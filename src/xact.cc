@@ -283,6 +283,81 @@ bool xact_base_t::finalize() {
     }
   }
 
+  // N-commodity implicit exchange using the price database.
+  //
+  // When the balance has more than 2 commodities and no null post and no
+  // explicit user-supplied costs, attempt to identify a "base" commodity
+  // (one that all other commodities in the balance have a price entry for in
+  // the price history) and automatically compute per-unit costs for each
+  // non-base posting from those prices.  This mirrors the 2-commodity
+  // implicit-exchange logic above but handles the common case where several
+  // commodities are purchased and their combined value in a single base
+  // currency is stated explicitly (e.g. using a computed expression).
+  if (!null_post && has_date() && balance.is_balance() && !balance.is_zero() &&
+      balance.as_balance().amounts.size() > 2) {
+    bool any_cost = false;
+    for (post_t* post : posts) {
+      if (!post->must_balance() || post->has_flags(POST_VIRTUAL))
+        continue;
+      if (post->cost) {
+        any_cost = true;
+        break;
+      }
+    }
+
+    if (!any_cost) {
+      const datetime_t moment(primary_date(), time_duration(0, 0, 0, 0));
+
+      // Collect the commodities present in the regular (non-virtual) balance.
+      std::vector<const commodity_t*> comms;
+      for (const auto& kv : balance.as_balance().amounts)
+        comms.push_back(&kv.second.commodity());
+
+      // Find the first commodity for which every other commodity in the
+      // balance has a price recorded (directly or via the price graph).
+      const commodity_t* base_comm = nullptr;
+      for (const commodity_t* cand : comms) {
+        bool all_priced = true;
+        for (const commodity_t* other : comms) {
+          if (other == cand)
+            continue;
+          if (!other->find_price(cand, moment)) {
+            all_priced = false;
+            break;
+          }
+        }
+        if (all_priced) {
+          base_comm = cand;
+          break;
+        }
+      }
+
+      if (base_comm) {
+        DEBUG("xact.finalize", "N-commodity: using base commodity " << base_comm->symbol());
+        for (post_t* post : posts) {
+          if (!post->must_balance() || post->amount.is_null() || post->has_flags(POST_VIRTUAL))
+            continue;
+          const amount_t& amt(post->amount.reduced());
+          if (&amt.commodity() == base_comm)
+            continue;
+
+          std::optional<price_point_t> price_pt = amt.commodity().find_price(base_comm, moment);
+          assert(price_pt); // guaranteed by the all_priced check above
+
+          amount_t per_unit_cost(price_pt->price.abs().unrounded());
+          DEBUG("xact.finalize", "N-commodity: " << amt.commodity().symbol()
+                                                 << " per-unit-cost = " << per_unit_cost);
+          balance -= amt;
+          post->cost = per_unit_cost * amt;
+          post->add_flags(POST_COST_CALCULATED);
+          balance += post->cost->reduced();
+          DEBUG("xact.finalize",
+                "N-commodity: set post->cost = " << *post->cost << ", balance = " << balance);
+        }
+      }
+    }
+  }
+
   // If the balance has 2 or more commodities and no null post, check
   // whether fixated price annotations ({=price}) can be used to compute
   // costs and reduce the commodity count.  This handles the case where

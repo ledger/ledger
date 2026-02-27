@@ -455,6 +455,29 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
     while (e > p && std::isspace(static_cast<unsigned char>(*(e - 1))))
       e--;
 
+    // When no double-space or tab separator was found (next == nullptr) the
+    // parser would silently swallow the entire remainder of the line as the
+    // account name.  Detect the common mistake of writing only a single space
+    // between the account name and a balance assertion ('= amount') and produce
+    // a clear diagnostic instead of registering a mangled account name.
+    if (!next) {
+      int depth = 0;
+      for (const char* scan = p; scan + 2 <= e; ++scan) {
+        if (*scan == '(' || *scan == '[') {
+          ++depth;
+          continue;
+        }
+        if (*scan == ')' || *scan == ']') {
+          --depth;
+          continue;
+        }
+        if (depth == 0 && *scan == ' ' && *(scan + 1) == '=' && *(scan + 2) == ' ')
+          throw parse_error(
+              _("Posting account name and balance assertion/assignment must be separated "
+                "by at least two spaces or a tab"));
+      }
+    }
+
     if ((*p == '[' && *(e - 1) == ']') || (*p == '(' && *(e - 1) == ')')) {
       post->add_flags(POST_VIRTUAL);
       DEBUG("textual.parse", "line " << context.linenum << ": "

@@ -1,0 +1,62 @@
+; Regression test for GitHub issue #1216
+; "Transaction does not balance" for multi-commodity transactions
+; where prices exist in the price database.
+;
+; When a transaction has N > 2 commodities and no explicit '@' cost
+; annotations, ledger should consult the price database to verify
+; balance and record per-unit costs automatically.
+
+; Price database entries establish exchange rates
+P 2017/01/01 High    1000 r
+P 2017/01/01 Medium   100 r
+P 2017/01/01 Low       10 r
+
+; A prior balance-establishing transaction
+2017/01/02 Opening
+    expenses:medium    1 Medium
+    liabilities        (- 1 * 100 r)
+
+; The multi-commodity transaction that previously failed with
+; "Transaction does not balance"
+2017/01/03 Purchase
+    expenses:high       2 High
+    expenses:medium     3 Medium
+    expenses:low        4 Low
+    liabilities         (-(2 * 1000 r + 3 * 100 r + 4 * 10 r))
+
+; Verify the balance report shows correct totals for all accounts
+test bal
+              2 High
+               4 Low
+            4 Medium  expenses
+              2 High    high
+               4 Low    low
+            4 Medium    medium
+             -2440 r  liabilities
+--------------------
+              2 High
+               4 Low
+            4 Medium
+             -2440 r
+end test
+
+; Verify the register shows all postings were accepted
+test reg
+17-Jan-02 Opening               expenses:medium            1 Medium     1 Medium
+                                liabilities                  -100 r     1 Medium
+                                                                          -100 r
+17-Jan-03 Purchase              expenses:high                2 High       2 High
+                                                                        1 Medium
+                                                                          -100 r
+                                expenses:medium            3 Medium       2 High
+                                                                        4 Medium
+                                                                          -100 r
+                                expenses:low                  4 Low       2 High
+                                                                           4 Low
+                                                                        4 Medium
+                                                                          -100 r
+                                liabilities                 -2340 r       2 High
+                                                                           4 Low
+                                                                        4 Medium
+                                                                         -2440 r
+end test

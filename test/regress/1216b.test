@@ -1,0 +1,17 @@
+; Regression test for GitHub issue #1216 (part 2)
+; A single space between an account name and a balance assertion or
+; assignment must produce a clear diagnostic error rather than
+; silently creating a malformed account name.
+
+2017/01/04 Bad spacing
+    assets = 100 r
+    liabilities
+
+test source -> 1
+__ERROR__
+While parsing file "$FILE", line 7:
+While parsing posting:
+  assets = 100 r
+
+Error: Posting account name and balance assertion/assignment must be separated by at least two spaces or a tab
+end test
