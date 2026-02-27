@@ -1858,6 +1858,7 @@ void times_initialize() {
     readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%Y/%m", true)));
     readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%y/%m/%d", true)));
     readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%Y-%m-%d", true)));
+    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%m-%d", true)));
 
     is_initialized = true;
   }
