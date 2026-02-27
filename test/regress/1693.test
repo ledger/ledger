@@ -1,0 +1,9 @@
+2018-12-11 * Test for date-format
+    Assets:Card:Tesco       10.00 GBP
+        ; Card: 123
+        ; Expiration:: [2019-12-11]
+    Assets:Cash            -10.00 GBP
+
+test bal card --pivot Expiration --date-format %Y-%m-%d
+           10.00 GBP  Expiration:2019-12-11:Assets:Card:Tesco
+end test
