@@ -1,0 +1,28 @@
+; Regression test for issue #1754
+;
+; Two consecutive balance assignments with the same amount should not fail
+; with "Only one posting with null amount allowed per transaction".
+;
+; When the second balance assignment has the same value as the current account
+; balance, the computed difference is zero.  Previously this zero-diff posting
+; was left with a null amount, causing finalize() to see two null postings
+; (the zero-diff posting and the auto-balancing posting), and throw an error.
+;
+; The fix ensures that a zero-diff balance assignment explicitly sets the
+; posting amount to zero (with the correct commodity) instead of leaving it
+; null, so finalize() sees only one null posting (the auto-balancing one).
+
+2019-01-21 Adjustment
+    Assets:Cash                                 = $500.00
+    Equity:Adjustments
+
+2019-01-25 Adjustment
+    Assets:Cash                                 = $500.00
+    Equity:Adjustments
+
+test bal
+             $500.00  Assets:Cash
+            $-500.00  Equity:Adjustments
+--------------------
+                   0
+end test
