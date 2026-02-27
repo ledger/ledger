@@ -151,10 +151,28 @@ account_t* journal_t::register_account(string_view name, post_t* post, account_t
       // account as known to avoid pedantic errors
       else if (post->has_flags(ITEM_GENERATED)) {
         result->add_flags(ACCOUNT_KNOWN);
-      } else if (checking_style == CHECK_WARNING) {
-        current_context->warning(_f("Unknown account '%1%'") % result->fullname());
-      } else if (checking_style == CHECK_ERROR) {
-        throw_(parse_error, _f("Unknown account '%1%'") % result->fullname());
+      } else {
+        // If the account name contains template variable references ($variable
+        // or %(expr)) used in automated transactions, it will be resolved at
+        // runtime, so mark it as known without warning (see issue #545).
+        const string& fn = result->fullname();
+        bool has_template_var = contains(fn, "%(");
+        if (!has_template_var) {
+          for (size_t i = 0; i + 1 < fn.size(); ++i) {
+            if (fn[i] == '$' &&
+                (std::isalpha((unsigned char)fn[i + 1]) || fn[i + 1] == '_')) {
+              has_template_var = true;
+              break;
+            }
+          }
+        }
+        if (has_template_var) {
+          result->add_flags(ACCOUNT_KNOWN);
+        } else if (checking_style == CHECK_WARNING) {
+          current_context->warning(_f("Unknown account '%1%'") % result->fullname());
+        } else if (checking_style == CHECK_ERROR) {
+          throw_(parse_error, _f("Unknown account '%1%'") % result->fullname());
+        }
       }
     }
   }
