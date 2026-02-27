@@ -1,0 +1,29 @@
+; Issue #1899: invalid expression "." followed by garbage should not cause
+; an assertion failure in expr_base_t::calc() due to null context pointer.
+; The expression produces an empty parse tree (ptr == nullptr), so compile()
+; must still set context even when there is nothing to compile.
+
+test expr . %foo
+--- Context is first posting of the following transaction ---
+2004/05/27 Book Store
+    ; This note applies to all postings. :SecondTag:
+    Expenses:Books                 20 BOOK @ $10
+    ; Metadata: Some Value
+    ; Typed:: $100 + $200
+    ; :ExampleTag:
+    ; Here follows a note describing the posting.
+    Liabilities:MasterCard        $-200.00
+
+--- Input expression ---
+. %foo
+
+--- Text as parsed ---
+
+
+--- Expression tree ---
+
+--- Compiled tree ---
+
+--- Calculated value ---
+null
+end test

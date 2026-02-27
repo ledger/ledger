@@ -108,11 +108,13 @@ void expr_t::parse(std::istream& in, const parse_flags_t& flags,
 }
 
 void expr_t::compile(scope_t& scope) {
-  if (!compiled && ptr) {
-    fast_path_ = fast_path_t::NONE;
-    ptr = ptr->compile(scope);
+  if (!compiled) {
+    if (ptr) {
+      fast_path_ = fast_path_t::NONE;
+      ptr = ptr->compile(scope);
+      detect_fast_path();
+    }
     base_type::compile(scope);
-    detect_fast_path();
   }
 }
 
