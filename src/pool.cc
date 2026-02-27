@@ -261,9 +261,22 @@ cost_breakdown_t commodity_pool_t::exchange(const amount_t& amount, const amount
   // Do not record commodity exchanges where amount's commodity has a
   // fixated price, since this does not establish a market value for the
   // base commodity.
+  //
+  // Also skip recording a price when the cost has a lot price annotation
+  // whose currency matches the amount's commodity.  In that case the cost
+  // is a lot-basis consumption rather than a true market exchange: the
+  // implied rate (amount / cost) is an artifact of the lot, not a new
+  // market price.  Recording it would incorrectly mark the cost commodity
+  // as COMMODITY_PRIMARY and cause -V to stop converting it (issue #1217).
+  bool cost_has_lot_price_in_amount_currency =
+      cost.has_annotation() && cost.annotation().price &&
+      cost.annotation().price->has_commodity() &&
+      cost.annotation().price->commodity().referent() == commodity.referent();
+
   if (add_price && !per_unit_cost.is_realzero() &&
       (current_annotation == nullptr ||
        !(current_annotation->price && current_annotation->has_flags(ANNOTATION_PRICE_FIXATED))) &&
+      !cost_has_lot_price_in_amount_currency &&
       commodity.referent() != per_unit_cost.commodity().referent()) {
     exchange(commodity, per_unit_cost, moment ? *moment : CURRENT_TIME());
   }
