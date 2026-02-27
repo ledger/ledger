@@ -178,6 +178,6 @@ public:
 };
 
 class call_scope_t;
-value_t source_command(call_scope_t& scope);
+value_t script_command(call_scope_t& scope);
 
 } // namespace ledger
