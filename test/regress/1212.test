@@ -1,0 +1,22 @@
+; Regression test for issue #1212:
+; "print --generated output unparsable with multiple commodities"
+;
+; When a transaction uses multiple commodities (e.g., USD and EUR) without an
+; explicit cost, ledger automatically computes a lot price annotation. The
+; print command with --generated should output this annotation with a date in
+; YYYY/MM/DD format (parseable) rather than YY-Mon-DD format (unparseable).
+;
+; The bug was that `print --generated` produced output like:
+;   Foo  10.00 USD {1.10 EUR} [00-Jan-01]
+; which could not be parsed back by ledger due to the invalid date format.
+; The fix ensures the date is written in the standard YYYY/MM/DD format.
+
+2000/01/01
+    Foo  10.00 USD
+    Bar  -11.00 EUR
+
+test print --generated -> 0
+2000/01/01 <Unspecified payee>
+    Foo                                 10.00 USD {1.10 EUR} [2000/01/01]
+    Bar                                   -11.00 EUR
+end test
