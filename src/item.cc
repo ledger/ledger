@@ -33,6 +33,10 @@
 
 #include "item.h"
 
+#if HAVE_GPGME
+#include "gpgme.h"
+#endif
+
 namespace ledger {
 
 bool item_t::use_aux_date = false;
