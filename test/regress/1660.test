@@ -1,0 +1,12 @@
+; Regression test for issue #1660: !include should be case-sensitive.
+; Including a filename with wrong case (1660.DAT vs 1660.dat) must fail
+; on case-sensitive filesystems and should not silently match a
+; differently-cased file via the glob matching logic.
+
+include 1660.DAT
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 6:
+Error: File to include was not found: "$sourcepath/test/regress/1660.DAT"
+end test

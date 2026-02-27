@@ -386,7 +386,17 @@ mask_t& mask_t::assign_glob(string_view pat) {
     }
     }
   }
-  return (*this = re_pat);
+  // Filename glob matching must be case-sensitive so that !include respects
+  // filesystem case-sensitivity (issue #1660).  Unlike operator= which uses
+  // icase for account/payee query matching, globs are used exclusively for
+  // file name matching where case matters.
+#if HAVE_BOOST_REGEX_UNICODE
+  expr = boost::make_u32regex(re_pat.c_str(), boost::regex::perl);
+#else
+  expr.assign(re_pat.c_str(), boost::regex::perl);
+#endif
+  VERIFY(valid());
+  return *this;
 }
 
 } // namespace ledger
