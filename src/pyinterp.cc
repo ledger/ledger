@@ -351,8 +351,7 @@ value_t python_interpreter_t::python_command(call_scope_t& args) {
       // Use code.interact() rather than Py_Main() or PyRun_InteractiveLoop()
       // to avoid reinitializing readline and signal handlers, which conflicts
       // with the already-initialized embedded interpreter (GitHub issue #819).
-      status = PyRun_SimpleString(
-          "import code; code.interact(local=vars(__import__('__main__')))");
+      status = PyRun_SimpleString("import code; code.interact(local=vars(__import__('__main__')))");
     } else if (inline_code) {
       if (args.size() < 2)
         throw_(std::runtime_error, _("-c requires a code argument"));
