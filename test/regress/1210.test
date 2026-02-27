@@ -1,0 +1,20 @@
+; Regression test for GitHub issue #1210
+; --price-exp (-Z) takes its argument in hours, not minutes.
+; The documentation was corrected to state hours (the default is 24 hours).
+; Internally, the value is converted to seconds: N hours * 3600 seconds/hour.
+
+P 2024/01/01 AAPL $150.00
+
+2024/01/15 Buy Stock
+    Assets:Brokerage    10 AAPL
+    Assets:Checking    $-1500.00
+
+; --price-exp 24 means 24 hours (86400 seconds) of quote freshness
+test bal --price-exp 24 --market Assets:Brokerage
+            $1500.00  Assets:Brokerage
+end test
+
+; -Z is the short form alias for --price-exp
+test bal -Z 48 --market Assets:Brokerage
+            $1500.00  Assets:Brokerage
+end test
