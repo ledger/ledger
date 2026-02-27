@@ -4109,12 +4109,6 @@ Becomes:
     Income:Customer A                          2 USD
 @end smallexample
 
-Keep in mind that if you are using @option{--strict} or @option{--pedantic} you will have to explicitly define an account to avoid errors. When using @samp{$account}, such definition can be done thus:
-
-@smallexample @c input:validate
-account $account
-@end smallexample
-
 @node Applying metadata to every matched posting, Applying metadata to the generated posting, Referring to the matching posting's account, Automated Transactions
 @subsection Applying metadata to every matched posting
 
