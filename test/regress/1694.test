@@ -1,0 +1,32 @@
+; Regression test for bug #1694: --exchange with budget reports crashes when
+; a budget account has a non-zero allocation but no actual transactions.
+; The error was "Cannot add an uninitialized value to an amount" or
+; "Cannot negate an uninitialized value" when the actual balance was
+; VOID (no transactions) and --exchange was applied.
+
+commodity R
+D R1,000.00
+
+~ Monthly
+    Income:Salary                            R-10000
+    Expenses:Groceries                         R2000
+    Expenses:Internet                           R100
+    Assets
+
+2023/01/01 Salary
+    Income:Salary                            R-10000
+    Assets:Checking
+
+2023/01/15 Groceries
+    Expenses:Groceries                          R500
+    Assets:Credit Card                         R-500
+
+test budget --exchange R -b 2023/01 -e 2023/02
+   R9,500.00    R7,900.00    R1,600.00  120%  Assets
+     R500.00    R2,100.00   R-1,600.00   24%  Expenses
+     R500.00    R2,000.00   R-1,500.00   25%    Groceries
+                  R100.00     R-100.00     0    Internet
+ R-10,000.00  R-10,000.00            0  100%  Income:Salary
+------------ ------------ ------------ -----
+           0            0            0     0
+end test
