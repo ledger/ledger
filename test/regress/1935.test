@@ -1,0 +1,20 @@
+; Test: lot value expressions with nested parentheses (issue #1935)
+; The documentation example uses ((lambda -> expr)) syntax where the
+; expression contains nested parens like market($10, date, t).
+; Previously this failed with:
+;   Error: Invalid token '<end of input>' (wanted ')')
+
+2012-04-10 My Broker
+    A:B:Cash       $375.00
+    A:B     -5 AAPL {$50.00} ((s, d, t -> market($10, date, t))) @@ $375.00
+    Income:Capital Gains       $-125.00
+
+test bal
+             $375.00
+             -5 AAPL  A:B
+             $375.00    Cash
+            $-125.00  Income:Capital Gains
+--------------------
+             $250.00
+             -5 AAPL
+end test
