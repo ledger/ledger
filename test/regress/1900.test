@@ -1,0 +1,69 @@
+; Regression test for issue #1900
+; When multiple_args is true and a single argument contains an operator like
+; '&', the lexer was accumulating trailing whitespace into the identifier
+; before the operator. For example, '. & %foo' (as one shell argument) would
+; produce (account =~ /. /) instead of (account =~ /./), because the space
+; before '&' was appended to the identifier string.
+
+2024/01/01 Store
+    ; foo: bar
+    Expenses:Food    $10.00
+    Assets:Checking
+
+2024/01/02 Store
+    Expenses:Transport    $20.00
+    Assets:Checking
+
+; Verify that '. & %foo' as a single argument parses '.' without trailing
+; whitespace in the regex, producing /./  not /. /
+test query '. & %foo' | sed -E 's/0x[0-9a-f]+/ADDR/g'
+--- Input arguments ---
+(". & %foo")
+
+--- Context is first posting of the following transaction ---
+2004/05/27 Book Store
+    ; This note applies to all postings. :SecondTag:
+    Expenses:Books                 20 BOOK @ $10
+    ; Metadata: Some Value
+    ; Typed:: $100 + $200
+    ; :ExampleTag:
+    ; Here follows a note describing the posting.
+    Liabilities:MasterCard        $-200.00
+
+--- Input expression ---
+((account =~ /./) & has_tag(/foo/))
+
+--- Text as parsed ---
+((account =~ /./) & has_tag(/foo/))
+
+--- Expression tree ---
+ADDR       O_AND (1)
+ADDR        O_MATCH (1)
+ADDR         IDENT: account (1)
+ADDR         VALUE: /./ (1)
+ADDR        O_CALL (1)
+ADDR         IDENT: has_tag (1)
+ADDR         VALUE: /foo/ (1)
+
+--- Compiled tree ---
+ADDR       O_AND (1)
+ADDR        O_MATCH (1)
+ADDR         IDENT: account (1)
+ADDR          FUNCTION (1)
+ADDR         VALUE: /./ (1)
+ADDR        O_CALL (1)
+ADDR         IDENT: has_tag (1)
+ADDR          FUNCTION (1)
+ADDR         VALUE: /foo/ (1)
+
+--- Calculated value ---
+false
+end test
+
+; Verify that '. & %foo' as a single argument correctly filters register
+; output to only transactions with the 'foo' tag (both postings of the
+; 2024/01/01 Store transaction, not the 2024/01/02 one)
+test reg '. & %foo'
+24-Jan-01 Store                 Expenses:Food                $10.00       $10.00
+                                Assets:Checking             $-10.00            0
+end test
