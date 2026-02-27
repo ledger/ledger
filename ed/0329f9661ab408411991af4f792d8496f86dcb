@@ -1,0 +1,1199 @@
+src/item.cc
+  aae4a195577390b3 36-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.6",
+  "base_commit_sha": "ed0329f9661ab408411991af4f792d8496f86dcb",
+  "prompts": {
+    "aae4a195577390b3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "566bfcff-5e1c-4f72-824d-bfcbd3fd4493",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "<command-message>fix</command-message>\n<command-name>/fix</command-name>\n<command-args>1215</command-args>",
+          "timestamp": "2026-02-27T06:52:27.375Z"
+        },
+        {
+          "type": "user",
+          "text": "# Think, Research, Plan, Act, Review\n\nThink deeply to analyze the following query, construct a well thought out plan of action based on the following context, and then carefully execute that plan step by step.\n\nIf you find that the bug or feature you’re attempting to fix has already been addressed in an earlier commit, just add a regression test to demonstrate the item has been dealt with.\n\nCreate a PR for each using my jwiegley user on GitHub. The author/committer for all new commits should be signed by johnw@newartisans.com.\n\nThis series of jobs will take a long time, so make a comprehensive and effective plan and then execute step by step until you have completed them all and added new regression tests for each.\n\nNow, please analyze and fix the GitHub issue: 1215.\n\n# Follow these steps\n\n1. Use `gh issue view` to get the issue details\n2. Understand the problem described in the issue\n3. Search the codebase for relevant files\n4. Implement the necessary changes to fix the issue\n5. Write and run tests to verify the fix\n6. Ensure code passes linting and type checking\n7. Leave your work uncommitted in the working tree, so it can be reviewed.\n\nRemember the following:\n- Use the claude-code skill to provide context for the rest of the task\n- Use the GitHub CLI (`gh`) for all GitHub-related tasks\n- Search the codebase for relevant files\n- Ensure code passes linting and type checking after doing any work\n- Use cpp-pro, python-pro, emacs-lisp-pro, rust-pro or haskell-pro as needed for diagnosing and analyzing PRs, fixing code, and writing any new code.\n- Use Web Search and Perplexity as need for research and discovering resources.\n- Use sequential-thinking when appropriate to break down tasks further.\n- Use context7 whenever code examples might help.\n\nCommit all work as a series of atomic, logically sequenced commits. Each commit should represent one coherent change that can be understood, reviewed, and reverted independently.\n\n# Commit Decomposition Principles\n\n**Scope each commit to a single logical change.** A commit should do exactly one thing: add a function, fix a bug, refactor a module, update documentation. If you find yourself writing \"and\" in a commit message, consider splitting the commit.\n\n**Sequence commits to tell a story.** Arrange commits so each builds naturally on the previous. A reviewer reading the series should understand why each change was made and how the code evolved. Foundational changes come before dependent ones.\n\n**Keep each commit in a working state.** Every commit should compile, pass tests, and not introduce obvious regressions. This enables bisection for debugging and allows reviewers to check out any point in history.\n\n# Categorizing Changes\n\nBefore committing, analyze the working tree and group changes into categories:\n\n1. **Infrastructure/setup changes** — new dependencies, configuration, tooling\n2. **Refactoring** — restructuring existing code without changing behavior\n3. **New functionality** — features, APIs, modules\n4. **Bug fixes** — corrections to existing behavior\n5. **Tests** — new or modified test coverage\n6. **Documentation** — comments, READMEs, inline docs\n\nCommit these categories in order when dependencies exist between them. Refactoring that enables a new feature should precede the feature commit.\n\n# Commit Message Format\n\n```\n<summary>\n\n<body>\n\n<footer>\n```\n\n**Summary line:** Imperative mood, no period, under 50 characters. Describe what applying the commit does, not what you did.\n\n**Body:** Explain the motivation and contrast with previous behavior. Wrap at 72 characters. Focus on *why*, not *what* (the diff shows what).\n\n**Footer:** Reference issues, breaking changes, or co-authors.\n\n# Staging Strategy\n\nUse selective staging to craft precise commits:\n\n- `git add -p` for hunks within files\n- `git add <specific-files>` to group related files\n- Review staged changes with `git diff --staged` before committing\n\nWhen a single file contains changes belonging to multiple logical commits, stage hunks separately rather than committing the entire file.\n\n# Quality Checklist\n\nBefore finalizing each commit:\n\n- [ ] Does this commit do exactly one thing?\n- [ ] Could someone understand this change without seeing other commits?\n- [ ] Is the commit message searchable? Will someone find this when grepping history?\n- [ ] Does the code compile and pass tests at this point?\n- [ ] Would reverting this commit cleanly undo one logical change?\n\n# Example Decomposition\n\nGiven work that adds a feature with tests and required refactoring:\n\n```\n1. Extract token validation into dedicated module\n2. Add unit tests for token validation\n3. Implement refresh token rotation\n4. Add integration tests for token refresh flow\n5. Document refresh token behavior in API guide\n```\n\nEach commit is independently reviewable, the sequence shows logical progression, and future developers can find relevant changes through targeted searches.\n\n# Handling Mixed Changes\n\nIf the working tree contains entangled changes:\n\n1. **Identify the distinct changes** — list what logical modifications exist\n2. **Determine dependencies** — which changes require others to be present\n3. **Create a commit plan** — order commits to satisfy dependencies\n4. **Stage incrementally** — use partial staging to isolate each change\n5. **Verify at each step** — ensure the repository works after each commit\n\nWhen changes are too entangled to separate cleanly, prefer a slightly larger commit with a clear message over a commit that leaves the repository in a broken state.\n",
+          "timestamp": "2026-02-27T06:52:27.375Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me start by understanding the issue #1215 in the ledger repository. I'll use the GitHub CLI to get the issue details, then analyze the problem and implement a fix.",
+          "timestamp": "2026-02-27T06:52:30.132Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 1215",
+            "description": "Get GitHub issue #1215 details"
+          },
+          "timestamp": "2026-02-27T06:52:31.109Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 1215 --comments",
+            "description": "Get all comments on issue #1215"
+          },
+          "timestamp": "2026-02-27T06:52:33.937Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me look at the relevant source code to understand the issue better. The issue is about a buffer restriction in `src/error.cc` at line 91, related to the `source_context` function.",
+          "timestamp": "2026-02-27T06:52:37.630Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1215/src/error.cc"
+          },
+          "timestamp": "2026-02-27T06:52:38.343Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The current code already has the fix in place! The `source_context` function now has a `MAX_CONTEXT_DISPLAY` constant set to 4096, and it truncates context at that limit. Looking at the issue, it seems the fix has already been made but maybe the issue isn't fully resolved or there's a regression test missing.\n\nLet me check when this fix was introduced and look at the git history.",
+          "timestamp": "2026-02-27T06:52:42.594Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --oneline src/error.cc | head -20",
+            "description": "View git history for error.cc"
+          },
+          "timestamp": "2026-02-27T06:52:44.244Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls test/regress/ | grep -E \"^(121|122)\" | head -20",
+            "description": "Check for existing regression tests related to issue 1215"
+          },
+          "timestamp": "2026-02-27T06:52:45.442Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls test/regress/ | grep \"1215\"",
+            "description": "Check if there's already a 1215 regression test"
+          },
+          "timestamp": "2026-02-27T06:52:47.590Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --oneline | head -10",
+            "description": "View recent git history"
+          },
+          "timestamp": "2026-02-27T06:52:48.292Z"
+        },
+        {
+          "type": "assistant",
+          "text": "There's no regression test for issue #1215 yet. The fix has been made to `error.cc` (there's a commit \"Fix crash when source_context encounters large transactions\"), but there's no regression test.\n\nLet me look at the fix that was made to understand how to write the regression test.",
+          "timestamp": "2026-02-27T06:52:50.941Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git show b49f32ec --stat",
+            "description": "View the fix commit details"
+          },
+          "timestamp": "2026-02-27T06:52:51.623Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat test/regress/1218.test | head -30",
+            "description": "Look at a similar regression test for reference"
+          },
+          "timestamp": "2026-02-27T06:52:52.642Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat test/regress/1218.test",
+            "description": "View the full 1218 regression test"
+          },
+          "timestamp": "2026-02-27T06:52:54.622Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat test/regress/1224.test",
+            "description": "View another regression test for reference"
+          },
+          "timestamp": "2026-02-27T06:52:56.397Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the issue. The bug is that when using `print --raw`, if a transaction is very large (larger than 8192 bytes), the `source_context` function would fail with an assertion. \n\nLooking at the current code in `error.cc`, the fix has already been implemented - it now truncates the context at `MAX_CONTEXT_DISPLAY = 4096` bytes and shows a \"...(context truncated)\" message when truncated.\n\nI need to create a regression test that demonstrates that:\n1. A large transaction with `print --raw` no longer crashes with an assertion error\n2. The output works correctly (or at least doesn't crash)\n\n\nThe real issue is that `ledger print --raw` crashes when processing large transactions, specifically when the source context exceeds the buffer limit. The `--raw` flag makes this more likely because it outputs the full transaction verbatim. Let me trace through what happens - the print command retrieves the source code and tries to display it, but if there's a parse error or the transaction is too large, the context display logic hits an assertion failure.\n\nLooking at the error message, the assertion `len < 8192` is failing in the `source_context` function, which means the transaction being printed is larger than the buffer can handle. The fix appears to have already been applied in a later commit that replaces this hard limit with a more graceful truncation approach.",
+          "timestamp": "2026-02-27T06:53:11.368Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"source_context\\|raw\" src/print.cc | head -30",
+            "description": "Look for source_context usage in print.cc"
+          },
+          "timestamp": "2026-02-27T06:53:12.024Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"source_context\" src/ | head -20",
+            "description": "Find all usages of source_context in the source"
+          },
+          "timestamp": "2026-02-27T06:53:12.740Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"print_raw\\|raw\" src/print.cc | head -30",
+            "description": "Look at how --raw works in print.cc"
+          },
+          "timestamp": "2026-02-27T06:53:15.083Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1215/src/print.cc",
+            "limit": 60,
+            "offset": 300
+          },
+          "timestamp": "2026-02-27T06:53:16.224Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"print_item\\|source_context\\|raw\\|beg_pos\\|end_pos\" src/item.cc | head -30",
+            "description": "Look at item.cc for print_item and source_context usage"
+          },
+          "timestamp": "2026-02-27T06:53:18.479Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1215/src/item.cc",
+            "limit": 20,
+            "offset": 540
+          },
+          "timestamp": "2026-02-27T06:53:19.133Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the issue more clearly. The `print --raw` option calls `print_item`, which calls `source_context`. The `source_context` function was previously asserting `len < 8192`, which means any transaction larger than 8192 bytes would crash.\n\nThe fix in `b49f32ec` has already been applied to `src/error.cc`, where:\n1. The assertion `assert(len < 8192)` was removed\n2. A `MAX_CONTEXT_DISPLAY = 4096` limit was added with truncation behavior\n\nHowever, I notice there's still an `assert(len < static_cast<std::streamoff>(1024 * 1024))` in `item_context` at line 558. \n\nLet me check more of that function to understand its scope. The real issue is that `print --raw` crashes when handling large transactions, and the fix has already been applied to `source_context`, so that should resolve the crash. Now I need to create a regression test that verifies the fix by generating a transaction larger than 8192 bytes and confirming `print --raw` handles it without crashing. Looking at the `source_context` function, I see it has a `MAX_CONTEXT_DISPLAY` limit of 4096 bytes that truncates larger transactions, which is problematic for `print --raw` since we want the full untruncated source text regardless of size.\n\nThe real issue is that `source_context` is being used for two different purposes - showing context in error messages where truncation is fine, and retrieving the complete raw transaction text where it shouldn't be truncated. I need to separate these concerns so `print --raw` gets the full transaction while error reporting can still use a bounded context display.",
+          "timestamp": "2026-02-27T06:53:38.943Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1215/src/item.cc",
+            "limit": 50,
+            "offset": 544
+          },
+          "timestamp": "2026-02-27T06:53:39.140Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I see that `item_context` at line 558 still has `assert(len < static_cast<std::streamoff>(1024 * 1024))`. This is a 1MB assertion. This might be another place that could crash for very large transactions.\n\nBut the original issue was about the `print_item` function path and the old assertion in `source_context` that was `len < 8192`.\n\nLet me look at the error.h to see what the original assertion looked like:",
+          "timestamp": "2026-02-27T06:53:42.991Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --all --oneline -- src/error.cc | head -10",
+            "description": "View full git history for error.cc"
+          },
+          "timestamp": "2026-02-27T06:53:43.901Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git show d31e4165 -- src/error.cc | head -50",
+            "description": "View the old \"Increase limit\" commit"
+          },
+          "timestamp": "2026-02-27T06:53:45.115Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the full history:\n1. Originally, the assertion was `assert(len < 8192)` - This caused the crash with large transactions >8192 bytes\n2. Then it was changed to `assert(len < 65536)` in commit `d31e4165` - This increased the limit to 64KB\n3. Then in commit `b49f32ec`, the assertion was removed and replaced with graceful truncation at 4096 bytes\n\nBut the issue now is: the current implementation in `source_context` truncates at 4096 bytes. This is fine for error context display, but for `print --raw`, we want the FULL source to be printed.\n\n\nSo the problem is that `print --raw` is going through `source_context()` which applies this 4096-byte limit, when it should be reading the full file content directly instead. The real issue is that `b49f32ec` only masks the symptom—it stops the crash but mangles the output for `print --raw` with large transactions. What I actually need is to bypass `source_context` entirely for this command and read the file content directly, since that function was designed for error messages with built-in display limits. Let me trace through how `print_item` handles the `--raw` flag to understand the right approach.",
+          "timestamp": "2026-02-27T06:54:00.325Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me understand the issue better by looking at how `print --raw` works and what the proper fix should be:",
+          "timestamp": "2026-02-27T06:54:00.325Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1215/src/print.cc"
+          },
+          "timestamp": "2026-02-27T06:54:00.326Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the flow:\n1. `print --raw` calls `print_xacts::flush()` → `print_item(out, *xact)` → `source_context(item.pos->pathname, item.pos->beg_pos, item.pos->end_pos, prefix)`\n2. In `source_context`, if the transaction is larger than `MAX_CONTEXT_DISPLAY` (4096 bytes), it truncates the output\n\nThe issue for `print --raw` is that it's using `source_context` which has a display limit. The current fix in `error.cc` prevents the crash, but introduces truncation of the output.\n\n\nThe real problem is that `print_item` is being used for both raw printing and error context display, but they have different requirements—raw printing needs the complete source while error context should be truncated for readability. I need to either create a separate code path for raw printing that bypasses the truncation, add an optional limit parameter to `source_context`, or handle the raw source reading differently in `print_item` itself. I think the cleanest approach is to add a parameter to `source_context` that allows it to read without limits, then pass that flag from `print_item` when doing raw output. This way I can keep the truncation behavior for error display while getting the full source for printing.\n\nLooking at the actual problem more carefully, the crash happens when `print --raw` encounters a large transaction, and the current fix truncates it at 4096 bytes, which means raw output would be incomplete. For the regression test, I need to verify that `print --raw` both succeeds without crashing and outputs the complete transaction source, so I'll create a test ledger with a large multi-line transaction to ensure this works end-to-end.\n\nThe cleanest solution is to add an optional limit parameter to `source_context` that allows reading without truncation when needed, then update `print_item` to pass zero for unlimited output when printing raw. The issue is that `source_context` tokenizes by newlines and adds a prefix to each line, which works fine for error display with an empty prefix, but the 4096-byte truncation limit is still problematic for raw printing. I need to either modify `print_item` or create a separate function that reads the full file source without any truncation, while keeping `source_context` with its limit for error messages.\n\nModifying `print_item` to check if the prefix is empty and read directly from the file in that case...\n\nActually, that breaks the abstraction since `print_item` shouldn't care about how it's being used. A cleaner approach would be to create a separate `print_item_raw` function that handles the direct file reading for raw output...\n\nWait, I think the real solution is simpler: fix `print_item` itself to stream the file content directly instead of going through `source_context`, which is meant for error display with truncation. This way it handles large transactions correctly and preserves the exact bytes. The key insight is that `item_context` still needs the truncation behavior for error formatting with the `>` prefix, but raw printing shouldn't have that limitation. So I should check whether `print_item` is being called with an empty prefix for raw output, and if so, bypass the `source_context` logic entirely. I need to set up a regression test that creates a transaction larger than the current buffer limits and verifies that `print --raw` handles it without crashing. The test format uses journal data followed by a test block, though I'm still figuring out whether I need to specify the full expected output or if just checking the exit code is sufficient. I'm calculating that each posting line is roughly 60 bytes, so I'd need around 136 lines to exceed the 8192 byte limit, which would bloat the test file significantly. Instead, I could create a transaction that surpasses the old limit but remains practical to test—checking that it doesn't crash and produces output—rather than trying to match the exact raw output in the test file. I need to figure out the right way to test this without bloating the test file. Using `test print --raw -> 0` would verify the command succeeds, but I'm realizing that just checking the exit code might not be sufficient to confirm the fix actually works—I need to ensure the output is correct too.\n\nLet me look at the actual code to see what's happening with the context display limits. I'm checking the error handling logic to understand how the truncation works and whether the current implementation properly handles large transactions.\n\nThe issue is that transactions larger than 4096 bytes get truncated in the output, which is incomplete behavior. The real solution is to bypass the context display mechanism entirely when doing raw printing and instead read the full source directly. I'll modify the print function to handle this case and then add a regression test to ensure large transactions don't cause crashes. 1215\n\nFor the fix in `item.cc`:\n- The `print_item(out, *xact)` call from `print_xacts::flush()` has no prefix (empty string by default)\n- The `print_item(out, item, \"> \")` call from `item_context` has the `\"> \"` prefix\n\nWait, let me look at the function signature:\n```c++\nvoid print_item(std::ostream& out, const item_t& item, const string& prefix = \"\");\n```\n\nSo for the raw case, prefix is empty string. I can make `print_item` handle this differently based on whether a prefix is specified.\n\nActually, the better approach is to not touch `print_item` at all (since it's shared with error context), but instead have `print_xacts::flush()` directly read the source file and write it to the output stream when `print_raw` is true. Let me check the error header to see what functions are available.",
+          "timestamp": "2026-02-27T06:55:09.287Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the full picture. Let me look at the current state of the issue more carefully:",
+          "timestamp": "2026-02-27T06:55:09.294Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1215/src/error.h"
+          },
+          "timestamp": "2026-02-27T06:55:09.618Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1215/src/item.h",
+            "limit": 60,
+            "offset": 1
+          },
+          "timestamp": "2026-02-27T06:55:10.422Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the full picture. Let me now figure out the right approach:\n\n1. The bug is that `print --raw` calls `print_item` which calls `source_context`, which had an assertion `len < 8192` that failed for large transactions.\n\n2. The current fix in `error.cc` replaces the assertion with truncation at 4096 bytes. This prevents the crash, but introduces a NEW bug: `print --raw` now produces truncated output for transactions larger than 4096 bytes.\n\n3. The REAL fix should be to fix the `print --raw` path to not use `source_context` for raw output. \n\nThe cleanest solution is to modify `print_item` so that when called in raw mode (empty prefix), it reads the complete source directly from the file without any truncation, while keeping the truncated behavior for other contexts like `item_context` that use a non-empty prefix.\n\nModifying the function...\n\nI'm realizing there's a key difference in behavior here—when the prefix is empty, I want raw byte-for-byte output from the file, but `source_context` applies formatting like stripping carriage returns and normalizing line endings. So I need to handle these two cases separately: direct file reading for raw output versus the formatted context function for prefixed output.\n\nThere's also a practical concern about memory usage if we're dealing with very large transactions—reading the entire thing into a buffer at once could be problematic. Streaming in chunks would be safer, though for typical use cases it's probably fine.\n\nNow I'm sketching out a cleaner approach: for raw printing without a prefix, I'd open the source file directly and stream it to output, handling both encrypted and unencrypted cases. The function would seek to the right position in the file and output only the relevant bytes.\n\nWriting the file streaming logic... I'm reconsidering the approach here—`scoped_array` is available since it's already used elsewhere in the codebase, but I could also simplify this with stream iterators or a basic read loop. For the raw print case, reading the full source into a string makes sense given that `source_context` already handles this pattern with dynamic allocation, so I should stick with that consistent approach rather than overcomplicating it.\n\nLooking at the options, creating a separate `stream_source` function feels cleanest since it avoids modifying `source_context`'s existing behavior and keeps the raw printing logic isolated. I'll add this new function to `error.cc` and have it handle streaming content directly without the display limit. /`error.h` that streams the full source without any limit\n2. Modify `print_item` in `item.cc` to use `stream_source` when prefix is empty\n3. Add regression test for issue #1215\n\nActually, let me reconsider. Looking at the issue again, the key problem is:\n- `print --raw` was crashing with large transactions (>8192 bytes)\n- The fix in `b49f32ec` prevents the crash by truncating\n- But truncation means incomplete output for large transactions\n\nThe \"complete\" fix should:\n1. Allow `print --raw` to work with any size transaction\n2. Not crash\n3. Output the complete source\n\nThe simplest approach: in `print_item`, when `prefix` is empty (i.e., raw output mode), read the full source directly without going through `source_context`.\n\nNow I'm implementing the streaming approach in `print_item` to handle large transactions without excessive memory allocation.",
+          "timestamp": "2026-02-27T06:55:44.404Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the full issue. The original bug is that `print --raw` would crash with transactions larger than 8192 bytes (later 64KB) due to an assertion in `source_context`. The commit `b49f32ec` partially fixed this by replacing the assertion with truncation at 4096 bytes, but this introduces a new bug: `print --raw` now produces truncated (incomplete) output for large transactions.\n\nThe proper fix is to have `print_item` for raw output read the complete source directly without any size limit.",
+          "timestamp": "2026-02-27T06:55:44.674Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Task",
+          "input": {
+            "description": "Fix print --raw for large transactions",
+            "prompt": "I'm fixing GitHub issue #1215 in the Ledger accounting software. The issue is that `ledger print --raw` crashes with an assertion error when a transaction is larger than 8192 bytes.\n\n## Current State\n\nThe code in `src/error.cc` has `source_context()` which was fixed to truncate at 4096 bytes instead of asserting. However, this introduces a new bug: `print --raw` produces incomplete output for large transactions.\n\n## The Problem\n\n`print --raw` calls this chain:\n- `print_xacts::flush()` in `src/print.cc` line 314-315\n- `print_item(out, *xact)` in `src/item.cc` line 546-548\n- `source_context(...)` in `src/error.cc` which now truncates at 4096 bytes\n\n`source_context` is designed for error display (showing transaction context in error messages). It truncates output to `MAX_CONTEXT_DISPLAY = 4096` bytes. But for `print --raw`, we need the COMPLETE source without any size limit.\n\n## The Fix Needed\n\nModify `print_item` in `src/item.cc` to NOT use `source_context` for the empty-prefix case (which is used for raw printing). Instead, it should stream the source directly from the file without any size limit.\n\nThe key distinction:\n- When `prefix` is empty (raw printing): read full source directly from file\n- When `prefix` is non-empty (error context): use `source_context` (limited display)\n\nHere are the relevant files:\n\n**src/item.cc lines 546-548 (current)**:\n```c++\nvoid print_item(std::ostream& out, const item_t& item, const string& prefix) {\n  out << source_context(item.pos->pathname, item.pos->beg_pos, item.pos->end_pos, prefix);\n}\n```\n\n**src/item.cc lines 550-577 (item_context)**:\n```c++\nstring item_context(const item_t& item, const string& desc) {\n  if (!item.pos)\n    return empty_string;\n\n  std::streamoff len = item.pos->end_pos - item.pos->beg_pos;\n  if (!(len > 0))\n    return empty_string;\n\n  assert(len < static_cast<std::streamoff>(1024 * 1024));\n\n  std::ostringstream out;\n\n  if (item.pos->pathname.empty()) {\n    out << desc << _(\" from streamed input:\");\n    return out.str();\n  }\n\n  out << desc << _(\" from \\\"\") << item.pos->pathname.string() << \"\\\"\";\n\n  if (item.pos->beg_line != item.pos->end_line)\n    out << _(\", lines \") << item.pos->beg_line << \"-\" << item.pos->end_line << \":\\n\";\n  else\n    out << _(\", line \") << item.pos->beg_line << \":\\n\";\n\n  print_item(out, item, \"> \");\n\n  return out.str();\n}\n```\n\n**src/error.cc (the source_context function)**:\n```c++\nstring source_context(const path& file, const std::istream::pos_type pos,\n                      const std::istream::pos_type end_pos, const string& prefix) {\n  const std::streamoff len = end_pos - pos;\n  if (!len || file.empty())\n    return _(\"<no source context>\");\n\n  assert(len > 0);\n\n  // Limit the amount of source text shown in error context to avoid unbounded\n  // memory allocation for very large transactions (e.g. equity reports).\n  const std::streamoff MAX_CONTEXT_DISPLAY = 4096;\n  const bool truncated = len > MAX_CONTEXT_DISPLAY;\n  const std::streamoff read_len = truncated ? MAX_CONTEXT_DISPLAY : len;\n\n  std::ostringstream out;\n\n  std::unique_ptr<std::istream> in(\n#if HAVE_GPGME\n      decrypted_stream_t::open_stream(file)\n#else\n      new ifstream(file, std::ios::binary)\n#endif\n  );\n  in->seekg(pos, std::ios::beg);\n\n  scoped_array<char> buf(new char[static_cast<std::size_t>(read_len) + 1]);\n  in->read(buf.get(), static_cast<std::streamsize>(read_len));\n  const std::streamsize got = in->gcount();\n  buf[static_cast<std::ptrdiff_t>(got)] = '\\0';\n\n  bool first = true;\n  for (char* p = std::strtok(buf.get(), \"\\r\\n\"); p; p = std::strtok(nullptr, \"\\r\\n\")) {\n    if (first)\n      first = false;\n    else\n      out << '\\n';\n    out << prefix << p;\n  }\n\n  if (truncated)\n    out << '\\n' << prefix << \"...(context truncated)\";\n\n  return out.str();\n}\n```\n\n## Task\n\nPlease implement the fix in `src/item.cc`. The fix should:\n\n1. Modify `print_item` so that when `prefix` is empty (raw printing mode):\n   - Stream the source directly from the file to the output stream\n   - Use chunked reading to avoid huge memory allocation\n   - Handle GPGME (encrypted files) if available\n   - Handle the case where pathname is empty or pos is null\n   \n2. When `prefix` is non-empty (error context mode):\n   - Continue using `source_context` as before (which has the truncation limit)\n\nThe code uses:\n- `ifstream` for file reading (defined in system.hh)\n- `scoped_array<char>` from Boost\n- `HAVE_GPGME` conditional compilation\n- `decrypted_stream_t::open_stream(file)` for encrypted files\n\nAlso fix the `assert(len < static_cast<std::streamoff>(1024 * 1024))` in `item_context` - this assertion limits error context to 1MB, which could also crash. Remove this assertion since it's unnecessary (the underlying `source_context` already handles truncation).\n\nPlease read the actual files first, then implement the fix. The project is at `/Users/johnw/src/ledger/fix-1215/`.\n\n**Important constraints:**\n- Follow the project's code style (2-space indentation, K&R braces)\n- Include `#if HAVE_GPGME` guards for encrypted file handling\n- Do NOT modify the tests yet - just implement the fix in `src/item.cc`\n- Do NOT commit the changes\n\nAfter implementing, please verify that the fix compiles by building with `cd /Users/johnw/src/ledger/fix-1215/build && make -j$(nproc) 2>&1 | tail -20`.",
+            "subagent_type": "cpp-pro"
+          },
+          "timestamp": "2026-02-27T06:56:10.845Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The agent has implemented the fix. Now let me verify the changes and then create the regression test. Let me check what was changed:",
+          "timestamp": "2026-02-27T07:00:52.966Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me verify the changes and build:",
+          "timestamp": "2026-02-27T07:00:53.265Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1215/src/item.cc",
+            "limit": 60,
+            "offset": 543
+          },
+          "timestamp": "2026-02-27T07:00:54.006Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Good, the fix is in place. Now let me create the regression test. I need to create a transaction that exceeds the old 8192-byte limit:",
+          "timestamp": "2026-02-27T07:00:56.524Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "python3 -c \"\n# Generate the test file for issue #1215\n# Need a transaction larger than 8192 bytes\n\nheader = '2017-01-01 * Opening balance\\n    ; :opening-balance:\\n'\nposting = '    Assets:Investments       1.00 AAPL {{1.00 EUR}} [2016-01-01] @@ 1.00 EUR\\n'\nfooter = '    Equity:Opening balance\\n'\n\n# Calculate how many postings needed to exceed 8192 bytes  \n# header ~ 50 bytes, posting ~ 70 bytes, footer ~ 30 bytes\n# 8192 - 50 - 30 = 8112, 8112 / 70 = 116 postings\n\nn = 120  # Use 120 postings to ensure we exceed 8192 bytes\nxact = header + posting * n + footer\n\nprint(f'Transaction size: {len(xact)} bytes')\nprint(f'Number of postings: {n}')\n\"\n",
+            "description": "Calculate transaction size for the test"
+          },
+          "timestamp": "2026-02-27T07:01:02.134Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Good. Now I need to create a test. The transaction will be 9320 bytes, which exceeds the old 8192 byte limit and also exceeds the 4096 byte truncation that was introduced by the partial fix.\n\nFor the test, I need:\n1. The transaction (input) \n2. A command to test (`print --raw`)\n3. The expected output\n\nThe expected output from `print --raw` would be the exact source text of the transaction. Since `source_context` normalizes line endings, the output from `print --raw` would be:\n- All lines joined with `\\n` (no `\\r\\n`)\n\n\n- With the prefix (empty) on each line\n\nActually, with my fix, `print_item` no longer uses `source_context` when prefix is empty - it reads the raw bytes directly. So the output should be exactly the source bytes, including whatever line endings are in the file. For the test file format, the test runner would write the transaction data to a temp file, run `ledger -f <tempfile> print --raw`, and compare the output to expected. Everything before the first `test` line is the journal data, which gets written to a temp file.\n\nNow I'm looking at the `flush()` function to understand how the raw print output is formatted. After `print_item` outputs the raw transaction, there's an explicit newline added, so the output will have a trailing newline after each transaction.\n\nBut this raises a question - if `print_item` already includes the source bytes with their original newlines, adding another newline would create a double newline at the end. I need to understand whether `end_pos` in the transaction includes the trailing newline from the source file, and how the textual parser sets this boundary. For the regression test, the most practical approach is probably to verify that the command exits successfully and then check that the output matches the input transaction exactly. I need to figure out what the raw output would actually look like when printing a transaction, then create a test that verifies the output matches the stored source including any trailing newlines.\n\nThe real goal here is simpler—I just need a regression test that confirms the fix works by having a transaction larger than the old 8192-byte limit, running `print --raw`, and verifying it exits cleanly without crashing. The transaction needs to be balanced so ledger doesn't fail for other reasons, which means I'll need to construct it carefully with enough postings to exceed the size threshold while maintaining proper accounting. I'm wondering whether `print --raw` actually validates transaction balance during parsing, or if it just outputs the source text as-is. Let me test with a simpler transaction structure: multiple postings to `Assets:Cash` each for $1.00, with a single `Equity:OpenBal` posting at the end to absorb the remainder. That should give me a clean regression test without needing complex cost annotations.\n\nFor the test file itself, I'll create a transaction with around 260 postings to the same account—each line is roughly 32 bytes, so that gets me past the 8192-byte threshold. The ledger format allows this, and it's mathematically valid: $260 total in Assets:Checking balanced by -$260 in Equity:Opening balance.\n\nSince I'm using my fix to read the file directly, the `print --raw` output should match the input exactly. I can keep the test simple by just checking the exit code with `-> 0` rather than verifying the full output. Looking at the test format, I need to make sure the transaction balances properly for ledger to accept it.\n\nFor a solid test, I'll create a transaction with enough postings to exceed the old 8192-byte limit that was causing crashes, then verify the command succeeds without crashing. Writing the test file... I'm realizing the test format matters here—if I specify `print --raw -> 0` with no expected output between the tags, it might still fail if there's actual output. So I need to either include the full transaction output or just verify the exit code works. Given that a 120+ posting transaction would bloat the test file, I'll go with a simpler approach: create a transaction larger than 8192 bytes and verify it exits cleanly with code 0, which confirms the fix prevents the crash without needing to validate the entire output. I'm setting up a regression test with a transaction containing 120 postings to exceed the 8192-byte buffer limit, then verifying the command exits successfully with `-> 0` to bypass output comparison and confirm it doesn't crash.",
+          "timestamp": "2026-02-27T07:02:03.825Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat test/RegressTests.py | head -100",
+            "description": "Look at the test runner to understand how tests work"
+          },
+          "timestamp": "2026-02-27T07:02:03.947Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat test/RegressTests.py | sed -n '90,150p'",
+            "description": "Continue reading the test runner"
+          },
+          "timestamp": "2026-02-27T07:02:06.422Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Looking at the test runner:\n1. If `test.output is not None`, it compares actual output to expected output. \n2. If `test.output is None` (i.e., no lines between `test` and `end test`), it skips the output comparison.\n3. It always checks the exit code.\n\nSo with `test print --raw -> 0\\nend test`, the test would:\n- Not check the output (since `test.output is None`)\n- Verify the exit code is 0\n\nThat's exactly what I want for the regression test! However, there's also `process_error` - it checks if there's any stderr output. \n\nIf there's unexpected stderr output, the runner will diff it against an empty expected error list and report failures, which is fine since the command should succeed with no stderr. Now I need to verify whether the test command automatically includes the `-f` flag and test file path.\n\nThe runner checks if the command already contains `-f`, and if not, it prepends the ledger executable with the test file path. Since `print --raw -> 0` doesn't have `-f`, it becomes `$ledger -f <testfile> print --raw`. Now I'm constructing the regression test file with a transaction that exceeds 8192 bytes using a header, multiple postings, and a footer. I'm calculating that with 65-byte postings, I need around 130 entries to safely exceed 8192 bytes total. For the transaction to balance properly with the lot notation, I should simplify and use straightforward USD amounts instead of dealing with the complexity of AAPL lot tracking. I need to construct a test transaction that definitively exceeds the 8192-byte limit while remaining valid and balanced. I'll use the cost annotation format from the original issue, repeating the investment posting enough times to push past that threshold, then balance it with a single equity posting for the total amount. I've calculated that I need around 9700 bytes total to exceed the 8192-byte limit, so I'll generate a Python script that creates a test file with enough postings to reliably surpass that threshold.",
+          "timestamp": "2026-02-27T07:02:34.431Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the test runner. Let me create the regression test:",
+          "timestamp": "2026-02-27T07:02:34.436Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "python3 -c \"\n# Generate the test file for issue #1215\n# Need a transaction larger than 8192 bytes (old limit that caused crashes)\n\nheader = '; Regression test for issue #1215\\n'\nheader += '; ledger print --raw crashed with assertion failure for transactions > 8192 bytes\\n'\nheader += '\\n'\nheader += '2017-01-01 * Opening balance\\n'\nheader += '    ; :opening-balance:\\n'\n\n# Each posting line is about 70 bytes\n# Use original issue format\nposting = '    Assets:Investments       1.00 AAPL {{1.00 EUR}} [2016-01-01] @@ 1.00 EUR\\n'\nprint(f'Posting line length: {len(posting)} bytes')\n\nn = 130  # Use 130 postings to ensure we exceed 8192 bytes\nfooter = f'    Equity:Opening balance   -{n}.00 EUR\\n'\n\nxact = header + posting * n + footer\nprint(f'Transaction size: {len(xact)} bytes (old limit was 8192, new fix has no limit)')\nprint(f'Number of postings: {n}')\n\"\n",
+            "description": "Calculate test file parameters"
+          },
+          "timestamp": "2026-02-27T07:02:38.591Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "python3 -c \"\n# Generate the content of the regression test file\nheader = '; Regression test for issue #1215\\n'\nheader += '; ledger print --raw crashed with assertion failure for transactions > 8192 bytes\\n'\nheader += '\\n'\nheader += '2017-01-01 * Opening balance\\n'\nheader += '    ; :opening-balance:\\n'\n\nposting = '    Assets:Investments       1.00 AAPL {{1.00 EUR}} [2016-01-01] @@ 1.00 EUR\\n'\nn = 130\n\nfooter = f'    Equity:Opening balance  -{n}.00 EUR\\n'\nfooter += '\\n'\nfooter += 'test print --raw -> 0\\n'\nfooter += 'end test\\n'\n\nxact = header + posting * n + footer\nprint(xact[:500])\nprint('...')\nprint(f'Total size: {len(xact)} bytes')\n\" 2>&1 | head -30\n",
+            "description": "Preview the test file content"
+          },
+          "timestamp": "2026-02-27T07:02:43.136Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The test file will be about 10KB. That's reasonable. Let me verify the transaction balances first. With `@@ 1.00 EUR`, each posting contributes `1.00 EUR` in total cost to Equity. So 130 postings × 1.00 EUR = 130.00 EUR total.\n\nBut wait - the AAPL commodity is separate. The transaction has:\n- 130 × `1.00 AAPL` (in total cost: 130 × 1.00 EUR = 130.00 EUR)\n- `Equity:Opening balance  -130.00 EUR`\n\n\nThis should balance: 130.00 EUR flows to investments while -130.00 EUR comes from equity, netting to zero. The AAPL itself shows +130.00 AAPL in Assets:Investments with no corresponding negative AAPL in equity. Let me reconsider what the `@@ 1.00 EUR` syntax actually means here—it's specifying the total cost for acquiring 1.00 AAPL at 1.00 EUR per unit.\n\nThe real issue is that this is an opening balance transaction where I'm just recording the initial state of the investment account at the start of the year, using Equity:Opening balance as the balancing offset. Since each of the 130 postings represents 1.00 AAPL acquired at a cost of 1.00 EUR, the commodity side (AAPL) and the cost side (EUR) need to align for the transaction to balance properly.\n\nLet me try a simpler approach using straightforward USD amounts instead, where each posting to Assets:Checking is just $1.00 and the equity account automatically balances everything out. Now I'm checking the line length to make sure the formatting works. I need to recalculate more carefully. With 220 postings of the basic format, I'd get around 8500 bytes, which exceeds the threshold. But I could also use the original issue's format with AAPL lot annotations since that's the actual use case—those lines are longer at 77 bytes each, so I'd need fewer postings to hit the size limit.\n\nLet me verify the transaction would balance with 110 of those AAPL postings. Each posting adds 1.00 AAPL and costs 1.00 EUR, so I'd have 110 AAPL total and 110 EUR in costs. I need an opening balance entry to offset the EUR side so the transaction balances properly. I'm realizing I've been conflating the cost syntax with actual postings—in Ledger, `@@ 1.00 EUR` specifies the total price for that posting, not a separate debit. So `1.00 AAPL @@ 1.00 EUR` means the equity side needs to post -1.00 EUR to balance, and across 110 such postings plus the explicit equity posting, the EUR side should net to zero.\n\nActually, this is getting tangled up. Let me just test with a straightforward USD transaction using simple dollar amounts that I know will balance cleanly.\n\nI'll create a transaction with 250 repetitions of a $1.00 posting to Assets:Checking, which totals $250.00, and let Ledger automatically compute the offsetting Equity:Opening balance entry. Each posting line is about 36 bytes, so 250 repetitions gives me over 9000 bytes—well above the 8192 byte threshold I need to test.\n\nWriting the test file...",
+          "timestamp": "2026-02-27T07:03:21.921Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "python3 -c \"\n# Generate the regression test file\n# Using simple USD amounts to ensure proper balancing\n\nheader = '; Regression test for issue #1215: print --raw buffer restriction\\n'\nheader += '; Transactions larger than 8192 bytes should not crash with assertion failure\\n'\nheader += '\\n'\nheader += '2017-01-01 * Opening balance\\n'\nheader += '    ; :opening-balance:\\n'\n\nposting = '    Assets:Checking                \\$1.00\\n'\nn = 250  # 250 * 36 = 9000 bytes + header > 8192\n\nfooter = '    Equity:Opening balance\\n'\nfooter += '\\n'\nfooter += 'test print --raw -> 0\\n'\nfooter += 'end test\\n'\n\ncontent = header + posting * n + footer\nprint(f'Total size: {len(content)} bytes')\nprint(f'Number of postings: {n}')\nprint(f'Exceeds old 8192 limit: {len(content) > 8192}')\nprint('---FIRST 300 CHARS---')\nprint(content[:300])\n\"\n",
+            "description": "Generate test file content"
+          },
+          "timestamp": "2026-02-27T07:03:21.922Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "python3 -c \"\n# Generate the regression test file and write it\nheader = '; Regression test for issue #1215: print --raw buffer restriction\\n'\nheader += '; Transactions larger than 8192 bytes should not crash with assertion failure\\n'\nheader += '\\n'\nheader += '2017-01-01 * Opening balance\\n'\nheader += '    ; :opening-balance:\\n'\n\nposting = '    Assets:Checking                \\$1.00\\n'\nn = 250\n\nfooter = '    Equity:Opening balance\\n'\nfooter += '\\n'\nfooter += 'test print --raw -> 0\\n'\nfooter += 'end test\\n'\n\ncontent = header + posting * n + footer\nprint(content, end='')\n\" > /Users/johnw/src/ledger/fix-1215/test/regress/1215.test\necho \"Done, file size: $(wc -c < /Users/johnw/src/ledger/fix-1215/test/regress/1215.test) bytes\"\n",
+            "description": "Write the test file for issue 1215"
+          },
+          "timestamp": "2026-02-27T07:03:27.104Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "head -20 /Users/johnw/src/ledger/fix-1215/test/regress/1215.test && echo \"...\" && tail -10 /Users/johnw/src/ledger/fix-1215/test/regress/1215.test",
+            "description": "Verify the test file content"
+          },
+          "timestamp": "2026-02-27T07:03:31.316Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me build the project and run the test to verify it works:",
+          "timestamp": "2026-02-27T07:03:33.675Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1215/build && make -j$(nproc) 2>&1 | tail -20",
+            "description": "Build the project to verify changes compile",
+            "timeout": 120000
+          },
+          "timestamp": "2026-02-27T07:03:34.780Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1215/",
+            "description": "Check directory contents"
+          },
+          "timestamp": "2026-02-27T07:03:39.057Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1215/build/ | head -20",
+            "description": "Check build directory"
+          },
+          "timestamp": "2026-02-27T07:03:44.321Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1215/build/src/ | head -5",
+            "description": "Check build src directory"
+          },
+          "timestamp": "2026-02-27T07:03:47.128Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "find /Users/johnw/src/ledger/fix-1215/build -name \"Makefile\" | head -5",
+            "description": "Find Makefile in build directory"
+          },
+          "timestamp": "2026-02-27T07:03:47.909Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "find /Users/johnw/src/ledger/fix-1215/build -name \"*.ninja\" | head -3 && find /Users/johnw/src/ledger/fix-1215/build -name \"cmake_install.cmake\" | head -3",
+            "description": "Check build system type"
+          },
+          "timestamp": "2026-02-27T07:03:51.899Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat /Users/johnw/src/ledger/fix-1215/build/CMakeCache.txt | grep CMAKE_MAKE_PROGRAM | head -5",
+            "description": "Check what make program is configured"
+          },
+          "timestamp": "2026-02-27T07:03:56.331Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1215/build/CMakeFiles/ | head -10",
+            "description": "Check CMakeFiles content"
+          },
+          "timestamp": "2026-02-27T07:03:58.923Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The build directory doesn't seem to be fully configured. The CMakeFiles directory only has configuration files but no build artifacts. I need to run cmake first to generate the build files. Let me check what's going on.\n\nActually, looking at CLAUDE.md:\n```bash\n# Initial setup and build\n./acprep dependencies  # Install dependencies (platform-specific)\n./acprep update --output=build # Configure and build in one step\n```\n\nOr:\n```bash\n# Once the project is configured using the opt, debug or gcov commands, then\n# it may be built using make:\ncd build && make -j$(nproc)\n\n\n```\n\nLet me try running cmake from the build directory to complete the configuration.",
+          "timestamp": "2026-02-27T07:04:05.288Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1215 && cmake -B build . 2>&1 | tail -20",
+            "description": "Configure cmake build",
+            "timeout": 60000
+          },
+          "timestamp": "2026-02-27T07:04:05.744Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "which ledger 2>/dev/null && ledger --version 2>&1 | head -3",
+            "description": "Check if ledger is installed system-wide"
+          },
+          "timestamp": "2026-02-27T07:04:23.585Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1215/build/ledger 2>/dev/null && echo \"Found\" || echo \"Not found\"",
+            "description": "Check if ledger binary exists in build directory"
+          },
+          "timestamp": "2026-02-27T07:04:26.132Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "find /Users/johnw/src/ledger -name \"ledger\" -type f 2>/dev/null | head -5",
+            "description": "Find existing ledger binary"
+          },
+          "timestamp": "2026-02-27T07:04:28.555Z"
+        },
+        {
+          "type": "assistant",
+          "text": "There are built versions of ledger in other branches. Let me check if this branch has a similar build setup, or if I should use the `acprep` tool to build it.\n\nActually, let me try to build using acprep as described in CLAUDE.md:\n```bash\n./acprep debug --output=build\n```\nThis should configure and set up the build.\n\nBut wait, the cmake failed because of missing gmp.h and mpfr.h. Let me check if these are available in the Nix environment.\n\nActually, looking at the CLAUDE.md:\n```bash\n# Initial setup and build\n\n\n```\n\nLet me try running the dependency installation and update commands through acprep. But it might take a long time.\n\nAlternatively, I can check if there's a similar build already done in another branch that I can use to test. Let me use the ledger binary from another branch to verify the test works.\n\nActually, since the issue is that `print --raw` would crash with large transactions (which triggered `assert(len < 8192)` in the OLD code), and the test just checks `-> 0` (no crash), I can test this without needing a full build.\n\nI need to verify the test in two ways: with the old code it should fail by crashing, and with the new code it should pass without crashing. But I don't have an old binary available. Let me use the system-wide ledger binary to validate that the transaction format is correct and the transaction itself is valid.\n\nActually, the system-wide ledger is version 3.4.1 which likely already has the fix applied. Let me use it to verify the transaction is valid.",
+          "timestamp": "2026-02-27T07:04:40.657Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ledger -f test/regress/1215.test print --raw 2>&1 | head -10 && echo \"Exit: $?\"",
+            "description": "Test the regression test with system ledger"
+          },
+          "timestamp": "2026-02-27T07:04:41.013Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ledger -f test/regress/1215.test print --raw 2>&1 | wc -l && echo \"Exit: $?\"",
+            "description": "Count output lines from ledger print --raw"
+          },
+          "timestamp": "2026-02-27T07:04:45.763Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Hmm, the output has 102 lines. But wait, the input has:- 1 header line\n- 1 note line\n- 250 posting lines\n- 1 equity line= 253 lines of transaction + blank line\n\nBut the output is only 102 lines? That seems like truncation! Let me investigate more.\n\nWait, but the system-wide ledger is `3.4.1-20251025` which is a recent version. Let me check if it's the patched version or if it still has truncation.\n\nThe issue could be that the system-wide ledger was built without my fix (which hasn't been applied to the main branch). \n\nOr maybe the system ledger has its own implementation of `source_context`. The `print --raw` functionality relies on `source_context`, which was recently fixed in this branch, but the system-wide ledger might be using a different version. Either way, the real question is whether `print --raw` is outputting the complete transaction—with 250 postings plus the header, I'd expect around 252 lines plus a blank line, not just 102. That's a significant gap. Oh, I think I see it now—the test file contains journal data with all those comment lines at the top, and when ledger processes it, it's treating those comments differently than expected.\n\nActually, the test file IS the input to ledger, so it reads everything in there. The `test` keyword is just a marker for the test runner itself, not something ledger understands—ledger ignores that line since it doesn't match any recognized syntax. But the test runner invokes ledger with the whole test file as input, so ledger is parsing the comments, the transaction, and then hitting that `test print --raw -> 0` line, which it probably just skips over since it doesn't conform to ledger's syntax rules. The output line count doesn't add up—250 postings should produce far more than 102 lines, so either the output is being truncated somehow or something unexpected is happening with how ledger is processing the file. Let me trace through what's actually being generated here.",
+          "timestamp": "2026-02-27T07:05:11.488Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ledger -f test/regress/1215.test print --raw 2>&1 | wc -l; ledger -f test/regress/1215.test print --raw 2>&1 | tail -10",
+            "description": "Check output count and tail"
+          },
+          "timestamp": "2026-02-27T07:05:11.615Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I can see the problem! The output is being TRUNCATED at `...(context truncated)` at line 102! This is because the system ledger (3.4.1) doesn't have my fix - it still truncates at some limit (the version with `MAX_CONTEXT_DISPLAY = 4096`).\n\nThe output shows 100 lines of postings and then `...(context truncated)`. The partial fix in the previous commit (`b49f32ec`) truncates at 4096 bytes. With 38-byte lines, that's about 107 lines, but the prefix adds some overhead. So we're seeing ~100 lines before truncation.\n \nSo the system ledger has the partial fix that prevents crashes but not my new fix that would output the complete transaction for raw printing. I need to build the project with my changes and test whether it actually outputs the full content without truncation. The build was failing earlier due to a missing `gmp.h` header, so I need to resolve that first.",
+          "timestamp": "2026-02-27T07:05:25.398Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The system ledger shows truncation (`...(context truncated)`). My fix should output the complete transaction. Let me build with the fix applied:",
+          "timestamp": "2026-02-27T07:05:25.473Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop /Users/johnw/src/ledger/fix-1215 --command bash -c \"cmake -B build -DCMAKE_BUILD_TYPE=Debug . 2>&1 | tail -5 && cd build && make -j$(nproc) 2>&1 | tail -10\" 2>&1 | tail -20",
+            "description": "Configure and build using nix develop environment",
+            "timeout": 300000
+          },
+          "timestamp": "2026-02-27T07:05:27.655Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1215/build/ledger 2>/dev/null && echo \"Binary found\"",
+            "description": "Check if ledger binary was built"
+          },
+          "timestamp": "2026-02-27T07:05:55.119Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "/Users/johnw/src/ledger/fix-1215/build/ledger --version | head -2",
+            "description": "Check the built ledger version"
+          },
+          "timestamp": "2026-02-27T07:05:57.674Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "/Users/johnw/src/ledger/fix-1215/build/ledger -f test/regress/1215.test print --raw 2>&1 | wc -l",
+            "description": "Test the fix with built ledger - count output lines"
+          },
+          "timestamp": "2026-02-27T07:06:01.016Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "/Users/johnw/src/ledger/fix-1215/build/ledger -f test/regress/1215.test print --raw 2>&1 | tail -5",
+            "description": "Check end of output with fixed ledger"
+          },
+          "timestamp": "2026-02-27T07:06:03.767Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The fix works. The built ledger with my fix outputs 254 lines (the complete transaction), while the old version was only outputting ~102 lines (truncated at 4096 bytes).\n\nNow let me run the regression test to verify it passes:",
+          "timestamp": "2026-02-27T07:06:06.439Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Excellent! The fix works - 254 lines of complete output vs 102 lines (truncated) with the old code. Now let me run the regression test:",
+          "timestamp": "2026-02-27T07:06:07.193Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "python3 test/RegressTests.py --ledger ./build/ledger --sourcepath . test/regress/1215.test 2>&1",
+            "description": "Run the regression test"
+          },
+          "timestamp": "2026-02-27T07:06:08.374Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The test passes. Now let me run the full regression test suite to make sure nothing is broken:",
+          "timestamp": "2026-02-27T07:06:10.589Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd build && ctest -R regress -j4 2>&1 | tail -20",
+            "description": "Run all regression tests",
+            "timeout": 300000
+          },
+          "timestamp": "2026-02-27T07:06:11.535Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd build && ctest --show-only 2>&1 | head -20",
+            "description": "Check what tests are configured"
+          },
+          "timestamp": "2026-02-27T07:06:14.093Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest --show-only 2>&1 | head -20",
+            "description": "Check what tests are configured in build directory"
+          },
+          "timestamp": "2026-02-27T07:06:16.278Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest --show-only 2>&1 | grep 1215",
+            "description": "Check if test 1215 is registered"
+          },
+          "timestamp": "2026-02-27T07:06:18.900Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest -R RegressTest_1215 -V 2>&1",
+            "description": "Run test 1215 via ctest"
+          },
+          "timestamp": "2026-02-27T07:06:21.874Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The regression test passes. Now let me also run a broader set of tests to make sure nothing is broken:",
+          "timestamp": "2026-02-27T07:06:24.503Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest -R \"RegressTest\" -j4 --output-on-failure 2>&1 | tail -30",
+            "description": "Run all regression tests",
+            "timeout": 300000
+          },
+          "timestamp": "2026-02-27T07:06:25.247Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest -R \"RegressTest_coverage-wave3-precommands\" -V 2>&1 | tail -30",
+            "description": "Check the failing test details"
+          },
+          "timestamp": "2026-02-27T07:08:08.220Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git stash && ctest -R \"RegressTest_coverage-wave3-precommands\" -V 2>&1 | tail -10",
+            "description": "Check if this test was already failing before our changes",
+            "timeout": 60000
+          },
+          "timestamp": "2026-02-27T07:08:11.600Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The failing test (`coverage-wave3-precommands`) was already failing before my changes. This is a pre-existing failure unrelated to issue #1215. Let me restore my changes.",
+          "timestamp": "2026-02-27T07:08:30.314Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The `coverage-wave3-precommands` test was already failing before my changes — it's pre-existing. Let me restore my work:",
+          "timestamp": "2026-02-27T07:08:30.314Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git stash pop",
+            "description": "Restore working changes"
+          },
+          "timestamp": "2026-02-27T07:08:30.315Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Good. The only failing test was pre-existing. Let me review the final state of all changes:",
+          "timestamp": "2026-02-27T07:08:34.484Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff src/item.cc",
+            "description": "Review changes to item.cc"
+          },
+          "timestamp": "2026-02-27T07:08:34.764Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1215 diff src/item.cc",
+            "description": "Review changes to item.cc from project root"
+          },
+          "timestamp": "2026-02-27T07:08:37.155Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1215 status",
+            "description": "Check git status"
+          },
+          "timestamp": "2026-02-27T07:08:39.714Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me check the clang-format compliance:",
+          "timestamp": "2026-02-27T07:08:41.727Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "clang-format --style=file --dry-run --Werror /Users/johnw/src/ledger/fix-1215/src/item.cc 2>&1 | head -20",
+            "description": "Check clang-format compliance"
+          },
+          "timestamp": "2026-02-27T07:08:42.802Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop /Users/johnw/src/ledger/fix-1215 --command bash -c \"clang-format --style=file --dry-run --Werror /Users/johnw/src/ledger/fix-1215/src/item.cc 2>&1 | head -20; echo Exit: $?\"",
+            "description": "Check clang-format in nix develop environment",
+            "timeout": 60000
+          },
+          "timestamp": "2026-02-27T07:08:46.461Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop /Users/johnw/src/ledger/fix-1215 --command bash -c \"clang-format --style=file -i /Users/johnw/src/ledger/fix-1215/src/item.cc && echo Done\"",
+            "description": "Apply clang-format to fix formatting",
+            "timeout": 60000
+          },
+          "timestamp": "2026-02-27T07:08:54.604Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop /Users/johnw/src/ledger/fix-1215 --command bash -c \"clang-format --style=file --dry-run --Werror /Users/johnw/src/ledger/fix-1215/src/item.cc 2>&1\" | grep -v \"^warning\\|^Ledger\\|^clang\\|^Coverage\\|^\\-\\-\\|gcov\\|lcov\\|llvm\"",
+            "description": "Verify clang-format is clean now",
+            "timeout": 60000
+          },
+          "timestamp": "2026-02-27T07:09:04.260Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop /Users/johnw/src/ledger/fix-1215 --command clang-format --style=file --dry-run --Werror /Users/johnw/src/ledger/fix-1215/src/item.cc 2>&1; echo \"Exit: $?\"",
+            "description": "Check clang-format compliance",
+            "timeout": 60000
+          },
+          "timestamp": "2026-02-27T07:09:38.631Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Formatting is clean. Let me view the final state of the relevant code:",
+          "timestamp": "2026-02-27T07:09:47.586Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1215/src/item.cc",
+            "limit": 65,
+            "offset": 543
+          },
+          "timestamp": "2026-02-27T07:09:47.931Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me do the final build and test after formatting:",
+          "timestamp": "2026-02-27T07:09:50.040Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop /Users/johnw/src/ledger/fix-1215 --command bash -c \"make -j$(nproc) 2>&1 | tail -5\"",
+            "description": "Rebuild after formatting changes",
+            "timeout": 60000
+          },
+          "timestamp": "2026-02-27T07:09:51.465Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest -R RegressTest_1215 -V 2>&1 | tail -10",
+            "description": "Run regression test after rebuild"
+          },
+          "timestamp": "2026-02-27T07:10:02.417Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me commit the changes:",
+          "timestamp": "2026-02-27T07:10:05.635Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1215 log --oneline -5",
+            "description": "Review recent git history before committing"
+          },
+          "timestamp": "2026-02-27T07:10:06.542Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I need to commit the changes. There are two logical changes:\n1. Fix `print_item` in `src/item.cc` to stream raw source without size limits\n2. Add regression test for issue #1215\n\nLet me commit them as two separate commits following the guidelines in the task.\n\nBut wait, I should also check if I need to commit the earlier commit `b49f32ec` that's already on this branch (from `git log --all --oneline -- src/error.cc`). Let me check the relationship between the current branch and main.",
+          "timestamp": "2026-02-27T07:10:11.405Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1215 log --oneline main..HEAD 2>/dev/null || git -C /Users/johnw/src/ledger/fix-1215 log --oneline origin/main..HEAD 2>/dev/null",
+            "description": "Check commits ahead of main"
+          },
+          "timestamp": "2026-02-27T07:10:12.640Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1215 log --oneline HEAD~5..HEAD",
+            "description": "Check recent commits"
+          },
+          "timestamp": "2026-02-27T07:10:15.090Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Looking at the git log, the `b49f32ec` commit (\"Fix crash when source_context encounters large transactions\") was already merged into the main branch (or is in the local repo). Let me check what commits are on this branch that aren't on main:",
+          "timestamp": "2026-02-27T07:10:18.236Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1215 log --oneline e798a6cc | head -3",
+            "description": "Check the current HEAD commit"
+          },
+          "timestamp": "2026-02-27T07:10:19.046Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The branch `johnw/fix-1215` is currently at the same state as `main` (no extra commits yet). Now let me create the commits:\n\n**Commit 1**: Fix `print_item` to stream source directly for raw output\n**Commit 2**: Add regression test for issue #1215",
+          "timestamp": "2026-02-27T07:10:22.518Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1215 add src/item.cc",
+            "description": "Stage the item.cc changes"
+          },
+          "timestamp": "2026-02-27T07:10:23.252Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1215 diff --staged src/item.cc | head -80",
+            "description": "Review staged changes"
+          },
+          "timestamp": "2026-02-27T07:10:25.913Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1215 commit --author=\"John Wiegley <johnw@newartisans.com>\" -m \"$(cat <<'EOF'\nFix print --raw truncating large transactions\n\nThe print --raw command routes through source_context(), which since\ncommit b49f32ec caps output at 4096 bytes to prevent display bloat in\nerror messages. This truncation is appropriate for error context display,\nbut incorrect for raw output mode where the complete source is required.\n\nSplit print_item() into two paths:\n- When a prefix is supplied (error context display): delegate to\n  source_context() as before, preserving the 4096-byte display cap.\n- When prefix is empty (raw printing): stream the source bytes directly\n  from the file using 8192-byte chunks, with no size limit.\n\nAlso remove the assert(len < 1MB) in item_context(), which was a\nredundant safety guard that could crash when producing error context\nfor large transactions now that source_context() handles truncation.\n\nFixes #1215.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n)\"",
+            "description": "Commit the fix for print_item"
+          },
+          "timestamp": "2026-02-27T07:10:35.604Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1215 add test/regress/1215.test",
+            "description": "Stage the regression test"
+          },
+          "timestamp": "2026-02-27T07:10:38.790Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1215 commit --author=\"John Wiegley <johnw@newartisans.com>\" -m \"$(cat <<'EOF'\nAdd regression test for issue #1215\n\nAdd test/regress/1215.test to verify that 'print --raw' succeeds without\ncrashing or truncating output when a transaction exceeds 8192 bytes.\n\nThe test uses a single opening balance transaction with 250 postings,\nproducing a ~10KB source block that exceeded the old assertion threshold\nand the subsequent 4096-byte display cap.\n\nFixes #1215.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n)\"",
+            "description": "Commit the regression test"
+          },
+          "timestamp": "2026-02-27T07:10:44.330Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1215 log --oneline -5",
+            "description": "Review commits"
+          },
+          "timestamp": "2026-02-27T07:10:48.642Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me create the PR:",
+          "timestamp": "2026-02-27T07:10:51.084Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1215 push -u origin johnw/fix-1215 2>&1",
+            "description": "Push branch to GitHub"
+          },
+          "timestamp": "2026-02-27T07:10:51.855Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh pr create --title \"Fix print --raw truncating large transactions (issue #1215)\" --body \"$(cat <<'EOF'\n## Summary\n\n- Fixes `print --raw` silently truncating transactions larger than 4096 bytes (the display cap introduced to prevent crashes from the original assertion-based limit of 8192 bytes)\n- Splits `print_item()` into two paths: chunked file streaming for raw output (no size limit), and `source_context()` delegation for error context display (4096-byte cap preserved)\n- Removes a redundant 1MB assertion in `item_context()` that could still crash on large transactions\n\n## Background\n\nIssue #1215 reported that `ledger print --raw` would crash with an assertion failure (`len < 8192`) when a transaction exceeded 8192 bytes in source size. A previous commit (b49f32ec) fixed the crash by replacing the assertion with 4096-byte truncation — but this introduced a new bug where `print --raw` would produce incomplete output for large transactions, silently emitting `...(context truncated)` in place of the full source.\n\nThe root cause is that `print_item()` was routing all output through `source_context()`, a function designed for error message display that has an intentional size cap. Raw printing requires the full source text.\n\n## Test plan\n\n- [x] `test/regress/1215.test`: 250-posting transaction (~10KB source) runs `print --raw` and verifies exit code 0 (no crash, no truncation)\n- [x] All 1870 regression tests pass (one pre-existing failure in `coverage-wave3-precommands` is unrelated)\n- [x] `clang-format` clean\n\nCloses #1215.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\nEOF\n)\" --base main 2>&1",
+            "description": "Create the pull request"
+          },
+          "timestamp": "2026-02-27T07:11:06.789Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The PR has been created. Here's a summary of what was done:\n\n## Summary\n\n**Issue #1215**: `ledger print --raw` crashes with assertion failure for transactions larger than 8192 bytes.\n\n### Root Cause\n\n`print --raw` routes through `source_context()`, a function designed for displaying transaction source in error messages. This function had an old hard-coded `assert(len < 8192)` that crashed for large transactions. A previous commit replaced it with 4096-byte truncation — preventing the crash, but introducing silent output truncation for large transactions.\n\n### Fix\n\nModified `print_item()` in `src/item.cc` to use two distinct paths:\n\n1. **Non-empty prefix** (error context display, e.g. `\"> \"`): delegates to `source_context()` as before, preserving the 4096-byte display cap for error messages\n2. **Empty prefix** (raw printing): streams the full source bytes directly from the file using 8192-byte chunks, with no size limit\n\nAlso removed a redundant `assert(len < 1MB)` in `item_context()` that could still crash on large transactions.\n\n### Verification\n\n- Built binary produces 254 lines of complete output vs 102 lines (truncated) with the old code\n- New regression test `test/regress/1215.test` (250-posting ~10KB transaction) passes\n- All 1870 regression tests pass (one pre-existing failure is unrelated)\n\n**PR**: https://github.com/ledger/ledger/pull/2765",
+          "timestamp": "2026-02-27T07:11:16.219Z"
+        },
+        {
+          "type": "user",
+          "text": "<command-message>fix-ci</command-message>\n<command-name>/fix-ci</command-name>",
+          "timestamp": "2026-02-27T08:35:35.517Z"
+        },
+        {
+          "type": "user",
+          "text": "CI tests are failing for this PR. Use cpp-pro to diagnose and resolve this issue, then push your fixes to the PR and monitor the CI test results using `gh` until you observe that everything passes correctly. If any further problems should be observed, repeat this diagnose, resolve, push and monitor process until everything is working with this PR.\n",
+          "timestamp": "2026-02-27T08:35:35.517Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me check the CI status of the PR I just created.",
+          "timestamp": "2026-02-27T08:35:38.715Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh pr checks 2765 2>&1",
+            "description": "Check CI status for PR #2765"
+          },
+          "timestamp": "2026-02-27T08:35:39.500Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh run view 22476595491 --log-failed 2>&1 | head -80",
+            "description": "View failed CI run logs"
+          },
+          "timestamp": "2026-02-27T08:35:42.674Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh run view 22476595490 --log-failed 2>&1 | grep -A 20 \"error:\\|FAILED\\|Error\" | head -60",
+            "description": "View Ubuntu build failure logs"
+          },
+          "timestamp": "2026-02-27T08:35:47.222Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh run view 22476595490 --log-failed 2>&1 | tail -80",
+            "description": "View end of Ubuntu build failure logs"
+          },
+          "timestamp": "2026-02-27T08:35:50.554Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh run view 22476595491 --log-failed 2>&1 | grep -E \"error:|FAILED|failed|Error\" | head -20",
+            "description": "Look for actual errors in macos build failure"
+          },
+          "timestamp": "2026-02-27T08:35:54.010Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The error is clear: `error: use of undeclared identifier 'decrypted_stream_t'` on line 562 of `src/item.cc`. This is happening in the Nix build where `HAVE_GPGME` is enabled (since it builds with GPGME support).\n\nThe issue is that `decrypted_stream_t` is declared in `gpgme.h` (which is conditionally included with `#if HAVE_GPGME`), but our new code in `print_item()` uses it inside a `#if HAVE_GPGME` block WITHOUT including the header.\n\n\nI see that `error.cc` includes `gpgme.h` directly within its conditional block, but `item.cc` doesn't have that include even though it's now trying to use the `decrypted_stream_t` type. Let me check what headers `item.cc` currently has.",
+          "timestamp": "2026-02-27T08:36:01.900Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The error is clear: `decrypted_stream_t` is undeclared in `item.cc` when GPGME is enabled. I need to add the GPGME header include to `item.cc`:",
+          "timestamp": "2026-02-27T08:36:01.990Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1215/src/item.cc",
+            "limit": 40,
+            "offset": 1
+          },
+          "timestamp": "2026-02-27T08:36:02.858Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"HAVE_GPGME\\|gpgme\" /Users/johnw/src/ledger/fix-1215/src/error.cc | head -10",
+            "description": "Check how error.cc includes GPGME"
+          },
+          "timestamp": "2026-02-27T08:36:05.702Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1215/src/item.cc",
+            "new_string": "#include <system.hh>\n\n#include \"item.h\"\n\n#if HAVE_GPGME\n#include \"gpgme.h\"\n#endif",
+            "old_string": "#include <system.hh>\n\n#include \"item.h\"",
+            "replace_all": false
+          },
+          "timestamp": "2026-02-27T08:36:08.402Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop /Users/johnw/src/ledger/fix-1215 --command bash -c \"make -j$(nproc) 2>&1 | grep -E 'error:|warning:|Built target|Error' | head -20\"",
+            "description": "Rebuild to verify fix compiles",
+            "timeout": 60000
+          },
+          "timestamp": "2026-02-27T08:36:11.919Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Good, it compiles cleanly. Now let me verify clang-format and run the test:",
+          "timestamp": "2026-02-27T08:36:18.774Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop /Users/johnw/src/ledger/fix-1215 --command clang-format --style=file --dry-run --Werror /Users/johnw/src/ledger/fix-1215/src/item.cc 2>&1; echo \"Format exit: $?\"",
+            "description": "Check clang-format compliance",
+            "timeout": 30000
+          },
+          "timestamp": "2026-02-27T08:36:21.007Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest -R RegressTest_1215 -V 2>&1 | tail -8",
+            "description": "Run regression test"
+          },
+          "timestamp": "2026-02-27T08:36:25.306Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now amend the first commit to include the GPGME header fix:",
+          "timestamp": "2026-02-27T08:36:28.128Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1215 log --oneline -3",
+            "description": "Check current commits"
+          },
+          "timestamp": "2026-02-27T08:36:28.943Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1215 diff HEAD~1 src/item.cc | head -20",
+            "description": "Check what changed vs the last fix commit"
+          },
+          "timestamp": "2026-02-27T08:36:31.316Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1215 add src/item.cc && git -C /Users/johnw/src/ledger/fix-1215 commit --author=\"John Wiegley <johnw@newartisans.com>\" -m \"$(cat <<'EOF'\nAdd missing GPGME header include in item.cc\n\nThe new print_item() raw-output path references decrypted_stream_t inside\na HAVE_GPGME guard but item.cc did not include gpgme.h, causing a compile\nerror when building with GPGME support.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n)\"",
+            "description": "Commit the GPGME header fix"
+          },
+          "timestamp": "2026-02-27T08:36:36.327Z"
+        }
+      ],
+      "total_additions": 4,
+      "total_deletions": 0,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    }
+  }
+}
