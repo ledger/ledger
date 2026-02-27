@@ -1,0 +1,31 @@
+; Test for issue #545: $account template in automated transactions should
+; not trigger --strict or --pedantic unknown account warnings.
+
+commodity $
+    format $1,000.00
+
+account Expenses:Groceries
+account Assets:Checking
+
+= /^Expenses:Groceries/
+    (Budget:$account)    -1.0
+
+2024/01/01 Store
+    Expenses:Groceries    $100.00
+    Assets:Checking
+
+test bal --strict -> 0
+            $-100.00  Assets:Checking
+            $-100.00  Budget:Expenses:Groceries
+             $100.00  Expenses:Groceries
+--------------------
+            $-100.00
+end test
+
+test bal --pedantic -> 0
+            $-100.00  Assets:Checking
+            $-100.00  Budget:Expenses:Groceries
+             $100.00  Expenses:Groceries
+--------------------
+            $-100.00
+end test
