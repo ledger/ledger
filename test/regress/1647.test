@@ -1,0 +1,25 @@
+# Regression test for issue #1647
+# --strict should not warn about built-in metadata tags like 'payee'
+# since these are used internally by ledger.
+
+commodity EUR
+
+account A
+account B
+tag foo
+
+2017-05-04 * Foo
+    ; :foo:
+    ; payee: xxx
+    A              10.00 EUR
+    B             -10.00 EUR
+
+test reg --strict
+17-May-04 xxx                   A                         10.00 EUR    10.00 EUR
+          xxx                   B                        -10.00 EUR            0
+end test
+
+test reg --pedantic
+17-May-04 xxx                   A                         10.00 EUR    10.00 EUR
+          xxx                   B                        -10.00 EUR            0
+end test
