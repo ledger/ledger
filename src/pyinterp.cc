@@ -372,9 +372,6 @@ value_t python_interpreter_t::python_command(call_scope_t& args) {
     }
   } catch (const error_already_set&) {
     PyErr_Print();
-    for (std::size_t i = 0; i < args.size() + 1; i++)
-      delete[] argv[i];
-    delete[] argv;
     throw_(std::runtime_error, _("Failed to execute Python module"));
   }
 
