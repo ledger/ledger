@@ -1,0 +1,9 @@
+account Foo
+    payee Bar
+
+i 2000-01-01 00:00:00 Unknown  Bar
+o 2000-01-01 01:00:00
+
+test bal
+               1.00h  Foo
+end test
