@@ -204,6 +204,12 @@ resume:
     consume_whitespace = false;
 
   test_ident:
+    // Strip trailing whitespace from the parsed identifier (can accumulate
+    // when multiple_args is true and whitespace precedes an operator)
+    while (!ident.empty() &&
+           (ident.back() == ' ' || ident.back() == '\t' ||
+            ident.back() == '\r' || ident.back() == '\n'))
+      ident.pop_back();
     // NOLINTBEGIN(bugprone-branch-clone)
     if (ident == "and")
       return token_t(token_t::TOK_AND);
