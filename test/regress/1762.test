@@ -1,0 +1,65 @@
+; Test for issue #1762: --end should not include prices from the excluded end date
+;
+; When using --end DATE with -V (market value), prices from transactions or
+; P directives on the end date itself should not be used for valuation.
+; The end date is exclusive, so "as of end of DATE-1" is the correct semantics.
+;
+; Without --now, "--end X" should behave like "--now X-1" for price lookups,
+; so all four commodities should show their Jan-31 cost ($100) rather than
+; the Feb-01 prices ($110).
+
+2019-01-31 Buy
+  Brokerage:Gadgets  1 GADGET @ $100
+  Brokerage:Gizmos  1 GIZMO @ $100
+  Brokerage:Whatsits  1 WHATSIT @ $100
+  Brokerage:Widgets  1 WIDGET @ $100
+  Bank  -400$
+
+2019-02-01 Buy another gadget
+  Brokerage:Gadget  1 GADGET @ $110
+  Bank  -110$
+
+2019-02-01 00:00:01 Buy another gizmo
+  Brokerage:Gizmos  1 GIZMO @ $110
+  Bank  -110$
+
+P 2019-02-01 WHATSIT $110
+P 2019-02-01 00:00:01 WIDGET $110
+
+; With --end 2019-02-01, the Feb-01 transactions are excluded and prices from
+; Feb-01 (whether from transactions or P directives) should not be used.
+; All four commodities should be valued at their Jan-31 cost of $100.
+test bal -e 2019-02-01 -V Brokerage
+                400$  Brokerage
+                100$    Gadgets
+                100$    Gizmos
+                100$    Whatsits
+                100$    Widgets
+--------------------
+                400$
+end test
+
+; Explicit --now 2019-01-31 should give the same result as --end 2019-02-01
+test bal -e 2019-02-01 --now 2019-01-31 -V Brokerage
+                400$  Brokerage
+                100$    Gadgets
+                100$    Gizmos
+                100$    Whatsits
+                100$    Widgets
+--------------------
+                400$
+end test
+
+; With --now 2019-02-01 the user explicitly requests Feb-01 prices, so the
+; Feb-01 prices at midnight ARE included (GADGET, GIZMO, WHATSIT at $110),
+; but the P directive at 00:00:01 for WIDGET remains excluded because
+; terminus is at 00:00:00 and the P entry is at 00:00:01.
+test bal -e 2019-02-01 --now 2019-02-01 -V Brokerage
+                430$  Brokerage
+                110$    Gadgets
+                110$    Gizmos
+                110$    Whatsits
+                100$    Widgets
+--------------------
+                430$
+end test
