@@ -166,7 +166,27 @@ void annotation_t::parse(std::istream& in) {
           throw_(amount_error, _("Commodity specifies more than one valuation expression"));
 
         in.get();
-        READ_INTO(in, buf, 255, c, c != ')');
+        // Read expression with balanced parentheses to handle nested parens
+        // like "market($10, date, t)" inside lot value expressions
+        {
+          char* _p = buf;
+          int depth = 0;
+          c = in.peek();
+          while (in.good() && !in.eof() && c != '\n' && _p - buf < 255) {
+            if (c == ')' && depth == 0)
+              break;
+            c = in.get();
+            if (in.eof())
+              break;
+            if (c == '(')
+              depth++;
+            else if (c == ')')
+              depth--;
+            *_p++ = c;
+            c = in.peek();
+          }
+          *_p = '\0';
+        }
         if (c == ')') {
           in.get();
           c = in.peek();
