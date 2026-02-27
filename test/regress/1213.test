@@ -1,0 +1,20 @@
+; Test for issue #1213: Balance amount doubled when using --period with
+; multiple postings to the same account.
+; With --immediate, --explicit, and --pedantic flags, the balance report
+; should show $8.00 ($5.00 + $3.00) for Expenses:Stuff, not $16.00.
+
+commodity $
+account Assets
+account Assets:Bank
+account Expenses
+account Expenses:Stuff
+payee   Some Store
+
+2017-06-17 * Some Store
+   Expenses:Stuff              $5.00
+   Expenses:Stuff              $3.00
+   Assets:Bank                -$8.00
+
+test bal --explicit --immediate --pedantic --period "june 2017" "^Expenses"
+               $8.00  Expenses:Stuff
+end test
