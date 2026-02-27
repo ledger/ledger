@@ -544,7 +544,43 @@ bool item_t::valid() const {
 }
 
 void print_item(std::ostream& out, const item_t& item, const string& prefix) {
-  out << source_context(item.pos->pathname, item.pos->beg_pos, item.pos->end_pos, prefix);
+  if (!prefix.empty()) {
+    out << source_context(item.pos->pathname, item.pos->beg_pos, item.pos->end_pos, prefix);
+    return;
+  }
+
+  // Raw printing: stream source directly without any size limit.
+  if (!item.pos || item.pos->pathname.empty())
+    return;
+
+  const std::streamoff len = item.pos->end_pos - item.pos->beg_pos;
+  if (!(len > 0))
+    return;
+
+  std::unique_ptr<std::istream> in(
+#if HAVE_GPGME
+      decrypted_stream_t::open_stream(item.pos->pathname)
+#else
+      new ifstream(item.pos->pathname, std::ios::binary)
+#endif
+  );
+  in->seekg(item.pos->beg_pos, std::ios::beg);
+
+  const std::size_t CHUNK_SIZE = 8192;
+  scoped_array<char> buf(new char[CHUNK_SIZE]);
+  std::streamoff remaining = len;
+
+  while (remaining > 0) {
+    const std::streamsize to_read = static_cast<std::streamsize>(
+        remaining < static_cast<std::streamoff>(CHUNK_SIZE) ? static_cast<std::size_t>(remaining)
+                                                            : CHUNK_SIZE);
+    in->read(buf.get(), to_read);
+    const std::streamsize got = in->gcount();
+    if (got <= 0)
+      break;
+    out.write(buf.get(), got);
+    remaining -= got;
+  }
 }
 
 string item_context(const item_t& item, const string& desc) {
@@ -554,8 +590,6 @@ string item_context(const item_t& item, const string& desc) {
   std::streamoff len = item.pos->end_pos - item.pos->beg_pos;
   if (!(len > 0))
     return empty_string;
-
-  assert(len < static_cast<std::streamoff>(1024 * 1024));
 
   std::ostringstream out;
 
