@@ -1,0 +1,14 @@
+; Regression test for GitHub issue #1761
+; -V/--market flag was "sticky" in REPL/script mode: once used in one command,
+; subsequent commands without --market still showed market values instead of
+; reverting to the original commodity display.
+
+2019-01-01 Buy AAPL
+  Brokerage  1 AAPL @ $158
+  Bank  -$158
+
+test --script test/regress/1761.dat
+              1 AAPL  Brokerage
+                $158  Brokerage
+              1 AAPL  Brokerage
+end test
