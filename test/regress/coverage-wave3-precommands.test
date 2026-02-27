@@ -13,7 +13,7 @@ test eval 2+2
 end test
 
 ; Test expr/parse precommand (line 1714-1715)
-test expr 3*4 | sed -E 's/0x[0-9a-f]+/ADDR/g'
+test expr 3*4 | sed -E 's/0x[0-9a-f]+[[:space:]]*/ADDR    /g'
 --- Context is first posting of the following transaction ---
 2004/05/27 Book Store
     ; This note applies to all postings. :SecondTag:
@@ -32,20 +32,20 @@ test expr 3*4 | sed -E 's/0x[0-9a-f]+/ADDR/g'
 
 --- Expression tree ---
 ADDR    O_MUL (1)
-ADDR     VALUE: 3 (1)
-ADDR     VALUE: 4 (1)
+ADDR    VALUE: 3 (1)
+ADDR    VALUE: 4 (1)
 
 --- Compiled tree ---
 ADDR    O_MUL (1)
-ADDR     VALUE: 3 (1)
-ADDR     VALUE: 4 (1)
+ADDR    VALUE: 3 (1)
+ADDR    VALUE: 4 (1)
 
 --- Calculated value ---
 12
 end test
 
 ; Test parse precommand (same as expr)
-test parse 5+5 | sed -E 's/0x[0-9a-f]+/ADDR/g'
+test parse 5+5 | sed -E 's/0x[0-9a-f]+[[:space:]]*/ADDR    /g'
 --- Context is first posting of the following transaction ---
 2004/05/27 Book Store
     ; This note applies to all postings. :SecondTag:
@@ -64,20 +64,20 @@ test parse 5+5 | sed -E 's/0x[0-9a-f]+/ADDR/g'
 
 --- Expression tree ---
 ADDR    O_ADD (1)
-ADDR     VALUE: 5 (1)
-ADDR     VALUE: 5 (1)
+ADDR    VALUE: 5 (1)
+ADDR    VALUE: 5 (1)
 
 --- Compiled tree ---
 ADDR    O_ADD (1)
-ADDR     VALUE: 5 (1)
-ADDR     VALUE: 5 (1)
+ADDR    VALUE: 5 (1)
+ADDR    VALUE: 5 (1)
 
 --- Calculated value ---
 10
 end test
 
 ; Test query precommand (line 1732-1734)
-test query Expenses | sed -E 's/0x[0-9a-f]+/ADDR/g'
+test query Expenses | sed -E 's/0x[0-9a-f]+[[:space:]]*/ADDR    /g'
 --- Input arguments ---
 ("Expenses")
 
@@ -99,21 +99,21 @@ test query Expenses | sed -E 's/0x[0-9a-f]+/ADDR/g'
 
 --- Expression tree ---
 ADDR    O_MATCH (1)
-ADDR     IDENT: account (1)
-ADDR     VALUE: /Expenses/ (1)
+ADDR    IDENT: account (1)
+ADDR    VALUE: /Expenses/ (1)
 
 --- Compiled tree ---
 ADDR    O_MATCH (1)
-ADDR     IDENT: account (1)
-ADDR      FUNCTION (1)
-ADDR     VALUE: /Expenses/ (1)
+ADDR    IDENT: account (1)
+ADDR    FUNCTION (1)
+ADDR    VALUE: /Expenses/ (1)
 
 --- Calculated value ---
 true
 end test
 
 ; Test args precommand (line 1708-1709)
-test args Expenses and Food | sed -E 's/0x[0-9a-f]+/ADDR/g'
+test args Expenses and Food | sed -E 's/0x[0-9a-f]+[[:space:]]*/ADDR    /g'
 --- Input arguments ---
 ("Expenses", "and", "Food")
 
@@ -135,23 +135,23 @@ test args Expenses and Food | sed -E 's/0x[0-9a-f]+/ADDR/g'
 
 --- Expression tree ---
 ADDR    O_AND (1)
-ADDR     O_MATCH (1)
-ADDR      IDENT: account (1)
-ADDR      VALUE: /Expenses/ (1)
-ADDR     O_MATCH (1)
-ADDR      IDENT: account (1)
-ADDR      VALUE: /Food/ (1)
+ADDR    O_MATCH (1)
+ADDR    IDENT: account (1)
+ADDR    VALUE: /Expenses/ (1)
+ADDR    O_MATCH (1)
+ADDR    IDENT: account (1)
+ADDR    VALUE: /Food/ (1)
 
 --- Compiled tree ---
 ADDR    O_AND (1)
-ADDR     O_MATCH (1)
-ADDR      IDENT: account (1)
-ADDR       FUNCTION (1)
-ADDR      VALUE: /Expenses/ (1)
-ADDR     O_MATCH (1)
-ADDR      IDENT: account (1)
-ADDR       FUNCTION (1)
-ADDR      VALUE: /Food/ (1)
+ADDR    O_MATCH (1)
+ADDR    IDENT: account (1)
+ADDR    FUNCTION (1)
+ADDR    VALUE: /Expenses/ (1)
+ADDR    O_MATCH (1)
+ADDR    IDENT: account (1)
+ADDR    FUNCTION (1)
+ADDR    VALUE: /Food/ (1)
 
 --- Calculated value ---
 false
