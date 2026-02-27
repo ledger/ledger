@@ -1,0 +1,36 @@
+; Regression test for issue #1644: effective date in posting note is ignored
+; when a colon follows the effective date bracket on the same line.
+;
+; The bug was that "; [=date]" followed by anything containing a colon caused
+; the effective date to be ignored (the posting would use the transaction date
+; instead).  A trailing colon alone (e.g. "; [=date] :") was sufficient to
+; trigger the issue.
+
+; Case 1: bare colon after the effective date bracket.
+; The second posting should use the effective date 2008/11/01, not 2008/10/16.
+
+2008/10/16 store
+    expenses                  $ 37.50  ; [=2008/10/01]
+    expenses                  $ 37.50  ; [=2008/11/01] :
+    assets
+
+test reg --effective @store
+08-Oct-01 store                 expenses                    $ 37.50      $ 37.50
+08-Nov-01 store                 expenses                    $ 37.50      $ 75.00
+08-Oct-16 store                 assets                     $ -75.00            0
+end test
+
+; Case 2: date followed by a colon after the effective date bracket.
+; "2001/01/01:" looks like a metadata tag name; the effective date must still
+; be honoured.
+
+2008/10/16 shop
+    expenses                  $ 37.50  ; [=2008/10/01]
+    expenses                  $ 37.50  ; [=2008/11/01] 2001/01/01:
+    assets
+
+test reg --effective @shop
+08-Oct-01 shop                  expenses                    $ 37.50      $ 37.50
+08-Nov-01 shop                  expenses                    $ 37.50      $ 75.00
+08-Oct-16 shop                  assets                     $ -75.00            0
+end test
