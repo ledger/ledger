@@ -1,0 +1,38 @@
+; Regression test for GitHub issue #2104
+; "error when using `expr date` invoked from a periodic transaction"
+;
+; When an automated transaction predicate contains `expr date < [DATE]`
+; and is applied to postings from a periodic transaction (~ monthly, etc.),
+; it should not crash with an assertion failure in primary_date().
+;
+; The crash occurred because periodic transaction postings have xact == nullptr,
+; and the old code had assert(xact) in primary_date(). The fix returns
+; CURRENT_DATE() as a fallback when xact is null, so the predicate evaluates
+; against the current date rather than crashing.
+;
+; Additionally, the automated transaction's generated postings are skipped
+; during budget generation (ITEM_GENERATED without POST_CALCULATED), so
+; the budget output is unaffected by the date-constrained auto transaction.
+
+= income:salary and expr date < [2023/01/01]
+    expense:gym         $50
+    assets:bank        -$50
+
+~ monthly
+    assets:bank         $1,000
+    income:salary      -$1,000
+
+; When --now is before the date cutoff, the auto transaction predicate
+; evaluates to TRUE against CURRENT_DATE(), but its generated postings
+; are ITEM_GENERATED and skipped during budget generation.
+test reg --budget --now 2022/06/15
+22-Jun-01 Budget transaction    assets:bank                 $-1,000      $-1,000
+22-Jun-01 Budget transaction    income:salary                $1,000            0
+end test
+
+; When --now is after the date cutoff, the auto transaction predicate
+; evaluates to FALSE, and the budget output is identical.
+test reg --budget --now 2023/06/15
+23-Jun-01 Budget transaction    assets:bank                 $-1,000      $-1,000
+23-Jun-01 Budget transaction    income:salary                $1,000            0
+end test
