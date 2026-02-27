@@ -1,0 +1,20 @@
+; Regression test for GitHub issue #1682
+; The 'source' command should:
+; 1. Accept a journal file as its argument and parse it for errors
+; 2. Not require a separate -f flag (the argument IS the file to check)
+; 3. Return exit code 0 for a valid file
+; 4. Return a non-zero exit code and report errors for an invalid file
+
+; Valid journal data used for the test
+2018/02/02 * Valid transaction
+    Assets:Cash     10.00 EUR
+    Income         -10.00 EUR
+
+; Test 1: source with a valid file and irrelevant -f /dev/null succeeds.
+; This demonstrates that source uses its argument, not the -f file.
+test -f /dev/null source $FILE -> 0
+end test
+
+; Test 2: source without -f also works on the valid file (exit code 0).
+test source $FILE -> 0
+end test
