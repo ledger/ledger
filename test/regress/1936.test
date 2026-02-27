@@ -1,0 +1,18 @@
+; Regression test for issue #1936:
+; Parser should allow lot note (tag annotation) combined with virtual price indicator.
+
+2020-06-22 * Virtual per-unit price with lot note
+    Assets:Test               10.00 EUR {1.23 USD} (this is a note) (@) 1.30 USD
+    Assets:Bank
+
+2020-06-22 * Virtual total price with lot note
+    Assets:Test               10.00 EUR {1.23 USD} (this is a note) ((@)) 1.30 USD
+    Assets:Bank
+
+2020-06-22 * Virtual total price without lot note
+    Assets:Test               10.00 EUR {1.23 USD} ((@)) 1.30 USD
+    Assets:Bank
+
+test bal Assets:Test
+           30.00 EUR  Assets:Test
+end test
