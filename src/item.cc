@@ -568,11 +568,33 @@ void print_item(std::ostream& out, const item_t& item, const string& prefix) {
       new ifstream(item.pos->pathname, std::ios::binary)
 #endif
   );
-  in->seekg(item.pos->beg_pos, std::ios::beg);
+
+  // Determine the effective end position by scanning backwards to strip
+  // trailing CR/LF, matching source_context()'s strtok-based behaviour which
+  // never emits trailing newlines.  (print_xacts::flush() appends one.)
+  std::streamoff effective_off = static_cast<std::streamoff>(item.pos->end_pos);
+  const std::streamoff beg_off = static_cast<std::streamoff>(item.pos->beg_pos);
+  {
+    char c;
+    while (effective_off > beg_off) {
+      in->seekg(effective_off - 1, std::ios::beg);
+      if (!in->read(&c, 1))
+        break;
+      if (c != '\n' && c != '\r')
+        break;
+      --effective_off;
+    }
+  }
+
+  const std::streamoff effective_len = effective_off - beg_off;
+  if (effective_len <= 0)
+    return;
+
+  in->seekg(beg_off, std::ios::beg);
 
   const std::size_t CHUNK_SIZE = 8192;
   scoped_array<char> buf(new char[CHUNK_SIZE]);
-  std::streamoff remaining = len;
+  std::streamoff remaining = effective_len;
 
   while (remaining > 0) {
     const std::streamsize to_read = static_cast<std::streamsize>(
