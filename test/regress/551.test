@@ -31,3 +31,14 @@ test reg Stuff --budget --invert -W -e 2024/01/15
 24-Jan-07 - 24-Jan-13           Expenses:Stuff            30.00 USD    10.00 USD
 24-Jan-14 - 24-Jan-20           Expenses:Stuff            80.00 USD    90.00 USD
 end test
+
+; Test --budget with monthly grouping (-M) without --invert
+test reg Stuff --budget -M -b 2024/01/01 -e 2024/02/01
+24-Jan-01 - 24-Jan-31           Expenses:Stuff          -170.00 USD  -170.00 USD
+end test
+
+; Test --budget with monthly grouping (-M) WITH --invert
+; The bug also affected monthly grouping: amount was inverted but total was not
+test reg Stuff --budget --invert -M -b 2024/01/01 -e 2024/02/01
+24-Jan-01 - 24-Jan-31           Expenses:Stuff           170.00 USD   170.00 USD
+end test
