@@ -1,0 +1,59 @@
+; Regression test for issue #1227
+; The 'print' command must respect the 'not' keyword in positional queries.
+; 'print not X' should exclude entire transactions where any posting's account
+; matches X, not show all transactions that have any posting not matching X.
+;
+; Before the fix, 'print not :pension' would show all transactions because
+; most transactions have at least one posting (e.g. Assets:Cash) that satisfies
+; the per-posting predicate "account does not match :pension".  The fix wraps
+; the positional query predicate in any() for transaction-level commands, so
+; 'not X' correctly becomes 'not any(X)'.
+
+2018-01-01 Grocery
+    Assets:Foo         $10.00
+    Expenses:Bar      -$10.00
+
+2018-01-02 Pension
+    Assets:Pension     $20.00
+    Assets:Cash       -$20.00
+
+2018-01-03 Hardware
+    Assets:Baz         $30.00
+    Expenses:Qux      -$30.00
+
+; Positive filter: show only the transaction with a pension posting
+test print :pension
+2018/01/02 Pension
+    Assets:Pension                            $20.00
+    Assets:Cash
+end test
+
+; Negative filter: show transactions without any pension posting
+; Before fix: all 3 transactions would be shown (bug)
+; After fix: only transactions 1 and 3 are shown
+test print not :pension
+2018/01/01 Grocery
+    Assets:Foo                                $10.00
+    Expenses:Bar
+
+2018/01/03 Hardware
+    Assets:Baz                                $30.00
+    Expenses:Qux
+end test
+
+; Payee filter: verify 'not' works with payee queries too
+test print payee Pension
+2018/01/02 Pension
+    Assets:Pension                            $20.00
+    Assets:Cash
+end test
+
+test print not payee Pension
+2018/01/01 Grocery
+    Assets:Foo                                $10.00
+    Expenses:Bar
+
+2018/01/03 Hardware
+    Assets:Baz                                $30.00
+    Expenses:Qux
+end test
