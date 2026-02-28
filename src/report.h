@@ -645,7 +645,13 @@ public:
         if (optional<date_t> end = interval.begin()) {
           OTHER(limit_).on(whence, "date<[" + to_iso_extended_string(*end) + "]");
 
-          parent->terminus = datetime_t(*end);
+          // Set terminus to the day before --end so that price lookups do not
+          // use prices from the (exclusive) end date itself.  This makes
+          // "--end X" equivalent to "--now X-1" for market-value purposes, so
+          // that commodities are valued as of the last included day rather than
+          // the first excluded day.  (--now still overrides this when the user
+          // needs to pin the valuation date explicitly.)
+          parent->terminus = datetime_t(*end - gregorian::days(1));
         } else {
           throw_(std::invalid_argument, _f("Could not determine end of period '%1%'") % str);
         }
