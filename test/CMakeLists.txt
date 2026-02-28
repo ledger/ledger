@@ -53,6 +53,14 @@ if(Python_EXECUTABLE)
       PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}")
   endforeach()
 
+  # CheckEnvVars tests that LEDGER_* environment variables are honored
+  # (requires running ledger without --args-only, so uses a separate script)
+  add_test(NAME CheckEnvVars
+    COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/CheckEnvVars.py
+    --ledger $<TARGET_FILE:ledger> --sourcepath ${PROJECT_SOURCE_DIR})
+  set_tests_properties(CheckEnvVars
+    PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}")
+
   # CheckManpage and CheckTexinfo are disabled, since they do not work
   # reliably yet
   list(APPEND CheckOptions CheckBaselineTests)
