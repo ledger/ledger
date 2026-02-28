@@ -819,7 +819,8 @@ path resolve_path(const path& pathname) {
       ssize_t size = cygwin_conv_path(CCP_WIN_A_TO_POSIX | CCP_ABSOLUTE, win_path, nullptr, 0);
       if (size > 0) {
         std::string posix_path(size, '\0');
-        if (cygwin_conv_path(CCP_WIN_A_TO_POSIX | CCP_ABSOLUTE, win_path, &posix_path[0], size) == 0)
+        if (cygwin_conv_path(CCP_WIN_A_TO_POSIX | CCP_ABSOLUTE, win_path, &posix_path[0], size) ==
+            0)
           temp = path(posix_path.c_str());
       }
     }
