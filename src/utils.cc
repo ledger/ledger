@@ -35,6 +35,10 @@
 
 #include "times.h"
 
+#if defined(__CYGWIN__)
+#include <sys/cygwin.h>
+#endif
+
 /**********************************************************************
  *
  * Assertions
@@ -807,6 +811,20 @@ path resolve_path(const path& pathname) {
   path temp = pathname;
   if (temp.string()[0] == '~')
     temp = expand_path(temp);
+#if defined(__CYGWIN__)
+  {
+    const std::string& s = temp.string();
+    if (s.size() >= 2 && std::isalpha((unsigned char)s[0]) && s[1] == ':') {
+      const char* win_path = s.c_str();
+      ssize_t size = cygwin_conv_path(CCP_WIN_A_TO_POSIX | CCP_ABSOLUTE, win_path, nullptr, 0);
+      if (size > 0) {
+        std::string posix_path(size, '\0');
+        if (cygwin_conv_path(CCP_WIN_A_TO_POSIX | CCP_ABSOLUTE, win_path, &posix_path[0], size) == 0)
+          temp = path(posix_path.c_str());
+      }
+    }
+  }
+#endif
   return temp.lexically_normal();
 }
 
