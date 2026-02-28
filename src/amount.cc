@@ -838,13 +838,17 @@ std::optional<amount_t> amount_t::value(const datetime_t& moment,
         // smallest unit (D) but a price is only defined for an intermediate
         // unit such as B.  We scale the amount up to the larger unit before
         // computing the price, then return the scaled price directly.
+        //
+        // Also handles the case where the target commodity is reachable via
+        // the larger() chain directly (e.g. -X h forces seconds to hours,
+        // even when the result is a fraction like 0.50h for 1800s).
         if (!point && commodity().larger()) {
           amount_t scaled(*this);
           while (!point && scaled.commodity_ && scaled.commodity().larger()) {
             scaled /= scaled.commodity().larger()->number();
             scaled.commodity_ = scaled.commodity().larger()->commodity_;
             if (comm && scaled.commodity().referent() == comm->referent())
-              break;
+              return scaled;
             point = scaled.commodity().find_price(comm, moment);
             if (point)
               point = scaled.commodity().check_for_updated_price(point, moment, comm);
