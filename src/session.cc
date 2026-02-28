@@ -257,10 +257,14 @@ value_t session_t::fn_account(call_scope_t& args) {
 }
 
 value_t session_t::fn_min(call_scope_t& args) {
+  if (args[0].is_null()) return args[1];
+  if (args[1].is_null()) return args[0];
   return args[1] < args[0] ? args[1] : args[0];
 }
 value_t session_t::fn_max(call_scope_t& args) {
-  return args[1] > args[0] ? args[1] : args[0];
+  if (args[0].is_null()) return args[1];
+  if (args[1].is_null()) return args[0];
+  return args[1] < args[0] ? args[0] : args[1];
 }
 
 value_t session_t::fn_int(call_scope_t& args) {
