@@ -205,6 +205,13 @@ value_t get_use_direct_amount(post_t& post) {
 
 value_t get_commodity(call_scope_t& args) {
   if (args.has<amount_t>(0)) {
+    value_t val(args[0]);
+    if (val.is_balance()) {
+      const balance_t& bal(val.as_balance());
+      if (bal.single_amount())
+        return bal.amounts.begin()->second.commodity().strip_annotations(keep_details_t{});
+      return string_value(empty_string);
+    }
     return args.get<amount_t>(0).commodity().strip_annotations(keep_details_t{});
   } else {
     post_t& post(args.context<post_t>());
