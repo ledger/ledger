@@ -665,6 +665,25 @@ value_t report_t::fn_market(call_scope_t& args) {
   else
     result = arg0.value(moment);
 
+  // If the exchange failed and the input is an annotated amount whose lot
+  // price is denominated in the target commodity, use the lot annotation
+  // price as a fallback.  This handles postings that predate all price
+  // history entries when -H is used together with -X or -V.
+  if (result.is_null() && !target_commodity.empty() && arg0.is_amount()) {
+    const amount_t& amt = arg0.as_amount();
+    if (amt.has_annotation()) {
+      const annotation_t& ann = amt.annotation();
+      if (ann.price) {
+        commodity_t* target = commodity_pool_t::current_pool->find(target_commodity);
+        if (target && &ann.price->commodity().referent() == &target->referent()) {
+          // Compute total value: lot_price_per_unit * quantity
+          amount_t stripped = amt.strip_annotations(keep_details_t());
+          result = *ann.price * stripped.number();
+        }
+      }
+    }
+  }
+
   return !result.is_null() ? result : arg0;
 }
 
