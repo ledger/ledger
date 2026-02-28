@@ -1,0 +1,16 @@
+; Regression test for issue #1185:
+; any() in conjunction with 'expr' in an automated transaction
+
+= expr any ( account =~ /Assets:ThatBankAccount/ )
+       $account                       -0.5
+
+2016/01/01 * test transaction
+     Expenses:Food                 $500
+     Assets:ThatBankAccount       $-500
+
+test bal
+               $-250  Assets:ThatBankAccount
+                $250  Expenses:Food
+--------------------
+                   0
+end test
