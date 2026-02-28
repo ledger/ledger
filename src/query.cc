@@ -163,6 +163,7 @@ resume:
     [[fallthrough]];
   default: {
     string ident;
+    string::const_iterator ident_start = arg_i;
     for (; arg_i != arg_end; ++arg_i) {
       switch (*arg_i) {
       case '\0':
@@ -209,6 +210,16 @@ resume:
     while (!ident.empty() && (ident.back() == ' ' || ident.back() == '\t' || ident.back() == '\r' ||
                               ident.back() == '\n'))
       ident.pop_back();
+    // When multiple_args is true, whitespace is included in identifiers, so
+    // "expr foo" may be read as a single token instead of recognizing "expr"
+    // as a keyword.  Detect this case and rewind arg_i to after the keyword
+    // so the remainder is consumed as the expression argument.
+    if (multiple_args && ident.size() > 4 && ident.substr(0, 4) == "expr" &&
+        (ident[4] == ' ' || ident[4] == '\t')) {
+      arg_i = ident_start + 4;
+      consume_next_arg = true;
+      return token_t(token_t::TOK_EXPR);
+    }
     // NOLINTBEGIN(bugprone-branch-clone)
     if (ident == "and")
       return token_t(token_t::TOK_AND);
