@@ -8,13 +8,13 @@ P 2024/01/01 EUR $1.10
     Assets:Cash
 
 test --cleared prices
-2024/01/01 EUR             $1.10
+24-Jan-01 EUR             $1.10
 end test
 
 test --pending prices
-2024/01/01 EUR             $1.10
+24-Jan-01 EUR             $1.10
 end test
 
 test --real prices
-2024/01/01 EUR             $1.10
+24-Jan-01 EUR             $1.10
 end test

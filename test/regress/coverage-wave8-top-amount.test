@@ -14,9 +14,9 @@ $10.00
 end test
 
 test prices
-2024/01/01 EUR             $1.10
+24-Jan-01 EUR             $1.10
 end test
 
 test pricesdb
-P 2024/01/01 00:00:00 EUR $1.10
+P 24-Jan-01 00:00:00 EUR $1.10
 end test

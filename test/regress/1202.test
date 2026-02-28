@@ -1,0 +1,20 @@
+P 2020/01/15 AAPL $320.00
+P 2020/06/30 AAPL $364.11
+
+2020/01/15 Buy Stock
+    Assets:Investments    10 AAPL @ $320.00
+    Assets:Checking
+
+2020/06/30 Buy More Stock
+    Assets:Investments    5 AAPL @ $364.11
+    Assets:Checking
+
+test prices --date-format %Y-%m-%d
+2020-01-15 AAPL          $320.00
+2020-06-30 AAPL          $364.11
+end test
+
+test pricedb --datetime-format "%Y-%m-%d %H:%M:%S"
+P 2020-01-15 00:00:00 AAPL $320.00
+P 2020-06-30 00:00:00 AAPL $364.11
+end test

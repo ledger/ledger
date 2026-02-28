@@ -33,7 +33,7 @@ test bal
 end test
 
 test pricedb
-P 2014/06/05 00:00:00 EUR $1.37
-P 2014/06/05 00:00:00 EUR £0.81
+P 14-Jun-05 00:00:00 EUR $1.37
+P 14-Jun-05 00:00:00 EUR £0.81
 end test
 

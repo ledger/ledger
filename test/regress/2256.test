@@ -4,5 +4,5 @@
     B
 
 test -C prices
-2023/06/01 EUR           USD1.07
+23-Jun-01 EUR           USD1.07
 end test

@@ -20,8 +20,8 @@
 
 ; pricedb should only contain ETH prices in EUR, not a spurious EUR-in-ETH entry
 test pricedb
-P 2017/06/09 00:00:00 ETH 243.07 EUR
-P 2017/06/13 00:00:00 ETH 334.51 EUR
+P 17-Jun-09 00:00:00 ETH 243.07 EUR
+P 17-Jun-13 00:00:00 ETH 334.51 EUR
 end test
 
 ; -V should convert ETH balances to EUR using the most recent ETH price

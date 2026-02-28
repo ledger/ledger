@@ -21,13 +21,13 @@ test bal Assets:Investments --market -X $ --now 2020/04/01
 end test
 
 test pricedb --now 2020/04/01
-P 2020/01/01 00:00:00 AAPL $150.00
-P 2020/02/01 00:00:00 AAPL $155.00
-P 2020/03/01 00:00:00 AAPL $160.00
-P 2020/04/01 00:00:00 AAPL $165.00
-P 2020/01/01 00:00:00 EUR $1.12
-P 2020/02/01 00:00:00 EUR $1.15
-P 2020/03/01 00:00:00 EUR $1.10
+P 20-Jan-01 00:00:00 AAPL $150.00
+P 20-Feb-01 00:00:00 AAPL $155.00
+P 20-Mar-01 00:00:00 AAPL $160.00
+P 20-Apr-01 00:00:00 AAPL $165.00
+P 20-Jan-01 00:00:00 EUR $1.12
+P 20-Feb-01 00:00:00 EUR $1.15
+P 20-Mar-01 00:00:00 EUR $1.10
 end test
 
 test reg Assets:Investments --gain -X $ --now 2020/04/01

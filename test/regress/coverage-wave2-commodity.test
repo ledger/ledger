@@ -13,9 +13,9 @@ P 2024/01/03 AAPL $160.00
 
 ; Test pricedb output - covers add_price
 test prices AAPL
-2024/01/01 AAPL          $150.00
-2024/01/02 AAPL          $155.00
-2024/01/03 AAPL          $160.00
+24-Jan-01 AAPL          $150.00
+24-Jan-02 AAPL          $155.00
+24-Jan-03 AAPL          $160.00
 end test
 
 ; Test comparing annotated commodities with different prices - covers lines 383-410

@@ -72,14 +72,14 @@ end test
 
 ; === Prices command ===
 test prices
-2024/01/01 AAPL          $150.00
-2024/02/01 AAPL          $160.00
-2024/03/01 AAPL          $170.00
+24-Jan-01 AAPL          $150.00
+24-Feb-01 AAPL          $160.00
+24-Mar-01 AAPL          $170.00
 end test
 
 ; === Pricesdb command ===
 test pricesdb
-P 2024/01/01 00:00:00 AAPL $150.00
-P 2024/02/01 00:00:00 AAPL $160.00
-P 2024/03/01 00:00:00 AAPL $170.00
+P 24-Jan-01 00:00:00 AAPL $150.00
+P 24-Feb-01 00:00:00 AAPL $160.00
+P 24-Mar-01 00:00:00 AAPL $170.00
 end test

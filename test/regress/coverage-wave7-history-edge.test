@@ -34,13 +34,13 @@ end test
 
 ; Test prices command (triggers map_prices)
 test prices EUR
-2024/01/01 EUR             $1.10
-2024/02/01 EUR             $1.12
-2024/03/01 EUR             $1.08
+24-Jan-01 EUR             $1.10
+24-Feb-01 EUR             $1.12
+24-Mar-01 EUR             $1.08
 end test
 
 test prices GBP
-2024/01/01 GBP          EUR 1.15
-2024/02/01 GBP          EUR 1.16
-2024/03/01 GBP          EUR 1.18
+24-Jan-01 GBP          EUR 1.15
+24-Feb-01 GBP          EUR 1.16
+24-Mar-01 GBP          EUR 1.18
 end test

@@ -21,6 +21,6 @@ end test
 
 ; Prices command exercises the price history iteration
 test prices EUR
-2024/01/01 EUR             $1.10
-2024/06/01 EUR             $1.12
+24-Jan-01 EUR             $1.10
+24-Jun-01 EUR             $1.12
 end test

@@ -46,6 +46,6 @@ P 2024/01/01 FOO $10.00
 P 2024/02/01 FOO $12.00
 
 test prices FOO
-2024/01/01 FOO            $10.00
-2024/02/01 FOO            $12.00
+24-Jan-01 FOO            $10.00
+24-Feb-01 FOO            $12.00
 end test

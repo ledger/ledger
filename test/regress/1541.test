@@ -9,6 +9,6 @@
 P 2024/06/01 AAPL $150
 
 test --cleared prices
-2024/01/01 AAPL             $100
-2024/06/01 AAPL             $150
+24-Jan-01 AAPL             $100
+24-Jun-01 AAPL             $150
 end test

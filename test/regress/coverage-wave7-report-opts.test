@@ -182,14 +182,14 @@ end test
 
 ; --- Test 29: prices command (line 1664) ---
 test prices
-2024/01/01 AAPL          $150.00
-2024/01/15 AAPL          $155.00
+24-Jan-01 AAPL          $150.00
+24-Jan-15 AAPL          $155.00
 end test
 
 ; --- Test 30: pricedb command (line 1667) ---
 test pricedb
-P 2024/01/01 00:00:00 AAPL $150.00
-P 2024/01/15 00:00:00 AAPL $155.00
+P 24-Jan-01 00:00:00 AAPL $150.00
+P 24-Jan-15 00:00:00 AAPL $155.00
 end test
 
 ; --- Test 31: commodity_price function (line 849) ---

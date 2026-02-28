@@ -16,6 +16,6 @@ end test
 
 ; Test pricesdb output
 test pricesdb
-P 2024/01/01 00:00:00 AAPL $150.00
-P 2024/06/01 00:00:00 AAPL $175.00
+P 24-Jan-01 00:00:00 AAPL $150.00
+P 24-Jun-01 00:00:00 AAPL $175.00
 end test
