@@ -1,0 +1,27 @@
+; Test that -H (historical prices) and -X (exchange commodity) give consistent
+; results for bal and reg when a posting predates all price history entries.
+; The lot annotation price should be used as a fallback when no market price
+; exists for the posting date.
+; GitHub issue #1738
+
+2011-10-05 Travel
+    Liabilities:Accounts-Payable            €-717.24 {$1.3327}
+    Expenses:Conferences:Travel              €717.24 {$1.3327}
+
+2011-12-09 Payment for travel
+    Liabilities:Accounts-Payable         €717.24 {$1.3327} @ $1.378868
+    Assets:Checking                           $-988.98
+    Expenses:Currency Conversion                $33.11
+
+2012-02-28 Flight on credit card
+    Liabilities:Credit Card:AMEX            $-107.04
+    Expenses:Flight                           €79.50 {$1.3464150}
+
+test reg Accounts-Payable -X $ -H
+11-Oct-05 Travel                Liabi:Accounts-Payable     $-955.87     $-955.87
+11-Dec-09 Payment for travel    Liabi:Accounts-Payable      $988.98       $33.11
+end test
+
+test bal Accounts-Payable -X $ -H --empty
+              $33.11  Liabilities:Accounts-Payable
+end test
