@@ -13,6 +13,6 @@ test csv Brokerage
 end test
 
 test prices AAPL
-2024/01/01 AAPL          $150.00
-2024/02/01 AAPL          $160.00
+24-Jan-01 AAPL          $150.00
+24-Feb-01 AAPL          $160.00
 end test

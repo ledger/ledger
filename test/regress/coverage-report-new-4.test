@@ -83,6 +83,6 @@ end test
 
 ; Test pricedb command
 test pricedb
-P 2024/01/01 00:00:00 $ EUR0.80
-P 2024/02/01 00:00:00 $ EUR0.82
+P 24-Jan-01 00:00:00 $ EUR0.80
+P 24-Feb-01 00:00:00 $ EUR0.82
 end test

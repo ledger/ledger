@@ -15,25 +15,25 @@
     D
 
 test prices
-2012/01/02 GBP          1.20 EUR
-2012/01/03 EUR      1.3166666667 USD
-2012/01/04 USD          0.63 GBP
+12-Jan-02 GBP          1.20 EUR
+12-Jan-03 EUR      1.3166666667 USD
+12-Jan-04 USD          0.63 GBP
 end test
 
 test prices EUR
-2012/01/03 EUR      1.3166666667 USD
+12-Jan-03 EUR      1.3166666667 USD
 end test
 
 test prices USD
-2012/01/04 USD          0.63 GBP
+12-Jan-04 USD          0.63 GBP
 end test
 
 test prices GBP
-2012/01/02 GBP          1.20 EUR
+12-Jan-02 GBP          1.20 EUR
 end test
 
 test prices U
-2012/01/03 EUR      1.3166666667 USD
-2012/01/04 USD          0.63 GBP
+12-Jan-03 EUR      1.3166666667 USD
+12-Jan-04 USD          0.63 GBP
 end test
 

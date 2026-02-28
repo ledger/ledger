@@ -59,14 +59,14 @@ end test
 
 ; Test prices command - covers report.cc line 1665
 test prices
-2024/01/01 AAPL          $150.00
-2024/06/01 AAPL          $195.00
+24-Jan-01 AAPL          $150.00
+24-Jun-01 AAPL          $195.00
 end test
 
 ; Test pricesdb command - covers report.cc line 1667
 test pricesdb
-P 2024/01/01 00:00:00 AAPL $150.00
-P 2024/06/01 00:00:00 AAPL $195.00
+P 24-Jan-01 00:00:00 AAPL $150.00
+P 24-Jun-01 00:00:00 AAPL $195.00
 end test
 
 ; Test cleared command - covers report.cc line 1629-1631

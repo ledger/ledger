@@ -11,14 +11,14 @@
 
 ; Test 'prices' command (line 1665)
 test prices
-2024/01/01 AAPL          $150.00
-2024/02/01 AAPL          $160.00
+24-Jan-01 AAPL          $150.00
+24-Feb-01 AAPL          $160.00
 end test
 
 ; Test 'pricesdb' command (line 1667)
 test pricesdb
-P 2024/01/01 00:00:00 AAPL $150.00
-P 2024/02/01 00:00:00 AAPL $160.00
+P 24-Jan-01 00:00:00 AAPL $150.00
+P 24-Feb-01 00:00:00 AAPL $160.00
 end test
 
 ; Test 'pricemap' command (line 1669)

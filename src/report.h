@@ -891,13 +891,13 @@ public:
 
   OPTION_CTOR(
       report_t, prices_format_, CTOR(report_t, prices_format_) {
-        on(none, "%(date) %-8(display_account) %(justify(scrub(display_amount), 12, "
+        on(none, "%(format_date(date)) %-8(display_account) %(justify(scrub(display_amount), 12, "
                  "    2 + 9 + 8 + 12, true, color))\n");
       });
 
   OPTION_CTOR(
       report_t, pricedb_format_, CTOR(report_t, pricedb_format_) {
-        on(none, "P %(datetime) %(display_account) %(scrub(display_amount))\n");
+        on(none, "P %(format_datetime(datetime)) %(display_account) %(scrub(display_amount))\n");
       });
 
   OPTION(report_t, primary_date);

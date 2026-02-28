@@ -43,8 +43,8 @@ end test
 ; --- Test 6: prices with --cleared + --limit (lines 474-475, 485) ---
 ; This triggers commodities_report state pred stripping
 test prices --cleared --limit "amount > 0"
-2024/01/01 AAPL          $150.00
-2024/01/15 AAPL          $155.00
+24-Jan-01 AAPL          $150.00
+24-Jan-15 AAPL          $155.00
 end test
 
 ; --- Test 7: fn_nail_down with amount (line 864-881) ---
@@ -99,8 +99,8 @@ end test
 
 ; --- Test 17: prices with --actual (additional state pred) ---
 test prices --actual
-2024/01/01 AAPL          $150.00
-2024/01/15 AAPL          $155.00
+24-Jan-01 AAPL          $150.00
+24-Jan-15 AAPL          $155.00
 end test
 
 ; --- Test 18: fn_to_boolean ---

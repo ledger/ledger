@@ -9,13 +9,13 @@ P 2024/03/01 AAPL $160.00
     Assets:Checking    $-1500.00
 
 test prices
-2024/01/01 AAPL          $150.00
-2024/01/15 AAPL          $150.00
-2024/03/01 AAPL          $160.00
+24-Jan-01 AAPL          $150.00
+24-Jan-15 AAPL          $150.00
+24-Mar-01 AAPL          $160.00
 end test
 
 test pricedb
-P 2024/01/01 00:00:00 AAPL $150.00
-P 2024/01/15 00:00:00 AAPL $150.00
-P 2024/03/01 00:00:00 AAPL $160.00
+P 24-Jan-01 00:00:00 AAPL $150.00
+P 24-Jan-15 00:00:00 AAPL $150.00
+P 24-Mar-01 00:00:00 AAPL $160.00
 end test

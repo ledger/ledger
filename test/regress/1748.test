@@ -19,8 +19,8 @@ year 2018
 ; Previously, the second year's prices were missing because the year
 ; directive incorrectly limited the price history lookup window.
 test prices
-2017/10/24 L               1 EUR
-2018/10/24 L            1.25 EUR
+17-Oct-24 L               1 EUR
+18-Oct-24 L            1.25 EUR
 end test
 
 ; Period filtering must work correctly even when year directives are present.

@@ -11,14 +11,14 @@ P 2024/02/01 EUR $1.20
 
 ; Test prices command (covers lines 1664-1665)
 test prices EUR
-2024/01/01 EUR             $1.10
-2024/02/01 EUR             $1.20
+24-Jan-01 EUR             $1.10
+24-Feb-01 EUR             $1.20
 end test
 
 ; Test pricesdb command (covers lines 1666-1667)
 test pricesdb EUR
-P 2024/01/01 00:00:00 EUR $1.10
-P 2024/02/01 00:00:00 EUR $1.20
+P 24-Jan-01 00:00:00 EUR $1.10
+P 24-Feb-01 00:00:00 EUR $1.20
 end test
 
 ; Test select command (covers line 1688-1690)

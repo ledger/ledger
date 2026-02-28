@@ -24,9 +24,9 @@ P 2024/02/01 EUR $1.08
 
 ; Test pricesdb output - covers price iteration
 test pricesdb
-P 2024/01/01 00:00:00 EUR $1.10
-P 2024/01/15 00:00:00 EUR $1.12
-P 2024/02/01 00:00:00 EUR $1.08
+P 24-Jan-01 00:00:00 EUR $1.10
+P 24-Jan-15 00:00:00 EUR $1.12
+P 24-Feb-01 00:00:00 EUR $1.08
 end test
 
 ; Test value conversion with prices - covers find_price
