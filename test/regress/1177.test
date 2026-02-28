@@ -1,0 +1,31 @@
+; Test that -X forces time values into the specified unit (issue #1177)
+;
+; Without -X, ledger unreduces time to the most compact form >= 1 unit:
+;   5400s -> 1.50h, 1800s -> 30.0m, 30s -> 30s
+;
+; With -X h, all time values should be forced into hours, even when the
+; result is fractional (e.g. 1800s = 0.50h, 30s = 0.01h).
+
+2016-01-01 Employer
+    Me   -5400s
+    Them  5400s
+2016-01-01 Employer
+    Me   -3600s
+    Them  3600s
+2016-01-02 Employer
+    Me   -1800s
+    Them  1800s
+2016-01-02 Employer
+    Me   -30s
+    Them  30s
+
+test reg -X h
+16-Jan-01 Employer              Me                           -1.50h       -1.50h
+                                Them                          1.50h            0
+16-Jan-01 Employer              Me                           -1.00h       -1.00h
+                                Them                          1.00h            0
+16-Jan-02 Employer              Me                           -0.50h       -0.50h
+                                Them                          0.50h            0
+16-Jan-02 Employer              Me                           -0.01h       -0.01h
+                                Them                          0.01h            0
+end test
