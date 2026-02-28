@@ -1,0 +1,46 @@
+# Test for issue #1190: register output for same transaction should be
+# consistent regardless of whether other transactions are present.
+#
+# When using 'apply fixed' with a high-precision exchange rate and no explicit
+# transaction amounts in the target commodity, the target commodity's precision
+# is derived from the exchange rate.  When an explicit transaction amount IS
+# present, that transaction's precision should take precedence.
+#
+# Original report: with only the XCD transaction (file1 scenario), the output
+# showed $16 (0 decimal places) instead of the expected display.  With a $1.00
+# transaction added (file2 scenario), the XCD transaction showed $16.10 and
+# $1.00 showed correctly with 2 decimal places.
+#
+# After fix for #2481 (commodity precision from price records) was applied, the
+# regression was: $1.00 would display as $1.000000000000 (12 decimal places
+# inherited from the exchange rate), and the XCD transaction also showed
+# $16.104868913858.  This test verifies that explicit transaction amounts
+# (with non-zero precision) correctly override the price-record-derived
+# precision.
+
+; File2 scenario: exchange rate + explicit $1.00 transaction
+apply fixed XCD $0.374531835206
+
+2008/04/08 KFC
+    Expenses:Food                          XCD 43.00
+    Assets:Cash
+
+2008/04/08 KFC
+    Expenses:Food                              $1.00
+    Assets:Cash
+
+end apply fixed
+
+test --exchange=$ reg
+08-Apr-08 KFC                   Expenses:Food                $16.10       $16.10
+                                Assets:Cash                 $-16.10            0
+08-Apr-08 KFC                   Expenses:Food                 $1.00        $1.00
+                                Assets:Cash                  $-1.00            0
+end test
+
+test --exchange=$ bal
+             $-17.10  Assets:Cash
+              $17.10  Expenses:Food
+--------------------
+                   0
+end test

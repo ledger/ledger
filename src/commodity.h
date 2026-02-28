@@ -95,6 +95,7 @@ protected:
 #define COMMODITY_STYLE_TIME_COLON 0x1000
 #define COMMODITY_STYLE_NO_MIGRATE 0x2000
 #define COMMODITY_STYLE_THOUSANDS_APOSTROPHE 0x4000
+#define COMMODITY_PRECISION_FROM_PRICE 0x8000
 
     string symbol;
     optional<std::size_t> graph_index;
