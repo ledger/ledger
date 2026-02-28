@@ -19,6 +19,12 @@ test reg Budget
 end test
 
 test print
+= /Food/
+    ; Auto-xact note
+    assert 1 == 1
+    check 1 == 1
+    (Budget:Food)                                 -1
+
 2024/01/15 Grocery Store  ;inline xact note
     Expenses:Food                             $25.00  ; Auto-xact note
     Assets:Cash
