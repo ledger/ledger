@@ -378,6 +378,8 @@ expr_t::ptr_op_t global_scope_t::lookup(const symbol_t::kind_t kind, const strin
 void global_scope_t::read_environment_settings(char* envp[]) {
   TRACE_START(environment, 1, "Processed environment variables");
 
+  // Process global-scope options (e.g., --init-file) from LEDGER_* env vars
+  process_environment(const_cast<const char**>(envp), "LEDGER_", *this);
   process_environment(const_cast<const char**>(envp), "LEDGER_", report());
 
 #if 1
@@ -389,7 +391,7 @@ void global_scope_t::read_environment_settings(char* envp[]) {
   }
   if (const char* p = std::getenv("LEDGER_INIT")) {
     if (!std::getenv("LEDGER_INIT_FILE"))
-      process_option("environ", "init-file", report(), p, "LEDGER_INIT");
+      process_option("environ", "init-file", *this, p, "LEDGER_INIT");
   }
   if (const char* p = std::getenv("PRICE_HIST")) {
     if (!std::getenv("LEDGER_PRICE_DB"))
