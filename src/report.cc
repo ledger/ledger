@@ -302,7 +302,32 @@ void report_t::parse_query_args(const value_t& args, const string& whence) {
   query_t query(args, what_to_keep());
 
   if (query.has_query(query_t::QUERY_LIMIT)) {
-    HANDLER(limit_).on(whence, query.get_query(query_t::QUERY_LIMIT));
+    string pred = query.get_query(query_t::QUERY_LIMIT);
+
+    // For commands that display whole transactions (print, xact, dump), the
+    // limit predicate must be evaluated at the transaction level rather than
+    // the posting level.  Without this, "not X" is treated as "any posting
+    // satisfies not-X" (nearly always true), instead of the expected
+    // "no posting satisfies X".
+    //
+    // We detect these commands by the presence of the related_all flag set in
+    // normalize_options().  The predicate is rewritten so that:
+    //   - "(! INNER)" becomes "(! any(INNER))"  — negation lifted to xact level
+    //   - "PRED" becomes "any(PRED)"             — use any-posting semantics
+    //
+    // This matches the documented workaround: print -l "not any(account =~ /X/)"
+    if (HANDLED(related_all) && !pred.empty()) {
+      if (pred.size() > 3 && pred[0] == '(' && pred[1] == '!' && pred[2] == ' ') {
+        // NOT expression serialized as "(! INNER)" — lift not outside any()
+        string inner = pred.substr(3, pred.size() - 4);
+        pred = "(! any(" + inner + "))";
+      } else {
+        pred = "any(" + pred + ")";
+      }
+      DEBUG("report.predicate", "Xact-level limit predicate = " << pred);
+    }
+
+    HANDLER(limit_).on(whence, pred);
     DEBUG("report.predicate", "Limit predicate   = " << HANDLER(limit_).str());
   }
 
