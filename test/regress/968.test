@@ -1,0 +1,31 @@
+# Test case from issue #968
+# Using a self-referencing (accumulator) variable expression like
+# biggest=max(amount,biggest);biggest should evaluate correctly without
+# triggering infinite recursion and "Expression evaluation depth limit exceeded".
+#
+# The -a flag (--account) prepends the expression result to each account name,
+# so each line shows the running maximum as a prefix to the account.
+
+2004/01/01 First
+    Expenses:Food                              $10.00
+    Assets:Cash
+
+2004/01/02 Second
+    Expenses:Food                              $30.00
+    Assets:Cash
+
+2004/01/03 Third
+    Expenses:Food                              $20.00
+    Assets:Cash
+
+test reg --limit 'account =~ /Expenses/' -a 'biggest=max(amount,biggest);biggest'
+04-Jan-01 First                 $10.00:Expenses:Food         $10.00       $10.00
+04-Jan-02 Second                $30.00:Expenses:Food         $30.00       $40.00
+04-Jan-03 Third                 $30.00:Expenses:Food         $20.00       $60.00
+end test
+
+test reg --limit 'account =~ /Expenses/' --amount 'biggest=max(amount,biggest);biggest'
+04-Jan-01 First                 Expenses:Food                $10.00       $10.00
+04-Jan-02 Second                Expenses:Food                $30.00       $40.00
+04-Jan-03 Third                 Expenses:Food                $30.00       $70.00
+end test

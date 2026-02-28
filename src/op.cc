@@ -108,10 +108,16 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth, scope_t*
       def = param_scope->lookup(symbol_t::FUNCTION, as_ident());
     if (!def)
       def = scope_ptr->lookup(symbol_t::FUNCTION, as_ident());
-    if (def) {
+    if (def && def->kind != PLUG) {
       // Identifier references are first looked up at the point of
       // definition, and then at the point of every use if they could
-      // not be found there.
+      // not be found there.  We skip PLUG sentinels here so that
+      // identifiers declared by O_DEFINE (which temporarily store PLUG
+      // during compilation to prevent recursion) remain as dynamic
+      // IDENT nodes that do a fresh scope lookup at runtime.  This
+      // allows accumulator patterns like biggest=max(amount,biggest);biggest
+      // to read the running accumulated value each time rather than
+      // always returning NULL (the value of PLUG).
 #if DEBUG_ON
       if (SHOW_DEBUG("expr.compile")) {
         DEBUG("expr.compile", "Found definition:");
@@ -134,10 +140,22 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth, scope_t*
   } else if (kind == O_DEFINE) {
     switch (left()->kind) {
     case IDENT: {
-      ptr_op_t node(right()->compile(*scope_ptr, depth + 1, param_scope));
+      // Compile the RHS first, before defining the identifier in scope, so
+      // that any self-reference in the RHS (e.g. accumulator patterns like
+      // biggest=max(amount,biggest)) remains as an unresolved IDENT and will
+      // be looked up dynamically at runtime rather than inlined at compile
+      // time (which would create infinite recursion).
+      ptr_op_t rhs(right()->compile(*scope_ptr, depth + 1, param_scope));
 
-      DEBUG("expr.compile", "Defining " << left()->as_ident() << " in " << scope_ptr);
-      scope_ptr->define(symbol_t::FUNCTION, left()->as_ident(), node);
+      // Store a PLUG sentinel so that any subsequent compile-time references
+      // to this identifier within the same expression resolve to PLUG, forcing
+      // them to fall back to a dynamic runtime scope lookup via lookup_ident.
+      DEBUG("expr.compile", "Declaring (PLUG) " << left()->as_ident() << " in " << scope_ptr);
+      scope_ptr->define(symbol_t::FUNCTION, left()->as_ident(), new op_t(PLUG));
+
+      // Keep the O_DEFINE node alive so it executes at runtime to evaluate
+      // the RHS and update the scope with the computed value each time.
+      result = copy(left(), rhs);
       break;
     }
 
@@ -158,7 +176,8 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth, scope_t*
     default:
       throw_(compile_error, _("Invalid function definition"));
     }
-    result = wrap_value(NULL_VALUE);
+    if (!result)
+      result = wrap_value(NULL_VALUE);
   } else if (kind == O_LAMBDA) {
     symbol_scope_t params(param_scope ? *param_scope : *scope_t::empty_scope);
 
@@ -226,6 +245,11 @@ expr_t::ptr_op_t lookup_ident(const expr_t::ptr_op_t& op, scope_t& scope) {
     DEBUG("scope.symbols", "Looking for IDENT '" << op->as_ident() << "'");
     def = scope.lookup(symbol_t::FUNCTION, op->as_ident());
   }
+  // A PLUG node stored in scope means the variable was declared by O_DEFINE
+  // but has not yet been assigned a value (first iteration of an accumulator).
+  // Return a null value node rather than throwing or recursing into PLUG.
+  if (def && def->kind == expr_t::op_t::PLUG)
+    return expr_t::op_t::wrap_value(NULL_VALUE);
   if (!def)
     throw_(calc_error, _f("Unknown identifier '%1%'") % op->as_ident());
   return def;
@@ -251,12 +275,31 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t* locus, const int depth) {
 
     // NOLINTBEGIN(bugprone-branch-clone)
     switch (kind) {
+    case PLUG:
+      // PLUG is an internal sentinel node stored in scope to mark an identifier
+      // as "declared but not yet assigned" (e.g., first iteration of an
+      // accumulator).  Evaluating it directly yields no value.
+      result = NULL_VALUE;
+      break;
+
     case VALUE:
       result = as_value();
       break;
 
     case O_DEFINE:
-      result = NULL_VALUE;
+      // For simple variable assignments (IDENT = expr), evaluate the RHS,
+      // store it in scope, and return the RHS value (like C assignment
+      // expressions).  This enables accumulator patterns like
+      // biggest=max(amount,biggest);biggest to propagate the result through
+      // the enclosing sequence.  Function definitions (O_CALL LHS) were fully
+      // handled at compile time, so they produce no runtime side-effect here.
+      if (left()->is_ident()) {
+        result = right()->calc(scope, locus, depth + 1);
+        DEBUG("expr.calc", "Assigning " << left()->as_ident() << " = " << result);
+        scope.define(symbol_t::FUNCTION, left()->as_ident(), wrap_value(result));
+      } else {
+        result = NULL_VALUE;
+      }
       break;
 
     case IDENT:
@@ -804,6 +847,10 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const {
     out << " =~ ";
     if (has_right() && right()->print(out, context))
       found = true;
+    break;
+
+  case PLUG:
+    // PLUG is an internal sentinel; it has no printable representation.
     break;
 
   case LAST:
