@@ -1,0 +1,26 @@
+; Regression test for GitHub issue #1184
+; csv -X EUR should not crash when a synthetic revaluation posting has a
+; multi-commodity balance (e.g., when commodity conversion is incomplete).
+
+2016/04/03 Opening Balances
+    Assets:Sparkasse                              20 EUR
+    Equity:Opening Balances
+
+2016/05/01 buying deka
+    Assets:Deka                                  0.1 DK @ 20.00 EUR
+    Assets:Sparkasse
+
+2016/04/06 deposit to kraken
+    Assets:Kraken                                 20 EUR
+    Assets:Sparkasse
+
+test csv -X EUR
+"2016/04/03","","Opening Balances","Assets:Sparkasse","EUR","20","",""
+"2016/04/03","","Opening Balances","Equity:Opening Balances","EUR","-20","",""
+"2016/05/01","","buying deka","Assets:Deka","EUR","2","",""
+"2016/05/01","","buying deka","Assets:Sparkasse","EUR","-2","",""
+"2016/04/06","","deposit to kraken","<Adjustment>","","0","",""
+"2016/04/06","","deposit to kraken","Assets:Kraken","EUR","20","",""
+"2016/04/06","","deposit to kraken","Assets:Sparkasse","EUR","-20","",""
+"2016/05/01","","Commodities revalued","<Revalued>","EUR","0","",""
+end test

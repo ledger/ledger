@@ -730,7 +730,14 @@ value_t report_t::fn_unrounded(call_scope_t& args) {
 }
 
 value_t report_t::fn_quantity(call_scope_t& args) {
-  return args.get<amount_t>(0).number();
+  value_t val(args[0]);
+  if (val.is_balance()) {
+    const balance_t& bal(val.as_balance());
+    if (bal.single_amount())
+      return bal.amounts.begin()->second.number();
+    return 0L;
+  }
+  return val.to_amount().number();
 }
 
 value_t report_t::fn_truncate(call_scope_t& args) {
@@ -891,7 +898,14 @@ value_t report_t::fn_percent(call_scope_t& args) {
 }
 
 value_t report_t::fn_commodity(call_scope_t& args) {
-  return string_value(args.get<amount_t>(0).commodity().symbol());
+  value_t val(args[0]);
+  if (val.is_balance()) {
+    const balance_t& bal(val.as_balance());
+    if (bal.single_amount())
+      return string_value(bal.amounts.begin()->first->symbol());
+    return string_value(empty_string);
+  }
+  return string_value(val.to_amount().commodity().symbol());
 }
 
 value_t report_t::fn_commodity_price(call_scope_t& args) {
