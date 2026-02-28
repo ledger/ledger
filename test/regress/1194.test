@@ -1,0 +1,33 @@
+; Test case from issue #1194
+; Using --group-by with --invert (or --unround) caused an assertion failure:
+;   Assertion failed in "src/op.h": refc > 0
+; due to an expression context pointer dangling across group iterations.
+; The second group's bind_scope_t ended up at the same stack address as
+; the first group's (already-destroyed) bind_scope_t, making the scope
+; appear to be its own parent and causing infinite recursion in define().
+
+2016-11-10 * Test
+    Expenses:Foo                10.00 EUR
+        ; Project: test
+    Assets:Cash                -10.00 EUR
+
+2016-11-10 * Test
+    Expenses:Foo                10.00 EUR
+        ; Project: bar
+    Assets:Cash                -10.00 EUR
+
+test bal --group-by 'tag("Project")' --invert
+bar
+          -10.00 EUR  Expenses:Foo
+
+test
+          -10.00 EUR  Expenses:Foo
+end test
+
+test bal --group-by 'tag("Project")' --unround
+bar
+           10.00 EUR  Expenses:Foo
+
+test
+           10.00 EUR  Expenses:Foo
+end test
