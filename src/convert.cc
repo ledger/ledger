@@ -74,7 +74,7 @@ value_t convert_command(call_scope_t& args) {
 
   /*--- CSV parsing and transaction creation ---*/
 
-  print_xacts formatter(report);
+  print_xacts formatter(report, false, false);
   path csv_file_path(args.get<string>(0));
 
   report.session.parsing_context.push(csv_file_path);
