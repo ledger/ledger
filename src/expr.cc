@@ -35,6 +35,8 @@
 #include "op.h"
 #include "parser.h"
 #include "scope.h"
+// scope.h must be included before the symbol_scope_t / lexical_scope_t definitions
+// are needed by merged_expr_t methods below.
 
 #include <boost/smart_ptr/scoped_ptr.hpp>
 #include <utility>
@@ -226,6 +228,37 @@ void expr_t::dump(std::ostream& out) const {
     ptr->dump(out, 0);
 }
 
+merged_expr_t::merged_expr_t(const string& _term, const string& expr,
+                             const string& merge_op)
+    : expr_t(), term(_term), base_expr(expr), merge_operator(merge_op) {
+  TRACE_CTOR(merged_expr_t, "string, string, string");
+}
+
+merged_expr_t::merged_expr_t(const merged_expr_t& other)
+    : expr_t(),  // fresh, uncompiled expression — do not inherit other's ptr/compiled
+      term(other.term), base_expr(other.base_expr), merge_operator(other.merge_operator),
+      exprs(other.exprs)
+// accumulator_scope_ is freshly null: the copy will re-compile and build its own
+{
+  TRACE_CTOR(merged_expr_t, "copy");
+}
+
+merged_expr_t& merged_expr_t::operator=(const merged_expr_t& other) {
+  if (this != &other) {
+    expr_t::operator=(expr_t());  // reset to fresh uncompiled expression
+    term = other.term;
+    base_expr = other.base_expr;
+    merge_operator = other.merge_operator;
+    exprs = other.exprs;
+    accumulator_scope_.reset();  // fresh accumulator for the new context
+  }
+  return *this;
+}
+
+merged_expr_t::~merged_expr_t() {
+  TRACE_DTOR(merged_expr_t);
+}
+
 bool merged_expr_t::check_for_single_identifier(const string& expr) {
   bool single_identifier = true;
   for (const char* p = expr.c_str(); *p; ++p)
@@ -252,7 +285,7 @@ void merged_expr_t::compile(scope_t& scope) {
     buf << "__tmp_" << term << "=(" << term << "=(" << base_expr << ")";
     for (const string& expr : exprs) {
       if (merge_operator == ";")
-        buf << merge_operator << term << "=" << expr;
+        buf << merge_operator << term << "=(" << expr << ")";
       else
         buf << merge_operator << "(" << expr << ")";
     }
@@ -262,7 +295,32 @@ void merged_expr_t::compile(scope_t& scope) {
     parse(buf.str());
   }
 
-  expr_t::compile(scope);
+  if (!accumulator_scope_)
+    accumulator_scope_ = std::make_unique<symbol_scope_t>();
+
+  // Wrap the compilation scope with a lexical scope so that O_DEFINE
+  // nodes (like "biggest=..." or "display_amount=...") store their
+  // PLUG sentinels and runtime values in the persistent accumulator_scope_
+  // rather than propagating them up to report/session.  This prevents
+  // accumulator variables from shadowing report-level functions such as
+  // fn_display_amount and fn_amount_expr in subsequent lookups.
+  lexical_scope_t wrapped(scope, *accumulator_scope_);
+  expr_t::compile(wrapped);
+}
+
+value_t merged_expr_t::real_calc(scope_t& scope) {
+  if (!accumulator_scope_)
+    accumulator_scope_ = std::make_unique<symbol_scope_t>();
+
+  // Each time the merged expression is evaluated (once per posting), wrap
+  // the posting scope with the persistent accumulator_scope_ so that:
+  //   - O_DEFINE writes (e.g. biggest=$30) go to accumulator_scope_ only
+  //   - IDENT reads first check accumulator_scope_ (for the running value),
+  //     then fall through to the posting/report/session scope chain
+  // This gives accumulator variables cross-posting persistence without
+  // polluting the global session scope.
+  lexical_scope_t wrapped(scope, *accumulator_scope_);
+  return expr_t::real_calc(wrapped);
 }
 
 expr_t::ptr_op_t as_expr(const value_t& val) {
