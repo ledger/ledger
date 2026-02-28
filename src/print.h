@@ -61,11 +61,13 @@ protected:
   xacts_list xacts;
   bool print_raw;
   bool first_title;
+  bool include_auto_xacts;
 
 public:
-  print_xacts(report_t& _report, bool _print_raw = false)
-      : report(_report), print_raw(_print_raw), first_title(true) {
-    TRACE_CTOR(print_xacts, "report&, bool");
+  print_xacts(report_t& _report, bool _print_raw = false, bool _include_auto_xacts = true)
+      : report(_report), print_raw(_print_raw), first_title(true),
+        include_auto_xacts(_include_auto_xacts) {
+    TRACE_CTOR(print_xacts, "report&, bool, bool");
   }
   ~print_xacts() override { TRACE_DTOR(print_xacts); }
 

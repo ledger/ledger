@@ -521,7 +521,7 @@ value_t xact_command(call_scope_t& args) {
     // Only consider actual postings for the "xact" command
     report.HANDLER(limit_).on("#xact", "actual");
 
-    report.xact_report(post_handler_ptr(new print_xacts(report)), *new_xact.get());
+    report.xact_report(post_handler_ptr(new print_xacts(report, false, false)), *new_xact.get());
   }
 
   return true;
