@@ -91,13 +91,15 @@ protected:
   xacts_list xacts;                ///< Ordered list of unique transactions to print.
   bool print_raw;   ///< If true, output original source text instead of reconstructing.
   bool first_title; ///< Tracks whether a title separator is needed.
+  bool include_auto_xacts;
 
 public:
   /// @param _report    The report context.
   /// @param _print_raw If true, use raw source output instead of structured print.
-  print_xacts(report_t& _report, bool _print_raw = false)
-      : report(_report), print_raw(_print_raw), first_title(true) {
-    TRACE_CTOR(print_xacts, "report&, bool");
+  print_xacts(report_t& _report, bool _print_raw = false, bool _include_auto_xacts = true)
+      : report(_report), print_raw(_print_raw), first_title(true),
+        include_auto_xacts(_include_auto_xacts) {
+    TRACE_CTOR(print_xacts, "report&, bool, bool");
   }
   ~print_xacts() override { TRACE_DTOR(print_xacts); }
 
