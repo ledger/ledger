@@ -1,0 +1,39 @@
+; Test for issue #1201: Balance reset doesn't work with automated transactions
+; When a balance assignment (=amount) follows a transaction that triggers an
+; automated transaction affecting the same account, the balance diff must
+; account for the automated transaction's effect on the account total.
+;
+; In this example:
+;   - Budget:Groceries starts at 10 EUR
+;   - An automated transaction fires when Expenses:Groceries is posted,
+;     reducing Budget:Groceries by 1.0 * the Expenses amount
+;   - The balance assignment "=2 EUR" should result in Budget:Groceries = 2 EUR
+;   - Without the fix, the auto-generated post was not counted in the account
+;     total, so the diff was 2 - 10 = -8 EUR, giving a final balance of -8 EUR
+
+2017-02-17 Initial balance
+  Budget:Groceries   10 €
+  Assets:Bank       100 €
+  Equity:Opening
+
+= /Expenses:Groceries/
+  Budget:Groceries  -1.0
+  Equity:Other       1.0
+
+2017-02-17
+  Expenses:Groceries  10 €
+  Assets:Bank
+
+2017-02-17
+  Budget:Groceries   =2 €
+  Assets:Bank
+
+test bal Budget:Groceries
+                 2 €  Budget:Groceries
+end test
+
+test reg Budget:Groceries
+17-Feb-17 Initial balance       Budget:Groceries               10 €         10 €
+17-Feb-17 <Unspecified payee>   Budget:Groceries              -10 €            0
+17-Feb-17 <Unspecified payee>   Budget:Groceries                2 €          2 €
+end test
