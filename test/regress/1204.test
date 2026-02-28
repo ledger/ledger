@@ -1,0 +1,29 @@
+; Test that --empty shows accounts declared with 'account' directive even if unused
+
+account Assets
+account Expenses
+account Expenses:Clothing
+account Expenses:Food
+account Income
+
+2017-03-15 Employer
+    Income             $-100
+    Assets              $100
+
+2017-03-15 Restaurant
+    Assets              $-20
+    Expenses:Food        $20
+
+test bal --no-total --empty
+                 $80  Assets
+                 $20  Expenses
+                   0    Clothing
+                 $20    Food
+               $-100  Income
+end test
+
+test bal --no-total
+                 $80  Assets
+                 $20  Expenses:Food
+               $-100  Income
+end test
