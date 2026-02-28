@@ -1,0 +1,24 @@
+; Regression test for issue #1167 (part B)
+;
+; SCENARIO 2: only the payment transaction is present (no prior bill).
+; Liabilities:Payable is at 0 before the payment.  Posting +1200 EUR to it
+; would leave it at 1200 EUR, not the asserted 0 EUR.  The balance assertion
+; MUST raise an error.
+;
+; The old (buggy) code checked `if (!diff.is_zero())` before subtracting the
+; posting amount.  With no prior activity diff = 0, the gate was false, the
+; assertion block was never entered, and the transaction was silently accepted.
+; The current code always executes the assertion check, raising the error below.
+
+2014/01/31 * Bill paid (no prior bill transaction)
+    Liabilities:Payable      1.200,00 EUR = 0,00 EUR
+    Assets:Checking
+
+test bal --decimal-comma Liabilities -> 1
+__ERROR__
+While parsing file "$FILE", line 14:
+While parsing posting:
+  Liabilities:Payable      1.200,00 EUR = 0,00 EUR
+                                          ^^^^^^^^
+Error: Balance assertion off by -1.200,00 EUR (expected to see 1.200,00 EUR)
+end test

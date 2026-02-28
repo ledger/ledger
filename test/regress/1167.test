@@ -1,0 +1,41 @@
+; Regression test for issue #1167
+;
+; Bug: With --decimal-comma, a balance assertion of "= 0,00 EUR" on a
+; transaction that posts to an account whose running balance is already zero
+; (because a prior "bill received" transaction is absent) would SILENTLY PASS
+; instead of raising an error.
+;
+; Root cause (old code): the assertion machinery first computed
+;
+;   diff = assertion_amount - account_total
+;
+; and only entered the assertion-check block when diff != 0.  When the
+; account total was 0 (no prior activity), diff was 0, the entire block was
+; skipped, and the posting amount (1200 EUR) was never compared against the
+; assertion target (0 EUR).  The transaction was accepted with an incorrect
+; payable balance.
+;
+; Fix (current code): the assertion diff is always computed as
+;
+;   diff = assertion_amount - account_total - post_amount
+;
+; and checked unconditionally.
+;
+; SCENARIO 1 (this file): both transactions present.  The payment posting
+; carries a balance assertion that the payable account must reach zero.  With
+; both transactions, the assertion must pass and the full balance must be zero.
+
+2014/01/01 * Bill received
+    Expenses:Rent            1.200,00 EUR
+    Liabilities:Payable
+
+2014/01/31 * Bill paid
+    Liabilities:Payable      1.200,00 EUR = 0,00 EUR
+    Assets:Checking
+
+test bal --decimal-comma
+       -1.200,00 EUR  Assets:Checking
+        1.200,00 EUR  Expenses:Rent
+--------------------
+                   0
+end test
