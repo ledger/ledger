@@ -1,0 +1,35 @@
+; Regression test for issue #1207:
+; Assertion error in post.cc when combining automated and budget transactions.
+;
+; When extend_xact() processes a period_xact_t (~ Monthly) at parse time,
+; matching auto-transaction rules add generated posts to the period
+; transaction's post list.  Because period_xact_t inherits from xact_base_t
+; (not xact_t), these generated posts have no xact back-pointer.
+;
+; If those NULL-xact posts were placed into pending_posts by add_period_xacts,
+; downstream handlers such as collapse_posts::report_subtotal (used by
+; --monthly --average balance) would dereference post->xact without a null
+; guard, triggering an assertion failure.
+;
+; Fixed by skipping ITEM_GENERATED posts (without POST_CALCULATED) in
+; add_period_xacts, same as was already done in extend_xact itself.
+
+= /^Expenses:AccountA$/
+    Expenses:AccountB  (amount*0.1)
+    Expenses:AccountA  (-(amount*0.1))
+
+~ Monthly
+    Expenses:AccountA   $100
+    Assets
+
+2017-04-01 My Payee
+    Expenses:AccountA   $100
+    Assets
+
+test --monthly --average balance ^Expenses
+                 $14  Expenses
+                 $22    AccountA
+                  $3    AccountB
+--------------------
+                 $12
+end test
