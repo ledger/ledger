@@ -60,7 +60,7 @@ value_t convert_command(call_scope_t& args) {
 
   // Read in the series of transactions from the CSV file
 
-  print_xacts formatter(report);
+  print_xacts formatter(report, false, false);
   path csv_file_path(args.get<string>(0));
 
   report.session.parsing_context.push(csv_file_path);
