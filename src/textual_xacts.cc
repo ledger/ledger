@@ -174,6 +174,7 @@ void instance_t::automated_xact_directive(char* line) {
     }
 
     unique_ptr<auto_xact_t> ae(new auto_xact_t(predicate_t(expr, keeper), xact_name));
+    ae->predicate.set_text(query_start);
     ae->pos = position_t();
     ae->pos->pathname = context.pathname;
     ae->pos->beg_pos = context.line_beg_pos;
