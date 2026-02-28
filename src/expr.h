@@ -44,7 +44,11 @@
 #include "exprbase.h"
 #include "value.h"
 
+#include <memory>
+
 namespace ledger {
+
+class symbol_scope_t; // forward declaration for merged_expr_t::accumulator_scope_
 
 class expr_t : public expr_base_t<value_t> {
   class parser_t;
@@ -152,11 +156,14 @@ public:
 
   std::list<string> exprs;
 
-  merged_expr_t(const string& _term, const string& expr, const string& merge_op = ";")
-      : expr_t(), term(_term), base_expr(expr), merge_operator(merge_op) {
-    TRACE_CTOR(merged_expr_t, "string, string, string");
-  }
-  ~merged_expr_t() override { TRACE_DTOR(merged_expr_t); }
+  merged_expr_t(const string& _term, const string& expr, const string& merge_op = ";");
+  // Custom copy constructor: copies the configuration (term, base_expr, etc.)
+  // but starts with a fresh, uncompiled expression and empty accumulator scope.
+  // This is correct for push_report() which needs an independent expression
+  // context for the new report rather than sharing the original's compiled state.
+  merged_expr_t(const merged_expr_t& other);
+  merged_expr_t& operator=(const merged_expr_t& other);
+  ~merged_expr_t() override;
 
   void set_term(const string& _term) { term = _term; }
   void set_base_expr(const string& expr) { base_expr = expr; }
@@ -175,6 +182,15 @@ public:
   void remove(const string& expr) { exprs.remove(expr); }
 
   void compile(scope_t& scope) override;
+  value_t real_calc(scope_t& scope) override;
+
+private:
+  // Persistent local scope for O_DEFINE variables in merged expressions.
+  // Using unique_ptr<symbol_scope_t> (incomplete type in this header) keeps
+  // accumulator state isolated from the report/session scope chain, preventing
+  // session pollution that would otherwise make variables like "biggest" and
+  // "display_amount" shadow their report-level functions across postings.
+  std::unique_ptr<symbol_scope_t> accumulator_scope_;
 };
 
 class call_scope_t;
