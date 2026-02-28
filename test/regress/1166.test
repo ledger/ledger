@@ -1,0 +1,23 @@
+; Regression test for GitHub issue #1166
+; "Ledger 3.1.1 won't compile on latest cygwin (64-bit)"
+;
+; On Cygwin, the strptime() function is not provided by the system
+; (unlike Linux/macOS). Ledger's custom strptime implementation in
+; strptime.cc was only compiled on Windows (#ifdef _WIN32), not on
+; Cygwin. The fix was to change the guard to:
+;   #if defined(_WIN32) || defined(__CYGWIN__)
+;
+; Additionally, Cygwin removed strnicmp() around August 2014, so the
+; custom strptime.cc had to define strnicmp as strncasecmp for Cygwin.
+;
+; This test exercises date/time parsing via --input-date-format, which
+; uses the strptime() function internally.
+
+01%23%2015 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --input-date-format='%m%%%d%%%Y'
+15-Jan-23 Payee                 Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
