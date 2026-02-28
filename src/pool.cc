@@ -359,8 +359,10 @@ commodity_pool_t::parse_price_directive(char* line, bool do_not_add_price, bool 
   if (point.price.has_commodity()) {
     commodity_t& price_commodity = point.price.commodity();
     if (price_commodity.precision() == 0 && !price_commodity.has_flags(COMMODITY_KNOWN) &&
-        !price_commodity.has_flags(COMMODITY_STYLE_NO_MIGRATE))
+        !price_commodity.has_flags(COMMODITY_STYLE_NO_MIGRATE)) {
       price_commodity.set_precision(point.price.precision());
+      price_commodity.add_flags(COMMODITY_PRECISION_FROM_PRICE);
+    }
   }
 
   DEBUG("commodity.download", "Looking up symbol: " << symbol);

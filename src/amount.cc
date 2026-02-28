@@ -1292,8 +1292,18 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
   } else if (commodity_ && !no_migrate_style) {
     commodity().add_flags(comm_flags);
 
-    if (new_quantity->prec > commodity().precision())
+    if (commodity().has_flags(COMMODITY_PRECISION_FROM_PRICE) &&
+        new_quantity->prec > 0) {
+      // Precision was set tentatively from a price record; a real transaction
+      // amount that explicitly specifies decimal places (non-zero precision)
+      // overrides the tentative precision and locks it in.  Integer amounts
+      // (precision == 0) do not override, preserving the price-derived
+      // precision for display.
       commodity().set_precision(new_quantity->prec);
+      commodity().drop_flags(COMMODITY_PRECISION_FROM_PRICE);
+    } else if (new_quantity->prec > commodity().precision()) {
+      commodity().set_precision(new_quantity->prec);
+    }
   }
 
   // Now we have the final number.  Remove commas and periods, if necessary.
