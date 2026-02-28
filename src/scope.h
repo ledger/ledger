@@ -225,9 +225,7 @@ public:
   string description() override {
     if (parent)
       return parent->description();
-    else
-      assert(false);
-    return empty_string;
+    return _("<scope>");
   }
 
   void define(const symbol_t::kind_t kind, const string& name,
