@@ -1,0 +1,16 @@
+; Regression test for GitHub issue #700 / #706:
+; `alias` directive without a preceding `account` directive should not segfault.
+; The alias keyword (and @alias legacy form) must expand account names correctly.
+
+alias Dining=Expenses:Dining
+
+2012/03/15 KFC
+    Dining                        $100.00
+    Checking
+
+test bal -> 0
+            $-100.00  Checking
+             $100.00  Expenses:Dining
+--------------------
+                   0
+end test
