@@ -1,0 +1,39 @@
+; Test for issue #1186
+; ledger print should output automated and period transactions so that the
+; output forms a complete, self-contained journal suitable for archiving.
+
+= Expenses:Food
+    (Envelopes:Food)           -1
+    (Envelopes)                 1
+
+~ monthly
+    Expenses:Rent              $500.00
+    Assets:Savings
+
+2024/01/15 Grocery Store
+    Expenses:Food              $25.00
+    Assets:Cash
+
+test print
+= Expenses:Food
+    (Envelopes:Food)                              -1
+    (Envelopes)                                    1
+
+~ monthly
+    Expenses:Rent                            $500.00
+    Assets:Savings
+
+2024/01/15 Grocery Store
+    Expenses:Food                             $25.00
+    Assets:Cash
+end test
+
+; Verify that using --generated suppresses the auto-xact rules (since the
+; generated postings are already materialized inline).
+test print --generated
+2024/01/15 Grocery Store
+    Expenses:Food                             $25.00
+    Assets:Cash                              $-25.00
+    (Envelopes:Food)                         $-25.00
+    (Envelopes)                               $25.00
+end test

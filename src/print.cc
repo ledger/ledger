@@ -37,6 +37,7 @@
 #include "account.h"
 #include "session.h"
 #include "report.h"
+#include "journal.h"
 
 namespace ledger {
 
@@ -117,6 +118,181 @@ std::ostringstream format_account_name(xact_t& xact, post_t* post) {
   }
 
   return pbuf;
+}
+
+std::ostringstream format_base_post_account(const post_t* post) {
+  std::ostringstream pbuf;
+  if (post->has_flags(POST_VIRTUAL)) {
+    if (post->has_flags(POST_MUST_BALANCE))
+      pbuf << '[';
+    else
+      pbuf << '(';
+  }
+  pbuf << post->account->fullname();
+  if (post->has_flags(POST_VIRTUAL)) {
+    if (post->has_flags(POST_MUST_BALANCE))
+      pbuf << ']';
+    else
+      pbuf << ')';
+  }
+  return pbuf;
+}
+
+void print_xact_base_posts(report_t& report, std::ostream& out, const xact_base_t& xact) {
+  std::size_t columns =
+      (report.HANDLED(columns_) ? lexical_cast<std::size_t>(report.HANDLER(columns_).str()) : 80);
+  std::size_t account_width = (report.HANDLED(account_width_)
+                                   ? lexical_cast<std::size_t>(report.HANDLER(account_width_).str())
+                                   : 36);
+  std::size_t amount_width = (report.HANDLED(amount_width_)
+                                  ? lexical_cast<std::size_t>(report.HANDLER(amount_width_).str())
+                                  : 12);
+
+  for (post_t* post : xact.posts) {
+    unistring name = format_base_post_account(post).str();
+    if (account_width < name.length())
+      account_width = name.length();
+  }
+
+  for (post_t* post : xact.posts) {
+    out << "    ";
+
+    std::ostringstream pbuf = format_base_post_account(post);
+    unistring name(pbuf.str());
+
+    // For calculated postings (balance-filling entries), only print the account
+    // name; the amount can be inferred when re-reading the journal.
+    if (post->has_flags(POST_CALCULATED) && !report.HANDLED(generated)) {
+      out << pbuf.str();
+    } else {
+      out << name.extract();
+
+      std::string::size_type slip = (static_cast<std::string::size_type>(account_width) -
+                                     static_cast<std::string::size_type>(name.length()));
+
+      string amt;
+      if (post->amount_expr) {
+        std::ostringstream amt_str;
+        justify(amt_str, post->amount_expr->text(), (int)amount_width, true);
+        amt = amt_str.str();
+      } else if (!post->amount.is_null()) {
+        std::ostringstream amt_str;
+        value_t(post->amount)
+            .print(amt_str, static_cast<int>(amount_width), -1, AMOUNT_PRINT_RIGHT_JUSTIFY);
+        amt = amt_str.str();
+      }
+
+      string trimmed_amt(amt);
+      trim_left(trimmed_amt);
+      std::string::size_type amt_slip = (static_cast<std::string::size_type>(amt.length()) -
+                                         static_cast<std::string::size_type>(trimmed_amt.length()));
+
+      std::ostringstream amtbuf;
+      if (slip + amt_slip < 2)
+        amtbuf << string(2 - (slip + amt_slip), ' ');
+      amtbuf << amt;
+
+      string trailer = amtbuf.str();
+      if (!trailer.empty()) {
+        if (slip > 0) {
+          out.width(static_cast<std::streamsize>(slip));
+          out << ' ';
+        }
+        out << trailer;
+      }
+    }
+
+    if (post->note)
+      print_note(out, *post->note, post->has_flags(ITEM_NOTE_ON_NEXT_LINE), columns,
+                 4 + account_width);
+    out << '\n';
+  }
+}
+
+void print_auto_xact(report_t& report, std::ostream& out, const auto_xact_t& xact) {
+  string predicate_text = xact.predicate.text();
+  if (predicate_text.empty()) {
+    std::ostringstream tmp;
+    xact.predicate.print(tmp);
+    predicate_text = tmp.str();
+  }
+
+  std::size_t columns =
+      (report.HANDLED(columns_) ? lexical_cast<std::size_t>(report.HANDLER(columns_).str()) : 80);
+
+  string leader;
+  if (xact.name) {
+    leader = "= \"" + *xact.name + "\" :: " + predicate_text;
+  } else {
+    leader = "= " + predicate_text;
+  }
+  out << leader;
+
+  if (xact.note)
+    print_note(out, *xact.note, xact.has_flags(ITEM_NOTE_ON_NEXT_LINE), columns,
+               unistring(leader).length());
+  out << '\n';
+
+  if (xact.metadata) {
+    for (const item_t::string_map::value_type& data : *xact.metadata) {
+      if (!data.second.second) {
+        out << "    ; ";
+        if (data.second.first)
+          out << data.first << ": " << *data.second.first;
+        else
+          out << ':' << data.first << ":";
+        out << '\n';
+      }
+    }
+  }
+
+  if (xact.check_exprs) {
+    for (const expr_t::check_expr_pair& pair : *xact.check_exprs) {
+      out << "    ";
+      switch (pair.second) {
+      case expr_t::EXPR_ASSERTION:
+        out << "assert ";
+        break;
+      case expr_t::EXPR_CHECK:
+        out << "check ";
+        break;
+      case expr_t::EXPR_GENERAL:
+        out << "eval ";
+        break;
+      }
+      out << pair.first.text() << '\n';
+    }
+  }
+
+  print_xact_base_posts(report, out, xact);
+}
+
+void print_period_xact(report_t& report, std::ostream& out, const period_xact_t& xact) {
+  std::size_t columns =
+      (report.HANDLED(columns_) ? lexical_cast<std::size_t>(report.HANDLER(columns_).str()) : 80);
+
+  string leader = "~ " + xact.period_string;
+  out << leader;
+
+  if (xact.note)
+    print_note(out, *xact.note, xact.has_flags(ITEM_NOTE_ON_NEXT_LINE), columns,
+               unistring(leader).length());
+  out << '\n';
+
+  if (xact.metadata) {
+    for (const item_t::string_map::value_type& data : *xact.metadata) {
+      if (!data.second.second) {
+        out << "    ; ";
+        if (data.second.first)
+          out << data.first << ": " << *data.second.first;
+        else
+          out << ':' << data.first << ":";
+        out << '\n';
+      }
+    }
+  }
+
+  print_xact_base_posts(report, out, xact);
 }
 
 void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
@@ -305,11 +481,50 @@ void print_xacts::flush() {
   std::ostream& out(report.output_stream);
 
   bool first = true;
-  for (xact_t* xact : xacts) {
-    if (first)
+
+  // Output automated and period transactions before regular transactions so
+  // that the print output is a complete, self-contained journal that can be
+  // used for archiving.  When --generated is active the automated postings are
+  // already materialized inline inside each transaction, so emitting the rules
+  // would cause them to fire a second time when the output is re-read.
+  // The include_auto_xacts flag is false for commands like 'entry'/'xact' that
+  // only want to show a single new transaction, not the full journal ruleset.
+  journal_t* journal = report.session.journal.get();
+  if (include_auto_xacts && journal && !report.HANDLED(generated)) {
+    for (const auto& auto_xact : journal->auto_xacts) {
+      // Only print auto_xacts that originated from explicit '= <predicate>'
+      // directives (i.e., those with a stored predicate text).  Auto_xacts
+      // synthesized from 'account' assert/check directives have no predicate
+      // text and should not be printed as standalone automated transactions.
+      if (auto_xact->predicate.text().empty())
+        continue;
+      if (!first)
+        out << '\n';
       first = false;
-    else
+      if (print_raw) {
+        print_item(out, *auto_xact);
+        out << '\n';
+      } else {
+        print_auto_xact(report, out, *auto_xact);
+      }
+    }
+    for (const auto& period_xact : journal->period_xacts) {
+      if (!first)
+        out << '\n';
+      first = false;
+      if (print_raw) {
+        print_item(out, *period_xact);
+        out << '\n';
+      } else {
+        print_period_xact(report, out, *period_xact);
+      }
+    }
+  }
+
+  for (xact_t* xact : xacts) {
+    if (!first)
       out << '\n';
+    first = false;
 
     if (print_raw) {
       print_item(out, *xact);
