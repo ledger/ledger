@@ -226,6 +226,32 @@ post_t* posts_getitem(collector_wrapper& collector, long i) {
       ->posts[static_cast<std::size_t>(i)];
 }
 
+object py_fileinfo_filename(const journal_t::fileinfo_t& fi) {
+  if (fi.filename)
+    return object(fi.filename->native());
+  return object();
+}
+
+void py_fileinfo_set_filename(journal_t::fileinfo_t& fi, const object& obj) {
+  if (obj.is_none())
+    fi.filename = none;
+  else
+    fi.filename = path(extract<std::string>(obj)());
+}
+
+object py_fileinfo_modtime(const journal_t::fileinfo_t& fi) {
+  if (fi.modtime.is_not_a_date_time())
+    return object();
+  return object(fi.modtime);
+}
+
+void py_fileinfo_set_modtime(journal_t::fileinfo_t& fi, const object& obj) {
+  if (obj.is_none())
+    fi.modtime = datetime_t();
+  else
+    fi.modtime = extract<datetime_t>(obj)();
+}
+
 } // unnamed namespace
 
 #define EXC_TRANSLATOR(type)                                                                       \
@@ -249,10 +275,10 @@ void export_journal() {
   class_<journal_t::fileinfo_t>("FileInfo")
       .def(init<path>())
 
-      .add_property("filename", make_getter(&journal_t::fileinfo_t::filename),
-                    make_setter(&journal_t::fileinfo_t::filename))
-      .add_property("modtime", make_getter(&journal_t::fileinfo_t::modtime),
-                    make_setter(&journal_t::fileinfo_t::modtime))
+      .add_property("filename", make_function(py_fileinfo_filename),
+                    make_function(py_fileinfo_set_filename))
+      .add_property("modtime", make_function(py_fileinfo_modtime),
+                    make_function(py_fileinfo_set_modtime))
       .add_property("from_stream", make_getter(&journal_t::fileinfo_t::from_stream),
                     make_setter(&journal_t::fileinfo_t::from_stream));
 

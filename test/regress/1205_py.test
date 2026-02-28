@@ -1,0 +1,3 @@
+test python test/regress/1205.py
+FileInfo.filename and FileInfo.modtime are accessible
+end test
