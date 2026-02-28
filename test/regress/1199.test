@@ -1,0 +1,37 @@
+; Regression test for bug #1199: lot date must be preserved when using a
+; cost expression so that lots can be matched across transactions.
+;
+; When a posting specifies a lot date like `-4ea [2017/01/03] @ expr`,
+; the user-specified lot date should be used for lot matching rather than
+; being replaced by the transaction date.
+;
+; Also tests that using the displayed decimal lot price (copied from
+; `--lots bal` output) as an explicit lot annotation `{price} [date]`
+; correctly matches a lot whose price was originally computed from an
+; expression (the internal rational number normalizes to the same
+; display-precision decimal).
+
+; --- Scenario 1: lot date annotation with @ cost expression ---
+; The lot date [2017/01/03] should be honoured so the two postings
+; match the same lot; the net 6ea should be left in the account.
+
+2017/01/03 Supplier
+  Assets:Inventory:Tricky       10ea @ (($26.40/10)*191.52/138.65)
+  Assets:Other                  ($112.25*191.52/138.65)
+  Equity:Expenditures           -$191.52
+
+2017/01/06 Production department
+  Assets:Inventory:Tricky       -4ea [2017/01/03] @ (($26.40/10)*191.52/138.65)
+  Assets:Inventory:Work in process
+
+; --- Scenario 2: explicit decimal lot price taken from --lots bal output ---
+; The printed decimal representation of the computed lot price is
+; precise enough to round-trip back and match the original lot.
+
+2017/01/09 Production department 2
+  Assets:Inventory:Tricky       -2ea {$3.646684457266498377208799} [2017/01/03]
+  Assets:Inventory:Work in process
+
+test bal --lots Tricky
+4ea {$3.646684457266498377208799} [2017/01/03]  Assets:Inventory:Tricky
+end test
