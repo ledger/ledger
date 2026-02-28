@@ -31,6 +31,10 @@
 
 #include <system.hh>
 
+#if !defined(_WIN32) && !defined(__CYGWIN__)
+#include <termios.h>
+#endif
+
 #include "pyinterp.h"
 #include "pyutils.h"
 #include "account.h"
@@ -329,7 +333,21 @@ value_t python_interpreter_t::python_command(call_scope_t& args) {
     // Interactive mode: use PyRun_InteractiveLoop instead of Py_Main to avoid
     // loading readline.so, which conflicts with libedit already loaded by
     // ledger and causes a segfault on startup (GitHub issue #852).
+    //
+    // Save terminal settings before entering the Python REPL.  Python's
+    // PyOS_Readline may put the terminal in raw mode (disabling echo) and does
+    // not always restore the original settings when the REPL exits.  We save
+    // and restore the settings ourselves to prevent the console from being left
+    // in a broken state after 'ledger python' returns (GitHub issue #774).
+#if !defined(_WIN32) && !defined(__CYGWIN__)
+    struct termios saved_tty;
+    bool have_tty = (isatty(STDIN_FILENO) != 0 && tcgetattr(STDIN_FILENO, &saved_tty) == 0);
+#endif
     status = PyRun_InteractiveLoop(stdin, "<stdin>");
+#if !defined(_WIN32) && !defined(__CYGWIN__)
+    if (have_tty)
+      tcsetattr(STDIN_FILENO, TCSANOW, &saved_tty);
+#endif
   } else {
     wchar_t** argv = new wchar_t*[args.size() + 1];
 
