@@ -1,0 +1,35 @@
+; Regression test for issue #1168
+; Balance assignments where the difference is zero (account balance already
+; matches the asserted amount) should succeed without error.
+;
+; Prior to the fix, this produced "Only one posting with null amount allowed
+; per transaction" because the zero-diff balance assignment left the posting
+; amount null, which conflicted with the other null (auto-computed) posting.
+
+2024/11/24 * Opening Balance
+    Equity:Adjustments              P 1000.00
+    Equity:Opening Balance
+
+2024/11/25 * Metrobank
+    Expenses:Food                   P 300.00
+    Liabilities:Credit:Metrobank
+
+; This balance assignment has zero difference (Liabilities:Credit:Metrobank
+; is already P -300.00), so it should be a no-op that succeeds without error.
+2024/11/26 * Adjustments
+    Liabilities:Credit:Metrobank    = P -300.00
+    Equity:Adjustments
+
+test bal
+                   0  Equity
+           P 1000.00    Adjustments
+          P -1000.00    Opening Balance
+            P 300.00  Expenses:Food
+           P -300.00  Liabilities:Credit:Metrobank
+--------------------
+                   0
+end test
+
+test bal Liabilities
+           P -300.00  Liabilities:Credit:Metrobank
+end test

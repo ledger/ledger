@@ -1,0 +1,25 @@
+; Regression test for issue #1168 (alternative form)
+; An explicit zero amount with a balance assertion ($0 = $100) should pass
+; without error even when the current balance matches.
+;
+; Eric Portis noted: "Assets:Bank account  $0 = $100" lets you balance the
+; whole folder but the assertion fails when you try to balance the statement
+; by itself (as expected).  The main form "= $100" (balance assignment) should
+; succeed in both the individual and combined-file cases.
+
+2016-09-01 Previous transaction
+    Assets:Bank account     $100
+    Equity:Opening balances
+
+; Explicit zero amount + balance assertion: the $0 posts and the = $100
+; confirms the running balance equals $100.
+2016-10-01 Statement opening balance
+    Assets:Bank account     $0 = $100
+    Equity:Opening balances
+
+test bal
+                $100  Assets:Bank account
+               $-100  Equity:Opening balances
+--------------------
+                   0
+end test
