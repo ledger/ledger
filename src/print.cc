@@ -177,8 +177,8 @@ void print_xact_base_posts(report_t& report, std::ostream& out, const xact_base_
         amt = amt_str.str();
       } else if (!post->amount.is_null()) {
         std::ostringstream amt_str;
-        value_t(post->amount).print(amt_str, static_cast<int>(amount_width), -1,
-                                    AMOUNT_PRINT_RIGHT_JUSTIFY);
+        value_t(post->amount)
+            .print(amt_str, static_cast<int>(amount_width), -1, AMOUNT_PRINT_RIGHT_JUSTIFY);
         amt = amt_str.str();
       }
 
