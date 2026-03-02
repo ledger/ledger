@@ -1,0 +1,29 @@
+; Test that --download does not fetch duplicate quotes for the same commodity
+; when it appears across multiple postings (issue #996).
+;
+; Prior to the fix, find_price() called with a historical moment (midnight)
+; could not see a price already downloaded with a later time component on the
+; same date.  This caused check_for_updated_price() to re-download on every
+; posting that referenced the commodity.  The fix adds last_quote tracking to
+; commodity_t::base_t so that a successful download within the leeway window
+; suppresses subsequent download attempts for that commodity.
+
+2013/10/21 Buy Stock A
+    Assets:Brokerage        10 AAPL
+    Assets:Checking        $-1000.00
+
+2013/10/21 Buy More Stock A
+    Assets:Brokerage        5 AAPL
+    Assets:Checking        $-500.00
+
+2013/10/21 Buy Stock B
+    Assets:Brokerage        2 GOOG
+    Assets:Checking        $-2000.00
+
+test bal --market --download --getquote $sourcepath/test/scripts/mock-getquote.sh -> 0
+           $-1050.00  Assets
+            $2450.00    Brokerage
+           $-3500.00    Checking
+--------------------
+           $-1050.00
+end test
