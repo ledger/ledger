@@ -75,6 +75,7 @@ expr_t& expr_t::operator=(const expr_t& _expr) {
     base_type::operator=(_expr);
     ptr = _expr.ptr;
     fast_path_ = _expr.fast_path_;
+    accumulator_scope_.reset();
   }
   return *this;
 }
@@ -134,7 +135,7 @@ void expr_t::detect_fast_path() {
   }
 }
 
-value_t expr_t::real_calc(scope_t& scope) {
+value_t expr_t::calc_with_scope(scope_t& scope) {
   static thread_local int eval_depth = 0;
 
   struct EvalDepthGuard {
@@ -143,11 +144,22 @@ value_t expr_t::real_calc(scope_t& scope) {
   } depth_guard;
 
   if (ptr) {
+    if (eval_depth > 256)
+      throw_(recursion_error, _f("Expression recursion depth exceeded (%1%)") % eval_depth);
+    return ptr->calc(scope);
+  }
+  return NULL_VALUE;
+}
+
+value_t expr_t::real_calc(scope_t& scope) {
+  if (ptr) {
+    if (!accumulator_scope_)
+      accumulator_scope_ = std::make_unique<symbol_scope_t>();
+    lexical_scope_t wrapped(scope, *accumulator_scope_);
+
     ptr_op_t locus;
     try {
-      if (eval_depth > 256)
-        throw_(recursion_error, _f("Expression recursion depth exceeded (%1%)") % eval_depth);
-      return ptr->calc(scope, &locus);
+      return ptr->calc(wrapped, &locus);
     } catch (const recursion_error&) {
       throw;
     } catch (const std::exception&) {
@@ -228,29 +240,26 @@ void expr_t::dump(std::ostream& out) const {
     ptr->dump(out, 0);
 }
 
-merged_expr_t::merged_expr_t(const string& _term, const string& expr,
-                             const string& merge_op)
+merged_expr_t::merged_expr_t(const string& _term, const string& expr, const string& merge_op)
     : expr_t(), term(_term), base_expr(expr), merge_operator(merge_op) {
   TRACE_CTOR(merged_expr_t, "string, string, string");
 }
 
 merged_expr_t::merged_expr_t(const merged_expr_t& other)
-    : expr_t(),  // fresh, uncompiled expression — do not inherit other's ptr/compiled
+    : expr_t(), // fresh, uncompiled expression — do not inherit other's ptr/compiled
       term(other.term), base_expr(other.base_expr), merge_operator(other.merge_operator),
-      exprs(other.exprs)
-// accumulator_scope_ is freshly null: the copy will re-compile and build its own
-{
+      exprs(other.exprs) {
   TRACE_CTOR(merged_expr_t, "copy");
 }
 
 merged_expr_t& merged_expr_t::operator=(const merged_expr_t& other) {
   if (this != &other) {
-    expr_t::operator=(expr_t());  // reset to fresh uncompiled expression
+    expr_t::operator=(expr_t()); // reset to fresh uncompiled expression
     term = other.term;
     base_expr = other.base_expr;
     merge_operator = other.merge_operator;
     exprs = other.exprs;
-    accumulator_scope_.reset();  // fresh accumulator for the new context
+    // accumulator_scope_ reset is handled by expr_t::operator=() above
   }
   return *this;
 }
@@ -319,8 +328,15 @@ value_t merged_expr_t::real_calc(scope_t& scope) {
   //     then fall through to the posting/report/session scope chain
   // This gives accumulator variables cross-posting persistence without
   // polluting the global session scope.
+  //
+  // Use calc_with_scope() for recursion depth protection (eval_depth counter),
+  // but do NOT add "While evaluating value expression:" error context here.
+  // Merged expressions are evaluated from a posting handler that already
+  // provides context ("While handling posting..."), and the partially-optimised
+  // compiled tree (non-self-referential O_DEFINE nodes become null) would
+  // produce a misleading expression string.
   lexical_scope_t wrapped(scope, *accumulator_scope_);
-  return expr_t::real_calc(wrapped);
+  return calc_with_scope(wrapped);
 }
 
 expr_t::ptr_op_t as_expr(const value_t& val) {
