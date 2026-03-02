@@ -13,7 +13,7 @@
     Expenses:Food    $220.00
     Assets:Checking
 
-test budget
+test budget --end 2026/03/01
     $-400.00    $-5200.00     $4800.00    8%  Assets:Checking
      $400.00     $5200.00    $-4800.00    8%  Expenses:Food
 ------------ ------------ ------------ -----
