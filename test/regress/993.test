@@ -1,0 +1,34 @@
+; Issue #993: --related drops generated postings from null-post multi-commodity expansion
+;
+; When a transaction has a null posting (no amount) that must balance across
+; multiple commodities, ledger expands it: the first commodity (alphabetically)
+; goes directly into the null post, while subsequent commodities get new
+; ITEM_GENERATED|POST_CALCULATED postings on the same account.
+;
+; Previously, --related would skip those generated postings, producing
+; incomplete output whose content depended on commodity sort order.
+
+2013/10/05 * Shopping
+    Expenses:Food          5 A
+    Assets:Cash          -20 B
+    Income:Currency
+
+; Without --related the balance shows both A and B in Income:Currency
+test bal
+               -20 B  Assets:Cash
+                 5 A  Expenses:Food
+                -5 A
+                20 B  Income:Currency
+--------------------
+                   0
+end test
+
+; With --related cash, Income:Currency should show both -5 A and 20 B,
+; not just -5 A (the non-generated posting).
+test bal --related cash
+                 5 A  Expenses:Food
+                -5 A
+                20 B  Income:Currency
+--------------------
+                20 B
+end test
