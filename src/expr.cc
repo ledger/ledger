@@ -245,12 +245,16 @@ merged_expr_t::merged_expr_t(const string& _term, const string& expr, const stri
   TRACE_CTOR(merged_expr_t, "string, string, string");
 }
 
+// NOLINTBEGIN(bugprone-copy-constructor-init)
+// Intentionally calls expr_t() rather than expr_t(other): the copy constructor
+// starts with a fresh, uncompiled expression state.  push_report() needs an
+// independent expression context for the new report, not a shared compiled state.
 merged_expr_t::merged_expr_t(const merged_expr_t& other)
-    : expr_t(), // fresh, uncompiled expression — do not inherit other's ptr/compiled
-      term(other.term), base_expr(other.base_expr), merge_operator(other.merge_operator),
-      exprs(other.exprs) {
+    : expr_t(), term(other.term), base_expr(other.base_expr),
+      merge_operator(other.merge_operator), exprs(other.exprs) {
   TRACE_CTOR(merged_expr_t, "copy");
 }
+// NOLINTEND(bugprone-copy-constructor-init)
 
 merged_expr_t& merged_expr_t::operator=(const merged_expr_t& other) {
   if (this != &other) {
