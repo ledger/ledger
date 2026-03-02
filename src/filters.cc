@@ -648,8 +648,7 @@ bool display_filter_posts::output_rounding(post_t& post) {
       // intermediate adjustment would only create an unwanted extra data point
       // for each period in the plot output (issue #984).
       bool suppress_period_plot_adjustment =
-          report.HANDLED(period_) &&
-          (report.HANDLED(amount_data) || report.HANDLED(total_data));
+          report.HANDLED(period_) && (report.HANDLED(amount_data) || report.HANDLED(total_data));
 
       if (!suppress_period_plot_adjustment) {
         if (value_t diff = precise_display_total - last_display_total) {
