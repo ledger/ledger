@@ -1,0 +1,25 @@
+; Test for issue #965: crash with --gain --subtotal when an account holds
+; multiple commodities.  Prior to the fix, the mismatch between BALANCE
+; compound values (from multi-commodity accounts) and the 2-element sequence
+; produced by evaluating (amount, cost) caused "Cannot add sequences of
+; different lengths" in the running-total accumulator.
+
+P 2024/01/01 EUR 1.10 USD
+
+2024/01/10 Buy EUR
+    Assets:Investments    100 EUR @ 1.10 USD
+    Assets:Checking
+
+P 2024/01/20 EUR 1.20 USD
+
+; Second posting in the *same* account but a different commodity forces
+; Assets:Investments to accumulate a multi-commodity BALANCE under --subtotal.
+2024/01/20 Buy USD stock
+    Assets:Investments     50.00 USD
+    Assets:Checking
+
+P 2024/01/30 EUR 1.25 USD
+
+test reg --gain --subtotal
+24-Jan-10 - 24-Jan-20           Assets:Investments        10.00 USD    10.00 USD
+end test
