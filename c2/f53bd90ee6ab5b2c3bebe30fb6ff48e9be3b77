@@ -1,0 +1,181 @@
+test/regress/2262.test
+  28949dde2dc0bf05 14-15,17-18
+test/regress/coverage-wave10-report-budget.test
+  28949dde2dc0bf05 13-15
+test/regress/coverage-wave11-period-xact.test
+  28949dde2dc0bf05 16-17
+test/regress/coverage-wave11-report-budget.test
+  28949dde2dc0bf05 16-18
+test/regress/1542.test
+  28949dde2dc0bf05 13-14,16-17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.6",
+  "base_commit_sha": "c2f53bd90ee6ab5b2c3bebe30fb6ff48e9be3b77",
+  "prompts": {
+    "28949dde2dc0bf05": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7ce96097-473c-4cfb-ba37-de6fb3655eef",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [
+        {
+          "type": "assistant",
+          "text": "The agent has computed the correct expected values. Let me verify these values are correct by actually running the tests before applying the changes.\n\nLet me now apply these changes to fix the date-dependent tests.",
+          "timestamp": "2026-03-02T23:46:30.841Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me verify the agent's computed values by running the proposed commands:",
+          "timestamp": "2026-03-02T23:46:31.429Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "DYLD_LIBRARY_PATH=/Users/johnw/src/ledger/fix-1004/build \\\n  /Users/johnw/src/ledger/fix-1004/build/ledger \\\n  -f /Users/johnw/src/ledger/fix-1004/test/regress/1542.test \\\n  -X '$' budget --period \"2023 to 2025\" 2>&1",
+            "description": "Verify expected output for 1542.test with period constraint"
+          },
+          "timestamp": "2026-03-02T23:46:33.023Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "DYLD_LIBRARY_PATH=/Users/johnw/src/ledger/fix-1004/build \\\n  /Users/johnw/src/ledger/fix-1004/build/ledger \\\n  -f /Users/johnw/src/ledger/fix-1004/test/regress/coverage-wave10-report-budget.test \\\n  budget --period \"2024 to 2025\" 2>&1",
+            "description": "Verify coverage-wave10 with period"
+          },
+          "timestamp": "2026-03-02T23:46:36.055Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "DYLD_LIBRARY_PATH=/Users/johnw/src/ledger/fix-1004/build \\\n  /Users/johnw/src/ledger/fix-1004/build/ledger \\\n  -f /Users/johnw/src/ledger/fix-1004/test/regress/coverage-wave11-period-xact.test \\\n  bal --budget Expenses --period \"2024 to 2025\" 2>&1",
+            "description": "Verify coverage-wave11-period-xact with period"
+          },
+          "timestamp": "2026-03-02T23:46:39.380Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "DYLD_LIBRARY_PATH=/Users/johnw/src/ledger/fix-1004/build \\\n  /Users/johnw/src/ledger/fix-1004/build/ledger \\\n  -f /Users/johnw/src/ledger/fix-1004/test/regress/coverage-wave11-report-budget.test \\\n  budget --period \"2024 to 2025\" 2>&1",
+            "description": "Verify coverage-wave11-report-budget with period"
+          },
+          "timestamp": "2026-03-02T23:46:42.239Z"
+        },
+        {
+          "type": "assistant",
+          "text": "All values confirmed. Now apply the fixes:",
+          "timestamp": "2026-03-02T23:46:44.580Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1004/test/regress/1542.test",
+            "new_string": "test -X '$' budget --period \"2023 to 2025\"\n       $2.00     $2400.00    $-2398.00     0  Expenses\n       $2.00            0        $2.00     0    Bar\n                 $2400.00    $-2400.00     0    Foo\n      $-2.00    $-2400.00     $2398.00     0  Income\n------------ ------------ ------------ -----\n           0            0            0     0\nend test",
+            "old_string": "test -X '$' budget\n       $2.00     $3800.00    $-3798.00     0  Expenses\n       $2.00            0        $2.00     0    Bar\n                 $3800.00    $-3800.00     0    Foo\n      $-2.00    $-3800.00     $3798.00     0  Income\n------------ ------------ ------------ -----\n           0            0            0     0\nend test",
+            "replace_all": false
+          },
+          "timestamp": "2026-03-02T23:46:48.169Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1004/test/regress/1542.test"
+          },
+          "timestamp": "2026-03-02T23:46:50.610Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The cpp-pro agent already applied the changes to 1542.test. Let me check the other tests.",
+          "timestamp": "2026-03-02T23:46:53.257Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The cpp-pro agent already applied the fixes. Let me check the other files:",
+          "timestamp": "2026-03-02T23:46:53.722Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1004/test/regress/2262.test"
+          },
+          "timestamp": "2026-03-02T23:46:54.214Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1004/test/regress/coverage-wave10-report-budget.test"
+          },
+          "timestamp": "2026-03-02T23:46:54.671Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1004/test/regress/coverage-wave11-period-xact.test"
+          },
+          "timestamp": "2026-03-02T23:46:55.057Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1004/test/regress/coverage-wave11-report-budget.test"
+          },
+          "timestamp": "2026-03-02T23:46:55.361Z"
+        },
+        {
+          "type": "assistant",
+          "text": "All five test files have been fixed. Let me run them all to verify:",
+          "timestamp": "2026-03-02T23:46:58.085Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "for f in 1542 2262 coverage-wave10-report-budget coverage-wave11-period-xact coverage-wave11-report-budget; do\n  echo -n \"Testing $f... \"\n  TZ=America/Chicago python3 /Users/johnw/src/ledger/fix-1004/test/RegressTests.py \\\n    --ledger /Users/johnw/src/ledger/fix-1004/build/ledger \\\n    --sourcepath /Users/johnw/src/ledger/fix-1004 \\\n    /Users/johnw/src/ledger/fix-1004/test/regress/$f.test 2>&1 | grep -E \"^OK|^FAIL\"\ndone",
+            "description": "Verify all previously failing tests now pass"
+          },
+          "timestamp": "2026-03-02T23:47:00.488Z"
+        },
+        {
+          "type": "assistant",
+          "text": "All passing. Now commit and push:",
+          "timestamp": "2026-03-02T23:47:03.754Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1004 diff --stat",
+            "description": "Check what changed"
+          },
+          "timestamp": "2026-03-02T23:47:04.383Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git add test/regress/1542.test test/regress/2262.test \\\n  test/regress/coverage-wave10-report-budget.test \\\n  test/regress/coverage-wave11-period-xact.test \\\n  test/regress/coverage-wave11-report-budget.test && \\\ngit commit --author=\"John Wiegley <johnw@newartisans.com>\" -m \"$(cat <<'EOF'\nFix date-dependent budget test expectations\n\nTests using `~ Monthly` periodic transactions without a bounded\nperiod accumulate budget entries from the journal start date to\ntoday, so their hardcoded expected values become stale each month.\n\nAdd `--period \"YYYY to YYYY\"` to each affected test command to fix\nthe budget window, making the expected output static and stable:\n\n- 1542.test, 2262.test: period \"2023 to 2025\" → $2400 budget\n- coverage-wave10-report-budget.test: period \"2024 to 2025\" → $3600\n- coverage-wave11-period-xact.test: period \"2024 to 2025\" → $10000\n- coverage-wave11-report-budget.test: period \"2024 to 2025\" → $2400\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n)\"",
+            "description": "Commit the test fixes"
+          },
+          "timestamp": "2026-03-02T23:47:12.661Z"
+        }
+      ],
+      "total_additions": 16,
+      "total_deletions": 16,
+      "accepted_lines": 16,
+      "overriden_lines": 0
+    }
+  }
+}
