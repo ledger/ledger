@@ -1,0 +1,15 @@
+2014-01-01 * Test
+  Assets:AAA  10.00 EUR
+  Equity:Opening-balance  -10.00 EUR
+
+2014-01-01 * Test
+  Assets:BBB:CCC  10.00 EUR
+  Equity:Opening-balance  -10.00 EUR
+
+test bal --depth 2 --flat
+           10.00 EUR  Assets:AAA
+           10.00 EUR  Assets:BBB
+          -20.00 EUR  Equity:Opening-balance
+--------------------
+                   0
+end test
