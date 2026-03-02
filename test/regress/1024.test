@@ -1,0 +1,63 @@
+; Regression test for issue #1024:
+; "lot price creation" - commodity swaps should not annotate the received
+; commodity when using explicit total-cost (@@ price) notation on the
+; outgoing (negative) posting.
+;
+; When converting one commodity to another using `@@ total-cost` on the
+; OUTGOING posting, the RECEIVED commodity should remain unannotated.
+; This allows freely mixing converted and directly-received amounts of the
+; same commodity and spending them together without specifying lots.
+;
+; The fix: place the cost annotation (`@@`) on the posting for the commodity
+; you are giving away, not the one you are receiving.
+
+commodity Avios
+commodity bmi
+
+2014-01-25 * Received bmi points from credit card
+    Assets:bmi                         1000.00 bmi
+    Income:Rewards
+
+; Key: the @@ notation goes on the OUTGOING (negative) posting.
+; This annotates the bmi (what you gave away) without annotating the Avios.
+2014-02-27 * Convert bmi miles to Avios
+    Assets:ba                          2500 Avios
+    Assets:bmi                        -2500.00 bmi @@ 2500 Avios
+
+2014-03-29 * Received Avios from credit card (no lot annotation)
+    Assets:ba                           200 Avios
+    Income:Rewards
+
+; Spending all 2700 Avios in one transaction works because the received
+; commodity (Avios) has no lot annotation. If the Avios had been annotated
+; with {1.00 bmi}, this transaction would leave an imbalance because
+; plain Avios and Avios {1.00 bmi} are treated as different commodities.
+2014-04-01 * Spend all Avios
+    Expenses:Travel                    2700 Avios
+    Assets:ba
+
+; After spending all Avios, the account balance should be zero.
+; This verifies that the converted Avios and credit-card Avios
+; were treated as the same fungible commodity (no lot differentiation).
+test bal Assets:ba -> 0
+end test
+
+; The print --generated output should show that bmi is annotated with
+; the Avios cost {1 Avios}, while the Avios posting remains unannotated.
+test print --generated -> 0
+2014/01/25 * Received bmi points from credit card
+    Assets:bmi                           1000.00 bmi
+    Income:Rewards                      -1000.00 bmi
+
+2014/02/27 * Convert bmi miles to Avios
+    Assets:ba                             2500 Avios
+    Assets:bmi                          -2500.00 bmi {1 Avios} [2014/02/27] @@ 2500 Avios
+
+2014/03/29 * Received Avios from credit card (no lot annotation)
+    Assets:ba                              200 Avios
+    Income:Rewards                        -200 Avios
+
+2014/04/01 * Spend all Avios
+    Expenses:Travel                       2700 Avios
+    Assets:ba                            -2700 Avios
+end test
