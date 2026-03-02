@@ -8296,9 +8296,10 @@ N h
 @end smallexample
 
 @noindent
-Note: Ledger NEVER writes output to files.  You are responsible for
-updating the price-db file.  The best way is to have your price
-download script maintain this file.
+Note: When using @option{--download (-Q)}, Ledger automatically
+appends downloaded prices to this file.  Otherwise, Ledger does not
+write to the price-db file, and you are responsible for maintaining
+it manually.
 
 The format of the file can be changed by telling ledger to use the
 @option{--pricedb-format @var{FORMAT_STRING}} you define.
