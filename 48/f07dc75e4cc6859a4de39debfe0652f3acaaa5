@@ -1,0 +1,72 @@
+test/regress/2262.test
+  25d8b018055a73f3 14
+test/regress/coverage-wave10-report-budget.test
+  25d8b018055a73f3 13
+test/regress/1542.test
+  25d8b018055a73f3 13
+test/regress/coverage-wave11-period-xact.test
+  25d8b018055a73f3 16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.6",
+  "base_commit_sha": "48f07dc75e4cc6859a4de39debfe0652f3acaaa5",
+  "prompts": {
+    "25d8b018055a73f3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "63ceb2f5-f866-4ca5-8dbf-5c08165e0a8a",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [
+        {
+          "type": "assistant",
+          "text": "All 9 tests pass. Now let me verify and commit:",
+          "timestamp": "2026-03-02T23:47:03.179Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "TZ=America/Chicago python3 test/RegressTests.py --ledger $(which ledger) --sourcepath . test/regress/1542.test test/regress/2262.test test/regress/coverage-wave10-report-budget.test test/regress/coverage-wave11-period-xact.test test/regress/coverage-wave11-report-budget.test test/regress/coverage-wave2-budget.test test/regress/coverage-wave6-budget.test test/regress/coverage-wave6-forecast.test test/regress/coverage-xact-period.test 2>&1"
+          },
+          "timestamp": "2026-03-02T23:47:04.479Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "for f in test/regress/1542.test test/regress/2262.test test/regress/coverage-wave10-report-budget.test test/regress/coverage-wave11-period-xact.test test/regress/coverage-wave11-report-budget.test test/regress/coverage-wave2-budget.test test/regress/coverage-wave6-budget.test test/regress/coverage-wave6-forecast.test test/regress/coverage-xact-period.test; do\n  result=$(TZ=America/Chicago python3 test/RegressTests.py --ledger $(which ledger) --sourcepath . $f 2>&1)\n  if echo \"$result\" | grep -q \"FAILED\\|ERROR\"; then\n    echo \"FAIL: $f\"\n    echo \"$result\" | tail -10\n  else\n    echo \"PASS: $f\"\n  fi\ndone"
+          },
+          "timestamp": "2026-03-02T23:47:08.481Z"
+        },
+        {
+          "type": "assistant",
+          "text": "All 9 tests pass. Now commit these fixes as a separate logical commit:",
+          "timestamp": "2026-03-02T23:47:11.918Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff --stat"
+          },
+          "timestamp": "2026-03-02T23:47:12.143Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git add test/regress/1542.test test/regress/2262.test test/regress/coverage-wave10-report-budget.test test/regress/coverage-wave11-period-xact.test test/regress/coverage-wave11-report-budget.test test/regress/coverage-wave2-budget.test test/regress/coverage-wave6-budget.test test/regress/coverage-wave6-forecast.test test/regress/coverage-xact-period.test\n\ngit commit -m \"$(cat <<'EOF'\nPin date-dependent budget and forecast tests to fixed dates\n\nSeveral regression tests used open-ended monthly budget directives\n(~ Monthly) without a fixed end date, causing the expected totals to\ngrow by one month's budget each calendar month.  These tests broke\nwhen March 2026 began, as the accumulated budget total increased.\n\nAdd --end 2026/03/01 to all affected budget test commands so the\nbudget period is capped at February 2026, matching the expected output\nthat was correct when the tests were written.\n\nFor the forecast test (coverage-wave6-forecast.test), add\n--now 2026/02/28 so the \"current date\" is pinned to February 28, 2026\nand the March 1, 2026 forecast entry remains in the future.\n\nAffected tests: 1542, 2262, coverage-wave10-report-budget,\ncoverage-wave11-period-xact, coverage-wave11-report-budget,\ncoverage-wave2-budget, coverage-wave6-budget (×2),\ncoverage-wave6-forecast, coverage-xact-period.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n)\""
+          },
+          "timestamp": "2026-03-02T23:47:21.001Z"
+        }
+      ],
+      "total_additions": 4,
+      "total_deletions": 4,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    }
+  }
+}
