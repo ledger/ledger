@@ -1,0 +1,23 @@
+; Regression test for GitHub issue #979
+; Functions like abs() should be usable in --sort expressions.
+; Previously this would fail with "Error: Unknown identifier 'abs'"
+; because sort expressions did not have access to the report scope
+; where functions like abs() are defined.
+
+2024/01/01 Groceries
+    Expenses:Food    $100.00
+    Assets:Cash
+
+2024/01/02 Refund
+    Expenses:Food    $-50.00
+    Assets:Cash
+
+2024/01/03 Dinner
+    Expenses:Food    $75.00
+    Assets:Cash
+
+test reg Expenses --sort 'abs(amount)'
+24-Jan-02 Refund                Expenses:Food               $-50.00      $-50.00
+24-Jan-03 Dinner                Expenses:Food                $75.00       $25.00
+24-Jan-01 Groceries             Expenses:Food               $100.00      $125.00
+end test
