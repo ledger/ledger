@@ -21,5 +21,8 @@ test bal --flat -d "depth>2"
 end test
 
 test bal --flat -d "depth==2"
+           12.50 GBP  A:B
           -12.50 GBP  A:C
+--------------------
+                   0
 end test
