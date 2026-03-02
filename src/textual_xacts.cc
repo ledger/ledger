@@ -802,6 +802,8 @@ bool instance_t::parse_posts(account_t* account, xact_base_t& xact, const bool d
     char* line;
     std::streamsize len = read_line(line);
     char* p = skip_ws(line);
+    if (!*p)
+      break;
     if (*p != ';') {
       if (post_t* post = parse_post(line, len, account, nullptr, defer_expr)) {
         xact.add_post(post);
