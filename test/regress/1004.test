@@ -1,0 +1,25 @@
+; Regression test for GitHub issue #1004
+; "Assertion failure when parsing ledger file with whitespace-only line"
+;
+; When a whitespace-only line (e.g., a line containing only a single space)
+; appears between a periodic transaction (~) and the next transaction,
+; ledger crashed with an assertion failure in parse_post():
+;   "Assertion failed: *line"
+;
+; The fix adds a missing empty-line check in parse_posts() that matches
+; the pattern already used in parse_xact() and automated_xact_directive().
+
+~ Monthly
+    Expenses:Food    $10.00
+    Assets:Cash
+ 
+2013/01/01 Some Transaction
+    Expenses:Food    $5.00
+    Assets:Cash
+
+test bal
+              $-5.00  Assets:Cash
+               $5.00  Expenses:Food
+--------------------
+                   0
+end test
