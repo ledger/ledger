@@ -710,6 +710,7 @@ public:
 #define AMOUNT_PRINT_COLORIZE 0x02
 #define AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS 0x04
 #define AMOUNT_PRINT_ELIDE_COMMODITY_QUOTES 0x08
+#define AMOUNT_PRINT_PRESERVE_TOTAL_COST 0x10
 
   void print(std::ostream& out, const uint_least8_t flags = AMOUNT_PRINT_NO_FLAGS) const;
 

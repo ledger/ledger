@@ -1406,7 +1406,7 @@ void amount_t::print(std::ostream& _out, const uint_least8_t flags) const {
 
   // If there are any annotations associated with this commodity, output them
   // now.
-  comm.write_annotations(out, flags & AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS);
+  comm.write_annotations(out, flags & AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS, this, flags);
 
   // Things are output to a string first, so that if anyone has specified a
   // width or fill for _out, it will be applied to the entire amount string,

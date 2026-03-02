@@ -225,10 +225,21 @@ void annotation_t::parse(std::istream& in) {
 #endif
 }
 
-void annotation_t::print(std::ostream& out, bool keep_base, bool no_computed_annotations) const {
-  if (price && (!no_computed_annotations || !has_flags(ANNOTATION_PRICE_CALCULATED)))
-    out << " {" << (has_flags(ANNOTATION_PRICE_FIXATED) ? "=" : "")
-        << (keep_base ? *price : price->unreduced()) << '}';
+void annotation_t::print(std::ostream& out, bool keep_base, bool no_computed_annotations,
+                         const amount_t* qty, uint_least8_t print_flags) const {
+  if (price && (!no_computed_annotations || !has_flags(ANNOTATION_PRICE_CALCULATED))) {
+    if (has_flags(ANNOTATION_PRICE_NOT_PER_UNIT) && qty != nullptr &&
+        (print_flags & AMOUNT_PRINT_PRESERVE_TOTAL_COST)) {
+      // Reconstruct original total cost: stored per-unit price * abs(quantity).
+      // Using GMP rational arithmetic this multiplication is exact (no rounding).
+      amount_t total = *price * qty->abs();
+      out << " {{" << (has_flags(ANNOTATION_PRICE_FIXATED) ? "=" : "")
+          << (keep_base ? total : total.unreduced()) << "}}";
+    } else {
+      out << " {" << (has_flags(ANNOTATION_PRICE_FIXATED) ? "=" : "")
+          << (keep_base ? *price : price->unreduced()) << '}';
+    }
+  }
 
   if (date && (!no_computed_annotations || !has_flags(ANNOTATION_DATE_CALCULATED)))
     out << " [" << format_date(*date, FMT_WRITTEN) << ']';
@@ -364,9 +375,10 @@ commodity_t& annotated_commodity_t::strip_annotations(const keep_details_t& what
   return referent();
 }
 
-void annotated_commodity_t::write_annotations(std::ostream& out,
-                                              bool no_computed_annotations) const {
-  details.print(out, pool().keep_base, no_computed_annotations);
+void annotated_commodity_t::write_annotations(std::ostream& out, bool no_computed_annotations,
+                                              const amount_t* qty,
+                                              uint_least8_t print_flags) const {
+  details.print(out, pool().keep_base, no_computed_annotations, qty, print_flags);
 }
 
 } // namespace ledger
