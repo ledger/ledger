@@ -1,0 +1,30 @@
+; Regression test for issue #1005
+; Balance assignments where the target is $0 (i.e. the account's balance is
+; already zero) should succeed without error.
+;
+; Prior to the fix, mixing a zero-target balance assignment (= $0) with an
+; auto-balancing posting in the same transaction produced:
+;   "Only one posting with null amount allowed per transaction"
+;
+; Root cause: when the diff between the account balance and the assignment
+; target was zero, the posting amount was left null.  A second null posting
+; (the auto-balancing "todo:adjust" entry) then violated the one-null-post
+; rule.  The fix sets post->amount to a zero amount (amt - amt) in the
+; zero-diff case, giving it a proper non-null value.
+
+2015/01/05 accuracy checking
+    Assets:b   = $1
+    Assets:a   = $0
+    todo:adjust
+
+test bal
+                  $1  Assets:b
+                 $-1  todo:adjust
+--------------------
+                   0
+end test
+
+test reg
+15-Jan-05 accuracy checking     Assets:b                         $1           $1
+                                todo:adjust                     $-1            0
+end test
