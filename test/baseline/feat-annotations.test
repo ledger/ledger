@@ -23,7 +23,7 @@ test print
 
 2012/03/09 KFC
     Assets:Cash                                  $75
-    Expenses:Food                       -10 CHIK {$5} @ $75
+    Expenses:Food                       -10 CHIK {{$50}} @ $75
     Equity:Capital Gains                        $-25
 
 2012/03/09 KFC
@@ -32,6 +32,6 @@ test print
 
 2012/03/09 KFC
     Assets:Cash                                  $75
-    Expenses:Food                       -10 CHIK {$5}
+    Expenses:Food                       -10 CHIK {{$50}}
     Equity:Capital Gains                        $-25
 end test
