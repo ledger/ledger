@@ -208,7 +208,16 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
 
     // collapse_posts causes xacts with multiple posts to appear as xacts
     // with a subtotaled post for each commodity used.
-    if (report.HANDLED(collapse) || report.HANDLED(depth_)) {
+    //
+    // When using plot mode (-j/-J) with period mode (-M/--period), automatically
+    // collapse per-account postings within each period into a single total posting.
+    // This ensures that each time period produces exactly one data point for graphing,
+    // even when the account contains multiple commodities or sub-accounts (issue #984).
+    bool auto_collapse_for_plot =
+        !report.HANDLED(collapse) && !report.HANDLED(depth_) && report.HANDLED(period_) &&
+        (report.HANDLED(amount_data) || report.HANDLED(total_data));
+
+    if (report.HANDLED(collapse) || report.HANDLED(depth_) || auto_collapse_for_plot) {
       unsigned short collapse_depth = 0;
       if (report.HANDLED(depth_))
         collapse_depth = lexical_cast<int>(report.HANDLER(depth_).str());
