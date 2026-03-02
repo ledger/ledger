@@ -332,6 +332,10 @@ value_t get_depth_spacer(account_t& account) {
   return string_value(out.str());
 }
 
+value_t get_has_children_to_display(account_t& account) {
+  return account.children_with_flags(ACCOUNT_EXT_TO_DISPLAY) > 0;
+}
+
 value_t get_latest_cleared(account_t& account) {
   return account.self_details().latest_cleared_post;
 }
@@ -433,6 +437,11 @@ expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind, const string& fn
       return WRAP_FUNCTOR(get_wrapper<&get_earliest>);
     else if (fn_name == "earliest_checkin")
       return WRAP_FUNCTOR(get_wrapper<&get_earliest_checkin>);
+    break;
+
+  case 'h':
+    if (fn_name == "has_children_to_display")
+      return WRAP_FUNCTOR(get_wrapper<&get_has_children_to_display>);
     break;
 
   case 'i':
