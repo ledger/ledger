@@ -1,0 +1,30 @@
+; Regression test for issue #1011:
+; Date comparison operators (>=, <=, >, <) in automated transaction predicates
+; should work correctly, including when preceded by a Y year directive.
+
+Y 2014
+
+= /^Income:Projects:Company/ & d>=[2014/01/01] & d<[2015/01/01]
+  * Expenses:Taxes:Income      -0.18
+  * Liabilities:Accrued:Taxes   0.18
+
+2013/06/01 Old Income
+  Income:Projects:Company     -1000
+  Assets:Checking              1000
+
+2014/04/01 Income in 2014
+  Income:Projects:Company     -2000
+  Assets:Checking              2000
+
+2015/03/01 Future Income
+  Income:Projects:Company     -3000
+  Assets:Checking              3000
+
+test bal
+                6000  Assets:Checking
+                 360  Expenses:Taxes:Income
+               -6000  Income:Projects:Company
+                -360  Liabilities:Accrued:Taxes
+--------------------
+                   0
+end test
