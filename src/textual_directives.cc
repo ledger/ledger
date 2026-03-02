@@ -505,7 +505,9 @@ void instance_t::alias_directive(char* line) {
     *e++ = '\0';
     e = skip_ws(e);
 
-    account_alias_directive(top_account()->find_account(e), line);
+    account_t* account = top_account()->find_account(e);
+    account->add_flags(ACCOUNT_KNOWN);
+    account_alias_directive(account, line);
   }
 }
 
