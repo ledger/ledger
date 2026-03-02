@@ -1,0 +1,1038 @@
+src/textual_xacts.cc
+  28949dde2dc0bf05 805-806
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.6",
+  "base_commit_sha": "56e6e2f3a5cacefb55074b288770a77e4bc2417e",
+  "prompts": {
+    "28949dde2dc0bf05": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7ce96097-473c-4cfb-ba37-de6fb3655eef",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "<command-message>fix</command-message>\n<command-name>/fix</command-name>\n<command-args>1004</command-args>",
+          "timestamp": "2026-03-02T22:08:20.700Z"
+        },
+        {
+          "type": "user",
+          "text": "# Think, Research, Plan, Act, Review\n\nThink deeply to analyze the following query, construct a well thought out plan of action based on the following context, and then carefully execute that plan step by step.\n\nIf you find that the bug or feature you’re attempting to fix has already been addressed in an earlier commit, just add a regression test to demonstrate the item has been dealt with.\n\nCreate a PR for each using my jwiegley user on GitHub. The author/committer for all new commits should be signed by johnw@newartisans.com.\n\nThis series of jobs will take a long time, so make a comprehensive and effective plan and then execute step by step until you have completed them all and added new regression tests for each.\n\nNow, please analyze and fix the GitHub issue: 1004.\n\nNOTE: Do not work on a bug that already has a PR open that addresses it. In that case, just give the PR number and stop immediately.\n\n# Follow these steps\n\n1. Use `gh issue view` to get the issue details\n2. Understand the problem described in the issue\n3. Search the codebase for relevant files\n4. Implement the necessary changes to fix the issue\n5. Write and run tests to verify the fix\n6. Ensure code passes linting and type checking\n7. Leave your work uncommitted in the working tree, so it can be reviewed.\n\nRemember the following:\n- Use the claude-code skill to provide context for the rest of the task\n- Use the GitHub CLI (`gh`) for all GitHub-related tasks\n- Search the codebase for relevant files\n- Ensure code passes linting and type checking after doing any work\n- Use cpp-pro, python-pro, emacs-lisp-pro, rust-pro or haskell-pro as needed for diagnosing and analyzing PRs, fixing code, and writing any new code.\n- Use Web Search and Perplexity as need for research and discovering resources.\n- Use sequential-thinking when appropriate to break down tasks further.\n- Use context7 whenever code examples might help.\n\nCommit all work as a series of atomic, logically sequenced commits. Each commit should represent one coherent change that can be understood, reviewed, and reverted independently.\n\n# Commit Decomposition Principles\n\n**Scope each commit to a single logical change.** A commit should do exactly one thing: add a function, fix a bug, refactor a module, update documentation. If you find yourself writing \"and\" in a commit message, consider splitting the commit.\n\n**Sequence commits to tell a story.** Arrange commits so each builds naturally on the previous. A reviewer reading the series should understand why each change was made and how the code evolved. Foundational changes come before dependent ones.\n\n**Keep each commit in a working state.** Every commit should compile, pass tests, and not introduce obvious regressions. This enables bisection for debugging and allows reviewers to check out any point in history.\n\n# Categorizing Changes\n\nBefore committing, analyze the working tree and group changes into categories:\n\n1. **Infrastructure/setup changes** — new dependencies, configuration, tooling\n2. **Refactoring** — restructuring existing code without changing behavior\n3. **New functionality** — features, APIs, modules\n4. **Bug fixes** — corrections to existing behavior\n5. **Tests** — new or modified test coverage\n6. **Documentation** — comments, READMEs, inline docs\n\nCommit these categories in order when dependencies exist between them. Refactoring that enables a new feature should precede the feature commit.\n\n# Commit Message Format\n\n```\n<summary>\n\n<body>\n\n<footer>\n```\n\n**Summary line:** Imperative mood, no period, under 50 characters. Describe what applying the commit does, not what you did.\n\n**Body:** Explain the motivation and contrast with previous behavior. Wrap at 72 characters. Focus on *why*, not *what* (the diff shows what).\n\n**Footer:** Reference issues, breaking changes, or co-authors.\n\n# Staging Strategy\n\nUse selective staging to craft precise commits:\n\n- `git add -p` for hunks within files\n- `git add <specific-files>` to group related files\n- Review staged changes with `git diff --staged` before committing\n\nWhen a single file contains changes belonging to multiple logical commits, stage hunks separately rather than committing the entire file.\n\n# Quality Checklist\n\nBefore finalizing each commit:\n\n- [ ] Does this commit do exactly one thing?\n- [ ] Could someone understand this change without seeing other commits?\n- [ ] Is the commit message searchable? Will someone find this when grepping history?\n- [ ] Does the code compile and pass tests at this point?\n- [ ] Would reverting this commit cleanly undo one logical change?\n\n# Example Decomposition\n\nGiven work that adds a feature with tests and required refactoring:\n\n```\n1. Extract token validation into dedicated module\n2. Add unit tests for token validation\n3. Implement refresh token rotation\n4. Add integration tests for token refresh flow\n5. Document refresh token behavior in API guide\n```\n\nEach commit is independently reviewable, the sequence shows logical progression, and future developers can find relevant changes through targeted searches.\n\n# Handling Mixed Changes\n\nIf the working tree contains entangled changes:\n\n1. **Identify the distinct changes** — list what logical modifications exist\n2. **Determine dependencies** — which changes require others to be present\n3. **Create a commit plan** — order commits to satisfy dependencies\n4. **Stage incrementally** — use partial staging to isolate each change\n5. **Verify at each step** — ensure the repository works after each commit\n\nWhen changes are too entangled to separate cleanly, prefer a slightly larger commit with a clear message over a commit that leaves the repository in a broken state.\n",
+          "timestamp": "2026-03-02T22:08:20.700Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me start by reading my memory file and understanding the project context, then look at GitHub issue 1004.",
+          "timestamp": "2026-03-02T22:08:23.415Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1004/memory/MEMORY.md"
+          },
+          "timestamp": "2026-03-02T22:08:24.471Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 1004 2>&1",
+            "description": "View GitHub issue 1004"
+          },
+          "timestamp": "2026-03-02T22:08:25.386Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 1004 --repo ledger/ledger 2>&1",
+            "description": "View GitHub issue 1004 from ledger/ledger repo"
+          },
+          "timestamp": "2026-03-02T22:08:28.424Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh auth status 2>&1",
+            "description": "Check gh auth status"
+          },
+          "timestamp": "2026-03-02T22:08:30.300Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The GitHub CLI authentication is failing. Let me try fetching the issue via the web instead.",
+          "timestamp": "2026-03-02T22:08:32.330Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "WebFetch",
+          "input": {
+            "prompt": "What is this GitHub issue about? Describe the bug report, the steps to reproduce, and any relevant details about the expected vs actual behavior.",
+            "url": "https://github.com/ledger/ledger/issues/1004"
+          },
+          "timestamp": "2026-03-02T22:08:33.341Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the issue. It's about an assertion failure in `src/textual.cc` when a blank line contains only whitespace characters. Let me look at the current state of the code to understand the problem.\n\nLet me:\n1. Check if there's already a PR for this issue\n2. Look at the relevant code in `src/textual.cc`\n3. Understand the issue and implement a fix",
+          "timestamp": "2026-03-02T22:08:40.934Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "WebFetch",
+          "input": {
+            "prompt": "Are there any pull requests related to issue 1004? List any PRs that reference this issue number.",
+            "url": "https://github.com/ledger/ledger/pulls?q=is%3Apr+1004"
+          },
+          "timestamp": "2026-03-02T22:08:42.052Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"parse_post\\|1379\\|whitespace\" src/textual.cc | head -50",
+            "description": "Search for relevant code in textual.cc"
+          },
+          "timestamp": "2026-03-02T22:08:43.496Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "wc -l src/textual.cc && grep -n \"parse_post\" src/textual.cc | head -20",
+            "description": "Check textual.cc size and parse_post occurrences"
+          },
+          "timestamp": "2026-03-02T22:08:48.158Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The textual.cc file only has 288 lines, but the error was at line 1379. The current code base may have changed significantly since 2013 when the issue was filed. Let me check the current state of the textual.cc file, particularly for `parse_post` and assertion failures around whitespace-only lines.\n\nLet me look more carefully at the issue by searching the codebase.",
+          "timestamp": "2026-03-02T22:08:51.510Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls src/textual*",
+            "description": "List textual source files"
+          },
+          "timestamp": "2026-03-02T22:08:52.262Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "wc -l src/textual*.cc src/textual*.h",
+            "description": "Count lines in all textual files"
+          },
+          "timestamp": "2026-03-02T22:08:54.035Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"parse_post\\|Assertion\\|assert\\|whitespace\" src/textual_xacts.cc | head -50",
+            "description": "Search for parse_post and assertions in textual_xacts.cc"
+          },
+          "timestamp": "2026-03-02T22:08:56.735Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1004/src/textual_xacts.cc",
+            "limit": 100,
+            "offset": 140
+          },
+          "timestamp": "2026-03-02T22:09:00.318Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me look at `peek_whitespace_line()` and `read_line()` to understand how they work, particularly when a line contains only whitespace. The issue says that a blank line containing a single whitespace character triggers an assertion failure.",
+          "timestamp": "2026-03-02T22:09:03.770Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1004/src/textual_internal.h"
+          },
+          "timestamp": "2026-03-02T22:09:04.911Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the code structure. The `peek_whitespace_line()` function returns `true` if the next character is a space or tab. So if there's a line that starts with a space or tab but only contains whitespace, the loop would call `read_line()` to get the line, then `skip_ws(line)` would return a pointer to the end of the string (empty), and the check `if (!*p) break;` would exit the loop.\n\nSo the existing code at line 185-231 in `textual_xacts.cc` should handle whitespace-only lines correctly by breaking when `*p == '\\0'` after skipping whitespace. \n\n\nLet me trace through the logic more carefully with `peek_whitespace_line()` and `parse_posts()` to see what's actually happening with whitespace-only lines. If a line contains just whitespace, `peek_whitespace_line()` sees the space and returns true, the loop reads the line, `skip_ws()` consumes all whitespace leaving an empty string, and `!*p` triggers the break. This should work as intended, though the issue was reported back in 2013 so there might be something I'm missing.\n\nLet me check if this was already fixed in subsequent versions and whether there's a regression test for it, then try to reproduce the original bug with the test case from the issue.",
+          "timestamp": "2026-03-02T22:09:26.021Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me look at the actual parse_post function to understand the assertions:",
+          "timestamp": "2026-03-02T22:09:26.027Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1004/src/textual_xacts.cc",
+            "limit": 50,
+            "offset": 400
+          },
+          "timestamp": "2026-03-02T22:09:26.963Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"1004\" test/regress/ 2>/dev/null | head -10",
+            "description": "Check if there's already a regression test for issue 1004"
+          },
+          "timestamp": "2026-03-02T22:09:28.158Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The assertions at lines 420-421 in the current code are:\n```cpp\nassert(line);\nassert(*line);\n```\n\nThe `assert(*line)` would fail if `line` points to an empty string (i.e., `line[0] == '\\0'`). But this shouldn't happen because the whitespace-only line handling in the loop above checks `if (!*p) break;` before calling `parse_post`.\n\nHowever, looking at the actual bug: the issue is with `period_xact_directive` (monthly recurring transactions). Let me look at that function.\n\nActually, looking at the call at line 224:\n\n\nI'm tracing through the code path where `p` gets skipped to the next non-whitespace character, and if the line is all whitespace, the loop would break before reaching the parse call. So the automated_xact_directive function appears safe. Now I need to check the `period_xact_directive` function to see if it has the same whitespace-handling logic.",
+          "timestamp": "2026-03-02T22:09:36.468Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"period_xact_directive\\|parse_posts\\|peek_whitespace\" src/textual_xacts.cc | head -30",
+            "description": "Find period_xact_directive in textual_xacts.cc"
+          },
+          "timestamp": "2026-03-02T22:09:36.541Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1004/src/textual_xacts.cc",
+            "limit": 60,
+            "offset": 247
+          },
+          "timestamp": "2026-03-02T22:09:39.488Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1004/src/textual_xacts.cc",
+            "limit": 50,
+            "offset": 796
+          },
+          "timestamp": "2026-03-02T22:09:39.865Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I can see the bug. In `parse_posts()` at line 801-811:\n\n```cpp\nwhile (peek_whitespace_line()) {\n    char* line;\n    std::streamsize len = read_line(line);\n    char* p = skip_ws(line);\n    if (*p != ';') {\n      if (post_t* post = parse_post(line, len, account, nullptr, defer_expr)) {\n        xact.add_post(post);\n        added = true;\n      }\n    }\n  }\n```\n\nWhen there's a whitespace-only line (e.g., a single space), `peek_whitespace_line()` returns true (it sees the space), `read_line()` reads the line, and `skip_ws(line)` returns a pointer past the whitespace. \n\nThe problem is that the code only checks `if (*p != ';')` without verifying the line isn't empty. When `*p` is `'\\0'` (indicating a whitespace-only line), it still calls `parse_post()` with the original line pointer. Inside `parse_post()`, the assertion `assert(*line)` fails because the first character of the original line is a space, not the null terminator—wait, actually the assertion would check the first character of the line buffer itself, which would be the whitespace character, so that passes. But the real issue is that `parse_post()` is being called on a line that's only whitespace, which it shouldn't be processing at all.\n\nLet me check what `read_line()` actually returns to understand the line format better.",
+          "timestamp": "2026-03-02T22:09:49.153Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1004/src/textual.cc"
+          },
+          "timestamp": "2026-03-02T22:09:49.591Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the flow much better. Let me trace through what happens with a whitespace-only line:\n\n1. In `read_line()`, when given a line containing only whitespace (e.g., \" \\n\"):\n   - `in.getline()` reads \" \" (without the newline)\n   - `len = 1` (just the space)\n   - The trailing whitespace stripping loop: `while (len > 0 && std::isspace(line[len - 1])) line[--len] = '\\0';`\n   - This strips the trailing space, so `len = 0` and `line[0] = '\\0'`\n   \n2. Back in `parse_posts()`, after `read_line()` returns with `len = 0`, the pointer `p` gets set to the null terminator when we call `skip_ws()`, so the condition `if (*p != ';')` evaluates to checking a null character, which fails the semicolon check.\n\n3. This leads to `parse_post()` being invoked with an empty string and `len = 0`, but the function has an assertion `assert(*line)` that expects the line to actually contain something—and that's where it crashes.\n\n4. The real issue is that `parse_posts()` doesn't filter out empty lines after stripping whitespace before passing them to `parse_post()`, so the fix would be to add that check to skip over lines that become empty after whitespace removal.\n\n5. Looking at how the automated transaction handling code deals with this same situation, it breaks out of the loop when encountering a whitespace-only line, treating it as a separator between entries. The same logic probably applies here—a whitespace-only line should signal the end of the current posting block. looking at how the parsing works. When a blank or whitespace-only line appears, it should terminate the postings loop since transactions are separated by blank lines. The main parsing loop treats these as empty directives and just continues, but inside `parse_posts()`, encountering such a line should trigger a break to stop reading postings. Let me trace through what happens with the example input to see where the issue occurs. I see the issue now—the `parse_posts()` function needs the same empty-line check that the automated xact directive already has. After stripping whitespace, if the line is empty, we should break out of the loop rather than trying to parse it. Adding that guard condition will prevent the assertion failure. I'm checking how the `xact_directive` function flows into `parse_xact` to understand the full transaction parsing lifecycle and confirm the whitespace-only line behavior is consistent across both paths.",
+          "timestamp": "2026-03-02T22:10:21.172Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1004/src/textual_xacts.cc",
+            "limit": 80,
+            "offset": 900
+          },
+          "timestamp": "2026-03-02T22:10:21.588Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I can see the pattern more clearly. In the `parse_xact()` function (starting at line 914) and the `automated_xact_directive()` function (starting at line 185), there's a check:\n\n```cpp\nif (!*p)\n    break;\n```\n\nThis correctly handles whitespace-only lines by breaking out of the posting-reading loop.\n\nBut in `parse_posts()` (starting at line 796), there is NO such check:\n\n```cpp\nwhile (peek_whitespace_line()) {\n    char* line;\n    std::streamsize len = read_line(line);\n    char* p = skip_ws(line);\n\n\n```\n\nWhen a whitespace-only line is encountered, `*p == '\\0'`, the condition `if (*p != ';')` evaluates to true since null doesn't equal semicolon, so it passes the line to `parse_post()` with `len == 0` and an empty string, which then hits the assertion that expects a non-empty line.\n\nThe solution is to add a check like `if (!*p) break;` before calling `parse_post()`, matching the pattern already used in `parse_xact()` and `automated_xact_directive()`. I also notice that `parse_post()` is called with `line` here but with `p` in other functions, which is another inconsistency worth noting, though the immediate priority is fixing the empty-line bug.\n\nNow I'm checking whether breaking on an empty line is the right behavior—looking at how `parse_xact()` and the automated transaction directive handle this, they both break when hitting an empty line to terminate the posting loop, so `parse_posts()` should follow the same pattern. Let me build and test this to confirm the bug exists.",
+          "timestamp": "2026-03-02T22:10:35.513Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the bug. In `parse_posts()` (line 796-816), there's a missing check for whitespace-only lines. The `parse_xact()` and `automated_xact_directive()` functions both have `if (!*p) break;` after skipping whitespace, but `parse_posts()` doesn't, causing it to call `parse_post()` with an empty line which triggers `assert(*line)`.\n\nLet me reproduce the bug and then fix it:",
+          "timestamp": "2026-03-02T22:10:36.362Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat > /tmp/test1004.dat << 'EOF'\n~ Monthly\n    Expenses:Food    $10.00\n    Assets:Cash\n \n2013/01/01 Some Transaction\n    Expenses:Food    $5.00\n    Assets:Cash\nEOF\necho \"Test file created\"",
+            "description": "Create a test file with whitespace-only line after period transaction"
+          },
+          "timestamp": "2026-03-02T22:10:38.994Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls build/ 2>/dev/null | head -5",
+            "description": "Check if build directory exists"
+          },
+          "timestamp": "2026-03-02T22:10:41.485Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls -la | head -20",
+            "description": "List directory contents"
+          },
+          "timestamp": "2026-03-02T22:10:43.309Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat .git",
+            "description": "Check git file (may be a worktree)"
+          },
+          "timestamp": "2026-03-02T22:10:45.324Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/main/build/ 2>/dev/null | head -5 && echo \"BUILD EXISTS\" || echo \"NO BUILD\"",
+            "description": "Check if the main build directory exists"
+          },
+          "timestamp": "2026-03-02T22:10:47.426Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/main/build/ledger 2>/dev/null && echo \"LEDGER BINARY EXISTS\" || echo \"NO BINARY\"",
+            "description": "Check if the ledger binary exists"
+          },
+          "timestamp": "2026-03-02T22:10:49.650Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "/Users/johnw/src/ledger/main/build/ledger -f /tmp/test1004.dat balance 2>&1",
+            "description": "Try to reproduce the bug with existing binary"
+          },
+          "timestamp": "2026-03-02T22:10:52.154Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/main/build/*.dylib 2>/dev/null | head -5 && ls /Users/johnw/src/ledger/main/build/*.so 2>/dev/null | head -5 || echo \"No shared libs found\"",
+            "description": "Find shared libraries"
+          },
+          "timestamp": "2026-03-02T22:10:54.299Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "DYLD_LIBRARY_PATH=/Users/johnw/src/ledger/main/build /Users/johnw/src/ledger/main/build/ledger -f /tmp/test1004.dat balance 2>&1",
+            "description": "Try running with correct library path"
+          },
+          "timestamp": "2026-03-02T22:10:56.854Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I've confirmed the bug. Now let me fix it. The fix is in `parse_posts()` in `src/textual_xacts.cc`. I need to add a check for empty lines after stripping whitespace, similar to what `parse_xact()` does at line 917-918.\n\nLooking at the code:\n\n```cpp\nbool instance_t::parse_posts(account_t* account, xact_base_t& xact, const bool defer_expr) {\n  TRACE_START(xact_posts, 1, \"Time spent parsing postings:\");\n\n  bool added = false;\n\n  while (peek_whitespace_line()) {\n    char* line;\n    std::streamsize len = read_line(line);\n    char* p = skip_ws(line);\n    if (*p != ';') {\n      if (post_t* post = parse_post(line, len, account, nullptr, defer_expr)) {\n        xact.add_post(post);\n        added = true;\n      }\n    }\n  }\n\n  TRACE_STOP(xact_posts, 1);\n\n  return added;\n}\n```\n\nI need to add a check to break out of the loop when we encounter an empty line after stripping whitespace, which will prevent the parser from trying to process blank lines as postings. This matches the pattern used in `parse_xact()`.\n\nI'm also noticing an inconsistency in how `parse_post` is being called. In `parse_posts()` I'm passing the original line buffer, but in `parse_xact()` it's being passed the whitespace-stripped pointer. Since `parse_post` does its own whitespace skipping internally, both approaches should work, but I should verify this is intentional and consistent with the function's expectations.",
+          "timestamp": "2026-03-02T22:11:09.418Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I've confirmed the bug. The fix is simple: `parse_posts()` is missing the check for whitespace-only lines that both `parse_xact()` and `automated_xact_directive()` have.",
+          "timestamp": "2026-03-02T22:11:10.187Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1004/src/textual_xacts.cc",
+            "new_string": "  while (peek_whitespace_line()) {\n    char* line;\n    std::streamsize len = read_line(line);\n    char* p = skip_ws(line);\n    if (!*p)\n      break;\n    if (*p != ';') {\n      if (post_t* post = parse_post(line, len, account, nullptr, defer_expr)) {\n        xact.add_post(post);\n        added = true;\n      }\n    }\n  }",
+            "old_string": "  while (peek_whitespace_line()) {\n    char* line;\n    std::streamsize len = read_line(line);\n    char* p = skip_ws(line);\n    if (*p != ';') {\n      if (post_t* post = parse_post(line, len, account, nullptr, defer_expr)) {\n        xact.add_post(post);\n        added = true;\n      }\n    }\n  }",
+            "replace_all": false
+          },
+          "timestamp": "2026-03-02T22:11:12.957Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let's build to verify the fix compiles:",
+          "timestamp": "2026-03-02T22:11:15.493Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/main/build && make -j$(sysctl -n hw.ncpu) ledger 2>&1 | tail -20",
+            "description": "Build the ledger binary",
+            "timeout": 120000
+          },
+          "timestamp": "2026-03-02T22:11:16.824Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/",
+            "description": "List ledger source directories"
+          },
+          "timestamp": "2026-03-02T22:11:18.963Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/main/build/ | head -5 && cat /Users/johnw/src/ledger/main/build/CMakeCache.txt | grep SOURCE_DIR | head -5",
+            "description": "Check the CMake source directory in main build"
+          },
+          "timestamp": "2026-03-02T22:11:21.859Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The build directory was configured for `master` branch, which doesn't exist. There's a `main` branch. Let me check if there's a build directory for the fix-1004 worktree, or if I need to set up a new build.\n\nActually, looking at the CLAUDE.md, I can build using:\n```bash\nmkdir build && cd build\ncmake ..\nmake -j$(nproc)\n```\n\nLet me check if the fix-1004 worktree has a build directory.",
+          "timestamp": "2026-03-02T22:11:27.129Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1004/build/ 2>/dev/null | head -5 || echo \"No build dir in fix-1004\"",
+            "description": "Check if fix-1004 has its own build dir"
+          },
+          "timestamp": "2026-03-02T22:11:28.041Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1000/build/ 2>/dev/null | head -5 && echo \"EXISTS\" || echo \"No build dir\"",
+            "description": "Check another fix directory for build"
+          },
+          "timestamp": "2026-03-02T22:11:30.709Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat /Users/johnw/src/ledger/fix-1000/build/CMakeCache.txt | grep SOURCE_DIR | head -3",
+            "description": "Check CMake source dir configuration"
+          },
+          "timestamp": "2026-03-02T22:11:32.594Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1000/build/ | head -10",
+            "description": "List build contents of fix-1000"
+          },
+          "timestamp": "2026-03-02T22:11:34.902Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "find /Users/johnw/src/ledger -maxdepth 2 -name \"CMakeCache.txt\" 2>/dev/null",
+            "description": "Find CMake cache files in ledger directory"
+          },
+          "timestamp": "2026-03-02T22:11:37.064Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "find /Users/johnw/src/ledger -name \"ledger\" -type f -executable 2>/dev/null | head -5",
+            "description": "Find existing ledger executables"
+          },
+          "timestamp": "2026-03-02T22:11:39.080Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1216/build/ | head -5 && cat /Users/johnw/src/ledger/fix-1216/build/CMakeCache.txt | grep SOURCE_DIR | head -3",
+            "description": "Check a recent build configuration"
+          },
+          "timestamp": "2026-03-02T22:11:41.682Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Good. The builds are configured within each worktree's `build/` directory. I need to build within the `fix-1004` worktree. Let me set up a build directory.",
+          "timestamp": "2026-03-02T22:11:44.303Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "mkdir -p build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug 2>&1 | tail -10",
+            "description": "Configure CMake build for fix-1004",
+            "timeout": 60000
+          },
+          "timestamp": "2026-03-02T22:11:45.124Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat /Users/johnw/src/ledger/fix-1216/build/CMakeCache.txt | grep -E \"BOOST|Python|MPFR|Utfcpp\" | grep -v \"ADVANCED\" | head -20",
+            "description": "Check build configuration options from a working build"
+          },
+          "timestamp": "2026-03-02T22:11:48.402Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat /Users/johnw/src/ledger/fix-1216/build/CMakeCache.txt | grep -E \"^CMAKE_PREFIX_PATH|BOOST_ROOT|Boost_DIR\" | head -10",
+            "description": "Find how boost was found in working build"
+          },
+          "timestamp": "2026-03-02T22:11:50.824Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd build && cmake .. -DBoost_DIR=/nix/store/i4h1r48bd2dqrsypsikggv3lzx63gdra-boost-1.87.0-dev/lib/cmake/Boost-1.87.0 2>&1 | tail -15",
+            "description": "Configure CMake with Boost dir",
+            "timeout": 60000
+          },
+          "timestamp": "2026-03-02T22:11:53.387Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1004/build/ 2>/dev/null && echo \"EXISTS\" || echo \"NOT FOUND\"",
+            "description": "Check build directory status"
+          },
+          "timestamp": "2026-03-02T22:11:55.426Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cmake .. -DBoost_DIR=/nix/store/i4h1r48bd2dqrsypsikggv3lzx63gdra-boost-1.87.0-dev/lib/cmake/Boost-1.87.0 2>&1 | tail -15",
+            "description": "Configure CMake with Boost in fix-1004 build dir",
+            "timeout": 60000
+          },
+          "timestamp": "2026-03-02T22:11:57.857Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat /Users/johnw/src/ledger/fix-1216/build/CMakeCache.txt | grep -E \"^MPFR\" | head -5",
+            "description": "Get MPFR path from working build"
+          },
+          "timestamp": "2026-03-02T22:12:03.148Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cmake .. \\\n  -DBoost_DIR=/nix/store/i4h1r48bd2dqrsypsikggv3lzx63gdra-boost-1.87.0-dev/lib/cmake/Boost-1.87.0 \\\n  -DMPFR_LIB=/nix/store/hrbzvl92ci45nmbni8xh1xazxpr5q650-mpfr-4.2.2/lib/libmpfr.dylib \\\n  -DMPFR_PATH=/nix/store/2q3v6lcf2dyzpp2vija506kckds23dcw-mpfr-4.2.2-dev/include \\\n  2>&1 | tail -15",
+            "description": "Configure CMake with Boost and MPFR paths",
+            "timeout": 60000
+          },
+          "timestamp": "2026-03-02T22:12:06.569Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat /Users/johnw/src/ledger/fix-1216/build/CMakeCache.txt | grep -E \"^GMP|^ICU\" | head -10",
+            "description": "Get GMP and ICU paths from working build"
+          },
+          "timestamp": "2026-03-02T22:12:09.299Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat /Users/johnw/src/ledger/fix-1216/build/CMakeCache.txt | grep -E \"^ICU_LIBRARY|^ICU_INCLUDE|^ICU_ROOT\" | head -10",
+            "description": "Get ICU library paths"
+          },
+          "timestamp": "2026-03-02T22:12:12.118Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cmake .. \\\n  -DBoost_DIR=/nix/store/i4h1r48bd2dqrsypsikggv3lzx63gdra-boost-1.87.0-dev/lib/cmake/Boost-1.87.0 \\\n  -DMPFR_LIB=/nix/store/hrbzvl92ci45nmbni8xh1xazxpr5q650-mpfr-4.2.2/lib/libmpfr.dylib \\\n  -DMPFR_PATH=/nix/store/2q3v6lcf2dyzpp2vija506kckds23dcw-mpfr-4.2.2-dev/include \\\n  -DGMP_LIB=/nix/store/ylp2h0mfjgsk4bbhp0z37ivnkprg98sz-gmp-with-cxx-6.3.0/lib/libgmp.dylib \\\n  -DGMP_PATH=/nix/store/9nl8l1ki5ha053ri15fy9x27h9a0pwmn-gmp-with-cxx-6.3.0-dev/include \\\n  2>&1 | tail -15",
+            "description": "Configure CMake with all library paths",
+            "timeout": 60000
+          },
+          "timestamp": "2026-03-02T22:12:20.117Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd build && make -j$(sysctl -n hw.ncpu) 2>&1 | tail -20",
+            "description": "Build ledger in fix-1004",
+            "timeout": 300000
+          },
+          "timestamp": "2026-03-02T22:12:23.133Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "make -j$(sysctl -n hw.ncpu) -C /Users/johnw/src/ledger/fix-1004/build 2>&1 | tail -20",
+            "description": "Build ledger in fix-1004 build dir",
+            "timeout": 300000
+          },
+          "timestamp": "2026-03-02T22:12:25.317Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The build succeeded. Let me test the fix:",
+          "timestamp": "2026-03-02T22:12:40.139Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "DYLD_LIBRARY_PATH=/Users/johnw/src/ledger/fix-1004/build /Users/johnw/src/ledger/fix-1004/build/ledger -f /tmp/test1004.dat balance 2>&1",
+            "description": "Test the fix with the reproduction case"
+          },
+          "timestamp": "2026-03-02T22:12:41.208Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The fix works. Now let me also test that the fix handles the `~ Monthly` case specifically (which is period_xact_directive):",
+          "timestamp": "2026-03-02T22:12:44.532Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "DYLD_LIBRARY_PATH=/Users/johnw/src/ledger/fix-1004/build /Users/johnw/src/ledger/fix-1004/build/ledger -f /tmp/test1004.dat register 2>&1",
+            "description": "Test register command with fix"
+          },
+          "timestamp": "2026-03-02T22:12:45.404Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me write a regression test:",
+          "timestamp": "2026-03-02T22:12:46.923Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat test/regress/2413.test | head -30",
+            "description": "Check an example regression test for format reference"
+          },
+          "timestamp": "2026-03-02T22:12:48.173Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls test/regress/ | head -10",
+            "description": "List regression tests"
+          },
+          "timestamp": "2026-03-02T22:12:50.632Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1004/test/regress/ | head -20",
+            "description": "List regression test files"
+          },
+          "timestamp": "2026-03-02T22:12:54.695Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat /Users/johnw/src/ledger/fix-1004/test/regress/1009.test",
+            "description": "Look at an example regression test"
+          },
+          "timestamp": "2026-03-02T22:12:57.176Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat /Users/johnw/src/ledger/fix-1004/test/regress/1035.test",
+            "description": "Look at another regression test with period transactions"
+          },
+          "timestamp": "2026-03-02T22:12:59.127Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I'll create the regression test for issue 1004:",
+          "timestamp": "2026-03-02T22:13:01.055Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Write",
+          "input": {
+            "content": "; Regression test for GitHub issue #1004\n; \"Assertion failure when parsing ledger file with whitespace-only line\"\n;\n; When a whitespace-only line (e.g., a line containing only a single space)\n; appears between a periodic transaction (~) and the next transaction,\n; ledger crashed with an assertion failure in parse_post():\n;   \"Assertion failed: *line\"\n;\n; The fix adds a missing empty-line check in parse_posts() that matches\n; the pattern already used in parse_xact() and automated_xact_directive().\n\n~ Monthly\n    Expenses:Food    $10.00\n    Assets:Cash\n\n2013/01/01 Some Transaction\n    Expenses:Food    $5.00\n    Assets:Cash\n\ntest bal\n              $-5.00  Assets:Cash\n               $5.00  Expenses:Food\n--------------------\n                   0\nend test\n",
+            "file_path": "/Users/johnw/src/ledger/fix-1004/test/regress/1004.test"
+          },
+          "timestamp": "2026-03-02T22:13:06.331Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Wait, the test uses a whitespace-only line between the periodic transaction and the regular transaction. The file I created with the `cat << 'EOF'` command had a literal space on the blank line. I need to make sure the test file also has that whitespace-only line.\n\nActually, looking at the issue description more carefully: the problem is with \"a blank line containing a single whitespace character.\" This is represented by a line that starts with a space (which `peek_whitespace_line()` would detect) but after stripping trailing whitespace, becomes empty.\n\nThe test file I just created has a blank line between the period transaction and the regular transaction. \n\nSo the distinction is clear now: `peek_whitespace_line()` returns true only when the next line starts with a space or tab, while a truly empty line would fail that check. The issue must be specifically about lines containing whitespace characters rather than completely empty lines.\n\nNow I need to construct a test case with a whitespace-only line positioned between transaction blocks, but that's complicated in the .test file format since the parser might interpret leading whitespace as part of the transaction syntax. the test harness actually validates whitespace-only lines versus truly empty lines—a whitespace-only line with a space character would trigger the bug, but the blank line I wrote wouldn't. I need to construct a test file that explicitly includes a line with just whitespace to properly reproduce the issue. the current test actually reproduce the bug? Let me think through the flow again.\n\nActually, looking at the `read_next_directive` function, when `read_line` reads an empty line, it returns `len = 0` and `read_next_directive` returns `nullptr` immediately. For the periodic transaction, `parse_posts()` reads the postings in a loop that only continues if the next line starts with whitespace. After reading both postings, the next line is blank with no leading space, so the loop exits normally.\n\nSo the bug actually triggers when that blank line contains whitespace like a single space character, which would make `peek_whitespace_line()` return true. I need to update my test file to include a line with a space character instead.",
+          "timestamp": "2026-03-02T22:13:31.419Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I need the test file to contain a line with actual whitespace (not just empty), since the bug is triggered specifically when a blank line contains whitespace. Let me fix the test file:",
+          "timestamp": "2026-03-02T22:13:31.431Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "# Create the test file with a proper whitespace-only line (single space)\nprintf '~ Monthly\\n    Expenses:Food    $10.00\\n    Assets:Cash\\n \\n2013/01/01 Some Transaction\\n    Expenses:Food    $5.00\\n    Assets:Cash\\n' > /tmp/test1004_verify.dat\n# Verify it has a whitespace-only line\ncat -A /tmp/test1004_verify.dat | head -6",
+            "description": "Verify the test data has a whitespace-only line"
+          },
+          "timestamp": "2026-03-02T22:13:33.026Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "DYLD_LIBRARY_PATH=/Users/johnw/src/ledger/fix-1004/build /Users/johnw/src/ledger/fix-1004/build/ledger -f /tmp/test1004_verify.dat balance 2>&1",
+            "description": "Verify the fix works with a whitespace-only line"
+          },
+          "timestamp": "2026-03-02T22:13:36.800Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Good, the fix works. Now I need to write the test file such that it has a whitespace-only line (a line with just a space character). The Write tool doesn't easily allow that, so I'll need to be careful.\n\nActually, looking at the test file format and how the Python test harness works, let me check if the test harness would strip trailing whitespace from the test data. If it does, then the whitespace-only line would become an empty line by the time it's written to the temp file, and the bug wouldn't be triggered.\n\nLet me check the test harness:",
+          "timestamp": "2026-03-02T22:13:41.466Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me check how the test harness handles the journal data to understand if it preserves whitespace-only lines:",
+          "timestamp": "2026-03-02T22:13:42.117Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "head -100 /Users/johnw/src/ledger/fix-1004/test/RegressTests.py",
+            "description": "Check the test harness implementation"
+          },
+          "timestamp": "2026-03-02T22:13:43.248Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I see! Looking at the test harness, when there's no `-f` in the command, it uses `$ledger -f \"<the_test_file_itself>\" <command>`. So the test file itself IS the journal file. This means the whitespace-only line needs to be in the .test file, and the harness will pass the .test file directly to ledger.\n\nBut there's a concern: the test harness reads through the .test file to find the `test` and `end test` blocks. The journal data IS the .test file itself. When ledger parses the .test file as a journal, the `test bal` line would trigger errors unless ledger handles it gracefully (it's after the journal data anyway, and the parsing of the `test` block would be done by the test harness).\n \nSo the whole .test file gets passed to ledger as the journal input, which means ledger needs to parse the `test` and `end test` directives as part of the file. Looking at how the parser handles these—comments starting with `;` are recognized, and the `test`/`end test` lines would be treated as directives that the parser needs to handle gracefully.\n\nThe key insight is that I need to make sure the blank line between the periodic transaction and regular transaction is preserved in the .test file, since it's just whitespace that the Write tool can handle.",
+          "timestamp": "2026-03-02T22:14:00.486Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The test harness passes the .test file directly to ledger, so I need to make sure the whitespace-only line is embedded correctly in the test file. Let me create it using bash to ensure precise content:",
+          "timestamp": "2026-03-02T22:14:01.167Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "printf '; Regression test for GitHub issue #1004\\n; \"Assertion failure when parsing ledger file with whitespace-only line\"\\n;\\n; When a whitespace-only line (e.g., a line containing only a single space)\\n; appears between a periodic transaction (~) and the next transaction,\\n; ledger crashed with an assertion failure in parse_post():\\n;   \"Assertion failed: *line\"\\n;\\n; The fix adds a missing empty-line check in parse_posts() that matches\\n; the pattern already used in parse_xact() and automated_xact_directive().\\n\\n~ Monthly\\n    Expenses:Food    $10.00\\n    Assets:Cash\\n \\n2013/01/01 Some Transaction\\n    Expenses:Food    $5.00\\n    Assets:Cash\\n\\ntest bal\\n              $-5.00  Assets:Cash\\n               $5.00  Expenses:Food\\n--------------------\\n                   0\\nend test\\n' > /Users/johnw/src/ledger/fix-1004/test/regress/1004.test\necho \"Written successfully\"\n# Verify the whitespace-only line\ngrep -n \"^[[:space:]]$\" /Users/johnw/src/ledger/fix-1004/test/regress/1004.test && echo \"Found whitespace-only line\" || echo \"No whitespace-only line found\"\ncat -A /Users/johnw/src/ledger/fix-1004/test/regress/1004.test | grep -n \"^ \\$$\" && echo \"Found space-only line\"",
+            "description": "Create test file with precise whitespace-only line"
+          },
+          "timestamp": "2026-03-02T22:14:09.288Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The test file has the whitespace-only line at line 15. Now let's run the regression test:",
+          "timestamp": "2026-03-02T22:14:11.228Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1004 && python3 test/RegressTests.py \\\n  --ledger ./build/ledger \\\n  --sourcepath . \\\n  test/regress/1004.test 2>&1",
+            "description": "Run the regression test"
+          },
+          "timestamp": "2026-03-02T22:14:12.547Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The regression test passes. Let's also run the full regression test suite to make sure nothing is broken:",
+          "timestamp": "2026-03-02T22:14:15.636Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1004/build && ctest -R regress --output-on-failure 2>&1 | tail -30",
+            "description": "Run all regression tests",
+            "timeout": 300000
+          },
+          "timestamp": "2026-03-02T22:14:17.006Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest --show-only 2>&1 | head -20",
+            "description": "Check what tests are available"
+          },
+          "timestamp": "2026-03-02T22:14:20.486Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest --show-only 2>&1 | grep \"1004\" | head -5",
+            "description": "Check if 1004 test is registered"
+          },
+          "timestamp": "2026-03-02T22:14:24.006Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The test #1004 happens to be a different test (numbered 1004 in order). The regression test for issue 1004 would be at some other number. Let me check if it's included.",
+          "timestamp": "2026-03-02T22:14:26.775Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest --show-only 2>&1 | grep \"Regress.*1004\\.\"",
+            "description": "Find regression test for issue 1004 in ctest"
+          },
+          "timestamp": "2026-03-02T22:14:27.921Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest --show-only 2>&1 | grep \"RegressTest_1004\"",
+            "description": "Find the 1004 regression test"
+          },
+          "timestamp": "2026-03-02T22:14:30.123Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The regression test isn't registered in CTest yet. Let me check how CTest discovers regression tests.",
+          "timestamp": "2026-03-02T22:14:32.109Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat /Users/johnw/src/ledger/fix-1004/CMakeLists.txt | grep -A5 -i \"regress\" | head -40",
+            "description": "Find how regression tests are registered in CMake"
+          },
+          "timestamp": "2026-03-02T22:14:33.278Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"RegressTest\\|regress\" /Users/johnw/src/ledger/fix-1004/CMakeLists.txt | head -20",
+            "description": "Check CMakeLists for regression test configuration"
+          },
+          "timestamp": "2026-03-02T22:14:35.511Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"RegressTest\\|regress\" /Users/johnw/src/ledger/fix-1004/cmake/ | head -20",
+            "description": "Check cmake directory for regression test configuration"
+          },
+          "timestamp": "2026-03-02T22:14:37.900Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat /Users/johnw/src/ledger/fix-1004/build/CTestTestfile.cmake | grep -A2 \"RegressTest_1009\\|RegressTest_1035\" | head -20",
+            "description": "Look at how existing regress tests are registered in CTestTestfile"
+          },
+          "timestamp": "2026-03-02T22:14:40.925Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "find /Users/johnw/src/ledger/fix-1004/build -name \"CTestTestfile.cmake\" | head -5",
+            "description": "Find CTestTestfile.cmake files"
+          },
+          "timestamp": "2026-03-02T22:14:43.011Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat /Users/johnw/src/ledger/fix-1004/build/test/regress/CTestTestfile.cmake | head -20",
+            "description": "Check the regress CTestTestfile"
+          },
+          "timestamp": "2026-03-02T22:14:45.469Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The CTestTestfile is auto-generated from CMakeLists.txt. The test will be registered when the build is reconfigured. Let me check if it picked up the new 1004.test file.",
+          "timestamp": "2026-03-02T22:14:48.812Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat /Users/johnw/src/ledger/fix-1004/build/test/regress/CTestTestfile.cmake | grep \"1004\"",
+            "description": "Check if 1004 test is registered in CTestTestfile"
+          },
+          "timestamp": "2026-03-02T22:14:50.013Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep \"RegressTest_1004\" /Users/johnw/src/ledger/fix-1004/build/test/regress/CTestTestfile.cmake 2>/dev/null && echo \"FOUND\" || echo \"NOT FOUND\"",
+            "description": "Check if 1004 test is in CTestTestfile"
+          },
+          "timestamp": "2026-03-02T22:14:53.868Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat /Users/johnw/src/ledger/fix-1004/test/regress/CMakeLists.txt | head -20",
+            "description": "Check regress CMakeLists"
+          },
+          "timestamp": "2026-03-02T22:14:56.037Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"add_ledger_harness_tests\" /Users/johnw/src/ledger/fix-1004/test/CMakeLists.txt | head -5",
+            "description": "Find how add_ledger_harness_tests is defined"
+          },
+          "timestamp": "2026-03-02T22:14:58.277Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "sed -n '22,40p' /Users/johnw/src/ledger/fix-1004/test/CMakeLists.txt",
+            "description": "Check how add_ledger_harness_tests macro works"
+          },
+          "timestamp": "2026-03-02T22:15:00.942Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The CTestTestfile is generated at CMake configuration time using `file(GLOB *.test)`. Since I added the 1004.test file AFTER the CMake configuration, the build system doesn't know about it yet. I need to re-run cmake to pick up the new test. Let me do that.",
+          "timestamp": "2026-03-02T22:15:06.109Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I need to re-run cmake to pick up the new test file:",
+          "timestamp": "2026-03-02T22:15:06.498Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cmake -S /Users/johnw/src/ledger/fix-1004 -B /Users/johnw/src/ledger/fix-1004/build 2>&1 | tail -5",
+            "description": "Re-run cmake to pick up new test file",
+            "timeout": 60000
+          },
+          "timestamp": "2026-03-02T22:15:07.387Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep \"RegressTest_1004\" /Users/johnw/src/ledger/fix-1004/build/test/regress/CTestTestfile.cmake && echo \"FOUND\" || echo \"NOT FOUND\"",
+            "description": "Verify 1004 test is now registered"
+          },
+          "timestamp": "2026-03-02T22:15:13.755Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest --test-dir /Users/johnw/src/ledger/fix-1004/build -R \"RegressTest_1004$\" -V 2>&1",
+            "description": "Run regression test for issue 1004 via ctest"
+          },
+          "timestamp": "2026-03-02T22:15:17.369Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The test passes. Now let me look at the git state and commit the changes:",
+          "timestamp": "2026-03-02T22:15:19.748Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1004 diff --stat",
+            "description": "Check git diff stats"
+          },
+          "timestamp": "2026-03-02T22:15:20.355Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1004 status",
+            "description": "Check git status"
+          },
+          "timestamp": "2026-03-02T22:15:23.562Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1004 log --oneline -5",
+            "description": "Check recent git log"
+          },
+          "timestamp": "2026-03-02T22:15:26.007Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1004 diff src/textual_xacts.cc",
+            "description": "Review the changes to commit"
+          },
+          "timestamp": "2026-03-02T22:15:29.073Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me commit both changes as separate commits:",
+          "timestamp": "2026-03-02T22:15:30.838Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1004 && git add src/textual_xacts.cc && git commit --author=\"John Wiegley <johnw@newartisans.com>\" -m \"$(cat <<'EOF'\nFix assertion failure on whitespace-only lines in parse_posts\n\nWhen a whitespace-only line (e.g., a line containing only a space)\nappears after a periodic transaction (~), parse_posts() would call\nparse_post() with an empty line buffer, triggering the assertion\nassert(*line) in parse_post().\n\nThe root cause is that read_line() strips trailing whitespace, so a\nwhitespace-only line becomes empty (len=0, line[0]='\\0'). The\nparse_posts() loop checked peek_whitespace_line() (which saw the\nleading space) and entered the loop, but failed to check whether the\nline was empty after stripping whitespace before calling parse_post().\n\nBoth parse_xact() and automated_xact_directive() already handle this\ncase with an identical `if (!*p) break;` guard. Add the same guard to\nparse_posts() to fix the inconsistency.\n\nFixes: https://github.com/ledger/ledger/issues/1004\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n)\"",
+            "description": "Commit the fix for issue 1004"
+          },
+          "timestamp": "2026-03-02T22:15:38.028Z"
+        }
+      ],
+      "total_additions": 27,
+      "total_deletions": 0,
+      "accepted_lines": 26,
+      "overriden_lines": 0
+    }
+  }
+}
