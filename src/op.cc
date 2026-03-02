@@ -84,6 +84,29 @@ inline void check_type_context(scope_t& scope, value_t& result) {
                            result.label(scope.type_context()) % result.label());
   }
 }
+
+// Check if the expression tree rooted at 'op' contains an unresolved IDENT
+// node (no pre-compiled left_ child) with the given name.  Used to detect
+// self-referential O_DEFINE assignments (accumulator patterns like
+// biggest=max(amount,biggest)) vs. simple chain assignments.
+bool op_contains_ident(const expr_t::ptr_op_t& op, const string& name) {
+  if (!op)
+    return false;
+  if (op->is_ident() && !op->left() && op->as_ident() == name)
+    return true; // unresolved IDENT with matching name
+  if (op->is_scope()) {
+    // SCOPE nodes wrap their expression in a new symbol scope; recurse into it
+    return op_contains_ident(op->left(), name);
+  }
+  // Recurse into children for non-terminal nodes
+  if (op->kind > expr_t::op_t::TERMINALS) {
+    if (op_contains_ident(op->left(), name))
+      return true;
+    if (op->has_right() && op_contains_ident(op->right(), name))
+      return true;
+  }
+  return false;
+}
 } // namespace
 
 expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth, scope_t* param_scope) {
@@ -147,15 +170,28 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth, scope_t*
       // time (which would create infinite recursion).
       ptr_op_t rhs(right()->compile(*scope_ptr, depth + 1, param_scope));
 
-      // Store a PLUG sentinel so that any subsequent compile-time references
-      // to this identifier within the same expression resolve to PLUG, forcing
-      // them to fall back to a dynamic runtime scope lookup via lookup_ident.
-      DEBUG("expr.compile", "Declaring (PLUG) " << left()->as_ident() << " in " << scope_ptr);
-      scope_ptr->define(symbol_t::FUNCTION, left()->as_ident(), new op_t(PLUG));
+      const string& var_name = left()->as_ident();
 
-      // Keep the O_DEFINE node alive so it executes at runtime to evaluate
-      // the RHS and update the scope with the computed value each time.
-      result = copy(left(), rhs);
+      if (op_contains_ident(rhs, var_name)) {
+        // Self-referential: variable appears in its own RHS as an unresolved
+        // IDENT.  This is the accumulator pattern (e.g. biggest=max(a,biggest)).
+        // Store a PLUG sentinel so that first-use returns NULL (pre-accumulation)
+        // and keep the O_DEFINE node alive so it evaluates the RHS and stores
+        // the updated value each time this expression is evaluated.
+        DEBUG("expr.compile",
+              "Declaring (PLUG, self-referential) " << var_name << " in " << scope_ptr);
+        scope_ptr->define(symbol_t::FUNCTION, var_name, new op_t(PLUG));
+        result = copy(left(), rhs); // keep O_DEFINE alive for runtime
+      } else {
+        // Non-self-referential: standard define.  Store the compiled RHS as
+        // the variable definition so that subsequent IDENT references to this
+        // variable can be resolved (and potentially inlined) at compile time.
+        // The O_DEFINE node is replaced by NULL_VALUE at runtime (no side
+        // effect needed since the value is captured at compile time).
+        DEBUG("expr.compile", "Defining " << var_name << " in " << scope_ptr);
+        scope_ptr->define(symbol_t::FUNCTION, var_name, rhs);
+        // result stays null -> will be wrapped as NULL_VALUE at the end
+      }
       break;
     }
 
@@ -287,19 +323,21 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t* locus, const int depth) {
       break;
 
     case O_DEFINE:
-      // For simple variable assignments (IDENT = expr), evaluate the RHS,
-      // store it in scope, and return the RHS value (like C assignment
-      // expressions).  This enables accumulator patterns like
-      // biggest=max(amount,biggest);biggest to propagate the result through
-      // the enclosing sequence.  Function definitions (O_CALL LHS) were fully
-      // handled at compile time, so they produce no runtime side-effect here.
+      // For self-referential variable assignments (accumulator patterns like
+      // biggest=max(amount,biggest)), evaluate the RHS and store the computed
+      // value in scope so the accumulated value persists across evaluations.
+      // Returns NULL_VALUE (consistent with compile-time replacement and unit
+      // test expectations).
+      //
+      // Only self-referential O_DEFINE nodes survive compilation (non-
+      // self-referential ones are compiled away to NULL_VALUE in compile()).
+      // Function definitions (O_CALL LHS) were handled at compile time.
       if (left()->is_ident()) {
-        result = right()->calc(scope, locus, depth + 1);
-        DEBUG("expr.calc", "Assigning " << left()->as_ident() << " = " << result);
-        scope.define(symbol_t::FUNCTION, left()->as_ident(), wrap_value(result));
-      } else {
-        result = NULL_VALUE;
+        value_t rhs_val = right()->calc(scope, locus, depth + 1);
+        DEBUG("expr.calc", "Assigning " << left()->as_ident() << " = " << rhs_val);
+        scope.define(symbol_t::FUNCTION, left()->as_ident(), wrap_value(rhs_val));
       }
+      result = NULL_VALUE;
       break;
 
     case IDENT:
