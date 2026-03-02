@@ -195,7 +195,6 @@ public:
 
   void compile(scope_t& scope) override;
   value_t real_calc(scope_t& scope) override;
-
 };
 
 class call_scope_t;
