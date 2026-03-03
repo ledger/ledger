@@ -1,0 +1,49 @@
+; Test that -X forces timelog entries into the specified time unit (issue #1018)
+;
+; Ledger should allow choosing the output unit for timelog reporting.
+; By default, time values are displayed in their most compact form >= 1 unit
+; (e.g. 5 minutes shows as 5.0m, 90 minutes as 1.50h).
+;
+; Using -X h forces all time amounts into hours, even when the result would
+; be fractional (e.g. 5 minutes = 0.08h, 30 minutes = 0.50h).
+
+i 2013/04/05 09:30:00 Internal:Meeting:Tactical [Intelligent comment]
+o 2013/04/05 10:00:00
+i 2013/04/05 10:00:00 CustomerA:Email
+o 2013/04/05 10:05:00
+i 2013/04/05 10:05:00 CustomerB:Config
+o 2013/04/05 11:30:00
+i 2013/04/05 11:30:00 Personal:Walk
+o 2013/04/05 12:00:00
+i 2013/04/05 12:00:00 Personal:Lunch
+o 2013/04/05 13:30:00
+
+test bal
+                5.0m  CustomerA:Email
+               1.42h  CustomerB:Config
+               30.0m  Internal:Meeting:Tactical [Intelligent comment]
+               2.00h  Personal
+               1.50h    Lunch
+               30.0m    Walk
+--------------------
+               4.00h
+end test
+
+test bal -X h
+               0.08h  CustomerA:Email
+               1.42h  CustomerB:Config
+               0.50h  Internal:Meeting:Tactical [Intelligent comment]
+               2.00h  Personal
+               1.50h    Lunch
+               0.50h    Walk
+--------------------
+               4.00h
+end test
+
+test reg -X h
+13-Apr-05                       ..Intelligent comment]        0.50h        0.50h
+13-Apr-05                       CustomerA:Email               0.08h        0.58h
+13-Apr-05                       CustomerB:Config              1.42h        2.00h
+13-Apr-05                       Personal:Walk                 0.50h        2.50h
+13-Apr-05                       Personal:Lunch                1.50h        4.00h
+end test
