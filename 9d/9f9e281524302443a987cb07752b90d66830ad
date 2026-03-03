@@ -1,0 +1,798 @@
+src/filters.cc
+  6ed6305ef0038cc9 548
+test/regress/993.test
+  6ed6305ef0038cc9 1,4-6,8-9,16,18,23,26-31,33-34
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.6",
+  "base_commit_sha": "9d9f9e281524302443a987cb07752b90d66830ad",
+  "prompts": {
+    "6ed6305ef0038cc9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8f4f64a1-6dc3-4b08-8bba-4d44241c9ce6",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "<command-message>fix</command-message>\n<command-name>/fix</command-name>\n<command-args>993</command-args>",
+          "timestamp": "2026-03-02T22:08:33.918Z"
+        },
+        {
+          "type": "user",
+          "text": "# Think, Research, Plan, Act, Review\n\nThink deeply to analyze the following query, construct a well thought out plan of action based on the following context, and then carefully execute that plan step by step.\n\nIf you find that the bug or feature you’re attempting to fix has already been addressed in an earlier commit, just add a regression test to demonstrate the item has been dealt with.\n\nCreate a PR for each using my jwiegley user on GitHub. The author/committer for all new commits should be signed by johnw@newartisans.com.\n\nThis series of jobs will take a long time, so make a comprehensive and effective plan and then execute step by step until you have completed them all and added new regression tests for each.\n\nNow, please analyze and fix the GitHub issue: 993.\n\nNOTE: Do not work on a bug that already has a PR open that addresses it. In that case, just give the PR number and stop immediately.\n\n# Follow these steps\n\n1. Use `gh issue view` to get the issue details\n2. Understand the problem described in the issue\n3. Search the codebase for relevant files\n4. Implement the necessary changes to fix the issue\n5. Write and run tests to verify the fix\n6. Ensure code passes linting and type checking\n7. Leave your work uncommitted in the working tree, so it can be reviewed.\n\nRemember the following:\n- Use the claude-code skill to provide context for the rest of the task\n- Use the GitHub CLI (`gh`) for all GitHub-related tasks\n- Search the codebase for relevant files\n- Ensure code passes linting and type checking after doing any work\n- Use cpp-pro, python-pro, emacs-lisp-pro, rust-pro or haskell-pro as needed for diagnosing and analyzing PRs, fixing code, and writing any new code.\n- Use Web Search and Perplexity as need for research and discovering resources.\n- Use sequential-thinking when appropriate to break down tasks further.\n- Use context7 whenever code examples might help.\n\nCommit all work as a series of atomic, logically sequenced commits. Each commit should represent one coherent change that can be understood, reviewed, and reverted independently.\n\n# Commit Decomposition Principles\n\n**Scope each commit to a single logical change.** A commit should do exactly one thing: add a function, fix a bug, refactor a module, update documentation. If you find yourself writing \"and\" in a commit message, consider splitting the commit.\n\n**Sequence commits to tell a story.** Arrange commits so each builds naturally on the previous. A reviewer reading the series should understand why each change was made and how the code evolved. Foundational changes come before dependent ones.\n\n**Keep each commit in a working state.** Every commit should compile, pass tests, and not introduce obvious regressions. This enables bisection for debugging and allows reviewers to check out any point in history.\n\n# Categorizing Changes\n\nBefore committing, analyze the working tree and group changes into categories:\n\n1. **Infrastructure/setup changes** — new dependencies, configuration, tooling\n2. **Refactoring** — restructuring existing code without changing behavior\n3. **New functionality** — features, APIs, modules\n4. **Bug fixes** — corrections to existing behavior\n5. **Tests** — new or modified test coverage\n6. **Documentation** — comments, READMEs, inline docs\n\nCommit these categories in order when dependencies exist between them. Refactoring that enables a new feature should precede the feature commit.\n\n# Commit Message Format\n\n```\n<summary>\n\n<body>\n\n<footer>\n```\n\n**Summary line:** Imperative mood, no period, under 50 characters. Describe what applying the commit does, not what you did.\n\n**Body:** Explain the motivation and contrast with previous behavior. Wrap at 72 characters. Focus on *why*, not *what* (the diff shows what).\n\n**Footer:** Reference issues, breaking changes, or co-authors.\n\n# Staging Strategy\n\nUse selective staging to craft precise commits:\n\n- `git add -p` for hunks within files\n- `git add <specific-files>` to group related files\n- Review staged changes with `git diff --staged` before committing\n\nWhen a single file contains changes belonging to multiple logical commits, stage hunks separately rather than committing the entire file.\n\n# Quality Checklist\n\nBefore finalizing each commit:\n\n- [ ] Does this commit do exactly one thing?\n- [ ] Could someone understand this change without seeing other commits?\n- [ ] Is the commit message searchable? Will someone find this when grepping history?\n- [ ] Does the code compile and pass tests at this point?\n- [ ] Would reverting this commit cleanly undo one logical change?\n\n# Example Decomposition\n\nGiven work that adds a feature with tests and required refactoring:\n\n```\n1. Extract token validation into dedicated module\n2. Add unit tests for token validation\n3. Implement refresh token rotation\n4. Add integration tests for token refresh flow\n5. Document refresh token behavior in API guide\n```\n\nEach commit is independently reviewable, the sequence shows logical progression, and future developers can find relevant changes through targeted searches.\n\n# Handling Mixed Changes\n\nIf the working tree contains entangled changes:\n\n1. **Identify the distinct changes** — list what logical modifications exist\n2. **Determine dependencies** — which changes require others to be present\n3. **Create a commit plan** — order commits to satisfy dependencies\n4. **Stage incrementally** — use partial staging to isolate each change\n5. **Verify at each step** — ensure the repository works after each commit\n\nWhen changes are too entangled to separate cleanly, prefer a slightly larger commit with a clear message over a commit that leaves the repository in a broken state.\n",
+          "timestamp": "2026-03-02T22:08:33.918Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me start by reading the MEMORY.md file and then getting the issue details from GitHub.",
+          "timestamp": "2026-03-02T22:08:37.678Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-993/memory/MEMORY.md"
+          },
+          "timestamp": "2026-03-02T22:08:38.553Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 993 2>&1",
+            "description": "Get GitHub issue details"
+          },
+          "timestamp": "2026-03-02T22:08:39.397Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 993 --repo ledger/ledger 2>&1",
+            "description": "Get GitHub issue details for ledger/ledger repo"
+          },
+          "timestamp": "2026-03-02T22:08:41.873Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh auth status 2>&1",
+            "description": "Check GitHub auth status"
+          },
+          "timestamp": "2026-03-02T22:08:43.622Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "WebFetch",
+          "input": {
+            "prompt": "Get the full details of this GitHub issue - title, description, comments, and any code examples or error messages",
+            "url": "https://github.com/ledger/ledger/issues/993"
+          },
+          "timestamp": "2026-03-02T22:08:46.734Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me get more details from the issue, including the exact commands and outputs.",
+          "timestamp": "2026-03-02T22:08:54.634Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "mcp__perplexity__perplexity_search_web",
+          "input": {
+            "query": "ledger accounting issue 993 cash flow report bug commodity order lexicographical"
+          },
+          "timestamp": "2026-03-02T22:08:55.037Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-993/",
+            "description": "List project directory contents"
+          },
+          "timestamp": "2026-03-02T22:08:55.833Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "WebFetch",
+          "input": {
+            "prompt": "Extract the complete issue text including the exact commands, journal data, and expected vs actual output. Include all comments.",
+            "url": "https://github.com/ledger/ledger/issues/993"
+          },
+          "timestamp": "2026-03-02T22:09:07.322Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me understand the issue better:\n\n1. There's a transaction with multiple commodities where one posting has no amount (auto-balancing)\n2. `ledger bal --dc --related cash` produces wrong output depending on commodity ordering\n\nThe problem seems to be related to how `--related` works. When you run with `--related`, ledger should find the \"related\" transactions - i.e., when you filter by `cash`, it should show the transactions that are *related* to the cash account.\n\nLet me look at the existing code to understand this better.\n\nThe issue #993 is specifically about cash flow reports with `--dc --related` flags and how auto-balanced postings interact with commodity ordering.\n\n\nI should check if there's already a test case covering this scenario and see what work has been done on it so far.",
+          "timestamp": "2026-03-02T22:09:17.422Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-993/test/regress/ | grep -E \"993|cashflow|cash_flow\" 2>&1",
+            "description": "Check for existing regression tests related to issue 993"
+          },
+          "timestamp": "2026-03-02T22:09:18.969Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --oneline --all | grep -i \"993\\|cashflow\\|cash-flow\\|related\\|commodity.*order\" | head -20 2>&1",
+            "description": "Check git history for related commits"
+          },
+          "timestamp": "2026-03-02T22:09:20.041Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --oneline --all | grep -i \"fix.*993\\b\" | head -10 2>&1",
+            "description": "Check for any fix specifically for issue 993"
+          },
+          "timestamp": "2026-03-02T22:09:22.225Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-993/test/regress/ | grep \"^993\" 2>&1",
+            "description": "Check if 993.test already exists"
+          },
+          "timestamp": "2026-03-02T22:09:23.088Z"
+        },
+        {
+          "type": "assistant",
+          "text": "No regression test for 993, and no fix yet. Let me understand the issue better by creating a test file and running it to reproduce the bug.\n\nFirst, let me look at the relevant code for `--related` and auto-balancing.",
+          "timestamp": "2026-03-02T22:09:25.824Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me reproduce the bug first to understand what's happening:",
+          "timestamp": "2026-03-02T22:09:26.169Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat > /tmp/test993.dat << 'EOF'\n2013/10/05 * Shopping\n Expenses:Food 5 A\n Assets:Cash -20 B\n Income:Currency\nEOF\n./build/ledger -f /tmp/test993.dat bal --dc --related cash 2>&1",
+            "description": "Reproduce issue 993 - scenario 1 (A before B)"
+          },
+          "timestamp": "2026-03-02T22:09:28.985Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "find /Users/johnw/src/ledger/fix-993 -name \"ledger\" -type f 2>/dev/null | head -5",
+            "description": "Find ledger binary"
+          },
+          "timestamp": "2026-03-02T22:09:30.928Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "which ledger 2>&1 || find /nix /usr/local -name \"ledger\" -type f 2>/dev/null | head -3",
+            "description": "Find ledger binary location"
+          },
+          "timestamp": "2026-03-02T22:09:33.268Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "# First, try to build ledger\nmkdir -p build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug 2>&1 | tail -5",
+            "description": "Configure CMake build"
+          },
+          "timestamp": "2026-03-02T22:09:35.465Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-993 && ./acprep debug --output=build 2>&1 | tail -20",
+            "description": "Build ledger with acprep debug configuration"
+          },
+          "timestamp": "2026-03-02T22:09:38.993Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "# Use nix develop to build\nnix develop --command bash -c \"cd build && make -j$(nproc) 2>&1 | tail -10\" 2>&1 | head -30",
+            "description": "Build with nix develop"
+          },
+          "timestamp": "2026-03-02T22:09:41.792Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c \"./acprep debug --output=build 2>&1 | tail -20\" 2>&1 | tail -25",
+            "description": "Build ledger inside nix develop environment"
+          },
+          "timestamp": "2026-03-02T22:09:44.499Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c \"cd build && make -j$(nproc) 2>&1 | tail -5\" 2>&1 | tail -10",
+            "description": "Build ledger with make"
+          },
+          "timestamp": "2026-03-02T22:09:52.633Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-993/build/ledger 2>&1",
+            "description": "Check ledger binary"
+          },
+          "timestamp": "2026-03-02T22:10:09.376Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me reproduce the bug:",
+          "timestamp": "2026-03-02T22:10:10.842Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat > /tmp/test993a.dat << 'EOF'\n2013/10/05 * Shopping\n Expenses:Food 5 A\n Assets:Cash -20 B\n Income:Currency\nEOF\n\necho \"=== Scenario 1: A before B (should show both A and B in Income:Currency) ===\"\n./build/ledger -f /tmp/test993a.dat bal --dc --related cash 2>&1\n\necho \"\"\necho \"=== Scenario 1 without filter (to see full picture) ===\"\n./build/ledger -f /tmp/test993a.dat bal --dc 2>&1",
+            "description": "Reproduce issue 993 scenario 1"
+          },
+          "timestamp": "2026-03-02T22:10:14.976Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Hmm, that's interesting. The transaction with \"Income:Currency\" (no amount) fails. This is because Ledger requires balance, and with two commodities (A and B), you can't automatically balance with a single null posting. Let me re-read the issue more carefully.\n\nLooking at the issue again - the user's transaction in the issue was:\n```\n2013/10/05 * Shopping\n Expenses:Food 5 A\n Assets:Cash -20 B\n Income:Currency\n```\n\nAnd they said it produces \"0 5 A -5 A Income:Currency\" - which suggests some version of ledger DOES parse this. Maybe the behavior was different in the version they were testing. Or perhaps this is really about the \"cash flow\" concept in ledger where --related shows related transactions.\n\n\nLet me look at the GitHub issue directly to understand what version this was reported in and whether older versions of ledger handled multi-commodity transactions with auto-postings differently - maybe the Income:Currency posting was meant to balance both commodities somehow.\n\nThe real issue seems to be with the `--related` flag when filtering by cash accounts with multiple commodities. When I run `ledger bal --dc --related cash`, it's showing incorrect output specifically when a related account's commodity comes before the cash account's commodity alphabetically. So if Assets:Cash has -20 B and Expenses:Food has 5 A, the `--related` flag should show all postings in the same transaction, but something's going wrong with how it handles the commodity ordering. The workaround shows that explicitly listing all four postings works, but the issue is that ledger rejects transactions with multiple commodities needing auto-balancing through a single null posting. This suggests the bug might be partially fixed, though I need to reconsider what the original issue was actually describing—maybe it's about a different scenario or a specific interaction with the `--dc` flag that I'm missing. I'm realizing the constraint is stricter than I thought—a null posting only works when everything balances to a single commodity. So this transaction with multiple commodities should be rejected outright. But the user's issue shows ledger actually producing output, which suggests either an older version was more permissive, or I'm misunderstanding what the issue is really about. Let me trace through the `--related cash` flag to see what's actually happening with the balance calculation. Looking at the actual test output, I'm seeing that the commodity ordering is affecting how the results display, and the issue seems to be with the debit/credit formatting rather than the `--related` filter itself. Let me check what the test cases for `--related` actually expect to understand the real problem better.",
+          "timestamp": "2026-03-02T22:10:47.727Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me look at the existing `--related` tests to understand how this feature works:",
+          "timestamp": "2026-03-02T22:10:47.735Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-993/test/regress/ | xargs -I{} grep -l \"related\" /Users/johnw/src/ledger/fix-993/test/regress/{} 2>/dev/null | head -10",
+            "description": "Find test files using --related"
+          },
+          "timestamp": "2026-03-02T22:10:48.057Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -r \"related\" /Users/johnw/src/ledger/fix-993/test/regress/ -l 2>/dev/null | head -10",
+            "description": "Find tests with --related flag"
+          },
+          "timestamp": "2026-03-02T22:10:48.827Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-993/test/regress/849.test"
+          },
+          "timestamp": "2026-03-02T22:10:53.563Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-993/test/regress/coverage-filter-related-match.test"
+          },
+          "timestamp": "2026-03-02T22:10:53.876Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-993/test/regress/1850.test"
+          },
+          "timestamp": "2026-03-02T22:10:55.670Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Task",
+          "input": {
+            "description": "Research issue 993 and related code",
+            "prompt": "I'm working on ledger (C++ accounting tool) in /Users/johnw/src/ledger/fix-993. I need to understand GitHub issue #993 which is about a \"Cash Flow Report Bug\" where `ledger bal --dc --related cash` produces wrong results depending on commodity ordering.\n\nThe issue involves:\n1. A transaction with multiple commodities where one posting has no amount\n2. The `--related` flag which shows \"other side\" of matched transactions\n3. The `--dc` flag for debit/credit display\n\nPlease:\n1. Read the existing test files that test `--related`: test/regress/1995.test, test/regress/2220.test (if it exists), test/regress/coverage-wave9-filters-related.test\n2. Look at the filters.h and filters.cc source files to understand how `--related` works\n3. Look at how transactions with multi-commodity auto-balancing work in src/textual.cc\n\nPlease give me:\n- How the `--related` filter works\n- How auto-balancing of null postings works\n- Any relevant functions that handle commodity ordering in balancing\n\nThis is to help me understand what the bug is and how to fix it.",
+            "subagent_type": "Explore"
+          },
+          "timestamp": "2026-03-02T22:11:05.052Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The exploration agent found a potentially relevant issue - the `unordered_map` for amounts in `balance.h`. However, let me also look at the actual issue more carefully.\n\nLooking at the issue, it seems the main problem is:\n1. A transaction where one posting has no amount (null posting)\n2. When balance involves multiple commodities\n3. The `--related` flag shows wrong results\n\nBut the error we got when trying to test is \"Only one posting with null amount allowed per transaction\" - so in the current version, ledger won't even let us have a null posting that balances to multiple commodities. This means either:\n\n\nThe behavior has changed since the issue was filed, or my test case was incorrect. Let me examine the actual issue more carefully - the WebFetch shows that Scenario 1 fails with 5 A in Expenses:Food, -20 B in Assets:Cash, and a null Income:Currency posting, producing the wrong result \"0 5 A -5 A Income:Currency\", while Scenario 2 works with the commodities reversed. The error I encountered suggests the current version rejects this configuration entirely.\n\nActually, I think I've been misunderstanding the issue - it's really about how `--related` works with filters. When running `ledger bal --dc --related cash`, the filter matches `Assets:Cash -20 B`, and `--related` should display the other postings in that transaction: `Expenses:Food 5 A` and `Income:Currency`. The question is what `Income:Currency` represents if the null posting was auto-calculated to balance the transaction.\n\nLooking at how the balancing logic works, when there are multiple commodities and a null posting, the system makes multiple passes - first setting the null posting to balance one commodity, then creating a generated posting for the second commodity. So in this transaction, the null posting should end up representing both the `-5 A` and `+20 B` needed to balance everything.\n\nThe real question is whether the generated posting is being created correctly and assigned to the right account. Let me trace through the actual xact.cc code to see exactly how this functor handles the multi-commodity case.",
+          "timestamp": "2026-03-02T22:13:00.976Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me look at the actual source code to understand the bug:",
+          "timestamp": "2026-03-02T22:13:01.035Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-993/src/xact.cc",
+            "limit": 150
+          },
+          "timestamp": "2026-03-02T22:13:01.476Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-993/src/xact.cc",
+            "limit": 200,
+            "offset": 150
+          },
+          "timestamp": "2026-03-02T22:13:04.145Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-993/src/xact.cc",
+            "limit": 150,
+            "offset": 400
+          },
+          "timestamp": "2026-03-02T22:13:06.955Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-993/src/xact.cc",
+            "limit": 200,
+            "offset": 550
+          },
+          "timestamp": "2026-03-02T22:13:09.479Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I can see what's happening. Looking at line 591:\n\n```cpp\nif (balance.is_balance())\n  balance.as_balance_lval().map_sorted_amounts(post_adder);\n```\n\nWhen there's a null post and the balance involves multiple commodities (a balance_t), it calls `map_sorted_amounts`. Let me look at what `map_sorted_amounts` does in `balance.h`.\n\nBut first, let me understand the issue better. The issue from 2013 is about:\n1. A transaction with two commodities (A and B)\n2. One null posting (Income:Currency)\n\n\n3. Running `ledger bal --dc --related cash`\n\nSo the `add_balancing_post` functor processes each commodity in sequence: it sets the null post's amount to the negated first commodity, then creates a new generated posting for the second commodity using the same Income:Currency account. The problem is that this generated posting gets flagged with `ITEM_GENERATED`, and when `related_posts::flush()` checks for that flag, it filters out the generated posting.\n\nWith `--related cash`, the filter matches `Assets:Cash -20 B` and pulls in related postings from the transaction. It includes the explicit `Expenses:Food 5 A` posting and the null post's `Income:Currency -5 A` (which isn't marked generated), but excludes the generated posting for the second commodity because of that flag check. That's where the bug lies—the generated posting gets filtered out when it shouldn't be. The real issue is that when `--related cash` filters the postings, it excludes the generated ones even though they represent legitimate economic transactions that should be shown. I need to check how `map_sorted_amounts` determines the ordering to confirm whether it's deterministic.",
+          "timestamp": "2026-03-02T22:13:28.946Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me look at `map_sorted_amounts` in balance.h to understand commodity ordering:",
+          "timestamp": "2026-03-02T22:13:28.962Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "path": "/Users/johnw/src/ledger/fix-993/src",
+            "pattern": "map_sorted_amounts"
+          },
+          "timestamp": "2026-03-02T22:13:29.773Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-993/src/filters.cc",
+            "limit": 30,
+            "offset": 535
+          },
+          "timestamp": "2026-03-02T22:13:29.922Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-993/src/balance.h",
+            "pattern": "map_sorted_amounts"
+          },
+          "timestamp": "2026-03-02T22:13:32.040Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-993/src/balance.cc",
+            "pattern": "map_sorted_amounts"
+          },
+          "timestamp": "2026-03-02T22:13:35.184Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-993/src/balance.cc",
+            "limit": 30,
+            "offset": 285
+          },
+          "timestamp": "2026-03-02T22:13:37.768Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-993/src/balance.cc",
+            "pattern": "sorted_amounts"
+          },
+          "timestamp": "2026-03-02T22:13:39.614Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-993/src/balance.cc",
+            "limit": 50,
+            "offset": 238
+          },
+          "timestamp": "2026-03-02T22:13:42.272Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand how `map_sorted_amounts` works. It sorts amounts by commodity using `compare_by_commodity`. Let me check what `compare_by_commodity` does to understand the ordering.\n\nBut the key insight is already clear:\n\nThe `add_balancing_post` functor is called by `map_sorted_amounts`, which sorts amounts by commodity. So the order IS deterministic (sorted by commodity symbol). The FIRST commodity alphabetically gets set as `null_post->amount`, and the SECOND gets a NEW generated posting with `ITEM_GENERATED` flag.\n\n**The Bug:**\nWhen using `--related`, the `related_posts::flush()` skips postings with `ITEM_GENERATED` flag:\n\n\nThe condition checks whether a posting lacks the `ITEM_GENERATED` flag or matches the related filter. So when a null posting expands to multiple commodities, the first one alphabetically stays on the null posting without the generated flag and gets included by `--related`, while any additional commodities get marked as generated and filtered out. This explains why commodity ordering matters—whichever commodity sorts first alphabetically will be the only one shown when using `--related`.\n\nThe fix is to modify the filter in `related_posts::flush()` to also include generated postings that have the `POST_CALCULATED` flag, since those are the ones created from expanding null postings and should be visible alongside their non-generated counterparts. The real issue is that auto-transactions from rules are fundamentally different from null-post expansions—the latter should always be included in `--related` output since they're just different commodity representations of the same posting. I need to refine the filter to distinguish between these cases, perhaps by checking whether a posting came from null-post expansion versus an automated rule, so the right postings show up when users query related transactions. I need to distinguish between `POST_CALCULATED` and `POST_COST_CALCULATED` — the former marks postings created during null posting expansion, while the latter is set when costs are auto-calculated in two-commodity scenarios. So my fix should treat `ITEM_GENERATED` postings with `POST_CALCULATED` as regular postings in `related_posts::flush()`, since that flag indicates they were generated to balance a null posting rather than being auto-transactions. Let me trace through where `POST_CALCULATED` gets set to confirm this interpretation.",
+          "timestamp": "2026-03-02T22:14:10.130Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me check how POST_CALCULATED is used:",
+          "timestamp": "2026-03-02T22:14:10.174Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"POST_CALCULATED\" /Users/johnw/src/ledger/fix-993/src/*.cc /Users/johnw/src/ledger/fix-993/src/*.h 2>/dev/null | grep -v \"^Binary\" | head -40",
+            "description": "Find all uses of POST_CALCULATED"
+          },
+          "timestamp": "2026-03-02T22:14:10.200Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Interesting! There's already a check in `filters.cc` at line 1303:\n```cpp\nif (!post->has_flags(ITEM_GENERATED) || post->has_flags(POST_CALCULATED))\n```\n\nThis already uses the same logic: \"include if not generated OR if calculated\" (which means it was generated from null-post expansion). Let me see what that code is used for.\n\nAnd looking at `print.cc` line 201:\n```cpp\nif (!post->has_flags(POST_CALCULATED) || is_balance_assignment || report.HANDLED(generated)) {\n```\n\nThis shows that POST_CALCULATED means a posting was auto-generated and should normally be skipped when printing.\n\n\nNow I need to understand what that filter at line 1303 in filters.cc is actually doing.",
+          "timestamp": "2026-03-02T22:14:15.777Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-993/src/filters.cc",
+            "limit": 30,
+            "offset": 1290
+          },
+          "timestamp": "2026-03-02T22:14:16.077Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the distinction better:\n\n- `ITEM_GENERATED` alone: auto-transaction postings (from `=` rules and period transactions) - these should NOT be included in `--related` output by default\n- `ITEM_GENERATED | POST_CALCULATED`: postings created by null-post expansion (add_balancing_post) - these ARE real economic postings that should be included\n\nSo the fix for the `related_posts::flush()` function should check for `POST_CALCULATED` to decide whether to include generated postings even without `also_matching=true`.\n\nThe current code at line 548 in filters.cc:\n\n\nRefining the condition...\n\nThe logic simplifies nicely: I can combine the generated flag check with the calculated flag to avoid redundancy. If it's not a received posting, I should include it unless it's generated without the calculated flag, or if `also_matching` is true. This gives me a cleaner boolean expression that captures the same intent with fewer redundant checks.\n\nNow I need to verify this is actually what's causing the issue by testing the behavior. Looking at the failing case where a commodity lexicographically precedes another, the problem seems to be in how the null posting gets assigned its amount from the sorted balance—it's taking the first commodity instead of the correct one.\n\nIn the working example with reversed commodities, the null posting correctly gets assigned the first sorted amount, which happens to be the right one. This suggests the filtering logic for generated postings is excluding the second posting when it shouldn't be. I'm realizing the user's \"correct\" output for scenario 2 should include both currency types for Income:Currency, but the actual `--dc` output is showing something different. Let me trace through what `--dc` formatting does and whether it's generating additional postings that affect the `--related` filtering. I'm looking at the null posting logic in the code—it checks if we already have a null post set, and if so, throws an error about multiple null postings. But our transaction only has one null posting, so that shouldn't trigger. Let me trace through my test case again to see where it's actually failing. I'm accumulating the balance as 5A and -20B, but I'm not sure where the \"Only one posting with null amount allowed\" error is coming from—maybe it's triggered during the reduced amount calculation instead. Let me run the test again to see if this error is actually from my test case or from ledger's actual behavior.",
+          "timestamp": "2026-03-02T22:14:56.053Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me test the actual behavior:",
+          "timestamp": "2026-03-02T22:14:56.099Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat > /tmp/test993a.dat << 'EOF'\n2013/10/05 * Shopping\n    Expenses:Food          5 A\n    Assets:Cash          -20 B\n    Income:Currency\nEOF\n\necho \"=== Full balance (no filter) ===\"\n./build/ledger -f /tmp/test993a.dat bal 2>&1\n\necho \"\"\necho \"=== bal --dc --related cash ===\"\n./build/ledger -f /tmp/test993a.dat bal --dc --related cash 2>&1",
+            "description": "Test issue 993 with proper indentation"
+          },
+          "timestamp": "2026-03-02T22:14:57.116Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I can reproduce the bug. The full balance shows that Income:Currency has:\n- -5 A\n- 20 B\n\nBut when running `bal --dc --related cash`, only Income:Currency -5 A is shown (0 debit, -5 A credit), missing the 20 B component.\n\nNow let me verify the working case (B comes before A alphabetically):",
+          "timestamp": "2026-03-02T22:15:00.941Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat > /tmp/test993b.dat << 'EOF'\n2013/10/05 * Shopping\n    Expenses:Food          5 B\n    Assets:Cash          -20 A\n    Income:Currency\nEOF\n\necho \"=== Full balance (no filter) ===\"\n./build/ledger -f /tmp/test993b.dat bal 2>&1\n\necho \"\"\necho \"=== bal --dc --related cash ===\"\n./build/ledger -f /tmp/test993b.dat bal --dc --related cash 2>&1",
+            "description": "Test scenario 2 - B before A alphabetically"
+          },
+          "timestamp": "2026-03-02T22:15:02.405Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I can see the bug clearly:\n\n**Scenario 1 (A before B):**\n- Full balance: Income:Currency = -5 A + 20 B (correct)\n- `--related cash` output: Income:Currency = -5 A only (MISSING 20 B)\n\n**Scenario 2 (B before A):**\n- Full balance: Income:Currency = 20 A + (-5 B) (correct)\n- `--related cash` output: Income:Currency = 20 A only (MISSING -5 B)\n\nSo BOTH scenarios show incorrect behavior for `--related` when a multi-commodity null posting is involved! Both cases miss one commodity.\n\n\nThe issue is that when a null posting gets expanded into multiple commodities by `add_balancing_post`, those generated postings with the `ITEM_GENERATED | POST_CALCULATED` flags are being filtered out of the `--related` output. Let me verify this by testing scenario 2 with just `--related` to see if the behavior changes without the `--dc` flag.",
+          "timestamp": "2026-03-02T22:15:11.400Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "echo \"=== Scenario 1: bal --related cash (no --dc) ===\"\n./build/ledger -f /tmp/test993a.dat bal --related cash 2>&1\n\necho \"\"\necho \"=== Scenario 2: bal --related cash (no --dc) ===\"\n./build/ledger -f /tmp/test993b.dat bal --related cash 2>&1\n\necho \"\"\necho \"=== Scenario 1: bal --related --related-all cash ===\"\n./build/ledger -f /tmp/test993a.dat bal --related --related-all cash 2>&1",
+            "description": "Test both scenarios and --related-all workaround"
+          },
+          "timestamp": "2026-03-02T22:15:12.652Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I can clearly see the issue:\n\n**Scenario 1:** Balance shows `Income:Currency = -5 A + 20 B` but `--related cash` shows only `Income:Currency = -5 A`  \n**Scenario 2:** Balance shows `Income:Currency = 20 A - 5 B` but `--related cash` shows only `Income:Currency = 20 A`\n\nAnd with `--related-all`, the full balance for scenario 1 is shown correctly.\n\nSo the bug: in `related_posts::flush()`, generated postings (ITEM_GENERATED) are excluded. But when a null posting is expanded to multiple commodities, the extra postings ARE generated by `add_balancing_post` with `ITEM_GENERATED | POST_CALCULATED`. These are real economic amounts, not auto-transaction postings.\n\n\nThe fix needs to happen in `filters.cc` where `related_posts::flush()` filters postings. I need to modify the condition that currently excludes all ITEM_GENERATED postings to instead allow those that also have POST_CALCULATED set, since those represent the null-post expansion rather than auto-transaction generated postings. Looking at where POST_CALCULATED gets set in different contexts, I see it's used in null-post expansion and lot matching split posts—both cases that should be included in --related output. But auto-transaction postings from `=` rules get ITEM_GENERATED without POST_CALCULATED, and those shouldn't be included. So the condition `!ITEM_GENERATED || POST_CALCULATED` appears to be the right approach. I'm also noticing POST_CALCULATED appears in other places like display filters and textual transaction parsing, but those are separate contexts from the transaction balancing logic I'm focused on here. Still writing the fix...\n\nThe key insight is that generated postings should be included in --related if they were calculated as part of transaction balancing, so I'm adding a check for the POST_CALCULATED flag alongside the existing ITEM_GENERATED check to distinguish between auto-transaction postings that should be skipped and null-post expansions that should be shown. lot matching), include it.\n\nNow let me also think about whether the fix should also be applied to the \"also_matching\" branch (when the posting WAS received). Currently when a posting was received, it's only included if `also_matching=true`. Should calculated postings that were also received be shown?\n\nLooking at how things work with `--related`: the received postings (matched by the filter) are marked with `POST_EXT_RECEIVED`. The `related_posts::flush()` then includes other postings in the same transaction (not received). If `also_matching=true`, it also includes received postings.\n\nFor our bug scenario:\n- When filtering `--related cash`, the cash posting matches (`Assets:Cash -20 B`)\n- The null posting expands to: `Income:Currency -5 A` (not generated) and `Income:Currency 20 B` (generated)\n- The non-generated null posting (`Income:Currency -5 A`) doesn't match the filter, so it goes through the non-received branch and gets included since it lacks the ITEM_GENERATED flag\n- The generated posting (`Income:Currency 20 B`) also doesn't match the filter, but it's currently excluded because it has ITEM_GENERATED and `also_matching` isn't set\n\nMy fix addresses this by including generated postings that have POST_CALCULATED, which handles the case where calculated postings weren't received but should still appear.\n\nLet me verify this works for `--related-all` as well, since that sets `also_matching=true` and should already include all generated postings.",
+          "timestamp": "2026-03-02T22:15:44.683Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I've confirmed the bug. Now I understand the issue:\n\nWhen a null posting is expanded by `add_balancing_post` into multiple commodities, the FIRST commodity becomes the null posting (no ITEM_GENERATED flag), while subsequent ones get NEW generated postings with `ITEM_GENERATED | POST_CALCULATED`. The `related_posts::flush()` excludes all `ITEM_GENERATED` postings unless `also_matching=true`.\n\nThe fix: also include `ITEM_GENERATED` postings that have `POST_CALCULATED` (which marks null-post expansion postings, NOT auto-transaction postings).",
+          "timestamp": "2026-03-02T22:15:45.803Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-993/src/filters.cc",
+            "limit": 20,
+            "offset": 540
+          },
+          "timestamp": "2026-03-02T22:15:46.745Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-993/src/filters.cc",
+            "new_string": "        if (!xdata.has_flags(POST_EXT_HANDLED) &&\n            (!xdata.has_flags(POST_EXT_RECEIVED)\n                 ? (!r_post->has_flags(ITEM_GENERATED) || r_post->has_flags(POST_CALCULATED) ||\n                    also_matching)\n                 : also_matching)) {",
+            "old_string": "        if (!xdata.has_flags(POST_EXT_HANDLED) &&\n            (!xdata.has_flags(POST_EXT_RECEIVED)\n                 ? (!r_post->has_flags(ITEM_GENERATED) || also_matching)\n                 : also_matching)) {",
+            "replace_all": false
+          },
+          "timestamp": "2026-03-02T22:15:50.346Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now rebuild and test:",
+          "timestamp": "2026-03-02T22:15:52.154Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c \"cd build && make -j$(nproc) 2>&1\" | grep -E \"error:|warning:|Built target ledger\" | head -20",
+            "description": "Rebuild ledger"
+          },
+          "timestamp": "2026-03-02T22:15:53.619Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "echo \"=== Scenario 1 (A before B): Full balance ===\"\n./build/ledger -f /tmp/test993a.dat bal 2>&1\n\necho \"\"\necho \"=== Scenario 1: bal --dc --related cash (should show Income:Currency -5 A + 20 B) ===\"\n./build/ledger -f /tmp/test993a.dat bal --dc --related cash 2>&1\n\necho \"\"\necho \"=== Scenario 1: bal --related cash ===\"\n./build/ledger -f /tmp/test993a.dat bal --related cash 2>&1\n\necho \"\"\necho \"=== Scenario 2 (B before A): bal --dc --related cash ===\"\n./build/ledger -f /tmp/test993b.dat bal --dc --related cash 2>&1\n\necho \"\"\necho \"=== Scenario 2: bal --related cash ===\"\n./build/ledger -f /tmp/test993b.dat bal --related cash 2>&1",
+            "description": "Test the fix"
+          },
+          "timestamp": "2026-03-02T22:16:29.153Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The fix works. Now both scenarios 1 and 2 show the full Income:Currency balance (both commodity components). Let me verify:\n\nScenario 1 (`bal --related cash`):\n- Expenses:Food: 5 A ✓\n- Income:Currency: -5 A + 20 B ✓ (was only showing -5 A before)\n\nScenario 2 (`bal --related cash`):\n- Expenses:Food: 5 B ✓ \n- Income:Currency: 20 A + (-5 B) ✓ (was only showing 20 A before)\n\n\nBoth scenarios are now producing the correct output regardless of how the commodities are ordered. I should verify that the existing test suite still passes, then add a regression test to ensure this behavior is preserved.",
+          "timestamp": "2026-03-02T22:16:35.082Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The fix works correctly. Now let me run the existing test suite to make sure nothing is broken:",
+          "timestamp": "2026-03-02T22:16:35.154Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c \"cd build && ctest -R regress --output-on-failure 2>&1 | tail -30\" 2>&1 | tail -40",
+            "description": "Run regression tests"
+          },
+          "timestamp": "2026-03-02T22:16:35.919Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c \"cd build && ctest -R related 2>&1\" 2>&1 | grep -v \"^warning:\"",
+            "description": "Run related tests"
+          },
+          "timestamp": "2026-03-02T22:16:53.733Z"
+        },
+        {
+          "type": "assistant",
+          "text": "All related tests pass. Let me also run the baseline tests:",
+          "timestamp": "2026-03-02T22:16:58.998Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c \"cd build && ctest -R baseline 2>&1 | tail -10\" 2>&1 | grep -v \"^warning:\"",
+            "description": "Run baseline tests"
+          },
+          "timestamp": "2026-03-02T22:16:59.444Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c \"cd build && ctest --list 2>&1 | head -20\" 2>&1 | grep -v \"^warning:\"",
+            "description": "List available tests"
+          },
+          "timestamp": "2026-03-02T22:17:02.274Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c \"cd build && ctest -N 2>&1 | head -30\" 2>&1 | grep -v \"^warning:\" | head -30",
+            "description": "List available test names"
+          },
+          "timestamp": "2026-03-02T22:17:05.038Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c \"cd build && ctest -j8 --output-on-failure 2>&1 | tail -20\" 2>&1 | grep -v \"^warning:\" | tail -20",
+            "description": "Run all tests"
+          },
+          "timestamp": "2026-03-02T22:17:08.112Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c \"cd build && ctest -R 'RegressTest_1542' --output-on-failure 2>&1\" 2>&1 | grep -v \"^warning:\" | tail -20",
+            "description": "Check what test 1542 failure looks like"
+          },
+          "timestamp": "2026-03-02T22:18:08.561Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c \"cd build && ctest -R 'RegressTest_1542' --output-on-failure 2>&1\" 2>&1 | grep -v \"^warning:\"",
+            "description": "Get full output of test 1542"
+          },
+          "timestamp": "2026-03-02T22:18:12.517Z"
+        },
+        {
+          "type": "assistant",
+          "text": "There are some tests failing. Let me check if these failures pre-existed (before my change) by looking at what they test. The test 1542 failure seems to be about budget reporting, not about `--related`. Let me verify that these tests failed before my change too.\n\nLet me check a couple of the failing tests to see if my change could have caused them.",
+          "timestamp": "2026-03-02T22:18:16.586Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git stash && nix develop --command bash -c \"cd build && make -j$(nproc) 2>&1 | tail -3\" 2>&1 | grep -v \"^warning:\"",
+            "description": "Stash changes and rebuild to check pre-existing failures"
+          },
+          "timestamp": "2026-03-02T22:18:17.730Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c \"cd build && ctest -R '1542|2262|coverage-wave10-report-budget|coverage-wave11-period-xact|coverage-wave11-report-budget|coverage-wave2-budget|coverage-wave6-budget|coverage-wave6-forecast|coverage-xact-period' --output-on-failure 2>&1 | tail -20\" 2>&1 | grep -v \"^warning:\" | tail -20",
+            "description": "Check if these tests already fail without my change"
+          },
+          "timestamp": "2026-03-02T22:18:31.080Z"
+        },
+        {
+          "type": "assistant",
+          "text": "All 9 failing tests fail even before my change. These are pre-existing failures not related to my fix. Good. Let me restore my changes.",
+          "timestamp": "2026-03-02T22:18:36.841Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The 9 failures are pre-existing and not caused by my fix. Let me restore my change:",
+          "timestamp": "2026-03-02T22:18:37.400Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git stash pop && nix develop --command bash -c \"cd build && make -j$(nproc) 2>&1 | tail -3\" 2>&1 | grep -v \"^warning:\"",
+            "description": "Restore fix and rebuild"
+          },
+          "timestamp": "2026-03-02T22:18:38.568Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me write the regression test:",
+          "timestamp": "2026-03-02T22:18:47.684Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat > /Users/johnw/src/ledger/fix-993/test/regress/993.test << 'EOF'\n; Issue #993: Cash flow report bug with multi-commodity null postings and --related\n;\n; When a transaction has a null posting (no amount) that must balance across\n; multiple commodities, ledger splits the null posting into multiple postings:\n; the first commodity goes into the null post directly, and subsequent\n; commodities get new ITEM_GENERATED|POST_CALCULATED postings.\n;\n; Previously, --related would exclude those generated postings, causing\n; incomplete output that depended on the lexicographical order of commodities.\n\n; Scenario 1: commodity A lexicographically precedes commodity B\n; (commodity of Expenses:Food comes before commodity of Assets:Cash)\n2013/10/05 * Shopping\n    Expenses:Food          5 A\n    Assets:Cash          -20 B\n    Income:Currency\n\n; Test that --related cash shows all commodities in Income:Currency,\n; not just the first alphabetically-sorted one (-5 A).\ntest bal --related cash\n                 5 A  Expenses:Food\n                -5 A\n                20 B  Income:Currency\n--------------------\n                20 B\nend test\n\n; Scenario 2: commodity B lexicographically precedes commodity A\n; (reversing the commodities — should produce symmetric correct output)\n2013/10/05 * Shopping2\n    Expenses:Food          5 B\n    Assets:Cash          -20 A\n    Income:Currency2\n\ntest bal --related cash2\n                 5 B  Expenses:Food\n                20 A\n                -5 B  Income:Currency2\n--------------------\n                20 A\nEOF",
+            "description": "Write regression test for issue 993"
+          },
+          "timestamp": "2026-03-02T22:19:00.248Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c \"python test/RegressTests.py --ledger ./build/ledger --sourcepath . test/regress/993.test 2>&1\"",
+            "description": "Run the new regression test"
+          },
+          "timestamp": "2026-03-02T22:19:04.127Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The test file has two transactions in the SAME file, and both transactions involve `cash` and `cash2` accounts. The first test `bal --related cash` is matching BOTH transactions (since the first also has `cash` which is a substring of `cash2`). Let me fix this by using different account names to avoid substring matching.Also, the second test with `--related cash2` is not matching anything. The filter likely matches based on the account name matching the pattern, and `cash2` is matching `Assets:Cash2` but the transaction uses `Assets:Cash -20 A` which could match both. Wait, let me re-read: `--related cash` would match any account containing \"cash\" as a regex. \n\n\nThe issue is that `--related cash` is matching both `Assets:Cash` and `Assets:Cash2` in the same file, which is why I'm seeing all four expenses combined. I need to restructure the test to avoid this substring collision—either by splitting into separate test files or redesigning the scenario with clearer account names that won't overlap. Sure, the simplest fix is to use different account names across the two scenarios so they don't interfere with each other in the same test file. Let me check how existing multi-scenario tests handle this by looking at similar test files.",
+          "timestamp": "2026-03-02T22:19:23.730Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-993/test/regress/2013.test"
+          },
+          "timestamp": "2026-03-02T22:19:23.839Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I see. The tests include all journal data at the top, and then multiple `test`/`end test` blocks. The query `car` matches `Assets:Savings:Car` and `Assets:Bank` because it's in the account name.\n\nFor my test, the issue is that having two transactions with different `cash` accounts in the same file causes the first test command `bal --related cash` to match BOTH scenarios.\n\nLet me simplify the test to use just ONE scenario (scenario 1, the main one described in the issue), and then test both without and with the filter to show it works correctly. I can make the accounts unique enough to avoid overlap.\n\n\nActually, I'll go even simpler: just one transaction with one filter command that clearly demonstrates the fix.",
+          "timestamp": "2026-03-02T22:19:30.190Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Write",
+          "input": {
+            "content": "; Issue #993: --related drops generated postings from null-post multi-commodity expansion\n;\n; When a transaction has a null posting (no amount) that must balance across\n; multiple commodities, ledger expands it: the first commodity (alphabetically)\n; goes directly into the null post, while subsequent commodities get new\n; ITEM_GENERATED|POST_CALCULATED postings on the same account.\n;\n; Previously, --related would skip those generated postings, producing\n; incomplete output whose content depended on commodity sort order.\n\n2013/10/05 * Shopping\n    Expenses:Food          5 A\n    Assets:Cash          -20 B\n    Income:Currency\n\n; Without --related the balance shows both A and B in Income:Currency\ntest bal\n               -20 B  Assets:Cash\n                 5 A  Expenses:Food\n                -5 A\n                20 B  Income:Currency\n--------------------\n                   0\nend test\n\n; With --related cash, Income:Currency should show both -5 A and 20 B,\n; not just -5 A (the non-generated posting).\ntest bal --related cash\n                 5 A  Expenses:Food\n                -5 A\n                20 B  Income:Currency\n--------------------\n                20 B\nend test\n",
+            "file_path": "/Users/johnw/src/ledger/fix-993/test/regress/993.test"
+          },
+          "timestamp": "2026-03-02T22:19:38.203Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c \"python test/RegressTests.py --ledger ./build/ledger --sourcepath . test/regress/993.test 2>&1\" | grep -v \"^warning:\"",
+            "description": "Run the updated regression test"
+          },
+          "timestamp": "2026-03-02T22:19:41.603Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The regression test passes. Let me now commit the work:",
+          "timestamp": "2026-03-02T22:19:47.086Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff src/filters.cc",
+            "description": "Review the fix"
+          },
+          "timestamp": "2026-03-02T22:19:47.936Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git add src/filters.cc test/regress/993.test\ngit commit -m \"$(cat <<'EOF'\nfix: include calculated generated posts in --related output (#993)\n\nWhen a transaction has a null posting that must balance across multiple\ncommodities, finalize() expands it via add_balancing_post: the first\ncommodity (in sorted order) is assigned directly to the null post, while\neach additional commodity creates a new ITEM_GENERATED|POST_CALCULATED\nposting on the same account.\n\nThe related_posts filter was excluding all ITEM_GENERATED postings unless\n--related-all was active, causing incomplete output whose content depended\non the alphabetical sort order of commodities.\n\nThe fix treats ITEM_GENERATED postings that also carry POST_CALCULATED as\nordinary economic postings (null-post expansion), including them in\n--related output just like non-generated postings. Auto-transaction\npostings (ITEM_GENERATED without POST_CALCULATED) continue to be excluded\nas before.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n)\" 2>&1",
+            "description": "Commit the fix and test"
+          },
+          "timestamp": "2026-03-02T22:19:56.327Z"
+        }
+      ],
+      "total_additions": 20,
+      "total_deletions": 25,
+      "accepted_lines": 18,
+      "overriden_lines": 0
+    }
+  }
+}
