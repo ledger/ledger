@@ -259,24 +259,42 @@ bool xact_base_t::finalize() {
         if (x->commodity() != top_post->amount.commodity())
           std::swap(x, y);
 
-        DEBUG("xact.finalize", "primary   amount = " << *x);
-        DEBUG("xact.finalize", "secondary amount = " << *y);
+        // Don't auto-convert when the two balance entries share the same base
+        // commodity and only one side carries a lot-price annotation whose
+        // cost commodity differs from the base.  Example: "Avios {1.00 bmi}"
+        // vs "Avios".  The {price} annotation records cost basis for capital
+        // gains tracking but does not define a currency conversion; treating
+        // the two as separate currencies would silently absorb an imbalance
+        // in the actual Avios quantity.
+        //
+        // We still allow auto-conversion when:
+        //   - The commodities have different base symbols (real FX conversion).
+        //   - The annotated side has only a tag or date annotation (no price).
+        //   - Both sides carry lot-price annotations (e.g., a stock split
+        //     between "AAPL {70 USD}" and "AAPL {70.01 USD}").
+        const bool x_has_lot_price = x->has_annotation() && x->annotation().price;
+        const bool y_has_lot_price = y->has_annotation() && y->annotation().price;
+        const bool same_base = (&x->commodity().referent() == &y->commodity().referent());
+        if (!(same_base && x_has_lot_price && !y_has_lot_price)) {
+          DEBUG("xact.finalize", "primary   amount = " << *x);
+          DEBUG("xact.finalize", "secondary amount = " << *y);
 
-        commodity_t& comm(x->commodity());
-        amount_t per_unit_cost = (*y / *x).abs().unrounded();
+          commodity_t& comm(x->commodity());
+          amount_t per_unit_cost = (*y / *x).abs().unrounded();
 
-        DEBUG("xact.finalize", "per_unit_cost = " << per_unit_cost);
+          DEBUG("xact.finalize", "per_unit_cost = " << per_unit_cost);
 
-        for (post_t* post : posts) {
-          const amount_t& amt(post->amount.reduced());
+          for (post_t* post : posts) {
+            const amount_t& amt(post->amount.reduced());
 
-          if (post->must_balance() && amt.commodity() == comm) {
-            balance -= amt;
-            post->cost = per_unit_cost * amt;
-            post->add_flags(POST_COST_CALCULATED);
-            balance += *post->cost;
+            if (post->must_balance() && amt.commodity() == comm) {
+              balance -= amt;
+              post->cost = per_unit_cost * amt;
+              post->add_flags(POST_COST_CALCULATED);
+              balance += *post->cost;
 
-            DEBUG("xact.finalize", "set post->cost to = " << *post->cost);
+              DEBUG("xact.finalize", "set post->cost to = " << *post->cost);
+            }
           }
         }
       }
