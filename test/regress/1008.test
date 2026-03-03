@@ -1,0 +1,37 @@
+; Regression test for issue #1008: budget report doesn't take transactions
+; into account when multiple budget categories have transactions.
+;
+; When transactions exist in Food:Groceries and Food:Restaurant before a
+; transaction in Health:SelfPay:Medication (a sub-account of budgeted Health),
+; the Health actual amount was previously shown as zero instead of $40.95.
+
+~ yearly
+  Expenses:Health              $2400
+  Expenses:Food:Restaurant     $1200
+  Expenses:Food:Groceries      $5400
+  Budget                      $-9000
+
+2014/01/07 Groceries Store
+  Expenses:Food:Groceries      $3.69
+  Expenses:Food:Groceries      $3.69
+  Expenses:Food:Groceries      $3.69
+  Expenses:Food:Groceries      $3.69
+  amexCC
+
+2014/01/17 Restaurant
+  Expenses:Food:Restaurant     $15.00
+  amexCC
+
+2014/01/18 Pharmacy
+  Expenses:Health:SelfPay:Medication  $40.95
+  amexCC
+
+test budget ^Expenses --begin 2014/01/01 --end 2014/12/31
+      $70.71     $9000.00    $-8929.29    1%  Expenses
+      $29.76     $6600.00    $-6570.24     0    Food
+      $14.76     $5400.00    $-5385.24     0      Groceries
+      $15.00     $1200.00    $-1185.00    1%      Restaurant
+      $40.95     $2400.00    $-2359.05    2%    Health
+------------ ------------ ------------ -----
+      $70.71     $9000.00    $-8929.29    1%
+end test
