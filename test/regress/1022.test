@@ -1,0 +1,38 @@
+; Regression test for GitHub issue #1022:
+; Account aliases should not produce "Unknown account" warnings with --strict.
+;
+; Form 1: account ACCOUNT / alias ALIAS (sub-directive of account directive)
+; Form 2: alias ALIAS=ACCOUNT (top-level alias directive)
+;
+; With --strict, both forms must not emit "Unknown account" warnings for the
+; aliased account, since the alias declaration implicitly declares the account.
+
+commodity $
+
+; Form 1: sub-directive alias
+account expenses:tools
+    alias tools
+
+account assets:checking
+    alias ccp
+
+; Form 2: top-level alias directive
+alias Dining=Expenses:Dining
+alias Cash=Assets:Cash
+
+2014/04/12 Tools expense
+    tools                                    $13.90
+    ccp
+
+2012/03/15 Dining expense
+    Dining                        $100.00
+    Cash
+
+test bal --strict
+            $-100.00  Assets:Cash
+             $100.00  Expenses:Dining
+             $-13.90  assets:checking
+              $13.90  expenses:tools
+--------------------
+                   0
+end test
