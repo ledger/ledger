@@ -1,0 +1,29 @@
+; Test case from issue #995
+; Using --group-by commodity with -V (market valuation) caused a segfault
+; because changed_value_posts::clear() called create_accounts() before
+; item_handler<post_t>::clear(), leaving the <Revalued> account pointer
+; dangling when the next group tried to use it.
+;
+; Also tests the @@ (total lot cost) annotation which was present in the
+; original report.
+
+P 2011/10/01 VTSMX $38.50
+
+2011/10/02 Backdoor Roth, fix investment
+    Assets:Investments:Roth IRA:VTSMX  127.996 VTSMX @@ $5500.00
+    Assets:Investments:Roth IRA
+
+2011/10/03 Another purchase
+    Assets:Investments:Roth IRA:VTSMX  10.000 VTSMX @ $38.50
+    Assets:Investments:Roth IRA
+
+test reg --group-by commodity -V
+$
+11-Oct-02 Backdoor Roth, fix .. As:Investment:Roth IRA    $-5500.00    $-5500.00
+11-Oct-03 Another purchase      As:Investment:Roth IRA     $-385.00    $-5885.00
+
+VTSMX
+11-Oct-02 Backdoor Roth, fix .. As:Inves:Roth IR:VTSMX     $5500.00     $5500.00
+11-Oct-03 Commodities revalued  <Revalued>                 $-572.15     $4927.85
+11-Oct-03 Another purchase      As:Inves:Roth IR:VTSMX      $385.00     $5312.85
+end test

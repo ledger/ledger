@@ -11,7 +11,7 @@
     Expenses:Bar                               $2.00
     Income
 
-test -X '$' budget
+test -X '$' budget --end 2026/03/01
        $2.00     $3800.00    $-3798.00     0  Expenses
        $2.00            0        $2.00     0    Bar
                  $3800.00    $-3800.00     0    Foo

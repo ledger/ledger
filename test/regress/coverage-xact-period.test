@@ -9,7 +9,7 @@
     Expenses:Food              $50.00
     Assets:Checking
 
-test budget --columns 80
+test budget --columns 80 --end 2026/03/01
      $-50.00   $-31200.00    $31150.00     0  Assets:Checking
            0    $31200.00   $-31200.00     0  Expenses:Rent
 ------------ ------------ ------------ -----

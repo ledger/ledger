@@ -10,7 +10,7 @@
     Assets:Cash
 
 ; Test budget command - covers line 1622
-test budget
+test budget --end 2026/03/01
      $-50.00    $-7800.00     $7750.00    1%  Assets:Cash
       $50.00     $7800.00    $-7750.00    1%  Expenses:Food
 ------------ ------------ ------------ -----

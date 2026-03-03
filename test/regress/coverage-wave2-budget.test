@@ -10,7 +10,7 @@
     Expenses:Food     $100.00
     Assets:Checking
 
-test budget
+test budget --end 2026/03/01
     $-100.00    $-7800.00     $7700.00    1%  Assets:Checking
      $100.00     $7800.00    $-7700.00    1%  Expenses:Food
 ------------ ------------ ------------ -----
