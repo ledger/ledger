@@ -60,7 +60,7 @@ jobs:
           # https://github.com/actions/runner-images/issues/2322
           brew list -1 | grep python | while read formula; do brew unlink $formula; brew link --overwrite $formula; done
 
-          brew update
+          brew update || brew update || echo "brew update failed (non-fatal, using cached tap)"
           brew uninstall cmake
           ./acprep dependencies --python
 
