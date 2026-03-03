@@ -683,10 +683,21 @@ public:
 
         // Since we are displaying the amounts of revalued postings, they
         // will end up being composite totals, and hence a pair of pairs.
+        // When --subtotal collapses compound postings the amount expression
+        // evaluates to a nested pair ((amount, cost), (amount, cost)).  We
+        // distinguish two sub-cases by looking at the inner cost element:
+        //
+        //  inner[1] != 0  →  subtotaled post: compute market(inner[0]) - inner[1]
+        //  inner[1] == 0  →  revalued post from changed_value_posts: the delta
+        //                    market(repriced) - market(last) is already computed as
+        //                    inner[0], so return it unchanged (issue #965).
         OTHER(display_amount_)
             .on(whence, "use_direct_amount ? amount :"
                         " (is_seq(get_at(amount_expr, 0)) ?"
-                        "  get_at(get_at(amount_expr, 0), 0) :"
+                        "  (get_at(get_at(amount_expr, 0), 1) ?"
+                        "    market(get_at(get_at(amount_expr, 0), 0), value_date, exchange)"
+                        "    - get_at(get_at(amount_expr, 0), 1) :"
+                        "    get_at(get_at(amount_expr, 0), 0)) :"
                         "  market(get_at(amount_expr, 0), value_date, exchange)"
                         "  - get_at(amount_expr, 1))");
         OTHER(revalued_total_)

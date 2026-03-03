@@ -988,9 +988,16 @@ void subtotal_posts::operator()(post_t& post) {
   account_t* acct = post.reported_account();
   assert(acct);
 
-  value_t amount(post.amount);
+  // Evaluate amount_expr before marking the post as compound so that compound
+  // expressions like "(amount, cost)" used by --gain produce values with a
+  // consistent type in the accumulator.  Using post.amount directly causes
+  // multi-commodity accounts to accumulate as BALANCE values; those compound
+  // posts then bypass expression evaluation in calc_posts, which leads to
+  // mismatched sequence lengths in the running total (issue #965).
+  value_t amount;
+  post.add_to_value(amount, amount_expr);
 
-  post.xdata().compound_value = amount;
+  post.xdata().compound_value = value_t(post.amount);
   post.xdata().add_flags(POST_EXT_COMPOUND);
 
   // Use a composite key to distinguish virtual from non-virtual postings to
