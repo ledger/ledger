@@ -90,7 +90,8 @@ struct annotation_t : public flags::supports_flags<>, public equality_comparable
   }
 
   void parse(std::istream& in);
-  void print(std::ostream& out, bool keep_base = false, bool no_computed_annotations = false) const;
+  void print(std::ostream& out, bool keep_base = false, bool no_computed_annotations = false,
+             const amount_t* qty = nullptr, uint_least8_t print_flags = 0) const;
 
   bool valid() const {
     assert(*this);
@@ -186,7 +187,9 @@ public:
     }
   }
 
-  void write_annotations(std::ostream& out, bool no_computed_annotations = false) const override;
+  void write_annotations(std::ostream& out, bool no_computed_annotations = false,
+                         const amount_t* qty = nullptr,
+                         uint_least8_t print_flags = 0) const override;
 };
 
 inline annotated_commodity_t& as_annotated_commodity(commodity_t& commodity) {

@@ -1,0 +1,28 @@
+; Regression test for issue #1033:
+; The print command should preserve {{total}} lot-price notation rather than
+; converting it to {per-unit} notation.  For example, -100 AAA {{90.00 GBP}}
+; means the total cost for the lot is 90.00 GBP.  The old code divided by the
+; quantity and printed {0.90 GBP}, which changes the user's notation and
+; produces repeating decimals for non-divisible cases.
+
+2011-11-03 * Buy AAA
+    Assets:Investments                  100 AAA @@ 100.00 GBP
+    Assets:Cash
+
+2011-12-06 * Sell
+    Assets:Investments                                      400.00 GBP
+    Assets:Investments    -100 AAA {{ 90.00 GBP}} [2010-06-10] @  2 GBP
+    Assets:Investments    -100 AAA {{100.00 GBP}} [2011-11-03] @  2 GBP
+    Income:Capital gains                                   -210.00 GBP
+
+test print
+2011/11/03 * Buy AAA
+    Assets:Investments                       100 AAA @@ 100.00 GBP
+    Assets:Cash
+
+2011/12/06 * Sell
+    Assets:Investments                    400.00 GBP
+    Assets:Investments                  -100 AAA {{90.00 GBP}} [2010/06/10] @ 2.00 GBP
+    Assets:Investments                  -100 AAA {1.00 GBP} [2011/11/03] @ 2.00 GBP
+    Income:Capital gains                 -210.00 GBP
+end test
