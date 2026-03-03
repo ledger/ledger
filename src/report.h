@@ -668,7 +668,7 @@ public:
         // the account's own amount rather than the family total (which
         // includes sub-accounts).  The root account (where parent is null)
         // still uses total for the grand total line.
-        OTHER(total_).on(whence, "parent ? amount : total");
+        OTHER(total_).on(whence, "parent ? (has_children_to_display ? amount : total) : total");
       });
   OPTION(report_t, force_color);
   OPTION(report_t, force_pager);

@@ -19,11 +19,18 @@
     Income:One:Two:Three:Books          $-10.00
 
 test bal --depth 1 --flat
+             $-10.00  Assets
+              $40.00  Expenses
+             $-30.00  Income
+--------------------
+                   0
 end test
 
 test bal --depth 2 --flat
              $-10.00  Assets:Cash
               $10.00  Expenses:Books
+              $30.00  Expenses:One
+             $-30.00  Income:One
 --------------------
                    0
 end test
@@ -32,7 +39,9 @@ test bal --depth 3 --flat
              $-10.00  Assets:Cash
               $10.00  Expenses:Books
               $10.00  Expenses:One:Books
+              $20.00  Expenses:One:Two
              $-10.00  Income:One:Books
+             $-20.00  Income:One:Two
 --------------------
                    0
 end test
@@ -42,8 +51,10 @@ test bal --depth 4 --flat
               $10.00  Expenses:Books
               $10.00  Expenses:One:Books
               $10.00  Expenses:One:Two:Books
+              $10.00  Expenses:One:Two:Three
              $-10.00  Income:One:Books
              $-10.00  Income:One:Two:Books
+             $-10.00  Income:One:Two:Three
 --------------------
                    0
 end test
