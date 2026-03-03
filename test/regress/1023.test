@@ -1,0 +1,15 @@
+; Regression test for issue #1023: --exchange with --add-budget crashes
+; with "Cannot negate an uninitialized value" when an account has actual
+; transactions but no matching budget entry (display_total[1] is VOID).
+
+2023/01/15 * USD purchase
+    expenses:cash                         300.00 USD
+    assets:checking                      $-320.43
+
+~ Monthly
+    expenses:food                         100.00 USD
+    equity:budget
+
+test budget --add-budget --depth 2 -X USD -b 2023/01 -e 2023/02 ^expenses
+  300.00 USD                300.00 USD     0  expenses:cash
+end test
