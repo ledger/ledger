@@ -545,7 +545,8 @@ void related_posts::flush() {
         post_t::xdata_t& xdata(r_post->xdata());
         if (!xdata.has_flags(POST_EXT_HANDLED) &&
             (!xdata.has_flags(POST_EXT_RECEIVED)
-                 ? (!r_post->has_flags(ITEM_GENERATED) || also_matching)
+                 ? (!r_post->has_flags(ITEM_GENERATED) || r_post->has_flags(POST_CALCULATED) ||
+                    also_matching)
                  : also_matching)) {
           xdata.add_flags(POST_EXT_HANDLED);
           item_handler<post_t>::operator()(*r_post);
