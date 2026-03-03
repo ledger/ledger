@@ -1,0 +1,43 @@
+; Regression test for issue #984
+;
+; When using plot mode (-J/-j) combined with period mode (-M/--period) and
+; exchange to a single commodity (-X $), accounts holding multiple commodities
+; or sub-accounts must produce exactly ONE output line per time period.
+;
+; Before the fix, interval_posts generated one synthetic posting per account
+; per period (e.g. AAPL and IBM each got their own posting), and
+; display_filter_posts::output_rounding() injected an extra <Adjustment>
+; posting at the start of each subsequent period to account for market
+; revaluation.  Both caused multiple lines per period in the plot output.
+;
+; The fix auto-collapses postings within each period when both period mode
+; and plot mode are active (chain.cc), and suppresses the rounding adjustment
+; posting in that combined mode (filters.cc).
+
+commodity AAPL
+    format 0.000 AAPL
+
+commodity IBM
+    format 0.000 IBM
+
+P 2011-01-15 AAPL $309.23
+P 2011-01-15 IBM  $150.00
+P 2011-02-15 AAPL $320.00
+P 2011-02-15 IBM  $160.00
+
+2011-01-10 Purchase AAPL
+    Assets:401K:AAPL        100.000 AAPL @ $309.23
+    Assets:Cash
+
+2011-01-10 Purchase IBM
+    Assets:401K:IBM         200.000 IBM @ $150.00
+    Assets:Cash
+
+2011-02-10 Purchase AAPL
+    Assets:401K:AAPL         10.000 AAPL @ $320.00
+    Assets:Cash
+
+test reg -J -M -X $ Assets:401K
+2011-01-01 60923
+2011-02-01 67200
+end test
