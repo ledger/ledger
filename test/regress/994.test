@@ -1,0 +1,32 @@
+; Regression test for GitHub issue #994
+; The single-letter value expression variables v (market value) and g (gain)
+; from ledger 2.x are no longer supported in ledger 3.x.  The documentation
+; previously listed these as valid variables, causing user confusion.
+;
+; The modern equivalents are:
+;   v (market value) -> market(amount) or P(a)
+;   g (net gain)     -> market(amount) - cost  or  P(a) - b
+
+P 2024-01-15 AAPL $200.00
+
+2024-01-01 Buy stocks
+    Assets:Brokerage            5 AAPL @ $150.00
+    Assets:Cash                -$750.00
+
+; Using the deprecated 'v' variable produces an error
+test reg --format "%(v)\n" Assets:Brokerage -> 1
+__ERROR__
+While handling posting from "$FILE", line 13:
+>     Assets:Brokerage            5 AAPL @ $150.00
+Error: The V and v value expression variables are no longer supported
+end test
+
+; The modern replacement for 'v' is market(amount)
+test reg --format "%(market(amount))\n" Assets:Brokerage
+$1000.00
+end test
+
+; The modern replacement for 'g' (gain = market value - cost) is market(amount) - cost
+test reg --format "%(market(amount) - cost)\n" Assets:Brokerage
+$250.00
+end test
