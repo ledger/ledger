@@ -187,7 +187,14 @@ endif()
 
 ########################################################################
 
-add_custom_target(doc DEPENDS ${ledger_doc_files} doc.doxygen)
+# When documentation is requested, include it in the default build so that
+# generated files (e.g. ledger3.info) exist when "cmake --install" runs.
+# Without ALL the install step would fail if the user never ran "make doc".
+if(BUILD_DOCS)
+  add_custom_target(doc ALL DEPENDS ${ledger_doc_files} doc.doxygen)
+else()
+  add_custom_target(doc DEPENDS ${ledger_doc_files} doc.doxygen)
+endif()
 
 ########################################################################
 
