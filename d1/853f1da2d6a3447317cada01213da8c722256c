@@ -1,0 +1,263 @@
+doc/ledger3.texi
+  0262c4ddee260819 8299-8302
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.6",
+  "base_commit_sha": "d1853f1da2d6a3447317cada01213da8c722256c",
+  "prompts": {
+    "0262c4ddee260819": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f5424c9e-4076-4495-9688-7ab96691bae6",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "<command-message>fix</command-message>\n<command-name>/fix</command-name>\n<command-args>997</command-args>",
+          "timestamp": "2026-03-02T22:08:26.291Z"
+        },
+        {
+          "type": "user",
+          "text": "# Think, Research, Plan, Act, Review\n\nThink deeply to analyze the following query, construct a well thought out plan of action based on the following context, and then carefully execute that plan step by step.\n\nIf you find that the bug or feature you’re attempting to fix has already been addressed in an earlier commit, just add a regression test to demonstrate the item has been dealt with.\n\nCreate a PR for each using my jwiegley user on GitHub. The author/committer for all new commits should be signed by johnw@newartisans.com.\n\nThis series of jobs will take a long time, so make a comprehensive and effective plan and then execute step by step until you have completed them all and added new regression tests for each.\n\nNow, please analyze and fix the GitHub issue: 997.\n\nNOTE: Do not work on a bug that already has a PR open that addresses it. In that case, just give the PR number and stop immediately.\n\n# Follow these steps\n\n1. Use `gh issue view` to get the issue details\n2. Understand the problem described in the issue\n3. Search the codebase for relevant files\n4. Implement the necessary changes to fix the issue\n5. Write and run tests to verify the fix\n6. Ensure code passes linting and type checking\n7. Leave your work uncommitted in the working tree, so it can be reviewed.\n\nRemember the following:\n- Use the claude-code skill to provide context for the rest of the task\n- Use the GitHub CLI (`gh`) for all GitHub-related tasks\n- Search the codebase for relevant files\n- Ensure code passes linting and type checking after doing any work\n- Use cpp-pro, python-pro, emacs-lisp-pro, rust-pro or haskell-pro as needed for diagnosing and analyzing PRs, fixing code, and writing any new code.\n- Use Web Search and Perplexity as need for research and discovering resources.\n- Use sequential-thinking when appropriate to break down tasks further.\n- Use context7 whenever code examples might help.\n\nCommit all work as a series of atomic, logically sequenced commits. Each commit should represent one coherent change that can be understood, reviewed, and reverted independently.\n\n# Commit Decomposition Principles\n\n**Scope each commit to a single logical change.** A commit should do exactly one thing: add a function, fix a bug, refactor a module, update documentation. If you find yourself writing \"and\" in a commit message, consider splitting the commit.\n\n**Sequence commits to tell a story.** Arrange commits so each builds naturally on the previous. A reviewer reading the series should understand why each change was made and how the code evolved. Foundational changes come before dependent ones.\n\n**Keep each commit in a working state.** Every commit should compile, pass tests, and not introduce obvious regressions. This enables bisection for debugging and allows reviewers to check out any point in history.\n\n# Categorizing Changes\n\nBefore committing, analyze the working tree and group changes into categories:\n\n1. **Infrastructure/setup changes** — new dependencies, configuration, tooling\n2. **Refactoring** — restructuring existing code without changing behavior\n3. **New functionality** — features, APIs, modules\n4. **Bug fixes** — corrections to existing behavior\n5. **Tests** — new or modified test coverage\n6. **Documentation** — comments, READMEs, inline docs\n\nCommit these categories in order when dependencies exist between them. Refactoring that enables a new feature should precede the feature commit.\n\n# Commit Message Format\n\n```\n<summary>\n\n<body>\n\n<footer>\n```\n\n**Summary line:** Imperative mood, no period, under 50 characters. Describe what applying the commit does, not what you did.\n\n**Body:** Explain the motivation and contrast with previous behavior. Wrap at 72 characters. Focus on *why*, not *what* (the diff shows what).\n\n**Footer:** Reference issues, breaking changes, or co-authors.\n\n# Staging Strategy\n\nUse selective staging to craft precise commits:\n\n- `git add -p` for hunks within files\n- `git add <specific-files>` to group related files\n- Review staged changes with `git diff --staged` before committing\n\nWhen a single file contains changes belonging to multiple logical commits, stage hunks separately rather than committing the entire file.\n\n# Quality Checklist\n\nBefore finalizing each commit:\n\n- [ ] Does this commit do exactly one thing?\n- [ ] Could someone understand this change without seeing other commits?\n- [ ] Is the commit message searchable? Will someone find this when grepping history?\n- [ ] Does the code compile and pass tests at this point?\n- [ ] Would reverting this commit cleanly undo one logical change?\n\n# Example Decomposition\n\nGiven work that adds a feature with tests and required refactoring:\n\n```\n1. Extract token validation into dedicated module\n2. Add unit tests for token validation\n3. Implement refresh token rotation\n4. Add integration tests for token refresh flow\n5. Document refresh token behavior in API guide\n```\n\nEach commit is independently reviewable, the sequence shows logical progression, and future developers can find relevant changes through targeted searches.\n\n# Handling Mixed Changes\n\nIf the working tree contains entangled changes:\n\n1. **Identify the distinct changes** — list what logical modifications exist\n2. **Determine dependencies** — which changes require others to be present\n3. **Create a commit plan** — order commits to satisfy dependencies\n4. **Stage incrementally** — use partial staging to isolate each change\n5. **Verify at each step** — ensure the repository works after each commit\n\nWhen changes are too entangled to separate cleanly, prefer a slightly larger commit with a clear message over a commit that leaves the repository in a broken state.\n",
+          "timestamp": "2026-03-02T22:08:26.291Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me start by examining the GitHub issue #997 and understanding what needs to be fixed.",
+          "timestamp": "2026-03-02T22:08:28.829Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 997 --repo ledger/ledger"
+          },
+          "timestamp": "2026-03-02T22:08:29.088Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 997"
+          },
+          "timestamp": "2026-03-02T22:08:31.165Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 997"
+          },
+          "timestamp": "2026-03-02T22:08:33.654Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh auth status"
+          },
+          "timestamp": "2026-03-02T22:08:35.388Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The GitHub authentication is failing. Let me try to access the issue via web search or fetch.",
+          "timestamp": "2026-03-02T22:08:37.714Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The GitHub auth is invalid. Let me fetch the issue directly via the web.",
+          "timestamp": "2026-03-02T22:08:38.165Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "WebFetch",
+          "input": {
+            "prompt": "Describe the bug report in detail including the problem, steps to reproduce, and any example data provided.",
+            "url": "https://github.com/ledger/ledger/issues/997"
+          },
+          "timestamp": "2026-03-02T22:08:39.076Z"
+        },
+        {
+          "type": "assistant",
+          "text": "This is a documentation issue about a contradiction in Ledger's documentation regarding the `-Q` flag and price database file behavior. The issue says:\n1. `--price-db` documentation says \"Ledger NEVER writes output to files\"\n2. `-Q/--download` documentation says \"Downloaded quote price are then appended to the price database\"\n\nThese contradict each other. The actual behavior seems to be that Ledger DOES append to the price-db file when using `-Q`.\n\nLet me look at the documentation source files to understand where these statements are and fix the contradiction.\n\nAlso, I need to check if there's an existing PR for this issue.",
+          "timestamp": "2026-03-02T22:08:49.518Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "WebFetch",
+          "input": {
+            "prompt": "Are there any open or closed pull requests that reference issue 997?",
+            "url": "https://github.com/ledger/ledger/pulls?q=is%3Apr+997"
+          },
+          "timestamp": "2026-03-02T22:08:50.191Z"
+        },
+        {
+          "type": "assistant",
+          "text": "No existing PR. Let me find the documentation files and fix the contradiction.",
+          "timestamp": "2026-03-02T22:08:54.019Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Glob",
+          "input": {
+            "pattern": "**/*.texi"
+          },
+          "timestamp": "2026-03-02T22:08:54.309Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Glob",
+          "input": {
+            "pattern": "doc/**/*"
+          },
+          "timestamp": "2026-03-02T22:08:54.644Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "-C": 5,
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-997/doc/ledger3.texi",
+            "pattern": "NEVER writes"
+          },
+          "timestamp": "2026-03-02T22:08:57.851Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "-C": 3,
+            "-i": true,
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-997/doc/ledger3.texi",
+            "pattern": "price.db|price_db|download|quote"
+          },
+          "timestamp": "2026-03-02T22:08:59.153Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I can see the contradiction. Let me look at the specific sections:\n\n1. At line 8299-8301, the documentation says:\n```\nNote: Ledger NEVER writes output to files.  You are responsible for\nupdating the price-db file.  The best way is to have your price\ndownload script maintain this file.\n```\n\n2. At line 8321-8323, the documentation says:\n```\nDownloaded quote price are then appended to the price\ndatabase, usually specified using the environment variable\nLEDGER_PRICE_DB.\n```\n\nThese clearly contradict each other. According to the issue, the actual behavior is that Ledger DOES write to the price-db file when using `-Q`. \n\n\nI should check the source code to see what's actually happening under the hood.",
+          "timestamp": "2026-03-02T22:09:05.625Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the issue. Let me look at the actual code to verify what really happens with `-Q`:",
+          "timestamp": "2026-03-02T22:09:05.697Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "-C": 3,
+            "-i": true,
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-997/src",
+            "pattern": "price.db|getquote|download|LEDGER_PRICE_DB"
+          },
+          "timestamp": "2026-03-02T22:09:07.717Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I can see the actual behavior clearly. Looking at `quotes.cc` lines 112-116:\n\n```cpp\nif (commodity_pool_t::current_pool->price_db) {\n    ofstream database(*commodity_pool_t::current_pool->price_db,\n                      std::ios_base::out | std::ios_base::app);\n    database << \"P \" << format_datetime(point->second.when, FMT_WRITTEN) << \" \"\n             << commodity.symbol() << \" \" << point->second.price << '\\n';\n```\n\nSo Ledger DOES write to the price-db file when `-Q` is used. \n\nThe documentation claiming it \"NEVER writes output to files\" is wrong, so I need to update the texi file to accurately reflect that the `-Q` option does append price data to the price-db file.",
+          "timestamp": "2026-03-02T22:09:15.009Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the full picture. The code in `src/quotes.cc` lines 112-116 clearly shows Ledger DOES write to the price-db file when `-Q` is used. The documentation at line 8299-8301 is wrong. Let me look at the exact context:",
+          "timestamp": "2026-03-02T22:09:15.630Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-997/doc/ledger3.texi",
+            "limit": 60,
+            "offset": 8280
+          },
+          "timestamp": "2026-03-02T22:09:16.531Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-997/src/quotes.cc"
+          },
+          "timestamp": "2026-03-02T22:09:16.949Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I have a complete understanding of the issue. The code in `quotes.cc` clearly shows that when `-Q` is used and a price is successfully downloaded, Ledger DOES write to the price-db file (lines 112-116). The \"Note: Ledger NEVER writes output to files\" statement in the documentation is incorrect.\n\nThe fix is to update the documentation at line 8299-8301 to correctly state that:\n1. Ledger does write downloaded prices to the price-db file when `-Q` is used\n2. However, for other reports, Ledger does not write output to files - the user is responsible for manual updates to the price-db beyond what `-Q` handles\n\n\n3. I need to revise the note to clarify that `--download` automatically appends prices to the price-db file, while manual maintenance is only needed for prices not obtained through that mechanism. I see the next thinking is just a fragment referring to the description of `--download` below. Since I've already established the corrected note about when Ledger writes to the price-db file, this fragment is pointing me toward where that option is documented further down in the text, so I don't need to add anything new here.",
+          "timestamp": "2026-03-02T22:09:30.224Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The code is clear: `quotes.cc` lines 112-116 show that Ledger DOES write downloaded quotes to the price-db file. The documentation at line 8299-8301 incorrectly claims \"Ledger NEVER writes output to files.\"\n\nThe fix is to correct the documentation to accurately reflect the actual behavior:",
+          "timestamp": "2026-03-02T22:09:30.242Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-997/doc/ledger3.texi",
+            "new_string": "@noindent\nNote: When using @option{--download (-Q)}, Ledger automatically\nappends downloaded prices to this file.  Otherwise, Ledger does not\nwrite to the price-db file, and you are responsible for maintaining\nit manually.",
+            "old_string": "@noindent\nNote: Ledger NEVER writes output to files.  You are responsible for\nupdating the price-db file.  The best way is to have your price\ndownload script maintain this file.",
+            "replace_all": false
+          },
+          "timestamp": "2026-03-02T22:09:32.311Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me verify the fix looks correct in context:",
+          "timestamp": "2026-03-02T22:09:34.141Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-997/doc/ledger3.texi",
+            "limit": 55,
+            "offset": 8283
+          },
+          "timestamp": "2026-03-02T22:09:34.913Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The fix looks good. The two sections now agree with each other and with the actual code behavior. Now let me commit this fix:",
+          "timestamp": "2026-03-02T22:09:37.375Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff"
+          },
+          "timestamp": "2026-03-02T22:09:37.808Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git add doc/ledger3.texi"
+          },
+          "timestamp": "2026-03-02T22:09:39.575Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git commit -m \"$(cat <<'EOF'\nFix contradictory documentation for --price-db and --download (-Q)\n\nThe --price-db section previously stated \"Ledger NEVER writes output to\nfiles,\" which directly contradicted the --download section's accurate\ndescription that downloaded prices are appended to the price database.\n\nThe code in src/quotes.cc (commodity_quote_from_script) clearly shows\nthat when --download (-Q) is active and a quote is successfully fetched,\nLedger appends the price entry to the price-db file.\n\nReplace the incorrect absolute statement with accurate documentation\nthat reflects the actual behavior: Ledger writes to price-db only when\ndownloading quotes with --download (-Q); otherwise the user is\nresponsible for maintaining the file manually.\n\nFixes #997\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n)\" --author=\"John Wiegley <johnw@newartisans.com>\""
+          },
+          "timestamp": "2026-03-02T22:09:45.733Z"
+        }
+      ],
+      "total_additions": 4,
+      "total_deletions": 3,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    }
+  }
+}
