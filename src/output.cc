@@ -297,6 +297,7 @@ void report_accounts::flush() {
       out << entry.second << ' ';
     out << *entry.first << '\n';
   }
+  out.flush();
 }
 
 void report_accounts::operator()(post_t& post) {
@@ -314,6 +315,7 @@ void report_payees::flush() {
       out << entry.second << ' ';
     out << entry.first << '\n';
   }
+  out.flush();
 }
 
 void report_payees::operator()(post_t& post) {
@@ -331,6 +333,7 @@ void report_tags::flush() {
       out << entry.second << ' ';
     out << entry.first << '\n';
   }
+  out.flush();
 }
 
 void report_tags::gather_metadata(item_t& item) {
@@ -361,6 +364,7 @@ void report_commodities::flush() {
       out << entry.second << ' ';
     out << *entry.first << '\n';
   }
+  out.flush();
 }
 
 void report_commodities::operator()(post_t& post) {

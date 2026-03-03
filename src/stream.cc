@@ -134,6 +134,8 @@ void output_stream_t::initialize(const optional<path>& output_file,
 }
 
 void output_stream_t::close() {
+  if (os == &std::cout)
+    os->flush();
 #if !defined(_WIN32) && !defined(__CYGWIN__)
   if (os != &std::cout) {
     checked_delete(os);

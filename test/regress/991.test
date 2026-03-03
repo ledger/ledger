@@ -1,0 +1,35 @@
+; Regression test for issue #991: output buffering in interactive (REPL) mode.
+; The accounts, payees, tags, and commodities commands were not flushing their
+; output, causing results to be delayed and only appear after the next command.
+
+2024/01/01 * Opening Balance
+    Assets:Cash                    $100.00
+    Equity:Opening Balances
+
+2024/01/15 * Groceries
+    Expenses:Food                   $25.00
+    Assets:Cash
+
+2024/01/20 * Internet Bill
+    Expenses:Utilities              $50.00
+    Assets:Cash
+
+test accounts
+Assets:Cash
+Equity:Opening Balances
+Expenses:Food
+Expenses:Utilities
+end test
+
+test payees
+Groceries
+Internet Bill
+Opening Balance
+end test
+
+test tags
+end test
+
+test commodities
+$
+end test
