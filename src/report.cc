@@ -659,6 +659,32 @@ value_t report_t::fn_market(call_scope_t& args) {
   if (args.has<string>(2))
     target_commodity = args.get<string>(2);
 
+  // When arg0 is a sequence (e.g., from the cleared or budget command's
+  // amount tuple), apply market conversion to each element individually.
+  // A sequence returned by value_t::value() is never is_null() even when all
+  // its elements are NULL_VALUE, so the fallback below would not trigger and
+  // the display total would become a sequence of nulls, causing no accounts
+  // to be marked for display.
+  if (arg0.is_sequence()) {
+    value_t temp;
+    for (value_t elem : arg0.as_sequence()) {
+      value_t elem_result;
+      if (!target_commodity.empty())
+        elem_result = elem.exchange_commodities(target_commodity,
+                                                /* add_prices= */ false, moment);
+      else
+        elem_result = elem.value(moment);
+      // Only fall back to the original element if it carries a value.
+      // Integer zeros used as placeholders in budget/cleared tuples should
+      // remain null so they display as blank rather than "0".
+      if (elem_result.is_null() && !elem.is_long())
+        temp.push_back(elem);
+      else
+        temp.push_back(elem_result);
+    }
+    return temp;
+  }
+
   if (!target_commodity.empty())
     result = arg0.exchange_commodities(target_commodity,
                                        /* add_prices= */ false, moment);
