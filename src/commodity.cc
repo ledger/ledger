@@ -166,6 +166,23 @@ std::optional<price_point_t>
 commodity_t::check_for_updated_price(const std::optional<price_point_t>& point,
                                      const datetime_t& moment, const commodity_t* in_terms_of) {
   if (pool().get_quotes && !has_flags(COMMODITY_NOMARKET)) {
+    // If we have already successfully downloaded a quote for this commodity
+    // during this session and within the leeway period, don't download again.
+    // This prevents duplicate downloads when the same commodity appears in
+    // multiple postings (issue #996): find_price() called with a historical
+    // moment (midnight) cannot see a price downloaded with a later time
+    // component on the same date, causing repeated download attempts.
+    if (referent().base->last_quote) {
+      time_duration_t::sec_type secs_since_last =
+          (TRUE_CURRENT_TIME() - *referent().base->last_quote).total_seconds();
+      DEBUG("commodity.download", "last_quote = " << *referent().base->last_quote);
+      DEBUG("commodity.download", "secs_since_last = " << secs_since_last);
+      if (secs_since_last < pool().quote_leeway) {
+        DEBUG("commodity.download", "quote already fetched recently, skipping download");
+        return point;
+      }
+    }
+
     bool exceeds_leeway = true;
 
     if (point) {
@@ -188,6 +205,7 @@ commodity_t::check_for_updated_price(const std::optional<price_point_t>& point,
       DEBUG("commodity.download", "attempting to download a more current quote...");
       if (std::optional<price_point_t> quote =
               pool().get_commodity_quote(referent(), in_terms_of)) {
+        referent().base->last_quote = TRUE_CURRENT_TIME(); // record download time (issue #996)
         if (!in_terms_of ||
             (quote->price.has_commodity() && quote->price.commodity_ptr() == in_terms_of))
           return quote;

@@ -111,6 +111,7 @@ protected:
 
     inline static constexpr std::size_t max_price_map_size = 8;
     mutable memoized_price_map price_map;
+    mutable std::optional<datetime_t> last_quote; // time of last successful download (issue #996)
 
   public:
     explicit base_t(const string& _symbol)
