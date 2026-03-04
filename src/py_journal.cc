@@ -143,18 +143,18 @@ account_t* py_register_account(journal_t& journal, const string& name, post_t* p
 #endif
 
 struct collector_wrapper {
-  journal_t& journal;
+  boost::shared_ptr<journal_t> journal_sp;
   report_t report;
   post_handler_ptr handler_chain; // Keeps the filter chain alive (owns synthetic temp posts)
   post_handler_ptr posts_collector;
 
-  collector_wrapper(journal_t& _journal, report_t& base)
-      : journal(_journal), report(base), posts_collector(new collect_posts) {
-    TRACE_CTOR(collector_wrapper, "journal_t&, report_t&");
+  collector_wrapper(boost::shared_ptr<journal_t> _journal_sp, report_t& base)
+      : journal_sp(std::move(_journal_sp)), report(base), posts_collector(new collect_posts) {
+    TRACE_CTOR(collector_wrapper, "boost::shared_ptr<journal_t>, report_t&");
   }
   ~collector_wrapper() {
     TRACE_DTOR(collector_wrapper);
-    journal.clear_xdata();
+    journal_sp->clear_xdata();
   }
 
   std::size_t length() const {
@@ -169,17 +169,19 @@ struct collector_wrapper {
   }
 };
 
-shared_ptr<collector_wrapper> py_query(journal_t& journal, const string& query) {
+shared_ptr<collector_wrapper> py_query(boost::shared_ptr<journal_t> journal_sp,
+                                       const string& query) {
+  journal_t& journal = *journal_sp;
   if (journal.has_xdata()) {
     PyErr_SetString(PyExc_RuntimeError, _("Cannot have more than one active journal query"));
     throw_error_already_set();
   }
 
   report_t& current_report(downcast<report_t>(*scope_t::default_scope));
-  shared_ptr<collector_wrapper> coll(new collector_wrapper(journal, current_report));
+  shared_ptr<collector_wrapper> coll(new collector_wrapper(journal_sp, current_report));
 
   boost::shared_ptr<journal_t> save_journal = coll->report.session.journal;
-  coll->report.session.journal = boost::shared_ptr<journal_t>(&coll->journal, [](journal_t*) {});
+  coll->report.session.journal = journal_sp;
 
   try {
     strings_list remaining = process_arguments(split_arguments(query.c_str()), coll->report);
@@ -200,8 +202,7 @@ shared_ptr<collector_wrapper> py_query(journal_t& journal, const string& query) 
     if (coll->report.HANDLED(group_by_)) {
       unique_ptr<post_splitter> splitter(new post_splitter(coll->handler_chain, coll->report,
                                                            coll->report.HANDLER(group_by_).expr));
-      journal_t* jrnl = coll->report.session.journal.get();
-      splitter->set_postflush_func([jrnl](const value_t&) { jrnl->clear_xdata(); });
+      splitter->set_postflush_func([journal_sp](const value_t&) { journal_sp->clear_xdata(); });
       coll->handler_chain = post_handler_ptr(splitter.release());
     }
 
