@@ -111,6 +111,8 @@ std::string format_date(const date_t& when, const format_type_t format_type = FM
                         const optional<const char*>& format = none);
 void set_date_format(const char* format);
 void set_input_date_format(const char* format);
+bool date_format_is_set();
+bool datetime_format_is_set();
 
 inline void put_datetime(property_tree::ptree& pt, const datetime_t& when) {
   pt.put_value(format_datetime(when, FMT_WRITTEN));

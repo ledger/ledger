@@ -1481,7 +1481,7 @@ void value_t::in_place_cast(type_t cast_type) {
       set_datetime(datetime_t(as_date(), time_duration(0, 0, 0, 0)));
       return;
     case STRING:
-      set_string(format_date(as_date(), FMT_WRITTEN));
+      set_string(format_date(as_date(), date_format_is_set() ? FMT_PRINTED : FMT_WRITTEN));
       return;
     default:
       break;
@@ -1493,7 +1493,8 @@ void value_t::in_place_cast(type_t cast_type) {
       set_date(as_datetime().date());
       return;
     case STRING:
-      set_string(format_datetime(as_datetime(), FMT_WRITTEN));
+      set_string(
+          format_datetime(as_datetime(), datetime_format_is_set() ? FMT_PRINTED : FMT_WRITTEN));
       return;
     default:
       break;
@@ -2477,11 +2478,11 @@ void value_t::print(std::ostream& _out, const int first_width, const int latter_
     break;
 
   case DATETIME: // NOLINT(bugprone-branch-clone)
-    out << format_datetime(as_datetime(), FMT_WRITTEN);
+    out << format_datetime(as_datetime(), datetime_format_is_set() ? FMT_PRINTED : FMT_WRITTEN);
     break;
 
   case DATE:
-    out << format_date(as_date(), FMT_WRITTEN);
+    out << format_date(as_date(), date_format_is_set() ? FMT_PRINTED : FMT_WRITTEN);
     break;
 
   case INTEGER:
