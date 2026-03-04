@@ -23,7 +23,7 @@ with tempfile.NamedTemporaryFile(mode='w', suffix='.ledger', delete=False) as f:
 try:
     s = ledger.Session()
     journal = s.read_journal(tmppath)
-    xacts = list(journal.xacts())
+    xacts = list(journal.xacts)
     assert len(xacts) == 1, "Expected 1 transaction"
     print("session.read_journal(str) works")
 finally:
