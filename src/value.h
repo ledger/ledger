@@ -39,12 +39,34 @@
  *
  * @ingroup math
  *
- * @brief  Abstract dynamic type representing various numeric types
+ * @brief  Polymorphic value type that avoids expensive allocations in the
+ *         expression engine
  *
  * A value_t object can be one of many types, and changes its type
  * dynamically based on how it is used.  For example, if you assign
- * the number 10 to a value object, it's internal type will be
- * INTEGER.
+ * the number 10 to a value object, its internal type will be INTEGER.
+ *
+ * The performance motivation for value_t is central to Ledger's design.
+ * The expression engine (see @ref expr.h) evaluates every filter
+ * predicate, format string, and calculated amount through chains of
+ * operators that produce intermediate values.  If these intermediates
+ * were always represented as balance_t (the most general numeric type),
+ * every operator would trigger a heap allocation for the balance's
+ * internal map -- even for simple boolean comparisons or integer
+ * arithmetic that dominate typical queries.
+ *
+ * value_t solves this by dynamically choosing the smallest sufficient
+ * representation.  A boolean test stays as BOOLEAN, a running total
+ * stays as INTEGER until a commoditized amount is added, and only a
+ * multi-commodity sum is promoted to BALANCE.  This type promotion
+ * follows a hierarchy from least to most general:
+ *
+ *   VOID < BOOLEAN < DATETIME < DATE < INTEGER < AMOUNT < BALANCE
+ *        < STRING < MASK < SEQUENCE < SCOPE < ANY
+ *
+ * Storage is reference-counted with copy-on-write semantics, so
+ * passing value_t by value through the filter pipeline is cheap:
+ * only a pointer copy and a reference count increment.
  */
 #pragma once
 
@@ -501,10 +523,42 @@ public:
   }
   void in_place_unreduce(); // exists for efficiency's sake
 
-  // Return the "market value" of a given value at a specific time.
+  /// @brief Return the market value of this value at a specific point in time.
+  ///
+  /// This is the engine behind `--market` and `--exchange COMM`.  For an
+  /// AMOUNT, it looks up the most recent price in the commodity's price
+  /// history (see commodity_t::find_price) and returns the value expressed
+  /// in the target commodity.  For a BALANCE, each component amount is
+  /// individually repriced.  INTEGER and VOID have no commodity and thus
+  /// no market price, so they return NULL_VALUE.
+  ///
+  /// @param moment       The point in time for price lookup.  If not
+  ///                     specified, the most recent available price is used.
+  /// @param in_terms_of  The target commodity to convert into.  If nullptr,
+  ///                     each amount's default exchange commodity is used.
+  /// @return The repriced value, or NULL_VALUE if no price is available.
   value_t value(const datetime_t& moment = datetime_t(),
                 const commodity_t* in_terms_of = nullptr) const;
 
+  /// @brief Convert commodities according to a comma-separated exchange spec.
+  ///
+  /// This method implements the `--exchange COMM1,COMM2` command-line option.
+  /// The @p commodities string is a comma-separated list of target commodities,
+  /// each optionally prefixed with a source commodity and colon (`A:B` means
+  /// "convert commodity A to commodity B only").  A trailing `!` forces
+  /// conversion even when the amount is already in one of the listed target
+  /// commodities.
+  ///
+  /// For a simple single-commodity target with no special syntax, this
+  /// delegates to value() for efficiency.  For complex expressions, it
+  /// parses the specification and reprices each component of an AMOUNT or
+  /// BALANCE individually.
+  ///
+  /// @param commodities  Comma-separated exchange specification string.
+  /// @param add_prices   If true, record discovered prices in the price
+  ///                     database for future lookups.
+  /// @param moment       The point in time for price lookup.
+  /// @return The repriced value.
   value_t exchange_commodities(const std::string& commodities, const bool add_prices = false,
                                const datetime_t& moment = datetime_t());
 

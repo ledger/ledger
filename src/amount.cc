@@ -29,6 +29,47 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   amount.cc
+ * @author John Wiegley
+ *
+ * @ingroup math
+ *
+ * @brief Implements the infinite-precision commoditized amount_t type.
+ *
+ * This file provides the full implementation of amount_t, Ledger's
+ * fundamental numeric type.  Every monetary value, share count, or time
+ * quantity that flows through the system is represented as an amount_t.
+ *
+ * Internally, each amount stores its numeric value as a GMP rational
+ * number (mpq_t).  Rational arithmetic guarantees that addition,
+ * subtraction, multiplication, and division never introduce rounding
+ * error -- a critical property for double-entry accounting where the
+ * sum of all postings in a transaction must balance to exactly zero.
+ *
+ * To avoid the cost of deep-copying large GMP integers on every
+ * assignment, amounts use a copy-on-write (COW) strategy backed by a
+ * reference-counted @c bigint_t structure.  Multiple amount_t objects
+ * may share the same bigint_t; a private copy is made only when a
+ * mutating operation (arithmetic, rounding, etc.) is about to modify
+ * the value.
+ *
+ * The file is organized into the following logical sections:
+ *
+ *   - Internal storage: bigint_t, GMP temporaries, initialization
+ *   - Copy-on-write helpers: _copy, _dup, _clear, _release
+ *   - Construction from primitive types (double, long, unsigned long)
+ *   - Comparison operators (compare, operator==)
+ *   - Arithmetic operators (+, -, *, /)
+ *   - Precision management and display precision
+ *   - Rounding family: round, roundto, truncate, floor, ceiling, unround
+ *   - Unit reduction/unreduction (e.g. seconds to minutes)
+ *   - Commodity operations: value, price, annotation
+ *   - Parsing: parse from stream, parse_conversion
+ *   - Printing: print with full commodity formatting, stream_out_mpq
+ *   - Validation
+ */
+
 #include <system.hh>
 #include <math.h>
 
@@ -40,6 +81,10 @@
 namespace ledger {
 
 bool amount_t::stream_fullstrings = false;
+
+/*----------------------------------------------------------------------*/
+/*  Internal storage: GMP temporaries and copy-on-write bigint_t        */
+/*----------------------------------------------------------------------*/
 
 #if !defined(THREADSAFE)
 // These global temporaries are pre-initialized for the sake of
@@ -54,6 +99,31 @@ static mpfr_t tempfnum;
 static mpfr_t tempfden;
 #endif
 
+/**
+ * @brief Copy-on-write storage wrapper around a GMP rational (mpq_t).
+ *
+ * Every amount_t stores its numeric value indirectly through a pointer
+ * to a bigint_t.  The struct holds:
+ *
+ *   - @c val   -- the GMP rational number (numerator / denominator).
+ *   - @c prec  -- the number of decimal digits of precision that were
+ *                  present when the value was parsed or computed.  This
+ *                  is *not* used by GMP itself (which always stores the
+ *                  exact rational), but drives display formatting and
+ *                  commodity-precision tracking.
+ *   - @c refc  -- a manual reference count.  When greater than one,
+ *                  the bigint_t is shared among multiple amount_t
+ *                  objects and must be duplicated before mutation
+ *                  (see @c amount_t::_dup).
+ *
+ * Two flags control special behavior:
+ *   - @c BIGINT_BULK_ALLOC -- the object lives inside a bulk memory
+ *     pool and must not be freed with @c delete.
+ *   - @c BIGINT_KEEP_PREC  -- the stored precision should be used for
+ *     display rather than the commodity's default precision.  This is
+ *     set when an amount is parsed with PARSE_NO_MIGRATE or after an
+ *     explicit @c unround() call.
+ */
 struct amount_t::bigint_t : public flags::supports_flags<> {
 #define BIGINT_BULK_ALLOC 0x01
 #define BIGINT_KEEP_PREC 0x02
@@ -62,6 +132,7 @@ struct amount_t::bigint_t : public flags::supports_flags<> {
   precision_t prec;
   uint_least32_t refc;
 
+  /** @brief Convenience macro: access the mpq_t value from a bigint_t pointer. */
 #define MP(bigint) ((bigint)->val)
 
   bigint_t() : prec(0), refc(1) {
@@ -81,6 +152,7 @@ struct amount_t::bigint_t : public flags::supports_flags<> {
     mpq_clear(val);
   }
 
+  /** @brief Sanity-check that precision and flags are within expected bounds. */
   bool valid() const {
     if (prec > 1024) {
       DEBUG("ledger.validate", "amount_t::bigint_t: prec > 1024");
@@ -96,7 +168,41 @@ struct amount_t::bigint_t : public flags::supports_flags<> {
 
 bool amount_t::is_initialized = false;
 
+/*----------------------------------------------------------------------*/
+/*  Printing: stream_out_mpq -- rational-to-decimal string conversion   */
+/*----------------------------------------------------------------------*/
+
 namespace {
+
+/**
+ * @brief Convert a GMP rational to a human-readable decimal string.
+ *
+ * This is the core output routine used by amount_t::print().  It
+ * converts the exact rational @a quant to a decimal representation
+ * at the requested @a precision and writes the result to @a out,
+ * respecting the commodity's display conventions:
+ *
+ *   - Thousands separators (commas, periods, or apostrophes depending
+ *     on the commodity style).
+ *   - Decimal comma vs. decimal point.
+ *   - Time-colon notation for "h" and "m" commodities (e.g. 1:30h
+ *     instead of 1.50h).
+ *
+ * Internally, the function converts the rational to an MPFR
+ * floating-point number with enough binary precision to reproduce the
+ * exact decimal digits, then formats it with mpfr_asprintf.
+ *
+ * @param out        Output stream to write the formatted number to.
+ * @param quant      The GMP rational value to format.
+ * @param precision  Number of decimal places to emit.
+ * @param zeros_prec If non-negative, trailing zeros beyond this many
+ *                   decimal places are stripped.  A value of -1 (the
+ *                   default) preserves all trailing zeros up to
+ *                   @a precision.
+ * @param rnd        MPFR rounding mode (default: round to nearest).
+ * @param comm       Optional commodity reference whose display flags
+ *                   control thousands separators and decimal style.
+ */
 void stream_out_mpq(std::ostream& out, mpq_t quant, amount_t::precision_t precision,
                     int zeros_prec = -1, mpfr_rnd_t rnd = GMP_RNDN,
                     const optional<commodity_t&>& comm = none) {
@@ -234,6 +340,18 @@ void stream_out_mpq(std::ostream& out, mpq_t quant, amount_t::precision_t precis
 }
 } // namespace
 
+/*----------------------------------------------------------------------*/
+/*  Initialization and shutdown                                         */
+/*----------------------------------------------------------------------*/
+
+/**
+ * @brief Initialize the GMP/MPFR temporary variables and commodity pool.
+ *
+ * Must be called once at program startup before any amount_t objects
+ * are created.  Sets up the reusable GMP/MPFR temporaries and creates
+ * the global commodity pool with built-in commodities ("s" for seconds,
+ * "%" for percentiles).
+ */
 void amount_t::initialize() {
   if (!is_initialized) {
     mpz_init(temp);
@@ -262,6 +380,12 @@ void amount_t::initialize() {
   }
 }
 
+/**
+ * @brief Release all GMP/MPFR temporaries and destroy the commodity pool.
+ *
+ * Called once at program exit.  After this call, no amount_t operations
+ * are valid.
+ */
 void amount_t::shutdown() {
   if (is_initialized) {
     mpz_clear(temp);
@@ -277,6 +401,18 @@ void amount_t::shutdown() {
   }
 }
 
+/*----------------------------------------------------------------------*/
+/*  Copy-on-write helpers                                               */
+/*----------------------------------------------------------------------*/
+
+/**
+ * @brief Share or deep-copy another amount's bigint_t into this one.
+ *
+ * If the source bigint_t was allocated from a bulk pool (flagged with
+ * BIGINT_BULK_ALLOC), a full deep copy is made because pool pointers
+ * are not guaranteed to remain valid.  Otherwise, the reference count
+ * on the shared bigint_t is simply incremented.
+ */
 void amount_t::_copy(const amount_t& amt) {
   VERIFY(amt.valid());
 
@@ -299,6 +435,14 @@ void amount_t::_copy(const amount_t& amt) {
   VERIFY(valid());
 }
 
+/**
+ * @brief Ensure this amount has an exclusive (unshared) bigint_t.
+ *
+ * If the current bigint_t has a reference count greater than one, a
+ * private copy is created so that subsequent mutations do not affect
+ * other amount_t objects that share the same storage.  This is the
+ * "copy" half of copy-on-write.
+ */
 void amount_t::_dup() {
   VERIFY(valid());
 
@@ -311,6 +455,12 @@ void amount_t::_dup() {
   VERIFY(valid());
 }
 
+/**
+ * @brief Reset this amount to the uninitialized (null) state.
+ *
+ * Releases the reference to the current bigint_t and sets both the
+ * quantity pointer and commodity pointer to nullptr.
+ */
 void amount_t::_clear() {
   if (quantity) {
     _release();
@@ -321,6 +471,12 @@ void amount_t::_clear() {
   }
 }
 
+/**
+ * @brief Decrement the bigint_t reference count, freeing if it reaches zero.
+ *
+ * Bulk-allocated bigint_t objects are destroyed in-place (destructor
+ * only); heap-allocated ones are deleted outright.
+ */
 void amount_t::_release() {
   VERIFY(valid());
 
@@ -338,6 +494,18 @@ void amount_t::_release() {
   VERIFY(valid());
 }
 
+/*----------------------------------------------------------------------*/
+/*  Construction from primitive types                                    */
+/*----------------------------------------------------------------------*/
+
+/**
+ * @brief Construct an uncommoditized amount from a double.
+ *
+ * The double is converted to a GMP rational via mpq_set_d.  Because
+ * IEEE 754 doubles cannot represent most decimals exactly, the
+ * precision is set to @c extend_by_digits as a reasonable
+ * approximation of the significant digits.
+ */
 amount_t::amount_t(const double val) : commodity_(nullptr) {
   quantity = new bigint_t;
   mpq_set_d(MP(quantity), val);
@@ -345,12 +513,14 @@ amount_t::amount_t(const double val) : commodity_(nullptr) {
   TRACE_CTOR(amount_t, "const double");
 }
 
+/** @brief Construct an uncommoditized amount from an unsigned long. */
 amount_t::amount_t(const unsigned long val) : commodity_(nullptr) {
   quantity = new bigint_t;
   mpq_set_ui(MP(quantity), val, 1);
   TRACE_CTOR(amount_t, "const unsigned long");
 }
 
+/** @brief Construct an uncommoditized amount from a signed long. */
 amount_t::amount_t(const long val) : commodity_(nullptr) {
   quantity = new bigint_t;
   mpq_set_si(MP(quantity), val, 1);
@@ -367,6 +537,21 @@ amount_t& amount_t::operator=(const amount_t& amt) {
   return *this;
 }
 
+/*----------------------------------------------------------------------*/
+/*  Comparison operators                                                */
+/*----------------------------------------------------------------------*/
+
+/**
+ * @brief Three-way comparison of two amounts.
+ *
+ * Returns a negative value if *this < @a amt, zero if equal, and a
+ * positive value if *this > @a amt.  Both amounts must be initialized
+ * and share the same commodity (or both be uncommoditized); otherwise
+ * an exception is thrown.
+ *
+ * The comparison is performed on the exact GMP rationals, so no
+ * precision is lost regardless of display formatting.
+ */
 int amount_t::compare(const amount_t& amt) const {
   VERIFY(amt.valid());
 
@@ -387,6 +572,14 @@ int amount_t::compare(const amount_t& amt) const {
   return mpq_cmp(MP(quantity), MP(amt.quantity));
 }
 
+/**
+ * @brief Test two amounts for exact equality.
+ *
+ * Unlike compare(), equality testing does *not* throw when the
+ * commodities differ -- it simply returns false, since "$10" and
+ * "10 EUR" are never equal regardless of exchange rates.  Two
+ * uninitialized (null) amounts are considered equal.
+ */
 bool amount_t::operator==(const amount_t& amt) const {
   if ((quantity && !amt.quantity) || (!quantity && amt.quantity))
     return false; // NOLINT(bugprone-branch-clone)
@@ -398,6 +591,19 @@ bool amount_t::operator==(const amount_t& amt) const {
   return mpq_equal(MP(quantity), MP(amt.quantity));
 }
 
+/*----------------------------------------------------------------------*/
+/*  Arithmetic operators                                                */
+/*----------------------------------------------------------------------*/
+
+/**
+ * @brief Add another amount to this one in place.
+ *
+ * Both amounts must be initialized and share the same commodity.
+ * The result's precision is the maximum of the two operands'
+ * precisions, so that no decimal information is lost in the sum.
+ *
+ * Triggers copy-on-write via _dup() before mutating the GMP value.
+ */
 amount_t& amount_t::operator+=(const amount_t& amt) {
   VERIFY(amt.valid());
 
@@ -426,6 +632,11 @@ amount_t& amount_t::operator+=(const amount_t& amt) {
   return *this;
 }
 
+/**
+ * @brief Subtract another amount from this one in place.
+ *
+ * Same commodity and precision rules as operator+=.
+ */
 amount_t& amount_t::operator-=(const amount_t& amt) {
   VERIFY(amt.valid());
 
@@ -454,6 +665,25 @@ amount_t& amount_t::operator-=(const amount_t& amt) {
   return *this;
 }
 
+/**
+ * @brief Multiply this amount by another, with commodity propagation.
+ *
+ * Precision of the result is the sum of the two operands' precisions,
+ * reflecting that multiplying a number with P1 decimal places by one
+ * with P2 decimal places can produce up to P1+P2 decimal places.
+ *
+ * If the result would exceed the commodity's precision plus
+ * @c extend_by_digits, it is clamped to avoid unbounded growth in
+ * long chains of multiplications.
+ *
+ * Special handling for the "%" commodity: multiplying by a percentage
+ * amount divides by 100 so that "$1000 * 19%" yields "$190".
+ *
+ * @param amt              The multiplier amount.
+ * @param ignore_commodity If true, do not propagate the multiplier's
+ *                         commodity to the result.  Used internally
+ *                         by value() when computing market prices.
+ */
 amount_t& amount_t::multiply(const amount_t& amt, bool ignore_commodity) {
   VERIFY(amt.valid());
 
@@ -504,6 +734,21 @@ amount_t& amount_t::multiply(const amount_t& amt, bool ignore_commodity) {
   return *this;
 }
 
+/**
+ * @brief Divide this amount by another in place.
+ *
+ * Division extends precision by @c extend_by_digits (default 6) beyond
+ * the sum of the two operands' precisions.  This extra headroom
+ * captures fractional digits that arise from non-terminating decimals
+ * (e.g. 1/3) while keeping the rational exact under the hood.
+ *
+ * If the divisor carries the "%" commodity, it is treated as a
+ * fraction: dividing by 19% is equivalent to dividing by 0.19.
+ *
+ * As with multiplication, the result precision is clamped to
+ * commodity precision + extend_by_digits when a commodity is present
+ * and BIGINT_KEEP_PREC is not set.
+ */
 amount_t& amount_t::operator/=(const amount_t& amt) {
   VERIFY(amt.valid());
 
@@ -561,6 +806,11 @@ amount_t& amount_t::operator/=(const amount_t& amt) {
   return *this;
 }
 
+/*----------------------------------------------------------------------*/
+/*  Precision management                                                */
+/*----------------------------------------------------------------------*/
+
+/** @brief Return the stored decimal precision of this amount. */
 amount_t::precision_t amount_t::precision() const {
   if (!quantity)
     throw_(amount_error, _("Cannot determine precision of an uninitialized amount"));
@@ -568,6 +818,10 @@ amount_t::precision_t amount_t::precision() const {
   return quantity->prec;
 }
 
+/**
+ * @brief Check whether this amount retains its full internal precision
+ *        for display, ignoring commodity display precision.
+ */
 bool amount_t::keep_precision() const {
   if (!quantity)
     throw_(amount_error, _("Cannot determine if precision of an uninitialized amount is kept"));
@@ -585,6 +839,14 @@ void amount_t::set_keep_precision(const bool keep) const {
     quantity->drop_flags(BIGINT_KEEP_PREC);
 }
 
+/**
+ * @brief Return the precision used for display output.
+ *
+ * If the amount has a commodity and BIGINT_KEEP_PREC is not set, the
+ * commodity's display precision is used.  Otherwise the internal
+ * precision is used, taking the maximum of the stored precision and
+ * the commodity precision when both are available.
+ */
 amount_t::precision_t amount_t::display_precision() const {
   if (!quantity)
     throw_(amount_error, _("Cannot determine display precision of an uninitialized amount"));
@@ -597,6 +859,11 @@ amount_t::precision_t amount_t::display_precision() const {
     return comm ? std::max(quantity->prec, comm.precision()) : quantity->prec;
 }
 
+/*----------------------------------------------------------------------*/
+/*  Negation, inversion, and the rounding family                        */
+/*----------------------------------------------------------------------*/
+
+/** @brief Negate this amount in place (multiply by -1). */
 void amount_t::in_place_negate() {
   if (quantity) {
     _dup();
@@ -606,6 +873,7 @@ void amount_t::in_place_negate() {
   }
 }
 
+/** @brief Replace this amount with its reciprocal (1/x). */
 void amount_t::in_place_invert() {
   if (!quantity)
     throw_(amount_error, _("Cannot invert an uninitialized amount"));
@@ -616,6 +884,14 @@ void amount_t::in_place_invert() {
     mpq_inv(MP(quantity), MP(quantity));
 }
 
+/**
+ * @brief Round this amount to its commodity's display precision.
+ *
+ * Simply clears the BIGINT_KEEP_PREC flag so that subsequent display
+ * operations use the commodity's precision rather than the full
+ * internal precision.  The underlying GMP rational is unchanged --
+ * rounding only affects how the number is printed.
+ */
 void amount_t::in_place_round() {
   if (!quantity)
     throw_(amount_error, _("Cannot set rounding for an uninitialized amount"));
@@ -626,6 +902,14 @@ void amount_t::in_place_round() {
   set_keep_precision(false);
 }
 
+/**
+ * @brief Round to commodity precision, also modifying the GMP value.
+ *
+ * Unlike in_place_round() which only affects display, this function
+ * actually rounds the underlying rational to the commodity's decimal
+ * precision when the stored precision exceeds it.  Used to produce
+ * amounts that match what the user would see on a bank statement.
+ */
 void amount_t::in_place_round_to_commodity_precision() {
   if (!quantity)
     throw_(amount_error, _("Cannot set rounding for an uninitialized amount"));
@@ -647,6 +931,18 @@ void amount_t::in_place_round_to_commodity_precision() {
   }
 }
 
+/**
+ * @brief Truncate toward zero to the display precision.
+ *
+ * Discards fractional digits beyond the display precision without
+ * rounding.  For positive numbers this is equivalent to floor; for
+ * negative numbers it rounds toward zero (unlike floor which rounds
+ * toward negative infinity).
+ *
+ * The implementation scales the rational's numerator (or denominator)
+ * by 10^places, performs integer truncation via mpz_tdiv_q, then
+ * reconstructs the rational at the target precision.
+ */
 void amount_t::in_place_truncate() {
   if (!quantity)
     throw_(amount_error, _("Cannot truncate an uninitialized amount"));
@@ -688,6 +984,12 @@ void amount_t::in_place_truncate() {
   DEBUG("amount.truncate", "Truncated = " << *this);
 }
 
+/**
+ * @brief Round down to the nearest integer (toward negative infinity).
+ *
+ * Uses GMP's mpz_fdiv_q ("floor division quotient") to compute the
+ * largest integer not exceeding the rational value.
+ */
 void amount_t::in_place_floor() {
   if (!quantity)
     throw_(amount_error, _("Cannot compute floor on an uninitialized amount"));
@@ -698,6 +1000,12 @@ void amount_t::in_place_floor() {
   mpq_set_z(MP(quantity), temp);
 }
 
+/**
+ * @brief Round up to the nearest integer (toward positive infinity).
+ *
+ * Uses GMP's mpz_cdiv_q ("ceiling division quotient") to compute the
+ * smallest integer not less than the rational value.
+ */
 void amount_t::in_place_ceiling() {
   if (!quantity)
     throw_(amount_error, _("Cannot compute ceiling on an uninitialized amount"));
@@ -708,6 +1016,18 @@ void amount_t::in_place_ceiling() {
   mpq_set_z(MP(quantity), temp);
 }
 
+/**
+ * @brief Round to exactly @a places decimal digits, modifying the GMP value.
+ *
+ * Implements banker's rounding (round half away from zero) by scaling
+ * the rational, extracting the integer quotient and remainder via
+ * mpz_tdiv_qr, then adjusting the quotient when the remainder is at
+ * least half the denominator.
+ *
+ * @param places Number of decimal places to round to.  May be zero
+ *               (round to integer) or negative (round to tens,
+ *               hundreds, etc.).
+ */
 void amount_t::in_place_roundto(int places) {
   if (!quantity)
     throw_(amount_error, _("Cannot round an uninitialized amount"));
@@ -749,6 +1069,13 @@ void amount_t::in_place_roundto(int places) {
   }
 }
 
+/**
+ * @brief Mark this amount to display its full internal precision.
+ *
+ * Sets the BIGINT_KEEP_PREC flag so that printing reveals all
+ * computed decimal places rather than truncating to the commodity's
+ * display precision.  This is the inverse of in_place_round().
+ */
 void amount_t::in_place_unround() {
   if (!quantity)
     throw_(amount_error, _("Cannot unround an uninitialized amount"));
@@ -762,6 +1089,19 @@ void amount_t::in_place_unround() {
   DEBUG("amount.unround", "Unrounded = " << *this);
 }
 
+/*----------------------------------------------------------------------*/
+/*  Unit reduction and unreduction                                      */
+/*----------------------------------------------------------------------*/
+
+/**
+ * @brief Convert to the smallest equivalent commodity unit.
+ *
+ * Walks the commodity's "smaller" chain, multiplying by the
+ * conversion factor at each step.  For example, if "1h = 60m" and
+ * "1m = 60s" are defined, reducing 1.5h yields 5400s.  This is used
+ * during parsing so that all time amounts are stored uniformly in the
+ * smallest defined unit.
+ */
 void amount_t::in_place_reduce() {
   if (!quantity)
     throw_(amount_error, _("Cannot reduce an uninitialized amount"));
@@ -772,6 +1112,14 @@ void amount_t::in_place_reduce() {
   }
 }
 
+/**
+ * @brief Convert to the largest unit where the value is at least 1.
+ *
+ * The inverse of in_place_reduce(): walks the "larger" chain,
+ * dividing by conversion factors, stopping when the result would
+ * drop below 1 in absolute value.  For example, unreducing 90s when
+ * "1m = 60s" is defined yields 1.5m (not 0.025h).
+ */
 void amount_t::in_place_unreduce() {
   if (!quantity)
     throw_(amount_error, _("Cannot unreduce an uninitialized amount"));
@@ -795,6 +1143,32 @@ void amount_t::in_place_unreduce() {
   }
 }
 
+/*----------------------------------------------------------------------*/
+/*  Commodity operations: value, price, annotation                      */
+/*----------------------------------------------------------------------*/
+
+/**
+ * @brief Compute the market value of this amount at a given moment.
+ *
+ * Looks up the current or historical price of this amount's commodity
+ * and returns the equivalent value in another commodity.  The price
+ * lookup proceeds through several strategies:
+ *
+ *   1. If the amount has a fixated price annotation, use it directly.
+ *   2. Query the commodity's price history for the best price at
+ *      @a moment, optionally expressed @a in_terms_of a target
+ *      commodity.
+ *   3. If no direct price exists, walk the "larger" unit chain
+ *      (e.g. seconds -> minutes -> hours) to find an intermediate
+ *      unit that does have a price defined.
+ *
+ * @param moment       The point in time for the price lookup.  If
+ *                     not_a_date_time, the latest available price is used.
+ * @param in_terms_of  Optional target commodity.  If nullptr, the
+ *                     price annotation's commodity is used as the target.
+ * @return The market value as an amount in the target commodity, or
+ *         std::nullopt if no price could be determined.
+ */
 std::optional<amount_t> amount_t::value(const datetime_t& moment,
                                         const commodity_t* in_terms_of) const {
   if (quantity) {
@@ -875,6 +1249,13 @@ std::optional<amount_t> amount_t::value(const datetime_t& moment,
   return std::nullopt;
 }
 
+/**
+ * @brief Return the total cost implied by this amount's price annotation.
+ *
+ * If this amount is annotated with a per-unit price (e.g. 100 AAPL @
+ * $150), returns the total cost (100 * $150 = $15000).  Returns
+ * std::nullopt if no price annotation is present.
+ */
 std::optional<amount_t> amount_t::price() const {
   if (has_annotation() && annotation().price) {
     amount_t tmp(*annotation().price);
@@ -885,6 +1266,7 @@ std::optional<amount_t> amount_t::price() const {
   return std::nullopt;
 }
 
+/** @brief Return -1, 0, or 1 indicating the sign of this amount. */
 int amount_t::sign() const {
   if (!quantity)
     throw_(amount_error, _("Cannot determine sign of an uninitialized amount"));
@@ -892,6 +1274,19 @@ int amount_t::sign() const {
   return mpq_sgn(MP(quantity));
 }
 
+/**
+ * @brief Test whether this amount is zero at its display precision.
+ *
+ * An amount may be non-zero in its exact rational representation but
+ * still display as zero when rounded to the commodity's precision.
+ * For example, $0.001 with a 2-digit commodity displays as "$0.00"
+ * and is considered zero by this test.
+ *
+ * The check is optimized: if the numerator exceeds the denominator
+ * the amount is obviously non-zero.  Otherwise, the amount is
+ * rendered to a string at commodity precision and scanned for any
+ * non-zero digit.
+ */
 bool amount_t::is_zero() const {
   if (!quantity)
     throw_(amount_error, _("Cannot determine if an uninitialized amount is zero"));
@@ -922,6 +1317,7 @@ bool amount_t::is_zero() const {
   return is_realzero();
 }
 
+/** @brief Convert to a double-precision floating point (lossy). */
 double amount_t::to_double() const {
   if (!quantity)
     throw_(amount_error, _("Cannot convert an uninitialized amount to a double"));
@@ -930,6 +1326,7 @@ double amount_t::to_double() const {
   return mpfr_get_d(tempf, GMP_RNDN);
 }
 
+/** @brief Convert to a long integer, rounding to nearest. */
 long amount_t::to_long() const {
   if (!quantity)
     throw_(amount_error, _("Cannot convert an uninitialized amount to a long"));
@@ -951,6 +1348,14 @@ bool amount_t::has_commodity() const {
   return commodity_ && commodity_ != commodity_->pool().null_commodity;
 }
 
+/**
+ * @brief Attach price/date/tag annotation metadata to this amount's commodity.
+ *
+ * Creates (or finds) an annotated commodity that wraps the current
+ * commodity with the given annotation details, then rebinds this
+ * amount to that annotated commodity.  Annotations are how Ledger
+ * tracks per-lot purchase prices and dates for investment accounting.
+ */
 void amount_t::annotate(const annotation_t& details) {
   commodity_t* this_base;
   annotated_commodity_t* this_ann = nullptr;
@@ -1011,7 +1416,25 @@ amount_t amount_t::strip_annotations(const keep_details_t& what_to_keep) const {
   return *this;
 }
 
+/*----------------------------------------------------------------------*/
+/*  Parsing: amount from stream or string                               */
+/*----------------------------------------------------------------------*/
+
 namespace {
+
+/**
+ * @brief Read a raw numeric string from the input stream.
+ *
+ * Consumes digits, periods, commas, and apostrophes (all of which may
+ * appear as decimal marks or thousands separators depending on locale
+ * conventions).  Trailing non-digit punctuation is stripped and pushed
+ * back onto the stream, with special handling for a trailing period
+ * (which may indicate zero decimal places in hledger-style input).
+ *
+ * @param[in]  in     Input stream positioned at the start of a number.
+ * @param[out] value  The raw numeric string, including punctuation but
+ *                    excluding any commodity symbol.
+ */
 void parse_quantity(std::istream& in, string& value) {
   char buf[256];
   int c = peek_next_nonws(in);
@@ -1064,6 +1487,27 @@ void parse_quantity(std::istream& in, string& value) {
 }
 } // namespace
 
+/**
+ * @brief Parse an amount from an input stream.
+ *
+ * Recognizes both prefix and suffix commodity styles:
+ *   - @c [-]NUM[ ]SYM -- e.g. "10.00 USD", "-$42.50"
+ *   - @c SYM[ ][-]NUM -- e.g. "$10.00", "EUR -5.00"
+ *
+ * The parser automatically detects the decimal mark convention
+ * (period vs. comma vs. apostrophe for thousands grouping) and
+ * updates the commodity's display style flags accordingly, unless
+ * PARSE_NO_MIGRATE is set.
+ *
+ * After parsing, the raw decimal string is converted to a GMP
+ * rational, unit reduction is applied (unless PARSE_NO_REDUCE), and
+ * any price/date annotations are attached.
+ *
+ * @param in    Input stream to read from.
+ * @param flags Parsing control flags (see parse_flags_enum_t).
+ * @return true if an amount was successfully parsed, false only if
+ *         PARSE_SOFT_FAIL is set and no quantity was found.
+ */
 bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
   // The possible syntax for an amount is:
   //
@@ -1361,6 +1805,18 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
   return true;
 }
 
+/**
+ * @brief Register a unit conversion between two commodity amounts.
+ *
+ * Establishes a bidirectional conversion link (larger/smaller) between
+ * two commodity units.  For example, parse_conversion("1.0h", "60m")
+ * tells Ledger that one hour equals sixty minutes, enabling automatic
+ * unit reduction and unreduction.
+ *
+ * @param larger_str   String representation of the larger unit (e.g. "1.0h").
+ * @param smaller_str  String representation of the equivalent smaller
+ *                     unit (e.g. "60m").
+ */
 void amount_t::parse_conversion(const string& larger_str, const string& smaller_str) {
   amount_t larger, smaller;
 
@@ -1377,6 +1833,26 @@ void amount_t::parse_conversion(const string& larger_str, const string& smaller_
     smaller.commodity().set_larger(larger);
 }
 
+/*----------------------------------------------------------------------*/
+/*  Printing: amount_t::print                                           */
+/*----------------------------------------------------------------------*/
+
+/**
+ * @brief Format this amount to an output stream with full commodity styling.
+ *
+ * Assembles the complete display representation: commodity symbol
+ * (prefix or suffix, with optional separator), the numeric value
+ * formatted by stream_out_mpq with appropriate thousands separators
+ * and decimal style, and any commodity annotations (price, date, tag).
+ *
+ * Output is first assembled in a temporary ostringstream so that any
+ * width/fill settings on @a _out apply to the entire formatted string
+ * rather than just the first component.
+ *
+ * @param _out  Destination output stream.
+ * @param flags AMOUNT_PRINT_* flags controlling elision of quotes,
+ *              right-justification, colorization, etc.
+ */
 void amount_t::print(std::ostream& _out, const uint_least8_t flags) const {
   VERIFY(valid());
 
@@ -1414,6 +1890,18 @@ void amount_t::print(std::ostream& _out, const uint_least8_t flags) const {
   _out << out.str();
 }
 
+/*----------------------------------------------------------------------*/
+/*  Validation                                                          */
+/*----------------------------------------------------------------------*/
+
+/**
+ * @brief Check internal consistency of this amount.
+ *
+ * Validates that: (1) if a quantity exists, the bigint_t passes its
+ * own validity check and the reference count is positive; and (2) a
+ * null quantity does not have a dangling commodity pointer.  Used by
+ * the VERIFY() macro throughout the codebase for defensive debugging.
+ */
 bool amount_t::valid() const {
   if (quantity) {
     if (!quantity->valid()) {
@@ -1432,6 +1920,7 @@ bool amount_t::valid() const {
   return true;
 }
 
+/** @brief Serialize an amount into a Boost property tree (XML/JSON output). */
 void put_amount(property_tree::ptree& st, const amount_t& amt, bool commodity_details) {
   if (amt.has_commodity())
     put_commodity(st.put("commodity", ""), amt.commodity(), commodity_details);

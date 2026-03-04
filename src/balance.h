@@ -527,7 +527,7 @@ public:
   /**
    * Iteration primitives.  `map_sorted_amounts' allows one to visit
    * each amount in balance in the proper order for displaying to the
-   * user.  Mostly used by `print' and other routinse where the sort
+   * user.  Mostly used by `print' and other routines where the sort
    * order of the amounts' commodities is significant.
    */
   void map_sorted_amounts(const function<void(const amount_t&)>& fn) const;
