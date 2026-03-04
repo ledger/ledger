@@ -14,7 +14,7 @@ journal = ledger.read_journal_from_string("""
     Assets:Cash
 """)
 
-sources = list(journal.sources())
+sources = list(journal.sources)
 assert len(sources) > 0, "Expected at least one source"
 
 fi = sources[0]
