@@ -67,9 +67,9 @@ namespace ledger {
  * needed to record a transaction posting with lot information.
  */
 struct cost_breakdown_t {
-  amount_t amount;      ///< The original amount re-annotated with lot price/date/tag.
-  amount_t final_cost;  ///< The total cost of this exchange (what was paid).
-  amount_t basis_cost;  ///< The cost basis (uses existing lot price if available).
+  amount_t amount;     ///< The original amount re-annotated with lot price/date/tag.
+  amount_t final_cost; ///< The total cost of this exchange (what was paid).
+  amount_t basis_cost; ///< The cost basis (uses existing lot price if available).
 };
 
 class commodity_pool_t : public noncopyable {
@@ -118,8 +118,8 @@ public:
 
   bool keep_base;          ///< When true (--base), display amounts in their base commodity.
   optional<path> price_db; ///< Path to the price database file (--price-db).
-  long quote_leeway;       ///< Seconds a cached quote remains valid before re-downloading (--leeway).
-  bool get_quotes;         ///< Whether to download live quotes (--download).
+  long quote_leeway; ///< Seconds a cached quote remains valid before re-downloading (--leeway).
+  bool get_quotes;   ///< Whether to download live quotes (--download).
   optional<path> getquote; ///< Path to the external quote-fetching script (--getquote).
 
   /// Callback used to obtain a live price quote for a commodity.

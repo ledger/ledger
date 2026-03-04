@@ -78,22 +78,26 @@ namespace ledger {
  * when all four fields match and the ANNOTATION_SEMANTIC_FLAGS agree.
  */
 struct annotation_t : public flags::supports_flags<>, public equality_comparable<annotation_t> {
-#define ANNOTATION_PRICE_CALCULATED 0x01      ///< Price was computed from a cost expression, not user-supplied.
-#define ANNOTATION_PRICE_FIXATED 0x02         ///< Price is fixated ({=...}), not a market price.
-#define ANNOTATION_PRICE_NOT_PER_UNIT 0x04    ///< Price was given as total cost (@@), stored per-unit internally.
-#define ANNOTATION_DATE_CALCULATED 0x08       ///< Date was derived from the transaction date, not explicit.
-#define ANNOTATION_TAG_CALCULATED 0x10        ///< Tag was computed, not user-supplied.
-#define ANNOTATION_VALUE_EXPR_CALCULATED 0x20 ///< Value expression was computed (e.g., by nail_down).
+#define ANNOTATION_PRICE_CALCULATED                                                                \
+  0x01 ///< Price was computed from a cost expression, not user-supplied.
+#define ANNOTATION_PRICE_FIXATED 0x02 ///< Price is fixated ({=...}), not a market price.
+#define ANNOTATION_PRICE_NOT_PER_UNIT                                                              \
+  0x04 ///< Price was given as total cost (@@), stored per-unit internally.
+#define ANNOTATION_DATE_CALCULATED                                                                 \
+  0x08 ///< Date was derived from the transaction date, not explicit.
+#define ANNOTATION_TAG_CALCULATED 0x10 ///< Tag was computed, not user-supplied.
+#define ANNOTATION_VALUE_EXPR_CALCULATED                                                           \
+  0x20 ///< Value expression was computed (e.g., by nail_down).
 
 /// Mask for flags that affect semantic equality of annotations.
 /// Currently only ANNOTATION_PRICE_FIXATED matters: a fixated lot at {=$5}
 /// is distinct from a floating lot at {$5} even if the numeric price matches.
 #define ANNOTATION_SEMANTIC_FLAGS (ANNOTATION_PRICE_FIXATED)
 
-  std::optional<amount_t> price;     ///< Per-unit lot price (e.g., $150.00 per share).
-  std::optional<date_t> date;        ///< Acquisition date of the lot.
-  std::optional<string> tag;         ///< Free-form tag for lot identification.
-  std::optional<expr_t> value_expr;  ///< Custom valuation expression overriding find_price.
+  std::optional<amount_t> price;    ///< Per-unit lot price (e.g., $150.00 per share).
+  std::optional<date_t> date;       ///< Acquisition date of the lot.
+  std::optional<string> tag;        ///< Free-form tag for lot identification.
+  std::optional<expr_t> value_expr; ///< Custom valuation expression overriding find_price.
 
   explicit annotation_t(const std::optional<amount_t>& _price = {},
                         const std::optional<date_t>& _date = {},
@@ -163,10 +167,10 @@ void put_annotation(property_tree::ptree& pt, const annotation_t& details);
  * annotations, discarding those that Ledger computed automatically.
  */
 struct keep_details_t {
-  bool keep_price;    ///< Retain the lot price annotation.
-  bool keep_date;     ///< Retain the lot date annotation.
-  bool keep_tag;      ///< Retain the lot tag annotation.
-  bool only_actuals;  ///< If true, discard computed (*_CALCULATED) annotations even if kept.
+  bool keep_price;   ///< Retain the lot price annotation.
+  bool keep_date;    ///< Retain the lot date annotation.
+  bool keep_tag;     ///< Retain the lot tag annotation.
+  bool only_actuals; ///< If true, discard computed (*_CALCULATED) annotations even if kept.
 
   explicit keep_details_t(bool _keep_price = false, bool _keep_date = false, bool _keep_tag = false,
                           bool _only_actuals = false)
@@ -215,7 +219,7 @@ class annotated_commodity_t
 protected:
   friend class commodity_pool_t;
 
-  commodity_t* ptr;  ///< The underlying unannotated base commodity.
+  commodity_t* ptr; ///< The underlying unannotated base commodity.
 
   explicit annotated_commodity_t(commodity_t* _ptr, const annotation_t& _details)
       : commodity_t(_ptr->parent_, _ptr->base), ptr(_ptr), details(_details) {
@@ -225,7 +229,7 @@ protected:
   }
 
 public:
-  annotation_t details;  ///< The lot annotation (price, date, tag, value_expr).
+  annotation_t details; ///< The lot annotation (price, date, tag, value_expr).
 
   ~annotated_commodity_t() override { TRACE_DTOR(annotated_commodity_t); }
 

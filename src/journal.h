@@ -72,18 +72,21 @@ class xact_base_t;
 class parse_context_t;
 class parse_context_stack_t;
 
-using payee_alias_mapping_t = std::pair<mask_t, string>;       ///< Regex-to-payee-name alias pair.
+using payee_alias_mapping_t = std::pair<mask_t, string>; ///< Regex-to-payee-name alias pair.
 using payee_alias_mappings_t = std::list<payee_alias_mapping_t>;
 using payee_uuid_mappings_t = std::unordered_map<string, string>; ///< UUID-to-payee-name mapping.
-using account_mapping_t = std::pair<mask_t, account_t*>;       ///< Regex-to-account mapping (for payee-based account routing).
+using account_mapping_t =
+    std::pair<mask_t, account_t*>; ///< Regex-to-account mapping (for payee-based account routing).
 using account_mappings_t = std::list<account_mapping_t>;
 
-using payee_rewrite_mapping_t = std::pair<mask_t, string>;     ///< Regex-to-replacement payee rewrite rule.
+using payee_rewrite_mapping_t =
+    std::pair<mask_t, string>; ///< Regex-to-replacement payee rewrite rule.
 using payee_rewrite_mappings_t = std::list<payee_rewrite_mapping_t>;
 
-using account_rewrite_mapping_t = std::pair<mask_t, string>;   ///< Regex-to-replacement account rewrite rule.
+using account_rewrite_mapping_t =
+    std::pair<mask_t, string>; ///< Regex-to-replacement account rewrite rule.
 using account_rewrite_mappings_t = std::list<account_rewrite_mapping_t>;
-using checksum_map_t = std::map<string, xact_t*>;              ///< UUID-to-transaction map for deduplication.
+using checksum_map_t = std::map<string, xact_t*>; ///< UUID-to-transaction map for deduplication.
 
 /// Map from tag name to assertion/check expression pairs for metadata validation.
 using tag_check_exprs_map = std::multimap<string, expr_t::check_expr_pair>;
@@ -131,31 +134,35 @@ public:
     ~fileinfo_t() noexcept { TRACE_DTOR(journal_t::fileinfo_t); }
   };
 
-  account_t* master;           ///< Invisible root of the account tree (depth 0, empty name).
-  account_t* bucket;           ///< Default account for postings with inferred (null) amounts.
-  xacts_list xacts;            ///< All regular (dated) transactions, in parse order.
-  auto_xacts_list auto_xacts;  ///< Automated transactions (= expr) that extend matching xacts.
+  account_t* master;              ///< Invisible root of the account tree (depth 0, empty name).
+  account_t* bucket;              ///< Default account for postings with inferred (null) amounts.
+  xacts_list xacts;               ///< All regular (dated) transactions, in parse order.
+  auto_xacts_list auto_xacts;     ///< Automated transactions (= expr) that extend matching xacts.
   period_xacts_list period_xacts; ///< Periodic transactions (~ period) for budgeting/forecasting.
   std::list<fileinfo_t> sources;  ///< Source files that were parsed into this journal.
-  std::set<string> known_payees;  ///< Payees declared with `payee` directive (for --strict validation).
-  std::set<string> known_tags;    ///< Tags declared with `tag` directive (for --strict validation).
+  std::set<string>
+      known_payees; ///< Payees declared with `payee` directive (for --strict validation).
+  std::set<string> known_tags; ///< Tags declared with `tag` directive (for --strict validation).
   bool was_loaded;             ///< True after at least one successful read().
-  bool check_payees;           ///< True if payee validation is enabled (payee directives were seen).
-  bool day_break;              ///< True if day-break transactions should be inserted between days.
-  bool recursive_aliases;      ///< If true, alias expansion repeats until no more aliases match.
-  bool no_aliases;             ///< If true, all alias expansion is suppressed.
-  lot_policy_t lot_matching_policy = lot_policy_t::none; ///< How commodity lots are matched for consumption.
-  payee_alias_mappings_t payee_alias_mappings;       ///< Regex-based payee alias rules from `alias` directives.
-  payee_uuid_mappings_t payee_uuid_mappings;         ///< UUID-to-payee-name mappings.
-  payee_rewrite_mappings_t payee_rewrite_mappings;   ///< Regex-based payee rewrite rules.
-  account_mappings_t account_mappings;               ///< Regex-to-account mappings for automatic categorization.
+  bool check_payees;      ///< True if payee validation is enabled (payee directives were seen).
+  bool day_break;         ///< True if day-break transactions should be inserted between days.
+  bool recursive_aliases; ///< If true, alias expansion repeats until no more aliases match.
+  bool no_aliases;        ///< If true, all alias expansion is suppressed.
+  lot_policy_t lot_matching_policy =
+      lot_policy_t::none; ///< How commodity lots are matched for consumption.
+  payee_alias_mappings_t
+      payee_alias_mappings; ///< Regex-based payee alias rules from `alias` directives.
+  payee_uuid_mappings_t payee_uuid_mappings;       ///< UUID-to-payee-name mappings.
+  payee_rewrite_mappings_t payee_rewrite_mappings; ///< Regex-based payee rewrite rules.
+  account_mappings_t account_mappings; ///< Regex-to-account mappings for automatic categorization.
   account_rewrite_mappings_t account_rewrite_mappings; ///< Regex-based account name rewrite rules.
-  accounts_map account_aliases;                      ///< Account alias map from `alias Name=Target` directives.
-  account_mappings_t payees_for_unknown_accounts;    ///< Payee-to-account mapping for resolving "Unknown" accounts.
-  checksum_map_t checksum_map;                       ///< UUID-to-transaction map for duplicate detection.
-  tag_check_exprs_map tag_check_exprs;               ///< Assertion/check expressions for metadata tag values.
-  std::optional<expr_t> value_expr;                  ///< Journal-level valuation expression.
-  parse_context_t* current_context;                  ///< Active parse context during read() (nullptr otherwise).
+  accounts_map account_aliases; ///< Account alias map from `alias Name=Target` directives.
+  account_mappings_t
+      payees_for_unknown_accounts; ///< Payee-to-account mapping for resolving "Unknown" accounts.
+  checksum_map_t checksum_map;     ///< UUID-to-transaction map for duplicate detection.
+  tag_check_exprs_map tag_check_exprs; ///< Assertion/check expressions for metadata tag values.
+  std::optional<expr_t> value_expr;    ///< Journal-level valuation expression.
+  parse_context_t* current_context;    ///< Active parse context during read() (nullptr otherwise).
 
   /**
    * @brief Controls how strictly unknown accounts/payees/commodities are handled.

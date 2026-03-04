@@ -99,31 +99,38 @@ class account_t;
  */
 class post_t : public item_t {
 public:
-#define POST_VIRTUAL 0x0010               ///< Account was specified with (parens) -- a virtual posting not requiring balance.
-#define POST_MUST_BALANCE 0x0020          ///< Virtual posting specified with [brackets] that MUST balance.
-#define POST_CALCULATED 0x0040            ///< Amount was computed (e.g., inferred null amount to balance the transaction).
-#define POST_COST_CALCULATED 0x0080       ///< Cost was computed rather than explicitly given by the user.
-#define POST_COST_IN_FULL 0x0100          ///< Cost was given as total cost (@@); stored internally as per-unit.
-#define POST_COST_FIXATED 0x0200          ///< Cost is fixated with = indicator ({=...}), locking the lot price.
-#define POST_COST_VIRTUAL 0x0400          ///< Cost was virtualized via (@), meaning the cost is informational only.
-#define POST_ANONYMIZED 0x0800            ///< Temporary anonymous posting created during anonymization.
-#define POST_DEFERRED 0x1000              ///< Account was specified with <angle brackets> for deferred posting.
-#define POST_IS_TIMELOG 0x2000            ///< Posting was generated from timeclock check-in/check-out data.
-#define POST_AMOUNT_USER_ANNOTATED 0x4000 ///< Amount has user-supplied lot annotations (price, date, or tag).
-#define POST_AMOUNT_USER_DATE 0x8000      ///< Amount has a user-supplied lot date annotation.
+#define POST_VIRTUAL                                                                               \
+  0x0010 ///< Account was specified with (parens) -- a virtual posting not requiring balance.
+#define POST_MUST_BALANCE 0x0020 ///< Virtual posting specified with [brackets] that MUST balance.
+#define POST_CALCULATED                                                                            \
+  0x0040 ///< Amount was computed (e.g., inferred null amount to balance the transaction).
+#define POST_COST_CALCULATED 0x0080 ///< Cost was computed rather than explicitly given by the user.
+#define POST_COST_IN_FULL                                                                          \
+  0x0100 ///< Cost was given as total cost (@@); stored internally as per-unit.
+#define POST_COST_FIXATED                                                                          \
+  0x0200 ///< Cost is fixated with = indicator ({=...}), locking the lot price.
+#define POST_COST_VIRTUAL                                                                          \
+  0x0400 ///< Cost was virtualized via (@), meaning the cost is informational only.
+#define POST_ANONYMIZED 0x0800 ///< Temporary anonymous posting created during anonymization.
+#define POST_DEFERRED 0x1000 ///< Account was specified with <angle brackets> for deferred posting.
+#define POST_IS_TIMELOG 0x2000 ///< Posting was generated from timeclock check-in/check-out data.
+#define POST_AMOUNT_USER_ANNOTATED                                                                 \
+  0x4000 ///< Amount has user-supplied lot annotations (price, date, or tag).
+#define POST_AMOUNT_USER_DATE 0x8000 ///< Amount has a user-supplied lot date annotation.
   // Note: FIFO/LIFO auto-matching is indicated by the presence of an
   // annotation without POST_AMOUNT_USER_ANNOTATED
 
-  xact_t* xact;         ///< Parent transaction; only set for posts of regular xacts.
-  account_t* account;   ///< Target account this posting debits or credits.
+  xact_t* xact;       ///< Parent transaction; only set for posts of regular xacts.
+  account_t* account; ///< Target account this posting debits or credits.
 
-  amount_t amount;       ///< The posting amount; can be null until finalization infers it.
+  amount_t amount;              ///< The posting amount; can be null until finalization infers it.
   optional<expr_t> amount_expr; ///< Expression that computed the amount, if any.
-  std::optional<amount_t> cost;           ///< Total cost in the cost commodity (e.g., $1500 for 10 AAPL @ $150).
-  std::optional<amount_t> given_cost;     ///< Cost as originally written, before per-unit conversion.
+  std::optional<amount_t>
+      cost; ///< Total cost in the cost commodity (e.g., $1500 for 10 AAPL @ $150).
+  std::optional<amount_t> given_cost; ///< Cost as originally written, before per-unit conversion.
   std::optional<amount_t> assigned_amount; ///< Balance assertion or assignment amount (= $500).
-  optional<datetime_t> checkin;  ///< Timeclock check-in time (for timelog postings).
-  optional<datetime_t> checkout; ///< Timeclock check-out time (for timelog postings).
+  optional<datetime_t> checkin;            ///< Timeclock check-in time (for timelog postings).
+  optional<datetime_t> checkout;           ///< Timeclock check-out time (for timelog postings).
 
 private:
   optional<string> _payee; ///< Per-posting payee override; falls back to xact payee if unset.
@@ -276,26 +283,28 @@ public:
    * postings that are never reported.
    */
   struct xdata_t : public supports_flags<uint_least16_t> {
-#define POST_EXT_RECEIVED 0x0001  ///< Posting was received by a handler in the filter pipeline.
-#define POST_EXT_HANDLED 0x0002   ///< Posting was fully handled by a filter (will not pass further).
+#define POST_EXT_RECEIVED 0x0001 ///< Posting was received by a handler in the filter pipeline.
+#define POST_EXT_HANDLED 0x0002  ///< Posting was fully handled by a filter (will not pass further).
 #define POST_EXT_DISPLAYED 0x0004 ///< Posting has been output to the user.
-#define POST_EXT_DIRECT_AMT 0x0008 ///< Amount was set directly on xdata, not evaluated from an expression.
-#define POST_EXT_SORT_CALC 0x0010 ///< Sort key value has been computed and cached in sort_values.
-#define POST_EXT_COMPOUND 0x0020  ///< compound_value is set and should be used instead of amount.
-#define POST_EXT_VISITED 0x0040   ///< Posting was visited during report traversal.
-#define POST_EXT_MATCHES 0x0080   ///< Posting matches the current query predicate.
+#define POST_EXT_DIRECT_AMT                                                                        \
+  0x0008 ///< Amount was set directly on xdata, not evaluated from an expression.
+#define POST_EXT_SORT_CALC 0x0010  ///< Sort key value has been computed and cached in sort_values.
+#define POST_EXT_COMPOUND 0x0020   ///< compound_value is set and should be used instead of amount.
+#define POST_EXT_VISITED 0x0040    ///< Posting was visited during report traversal.
+#define POST_EXT_MATCHES 0x0080    ///< Posting matches the current query predicate.
 #define POST_EXT_CONSIDERED 0x0100 ///< Posting has already been counted toward account totals.
 #define POST_EXT_DISPLAY_TOTAL_CACHED 0x0200 ///< display_total has been computed and cached.
 
-    value_t visited_value;   ///< Value recorded when the posting was visited.
-    value_t compound_value;  ///< Compound value set by filters (overrides amount when POST_EXT_COMPOUND).
-    value_t total;           ///< Running total accumulated through the filter chain.
-    value_t display_total;   ///< Cached stripped display total for output formatting.
-    std::size_t count;       ///< Posting index or count within the current report context.
-    date_t date;             ///< Overridden date assigned by the reporting pipeline.
-    date_t value_date;       ///< Overridden valuation date for price lookups.
-    datetime_t datetime;     ///< Full datetime for time-aware reporting.
-    account_t* account;      ///< Overridden account for display (e.g., after account rewriting).
+    value_t visited_value;  ///< Value recorded when the posting was visited.
+    value_t compound_value; ///< Compound value set by filters (overrides amount when
+                            ///< POST_EXT_COMPOUND).
+    value_t total;          ///< Running total accumulated through the filter chain.
+    value_t display_total;  ///< Cached stripped display total for output formatting.
+    std::size_t count;      ///< Posting index or count within the current report context.
+    date_t date;            ///< Overridden date assigned by the reporting pipeline.
+    date_t value_date;      ///< Overridden valuation date for price lookups.
+    datetime_t datetime;    ///< Full datetime for time-aware reporting.
+    account_t* account;     ///< Overridden account for display (e.g., after account rewriting).
 
     std::list<sort_value_t> sort_values; ///< Cached sort key values for multi-key sorting.
 

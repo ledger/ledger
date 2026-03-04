@@ -82,8 +82,8 @@ public:
  * with when = 2024-01-15 and price = $185.00.
  */
 struct price_point_t {
-  datetime_t when;  ///< When this price was observed or effective.
-  amount_t price;   ///< The exchange rate, expressed in a target commodity.
+  datetime_t when; ///< When this price was observed or effective.
+  amount_t price;  ///< The exchange rate, expressed in a target commodity.
 
   price_point_t() {}
   price_point_t(datetime_t _when, const amount_t& _price) : when(_when), price(_price) {}
@@ -113,32 +113,32 @@ protected:
    */
   class base_t : public noncopyable, public flags::supports_flags<uint_least16_t> {
   public:
-#define COMMODITY_STYLE_DEFAULTS 0x000   ///< No special formatting; symbol is prefixed.
-#define COMMODITY_STYLE_SUFFIXED 0x001   ///< Symbol follows the amount (e.g., "100 EUR").
-#define COMMODITY_STYLE_SEPARATED 0x002  ///< A space separates symbol from quantity.
-#define COMMODITY_STYLE_DECIMAL_COMMA 0x004  ///< Use comma as decimal point (European style).
-#define COMMODITY_STYLE_THOUSANDS 0x008  ///< Insert grouping separators (e.g., "1,000").
-#define COMMODITY_NOMARKET 0x010   ///< Exclude from market-price valuations (-V/-X).
-#define COMMODITY_BUILTIN 0x020    ///< Internally created (e.g., the null commodity).
-#define COMMODITY_WALKED 0x040     ///< Traversal flag for graph algorithms.
-#define COMMODITY_KNOWN 0x080      ///< Explicitly declared via a commodity directive.
-#define COMMODITY_PRIMARY 0x100    ///< This commodity has appeared as a price target.
+#define COMMODITY_STYLE_DEFAULTS 0x000        ///< No special formatting; symbol is prefixed.
+#define COMMODITY_STYLE_SUFFIXED 0x001        ///< Symbol follows the amount (e.g., "100 EUR").
+#define COMMODITY_STYLE_SEPARATED 0x002       ///< A space separates symbol from quantity.
+#define COMMODITY_STYLE_DECIMAL_COMMA 0x004   ///< Use comma as decimal point (European style).
+#define COMMODITY_STYLE_THOUSANDS 0x008       ///< Insert grouping separators (e.g., "1,000").
+#define COMMODITY_NOMARKET 0x010              ///< Exclude from market-price valuations (-V/-X).
+#define COMMODITY_BUILTIN 0x020               ///< Internally created (e.g., the null commodity).
+#define COMMODITY_WALKED 0x040                ///< Traversal flag for graph algorithms.
+#define COMMODITY_KNOWN 0x080                 ///< Explicitly declared via a commodity directive.
+#define COMMODITY_PRIMARY 0x100               ///< This commodity has appeared as a price target.
 #define COMMODITY_SAW_ANNOTATED 0x200         ///< An annotated variant has been created.
 #define COMMODITY_SAW_ANN_PRICE_FLOAT 0x400   ///< Seen with a floating lot price.
 #define COMMODITY_SAW_ANN_PRICE_FIXATED 0x800 ///< Seen with a fixated lot price ({=...}).
-#define COMMODITY_STYLE_TIME_COLON 0x1000  ///< Use colon notation for time amounts.
-#define COMMODITY_STYLE_NO_MIGRATE 0x2000  ///< Do not migrate formatting from parsed amounts.
-#define COMMODITY_STYLE_THOUSANDS_APOSTROPHE 0x4000  ///< Use apostrophe as thousands separator.
-#define COMMODITY_PRECISION_FROM_PRICE 0x8000  ///< Precision was inferred from a price directive.
+#define COMMODITY_STYLE_TIME_COLON 0x1000     ///< Use colon notation for time amounts.
+#define COMMODITY_STYLE_NO_MIGRATE 0x2000     ///< Do not migrate formatting from parsed amounts.
+#define COMMODITY_STYLE_THOUSANDS_APOSTROPHE 0x4000 ///< Use apostrophe as thousands separator.
+#define COMMODITY_PRECISION_FROM_PRICE 0x8000 ///< Precision was inferred from a price directive.
 
-    string symbol;                        ///< The canonical commodity name (e.g., "$", "AAPL").
-    optional<std::size_t> graph_index;    ///< Index into the price history graph adjacency list.
-    amount_t::precision_t precision;      ///< Number of decimal places for display.
-    optional<string> name;                ///< Long descriptive name (from commodity directive).
-    optional<string> note;                ///< User-supplied note (from commodity directive).
-    optional<amount_t> smaller;           ///< Subdivision unit (e.g., cents for dollars).
-    optional<amount_t> larger;            ///< Grouping unit (e.g., thousands).
-    std::optional<expr_t> value_expr;     ///< Custom valuation expression overriding find_price.
+    string symbol;                     ///< The canonical commodity name (e.g., "$", "AAPL").
+    optional<std::size_t> graph_index; ///< Index into the price history graph adjacency list.
+    amount_t::precision_t precision;   ///< Number of decimal places for display.
+    optional<string> name;             ///< Long descriptive name (from commodity directive).
+    optional<string> note;             ///< User-supplied note (from commodity directive).
+    optional<amount_t> smaller;        ///< Subdivision unit (e.g., cents for dollars).
+    optional<amount_t> larger;         ///< Grouping unit (e.g., thousands).
+    std::optional<expr_t> value_expr;  ///< Custom valuation expression overriding find_price.
 
     /// Key type for the memoized price cache: (moment, oldest, target commodity).
     using memoized_price_entry = tuple<datetime_t, datetime_t, const commodity_t*>;
@@ -148,7 +148,8 @@ protected:
     /// Maximum entries before the cache is halved to prevent unbounded growth.
     inline static constexpr std::size_t max_price_map_size = 8;
     mutable memoized_price_map price_map;
-    mutable std::optional<datetime_t> last_quote; ///< Time of last successful download (issue #996).
+    mutable std::optional<datetime_t>
+        last_quote; ///< Time of last successful download (issue #996).
 
   public:
     explicit base_t(const string& _symbol)

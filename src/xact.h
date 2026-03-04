@@ -103,8 +103,8 @@ class parse_context_t;
  */
 class xact_base_t : public item_t {
 public:
-  journal_t* journal;  ///< The journal that owns this transaction (nullptr for temporaries).
-  posts_list posts;    ///< All postings belonging to this transaction.
+  journal_t* journal; ///< The journal that owns this transaction (nullptr for temporaries).
+  posts_list posts;   ///< All postings belonging to this transaction.
 
   xact_base_t() : item_t(), journal(nullptr) { TRACE_CTOR(xact_base_t, ""); }
   xact_base_t(const xact_base_t& e);
@@ -193,8 +193,8 @@ public:
  */
 class xact_t : public xact_base_t {
 public:
-  std::optional<string> code;  ///< Optional check number or transaction code, e.g., "(1042)".
-  string payee;                ///< The payee/description of the transaction.
+  std::optional<string> code; ///< Optional check number or transaction code, e.g., "(1042)".
+  string payee;               ///< The payee/description of the transaction.
 
   xact_t() { TRACE_CTOR(xact_t, ""); }
   xact_t(const xact_t& e);
@@ -275,13 +275,19 @@ public:
  */
 class auto_xact_t : public xact_base_t {
 public:
-  predicate_t predicate;                  ///< Expression that must be true for a posting to trigger this auto transaction.
-  optional<string> name;                  ///< Optional descriptive name for the automated transaction.
-  bool try_quick_match;                   ///< If true, attempt the fast AST-based predicate matcher before falling back to full evaluation. Disabled after a failure.
-  std::map<string, bool> memoized_results; ///< Cache of account fullname -> predicate result, for the quick matcher. Cleared if quick matching is disabled.
-  bool enabled;                           ///< If false, this auto transaction is skipped entirely. Can be toggled by directives.
+  predicate_t
+      predicate; ///< Expression that must be true for a posting to trigger this auto transaction.
+  optional<string> name; ///< Optional descriptive name for the automated transaction.
+  bool try_quick_match;  ///< If true, attempt the fast AST-based predicate matcher before falling
+                         ///< back to full evaluation. Disabled after a failure.
+  std::map<string, bool>
+      memoized_results; ///< Cache of account fullname -> predicate result, for the quick matcher.
+                        ///< Cleared if quick matching is disabled.
+  bool enabled;         ///< If false, this auto transaction is skipped entirely. Can be toggled by
+                        ///< directives.
 
-  optional<expr_t::check_expr_list> check_exprs; ///< Optional assertion/check expressions evaluated when the predicate matches.
+  optional<expr_t::check_expr_list>
+      check_exprs; ///< Optional assertion/check expressions evaluated when the predicate matches.
 
   /**
    * @brief Holds a deferred metadata tag to be applied to generated postings.
@@ -296,9 +302,10 @@ public:
    * If null, the tag is applied to the matched posting itself.
    */
   struct deferred_tag_data_t {
-    string tag_data;            ///< Raw tag text (same format as comment lines).
-    bool overwrite_existing;    ///< Whether to overwrite existing tags with the same name.
-    post_t* apply_to_post;     ///< Template posting this tag applies to, or nullptr for the matched posting.
+    string tag_data;         ///< Raw tag text (same format as comment lines).
+    bool overwrite_existing; ///< Whether to overwrite existing tags with the same name.
+    post_t* apply_to_post;   ///< Template posting this tag applies to, or nullptr for the matched
+                             ///< posting.
 
     deferred_tag_data_t(string _tag_data, bool _overwrite_existing)
         : tag_data(std::move(_tag_data)), overwrite_existing(_overwrite_existing),
@@ -308,7 +315,8 @@ public:
   using deferred_notes_list = std::list<deferred_tag_data_t>;
 
   optional<deferred_notes_list> deferred_notes; ///< Tags deferred until extend_xact() applies them.
-  post_t* active_post;                          ///< During parsing, the template posting currently being built (used by parse_tags to set apply_to_post).
+  post_t* active_post; ///< During parsing, the template posting currently being built (used by
+                       ///< parse_tags to set apply_to_post).
 
   auto_xact_t() : try_quick_match(true), active_post(nullptr) { TRACE_CTOR(auto_xact_t, ""); }
   auto_xact_t(const auto_xact_t& other)
@@ -391,8 +399,8 @@ public:
  */
 class period_xact_t : public xact_base_t {
 public:
-  date_interval_t period;  ///< Parsed recurrence interval (e.g., "Monthly", "Every 2 weeks").
-  string period_string;    ///< Original period text from the journal file.
+  date_interval_t period; ///< Parsed recurrence interval (e.g., "Monthly", "Every 2 weeks").
+  string period_string;   ///< Original period text from the journal file.
 
   period_xact_t() { TRACE_CTOR(period_xact_t, ""); }
   period_xact_t(const period_xact_t& e)
