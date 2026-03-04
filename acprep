@@ -320,7 +320,7 @@ class PrepareBuild(CommandLineApp):
         self.initialize()
 
     def main(self, *args):
-        if args and args[0] in ['default', 'debug', 'opt', 'gcov', 'gprof', 'prof']:
+        if args and args[0] in ['default', 'debug', 'opt', 'gcov', 'lcov', 'gprof', 'prof']:
             self.current_flavor = args[0]
             args = args[1:]
 
@@ -832,6 +832,13 @@ class PrepareBuild(CommandLineApp):
         if not self.options.compiler or self.options.compiler == "clang-3.1":
             self.LDFLAGS.append('-lgcov')
 
+    def setup_flavor_lcov(self):
+        # Uses LLVM's native instrumentation coverage (no -lgcov needed).
+        # After building, run tests, then: cd build && make coverage
+        self.configure_args.append('-DCMAKE_BUILD_TYPE=Debug')
+        self.configure_args.append('-DNO_ASSERTS=1')
+        self.configure_args.append('-DUSE_LLVM_COV=ON')
+
     def setup_flavor_gprof(self):
         self.configure_args.append('-DCMAKE_BUILD_TYPE=Debug')
 
@@ -1108,6 +1115,7 @@ being 'debug':
   debug             Debugging and --verify support (default)
   opt               Full optimizations
   gcov              Coverage analysis
+  lcov              Coverage analysis using LLVM instrumentation + lcov/genhtml (works on macOS)
   gprof             Code profiling (for macOS, just use: 'shark -i ledger ...')
   prof              Clang instrumentation profiling (use llvm-profdata to analyze)
 
