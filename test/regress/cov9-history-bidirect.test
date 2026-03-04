@@ -1,0 +1,21 @@
+; Coverage for history.cc: bidirectional price lookup
+
+commodity $
+    note US Dollar
+    format $1,000.00
+
+commodity EUR
+    format 1,000.00 EUR
+
+P 2024/01/01 $ 0.92 EUR
+
+2024/01/01 Test
+    Expenses:Food    $100.00
+    Assets:Cash
+
+test bal --market -X EUR
+          -92.00 EUR  Assets:Cash
+           92.00 EUR  Expenses:Food
+--------------------
+                   0
+end test

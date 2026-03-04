@@ -1,0 +1,11 @@
+; Coverage test for textual_directives.cc line 538-539
+; Payee directive with sub-directive missing argument
+
+payee Test Store
+    alias
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 5:
+Error: Payee directive 'alias' requires an argument
+end test

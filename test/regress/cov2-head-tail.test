@@ -1,0 +1,38 @@
+; Test --head and --tail options for report.cc lines 549-555 area
+; Also tests the head/tail option handlers
+
+2024/01/01 Payee One
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/01/02 Payee Two
+    Expenses:Food            $20.00
+    Assets:Cash
+
+2024/01/03 Payee Three
+    Expenses:Food            $30.00
+    Assets:Cash
+
+test reg --head 1
+24-Jan-01 Payee One             Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+test reg --tail 1
+24-Jan-03 Payee Three           Expenses:Food                $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test
+
+test reg --head 2
+24-Jan-01 Payee One             Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Jan-02 Payee Two             Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test
+
+test reg --tail 2
+24-Jan-02 Payee Two             Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+24-Jan-03 Payee Three           Expenses:Food                $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test

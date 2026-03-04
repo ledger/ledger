@@ -1,0 +1,10 @@
+; Test format with backslash-backslash escape
+; Covers format.cc lines 180-182 (backslash escape producing literal backslash)
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg --format="%(date)\\\\%(account)\n" Expenses
+2024/01/15\Expenses:Food
+end test

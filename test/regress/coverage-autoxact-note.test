@@ -1,0 +1,18 @@
+; Coverage test for textual_xacts.cc lines 189, 193-204
+; Automated transaction with trailing note and blank sub-line break
+
+= /Food/
+    ; This note is on the automated transaction
+    (Budgets:Food)             -1
+
+2024/01/01 Test
+    Expenses:Food            $10.00
+    Assets:Cash
+
+test bal
+             $-10.00  Assets:Cash
+             $-10.00  Budgets:Food
+              $10.00  Expenses:Food
+--------------------
+             $-10.00
+end test

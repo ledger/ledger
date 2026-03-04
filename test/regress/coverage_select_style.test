@@ -1,0 +1,26 @@
+; Coverage test for select.cc lines 389-393
+; Test select with csv, xml, json, and emacs style keywords
+
+2024/01/01 Test Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test select date,payee,account,amount from posts style csv
+24-Jan-01 Test Payee               Expenses:Food                         $10.00
+24-Jan-01 Test Payee               Assets:Cash                          $-10.00
+end test
+
+test select date,payee,account,amount from posts style xml
+24-Jan-01 Test Payee               Expenses:Food                         $10.00
+24-Jan-01 Test Payee               Assets:Cash                          $-10.00
+end test
+
+test select date,payee,account,amount from posts style json
+24-Jan-01 Test Payee               Expenses:Food                         $10.00
+24-Jan-01 Test Payee               Assets:Cash                          $-10.00
+end test
+
+test select date,payee,account,amount from posts style emacs
+24-Jan-01 Test Payee               Expenses:Food                         $10.00
+24-Jan-01 Test Payee               Assets:Cash                          $-10.00
+end test

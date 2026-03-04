@@ -1,0 +1,17 @@
+; Coverage test for post.cc lines 250-264:
+; get_total() and get_count() return values
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/01/20 Test2
+    Expenses:Gas     $30.00
+    Assets:Cash
+
+test reg --format '%(O) %(N)\n'
+$50.00 1
+$0.00 2
+$30.00 3
+$0.00 4
+end test

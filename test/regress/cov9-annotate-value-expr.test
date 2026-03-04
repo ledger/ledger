@@ -1,0 +1,9 @@
+; Coverage for annotate.cc lines 180, 223-224: value expression in annotation
+
+2024/01/01 Buy
+    Assets:Stock     10 AAPL {$100} ((market(amount, date, t)))
+    Assets:Cash
+
+test reg Assets:Stock --lots --lot-notes
+24-Jan-01 Buy                   Assets:Stock           10 AAPL {$100} ((market(amount, date, t))) 10 AAPL {$100} ((market(amount, date, t)))
+end test

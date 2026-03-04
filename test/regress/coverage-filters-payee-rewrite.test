@@ -1,0 +1,12 @@
+; Coverage test for filters.cc rewrite_posts (lines 1606-1656)
+; Tests --payee-rewrite which creates temp postings with rewritten payees.
+; Also exercises the payee_rewrite_mappings path in rewrite_posts.
+
+2024/01/01 WholeFoods
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --payee-rewrite 'WholeFoods=Whole Foods Market'
+24-Jan-01 Whole Foods Market    Expenses:Food                $10.00       $10.00
+24-Jan-01 Whole Foods Market    Assets:Cash                 $-10.00            0
+end test

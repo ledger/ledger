@@ -1,0 +1,18 @@
+; Coverage test for post.cc get_account when account is not found (L296-297).
+; account("Nonexistent") should throw an error when the named account
+; doesn't exist in the journal.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --limit "account('Nonexistent')" -> 1
+__ERROR__
+While evaluating value expression:
+  account("Nonexistent")
+  ^^^^^^^^^^^^^^^^^^^^^^
+While calling function 'account Nonexistent':
+While handling posting from "$FILE", line 6:
+>     Expenses:Food    $10.00
+Error: Could not find an account matching 'Nonexistent'
+end test

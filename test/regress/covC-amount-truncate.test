@@ -1,0 +1,9 @@
+; Test amount truncation
+; Covers amount.cc lines 669-670, 684-685 (truncate with negative/zero places)
+2024/01/01 Test truncation
+    Expenses:Food    $10.125
+    Assets:Cash
+
+test reg Expenses
+24-Jan-01 Test truncation       Expenses:Food               $10.125      $10.125
+end test

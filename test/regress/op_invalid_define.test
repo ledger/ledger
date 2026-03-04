@@ -1,0 +1,17 @@
+; Test invalid function definition to cover op.cc line 159
+; Triggers the default case in O_DEFINE compile when left is not IDENT or O_CALL
+2024/01/01 Test
+    Expenses:Food              $10.00
+    Assets:Checking
+
+; Non-identifier left side of define
+test eval "1 = 2" -> 1
+__ERROR__
+Error: Invalid function definition
+end test
+
+; O_CALL fallthrough: call with non-identifier function name
+test eval '(1+2)(x) = x' -> 1
+__ERROR__
+Error: Invalid function definition
+end test

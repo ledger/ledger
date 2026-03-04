@@ -1,0 +1,22 @@
+; Coverage test for xact.cc line 402-403
+; Tests the lots.empty() continue path in lot matching.
+; AAPL has COMMODITY_SAW_ANNOTATED from an annotated buy in a different
+; account, but Assets:Brokerage only holds unannotated AAPL, so no
+; matching lots exist and the code continues without splitting.
+
+2024/01/01 Buy annotated in different account
+    Assets:Other    10 AAPL {$150.00} [2024/01/01]
+    Assets:Cash
+
+2024/01/15 Buy unannotated in brokerage
+    Assets:Brokerage    5 AAPL
+    Assets:Cash
+
+2024/02/01 Sell from brokerage
+    Assets:Brokerage    -3 AAPL @ $160.00
+    Assets:Cash
+
+test --lot-matching fifo reg Assets:Brokerage
+24-Jan-15 Buy unannotated in .. Assets:Brokerage             5 AAPL       5 AAPL
+24-Feb-01 Sell from brokerage   Assets:Brokerage            -3 AAPL       2 AAPL
+end test

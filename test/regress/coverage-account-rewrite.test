@@ -1,0 +1,14 @@
+; Coverage for filters.cc lines 1641-1652 (rewrite_posts account rewrite)
+; When account-rewrite directive matches, the posting is rewritten
+; with a new account path.
+
+account-rewrite  Expenses:Food  Expenses:Groceries
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Test                  Expenses:Groceries           $10.00       $10.00
+24-Jan-01 Test                  Assets:Cash                 $-10.00            0
+end test

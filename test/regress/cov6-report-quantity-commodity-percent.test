@@ -1,0 +1,15 @@
+; Coverage for report.cc lines 779,936,940: fn_quantity, fn_percent, fn_commodity
+; Also covers lookup lines 1592 (quantity), and fn_commodity lookup
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/15 Test2
+    Expenses:Food    $40.00
+    Assets:Cash
+
+test reg Expenses --format "%(quantity(amount)) %(commodity(amount)) %(percent(amount, 50))\n"
+10 $ 20.00%
+40 $ 80.00%
+end test

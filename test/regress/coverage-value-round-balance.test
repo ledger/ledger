@@ -1,0 +1,15 @@
+; Coverage for value.cc line 1802:
+; Calling rounded() on a multi-commodity balance goes through the BALANCE
+; case in value_t::in_place_round_to_commodity_precision, which dispatches
+; to balance_t::in_place_round_to_commodity_precision.
+
+2024/01/01 Test
+    Expenses:Food    $100.00
+    Expenses:Food    10.00 EUR
+    Assets:Cash
+
+test bal Expenses --balance-format "%(rounded(total / 3))\n===\n"
+$33.33
+3.33 EUR
+===
+end test

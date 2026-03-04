@@ -1,0 +1,20 @@
+; Coverage test for post.cc various functions and lookup switch branches.
+; Exercises code, calculated, cost_calculated, display_account, real,
+; virtual, use_direct_amount, and xact_id functions.
+
+2024/01/01 (CODE1) * Grocery
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Gas
+    (Budget:Gas)     $30.00
+    Expenses:Gas     $30.00
+    Assets:Cash
+
+test reg --format "%(code)|%(calculated)|%(cost_calculated)|%(display_account)|%(real)|%(virtual)|%(use_direct_amount)|%(xact_id)|%(account)\n"
+CODE1|false|false|Expenses:Food|true|false|false|1|Expenses:Food
+CODE1|true|false|Assets:Cash|true|false|false|2|Assets:Cash
+|false|false|(Budget:Gas)|false|true|false|1|Budget:Gas
+|false|false|Expenses:Gas|true|false|false|2|Expenses:Gas
+|true|false|Assets:Cash|true|false|false|3|Assets:Cash
+end test

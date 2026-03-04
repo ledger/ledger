@@ -1,0 +1,13 @@
+; Coverage test for post.cc lines 162-165, 226-228
+; Tests get_code (returns xact code) and get_has_cost for postings.
+; The code field comes from the parent transaction.
+; has_cost indicates whether a posting has a cost annotation.
+
+2024/03/01 (REF123) Purchase
+    Expenses:Food     100 EUR @ $1.10
+    Assets:Cash
+
+test reg --format "%(code) %(has_cost)\n"
+REF123 true
+REF123 false
+end test

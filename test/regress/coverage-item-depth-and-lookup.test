@@ -1,0 +1,26 @@
+; Coverage test for item.cc get_depth returning 0L (L350-351) and lookup
+; switch break statements for various function name prefixes (L465, L520,
+; L525, L530 and others).
+; Accessing parent.X fields triggers xact_t::lookup which falls through
+; to item_t::lookup for most names.
+
+2024/01/01 * Cleared Transaction
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 ! Pending Transaction
+    Expenses:Rent    $500.00
+    Assets:Cash
+
+2024/01/03 Uncleared Transaction
+    Expenses:Gas     $30.00
+    Assets:Cash
+
+test reg --format "%(parent.depth)|%(parent.L)|%(parent.X)|%(parent.Y)|%(account)\n"
+0|true|true|false|Expenses:Food
+0|true|true|false|Assets:Cash
+0|true|false|true|Expenses:Rent
+0|true|false|true|Assets:Cash
+0|true|false|false|Expenses:Gas
+0|true|false|false|Assets:Cash
+end test

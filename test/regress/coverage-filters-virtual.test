@@ -1,0 +1,24 @@
+; Coverage test for filters.cc line 350
+; Tests handle_value with virtual postings in subtotal mode.
+; Line 350: POST_MUST_BALANCE flag set when account has
+; ACCOUNT_EXT_AUTO_VIRTUALIZE without ACCOUNT_EXT_HAS_UNB_VIRTUALS.
+; Virtual postings [in brackets] trigger the auto-virtualize path.
+
+2024/01/15 Test
+    Expenses:Food             $50.00
+    [Budget:Food]            $-50.00
+    Assets:Cash              $-50.00
+    [Budget:Cash]             $50.00
+
+2024/01/20 Test
+    Expenses:Food             $30.00
+    [Budget:Food]            $-30.00
+    Assets:Cash              $-30.00
+    [Budget:Cash]             $30.00
+
+test reg --subtotal
+24-Jan-15 - 24-Jan-20           Assets:Cash                 $-80.00      $-80.00
+                                [Budget:Cash]                $80.00            0
+                                [Budget:Food]               $-80.00      $-80.00
+                                Expenses:Food                $80.00            0
+end test

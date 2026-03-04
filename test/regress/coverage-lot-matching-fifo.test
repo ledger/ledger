@@ -1,0 +1,28 @@
+; Test xact.cc: lot matching FIFO policy (lines 333-470)
+; Exercises automatic lot matching for sales
+
+2024/01/15 Buy First Lot
+    Assets:Brokerage         10 AAPL {$150.00} [2024/01/15]
+    Assets:Cash          $-1500.00
+
+2024/02/15 Buy Second Lot
+    Assets:Brokerage          5 AAPL {$160.00} [2024/02/15]
+    Assets:Cash           $-800.00
+
+2024/03/15 Sell Some
+    Assets:Brokerage         -8 AAPL @ $170.00
+    Assets:Cash
+
+test print --lot-matching fifo --generated
+2024/01/15 Buy First Lot
+    Assets:Brokerage                    10 AAPL {$150.00} [2024/01/15]
+    Assets:Cash                            $-1500.00
+
+2024/02/15 Buy Second Lot
+    Assets:Brokerage                    5 AAPL {$160.00} [2024/02/15]
+    Assets:Cash                             $-800.00
+
+2024/03/15 Sell Some
+    Assets:Brokerage                    -8 AAPL {$150.00} [2024/01/15] @ $170.00
+    Assets:Cash                             $1200.00
+end test

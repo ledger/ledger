@@ -1,0 +1,11 @@
+; Test report.cc color name functions (fn_black through fn_yellow)
+; These return color name strings used with ansify_if
+
+2024/01/01 Test
+    Expenses:Food   $10.00
+    Assets:Cash
+
+test reg --format "%(black) %(red) %(green) %(yellow) %(blue) %(magenta) %(cyan) %(white) %(bold) %(underline) %(blink)\n" --now 2024/01/15
+black red green yellow blue magenta cyan white bold underline blink
+black red green yellow blue magenta cyan white bold underline blink
+end test

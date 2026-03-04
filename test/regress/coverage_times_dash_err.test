@@ -1,0 +1,11 @@
+; Coverage test for times.cc line 910
+; Dash operator with no preceding date triggers unexpected
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg -p "- 2024" -> 1
+__ERROR__
+Error: Unexpected date period token '-'
+end test

@@ -1,0 +1,18 @@
+; Coverage test for amount.cc lines 204, 216-220
+; Exercise European-style formatting with decimal comma
+; and thousands separator (period as thousands separator)
+; Line 204: out << *p (period as decimal separator in non-comma mode)
+; Lines 216-220: thousands separator with decimal comma
+
+commodity 1.000,00 EUR
+
+2024/01/01 Large Amount
+    Expenses:Rent       12.345,67 EUR
+    Assets:Checking
+
+test bal --decimal-comma
+      -12.345,67 EUR  Assets:Checking
+       12.345,67 EUR  Expenses:Rent
+--------------------
+                   0
+end test

@@ -1,0 +1,20 @@
+; Coverage test for post.cc lookup shorthand single-character functions.
+; Exercises N -> count (L519-520), O -> total (L524-525), R -> real
+; (L529-530), b -> cost (L422-423).
+
+2024/01/01 Grocery
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Gas
+    (Budget:Gas)     $30.00
+    Expenses:Gas     $30.00
+    Assets:Cash
+
+test reg --format "%(N)|%(O)|%(R)|%(b)|%(account)\n"
+1|$10.00|true|$10.00|Expenses:Food
+2|$0.00|true|$-10.00|Assets:Cash
+3|$30.00|false|$30.00|Budget:Gas
+4|$60.00|true|$30.00|Expenses:Gas
+5|$30.00|true|$-30.00|Assets:Cash
+end test

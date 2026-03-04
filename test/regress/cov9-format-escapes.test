@@ -1,0 +1,15 @@
+; Coverage test for format.cc lines 162-186
+; Test escape sequences in format strings: \t (tab), \\ (backslash),
+; and other backslash escapes in the format parser.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg Expenses --format '%(account)\t%(amount)\n'
+Expenses:Food	$10.00
+end test
+
+test reg Expenses --format '%(account)\\%(amount)\n'
+Expenses:Food\$10.00
+end test

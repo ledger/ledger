@@ -1,0 +1,22 @@
+; Coverage for amount.cc lines 635-640:
+; in_place_round_to_commodity_precision rounding path where the amount's
+; internal precision exceeds the commodity's display precision.
+; The rounded() function in a format expression triggers this path.
+
+commodity $
+    format $1,000.00
+
+2024/01/01 Setup
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Precise
+    Expenses:Tools    $10.126789
+    Assets:Cash
+
+test reg --format="%(rounded(amount))\n"
+$10.00
+$-10.00
+$10.13
+$-10.13
+end test

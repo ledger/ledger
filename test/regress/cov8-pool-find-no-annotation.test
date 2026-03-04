@@ -1,0 +1,11 @@
+; Coverage for pool.cc line 378: find with no annotation match
+
+P 2024/01/01 AAPL $100.00
+
+2024/01/01 Buy
+    Assets:Stock    10 AAPL {$95.00}
+    Assets:Cash
+
+test reg Assets:Stock --lots
+24-Jan-01 Buy                   Assets:Stock           10 AAPL {$95.00} 10 AAPL {$95.00}
+end test

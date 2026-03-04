@@ -1,0 +1,15 @@
+; Coverage test for textual_xacts.cc line 561-562
+; Fixed cost with @= but no amount after the =
+
+2024/01/01 Test
+    Assets:Stocks     10 AAPL @=
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 5:
+While parsing posting:
+  Assets:Stocks     10 AAPL @=
+                    ^^^^^^^^^^
+Error: Posting is missing a cost amount
+end test

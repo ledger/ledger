@@ -1,0 +1,13 @@
+; Coverage for commodity.cc line 79: CURRENT_TIME() fallback in map_prices
+; Without --now, the pricing code falls back to CURRENT_TIME()
+; Verifies the conversion still works using the current time
+
+P 2024/01/01 EUR $1.10
+
+2024/01/15 Test
+    Expenses:Travel    500 EUR
+    Assets:Checking
+
+test bal --market --exchange '$' Expenses
+             $550.00  Expenses:Travel
+end test

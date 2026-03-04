@@ -1,0 +1,10 @@
+; Test annotation with tag only (no price, no date)
+; Covers annotate.cc lines 202-212 (tag annotation parsing)
+
+2024/01/01 Buy Stock
+    Assets:Brokerage    10 AAPL (lot-x)
+    Assets:Cash
+
+test bal --lots Assets:Brokerage
+     10 AAPL (lot-x)  Assets:Brokerage
+end test

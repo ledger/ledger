@@ -1,0 +1,17 @@
+; Coverage for filters.cc forecast_posts (lines 1450-1461)
+; Tests the --forecast flag to generate future periodic transactions.
+
+~ Monthly
+    Expenses:Food    $100.00
+    Assets:Cash
+
+2024/01/01 Grocery
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg --forecast "date < [2024/04/01]" --now 2024/02/01
+24-Jan-01 Grocery               Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+24-Mar-01 Forecast transaction  Expenses:Food               $100.00      $100.00
+24-Mar-01 Forecast transaction  Assets:Cash                $-100.00            0
+end test

@@ -1,0 +1,12 @@
+; Test token parsing for 'else' keyword (lines 68-74 of token.cc)
+; and 'if' keyword (lines 85-93)
+; Exercise the if/else in expressions with ternary style
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(amount > 0 ? 'positive' : 'negative')\n"
+positive
+negative
+end test

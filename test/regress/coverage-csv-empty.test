@@ -1,0 +1,8 @@
+; Coverage test for csv.cc line 96:
+; Empty CSV file causes early return from read_index()
+
+account Expenses:Unknown
+account Assets:Checking
+
+test convert test/regress/coverage-csv-empty-data.csv --input-date-format "%Y/%m/%d" --account Assets:Checking
+end test

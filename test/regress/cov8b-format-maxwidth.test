@@ -1,0 +1,12 @@
+; Coverage test for format.cc lines 436-439
+; Test format expression with max_width set via %N.M{expr} syntax.
+; This triggers the is_function() path where max_width is passed as an arg.
+
+2024/01/01 Groceries
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format '%20.30{1}\n'
+                   1
+                   1
+end test

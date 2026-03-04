@@ -1,0 +1,11 @@
+; Test is_account accessor (lines 468-469 of item.cc)
+; Exercise the is_account lookup path
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --limit "!is_account" --format "%(account)\n"
+Expenses:Food
+Assets:Cash
+end test

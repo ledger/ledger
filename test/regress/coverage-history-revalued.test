@@ -1,0 +1,22 @@
+; Tests for history.cc: bidirectional map_prices inversion
+; Covers: line 319 (set_commodity for inverted price when source != sv)
+; The --revalued flag triggers map_prices with bidirectionally=true.
+; When the balance is in $ but prices are defined as EUR -> $,
+; the bidirectional inversion path at line 319 is exercised.
+
+P 2024/01/01 EUR $1.10
+P 2024/02/01 EUR $1.20
+
+2024/01/15 Test
+    Expenses  $100
+    Assets
+
+2024/02/15 Test2
+    Expenses  $50
+    Assets
+
+test reg Expenses --revalued -X EUR
+24-Jan-15 Test                  Expenses                      EUR91        EUR91
+24-Feb-01 Commodities revalued  <Revalued>                    EUR-8        EUR83
+24-Feb-15 Test2                 Expenses                      EUR42       EUR125
+end test

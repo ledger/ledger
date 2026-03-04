@@ -1,0 +1,24 @@
+; Test sorting by amount with different commodities
+; Covers value.cc line 912 (is_less_than AMOUNT vs AMOUNT with different
+; commodities using compare_by_commodity)
+
+2024/01/01 Test
+    Expenses:A    100 EUR
+    Assets:Cash  -100 EUR
+
+2024/01/02 Test2
+    Expenses:B    $50.00
+    Assets:Cash  $-50.00
+
+2024/01/03 Test3
+    Expenses:C    200 GBP
+    Assets:Cash  -200 GBP
+
+test reg --sort amount Expenses
+24-Jan-02 Test2                 Expenses:B                   $50.00       $50.00
+24-Jan-01 Test                  Expenses:A                  100 EUR       $50.00
+                                                                         100 EUR
+24-Jan-03 Test3                 Expenses:C                  200 GBP       $50.00
+                                                                         100 EUR
+                                                                         200 GBP
+end test

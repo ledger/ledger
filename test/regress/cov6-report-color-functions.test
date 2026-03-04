@@ -1,0 +1,11 @@
+; Coverage for report.cc lines 1079-1111: remaining color name functions
+; black, blink, cyan, magenta, underline, white, yellow
+; Also covers lookup lines 1536,1673,1678 (green, white, yellow)
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg Expenses --format "%(black) %(blink) %(cyan) %(magenta) %(underline) %(white) %(yellow)\n"
+black blink cyan magenta underline white yellow
+end test

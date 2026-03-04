@@ -1,0 +1,13 @@
+; Coverage test for report.cc line 933-936
+; fn_percent computes percentage of one amount relative to another
+
+2024/01/01 Test
+    Expenses:Food     $25.00
+    Expenses:Rent     $75.00
+    Assets:Cash
+
+test bal --percent Expenses
+             100.00%  Expenses
+              25.00%    Food
+              75.00%    Rent
+end test

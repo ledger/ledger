@@ -1,0 +1,22 @@
+; Coverage test for value.cc lines 1021-1029
+; Exercise date comparison in is_greater_than
+; Also covers is_less_than date comparison (lines 885-888)
+
+2024/01/15 First
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/01/10 Second
+    Expenses:Food            $20.00
+    Assets:Cash
+
+2024/01/20 Third
+    Expenses:Food            $30.00
+    Assets:Cash
+
+; Sort by -date exercises is_greater_than for dates
+test reg Expenses --sort "-date"
+24-Jan-20 Third                 Expenses:Food                $30.00       $30.00
+24-Jan-15 First                 Expenses:Food                $10.00       $40.00
+24-Jan-10 Second                Expenses:Food                $20.00       $60.00
+end test

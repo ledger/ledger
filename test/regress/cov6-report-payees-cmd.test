@@ -1,0 +1,14 @@
+; Coverage for report.cc line 1799: payees command
+
+2024/01/01 Store
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/15 Restaurant
+    Expenses:Dining    $25.00
+    Assets:Cash
+
+test payees
+Restaurant
+Store
+end test

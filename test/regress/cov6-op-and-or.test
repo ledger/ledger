@@ -1,0 +1,21 @@
+; Coverage test for op.cc O_AND (lines 360-365) and O_OR (lines 367-372)
+; Tests the logical AND and OR operators in expressions.
+; AND returns the right value if left is true, false otherwise.
+; OR returns the left value if true, otherwise the right value.
+
+2024/01/01 Groceries
+    Expenses:Food              $50.00
+    Assets:Cash
+
+2024/01/02 Rent
+    Expenses:Rent             $500.00
+    Assets:Cash
+
+test reg --display 'amount > 0 & account =~ /Food/'
+24-Jan-01 Groceries             Expenses:Food                $50.00       $50.00
+end test
+
+test reg --display 'account =~ /Food/ | account =~ /Rent/'
+24-Jan-01 Groceries             Expenses:Food                $50.00       $50.00
+24-Jan-02 Rent                  Expenses:Rent               $500.00      $500.00
+end test

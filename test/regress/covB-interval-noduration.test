@@ -1,0 +1,21 @@
+; Coverage for filters.cc lines 1070-1071:
+; interval_posts::operator() when interval has no duration.
+; Using --period with only a date range (no weekly/monthly) triggers
+; the find_period path without a duration.
+
+2024/01/01 First
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/02/01 Second
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2024/03/01 Third
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test reg --period "from 2024/01/15 to 2024/02/15"
+24-Feb-01 Second                Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test

@@ -1,0 +1,16 @@
+; Coverage: post.cc line 170 - get_payee in register format
+
+2024/01/01 Grocery Store
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Cash
+
+test reg --format "%(payee) %(amount)\n"
+Grocery Store $10.00
+Grocery Store $-10.00
+Gas Station $30.00
+Gas Station $-30.00
+end test

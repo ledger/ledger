@@ -1,0 +1,12 @@
+; Test stream.cc: do_fork() pager subprocess (lines 64-115)
+
+2024/01/01 Test
+    Expenses:Food   $10.00
+    Assets:Cash
+
+test bal --pager cat
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

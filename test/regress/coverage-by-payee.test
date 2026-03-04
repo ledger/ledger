@@ -1,0 +1,21 @@
+; Coverage for filters.cc by_payee_posts (lines 1233-1256)
+; Tests subtotaling by payee name.
+
+2024/01/01 Store A
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/15 Store B
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2024/01/20 Store A
+    Expenses:Food    $5.00
+    Assets:Cash
+
+test reg --by-payee
+24-Jan-01 Store A               Assets:Cash                 $-15.00      $-15.00
+                                Expenses:Food                $15.00            0
+24-Jan-15 Store B               Assets:Cash                 $-20.00      $-20.00
+                                Expenses:Food                $20.00            0
+end test

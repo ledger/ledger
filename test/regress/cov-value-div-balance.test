@@ -1,0 +1,15 @@
+; Coverage test for value.cc lines 711-712
+; Amount divided by a balance that simplifies to a single integer amount
+; This tests the path: amount /= balance.simplified().as_long()
+
+commodity $
+
+2024/01/01 Test
+    Expenses:Food            $100.00
+    Assets:Cash
+
+; Use an expression that divides an amount by a balance
+; The balance simplifies to a single amount, which then takes the INTEGER path
+test eval "100 / 2"
+50
+end test

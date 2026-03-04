@@ -1,0 +1,10 @@
+; Coverage test for annotate.cc lines 268-269, 272-273
+; Tests keep_details_t::keep_all and keep_any for annotated commodities
+
+2024/01/01 Buy shares
+    Assets:Brokerage    10 AAPL {$150} [2024/01/01] (batch1)
+    Assets:Cash        $-1500
+
+test bal --lots --lot-dates --lot-tags Assets:Brokerage
+10 AAPL {$150} [2024/01/01] (batch1)  Assets:Brokerage
+end test

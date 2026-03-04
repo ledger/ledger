@@ -1,0 +1,10 @@
+; Test get_filebase (lines 308-312 of item.cc)
+; Exercise the filebase accessor
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(filebase)\n" --limit "account =~ /Food/"
+cov4-item-filebase-filepath.test
+end test

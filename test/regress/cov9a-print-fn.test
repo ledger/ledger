@@ -1,0 +1,11 @@
+; Coverage test for report.cc lines 758-763
+; fn_print writes values to output_stream followed by newline
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(print(account))\n" --limit "account =~ /Expenses/"
+Expenses:Food
+true
+end test

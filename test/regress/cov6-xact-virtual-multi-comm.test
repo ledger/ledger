@@ -1,0 +1,23 @@
+; Coverage test for xact.cc lines 608-609
+; Tests balanced virtual postings with multiple commodities.
+; When virtual postings involve multiple commodities, the virtual_balance
+; is a balance_t and must be handled via map_sorted_amounts.
+
+2024/01/01 Test multi-commodity virtual
+    Expenses:Food              $50.00
+    Assets:Cash               $-50.00
+    [Budget:EUR]               10 EUR
+    [Budget:GBP]                5 GBP
+    [Budget:Mix]
+
+test bal
+             $-50.00  Assets:Cash
+                   0  Budget
+              10 EUR    EUR
+               5 GBP    GBP
+             -10 EUR
+              -5 GBP    Mix
+              $50.00  Expenses:Food
+--------------------
+                   0
+end test

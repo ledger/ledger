@@ -1,0 +1,9 @@
+; Coverage for value.cc line 711: amount /= long division
+
+2024/01/01 Test
+    Expenses:Food    $9.00
+    Assets:Cash
+
+test reg --format "%(amount / 3)\n" Expenses
+$3.00
+end test

@@ -1,0 +1,18 @@
+; Coverage test for commodity.cc lines 348-355
+; Tests commodity_t::print with quoted commodity symbols.
+; The "elide_quotes" path in print() removes quotes when the symbol
+; contains non-digit characters and COMMODITY_STYLE_SEPARATED is set.
+
+2024/01/15 Test
+    Assets:Stocks          10 "AA BB" @ $50.00
+    Assets:Cash
+
+test bal
+               $-500
+            10 AA BB  Assets
+               $-500    Cash
+            10 AA BB    Stocks
+--------------------
+               $-500
+            10 AA BB
+end test

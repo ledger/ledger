@@ -1,0 +1,22 @@
+; Test fn_any auto transaction predicate for xact.cc coverage
+; Covers fn_any (line 789-798)
+
+= expr 'any(account =~ /Expenses/)'
+    Budget:AnyExpenses                 1
+    Budget:AnyOffset                  -1
+
+2024/01/01 Payee
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/02/01 Payee Two
+    Income:Salary           $-100.00
+    Assets:Cash
+
+; Test fn_any: triggers when any posting matches
+test reg Budget:Any
+24-Jan-01 Payee                 Budget:AnyExpenses           $10.00       $10.00
+                                Budget:AnyOffset            $-10.00            0
+                                Budget:AnyExpenses          $-10.00      $-10.00
+                                Budget:AnyOffset             $10.00            0
+end test

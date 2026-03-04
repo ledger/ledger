@@ -1,0 +1,10 @@
+; Test -F short option for format
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg -F "%(account)\n"
+Expenses:Food
+Assets:Cash
+end test

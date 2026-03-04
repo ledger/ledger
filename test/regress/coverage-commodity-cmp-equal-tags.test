@@ -1,0 +1,16 @@
+; Coverage for commodity.cc lines 485, 514-515: tag comparison returns equal
+; Two lots with same price, same tag, but different dates
+; Forces the comparison to pass through the equal-tag branch
+
+2024/01/01 Buy
+    Assets:Brokerage    10 AAPL {$150.00} [2024/01/01] (lot1)
+    Assets:Checking
+
+2024/01/15 Buy
+    Assets:Brokerage    5 AAPL {$150.00} [2024/01/15] (lot1)
+    Assets:Checking
+
+test bal --lots Assets:Brokerage
+10 AAPL {$150} [2024/01/01] (lot1)
+5 AAPL {$150} [2024/01/15] (lot1)  Assets:Brokerage
+end test

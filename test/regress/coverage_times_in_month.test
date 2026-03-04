@@ -1,0 +1,24 @@
+; Coverage test for times.cc peek_token (line 647) via TOK_A_MONTH
+; Month name in determine_when causes peek_token call at line 856
+
+2024/06/15 June Transaction
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/06/20 Another June
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test reg --now 2024/07/01 --period "in june"
+24-Jun-15 June Transaction      Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Jun-20 Another June          Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test
+
+test reg --now 2024/07/01 --period "in june 2024"
+24-Jun-15 June Transaction      Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Jun-20 Another June          Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test

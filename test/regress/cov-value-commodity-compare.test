@@ -1,0 +1,25 @@
+; Coverage test for value.cc commodity and string comparison
+; Exercise sorting by commodity and account names
+
+commodity $
+commodity EUR
+
+2024/01/01 Purchase
+    Expenses:Food            $10.00
+    Expenses:Drink           10.00 EUR
+    Assets:Cash             $-10.00
+    Assets:Bank            -10.00 EUR
+
+; Sort by account (string comparison, lines 953-962)
+test bal --sort account
+             $-10.00
+          -10.00 EUR  Assets
+          -10.00 EUR    Bank
+             $-10.00    Cash
+              $10.00
+           10.00 EUR  Expenses
+           10.00 EUR    Drink
+              $10.00    Food
+--------------------
+                   0
+end test

@@ -1,0 +1,47 @@
+; Test type conversion functions for report.cc coverage
+; Covers fn_to_boolean, fn_to_int, fn_to_amount, fn_to_string,
+; fn_to_date, fn_round, fn_unround, fn_roundto
+
+2024/01/01 Payee
+    Expenses:Food            $10.50
+    Assets:Cash
+
+; Test to_boolean function (line 1039-1040, 1631-1632)
+test reg Expenses --format "%(to_boolean(amount) ? \"yes\" : \"no\")\n"
+yes
+end test
+
+; Test to_int function (line 1043-1048, 1633-1634)
+test reg Expenses --format "%(to_int(quantity(amount)))\n"
+10
+end test
+
+; Test to_amount function (line 1058-1060, 1639-1640)
+test reg Expenses --format "%(to_amount(amount))\n"
+$10.50
+end test
+
+; Test to_string function (line 1066-1068, 1643-1644)
+test reg Expenses --format "%(to_string(payee))\n"
+Payee
+end test
+
+; Test to_date function (line 1054-1056, 1637-1638)
+test reg Expenses --format "%(to_date(date))\n"
+2024/01/01
+end test
+
+; Test round function (line 793-795, 1599-1600)
+test reg Expenses --format "%(round(amount))\n"
+$10.50
+end test
+
+; Test unround function (line 801-803, 1659-1660)
+test reg Expenses --format "%(unround(amount))\n"
+$10.50
+end test
+
+; Test clear_commodity function (line 958-962, 1505-1506)
+test reg Expenses --format "%(clear_commodity(amount))\n"
+10.5
+end test

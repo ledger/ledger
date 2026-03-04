@@ -1,0 +1,26 @@
+; Coverage test for select.cc column handling paths
+
+2024/01/01 Test Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test select date from posts
+24-Jan-01
+24-Jan-01
+end test
+
+test select amount from posts
+      $10.00
+     $-10.00
+end test
+
+test select total from posts
+      $10.00
+           0
+end test
+
+test select account from accounts
+Assets:Cash
+Expenses:Food
+
+end test

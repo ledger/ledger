@@ -1,0 +1,10 @@
+; Test account lookup use_direct_amount (lines 492-493 of account.cc)
+; Exercise the use_direct_amount accessor on accounts
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --format "%(use_direct_amount ? \"Y\" : \"N\") %(account)\n" --flat --limit "account =~ /Food/"
+N Expenses:Food
+end test

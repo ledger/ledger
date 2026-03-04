@@ -1,0 +1,13 @@
+; Coverage for history.cc: price history graph lookup
+
+P 2024/01/01 AAPL $150
+P 2024/01/02 AAPL $155
+
+2024/01/01 Buy
+    Assets:Brokerage    10 AAPL
+    Assets:Cash
+
+test reg -V
+24-Jan-01 Buy                   Assets:Brokerage              $1500        $1500
+                                Assets:Cash                  $-1500            0
+end test

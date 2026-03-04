@@ -1,0 +1,11 @@
+; Coverage for print.cc lines 211-222: print with balance assignment
+
+2024/01/01 Test
+    Assets:Cash    = $100.00
+    Equity
+
+test print
+2024/01/01 Test
+    Assets:Cash                            = $100.00
+    Equity
+end test

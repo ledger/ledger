@@ -1,0 +1,13 @@
+; Coverage for xact.cc line 918: post_pred function
+; Tests the O_MATCH case in post_pred via auto transactions
+
+= /Food/
+    (Budget:Food)    -1
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --generated Expenses:Food
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+end test

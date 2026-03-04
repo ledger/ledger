@@ -1,0 +1,15 @@
+; Coverage test for post.cc line 384:
+; Exercise all(EXPR, false) to exclude self and test all other postings.
+
+2024/01/01 All Expenses
+    Expenses:Food    $10.00
+    Expenses:Drink    $5.00
+    Assets:Cash
+
+test reg --limit "all(account =~ /Expenses/, false)" Assets
+24-Jan-01 All Expenses          Assets:Cash                 $-15.00      $-15.00
+end test
+
+test reg --limit "all(amount > 0, false)"
+24-Jan-01 All Expenses          Assets:Cash                 $-15.00      $-15.00
+end test

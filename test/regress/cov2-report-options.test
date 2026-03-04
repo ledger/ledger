@@ -1,0 +1,56 @@
+; Test various report options for report.cc coverage
+; Tests --lot-dates, --lot-prices, --lot-tags, --daily, -S, -T, etc.
+
+2024/01/01 Payee One
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/01/02 Payee Two
+    Expenses:Gas             $20.00
+    Assets:Cash
+
+2024/01/03 Payee Three
+    Expenses:Dining          $30.00
+    Assets:Cash
+
+; Test --lot-dates option (line 760)
+test reg --lot-dates Expenses
+24-Jan-01 Payee One             Expenses:Food                $10.00       $10.00
+24-Jan-02 Payee Two             Expenses:Gas                 $20.00       $30.00
+24-Jan-03 Payee Three           Expenses:Dining              $30.00       $60.00
+end test
+
+; Test --lot-prices option (line 761)
+test reg --lot-prices Expenses
+24-Jan-01 Payee One             Expenses:Food                $10.00       $10.00
+24-Jan-02 Payee Two             Expenses:Gas                 $20.00       $30.00
+24-Jan-03 Payee Three           Expenses:Dining              $30.00       $60.00
+end test
+
+; Test --lot-tags option (mapped to lot_notes, line 782/1318)
+test reg --lot-tags Expenses
+24-Jan-01 Payee One             Expenses:Food                $10.00       $10.00
+24-Jan-02 Payee Two             Expenses:Gas                 $20.00       $30.00
+24-Jan-03 Payee Three           Expenses:Dining              $30.00       $60.00
+end test
+
+; Test -S (sort) shorthand option (line 1198/1199)
+test reg Expenses -S amount
+24-Jan-01 Payee One             Expenses:Food                $10.00       $10.00
+24-Jan-02 Payee Two             Expenses:Gas                 $20.00       $30.00
+24-Jan-03 Payee Three           Expenses:Dining              $30.00       $60.00
+end test
+
+; Test -T (total) shorthand option (line 1200-1202)
+test reg Expenses -T "total_expr + amount"
+24-Jan-01 Payee One             Expenses:Food                $10.00       $20.00
+24-Jan-02 Payee Two             Expenses:Gas                 $20.00       $50.00
+24-Jan-03 Payee Three           Expenses:Dining              $30.00       $90.00
+end test
+
+; Test --daily option (line 1162)
+test reg Expenses --daily
+24-Jan-01 - 24-Jan-01           Expenses:Food                $10.00       $10.00
+24-Jan-02 - 24-Jan-02           Expenses:Gas                 $20.00       $30.00
+24-Jan-03 - 24-Jan-03           Expenses:Dining              $30.00       $60.00
+end test

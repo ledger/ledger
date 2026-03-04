@@ -1,0 +1,15 @@
+; Coverage for xact.cc lines 241-242: explicit cost in finalize
+
+2024/01/01 Buy
+    Assets:Brokerage    10 AAPL @ $150.00
+    Assets:Cash    $-1500.00
+
+test bal
+           $-1500.00
+             10 AAPL  Assets
+             10 AAPL    Brokerage
+           $-1500.00    Cash
+--------------------
+           $-1500.00
+             10 AAPL
+end test

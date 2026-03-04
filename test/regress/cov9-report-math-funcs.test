@@ -1,0 +1,18 @@
+; Coverage test for report.cc lines 785-803
+; Test floor(), ceiling(), roundto(), abs() mathematical functions.
+
+2024/01/01 Test
+    Expenses:Food    $10.75
+    Assets:Cash
+
+test reg Expenses --format '%(floor(amount))\n'
+$10.00
+end test
+
+test reg Expenses --format '%(ceiling(amount))\n'
+$11.00
+end test
+
+test reg Assets --format '%(abs(amount))\n'
+$10.75
+end test

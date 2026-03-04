@@ -1,0 +1,13 @@
+; Test item_t::has_tag with mask and value_mask (line 65 of item.cc)
+; and get_tag with mask (lines 88-92)
+; Uses has_tag with two mask arguments (line 260 of item.cc)
+
+2024/01/01 Test
+    ; Category: food
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --limit "has_tag(/Category/, /food/)" --format "%(tag(/Category/))\n"
+food
+food
+end test

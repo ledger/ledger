@@ -1,0 +1,13 @@
+; Coverage test for report.cc lines 942-951: fn_commodity_price
+; Test commodity_price() which looks up a commodity's price at a given date.
+
+P 2024/01/01 AAPL $100.00
+P 2024/06/01 AAPL $150.00
+
+2024/01/01 Buy
+    Assets:Stock    10 AAPL
+    Assets:Cash    $-1000.00
+
+test reg Assets:Stock --format '%(commodity_price(amount, [2024/06/01]))\n'
+$150.00
+end test

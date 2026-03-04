@@ -1,0 +1,14 @@
+; Coverage for output.cc line 386: duplicate cost commodity in annotation map
+
+2024/01/01 Buy1
+    Assets:Stock    10 AAPL {$15.00}
+    Assets:Cash
+
+2024/01/05 Buy2
+    Assets:Stock    5 AAPL {$20.00}
+    Assets:Cash
+
+test reg Assets:Stock
+24-Jan-01 Buy1                  Assets:Stock                10 AAPL      10 AAPL
+24-Jan-05 Buy2                  Assets:Stock                 5 AAPL      15 AAPL
+end test

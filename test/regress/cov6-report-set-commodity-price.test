@@ -1,0 +1,11 @@
+; Coverage for report.cc lines 956,1614: fn_set_commodity_price and its lookup
+
+P 2024/01/01 EUR 1.10 GBP
+
+2024/01/01 Test
+    Expenses:Food    10 EUR
+    Assets:Cash
+
+test reg Expenses --format "%(set_commodity_price(amount, today, 2.00 GBP))%(market(amount, today, \"GBP\"))\n"
+20.00 GBP
+end test

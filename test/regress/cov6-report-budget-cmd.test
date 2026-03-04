@@ -1,0 +1,16 @@
+; Coverage for report.cc line 1750: budget command
+
+~ Monthly
+    Expenses:Food    $500.00
+    Assets:Cash
+
+2024/01/01 Store
+    Expenses:Food    $450.00
+    Assets:Cash
+
+test budget -p "this month" --now 2024/01/15
+    $-450.00     $-500.00       $50.00   90%  Assets:Cash
+     $450.00      $500.00      $-50.00   90%  Expenses:Food
+------------ ------------ ------------ -----
+           0            0            0     0
+end test

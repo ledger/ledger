@@ -1,0 +1,23 @@
+; Tests for query.cc: since and until keywords
+; Covers: lines 519-522 (since/until for_string initialization)
+;         lines 524-545 (consume_next_arg in for clause)
+
+2024/01/01 Jan
+    Expenses  $10
+    Assets
+
+2024/06/01 Jun
+    Expenses  $20
+    Assets
+
+; since keyword (line 519-520)
+test reg since 2024/03/01
+24-Jun-01 Jun                   Expenses                        $20          $20
+                                Assets                         $-20            0
+end test
+
+; until keyword (line 521-522)
+test reg until 2024/03/01
+24-Jan-01 Jan                   Expenses                        $10          $10
+                                Assets                         $-10            0
+end test

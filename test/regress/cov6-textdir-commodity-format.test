@@ -1,0 +1,15 @@
+; Coverage for textual_directives.cc lines 636-639: commodity format sub-directive
+
+commodity EUR
+    format 1.000,00 EUR
+
+2024/01/01 Test
+    Expenses:Food    100 EUR
+    Assets:Cash
+
+test bal
+         -100,00 EUR  Assets:Cash
+          100,00 EUR  Expenses:Food
+--------------------
+                   0
+end test

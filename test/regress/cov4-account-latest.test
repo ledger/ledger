@@ -1,0 +1,14 @@
+; Test account lookup latest (lines 459-460 of account.cc)
+; Exercise the latest accessor on accounts
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/15 Test2
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test bal --format "%(latest) %(account)\n" --flat --limit "account =~ /Food/"
+2024/01/15 Expenses:Food
+end test

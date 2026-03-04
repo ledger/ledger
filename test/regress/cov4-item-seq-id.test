@@ -1,0 +1,10 @@
+; Test get_seq and get_id (lines 338-343 of item.cc)
+; Exercise the seq and id accessors (case 'i' and 's' in lookup)
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(id) %(seq)\n" --limit "account =~ /Food/"
+2 2
+end test

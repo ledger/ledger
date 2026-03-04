@@ -1,0 +1,31 @@
+; Coverage for session.cc lines 114-115: check_payees option
+; --check-payees enables payee validation against declared payees
+; Unknown payees generate warnings when combined with --strict
+
+commodity $
+    format $1,000.00
+
+account Assets:Checking
+account Expenses:Food
+account Expenses:Rent
+
+payee Test Payee
+
+2024/01/01 Test Payee
+    Expenses:Food    $10.00
+    Assets:Checking
+
+2024/01/02 Unknown Payee
+    Expenses:Rent    $20.00
+    Assets:Checking
+
+test --check-payees --strict bal
+             $-30.00  Assets:Checking
+              $30.00  Expenses
+              $10.00    Food
+              $20.00    Rent
+--------------------
+                   0
+__ERROR__
+Warning: "$FILE", line 18: Unknown payee 'Unknown Payee'
+end test

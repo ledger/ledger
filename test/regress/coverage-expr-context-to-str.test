@@ -1,0 +1,17 @@
+; Coverage for expr.cc line 215-217: context_to_str
+; A format expression that triggers a calc_error exercises the error
+; context path in format.cc which calls expr_t::context_to_str()
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(1/0)\n" -> 1
+__ERROR__
+While evaluating value expression:
+  (1 / 0)
+  ^^^^^^^
+While handling posting from "$FILE", line 6:
+>     Expenses:Food    $10.00
+Error: Divide by zero
+end test

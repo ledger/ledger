@@ -1,0 +1,31 @@
+; Coverage test for format.cc lines 424-425, 444-446, 471-473
+; Tests STRING element with min_width, expression with min_width for
+; value.print, and left-aligned expression padding with spaces
+
+2024/01/15 Test Payee
+    Expenses:Food   $100.00
+    Assets:Cash
+
+; Test STRING element with min_width (line 424-425)
+test reg --format "%5%%(account)\n"
+    %Expenses:Food
+    %Assets:Cash
+end test
+
+; Test left-justified expression with padding spaces (lines 471-473)
+test reg --format "%-30(account)|\n"
+Expenses:Food                 |
+Assets:Cash                   |
+end test
+
+; Test right-justified expression with value.print (lines 444-446)
+test reg --format "%30(account)\n"
+                 Expenses:Food
+                   Assets:Cash
+end test
+
+; Test max_width truncation on expression (line 467-468)
+test reg --format "%.5(account)\n"
+Exp..
+Ass..
+end test

@@ -1,0 +1,18 @@
+; Coverage test for textual_xacts.cc lines 633-636, 718-721
+; Balance assignment with a null-amount posting
+
+2024/01/01 Opening balance
+    Assets:Cash              $100.00
+    Equity:Opening
+
+2024/01/02 Spend
+    Expenses:Food
+    Assets:Cash               = $80.00
+
+test bal
+              $80.00  Assets:Cash
+            $-100.00  Equity:Opening
+              $20.00  Expenses:Food
+--------------------
+                   0
+end test

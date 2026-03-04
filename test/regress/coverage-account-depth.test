@@ -1,0 +1,11 @@
+; Coverage for account.cc line 630: account depth function
+
+2024/01/01 Test
+    Expenses:Food:Snacks    $10.00
+    Assets:Cash
+
+test bal --format "%(depth) %(account)\n"
+2 Assets:Cash
+3 Expenses:Food:Snacks
+0 
+end test

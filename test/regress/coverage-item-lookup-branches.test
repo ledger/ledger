@@ -1,0 +1,15 @@
+; Coverage test for item.cc lookup switch break statements.
+; Exercises branches for function name prefixes 'b' (L426), 'e' (L449),
+; 'f' (L458), 'i' (L472), 'n' (L482), 's' (L498), 'v' (L515).
+; Accessing parent.X calls xact_t::lookup which falls through to
+; item_t::lookup for most names.
+
+2024/01/01 * Test
+    ; Payee: vendor
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(parent.beg_line)|%(parent.end_line)|%(parent.seq)|%(parent.id)|%(parent.status)|%(account)\n"
+7|10|1|1|1|Expenses:Food
+7|10|1|1|1|Assets:Cash
+end test

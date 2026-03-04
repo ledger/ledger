@@ -1,0 +1,24 @@
+; Test value sorting and comparison with expression types
+; Exercises value.cc is_less_than for AMOUNT with different commodities
+; (line 912: compare_by_commodity for cross-commodity amount comparison)
+
+2024/01/01 European trip
+    Expenses:Travel    500 EUR
+    Assets:Cash       -500 EUR
+
+2024/01/02 US purchase
+    Expenses:Shopping    $200.00
+    Assets:Cash         $-200.00
+
+2024/01/03 UK purchase
+    Expenses:Shopping    150 GBP
+    Assets:Cash         -150 GBP
+
+test reg --sort amount Expenses
+24-Jan-02 US purchase           Expenses:Shopping           $200.00      $200.00
+24-Jan-01 European trip         Expenses:Travel             500 EUR      $200.00
+                                                                         500 EUR
+24-Jan-03 UK purchase           Expenses:Shopping           150 GBP      $200.00
+                                                                         500 EUR
+                                                                         150 GBP
+end test

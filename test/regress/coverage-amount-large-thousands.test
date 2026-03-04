@@ -1,0 +1,15 @@
+; Coverage for amount.cc lines 204, 209, 211, 220:
+; Very large amounts exercise the thousands separator loop multiple times,
+; ensuring the comma separator (line 220) and decimal point (line 204)
+; are both covered. Multiple digit groups force multiple separator insertions.
+
+commodity $
+    format $1,000.00
+
+2024/01/01 Huge Purchase
+    Expenses:Capital   $1,234,567.89
+    Assets:Bank
+
+test bal Expenses
+       $1,234,567.89  Expenses:Capital
+end test

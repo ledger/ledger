@@ -1,0 +1,10 @@
+; Coverage for report.cc lines 76,78: --output disables both --color and --pager
+; When --output is specified and neither --force-color nor --force-pager is set,
+; normalize_options turns off color (line 76) and pager (line 78).
+
+2024/01/15 * Test
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test bal --color --pager cat --output /dev/null
+end test

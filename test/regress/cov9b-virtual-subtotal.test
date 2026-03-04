@@ -1,0 +1,16 @@
+; Coverage for filters.cc line 350: POST_MUST_BALANCE via auto-virtualize
+; When all postings are balanced virtual ([brackets]), subtotal reports
+; should mark generated posts with POST_MUST_BALANCE
+
+2024/01/01 Test A
+    [Budget:Food]    $100.00
+    [Budget:Savings]  $-100.00
+
+2024/01/15 Test B
+    [Budget:Food]     $50.00
+    [Budget:Savings]   $-50.00
+
+test reg --subtotal
+24-Jan-01 - 24-Jan-15           [Budget:Food]               $150.00      $150.00
+                                [Budget:Savings]           $-150.00            0
+end test

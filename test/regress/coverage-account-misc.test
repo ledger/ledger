@@ -1,0 +1,24 @@
+; Coverage test for account.cc miscellaneous lookup functions.
+; Exercises 'l' shorthand for depth (L455-456), is_account returning
+; true (L448-449), is_index/subcount (L450-451, L482-484),
+; account_base (L409-410), addr (L411-412), and use_direct_amount
+; (L492-494). Also covers latest_cleared (L457-458).
+
+2024/01/01 * Grocery
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Gas     $30.00
+    Assets:Cash
+
+2024/01/03 * Grocery
+    Expenses:Food    $5.00
+    Assets:Cash
+
+test bal --no-total --format "%(l)|%(is_account)|%(is_index)|%(subcount)|%(account_base)|%(account)\n"
+2|true|3|3|Cash|Assets:Cash
+1|true|0|0|Expenses|Expenses
+2|true|2|2|Food|Expenses:Food
+2|true|1|1|Gas|Expenses:Gas
+end test

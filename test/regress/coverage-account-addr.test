@@ -1,0 +1,13 @@
+; Coverage: account.cc lines 303-305, 400, 412 - get_addr and addr lookup
+; Uses addr in a balance format expression to trigger get_addr
+; addr returns a nonzero value for real accounts
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --format "%(addr > 0 ? 'Y' : 'N')\n"
+Y
+Y
+Y
+end test

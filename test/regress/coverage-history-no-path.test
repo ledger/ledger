@@ -1,0 +1,13 @@
+; Coverage for history.cc lines 493-495: find_price returning nullopt
+; No price path exists between GBP and $ (only EUR->$ is defined)
+; So the conversion cannot happen and the original commodity is shown
+
+P 2024/01/01 EUR $1.10
+
+2024/01/15 Test
+    Expenses:Travel    500 GBP
+    Assets:Checking
+
+test bal --market --exchange '$' --now 2024/02/01 Expenses
+             500 GBP  Expenses:Travel
+end test

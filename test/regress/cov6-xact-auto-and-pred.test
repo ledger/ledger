@@ -1,0 +1,24 @@
+; Coverage test for xact.cc line 918
+; Tests the post_pred function with O_AND operator in auto transactions.
+; The quick matcher handles AND predicates for auto transaction matching.
+
+= /Expenses/ and /Food/
+    (Budget:Food)              -1.0
+
+2024/01/01 Groceries
+    Expenses:Food              $50.00
+    Assets:Cash
+
+2024/01/02 Rent
+    Expenses:Rent             $500.00
+    Assets:Cash
+
+test bal
+            $-550.00  Assets:Cash
+             $-50.00  Budget:Food
+             $550.00  Expenses
+              $50.00    Food
+             $500.00    Rent
+--------------------
+             $-50.00
+end test

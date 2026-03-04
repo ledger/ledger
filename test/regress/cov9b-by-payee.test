@@ -1,0 +1,21 @@
+; Coverage for filters.cc by_payee_posts (lines around 1242-1255)
+; The --by-payee option groups subtotals by payee name
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Cash
+
+2024/01/05 Restaurant
+    Expenses:Food    $40.00
+    Assets:Cash
+
+2024/01/10 Grocery Store
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test reg --by-payee
+24-Jan-01 Grocery Store         Assets:Cash                 $-55.00      $-55.00
+                                Expenses:Food                $55.00            0
+24-Jan-05 Restaurant            Assets:Cash                 $-40.00      $-40.00
+                                Expenses:Food                $40.00            0
+end test

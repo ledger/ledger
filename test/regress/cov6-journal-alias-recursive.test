@@ -1,0 +1,17 @@
+; Coverage for journal.cc line 213: infinite recursion on alias expansion
+
+alias Exp=Expenses
+alias Expenses=Exp:Food
+
+2024/01/01 Test
+    Exp:Groceries    $10.00
+    Assets:Cash
+
+test bal --recursive-aliases -> 1
+__ERROR__
+While parsing file "$FILE", line 7:
+While parsing posting:
+  Exp:Groceries    $10.00
+
+Error: Infinite recursion on alias expansion for Exp
+end test

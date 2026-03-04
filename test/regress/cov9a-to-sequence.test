@@ -1,0 +1,11 @@
+; Coverage test for report.cc line 1075
+; fn_to_sequence converts a value to a sequence
+; Also covers fn_is_seq (line 735)
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(is_seq(to_sequence(amount)))\n" --limit "account =~ /Expenses/"
+true
+end test

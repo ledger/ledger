@@ -1,0 +1,10 @@
+; Test percentage multiplication with bare number (no commodity)
+; Covers amount.cc line 490 (propagate % commodity to result)
+
+2024/01/01 Test
+    Expenses:Food    (100 * 19%)
+    Assets:Cash
+
+test bal Expenses
+                 19%  Expenses:Food
+end test

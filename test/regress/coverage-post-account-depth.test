@@ -1,0 +1,16 @@
+; Coverage for post.cc lines 273-278: account(n) with long depth argument
+; When n > 2, truncates account name; when n <= 2, returns full name
+
+2024/01/01 Test
+    Expenses:Food:Groceries:Organic    $10.00
+    Assets:Cash
+
+test reg --format "%(account(int(20)))\n"
+Ex:Fo:Groc:Organic
+Assets:Cash
+end test
+
+test reg --format "%(account(int(2)))\n"
+Expenses:Food:Groceries:Organic
+Assets:Cash
+end test

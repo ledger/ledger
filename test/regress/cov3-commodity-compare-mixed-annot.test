@@ -1,0 +1,15 @@
+; Test commodity comparison with mixed annotated/unannotated lots
+; Covers commodity.cc lines 389-396 (annotation presence asymmetry)
+
+2024/01/15 Buy annotated lot
+    Assets:Stocks    10 AAPL {$150}
+    Assets:Cash
+
+2024/02/20 Buy unannotated lot
+    Assets:Stocks    5 AAPL
+    Assets:Cash
+
+test bal --lots --no-total Assets:Stocks
+              5 AAPL
+      10 AAPL {$150}  Assets:Stocks
+end test

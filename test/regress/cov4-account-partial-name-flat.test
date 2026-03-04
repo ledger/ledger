@@ -1,0 +1,12 @@
+; Test partial_name with flat=true (line 242 of account.cc)
+; When flat is true, partial_name does not skip single-child parents
+
+2024/01/01 Test
+    Expenses:Food:Groceries    $10.00
+    Assets:Cash
+
+test bal --flat --format "%(partial_account(true)) %(total)\n"
+Assets:Cash $-10.00
+Expenses:Food:Groceries $10.00
+ 0
+end test

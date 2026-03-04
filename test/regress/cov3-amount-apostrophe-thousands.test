@@ -1,0 +1,10 @@
+; Test amount parsing with apostrophe thousands separators (Swiss style)
+; Covers amount.cc lines 1276-1283 (apostrophe as thousands separator)
+
+2024/01/01 Swiss Amount
+    Assets:Bank     CHF 1'234'567.89
+    Equity:Opening
+
+test bal Assets:Bank
+    CHF 1'234'567.89  Assets:Bank
+end test

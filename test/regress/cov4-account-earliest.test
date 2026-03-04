@@ -1,0 +1,14 @@
+; Test account_t::lookup for earliest (line 436-437 of account.cc)
+; and earliest_checkin (line 438-439)
+
+2024/01/05 Test1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/15 Test2
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test bal --format "%(earliest):%(total)\n" Expenses
+2024/01/05:$30.00
+end test

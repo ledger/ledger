@@ -1,0 +1,11 @@
+; Coverage test for select.cc: select with total column
+; Tests select command with amount and total columns
+
+2024/01/15 Test Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test select date, account, amount, total
+24-Jan-15 Expenses:Food                                     $10.00       $10.00
+24-Jan-15 Assets:Cash                                      $-10.00            0
+end test

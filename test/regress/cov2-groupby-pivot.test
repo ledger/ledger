@@ -1,0 +1,43 @@
+; Test --group-by, --pivot, --meta options for report.cc coverage
+; Covers group_by_, pivot_, meta_ option handlers
+
+2024/01/01 Grocery Store
+    ; Category: food
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    ; Category: transport
+    Expenses:Gas             $20.00
+    Assets:Cash
+
+2024/01/03 Grocery Store
+    ; Category: food
+    Expenses:Food            $15.00
+    Assets:Cash
+
+; Test --group-by option (line 1295-1296)
+test reg Expenses --group-by payee
+Gas Station
+24-Jan-02 Gas Station           Expenses:Gas                 $20.00       $20.00
+
+Grocery Store
+24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+24-Jan-03 Grocery Store         Expenses:Food                $15.00       $25.00
+end test
+
+; Test --pivot option (line 1353)
+test bal Expenses --pivot Category
+              $45.00  Category
+              $25.00    food:Expenses:Food
+              $20.00    transport:Expenses:Gas
+--------------------
+              $45.00
+end test
+
+; Test --meta option (line 1328-1329)
+test reg Expenses --meta Category
+food24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+transport24-Jan-02 Gas Station           Expenses:Gas                 $20.00       $30.00
+food24-Jan-03 Grocery Store         Expenses:Food                $15.00       $45.00
+end test

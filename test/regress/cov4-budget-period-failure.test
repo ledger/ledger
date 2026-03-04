@@ -1,0 +1,17 @@
+; Test budget period find (lines 1363-1366 of filters.cc)
+; Exercise the budget_posts report_budget_items find_period path
+
+~ monthly
+    Expenses:Food    $100.00
+    Assets:Cash
+
+2024/01/01 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test budget --add-budget -b 2024/01/01 -e 2024/02/01
+     $-50.00     $-100.00       $50.00   50%  Assets:Cash
+      $50.00      $100.00      $-50.00   50%  Expenses:Food
+------------ ------------ ------------ -----
+           0            0            0     0
+end test

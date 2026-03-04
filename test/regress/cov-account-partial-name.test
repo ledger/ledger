@@ -1,0 +1,12 @@
+; Coverage test for account.cc line 242
+; get_partial_name triggered by partial_account in balance format
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --format "%(partial_account)\n"
+Assets:Cash
+Expenses:Food
+
+end test

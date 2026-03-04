@@ -1,0 +1,13 @@
+; Test auto xact cost derivation with ANNOTATION_PRICE_NOT_PER_UNIT and negative sign
+; Exercises lines 1125-1127 of xact.cc
+
+= Expenses:Energy
+    (Budget:Energy)    1
+
+2024/01/01 Sell energy
+    Expenses:Energy    -100 kWh {{72 EUR}} @@ 72 EUR
+    Assets:Cash        72 EUR
+
+test reg Budget:Energy
+24-Jan-01 Sell energy           (Budget:Energy)            -100 kWh     -100 kWh
+end test

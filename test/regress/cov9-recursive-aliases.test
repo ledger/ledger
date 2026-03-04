@@ -1,0 +1,14 @@
+; Test --recursive-aliases option
+; Covers session.cc line 107 (recursive_aliases)
+
+alias food=Expenses:Food
+alias groc=food
+
+2024/01/15 Test
+    groc    $50.00
+    Assets:Cash
+
+test reg --recursive-aliases
+24-Jan-15 Test                  Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+end test

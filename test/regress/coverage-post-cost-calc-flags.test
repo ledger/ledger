@@ -1,0 +1,13 @@
+; Coverage test for post.cc lines 137-143, 202-203, 230-238
+; Tests cost, calculated, cost_calculated, and use_direct_amount accessors.
+; The first posting has an explicit cost (@ price).
+; The second posting is auto-calculated (POST_CALCULATED flag).
+
+2024/03/01 Purchase
+    Expenses:Food     100 EUR @ $1.10
+    Assets:Cash
+
+test reg --format "%(cost) %(calculated) %(cost_calculated) %(use_direct_amount)\n"
+$110 false false false
+$-110 true false false
+end test

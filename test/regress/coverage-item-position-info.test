@@ -1,0 +1,10 @@
+; Coverage for item.cc lines 322-335: beg_pos, beg_line, end_pos, end_line
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(beg_line)-%(end_line) %(account)\n"
+4-4 Expenses:Food
+5-5 Assets:Cash
+end test

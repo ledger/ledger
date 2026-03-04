@@ -1,0 +1,7 @@
+2024/01/01 Test
+    Expenses:Food   $10.00
+    Assets:Cash
+
+test reg --format '%(top_amount(nail_down(to_sequence(amount), amount)))\n' Expenses
+$10.00
+end test

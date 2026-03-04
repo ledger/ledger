@@ -1,0 +1,20 @@
+; Tests for quotes.cc: getquote failure paths
+; Covers: line 68 (default getquote command when not set)
+;         line 76 (empty symbol quoting for exchange commodity)
+;         line 99-100 (pclose failure)
+;         line 120 (else branch / failure path / NOMARKET flag)
+
+P 2024/01/01 EUR $1.10
+
+2024/01/15 Test
+    Expenses  10 EUR
+    Assets
+
+; Test with failing getquote script - falls back to existing price
+; Exercises lines 99-100 (pclose failure) and 120 (else/NOMARKET path)
+test bal -X '$' -Q --getquote /usr/bin/false
+             $-11.00  Assets
+              $11.00  Expenses
+--------------------
+                   0
+end test

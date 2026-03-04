@@ -1,0 +1,19 @@
+; Coverage for session.cc line 303: check_payees option
+
+payee Store
+payee Restaurant
+
+2024/01/01 Store
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Restaurant
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test reg --check-payees
+24-Jan-01 Store                 Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Jan-02 Restaurant            Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test

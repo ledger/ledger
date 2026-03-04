@@ -1,0 +1,11 @@
+; Test format.cc lines 608-618: ABBREVIATE truncation path with
+; account_abbrev_length set via --abbrev-len
+
+2024/01/01 Test
+    Assets:Banking:Check:Register   $10.00
+    Income:Salary
+
+test reg --abbrev-len 3
+24-Jan-01 Test                  Ass:Bank:Chec:Register       $10.00       $10.00
+                                Income:Salary               $-10.00            0
+end test

@@ -1,0 +1,77 @@
+; Coverage tests for parser.cc error paths
+; L128: ! operator not followed by argument
+; L144: - operator not followed by argument
+; L298: and operator not followed by argument
+; L322: or operator not followed by argument
+; L345: ? operator not followed by argument
+; L353: : operator not followed by argument
+; L359: 'if' keyword not followed by argument
+; L365: 'else' keyword not followed by argument
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --display 'not' -> 1
+__ERROR__
+While parsing value expression:
+  not
+
+Error: ! operator not followed by argument
+end test
+
+test reg --display '-' -> 1
+__ERROR__
+While parsing value expression:
+  -
+
+Error: - operator not followed by argument
+end test
+
+test reg --display '1 and' -> 1
+__ERROR__
+While parsing value expression:
+  1 and
+
+Error: & operator not followed by argument
+end test
+
+test reg --display '1 or' -> 1
+__ERROR__
+While parsing value expression:
+  1 or
+
+Error: | operator not followed by argument
+end test
+
+test reg --display '1 ?' -> 1
+__ERROR__
+While parsing value expression:
+  1 ?
+
+Error: ? operator not followed by argument
+end test
+
+test reg --display '1 ? 2 :' -> 1
+__ERROR__
+While parsing value expression:
+  1 ? 2 :
+
+Error: : operator not followed by argument
+end test
+
+test reg --display '1 if' -> 1
+__ERROR__
+While parsing value expression:
+  1 if
+
+Error: 'if' keyword not followed by argument
+end test
+
+test reg --display '1 if 2 else' -> 1
+__ERROR__
+While parsing value expression:
+  1 if 2 else
+
+Error: 'else' keyword not followed by argument
+end test

@@ -1,0 +1,12 @@
+; Coverage test for report.cc lines 942-951
+; fn_commodity_price looks up a historical price for a commodity
+
+P 2024/01/01 AAPL $150.00
+
+2024/01/01 Buy stock
+    Assets:Brokerage    1 AAPL @ $150.00
+    Assets:Cash
+
+test reg --format "%(commodity_price(amount, date))\n" --limit "account =~ /Brokerage/"
+$150.00
+end test

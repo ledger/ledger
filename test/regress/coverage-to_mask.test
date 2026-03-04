@@ -1,0 +1,11 @@
+; Coverage test for report.cc fn_to_mask (line 1071)
+; Tests to_mask() function in format expressions
+
+2024/01/15 Test Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(account =~ to_mask(\"Food\") ? \"yes\" : \"no\")\n"
+yes
+no
+end test

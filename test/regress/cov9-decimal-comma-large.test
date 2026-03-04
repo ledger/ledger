@@ -1,0 +1,13 @@
+; Test European-style display with large amounts (thousands period separator)
+; Exercises amount.cc lines 216-218 (thousands period separator with
+; decimal comma style)
+
+commodity 1.000,00 EUR
+
+2024/01/01 Big purchase
+    Expenses:Equipment    1.234.567,89 EUR
+    Assets:Bank
+
+test bal --no-total Expenses
+    1.234.567,89 EUR  Expenses:Equipment
+end test

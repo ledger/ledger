@@ -1,0 +1,17 @@
+; Coverage test for post.cc line 187:
+; Exercise get_magnitude() which returns the transaction magnitude.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash     $-10.00
+
+2024/01/15 Big Purchase
+    Expenses:Electronics    $500.00
+    Assets:Cash            $-500.00
+
+test reg --format "%(magnitude) %(payee)\n"
+$10.00 Test
+$10.00 Test
+$500.00 Big Purchase
+$500.00 Big Purchase
+end test

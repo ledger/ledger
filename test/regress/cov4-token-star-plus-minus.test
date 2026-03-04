@@ -1,0 +1,11 @@
+; Test token parsing for STAR, PLUS, MINUS tokens (lines 321-329 of token.cc)
+; Exercise arithmetic operator tokens
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(amount * 2 + {\$5} - {\$1})\n"
+$24.00
+$-16.00
+end test

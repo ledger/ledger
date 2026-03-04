@@ -1,0 +1,17 @@
+; Coverage tests for post.cc accessor functions
+; Covers lines: 170 (get_payee), 197 (get_amount null), 236 (get_cost null),
+; 243 (get_price null), 254 (get_total null), 263 (get_count no xdata)
+
+2024/01/01 My Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+; Test get_payee - covers post.cc line 170
+test reg --format "%(payee)\n" Expenses
+My Payee
+end test
+
+; Test get_count when no xdata - covers post.cc line 263
+test reg --format "%(N)\n" --limit "N == 1" Expenses
+1
+end test

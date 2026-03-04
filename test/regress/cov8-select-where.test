@@ -1,0 +1,15 @@
+; Coverage test for select.cc additional branches:
+; Exercise select with where clause for field validation.
+
+2024/01/01 Test One
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/15 Test Two
+    Expenses:Gas     $20.00
+    Assets:Cash
+
+test select date, account, amount where account =~ /Expenses/
+24-Jan-01 Expenses:Food                                                  $10.00
+24-Jan-15 Expenses:Gas                                                   $20.00
+end test

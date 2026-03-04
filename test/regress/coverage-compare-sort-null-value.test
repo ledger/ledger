@@ -1,0 +1,11 @@
+; Coverage for compare.cc line 62: null sort value error
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --sort "tag('nonexistent')" -> 1
+__ERROR__
+While applying is_realzero to :
+Error: Cannot determine if an uninitialized value is really zero
+end test

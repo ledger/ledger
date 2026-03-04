@@ -1,0 +1,14 @@
+; Test session int() and str() functions
+; Covers session.cc lines 266-271 (fn_int, fn_str)
+
+2024/01/01 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg --format="%(int(display_amount))\n" Expenses
+50
+end test
+
+test reg --format="%(str(display_amount))\n" Expenses
+$50.00
+end test

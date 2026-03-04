@@ -1,0 +1,18 @@
+; Coverage test for op.cc lines 519-523: exception handling in calc_call
+; A function call with wrong argument type triggers the catch block
+; which adds error context about the function name and arguments
+
+2024/01/15 Test Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(quantity(\"hello\"))\n" -> 1
+__ERROR__
+While evaluating value expression:
+  quantity("hello")
+  ^^^^^^^^^^^^^^^^^
+While calling function 'quantity hello':
+While handling posting from "$FILE", line 6:
+>     Expenses:Food    $10.00
+Error: No quantity specified for amount
+end test

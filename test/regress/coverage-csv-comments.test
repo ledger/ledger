@@ -1,0 +1,11 @@
+; Coverage test for csv.cc line 83:
+; CSV comment lines (# prefix) are skipped by next_line()
+
+account Expenses:Unknown
+account Assets:Checking
+
+test convert test/regress/coverage-csv-comments-data.csv --input-date-format "%Y/%m/%d" --account Assets:Checking
+2024/01/15 * Grocery Store
+    Expenses:Unknown                              50
+    Assets:Checking
+end test

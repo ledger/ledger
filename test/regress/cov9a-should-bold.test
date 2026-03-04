@@ -1,0 +1,11 @@
+; Coverage test for report.cc lines 615-620
+; fn_should_bold returns true/false based on --bold-if expression
+; Testing the else branch (no --bold-if) returns false
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(should_bold)\n" --limit "account =~ /Expenses/"
+false
+end test

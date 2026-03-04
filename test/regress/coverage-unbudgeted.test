@@ -1,0 +1,19 @@
+; Coverage for filters.cc lines 1426-1440 (unbudgeted budget path)
+; and line 1427 (BUDGET_WRAP_VALUES flag for unbudgeted posts)
+; The --unbudgeted flag shows only posts not matching any budget.
+
+~ Monthly
+    Expenses:Food    $100.00
+    Assets:Cash
+
+2024/01/01 Grocery
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/01/02 Transport
+    Expenses:Transport    $30.00
+    Assets:Cash
+
+test --unbudgeted budget
+      $30.00                    $30.00     0  Expenses:Transport
+end test

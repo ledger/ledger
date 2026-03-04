@@ -1,0 +1,30 @@
+; Coverage for times.cc lines 515-523: TOK_SLASH and TOK_DOT in token dump
+; The "period" command outputs token types, exercising the dump() method
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test period "monthly / since 2024" -> 1
+--- Period expression tokens ---
+TOK_MONTHLY: monthly
+TOK_SLASH: /
+TOK_SINCE: since
+TOK_INT: 2024
+END_REACHED: <EOF>
+
+__ERROR__
+Error: Unexpected date period token '/'
+end test
+
+test period "monthly . since 2024" -> 1
+--- Period expression tokens ---
+TOK_MONTHLY: monthly
+TOK_DOT: .
+TOK_SINCE: since
+TOK_INT: 2024
+END_REACHED: <EOF>
+
+__ERROR__
+Error: Unexpected date period token '.'
+end test

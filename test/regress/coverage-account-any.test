@@ -1,0 +1,22 @@
+; Coverage test for account.cc fn_any (L373-383).
+; In balance context, any(expr) checks if any posting of the account
+; matches the expression. Also exercises fn_all (L385-395).
+
+2024/01/01 Grocery
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Gas     $30.00
+    Assets:Cash
+
+2024/01/03 Grocery
+    Expenses:Food    $5.00
+    Assets:Cash
+
+test bal --limit "any(amount > 20)"
+             $-30.00  Assets:Cash
+              $30.00  Expenses:Gas
+--------------------
+                   0
+end test

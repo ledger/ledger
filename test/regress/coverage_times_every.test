@@ -1,0 +1,36 @@
+; Coverage test for times.cc handle_every_token paths
+; and "N units ago/hence" in determine_when
+
+2000/01/01 Ancient Transaction
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --period "every 2 years"
+end test
+
+test reg --period "every 3 quarters"
+end test
+
+test reg --period "every 2 months"
+end test
+
+test reg --period "every 2 weeks"
+end test
+
+test reg --period "every 3 days"
+end test
+
+test reg --period "every year"
+end test
+
+test reg --period "every quarter"
+end test
+
+test reg --period "every month"
+end test
+
+test reg --period "every week"
+end test
+
+test reg --period "every day"
+end test

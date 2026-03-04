@@ -1,0 +1,10 @@
+; Test percent * percent keeps % commodity
+; Covers amount.cc lines 489-490 (% commodity propagation in multiply)
+
+2024/01/15 Test
+    Expenses:Food    19.00%
+    Assets:Cash
+
+test reg --format="%(display_amount * 19.00%)\n" Expenses
+3.61%
+end test

@@ -1,0 +1,11 @@
+; Test get_use_direct_amount (line 202-204 of post.cc)
+; Exercise the direct amount flag check
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(use_direct_amount)\n"
+false
+false
+end test

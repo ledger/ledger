@@ -1,0 +1,25 @@
+; Coverage test for post.cc get_display_account (L309-321).
+; Balanced virtual postings are wrapped in [] (L314-315),
+; unbalanced virtual postings are wrapped in () (L316-317).
+; Non-virtual postings are shown without wrapping.
+
+2024/01/01 Test
+    Expenses:Food         $10.00
+    Assets:Cash
+    [Savings:Reserve]     $10.00
+    [Savings:Reserve2]   -$10.00
+
+2024/01/02 Test2
+    (Virtual:Budget)      $30.00
+    Expenses:Gas          $30.00
+    Assets:Cash
+
+test reg --format "%(display_account)|%(virtual)|%(account)\n"
+Expenses:Food|false|Expenses:Food
+Assets:Cash|false|Assets:Cash
+[Savings:Reserve]|true|Savings:Reserve
+[Savings:Reserve2]|true|Savings:Reserve2
+(Virtual:Budget)|true|Virtual:Budget
+Expenses:Gas|false|Expenses:Gas
+Assets:Cash|false|Assets:Cash
+end test

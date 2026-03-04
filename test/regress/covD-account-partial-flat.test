@@ -1,0 +1,12 @@
+; Test get_partial_name with flat=true argument
+; Covers account.cc line 242 (get_partial_name with bool arg)
+
+2024/01/15 Test
+    Expenses:Food:Groceries    $50.00
+    Assets:Cash
+
+test bal --flat --format="%(partial_account(true)) %(total)\n"
+Assets:Cash $-50.00
+Expenses:Food:Groceries $50.00
+ 0
+end test

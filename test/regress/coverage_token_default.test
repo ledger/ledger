@@ -1,0 +1,15 @@
+; Coverage test for token.cc line 122
+; Identifier starting with 'd' hits default case in parse_reserved_word
+
+2024/01/01 Test Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/02/01 Test Payee 2
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test reg --limit "date >= [2024/02/01]"
+24-Feb-01 Test Payee 2          Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test

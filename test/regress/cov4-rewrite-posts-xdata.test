@@ -1,0 +1,19 @@
+; Test rewrite_posts xdata copy (line 1652 of filters.cc)
+; Exercise the account rewrite with xdata flag copy path
+
+account-rewrite Expenses:Food  Expenses:Dining
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Test2
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test bal
+             $-30.00  Assets:Cash
+              $30.00  Expenses:Dining
+--------------------
+                   0
+end test

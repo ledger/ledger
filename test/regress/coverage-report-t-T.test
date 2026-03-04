@@ -1,0 +1,7 @@
+2024/01/01 Test
+    Expenses:Food   $10.00
+    Assets:Cash
+
+test reg --format '%(t) %(T)\n' Expenses:Food
+$10.00 $10.00
+end test

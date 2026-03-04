@@ -1,0 +1,12 @@
+; Coverage test for session.cc line 267
+; Tests fn_int function - converting values to integers
+; Ensures the int() function is accessible and works
+
+2024/01/01 Test
+    Expenses:Food    $10.50
+    Assets:Cash
+
+test reg --amount "int(amount)"
+24-Jan-01 Test                  Expenses:Food                    10           10
+                                Assets:Cash                     -10            0
+end test

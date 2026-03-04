@@ -1,0 +1,11 @@
+; Test token parsing for QUERY (?) and COLON (:) tokens (lines 331-338 of token.cc)
+; Exercise the ternary operator ? : path
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(amount > 0 ? 'debit' : 'credit')\n"
+debit
+credit
+end test

@@ -1,0 +1,12 @@
+; Test session with master account
+; Covers session.cc lines 86-87 (master_account non-empty path)
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test bal --master-account Business --no-total
+                   0  Business
+             $-50.00    Assets:Cash
+              $50.00    Expenses:Food
+end test

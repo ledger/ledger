@@ -1,0 +1,16 @@
+; Coverage test for expr.cc lines 152-156, 181-182
+; Tests the expression error handler path in real_calc()
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg -d "undefined_func()" -> 1
+__ERROR__
+While evaluating value expression:
+  undefined_func()
+  ^^^^^^^^^^^^^^^^
+While handling posting from "$FILE", line 5:
+>     Expenses:Food    $10.00
+Error: Unknown identifier 'undefined_func'
+end test

@@ -1,0 +1,11 @@
+; Coverage for post.cc lines 542, 557: xact_id() and account_id()
+; Use xact_id and account_id in format expressions
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(xact_id) %(account_id) %(account)\n"
+1 1 Expenses:Food
+2 1 Assets:Cash
+end test

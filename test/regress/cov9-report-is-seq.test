@@ -1,0 +1,11 @@
+; Coverage test for report.cc line 735: fn_is_seq
+; Test is_seq() which checks if a value is a sequence type.
+; A simple amount is not a sequence, so returns false.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg Expenses --format '%(is_seq(amount))\n'
+false
+end test

@@ -1,0 +1,11 @@
+; Test value_date accessor via item lookup (lines 513-514 of item.cc)
+; Exercise the value_date lookup in item
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(value_date) %(account)\n"
+2024/01/01 Expenses:Food
+2024/01/01 Assets:Cash
+end test

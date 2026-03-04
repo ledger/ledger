@@ -1,0 +1,27 @@
+; Coverage test for times.cc line 1608-1609
+; Exercise period dump with no duration (just a date range)
+; This hits the "if (!duration) break" path in dump()
+
+2024/01/01 Test
+    Expenses:Food            $10.00
+    Assets:Cash
+
+test period "since 2024/01/01 until 2024/12/31"
+--- Period expression tokens ---
+TOK_SINCE: since
+TOK_DATE:  year 2024 month Jan day 1
+TOK_UNTIL: until
+TOK_DATE:  year 2024 month Dec day 31
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2024 month Jan day 1 to year 2024 month Dec day 31
+
+--- After stabilization ---
+   range: from year 2024 month Jan day 1 to year 2024 month Dec day 31
+   start: 24-Jan-01
+  finish: 24-Dec-31
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jan-01
+end test

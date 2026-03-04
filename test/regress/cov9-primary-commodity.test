@@ -1,0 +1,15 @@
+; Coverage test for post.cc line 254 (get_commodity_is_primary):
+; Exercise the primary commodity flag via the primary expression.
+
+commodity $
+    note US Dollar
+    default
+
+2024/01/01 Purchase
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(primary) %(commodity) %(amount)\n"
+false $ $10.00
+false $ $-10.00
+end test

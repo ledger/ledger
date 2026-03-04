@@ -1,0 +1,11 @@
+; Coverage for post.cc lines 244-245 (get_price with annotation)
+; and lines 226-228 (get_has_cost, get_cost with cost)
+; Tests price extraction from annotated amounts.
+
+2024/01/01 Buy
+    Assets:Brokerage    10 AAPL @ $150.00
+    Assets:Cash
+
+test reg Assets:Brokerage --format "%(has_cost) %(price)\n"
+true $1500
+end test

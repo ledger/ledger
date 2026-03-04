@@ -1,0 +1,26 @@
+; Coverage test for times.cc lines 1108-1109
+; Exercise "every N quarters" period parsing
+; Also covers TOK_QUARTERS in handle_every_token
+
+2024/01/01 Test Q1
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/04/01 Test Q2
+    Expenses:Food            $20.00
+    Assets:Cash
+
+2024/07/01 Test Q3
+    Expenses:Food            $30.00
+    Assets:Cash
+
+2024/10/01 Test Q4
+    Expenses:Food            $40.00
+    Assets:Cash
+
+test reg Expenses --period "every 1 quarters"
+24-Jan-01 - 24-Mar-31           Expenses:Food                $10.00       $10.00
+24-Apr-01 - 24-Jun-30           Expenses:Food                $20.00       $30.00
+24-Jul-01 - 24-Sep-30           Expenses:Food                $30.00       $60.00
+24-Oct-01 - 24-Dec-31           Expenses:Food                $40.00      $100.00
+end test

@@ -1,0 +1,26 @@
+; Coverage for report.cc lines 1169,1199,1202,1214: short option lookup
+; -F (format), -S (sort), -T (total), -X (exchange)
+
+P 2024/01/01 EUR '$1.10'
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/15 Brunch
+    Expenses:Dining    $25.00
+    Assets:Cash
+
+test reg Expenses -F "%(payee)\n"
+Test
+Brunch
+end test
+
+test reg Expenses -S payee
+24-Jan-15 Brunch                Expenses:Dining              $25.00       $25.00
+24-Jan-01 Test                  Expenses:Food                $10.00       $35.00
+end test
+
+test reg Expenses:Food -T "amount * 2"
+24-Jan-01 Test                  Expenses:Food                $10.00       $20.00
+end test

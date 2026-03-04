@@ -1,0 +1,19 @@
+; Coverage for xact.cc line 1037 (check warning in auto_xact)
+; When a check expression evaluates to false, a warning is issued
+; but processing continues.
+
+= Expenses
+    check amount < 0
+    (Budget)    -1
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+                                (Budget)                    $-10.00      $-10.00
+__ERROR__
+Warning: "$FILE", line 11: Transaction check failed: (amount < {0})
+end test

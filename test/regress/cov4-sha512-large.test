@@ -1,0 +1,24 @@
+; Test sha512 processing with larger input (lines 325-351 of sha512.cc)
+; Exercise the SHA512 update with data spanning multiple blocks
+; by using --hashes with sha512_half option
+
+2024/01/01 Test1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Test2
+    Expenses:Auto    $20.00
+    Assets:Cash
+
+2024/01/03 Test3
+    Expenses:Other   $30.00
+    Assets:Cash
+
+test reg --hashes sha512_half
+24-Jan-01 Test1                 Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Jan-02 Test2                 Expenses:Auto                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+24-Jan-03 Test3                 Expenses:Other               $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test

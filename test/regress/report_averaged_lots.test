@@ -1,0 +1,19 @@
+; Test fn_averaged_lots, fn_fifo_lots, fn_lifo_lots with non-balance (amount)
+; arguments to exercise the else branches that return args[0] directly.
+; Lines 626, 633, 640 of report.cc
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg Expenses --format "%(averaged_lots(amount))\n"
+$10.00
+end test
+
+test reg Expenses --format "%(fifo_lots(amount))\n"
+$10.00
+end test
+
+test reg Expenses --format "%(lifo_lots(amount))\n"
+$10.00
+end test

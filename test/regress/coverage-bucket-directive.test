@@ -1,22 +1,14 @@
-; Test bucket / A directive
+; Test textual_directives.cc lines 808-811: bucket directive
+; in general_directive case b
 
-bucket Assets:Checking
+bucket Assets:Cash
 
-2024/01/01 Payee
-    Expenses:Food    $10.00
-
-A Assets:Savings
-
-2024/01/02 Payee2
-    Expenses:Rent    $500.00
+2024/01/01 Test
+    Expenses:Food   $10.00
 
 test bal
-            $-510.00  Assets
-             $-10.00    Checking
-            $-500.00    Savings
-             $510.00  Expenses
-              $10.00    Food
-             $500.00    Rent
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
 --------------------
                    0
 end test

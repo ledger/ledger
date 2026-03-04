@@ -1,0 +1,11 @@
+; Coverage: account.cc line 257 - get_account returns scope_value
+; parent.total chains account scope into total lookup
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --format "%(parent.total)\n" --no-total
+$-10.00
+$10.00
+end test

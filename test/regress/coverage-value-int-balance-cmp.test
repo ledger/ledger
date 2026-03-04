@@ -1,0 +1,12 @@
+; Coverage for value.cc: INTEGER vs BALANCE comparison in is_greater_than
+; display_total is a balance, comparing against integer 15 exercises
+; the BALANCE comparison path in is_greater_than
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Expenses:Rent    $20.00
+    Assets:Checking
+
+test reg Expenses --display "display_total > 15"
+24-Jan-01 Test                  Expenses:Rent                $20.00       $30.00
+end test

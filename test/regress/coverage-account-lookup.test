@@ -1,0 +1,20 @@
+; Coverage test for account.cc lookup switch cases.
+; Exercises the 'h' case (L442-445, has_children_to_display),
+; 'n' case (L467-472, note), 'N' case (L496-499), 'O' case (L501-504),
+; 'e' case (L435-440, earliest), and other lookup branches.
+
+2024/01/01 Grocery
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Gas     $30.00
+    Assets:Cash
+
+test bal --format "%(has_children_to_display ? 'Y' : 'N') %(account)\n"
+N Assets:Cash
+Y Expenses
+N Expenses:Food
+N Expenses:Gas
+Y 
+end test

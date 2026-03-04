@@ -1,0 +1,16 @@
+; Coverage for value.cc lines 706-714: amount divided by single-amount balance
+; When display_total is a balance with a single commodity, dividing an amount
+; by it triggers the balance simplification path in operator/=
+
+2024/01/01 Test
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/02 Test2
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg Expenses --format "%(amount / display_total)\n"
+$1.00
+$0.50
+end test

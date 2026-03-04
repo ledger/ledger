@@ -1,0 +1,20 @@
+; Coverage for value.cc: sequence handling in budget reports
+; Budget reports create SEQUENCE values (budget amount paired with actual)
+; Display rounding on sequences exercises lines 1782-1784, 1805-1807
+
+~ Monthly
+    Expenses:Food    $300.00
+    Expenses:Rent    $1000.00
+    Assets:Checking
+
+2024/01/01 Test
+    Expenses:Food    $250.00
+    Assets:Checking
+
+2024/01/15 Test2
+    Expenses:Rent    $1000.00
+    Assets:Checking
+
+test bal --budget Expenses --begin 2024/01/01 --end 2024/02/01
+             $-50.00  Expenses:Food
+end test

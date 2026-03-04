@@ -1,0 +1,12 @@
+; Coverage test for select.cc lines 351-354:
+; Exercise select from xacts (transactions format).
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Cash
+
+test select date, payee, account, amount from xacts
+2024/01/01 Grocery Store
+    Expenses:Food                             $25.00
+    Assets:Cash
+end test

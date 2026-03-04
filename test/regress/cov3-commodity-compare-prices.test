@@ -1,0 +1,20 @@
+; Test commodity comparison with different price currencies
+; Covers commodity.cc lines 418-431 (compare_by_commodity with price disparity)
+
+2024/01/01 Buy Stock A
+    Assets:Brokerage    10 AAPL {$150}
+    Assets:Cash
+
+2024/01/01 Buy Stock B
+    Assets:Brokerage    10 AAPL {EUR 140}
+    Assets:Cash
+
+2024/01/02 Buy Stock C
+    Assets:Brokerage    5 AAPL {$155}
+    Assets:Cash
+
+test bal --lots Assets:Brokerage
+      10 AAPL {$150}
+       5 AAPL {$155}
+    10 AAPL {EUR140}  Assets:Brokerage
+end test

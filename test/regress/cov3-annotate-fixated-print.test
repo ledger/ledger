@@ -1,0 +1,21 @@
+; Test print with fixated price annotations
+; Covers annotate.cc lines 121-124, 196 (ANNOTATION_PRICE_FIXATED flag)
+; and annotate.cc print path lines 239 (fixated output)
+
+2024/01/01 Buy Stock
+    Assets:Brokerage    10 AAPL {=$150.00}
+    Assets:Cash
+
+2024/02/01 More Stock
+    Assets:Brokerage    5 AAPL {=$155.00}
+    Assets:Cash
+
+test print
+2024/01/01 Buy Stock
+    Assets:Brokerage                    10 AAPL {=$150}
+    Assets:Cash
+
+2024/02/01 More Stock
+    Assets:Brokerage                    5 AAPL {=$155}
+    Assets:Cash
+end test

@@ -1,0 +1,10 @@
+; Coverage for item.cc line 343: get_addr and seq
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(seq)\n"
+2
+3
+end test

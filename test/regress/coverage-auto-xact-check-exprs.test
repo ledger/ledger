@@ -1,0 +1,23 @@
+; Coverage for xact.cc lines 1029-1038 (check_exprs in auto_xact)
+; Tests assert, check, and eval expressions in auto transactions.
+
+= Expenses:Food
+    assert amount > 0
+    (Budget:Food)    -1
+
+= Expenses:Rent
+    check amount > 0
+    (Budget:Rent)    -1
+
+2024/01/01 Grocery
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Landlord
+    Expenses:Rent    $500.00
+    Assets:Cash
+
+test reg Budget
+24-Jan-01 Grocery               (Budget:Food)               $-10.00      $-10.00
+24-Jan-02 Landlord              (Budget:Rent)              $-500.00     $-510.00
+end test

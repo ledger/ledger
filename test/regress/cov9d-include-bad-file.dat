@@ -1,0 +1,5 @@
+; Bad file that will cause a parse error
+2024/01/15 Test
+    Expenses:Food
+    Expenses:Rent
+    Assets:Cash

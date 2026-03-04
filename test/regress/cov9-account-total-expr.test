@@ -1,0 +1,13 @@
+; Coverage for account.cc line 690: total with non-null temp
+
+2024/01/01 Test
+    Expenses:Food:Grocery    $10.00
+    Expenses:Food:Dining     $20.00
+    Assets:Cash
+
+test bal Expenses --flat
+              $20.00  Expenses:Food:Dining
+              $10.00  Expenses:Food:Grocery
+--------------------
+              $30.00
+end test

@@ -1,0 +1,19 @@
+; Coverage for history.cc lines 232-243: alias_commodity
+; Tests the case where old commodity has no graph index (returns early)
+; and normal alias behavior
+
+commodity $
+    note US Dollar
+    format $1,000.00
+
+P 2024/01/01 AAPL $150.00
+P 2024/01/01 GOOG $100.00
+
+2024/01/01 Buy
+    Assets:Stock    10 AAPL
+    Assets:Cash
+
+test reg --market -X $
+24-Jan-01 Buy                   Assets:Stock              $1,500.00    $1,500.00
+                                Assets:Cash              $-1,500.00            0
+end test

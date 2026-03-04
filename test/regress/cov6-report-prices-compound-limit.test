@@ -1,0 +1,15 @@
+; Coverage for report.cc line 528: compound limit rebuild in commodities_report
+; When prices command has both state predicates (--cleared) and multiple
+; non-state limit terms, the limit is decomposed and rebuilt
+
+P 2024/01/01 EUR $1.10
+P 2024/02/01 EUR $1.20
+
+2024/01/01 Test
+    Expenses:Food    10 EUR
+    Assets:Cash
+
+test prices --cleared -l "amount > 0" -l "date >= [2024]"
+2024/01/01 EUR             $1.10
+2024/02/01 EUR             $1.20
+end test

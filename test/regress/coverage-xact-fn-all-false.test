@@ -1,0 +1,8 @@
+; Test xact.cc: fn_all returns false (line 808) when not all match
+
+2024/01/10 Groceries
+    Expenses:Food       $50.00
+    Assets:Cash
+
+test reg --limit "all(account =~ /Expenses/)"
+end test

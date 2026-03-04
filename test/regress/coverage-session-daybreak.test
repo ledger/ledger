@@ -1,0 +1,17 @@
+; Coverage for session.cc lines 103-104: day_break option
+; --day-break sets journal->day_break to true
+
+2024/01/01 Test1
+    Expenses:Food    $10.00
+    Assets:Checking
+
+2024/01/02 Test2
+    Expenses:Rent    $20.00
+    Assets:Checking
+
+test --day-break reg
+24-Jan-01 Test1                 Expenses:Food                $10.00       $10.00
+                                Assets:Checking             $-10.00            0
+24-Jan-02 Test2                 Expenses:Rent                $20.00       $20.00
+                                Assets:Checking             $-20.00            0
+end test

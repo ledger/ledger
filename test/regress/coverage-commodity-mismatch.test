@@ -1,0 +1,17 @@
+; Tests for commodity.cc: downloaded quote commodity mismatch
+; Covers: line 212 (quote returned but commodity doesn't match in_terms_of)
+; The getquote script returns a GBP-denominated price when $ is expected,
+; so the quote is rejected and the old cached price ($1.05) is used instead.
+
+P 2020/01/01 EUR $1.05
+
+2024/01/15 Test
+    Expenses  10 EUR
+    Assets
+
+test bal -X '$' -Q --getquote $sourcepath/test/scripts/getquote-wrong-commodity.sh -> 0
+             $-10.50  Assets
+              $10.50  Expenses
+--------------------
+                   0
+end test

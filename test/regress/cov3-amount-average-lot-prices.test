@@ -1,0 +1,14 @@
+; Test --average-lot-prices flag
+; Covers amount.cc averaged lots merging
+
+2024/01/15 Buy lot 1
+    Assets:Stocks    10 AAPL {$150}
+    Assets:Cash
+
+2024/02/20 Buy lot 2
+    Assets:Stocks    5 AAPL {$160}
+    Assets:Cash
+
+test bal --average-lot-prices --no-total Assets:Stocks
+15 AAPL {$153.333333}  Assets:Stocks
+end test

@@ -1,0 +1,13 @@
+; Coverage test for format.cc lines 363-382
+; Test --force-color output path triggering ansify_if colorization.
+; The register format with --force-color wraps account names and amounts
+; in ANSI color codes, exercising the colorize path in parse_elements.
+
+2024/01/01 Groceries
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --force-color
+24-Jan-01 [1mGroceries            [0m [34mExpenses:Food         [0m       $10.00       $10.00
+                                [34mAssets:Cash           [0m      [31m$-10.00[0m            0
+end test

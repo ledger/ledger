@@ -1,0 +1,11 @@
+; Coverage test for report.cc lines 1079-1111
+; Color name functions: fn_black, fn_blink, fn_blue, fn_bold,
+; fn_cyan, fn_green, fn_magenta, fn_red, fn_underline, fn_white, fn_yellow
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(black) %(blink) %(blue) %(bold) %(cyan) %(green) %(magenta) %(red) %(underline) %(white) %(yellow)\n" --limit "account =~ /Expenses/"
+black blink blue bold cyan green magenta red underline white yellow
+end test

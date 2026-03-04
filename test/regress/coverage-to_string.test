@@ -1,0 +1,11 @@
+; Coverage test for report.cc fn_to_string (line 1067)
+; Tests to_string() function in format expressions
+
+2024/01/15 Test Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(to_string(amount))\n"
+$10.00
+$-10.00
+end test

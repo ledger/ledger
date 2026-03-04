@@ -1,0 +1,47 @@
+; Coverage: commodity.cc put_commodity function for xml output
+; Exercises COMMODITY_STYLE_THOUSANDS flag 'T' in xml output
+
+2024/01/01 Test
+    Expenses:Food    $1,234.56
+    Assets:Cash
+
+test xml Expenses:Food --no-pager
+<?xml version="1.0" encoding="UTF-8"?>
+<ledger version="196865">
+<commodities>
+<commodity flags="PST">
+  <symbol>$</symbol>
+</commodity>
+</commodities>
+<transactions>
+<transaction id="">
+  <date>2024/01/01</date>
+  <payee>Test</payee>
+  <postings>
+  <posting id="" state="uncleared">
+    <account ref="">
+      <name>Expenses:Food</name>
+      <fullname>Expenses:Food</fullname>
+    </account>
+    <post-amount>
+      <amount>
+        <commodity flags="PST">
+          <symbol>$</symbol>
+        </commodity>
+        <quantity>1234.56</quantity>
+      </amount>
+    </post-amount>
+    <total>
+      <amount>
+        <commodity flags="PST">
+          <symbol>$</symbol>
+        </commodity>
+        <quantity>1234.56</quantity>
+      </amount>
+    </total>
+  </posting>
+  </postings>
+</transaction>
+</transactions>
+</ledger>
+end test

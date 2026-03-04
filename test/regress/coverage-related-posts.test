@@ -1,0 +1,10 @@
+; Coverage for filters.cc related_posts path
+; The --related flag shows the other side of matching postings.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg Expenses --related
+24-Jan-01 Test                  Assets:Cash                 $-10.00      $-10.00
+end test

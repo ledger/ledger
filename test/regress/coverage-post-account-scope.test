@@ -1,0 +1,12 @@
+; Coverage test for post.cc get_account L301-302: account() returning
+; scope_value(&account) when called with no args in SCOPE context.
+; Using %(account.X) in register format resolves account as a scope.
+
+2024/01/01 Grocery
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(account.depth)|%(account.account_base)|%(account)\n"
+2|Food|Expenses:Food
+2|Cash|Assets:Cash
+end test

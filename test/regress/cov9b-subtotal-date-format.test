@@ -1,0 +1,15 @@
+; Coverage for filters.cc lines 966-967: subtotal_posts report_subtotal
+; with date_format set (the else-if branch using date_format)
+
+2024/01/05 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Cash
+
+2024/01/20 Restaurant
+    Expenses:Food    $45.00
+    Assets:Cash
+
+test reg --subtotal --date-format "%Y-%m-%d"
+2024-01-05 - 2024-01-20         Assets:Cash                 $-70.00      $-70.00
+                                Expenses:Food                $70.00            0
+end test

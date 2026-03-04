@@ -1,0 +1,10 @@
+; Coverage test for report.cc lines 953-956
+; fn_set_commodity_price sets a price for a commodity
+
+2024/01/01 Test
+    Expenses:Food    1 AAPL
+    Assets:Cash   $-150.00
+
+test reg --format "%(set_commodity_price(amount, now, amount))OK\n" --limit "account =~ /Expenses/"
+OK
+end test

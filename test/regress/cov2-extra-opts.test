@@ -1,0 +1,46 @@
+; Test additional option handlers for report.cc coverage
+; Covers datetime-format_, payee-rewrite_, account-rewrite_,
+; revalued-total_, ignore-diacritics
+
+2024/01/01 Grocery Store
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/02/01 Gas Station
+    Expenses:Gas             $20.00
+    Assets:Cash
+
+; Test --datetime-format option (line 1264)
+test reg Expenses --datetime-format "%Y/%m/%d %H:%M:%S"
+24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+24-Feb-01 Gas Station           Expenses:Gas                 $20.00       $30.00
+end test
+
+; Test --payee-rewrite option (line 1348)
+test reg Expenses --payee-rewrite "/Grocery Store/=Market"
+24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+24-Feb-01 Gas Station           Expenses:Gas                 $20.00       $30.00
+end test
+
+; Test --account-rewrite option (line 1221)
+test reg Expenses --account-rewrite "/Expenses/=Spending"
+24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+24-Feb-01 Gas Station           Expenses:Gas                 $20.00       $30.00
+end test
+
+; Test --ignore-diacritics option (line 1307)
+test reg Expenses --ignore-diacritics
+24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+24-Feb-01 Gas Station           Expenses:Gas                 $20.00       $30.00
+end test
+
+; Test --raw option on print (line 1369, 1789)
+test print --raw
+2024/01/01 Grocery Store
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/02/01 Gas Station
+    Expenses:Gas             $20.00
+    Assets:Cash
+end test

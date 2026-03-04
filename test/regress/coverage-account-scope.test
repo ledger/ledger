@@ -1,0 +1,18 @@
+; Coverage test for account.cc get_account L257: account() returning
+; scope_value(&account) when called with no args in SCOPE context.
+; Using %(account.X) in balance format resolves account as a scope first.
+
+2024/01/01 Grocery
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Gas     $30.00
+    Assets:Cash
+
+test bal --no-total --format "%(account.depth) %(account.account_base) %(total)\n"
+2 Cash $-40.00
+1 Expenses $40.00
+2 Food $10.00
+2 Gas $30.00
+end test

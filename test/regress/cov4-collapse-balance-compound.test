@@ -1,0 +1,16 @@
+; Test collapse handle_value with BALANCE/SEQUENCE type (lines 375-379 of filters.cc)
+; Exercise the compound value path in handle_value by collapsing same-day xacts
+
+2024/01/01 Test1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/01 Test2
+    Expenses:Food    10 EUR
+    Assets:Cash     $-11.00
+
+test reg --collapse Expenses
+24-Jan-01 Test1                 Expenses:Food                $10.00       $10.00
+24-Jan-01 Test2                 Expenses:Food                10 EUR       $10.00
+                                                                          10 EUR
+end test

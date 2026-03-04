@@ -1,0 +1,11 @@
+; Coverage test for select.cc lines 54-56, 184, 256:
+; Exercise select with aux_date field.
+
+2024/01/01=2024/02/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test select date, aux_date, account, amount
+24-Jan-01 24-Feb-01 Expenses:Food                                        $10.00
+24-Jan-01 24-Feb-01 Assets:Cash                                         $-10.00
+end test

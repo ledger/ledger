@@ -1,0 +1,17 @@
+; Coverage for annotate.cc lines 160-163: break when annotation sees (@
+; The annotation parser encounters ( then @, breaks to let posting parser
+; handle the virtual cost syntax
+
+2024/01/01 Buy Stock
+    Assets:Brokerage    10 AAPL {$100.00} (@) $150.00
+    Assets:Cash
+
+test bal
+              $-1000
+             10 AAPL  Assets
+             10 AAPL    Brokerage
+              $-1000    Cash
+--------------------
+              $-1000
+             10 AAPL
+end test

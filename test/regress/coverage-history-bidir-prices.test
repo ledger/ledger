@@ -1,0 +1,16 @@
+; Coverage for history.cc line 319: map_prices bidirectional conversion
+; Tests revaluation over time with changing price points
+
+P 2024/01/01 EUR $1.10
+P 2024/02/01 EUR $1.12
+P 2024/03/01 EUR $1.08
+
+2024/01/15 European Travel
+    Expenses:Travel    500 EUR
+    Assets:Checking
+
+test reg --market --exchange '$' Expenses --now 2024/04/01
+24-Jan-15 European Travel       Expenses:Travel             $550.00      $550.00
+24-Feb-01 Commodities revalued  <Revalued>                   $10.00      $560.00
+24-Mar-01 Commodities revalued  <Revalued>                  $-20.00      $540.00
+end test

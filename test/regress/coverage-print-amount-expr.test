@@ -1,0 +1,11 @@
+; Coverage for print.cc line 58: print with amount expression post
+
+2024/01/01 Test
+    Expenses:Food    (10 * 2)
+    Assets:Cash
+
+test print
+2024/01/01 Test
+    Expenses:Food                           (10 * 2)
+    Assets:Cash
+end test

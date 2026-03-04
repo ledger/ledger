@@ -1,0 +1,19 @@
+; Test cons and sequence expressions to cover op.cc calc_cons, calc_seq
+2024/01/01 Test
+    Expenses:Food              $10.00
+    Assets:Checking
+
+; Cons expression builds a list
+test eval "1, 2, 3"
+(1, 2, 3)
+end test
+
+; Sequence expression returns last value
+test eval "1; 2; 3"
+3
+end test
+
+; Variable definitions in sequence
+test eval "x = 5; y = x * 2; y"
+10
+end test

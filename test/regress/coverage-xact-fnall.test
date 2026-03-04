@@ -1,0 +1,18 @@
+; Coverage test for xact.cc lines 801-811
+; Tests fn_all() - the all() predicate function for transactions.
+; all(expr) returns true only if every posting in the transaction matches.
+; Here, only the Transfer has all postings matching /Assets/, so the
+; Groceries transaction is filtered out (fn_all returns false for it).
+
+2024/01/01 Transfer Between Assets
+    Assets:Checking    $-100.00
+    Assets:Savings     $100.00
+
+2024/01/02 Groceries
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --limit 'all(account =~ /Assets/)'
+24-Jan-01 Transfer Between As.. Assets:Checking            $-100.00     $-100.00
+                                Assets:Savings              $100.00            0
+end test

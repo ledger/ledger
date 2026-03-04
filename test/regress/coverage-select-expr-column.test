@@ -1,0 +1,22 @@
+; Coverage test for select.cc lines 79-85: recursive identifier resolution
+; When a select column is a binary expression (e.g., amount + total),
+; get_principal_identifiers recurses into both left and right subtrees
+; to determine what type of column it is. This exercises:
+;   L79-80: recursion into left subtree
+;   L83-85: recursion into right subtree (binary operator)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+; A binary expression using amount + total triggers recursive descent
+test select 'amount + total', date from posts
+     $100.00 24-Jan-15
+     $-50.00 24-Jan-15
+      $60.00 24-Jan-20
+     $-30.00 24-Jan-20
+end test

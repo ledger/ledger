@@ -1,0 +1,14 @@
+; Coverage for query.cc lines 347-349: code query term
+
+2024/01/01 (1234) Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 (5678) Other
+    Expenses:Gas    $20.00
+    Assets:Cash
+
+test reg code 1234
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

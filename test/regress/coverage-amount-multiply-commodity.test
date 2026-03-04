@@ -1,0 +1,13 @@
+; Coverage for amount.cc lines 494-495:
+; When multiplying a bare amount (no commodity) by a commoditized amount,
+; the result inherits the commodity from the multiplier. Here 2.0 has
+; no commodity, and amount has $, so the result gets $.
+
+2024/01/01 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg --format "%(2.0 * amount)\n"
+$100.00
+$-100.00
+end test

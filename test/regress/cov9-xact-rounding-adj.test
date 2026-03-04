@@ -1,0 +1,11 @@
+; Coverage for xact.cc lines 641: rounding adjustment for per-unit costs
+
+2024/01/01 Buy
+    Assets:Stock    3 AAPL @ $33.33
+    Assets:Cash
+
+test reg
+24-Jan-01 Buy                   Assets:Stock                 3 AAPL       3 AAPL
+                                Assets:Cash                   $-100        $-100
+                                                                          3 AAPL
+end test

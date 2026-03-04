@@ -1,0 +1,21 @@
+; Coverage for history.cc lines 311-327: map_prices with oldest filtering
+; Prices older than --begin are filtered out during map_prices enumeration
+; Shows revaluation only at valid price points within the date range
+
+P 2023/06/01 EUR $0.90
+P 2024/01/01 EUR $1.10
+P 2024/06/01 EUR $1.20
+
+2024/03/01 Trip1
+    Expenses:Travel    100 EUR
+    Assets:Checking
+
+2024/07/01 Trip2
+    Expenses:Food    50 EUR
+    Assets:Checking
+
+test reg --market --exchange '$' Expenses --begin 2024/01/01 --end 2024/08/01 --now 2024/08/01
+24-Mar-01 Trip1                 Expenses:Travel             $110.00      $110.00
+24-Jun-01 Commodities revalued  <Revalued>                   $10.00      $120.00
+24-Jul-01 Trip2                 Expenses:Food                $60.00      $180.00
+end test

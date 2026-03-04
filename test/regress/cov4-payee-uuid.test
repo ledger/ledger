@@ -1,0 +1,15 @@
+; Test payee directive uuid sub-directive (lines 543-544, 553-555 of textual_directives.cc)
+; Exercise the uuid keyword within a payee directive
+
+payee Grocery Store
+    uuid abc-123-def
+
+2024/01/01 Grocery Store
+    ; UUID: abc-123-def
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

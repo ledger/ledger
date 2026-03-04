@@ -1,0 +1,10 @@
+; Test amount annotation parsing with fixated price, date, and tag
+; Covers annotate.cc: price fixated flag, date, and tag parsing
+
+2024/01/01 Buy Stock
+    Assets:Brokerage    10 AAPL {=$150.00} [2024/01/01] (lot1)
+    Assets:Cash
+
+test bal --lots Assets:Brokerage
+10 AAPL {=$150} [2024/01/01] (lot1)  Assets:Brokerage
+end test

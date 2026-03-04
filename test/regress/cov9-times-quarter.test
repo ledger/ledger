@@ -1,0 +1,16 @@
+; Coverage for times.cc: quarterly period
+
+2024/01/01 Test1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/04/01 Test2
+    Expenses:Gas    $20.00
+    Assets:Cash
+
+test reg --quarterly
+24-Jan-01 - 24-Mar-31           Assets:Cash                 $-10.00      $-10.00
+                                Expenses:Food                $10.00            0
+24-Apr-01 - 24-Jun-30           Assets:Cash                 $-20.00      $-20.00
+                                Expenses:Gas                 $20.00            0
+end test

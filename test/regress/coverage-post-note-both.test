@@ -1,0 +1,14 @@
+; Coverage test for post.cc lines 174-179
+; Tests get_note when both the posting AND the transaction have notes.
+; The notes are concatenated with a newline between them.
+
+2024/03/01 Groceries
+    ; Xact note
+    Expenses:Food     $10.00
+      ; Post note
+    Assets:Cash
+
+test reg --format "%(note)\n" --limit "account =~ /Food/"
+ Post note
+ Xact note
+end test

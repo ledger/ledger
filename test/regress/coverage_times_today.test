@@ -1,0 +1,16 @@
+; Coverage test for times.cc lines 1242-1245
+; Test TOK_TODAY/TOK_TOMORROW/TOK_YESTERDAY dispatching to
+; handle_simple_period_token
+
+2020/01/01 Old Transaction
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --period "today"
+end test
+
+test reg --period "tomorrow"
+end test
+
+test reg --period "yesterday"
+end test

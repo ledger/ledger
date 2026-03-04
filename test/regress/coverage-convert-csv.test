@@ -1,0 +1,12 @@
+; Coverage for convert.cc: CSV conversion command
+; Tests the convert command which reads a CSV file and outputs transactions
+
+test -f /dev/null convert $sourcepath/test/input/convert-test.csv --input-date-format %Y/%m/%d -> 0
+2024/01/15 * Grocery Store
+    Expenses:Unknown                             -50
+    Equity:Unknown
+
+2024/01/20 * Gas Station
+    Expenses:Unknown                             -30
+    Equity:Unknown
+end test

@@ -1,0 +1,15 @@
+; Test textual_directives.cc lines 858-860: payee-rewrite directive
+; in general_directive case p
+
+payee-rewrite /Gro.*/  Grocery Store
+
+2024/01/01 Groceries
+    Expenses:Food   $10.00
+    Assets:Cash
+
+test bal
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

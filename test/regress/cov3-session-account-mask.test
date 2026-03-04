@@ -1,0 +1,10 @@
+; Test fn_account with mask argument
+; Covers session.cc lines 252-253 (fn_account mask path)
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg --format="%(account(/Expenses/) ? \"found\" : \"nope\")\n" Expenses
+found
+end test

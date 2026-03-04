@@ -1,0 +1,15 @@
+; Coverage test for token.cc L210
+; Date specifier that does not refer to a starting date.
+; The word "monthly" is a period specifier without a concrete start date.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --display 'date < [monthly]' -> 1
+__ERROR__
+While parsing value expression:
+  date < [monthly]
+         ^^^^^^^^^
+Error: Date specifier does not refer to a starting date
+end test

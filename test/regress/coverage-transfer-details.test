@@ -1,0 +1,13 @@
+; Coverage for filters.cc lines 1288-1290 (transfer_details SET_ACCOUNT)
+; The --pivot option uses transfer_details to prepend tag values
+; to account names, exercising the SET_ACCOUNT path.
+
+2024/01/01 Test
+    ; Type: A
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --pivot Type
+24-Jan-01 Test                  Type:A:Expenses:Food         $10.00       $10.00
+24-Jan-01 Test                  Type:A:Assets:Cash          $-10.00            0
+end test

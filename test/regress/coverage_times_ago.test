@@ -1,0 +1,44 @@
+; Coverage test for times.cc determine_when's N-units-ago/hence paths
+
+2000/01/01 Ancient Transaction
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --period "2 years ago"
+end test
+
+test reg --period "3 quarters ago"
+end test
+
+test reg --period "2 months ago"
+end test
+
+test reg --period "2 weeks ago"
+end test
+
+test reg --period "3 days ago"
+end test
+
+test reg --period "1 year hence"
+end test
+
+test reg --period "1 month hence"
+end test
+
+test reg --period "last 2 years"
+end test
+
+test reg --period "last 3 months"
+end test
+
+test reg --period "last 2 quarters"
+end test
+
+test reg --period "next 2 months"
+end test
+
+test reg --period "next 2 weeks"
+end test
+
+test reg --period "next 3 days"
+end test

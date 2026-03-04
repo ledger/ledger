@@ -1,0 +1,13 @@
+; Coverage for textual_directives.cc line 307: apply tag with no argument
+
+apply tag
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 3:
+Error: Directive 'apply tag' requires an argument
+end test

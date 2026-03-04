@@ -1,0 +1,26 @@
+; Coverage test for filters.cc lines 1506, 1554-1555
+; Tests forecast_posts with a period that has a finish date, exercising:
+; Line 1506: assertion for start < finish
+; Line 1554-1555: pending_posts erasure when period increment exhausts start
+; The "in 2024" constraint causes the periodic transaction to have a
+; definite end, so the forecast will exhaust the period and erase from
+; pending_posts (line 1554-1555).
+
+~ monthly in 2024
+    Expenses:Rent             $1000.00
+    Assets:Checking
+
+2024/06/15 Initial
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --now="2024/06/15" --forecast-while="date < [2024/10/01]"
+24-Jun-15 Initial               Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Jul-01 Forecast transaction  Expenses:Rent              $1000.00     $1000.00
+24-Jul-01 Forecast transaction  Assets:Checking           $-1000.00            0
+24-Aug-01 Forecast transaction  Expenses:Rent              $1000.00     $1000.00
+24-Aug-01 Forecast transaction  Assets:Checking           $-1000.00            0
+24-Sep-01 Forecast transaction  Expenses:Rent              $1000.00     $1000.00
+24-Sep-01 Forecast transaction  Assets:Checking           $-1000.00            0
+end test

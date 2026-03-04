@@ -1,0 +1,35 @@
+; Coverage test for select.cc: from clause variants
+; Exercises different reporter types based on the from clause:
+;   L355-358: from posts/postings
+;   L359-363: from accounts
+;   L364-368: from commodities
+;   L400-403: default (no from clause, uses format_posts)
+
+2024/01/15 Grocery Store
+    Expenses:Food    10 AAPL @ $5.00
+    Assets:Cash   $-50.00
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Cash          $-30.00
+
+; from posts is the default behavior
+test select date, amount from posts
+24-Jan-15      10 AAPL
+24-Jan-15      $-50.00
+24-Jan-20       $30.00
+24-Jan-20      $-30.00
+end test
+
+; from commodities exercises L364-368
+test select date, amount from commodities
+24-Jan-15        $5.00
+end test
+
+; no from clause -- exercises L400-403 (default reporter)
+test select date, amount
+24-Jan-15      10 AAPL
+24-Jan-15      $-50.00
+24-Jan-20       $30.00
+24-Jan-20      $-30.00
+end test

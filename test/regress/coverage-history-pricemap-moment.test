@@ -1,0 +1,23 @@
+; Coverage test for history.cc L523-526
+; Tests print_map with a specific moment, which uses the filtered graph
+; path (write_graphviz with FGraph) instead of the unfiltered graph.
+
+P 2024/01/01 EUR $1.10
+P 2024/06/01 EUR $1.20
+
+2024/01/01 Test
+    Expenses:Food    10 EUR
+    Assets:Cash
+
+test pricemap 2024/03/01
+graph G {
+0[label=""];
+1[label="s"];
+2[label="%"];
+3[label="m"];
+4[label="h"];
+5[label="$"];
+6[label="EUR"];
+6--5 ;
+}
+end test

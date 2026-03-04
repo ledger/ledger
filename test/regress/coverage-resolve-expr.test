@@ -1,0 +1,19 @@
+; Coverage for post.cc lines 541-542 (resolve_expr is_long)
+; and lines 544-546 (resolve_expr is_amount)
+; Amount expressions in postings may return either a long integer
+; or an amount value.
+
+2024/01/01 Test Long
+    Expenses:Food    (5 * 2)
+    Assets:Cash
+
+2024/01/02 Test Amount
+    Expenses:Food    ($3 * 2)
+    Assets:Cash
+
+test reg
+24-Jan-01 Test Long             Expenses:Food                    10           10
+                                Assets:Cash                     -10            0
+24-Jan-02 Test Amount           Expenses:Food                    $6           $6
+                                Assets:Cash                     $-6            0
+end test

@@ -1,0 +1,12 @@
+; Coverage for format.cc line 270: %$ field reference error
+; Triggered by %$0 or %$X (invalid field reference digit)
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Checking
+
+; Test: %$0 is invalid (must be 1-9 or A-F)
+test reg --format '%(amount)\n%/%$0\n' -> 1
+__ERROR__
+Error: %$ field reference must be a digit from 1-9
+end test

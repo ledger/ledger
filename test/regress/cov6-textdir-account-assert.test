@@ -1,0 +1,15 @@
+; Coverage for textual_directives.cc lines 445-465: account assert/check directive
+
+account Expenses:Food
+    assert amount > 0
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

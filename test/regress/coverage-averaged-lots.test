@@ -1,0 +1,14 @@
+; Test report.cc: fn_averaged_lots, fn_fifo_lots, fn_lifo_lots
+; Exercises lot pricing functions (lines 622-641)
+
+2024/01/15 Buy Stock
+    Assets:Brokerage         10 AAPL {$150.00}
+    Assets:Cash          $-1500.00
+
+2024/02/15 Buy More
+    Assets:Brokerage          5 AAPL {$160.00}
+    Assets:Cash           $-800.00
+
+test bal --format "%(averaged_lots(total))\n" Assets:Brokerage
+15 AAPL {$153.33333333}
+end test

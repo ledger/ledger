@@ -1,0 +1,12 @@
+; Coverage for expr.cc line 271: as_expr function
+; Triggered by the select command which processes expression columns
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Checking
+
+; Test: select command processes columns as expressions via as_expr()
+test select date,amount,account
+24-Jan-15       $50.00 Expenses:Food                                           
+24-Jan-15      $-50.00 Assets:Checking                                         
+end test

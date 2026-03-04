@@ -1,0 +1,11 @@
+; Coverage test for report.cc lines 958-962: fn_clear_commodity
+; Test clear_commodity() which removes the commodity from an amount,
+; returning just the numeric value.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg Expenses --format '%(clear_commodity(amount))\n'
+10
+end test

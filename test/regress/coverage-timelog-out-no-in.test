@@ -1,0 +1,8 @@
+; Coverage for timelog.cc line 92: check-out without check-in
+o 2024/01/01 10:00:00 Work
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 2:
+Error: Timelog check-out event without a check-in
+end test

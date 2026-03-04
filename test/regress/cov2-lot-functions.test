@@ -1,0 +1,15 @@
+; Test lot_date, lot_price, lot_tag functions in report.cc lines 1012-1037
+; These are format expression functions for lot annotations
+
+2024/01/01 Buy Stock
+    Assets:Brokerage            10 AAPL {$150.00} [2024/01/01] (lot1)
+    Assets:Cash
+
+2024/02/01 Buy More Stock
+    Assets:Brokerage            5 AAPL {$160.00} [2024/02/01] (lot2)
+    Assets:Cash
+
+test reg Assets:Brokerage --lot-prices --lot-dates --lot-tags --format "%(lot_date(amount)) %(lot_price(amount)) %(lot_tag(amount)) %(display_amount)\n"
+2024/01/01 $150 lot1 10 AAPL {$150} [2024/01/01] (lot1)
+2024/02/01 $160 lot2 5 AAPL {$160} [2024/02/01] (lot2)
+end test

@@ -1,0 +1,15 @@
+; Coverage: account.cc line 119 - find_account_re
+; post.cc lines 285,288-290 - get_account with mask arg calls find_account_re
+; This exercises find_account_re through post context account(/regex/)
+
+2024/01/01 Grocery
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Cash
+
+test reg --limit "account =~ /Food/"
+24-Jan-01 Grocery               Expenses:Food                $10.00       $10.00
+end test

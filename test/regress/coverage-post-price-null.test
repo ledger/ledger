@@ -1,0 +1,10 @@
+; Coverage: post.cc line 243 - get_price with annotation price
+; Tests price expression on a posting with @ annotation
+
+2024/01/01 Buy Stock
+    Assets:Investments    10 AAPL @ $150.00
+    Assets:Cash
+
+test reg --format "%(price)\n" Assets:Investments
+$1500
+end test

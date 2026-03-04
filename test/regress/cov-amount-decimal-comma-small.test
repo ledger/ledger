@@ -1,0 +1,19 @@
+; Coverage test for amount.cc line 200-202
+; Exercise decimal comma output for small amounts (no thousands separator)
+; This exercises the decimal point -> comma conversion path
+
+2024/01/01 Test
+    Expenses:Food       42,50 EUR
+    Assets:Cash
+
+test bal --decimal-comma
+          -42,50 EUR  Assets:Cash
+           42,50 EUR  Expenses:Food
+--------------------
+                   0
+end test
+
+test reg --decimal-comma
+24-Jan-01 Test                  Expenses:Food             42,50 EUR    42,50 EUR
+                                Assets:Cash              -42,50 EUR            0
+end test

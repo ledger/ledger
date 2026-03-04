@@ -1,0 +1,14 @@
+; Coverage for xact.cc lines 1063-1064: extend_xact where post has commodity
+
+= Expenses:Food
+    (Budget:Food)    $-50.00
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --generated
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+                                (Budget:Food)               $-50.00      $-50.00
+end test

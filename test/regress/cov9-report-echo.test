@@ -1,0 +1,10 @@
+; Coverage test for report.cc lines 1134-1138: echo_command
+; Test the echo command which prints its argument to stdout.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test echo "Hello World"
+Hello World
+end test

@@ -1,0 +1,13 @@
+; Coverage test for post.cc lines 172-183
+; Tests get_note which merges post note and xact note.
+; When both post and xact have notes, they are joined with newline.
+
+2024/03/01 Groceries
+    ; Post note here
+    Expenses:Food     $10.00
+    Assets:Cash
+
+test reg --format "%(note)\n"
+ Post note here
+ Post note here
+end test

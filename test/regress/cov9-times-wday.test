@@ -1,0 +1,16 @@
+; Coverage for times.cc lines 790-794: TOK_A_WDAY parsing
+
+2024/01/01 Test1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/08 Test2
+    Expenses:Gas    $20.00
+    Assets:Cash
+
+test reg --weekly
+23-Dec-31 - 24-Jan-06           Assets:Cash                 $-10.00      $-10.00
+                                Expenses:Food                $10.00            0
+24-Jan-07 - 24-Jan-13           Assets:Cash                 $-20.00      $-20.00
+                                Expenses:Gas                 $20.00            0
+end test

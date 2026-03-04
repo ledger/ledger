@@ -1,0 +1,14 @@
+; Test account lookup total (lines 487-488 of account.cc)
+; Exercise the total accessor on accounts
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Test2
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test bal --format "%(total) %(account)\n" --flat --limit "account =~ /Food/"
+$30.00 Expenses:Food
+end test

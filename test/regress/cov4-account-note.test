@@ -1,0 +1,13 @@
+; Test account_t::lookup for 'note' (line 471 of account.cc)
+; Exercise the account note accessor
+
+account Expenses:Food
+    note This is a food account
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --format "%(note) %(total)\n" Expenses
+This is a food account $10.00
+end test

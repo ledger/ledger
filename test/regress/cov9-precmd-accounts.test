@@ -1,0 +1,12 @@
+; Coverage for precmd.cc: accounts listing
+
+2024/01/01 Test
+    Expenses:Food:Grocery    $10.00
+    Expenses:Food:Dining     $20.00
+    Assets:Cash
+
+test accounts
+Assets:Cash
+Expenses:Food:Dining
+Expenses:Food:Grocery
+end test

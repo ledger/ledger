@@ -1,0 +1,28 @@
+; Coverage for times.cc line 1231: handle_in_token
+; Tests "in january" and "in 2024" period expressions
+
+2024/01/15 January
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/02/15 February
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2024/03/15 March
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test reg --now 2024/06/01 --period "in january"
+24-Jan-15 January               Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+test reg --period "in 2024"
+24-Jan-15 January               Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Feb-15 February              Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+24-Mar-15 March                 Expenses:Food                $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test

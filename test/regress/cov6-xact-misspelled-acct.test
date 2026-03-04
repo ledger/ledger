@@ -1,0 +1,16 @@
+; Coverage test for xact.cc lines 114-117, 182-190
+; Tests the error when two null postings exist and one account name ends
+; with a special character (digit, ), }, ]), suggesting a misspelling.
+; account_ends_with_special_char checks for these patterns.
+
+2024/01/01 Test
+    Expenses:Food2
+    Expenses:Rent
+    Assets:Cash               $-50.00
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 9:
+Error: Posting with null amount's account may be misspelled:
+  "Expenses:Food2"
+end test

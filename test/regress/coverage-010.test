@@ -1,0 +1,43 @@
+; Coverage test for src/precmd.cc: pre-command functions
+; Tests eval and period commands to exercise the precmd code paths.
+
+2024/01/01 Test
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test eval 2+3
+5
+end test
+
+test eval '10 * 5 + 2'
+52
+end test
+
+test eval '"hello"'
+hello
+end test
+
+test period 'monthly from 2024/01/01 to 2024/04/01'
+--- Period expression tokens ---
+TOK_MONTHLY: monthly
+TOK_SINCE: since
+TOK_DATE:  year 2024 month Jan day 1
+TOK_UNTIL: until
+TOK_DATE:  year 2024 month Apr day 1
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2024 month Jan day 1 to year 2024 month Apr day 1
+duration: 1 month
+
+--- After stabilization ---
+   range: from year 2024 month Jan day 1 to year 2024 month Apr day 1
+   start: 24-Jan-01
+  finish: 24-Apr-01
+duration: 1 month
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jan-01 -- 24-Jan-31
+ 2: 24-Feb-01 -- 24-Feb-29
+ 3: 24-Mar-01 -- 24-Mar-31
+end test

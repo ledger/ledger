@@ -1,0 +1,20 @@
+; Test cleared command for report.cc coverage
+; Covers cleared command (line 1755-1757)
+
+2024/01/01 * Payee
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/02/01 Payee Two
+    Expenses:Gas             $20.00
+    Assets:Cash
+
+; Test cleared command (line 1755-1757)
+test cleared
+         $-30.00             $-10.00    24-Jan-01    Assets:Cash
+          $30.00              $10.00                 Expenses
+          $10.00              $10.00    24-Jan-01      Food
+          $20.00                   0                   Gas
+----------------    ----------------    ---------
+               0                   0             
+end test

@@ -1,0 +1,23 @@
+; Coverage test for xact.cc lines 361-369
+; Tests lot matching when a single transaction has multiple sale postings
+; for the same commodity. Earlier postings in the same transaction modify
+; the effective lot balance for later postings.
+
+2020/01/15 Buy Lot A
+    Assets:Brokerage         5 AAPL {$100} [2020/01/15]
+    Assets:Cash             -$500
+
+2020/02/15 Buy Lot B
+    Assets:Brokerage         5 AAPL {$120} [2020/02/15]
+    Assets:Cash             -$600
+
+; Two separate sell lines in the same transaction
+2020/06/01 Sell AAPL
+    Assets:Brokerage        -3 AAPL @ $150
+    Assets:Brokerage        -2 AAPL @ $160
+    Assets:Cash              $770
+    Income:Capital Gains
+
+test --lot-matching fifo --lots bal Assets:Brokerage
+5 AAPL {$120} [2020/02/15]  Assets:Brokerage
+end test

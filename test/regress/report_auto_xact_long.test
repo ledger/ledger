@@ -1,0 +1,13 @@
+; Test auto transaction with amount_expr producing long integer result
+; Exercises lines 1049-1050 of xact.cc
+
+= Expenses:Food
+    (Assets:Budget)    (1)
+
+2024/01/01 Grocery
+    Expenses:Food    $25.00
+    Assets:Cash
+
+test reg Assets:Budget
+24-Jan-01 Grocery               (Assets:Budget)              $25.00       $25.00
+end test

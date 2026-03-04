@@ -1,0 +1,10 @@
+; Coverage for report.cc lines 618-619: fn_should_bold else branch
+; Without --bold-if, should_bold returns false
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg --format '%(should_bold)\n' Expenses
+false
+end test

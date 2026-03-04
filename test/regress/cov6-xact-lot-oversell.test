@@ -1,0 +1,24 @@
+; Coverage test for xact.cc lines 354, 387-398, 403, 460-470
+; Tests lot matching oversell path: when selling more shares than held
+; in lots, the remainder is left as an unannotated posting.
+; Also tests the fallback date path for lots without explicit dates,
+; and the accumulate-prior-amounts path.
+
+; Buy some stock with lot dates
+2020/01/15 Buy Lot A
+    Assets:Brokerage         5 AAPL {$100} [2020/01/15]
+    Assets:Cash             -$500
+
+2020/02/15 Buy Lot A more
+    Assets:Brokerage         5 AAPL {$100} [2020/01/15]
+    Assets:Cash             -$500
+
+; Sell more than we hold - should trigger oversell remainder
+2020/06/01 Sell AAPL Oversell
+    Assets:Brokerage        -15 AAPL @ $150
+    Assets:Cash              $2250
+    Income:Capital Gains
+
+test --lot-matching fifo bal Assets:Brokerage
+             -5 AAPL  Assets:Brokerage
+end test

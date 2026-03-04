@@ -1,0 +1,17 @@
+; Coverage test for select.cc lines 56-85, 256-328:
+; Exercise select command with multiple fields.
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Cash
+
+2024/01/15 Gas Station
+    Expenses:Gas     $40.00
+    Assets:Cash
+
+test select date, payee, account, amount, total from posts
+24-Jan-01 Grocery Store        Expenses:Food                $25.00       $25.00
+24-Jan-01 Grocery Store        Assets:Cash                 $-25.00            0
+24-Jan-15 Gas Station          Expenses:Gas                 $40.00       $40.00
+24-Jan-15 Gas Station          Assets:Cash                 $-40.00            0
+end test

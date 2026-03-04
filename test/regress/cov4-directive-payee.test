@@ -1,0 +1,14 @@
+; Test payee directive via general_directive (lines 854-857 of textual_directives.cc)
+; Exercise the payee keyword and payee alias through the switch
+
+payee Grocery Store
+    alias grocery
+
+2024/01/01 grocery
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

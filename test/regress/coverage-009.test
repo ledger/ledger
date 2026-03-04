@@ -1,0 +1,28 @@
+; Coverage test for src/emacs.cc: Emacs output format
+; Tests the emacs command which produces Lisp-friendly output,
+; including cleared/pending states, codes, costs, and notes.
+
+2024/01/01 (1234) Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/02 * Restaurant
+    Expenses:Food:Dining       $30.00
+      ; A note on this posting
+    Assets:Checking
+
+2024/01/03 ! Pending Purchase
+    Expenses:Books             10 BOOK @ $5.00
+    Assets:Checking           $-50.00
+
+test emacs --lisp-date-format "%Y/%m/%d"
+(("$FILE" 5 "2024/01/01" "1234" "Grocery Store"
+  (6 "Expenses:Food" "$50.00" nil)
+  (7 "Assets:Checking" "$-50.00" nil))
+ ("$FILE" 9 "2024/01/02" nil "Restaurant"
+  (10 "Expenses:Food:Dining" "$30.00" t " A note on this posting")
+  (12 "Assets:Checking" "$-30.00" t))
+ ("$FILE" 14 "2024/01/03" nil "Pending Purchase"
+  (15 "Expenses:Books" "10 BOOK {$5.00} [2024/01/03]" pending "$50.00")
+  (16 "Assets:Checking" "$-50.00" pending)))
+end test

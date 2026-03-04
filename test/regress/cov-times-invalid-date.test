@@ -1,0 +1,20 @@
+; Coverage test for times.cc line 158, 160-161
+; Exercise invalid date parsing (date that parses but reformats differently)
+; Feb 30 gets caught at Boost.Date level. Let's try a date that
+; passes parsing but fails the reformat check.
+
+2024/02/29 Good Leap Year Date
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2023/02/29 Not a Leap Year
+    Expenses:Food            $20.00
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 10:
+While parsing transaction:
+> 2023/02/29 Not a Leap Year
+Error: Day of month is not valid for year
+end test

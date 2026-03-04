@@ -1,0 +1,20 @@
+; Coverage test for format.cc lines 105-107, 114-116
+; Test format element parsing:
+; - Lines 105-107: expression that consumes the entire remaining format string
+;   (str.eof() is true). This happens when the format ends with an expression.
+; - Lines 114-116: expression followed by more format text, where trailing
+;   whitespace in the expression is backtracked.
+
+2024/01/01 Groceries
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format '%(account) %(amount)\n'
+Expenses:Food $10.00
+Assets:Cash $-10.00
+end test
+
+test reg --format '%(account)\n'
+Expenses:Food
+Assets:Cash
+end test

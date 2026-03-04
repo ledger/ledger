@@ -1,0 +1,15 @@
+; Coverage for report.cc line 1548: case 'j' break in FUNCTION lookup
+; 'junk' starts with 'j', not justify/join -> break at 1548
+; No option starts with 'j', so lookup returns null -> error
+
+2024/01/01 Test
+    Expenses:Food  $10.00
+    Assets:Cash
+
+test eval 'junk' -> 1
+__ERROR__
+While evaluating value expression:
+  junk
+  ^^^^
+Error: Unknown identifier 'junk'
+end test

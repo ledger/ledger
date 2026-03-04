@@ -1,0 +1,15 @@
+; Test token parsing for not-match operator !~ (lines 297-303 of token.cc)
+; Exercise the NMATCH token path
+
+2024/01/01 Test One
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Test Two
+    Expenses:Auto    $20.00
+    Assets:Cash
+
+test reg --limit "payee !~ /One/"
+24-Jan-02 Test Two              Expenses:Auto                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test

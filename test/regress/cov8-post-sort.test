@@ -1,0 +1,20 @@
+; Coverage test for compare.cc lines 80-106:
+; Exercise post sorting comparison via --sort.
+
+2024/01/01 Test
+    Expenses:Food    $30.00
+    Assets:Cash
+
+2024/01/02 Test Two
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/03 Test Three
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test reg Expenses --sort amount
+24-Jan-02 Test Two              Expenses:Food                $10.00       $10.00
+24-Jan-03 Test Three            Expenses:Food                $20.00       $30.00
+24-Jan-01 Test                  Expenses:Food                $30.00       $60.00
+end test

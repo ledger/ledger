@@ -1,0 +1,15 @@
+; Test report.cc: fn_percent (line 933-936), fn_commodity (line 938-940)
+
+2024/01/01 Test
+    Expenses:Food   $10.00
+    Assets:Cash
+
+test reg --format "%(percent(amount, 100))\n" --now 2024/01/15
+10.00%
+-10.00%
+end test
+
+test reg --format "%(commodity(amount))\n" --now 2024/01/15
+$
+$
+end test

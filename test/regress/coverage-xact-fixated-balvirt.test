@@ -1,0 +1,24 @@
+; Coverage test for xact.cc line 320
+; Tests the recompute path after fixated cost resolution where
+; balanced virtual postings ([Account]) are skipped.
+; The fixated price {=$1.10} triggers the recompute, and the
+; balanced virtual postings are excluded from the balance recalculation.
+
+2024/03/01 Fixated with balanced virtual
+    Assets:EUR        100 EUR {=$1.10}
+    Assets:Checking  $-110.00
+    [Budget:Allocation]    $50.00
+    [Budget:Reserve]      $-50.00
+
+test bal
+            $-110.00
+             100 EUR  Assets
+            $-110.00    Checking
+             100 EUR    EUR
+                   0  Budget
+              $50.00    Allocation
+             $-50.00    Reserve
+--------------------
+            $-110.00
+             100 EUR
+end test

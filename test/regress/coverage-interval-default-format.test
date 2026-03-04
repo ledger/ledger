@@ -1,0 +1,21 @@
+; Coverage for filters.cc line 968 (default date format for intervals)
+; When --period is used without --date-format, the default format is used.
+
+2024/01/01 Test1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/15 Test2
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2024/02/01 Test3
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test reg --period "monthly"
+24-Jan-01 - 24-Jan-31           Assets:Cash                 $-30.00      $-30.00
+                                Expenses:Food                $30.00            0
+24-Feb-01 - 24-Feb-29           Assets:Cash                 $-30.00      $-30.00
+                                Expenses:Food                $30.00            0
+end test

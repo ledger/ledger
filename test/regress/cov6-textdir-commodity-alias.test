@@ -1,0 +1,15 @@
+; Coverage for textual_directives.cc lines 624-629: commodity alias directive
+
+commodity EUR
+    alias Euro
+
+2024/01/01 Test
+    Expenses:Food    100 Euro
+    Assets:Cash
+
+test bal
+            -100 EUR  Assets:Cash
+             100 EUR  Expenses:Food
+--------------------
+                   0
+end test

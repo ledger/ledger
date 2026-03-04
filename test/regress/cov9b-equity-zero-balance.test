@@ -1,0 +1,23 @@
+; Coverage for filters.cc line 1166: equity filter zero amount in balance
+; When equity report has a multi-commodity balance with a zero component
+; the create_post_from_amount skips zero amounts
+
+2024/01/01 Buy EUR
+    Assets:Foreign      100 EUR
+    Assets:Cash        $-110.00
+
+2024/01/02 Sell EUR
+    Assets:Cash         $120.00
+    Assets:Foreign      -100 EUR
+
+2024/01/03 Other
+    Expenses:Misc       50 GBP
+    Assets:GBP
+
+test equity
+2024/01/03 Opening Balances
+    Assets:Cash                               $10.00
+    Assets:GBP                               -50 GBP
+    Expenses:Misc                             50 GBP
+    Equity:Opening Balances                  $-10.00
+end test

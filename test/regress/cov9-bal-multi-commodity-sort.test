@@ -1,0 +1,21 @@
+; Test balance with multiple commodities that must be sorted
+; Exercises commodity.cc compare_by_commodity for base symbol comparison
+; and balance.cc sorting by commodity
+
+2024/01/01 Buy AAPL
+    Assets:Brokerage    10 AAPL {$150.00}
+    Assets:Cash        $-1500.00
+
+2024/01/01 Buy MSFT
+    Assets:Brokerage    5 MSFT {$300.00}
+    Assets:Cash        $-1500.00
+
+2024/01/01 Buy GOOG
+    Assets:Brokerage    20 GOOG {$100.00}
+    Assets:Cash        $-2000.00
+
+test bal --no-total Brokerage
+             10 AAPL
+             20 GOOG
+              5 MSFT  Assets:Brokerage
+end test

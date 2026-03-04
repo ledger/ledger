@@ -1,0 +1,17 @@
+; Coverage for amount.cc line 1219:
+; "Too many commas" error is thrown when a comma appears after
+; no_more_commas has been set, which happens when the first comma
+; was interpreted as a decimal separator in European style.
+
+2024/01/01 Test
+    Expenses:Food    1.000,50,25 EUR
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 7:
+While parsing posting:
+  Expenses:Food    1.000,50,25 EUR
+                   ^^^^^^^^^^^^^^^
+Error: Too many commas in amount
+end test

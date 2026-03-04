@@ -1,0 +1,16 @@
+; Test select from commodities
+; Covers select.cc lines 364-368 (from commodities handling)
+
+P 2024/01/01 EUR $1.10
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/02/20 Test
+    Expenses:Travel    100 EUR
+    Assets:Cash
+
+test select "date, amount from commodities"
+24-Jan-01        $1.10
+end test

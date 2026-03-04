@@ -1,0 +1,25 @@
+; Coverage test for account.cc get_account function.
+; L251: account("name") finds an account by name, returns scope_value.
+; When the account exists, it is truthy; when not found, it is falsy.
+; Also tests account_t::lookup L400 (nullptr return) when a function
+; name doesn't match any known function in the switch.
+
+2024/01/01 Grocery
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Gas     $30.00
+    Assets:Cash
+
+test bal --display "total and account('Expenses:Food')"
+             $-40.00  Assets:Cash
+              $40.00  Expenses
+              $10.00    Food
+              $30.00    Gas
+--------------------
+                   0
+end test
+
+test bal --display "total and account('Nonexistent')"
+end test

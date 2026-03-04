@@ -1,0 +1,18 @@
+; Coverage for compare.cc: account sort without context (lines 120, 131)
+
+2024/01/01 Test1
+    Expenses:Rent    $500.00
+    Assets:Cash
+
+2024/01/01 Test2
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --sort amount
+            $-510.00  Assets:Cash
+             $510.00  Expenses
+              $10.00    Food
+             $500.00    Rent
+--------------------
+                   0
+end test

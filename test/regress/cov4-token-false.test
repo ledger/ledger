@@ -1,0 +1,12 @@
+; Test token parsing for 'false' keyword (lines 76-83 of token.cc)
+; and 'true' keyword (lines 113-119)
+; Exercise boolean literal values
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --limit "not false and true"
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

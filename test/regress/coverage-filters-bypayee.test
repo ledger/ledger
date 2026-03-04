@@ -1,0 +1,23 @@
+; Coverage test for filters.cc line 1251 (by_payee_posts::operator())
+; Tests the by_payee_posts handler where payees are inserted into the map.
+; The --by-payee option sets up the by_payee_posts filter handler.
+; Multiple payees exercise the map insertion and lookup paths.
+
+2024/01/15 Groceries
+    Expenses:Food             $50.00
+    Assets:Cash
+
+2024/01/20 Gas Station
+    Expenses:Gas              $30.00
+    Assets:Cash
+
+2024/01/25 Groceries
+    Expenses:Food             $40.00
+    Assets:Cash
+
+test reg --by-payee
+24-Jan-20 Gas Station           Assets:Cash                 $-30.00      $-30.00
+                                Expenses:Gas                 $30.00            0
+24-Jan-15 Groceries             Assets:Cash                 $-90.00      $-90.00
+                                Expenses:Food                $90.00            0
+end test

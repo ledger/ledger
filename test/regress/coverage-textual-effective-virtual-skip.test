@@ -1,0 +1,19 @@
+; Coverage for textual_xacts.cc line 352: skip virtual posts in effective date
+; balance assertion computation
+
+2024/01/01=2024/01/15 Opening
+    Assets:Checking    $500
+    Equity:Opening
+
+2024/01/05=2024/01/12 Virtual deposit
+    (Assets:Checking)  $200
+
+2024/01/02=2024/01/10 Deposit
+    Assets:Checking    $100 = $100
+    Income:Salary
+
+test --effective reg Assets:Checking
+24-Jan-15 Opening               Assets:Checking                $500         $500
+24-Jan-12 Virtual deposit       (Assets:Checking)              $200         $700
+24-Jan-10 Deposit               Assets:Checking                $100         $800
+end test

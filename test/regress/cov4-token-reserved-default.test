@@ -1,0 +1,12 @@
+; Test token default break in parse_reserved_word (line 122 of token.cc)
+; Exercise parsing of identifiers that start with reserved-word letters
+; but aren't reserved words (e.g., 'total' starts with 't' but is not 'true')
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(total)\n"
+$10.00
+$0.00
+end test

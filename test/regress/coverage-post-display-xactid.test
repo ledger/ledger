@@ -1,0 +1,15 @@
+; Coverage test for post.cc lines 309-310, 157-158, 550-558
+; Tests display_account and xact_id accessors.
+; display_account returns the account name as it should be displayed.
+; xact_id returns the 1-based index of the posting within its transaction.
+
+2024/03/01 Groceries
+    Expenses:Food     $10.00
+    Expenses:Drink     $5.00
+    Assets:Cash
+
+test reg --format "%(display_account) %(xact_id)\n"
+Expenses:Food 1
+Expenses:Drink 2
+Assets:Cash 3
+end test

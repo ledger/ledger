@@ -1,0 +1,11 @@
+; Test get_payee accessor (line 170 of post.cc)
+; Exercise payee lookup through the post_t symbol table
+
+2024/01/01 Test Payee Name
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(payee)\n"
+Test Payee Name
+Test Payee Name
+end test

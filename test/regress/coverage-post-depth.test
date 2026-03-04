@@ -1,10 +1,12 @@
-; Test account depth expression (exercises post.cc get_account_depth)
+; Coverage test for post.cc line 331-332
+; Tests get_account_depth accessor.
+; The depth of Expenses:Food:Groceries is 3 (three levels deep).
 
-2024/01/15 * Store
-    Expenses:Food:Grocery      $50.00
-    Assets:Checking
+2024/03/01 Groceries
+    Expenses:Food:Groceries     $10.00
+    Assets:Cash
 
-test reg --format "%(depth) %(account) %(amount)\n" -> 0
-3 Expenses:Food:Grocery $50.00
-2 Assets:Checking $-50.00
+test reg --format "%(depth) %(account)\n"
+3 Expenses:Food:Groceries
+2 Assets:Cash
 end test

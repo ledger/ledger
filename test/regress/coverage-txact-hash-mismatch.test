@@ -1,0 +1,17 @@
+; Coverage for textual_xacts.cc line 1011: hash mismatch detection
+
+2024/01/01 Test
+    ; Hash: wronghash
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --hashes SHA512 -> 1
+__ERROR__
+While parsing file "$FILE", line 6:
+While parsing transaction:
+> 2024/01/01 Test
+>     ; Hash: wronghash
+>     Expenses:Food    $10.00
+>     Assets:Cash
+Error: Expected hash fbaef2581d47d8f47b4e683db5c1191a2c3e3df8b0a21dba872d191082d4737e51c7aedf8bd8fe046e3f313014d4bb1d01de48d66695184204151a77ea0fece8 != wronghash
+end test

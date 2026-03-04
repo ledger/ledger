@@ -1,0 +1,40 @@
+; Coverage for report.cc line 1861: query precommand
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test query Expenses | sed -E 's/0x[0-9a-f]+/0xXXXX/g'
+--- Input arguments ---
+("Expenses")
+
+--- Context is first posting of the following transaction ---
+2004/05/27 Book Store
+    ; This note applies to all postings. :SecondTag:
+    Expenses:Books                 20 BOOK @ $10
+    ; Metadata: Some Value
+    ; Typed:: $100 + $200
+    ; :ExampleTag:
+    ; Here follows a note describing the posting.
+    Liabilities:MasterCard        $-200.00
+
+--- Input expression ---
+(account =~ /Expenses/)
+
+--- Text as parsed ---
+(account =~ /Expenses/)
+
+--- Expression tree ---
+0xXXXX    O_MATCH (1)
+0xXXXX     IDENT: account (1)
+0xXXXX     VALUE: /Expenses/ (1)
+
+--- Compiled tree ---
+0xXXXX    O_MATCH (1)
+0xXXXX     IDENT: account (1)
+0xXXXX      FUNCTION (1)
+0xXXXX     VALUE: /Expenses/ (1)
+
+--- Calculated value ---
+true
+end test

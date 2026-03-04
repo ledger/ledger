@@ -1,0 +1,13 @@
+; Coverage test for post.cc lines 323-352:
+; Various post accessor functions
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+; Test account_id, account_base, depth, value_date, checkin, checkout
+
+test reg --format '%(account_base)|%(depth)|%(value_date)|%(checkin)|%(checkout)\n'
+Food|2|2024/01/15||
+Cash|2|2024/01/15||
+end test

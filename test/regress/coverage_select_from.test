@@ -1,0 +1,17 @@
+; Coverage test for select.cc from clause variants (xacts, commodities)
+
+P 2024/01/01 EUR 1.1 $
+
+2024/01/01 Test A
+    Expenses:Food    10 EUR
+    Assets:Cash
+
+test select date,payee from xacts
+2024/01/01 Test A
+    Expenses:Food                             10 EUR
+    Assets:Cash
+end test
+
+test select date,account,amount from commodities
+24-Jan-01 EUR                                                              $1.1
+end test

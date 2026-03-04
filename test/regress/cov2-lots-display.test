@@ -1,0 +1,38 @@
+; Test lots display options for report.cc coverage
+
+2024/01/01 Buy Lot 1
+    Assets:Broker          10 AAPL {$100.00} [2024/01/01]
+    Assets:Cash
+
+2024/02/01 Buy Lot 2
+    Assets:Broker           5 AAPL {$150.00} [2024/02/01]
+    Assets:Cash
+
+; Test --lots option (line 783, 1319)
+test bal Assets:Broker --lots
+10 AAPL {$100} [2024/01/01]
+5 AAPL {$150} [2024/02/01]  Assets:Broker
+end test
+
+; Test --lots-actual option (line 784, 1320)
+test bal Assets:Broker --lots-actual
+10 AAPL {$100} [2024/01/01]
+5 AAPL {$150} [2024/02/01]  Assets:Broker
+end test
+
+; Test --lots-fifo option (line 768-774)
+test bal Assets:Broker --lots-fifo
+10 AAPL {$100} [2024/01/01]
+5 AAPL {$150} [2024/02/01]  Assets:Broker
+end test
+
+; Test --lots-lifo option (line 775-781)
+test bal Assets:Broker --lots-lifo
+5 AAPL {$150} [2024/02/01]
+10 AAPL {$100} [2024/01/01]  Assets:Broker
+end test
+
+; Test --average-lot-prices option (line 762-767)
+test bal Assets:Broker --average-lot-prices
+15 AAPL {$116.66666667}  Assets:Broker
+end test

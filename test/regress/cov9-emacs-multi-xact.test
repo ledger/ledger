@@ -1,0 +1,18 @@
+; Coverage for emacs.cc lines 82-87: multiple xacts in emacs output
+
+2024/01/01 First
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Second
+    Expenses:Gas     $20.00
+    Assets:Cash
+
+test emacs
+(("$FILE" 3 (26002 21728 0) nil "First"
+  (4 "Expenses:Food" "$10.00" nil)
+  (5 "Assets:Cash" "$-10.00" nil))
+ ("$FILE" 7 (26003 42592 0) nil "Second"
+  (8 "Expenses:Gas" "$20.00" nil)
+  (9 "Assets:Cash" "$-20.00" nil)))
+end test

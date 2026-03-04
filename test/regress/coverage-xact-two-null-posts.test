@@ -1,0 +1,15 @@
+; Coverage test for xact.cc line 114, 182-192
+; Line 114: account_ends_with_special_char returns false for normal names
+; Line 192: two null postings trigger error
+; When there are two postings without amounts in a transaction,
+; finalize() detects the ambiguity and reports an error.
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+    Savings
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 9:
+Error: Only one posting with null amount allowed per transaction
+end test

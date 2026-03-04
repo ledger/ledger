@@ -1,0 +1,20 @@
+; Coverage test for op.cc lines 519-520
+; Tests the error context added when a function call throws an error.
+; The calc_call method catches exceptions and adds context about which
+; function was being called.
+
+2024/01/01 Test
+    Expenses:Food              $50.00
+    Assets:Cash
+
+test reg --display 'to_int(account)' -> 1
+__ERROR__
+While evaluating value expression:
+  to_int(account)
+  ^^^^^^^^^^^^^^^
+While converting Expenses:Food:
+While calling function 'to_int Expenses:Food':
+While handling posting from "$FILE", line 7:
+>     Expenses:Food              $50.00
+Error: Cannot convert a string to an integer
+end test

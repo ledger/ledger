@@ -1,0 +1,16 @@
+; Coverage for value.cc lines 1891-1909: has_annotation() and annotation()
+; Using lot_price, lot_date, lot_tag which call value_t::has_annotation/annotation
+; Tests both the annotated case (returning values) and the path exercising these functions
+
+2024/01/01 Buy Stock
+    Assets:Brokerage    10 AAPL {$150.00} [2024/01/01] (lot1)
+    Assets:Checking    $-1500.00
+
+2024/02/01 Buy More
+    Assets:Brokerage    5 AAPL {$160.00} [2024/02/01] (lot2)
+    Assets:Checking    $-800.00
+
+test reg --format '%(lot_price(amount)) %(lot_date(amount)) %(lot_tag(amount))\n' Assets:Brokerage
+$150.00 2024/01/01 lot1
+$160.00 2024/02/01 lot2
+end test

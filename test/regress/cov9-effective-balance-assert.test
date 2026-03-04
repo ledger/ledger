@@ -1,0 +1,17 @@
+; Test balance assertion with --effective dates
+; Covers textual_xacts.cc line 350 (compute_balance_diff with aux_date)
+
+2024/01/01 Opening
+    Assets:Cash    $100.00
+    Equity:Opening
+
+2024/01/15=2024/01/20 Purchase
+    Expenses:Food    $30.00
+    Assets:Cash      $-30.00 = $70.00
+
+test reg --effective
+24-Jan-01 Opening               Assets:Cash                 $100.00      $100.00
+                                Equity:Opening             $-100.00            0
+24-Jan-20 Purchase              Expenses:Food                $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test

@@ -1,0 +1,11 @@
+; Coverage test for xact.cc line 758-759 (xact_t copy constructor)
+; Tests the copy constructor via --related which uses copy_xact()
+; in the related_posts filter to create temporary transaction copies.
+
+2024/03/01 Groceries
+    Expenses:Food     $10.00
+    Assets:Cash
+
+test reg Expenses --related
+24-Mar-01 Groceries             Assets:Cash                 $-10.00      $-10.00
+end test

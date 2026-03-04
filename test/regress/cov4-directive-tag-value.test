@@ -1,0 +1,15 @@
+; Test tag directive with assert value check (line 670 of textual_directives.cc)
+; Exercise the tag_directive path with assert sub-directive
+
+tag Priority
+    assert value =~ /[1-5]/
+
+2024/01/01 Test
+    ; Priority: 3
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(tag('Priority'))\n"
+3
+3
+end test

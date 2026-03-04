@@ -1,0 +1,11 @@
+; Coverage for convert.cc: csv output with UUID metadata
+
+2024/01/01 Existing
+    ; UUID: abc123
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test csv
+"2024/01/01","","Existing","Expenses:Food","$","10",""," UUID: abc123"
+"2024/01/01","","Existing","Assets:Cash","$","-10",""," UUID: abc123"
+end test

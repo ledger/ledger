@@ -1,0 +1,24 @@
+; Coverage test for account.cc get_account with mask argument (L252-253).
+; account(/regex/) in balance context calls find_account_re to locate
+; an account by regular expression. When found, returns a truthy scope;
+; when not found, returns a null/falsy scope.
+
+2024/01/01 Grocery
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Gas     $30.00
+    Assets:Cash
+
+test bal --display "total and account(/Food/)"
+             $-40.00  Assets:Cash
+              $40.00  Expenses
+              $10.00    Food
+              $30.00    Gas
+--------------------
+                   0
+end test
+
+test bal --display "total and account(/Nonexistent/)"
+end test

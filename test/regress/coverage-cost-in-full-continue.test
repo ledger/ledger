@@ -1,0 +1,16 @@
+; Coverage for xact.cc line 641 (continue for POST_COST_IN_FULL)
+; In the rounding adjustment loop, total cost (@@) postings are
+; skipped because their cost precision doesn't follow the per-unit
+; rounding logic.
+
+2024/01/01 Buy
+    Expenses:Utils   100 kWh @@ $72.00
+    Expenses:Utils   50 kWh @ $0.80
+    Assets:Cash     $-112.00
+
+test reg
+24-Jan-01 Buy                   Expenses:Utils              100 kWh      100 kWh
+                                Expenses:Utils               50 kWh      150 kWh
+                                Assets:Cash                $-112.00     $-112.00
+                                                                         150 kWh
+end test

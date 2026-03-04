@@ -1,0 +1,18 @@
+; Coverage test for post.cc lines 170, 190, 197, 236, 243, 254, 263
+; Tests various post field accessor functions:
+; - get_payee (line 170): payee from post context
+; - get_magnitude (line 190): magnitude from post context
+; - get_amount (line 197): returns 0 for null amount
+; - get_cost (line 236): returns 0 for null amount
+; - get_price (line 243): returns 0 for null amount
+; - get_total (line 254): total from post context
+; - get_count (line 263): count from post context
+
+2024/03/01 Groceries
+    Expenses:Food     $10.00
+    Assets:Cash
+
+test reg --format "%(payee) %(magnitude) %(amount) %(cost) %(price) %(total) %(count)\n"
+Groceries $10.00 $10.00 $10.00 $10.00 $10.00 1
+Groceries $10.00 $-10.00 $-10.00 $-10.00 $0.00 2
+end test

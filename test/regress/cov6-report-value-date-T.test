@@ -1,0 +1,10 @@
+; Coverage for report.cc lines 1652-1654,1668: T (display_total) and
+; value_date function lookups
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg Expenses --format "%(format_date(value_date, \"%Y\")) %(T)\n"
+2024 $10.00
+end test

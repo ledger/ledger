@@ -1,0 +1,34 @@
+; Coverage test for src/commodity.cc: commodity display and formatting
+; Tests multiple commodities, quoted commodities, and commodity directive.
+
+commodity $
+    note US Dollar
+    format $1,000.00
+    default
+
+2024/01/01 Multi-commodity
+    Assets:Brokerage           10 AAPL @ $150.00
+    Assets:Checking           $-1,500.00
+
+2024/01/02 Another Buy
+    Assets:Brokerage           5 AAPL @ $155.00
+    Assets:Checking             $-775.00
+
+test bal Assets
+          $-2,275.00
+             15 AAPL  Assets
+             15 AAPL    Brokerage
+          $-2,275.00    Checking
+--------------------
+          $-2,275.00
+             15 AAPL
+end test
+
+test bal --flat Assets:Brokerage
+             15 AAPL  Assets:Brokerage
+end test
+
+test reg Assets:Brokerage
+24-Jan-01 Multi-commodity       Assets:Brokerage            10 AAPL      10 AAPL
+24-Jan-02 Another Buy           Assets:Brokerage             5 AAPL      15 AAPL
+end test

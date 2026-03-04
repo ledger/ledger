@@ -1,0 +1,46 @@
+; Coverage tests for textual_directives.cc
+; Covers: apply account/tag without args (lines 297, 307),
+;         payee directive with blank sub-line (line 534),
+;         tag directive with blank sub-line (line 670),
+;         account directive with blank sub-line (line 429),
+;         commodity directive with blank sub-line (line 600),
+;         bucket directive (line 812), define directive (line 832),
+;         year directive (line 889), @ prefix on directives (line 779)
+
+; Test 'bucket' directive (case 'b' in general_directive, line 808-812)
+bucket Assets:Checking
+
+; Test 'define' directive (case 'd' in general_directive, line 828-832)
+define my_var=100
+
+; Test 'year' directive (case 'y', line 884-889)
+year 2024
+
+; Test '@' prefix on directive (line 778-779)
+@commodity $
+    format $1,000.00
+
+; A payee directive with a blank sub-line (line 534)
+payee Grocery Store
+    alias Groceries
+
+payee Restaurant
+
+; A tag directive with a blank sub-line (line 670)
+tag MyTag
+
+; An account directive with a blank sub-line (line 429)
+account Expenses:Food
+
+account Assets:Checking
+
+2024/01/01 Grocery Store
+    Expenses:Food            $25.00
+    Assets:Checking
+
+test bal
+             $-25.00  Assets:Checking
+              $25.00  Expenses:Food
+--------------------
+                   0
+end test

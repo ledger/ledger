@@ -1,0 +1,17 @@
+; Coverage test for amount.cc lines 1043-1055
+; Exercise trailing period in amount parsing (hledger compatibility)
+; A trailing decimal point with no following digits indicates zero decimal
+; places, used by hledger to disambiguate decimal marks from digit group marks
+
+commodity $1,000.
+
+2024/01/01 Test
+    Expenses:Food            $1,234.
+    Assets:Cash
+
+test bal
+             $-1,234  Assets:Cash
+              $1,234  Expenses:Food
+--------------------
+                   0
+end test

@@ -1,0 +1,11 @@
+; Coverage test for times.cc line 1266
+; Unknown period token triggers default case and unexpected()
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test period "blah" -> 1
+__ERROR__
+Error: Unexpected date period token 'blah'
+end test

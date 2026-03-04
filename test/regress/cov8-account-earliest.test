@@ -1,0 +1,14 @@
+; Coverage test for account.cc lines 343-344:
+; Exercise get_earliest function for accounts.
+
+2024/01/01 Test One
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/06/15 Test Two
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test bal Expenses --format "%(account) earliest=%(earliest)\n"
+Expenses:Food earliest=2024/01/01
+end test

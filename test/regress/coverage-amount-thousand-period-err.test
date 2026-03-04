@@ -1,0 +1,19 @@
+; Coverage for amount.cc line 1205:
+; Incorrect use of thousand-mark period when a comma was retroactively
+; identified as a decimal separator (European style with wrong grouping).
+; Input "1.12,345" scanned right-to-left: 3 digits then comma (tentative
+; thousands separator), then 2 digits then period -- the period triggers
+; retroactive decimal-comma detection, but offset (2) is not divisible by 3.
+
+2024/01/01 Test
+    Expenses:Food    1.12,345 EUR
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 9:
+While parsing posting:
+  Expenses:Food    1.12,345 EUR
+                   ^^^^^^^^^^^^
+Error: Incorrect use of thousand-mark period
+end test

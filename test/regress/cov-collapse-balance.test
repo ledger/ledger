@@ -1,0 +1,14 @@
+; Coverage test for filters.cc line 377
+; collapse_posts with multiple commodities triggers handle_value BALANCE path
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Expenses:Drink   5 EUR
+    Assets:Cash     $-10.00
+    Assets:Cash     -5 EUR
+
+test reg --collapse Expenses
+24-Jan-01 Test                  <Total>                      $10.00
+                                                              5 EUR       $10.00
+                                                                           5 EUR
+end test

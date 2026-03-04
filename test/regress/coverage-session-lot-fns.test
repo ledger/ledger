@@ -1,0 +1,32 @@
+; Tests for session.cc: lot functions with annotations
+; Covers: session.cc line 276 (lot_price success), 278 (NULL_VALUE)
+;         session.cc line 283 (lot_date success), 285 (NULL_VALUE)
+;         session.cc line 290 (lot_tag success), 292 (NULL_VALUE)
+
+2024/01/01 Buy Stock
+    Assets:Brokerage  10 AAPL {$150} [2024/01/01] (lot1)
+    Assets:Checking  $-1500
+
+2024/02/01 Simple
+    Expenses  $50
+    Assets:Checking
+
+; lot_price returns the price annotation
+test reg Assets:Brokerage --format '%(lot_price(amount))\n'
+$150
+end test
+
+; lot_date returns the date annotation
+test reg Assets:Brokerage --format '%(lot_date(amount))\n'
+2024/01/01
+end test
+
+; lot_tag returns the tag annotation
+test reg Assets:Brokerage --format '%(lot_tag(amount))\n'
+lot1
+end test
+
+; lot functions return empty for non-annotated amounts (NULL_VALUE paths)
+test reg Expenses --format '%(lot_price(amount))%(lot_date(amount))%(lot_tag(amount))%(amount)\n'
+$50
+end test

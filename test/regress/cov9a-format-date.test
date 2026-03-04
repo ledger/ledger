@@ -1,0 +1,10 @@
+; Coverage test for report.cc lines 885-898
+; fn_format_date with custom format, fn_format_datetime with custom format
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(format_date(date, \"%Y-%m-%d\"))\n" --limit "account =~ /Expenses/"
+2024-01-01
+end test

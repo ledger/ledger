@@ -1,0 +1,14 @@
+; Test account has_children_to_display (lines 443-444 of account.cc)
+; Exercise the has_children_to_display accessor
+
+2024/01/01 Test
+    Expenses:Food:Groceries    $10.00
+    Expenses:Food:Dining       $20.00
+    Assets:Cash
+
+test bal --format "%(has_children_to_display ? \"Y\" : \"N\") %(account)\n" --no-total
+N Assets:Cash
+Y Expenses:Food
+N Expenses:Food:Dining
+N Expenses:Food:Groceries
+end test

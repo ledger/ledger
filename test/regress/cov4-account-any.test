@@ -1,0 +1,13 @@
+; Test account lookup any (lines 413-414 of account.cc)
+; Exercise the any() function on accounts
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --limit "any(account =~ /Food/)" --flat
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

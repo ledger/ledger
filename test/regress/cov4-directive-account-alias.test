@@ -1,0 +1,14 @@
+; Test account sub-directive 'alias' (line 437-438 of textual_directives.cc)
+; Exercise the alias sub-directive for account
+
+account Expenses:Food
+    alias food
+
+2024/01/01 Test
+    food    $10.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

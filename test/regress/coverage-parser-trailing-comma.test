@@ -1,0 +1,13 @@
+; Coverage test for parser.cc L415
+; Tests a trailing comma in a function argument list, followed by
+; a closing parenthesis. The parser sees COMMA then RPAREN and breaks
+; out of the comma expression loop.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --display 'justify(amount, 10,)'
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

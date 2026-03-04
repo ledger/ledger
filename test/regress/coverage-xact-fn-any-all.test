@@ -1,0 +1,18 @@
+; Coverage for xact.cc lines 789-799 (fn_any) and 801-811 (fn_all)
+; These are the xact_t::lookup versions of any() and all()
+; which differ from the post_t versions in post.cc
+
+2024/01/01 Test1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Test2
+    Income:Salary   $-1000.00
+    Assets:Cash
+
+test reg --format "%(xact.any(account =~ /Expenses/)) %(xact.all(account =~ /:/)) %(xact.all(amount > 0))\n"
+true true false
+true true false
+false true false
+false true false
+end test

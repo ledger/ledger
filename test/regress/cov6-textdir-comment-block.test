@@ -1,0 +1,17 @@
+; Coverage for textual_directives.cc lines 704-710: comment block directive
+
+comment
+This is a multi-line comment
+that spans several lines
+end comment
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

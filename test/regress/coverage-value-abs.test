@@ -1,0 +1,10 @@
+; Coverage for value.cc: abs() function for AMOUNT type
+; abs() returns absolute value of a negative amount
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Checking
+
+test reg Assets --format "%(abs(amount))\n"
+$10.00
+end test

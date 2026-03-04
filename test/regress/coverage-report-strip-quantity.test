@@ -1,0 +1,9 @@
+; Coverage for report.cc lines 740,779: fn_strip and fn_quantity
+
+2024/01/01 Buy
+    Assets:Brokerage    10 AAPL {$150.00} [2024/01/01]
+    Assets:Cash
+
+test reg Assets:Brokerage --format "%(strip(amount)) %(quantity(amount))\n"
+10 AAPL 10
+end test

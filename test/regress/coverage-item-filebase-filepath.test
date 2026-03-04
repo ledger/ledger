@@ -1,0 +1,11 @@
+; Coverage for item.cc lines 454-457: filebase and filepath functions
+; Also covers has_meta (line 463)
+
+2024/01/01 Test
+    ; MyTag: myvalue
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(filebase) %(has_meta('MyTag'))\n" Expenses
+coverage-item-filebase-filepath.test true
+end test

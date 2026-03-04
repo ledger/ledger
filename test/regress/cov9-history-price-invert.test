@@ -1,0 +1,14 @@
+; Coverage for history.cc lines 377, 397: find_price inverted path
+
+commodity EUR
+    format 1,000.00 EUR
+
+P 2024/01/01 EUR $1.10
+
+2024/01/01 Test
+    Expenses:Travel    100.00 EUR
+    Assets:Cash
+
+test bal --market -X $ Assets
+            $-110.00  Assets:Cash
+end test

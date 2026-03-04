@@ -1,0 +1,21 @@
+; Coverage for value.cc lines 1568, 1608-1613:
+; When --exchange specifies source:target and the source commodity is
+; not found, sources[index] is nullptr. For a BALANCE value this
+; exercises the nullptr source branch where should_convert falls through
+; to the non-source path (line 1611-1613).
+
+2024/01/01 Test
+    Expenses:Food    $100.00
+    Expenses:Drink   50 EUR
+    Assets:Cash
+
+P 2024/01/01 $ 0.90 EUR
+
+test bal --exchange FAKE:EUR
+         -140.00 EUR  Assets:Cash
+          140.00 EUR  Expenses
+           50.00 EUR    Drink
+           90.00 EUR    Food
+--------------------
+                   0
+end test

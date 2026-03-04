@@ -1,0 +1,15 @@
+; Test min() function
+; Covers session.cc line 259 (fn_min)
+
+2024/01/15 Small
+    Expenses:Food    10 APPLES
+    Assets:Inventory
+
+2024/01/20 Large
+    Expenses:Food    50 APPLES
+    Assets:Inventory
+
+test reg --amount "min(amount, 30 APPLES)" --limit "account =~ /Expenses/"
+24-Jan-15 Small                 Expenses:Food             10 APPLES    10 APPLES
+24-Jan-20 Large                 Expenses:Food             30 APPLES    40 APPLES
+end test

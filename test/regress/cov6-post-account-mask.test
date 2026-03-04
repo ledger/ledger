@@ -1,0 +1,10 @@
+; Test post get_account with mask argument returning account scope
+; Covers post.cc lines 288-290 (account lookup by regex mask)
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format '%(account(/Food/).total)\n' Expenses
+$10.00
+end test

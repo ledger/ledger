@@ -1,0 +1,19 @@
+; Coverage for report.cc lines 626,633,640: averaged_lots/fifo_lots/lifo_lots
+; else branches that return args[0] when the argument is not a balance_t.
+; A single-commodity amount_t triggers the passthrough path.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format '%(averaged_lots(amount))\n' Expenses
+$10.00
+end test
+
+test reg --format '%(fifo_lots(amount))\n' Expenses
+$10.00
+end test
+
+test reg --format '%(lifo_lots(amount))\n' Expenses
+$10.00
+end test

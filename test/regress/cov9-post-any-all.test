@@ -1,0 +1,17 @@
+; Coverage test for post.cc lines 364, 384:
+; Exercise fn_any returning false and fn_all returning true.
+;
+; any(account =~ /NoSuchAccount/) should return false for all postings.
+; all(amount != 0) should return true when both postings have amounts.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash     $-10.00
+
+test reg --limit "any(account =~ /NoSuchAccount/)"
+end test
+
+test reg --limit "all(amount != 0)"
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

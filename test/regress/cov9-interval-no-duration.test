@@ -1,0 +1,19 @@
+; Coverage test for filters.cc lines 1070-1071:
+; Exercise interval_posts with a date range but no duration.
+; Using --begin/--end without --monthly or --weekly.
+
+2024/01/01 Before Range
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/02/15 In Range
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2024/03/31 After Range
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test reg Expenses --begin 2024/02/01 --end 2024/03/01
+24-Feb-15 In Range              Expenses:Food                $20.00       $20.00
+end test

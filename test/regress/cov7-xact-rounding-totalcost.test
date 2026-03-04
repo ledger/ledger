@@ -1,0 +1,11 @@
+; Coverage for xact.cc line 641: rounding adjustment skipping @@ posting
+
+2024/01/01 Buy
+    Assets:Stock    10 AAPL @@ $1500.00
+    Assets:Cash    $-1500.00
+
+test reg
+24-Jan-01 Buy                   Assets:Stock                10 AAPL      10 AAPL
+                                Assets:Cash               $-1500.00    $-1500.00
+                                                                         10 AAPL
+end test

@@ -1,0 +1,20 @@
+; Coverage test for item.cc get_tag returning NULL_VALUE (L298)
+; and has_tag returning false for non-existent tags.
+; Also covers the lookup switch break statements in item.cc
+; for 'h' (has_tag, L465), 't' (tag, L503), and other paths.
+
+2024/01/01 Test
+    ; MyTag: hello
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Test2
+    Expenses:Rent    $500.00
+    Assets:Cash
+
+test reg --format "%(tag('MyTag'))|%(has_tag('MyTag'))|%(tag('Missing'))|%(has_tag('Missing'))|%(account)\n"
+hello|true||false|Expenses:Food
+hello|true||false|Assets:Cash
+|false||false|Expenses:Rent
+|false||false|Assets:Cash
+end test

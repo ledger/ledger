@@ -1,0 +1,15 @@
+; Test commodity comparison with different prices (same currency)
+; Covers commodity.cc lines 436-442 (price less/greater comparison)
+
+2024/01/15 Buy lot 1
+    Assets:Stocks    10 AAPL {$150}
+    Assets:Cash
+
+2024/02/20 Buy lot 2
+    Assets:Stocks    5 AAPL {$160}
+    Assets:Cash
+
+test bal --lots --no-total Assets:Stocks
+      10 AAPL {$150}
+       5 AAPL {$160}  Assets:Stocks
+end test

@@ -1,0 +1,23 @@
+; Test select with group by clause
+; Covers select.cc lines 385-386 (group by keyword handling)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/02/20 Gas Station
+    Expenses:Transport    $40.00
+    Assets:Cash
+
+2024/03/10 More Food
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test select "account, total(amount) from posts where account =~ /Expenses/ group by account"
+Expenses:Food
+Expenses:Food                                                            $50.00
+Expenses:Food                                                            $80.00
+
+Expenses:Transport
+Expenses:Transport                                                       $40.00
+end test

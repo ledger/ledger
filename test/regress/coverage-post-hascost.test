@@ -1,0 +1,18 @@
+; Coverage test for post.cc get_has_cost (L226-228) and get_cost (L230-238).
+; Tests has_cost returning true for cost postings and false for non-cost
+; postings, and cost returning the cost or the amount when no cost exists.
+
+2024/01/01 Stock Purchase
+    Assets:Brokerage    10 AAPL @ $150.00
+    Assets:Cash
+
+2024/01/02 Simple Purchase
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(has_cost)|%(cost)|%(account)\n"
+true|$1500.00|Assets:Brokerage
+false|$-1500.00|Assets:Cash
+false|$10.00|Expenses:Food
+false|$-10.00|Assets:Cash
+end test

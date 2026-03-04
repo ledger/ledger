@@ -1,0 +1,14 @@
+; Test account sub-directive 'payee' (line 439-440 of textual_directives.cc)
+; Exercise the account payee mapping
+
+account Expenses:Food
+    payee Grocery
+
+2024/01/01 Grocery Store
+    Expenses:Unknown    $10.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

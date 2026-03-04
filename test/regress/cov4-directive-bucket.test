@@ -1,0 +1,14 @@
+; Test bucket directive (line 812 of textual_directives.cc)
+; and default_account_directive (line 113)
+
+bucket Assets:Checking
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+
+test bal
+             $-10.00  Assets:Checking
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

@@ -1,0 +1,18 @@
+; Coverage test for filters.cc line 1166: early return in create_post_from_amount
+; When an equity balance has a zero-valued commodity (e.g., AAPL stock
+; bought and sold completely), the create_post_from_amount skips it
+; with an early return at line 1166.
+
+2024/01/01 Buy
+    Assets:Stock    10 AAPL @ $150
+    Assets:Cash    $-1500
+
+2024/02/01 Sell
+    Assets:Stock    -10 AAPL @ $160
+    Assets:Cash    $1600
+
+test equity
+2024/02/01 Opening Balances
+    Assets:Cash                                 $100
+    Equity:Opening Balances
+end test

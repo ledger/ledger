@@ -1,0 +1,23 @@
+; Test item_t::lookup for pending, uncleared (lines 485-486, 506-507 of item.cc)
+; Exercise the pending and uncleared status accessors
+
+2024/01/01 ! Test1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 * Test2
+    Expenses:Auto    $20.00
+    Assets:Cash
+
+2024/01/03 Test3
+    Expenses:Other   $30.00
+    Assets:Cash
+
+test reg --format "%(pending) %(uncleared) %(cleared)\n"
+true false false
+true false false
+false false true
+false false true
+false true false
+false true false
+end test

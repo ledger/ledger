@@ -1,0 +1,26 @@
+; Test --check-payees with --strict option
+; Covers session.cc line 115 (check_payees)
+
+commodity $
+
+account Expenses:Food
+account Expenses:Transport
+account Assets:Cash
+
+payee Grocery Store
+payee Gas Station
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/01/20 Gas Station
+    Expenses:Transport    $40.00
+    Assets:Cash
+
+test reg --check-payees --strict
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+24-Jan-20 Gas Station           Expenses:Transport           $40.00       $40.00
+                                Assets:Cash                 $-40.00            0
+end test

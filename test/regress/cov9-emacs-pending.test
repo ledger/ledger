@@ -1,0 +1,11 @@
+; Coverage for emacs.cc: pending state in emacs output
+
+2024/01/01 ! Pending Transaction
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test emacs
+(("$FILE" 3 (26002 21728 0) nil "Pending Transaction"
+  (4 "Expenses:Food" "$10.00" pending)
+  (5 "Assets:Cash" "$-10.00" pending)))
+end test

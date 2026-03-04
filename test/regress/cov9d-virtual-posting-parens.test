@@ -1,0 +1,14 @@
+; Test virtual posting with parentheses (unbalanced)
+; Covers textual_xacts.cc line 456 (trailing whitespace trim on account name)
+;   and line 458-459 (POST_VIRTUAL flag via parentheses)
+
+2024/01/15 Test Transaction
+    Expenses:Food      $50.00
+    Assets:Cash       $-50.00
+    (Budget:Food)     $-50.00
+
+test reg
+24-Jan-15 Test Transaction      Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+                                (Budget:Food)               $-50.00      $-50.00
+end test

@@ -1,0 +1,16 @@
+; Coverage test for times.cc handle_in_token paths
+
+2024/06/15 June Transaction
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/15 January Transaction
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test reg --period "in 2024"
+24-Jun-15 June Transaction      Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Jan-15 January Transaction   Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test

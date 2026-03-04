@@ -1,0 +1,11 @@
+; Coverage for report.cc line 819: fn_truncated string fallthrough
+; When truncated() is called without a width argument on a non-amount value,
+; it falls through to the string truncation path
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format '%(truncated(account))\n' Expenses
+Expenses:Food
+end test

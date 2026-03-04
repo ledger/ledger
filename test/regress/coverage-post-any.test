@@ -1,0 +1,20 @@
+; Coverage test for post.cc fn_any (L359-377).
+; any(expr) checks if any posting in the same transaction matches expr.
+; any(expr, false) skips the current posting (L368-371).
+
+2024/01/01 Grocery
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Gas
+    Expenses:Gas     $30.00
+    Assets:Cash
+
+test reg --limit "any(account =~ /Food/)"
+24-Jan-01 Grocery               Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+test reg --limit "any(account =~ /Food/, false)"
+24-Jan-01 Grocery               Assets:Cash                 $-10.00      $-10.00
+end test

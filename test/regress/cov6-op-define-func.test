@@ -1,0 +1,12 @@
+; Coverage test for op.cc O_DEFINE and O_LAMBDA paths
+; Tests function definition and calling via expressions.
+; This exercises the O_DEFINE compile path (lines 134-161) and
+; O_LAMBDA evaluation path.
+
+2024/01/01 Test
+    Expenses:Food              $50.00
+    Assets:Cash
+
+test reg --display 'double(x) = x * 2; double(amount) > 0'
+24-Jan-01 Test                  Expenses:Food                $50.00       $50.00
+end test

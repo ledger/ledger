@@ -1,0 +1,15 @@
+; Coverage test for select.cc lines 381-382:
+; Exercise select with display clause.
+
+2024/01/01 Test
+    Expenses:Food    $25.00
+    Assets:Cash
+
+2024/01/15 Test Two
+    Expenses:Gas     $30.00
+    Assets:Cash
+
+test select date, account, amount display account =~ /Expenses/
+24-Jan-01 Expenses:Food                                                  $25.00
+24-Jan-15 Expenses:Gas                                                   $30.00
+end test

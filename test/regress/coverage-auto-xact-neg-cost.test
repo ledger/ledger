@@ -1,0 +1,14 @@
+; Coverage for xact.cc lines 1126-1128 (neg sign cost adjustment)
+; When an auto transaction copies a posting with a total cost (@@) and
+; the amount is negative, the cost must be negated.
+
+= Expenses
+    (Tracking)    1
+
+2024/01/01 Utility
+    Expenses:Utils   -100 kWh @@ 72 EUR
+    Assets:Cash
+
+test reg Tracking
+24-Jan-01 Utility               (Tracking)                 -100 kWh     -100 kWh
+end test

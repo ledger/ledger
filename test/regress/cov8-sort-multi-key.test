@@ -1,0 +1,20 @@
+; Coverage test for compare.cc lines 44-49:
+; Exercise multi-key sort (O_CONS handling in push_sort_value).
+
+2024/01/01 BBB
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 AAA
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/03 AAA
+    Expenses:Food    $5.00
+    Assets:Cash
+
+test reg Expenses --sort payee,amount
+24-Jan-03 AAA                   Expenses:Food                 $5.00        $5.00
+24-Jan-02 AAA                   Expenses:Food                $10.00       $15.00
+24-Jan-01 BBB                   Expenses:Food                $10.00       $25.00
+end test

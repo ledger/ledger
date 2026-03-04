@@ -1,0 +1,14 @@
+; Coverage for output.cc line 386: annotated commodity price already in map
+
+2024/01/01 Buy
+    Assets:Stocks    10 AAPL @ $100.00
+    Assets:Cash
+
+2024/01/02 Buy More
+    Assets:Stocks    5 AAPL @ $105.00
+    Assets:Cash
+
+test commodities
+$
+AAPL
+end test

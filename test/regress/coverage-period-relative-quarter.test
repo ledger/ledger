@@ -1,0 +1,16 @@
+; Test times.cc lines 805-817: handle_relative_token for "this quarter"
+
+2026/02/23 Q1 tx
+    Expenses:Food   $5.00
+    Assets:Cash
+
+2026/03/02 Q1 tx2
+    Expenses:Food   $20.00
+    Assets:Cash
+
+test reg --period "this quarter" --now 2026/03/03
+26-Feb-23 Q1 tx                 Expenses:Food                 $5.00        $5.00
+                                Assets:Cash                  $-5.00            0
+26-Mar-02 Q1 tx2                Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test

@@ -1,0 +1,15 @@
+; Coverage for filters.cc display_filter_posts path
+; The --display flag filters which postings are shown in output.
+
+2024/01/01 Test1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Test2
+    Expenses:Rent    $500.00
+    Assets:Cash
+
+test reg --display "amount > 0"
+24-Jan-01 Test1                 Expenses:Food                $10.00       $10.00
+24-Jan-02 Test2                 Expenses:Rent               $500.00      $500.00
+end test

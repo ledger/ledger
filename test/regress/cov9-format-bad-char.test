@@ -1,0 +1,13 @@
+; Coverage test for format.cc line 255
+; Test unrecognized single-letter format character. The format parser
+; checks %X against known single-letter mappings (like %D for date,
+; %P for payee, etc.) and throws an error for unknown letters.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format '%Z\n' -> 1
+__ERROR__
+Error: Unrecognized formatting character: Z
+end test

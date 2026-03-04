@@ -1,0 +1,13 @@
+; Test check directive (lines 693-696 of textual_directives.cc)
+; Exercise the check directive that produces a warning if false
+
+check 1 == 1
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

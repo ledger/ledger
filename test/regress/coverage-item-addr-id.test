@@ -1,0 +1,10 @@
+; Coverage for item.cc lines 341-342,345-348,415-416,470-471: id and addr functions
+
+2024/01/01 Test
+    ; UUID: my-test-id
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(id) %(addr != 0)\n" Expenses
+my-test-id true
+end test

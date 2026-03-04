@@ -1,0 +1,20 @@
+; Test times.cc lines 1245, 1086-1096: today/yesterday/tomorrow
+; as period tokens in handle_simple_period_token
+
+2026/03/02 Monday tx
+    Expenses:Food   $20.00
+    Assets:Cash
+
+2026/03/03 Tuesday tx
+    Expenses:Food   $30.00
+    Assets:Cash
+
+test reg --period "today" --now 2026/03/03
+26-Mar-03 Tuesday tx            Expenses:Food                $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test
+
+test reg --period "yesterday" --now 2026/03/03
+26-Mar-02 Monday tx             Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test

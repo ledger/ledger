@@ -1,0 +1,16 @@
+; Coverage: commodity.cc lines 430-431 (compare_by_commodity price comparison
+; with different price commodities -- recursion finds disparity)
+; Two lots of the same commodity with prices in different currencies
+
+2024/01/01 Buy in USD
+    Assets:Brokerage    10 AAPL {$150.00}
+    Assets:Cash
+
+2024/01/02 Buy in EUR
+    Assets:Brokerage    5 AAPL {100.00 EUR}
+    Assets:Cash
+
+test bal --lot-prices Assets:Brokerage
+      10 AAPL {$150}
+     5 AAPL {EUR100}  Assets:Brokerage
+end test

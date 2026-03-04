@@ -1,0 +1,17 @@
+; Coverage for xact.cc lines 612-613: virtual balanced null posting
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash    $-10.00
+    [Budget:Food]    $-10.00
+    [Budget:Savings]
+
+test bal
+             $-10.00  Assets:Cash
+                   0  Budget
+             $-10.00    Food
+              $10.00    Savings
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

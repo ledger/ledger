@@ -1,0 +1,17 @@
+; Coverage: value.cc line 912 (compare_by_commodity for different commodities
+; in is_less_than) and the commodity comparison recursion paths.
+; Sorting amounts with different commodities triggers the commodity comparison.
+
+2024/01/01 Buy EUR
+    Assets:Foreign    100.00 EUR
+    Assets:Cash       $-110.00
+
+2024/01/02 Buy GBP
+    Assets:Foreign    50.00 GBP
+    Assets:Cash       $-65.00
+
+test reg --sort "amount" Assets:Foreign
+24-Jan-01 Buy EUR               Assets:Foreign           100.00 EUR   100.00 EUR
+24-Jan-02 Buy GBP               Assets:Foreign            50.00 GBP   100.00 EUR
+                                                                       50.00 GBP
+end test

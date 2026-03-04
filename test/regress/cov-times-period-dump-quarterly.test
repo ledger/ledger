@@ -1,0 +1,52 @@
+; Coverage test for times.cc lines 320-324
+; Exercise date_duration output for quarterly and yearly periods
+; via the period command dump
+
+2024/01/01 Test
+    Expenses:Food            $10.00
+    Assets:Cash
+
+test period "quarterly in 2024"
+--- Period expression tokens ---
+TOK_QUARTERLY: quarterly
+TOK_IN: in
+TOK_INT: 2024
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: in year 2024
+duration: 1 quarter
+
+--- After stabilization ---
+   range: in year 2024
+   start: 24-Jan-01
+  finish: 25-Jan-01
+duration: 1 quarter
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jan-01 -- 24-Mar-31
+ 2: 24-Apr-01 -- 24-Jun-30
+ 3: 24-Jul-01 -- 24-Sep-30
+ 4: 24-Oct-01 -- 24-Dec-31
+end test
+
+test period "yearly in 2024"
+--- Period expression tokens ---
+TOK_YEARLY: yearly
+TOK_IN: in
+TOK_INT: 2024
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: in year 2024
+duration: 1 year
+
+--- After stabilization ---
+   range: in year 2024
+   start: 24-Jan-01
+  finish: 25-Jan-01
+duration: 1 year
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jan-01 -- 24-Dec-31
+end test

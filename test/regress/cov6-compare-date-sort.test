@@ -1,0 +1,14 @@
+; Coverage for compare.cc: date comparison in sort
+
+2024/01/15 Second
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2024/01/01 First
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg Expenses --sort date
+24-Jan-01 First                 Expenses:Food                $10.00       $10.00
+24-Jan-15 Second                Expenses:Food                $20.00       $30.00
+end test

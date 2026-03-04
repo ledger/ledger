@@ -1,0 +1,11 @@
+; Coverage test for select.cc: select command parsing and execution
+; Tests the SQL-like select command with various column types
+
+2024/01/15 Test Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test select date, payee, account, amount
+24-Jan-15 Test Payee               Expenses:Food                         $10.00
+24-Jan-15 Test Payee               Assets:Cash                          $-10.00
+end test

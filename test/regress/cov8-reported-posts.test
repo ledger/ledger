@@ -1,0 +1,20 @@
+; Coverage test for account.cc lines 629-630:
+; Exercise reported_posts via automated transactions.
+
+= Expenses
+    (Budget:Expenses)    -1
+
+2024/01/01 Test One
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/15 Test Two
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test bal Expenses Budget
+             $-30.00  Budget:Expenses
+              $30.00  Expenses:Food
+--------------------
+                   0
+end test

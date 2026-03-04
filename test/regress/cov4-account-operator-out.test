@@ -1,0 +1,13 @@
+; Test account_t::operator<< (line 233-236 of account.cc)
+; Exercise the stream operator through account display
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --flat
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

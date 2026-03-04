@@ -1,0 +1,14 @@
+; Test commodity compare with recursive disparity
+; (commodity.cc lines 430-431)
+2024/01/01 Buy A
+    Assets:Stocks    10 AAPL {$100.00}
+    Assets:Cash
+
+2024/01/02 Buy B
+    Assets:Stocks    10 AAPL {200.00 EUR}
+    Assets:Cash
+
+test bal Assets:Stocks --lot-prices
+      10 AAPL {$100}
+    10 AAPL {EUR200}  Assets:Stocks
+end test

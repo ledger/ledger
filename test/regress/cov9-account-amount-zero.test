@@ -1,0 +1,12 @@
+; Coverage for account.cc lines 269, 273: get_amount/get_total returning zero
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash     $-10.00
+
+test bal --empty --flat
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

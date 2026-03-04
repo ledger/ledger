@@ -1,0 +1,15 @@
+; Test commodity comparison with different lot dates
+; Covers commodity.cc lines 446-468 (date comparison in compare_by_commodity)
+
+2024/01/15 Buy lot 1
+    Assets:Stocks    10 AAPL {$150} [2024/01/15]
+    Assets:Cash
+
+2024/02/20 Buy lot 2
+    Assets:Stocks    5 AAPL {$150} [2024/02/20]
+    Assets:Cash
+
+test bal --lots --no-total Assets:Stocks
+10 AAPL {$150} [2024/01/15]
+5 AAPL {$150} [2024/02/20]  Assets:Stocks
+end test

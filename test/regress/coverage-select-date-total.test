@@ -1,0 +1,16 @@
+; Coverage for select.cc lines 70-72: total column identifier
+
+2024/01/01 Test1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/08 Test2
+    Expenses:Rent    $500.00
+    Assets:Cash
+
+test select "date, total"
+24-Jan-01       $10.00
+24-Jan-01            0
+24-Jan-08      $500.00
+24-Jan-08            0
+end test

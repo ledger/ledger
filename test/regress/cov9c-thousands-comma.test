@@ -1,0 +1,12 @@
+; Coverage: amount.cc line 220 (thousands comma separator output)
+; and line 204 (decimal point output in formatted amounts)
+; Exercises the thousands-separator formatting path in stream_out_mpq
+; when the commodity has COMMODITY_STYLE_THOUSANDS
+
+2024/01/01 Large Purchase
+    Expenses:Equipment    $12,345.67
+    Assets:Checking
+
+test bal Expenses
+          $12,345.67  Expenses:Equipment
+end test

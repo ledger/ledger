@@ -1,0 +1,27 @@
+; Coverage test for account.cc get_parent_account (L369-371),
+; get_partial_name (L476-477), get_latest_cleared (L339-341),
+; and the 'p' lookup case (L474-479).
+
+2024/01/01 * Grocery
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Gas
+    Expenses:Gas     $30.00
+    Assets:Cash
+
+2024/01/03 * Grocery
+    Expenses:Food    $5.00
+    Assets:Cash
+
+test bal --no-total --format "%(partial_account)|%(parent.account)|%(account)\n"
+Assets:Cash|Assets|Assets:Cash
+Expenses||Expenses
+Food|Expenses|Expenses:Food
+Gas|Expenses|Expenses:Gas
+end test
+
+test bal --no-total --flat --format "%(latest_cleared)|%(account)\n" Expenses:Food Assets:Cash
+2024/01/03|Assets:Cash
+2024/01/03|Expenses:Food
+end test

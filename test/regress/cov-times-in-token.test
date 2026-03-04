@@ -1,0 +1,22 @@
+; Coverage test for times.cc lines 1230-1232
+; Exercise "in" token in period parsing
+; Covers handle_in_token
+
+2024/01/01 January
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/02/01 February
+    Expenses:Food            $20.00
+    Assets:Cash
+
+2024/03/01 March
+    Expenses:Food            $30.00
+    Assets:Cash
+
+; "in 2024" exercises TOK_IN -> handle_in_token
+test reg Expenses --period "in 2024"
+24-Jan-01 January               Expenses:Food                $10.00       $10.00
+24-Feb-01 February              Expenses:Food                $20.00       $30.00
+24-Mar-01 March                 Expenses:Food                $30.00       $60.00
+end test

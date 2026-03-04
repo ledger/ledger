@@ -1,0 +1,11 @@
+; Coverage test for select.cc column handling
+; Exercise aux_date and multi-column formatting
+
+2024/01/01=2024/01/02 Test Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test select aux_date,payee,account,amount,total from posts
+24-Jan-02 Test Payee           Expenses:Food                $10.00       $10.00
+24-Jan-02 Test Payee           Assets:Cash                 $-10.00            0
+end test

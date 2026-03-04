@@ -1,0 +1,10 @@
+; Test value void printing
+; Covers value.cc lines 1994-1997 (void value printing)
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg --format="%(note)|\n" Expenses
+|
+end test

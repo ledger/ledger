@@ -1,0 +1,13 @@
+; Coverage for textual_directives.cc lines 305-340: apply tag directive
+
+apply tag Project
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+end apply tag
+
+test reg Expenses --format '%(has_tag("Project") ? "yes" : "no")\n'
+yes
+end test

@@ -1,0 +1,19 @@
+; Coverage for balance.cc: FIFO/LIFO lot sorting with mixed date annotations
+
+2024/01/01 Buy1
+    Assets:Stock    10 AAPL {$15.00}
+    Assets:Cash
+
+2024/01/05 Buy2
+    Assets:Stock    5 AAPL {$20.00} [2024/01/05]
+    Assets:Cash
+
+test bal --format "%(fifo_lots(total))\n" Assets:Stock
+10 AAPL {$15}
+5 AAPL {$20} [2024/01/05]
+end test
+
+test bal --format "%(lifo_lots(total))\n" Assets:Stock
+5 AAPL {$20} [2024/01/05]
+10 AAPL {$15}
+end test

@@ -1,0 +1,13 @@
+; Coverage for annotate.cc lines 316-319: non-fixated price sets target commodity
+
+2024/01/01 Buy Stock
+    Assets:Brokerage    10 AAPL {$150.00}
+    Assets:Cash         $-1500.00
+
+test bal --market
+                   0  Assets
+            $1500.00    Brokerage
+           $-1500.00    Cash
+--------------------
+                   0
+end test

@@ -1,0 +1,10 @@
+; Test amount printing with separated prefix commodity
+; Covers amount.cc lines 1392-1396 (prefixed, separated commodity print)
+
+2024/01/15 Test
+    Expenses:Food    $ 50.00
+    Assets:Cash
+
+test bal --no-total Expenses
+             $ 50.00  Expenses:Food
+end test

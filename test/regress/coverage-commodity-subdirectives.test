@@ -1,0 +1,23 @@
+; Coverage test for textual_directives.cc lines 600, 605, 614-619
+; Commodity directive with nomarket, default, note, alias sub-directives
+
+commodity BTC
+    nomarket
+    note Bitcoin cryptocurrency
+    alias XBT
+
+commodity $
+    format $1,000.00
+    default
+
+2024/01/01 Test
+    Assets:Crypto              1.5 XBT
+    Assets:Cash
+
+test bal
+                   0  Assets
+            -1.5 BTC    Cash
+             1.5 BTC    Crypto
+--------------------
+                   0
+end test

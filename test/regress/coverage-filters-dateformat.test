@@ -1,0 +1,19 @@
+; Coverage test for filters.cc lines 966-967
+; Tests subtotal_posts::report_subtotal date_format branch with --monthly
+; When date_format is set and there's a duration interval, the subtotal
+; reporting path should use the date_format to format period dates
+
+2024/01/15 Groceries
+    Expenses:Food             $50.00
+    Assets:Cash
+
+2024/02/20 Groceries
+    Expenses:Food             $75.00
+    Assets:Cash
+
+test reg --date-format "%Y-%m-%d" --monthly
+2024-01-01 - 2024-01-31         Assets:Cash                 $-50.00      $-50.00
+                                Expenses:Food                $50.00            0
+2024-02-01 - 2024-02-29         Assets:Cash                 $-75.00      $-75.00
+                                Expenses:Food                $75.00            0
+end test

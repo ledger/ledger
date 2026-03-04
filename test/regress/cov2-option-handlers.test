@@ -1,0 +1,103 @@
+; Test additional option handlers for report.cc coverage
+; Covers --subtotal, --depth, --flat, --no-total, --real,
+; --dc, --by-payee, --pending, --cleared, --uncleared
+
+2024/01/01 Payee One
+    Expenses:Food        $10.00
+    Assets:Cash
+
+2024/01/02 Payee One
+    Expenses:Dining      $20.00
+    Assets:Cash
+
+2024/01/03 Payee Two
+    Expenses:Gas         $30.00
+    Assets:Cash
+
+; Test --subtotal / -s option (line 1384)
+test reg Expenses --subtotal
+24-Jan-01 - 24-Jan-03           Expenses:Dining              $20.00       $20.00
+                                Expenses:Food                $10.00       $30.00
+                                Expenses:Gas                 $30.00       $60.00
+end test
+
+; Test --depth option (line 1266)
+test bal --depth 1
+             $-60.00  Assets
+              $60.00  Expenses
+--------------------
+                   0
+end test
+
+; Test --flat option (line 1284)
+test bal Expenses --flat
+              $20.00  Expenses:Dining
+              $10.00  Expenses:Food
+              $30.00  Expenses:Gas
+--------------------
+              $60.00
+end test
+
+; Test --no-total option (line 1338)
+test bal Expenses --no-total
+              $60.00  Expenses
+              $20.00    Dining
+              $10.00    Food
+              $30.00    Gas
+end test
+
+; Test --real / -R option (line 1194-1195)
+test reg --real
+24-Jan-01 Payee One             Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Jan-02 Payee One             Expenses:Dining              $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+24-Jan-03 Payee Two             Expenses:Gas                 $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test
+
+; Test --dc option (line 1265)
+test reg Expenses --dc
+24-Jan-01 Payee One        Expenses:Food        $10.00            0       $10.00
+24-Jan-02 Payee One        Expense:Dining       $20.00            0       $30.00
+24-Jan-03 Payee Two        Expenses:Gas         $30.00            0       $60.00
+end test
+
+; Test --by-payee / -P option (line 1192)
+test reg Expenses --by-payee
+24-Jan-01 Payee One             Expenses:Dining              $20.00       $20.00
+                                Expenses:Food                $10.00       $30.00
+24-Jan-03 Payee Two             Expenses:Gas                 $30.00       $60.00
+end test
+
+; Test --pending option (line 1349)
+test reg --pending
+end test
+
+; Test --cleared / -C option (line 1159-1160)
+test reg --cleared
+end test
+
+; Test --uncleared / -U option (line 1203-1204)
+test reg --uncleared
+24-Jan-01 Payee One             Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Jan-02 Payee One             Expenses:Dining              $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+24-Jan-03 Payee Two             Expenses:Gas                 $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test
+
+; Test --price / -I option (line 1177-1178, 1356)
+test reg Expenses --price
+24-Jan-01 Payee One             Expenses:Food                $10.00       $10.00
+24-Jan-02 Payee One             Expenses:Dining              $20.00       $30.00
+24-Jan-03 Payee Two             Expenses:Gas                 $30.00       $60.00
+end test
+
+; Test --quantity / -O option (line 1189, 1365)
+test reg Expenses --quantity
+24-Jan-01 Payee One             Expenses:Food                $10.00       $10.00
+24-Jan-02 Payee One             Expenses:Dining              $20.00       $30.00
+24-Jan-03 Payee Two             Expenses:Gas                 $30.00       $60.00
+end test

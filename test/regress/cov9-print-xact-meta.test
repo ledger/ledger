@@ -1,0 +1,13 @@
+; Coverage for print.cc lines 53, 58: print with xact-level metadata
+
+2024/01/01 Test
+    ; Payee: Original
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test print
+2024/01/01 Test
+    ; Payee: Original
+    Expenses:Food                             $10.00
+    Assets:Cash
+end test

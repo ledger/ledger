@@ -1,0 +1,9 @@
+; Coverage for item.cc lines 468-469: is_account function
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(is_account)\n" Expenses
+false
+end test

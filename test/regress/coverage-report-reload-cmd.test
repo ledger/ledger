@@ -1,0 +1,9 @@
+; Test report.cc: reload_command (lines 1120-1123)
+; The reload command re-reads journal files
+
+2024/01/01 Test
+    Expenses:Food   $10.00
+    Assets:Cash
+
+test reload
+end test

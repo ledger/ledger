@@ -1,0 +1,14 @@
+; Test token parsing for && and || operators (lines 164-184 of token.cc)
+; Exercise the double-character AND/OR token paths
+
+2024/01/01 Test1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Test2
+    Expenses:Auto    $20.00
+    Assets:Cash
+
+test reg --limit "payee == 'Test1' || payee == 'Test2'" --limit "amount > 0 && amount < {\$15}"
+24-Jan-01 Test1                 Expenses:Food                $10.00       $10.00
+end test

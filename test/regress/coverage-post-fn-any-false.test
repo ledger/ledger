@@ -1,0 +1,9 @@
+; Coverage for post.cc: fn_any with second argument (exclude self)
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --limit "any(account =~ /Cash/, false)"
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+end test

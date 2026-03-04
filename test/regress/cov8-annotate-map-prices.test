@@ -1,0 +1,9 @@
+; Coverage for annotate.cc line 105: early return when no price history
+
+2024/01/01 Buy
+    Assets:Stock    10 FOOD
+    Assets:Cash
+
+test reg --format "%(market(amount))\n" Assets:Stock
+10 FOOD
+end test

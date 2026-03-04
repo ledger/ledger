@@ -1,0 +1,17 @@
+; Test select command with date and payee columns
+; Covers select.cc lines 56, 60, 82, 85, 146-147, 149-150, 153
+
+2024/01/15 Groceries
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/02/01 Rent
+    Expenses:Rent    $800.00
+    Assets:Cash
+
+test select date, payee from posts
+24-Jan-15 Groceries                                                            
+24-Jan-15 Groceries                                                            
+24-Feb-01 Rent                                                                 
+24-Feb-01 Rent                                                                 
+end test

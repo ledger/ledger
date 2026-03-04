@@ -1,0 +1,11 @@
+; Coverage for pool.cc line 128: create commodity with no annotation
+
+commodity AAPL
+
+2024/01/01 Test
+    Assets:Stock    10 AAPL
+    Assets:Cash    $-150.00
+
+test bal Assets:Stock
+             10 AAPL  Assets:Stock
+end test

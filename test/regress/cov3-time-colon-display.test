@@ -1,0 +1,10 @@
+; Test time colon display mode
+; Covers amount.cc lines 173-199 (time_colon display in stream_out_mpq)
+
+2024/01/01 Work
+    Expenses:Labor    1.50h
+    Assets:Cash
+
+test --time-colon bal --no-total Expenses
+               1:30h  Expenses:Labor
+end test

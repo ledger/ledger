@@ -1,0 +1,31 @@
+; Coverage test for select.cc lines 285-288, 359-363: from accounts report
+; When select uses "from accounts", the account column formatter
+; uses partial_account instead of truncated/justify.
+; Exercises:
+;   L117: accounts_report = true (from accounts detection)
+;   L285-288: accounts_report branch for account column
+;   L359-363: accounts reporter creation
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+test select account, total from accounts
+Assets:Checking      $-80.00
+Expenses       $80.00
+Food       $50.00
+Transport       $30.00
+            0
+end test
+
+; With --flat to exercise partial_account(options.flat) at L287
+test --flat select account, total from accounts
+Assets:Checking      $-80.00
+Expenses:Food       $50.00
+Expenses:Transport       $30.00
+            0
+end test

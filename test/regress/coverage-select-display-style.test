@@ -1,0 +1,26 @@
+; Coverage test for select.cc lines 381-394: display and style clauses
+; Exercises the parsing of additional SQL-like clauses:
+;   L381-382: display clause parsing
+;   L387-394: style clause parsing (csv, xml, json, emacs branches)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+; display clause filters which postings are shown
+test select date, payee, amount from posts display 'amount > 0'
+24-Jan-15 Grocery Store                                                  $50.00
+24-Jan-20 Gas Station                                                    $30.00
+end test
+
+; style clause is parsed but does not change formatter output
+test select date, amount from posts style csv
+24-Jan-15       $50.00
+24-Jan-15      $-50.00
+24-Jan-20       $30.00
+24-Jan-20      $-30.00
+end test

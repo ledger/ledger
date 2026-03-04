@@ -1,0 +1,15 @@
+; Coverage for compare.cc lines 116-138: account sort comparison
+
+2024/01/01 Test
+    Expenses:Gas    $20.00
+    Expenses:Food   $10.00
+    Assets:Cash
+
+test bal --sort total
+             $-30.00  Assets:Cash
+              $30.00  Expenses
+              $10.00    Food
+              $20.00    Gas
+--------------------
+                   0
+end test

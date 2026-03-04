@@ -1,0 +1,32 @@
+; Coverage test for select.cc: additional clause handling
+; Exercises:
+;   L349-354: from xacts/transactions
+;   L383-384: collect clause
+;   L385-386: group by clause
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+; from xacts exercises L351-354 (print_xacts reporter)
+test select date, payee from xacts
+2024/01/15 Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport                        $30.00
+    Assets:Checking
+end test
+
+; collect clause modifies the amount expression (L383-384)
+test select date, amount from posts collect 'amount * 2'
+24-Jan-15      $100.00
+24-Jan-15     $-100.00
+24-Jan-20       $60.00
+24-Jan-20      $-60.00
+end test

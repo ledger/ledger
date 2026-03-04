@@ -1,0 +1,12 @@
+; Coverage for filters.cc lines 1270-1272 (transfer_details SET_DATE)
+; The --date option overrides the posting date with an expression.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+    ; AuxDate: 2024/06/15
+
+test reg --date "value_date"
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+24-Jan-01 Test                  Assets:Cash                 $-10.00            0
+end test

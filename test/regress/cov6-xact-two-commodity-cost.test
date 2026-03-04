@@ -1,0 +1,17 @@
+; Coverage test for xact.cc lines 240-242
+; When two commodities exist and a posting already has a user-specified cost,
+; saw_cost should be set true and cost auto-calculation should be skipped.
+
+2024/01/01 Buy Foreign Currency
+    Assets:Brokerage          100 EUR @ $1.10
+    Assets:Cash
+
+test bal
+               $-110
+             100 EUR  Assets
+             100 EUR    Brokerage
+               $-110    Cash
+--------------------
+               $-110
+             100 EUR
+end test

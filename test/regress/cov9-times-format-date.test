@@ -1,0 +1,11 @@
+; Coverage for times.cc lines 1801-1802, 1821-1822: assert(false) in format_date
+; These are dead code (assert(false) paths) but we can exercise the FMT_CUSTOM path
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --date-format "%Y/%m/%d"
+2024/01/01 Test                 Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

@@ -1,0 +1,8 @@
+; Coverage for report.cc lines 1120-1123,1805-1808: reload command
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reload
+end test

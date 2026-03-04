@@ -1,0 +1,13 @@
+; Coverage for iterators.cc: price iterator
+
+P 2024/01/01 EUR $1.00
+P 2024/01/15 EUR $1.50
+
+2024/01/01 Buy
+    Assets:Investments    100 EUR
+    Assets:Cash
+
+test pricesdb
+P 2024/01/01 00:00:00 EUR $1.00
+P 2024/01/15 00:00:00 EUR $1.50
+end test

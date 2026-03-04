@@ -1,0 +1,11 @@
+; Coverage for pool.cc line 308: annotation tag in exchange
+
+P 2024/01/01 AAPL $100.00
+
+2024/01/01 Buy
+    Assets:Stocks    10 AAPL {$100.00} [2024/01/01] (purchase) @ $100.00
+    Assets:Cash
+
+test bal --lot-tags Assets:Stocks
+  10 AAPL (purchase)  Assets:Stocks
+end test

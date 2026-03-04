@@ -1,0 +1,14 @@
+; Coverage test for format.cc lines 80-97, 224-252
+; Test single-letter format mappings: %P (payee), %N (note),
+; %X (cleared marker), %C (code), %a (account).
+; These exercise the single_letter_mappings lookup and the expression
+; generation code with $min/$max/$left substitutions.
+
+2024/01/01 * (123) Groceries
+    ; A note here
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg Expenses --format '%X%C%P|%a|%N\n'
+* (123) Groceries|Expenses:Food| A note here
+end test

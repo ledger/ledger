@@ -1,0 +1,9 @@
+; Coverage for report.cc line 575: top_amount with SEQUENCE type
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg Expenses --format "%(top_amount(to_sequence(amount)))\n"
+$10.00
+end test

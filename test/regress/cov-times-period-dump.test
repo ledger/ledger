@@ -1,0 +1,39 @@
+; Coverage test for times.cc lines 1580-1612
+; Exercise date_interval_t::dump() via the period command
+; Also covers the date_duration output operator for various types
+
+2024/01/01 Test
+    Expenses:Food            $10.00
+    Assets:Cash
+
+test period "monthly in 2024"
+--- Period expression tokens ---
+TOK_MONTHLY: monthly
+TOK_IN: in
+TOK_INT: 2024
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: in year 2024
+duration: 1 month
+
+--- After stabilization ---
+   range: in year 2024
+   start: 24-Jan-01
+  finish: 25-Jan-01
+duration: 1 month
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jan-01 -- 24-Jan-31
+ 2: 24-Feb-01 -- 24-Feb-29
+ 3: 24-Mar-01 -- 24-Mar-31
+ 4: 24-Apr-01 -- 24-Apr-30
+ 5: 24-May-01 -- 24-May-31
+ 6: 24-Jun-01 -- 24-Jun-30
+ 7: 24-Jul-01 -- 24-Jul-31
+ 8: 24-Aug-01 -- 24-Aug-31
+ 9: 24-Sep-01 -- 24-Sep-30
+10: 24-Oct-01 -- 24-Oct-31
+11: 24-Nov-01 -- 24-Nov-30
+12: 24-Dec-01 -- 24-Dec-31
+end test

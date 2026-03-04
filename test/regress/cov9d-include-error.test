@@ -1,0 +1,11 @@
+; Test include directive with file that has parse error
+; Covers textual_directives.cc lines 248-258 (catch block in include)
+
+include cov9d-include-bad-file.dat
+
+test reg -> 1
+__ERROR__
+In file included from "$FILE", line 4:
+While parsing file "$sourcepath/test/regress/cov9d-include-bad-file.dat", line 5:
+Error: Only one posting with null amount allowed per transaction
+end test

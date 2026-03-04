@@ -1,0 +1,10 @@
+; Coverage test for report.cc line 740: fn_strip
+; Test strip() function which removes annotations from amounts.
+
+2024/01/01 Buy Stock
+    Assets:Stock    10 AAPL @ $100.00
+    Assets:Cash
+
+test reg Assets:Stock --format '%(strip(amount))\n'
+10 AAPL
+end test

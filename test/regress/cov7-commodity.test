@@ -1,0 +1,10 @@
+; Test fn_commodity
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(commodity(amount))\n"
+$
+$
+end test

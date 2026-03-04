@@ -1,0 +1,17 @@
+; Test item_t::lookup for L, X, Y symbols (lines 517-530 of item.cc)
+; L = actual (not virtual), X = cleared, Y = pending
+
+2024/01/01 ! Test1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 * Test2
+    Expenses:Auto    $20.00
+    Assets:Cash
+
+test reg --format "L=%(L) X=%(X) Y=%(Y)\n"
+L=true X=false Y=true
+L=true X=false Y=true
+L=true X=true Y=false
+L=true X=true Y=false
+end test

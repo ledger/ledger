@@ -1,0 +1,16 @@
+; Test compare_by_commodity with prices in different currencies
+; Covers commodity.cc lines 430-431 (recursion found disparity in price
+; comparison with different commodity)
+
+2024/01/01 Buy AAPL in USD
+    Assets:Brokerage    10 AAPL {$150.00}
+    Assets:Cash        $-1500.00
+
+2024/01/02 Buy AAPL in EUR
+    Assets:Brokerage    5 AAPL {130.00 EUR}
+    Assets:EUR         -650.00 EUR
+
+test bal --no-total --lots Brokerage
+   10 AAPL {$150.00}
+ 5 AAPL {130.00 EUR}  Assets:Brokerage
+end test

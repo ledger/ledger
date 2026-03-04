@@ -1,0 +1,31 @@
+; Coverage test for amount.cc truncate and rounding operations
+; Exercise floor, ceiling, abs, and other amount functions
+
+2024/01/01 Test
+    Expenses:Food           $123.45
+    Assets:Cash
+
+; Exercise floor function (amount.cc in_place_floor)
+test eval "floor(3.7)"
+3
+end test
+
+; Exercise ceiling function (amount.cc in_place_ceiling)
+test eval "ceiling(3.2)"
+4
+end test
+
+; Exercise abs function (amount.cc in_place_abs)
+test eval "abs(-42)"
+42
+end test
+
+; Negative floor
+test eval "floor(-3.2)"
+-4
+end test
+
+; Negative ceiling
+test eval "ceiling(-3.7)"
+-3
+end test

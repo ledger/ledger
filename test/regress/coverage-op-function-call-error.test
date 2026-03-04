@@ -1,0 +1,19 @@
+; Coverage for op.cc lines 520-522:
+; When a function call throws a non-recursion exception, the catch
+; handler at line 520 adds context about which function was called
+; and rethrows. Here justify() receives amount/0 which throws
+; "Divide by zero" inside the function call.
+
+2024/01/01 Test
+    Expenses:Food    $100.00
+    Assets:Cash
+
+test reg --format "%(justify(amount / 0, 20))\n" -> 1
+__ERROR__
+While evaluating value expression:
+  justify((amount / 0), 20)
+While calling function 'justify (<#EXPR (amount / {0})>, <#EXPR {20}>)':
+While handling posting from "$FILE", line 8:
+>     Expenses:Food    $100.00
+Error: Divide by zero
+end test

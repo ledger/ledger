@@ -1,0 +1,10 @@
+; Test get_cost when amount is null (lines 235-236 of post.cc)
+; Exercise the null amount path for cost
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(cost)\n" --limit "account =~ /Food/"
+$10.00
+end test

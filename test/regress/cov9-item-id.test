@@ -1,0 +1,11 @@
+; Coverage for item.cc line 343: get_id
+
+2024/01/01 Test
+    ; UUID: abc-123
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(id)\n"
+abc-123
+abc-123
+end test

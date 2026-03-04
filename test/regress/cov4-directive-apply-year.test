@@ -1,0 +1,21 @@
+; Test apply year / end apply year directive (lines 359-387, 389-414 of textual_directives.cc)
+; Exercise the year_directive_year and apply_stack flow
+
+apply year 2023
+
+01/15 Test1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+end apply year
+
+01/15 Test2
+    Expenses:Auto    $20.00
+    Assets:Cash
+
+test reg
+23-Jan-15 Test1                 Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+26-Jan-15 Test2                 Expenses:Auto                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test

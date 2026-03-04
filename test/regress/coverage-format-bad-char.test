@@ -1,0 +1,11 @@
+; Coverage test for format.cc line 391:
+; Unrecognized formatting character error
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg --format '%!\n' -> 1
+__ERROR__
+Error: Unrecognized formatting character: !
+end test

@@ -1,0 +1,22 @@
+; Coverage test for report.cc short option lookups
+; Tests -F (format), -S (sort), -T (total) short options
+; Covers lines 1169 (-F), 1199 (-S), 1202 (-T)
+
+2024/01/15 Test Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test -F "%(account)\n" reg
+Expenses:Food
+Assets:Cash
+end test
+
+test -S amount reg
+24-Jan-15 Test Payee            Assets:Cash                 $-10.00      $-10.00
+                                Expenses:Food                $10.00            0
+end test
+
+test -T "amount" reg
+24-Jan-15 Test Payee            Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00      $-10.00
+end test

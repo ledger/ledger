@@ -1,0 +1,27 @@
+; Coverage test for report.cc lines 1039-1076
+; Test to_boolean(), to_int(), to_string(), to_amount(), to_sequence()
+; type conversion functions.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg Expenses --format '%(to_boolean(amount > 0))\n'
+true
+end test
+
+test reg Expenses --format '%(to_int(quantity(amount)))\n'
+10
+end test
+
+test reg Expenses --format '%(to_string(payee))\n'
+Test
+end test
+
+test reg Expenses --format '%(to_amount(10))\n'
+10
+end test
+
+test reg Expenses --format '%(is_seq(to_sequence(amount)))\n'
+true
+end test

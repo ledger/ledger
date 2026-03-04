@@ -1,0 +1,19 @@
+; Coverage test for filters.cc line 372
+; Tests handle_value AMOUNT branch via collapse_posts::report_subtotal.
+; When collapsing transactions with --collapse, the totals per account
+; are passed through handle_value. For single-commodity amounts, the
+; value type is AMOUNT, which hits line 372: post.amount = temp.as_amount().
+
+2024/01/15 Payee1
+    Expenses:Food             $50.00
+    Expenses:Drink            $10.00
+    Assets:Cash              $-60.00
+
+2024/01/15 Payee1
+    Expenses:Gas              $40.00
+    Assets:Cash              $-40.00
+
+test reg Expenses --collapse
+24-Jan-15 Payee1                <Total>                      $60.00       $60.00
+24-Jan-15 Payee1                Expenses:Gas                 $40.00      $100.00
+end test

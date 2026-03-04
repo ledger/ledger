@@ -1,15 +1,13 @@
-; Test account directive with note subdirective
+; Coverage: account.cc line 472 - note lookup for accounts
+; Uses the account directive with a note
 
 account Expenses:Food
-    note Food and grocery expenses
+    note This is a food account
 
-2024/01/01 Payee
+2024/01/01 Grocery
     Expenses:Food    $10.00
-    Assets:Checking
+    Assets:Cash
 
-test bal
-             $-10.00  Assets:Checking
-              $10.00  Expenses:Food
---------------------
-                   0
+test bal --format "%(note)\n" Expenses
+This is a food account
 end test

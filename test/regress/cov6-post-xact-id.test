@@ -1,0 +1,13 @@
+; Test xact_id with multiple postings in a transaction
+; Covers post.cc line 555 (xact_id incrementing past first posting)
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Expenses:Drink   $5.00
+    Assets:Cash
+
+test reg --format '%(xact_id)\n'
+1
+2
+3
+end test

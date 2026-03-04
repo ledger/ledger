@@ -1,0 +1,10 @@
+; Coverage for report.cc lines 958-962: fn_clear_commodity
+; Strips the commodity symbol from an amount
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg --format '%(clear_commodity(amount))\n' Expenses
+50
+end test

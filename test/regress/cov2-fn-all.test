@@ -1,0 +1,20 @@
+; Test fn_all auto transaction predicate for xact.cc coverage
+; Covers fn_all (line 801-811)
+
+= expr 'all(account =~ /Assets/ or account =~ /Expenses/)'
+    Budget:AllMatch                    1
+    Budget:AllOffset                  -1
+
+2024/01/01 Payee
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/02/01 Payee Two
+    Income:Salary           $-100.00
+    Assets:Cash
+
+; Test fn_all: triggers only when ALL postings match
+test reg Budget:All
+24-Jan-01 Payee                 Budget:AllMatch              $10.00       $10.00
+                                Budget:AllOffset            $-10.00            0
+end test

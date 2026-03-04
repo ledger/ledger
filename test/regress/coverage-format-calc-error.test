@@ -1,0 +1,18 @@
+; Coverage test for format.cc lines 449-457:
+; calc_error during format expression evaluation
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg --format '%(nonexistent_function(amount))\n' -> 1
+__ERROR__
+While calculating format expression:
+  nonexistent_function(amount)
+While evaluating value expression:
+  nonexistent_function(amount)
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+While handling posting from "$FILE", line 5:
+>     Expenses:Food    $50.00
+Error: Unknown identifier 'nonexistent_function'
+end test

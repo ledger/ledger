@@ -1,0 +1,24 @@
+; Coverage for times.cc lines 781-786: TOK_A_MONTH case in handle_relative_token
+; Tests "last january" and "next march" with month names after relative tokens
+
+2024/01/15 January
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/02/15 February
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2024/03/15 March
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test reg --now 2025/06/01 --period "last january"
+24-Jan-15 January               Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+test reg --now 2023/06/01 --period "next march"
+24-Mar-15 March                 Expenses:Food                $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test

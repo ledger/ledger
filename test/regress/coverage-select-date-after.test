@@ -1,0 +1,15 @@
+; Coverage test for select.cc line 267: thus_far += " + " for date column
+; When a date column is NOT the first column in a select query,
+; the thus_far accumulator needs to prepend " + " before adding
+; "int(date_width) + 1". This exercises the true branch of:
+;   L266: if (!thus_far.empty())
+;   L267: thus_far += " + "
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test select amount, date from posts
+      $50.00 24-Jan-15
+     $-50.00 24-Jan-15
+end test

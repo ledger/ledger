@@ -1,0 +1,15 @@
+; Coverage test for filters.cc lines 840-841, 845
+; Test revalued filter with market values.
+; The revalued filter creates temporary posts with the revalued total,
+; exercising the as_amount path in handle_value.
+
+P 2024/01/01 AAPL $150.00
+P 2024/01/15 AAPL $160.00
+
+2024/01/01 Buy stock
+    Assets:Investment    10 AAPL
+    Assets:Cash         $-1500.00
+
+test reg Assets:Investment --market --gain
+24-Jan-15 Commodities revalued  <Revalued>                  $100.00      $100.00
+end test

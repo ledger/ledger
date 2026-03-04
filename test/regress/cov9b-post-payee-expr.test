@@ -1,0 +1,15 @@
+; Coverage for post.cc line 170: get_payee accessor function
+; Use payee in a value expression to trigger the post_t lookup
+
+2024/01/01 Grocery Store
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Restaurant
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test reg --limit "payee =~ /Grocery/"
+24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

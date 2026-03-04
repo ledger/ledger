@@ -1,0 +1,27 @@
+; Tests for history.cc: find_price returning nullopt when no path exists
+; Covers: lines 404-407 (return nullopt when source/target has no graph index)
+;         line 493-495 (return nullopt when price.is_null after dijkstra)
+
+; Only EUR -> $ price exists, no GBP price
+P 2024/01/01 EUR $1.10
+
+2024/01/15 EUR Test
+    Expenses:A  10 EUR
+    Assets
+
+2024/01/16 GBP Test
+    Expenses:B  10 GBP
+    Assets
+
+; GBP has no conversion path to $ so find_price returns nullopt
+; EUR converts successfully, GBP stays unconverted
+test bal -X '$'
+             $-11.00
+             -10 GBP  Assets
+              $11.00
+              10 GBP  Expenses
+              $11.00    A
+              10 GBP    B
+--------------------
+                   0
+end test

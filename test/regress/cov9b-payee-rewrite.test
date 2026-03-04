@@ -1,0 +1,13 @@
+; Coverage for filters.cc rewrite_posts: payee rewrite path
+; Tests payee-rewrite directive
+
+payee-rewrite Restaurant  Dining Out
+
+2024/01/01 Restaurant
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Dining Out            Expenses:Food                $50.00       $50.00
+24-Jan-01 Dining Out            Assets:Cash                 $-50.00            0
+end test

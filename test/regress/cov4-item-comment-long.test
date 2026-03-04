@@ -1,0 +1,12 @@
+; Test get_comment with long note (lines 364-386 of item.cc)
+; Exercise the comment formatter with a note longer than 15 chars
+
+2024/01/01 Test
+    ; This is a longer note for the whole transaction
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(xact.comment)\n" --limit "account =~ /Food/"
+
+    ; This is a longer note for the whole transaction
+end test

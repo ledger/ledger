@@ -1,0 +1,10 @@
+; Test format left alignment with %-
+; Covers format.cc lines 191-194, 417-418 (left align flag in format)
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg --format="%-20(account) %(scrub(display_amount))\n" Expenses
+Expenses:Food        $50.00
+end test

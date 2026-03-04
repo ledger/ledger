@@ -1,0 +1,11 @@
+; Coverage test for select.cc lines 66, 72, 82, 85, 96
+; Tests select command with total column to cover the "total" identifier path
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test select date, payee, account, amount, total from posts
+24-Jan-01 Test                 Expenses:Food                $10.00       $10.00
+24-Jan-01 Test                 Assets:Cash                 $-10.00            0
+end test

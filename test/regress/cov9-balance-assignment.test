@@ -1,0 +1,17 @@
+; Test balance assignment on null posting
+; Covers textual_xacts.cc lines 718 (balance assignment diff)
+
+2024/01/01 Opening Balance
+    Assets:Cash    $100.00
+    Equity:Opening
+
+2024/01/15 Adjustment
+    Assets:Cash    = $80.00
+    Expenses:Misc
+
+test reg
+24-Jan-01 Opening Balance       Assets:Cash                 $100.00      $100.00
+                                Equity:Opening             $-100.00            0
+24-Jan-15 Adjustment            Assets:Cash                 $-20.00      $-20.00
+                                Expenses:Misc                $20.00            0
+end test

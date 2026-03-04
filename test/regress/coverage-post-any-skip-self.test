@@ -1,0 +1,18 @@
+; Coverage test for post.cc lines 368-371
+; Tests fn_any with second argument false to skip the current posting.
+; any(expr, false) evaluates expr against all OTHER postings in the
+; transaction, not including the current one. Here, the Expenses:Food
+; posting itself is skipped so it doesn't match; only Assets:Cash
+; (the other posting) sees that Expenses:Food matches.
+
+2024/03/01 Groceries
+    Expenses:Food     $10.00
+    Assets:Cash
+
+2024/03/02 Transfer
+    Assets:Savings    $100.00
+    Assets:Checking
+
+test reg --limit "any(account =~ /Expense/, false)"
+24-Mar-01 Groceries             Assets:Cash                 $-10.00      $-10.00
+end test

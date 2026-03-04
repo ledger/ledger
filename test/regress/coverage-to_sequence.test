@@ -1,0 +1,11 @@
+; Coverage test for report.cc fn_to_sequence (line 1075)
+; Tests to_sequence() function in format expressions
+
+2024/01/15 Test Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(is_seq(to_sequence(amount)) ? \"seq\" : \"no\")\n"
+seq
+seq
+end test

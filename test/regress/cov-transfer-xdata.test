@@ -1,0 +1,16 @@
+; Coverage test for filters.cc line 1290
+; transfer_details SET_ACCOUNT copies xdata flags from previous account
+; Auto_xact sets xdata on accounts, then --account renames them
+
+= Expenses
+    (Budget:Match)    -1
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --account "payee"
+24-Jan-01 Test                  Test:Expenses:Food           $10.00       $10.00
+24-Jan-01 Test                  Test:Assets:Cash            $-10.00            0
+24-Jan-01 Test                  (Test:Budget:Match)         $-10.00      $-10.00
+end test

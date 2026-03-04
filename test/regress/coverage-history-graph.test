@@ -1,0 +1,39 @@
+; Tests for history.cc: graph visualization and price operations
+; Covers: lines 519-527 (print_map/pricemap with and without moment)
+;         lines 280-282 (remove_price/remove_edge after removing last price)
+
+; Set up price history with multiple commodities for graph paths
+P 2024/01/01 EUR $1.10
+P 2024/06/01 EUR $1.15
+
+2024/01/15 Test
+    Expenses  10 EUR
+    Assets
+
+; pricemap without moment triggers line 520-521
+test pricemap
+graph G {
+0[label=""];
+1[label="s"];
+2[label="%"];
+3[label="m"];
+4[label="h"];
+5[label="$"];
+6[label="EUR"];
+6--5 ;
+}
+end test
+
+; pricemap with --now triggers line 523-526 (filtered graph)
+test pricemap --now 2024/03/01
+graph G {
+0[label=""];
+1[label="s"];
+2[label="%"];
+3[label="m"];
+4[label="h"];
+5[label="$"];
+6[label="EUR"];
+6--5 ;
+}
+end test

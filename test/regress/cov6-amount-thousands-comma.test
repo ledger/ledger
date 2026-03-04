@@ -1,0 +1,12 @@
+; Test amount output with thousands comma separator and decimal point
+; Covers amount.cc lines 204 (decimal point output), 220 (comma thousands)
+
+commodity 1,000.00 USD
+
+2024/01/01 Test
+    Expenses:Food    12,345.67 USD
+    Assets:Cash
+
+test bal Expenses
+       12,345.67 USD  Expenses:Food
+end test

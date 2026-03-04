@@ -1,0 +1,11 @@
+; Coverage test for select.cc lines 309-320:
+; Exercise select with total column.
+
+2024/01/01 Test
+    Expenses:Food    $25.00
+    Assets:Cash
+
+test select date, account, total
+24-Jan-01 Expenses:Food                                                  $25.00
+24-Jan-01 Assets:Cash                                                         0
+end test

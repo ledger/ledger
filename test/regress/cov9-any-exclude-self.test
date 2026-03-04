@@ -1,0 +1,11 @@
+; Coverage test for post.cc line 364:
+; Exercise any(EXPR, false) to exclude self from the test.
+; When false is passed as second arg, the current posting is excluded.
+
+2024/01/01 Mixed
+    Expenses:Food    $10.00
+    Assets:Cash     $-10.00
+
+test reg --limit "any(account =~ /Food/, false)" Assets
+24-Jan-01 Mixed                 Assets:Cash                 $-10.00      $-10.00
+end test

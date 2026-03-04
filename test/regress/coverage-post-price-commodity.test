@@ -1,0 +1,19 @@
+; Coverage test for post.cc get_price (L241-248), get_commodity (L206-217),
+; and get_commodity_is_primary (L219-224).
+; Tests price with annotation (L244-245) and without (L246-247).
+; Tests commodity and primary on different posting types.
+
+2024/01/01 Stock Purchase
+    Assets:Brokerage    10 AAPL @ $150.00
+    Assets:Cash
+
+2024/01/02 Simple Purchase
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(price)|%(commodity)|%(primary)|%(account)\n"
+$1500.00|AAPL|false|Assets:Brokerage
+$-1500.00|$|true|Assets:Cash
+$10.00|$|true|Expenses:Food
+$-10.00|$|true|Assets:Cash
+end test

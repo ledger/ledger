@@ -1,0 +1,14 @@
+; Coverage for times.cc lines 1169-1170: daily period duration
+
+2024/01/01 Test1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Test2
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test reg Expenses --daily
+24-Jan-01 - 24-Jan-01           Expenses:Food                $10.00       $10.00
+24-Jan-02 - 24-Jan-02           Expenses:Food                $20.00       $30.00
+end test

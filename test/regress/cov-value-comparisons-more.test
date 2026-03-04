@@ -1,0 +1,41 @@
+; Coverage test for value.cc comparison operators
+; Exercise comparison between different value types
+
+2024/01/01 Test
+    Expenses:Food            $10.00
+    Assets:Cash
+
+; Compare integers
+test eval "5 < 10"
+1
+end test
+
+test eval "10 < 5"
+0
+end test
+
+test eval "5 > 10"
+0
+end test
+
+test eval "10 > 5"
+1
+end test
+
+; Compare equal values
+test eval "5 == 5"
+1
+end test
+
+test eval "5 != 10"
+1
+end test
+
+; Compare amounts
+test eval "10 <= 10"
+1
+end test
+
+test eval "10 >= 10"
+1
+end test

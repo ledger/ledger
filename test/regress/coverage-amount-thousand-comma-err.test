@@ -1,0 +1,17 @@
+; Coverage for amount.cc line 1257:
+; Incorrect use of thousand-mark comma when the digit grouping is
+; inconsistent (1,23,456 has 2-digit then 3-digit groups from the left,
+; which scanning right-to-left detects as invalid).
+
+2024/01/01 Test
+    Expenses:Food    $1,23,456
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 7:
+While parsing posting:
+  Expenses:Food    $1,23,456
+                   ^^^^^^^^^
+Error: Incorrect use of thousand-mark comma
+end test

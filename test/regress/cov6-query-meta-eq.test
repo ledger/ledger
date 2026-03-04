@@ -1,0 +1,16 @@
+; Coverage for query.cc lines 319-329: metadata equality in query
+
+2024/01/01 Test
+    ; Category: groceries
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Other
+    ; Category: fuel
+    Expenses:Gas    $20.00
+    Assets:Cash
+
+test reg '%Category=groceries'
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

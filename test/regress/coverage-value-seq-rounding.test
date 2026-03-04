@@ -1,0 +1,16 @@
+; Coverage for value.cc lines 1805-1807: in_place_round for SEQUENCE type
+; Budget register with --add-budget creates compound sequence values
+; that undergo display rounding during formatting
+
+~ Monthly
+    Expenses:Food    $300.555
+    Assets:Checking
+
+2024/01/01 Test
+    Expenses:Food    $250.100
+    Assets:Checking
+
+test reg --add-budget Expenses --begin 2024/01/01 --end 2024/02/01
+24-Jan-01 Budget transaction    Expenses:Food             $-300.555    $-300.555
+24-Jan-01 Test                  Expenses:Food              $250.100     $-50.455
+end test

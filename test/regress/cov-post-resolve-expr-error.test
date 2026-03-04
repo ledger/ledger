@@ -1,0 +1,15 @@
+; Coverage test for post.cc line 545
+; resolve_expr throws amount_error for non-simple amount result
+
+2024/01/01 Test
+    Expenses:Food    (payee)
+    Assets:Cash    $-10.00
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 5:
+While parsing posting:
+  Expenses:Food    (payee)
+                   ^^^^^^^
+Error: Amount expressions must result in a simple amount
+end test

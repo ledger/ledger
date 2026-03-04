@@ -1,0 +1,21 @@
+; Test times.cc lines 960-998: "last N months" relative time
+; in handle_relative_token
+
+2025/12/01 Old tx
+    Expenses:Food   $5.00
+    Assets:Cash
+
+2026/02/15 Recent tx
+    Expenses:Food   $10.00
+    Assets:Cash
+
+2026/03/01 Current tx
+    Expenses:Food   $20.00
+    Assets:Cash
+
+test reg --period "last 2 months" --now 2026/03/03
+26-Feb-15 Recent tx             Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+26-Mar-01 Current tx            Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test

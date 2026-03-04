@@ -1,0 +1,19 @@
+; Test amount strip_annotations via balance report
+; Covers value.cc lines 1935-1938 (strip_annotations for AMOUNT/BALANCE)
+
+2024/01/01 Buy
+    Assets:Brokerage    10 AAPL {$150} [2024/01/01] (lot1)
+    Assets:Cash
+
+2024/01/02 Buy
+    Assets:Brokerage    5 AAPL {$155} [2024/01/02] (lot2)
+    Assets:Cash
+
+test bal --no-total Assets:Brokerage
+             15 AAPL  Assets:Brokerage
+end test
+
+test bal --no-total --lots Assets:Brokerage
+10 AAPL {$150} [2024/01/01] (lot1)
+5 AAPL {$155} [2024/01/02] (lot2)  Assets:Brokerage
+end test

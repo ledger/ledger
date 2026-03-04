@@ -1,0 +1,20 @@
+; Coverage test for amount.cc division paths
+; Test division by percentage (amount.cc lines 531-540)
+; Test division of amounts
+
+2024/01/01 Calculate tax base
+    Expenses:Tax             ($1190.00 / 19%)
+    Assets:Cash
+
+2024/01/02 Simple division
+    Expenses:Food            ($30.00 / 3)
+    Assets:Cash
+
+test bal
+           $-6273.16  Assets:Cash
+            $6273.16  Expenses
+              $10.00    Food
+            $6263.16    Tax
+--------------------
+                   0
+end test

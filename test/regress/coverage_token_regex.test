@@ -1,0 +1,14 @@
+; Coverage test for token.cc line 349
+; Unclosed regex delimiter triggers expected('/', c)
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --limit "account =~ /Food" -> 1
+__ERROR__
+While parsing value expression:
+  account =~ /Food
+
+Error: Missing '/'
+end test

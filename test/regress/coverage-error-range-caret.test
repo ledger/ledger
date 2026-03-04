@@ -1,0 +1,15 @@
+; Coverage for error.cc lines 66-69: error range caret (end_pos != 0)
+; Posting amount parse errors show a range of ^^^^^ markers
+
+2024/01/01 Test
+    Expenses:Food    $10.00 + $5.00
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 5:
+While parsing posting:
+  Expenses:Food    $10.00 + $5.00
+                   ^^^^^^^^^^^^^^
+Error: Unexpected char '+' (Note: inline math requires parentheses)
+end test

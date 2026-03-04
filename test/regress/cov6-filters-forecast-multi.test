@@ -1,0 +1,13 @@
+; Coverage for filters.cc lines 1290,1652: forecast with xdata flags
+
+~ monthly
+    Expenses:Rent    $1000
+    Assets:Cash
+
+2024/01/01 Rent
+    Expenses:Rent    $1000
+    Assets:Cash
+
+test reg --forecast 'd<[2024/04/01]' Expenses
+24-Jan-01 Rent                  Expenses:Rent                 $1000        $1000
+end test

@@ -1,0 +1,11 @@
+; Test get_note combining xact and post notes (lines 172-184 of post.cc)
+; Exercise the note accessor with post note
+
+2024/01/01 Test
+    ; Post note here
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(note)\n" Expenses
+ Post note here
+end test

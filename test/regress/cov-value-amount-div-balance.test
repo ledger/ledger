@@ -1,0 +1,20 @@
+; Coverage test for value.cc lines 706-721
+; Exercise amount /= balance path where balance simplifies to single amount
+; This happens when dividing a commodity amount by a total amount
+; that is represented as a balance but has only one commodity
+
+commodity $
+commodity AAPL
+
+P 2024/01/01 AAPL $50.00
+P 2024/06/01 AAPL $60.00
+
+2024/01/01 Buy Stock
+    Assets:Brokerage      10 AAPL
+    Assets:Cash            $-500.00
+
+; When using -V, amounts get converted and divisions may happen
+test reg Assets:Brokerage -V
+24-Jan-01 Buy Stock             Assets:Brokerage            $500.00      $500.00
+24-Jun-01 Commodities revalued  <Revalued>                  $100.00      $600.00
+end test

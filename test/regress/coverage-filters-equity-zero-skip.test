@@ -1,0 +1,13 @@
+; Coverage for filters.cc line 1166: skip zero amount in equity output
+
+2024/01/01 Test1
+    Expenses:Food    $10.00
+    Expenses:Food    $-10.00
+    Expenses:Rent    $500.00
+    Assets:Cash
+
+test equity
+2024/01/01 Opening Balances
+    Assets:Cash                             $-500.00
+    Expenses:Rent
+end test

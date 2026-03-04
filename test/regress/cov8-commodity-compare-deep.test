@@ -1,0 +1,15 @@
+; Coverage for commodity.cc lines 431, 515: deep commodity comparison
+; Two commodities with same base name but different annotations
+
+2024/01/01 Buy Lot A
+    Assets:Stock    5 AAPL {$100.00} [2024/01/01] (lot-a)
+    Assets:Cash
+
+2024/02/01 Buy Lot B
+    Assets:Stock    3 AAPL {$100.00} [2024/02/01] (lot-b)
+    Assets:Cash
+
+test bal --lots Assets:Stock
+5 AAPL {$100} [2024/01/01] (lot-a)
+3 AAPL {$100} [2024/02/01] (lot-b)  Assets:Stock
+end test

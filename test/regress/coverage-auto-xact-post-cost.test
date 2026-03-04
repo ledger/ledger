@@ -1,0 +1,20 @@
+; Coverage test for xact.cc line 1117-1118
+; Tests auto-xact where the auto posting itself has an explicit cost.
+; When post->cost is set, it is copied directly to new_post->cost
+; without deriving from annotations.
+
+= Expenses:Food
+    Liabilities:Tax  $5.00 @ 1 EUR
+    Assets:Tax       -5 EUR
+
+2024/03/01 Test
+    Expenses:Food     $100.00
+    Assets:Checking
+
+test reg --generated
+24-Mar-01 Test                  Expenses:Food               $100.00      $100.00
+                                Assets:Checking            $-100.00            0
+                                Liabilities:Tax               $5.00        $5.00
+                                Assets:Tax                   -5 EUR        $5.00
+                                                                          -5 EUR
+end test

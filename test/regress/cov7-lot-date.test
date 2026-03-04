@@ -1,0 +1,10 @@
+; Test fn_lot_date with date annotation
+
+2024/01/01 Test
+    Assets:Brokerage    10 AAPL {$100.00} [2024/01/15]
+    Assets:Cash
+
+test reg --format "%(lot_date(amount))\n"
+2024/01/15
+2024/01/15
+end test

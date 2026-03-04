@@ -1,0 +1,11 @@
+; Coverage test for op.cc O_LOOKUP evaluation path (line 292-304)
+; Tests the dot (.) lookup operator which accesses object members.
+; Also exercises the O_LOOKUP print path (line 764).
+
+2024/01/01 Groceries
+    Expenses:Food              $50.00
+    Assets:Cash
+
+test reg --display 'parent.total > 0'
+24-Jan-01 Groceries             Expenses:Food                $50.00       $50.00
+end test

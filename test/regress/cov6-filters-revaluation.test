@@ -1,0 +1,18 @@
+; Coverage for filters.cc lines 746-748, 840-850: revaluation with market
+
+P 2024/01/01 EUR $1.00
+P 2024/01/15 EUR $1.50
+
+2024/01/01 Buy
+    Assets:Investments    100 EUR
+    Assets:Cash
+
+2024/02/01 Sell
+    Assets:Cash    50 EUR
+    Assets:Investments
+
+test reg Assets:Investments --revalued -V
+24-Jan-01 Buy                   Assets:Investments          $100.00      $100.00
+24-Jan-15 Commodities revalued  <Revalued>                   $50.00      $150.00
+24-Feb-01 Sell                  Assets:Investments          $-75.00       $75.00
+end test

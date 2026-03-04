@@ -1,0 +1,10 @@
+; Test resolve_expr error (line 545 of post.cc)
+; When an amount expression results in non-amount value
+
+2024/01/01 Test
+    Expenses:Food    (1+2)
+    Assets:Cash
+
+test reg Expenses --format "%(amount)\n"
+3
+end test

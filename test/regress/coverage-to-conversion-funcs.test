@@ -1,0 +1,11 @@
+; Test report.cc: type conversion functions
+; fn_to_amount, fn_to_balance, fn_to_string, fn_to_mask, fn_to_sequence
+; (lines 1058-1076)
+
+2024/01/10 Test
+    Expenses:Food    $100.00
+    Assets:Cash
+
+test bal --format "%(to_amount(total))\n" Expenses
+$100.00
+end test

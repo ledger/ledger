@@ -1,0 +1,12 @@
+; Coverage for parser.cc line 230: PARSE_NO_ASSIGN rewind
+
+2024/01/01 Opening
+    Assets:Cash    = $100.00
+    Equity:Opening
+
+test bal
+             $100.00  Assets:Cash
+            $-100.00  Equity:Opening
+--------------------
+                   0
+end test

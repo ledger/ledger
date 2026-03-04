@@ -1,0 +1,13 @@
+; Coverage test for format.cc line 270
+; Test that %$0 in a format string triggers the error for invalid field
+; reference. The %$ syntax references a prior template field by number.
+; Using %/ to create a template relationship where %$0 is invalid.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format '%(account)\n%/x%$0y\n' -> 1
+__ERROR__
+Error: %$ field reference must be a digit from 1-9
+end test

@@ -1,0 +1,19 @@
+; Coverage test for format.cc lines 54-57 (output.cc)
+; Tests three-part format (first_line%/next_lines%/between) parsing.
+; The third %/ section is the between-format shown between transactions.
+
+2024/01/15 Test1
+    Expenses:Food             $50.00
+    Assets:Cash
+
+2024/01/20 Test2
+    Expenses:Gas              $30.00
+    Assets:Cash
+
+test reg --format '%(date) %(payee) %(account) %(amount)\n%/%(date) cont %(account) %(amount)\n%/---\n'
+2024/01/15 Test1 Expenses:Food $50.00
+2024/01/15 cont Assets:Cash $-50.00
+---
+2024/01/20 Test2 Expenses:Gas $30.00
+2024/01/20 cont Assets:Cash $-30.00
+end test

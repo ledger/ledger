@@ -1,0 +1,13 @@
+; Coverage for filters.cc line 966: date_format branch in interval reporting
+
+2024/01/01 Test1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/15 Test2
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test reg --monthly --date-format "%Y-%m" Expenses
+2024-01 - 2024-01             Expenses:Food                  $30.00       $30.00
+end test

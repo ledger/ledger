@@ -1,0 +1,13 @@
+; Coverage for account.cc line 472: latest_cleared accessor
+
+2024/01/01 * Cleared
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Pending
+    Expenses:Food    $5.00
+    Assets:Cash
+
+test bal Expenses --format '%(latest_cleared)\n'
+2024/01/01
+end test

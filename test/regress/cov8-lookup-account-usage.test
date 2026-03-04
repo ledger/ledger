@@ -1,0 +1,16 @@
+; Coverage for lookup.cc line 266: account usage iteration
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/02/01 Test2
+    Expenses:Food    $20.00
+    Expenses:Gas     $15.00
+    Assets:Cash
+
+test accounts
+Assets:Cash
+Expenses:Food
+Expenses:Gas
+end test

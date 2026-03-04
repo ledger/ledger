@@ -1,0 +1,11 @@
+; Coverage test for post.cc lines 528-531:
+; R format shortcut for get_real()
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg --format '%(R)\n'
+true
+true
+end test

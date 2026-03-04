@@ -1,0 +1,29 @@
+; Coverage test for xact.cc lines 789-811
+; Tests the fn_any() and fn_all() functions used in expressions.
+; fn_any returns true if any posting in the xact matches the expression.
+; fn_all returns true if all postings in the xact match the expression.
+
+2024/01/01 Groceries
+    Expenses:Food              $50.00
+    Assets:Cash               $-50.00
+
+2024/01/02 Transfer
+    Expenses:Food              $30.00
+    Expenses:Rent             $500.00
+    Equity:Opening            $-530.00
+
+test reg -l 'any(account =~ /Food/)'
+24-Jan-01 Groceries             Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+24-Jan-02 Transfer              Expenses:Food                $30.00       $30.00
+                                Expenses:Rent               $500.00      $530.00
+                                Equity:Opening             $-530.00            0
+end test
+
+test reg -l 'all(amount)'
+24-Jan-01 Groceries             Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+24-Jan-02 Transfer              Expenses:Food                $30.00       $30.00
+                                Expenses:Rent               $500.00      $530.00
+                                Equity:Opening             $-530.00            0
+end test

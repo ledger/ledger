@@ -1,0 +1,11 @@
+; Coverage test for filters.cc line 372
+; collapse_posts with single commodity triggers handle_value AMOUNT path
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Expenses:Drink   $5.00
+    Assets:Cash
+
+test reg --collapse Expenses
+24-Jan-01 Test                  <Total>                      $15.00       $15.00
+end test

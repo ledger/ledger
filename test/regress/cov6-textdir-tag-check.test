@@ -1,0 +1,16 @@
+; Coverage for textual_directives.cc lines 662-679: tag directive with check
+
+tag Project
+    check value =~ /^[A-Z]/
+
+2024/01/01 Test
+    ; Project: Alpha
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

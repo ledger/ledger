@@ -1,0 +1,10 @@
+; Test report.cc: fn_lot_date, fn_lot_price, fn_lot_tag functions
+; Exercises lot annotation extraction functions (lines 1012-1037)
+
+2024/01/15 Buy Stock
+    Assets:Brokerage         10 AAPL {$150.00} [2024/01/15] (lot1)
+    Assets:Cash          $-1500.00
+
+test reg --lots --format "%(lot_date(amount)) %(lot_price(amount)) %(lot_tag(amount))\n" Assets:Brokerage
+2024/01/15 $150.00 lot1
+end test

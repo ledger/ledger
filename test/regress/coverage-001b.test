@@ -1,0 +1,20 @@
+; Coverage test for src/filters.cc: subtotal with mixed virtual and real
+; postings to the same account. Exercises the composite key code path
+; that separates virtual from non-virtual in subtotal_posts (issue #2051).
+
+2024/01/01 Transaction with virtual and real to same account
+    Expenses:Food              $50.00
+    (Expenses:Food)            $10.00
+    Assets:Checking           $-50.00
+
+test bal
+             $-50.00  Assets:Checking
+              $60.00  Expenses:Food
+--------------------
+              $10.00
+end test
+
+test reg Expenses
+24-Jan-01 Transaction with vi.. Expenses:Food                $50.00       $50.00
+                                (Expenses:Food)              $10.00       $60.00
+end test

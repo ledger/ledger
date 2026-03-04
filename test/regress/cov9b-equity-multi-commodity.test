@@ -1,0 +1,15 @@
+; Coverage for filters.cc line 377: handle_value with BALANCE value type
+; When multiple commodities are involved, the value is a balance
+
+2024/01/01 Opening
+    Assets:Cash      $500.00
+    Assets:Euro      200 EUR
+    Equity:Opening
+
+test equity
+2024/01/01 Opening Balances
+    Assets:Cash                              $500.00
+    Assets:Euro                              200 EUR
+    Equity:Opening                          $-500.00
+    Equity:Opening                          -200 EUR
+end test

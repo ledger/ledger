@@ -1,0 +1,16 @@
+; Coverage for times.cc: weekly period expression
+
+2024/01/01 Test1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/08 Test2
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test reg --period "every week"
+23-Dec-31 - 24-Jan-06           Assets:Cash                 $-10.00      $-10.00
+                                Expenses:Food                $10.00            0
+24-Jan-07 - 24-Jan-13           Assets:Cash                 $-20.00      $-20.00
+                                Expenses:Food                $20.00            0
+end test

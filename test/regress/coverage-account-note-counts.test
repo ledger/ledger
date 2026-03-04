@@ -1,0 +1,16 @@
+; Coverage test for account.cc get_note (L291-293), get_subcount via 'n'
+; (L468-469), get_count via 'N' (L497-498), and get_total via 'O'
+; (L502-503). Exercises corresponding lookup switch branches.
+
+account Expenses:Food
+    note This is a food account
+
+2024/01/01 Grocery
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --format "%(n)|%(N)|%(O)|%(note)|%(account)\n"
+1|1|$-10.00||Assets:Cash
+1|1|$10.00|This is a food account|Expenses:Food
+0|2|0||
+end test

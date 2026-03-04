@@ -1,0 +1,21 @@
+; Coverage test for xact.cc lines 595,597,612-615
+; Tests balanced virtual postings with null amounts.
+; The virtual_null_post path handles balancing [bracketed] virtual postings
+; separately from regular postings. This tests the is_amount() path for
+; virtual_balance when auto-calculating a null virtual posting.
+
+2024/01/01 Test balanced virtual
+    Expenses:Food              $50.00
+    Assets:Cash
+    [Budget:Food]              $50.00
+    [Budget:Savings]
+
+test bal
+             $-50.00  Assets:Cash
+                   0  Budget
+              $50.00    Food
+             $-50.00    Savings
+              $50.00  Expenses:Food
+--------------------
+                   0
+end test

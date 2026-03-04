@@ -1,0 +1,68 @@
+; Test more format expression functions for report.cc coverage
+; Covers fn_join, fn_format, fn_print, fn_quoted, fn_quoted_rfc,
+; fn_format_date, fn_scrub, fn_rounded, fn_unrounded, fn_trim,
+; fn_is_seq, fn_abs, fn_roundto, fn_unround, fn_top_amount
+
+2024/01/01 Payee
+    Expenses:Food            $10.55
+    Assets:Cash
+
+; Test join function (line 872-883)
+test reg Expenses --format "%(join(payee))\n"
+Payee
+end test
+
+; Test quoted function (line 840-854)
+test reg Expenses --format "%(quoted(payee))\n"
+"Payee"
+end test
+
+; Test quoted_rfc function (line 856-870)
+test reg Expenses --format "%(quoted_rfc(payee))\n"
+"Payee"
+end test
+
+; Test format_date function (line 885-890)
+test reg Expenses --format "%(format_date(date, \"%Y-%m-%d\"))\n"
+2024-01-01
+end test
+
+; Test scrub function (line 765-767)
+test reg Expenses --format "%(scrub(amount))\n"
+$10.55
+end test
+
+; Test rounded function (line 769-771)
+test reg Expenses --format "%(rounded(amount))\n"
+$10.55
+end test
+
+; Test unrounded function (line 773-775)
+test reg Expenses --format "%(unrounded(amount))\n"
+$10.55
+end test
+
+; Test abs function (line 1449, fn_abs)
+test reg Assets --format "%(abs(amount))\n"
+$10.55
+end test
+
+; Test trim function (line 742-749)
+test reg Expenses --format "%(trim(\"  hello  \"))\n"
+hello
+end test
+
+; Test is_seq function (line 734-736)
+test reg Expenses --format "%(is_seq(amount) ? \"yes\" : \"no\")\n"
+no
+end test
+
+; Test display_amount function (line 596-598, 1444-1445, 1625-1626)
+test reg Expenses --format "%(t)\n"
+$10.55
+end test
+
+; Test display_total function (line 600-613, 1447, 1652-1653)
+test reg Expenses --format "%(T)\n"
+$10.55
+end test

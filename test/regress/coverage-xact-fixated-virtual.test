@@ -1,0 +1,20 @@
+; Coverage test for xact.cc lines 318-319
+; Tests the recompute path (after fixated cost resolution) with a
+; virtual posting that doesn't must_balance (unbalanced virtual).
+; The (Virtual) posting is skipped by must_balance() at line 318-319.
+
+2024/03/01 Fixated with virtual
+    Assets:EUR        100 EUR {=$1.10}
+    Assets:Checking  $-110.00
+    (Budget:Notes)    $50.00
+
+test bal
+            $-110.00
+             100 EUR  Assets
+            $-110.00    Checking
+             100 EUR    EUR
+              $50.00  Budget:Notes
+--------------------
+             $-60.00
+             100 EUR
+end test

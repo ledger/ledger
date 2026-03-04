@@ -1,0 +1,17 @@
+; Tests for query.cc: for clause with keyword break
+; Covers: lines 531-536 (break in for clause when keyword encountered)
+;         lines 539-544 (for_string accumulation)
+
+2024/01/01 Test
+    Expenses  $10
+    Assets
+
+2024/02/01 Test2
+    Expenses  $20
+    Assets
+
+; for clause followed by since triggers keyword break (lines 531-536)
+; The for_string is "since 2024/01/15" and show clause follows
+test reg for since 2024/01/15 show Expenses
+24-Feb-01 Test2                 Expenses                        $20          $20
+end test

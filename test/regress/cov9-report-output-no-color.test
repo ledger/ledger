@@ -1,0 +1,14 @@
+; Coverage test for report.cc lines 76, 78
+; When --output is set, color and pager are disabled even if explicitly set.
+; Line 76: HANDLER(color).off() when --output is used
+; Line 78: HANDLER(pager_).off() when --output is used
+; Using --output=/dev/stdout so output still goes to stdout for capture.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --color --pager=cat --output=/dev/stdout
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

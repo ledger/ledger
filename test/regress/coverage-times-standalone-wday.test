@@ -1,0 +1,23 @@
+; Coverage for times.cc line 1213: handle_date_token for standalone TOK_A_WDAY
+; A bare weekday name "monday" used as a period filter
+
+2024/01/01 Monday Entry
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Tuesday Entry
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2024/01/03 Wednesday Entry
+    Expenses:Food    $15.00
+    Assets:Cash
+
+2024/01/08 Next Monday
+    Expenses:Food    $25.00
+    Assets:Cash
+
+test reg --now 2024/01/10 --period "monday"
+24-Jan-01 Monday Entry          Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

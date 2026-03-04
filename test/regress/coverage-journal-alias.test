@@ -1,31 +1,20 @@
-; Test alias directive expansion (exercises journal.cc expand_aliases)
+; Coverage test for journal.cc line 213
+; Tests infinite alias recursion detection for partial (first-account) aliases.
+; When --recursive-aliases is enabled and alias A->B and B->A exist,
+; expanding "A:Sub" finds A->B, then B->A, detecting the cycle.
 
-account Expenses:Food
-account Expenses:Auto
+alias A=B
+alias B=A
 
-alias food=Expenses:Food
-alias gas=Expenses:Auto:Gas
+2024/01/15 Test
+    A:Sub             $50.00
+    Assets:Cash
 
-2024/01/15 * Grocery Store
-    food                   $50.00
-    Assets:Checking
+test bal --recursive-aliases -> 1
+__ERROR__
+While parsing file "$FILE", line 10:
+While parsing posting:
+  A:Sub             $50.00
 
-2024/01/20 * Gas Station
-    gas                    $35.00
-    Assets:Checking
-
-test bal --args-only --columns=80 -> 0
-             $-85.00  Assets:Checking
-              $85.00  Expenses
-              $35.00    Auto:Gas
-              $50.00    Food
---------------------
-                   0
-end test
-
-test accounts --args-only --columns=80 -> 0
-Assets:Checking
-Expenses:Auto
-Expenses:Auto:Gas
-Expenses:Food
+Error: Infinite recursion on alias expansion for A
 end test

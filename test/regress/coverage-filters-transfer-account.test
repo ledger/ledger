@@ -1,0 +1,10 @@
+; Coverage for filters.cc line 1290: transfer_details SET_ACCOUNT with xdata
+
+2024/01/01 Grocery Store
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --account=payee
+24-Jan-01 Grocery Store         Grocery:Expenses:Food        $10.00       $10.00
+24-Jan-01 Grocery Store         Grocery St:Assets:Cash      $-10.00            0
+end test

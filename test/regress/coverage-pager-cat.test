@@ -1,0 +1,13 @@
+; Test stream.cc: pager subprocess handling
+; Exercises do_fork and pager cleanup (lines 64-156)
+
+2024/01/10 Test
+    Expenses:Food    $100.00
+    Assets:Cash
+
+test bal --pager cat
+            $-100.00  Assets:Cash
+             $100.00  Expenses:Food
+--------------------
+                   0
+end test

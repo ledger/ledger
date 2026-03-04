@@ -1,0 +1,14 @@
+; Coverage for item.cc lines 238-241: get_aux_date function
+
+2024/01/01=2024/02/15 Test with aux date
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Test without aux date
+    Expenses:Food    $5.00
+    Assets:Cash
+
+test reg --format "%(aux_date) %(account)\n" Expenses
+2024/02/15 Expenses:Food
+ Expenses:Food
+end test

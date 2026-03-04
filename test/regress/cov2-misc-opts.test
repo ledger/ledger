@@ -1,0 +1,45 @@
+; Test miscellaneous option handlers for report.cc coverage
+; Covers gain-since_, aux-date, auto-match, no-pager, round,
+; forecast-years_, datetime-format_, account-rewrite_,
+; payee-rewrite_, lisp-date-format_
+
+2024/01/01 Payee
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/02/01 Payee Two
+    Expenses:Gas             $20.00
+    Assets:Cash
+
+; Test --gain-since option (line 1294)
+test reg Expenses --gain-since 2024/01/15
+24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
+24-Feb-01 Payee Two             Expenses:Gas                 $20.00       $30.00
+end test
+
+; Test --aux-date option (line 1231, 1281)
+test reg Expenses --aux-date
+24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
+24-Feb-01 Payee Two             Expenses:Gas                 $20.00       $30.00
+end test
+
+; Test --auto-match option (line 1230)
+test reg Expenses --auto-match
+24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
+24-Feb-01 Payee Two             Expenses:Gas                 $20.00       $30.00
+end test
+
+; Test --no-pager option (line 1334)
+test bal Expenses --no-pager
+              $30.00  Expenses
+              $10.00    Food
+              $20.00    Gas
+--------------------
+              $30.00
+end test
+
+; Test --round option (line 1378)
+test reg Expenses --round
+24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
+24-Feb-01 Payee Two             Expenses:Gas                 $20.00       $30.00
+end test

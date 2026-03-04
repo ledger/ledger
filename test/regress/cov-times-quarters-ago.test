@@ -1,0 +1,15 @@
+; Coverage test for times.cc lines 740-742
+; Exercise "N quarters ago/hence" expressions
+; These exercise the QUARTERS arithmetic (amount * 3 * adjust)
+
+2020/01/01 Old
+    Expenses:Food            $10.00
+    Assets:Cash
+
+; "2 quarters ago" exercises QUARTERS + AGO path
+test reg Expenses --begin "2 quarters ago"
+end test
+
+; "1 quarters hence" exercises QUARTERS + HENCE path
+test reg Expenses --begin "1 quarters hence"
+end test

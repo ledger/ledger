@@ -1,0 +1,14 @@
+; Test times.cc lines 798-803: handle TOK_YEAR in determine_when
+
+2025/12/31 Last year tx
+    Expenses:Food   $5.00
+    Assets:Cash
+
+2026/01/15 This year tx
+    Expenses:Food   $20.00
+    Assets:Cash
+
+test reg --period "this year" --now 2026/03/03
+26-Jan-15 This year tx          Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test

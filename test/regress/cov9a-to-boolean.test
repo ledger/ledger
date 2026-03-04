@@ -1,0 +1,10 @@
+; Coverage test for report.cc lines 1039-1041
+; fn_to_boolean converts a value to boolean
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(to_boolean(amount))\n" --limit "account =~ /Expenses/"
+true
+end test

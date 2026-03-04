@@ -1,0 +1,17 @@
+; Test error for too many periods in amount
+; Covers amount.cc lines 1189-1190 (no_more_periods check)
+
+commodity 1.000,00 EUR
+
+2024/01/01 Test
+    Expenses:Food    1.234.56 EUR
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 7:
+While parsing posting:
+  Expenses:Food    1.234.56 EUR
+                   ^^^^^^^^^^^^
+Error: Too many periods in amount
+end test

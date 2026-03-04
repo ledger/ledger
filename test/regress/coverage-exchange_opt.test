@@ -1,0 +1,13 @@
+; Coverage test for report.cc line 1214: -X (exchange) short option
+; Tests currency conversion with -X option
+
+P 2024/01/15 EUR $1.10
+
+2024/01/15 Foreign Purchase
+    Expenses:Travel    100 EUR
+    Assets:Cash
+
+test -X '$' reg
+24-Jan-15 Foreign Purchase      Expenses:Travel             $110.00      $110.00
+                                Assets:Cash                $-110.00            0
+end test

@@ -1,0 +1,12 @@
+; Coverage for history.cc lines 337,377,397,405,407: price graph traversal
+
+P 2024/01/01 EUR $1.10
+P 2024/01/01 GBP 1.17 EUR
+
+2024/01/01 Buy
+    Assets:British    100 GBP
+    Assets:Cash
+
+test bal Assets:British -X '$'
+             $128.70  Assets:British
+end test

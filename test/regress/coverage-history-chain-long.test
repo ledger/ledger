@@ -1,0 +1,15 @@
+; Coverage for history.cc line 488: last_target reassignment in multi-hop path
+; A->B->C->D chain: 10 A * 2 B/A * 3 C/B * 4 D/C = 240 D
+; Each hop changes last_target, exercising both branches of the assignment
+
+P 2024/01/01 A 2 B
+P 2024/01/01 B 3 C
+P 2024/01/01 C 4 D
+
+2024/01/15 Test
+    Expenses:Test    10 A
+    Assets:Cash
+
+test bal --market --exchange D --now 2024/02/01 Expenses
+                D240  Expenses:Test
+end test

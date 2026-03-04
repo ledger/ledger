@@ -1,0 +1,19 @@
+; Coverage for compare.cc: post sort with context (lines 87-89, 98-100)
+
+2024/01/01 Test1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/01 Test2
+    Expenses:Rent    $500.00
+    Assets:Cash
+
+2024/01/01 Test3
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test reg --sort amount Expenses
+24-Jan-01 Test1                 Expenses:Food                $10.00       $10.00
+24-Jan-01 Test3                 Expenses:Food                $20.00       $30.00
+24-Jan-01 Test2                 Expenses:Rent               $500.00      $530.00
+end test

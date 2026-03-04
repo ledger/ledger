@@ -1,0 +1,19 @@
+; Coverage test for times.cc lines 780-796
+; Exercise "next month" and "last month" period tokens
+; Covers TOK_A_MONTH and TOK_A_WDAY handling in handle_date_specifier
+
+2020/01/01 Old Transaction
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2027/01/01 Future Transaction
+    Expenses:Food            $20.00
+    Assets:Cash
+
+; "next month" exercises TOK_NEXT + TOK_A_MONTH path
+test reg Expenses --begin "next month"
+end test
+
+; "last month" exercises TOK_LAST + TOK_A_MONTH path
+test reg Expenses --end "last month"
+end test

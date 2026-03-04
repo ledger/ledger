@@ -1,0 +1,24 @@
+; Coverage for xact.cc lines 993-998 (memoized_results in auto_xact)
+; When the same account appears in multiple transactions, the
+; memoized results are reused for faster evaluation.
+
+= Expenses:Food
+    (Budget:Food)    -1
+
+2024/01/01 Grocery1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Grocery2
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2024/01/03 Grocery3
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test reg Budget
+24-Jan-01 Grocery1              (Budget:Food)               $-10.00      $-10.00
+24-Jan-02 Grocery2              (Budget:Food)               $-20.00      $-30.00
+24-Jan-03 Grocery3              (Budget:Food)               $-30.00      $-60.00
+end test

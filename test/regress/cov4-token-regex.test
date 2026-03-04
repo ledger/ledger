@@ -1,0 +1,15 @@
+; Test token parsing with regex (lines 340-357 of token.cc)
+; Exercise the regex/mask parsing path
+
+2024/01/01 Test One
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Test Two
+    Expenses:Auto    $20.00
+    Assets:Cash
+
+test reg --limit "payee =~ /One/"
+24-Jan-01 Test One              Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

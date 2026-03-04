@@ -1,0 +1,29 @@
+; Coverage test for value.cc comparison operators
+; Exercise is_less_than and is_greater_than with amounts
+; Sorting by amount triggers value comparisons
+
+2024/01/01 Small
+    Expenses:Food            $5.00
+    Assets:Cash
+
+2024/01/02 Medium
+    Expenses:Food            $20.00
+    Assets:Cash
+
+2024/01/03 Large
+    Expenses:Food            $10.00
+    Assets:Cash
+
+; Sort by amount (ascending) exercises is_less_than
+test reg Expenses --sort amount
+24-Jan-01 Small                 Expenses:Food                 $5.00        $5.00
+24-Jan-03 Large                 Expenses:Food                $10.00       $15.00
+24-Jan-02 Medium                Expenses:Food                $20.00       $35.00
+end test
+
+; Sort by -amount (descending) exercises is_greater_than
+test reg Expenses --sort "-amount"
+24-Jan-02 Medium                Expenses:Food                $20.00       $20.00
+24-Jan-03 Large                 Expenses:Food                $10.00       $30.00
+24-Jan-01 Small                 Expenses:Food                 $5.00       $35.00
+end test

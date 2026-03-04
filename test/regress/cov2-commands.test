@@ -1,0 +1,34 @@
+; Test various commands for report.cc coverage
+; Covers print, select, echo
+
+2024/01/01 Grocery Store
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/01/02 * Gas Station
+    Expenses:Gas             $20.00
+    Assets:Cash
+
+; Test print command (report.cc line 1788-1789)
+test print
+2024/01/01 Grocery Store
+    Expenses:Food                             $10.00
+    Assets:Cash
+
+2024/01/02 * Gas Station
+    Expenses:Gas                              $20.00
+    Assets:Cash
+end test
+
+; Test echo command (report.cc line 1777-1778, 1134-1138)
+test echo "Hello World"
+Hello World
+end test
+
+; Test select command (report.cc line 1813-1814)
+test select date, payee, account, amount
+24-Jan-01 Grocery Store            Expenses:Food                         $10.00
+24-Jan-01 Grocery Store            Assets:Cash                          $-10.00
+24-Jan-02 Gas Station              Expenses:Gas                          $20.00
+24-Jan-02 Gas Station              Assets:Cash                          $-20.00
+end test

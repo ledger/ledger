@@ -1,0 +1,13 @@
+; Test ! prefix on directives
+; Covers textual_directives.cc line 779 (! prefix handling)
+
+!year 2023
+
+2023/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg
+23-Jan-15 Test                  Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+end test

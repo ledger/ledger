@@ -1,0 +1,9 @@
+; Coverage for item.cc line 514: value_date lookup branch
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(value_date) %(account)\n" Expenses
+2024/01/01 Expenses:Food
+end test

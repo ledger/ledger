@@ -1,0 +1,33 @@
+; Coverage test for filters.cc lines 1364, 1390-1396, 1427-1438
+; Tests budget_posts with various flags including BUDGET_WRAP_VALUES
+; and BUDGET_UNBUDGETED for items not in the budget.
+; Line 1364: skip budget items when find_period fails
+; Lines 1390-1396: BUDGET_WRAP_VALUES sequence creation
+; Lines 1427-1438: unbudgeted posts with BUDGET_WRAP_VALUES
+
+~ monthly
+    Expenses:Food             $200.00
+    Expenses:Gas              $100.00
+    Assets
+
+2024/01/10 Groceries
+    Expenses:Food             $180.00
+    Assets:Cash
+
+2024/01/15 Gas Station
+    Expenses:Gas              $90.00
+    Assets:Cash
+
+2024/01/20 Movies
+    Expenses:Entertainment    $50.00
+    Assets:Cash
+
+test budget --add-budget -p "in jan 2024"
+    $-320.00     $-300.00      $-20.00  107%  Assets
+     $320.00      $300.00       $20.00  107%  Expenses
+      $50.00                    $50.00     0    Entertainment
+     $180.00      $200.00      $-20.00   90%    Food
+      $90.00      $100.00      $-10.00   90%    Gas
+------------ ------------ ------------ -----
+           0            0            0     0
+end test

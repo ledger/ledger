@@ -1,0 +1,12 @@
+; Coverage for textual_xacts.cc line 456: posting has no account (empty line after amount indicator)
+
+2024/01/01 Test
+       $10.00
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 5:
+Error: Posting with null amount's account may be misspelled:
+  "$10.00"
+end test

@@ -1,0 +1,10 @@
+; Test European-style comma as decimal when integer part is zero
+; Covers amount.cc lines 1235-1255 (integer_part_is_zero detection)
+
+2024/01/01 Test
+    Expenses:Food    0,075 EUR
+    Assets:Cash
+
+test bal Expenses
+           0,075 EUR  Expenses:Food
+end test

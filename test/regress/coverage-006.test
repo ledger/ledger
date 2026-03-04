@@ -1,0 +1,35 @@
+; Coverage test for src/journal.cc: --strict and --pedantic modes
+; Tests that --strict warns on unknown accounts and commodities,
+; and --pedantic errors on them.
+
+account Assets:Checking
+account Expenses:Food
+commodity $
+
+2024/01/01 Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/02 Unknown Account
+    Expenses:Unknown           $30.00
+    Assets:Checking
+
+test bal --strict
+             $-80.00  Assets:Checking
+              $80.00  Expenses
+              $50.00    Food
+              $30.00    Unknown
+--------------------
+                   0
+__ERROR__
+Warning: "$FILE", line 14: Unknown account 'Expenses:Unknown'
+end test
+
+test bal --pedantic -> 1
+__ERROR__
+While parsing file "$FILE", line 14:
+While parsing posting:
+  Expenses:Unknown           $30.00
+
+Error: Unknown account 'Expenses:Unknown'
+end test

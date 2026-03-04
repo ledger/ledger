@@ -1,0 +1,24 @@
+; Coverage test for select.cc where/display/collect clauses
+
+2024/01/01 Test A
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/02/01 Test B
+    Expenses:Rent    $20.00
+    Assets:Cash
+
+test select date,account,amount from posts where account =~ /Food/
+24-Jan-01 Expenses:Food                                                  $10.00
+end test
+
+test select date,account,amount from posts display account =~ /Rent/
+24-Feb-01 Expenses:Rent                                                  $20.00
+end test
+
+test select date,account,amount from posts collect amount
+24-Jan-01 Expenses:Food                                                  $10.00
+24-Jan-01 Assets:Cash                                                   $-10.00
+24-Feb-01 Expenses:Rent                                                  $20.00
+24-Feb-01 Assets:Cash                                                   $-20.00
+end test

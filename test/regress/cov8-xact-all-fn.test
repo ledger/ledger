@@ -1,0 +1,14 @@
+; Coverage for xact.cc: fn_all - check if all postings match
+
+2024/01/01 Transfer
+    Expenses:Food    $10.00
+    Expenses:Gas    $-10.00
+
+2024/02/01 Mixed
+    Expenses:Gas     $20.00
+    Assets:Cash
+
+test reg --limit 'all(account =~ /Expenses/)'
+24-Jan-01 Transfer              Expenses:Food                $10.00       $10.00
+                                Expenses:Gas                $-10.00            0
+end test

@@ -1,0 +1,26 @@
+; Coverage for filters.cc budget_posts cleanup path (lines 1329-1342)
+; and budget_posts::report_budget_items with period expiry
+; Tests a budget with a fixed date range that ends.
+
+~ Monthly from 2024/01/01 to 2024/03/01
+    Expenses:Food    $100.00
+    Assets:Cash
+
+2024/01/15 Grocery
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/02/15 Grocery
+    Expenses:Food    $120.00
+    Assets:Cash
+
+2024/04/15 Post-Budget Grocery
+    Expenses:Food    $60.00
+    Assets:Cash
+
+test budget
+    $-170.00     $-200.00       $30.00   85%  Assets:Cash
+     $230.00      $200.00       $30.00  115%  Expenses:Food
+------------ ------------ ------------ -----
+      $60.00            0       $60.00     0
+end test

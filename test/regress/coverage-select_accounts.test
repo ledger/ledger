@@ -1,0 +1,12 @@
+; Coverage test for select.cc: select from accounts
+; Tests select command with accounts report variant
+
+2024/01/15 Test Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test select account, total from accounts
+Assets:Cash      $-10.00
+Expenses:Food       $10.00
+            0
+end test

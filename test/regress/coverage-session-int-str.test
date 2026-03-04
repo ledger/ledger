@@ -1,0 +1,10 @@
+; Coverage for session.cc lines 267-270: fn_int and fn_str functions
+; int() converts an amount to an integer, str() converts to string
+
+2024/01/01 Test
+    Expenses:Food    $10.50
+    Assets:Checking
+
+test reg Expenses --format '%(int(amount)) %(str(amount))\n'
+10 $10.50
+end test

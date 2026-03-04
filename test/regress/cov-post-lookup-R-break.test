@@ -1,0 +1,18 @@
+; Coverage test for post.cc line 531
+; Switch break for 'R' lookup when name is longer than 1 char
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(Rogue)\n" Expenses -> 1
+__ERROR__
+While calculating format expression:
+  Rogue
+While evaluating value expression:
+  Rogue
+  ^^^^^
+While handling posting from "$FILE", line 5:
+>     Expenses:Food    $10.00
+Error: Unknown identifier 'Rogue'
+end test

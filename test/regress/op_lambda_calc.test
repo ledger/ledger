@@ -1,0 +1,20 @@
+; Test lambda expressions to cover op.cc lambda paths
+; Exercises O_LAMBDA calc (line 313) and call_lambda
+2024/01/01 Test
+    Expenses:Food              $10.00
+    Assets:Checking
+
+; Anonymous lambda call
+test eval "(x -> x * 2)(5)"
+10
+end test
+
+; Lambda with multiple parameters
+test eval "my_add(a, b) = a + b; my_add(3, 7)"
+10
+end test
+
+; Lambda returning lambda
+test eval "my_f(x) = x * 3; my_f(4)"
+12
+end test

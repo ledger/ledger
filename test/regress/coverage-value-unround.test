@@ -1,0 +1,13 @@
+; Coverage for value.cc: unrounded() function for AMOUNT type
+; Shows the unrounded value of an amount
+
+commodity $
+    format $1,000.00
+
+2024/01/01 Test
+    Expenses:Food    $10.555
+    Assets:Checking
+
+test reg Expenses --format "%(unrounded(amount))\n"
+$10.555
+end test

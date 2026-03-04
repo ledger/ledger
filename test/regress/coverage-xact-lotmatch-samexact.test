@@ -1,0 +1,27 @@
+; Coverage test for xact.cc lines 360-369
+; Tests the "earlier postings in same transaction" code path in lot matching.
+; When a transaction has multiple sell postings, the second sell must account
+; for the lots already consumed by the first sell within the same transaction.
+; The second -4 sell here spans two lots because the first -3 leaves only
+; 2 remaining in lot 1.
+
+2024/01/01 Buy Lot 1
+    Assets:Brokerage    5 AAPL {$150.00} [2024/01/01]
+    Assets:Cash
+
+2024/02/01 Buy Lot 2
+    Assets:Brokerage    5 AAPL {$160.00} [2024/02/01]
+    Assets:Cash
+
+2024/03/01 Sell Two Lines
+    Assets:Brokerage    -3 AAPL @ $170.00
+    Assets:Brokerage    -4 AAPL @ $170.00
+    Assets:Cash
+
+test --lot-matching fifo reg Assets:Brokerage
+24-Jan-01 Buy Lot 1             Assets:Brokerage             5 AAPL       5 AAPL
+24-Feb-01 Buy Lot 2             Assets:Brokerage             5 AAPL      10 AAPL
+24-Mar-01 Sell Two Lines        Assets:Brokerage            -3 AAPL       7 AAPL
+                                Assets:Brokerage            -2 AAPL       5 AAPL
+                                Assets:Brokerage            -2 AAPL       3 AAPL
+end test

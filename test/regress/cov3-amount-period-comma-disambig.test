@@ -1,0 +1,10 @@
+; Test period followed by comma disambiguation (European style auto-detect)
+; Covers amount.cc lines 1198-1207 (period after comma retroactive switch)
+
+2024/01/01 Test
+    Expenses:Food    EUR 1.234,56
+    Assets:Cash
+
+test bal --no-total Expenses
+        EUR 1.234,56  Expenses:Food
+end test

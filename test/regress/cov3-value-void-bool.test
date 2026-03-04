@@ -1,0 +1,10 @@
+; Test VOID value in boolean context
+; Covers value.cc lines 87-88 (VOID operator bool returns false)
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg --format="%(note ? note : \"none\")\n" Expenses
+none
+end test

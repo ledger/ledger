@@ -1,0 +1,15 @@
+; Coverage test for annotate.cc line 203:
+; Commodity specifies more than one tag error
+
+2024/01/15 Test
+    Assets:Stocks    10 AAPL (tag1) (tag2)
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 5:
+While parsing posting:
+  Assets:Stocks    10 AAPL (tag1) (tag2)
+                   ^^^^^^^^^^^^^^^^^^^^^
+Error: Commodity specifies more than one tag
+end test

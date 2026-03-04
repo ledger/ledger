@@ -1,0 +1,16 @@
+; Coverage for commodity.cc lines 446-453: date presence comparison
+; One lot with date, other without - tests the asymmetric date paths
+; The lot without date sorts first (left no date, right has date)
+
+2024/01/01 Buy
+    Assets:Brokerage    10 AAPL {$150.00} [2024/01/01]
+    Assets:Checking
+
+2024/01/15 Buy More
+    Assets:Brokerage    5 AAPL {$150.00}
+    Assets:Checking
+
+test bal --lots Assets:Brokerage
+       5 AAPL {$150}
+10 AAPL {$150} [2024/01/01]  Assets:Brokerage
+end test

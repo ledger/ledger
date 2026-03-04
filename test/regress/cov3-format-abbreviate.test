@@ -1,0 +1,11 @@
+; Test format abbreviation truncation
+; Covers format.cc lines 511-640 (ABBREVIATE truncation style)
+
+2024/01/15 Test
+    Expenses:Groceries:Fresh:Produce:Organic    $50.00
+    Assets:Cash
+
+test reg --no-total --account-width 25 --abbrev-len 3
+24-Jan-15 Test                  Exp:Gro:Fre:Produ:Organic       $50.00       $50.00
+                                Assets:Cash                    $-50.00            0
+end test

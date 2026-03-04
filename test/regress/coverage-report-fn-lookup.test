@@ -1,0 +1,40 @@
+; Coverage for report.cc function lookup switch cases
+; Tests various function names to ensure all switch cases are reached
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+; case 'l': lifo_lots (line 1551-1552)
+test eval 'lifo_lots($10)'
+$10
+end test
+
+; case 'n': null (line 1563-1564)
+test eval 'null'
+end test
+
+; case 'n': now (line 1565-1566)
+test eval --now 2024/06/15 'now'
+2024/06/15 00:00:00
+end test
+
+; case 'o': options (line 1572-1573)
+test eval 'options'
+<#SCOPE>
+end test
+
+; case 'u': unround (line 1659-1660)
+test eval 'unround($10.00)'
+$10.00
+end test
+
+; case 'w': white (line 1671-1672)
+test eval 'white'
+white
+end test
+
+; case 'y': yellow (line 1676-1677)
+test eval 'yellow'
+yellow
+end test

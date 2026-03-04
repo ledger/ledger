@@ -1,0 +1,15 @@
+; Test apply tag directive (lines 305-343 of textual_directives.cc)
+; Exercise the tag application with apply/end apply
+
+apply tag :project:
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+end apply tag
+
+test reg --format "%(has_tag('project'))\n"
+true
+true
+end test

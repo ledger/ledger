@@ -1,0 +1,15 @@
+; Test select with payee column
+; Covers select.cc lines 56 (payee identifier), 146-153 (payee_width sizing)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/01/20 Gas Station
+    Expenses:Transport    $40.00
+    Assets:Cash
+
+test select "date, payee, amount from posts where account =~ /Expenses/"
+24-Jan-15 Grocery Store                                                  $50.00
+24-Jan-20 Gas Station                                                    $40.00
+end test

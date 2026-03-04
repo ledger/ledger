@@ -1,0 +1,16 @@
+; Coverage for commodity.cc lines 479-484: tag lexical comparison
+; Two lots with different tags exercises the string comparison of tags
+; "alpha" < "beta" in lexicographic order
+
+2024/01/01 Buy
+    Assets:Brokerage    10 AAPL {$150.00} (alpha)
+    Assets:Checking
+
+2024/01/15 Buy More
+    Assets:Brokerage    5 AAPL {$150.00} (beta)
+    Assets:Checking
+
+test bal --lots Assets:Brokerage
+10 AAPL {$150} (alpha)
+5 AAPL {$150} (beta)  Assets:Brokerage
+end test

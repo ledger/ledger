@@ -1,0 +1,13 @@
+; Coverage test for format.cc lines 610-618
+; Test account abbreviation with hierarchical account names.
+; The default register format abbreviates long account names to fit
+; the column width. This exercises the abbreviation algorithm including
+; the weighted adjustment calculation.
+
+2024/01/01 Test
+    Expenses:Banking:Checking:Savings:Investments:LongTerm    $10.00
+    Assets:Cash
+
+test reg Expenses --columns=90
+24-Jan-01 Test                    Ex:Ba:Ch:Sa:Inves:LongTerm         $10.00         $10.00
+end test

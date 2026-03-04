@@ -1,0 +1,10 @@
+; Coverage for value.cc has_annotation returning false, lot functions returning NULL
+; When amount has no annotation, lot_price/lot_date/lot_tag return NULL_VALUE
+; This exercises the else branch of has_annotation check
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Checking
+
+test reg --format '%(lot_price(amount))%(lot_date(amount))%(lot_tag(amount))\n' Expenses
+end test

@@ -1,0 +1,32 @@
+; Test short option switch cases for report.cc coverage
+; Covers -t (amount_), -y (date_format_), -X (exchange_)
+
+P 2024/01/01 EUR $1.10
+
+2024/01/01 Payee
+    Expenses:Food            10.00 EUR
+    Assets:Cash
+
+2024/01/15 Payee Two
+    Expenses:Gas             $20.00
+    Assets:Cash
+
+; Test -t shortcut (line 1388-1389, OPT_CH(amount_))
+test reg Expenses -t "amount * 3"
+24-Jan-01 Payee                 Expenses:Food             30.00 EUR    30.00 EUR
+24-Jan-15 Payee Two             Expenses:Gas                 $60.00       $60.00
+                                                                       30.00 EUR
+end test
+
+; Test -y shortcut (line 1413-1414, OPT_CH(date_format_))
+test reg Expenses -y "%Y/%m/%d"
+2024/01/01 Payee                Expenses:Food             10.00 EUR    10.00 EUR
+2024/01/15 Payee Two            Expenses:Gas                 $20.00       $20.00
+                                                                       10.00 EUR
+end test
+
+; Test -X (exchange_) shortcut (line 1212-1214)
+test reg Expenses -X '$'
+24-Jan-01 Payee                 Expenses:Food                $11.00       $11.00
+24-Jan-15 Payee Two             Expenses:Gas                 $20.00       $31.00
+end test

@@ -1,0 +1,39 @@
+; Coverage test for src/times.cc: date ranges and period expressions
+; Tests complex date range queries and period expressions.
+
+2024/01/15 January
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/02/15 February
+    Expenses:Food              $60.00
+    Assets:Checking
+
+2024/03/15 March
+    Expenses:Food              $70.00
+    Assets:Checking
+
+2024/04/15 April
+    Expenses:Food              $80.00
+    Assets:Checking
+
+test reg --begin 2024/02/01 --end 2024/04/01
+24-Feb-15 February              Expenses:Food                $60.00       $60.00
+                                Assets:Checking             $-60.00            0
+24-Mar-15 March                 Expenses:Food                $70.00       $70.00
+                                Assets:Checking             $-70.00            0
+end test
+
+test reg --period "monthly" --collapse Expenses
+24-Jan-01 - 24-Jan-31           Expenses:Food                $50.00       $50.00
+24-Feb-01 - 24-Feb-29           Expenses:Food                $60.00      $110.00
+24-Mar-01 - 24-Mar-31           Expenses:Food                $70.00      $180.00
+24-Apr-01 - 24-Apr-30           Expenses:Food                $80.00      $260.00
+end test
+
+test reg --period "in 2024" Expenses
+24-Jan-15 January               Expenses:Food                $50.00       $50.00
+24-Feb-15 February              Expenses:Food                $60.00      $110.00
+24-Mar-15 March                 Expenses:Food                $70.00      $180.00
+24-Apr-15 April                 Expenses:Food                $80.00      $260.00
+end test

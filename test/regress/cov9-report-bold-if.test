@@ -1,0 +1,11 @@
+; Coverage test for report.cc lines 615-620: fn_should_bold
+; Test --bold-if option which conditionally bolds output lines.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --bold-if='amount>0' --force-color
+[1m24-Jan-01[0m [1m[1mTest                 [0m[0m [1m[34mExpenses:Food         [0m[0m [1m      $10.00[0m [1m      $10.00[0m
+                                [34mAssets:Cash           [0m      [31m$-10.00[0m            0
+end test

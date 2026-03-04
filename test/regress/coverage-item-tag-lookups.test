@@ -1,0 +1,11 @@
+; Coverage for item.cc lines 305,312,319: tag lookup functions
+
+2024/01/01 Test
+    ; MyTag: myvalue
+    ; :FlagTag:
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(tag('MyTag')) %(has_tag('FlagTag'))\n" Expenses
+myvalue true
+end test

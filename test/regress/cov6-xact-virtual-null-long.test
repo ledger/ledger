@@ -1,0 +1,20 @@
+; Coverage test for xact.cc lines 612-613
+; Tests balanced virtual null posting when virtual_balance is a long integer.
+; When balanced virtual postings use commodityless amounts, the virtual_balance
+; may be stored as a long, requiring conversion via to_amount().
+
+2024/01/01 Test virtual long balance
+    Expenses:A                 $50.00
+    Assets:B
+    [Budget:A]                      5
+    [Budget:B]
+
+test bal
+             $-50.00  Assets:B
+                   0  Budget
+                   5    A
+                  -5    B
+              $50.00  Expenses:A
+--------------------
+                   0
+end test

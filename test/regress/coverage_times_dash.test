@@ -1,0 +1,18 @@
+; Coverage test for times.cc handle_dash_operator
+
+2020/01/15 Old Transaction
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/06/15 Mid Transaction
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2025/01/15 New Transaction
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test reg --period "2024/01/01 - 2024/12/31"
+24-Jun-15 Mid Transaction       Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test

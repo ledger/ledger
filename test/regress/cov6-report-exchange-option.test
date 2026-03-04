@@ -1,0 +1,11 @@
+; Coverage for report.cc line 1214: -X (exchange) short option lookup
+
+P 2024/01/01 EUR $1.10
+
+2024/01/01 Test
+    Expenses:Food    10 EUR
+    Assets:Cash
+
+test reg Expenses -X '$'
+24-Jan-01 Test                  Expenses:Food                $11.00       $11.00
+end test

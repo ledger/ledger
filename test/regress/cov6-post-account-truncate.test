@@ -1,0 +1,16 @@
+; Test post get_account with long argument for truncation
+; Covers post.cc lines 273-278 (account truncation with int argument)
+
+2024/01/01 Test
+    Expenses:Very:Long:Account:Name    $10.00
+    Assets:Cash
+
+; account(int(20)) triggers truncation to 18 chars (20-2)
+test reg --format '%(account(int(20)))\n' Expenses
+Ex:Ve:Lo:Acco:Name
+end test
+
+; account(int(2)) uses full name (arg <= 2)
+test reg --format '%(account(int(2)))\n' Expenses
+Expenses:Very:Long:Account:Name
+end test

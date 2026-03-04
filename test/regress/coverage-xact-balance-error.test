@@ -1,0 +1,22 @@
+; Coverage test for xact.cc lines 656-661
+; Tests the balance assertion error when a transaction doesn't balance.
+; When real postings don't sum to zero and there's no null posting,
+; finalize() throws a balance error.
+
+2024/03/01 Unbalanced
+    Expenses:Food     $10.00
+    Assets:Cash       $-5.00
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 8:
+While balancing transaction from "$FILE", lines 6-8:
+> 2024/03/01 Unbalanced
+>     Expenses:Food     $10.00
+>     Assets:Cash       $-5.00
+Unbalanced remainder is:
+               $5.00
+Amount to balance against:
+              $10.00
+Error: Transaction does not balance
+end test

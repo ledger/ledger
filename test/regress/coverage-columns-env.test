@@ -1,0 +1,13 @@
+; Test report.cc: COLUMNS environment variable (line 211-212)
+; and fallback to 80 columns (line 218)
+
+2024/01/10 Test
+    Expenses:Food    $100.00
+    Assets:Cash
+
+test bal --columns 60
+            $-100.00  Assets:Cash
+             $100.00  Expenses:Food
+--------------------
+                   0
+end test

@@ -1,0 +1,38 @@
+; Coverage test for times.cc lines 1156-1161, 1254-1262
+; Exercise biweekly and bimonthly period shortcuts
+; Covers handle_period_token for TOK_BIWEEKLY and TOK_BIMONTHLY
+
+2024/01/01 Week 1
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/01/15 Week 3
+    Expenses:Food            $20.00
+    Assets:Cash
+
+2024/02/01 Month 2
+    Expenses:Food            $30.00
+    Assets:Cash
+
+2024/03/01 Month 3
+    Expenses:Food            $40.00
+    Assets:Cash
+
+2024/04/01 Month 4
+    Expenses:Food            $50.00
+    Assets:Cash
+
+; "biweekly" exercises TOK_BIWEEKLY (lines 1258-1259)
+test reg Expenses --period biweekly
+23-Dec-24 - 24-Jan-06           Expenses:Food                $10.00       $10.00
+24-Jan-07 - 24-Jan-20           Expenses:Food                $20.00       $30.00
+24-Jan-21 - 24-Feb-03           Expenses:Food                $30.00       $60.00
+24-Feb-18 - 24-Mar-02           Expenses:Food                $40.00      $100.00
+24-Mar-31 - 24-Apr-13           Expenses:Food                $50.00      $150.00
+end test
+
+; "bimonthly" exercises TOK_BIMONTHLY (lines 1256-1257)
+test reg Expenses --period bimonthly
+24-Jan-01 - 24-Feb-29           Expenses:Food                $60.00       $60.00
+24-Mar-01 - 24-Apr-30           Expenses:Food                $90.00      $150.00
+end test

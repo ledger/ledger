@@ -1,0 +1,12 @@
+; Test print with total cost annotation (preserving double braces)
+; Covers annotate.cc lines 231-237 (ANNOTATION_PRICE_NOT_PER_UNIT print with qty)
+
+2024/01/01 Buy Stock
+    Assets:Brokerage    10 AAPL {{$1500}}
+    Assets:Cash
+
+test print --raw
+2024/01/01 Buy Stock
+    Assets:Brokerage    10 AAPL {{$1500}}
+    Assets:Cash
+end test

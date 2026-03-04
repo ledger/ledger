@@ -1,0 +1,15 @@
+; Coverage tests for textual_directives.cc
+; payee-rewrite directive (line 558-570)
+; account-rewrite directive (line 573-585)
+
+payee-rewrite  Groce.*  Grocery Store
+account-rewrite  Food  Expenses:Food
+
+2024/01/01 Grocery
+    Food            $25.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-01 Grocery Store         Assets:Cash                 $-25.00            0
+end test

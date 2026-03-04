@@ -1,0 +1,13 @@
+; Test commodity compare: both have tags that are equal
+; (commodity.cc line 485 - falls through to 514-515)
+2024/01/01 Buy A
+    Assets:Stocks    10 AAPL {$100.00} [2024/01/01] (lot1)
+    Assets:Cash
+
+2024/01/02 Buy B
+    Assets:Stocks    5 AAPL {$100.00} [2024/01/01] (lot1)
+    Assets:Cash
+
+test bal Assets:Stocks --lot-prices --lot-dates --lot-tags
+15 AAPL {$100} [2024/01/01] (lot1)  Assets:Stocks
+end test

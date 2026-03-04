@@ -1,0 +1,16 @@
+; Coverage for commodity.cc lines 446-467: date comparison in compare_by_commodity
+; Two lots with same price but different dates forces the date comparison path
+; The earlier date sorts first
+
+2024/01/01 Buy
+    Assets:Brokerage    10 AAPL {$150.00} [2024/01/01]
+    Assets:Checking
+
+2024/01/15 Buy More
+    Assets:Brokerage    5 AAPL {$150.00} [2024/02/01]
+    Assets:Checking
+
+test bal --lots Assets:Brokerage
+10 AAPL {$150} [2024/01/01]
+5 AAPL {$150} [2024/02/01]  Assets:Brokerage
+end test

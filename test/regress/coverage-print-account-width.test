@@ -1,0 +1,11 @@
+; Coverage for print.cc line 175: --account-width option
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test print --account-width=50
+2024/01/01 Test
+    Expenses:Food                                           $10.00
+    Assets:Cash
+end test

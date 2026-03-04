@@ -1,0 +1,9 @@
+; Coverage for format.cc lines 242,270: format width with min.max notation
+
+2024/01/01 Test
+    Expenses:Food:Groceries:Weekly    $10.00
+    Assets:Cash
+
+test bal Expenses --format '%20.30(account) %(total)\n'
+Expenses:Food:Groceries:Weekly $10.00
+end test

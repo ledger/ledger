@@ -1,0 +1,24 @@
+; Coverage test for filters.cc lines 1070-1071
+; Tests interval_posts::operator() without a duration (no --weekly/--monthly)
+; but with a period range that uses find_period to filter posts.
+; Lines 1070-1071: the else-if branch when interval has no duration
+; but find_period succeeds, forwarding the post directly.
+
+2024/01/15 Groceries
+    Expenses:Food             $50.00
+    Assets:Cash
+
+2024/02/20 Restaurant
+    Expenses:Dining           $75.00
+    Assets:Cash
+
+2024/04/10 Outside Range
+    Expenses:Other            $30.00
+    Assets:Cash
+
+test reg --period "from 2024/01/01 to 2024/03/01"
+24-Jan-15 Groceries             Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+24-Feb-20 Restaurant            Expenses:Dining              $75.00       $75.00
+                                Assets:Cash                 $-75.00            0
+end test

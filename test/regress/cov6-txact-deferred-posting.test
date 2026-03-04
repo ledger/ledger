@@ -1,0 +1,10 @@
+; Coverage for textual_xacts.cc line 471: deferred posting with <> brackets
+
+2024/01/01 Test
+    <Deferred:Income>    $10.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Test                  Deferred:Income              $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

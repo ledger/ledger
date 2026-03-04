@@ -1,0 +1,14 @@
+; Coverage for precmd.cc: payees listing
+
+2024/01/01 Store
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Restaurant
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test payees
+Restaurant
+Store
+end test

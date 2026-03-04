@@ -1,0 +1,10 @@
+; Test format %% literal percent
+; Covers format.cc lines 258-260 (percent literal in format string)
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg --format="%%-%(date)\n" Expenses
+%-2024/01/15
+end test

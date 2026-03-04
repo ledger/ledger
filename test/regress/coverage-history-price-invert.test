@@ -1,0 +1,13 @@
+; Coverage for history.cc lines 372-377: price inversion in find_price
+; When the price's commodity matches the source, the price must be inverted
+; P $ EUR means 1$ = 0.91 EUR, so 1 EUR = 1/0.91 $
+
+P 2024/01/01 $ 0.91 EUR
+
+2024/01/15 Test
+    Expenses:Travel    500 EUR
+    Assets:Checking
+
+test bal --market --exchange '$' --now 2024/02/01 Expenses
+                $549  Expenses:Travel
+end test

@@ -1,0 +1,15 @@
+; Coverage test for report.cc lifo_lots lookup (line 1552)
+; Tests the lifo_lots function with lot pricing
+
+2024/01/15 Buy
+    Assets:Stock    10 AAPL @ $150
+    Assets:Cash    $-1500
+
+2024/02/15 Buy More
+    Assets:Stock    5 AAPL @ $160
+    Assets:Cash    $-800
+
+test reg --format "%(lifo_lots(amount))\n" Assets:Stock
+10 AAPL {$150} [2024/01/15]
+5 AAPL {$160} [2024/02/15]
+end test

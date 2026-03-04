@@ -1,10 +1,13 @@
-; Test get_price with annotated price
-; Targets: post.cc lines 233-240 (get_price with annotation price)
+; Coverage test for post.cc lines 244-247
+; Tests get_price when a posting has an annotation with a price.
+; When amount has annotation with price, get_price returns the price.
+; When no annotation, get_price falls back to get_cost.
 
-2024/01/15 * Buy Stock
-    Assets:Investments         10 AAPL @ $150.00
-    Assets:Checking
+2024/03/01 Purchase
+    Expenses:Food     100 EUR @ $1.10
+    Assets:Cash
 
-test reg --format "%(price) %(amount)\n" Assets:Investments
-$1500 10 AAPL {$150} [2024/01/15]
+test reg --format "%(price)\n"
+$110
+$-110
 end test

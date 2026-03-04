@@ -1,0 +1,23 @@
+; Coverage test for filters.cc lines 1166, 1229
+; Tests posts_as_equity::report_subtotal with multiple commodities
+; Line 1229: total.to_amount() path when total is single-commodity
+; Line 1166: amount.is_zero() skip in create_post_from_amount
+; The equity command forces the filter pipeline through posts_as_equity.
+
+2024/01/15 Buy Stock
+    Assets:Brokerage          10 AAPL @ $150.00
+    Assets:Cash               $-1500.00
+
+2024/01/20 Buy Stock
+    Assets:Brokerage          5 GOOG @ $100.00
+    Assets:Cash               $-500.00
+
+test equity
+2024/01/20 Opening Balances
+    Assets:Brokerage                         10 AAPL
+    Assets:Brokerage                          5 GOOG
+    Assets:Cash                            $-2000.00
+    Equity:Opening Balances                 $2000.00
+    Equity:Opening Balances                 -10 AAPL
+    Equity:Opening Balances                  -5 GOOG
+end test

@@ -1,0 +1,10 @@
+; Test format vertical tab escape character
+; Covers format.cc line 178 (\v vertical tab escape)
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg --format="A\vB\n" Expenses
+AB
+end test

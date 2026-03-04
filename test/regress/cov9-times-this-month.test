@@ -1,0 +1,14 @@
+; Coverage for times.cc line 1245: handle_simple_period_token for "today"
+
+2024/01/15 Test1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/20 Test2
+    Expenses:Gas    $20.00
+    Assets:Cash
+
+test reg -p "today" --now=2024/01/15
+24-Jan-15 Test1                 Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

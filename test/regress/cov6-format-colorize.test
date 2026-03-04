@@ -1,0 +1,9 @@
+; Coverage for format.cc lines 362-382: colorize path with O_CONS
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg Expenses --format '%(justify(scrub(display_amount), 20, 20 + int(prepend_width), true, color))\n'
+              $10.00
+end test

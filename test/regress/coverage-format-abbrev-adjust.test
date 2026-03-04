@@ -1,0 +1,10 @@
+; Coverage for format.cc line 618: abbreviation adjustment calculation
+
+2024/01/01 Test
+    Expenses:Food:Dining:Restaurant:Fancy    $10.00
+    Assets:Checking:Main:Primary
+
+test reg --columns=40
+24-Jan-01 Test     ..Fancy $10.00 $10.00
+                   ..imary $-10.00      0
+end test

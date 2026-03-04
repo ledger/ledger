@@ -1,0 +1,31 @@
+; Coverage test for commodity.cc lines 430-431, 485, 514-515, 527
+; Tests commodity_t::compare_by_commodity with annotated commodities.
+; Lines 430-431: recursive price comparison when commodity symbols match
+; Line 485: tag comparison between annotated commodities
+; Lines 514-515: final return 0 when all attributes match
+; Line 527: put_commodity XML output path
+; Using --lots forces comparison of full commodity annotations including
+; lot prices, dates, and tags.
+
+2024/01/15 Buy
+    Assets:Brokerage          10 AAPL {$150.00} [2024/01/15] (lot1)
+    Assets:Cash
+
+2024/01/20 Buy
+    Assets:Brokerage          10 AAPL {$155.00} [2024/01/20] (lot2)
+    Assets:Cash
+
+2024/01/25 Buy
+    Assets:Brokerage          5 GOOG {$100.00} [2024/01/25] (lotG)
+    Assets:Cash
+
+test bal --flat --lots
+10 AAPL {$150} [2024/01/15] (lot1)
+10 AAPL {$155} [2024/01/20] (lot2)
+5 GOOG {$100} [2024/01/25] (lotG)  Assets:Brokerage
+-10 AAPL {$150} [2024/01/15] (lot1)
+-10 AAPL {$155} [2024/01/20] (lot2)
+-5 GOOG {$100} [2024/01/25] (lotG)  Assets:Cash
+--------------------
+                   0
+end test

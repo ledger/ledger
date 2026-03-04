@@ -1,0 +1,16 @@
+; Coverage for item.cc line 66, 107: copy_details with tags
+
+= Expenses
+    ; AutoTag: AutoValue
+    (Budget:Expenses)    -1
+
+2024/01/01 Test
+    ; :ManualTag:
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(has_tag('AutoTag') ? tag('AutoTag') : 'none')\n"
+AutoValue
+none
+AutoValue
+end test

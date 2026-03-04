@@ -1,0 +1,22 @@
+; Coverage for history.cc lines 195-196: edge out of range due to oldest constraint
+; The --begin flag sets the oldest parameter for price filtering
+; Price from 2023 is out of range, only 2024 price is used
+
+P 2023/01/01 EUR $1.00
+P 2024/06/01 EUR $1.20
+
+2024/01/15 Test
+    Expenses:Travel    500 EUR
+    Assets:Checking
+
+2024/07/01 Test2
+    Expenses:Food    100 EUR
+    Assets:Checking
+
+test bal --market --exchange '$' --now 2024/08/01 --begin 2024/01/01 Expenses
+             $720.00  Expenses
+             $120.00    Food
+             $600.00    Travel
+--------------------
+             $720.00
+end test

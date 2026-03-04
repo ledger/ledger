@@ -1,0 +1,12 @@
+; Test def directive via general_directive (lines 828-831 of textual_directives.cc)
+; Exercise the def keyword (alias for define) through the switch
+
+def myfunc(x) = x * 2
+
+2024/01/01 Test
+    Expenses:Food    (myfunc($5.00))
+    Assets:Cash
+
+test reg --limit "account =~ /Food/"
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+end test

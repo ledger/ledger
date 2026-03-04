@@ -1,0 +1,19 @@
+; Coverage for item.cc lines 215-216,494-495: status/state function
+
+2024/01/01 * Cleared
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 ! Pending
+    Expenses:Food    $5.00
+    Assets:Cash
+
+2024/01/03 Normal
+    Expenses:Food    $3.00
+    Assets:Cash
+
+test reg --format "%(status) %(state) %(account)\n" Expenses
+1 1 Expenses:Food
+2 2 Expenses:Food
+0 0 Expenses:Food
+end test

@@ -1,0 +1,15 @@
+; Coverage test for account.cc lines 282-284:
+; Exercise get_cost for accounts which throws calc_error.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --format "%(cost)\n" -> 1
+__ERROR__
+While calculating format expression:
+  cost
+While evaluating value expression:
+  cost
+Error: An account does not have a 'cost' value
+end test

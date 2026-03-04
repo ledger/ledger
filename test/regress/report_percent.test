@@ -1,0 +1,14 @@
+; Test fn_percent to exercise lines 933-936 of report.cc
+; percent(a, b) returns (a/b)*100%
+
+2024/01/01 Test
+    Expenses:Food    $25.00
+    Assets:Cash
+
+2024/01/02 Test
+    Expenses:Food    $75.00
+    Assets:Cash
+
+test bal Expenses --format "%(percent(amount, parent.total))\n"
+100.00%
+end test

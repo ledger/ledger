@@ -1,0 +1,10 @@
+; Test amount quantity (strip commodity) function
+; Covers amount.cc commodity display with null commodity
+
+2024/01/01 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg --format="%(quantity(display_amount))\n" Expenses
+50
+end test

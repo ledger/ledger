@@ -1,0 +1,13 @@
+; Coverage test for post.cc get_account with long argument (L272-278).
+; account(int(N)) truncates the account name to N characters,
+; abbreviating parent components to fit.
+; Also tests account(int(1)) which is <= 2 and returns fullname (L277-278).
+
+2024/01/01 Grocery
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(account(int(10)))|%(account(int(1)))|%(account)\n"
+Exp:Food|Expenses:Food|Expenses:Food
+Ass:Cash|Assets:Cash|Assets:Cash
+end test

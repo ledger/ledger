@@ -1,0 +1,14 @@
+; Coverage for history.cc: multi-step price conversion via dijkstra path
+; Exercises find_price with source+target, path traversal, last_target assignment
+; A->B->C chain: 10 A * 2 B/A * 3 C/B = 60 C
+
+P 2024/01/01 A 2 B
+P 2024/01/01 B 3 C
+
+2024/01/15 Test
+    Expenses:Test    10 A
+    Assets:Cash
+
+test bal --market --exchange C --now 2024/02/01 Expenses
+                 C60  Expenses:Test
+end test

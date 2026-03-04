@@ -1,0 +1,11 @@
+; Coverage tests for post.cc resolve_expr
+; Covers lines: 542 (is_long to_amount), 545 (amount_error for non-simple)
+
+; Trigger resolve_expr with integer expression - covers post.cc line 542
+2024/01/01 Test
+    Expenses:Food    (2 + 3)
+    Assets:Cash
+
+test reg Expenses
+24-Jan-01 Test                  Expenses:Food                     5            5
+end test

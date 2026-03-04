@@ -1,0 +1,21 @@
+; Test by_payee_posts (lines 1233-1256 of filters.cc)
+; Exercise the payee subtotal path
+
+2024/01/01 Grocery
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Auto    $20.00
+    Assets:Cash
+
+2024/01/03 Grocery
+    Expenses:Food    $15.00
+    Assets:Cash
+
+test reg --by-payee
+24-Jan-02 Gas Station           Assets:Cash                 $-20.00      $-20.00
+                                Expenses:Auto                $20.00            0
+24-Jan-01 Grocery               Assets:Cash                 $-25.00      $-25.00
+                                Expenses:Food                $25.00            0
+end test

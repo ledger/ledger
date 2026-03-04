@@ -1,0 +1,9 @@
+; Coverage for report.cc lines 739-740: fn_strip and fn_trim
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg Expenses --format "%(strip(display_amount)) %(trim(\"  hello  \"))\n"
+$10.00 hello
+end test

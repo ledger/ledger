@@ -1,0 +1,28 @@
+; Test auto transactions for xact.cc lines 789-811 coverage
+; Tests fn_any and fn_all predicate matching
+
+= Expenses:Food
+    (Budget:Food)            -1
+
+= /Expenses/
+    (Tracking)               1
+
+2024/01/01 Grocery Store
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Gas             $20.00
+    Assets:Cash
+
+; Auto-xact should match Food and add Budget posting,
+; plus both should match /Expenses/ and add Tracking posting
+test reg
+24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+                                (Budget:Food)               $-10.00      $-10.00
+                                (Tracking)                   $10.00            0
+24-Jan-02 Gas Station           Expenses:Gas                 $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+                                (Tracking)                   $20.00       $20.00
+end test

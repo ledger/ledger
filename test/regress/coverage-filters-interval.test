@@ -1,0 +1,19 @@
+; Coverage test for filters.cc lines 966-967, 1070-1071
+; Tests interval_posts with --date-format and posts without duration period
+; Line 966-967: date_format branch in report_subtotal
+; Line 1070-1071: interval_posts::operator() without duration, using find_period
+
+2024/01/15 Groceries
+    Expenses:Food             $50.00
+    Assets:Cash
+
+2024/02/20 Groceries
+    Expenses:Food             $75.00
+    Assets:Cash
+
+test reg --date-format "%Y-%m-%d" --period "from 2024/01/01 to 2024/03/01"
+2024-01-15 Groceries            Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+2024-02-20 Groceries            Expenses:Food                $75.00       $75.00
+                                Assets:Cash                 $-75.00            0
+end test

@@ -1,0 +1,10 @@
+; Test fn_lot_price with annotated amount
+
+2024/01/01 Test
+    Assets:Brokerage    10 AAPL {$100.00}
+    Assets:Cash
+
+test reg --format "%(lot_price(amount))\n"
+$100
+$100
+end test

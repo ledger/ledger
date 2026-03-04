@@ -1,0 +1,17 @@
+; Coverage for report.cc lines 1006-1008: fn_nail_down error path
+; When nail_down receives a value that is not AMOUNT, BALANCE, or SEQUENCE
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format '%(nail_down(account, amount))\n' Expenses -> 1
+__ERROR__
+While evaluating value expression:
+  nail_down(account, amount)
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+While calling function 'nail_down (Expenses:Food, $10.00)':
+While handling posting from "$FILE", line 5:
+>     Expenses:Food    $10.00
+Error: Attempting to nail down a string
+end test

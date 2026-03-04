@@ -1,0 +1,12 @@
+; Test display with decimal comma AND thousands separator (European style)
+; Covers amount.cc lines 200-204, 216-220 (stream_out_mpq with thousands and decimal_comma)
+
+commodity 1.000,00 EUR
+
+2024/01/01 Test
+    Expenses:Food    12.345,67 EUR
+    Assets:Cash
+
+test bal --no-total Expenses
+       12.345,67 EUR  Expenses:Food
+end test

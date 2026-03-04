@@ -1,0 +1,20 @@
+; Coverage test for filters.cc interval_posts with duration:
+; Exercise --weekly register report.
+
+2024/01/01 Groceries
+    Expenses:Food    $25.00
+    Assets:Cash
+
+2024/01/03 Gas
+    Expenses:Transport    $40.00
+    Assets:Cash
+
+2024/01/08 Groceries
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test reg Expenses --weekly
+23-Dec-31 - 24-Jan-06           Expenses:Food                $25.00       $25.00
+                                Expenses:Transport           $40.00       $65.00
+24-Jan-07 - 24-Jan-13           Expenses:Food                $30.00       $95.00
+end test

@@ -1,0 +1,18 @@
+; Test hash mismatch detection
+; Covers textual_xacts.cc line 1011 (hash size/value mismatch)
+
+2024/01/15 Test
+    ; Hash: wronghashvalue
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg --hashes SHA512_Half -> 1
+__ERROR__
+While parsing file "$FILE", line 7:
+While parsing transaction:
+> 2024/01/15 Test
+>     ; Hash: wronghashvalue
+>     Expenses:Food    $50.00
+>     Assets:Cash
+Error: Expected hash b950af0a46d7bef5fd3076d375b21eca22a45b675a81a1577328ea1eacdc4ca0 != wronghashvalue
+end test

@@ -1,0 +1,20 @@
+; Tests for history.cc: price inversion and conversion paths
+; Covers: lines 372-378 (price inversion when price.commodity == source)
+;         lines 396-397 (return nullopt when source == target)
+
+; Price defined inversely: $ priced in EUR
+; When looking up EUR -> $, the graph has an edge $ -> EUR
+; so price inversion is needed (lines 372-378)
+P 2024/01/01 $ 0.91 EUR
+
+2024/01/15 Test
+    Expenses  10 EUR
+    Assets
+
+; Converting EUR to $ requires inverting the $ -> EUR price
+test bal -X '$'
+                $-11  Assets
+                 $11  Expenses
+--------------------
+                   0
+end test

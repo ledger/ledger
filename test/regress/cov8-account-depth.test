@@ -1,0 +1,12 @@
+; Coverage test for account.cc lines 287-288:
+; Exercise get_depth function for accounts.
+
+2024/01/01 Test
+    Expenses:Food:Snacks    $10.00
+    Assets:Cash
+
+test bal --format "%(account) depth=%(l)\n"
+Assets:Cash depth=2
+Expenses:Food:Snacks depth=3
+ depth=0
+end test

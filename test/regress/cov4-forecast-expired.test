@@ -1,0 +1,17 @@
+; Test forecast_posts with period that expires (lines 1453, 1553-1555 of filters.cc)
+; A periodic transaction with a limited range used for forecasting.
+; After 2024/04/01 the period has no more start, exercising the
+; pending_posts erase path at line 1554.
+
+~ monthly from 2024/01/01 to 2024/04/01
+    Expenses:Food    $100.00
+    Assets:Cash
+
+test reg --forecast "d<[2024/05/01]" --now 2024/01/01
+24-Feb-01 Forecast transaction  Expenses:Food               $100.00      $100.00
+24-Feb-01 Forecast transaction  Assets:Cash                $-100.00            0
+24-Mar-01 Forecast transaction  Expenses:Food               $100.00      $100.00
+24-Mar-01 Forecast transaction  Assets:Cash                $-100.00            0
+24-Apr-01 Forecast transaction  Expenses:Food               $100.00      $100.00
+24-Apr-01 Forecast transaction  Assets:Cash                $-100.00            0
+end test

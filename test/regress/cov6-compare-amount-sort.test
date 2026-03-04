@@ -1,0 +1,14 @@
+; Coverage for compare.cc: amount comparison in sort
+
+2024/01/01 Big
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2024/01/02 Small
+    Expenses:Food    $5.00
+    Assets:Cash
+
+test reg Expenses --sort amount
+24-Jan-02 Small                 Expenses:Food                 $5.00        $5.00
+24-Jan-01 Big                   Expenses:Food                $20.00       $25.00
+end test

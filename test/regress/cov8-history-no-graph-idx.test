@@ -1,0 +1,9 @@
+; Coverage for history.cc lines 337, 397, 405: find_price with no graph index
+
+2024/01/01 Test
+    Expenses:Food    10 FOOD
+    Assets:Cash
+
+test reg -X $ Expenses
+24-Jan-01 Test                  Expenses:Food               10 FOOD      10 FOOD
+end test

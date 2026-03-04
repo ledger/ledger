@@ -1,0 +1,19 @@
+; Coverage for filters.cc line 1290: transfer_details SET_ACCOUNT with pivot
+; The --pivot option creates accounts based on tag values
+
+2024/01/01 Test
+    ; City: NYC
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Test2
+    ; City: LA
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test reg --pivot City
+24-Jan-01 Test                  City:NYC:Expenses:Food       $10.00       $10.00
+24-Jan-01 Test                  City:NYC:Assets:Cash        $-10.00            0
+24-Jan-02 Test2                 City:LA:Expenses:Food        $20.00       $20.00
+24-Jan-02 Test2                 City:LA:Assets:Cash         $-20.00            0
+end test

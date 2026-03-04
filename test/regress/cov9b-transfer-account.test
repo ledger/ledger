@@ -1,0 +1,12 @@
+; Coverage for filters.cc line 1290: transfer_details SET_ACCOUNT
+; with xdata flags from previous account
+; The --account option with a non-colon-ending string triggers prepending
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --account "'Wrapper'"
+24-Jan-01 Test                  Wrapper:Expenses:Food        $10.00       $10.00
+24-Jan-01 Test                  Wrapper:Assets:Cash         $-10.00            0
+end test

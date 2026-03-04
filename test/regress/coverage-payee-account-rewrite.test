@@ -1,0 +1,14 @@
+; Coverage for filters.cc rewrite_posts (lines 1606-1656)
+; Tests both payee-rewrite and account-rewrite directives together.
+
+payee-rewrite  Grocery  Whole Foods
+account-rewrite  Expenses:Food  Expenses:Groceries
+
+2024/01/01 Grocery Store
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Whole Foods           Expenses:Groceries           $10.00       $10.00
+24-Jan-01 Whole Foods           Assets:Cash                 $-10.00            0
+end test

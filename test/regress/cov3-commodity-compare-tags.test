@@ -1,0 +1,15 @@
+; Test commodity comparison ordering by tag
+; Covers commodity.cc lines 479-484 (tag comparison in compare_by_commodity)
+
+2024/01/15 Buy lot A
+    Assets:Stocks    10 AAPL {$150} (alpha)
+    Assets:Cash
+
+2024/02/20 Buy lot B
+    Assets:Stocks    5 AAPL {$150} (beta)
+    Assets:Cash
+
+test bal --lots --no-total Assets:Stocks
+10 AAPL {$150} (alpha)
+5 AAPL {$150} (beta)  Assets:Stocks
+end test

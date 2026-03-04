@@ -1,0 +1,22 @@
+; Coverage tests for value.cc comparison operators
+; Boolean less_than (line 877), boolean greater_than (line 1018)
+; Date/datetime comparisons (lines 1024, 1029)
+
+2024/01/01 First
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/02/01 Second
+    Expenses:Food            $20.00
+    Assets:Cash
+
+; Test date comparison (less than and greater than)
+test reg -l "date < [2024/02/01]"
+24-Jan-01 First                 Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+test reg -l "date > [2024/01/15]"
+24-Feb-01 Second                Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test

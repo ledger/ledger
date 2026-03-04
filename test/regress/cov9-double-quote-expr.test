@@ -1,0 +1,11 @@
+; Test expression with double-quoted string
+; Covers token.cc double-quote string parsing
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    ; Note: lunch
+    Assets:Cash
+
+test reg --limit "has_tag(\"Note\")"
+24-Jan-15 Test                  Expenses:Food                $50.00       $50.00
+end test

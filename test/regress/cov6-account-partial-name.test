@@ -1,0 +1,9 @@
+; Coverage for account.cc line 241: partial_name function
+
+2024/01/01 Test
+    Expenses:Food:Groceries    $10.00
+    Assets:Cash
+
+test bal --format '%(partial_account(true))\n' Expenses
+Expenses:Food:Groceries
+end test

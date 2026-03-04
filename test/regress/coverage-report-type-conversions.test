@@ -1,0 +1,9 @@
+; Coverage for report.cc lines 1060,1064,1068,1072,1076: type conversion functions
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(to_amount(10)) %(to_int(2)) %(to_date(date)) %(to_boolean(1))\n" Expenses
+10 2 2024/01/01 true
+end test

@@ -1,17 +1,11 @@
-; Coverage: account.cc lines 225-233: partial_name with flat=true
-; Tests the flat account display which uses partial_name(flat=true)
+; Coverage: account.cc line 242 - get_partial_name with flat argument
+; partial_account(true) calls partial_name(flat=true)
 
-2024/01/15 * Payee
-    Expenses:Food:Groceries    $50.00
-    Expenses:Food:Dining       $30.00
-    Expenses:Auto:Gas          $40.00
-    Assets:Checking
+2024/01/01 Test
+    Expenses:Food:Groceries    $10.00
+    Assets:Cash
 
-test bal --flat --columns=80
-            $-120.00  Assets:Checking
-              $40.00  Expenses:Auto:Gas
-              $30.00  Expenses:Food:Dining
-              $50.00  Expenses:Food:Groceries
---------------------
-                   0
+test bal --format "%(partial_account(true))\n" --no-total
+Assets:Cash
+Expenses:Food:Groceries
 end test

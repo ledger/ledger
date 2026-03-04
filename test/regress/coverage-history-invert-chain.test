@@ -1,0 +1,15 @@
+; Coverage for history.cc: price inversion in multi-step path
+; A->B direct price, C->B direct price
+; Converting A->C requires: A->B (direct) then B->C (inverted C->B)
+; 10 A * 2 B/A / (5 B/C) = 4 C
+
+P 2024/01/01 A 2 B
+P 2024/01/01 C 5 B
+
+2024/01/15 Test
+    Expenses:Test    10 A
+    Assets:Cash
+
+test bal --market --exchange C --now 2024/02/01 Expenses
+                  C4  Expenses:Test
+end test

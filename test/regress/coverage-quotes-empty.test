@@ -1,0 +1,20 @@
+; Tests for quotes.cc: getquote empty output
+; Covers: lines 83-84 (feof/fgets failure - empty output)
+;         line 76 (no exchange commodity - uses '' for empty symbol)
+
+P 2024/01/01 EUR $1.10
+
+2024/01/15 Test
+    Expenses  10 EUR
+    Assets
+
+; getquote returns empty output - exercises feof/fgets failure at lines 83-84
+; and the else branch at line 120
+; Also exercises line 76 (no exchange commodity, '' for empty symbol)
+; because -V does not specify an explicit target commodity
+test bal -V -Q --getquote /usr/bin/true
+             $-11.00  Assets
+              $11.00  Expenses
+--------------------
+                   0
+end test

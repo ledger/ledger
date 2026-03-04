@@ -1,0 +1,17 @@
+; Coverage test for xact.cc lines 612-613
+; Tests the virtual_null_post path where virtual_balance is a long (integer).
+; When balanced virtual postings use bare numbers (no commodity),
+; the balance is stored as a long. The null posting gets the inverse.
+
+2024/03/01 Virtual Long Balance
+    Expenses:Food     $10.00
+    Assets:Cash      $-10.00
+    [Budget:Food]     5
+    [Budget:Extra]
+
+test reg
+24-Mar-01 Virtual Long Balance  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+                                [Budget:Food]                     5            5
+                                [Budget:Extra]                   -5            0
+end test

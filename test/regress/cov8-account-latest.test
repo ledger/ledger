@@ -1,0 +1,14 @@
+; Coverage test for account.cc lines 339-341, 352-354, 457-464:
+; Exercise latest and latest_cleared functions.
+
+2024/01/01 * Test Cleared
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/15 Test Pending
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test bal Expenses --format "%(account) latest=%(latest) cleared=%(latest_cleared)\n"
+Expenses:Food latest=2024/01/15 cleared=2024/01/01
+end test

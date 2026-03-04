@@ -1,0 +1,10 @@
+; Coverage for session.cc lines 170-172: exception handling during journal parsing
+; Including a non-existent file triggers the catch/rethrow in read_data
+
+include /nonexistent/file.dat
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 4:
+Error: File to include was not found: "/nonexistent/file.dat"
+end test

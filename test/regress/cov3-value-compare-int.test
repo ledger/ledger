@@ -1,0 +1,15 @@
+; Test value comparison between amount and integer
+; Covers value.cc lines related to amount vs integer comparison
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/01/20 Test
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test reg --format="%(display_total > 60 ? \"big\" : \"small\")\n" Expenses
+small
+big
+end test

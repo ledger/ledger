@@ -1,0 +1,27 @@
+; Coverage tests for textual_xacts.cc
+; Automated transaction enable/disable/delete commands
+; Lines 45-48 (check_command_has_match warning), 67-68, 77, 79, 126
+
+; Named automated transaction
+= "food" :: /Food/
+    (Budgets:Food)             -1
+
+; Disable the named automated transaction
+= "food" disable
+
+; Re-enable it
+= "food" enable
+
+; Delete it
+= "food" delete
+
+2024/01/01 Test
+    Expenses:Food            $10.00
+    Assets:Cash
+
+test bal
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

@@ -1,0 +1,12 @@
+; Test time colon display with thousands separator
+; Exercises amount.cc line 213 (time_colon thousands separator using colon)
+
+commodity 1,000.00h
+
+2024/01/01 Long project
+    Billable:Client    1,234.50h
+    Time
+
+test --time-colon bal --no-total Billable
+           1:234:30h  Billable:Client
+end test

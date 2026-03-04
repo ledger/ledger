@@ -1,0 +1,11 @@
+; Test middle truncation style
+; Covers format.cc lines 504-508 (TRUNCATE_MIDDLE style)
+
+2024/01/15 Test
+    Expenses:Groceries:Fresh:Produce:Organic    $50.00
+    Assets:Cash
+
+test reg --no-total --account-width 20 --truncate=middle
+24-Jan-15 Test                  Expenses:..e:Organic       $50.00       $50.00
+                                Assets:Cash               $-50.00            0
+end test

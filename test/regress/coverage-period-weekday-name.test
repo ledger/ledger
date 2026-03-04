@@ -1,0 +1,23 @@
+; Test times.cc lines 866-868: weekday name as period specifier
+; via determine_when TOK_A_WDAY case
+
+2026/03/01 Sun tx
+    Expenses:Food   $5.00
+    Assets:Cash
+
+2026/03/02 Mon tx
+    Expenses:Food   $10.00
+    Assets:Cash
+
+2026/03/03 Tue tx
+    Expenses:Food   $20.00
+    Assets:Cash
+
+test reg --begin "Monday" --now 2026/03/03
+26-Mar-01 Sun tx                Expenses:Food                 $5.00        $5.00
+                                Assets:Cash                  $-5.00            0
+26-Mar-02 Mon tx                Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+26-Mar-03 Tue tx                Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test

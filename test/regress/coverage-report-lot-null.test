@@ -1,0 +1,6 @@
+2024/01/01 Buy
+    Expenses:Food   $10.00
+    Assets:Cash
+
+test reg --format '%(lot_date(amount))%(lot_price(amount))%(lot_tag(amount))\n' Expenses:Food
+end test

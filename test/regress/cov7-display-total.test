@@ -1,0 +1,11 @@
+; Test fn_display_total (T function)
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --format "%(T)\n"
+$-10.00
+$10.00
+0
+end test

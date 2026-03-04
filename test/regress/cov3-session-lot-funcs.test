@@ -1,0 +1,10 @@
+; Test session lot functions: lot_price, lot_date, lot_tag
+; Covers session.cc lines 273-293 (fn_lot_price, fn_lot_date, fn_lot_tag)
+
+2024/01/01 Buy Stock
+    Assets:Brokerage    10 AAPL {$150} [2024/01/01] (lot1)
+    Assets:Cash
+
+test reg --format="%(lot_price(display_amount)) %(lot_date(display_amount)) %(lot_tag(display_amount))\n" Assets:Brokerage
+$150 2024/01/01 lot1
+end test

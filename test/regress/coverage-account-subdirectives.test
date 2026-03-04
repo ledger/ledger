@@ -1,0 +1,22 @@
+; Coverage test for textual_directives.cc lines 429, 439-473
+; Account directive with payee, value, default, note, check, eval
+
+account Expenses:Food
+    payee Food.*
+    note This is the food expense account
+    check amount > 0
+    eval 1 + 1
+
+account Assets:Cash
+    default
+
+2024/01/01 Food Store
+    Expenses:Food            $10.00
+    Assets:Cash
+
+test bal
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

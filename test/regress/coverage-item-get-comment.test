@@ -1,0 +1,16 @@
+; Coverage for item.cc lines 364-388: get_comment function
+; Tests short note (line 372) and long note (line 370) formatting
+
+2024/01/01 Test Short
+    Expenses:Food    $10.00  ; Short
+    Assets:Cash
+
+2024/01/02 Test Long
+    Expenses:Food    $5.00  ; This is a long note for the posting itself
+    Assets:Cash
+
+test reg --format "|%(comment)|\n" Expenses
+|  ; Short|
+|
+    ; This is a long note for the posting itself|
+end test

@@ -1,0 +1,11 @@
+; Coverage for item.cc lines 49-53: has_tag/get_tag with metadata
+
+2024/01/01 Test
+    ; :MyTag:
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(has_tag('MyTag') ? 'yes' : 'no')\n"
+yes
+yes
+end test

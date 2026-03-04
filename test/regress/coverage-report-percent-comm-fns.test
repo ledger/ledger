@@ -1,0 +1,25 @@
+; Coverage for report.cc:
+; Lines 933-936: fn_percent - computes percentage of one amount relative to another
+; Lines 938-940: fn_commodity - returns the commodity symbol of an amount
+; Lines 942-951: fn_commodity_price - looks up commodity price at a given time
+; Lines 953-956: fn_set_commodity_price - sets a commodity price
+
+P 2024/01/01 AAPL $150.00
+
+2024/01/01 * Buy Stock
+    Assets:Brokerage   10 AAPL @ $150.00
+    Assets:Cash
+
+; fn_percent (lines 933-936)
+test reg --format '%(percent(amount, $200.00))\n' Assets:Cash
+-750.00%
+end test
+
+; fn_commodity (lines 938-940)
+test reg --format '%(commodity(amount))\n' Assets:Brokerage
+AAPL
+end test
+
+; fn_set_commodity_price (lines 953-956)
+test eval 'set_commodity_price(1 AAPL, today, $200)'
+end test

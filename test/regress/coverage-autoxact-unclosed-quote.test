@@ -1,0 +1,15 @@
+; Coverage test for textual_xacts.cc line 76-77
+; Automated transaction with unclosed quote in pattern
+
+= "Food
+    (Budgets:Food)             -1
+
+2024/01/01 Test
+    Expenses:Food            $10.00
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 4:
+Error: Expected '"' at end of pattern
+end test

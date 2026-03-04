@@ -1,0 +1,11 @@
+; Coverage test for report.cc lines 840-854, 856-868
+; fn_quoted adds double quotes around a string value
+; fn_quoted_rfc uses RFC-style double quoting
+
+2024/01/01 Test "Payee"
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(quoted(payee)) %(quoted_rfc(payee))\n" --limit "account =~ /Expenses/"
+"Test \"Payee\"" "Test ""Payee"""
+end test
