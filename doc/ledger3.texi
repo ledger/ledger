@@ -8370,8 +8370,7 @@ When combined with @option{--gain}, report gain relative to the market
 value at @var{DATE} rather than original cost.  Use this to measure
 performance within a period: positions held before @var{DATE} use their
 market value at @var{DATE} as the baseline, so only appreciation since
-that date is counted.  @xref{--gain-since}, for a full description and
-example.
+that date is counted.
 
 @end ftable
 
