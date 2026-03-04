@@ -1030,8 +1030,13 @@ $ ledger balance --no-total
 
 Ledger makes no assumptions about the commodities you use; it only
 requires that you specify a commodity.  The commodity may be any
-non-numeric string that does not contain a period, comma, forward
-slash or at-sign.  It may appear before or after the amount, although
+non-numeric string that does not contain whitespace, digits, or
+punctuation characters used in Ledger's grammar (such as period,
+comma, semicolon, colon, plus, minus, asterisk, forward slash,
+caret, ampersand, parentheses, brackets, braces, at-sign, equals,
+angle brackets, exclamation mark, question mark, pipe, or tilde).
+If you need to use such characters, enclose the entire commodity
+name in double quotes.  It may appear before or after the amount, although
 it is assumed that symbols appearing before the amount refer to
 currencies, while non-joined symbols appearing after the amount refer
 to commodities.  Here are some valid currency and commodity
@@ -1229,12 +1234,12 @@ percentage is the same as multiplying by its reciprocal:
 $190.00 / 19%   @result{}  $1000.00   (not $10.00)
 @end example
 
-@item Percentage @times{} percentage
+@item Percentage × percentage
 When both operands carry @samp{%}, only one implicit division by 100
 takes place, preserving the natural percentage convention:
 
 @example
-10% * 10%  @result{}  1%   (i.e., 0.10 @times{} 0.10 = 0.01 = 1%)
+10% * 10%  @result{}  1%   (i.e., 0.10 × 0.10 = 0.01 = 1%)
 @end example
 
 @item Addition and subtraction
@@ -7323,7 +7328,7 @@ $ ledger bal --gain
 @end smallexample
 
 @noindent
-The $600 is gain from cost: 10@times{}($180@minus{}$120) + 10@times{}($180@minus{}$160).
+The $600 is gain from cost: 10×($180@minus{}$120) + 10×($180@minus{}$160).
 To see only the gain @emph{within} 2022:
 
 @smallexample
@@ -7333,9 +7338,9 @@ $ ledger bal --gain --gain-since 2022/01/01
 
 @noindent
 The first lot now uses $150 (market value at 2022-01-01) as its baseline:
-10@times{}($180@minus{}$150) = $300.
+10×($180@minus{}$150) = $300.
 The second lot, acquired after the reference date, still uses its cost:
-10@times{}($180@minus{}$160) = $200.
+10×($180@minus{}$160) = $200.
 Total: $500.
 
 @item --generated
@@ -8370,8 +8375,7 @@ When combined with @option{--gain}, report gain relative to the market
 value at @var{DATE} rather than original cost.  Use this to measure
 performance within a period: positions held before @var{DATE} use their
 market value at @var{DATE} as the baseline, so only appreciation since
-that date is counted.  @xref{--gain-since}, for a full description and
-example.
+that date is counted.
 
 @end ftable
 

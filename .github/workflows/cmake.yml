@@ -158,3 +158,49 @@ jobs:
           path: ${{github.workspace}}/build/coverage-report/
           retention-days: 30
           if-no-files-found: error
+
+  doxygen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        name: Check out repository code
+
+      - name: Install Doxygen and Graphviz
+        run: sudo apt-get update -y && sudo apt-get install -y doxygen graphviz
+
+      - name: Configure CMake
+        run: cmake -B ${{github.workspace}}/build -DUSE_DOXYGEN=ON
+
+      - name: Build Doxygen documentation
+        run: cmake --build ${{github.workspace}}/build --target doc.doxygen
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: doxygen-html
+          path: ${{github.workspace}}/build/doc/html/
+          retention-days: 30
+          if-no-files-found: error
+
+  manual:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        name: Check out repository code
+
+      - name: Install documentation tools
+        run: sudo apt-get update -y && sudo apt-get install -y texinfo texlive
+
+      - name: Configure CMake
+        run: cmake -B ${{github.workspace}}/build -DBUILD_DOCS=ON
+
+      - name: Build PDF manual and info pages
+        run: cmake --build ${{github.workspace}}/build --target doc
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ledger-manual
+          path: |
+            ${{github.workspace}}/build/doc/ledger3.pdf
+            ${{github.workspace}}/build/doc/ledger3.info
+          retention-days: 30
+          if-no-files-found: error

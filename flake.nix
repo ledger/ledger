@@ -106,13 +106,37 @@
           llvmPackages_18.llvm        # Provides llvm-profdata, llvm-cov
           hyperfine                   # Statistical benchmarking
           cppcheck
+          doxygen                     # API documentation generator
+          graphviz                    # Graph visualization for Doxygen call graphs
+          (texliveSmall.withPackages (ps: [ ps.texinfo ])) # TeX for texi2pdf (PDF manual)
           lcov                        # Frontend for gcov (coverage analysis tool)
         ] ++ lib.optionals (system == "x86_64-linux" || system == "aarch64-linux") [
           gcc                         # GNU compiler suite, includes gcov for Linux
         ];
 
+        # Point CMake at the ICU runtime package so FindICU can locate
+        # libicuuc.  Nix splits headers (-dev) and libraries into separate
+        # store paths; without this hint CMake finds the version from the
+        # -dev headers but cannot locate the shared libraries.
+        ICU_ROOT = "${pkgs.icu.out}";
+
+        # Default CMake flags for the dev shell.  mkShellNoCC exports
+        # this as $cmakeFlags so developers can use:
+        #   cmake -B build $cmakeFlags
+        # All optional features are enabled since every dependency is
+        # available via inputsFrom.  Sanitizers, coverage, and profiling
+        # are left off as they require dedicated build configurations.
+        cmakeFlags = [
+          "-DCMAKE_BUILD_TYPE=Debug"
+          "-DUSE_PYTHON=ON"
+          "-DUSE_DOXYGEN=ON"
+          "-DUSE_GPGME=ON"
+          "-DBUILD_DOCS=ON"
+        ];
+
         shellHook = ''
           echo "Ledger development environment"
+          echo "  cmake -B build \$cmakeFlags   # configure with all features"
           echo "clang-format version: $(clang-format --version)"
           echo "Coverage tools available:"
           ${if system == "x86_64-linux" || system == "aarch64-linux" then ''
