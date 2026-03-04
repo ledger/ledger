@@ -29,6 +29,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   post.cc
+ * @author John Wiegley
+ *
+ * @ingroup data
+ *
+ * @brief  Implementation of posting operations
+ *
+ * This file implements the post_t methods for tag inheritance, date
+ * resolution, payee resolution, expression binding, value accumulation,
+ * valuation expression attachment, and XML serialization.  Together these
+ * form the core logic that connects journal entries to the reporting
+ * pipeline.
+ */
+
 #include <system.hh>
 
 #include "post.h"
@@ -39,6 +54,12 @@
 #include "pool.h"
 
 namespace ledger {
+
+/*--- Tag Inheritance ---*/
+// Postings inherit tags from their parent transaction.  When a posting
+// does not have a given tag itself, and inherit is true, the lookup
+// delegates to the parent xact.  This lets users attach metadata at the
+// transaction level (e.g., ; Payee: ...) and have it apply to all postings.
 
 bool post_t::has_tag(const string& tag, bool inherit) const {
   if (item_t::has_tag(tag))
@@ -75,12 +96,37 @@ std::optional<value_t> post_t::get_tag(const mask_t& tag_mask,
   return std::nullopt;
 }
 
+/*--- Date Resolution ---*/
+// Date resolution follows a priority chain that varies by method:
+//
+//   value_date(): xdata override -> date()
+//   date():       xdata override -> aux_date (if use_aux_date) -> primary_date()
+//   primary_date(): xdata override -> posting _date -> xact date -> CURRENT_DATE
+//   aux_date():  posting aux_date -> xact aux_date
+//
+// The xdata date override lets the reporting pipeline assign custom dates
+// (e.g., for --now or period-based reporting) without modifying the journal.
+// The --aux-date flag toggles use_aux_date, making auxiliary dates primary.
+
+/**
+ * @brief The date to use for valuation (price lookup) purposes.
+ *
+ * Checks xdata for a pipeline-assigned valuation date first, then
+ * falls back to the posting's effective date().
+ */
 date_t post_t::value_date() const {
   if (xdata_ && is_valid(xdata_->value_date))
     return xdata_->value_date;
   return date();
 }
 
+/**
+ * @brief The effective date of this posting for reporting purposes.
+ *
+ * When --aux-date is active and an auxiliary date exists (on the posting
+ * or its parent transaction), that date is used.  Otherwise falls through
+ * to primary_date().
+ */
 date_t post_t::date() const {
   if (xdata_ && is_valid(xdata_->date))
     return xdata_->date;
@@ -93,6 +139,14 @@ date_t post_t::date() const {
   return primary_date();
 }
 
+/**
+ * @brief The primary date of this posting.
+ *
+ * If the posting has its own date (from a per-posting date override in
+ * the journal), that is returned.  Otherwise the parent transaction's
+ * date is used.  As a last resort, CURRENT_DATE() provides a fallback
+ * for programmatically created postings with no transaction.
+ */
 date_t post_t::primary_date() const {
   if (xdata_ && is_valid(xdata_->date))
     return xdata_->date;
@@ -106,6 +160,13 @@ date_t post_t::primary_date() const {
   return *_date;
 }
 
+/**
+ * @brief The auxiliary (secondary) date for this posting.
+ *
+ * Checks the posting's own aux_date first, then the parent transaction's.
+ * Auxiliary dates are commonly used for the settlement date of a trade
+ * when the primary date is the trade date.
+ */
 optional<date_t> post_t::aux_date() const {
   optional<date_t> date = item_t::aux_date();
   if (!date && xact)
@@ -113,6 +174,19 @@ optional<date_t> post_t::aux_date() const {
   return date;
 }
 
+/*--- Payee Resolution ---*/
+// The payee for a posting is resolved through a three-level cascade:
+//   1. Explicit _payee set via set_payee() (used by automated transactions)
+//   2. A "Payee:" metadata tag on the posting or inherited from the transaction
+//   3. The parent transaction's payee field
+//
+// This allows individual postings to override the transaction payee,
+// which is useful for split transactions involving different payees.
+
+/**
+ * @brief Extract a payee from the Payee metadata tag.
+ * @return The tag value as a string, or empty string if not found.
+ */
 string post_t::payee_from_tag() const {
   if (std::optional<value_t> post_payee = get_tag(_("Payee")))
     return post_payee->as_string();
@@ -120,6 +194,11 @@ string post_t::payee_from_tag() const {
     return "";
 }
 
+/**
+ * @brief Resolve the effective payee for this posting.
+ *
+ * Checks: (1) _payee field, (2) Payee metadata tag, (3) xact payee.
+ */
 string post_t::payee() const {
   if (_payee)
     return *_payee;
@@ -129,7 +208,18 @@ string post_t::payee() const {
   return post_payee != "" ? post_payee : xact ? xact->payee : "";
 }
 
+/*--- Expression Bindings ---*/
+// This anonymous namespace defines getter functions that bridge between
+// Ledger's expression language and the C++ post_t data model.  Each getter
+// extracts a specific field or computed value from a posting, making it
+// available to user expressions like `amount`, `account`, `payee`, etc.
+//
+// The get_wrapper template adapts simple post_t& getters into call_scope_t
+// functors expected by the expression engine.
+
 namespace {
+
+/** @brief Return the posting itself as a scope value. */
 value_t get_this(post_t& post) {
   return scope_value(&post);
 }
@@ -142,14 +232,17 @@ value_t get_is_cost_calculated(post_t& post) {
   return post.has_flags(POST_COST_CALCULATED);
 }
 
+/** @brief True if the posting is virtual (parenthesized account). */
 value_t get_virtual(post_t& post) {
   return post.has_flags(POST_VIRTUAL);
 }
 
+/** @brief True if the posting is real (not virtual). */
 value_t get_real(post_t& post) {
   return !post.has_flags(POST_VIRTUAL);
 }
 
+/** @brief Return the parent transaction as a scope value. */
 value_t get_xact(post_t& post) {
   return scope_value(post.xact);
 }
@@ -158,6 +251,7 @@ value_t get_xact_id(post_t& post) {
   return static_cast<long>(post.xact_id());
 }
 
+/** @brief Return the transaction code, or NULL_VALUE if none. */
 value_t get_code(post_t& post) {
   if (post.xact && post.xact->code)
     return string_value(*post.xact->code);
@@ -169,6 +263,12 @@ value_t get_payee(post_t& post) {
   return string_value(post.payee());
 }
 
+/**
+ * @brief Combine the posting's note with its transaction's note.
+ *
+ * If both exist, they are joined with a newline.  This mirrors the
+ * tag inheritance model: posting notes supplement transaction notes.
+ */
 value_t get_note(post_t& post) {
   if (post.note || (post.xact && post.xact->note)) {
     string note = post.note ? *post.note : empty_string;
@@ -190,6 +290,13 @@ value_t get_magnitude(post_t& post) {
     return NULL_VALUE;
 }
 
+/**
+ * @brief Return the posting amount, respecting compound value overrides.
+ *
+ * If POST_EXT_COMPOUND is set, returns compound_value (which may be a
+ * balance or other complex value set by a filter).  Otherwise returns
+ * the raw posting amount, or 0 if null.
+ */
 value_t get_amount(post_t& post) {
   if (post.has_xdata() && post.xdata().has_flags(POST_EXT_COMPOUND))
     return post.xdata().compound_value;
@@ -203,6 +310,13 @@ value_t get_use_direct_amount(post_t& post) {
   return post.has_xdata() && post.xdata().has_flags(POST_EXT_DIRECT_AMT);
 }
 
+/**
+ * @brief Return the commodity of the posting amount.
+ *
+ * Accepts an optional amount argument; if provided, returns that amount's
+ * commodity instead of the posting's.  Annotations are stripped to return
+ * the base commodity symbol.
+ */
 value_t get_commodity(call_scope_t& args) {
   if (args.has<amount_t>(0)) {
     return args.get<amount_t>(0).commodity().strip_annotations(keep_details_t{});
@@ -227,6 +341,13 @@ value_t get_has_cost(post_t& post) {
   return post.cost ? true : false;
 }
 
+/**
+ * @brief Return the cost of the posting, falling back to the amount.
+ *
+ * If a cost is recorded (currency conversion or lot price), returns it.
+ * Otherwise returns the compound value or raw amount, since a posting
+ * in a single commodity has cost equal to amount.
+ */
 value_t get_cost(post_t& post) {
   if (post.cost)
     return *post.cost;
@@ -238,6 +359,13 @@ value_t get_cost(post_t& post) {
     return post.amount;
 }
 
+/**
+ * @brief Return the per-unit price from the amount's annotation.
+ *
+ * If the amount has a lot price annotation, returns that price.
+ * Otherwise falls back to the cost (which equals the amount when
+ * there is no currency conversion).
+ */
 value_t get_price(post_t& post) {
   if (post.amount.is_null())
     return 0L;
@@ -247,6 +375,9 @@ value_t get_price(post_t& post) {
     return get_cost(post);
 }
 
+/**
+ * @brief Return the running total, or the amount if no total is accumulated.
+ */
 value_t get_total(post_t& post) {
   if (post.xdata_ && !post.xdata_->total.is_null())
     return post.xdata_->total;
@@ -263,6 +394,14 @@ value_t get_count(post_t& post) {
     return 1L;
 }
 
+/**
+ * @brief Return the posting's account, with optional formatting.
+ *
+ * With no arguments, returns the full account name (or the account as a
+ * scope when the type context is SCOPE).  With a numeric argument > 2,
+ * truncates the account name to that width.  With a string or mask
+ * argument, looks up a different account by name or pattern.
+ */
 value_t get_account(call_scope_t& args) {
   post_t& post(args.context<post_t>());
   account_t& account(*post.reported_account());
@@ -306,6 +445,12 @@ value_t get_account(call_scope_t& args) {
   return string_value(name);
 }
 
+/**
+ * @brief Return the display account name, decorated with virtual indicators.
+ *
+ * Virtual postings are wrapped in parentheses, balanced virtual postings
+ * in brackets, matching the journal syntax the user originally wrote.
+ */
 value_t get_display_account(call_scope_t& args) {
   value_t acct = get_account(args);
   if (acct.is_string()) {
@@ -351,11 +496,23 @@ value_t get_checkout(post_t& post) {
   return post.checkout ? *post.checkout : NULL_VALUE;
 }
 
+/** @brief Adapt a simple post_t& getter into a call_scope_t functor. */
 template <value_t (*Func)(post_t&)>
 value_t get_wrapper(call_scope_t& scope) {
   return (*Func)(find_scope<post_t>(scope));
 }
 
+/**
+ * @brief Test whether any posting in the same transaction satisfies an expression.
+ *
+ * Iterates over all postings in the parent transaction and evaluates the
+ * given expression in each posting's scope.  Returns true as soon as one
+ * matches.
+ *
+ * An optional second argument (false) excludes the current posting from
+ * consideration, which is useful for queries like "does any *other*
+ * posting in this transaction match?"
+ */
 value_t fn_any(call_scope_t& args) {
   post_t& post(args.context<post_t>());
   expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
@@ -376,6 +533,15 @@ value_t fn_any(call_scope_t& args) {
   return false;
 }
 
+/**
+ * @brief Test whether all postings in the same transaction satisfy an expression.
+ *
+ * Like fn_any, but returns false as soon as any posting fails the test.
+ * Returns true if no transaction exists (vacuous truth).
+ *
+ * An optional second argument (false) excludes the current posting from
+ * consideration.
+ */
 value_t fn_all(call_scope_t& args) {
   post_t& post(args.context<post_t>());
   expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
@@ -397,6 +563,22 @@ value_t fn_all(call_scope_t& args) {
 }
 } // namespace
 
+/**
+ * @brief Map expression names to getter implementations for the posting scope.
+ *
+ * This dispatch table maps expression identifiers to the appropriate getter
+ * functions defined above.  It uses a first-character switch for fast lookup.
+ *
+ * Single-character aliases (used in format strings and expressions):
+ *   - `a` = amount
+ *   - `b` = cost (mnemonic: "basis")
+ *   - `n` / `N` = count
+ *   - `O` = total
+ *   - `R` = real (not virtual)
+ *
+ * Falls through to item_t::lookup() for inherited bindings such as date,
+ * note, state, has_tag, etc.
+ */
 expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind, const string& name) {
   if (kind != symbol_t::FUNCTION)
     return item_t::lookup(kind, name);
@@ -535,6 +717,17 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind, const string& name)
   return item_t::lookup(kind, name);
 }
 
+/**
+ * @brief Evaluate an expression in a scope bound to this posting.
+ *
+ * Creates a bind_scope_t pairing the given scope with this posting,
+ * then calculates the expression.  Long results are promoted to amounts.
+ *
+ * @param scope  The parent scope (typically the report scope).
+ * @param expr   The expression to evaluate.
+ * @return The result as an amount_t.
+ * @throws amount_error if the result is neither a long nor an amount.
+ */
 amount_t post_t::resolve_expr(scope_t& scope, expr_t& expr) {
   bind_scope_t bound_scope(scope, *this);
   value_t result(expr.calc(bound_scope));
@@ -547,6 +740,9 @@ amount_t post_t::resolve_expr(scope_t& scope, expr_t& expr) {
   }
 }
 
+/**
+ * @brief Return the 1-based index of this posting within its transaction.
+ */
 std::size_t post_t::xact_id() const {
   std::size_t id = 1;
   for (post_t* p : xact->posts) {
@@ -558,6 +754,9 @@ std::size_t post_t::xact_id() const {
   return 0;
 }
 
+/**
+ * @brief Return the 1-based index of this posting within its account.
+ */
 std::size_t post_t::account_id() const {
   std::size_t id = 1;
   for (post_t* p : account->posts) {
@@ -569,6 +768,13 @@ std::size_t post_t::account_id() const {
   return 0;
 }
 
+/**
+ * @brief Validate the internal consistency of this posting.
+ *
+ * Checks that the posting has a parent transaction, that it can be
+ * found within that transaction's posting list, that it has an account,
+ * and that the amount and cost (if present) are valid.
+ */
 bool post_t::valid() const {
   if (!xact) {
     DEBUG("ledger.validate", "post_t: ! xact");
@@ -605,6 +811,28 @@ bool post_t::valid() const {
   return true;
 }
 
+/*--- Value Accumulation ---*/
+// add_to_value is called by the reporting pipeline to accumulate posting
+// values into running totals.  The logic has several branches to handle
+// compound values, fast-path amount reads, expression evaluation, and
+// visited-value fallbacks.
+
+/**
+ * @brief Accumulate this posting's value into a running total.
+ *
+ * The evaluation priority is:
+ *   1. If POST_EXT_COMPOUND is set, use the compound_value (set by filters
+ *      that transform the posting value, e.g., market valuation).
+ *   2. If an expression is provided and its fast_path is POST_AMOUNT,
+ *      read the amount directly -- this avoids creating scope objects
+ *      and evaluating through the AST interpreter for the common case.
+ *   3. Otherwise evaluate the expression in a bound scope.
+ *   4. If no expression and the posting was visited, use visited_value.
+ *   5. Fall back to the raw posting amount.
+ *
+ * @param value  The accumulator to add this posting's value to.
+ * @param expr   Optional expression to evaluate (e.g., `amount` or `cost`).
+ */
 void post_t::add_to_value(value_t& value, const optional<expr_t&>& expr) const {
   // NOLINTBEGIN(bugprone-branch-clone)
   if (xdata_ && xdata_->has_flags(POST_EXT_COMPOUND)) {
@@ -644,11 +872,46 @@ void post_t::add_to_value(value_t& value, const optional<expr_t&>& expr) const {
   // NOLINTEND(bugprone-branch-clone)
 }
 
+/**
+ * @brief Set the account used for display and register it for reporting.
+ *
+ * Overrides the account shown in reports (stored in xdata) and adds this
+ * posting to the target account's reported_posts list.
+ */
 void post_t::set_reported_account(account_t* acct) {
   xdata().account = acct;
   acct->xdata().reported_posts.push_back(this);
 }
 
+/*--- Valuation Expression Cascade ---*/
+// extend_post attaches a valuation expression to the posting's commodity
+// annotation.  This is the mechanism behind --market, --exchange, and the
+// Value: metadata tag.  The cascade checks four sources in priority order,
+// stopping at the first one found.
+
+/**
+ * @brief Attach a valuation expression to the posting's commodity.
+ *
+ * When the user runs `--market` or uses a `Value:` tag, this function
+ * determines which valuation expression to attach to the commodity
+ * annotation.  The cascade checks four sources:
+ *
+ *   1. `Value:` metadata tag on the posting (or inherited from the
+ *      transaction).  When a typed expression (`Value::`) returns an
+ *      amount, it is divided by the posting quantity to convert from
+ *      total value to per-unit price.
+ *   2. The account's value_expr.
+ *   3. The commodity's value_expr.
+ *   4. The journal's value_expr.
+ *
+ * If the commodity already has a valuation expression in its annotation,
+ * this function does nothing.  Otherwise, the selected expression is
+ * either set on the existing annotation or wrapped into a new annotated
+ * commodity created via the commodity pool.
+ *
+ * @param post     The posting whose commodity should be annotated.
+ * @param journal  The journal providing the fallback value_expr.
+ */
 void extend_post(post_t& post, journal_t& journal) {
   commodity_t& comm(post.amount.commodity());
 
@@ -695,6 +958,21 @@ void extend_post(post_t& post, journal_t& journal) {
   }
 }
 
+/*--- XML Serialization ---*/
+// put_post serializes a posting into an XML property tree for the xml
+// output format.  It emits all fields that have meaningful values.
+
+/**
+ * @brief Serialize a posting to an XML property tree.
+ *
+ * Outputs the posting's state (cleared/pending), virtual flag, dates,
+ * payee override, account (with hex address reference), amount or
+ * compound value, cost, balance assertion/assignment, note, metadata,
+ * and running total.
+ *
+ * @param st    The property tree node to populate.
+ * @param post  The posting to serialize.
+ */
 void put_post(property_tree::ptree& st, const post_t& post) {
   if (post.state() == item_t::CLEARED)
     st.put("<xmlattr>.state", "cleared");

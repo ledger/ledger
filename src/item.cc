@@ -29,6 +29,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   item.cc
+ * @author John Wiegley
+ *
+ * @ingroup data
+ *
+ * @brief  Implementation of item_t -- the base class for all journal items.
+ *
+ * This file implements the metadata system (has_tag, get_tag, set_tag,
+ * parse_tags), the expression-engine bindings (lookup), and utility
+ * functions for printing and serializing journal items.
+ */
+
 #include <system.hh>
 
 #include "item.h"
@@ -36,6 +49,15 @@
 namespace ledger {
 
 bool item_t::use_aux_date = false;
+
+/*----------------------------------------------------------------------*/
+/*  Metadata Operations                                                 */
+/*                                                                      */
+/*  The metadata map uses a case-insensitive comparator so that tags    */
+/*  like "Payee", "payee", and "PAYEE" all resolve to the same entry.   */
+/*  Lookups by exact string use the map's find(); lookups by regex      */
+/*  iterate over all entries.                                           */
+/*----------------------------------------------------------------------*/
 
 bool item_t::has_tag(const string& tag, bool) const {
   DEBUG("item.meta", "Checking if item has tag: " << tag);
@@ -97,6 +119,15 @@ std::optional<value_t> item_t::get_tag(const mask_t& tag_mask,
 }
 
 namespace {
+/**
+ * @brief Case-insensitive ordering for metadata tag names.
+ *
+ * Used as the comparator for item_t::string_map so that metadata
+ * lookups are case-insensitive.  For example, a tag set as "Payee"
+ * can be retrieved via has_tag("payee") or get_tag("PAYEE").
+ * Delegates to Boost's ilexicographical_compare for locale-aware
+ * case-folded ordering.
+ */
 struct CaseInsensitiveKeyCompare
 #if __cplusplus < 201103L
     : public std::binary_function<string, string, bool>
@@ -108,6 +139,13 @@ struct CaseInsensitiveKeyCompare
 };
 } // namespace
 
+/**
+ * @brief Set or overwrite a metadata tag, creating the map if needed.
+ *
+ * When the metadata map does not yet exist, it is initialized with a
+ * CaseInsensitiveKeyCompare comparator.  Null or empty-string values
+ * are normalized to std::nullopt (stored as a valueless tag).
+ */
 item_t::string_map::iterator item_t::set_tag(const string& tag, const std::optional<value_t>& value,
                                              const bool overwrite_existing) {
   assert(!tag.empty());
@@ -138,6 +176,44 @@ item_t::string_map::iterator item_t::set_tag(const string& tag, const std::optio
   }
 }
 
+/*----------------------------------------------------------------------*/
+/*  Tag Parsing                                                         */
+/*                                                                      */
+/*  Comment lines (`;`-prefixed) are scanned for structured metadata.   */
+/*  Three syntaxes are recognized:                                      */
+/*    1. [date=auxdate] -- bracketed date override                      */
+/*    2. :tag1:tag2:    -- colon-delimited bare tags                    */
+/*    3. Key: value     -- key/value metadata (first token with `:`)    */
+/*    4. Key:: expr     -- like Key: but value is an evaluated expr     */
+/*----------------------------------------------------------------------*/
+
+/**
+ * @brief Parse metadata tags from a single comment line.
+ *
+ * This function extracts structured metadata from comment text.  It
+ * handles three distinct syntaxes:
+ *
+ * **Bracketed dates** `[date]` or `[date=auxdate]`:
+ *   If the text contains `[` followed by a digit or `=`, the content
+ *   between brackets is parsed as a date override.  The part before
+ *   `=` sets the primary date; the part after `=` sets the auxiliary
+ *   (effective) date.  This allows postings to carry dates different
+ *   from their parent transaction.
+ *
+ * **Colon-delimited tags** `:tag1:tag2:tag3:`:
+ *   A token beginning and ending with `:` is split on `:` to produce
+ *   multiple bare (valueless) tags in one comment line.
+ *
+ * **Key/value metadata** `Key: value` or `Key:: expr`:
+ *   The first whitespace-delimited token ending with `:` names the key.
+ *   Everything after it is the value.  With a single colon the value
+ *   is stored as a string; with a double colon (`::`) the value is
+ *   parsed and evaluated as an expression in the current scope.
+ *
+ * Only the first key/value pair per line is parsed (the function
+ * breaks after finding it).  Multiple bare tags on the same line
+ * are all recorded.
+ */
 void item_t::parse_tags(const char* p, scope_t& scope, bool overwrite_existing) {
   if (const char* b = std::strchr(p, '[')) {
     if (*(b + 1) != '\0' &&
@@ -210,6 +286,16 @@ void item_t::append_note(const char* p, scope_t& scope, bool overwrite_existing)
 
   parse_tags(p, scope, overwrite_existing);
 }
+
+/*----------------------------------------------------------------------*/
+/*  Expression Bindings                                                 */
+/*                                                                      */
+/*  These getter functions are referenced by item_t::lookup() to map    */
+/*  expression function names (e.g., "date", "status", "note") to      */
+/*  callable wrappers.  The get_wrapper<> template adapts a simple      */
+/*  item_t getter into a call_scope_t functor that the expression       */
+/*  engine can invoke.                                                  */
+/*----------------------------------------------------------------------*/
 
 namespace {
 value_t get_status(item_t& item) {
@@ -361,6 +447,18 @@ value_t get_wrapper(call_scope_t& scope) {
 }
 } // namespace
 
+/*----------------------------------------------------------------------*/
+/*  Utility Functions                                                   */
+/*----------------------------------------------------------------------*/
+
+/**
+ * @brief Format an item's note as a semicolon-prefixed comment string.
+ *
+ * Short notes (15 characters or fewer) are formatted inline as
+ * `  ;note`.  Longer notes start on a new line as `\n    ;note`.
+ * Embedded newlines in the note text produce additional `\n    ;`
+ * continuation lines.
+ */
 value_t get_comment(item_t& item) {
   if (!item.note) {
     return string_value("");
@@ -387,6 +485,14 @@ value_t get_comment(item_t& item) {
   }
 }
 
+/**
+ * @brief Store an expression result as a metadata tag.
+ *
+ * Evaluates the expression @p def in the default scope bound to this
+ * item and stores the result under the given @p name as a metadata
+ * tag.  The defining_ flag prevents re-entrant calls (which could
+ * occur if the expression itself triggers a define on this item).
+ */
 void item_t::define(const symbol_t::kind_t, const string& name, const expr_t::ptr_op_t& def) {
   if (defining_)
     return;
@@ -401,6 +507,34 @@ void item_t::define(const symbol_t::kind_t, const string& name, const expr_t::pt
   }
 }
 
+/**
+ * @brief Dispatch table mapping expression names to item property getters.
+ *
+ * This is the core of item_t's participation in the expression engine.
+ * When an expression like `date > [2024-01-01]` or `has_tag("Payee")`
+ * is evaluated, the expression engine calls lookup() to resolve each
+ * identifier.  This method maps names to getter functors:
+ *
+ *   - `date` / `d` -- effective date (respects --aux-date)
+ *   - `primary_date` / `actual_date` -- always the entry date
+ *   - `aux_date` / `effective_date` -- the auxiliary date
+ *   - `status` / `state` -- clearing state as integer (0/1/2)
+ *   - `cleared` / `X` -- true if state is CLEARED
+ *   - `pending` / `Y` -- true if state is PENDING
+ *   - `uncleared` -- true if state is UNCLEARED
+ *   - `actual` / `L` -- true if item is not generated or temporary
+ *   - `note` -- the raw note text
+ *   - `comment` -- formatted comment with `;` prefixes
+ *   - `has_tag(name)` / `has_meta(name)` -- test for metadata presence
+ *   - `tag(name)` / `meta(name)` -- retrieve metadata value
+ *   - `filename` / `filebase` / `filepath` -- source file information
+ *   - `beg_line` / `end_line` / `beg_pos` / `end_pos` -- position info
+ *   - `id` / `uuid` -- item identifier
+ *   - `seq` -- parse-order sequence number
+ *
+ * Subclasses (xact_t, post_t) override this to add their own bindings
+ * and fall through to item_t::lookup() for base properties.
+ */
 expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind, const string& name) {
   if (kind != symbol_t::FUNCTION)
     return nullptr;
@@ -543,10 +677,22 @@ bool item_t::valid() const {
   return true;
 }
 
+/** @brief Re-read and print the original source text of an item. */
 void print_item(std::ostream& out, const item_t& item, const string& prefix) {
   out << source_context(item.pos->pathname, item.pos->beg_pos, item.pos->end_pos, prefix);
 }
 
+/**
+ * @brief Build a human-readable error context string for an item.
+ *
+ * Produces output like:
+ * @code
+ *   transaction from "ledger.dat", lines 5-8:
+ *   > 2024/01/01 Payee
+ *   >     Expenses:Food  $10.00
+ *   >     Assets:Cash
+ * @endcode
+ */
 string item_context(const item_t& item, const string& desc) {
   if (!item.pos)
     return empty_string;
@@ -576,6 +722,13 @@ string item_context(const item_t& item, const string& desc) {
   return out.str();
 }
 
+/**
+ * @brief Serialize metadata tags into a property tree for XML/JSON output.
+ *
+ * Valueless tags are written as `<tag>name</tag>` elements.  Key/value
+ * pairs are written as `<value key="name">...</value>` elements with
+ * the value serialized by put_value().
+ */
 void put_metadata(property_tree::ptree& st, const item_t::string_map& metadata) {
   for (const item_t::string_map::value_type& pair : metadata) {
     if (pair.second.first) {

@@ -29,6 +29,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   xact.cc
+ * @author John Wiegley
+ *
+ * @ingroup data
+ *
+ * @brief  Implementation of the transaction class hierarchy.
+ *
+ * This file contains the implementation of xact_base_t, xact_t,
+ * auto_xact_t, and their supporting functions.  The most critical
+ * function is xact_base_t::finalize(), which implements Ledger's
+ * double-entry balance checking -- the core accounting invariant that
+ * every transaction's debits must equal its credits.
+ *
+ * Also implemented here is auto_xact_t::extend_xact(), which applies
+ * automated transaction rules to generate additional postings based
+ * on predicate matching.
+ */
+
 #include <system.hh>
 
 #include "xact.h"
@@ -41,6 +60,14 @@
 #include "annotate.h"
 
 namespace ledger {
+
+/*----------------------------------------------------------------------*/
+/*  Transaction Lifecycle                                               */
+/*                                                                      */
+/*  Constructors, destructor, and basic post management.  The           */
+/*  destructor is responsible for cleaning up owned postings and        */
+/*  removing them from their accounts.                                  */
+/*----------------------------------------------------------------------*/
 
 xact_base_t::xact_base_t(const xact_base_t& xact_base)
     : item_t(xact_base), journal(xact_base.journal) {
@@ -95,6 +122,14 @@ void xact_base_t::clear_xdata() {
       post->clear_xdata();
 }
 
+/**
+ * @brief Compute the absolute value of the positive (debit) side.
+ *
+ * Sums the cost (or amount if no cost) of every posting with a
+ * positive amount.  This gives the "size" of the transaction for
+ * display in error messages about imbalances, helping users understand
+ * the scale of the discrepancy relative to the transaction total.
+ */
 value_t xact_base_t::magnitude() const {
   value_t halfbal = 0L;
   for (const post_t* post : posts) {
@@ -108,7 +143,21 @@ value_t xact_base_t::magnitude() const {
   return halfbal;
 }
 
+/*----------------------------------------------------------------------*/
+/*  Transaction Finalization                                            */
+/*                                                                      */
+/*  finalize() is the heart of Ledger's double-entry accounting.  It   */
+/*  enforces the invariant that every transaction's debits equal its    */
+/*  credits across all commodities.  The algorithm handles null-amount  */
+/*  inference, multi-commodity conversions, lot matching, cost basis    */
+/*  tracking, capital gains computation, and balance assertions.        */
+/*----------------------------------------------------------------------*/
+
 namespace {
+/// Helper: detect account names ending with digits, `)`, `}`, or `]`,
+/// which often indicate typos or auto-complete artifacts.  Used to
+/// produce a more helpful error message when two null-amount postings
+/// are found in the same transaction.
 inline bool account_ends_with_special_char(const string& name) {
   if (name.empty())
     return false;
@@ -117,6 +166,17 @@ inline bool account_ends_with_special_char(const string& name) {
           name[len - 1] == '}' || name[len - 1] == ']');
 }
 
+/**
+ * @brief Functor that creates balancing postings for null-amount inference.
+ *
+ * When a transaction has exactly one posting with a null amount, its
+ * value is inferred as the negation of the transaction's running
+ * balance.  If the balance involves multiple commodities, additional
+ * postings are generated (one per commodity) beyond the first.
+ *
+ * The first call sets the null posting's amount; subsequent calls
+ * create new generated postings on the same account.
+ */
 struct add_balancing_post {
   bool first;
   xact_base_t& xact;
@@ -147,10 +207,62 @@ struct add_balancing_post {
 };
 } // namespace
 
+/**
+ * @brief Finalize a transaction: infer amounts, compute costs, enforce balance.
+ *
+ * This is the most important function in Ledger.  It implements the
+ * double-entry accounting invariant: every transaction's debits must
+ * equal its credits.  The function proceeds in several phases:
+ *
+ * **Phase 1 -- Scan postings and accumulate the balance.**
+ * Iterate over all must-balance postings.  For each one that has an
+ * amount (or cost), add it to the running balance.  Track whether any
+ * posting has a null amount (meaning it should be auto-filled).  Real
+ * and balanced-virtual postings ([Account]) are tracked separately.
+ *
+ * **Phase 2 -- Handle single-posting transactions.**
+ * If only one posting exists and a default "bucket" account is
+ * configured, create a second posting to that account.
+ *
+ * **Phase 3 -- Infer conversion prices for two-commodity transactions.**
+ * When the balance contains exactly two commodities and no explicit
+ * costs were given, compute the exchange rate by dividing one
+ * commodity's total by the other's, and set computed costs on all
+ * postings of the primary commodity.
+ *
+ * **Phase 4 -- Apply fixated price annotations.**
+ * For postings with {=price} annotations that have not yet had costs
+ * computed, derive their costs from the fixated price.
+ *
+ * **Phase 5 -- Lot matching (FIFO/LIFO).**
+ * For unannotated sales (negative amounts), match against the
+ * account's lot holdings to split the sale across specific lots.
+ *
+ * **Phase 6 -- Exchange amounts through the commodity pool.**
+ * Process postings with explicit costs (@ or @@), converting them
+ * through the commodity pool to establish price history, create
+ * annotated commodities, and compute capital gains/losses.
+ *
+ * **Phase 7 -- Infer null-amount postings.**
+ * If exactly one posting has a null amount, set it to the negation
+ * of the accumulated balance.  If multiple commodities are in the
+ * balance, generate additional postings (one per extra commodity).
+ *
+ * **Phase 8 -- Verify final balance.**
+ * Check that the balance is zero.  If not, check whether per-unit
+ * rounding explains the discrepancy.  Throw balance_error if not.
+ *
+ * **Phase 9 -- Register postings with accounts.**
+ * Add each posting to its account's post list and mark it as visited.
+ *
+ * @return true if the transaction is valid; false if all amounts were
+ *         null (indicating the transaction should be silently ignored).
+ * @throws balance_error if the transaction cannot be balanced.
+ */
 bool xact_base_t::finalize() {
-  // Scan through and compute the total balance for the xact.  This is used
-  // for auto-calculating the value of xacts with no cost, and the per-unit
-  // price of unpriced commodities.
+  // Phase 1: Scan all postings, accumulate balance, find null-amount posts.
+  // Real postings and balanced-virtual postings ([Account]) are tracked
+  // in separate balances because they must balance independently.
 
   value_t balance;
   value_t virtual_balance;
@@ -209,8 +321,8 @@ bool xact_base_t::finalize() {
           "virtual_balance commodity count = " << virtual_balance.as_balance().amounts.size());
 #endif
 
-  // If there is only one post, balance against the default account if one has
-  // been set.
+  // Phase 2: If there is only one posting, create a balancing posting against
+  // the journal's default "bucket" account (set by the `bucket` directive).
 
   if (journal && journal->bucket && posts.size() == 1 && !balance.is_null()) {
     null_post = new post_t(journal->bucket, ITEM_INFERRED);
@@ -218,11 +330,13 @@ bool xact_base_t::finalize() {
     add_post(null_post);
   }
 
+  // Phase 3: Two-commodity conversion price inference.
+  // When the balance has exactly two commodities and no null posting,
+  // compute the implied exchange rate.  For example, if the balance
+  // is {$100, -80 EUR}, the per-unit cost of EUR in $ is computed as
+  // $100/80 = $1.25 per EUR.  This price is assigned as a computed
+  // cost on all postings of the primary commodity.
   if (!null_post && balance.is_balance() && balance.as_balance().amounts.size() == 2) {
-    // When an xact involves two different commodities (regardless of how
-    // many posts there are) determine the conversion ratio by dividing the
-    // total value of one commodity by the total value of the other.  This
-    // establishes the per-unit cost for this post for both commodities.
 
     DEBUG("xact.finalize", "there were exactly two commodities, and no null post");
 
@@ -301,12 +415,14 @@ bool xact_base_t::finalize() {
     }
   }
 
-  // If the balance has 2 or more commodities and no null post, check
-  // whether fixated price annotations ({=price}) can be used to compute
-  // costs and reduce the commodity count.  This handles the case where
-  // multiple postings have different fixated prices for the same base
-  // commodity (e.g., EUR {=$1.32} and EUR {=$1.33}), including when the
-  // fixated prices collapse to exactly 2 commodities in the balance.
+  // Phase 4: Fixated price annotation cost derivation.
+  // If the balance still has 2+ commodities and no null post, check for
+  // fixated price annotations ({=price}).  These lock the per-unit cost
+  // regardless of market prices.  For each posting with a fixated price
+  // and no explicit cost, compute the cost from the annotation and
+  // recalculate the balance.  This handles the case where multiple
+  // postings have different fixated prices for the same base commodity
+  // (e.g., EUR {=$1.32} and EUR {=$1.33}).
   if (!null_post && balance.is_balance() && balance.as_balance().amounts.size() >= 2) {
     bool recompute = false;
     for (post_t* post : posts) {
@@ -347,7 +463,11 @@ bool xact_base_t::finalize() {
   std::vector<post_t*> copy(posts.begin(), posts.end());
 
   if (has_date()) {
-    // Auto-match unannotated sales against account's lot holdings
+    // Phase 5: Lot matching (FIFO/LIFO) for commodity sales.
+    // When a posting sells a commodity (negative unannotated amount) and
+    // the journal has a lot matching policy, find the account's lot
+    // holdings and split the sale across specific lots.  Each lot gets
+    // its own annotated posting so cost basis is tracked correctly.
     if (journal && journal->lot_matching_policy != lot_policy_t::none) {
       for (std::size_t idx = 0; idx < copy.size(); ++idx) {
         post_t* post = copy[idx];
@@ -489,6 +609,12 @@ bool xact_base_t::finalize() {
       }
     }
 
+    // Phase 6: Exchange amounts through the commodity pool.
+    // For every posting with an explicit or computed cost, pass it
+    // through commodity_pool_t::exchange().  This creates annotated
+    // commodities (with lot prices and dates), establishes price
+    // history entries, and computes capital gains/losses by comparing
+    // the original cost basis against the selling price.
     for (post_t* post : copy) {
       if (!post->cost)
         continue;
@@ -597,10 +723,12 @@ bool xact_base_t::finalize() {
     }
   }
 
+  // Phase 7: Infer null-amount postings.
+  // If exactly one real posting has no amount, its value becomes the
+  // negation of the accumulated balance.  If the balance involves
+  // multiple commodities, additional generated postings are created
+  // (one per extra commodity) on the same account.
   if (null_post != nullptr) {
-    // If one post has no value at all, its value will become the inverse of
-    // the rest.  If multiple commodities are involved, multiple posts are
-    // generated to balance them all.
 
     DEBUG("xact.finalize", "there was a null posting");
     add_balancing_post post_adder(*this, null_post);
@@ -617,8 +745,9 @@ bool xact_base_t::finalize() {
     balance = NULL_VALUE;
   }
 
+  // Same null-amount inference, but for balanced-virtual postings
+  // ([Account] syntax).  These balance independently from real postings.
   if (virtual_null_post != nullptr) {
-    // Same logic as null_post above, but for balanced-virtual postings.
 
     DEBUG("xact.finalize", "there was a null balanced-virtual posting");
     add_balancing_post post_adder(*this, virtual_null_post);
@@ -638,6 +767,10 @@ bool xact_base_t::finalize() {
   DEBUG("xact.finalize", "resolved balance = " << balance);
   DEBUG("xact.finalize", "resolved virtual_balance = " << virtual_balance);
 
+  // Phase 8: Final balance verification.
+  // The balance should be zero (or null).  If it is not, check whether
+  // the discrepancy can be explained by per-unit cost rounding before
+  // reporting an error.
   if (!balance.is_null() && !balance.is_zero()) {
     // Check whether the imbalance is fully explained by independently rounding
     // each per-unit (@) annotated cost to the price's decimal precision (issue
@@ -689,7 +822,10 @@ bool xact_base_t::finalize() {
     throw_(balance_error, _("Transaction does not balance"));
   }
 
-  // Add a pointer to each posting to their related accounts
+  // Phase 9: Register postings with their accounts.
+  // Each posting is added to its account's post list so that account
+  // balances are maintained incrementally.  Deferred postings (for
+  // future-dated entries) are handled separately.
 
   if (dynamic_cast<xact_t*>(this)) {
     bool all_null = true;
@@ -727,6 +863,23 @@ bool xact_base_t::finalize() {
   return true;
 }
 
+/*----------------------------------------------------------------------*/
+/*  Transaction Verification                                            */
+/*                                                                      */
+/*  verify() is a lightweight balance check used after automated        */
+/*  transactions add postings.  Unlike finalize(), it does not infer   */
+/*  null amounts, compute costs, or register with accounts.             */
+/*----------------------------------------------------------------------*/
+
+/**
+ * @brief Re-verify that a finalized transaction still balances.
+ *
+ * Called by auto_xact_t::extend_xact() after adding generated postings
+ * to ensure the transaction still satisfies the double-entry invariant.
+ * Unlike finalize(), this method does not infer null amounts, compute
+ * costs, or perform lot matching -- it simply sums all must-balance
+ * postings and checks the result is zero.
+ */
 bool xact_base_t::verify() {
   // Scan through and compute the total balance for the xact.
 
@@ -773,6 +926,10 @@ bool xact_base_t::verify() {
   return true;
 }
 
+/*----------------------------------------------------------------------*/
+/*  xact_t Implementation                                               */
+/*----------------------------------------------------------------------*/
+
 xact_t::xact_t(const xact_t& e) : xact_base_t(e), code(e.code), payee(e.payee) {
   TRACE_CTOR(xact_t, "copy");
 }
@@ -782,6 +939,14 @@ void xact_t::add_post(post_t* post) {
   post->parent = this;
   xact_base_t::add_post(post);
 }
+
+/*----------------------------------------------------------------------*/
+/*  Expression Bindings (xact_t)                                        */
+/*                                                                      */
+/*  These getters expose transaction-specific properties to the         */
+/*  expression engine: payee, code, magnitude, and the any()/all()     */
+/*  quantifier functions over postings.                                 */
+/*----------------------------------------------------------------------*/
 
 namespace {
 value_t get_magnitude(xact_t& xact) {
@@ -804,6 +969,8 @@ value_t get_wrapper(call_scope_t& scope) {
   return (*Func)(find_scope<xact_t>(scope));
 }
 
+/// Expression function: `any(expr)` -- returns true if any posting in the
+/// transaction satisfies the given expression.
 value_t fn_any(call_scope_t& args) {
   post_t& post(args.context<post_t>());
   expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
@@ -816,6 +983,8 @@ value_t fn_any(call_scope_t& args) {
   return false;
 }
 
+/// Expression function: `all(expr)` -- returns true if every posting in
+/// the transaction satisfies the given expression.
 value_t fn_all(call_scope_t& args) {
   post_t& post(args.context<post_t>());
   expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
@@ -829,6 +998,18 @@ value_t fn_all(call_scope_t& args) {
 }
 } // namespace
 
+/**
+ * @brief Resolve expression names for transaction-specific properties.
+ *
+ * Extends item_t::lookup() with transaction-level bindings:
+ *   - `payee` / `p` -- the payee string
+ *   - `code` -- the check number or transaction code
+ *   - `magnitude` -- absolute value of the positive (debit) side
+ *   - `any(expr)` -- existential quantifier over postings
+ *   - `all(expr)` -- universal quantifier over postings
+ *
+ * Unrecognized names fall through to item_t::lookup().
+ */
 expr_t::ptr_op_t xact_t::lookup(const symbol_t::kind_t kind, const string& name) {
   if (kind != symbol_t::FUNCTION)
     return item_t::lookup(kind, name);
@@ -877,9 +1058,14 @@ bool xact_t::valid() const {
   return true;
 }
 
+/*----------------------------------------------------------------------*/
+/*  Hashing                                                             */
+/*----------------------------------------------------------------------*/
+
 extern "C" unsigned char* SHA512(void* data, unsigned int data_len, unsigned char* digest);
 
 namespace {
+/// Convert a binary buffer to a lowercase hexadecimal string.
 std::string bufferToHex(const unsigned char* buffer, std::size_t size) {
   std::ostringstream oss;
   oss << std::hex << std::setfill('0');
@@ -889,6 +1075,14 @@ std::string bufferToHex(const unsigned char* buffer, std::size_t size) {
 }
 } // namespace
 
+/**
+ * @brief Compute a SHA-512 hash of this transaction for deduplication.
+ *
+ * Builds a canonical string representation from the nonce, dates, code,
+ * payee, and all postings (sorted alphabetically for determinism), then
+ * hashes it with SHA-512.  The result can be stored as a UUID tag to
+ * detect duplicate imports.
+ */
 string xact_t::hash(const string& nonce, hash_type_t hash_type) const {
   std::ostringstream repr;
 
@@ -930,7 +1124,30 @@ string xact_t::hash(const string& nonce, hash_type_t hash_type) const {
   return bufferToHex(data, hash_type == HASH_SHA512 ? 64 : 32 /*SHA512_DIGEST_LENGTH*/);
 }
 
+/*----------------------------------------------------------------------*/
+/*  Automated Transactions                                              */
+/*                                                                      */
+/*  auto_xact_t::extend_xact() is the engine behind `= expr` entries. */
+/*  For each posting in the target transaction that matches the         */
+/*  predicate, it clones the auto_xact's template postings, resolves   */
+/*  amount expressions and account name templates, applies deferred    */
+/*  tags, and adds the generated postings to the transaction.           */
+/*----------------------------------------------------------------------*/
+
 namespace {
+/**
+ * @brief Fast predicate evaluator for simple account-matching expressions.
+ *
+ * Most automated transactions use simple predicates like `/Expenses:Food/`
+ * which match against account names.  This function walks the predicate
+ * AST directly instead of going through the full expression evaluator,
+ * providing a significant performance improvement.  It handles VALUE,
+ * O_MATCH, O_EQ, O_NOT, O_AND, O_OR, and O_QUERY nodes.
+ *
+ * If an unhandled operator is encountered, it throws calc_error, causing
+ * the caller to fall back to the full evaluator and disable quick
+ * matching for this auto_xact going forward.
+ */
 bool post_pred(const expr_t::ptr_op_t& op, post_t& post) {
   if (!op)
     return false;
@@ -973,6 +1190,8 @@ bool post_pred(const expr_t::ptr_op_t& op, post_t& post) {
 }
 } // namespace
 
+/// If a string contains `%(` format expressions, expand them against
+/// the given scope; otherwise return the string unchanged.
 static string apply_format(const string& str, scope_t& scope) {
   if (contains(str, "%(")) {
     format_t str_format(str);
@@ -984,6 +1203,42 @@ static string apply_format(const string& str, scope_t& scope) {
   }
 }
 
+/**
+ * @brief Apply this automated transaction's rules to a regular transaction.
+ *
+ * This is the implementation of `= expr` automated transactions.  The
+ * algorithm proceeds as follows:
+ *
+ * 1. **Iterate over the target transaction's postings** (a snapshot taken
+ *    before any new postings are added, to avoid infinite loops).
+ *
+ * 2. **Skip generated postings** (to prevent auto_xacts from triggering
+ *    on their own output), except for balancing postings created by
+ *    finalize() which have both ITEM_GENERATED and POST_CALCULATED.
+ *
+ * 3. **Evaluate the predicate** against each posting.  The quick matcher
+ *    (post_pred) is tried first for performance; if it cannot handle the
+ *    expression, the full evaluator is used and quick matching is disabled
+ *    for this auto_xact.  Results are cached by account name.
+ *
+ * 4. **On a match**:
+ *    a. Apply any deferred notes (metadata tags) to the matched posting
+ *       if they have no specific target posting.
+ *    b. Evaluate check/assertion expressions if present.
+ *    c. For each template posting in this auto_xact:
+ *       - Compute the amount: if the template's amount has no commodity,
+ *         it is treated as a multiplier (e.g., `0.10` means 10% of the
+ *         matched posting's amount); otherwise it is used as-is.
+ *       - Resolve `$variable` and `%(format)` expressions in the account
+ *         name against the matched posting's scope.
+ *       - Clone the template posting with the computed amount and account.
+ *       - Inherit the parent transaction's clearing state.
+ *       - Apply deferred notes targeted at this template posting.
+ *       - Register the new posting with the journal and account.
+ *
+ * 5. **After processing all postings**, if any must-balance posting was
+ *    generated, call verify() to ensure the transaction still balances.
+ */
 void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
   posts_list initial_posts(xact.posts.begin(), xact.posts.end());
 
@@ -1214,6 +1469,16 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
   }
 }
 
+/*----------------------------------------------------------------------*/
+/*  Utility Functions                                                   */
+/*----------------------------------------------------------------------*/
+
+/**
+ * @brief Serialize a transaction to a property tree for XML/JSON output.
+ *
+ * Writes the transaction's clearing state, dates, code, payee, note,
+ * and metadata as elements and attributes in the property tree.
+ */
 void put_xact(property_tree::ptree& st, const xact_t& xact) {
   if (xact.state() == item_t::CLEARED)
     st.put("<xmlattr>.state", "cleared");
