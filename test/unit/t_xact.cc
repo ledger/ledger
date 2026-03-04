@@ -572,9 +572,9 @@ BOOST_AUTO_TEST_CASE(testJournalAddRemoveAccount)
 BOOST_AUTO_TEST_CASE(testJournalFindAccountRe)
 {
   // Cover journal.cc lines 116-118: find_account_re
-  journal.find_account("Expenses:Food");
-  journal.find_account("Expenses:Rent");
-  journal.find_account("Assets:Bank");
+  (void)journal.find_account("Expenses:Food");
+  (void)journal.find_account("Expenses:Rent");
+  (void)journal.find_account("Assets:Bank");
 
   account_t* found = journal.find_account_re("Expense");
   BOOST_CHECK(found != nullptr);
@@ -591,7 +591,7 @@ BOOST_AUTO_TEST_CASE(testJournalRemoveXact)
   post_t* p2 = new post_t(assets, amount_t("$-10.00"));
   x1->add_post(p1);
   x1->add_post(p2);
-  journal.add_xact(x1);
+  (void)journal.add_xact(x1);
   std::size_t count_before = journal.xacts.size();
   BOOST_CHECK(count_before > 0);
 
@@ -625,7 +625,7 @@ BOOST_AUTO_TEST_CASE(testJournalHasXdata)
   post_t* p2 = new post_t(ast, amount_t("$-10.00"));
   x1->add_post(p1);
   x1->add_post(p2);
-  j.add_xact(x1);
+  (void)j.add_xact(x1);
 
   // Add xdata to the post
   p1->xdata().add_flags(POST_EXT_VISITED);
@@ -649,7 +649,7 @@ BOOST_AUTO_TEST_CASE(testJournalValid)
   post_t* p2 = new post_t(assets, amount_t("$-10.00"));
   x1->add_post(p1);
   x1->add_post(p2);
-  journal.add_xact(x1);
+  (void)journal.add_xact(x1);
   BOOST_CHECK(journal.valid());
 }
 

@@ -4785,7 +4785,7 @@ BOOST_AUTO_TEST_CASE(testDisplayRoundInteger)
 BOOST_AUTO_TEST_CASE(testDisplayRoundStringThrows)
 {
   value_t v1(string_value("hello"));
-  BOOST_CHECK_THROW(v1.display_rounded(), value_error);
+  BOOST_CHECK_THROW((void)v1.display_rounded(), value_error);
 }
 
 // ---------------------------------------------------------------------------
@@ -7070,7 +7070,7 @@ BOOST_AUTO_TEST_CASE(testIsRealzeroDefaultW7)
   v.set_mask("foo");
 
   // MASK has no is_realzero path => throws (lines 1450-1451)
-  BOOST_CHECK_THROW(v.is_realzero(), value_error);
+  BOOST_CHECK_THROW((void)v.is_realzero(), value_error);
 }
 
 // -----------------------------------------------------------------------
