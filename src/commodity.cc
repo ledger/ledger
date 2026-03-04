@@ -29,6 +29,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   commodity.cc
+ * @author John Wiegley
+ *
+ * @ingroup math
+ *
+ * @brief Implements commodity lifecycle, price lookup with memoization,
+ *        and symbol parsing.
+ *
+ * This file contains the core logic for managing commodities at runtime:
+ * recording and removing prices in the commodity_history graph, performing
+ * memoized price lookups (with LRU-style cache eviction), downloading
+ * updated quotes when --download is active, and parsing commodity symbols
+ * from both stream and C-string input.  It also implements the multi-level
+ * compare_by_commodity ordering used for deterministic balance display.
+ */
+
 #include <system.hh>
 #include <utility>
 
@@ -43,6 +60,15 @@ namespace ledger {
 bool commodity_t::decimal_comma_by_default = false;
 bool commodity_t::time_colon_by_default = false;
 
+/**
+ * @brief Record a price in the commodity_history graph.
+ *
+ * Adds an edge from this commodity to the price's commodity in the price
+ * history graph.  When @p reflexive is true (the default for parsed P
+ * directives), the price's commodity is marked COMMODITY_PRIMARY, which
+ * tells -V/-X to convert into it.  The memoized price cache is
+ * invalidated because a new price may change future lookup results.
+ */
 void commodity_t::add_price(const datetime_t& date, const amount_t& price, const bool reflexive) {
   if (reflexive) {
     DEBUG("history.find", "Marking " << price.commodity().symbol() << " as a primary commodity");
@@ -59,6 +85,12 @@ void commodity_t::add_price(const datetime_t& date, const amount_t& price, const
   base->price_map.clear(); // a price was added, invalid the map
 }
 
+/**
+ * @brief Remove a price entry from the commodity_history graph.
+ *
+ * Deletes the price edge for this commodity to @p commodity at the given
+ * @p date, and invalidates the memoized price cache.
+ */
 void commodity_t::remove_price(const datetime_t& date, commodity_t& commodity) {
   pool().commodity_price_history.remove_price(referent(), commodity, date);
 
@@ -107,6 +139,20 @@ std::optional<price_point_t> commodity_t::find_price_from_expr(expr_t& expr,
   return price_point_t(moment, result.to_amount());
 }
 
+/**
+ * @brief Memoized price lookup through the commodity price history graph.
+ *
+ * The lookup proceeds as follows:
+ *   1. Determine the target commodity (explicit parameter, or pool default).
+ *   2. Check the memoization cache for an identical (moment, oldest, target) key.
+ *   3. If the commodity has a value_expr, evaluate it instead of the graph.
+ *   4. Otherwise, query the commodity_history graph for the best price.
+ *   5. Store the result in the cache; if the cache exceeds max_price_map_size,
+ *      evict the oldest half of the entries.
+ *
+ * Returns nullopt when no conversion path exists or the commodity is being
+ * looked up in terms of itself.
+ */
 std::optional<price_point_t> commodity_t::find_price(const commodity_t* commodity,
                                                      const datetime_t& moment,
                                                      const datetime_t& oldest) const {
@@ -162,6 +208,19 @@ std::optional<price_point_t> commodity_t::find_price(const commodity_t* commodit
   return point;
 }
 
+/**
+ * @brief Download an updated price quote if the current one is stale.
+ *
+ * Implements the --download logic: when get_quotes is enabled and the
+ * commodity is marketable (no COMMODITY_NOMARKET flag), this method checks
+ * whether the existing price point is older than quote_leeway seconds.
+ * If so, it invokes get_commodity_quote (typically an external script)
+ * to fetch a fresh quote.
+ *
+ * A per-session throttle (base->last_quote) prevents duplicate downloads
+ * for the same commodity when find_price is called multiple times with
+ * slightly different moments during a single run (issue #996).
+ */
 std::optional<price_point_t>
 commodity_t::check_for_updated_price(const std::optional<price_point_t>& point,
                                      const datetime_t& moment, const commodity_t* in_terms_of) {
@@ -229,11 +288,17 @@ commodity_t::operator bool() const {
 }
 
 namespace {
-// Invalid commodity characters:
-//   SPACE, TAB, NEWLINE, RETURN
-//   0-9 . , ; : ? ! - + * / ^ & | =
-//   < > { } [ ] ( ) @
 
+/**
+ * @brief Lookup table of characters that cannot appear in bare commodity symbols.
+ *
+ * A value of 1 means the character terminates a bare (unquoted) symbol.
+ * This includes whitespace, digits, arithmetic operators, and bracket
+ * characters that have syntactic meaning in Ledger's grammar.  Commodity
+ * names containing any of these characters must be double-quoted.
+ *
+ * The table is indexed by the unsigned byte value of each character.
+ */
 static int invalid_chars[256] = {
     /* 0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f */
     /* 00 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0,
@@ -254,6 +319,14 @@ static int invalid_chars[256] = {
     /* f0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 
+/**
+ * @brief Check whether a parsed token is a reserved expression keyword.
+ *
+ * Tokens like "and", "or", "not", "if", "else", "true", "false", and "div"
+ * are part of Ledger's expression language and cannot be commodity names.
+ * When parse_symbol encounters one of these, it rejects the token and
+ * rewinds the input.
+ */
 bool is_reserved_token(const char* buf) {
   switch (buf[0]) {
   case 'a':
@@ -287,6 +360,18 @@ bool commodity_t::symbol_needs_quotes(const string& symbol) {
   return false;
 }
 
+/**
+ * @brief Parse a commodity symbol from an input stream.
+ *
+ * Supports two forms:
+ *   - Quoted: "My Fund" -- reads everything between double quotes.
+ *   - Bare: USD -- reads characters until an invalid_chars[] entry is hit.
+ *     Backslash escapes allow embedding a single invalid character.
+ *
+ * If the result is a reserved token (and, or, not, etc.), the symbol is
+ * cleared and the stream is rewound to its original position so that the
+ * token can be parsed as an expression keyword by the caller.
+ */
 void commodity_t::parse_symbol(std::istream& in, string& symbol) {
   std::istream::pos_type pos = in.tellg();
 
@@ -374,6 +459,21 @@ bool commodity_t::valid() const {
   return true;
 }
 
+/**
+ * @brief Multi-level comparison for deterministic amount ordering.
+ *
+ * Comparison proceeds through these levels, returning as soon as a
+ * difference is found:
+ *   1. Base symbol (lexicographic).
+ *   2. Annotation presence (unannotated sorts before annotated).
+ *   3. Lot price (by commodity symbol, then by numeric value).
+ *   4. Lot date (chronological).
+ *   5. Lot tag (lexicographic).
+ *   6. Valuation expression text (lexicographic).
+ *   7. Semantic flags (ANNOTATION_PRICE_FIXATED).
+ *
+ * Returns negative if left < right, zero if equal, positive if left > right.
+ */
 int commodity_t::compare_by_commodity::operator()(const amount_t* left,
                                                   const amount_t* right) const {
   commodity_t& leftcomm(left->commodity());

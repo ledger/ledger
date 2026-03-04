@@ -29,6 +29,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   journal.cc
+ * @author John Wiegley
+ *
+ * @ingroup data
+ *
+ * @brief  Implementation of the central journal container
+ *
+ * This file implements journal lifecycle management (constructor,
+ * destructor, initialize), account registration with alias expansion,
+ * payee/commodity/metadata validation, transaction management
+ * (add_xact with UUID deduplication), journal I/O, and xdata cleanup.
+ */
 #include <system.hh>
 
 #include <unordered_set>
@@ -43,6 +56,8 @@
 #include "account.h"
 
 namespace ledger {
+
+/*--- Journal Lifecycle ---*/
 
 journal_t::journal_t() {
   initialize();
@@ -65,6 +80,13 @@ journal_t::journal_t(const string& str)
 }
 #endif
 
+/**
+ * @brief Destroy the journal, freeing all owned transactions and accounts.
+ *
+ * Cleanup order matters: regular and period xacts are deleted first,
+ * then auto_xacts are cleared (their destructors call remove_post on
+ * accounts), and finally the master account tree is deleted.
+ */
 journal_t::~journal_t() {
   TRACE_DTOR(journal_t);
 
@@ -103,6 +125,8 @@ void journal_t::initialize() {
   known_tags.insert("Hash");
 }
 
+/*--- Account Registration ---*/
+
 void journal_t::add_account(account_t* acct) {
   master->add_account(acct);
 }
@@ -119,6 +143,19 @@ account_t* journal_t::find_account_re(const string& regexp) {
   return master->find_account_re(regexp);
 }
 
+/**
+ * @brief Resolve aliases, create the account, and enforce --strict/--pedantic.
+ *
+ * This is the main entry point for registering an account name encountered
+ * during parsing.  The sequence is:
+ *   1. Expand account aliases via expand_aliases().
+ *   2. Find or create the account in the tree under @p master_account.
+ *   3. If the account is named "Unknown", check payees_for_unknown_accounts
+ *      for a payee-based mapping to a real account.
+ *   4. When --strict or --pedantic is active, verify the account is known.
+ *      Template variables ($var, %(expr)) are silently accepted because they
+ *      will be resolved at runtime by automated transactions.
+ */
 account_t* journal_t::register_account(string_view name, post_t* post, account_t* master_account) {
   // If there are any account aliases, substitute before creating an account
   // object.
@@ -178,6 +215,18 @@ account_t* journal_t::register_account(string_view name, post_t* post, account_t
   return result;
 }
 
+/**
+ * @brief Recursively expand account aliases with cycle detection.
+ *
+ * Checks the account_aliases map for a full-name match first (e.g.,
+ * "Foo:Bar" -> some account), then tries matching just the first
+ * segment before ':' (e.g., "Foo" in "Foo:Bar:Baz").  When
+ * recursive_aliases is true, the loop repeats until no alias matches.
+ * An already_seen set tracks which names have been expanded to detect
+ * and prevent infinite alias loops.
+ *
+ * @return The resolved account, or nullptr if no alias matched.
+ */
 account_t* journal_t::expand_aliases(string name) {
   // Aliases are expanded recursively, so if both alias Foo=Bar:Foo and
   // alias Bar=Baaz:Bar are in effect, first Foo will be expanded to Bar:Foo,
@@ -230,6 +279,8 @@ account_t* journal_t::expand_aliases(string name) {
   return result;
 }
 
+/*--- Payee Validation ---*/
+
 string journal_t::register_payee(const string& name) {
   if (should_check_payees() && payee_not_registered(name)) {
     known_payees.insert(name);
@@ -273,6 +324,8 @@ string journal_t::translate_payee_name(const string& name) {
   return payee.empty() ? name : payee;
 }
 
+/*--- Commodity and Metadata Registration ---*/
+
 void journal_t::register_commodity(commodity_t& comm, std::variant<int, xact_t*, post_t*> context) {
   if (checking_style == CHECK_WARNING || checking_style == CHECK_ERROR) {
     if (!comm.has_flags(COMMODITY_KNOWN)) {
@@ -287,6 +340,14 @@ void journal_t::register_commodity(commodity_t& comm, std::variant<int, xact_t*,
   }
 }
 
+/**
+ * @brief Validate a metadata tag and evaluate tag_check_exprs assertions.
+ *
+ * First checks the tag name against known_tags when --strict/--pedantic
+ * is active.  Then, if there are any check/assert expressions registered
+ * for this tag (via `tag Foo assert ...`), evaluates each one against
+ * the metadata value.  A failing assertion throws; a failing check warns.
+ */
 void journal_t::register_metadata(const string& key, const value_t& value,
                                   std::variant<int, xact_t*, post_t*> context) {
   if (checking_style == CHECK_WARNING || checking_style == CHECK_ERROR) {
@@ -329,6 +390,7 @@ void journal_t::register_metadata(const string& key, const value_t& value,
 }
 
 namespace {
+/** @brief Iterate all metadata on a transaction or posting and validate each tag. */
 void check_all_metadata(journal_t& journal, std::variant<int, xact_t*, post_t*> context) {
   xact_t* xact = context.index() == 1 ? std::get<xact_t*>(context) : NULL;
   post_t* post = context.index() == 2 ? std::get<post_t*>(context) : NULL;
@@ -347,10 +409,14 @@ void check_all_metadata(journal_t& journal, std::variant<int, xact_t*, post_t*> 
 }
 } // namespace
 
+/*--- Transaction Management ---*/
+
+/** @brief Compare postings by account pointer for sorting during UUID dedup. */
 bool lt_posting_account(post_t* left, post_t* right) {
   return left->account < right->account;
 }
 
+/** @brief True if two postings have the same account and amount (for UUID dedup). */
 bool is_equivalent_posting(post_t* left, post_t* right) {
   if (left->account != right->account)
     return false;
@@ -361,6 +427,22 @@ bool is_equivalent_posting(post_t* left, post_t* right) {
   return true;
 }
 
+/**
+ * @brief Add a parsed transaction to the journal.
+ *
+ * This is the main entry point for incorporating a transaction after
+ * parsing.  The sequence is:
+ *   1. Finalize the transaction (balance check, null-amount inference).
+ *   2. Extend with auto_xacts (automated transaction matching).
+ *   3. Validate all metadata on the transaction.
+ *   4. Extend each posting and validate its metadata.
+ *   5. UUID deduplication: if a transaction with the same UUID already
+ *      exists, verify that the postings are equivalent (same accounts
+ *      and amounts).  If they match, apply any deferred posts and
+ *      silently discard the duplicate.  If they differ, throw an error.
+ *
+ * @return true if the transaction was added, false if rejected.
+ */
 bool journal_t::add_xact(xact_t* xact) {
   xact->journal = this;
 
@@ -455,6 +537,16 @@ bool journal_t::remove_xact(xact_t* xact) {
   return true;
 }
 
+/*--- Journal I/O ---*/
+
+/**
+ * @brief Parse a journal file (or stream) and add its contents.
+ *
+ * Sets up the parse context (scope, master account), delegates to
+ * read_textual() for the actual parsing, records the source file info
+ * for change detection, and clears any xdata that was set during parsing
+ * (e.g., by balance assertions or valuation expressions in posting amounts).
+ */
 std::size_t journal_t::read(parse_context_stack_t& context, hash_type_t hash_type,
                             bool should_clear_xdata) {
   std::size_t count = 0;
@@ -494,6 +586,8 @@ std::size_t journal_t::read(parse_context_stack_t& context, hash_type_t hash_typ
 
   return count;
 }
+
+/*--- Validation and Cleanup ---*/
 
 bool journal_t::has_xdata() {
   for (xact_t* xact : xacts)

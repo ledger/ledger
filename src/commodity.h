@@ -41,8 +41,22 @@
  *
  * @brief  Types for handling commodities
  *
- * This file contains one of the most basic types in Ledger:
- * commodity_t, and its annotated cousin, annotated_commodity_t.
+ * Commodities represent currencies, stocks, mutual funds, and any other
+ * unit of value that can appear in a journal.  Every amount_t carries a
+ * pointer to a commodity_t that determines its display symbol and
+ * formatting rules.
+ *
+ * A key design principle is that Ledger *learns* display formatting from
+ * usage: the first time a commodity like "$" is seen with two decimal
+ * places and a thousands separator, those style flags are recorded in the
+ * commodity's shared base_t and applied to all future output of that
+ * commodity.  Users can also set formatting explicitly via commodity
+ * directives.
+ *
+ * commodity_t also serves as the node type in the commodity price graph
+ * (see history.h).  Price entries establish exchange rates between
+ * commodities, and find_price() performs shortest-path lookups through
+ * that graph with memoization for performance.
  */
 #pragma once
 
@@ -59,9 +73,17 @@ public:
   ~commodity_error() noexcept override {}
 };
 
+/**
+ * @brief A price observation: a specific exchange rate at a point in time.
+ *
+ * Produced by price lookups and price directives, and returned from
+ * find_price() and the commodity price history graph.  For example,
+ * a "P 2024/01/15 AAPL $185.00" directive creates a price_point_t
+ * with when = 2024-01-15 and price = $185.00.
+ */
 struct price_point_t {
-  datetime_t when;
-  amount_t price;
+  datetime_t when; ///< When this price was observed or effective.
+  amount_t price;  ///< The exchange rate, expressed in a target commodity.
 
   price_point_t() {}
   price_point_t(datetime_t _when, const amount_t& _price) : when(_when), price(_price) {}
@@ -77,41 +99,57 @@ protected:
   friend class commodity_pool_t;
   friend class annotated_commodity_t;
 
+  /**
+   * @brief Shared state for all amounts of the same commodity.
+   *
+   * Multiple commodity_t instances (including annotated variants) can share
+   * a single base_t through a shared_ptr.  The base holds the canonical
+   * symbol, display-style flags learned from parsed amounts, the precision
+   * to use when printing, and the memoized price lookup cache.
+   *
+   * This sharing ensures that when Ledger learns display formatting from
+   * one occurrence of a commodity (e.g., "$1,000.00" teaches THOUSANDS
+   * and precision 2), all amounts of that commodity benefit immediately.
+   */
   class base_t : public noncopyable, public flags::supports_flags<uint_least16_t> {
   public:
-#define COMMODITY_STYLE_DEFAULTS 0x000
-#define COMMODITY_STYLE_SUFFIXED 0x001
-#define COMMODITY_STYLE_SEPARATED 0x002
-#define COMMODITY_STYLE_DECIMAL_COMMA 0x004
-#define COMMODITY_STYLE_THOUSANDS 0x008
-#define COMMODITY_NOMARKET 0x010
-#define COMMODITY_BUILTIN 0x020
-#define COMMODITY_WALKED 0x040
-#define COMMODITY_KNOWN 0x080
-#define COMMODITY_PRIMARY 0x100
-#define COMMODITY_SAW_ANNOTATED 0x200
-#define COMMODITY_SAW_ANN_PRICE_FLOAT 0x400
-#define COMMODITY_SAW_ANN_PRICE_FIXATED 0x800
-#define COMMODITY_STYLE_TIME_COLON 0x1000
-#define COMMODITY_STYLE_NO_MIGRATE 0x2000
-#define COMMODITY_STYLE_THOUSANDS_APOSTROPHE 0x4000
-#define COMMODITY_PRECISION_FROM_PRICE 0x8000
+#define COMMODITY_STYLE_DEFAULTS 0x000        ///< No special formatting; symbol is prefixed.
+#define COMMODITY_STYLE_SUFFIXED 0x001        ///< Symbol follows the amount (e.g., "100 EUR").
+#define COMMODITY_STYLE_SEPARATED 0x002       ///< A space separates symbol from quantity.
+#define COMMODITY_STYLE_DECIMAL_COMMA 0x004   ///< Use comma as decimal point (European style).
+#define COMMODITY_STYLE_THOUSANDS 0x008       ///< Insert grouping separators (e.g., "1,000").
+#define COMMODITY_NOMARKET 0x010              ///< Exclude from market-price valuations (-V/-X).
+#define COMMODITY_BUILTIN 0x020               ///< Internally created (e.g., the null commodity).
+#define COMMODITY_WALKED 0x040                ///< Traversal flag for graph algorithms.
+#define COMMODITY_KNOWN 0x080                 ///< Explicitly declared via a commodity directive.
+#define COMMODITY_PRIMARY 0x100               ///< This commodity has appeared as a price target.
+#define COMMODITY_SAW_ANNOTATED 0x200         ///< An annotated variant has been created.
+#define COMMODITY_SAW_ANN_PRICE_FLOAT 0x400   ///< Seen with a floating lot price.
+#define COMMODITY_SAW_ANN_PRICE_FIXATED 0x800 ///< Seen with a fixated lot price ({=...}).
+#define COMMODITY_STYLE_TIME_COLON 0x1000     ///< Use colon notation for time amounts.
+#define COMMODITY_STYLE_NO_MIGRATE 0x2000     ///< Do not migrate formatting from parsed amounts.
+#define COMMODITY_STYLE_THOUSANDS_APOSTROPHE 0x4000 ///< Use apostrophe as thousands separator.
+#define COMMODITY_PRECISION_FROM_PRICE 0x8000 ///< Precision was inferred from a price directive.
 
-    string symbol;
-    optional<std::size_t> graph_index;
-    amount_t::precision_t precision;
-    optional<string> name;
-    optional<string> note;
-    optional<amount_t> smaller;
-    optional<amount_t> larger;
-    std::optional<expr_t> value_expr;
+    string symbol;                     ///< The canonical commodity name (e.g., "$", "AAPL").
+    optional<std::size_t> graph_index; ///< Index into the price history graph adjacency list.
+    amount_t::precision_t precision;   ///< Number of decimal places for display.
+    optional<string> name;             ///< Long descriptive name (from commodity directive).
+    optional<string> note;             ///< User-supplied note (from commodity directive).
+    optional<amount_t> smaller;        ///< Subdivision unit (e.g., cents for dollars).
+    optional<amount_t> larger;         ///< Grouping unit (e.g., thousands).
+    std::optional<expr_t> value_expr;  ///< Custom valuation expression overriding find_price.
 
+    /// Key type for the memoized price cache: (moment, oldest, target commodity).
     using memoized_price_entry = tuple<datetime_t, datetime_t, const commodity_t*>;
+    /// Map from lookup parameters to cached price results.
     using memoized_price_map = std::map<memoized_price_entry, std::optional<price_point_t>>;
 
+    /// Maximum entries before the cache is halved to prevent unbounded growth.
     inline static constexpr std::size_t max_price_map_size = 8;
     mutable memoized_price_map price_map;
-    mutable std::optional<datetime_t> last_quote; // time of last successful download (issue #996)
+    mutable std::optional<datetime_t>
+        last_quote; ///< Time of last successful download (issue #996).
 
   public:
     explicit base_t(const string& _symbol)
@@ -192,7 +230,13 @@ public:
   virtual std::optional<expr_t> value_expr() const { return base->value_expr; }
   void set_value_expr(const std::optional<expr_t>& expr = {}) { base->value_expr = expr; }
 
+  /** @brief Record a price for this commodity in the price history graph.
+   *  @param date   When the price is effective.
+   *  @param price  The exchange rate (its commodity is the target).
+   *  @param reflexive  If true, mark the price's commodity as COMMODITY_PRIMARY
+   *                    (the normal case for parsed P directives). */
   void add_price(const datetime_t& date, const amount_t& price, const bool reflexive = true);
+  /** @brief Remove a previously recorded price from the history graph. */
   void remove_price(const datetime_t& date, commodity_t& commodity);
 
   void map_prices(const function<void(datetime_t, const amount_t&)>& fn,
@@ -202,10 +246,41 @@ public:
   std::optional<price_point_t> find_price_from_expr(expr_t& expr, const commodity_t* commodity,
                                                     const datetime_t& moment) const;
 
+  /**
+   * @brief Look up this commodity's price in terms of another commodity.
+   *
+   * Performs a memoized price lookup through the commodity price history
+   * graph.  If no target commodity is specified, the pool's default
+   * commodity is used.  Results are cached in base->price_map; when the
+   * cache exceeds max_price_map_size, the oldest half is evicted.
+   *
+   * If the commodity has a value_expr, that expression is evaluated
+   * instead of consulting the price graph.
+   *
+   * @param commodity  Target commodity (nullptr = pool default).
+   * @param moment     Point in time for the lookup (default = now/epoch).
+   * @param oldest     Oldest acceptable price date.
+   * @return The price point if found, or nullopt.
+   */
   std::optional<price_point_t> virtual find_price(const commodity_t* commodity = nullptr,
                                                   const datetime_t& moment = datetime_t(),
                                                   const datetime_t& oldest = datetime_t()) const;
 
+  /**
+   * @brief Conditionally download a more current price quote (--download).
+   *
+   * When get_quotes is enabled and the commodity is not marked NOMARKET,
+   * this checks whether the existing price point is stale (older than
+   * quote_leeway seconds).  If so, it invokes the external getquote
+   * script to fetch a current price.  A per-session throttle
+   * (last_quote) prevents redundant downloads for the same commodity
+   * within a single run (issue #996).
+   *
+   * @param point        The best price found so far (may be nullopt).
+   * @param moment       The reference time for staleness comparison.
+   * @param in_terms_of  Desired target commodity for the quote.
+   * @return The updated price point, or the original if no update was needed.
+   */
   std::optional<price_point_t> check_for_updated_price(const std::optional<price_point_t>& point,
                                                        const datetime_t& moment,
                                                        const commodity_t* in_terms_of);
@@ -215,8 +290,20 @@ public:
   // Methods related to parsing, reading, writing, etc., the commodity
   // itself.
 
+  /**
+   * @brief Parse a commodity symbol from an input stream.
+   *
+   * Handles both quoted symbols (delimited by double quotes, allowing any
+   * characters including digits and operators) and bare symbols (terminated
+   * by any character in the invalid_chars table).  Backslash escapes are
+   * supported in bare symbols.  If the parsed token is a reserved word
+   * (and, or, not, if, else, true, false, div), it is rejected as a
+   * commodity name and the stream is rewound.
+   */
   static void parse_symbol(std::istream& in, string& symbol);
+  /** @brief Parse a commodity symbol from a C string pointer (advances p). */
   static void parse_symbol(char*& p, string& symbol);
+  /** @brief Convenience overload that returns the parsed symbol by value. */
   static string parse_symbol(std::istream& in) {
     string temp; // NOLINT(bugprone-unused-local-non-trivial-variable)
     parse_symbol(in, temp);
@@ -227,6 +314,15 @@ public:
                      bool print_annotations = false) const;
   bool valid() const;
 
+  /**
+   * @brief Comparator for consistent display ordering of amounts.
+   *
+   * Used by balance_t and reporting to sort amounts deterministically.
+   * Comparison proceeds through multiple levels: base symbol (lexicographic),
+   * then annotation presence, then lot price, lot date, lot tag, valuation
+   * expression, and finally semantic flags (ANNOTATION_PRICE_FIXATED).
+   * Returns negative, zero, or positive like strcmp.
+   */
   struct compare_by_commodity {
     int operator()(const amount_t* left, const amount_t* right) const;
   };

@@ -212,10 +212,14 @@ Value commodities at the time of their acquisition.
 .It Fl \-invert
 Invert the value of amounts shown.
 .It Fl \-market Pq Fl V
-Show current market values for all amounts.  This is determined in a somewhat
-magical fashion.  It is probably more straightforward to use
+Show current market values for all amounts.  Each commodity is converted to a
+target commodity by looking up the most recent price in the price database
+(either from P directives or recorded implicitly from @@ cost transactions).
+The target commodity is chosen automatically: Ledger picks the commodity
+most commonly used as a pricing target (marked as "primary" internally).
+For explicit control over which commodity to convert into, use the
 .Fl \-exchange
-option.
+option instead.
 .It Fl \-period Ar time-period Pq Fl p
 Show postings only for the given
 .Ar time-period .
@@ -405,7 +409,9 @@ report.
 Reduce convertible commodities down the bottom of the conversion, e.g.
 display time in seconds.
 .It Fl \-basis Pq Fl B
-Report the cost basis on all posting.
+Report the cost basis on all postings, stripping away any lot price
+annotations and showing what was originally paid rather than current market
+value.
 Alias for
 .Fl \-cost
 .It Fl \-begin Ar DATE Pq Fl b
@@ -452,7 +458,7 @@ characters wide.  By default
 .Nm
 will use all available columns in your terminal.
 .It Fl \-cost
-Report the cost basis on all posting.
+Report the cost basis on all postings, stripping away lot price annotations.
 Alias for
 .Fl \-basis .
 .It Fl \-count
@@ -788,7 +794,10 @@ Implies
 and
 .Fl \-lot-dates .
 .It Fl \-market Pq Fl V
-Use the latest market value for all commodities.
+Convert all commodities to their latest market value using the price
+database.  Prices may come from P directives, @@ cost notation, or
+.Fl \-download
+queries.
 .It Fl \-master-account Ar STR
 Prepend all account names with
 .Ar STR

@@ -208,7 +208,6 @@ endif()
 
 ########################################################################
 
-include(FindICU)
 find_package(ICU ${Required_Icu_Version} OPTIONAL_COMPONENTS uc i18n)
 if(ICU_FOUND)
   include_directories(SYSTEM ${ICU_INCLUDE_DIRS})

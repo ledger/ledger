@@ -29,6 +29,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   pool.cc
+ * @author John Wiegley
+ *
+ * @ingroup math
+ *
+ * @brief Implements the commodity pool: commodity creation, lookup, aliasing,
+ *        and exchange recording.
+ *
+ * The commodity pool is the central registry for all commodity_t and
+ * annotated_commodity_t instances.  This file implements the create/find/
+ * find_or_create family for both plain and annotated commodities, the alias
+ * mechanism (with its retired_commodities safety net), and the exchange()
+ * methods that record lot-based commodity conversions with proper cost
+ * breakdown and annotation.  It also contains the parsers for P directives
+ * and price expressions.
+ */
+
 #include <system.hh>
 
 #include "amount.h"
@@ -42,6 +60,15 @@ namespace ledger {
 
 std::shared_ptr<commodity_pool_t> commodity_pool_t::current_pool;
 
+/**
+ * @brief Construct a new commodity pool with a null commodity.
+ *
+ * The null commodity (empty symbol) is created immediately and marked as
+ * BUILTIN | NOMARKET.  It serves as a sentinel for amounts that have no
+ * commodity (pure numeric values).  The default quote_leeway is 86400
+ * seconds (24 hours), meaning downloaded prices are considered fresh
+ * for one day.
+ */
 commodity_pool_t::commodity_pool_t()
     : default_commodity(nullptr), keep_base(false), quote_leeway(86400), get_quotes(false),
       get_commodity_quote(commodity_quote_from_script) {
@@ -50,6 +77,15 @@ commodity_pool_t::commodity_pool_t()
   TRACE_CTOR(commodity_pool_t, "");
 }
 
+/**
+ * @brief Create a new commodity with the given symbol.
+ *
+ * Allocates a new base_t and commodity_t, wraps the symbol in quotes if it
+ * contains characters from invalid_chars (e.g., spaces or digits), inserts
+ * the commodity into the commodities map, and registers it as a node in the
+ * price history graph.  The caller must ensure the symbol does not already
+ * exist in the pool.
+ */
 commodity_t* commodity_pool_t::create(const string& symbol) {
   std::shared_ptr<commodity_t::base_t> base_commodity(new commodity_t::base_t(symbol));
   std::shared_ptr<commodity_t> commodity(new commodity_t(this, base_commodity));
@@ -78,6 +114,7 @@ commodity_t* commodity_pool_t::create(const string& symbol) {
   return commodity.get();
 }
 
+/** @brief Look up a commodity by its symbol.  Returns nullptr if not found. */
 commodity_t* commodity_pool_t::find(const string& symbol) {
   DEBUG("pool.commodities", "Find commodity " << symbol);
 
@@ -86,6 +123,7 @@ commodity_t* commodity_pool_t::find(const string& symbol) {
   return nullptr;
 }
 
+/** @brief Look up a commodity by symbol, creating it if it does not exist. */
 commodity_t* commodity_pool_t::find_or_create(const string& symbol) {
   DEBUG("pool.commodities", "Find-or-create commodity " << symbol);
   if (commodity_t* commodity = find(symbol))
@@ -93,6 +131,19 @@ commodity_t* commodity_pool_t::find_or_create(const string& symbol) {
   return create(symbol);
 }
 
+/**
+ * @brief Create an alias mapping @p name to @p referent's commodity entry.
+ *
+ * After aliasing, looking up @p name in the commodities map returns the same
+ * shared_ptr as the referent's canonical entry.  If @p name was previously
+ * mapped to a different commodity (e.g., created implicitly by a pricedb
+ * parse before the alias directive was seen), the old commodity is moved to
+ * retired_commodities to keep it alive -- existing amount_t objects may still
+ * hold raw pointers to it.  Any price history on the old commodity is
+ * transferred to the referent via commodity_history::alias_commodity.
+ *
+ * Aliasing the same name to the same referent is idempotent.
+ */
 commodity_t* commodity_pool_t::alias(const string& name, commodity_t& referent) {
   commodities_map::const_iterator i = commodities.find(referent.base_symbol());
   assert(i != commodities.end());
@@ -118,6 +169,16 @@ commodity_t* commodity_pool_t::alias(const string& name, commodity_t& referent) 
   return (*iter).second.get();
 }
 
+/// @name Annotated commodity operations
+/// @{
+
+/**
+ * @brief Create an annotated commodity from a symbol and annotation.
+ *
+ * If the annotation is non-empty, the base commodity is looked up (or
+ * created) and then wrapped in an annotated_commodity_t.  If the
+ * annotation is empty, falls through to the plain create().
+ */
 commodity_t* commodity_pool_t::create(const string& symbol, const annotation_t& details) {
   DEBUG("pool.commodities", "commodity_pool_t::create[ann] " << "symbol " << symbol << '\n'
                                                              << details);
@@ -128,6 +189,7 @@ commodity_t* commodity_pool_t::create(const string& symbol, const annotation_t& 
     return create(symbol);
 }
 
+/** @brief Look up an annotated commodity by symbol and annotation details. */
 commodity_t* commodity_pool_t::find(const string& symbol, const annotation_t& details) {
   DEBUG("pool.commodities", "commodity_pool_t::find[ann] " << "symbol " << symbol << '\n'
                                                            << details);
@@ -143,6 +205,7 @@ commodity_t* commodity_pool_t::find(const string& symbol, const annotation_t& de
   }
 }
 
+/** @brief Look up an annotated commodity by symbol, creating it if needed. */
 commodity_t* commodity_pool_t::find_or_create(const string& symbol, const annotation_t& details) {
   DEBUG("pool.commodities", "commodity_pool_t::find_or_create[ann] " << "symbol " << symbol << '\n'
                                                                      << details);
@@ -159,6 +222,7 @@ commodity_t* commodity_pool_t::find_or_create(const string& symbol, const annota
   }
 }
 
+/** @brief Look up an annotated commodity by base commodity reference, creating if needed. */
 commodity_t* commodity_pool_t::find_or_create(commodity_t& comm, const annotation_t& details) {
   DEBUG("pool.commodities", "commodity_pool_t::find_or_create[ann:comm] "
                                 << "symbol " << comm.base_symbol() << '\n'
@@ -176,6 +240,16 @@ commodity_t* commodity_pool_t::find_or_create(commodity_t& comm, const annotatio
   }
 }
 
+/**
+ * @brief Create an annotated_commodity_t wrapping a base commodity.
+ *
+ * The base commodity must not already be annotated, and the annotation
+ * must be non-empty.  The new annotated commodity is inserted into the
+ * annotated_commodities map keyed by (base_symbol, details).  Flags on
+ * the base commodity are updated to record whether fixated or floating
+ * price annotations have been seen (COMMODITY_SAW_ANN_PRICE_FIXATED,
+ * COMMODITY_SAW_ANN_PRICE_FLOAT), which influences find_price() behavior.
+ */
 annotated_commodity_t* commodity_pool_t::create(commodity_t& comm, const annotation_t& details) {
   DEBUG("pool.commodities", "commodity_pool_t::create[ann:comm] " << "symbol " << comm.base_symbol()
                                                                   << '\n'
@@ -211,6 +285,17 @@ annotated_commodity_t* commodity_pool_t::create(commodity_t& comm, const annotat
   return commodity.get();
 }
 
+/// @}
+
+/// @name Exchange and price operations
+/// @{
+
+/**
+ * @brief Record a simple per-unit exchange rate in the price history.
+ *
+ * Resolves through any annotation to the base commodity, then delegates
+ * to commodity_t::add_price.
+ */
 void commodity_pool_t::exchange(commodity_t& commodity, const amount_t& per_unit_cost,
                                 const datetime_t& moment) {
   DEBUG("commodity.prices.add", "exchanging commodity " << commodity << " at per unit cost "
@@ -222,6 +307,22 @@ void commodity_pool_t::exchange(commodity_t& commodity, const amount_t& per_unit
   base_commodity.add_price(moment, per_unit_cost);
 }
 
+/**
+ * @brief Record a full commodity exchange with lot annotation.
+ *
+ * This is the workhorse for "@" and "@@" cost expressions in postings.
+ * It performs these steps:
+ *   1. Compute the per-unit cost (dividing total cost by quantity for @@).
+ *   2. Normalize the per-unit cost to display precision so that lot prices
+ *      computed from total costs can be matched by users (issue #1032).
+ *   3. Optionally record a market price in the history graph (skipped for
+ *      fixated prices and lot-basis consumption -- issue #1217).
+ *   4. Build an annotation_t with price, date, and tag; mark computed
+ *      fields with ANNOTATION_*_CALCULATED flags.
+ *   5. Re-annotate the original amount with the new lot information.
+ *   6. Return the cost_breakdown_t with the annotated amount, the final
+ *      cost (what was paid), and the basis cost (using any prior lot price).
+ */
 cost_breakdown_t commodity_pool_t::exchange(const amount_t& amount, const amount_t& cost,
                                             const bool is_per_unit, const bool add_price,
                                             const std::optional<datetime_t>& moment,
@@ -314,6 +415,24 @@ cost_breakdown_t commodity_pool_t::exchange(const amount_t& amount, const amount
   return breakdown;
 }
 
+/// @}
+
+/// @name Price directive parsing
+/// @{
+
+/**
+ * @brief Parse a price directive line ("P DATE [TIME] SYMBOL AMOUNT").
+ *
+ * The line is split into whitespace-separated fields.  If a time component
+ * is present, it is combined with the date into a full datetime; otherwise,
+ * midnight is assumed.  The commodity symbol is parsed (handling quoted
+ * symbols), and the remaining text is parsed as the price amount.
+ *
+ * On success, the commodity is looked up (or created) in the pool, the
+ * price is optionally added to the history graph, and the commodity is
+ * marked COMMODITY_KNOWN.  The price commodity's precision may be updated
+ * from the parsed amount if it was previously at the default.
+ */
 std::optional<std::pair<commodity_t*, price_point_t>>
 commodity_pool_t::parse_price_directive(char* line, bool do_not_add_price, bool no_date) {
   char* date_field_ptr = line;
@@ -378,6 +497,14 @@ commodity_pool_t::parse_price_directive(char* line, bool do_not_add_price, bool 
   return std::nullopt;
 }
 
+/**
+ * @brief Parse a "COMMODITY=PRICE[;PRICE;...]" expression.
+ *
+ * Splits the string at '=' to obtain the commodity name on the left and
+ * one or more semicolon-separated price amounts on the right.  Each price
+ * is added to the commodity's history at the given moment (or now).  Used
+ * by the --exchange/-X command-line option.
+ */
 commodity_t* commodity_pool_t::parse_price_expression(const std::string& str, const bool add_prices,
                                                       const std::optional<datetime_t>& moment) {
   scoped_array<char> buf(new char[str.length() + 1]);
@@ -398,5 +525,7 @@ commodity_t* commodity_pool_t::parse_price_expression(const std::string& str, co
   }
   return nullptr;
 }
+
+/// @}
 
 } // namespace ledger

@@ -29,6 +29,47 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   value.cc
+ * @author John Wiegley
+ *
+ * @ingroup math
+ *
+ * @brief  Implementation of the polymorphic value_t type
+ *
+ * This file implements value_t, the dynamic type that flows through every
+ * stage of Ledger's expression engine, filter pipeline, and report
+ * formatter.  The central design goal is to avoid expensive balance_t
+ * heap allocations for the overwhelmingly common cases where a simple
+ * boolean, integer, or single-commodity amount suffices.
+ *
+ * value_t achieves this through a type promotion strategy: arithmetic
+ * and comparison operators inspect the types of both operands and choose
+ * the smallest result type that preserves full precision.  The promotion
+ * hierarchy, from least to most general, is:
+ *
+ *   VOID < BOOLEAN < DATETIME < DATE < INTEGER < AMOUNT < BALANCE
+ *        < STRING < MASK < SEQUENCE < SCOPE < ANY
+ *
+ * For example, INTEGER + INTEGER stays INTEGER, but INTEGER + AMOUNT
+ * (with a commodity) promotes to BALANCE so the commodity is not lost.
+ * Subtraction may simplify back down: if a BALANCE ends up with a
+ * single commodity after subtraction, in_place_simplify() demotes it
+ * to AMOUNT or even INTEGER.
+ *
+ * The file is organized into the following logical sections:
+ *
+ *   1. Storage management     -- storage_t copy, initialize/shutdown
+ *   2. Truth testing          -- operator bool, is_zero, is_realzero
+ *   3. Type conversion        -- to_*() helpers, in_place_cast, simplify
+ *   4. Arithmetic operators   -- +=, -=, *=, /= with type promotion
+ *   5. Comparison operators   -- is_equal_to, is_less_than, is_greater_than
+ *   6. Unary operations       -- negate, not, abs, rounding family
+ *   7. Commodity operations   -- value, exchange, annotate, strip
+ *   8. Printing and debugging -- print, dump, label, valid
+ *   9. Sorting and XML output -- sort_value_is_less_than, put_value
+ */
+
 #include <system.hh>
 
 #include <boost/tokenizer.hpp>
@@ -45,6 +86,21 @@ namespace ledger {
 intrusive_ptr<value_t::storage_t> value_t::true_value;
 intrusive_ptr<value_t::storage_t> value_t::false_value;
 
+// ----------------------------------------------------------------------
+// Section 1: Storage management
+//
+// value_t uses intrusive reference-counted storage with copy-on-write
+// semantics.  BALANCE and SEQUENCE own heap-allocated objects and must
+// be deep-copied; all other types are stored inline in the variant and
+// can be copied by value.
+// ----------------------------------------------------------------------
+
+/// @brief Deep-copy assignment for storage objects.
+///
+/// BALANCE and SEQUENCE contain raw pointers to heap-allocated objects,
+/// so they must be cloned rather than pointer-copied.  All other variant
+/// alternatives are trivially copyable or have proper copy constructors
+/// within std::variant and are handled by the default branch.
 value_t::storage_t& value_t::storage_t::operator=(const value_t::storage_t& rhs) {
   if (this == &rhs)
     return *this;
@@ -67,6 +123,12 @@ value_t::storage_t& value_t::storage_t::operator=(const value_t::storage_t& rhs)
   return *this;
 }
 
+/// @brief Create the shared true/false singleton storage objects.
+///
+/// Because boolean values are extremely common in expression evaluation
+/// (every filter predicate produces one), two static storage_t objects
+/// are pre-allocated and shared by all boolean value_t instances.  This
+/// eliminates per-value heap allocations for the most frequent case.
 void value_t::initialize() {
   true_value = new storage_t;
   true_value->type = BOOLEAN;
@@ -77,11 +139,38 @@ void value_t::initialize() {
   false_value->data = false;
 }
 
+/// @brief Release the shared boolean singletons at program shutdown.
 void value_t::shutdown() {
   true_value = intrusive_ptr<storage_t>();
   false_value = intrusive_ptr<storage_t>();
 }
 
+// ----------------------------------------------------------------------
+// Section 2: Truth testing
+//
+// Truth testing is used pervasively by the expression engine to evaluate
+// filter predicates (`--limit`, `--display`, etc.).  Each type defines
+// its own truthiness: integers are true if non-zero, amounts delegate
+// to amount_t::operator bool, strings are true if non-empty, and
+// sequences are true if any element is true.  MASK values cannot be
+// truth-tested (they are patterns, not values) and throw an error
+// suggesting the `=~` operator instead.
+// ----------------------------------------------------------------------
+
+/// @brief Determine the truth value of any value_t.
+///
+/// This is the core predicate used by the expression engine when
+/// evaluating `if`, `and`, `or`, and filter expressions.  The rules
+/// for each type mirror common programming conventions:
+///   - VOID is always false
+///   - BOOLEAN returns its stored value
+///   - DATETIME/DATE are true if the stored date is valid
+///   - INTEGER is true if non-zero
+///   - AMOUNT/BALANCE delegate to their own operator bool
+///   - STRING is true if non-empty
+///   - SEQUENCE is true if any element is true
+///   - SCOPE is true if the pointer is non-null
+///   - MASK always throws (use `=~` instead)
 value_t::operator bool() const {
   switch (type()) {
   case VOID:
@@ -128,6 +217,12 @@ value_t::operator bool() const {
   return false;
 }
 
+/// @brief Prepare storage for a new type, reusing the object if possible.
+///
+/// If the value is VOID, storage is simply released.  Otherwise, if the
+/// current storage has a reference count of 1 (we are the sole owner),
+/// the existing storage is destroyed and reused -- avoiding a heap
+/// allocation.  If the storage is shared, a fresh storage_t is allocated.
 void value_t::set_type(type_t new_type) {
   if (new_type == VOID) { // NOLINT(bugprone-branch-clone)
     storage.reset();
@@ -145,6 +240,35 @@ void value_t::set_commodity(const commodity_t& val) {
   set_type(COMMODITY);
   storage->data = &val;
 }
+
+// ----------------------------------------------------------------------
+// Section 3: Type conversion (to_*() helpers, in_place_cast, simplify)
+//
+// The to_*() methods provide convenient type-safe extraction.  If the
+// value already holds the requested type, the stored data is returned
+// directly.  Otherwise, in_place_cast is used to attempt a conversion
+// on a temporary copy.
+//
+// in_place_cast() is the general-purpose type coercion engine.  It
+// handles all valid conversions between value types and throws
+// value_error for unsupported ones.  The valid conversions include:
+//   - Any type -> BOOLEAN (via truth testing)
+//   - Any type -> SEQUENCE (wraps in a single-element sequence)
+//   - VOID -> INTEGER (0), AMOUNT (0), STRING ("")
+//   - BOOLEAN -> INTEGER (0/1), AMOUNT (0/1), STRING ("true"/"false")
+//   - DATE <-> DATETIME
+//   - DATE/DATETIME -> STRING
+//   - INTEGER -> AMOUNT, BALANCE, STRING
+//   - AMOUNT -> INTEGER (truncates), BALANCE, STRING
+//   - BALANCE -> AMOUNT (only if single commodity), STRING
+//   - STRING -> INTEGER, AMOUNT, COMMODITY, DATE, DATETIME, MASK
+//   - COMMODITY -> STRING
+//   - MASK -> STRING
+//
+// in_place_simplify() reduces a value to the most compact representation
+// that preserves its meaning: a zero value of any type becomes INTEGER 0,
+// and a BALANCE with a single commodity becomes an AMOUNT.
+// ----------------------------------------------------------------------
 
 bool value_t::to_boolean() const {
   if (is_boolean()) {
@@ -258,6 +382,16 @@ value_t::sequence_t value_t::to_sequence() const {
   }
 }
 
+/// @brief Reduce this value to the simplest type that preserves its meaning.
+///
+/// This is called after subtraction and other operations that may leave
+/// a value in a more complex type than necessary.  Two simplifications
+/// are performed:
+///   1. Any value that is "really zero" (is_realzero()) is replaced by
+///      INTEGER 0, avoiding the overhead of carrying an empty balance or
+///      zero amount through subsequent calculations.
+///   2. A BALANCE containing exactly one commodity is demoted to AMOUNT,
+///      since there is no need for the multi-commodity map.
 void value_t::in_place_simplify() {
 #if DEBUG_ON
   LOGGER("value.simplify");
@@ -277,6 +411,15 @@ void value_t::in_place_simplify() {
   }
 }
 
+/// @brief Extract the numeric magnitude, stripping any commodity.
+///
+/// Returns the pure numeric value without commodity information.  For
+/// AMOUNT, this calls amount_t::number() which strips the commodity.
+/// For BALANCE, it calls balance_t::number().  For SEQUENCE, the
+/// numbers of all elements are summed.  BOOLEAN is converted to 0 or 1.
+///
+/// This is used by expressions that need a raw number for arithmetic,
+/// such as percentage calculations where the commodity is irrelevant.
 value_t value_t::number() const {
   switch (type()) {
   case VOID:
@@ -307,6 +450,55 @@ value_t value_t::number() const {
   return false;
 }
 
+// ----------------------------------------------------------------------
+// Section 4: Arithmetic operators (+=, -=, *=, /=)
+//
+// These are the largest and most complex methods in value.cc because
+// each must handle every valid combination of left-hand and right-hand
+// types, applying the correct type promotion rules.
+//
+// Type promotion rules for addition and subtraction:
+//   INTEGER + INTEGER       -> INTEGER
+//   INTEGER + AMOUNT(bare)  -> AMOUNT   (promote left to AMOUNT)
+//   INTEGER + AMOUNT(comm)  -> BALANCE  (commodity requires balance)
+//   INTEGER + BALANCE       -> BALANCE
+//   AMOUNT  + INTEGER       -> BALANCE if amount has commodity, else AMOUNT
+//   AMOUNT  + AMOUNT(same)  -> AMOUNT
+//   AMOUNT  + AMOUNT(diff)  -> BALANCE  (different commodities)
+//   AMOUNT  + BALANCE       -> BALANCE
+//   BALANCE + INTEGER/AMOUNT/BALANCE -> BALANCE
+//   DATETIME/DATE + INTEGER/AMOUNT   -> add seconds/days
+//   STRING  + anything      -> string concatenation
+//   SEQUENCE + SEQUENCE     -> element-wise (must be same length)
+//   SEQUENCE + scalar       -> append to sequence
+//   VOID + anything         -> copy the right-hand value
+//
+// Subtraction follows similar rules but calls in_place_simplify()
+// after each operation, since a BALANCE minus an AMOUNT of the same
+// commodity may reduce to a single-commodity result.
+//
+// Multiplication and division are more restrictive:
+//   - Only numeric types (INTEGER, AMOUNT, BALANCE) are supported.
+//   - BALANCE * BALANCE is not defined (what would it mean in accounting?).
+//   - STRING * INTEGER repeats the string.
+//   - BALANCE can only be multiplied/divided by a scalar (INTEGER or
+//     uncommoditized AMOUNT), distributing the operation across all
+//     commodity components.
+// ----------------------------------------------------------------------
+
+/// @brief Add a value to this one, promoting types as necessary.
+///
+/// The addition logic is organized in three phases:
+///   1. Special-case handling for STRING (concatenation), COMMODITY
+///      (cast to string first), and SEQUENCE (element-wise or append).
+///   2. A switch over the left-hand type for numeric and temporal types.
+///   3. Within each left-hand case, a switch over the right-hand type
+///      determines the promotion path.
+///
+/// The key accounting insight is that adding amounts of different
+/// commodities must produce a BALANCE (multi-commodity map), since
+/// "$100 + 50 EUR" cannot be reduced to a single number without a
+/// price lookup.
 value_t& value_t::operator+=(const value_t& val) {
   if (val.is_null())
     return *this;
@@ -449,6 +641,20 @@ value_t& value_t::operator+=(const value_t& val) {
   return *this;
 }
 
+/// @brief Subtract a value, with post-operation simplification.
+///
+/// Subtraction mirrors addition's type promotion rules but adds an
+/// important difference: after every numeric subtraction, in_place_simplify()
+/// is called.  This is because subtraction frequently cancels out
+/// commodity components (e.g., a BALANCE of "$100, 50 EUR" minus "$100"
+/// yields a single-commodity balance that can be simplified to AMOUNT).
+///
+/// For VOID, subtraction assigns the negated right-hand value, matching
+/// the mathematical identity 0 - x = -x.
+///
+/// For SEQUENCE, subtraction has two modes:
+///   - SEQUENCE - SEQUENCE: element-wise subtraction (lengths must match)
+///   - SEQUENCE - scalar: removes the first matching element
 value_t& value_t::operator-=(const value_t& val) {
   if (val.is_null())
     return *this;
@@ -595,6 +801,22 @@ value_t& value_t::operator-=(const value_t& val) {
   return *this;
 }
 
+/// @brief Multiply this value by another.
+///
+/// Multiplication is more restrictive than addition because multiplying
+/// two commoditized amounts is generally undefined in accounting (what
+/// is "$10 * 5 EUR"?).  The supported combinations are:
+///   - INTEGER * INTEGER -> INTEGER
+///   - INTEGER * AMOUNT  -> AMOUNT (the amount's commodity is preserved)
+///   - AMOUNT  * INTEGER -> AMOUNT
+///   - AMOUNT  * AMOUNT  -> AMOUNT (used for percentage calculations, etc.)
+///   - BALANCE * INTEGER -> BALANCE (each component scaled)
+///   - BALANCE * AMOUNT(bare) -> BALANCE (scale by uncommoditized factor)
+///   - STRING  * INTEGER -> string repetition ("ab" * 3 = "ababab")
+///   - SEQUENCE * INTEGER -> sequence repetition
+///
+/// BALANCE * AMOUNT(commoditized) is only allowed when the balance has
+/// a single commodity (it is simplified to AMOUNT first).
 value_t& value_t::operator*=(const value_t& val) {
   if (is_string()) {
     const string& s = as_string();
@@ -679,6 +901,15 @@ value_t& value_t::operator*=(const value_t& val) {
   return *this;
 }
 
+/// @brief Divide this value by another.
+///
+/// Division follows the same restrictions as multiplication: only
+/// numeric types are supported, and BALANCE can only be divided by
+/// scalars.  The supported combinations mirror operator*= with
+/// division substituted.
+///
+/// Note: INTEGER / AMOUNT produces AMOUNT (not INTEGER), preserving
+/// the precision of the amount's decimal representation.
 value_t& value_t::operator/=(const value_t& val) {
   switch (type()) {
   case INTEGER:
@@ -755,6 +986,28 @@ value_t& value_t::operator/=(const value_t& val) {
   return *this;
 }
 
+// ----------------------------------------------------------------------
+// Section 5: Comparison operators
+//
+// Comparison is used by the expression engine for sorting (`--sort`),
+// filtering (`--limit "amount > 100"`), and conditional formatting.
+// Like arithmetic, comparisons handle cross-type operands by promoting
+// to a common type:
+//   - INTEGER can be compared to AMOUNT and BALANCE (via to_amount())
+//   - AMOUNT can be compared to INTEGER and BALANCE
+//   - BALANCE values are compared via to_amount() (single-commodity only)
+//   - COMMODITY and STRING can be compared to each other (by symbol name)
+//   - Same-type comparisons use the type's native operator
+//
+// Comparing incompatible types (e.g., DATE to AMOUNT) throws value_error.
+// ----------------------------------------------------------------------
+
+/// @brief Test equality between two values, handling cross-type comparisons.
+///
+/// VOID is only equal to VOID.  For numeric types (INTEGER, AMOUNT,
+/// BALANCE), cross-type equality is supported by promoting the simpler
+/// operand.  COMMODITY can be compared to STRING by looking up the
+/// string in the commodity pool.
 bool value_t::is_equal_to(const value_t& val) const {
   switch (type()) {
   case VOID:
@@ -859,6 +1112,15 @@ bool value_t::is_equal_to(const value_t& val) const {
   return *this;
 }
 
+/// @brief Test whether this value is strictly less than another.
+///
+/// For VOID, null is considered less than any non-null value (establishing
+/// a total order where VOID sorts first).  For AMOUNT values of different
+/// commodities, lexicographic commodity comparison is used as a tiebreaker
+/// so that sort output is deterministic.
+///
+/// BALANCE comparison against scalars checks whether ALL component amounts
+/// are less than the scalar.  SEQUENCE comparison is lexicographic.
 bool value_t::is_less_than(const value_t& val) const {
   switch (type()) {
   case VOID:
@@ -1000,6 +1262,11 @@ bool value_t::is_less_than(const value_t& val) const {
   return *this;
 }
 
+/// @brief Test whether this value is strictly greater than another.
+///
+/// Mirrors is_less_than() with reversed comparison directions.  VOID is
+/// never greater than anything.  BALANCE > scalar requires ALL components
+/// to be greater.
 bool value_t::is_greater_than(const value_t& val) const {
   switch (type()) {
   case VOID:
@@ -1137,6 +1404,27 @@ bool value_t::is_greater_than(const value_t& val) const {
   return *this;
 }
 
+/// @brief Convert this value to the specified type in place.
+///
+/// This is the general-purpose type coercion engine.  Two target types
+/// receive universal handling before the main switch:
+///   - BOOLEAN: any type can be cast to bool via operator bool()
+///   - SEQUENCE: any type is wrapped in a single-element sequence
+///
+/// All other conversions are handled by a two-level switch on
+/// (source type, target type).  If a conversion path does not exist,
+/// a value_error is thrown.  See the Section 3 comment above for the
+/// complete table of valid conversions.
+///
+/// Notable behaviors:
+///   - BALANCE -> AMOUNT only succeeds if the balance contains exactly
+///     one commodity (or is empty, yielding amount 0).  Multi-commodity
+///     balances cannot be losslessly represented as a single amount.
+///   - STRING -> INTEGER only succeeds if the string contains only
+///     digits and an optional leading minus sign.
+///   - STRING -> AMOUNT parses the string as a commoditized amount
+///     (e.g., "$100.00" or "50 EUR").
+///   - STRING -> MASK compiles the string as a regular expression.
 void value_t::in_place_cast(type_t cast_type) {
   if (type() == cast_type)
     return;
@@ -1351,6 +1639,36 @@ void value_t::in_place_cast(type_t cast_type) {
   throw_(value_error, _f("Cannot convert %1% to %2%") % label() % label(cast_type));
 }
 
+// ----------------------------------------------------------------------
+// Section 6: Unary operations (negate, not, abs, rounding family)
+//
+// These operations transform a single value in place.  They share a
+// common structure: a switch over the value's type delegates to the
+// corresponding operation on amount_t or balance_t, while INTEGER is
+// handled directly and SEQUENCE applies the operation element-wise.
+//
+// The rounding family deserves special attention because it determines
+// how amounts appear in reports:
+//   - in_place_round()       -- round to the commodity's internal precision
+//   - in_place_roundto(n)    -- round to exactly n decimal places
+//   - in_place_truncate()    -- truncate (round toward zero)
+//   - in_place_floor()       -- round toward negative infinity
+//   - in_place_ceiling()     -- round toward positive infinity
+//   - in_place_display_round() -- round to the commodity's display precision
+//   - in_place_round_to_commodity_precision() -- round to commodity precision
+//   - in_place_unround()     -- restore full internal precision
+//
+// These correspond to the expression functions round(), roundto(),
+// truncate(), floor(), ceiling(), and unround() available in format
+// strings and value expressions.
+// ----------------------------------------------------------------------
+
+/// @brief Negate this value in place (unary minus).
+///
+/// For BOOLEAN, negation flips the value (equivalent to logical not).
+/// For INTEGER, DATETIME, and DATE, the stored long is negated.
+/// For AMOUNT and BALANCE, the corresponding in_place_negate() is called.
+/// For SEQUENCE, each element is negated recursively.
 void value_t::in_place_negate() {
   switch (type()) {
   case VOID:
@@ -1381,6 +1699,11 @@ void value_t::in_place_negate() {
   throw_(value_error, _f("Cannot negate %1%") % label());
 }
 
+/// @brief Apply logical NOT in place, converting the value to BOOLEAN.
+///
+/// Unlike in_place_negate() which preserves the value's type,
+/// in_place_not() always converts the result to BOOLEAN.  This is used
+/// by the expression engine's `not` operator and `!` syntax.
 void value_t::in_place_not() {
   switch (type()) {
   case BOOLEAN:
@@ -1415,6 +1738,14 @@ void value_t::in_place_not() {
   throw_(value_error, _f("Cannot 'not' %1%") % label());
 }
 
+/// @brief Test whether this value is truly zero, ignoring display rounding.
+///
+/// is_realzero() differs from is_zero() for AMOUNT values: is_zero()
+/// considers an amount zero if it rounds to zero at the commodity's
+/// display precision, while is_realzero() checks whether the underlying
+/// value is exactly zero at full internal precision.  This distinction
+/// matters for in_place_simplify(), which should only collapse a value
+/// to INTEGER 0 if it is genuinely zero, not merely display-zero.
 bool value_t::is_realzero() const {
   switch (type()) {
   case BOOLEAN:
@@ -1448,6 +1779,12 @@ bool value_t::is_realzero() const {
   return false;
 }
 
+/// @brief Test whether this value is zero, respecting display precision.
+///
+/// For AMOUNT values, this uses amount_t::is_zero(), which considers an
+/// amount zero if it rounds to zero at the commodity's display precision.
+/// For example, $0.001 is considered zero if the commodity "$" displays
+/// only two decimal places.  Use is_realzero() to check exact zero.
 bool value_t::is_zero() const {
   switch (type()) {
   case BOOLEAN:
@@ -1481,6 +1818,26 @@ bool value_t::is_zero() const {
   return false;
 }
 
+// ----------------------------------------------------------------------
+// Section 7: Commodity operations (value, exchange, annotate, strip)
+//
+// These methods connect value_t to Ledger's commodity and pricing
+// system.  They implement the `--market`, `--exchange`, and annotation
+// stripping behaviors that transform multi-commodity balances into
+// user-friendly report output.
+// ----------------------------------------------------------------------
+
+/// @brief Return the market value of this value at the given moment.
+///
+/// This powers the `--market` and `--exchange COMM` report options.
+/// For AMOUNT, it delegates to amount_t::value() which looks up the
+/// most recent price in the commodity's price history.  For BALANCE,
+/// each component amount is individually repriced.  INTEGER and VOID
+/// have no associated commodity and thus no market price, so they
+/// return NULL_VALUE (which the caller typically treats as "no change").
+///
+/// An empty BALANCE is returned as-is rather than NULL_VALUE so that
+/// it renders as zero instead of blank in report output.
 value_t value_t::value(const datetime_t& moment, const commodity_t* in_terms_of) const {
   switch (type()) {
   case VOID:
@@ -1517,6 +1874,22 @@ value_t value_t::value(const datetime_t& moment, const commodity_t* in_terms_of)
   return NULL_VALUE;
 }
 
+/// @brief Convert commodities according to a comma-separated exchange spec.
+///
+/// This implements the `--exchange COMM1,COMM2` command-line option.  The
+/// @p commodities string is parsed as a comma-separated list where each
+/// entry may be:
+///   - "USD"     -- convert everything to USD
+///   - "EUR:USD" -- convert only EUR to USD, leave other commodities alone
+///   - "USD!"    -- force conversion even if the value is already in USD
+///   - "=expr"   -- use a price expression instead of a commodity name
+///
+/// For a simple single-commodity target with no special syntax (no comma,
+/// colon, or equals sign), this method shortcuts to value() for efficiency.
+///
+/// For BALANCE values, each component amount is examined individually:
+/// amounts matching a source specifier (or not matching any target
+/// commodity) are repriced; others are kept as-is.
 value_t value_t::exchange_commodities(const std::string& commodities, const bool add_prices,
                                       const datetime_t& moment) {
   if (type() == SEQUENCE) {
@@ -1532,6 +1905,8 @@ value_t value_t::exchange_commodities(const std::string& commodities, const bool
       commodities.find(':') == string::npos)
     return value(moment, commodity_pool_t::current_pool->find_or_create(commodities));
 
+  // Phase 1: Parse the comma-separated commodity spec into parallel vectors
+  // of target commodities, optional source commodities, and force flags.
   std::vector<commodity_t*> comms;
   std::vector<commodity_t*> sources;
   std::vector<bool> force;
@@ -1571,6 +1946,9 @@ value_t value_t::exchange_commodities(const std::string& commodities, const bool
     }
   }
 
+  // Phase 2: Apply each target commodity to this value.  For AMOUNT, we
+  // reprice directly.  For BALANCE, we iterate over each component amount
+  // and selectively reprice based on the source/force constraints.
   std::size_t index = 0;
   for (commodity_t* comm : comms) {
     switch (type()) {
@@ -1643,6 +2021,12 @@ value_t value_t::exchange_commodities(const std::string& commodities, const bool
   return *this;
 }
 
+/// @brief Reduce commodity expressions to their base commodities.
+///
+/// For example, if "min" is defined as "60s", an amount of "5 min" would
+/// be reduced to "300s".  This delegates to amount_t::in_place_reduce()
+/// or balance_t::in_place_reduce() which walk the commodity equivalence
+/// chain.  Non-numeric types are silently ignored.
 void value_t::in_place_reduce() {
   switch (type()) {
   case AMOUNT:
@@ -1662,6 +2046,10 @@ void value_t::in_place_reduce() {
   // throw_(value_error, _f("Cannot reduce %1%") % label());
 }
 
+/// @brief Expand base commodities back to their higher-level equivalents.
+///
+/// The inverse of in_place_reduce(): "300s" would become "5 min" if such
+/// an equivalence is defined.
 void value_t::in_place_unreduce() {
   switch (type()) {
   case AMOUNT:
@@ -1681,6 +2069,11 @@ void value_t::in_place_unreduce() {
   // throw_(value_error, _f("Cannot reduce %1%") % label());
 }
 
+/// @brief Return the absolute value.
+///
+/// Supported for INTEGER, AMOUNT, and BALANCE.  VOID is returned as-is
+/// (it has no sign).  Delegates to amount_t::abs() or balance_t::abs()
+/// for the commodity-aware types.
 value_t value_t::abs() const {
   switch (type()) {
   case VOID:
@@ -1704,6 +2097,12 @@ value_t value_t::abs() const {
   return NULL_VALUE;
 }
 
+/// @brief Round to the commodity's internal precision.
+///
+/// For AMOUNT, this rounds to the number of decimal places defined by the
+/// commodity (e.g., 2 for USD).  For BALANCE, each component amount is
+/// rounded independently.  INTEGER values are already integral and need
+/// no rounding.  For SEQUENCE, rounding is applied element-wise.
 void value_t::in_place_round() {
   switch (type()) {
   case INTEGER:
@@ -1726,6 +2125,8 @@ void value_t::in_place_round() {
   throw_(value_error, _f("Cannot set rounding for %1%") % label());
 }
 
+/// @brief Round to a specific number of decimal places.
+/// @param places  The number of decimal places to retain.
 void value_t::in_place_roundto(int places) {
   DEBUG("amount.roundto", "=====> roundto places " << places);
   switch (type()) {
@@ -1746,6 +2147,7 @@ void value_t::in_place_roundto(int places) {
   }
 }
 
+/// @brief Truncate toward zero (remove fractional part without rounding).
 void value_t::in_place_truncate() {
   switch (type()) {
   case INTEGER:
@@ -1768,6 +2170,12 @@ void value_t::in_place_truncate() {
   throw_(value_error, _f("Cannot truncate %1%") % label());
 }
 
+/// @brief Round to the commodity's display precision.
+///
+/// Display precision may differ from internal precision.  For example,
+/// a commodity might track 6 decimal places internally but display only 2.
+/// This method rounds to the display precision, which is used when
+/// formatting output for the user.
 void value_t::in_place_display_round() {
   switch (type()) {
   case INTEGER:
@@ -1790,6 +2198,11 @@ void value_t::in_place_display_round() {
   throw_(value_error, _f("Cannot display-round %1%") % label());
 }
 
+/// @brief Round to the precision defined by the commodity's usage history.
+///
+/// This differs from in_place_round() in that it uses the precision
+/// observed from actual transactions involving the commodity, rather than
+/// a fixed internal precision.
 void value_t::in_place_round_to_commodity_precision() {
   switch (type()) {
   case INTEGER:
@@ -1812,6 +2225,7 @@ void value_t::in_place_round_to_commodity_precision() {
   throw_(value_error, _f("Cannot round %1% to commodity precision") % label());
 }
 
+/// @brief Round toward negative infinity.
 void value_t::in_place_floor() {
   switch (type()) {
   case INTEGER:
@@ -1834,6 +2248,7 @@ void value_t::in_place_floor() {
   throw_(value_error, _f("Cannot floor %1%") % label());
 }
 
+/// @brief Round toward positive infinity.
 void value_t::in_place_ceiling() {
   switch (type()) {
   case INTEGER:
@@ -1856,6 +2271,7 @@ void value_t::in_place_ceiling() {
   throw_(value_error, _f("Cannot ceiling %1%") % label());
 }
 
+/// @brief Restore the value to its full internal precision, undoing rounding.
 void value_t::in_place_unround() {
   switch (type()) {
   case INTEGER:
@@ -1878,6 +2294,14 @@ void value_t::in_place_unround() {
   throw_(value_error, _f("Cannot unround %1%") % label());
 }
 
+/// @brief Attach price/date/tag annotations to this value's commodity.
+///
+/// Annotations record metadata about how an amount was acquired, such as
+/// the per-unit cost (`{$50}`), the acquisition date (`[2024-01-15]`),
+/// or a note tag (`(lot1)`).  Only AMOUNT values can be annotated; other
+/// types throw value_error.
+///
+/// @param details  The annotation containing price, date, and/or tag info.
 void value_t::annotate(const annotation_t& details) {
   if (is_amount()) {
     as_amount_lval().annotate(details);
@@ -1887,6 +2311,11 @@ void value_t::annotate(const annotation_t& details) {
   }
 }
 
+/// @brief Check whether this value's commodity carries an annotation.
+///
+/// Only AMOUNT values can carry annotations (price, date, or tag metadata
+/// attached to a commodity).  Calling this on any other type throws
+/// value_error.
 bool value_t::has_annotation() const {
   if (is_amount()) {
     return as_amount().has_annotation();
@@ -1897,6 +2326,11 @@ bool value_t::has_annotation() const {
   return false;
 }
 
+/// @brief Return a mutable reference to this value's annotation.
+///
+/// The caller can modify the returned annotation_t to change the price,
+/// date, or tag associated with this amount's commodity.  Only AMOUNT
+/// values support this; other types throw value_error.
 annotation_t& value_t::annotation() {
   if (is_amount()) {
     return as_amount_lval().annotation();
@@ -1907,6 +2341,16 @@ annotation_t& value_t::annotation() {
   }
 }
 
+/// @brief Return a copy of this value with annotations selectively removed.
+///
+/// The @p what_to_keep parameter controls which annotation components
+/// (price, date, tag) are preserved.  This is used by report options like
+/// `--lot-prices`, `--lot-dates`, and `--lot-tags` to control how much
+/// lot detail appears in output.  If what_to_keep.keep_all() is true,
+/// the value is returned unchanged for efficiency.
+///
+/// Non-annotatable types (BOOLEAN, INTEGER, STRING, etc.) are returned
+/// as-is.  SEQUENCE values have each element stripped recursively.
 value_t value_t::strip_annotations(const keep_details_t& what_to_keep) const {
   if (what_to_keep.keep_all())
     return *this;
@@ -1941,6 +2385,21 @@ value_t value_t::strip_annotations(const keep_details_t& what_to_keep) const {
   return NULL_VALUE;
 }
 
+// ----------------------------------------------------------------------
+// Section 8: Printing and debugging (print, dump, label, valid)
+//
+// print() produces user-facing report output with optional column
+// justification and colorization.  dump() produces a debug-oriented
+// representation that can be round-tripped through the expression
+// parser (amounts are wrapped in braces, strings in quotes, etc.).
+// label() returns a human-readable type name for error messages.
+// valid() performs internal consistency checks.
+// ----------------------------------------------------------------------
+
+/// @brief Return a human-readable label for this value's type.
+///
+/// Used in error messages to describe what kind of value caused a
+/// problem, e.g., "Cannot add a string to an integer".
 string value_t::label(optional<type_t> the_type) const {
   switch (the_type ? *the_type : type()) {
   case VOID:
@@ -1977,10 +2436,28 @@ string value_t::label(optional<type_t> the_type) const {
   return _("<invalid>");
 }
 
+/// @brief Format this value for user-facing report output.
+///
+/// This is the primary output method used by the report formatters.
+/// It handles column width justification for tabular output (balance
+/// reports, register reports) and optional ANSI color for negative values.
+///
+/// @param _out          The output stream to write to.
+/// @param first_width   Column width for the first line of output.
+///                      A value of -1 disables width formatting.
+/// @param latter_width  Column width for subsequent lines (used by
+///                      BALANCE which may span multiple lines).
+/// @param flags         Bitmask of AMOUNT_PRINT_* flags controlling
+///                      right-justification, colorization, etc.
 void value_t::print(std::ostream& _out, const int first_width, const int latter_width,
                     const uint_least8_t flags) const {
+  // We buffer into a local ostringstream so that width and justification
+  // settings do not leak into the caller's stream.
   std::ostringstream out;
 
+  // Set column width for simple scalar types.  AMOUNT, BALANCE, and STRING
+  // handle their own justification via the justify() helper so they are
+  // excluded here.
   if (first_width > 0 && (!is_amount() || as_amount().is_zero()) && !is_balance() && !is_string()) {
     out.width(first_width);
 
@@ -2076,6 +2553,17 @@ void value_t::print(std::ostream& _out, const int first_width, const int latter_
   _out << out.str();
 }
 
+/// @brief Write a debug-oriented representation of this value.
+///
+/// Unlike print(), dump() produces output that is closer to the internal
+/// representation and can often be parsed back by the expression engine.
+/// Amounts are wrapped in braces (e.g., `{$100.00}`), strings in double
+/// quotes with escape sequences, dates in brackets, and booleans as
+/// `true`/`false`.
+///
+/// @param out      The output stream to write to.
+/// @param relaxed  If true, amounts are printed without braces (more
+///                 readable but not round-trippable).
 void value_t::dump(std::ostream& out, const bool relaxed) const {
   switch (type()) {
   case VOID:
@@ -2165,6 +2653,11 @@ void value_t::dump(std::ostream& out, const bool relaxed) const {
   }
 }
 
+/// @brief Validate internal consistency of this value.
+///
+/// Delegates to the valid() method of AMOUNT, BALANCE, or COMMODITY
+/// if the value holds one of those types.  Other types are always
+/// considered valid.  Used by VERIFY assertions throughout the codebase.
 bool value_t::valid() const {
   switch (type()) {
   case AMOUNT:
@@ -2179,6 +2672,30 @@ bool value_t::valid() const {
   return true;
 }
 
+// ----------------------------------------------------------------------
+// Section 9: Sorting and XML output
+//
+// sort_value_is_less_than() provides the comparator used by the `--sort`
+// option to order transactions and postings.  It walks a list of sort
+// keys in priority order, respecting per-key inversion for descending
+// sorts, and skips BALANCE values which lack a natural total ordering.
+//
+// put_value() serializes a value_t into a Boost.PropertyTree node,
+// enabling the `xml` report format to emit structured output that
+// external tools can parse.
+// ----------------------------------------------------------------------
+
+/// @brief Compare two multi-key sort value lists for ordering.
+///
+/// This implements the `--sort` option's comparison logic.  Each
+/// sort_value_t in the list represents one sort key (e.g., `--sort date`
+/// or `--sort "amount, account"`).  Keys are compared left to right;
+/// the first non-equal key determines the result.  Each key may be
+/// individually inverted (descending order).
+///
+/// BALANCE values are skipped during comparison since they have no
+/// natural total ordering (a multi-commodity balance cannot be
+/// meaningfully compared as less-than or greater-than).
 bool sort_value_is_less_than(const std::list<sort_value_t>& left_values,
                              const std::list<sort_value_t>& right_values) {
   std::list<sort_value_t>::const_iterator left_iter = left_values.begin();
@@ -2206,6 +2723,12 @@ bool sort_value_is_less_than(const std::list<sort_value_t>& left_values,
   return false;
 }
 
+/// @brief Serialize a value_t into a Boost property tree for XML output.
+///
+/// This is used by the `xml` report format to produce structured output.
+/// Each value type maps to a specific XML element name (e.g., "amount",
+/// "balance", "int", "bool").  SCOPE and ANY values cannot be serialized
+/// and will trigger an assertion failure.
 void put_value(property_tree::ptree& pt, const value_t& value) {
   switch (value.type()) {
   case value_t::VOID:

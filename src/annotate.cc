@@ -29,6 +29,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   annotate.cc
+ * @author John Wiegley
+ *
+ * @ingroup math
+ *
+ * @brief Implements commodity annotation parsing, printing, comparison,
+ *        and the annotated commodity's price lookup and stripping logic.
+ *
+ * This file contains the runtime logic for annotation_t (parsing the
+ * bracket syntax, rendering annotations back to text, and ordering them)
+ * and for annotated_commodity_t (finding prices with fixated-vs-floating
+ * semantics, and selectively removing annotations based on keep_details_t).
+ */
+
 #include <system.hh>
 
 #include "amount.h"
@@ -39,6 +54,21 @@
 
 namespace ledger {
 
+/// @name annotation_t implementation
+/// @{
+
+/**
+ * @brief Strict weak ordering for annotations.
+ *
+ * Annotations are ordered lexicographically by (price, date, tag, value_expr,
+ * semantic flags).  Within each field, "absent" sorts before "present"; when
+ * both are present, the field values are compared normally.  For prices the
+ * commodity symbol is compared first (alphabetically), then the numeric value,
+ * so that annotations in different currencies sort predictably.
+ *
+ * This ordering is the key comparator for the pool's annotated_commodities
+ * map, ensuring that each unique annotation is stored exactly once.
+ */
 bool annotation_t::operator<(const annotation_t& rhs) const {
   if (!price && rhs.price)
     return true;
@@ -98,6 +128,22 @@ bool annotation_t::operator<(const annotation_t& rhs) const {
   return false;
 }
 
+/**
+ * @brief Parse annotation fields from the input stream.
+ *
+ * Reads annotation components in a loop, stopping when a non-annotation
+ * character is encountered.  The supported bracket syntax is:
+ *
+ *   - `{price}`   -- per-unit lot price
+ *   - `{{price}}` -- total lot price (sets ANNOTATION_PRICE_NOT_PER_UNIT)
+ *   - `{=price}`  -- fixated lot price (sets ANNOTATION_PRICE_FIXATED)
+ *   - `[date]`    -- acquisition date
+ *   - `(tag)`     -- free-form lot tag
+ *   - `((expr))`  -- valuation expression (supports nested parentheses)
+ *
+ * The `(@` sequence is not consumed (it belongs to the cost syntax).
+ * Each field may appear at most once; duplicates throw amount_error.
+ */
 void annotation_t::parse(std::istream& in) {
   do {
     std::istream::pos_type pos = in.tellg();
@@ -225,6 +271,18 @@ void annotation_t::parse(std::istream& in) {
 #endif
 }
 
+/**
+ * @brief Render annotation fields back to their textual form.
+ *
+ * Each present field is output with its appropriate delimiters.  The
+ * @p no_computed_annotations flag suppresses fields marked with
+ * *_CALCULATED flags (used when printing journal output that should
+ * only show user-supplied annotations).
+ *
+ * For total-cost prices (ANNOTATION_PRICE_NOT_PER_UNIT), the original
+ * `{{total}}` form is reconstructed by multiplying the stored per-unit
+ * price by abs(qty), preserving exact GMP rational arithmetic.
+ */
 void annotation_t::print(std::ostream& out, bool keep_base, bool no_computed_annotations,
                          const amount_t* qty, uint_least8_t print_flags) const {
   if (price && (!no_computed_annotations || !has_flags(ANNOTATION_PRICE_CALCULATED))) {
@@ -251,6 +309,8 @@ void annotation_t::print(std::ostream& out, bool keep_base, bool no_computed_ann
     out << " ((" << *value_expr << "))";
 }
 
+/// @}
+
 void put_annotation(property_tree::ptree& st, const annotation_t& details) {
   if (details.price)
     put_amount(st.put("price", ""), *details.price);
@@ -265,6 +325,9 @@ void put_annotation(property_tree::ptree& st, const annotation_t& details) {
     st.put("value_expr", details.value_expr->text());
 }
 
+/// @name keep_details_t implementation
+/// @{
+
 bool keep_details_t::keep_all(const commodity_t& comm) const {
   return (!comm.has_annotation() || (keep_price && keep_date && keep_tag && !only_actuals));
 }
@@ -272,6 +335,11 @@ bool keep_details_t::keep_all(const commodity_t& comm) const {
 bool keep_details_t::keep_any(const commodity_t& comm) const {
   return comm.has_annotation() && (keep_price || keep_date || keep_tag);
 }
+
+/// @}
+
+/// @name annotated_commodity_t implementation
+/// @{
 
 bool annotated_commodity_t::operator==(const commodity_t& comm) const {
   // If the base commodities don't match, the game's up.
@@ -288,6 +356,29 @@ bool annotated_commodity_t::operator==(const commodity_t& comm) const {
   return true;
 }
 
+/**
+ * @brief Price lookup with fixated-price and valuation-expression support.
+ *
+ * This override implements the lot-aware pricing semantics that make
+ * `{=$50}` (fixated) different from `{$50}` (floating):
+ *
+ *   1. If the annotation has a fixated price (ANNOTATION_PRICE_FIXATED,
+ *      written as `{=$50}` in journal syntax), that price is returned
+ *      immediately -- fixated prices represent a contractual or book value
+ *      that does not change with the market.
+ *
+ *   2. If the annotation has a non-fixated price and no explicit target
+ *      commodity was requested, the price's commodity is used as the
+ *      target.  This guides the price history graph search toward the
+ *      right currency (e.g., if the lot was bought for $150, the target
+ *      becomes "$").
+ *
+ *   3. If a valuation expression `((expr))` is present, it is evaluated
+ *      to compute the price.
+ *
+ *   4. Otherwise, the call falls through to commodity_t::find_price()
+ *      which walks the price history graph.
+ */
 std::optional<price_point_t> annotated_commodity_t::find_price(const commodity_t* commodity,
                                                                const datetime_t& moment,
                                                                const datetime_t& oldest) const {
@@ -330,6 +421,23 @@ std::optional<price_point_t> annotated_commodity_t::find_price(const commodity_t
   return commodity_t::find_price(target, when, oldest);
 }
 
+/**
+ * @brief Selectively remove annotation fields based on a keep_details_t filter.
+ *
+ * This is the mechanism behind `--basis` (which strips all annotations,
+ * showing amounts in their base commodity) and the `--lots` family of
+ * options (which selectively preserve lot prices, dates, or tags).
+ *
+ * For each annotation field, retention requires both:
+ *   - The corresponding keep_* flag is true in @p what_to_keep.
+ *   - If only_actuals is set, the field must not carry a *_CALCULATED flag
+ *     (i.e., it must have been explicitly written in the journal).
+ *
+ * If at least one field survives, a (possibly new) annotated_commodity_t
+ * is obtained from the pool via find_or_create, and the relevant flags
+ * are transferred.  If no fields survive, the unannotated base commodity
+ * (referent()) is returned.
+ */
 commodity_t& annotated_commodity_t::strip_annotations(const keep_details_t& what_to_keep) {
   DEBUG("commodity.annotated.strip", "Reducing commodity "
                                          << *this << '\n'
@@ -375,10 +483,18 @@ commodity_t& annotated_commodity_t::strip_annotations(const keep_details_t& what
   return referent();
 }
 
+/**
+ * @brief Delegate annotation printing to annotation_t::print.
+ *
+ * Passes the pool's keep_base setting so that amounts are displayed
+ * in their base or unreduced form as appropriate.
+ */
 void annotated_commodity_t::write_annotations(std::ostream& out, bool no_computed_annotations,
                                               const amount_t* qty,
                                               uint_least8_t print_flags) const {
   details.print(out, pool().keep_base, no_computed_annotations, qty, print_flags);
 }
+
+/// @}
 
 } // namespace ledger

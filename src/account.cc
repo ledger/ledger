@@ -29,6 +29,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   account.cc
+ * @author John Wiegley
+ *
+ * @ingroup data
+ *
+ * @brief  Implementation of the hierarchical account tree
+ *
+ * This file implements account tree navigation (find_account,
+ * find_account_re), posting management, name formatting (fullname,
+ * partial_name), the expression-binding dispatch table, incremental
+ * balance accumulation (amount, total), statistical gathering
+ * (self_details, family_details), and cache management (clear_xdata,
+ * clear_display_state).
+ */
 #include <system.hh>
 
 #include "account.h"
@@ -36,6 +51,8 @@
 #include "xact.h"
 
 namespace ledger {
+
+/*--- Account Lifecycle ---*/
 
 account_t::~account_t() {
   TRACE_DTOR(account_t);
@@ -47,6 +64,18 @@ account_t::~account_t() {
   }
 }
 
+/*--- Account Tree Navigation ---*/
+
+/**
+ * @brief Split a colon-separated name and walk/create the account tree.
+ *
+ * Given a name like "Assets:Bank:Checking", this function splits on the
+ * first ':' to get "Assets" and "Bank:Checking", finds or creates the
+ * "Assets" child, then recurses with the remainder.  Newly created
+ * accounts inherit ACCOUNT_TEMP and ACCOUNT_GENERATED flags from their
+ * parent so that the entire subtree shares the same temporary/generated
+ * status.
+ */
 account_t* account_t::find_account(string_view acct_name, const bool auto_create) {
   accounts_map::const_iterator i = accounts.find(acct_name);
   if (i != accounts.end())
@@ -102,6 +131,7 @@ account_t* account_t::find_account(string_view acct_name, const bool auto_create
 }
 
 namespace {
+/** @brief Depth-first search helper for find_account_re. */
 account_t* find_account_re_(account_t* account, const mask_t& regexp) {
   if (regexp.match(account->fullname()))
     return account;
@@ -118,6 +148,17 @@ account_t* account_t::find_account_re(const string& regexp) {
   return find_account_re_(this, mask_t(regexp));
 }
 
+/*--- Post Management ---*/
+
+/**
+ * @brief Invalidate cached totals for this account and all ancestors.
+ *
+ * When a posting is added or removed, any previously computed totals
+ * (self_details and family_details) become stale.  This function marks
+ * the account's own details as uncalculated and then walks up to the
+ * root, clearing each ancestor's family_details so that total() will
+ * recompute on the next call.
+ */
 void invalidate_xdata_cache(account_t* account) {
   if (account->has_xdata()) {
     account_t::xdata_t& xdata_ = account->xdata();
@@ -195,6 +236,8 @@ bool account_t::remove_post(post_t* post) {
   return true;
 }
 
+/*--- Name Formatting ---*/
+
 string account_t::fullname() const {
   if (!_fullname.empty()) {
     return _fullname;
@@ -234,6 +277,8 @@ std::ostream& operator<<(std::ostream& out, const account_t& account) {
   out << account.fullname();
   return out;
 }
+
+/*--- Expression Bindings ---*/
 
 namespace {
 value_t get_partial_name(call_scope_t& args) {
@@ -395,6 +440,14 @@ value_t fn_all(call_scope_t& args) {
 }
 } // namespace
 
+/**
+ * @brief Dispatch table mapping expression function names to account getters.
+ *
+ * This is the binding layer between value expressions and account data.
+ * When a format string contains @c %(total) or a query uses @c account,
+ * the expression engine calls lookup() on the account scope to resolve
+ * the name to a callable functor.
+ */
 expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind, const string& fn_name) {
   if (kind != symbol_t::FUNCTION)
     return nullptr;
@@ -547,6 +600,8 @@ std::size_t account_t::children_with_flags(xdata_t::flags_t flags) const {
   return count;
 }
 
+/*--- Statistics Gathering ---*/
+
 account_t::xdata_t::details_t& account_t::xdata_t::details_t::operator+=(const details_t& other) {
   posts_count += other.posts_count;
   posts_virtuals_count += other.posts_virtuals_count;
@@ -573,6 +628,8 @@ account_t::xdata_t::details_t& account_t::xdata_t::details_t::operator+=(const d
   payees_referenced.insert(other.payees_referenced.begin(), other.payees_referenced.end());
   return *this;
 }
+
+/*--- Cache Management ---*/
 
 void account_t::clear_xdata() {
   xdata_ = none;
@@ -609,6 +666,29 @@ void account_t::clear_display_state() {
       pair.second->clear_display_state();
 }
 
+/*--- Account Totals ---*/
+
+/**
+ * @brief Incrementally accumulate this account's balance from visited postings.
+ *
+ * This is the core balance-computation method.  It iterates only postings
+ * that have been marked POST_EXT_VISITED by the report walker, which means
+ * only transactions matching the current query contribute to the balance.
+ *
+ * To avoid re-scanning the entire posting list on every call, it uses
+ * last_post and last_reported_post iterators to resume from where the
+ * previous invocation stopped.  Each posting is marked POST_EXT_CONSIDERED
+ * after being counted so it will not be double-counted if amount() is
+ * called again (e.g., during a multi-group report).
+ *
+ * After exhausting the account's own posts list, it continues with
+ * reported_posts -- postings that display filters have redirected to
+ * this account.
+ *
+ * When an expression is supplied, totals are computed in temporary
+ * variables rather than cached in xdata, because the expression changes
+ * the semantics of the accumulation.
+ */
 value_t account_t::amount(const optional<bool> real_only, const optional<expr_t&>& expr /*= none*/
 ) const {
   DEBUG("account.amount", "real only: " << real_only);
@@ -671,6 +751,14 @@ value_t account_t::self_total(bool real_only) const {
   return result;
 }
 
+/**
+ * @brief Recursive family total: own amount() plus children's total().
+ *
+ * Walks the account tree depth-first, summing each child's total() into
+ * family_details.total, then adds this account's own amount().  The
+ * result is cached via family_details.calculated so subsequent calls
+ * return immediately.
+ */
 value_t account_t::total(const optional<expr_t&>& expr) const {
   if (!(xdata_ && xdata_->family_details.calculated)) {
     const_cast<account_t&>(*this).xdata().family_details.calculated = true;
@@ -758,6 +846,15 @@ void account_t::xdata_t::details_t::update(post_t& post, bool gather_all) {
   }
 }
 
+/*--- XML Serialization ---*/
+
+/**
+ * @brief Serialize an account and its children into a Boost property tree.
+ *
+ * Recurses into child accounts, outputting name, fullname, account-amount,
+ * and account-total for each account that satisfies @p pred.  Used by the
+ * XML output handler.
+ */
 void put_account(property_tree::ptree& st, const account_t& acct,
                  const function<bool(const account_t&)>& pred) {
   if (pred(acct)) {
