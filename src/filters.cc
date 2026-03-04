@@ -1424,6 +1424,18 @@ handle:
     report_budget_items(post.date());
     item_handler<post_t>::operator()(post);
   } else if (!post_in_budget && flags & BUDGET_UNBUDGETED) {
+    if (flags & BUDGET_WRAP_VALUES) {
+      // Wrap the unbudgeted post's value so that the budget slot is VOID
+      // rather than the 0 produced by the amount expression "(amount, 0)".
+      // VOID displays as blank in the budget column, correctly indicating
+      // that no budget exists for this account (issue #1023).
+      value_t seq;
+      seq.push_back(post.amount);
+      seq.push_back(value_t());
+
+      post.xdata().compound_value = seq;
+      post.xdata().add_flags(POST_EXT_COMPOUND);
+    }
     item_handler<post_t>::operator()(post);
   }
 }

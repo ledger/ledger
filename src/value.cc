@@ -1483,6 +1483,8 @@ bool value_t::is_zero() const {
 
 value_t value_t::value(const datetime_t& moment, const commodity_t* in_terms_of) const {
   switch (type()) {
+  case VOID:
+    return NULL_VALUE;
   case INTEGER:
     return NULL_VALUE;
 
