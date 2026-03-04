@@ -9,8 +9,10 @@ on:
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Debug
-  # Minimum line coverage percentage required. Raise this as coverage improves.
-  MIN_COVERAGE: 90
+  # Minimum coverage thresholds required. Raise these as coverage improves.
+  # Measured by LLVM instrumentation across all instrumented binaries.
+  MIN_LINE_COVERAGE: 80
+  MIN_FUNC_COVERAGE: 85
 
 jobs:
   build:
@@ -119,42 +121,74 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -y
-          sudo ./acprep dependencies
-          sudo apt-get install -y lcov
+          # acprep dependencies brings in build tools, Boost, Python, etc.
+          sudo ./acprep dependencies --python
+          # llvm provides llvm-profdata and llvm-cov; lcov provides genhtml.
+          sudo apt-get install -y clang llvm lcov
 
       - name: Configure CMake
-        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Debug -DUSE_GCOV=ON -DDISABLE_ASSERTS=ON
+        # USE_LLVM_COV uses Clang instrumentation (-fprofile-instr-generate
+        # -fcoverage-mapping) instead of gcov, so it works with Clang on all
+        # platforms. DISABLE_ASSERTS keeps branch coverage clean.
+        run: |
+          cmake -B ${{github.workspace}}/build \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DUSE_LLVM_COV=ON \
+            -DUSE_PYTHON=ON \
+            -DDISABLE_ASSERTS=ON
 
       - name: Build
         run: cmake --build ${{github.workspace}}/build --config Debug
 
-      - name: Test
+      - name: Run tests and generate coverage report
+        # The 'coverage' target (from RunCoverage.cmake) runs ctest with
+        # LLVM_PROFILE_FILE set, merges profiles, exports to lcov format,
+        # and generates the HTML report – all in one step.
         working-directory: ${{github.workspace}}/build
-        run: ctest -C Debug || ctest -C Debug --rerun-failed --output-on-failure
+        run: cmake --build . --target coverage
 
-      - name: Generate coverage report
+      - name: Check coverage thresholds
         working-directory: ${{github.workspace}}/build
         run: |
-          lcov --capture --directory . --output-file coverage.info --ignore-errors mismatch
-          lcov --remove coverage.info '/usr/*' '*/test/*' --ignore-errors unused --output-file coverage.info
-          lcov --summary coverage.info
-          genhtml coverage.info --output-directory coverage-report
+          # Parse coverage.info directly to avoid lcov consistency-check errors
+          # that arise when processing LLVM-generated data with older lcov versions.
+          #   LH / LF  = lines hit / lines found (per file, summed across all files)
+          #   FNH / FNF = functions hit / found
+          eval "$(awk -F: '
+            /^LH:/  { lh += $2 }
+            /^LF:/  { lf += $2 }
+            /^FNH:/ { fnh += $2 }
+            /^FNF:/ { fnf += $2 }
+            END {
+              line_pct = (lf > 0) ? lh * 100.0 / lf : 0
+              func_pct = (fnf > 0) ? fnh * 100.0 / fnf : 0
+              printf "LINE_COV=%.1f\nFUNC_COV=%.1f\n", line_pct, func_pct
+            }
+          ' coverage.info)"
 
-      - name: Check coverage threshold
-        working-directory: ${{github.workspace}}/build
-        run: |
-          COVERAGE=$(lcov --summary coverage.info 2>&1 | grep "lines\.\.\.\.\.\." | sed 's/.*: \([0-9.]*\)%.*/\1/')
-          echo "Line coverage: ${COVERAGE}%"
-          echo "Minimum threshold: ${{env.MIN_COVERAGE}}%"
-          if ! awk "BEGIN{exit ($COVERAGE >= ${{env.MIN_COVERAGE}}) ? 0 : 1}"; then
-            echo "::error::Line coverage ${COVERAGE}% is below the minimum threshold of ${{env.MIN_COVERAGE}}%"
+          echo "Line coverage:     ${LINE_COV}%  (minimum: ${{env.MIN_LINE_COVERAGE}}%)"
+          echo "Function coverage: ${FUNC_COV}%  (minimum: ${{env.MIN_FUNC_COVERAGE}}%)"
+
+          FAILED=0
+          if ! awk "BEGIN{exit (${LINE_COV} >= ${{env.MIN_LINE_COVERAGE}}) ? 0 : 1}"; then
+            echo "::error::Line coverage ${LINE_COV}% is below the minimum of ${{env.MIN_LINE_COVERAGE}}%"
+            FAILED=1
+          fi
+          if ! awk "BEGIN{exit (${FUNC_COV} >= ${{env.MIN_FUNC_COVERAGE}}) ? 0 : 1}"; then
+            echo "::error::Function coverage ${FUNC_COV}% is below the minimum of ${{env.MIN_FUNC_COVERAGE}}%"
+            FAILED=1
+          fi
+
+          if [ "$FAILED" -eq 1 ]; then
             exit 1
           fi
-          echo "Coverage check passed: ${COVERAGE}% >= ${{env.MIN_COVERAGE}}%"
+          echo "Coverage check passed: lines=${LINE_COV}%, functions=${FUNC_COV}%"
 
       - uses: actions/upload-artifact@v7
         with:
           name: coverage-report
-          path: ${{github.workspace}}/build/coverage-report/
+          path: ${{github.workspace}}/build/coverage_html/
           retention-days: 30
           if-no-files-found: error
