@@ -1,0 +1,38 @@
+; Regression test for GitHub issue #1029
+; A transaction using lot price annotation {price} must still balance
+; in the base commodity. Ledger was incorrectly accepting imbalanced
+; transactions because it treated "Avios {1.00 bmi}" and "Avios" as
+; two separate currencies and auto-assigned a conversion.
+
+2014-01-25 * Received bmi points from MBNA credit card
+    Assets:bmi                           2500.00 bmi
+    Income:Rewards
+
+2014-02-27 * Received Avios from Diamond Club on BAEC account
+    Assets:ba                             2500 Avios @@ 2500.00 bmi
+    Assets:bmi                          -2500.00 bmi
+
+2014-03-29 * Received Avios from BA credit card
+    Assets:ba                              200 Avios
+    Income:Rewards
+
+2014-05-08 * Spend Avios
+    Expenses:Flights                      3000 Avios
+    Assets:ba                           -2500 Avios {1.00 bmi} [2014/02/27]
+    Assets:ba                             -200 Avios
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 22:
+While balancing transaction from "$FILE", lines 19-22:
+> 2014-05-08 * Spend Avios
+>     Expenses:Flights                      3000 Avios
+>     Assets:ba                           -2500 Avios {1.00 bmi} [2014/02/27]
+>     Assets:ba                             -200 Avios
+Unbalanced remainder is:
+          2800 Avios
+-2500 Avios {1.00 bmi} [2014/02/27]
+Amount to balance against:
+          3000 Avios
+Error: Transaction does not balance
+end test
