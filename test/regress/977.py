@@ -13,5 +13,5 @@ ledger.session.close_journal_files()
 # With the fix (shared_ptr ownership), the journal stays alive.
 for xact in journal:
     print(xact.payee)
-    for post in xact.posts():
+    for post in xact.posts:
         print(post.account.fullname())
