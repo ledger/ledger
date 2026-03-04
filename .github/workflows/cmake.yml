@@ -58,7 +58,7 @@ jobs:
           # https://github.com/actions/runner-images/issues/6459
           # https://github.com/actions/runner-images/issues/6507
           # https://github.com/actions/runner-images/issues/2322
-          brew list -1 | grep python | while read formula; do brew unlink $formula; brew link --overwrite $formula; done || true
+          brew list -1 | grep python | while read formula; do brew unlink $formula; brew link --overwrite $formula; done
 
           brew update
           brew uninstall cmake
