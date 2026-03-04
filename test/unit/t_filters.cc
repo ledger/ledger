@@ -1333,7 +1333,7 @@ BOOST_AUTO_TEST_CASE(testAnonymizePostsAnnotatedW8)
   // Create a posting with an annotated amount.
   // Parse "10 AAPL {$15.00}" which has a price annotation.
   amount_t annotated_amt;
-  annotated_amt.parse("10 AAPL {$15.00}");
+  (void)annotated_amt.parse("10 AAPL {$15.00}");
 
   xact_t* xact = make_xact("Test Annotated", parse_date("2024/03/15"));
   post_t* post = make_post(xact, exp, annotated_amt);

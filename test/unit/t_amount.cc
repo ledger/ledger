@@ -1797,7 +1797,7 @@ BOOST_AUTO_TEST_CASE(testIsZeroUninitialized)
 BOOST_AUTO_TEST_CASE(testToLongUninitialized)
 {
   amount_t x1;
-  BOOST_CHECK_THROW(x1.to_long(), amount_error);
+  BOOST_CHECK_THROW((void)x1.to_long(), amount_error);
 }
 
 // ---------------------------------------------------------------------------
