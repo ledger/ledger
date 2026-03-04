@@ -1,0 +1,18 @@
+; Verify that --date-format is honored by the prices command and
+; --datetime-format is honored by the pricedb command (issue #1202).
+
+2020/01/10 Buy Stock
+    Assets:Brokerage    10 AAPL @ $30.00
+    Assets:Cash
+
+P 2020/01/15 00:00:00 AAPL $31.00
+
+test prices --date-format %Y-%m-%d
+2020-01-10 AAPL           $30.00
+2020-01-15 AAPL           $31.00
+end test
+
+test pricedb --datetime-format "%Y-%m-%d %H:%M:%S"
+P 2020-01-10 00:00:00 AAPL $30.00
+P 2020-01-15 00:00:00 AAPL $31.00
+end test
