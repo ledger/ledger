@@ -165,8 +165,11 @@ jobs:
       - uses: actions/checkout@v6
         name: Check out repository code
 
-      - name: Install Doxygen and Graphviz
-        run: sudo apt-get update -y && sudo apt-get install -y doxygen graphviz
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -y
+          sudo ./acprep dependencies
+          sudo apt-get install -y doxygen graphviz
 
       - name: Configure CMake
         run: cmake -B ${{github.workspace}}/build -DUSE_DOXYGEN=ON
@@ -187,8 +190,11 @@ jobs:
       - uses: actions/checkout@v6
         name: Check out repository code
 
-      - name: Install documentation tools
-        run: sudo apt-get update -y && sudo apt-get install -y texinfo texlive
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -y
+          sudo ./acprep dependencies
+          sudo apt-get install -y texinfo texlive
 
       - name: Configure CMake
         run: cmake -B ${{github.workspace}}/build -DBUILD_DOCS=ON
