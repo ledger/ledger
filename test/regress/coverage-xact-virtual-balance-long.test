@@ -1,0 +1,10 @@
+; Coverage for xact.cc lines 612-613: virtual balance as long integer
+
+2024/01/01 Test
+    [Expenses:Budget]    10
+    [Assets:Reserve]
+
+test reg
+24-Jan-01 Test                  [Expenses:Budget]                10           10
+                                [Assets:Reserve]                -10            0
+end test

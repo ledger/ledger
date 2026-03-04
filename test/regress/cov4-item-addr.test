@@ -1,0 +1,10 @@
+; Test get_addr (lines 345-348 of item.cc)
+; Exercise the addr accessor which returns a memory address
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(addr > 0)\n" --limit "account =~ /Food/"
+true
+end test

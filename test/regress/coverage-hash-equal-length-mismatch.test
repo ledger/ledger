@@ -1,0 +1,18 @@
+; Coverage for textual_xacts.cc line 1011: hash comparison with same-length mismatch
+; Tests the std::equal branch when hash sizes are equal but contents differ
+
+2024/01/01 Test
+    ; Hash: 0000000000000000000000000000000000000000000000000000000000000000
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --hashes sha512_half -> 1
+__ERROR__
+While parsing file "$FILE", line 7:
+While parsing transaction:
+> 2024/01/01 Test
+>     ; Hash: 0000000000000000000000000000000000000000000000000000000000000000
+>     Expenses:Food    $10.00
+>     Assets:Cash
+Error: Expected hash fbaef2581d47d8f47b4e683db5c1191a2c3e3df8b0a21dba872d191082d4737e != 0000000000000000000000000000000000000000000000000000000000000000
+end test

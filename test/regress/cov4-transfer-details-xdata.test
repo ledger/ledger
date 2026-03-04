@@ -1,0 +1,12 @@
+; Test transfer_details xdata copy (line 1290 of filters.cc)
+; Exercise the SET_ACCOUNT path that copies xdata flags
+
+2024/01/01 Test Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --group-by payee
+Test Payee
+24-Jan-01 Test Payee            Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

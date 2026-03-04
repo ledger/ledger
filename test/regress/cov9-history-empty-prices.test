@@ -1,0 +1,13 @@
+; Coverage for history.cc lines 182-183: prices map is empty for edge
+
+2024/01/01 Buy
+    Assets:Stock    10 AAPL
+    Assets:Cash    $-1500.00
+
+test bal --market -X $
+                   0  Assets
+           $-1500.00    Cash
+            $1500.00    Stock
+--------------------
+                   0
+end test

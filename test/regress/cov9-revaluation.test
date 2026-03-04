@@ -1,0 +1,14 @@
+; Coverage test for filters.cc lines 840-841:
+; Exercise changed_value_posts revaluation with market value changes.
+; The --gain report triggers revaluation logic.
+
+P 2024/01/01 AAPL $150.00
+P 2024/02/01 AAPL $160.00
+
+2024/01/01 Buy Stock
+    Assets:Broker    10 AAPL @ $150.00
+    Assets:Cash     $-1500.00
+
+test reg Assets:Broker --gain
+24-Feb-01 Commodities revalued  <Revalued>                  $100.00      $100.00
+end test

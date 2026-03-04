@@ -1,0 +1,14 @@
+; Test subtotal_posts with date_format (lines 966-967 of filters.cc)
+; When using --monthly with a date format
+
+2024/01/15 Test1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/20 Test2
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test reg --monthly --date-format "%Y/%m/%d" Expenses
+2024/01/01 - 2024/01/31         Expenses:Food                $30.00       $30.00
+end test

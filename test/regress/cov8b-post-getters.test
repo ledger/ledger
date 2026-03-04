@@ -1,0 +1,27 @@
+; Coverage test for post.cc lines 190, 197, 236, 243, 254
+; Test various post getter functions:
+; - get_magnitude (lines 186-191)
+; - get_amount null path (line 197)
+; - get_cost paths (lines 231-238)
+; - get_price with annotation (line 245) and without (line 247)
+; - get_total paths (lines 250-257)
+
+2024/01/01 Purchase with cost
+    Assets:Investment    10 AAPL @ $50.00
+    Assets:Cash
+
+2024/01/02 Simple transaction
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format '%(price)\n' Assets:Investment
+$500.00
+end test
+
+test reg --format '%(cost)\n' Expenses
+$10.00
+end test
+
+test reg --format '%(total)\n' Expenses
+$10.00
+end test

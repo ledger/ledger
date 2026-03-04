@@ -1,0 +1,17 @@
+; Coverage test for times.cc lines 1235-1245
+; Exercise relative time period tokens (this/next/last) and
+; simple period tokens (today/tomorrow/yesterday)
+; Also covers handle_relative_token (line 1238)
+; and handle_simple_period_token (line 1245)
+
+2024/01/01 Test
+    Expenses:Food            $10.00
+    Assets:Cash
+
+; Test "last year" period token - exercises TOK_LAST -> handle_relative_token
+test reg Expenses --period "last year"
+end test
+
+; Test "this year" period token - exercises TOK_THIS -> handle_relative_token
+test reg Expenses --period "this year"
+end test

@@ -1,0 +1,17 @@
+; Test select from accounts with account column
+; Covers select.cc lines 285-288 (accounts_report account column path)
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/01/20 Test2
+    Expenses:Transport    $40.00
+    Assets:Cash
+
+test select "account, total(amount) from accounts where account =~ /Expenses/"
+Expenses       $90.00
+Food       $50.00
+Transport       $40.00
+       $90.00
+end test

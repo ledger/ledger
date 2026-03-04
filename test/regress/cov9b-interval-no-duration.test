@@ -1,0 +1,17 @@
+; Coverage for filters.cc lines 1070-1071: interval_posts with no duration
+; (find_period path where there's no interval.duration)
+
+2024/01/01 Test A
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/02/01 Test B
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test reg --period "from 2024/01/01 to 2024/03/01"
+24-Jan-01 Test A                Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Feb-01 Test B                Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test

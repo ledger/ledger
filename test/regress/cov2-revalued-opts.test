@@ -1,0 +1,56 @@
+; Test revaluation and unrealized options for report.cc coverage
+; Covers revalued_only, unrealized, unrealized_gains_, unrealized_losses_,
+; generated, immediate, values
+
+P 2024/01/01 AAPL $100.00
+P 2024/06/01 AAPL $150.00
+
+2024/01/01 Buy
+    Assets:Broker          10 AAPL @ $100.00
+    Assets:Cash
+
+2024/06/01 Hold
+    Expenses:Fees            $5.00
+    Assets:Cash
+
+; Test --revalued-only option (line 1375)
+test reg Assets:Broker -V --revalued-only
+24-Jun-01 Commodities revalued  <Revalued>                  $500.00     $1500.00
+end test
+
+; Test --unrealized option (line 1400)
+test bal Assets:Broker --unrealized --market
+            $1500.00  Assets:Broker
+            $-500.00  Equity:Unrealized Gains
+--------------------
+            $1000.00
+end test
+
+; Test --unrealized-gains and --unrealized-losses (line 1401-1402)
+test bal Assets:Broker --unrealized --market --unrealized-gains "Income:Gains" --unrealized-losses "Expenses:Losses"
+            $1500.00  Assets:Broker
+            $-500.00  Income:Gains
+--------------------
+            $1000.00
+end test
+
+; Test --generated option (line 1298)
+test reg Expenses --generated
+24-Jun-01 Hold                  Expenses:Fees                 $5.00        $5.00
+end test
+
+; Test --immediate option (line 1308)
+test reg Expenses --immediate
+24-Jun-01 Hold                  Expenses:Fees                 $5.00        $5.00
+end test
+
+; Test --values option (line 1407)
+test reg --values
+24-Jan-01 Buy                   Assets:Broker               10 AAPL      10 AAPL
+                                Assets:Cash               $-1000.00    $-1000.00
+                                                                         10 AAPL
+24-Jun-01 Hold                  Expenses:Fees                 $5.00     $-995.00
+                                                                         10 AAPL
+                                Assets:Cash                  $-5.00    $-1000.00
+                                                                         10 AAPL
+end test

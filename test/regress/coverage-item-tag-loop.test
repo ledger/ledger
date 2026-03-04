@@ -1,0 +1,24 @@
+; Tests for item.cc: tag iteration paths
+; Covers: line 66 (tag loop iteration past non-matching entries)
+;         line 107 (return from get_tag with mask)
+;         lines 88-93 (get_tag with mask iterating through metadata)
+
+2024/01/01 Test
+    ; Alpha: one
+    ; Beta: two
+    ; Gamma: three
+    Expenses  $10
+    Assets
+
+; has_tag with mask that must iterate past Alpha and Beta to find Gamma
+; Exercises line 66 (loop iteration past non-matching tags)
+test reg --display 'has_tag(/Gamma/)'
+24-Jan-01 Test                  Expenses                        $10          $10
+                                Assets                         $-10            0
+end test
+
+; get_tag with mask returns the tag value (line 107)
+test reg --format '%(tag(/Gamma/))\n'
+three
+three
+end test

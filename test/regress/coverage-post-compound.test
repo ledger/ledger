@@ -1,0 +1,22 @@
+; Coverage test for post.cc compound value paths.
+; When --subtotal or --monthly creates compound posts (POST_EXT_COMPOUND),
+; the commodity (L211-213) and primary (L220-221) functions access
+; compound_value.to_amount() instead of post.amount directly.
+
+2024/01/01 Test1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Test2
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test reg --subtotal --format "%(commodity)|%(primary)|%(amount)|%(account)\n"
+$|false|$-30.00|Assets:Cash
+$|false|$30.00|Expenses:Food
+end test
+
+test reg --monthly --format "%(commodity)|%(primary)|%(amount)|%(account)\n"
+$|false|$-30.00|Assets:Cash
+$|false|$30.00|Expenses:Food
+end test

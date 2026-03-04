@@ -1,0 +1,13 @@
+; Test amount conversion (C directive)
+; Covers amount.cc lines 1364-1378 (parse_conversion)
+
+C 1.00 m = 60s
+C 1.00 h = 60m
+
+2024/01/01 Work
+    Expenses:Labor    5400s
+    Assets:Cash
+
+test bal --no-total Expenses
+              1.50 h  Expenses:Labor
+end test

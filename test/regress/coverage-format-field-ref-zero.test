@@ -1,0 +1,11 @@
+; Coverage for format.cc line 270: %$0 field reference error
+; %$0 is invalid since field references must be digits 1-9
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg --format '%(date) %(payee)\n%/%$0\n' -> 1
+__ERROR__
+Error: %$ field reference must be a digit from 1-9
+end test

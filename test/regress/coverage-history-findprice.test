@@ -1,0 +1,32 @@
+; Coverage test for history.cc lines 377, 397, 443, 454, 488
+; Tests multi-hop price resolution through the price graph.
+; Lines 443, 454: multi-hop price path where prices must be chained
+; Line 488: last_target tracking through the price graph path
+; Line 377: inverted price when commodity matches source
+; Line 397: source == target early return
+
+P 2024/01/01 EUR 1.10 $
+P 2024/01/01 GBP 0.85 EUR
+P 2024/01/01 CHF 0.90 EUR
+
+2024/01/10 Buy
+    Assets:European           100 EUR
+    Assets:Cash
+
+2024/01/15 Buy
+    Assets:British            50 GBP
+    Assets:Cash
+
+2024/01/20 Buy
+    Assets:Swiss              200 CHF
+    Assets:Cash
+
+test bal -X '$' --now="2024/02/01"
+                   0  Assets
+              $46.75    British
+            $-354.75    Cash
+             $110.00    European
+             $198.00    Swiss
+--------------------
+                   0
+end test

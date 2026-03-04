@@ -1,0 +1,56 @@
+; Coverage for report.cc lines 900-931 and 1079-1111: ansify_if with colors
+; Tests that ansify_if renders ANSI escape codes when --force-color is active
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+; Test ansify_if with red color
+test reg --force-color --format '%(ansify_if(account, red))\n' Expenses
+[31mExpenses:Food[0m
+end test
+
+; Test ansify_if with green color
+test reg --force-color --format '%(ansify_if(account, green))\n' Expenses
+[32mExpenses:Food[0m
+end test
+
+; Test ansify_if with bold
+test reg --force-color --format '%(ansify_if(account, bold))\n' Expenses
+[1mExpenses:Food[0m
+end test
+
+; Test ansify_if with underline
+test reg --force-color --format '%(ansify_if(account, underline))\n' Expenses
+[4mExpenses:Food[0m
+end test
+
+; Test ansify_if with blink
+test reg --force-color --format '%(ansify_if(account, blink))\n' Expenses
+[5mExpenses:Food[0m
+end test
+
+; Test ansify_if with yellow color
+test reg --force-color --format '%(ansify_if(account, yellow))\n' Expenses
+[33mExpenses:Food[0m
+end test
+
+; Test ansify_if with cyan color
+test reg --force-color --format '%(ansify_if(account, cyan))\n' Expenses
+[36mExpenses:Food[0m
+end test
+
+; Test ansify_if with magenta color
+test reg --force-color --format '%(ansify_if(account, magenta))\n' Expenses
+[35mExpenses:Food[0m
+end test
+
+; Test ansify_if with white color
+test reg --force-color --format '%(ansify_if(account, white))\n' Expenses
+[37mExpenses:Food[0m
+end test
+
+; Test ansify_if with black color
+test reg --force-color --format '%(ansify_if(account, black))\n' Expenses
+[30mExpenses:Food[0m
+end test

@@ -1,0 +1,48 @@
+; Test more report format functions for report.cc coverage
+; Covers percent, roundto, top_amount, amount_expr, total_expr,
+; get_at, to_sequence, to_mask, to_balance, commodity_price
+
+2024/01/01 Payee
+    Expenses:Food            $10.50
+    Assets:Cash
+
+2024/02/01 Payee Two
+    Expenses:Gas             $20.75
+    Assets:Cash
+
+; Test percent function (line 933-936, 1579-1580)
+test reg Expenses --format "%(percent(amount, total))\n"
+100.00%
+66.40%
+end test
+
+; Test roundto function (line 797-799, 1601-1602)
+test reg Expenses --format "%(roundto(amount, 1))\n"
+$10.50
+$20.80
+end test
+
+; Test top_amount function (line 569-586, 1629-1630)
+test reg Expenses --format "%(top_amount(amount))\n"
+$10.50
+$20.75
+end test
+
+; Test amount_expr function (line 588-589, 1475-1476)
+test reg Expenses --format "%(amount_expr)\n"
+$10.50
+$20.75
+end test
+
+; Test total_expr function (line 591-592, 1621-1622)
+test reg Expenses --format "%(total_expr)\n"
+$10.50
+$31.25
+end test
+
+; Test to_sequence function (line 1074-1076, 1647-1648)
+test reg Expenses --format "%(is_seq(to_sequence(amount)) ? \"yes\" : \"no\")\n"
+yes
+yes
+end test
+

@@ -1,0 +1,12 @@
+; Coverage test for report.cc lines 626, 633, 640
+; fn_averaged_lots, fn_fifo_lots, fn_lifo_lots else branches:
+; When the argument is not a balance_t (just a simple amount),
+; they return the argument unchanged.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(averaged_lots(amount)) %(fifo_lots(amount)) %(lifo_lots(amount))\n" --limit "account =~ /Expenses/"
+$10.00 $10.00 $10.00
+end test

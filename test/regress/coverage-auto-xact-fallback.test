@@ -1,0 +1,23 @@
+; Coverage test for xact.cc lines 1010-1014
+; Tests auto-xact with a predicate that can't be handled by the
+; quick matcher (post_pred), forcing fallback to regular eval.
+; The expression "amount > 0" uses O_GT which post_pred doesn't handle,
+; so it throws and the catch block falls back to regular evaluation.
+
+= expr amount > 0
+    Liabilities:Tax  (amount * 0.10)
+    Assets:Tax       (-amount * 0.10)
+
+2024/03/01 Test
+    Expenses:Food     $100.00
+    Assets:Checking
+
+test bal
+            $-110.00  Assets
+            $-100.00    Checking
+             $-10.00    Tax
+             $100.00  Expenses:Food
+              $10.00  Liabilities:Tax
+--------------------
+                   0
+end test

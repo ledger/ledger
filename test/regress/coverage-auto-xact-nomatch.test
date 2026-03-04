@@ -1,0 +1,18 @@
+; Coverage test for xact.cc line 989 (matches_predicate = false)
+; Tests auto-xact where the predicate matches nothing.
+; The auto-xact body is not applied to any posting.
+
+= Expenses:Travel
+    Liabilities:Tax  (amount * 0.10)
+    Assets:Tax       (-amount * 0.10)
+
+2024/03/01 Groceries
+    Expenses:Food     $100.00
+    Assets:Checking
+
+test bal
+            $-100.00  Assets:Checking
+             $100.00  Expenses:Food
+--------------------
+                   0
+end test

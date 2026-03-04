@@ -1,0 +1,13 @@
+; Coverage test for op.cc line 588
+; Tests the print_cons function with nested O_CONS nodes.
+; This exercises the recursive case where right() is also O_CONS.
+; Using format with multiple comma-separated arguments triggers O_CONS.
+
+2024/01/01 Test
+    Expenses:Food              $50.00
+    Assets:Cash
+
+test reg --format '%(justify(scrub(display_amount), 20, 20 + int(prepend_width), true, color))\n'
+              $50.00
+             $-50.00
+end test

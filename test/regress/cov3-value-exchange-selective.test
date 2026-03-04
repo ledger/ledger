@@ -1,0 +1,23 @@
+; Test selective value exchange with A:B syntax
+; Covers value.cc lines 1564-1567, 1580-1583 (A:B exchange syntax)
+
+P 2024/01/01 EUR $1.10
+P 2024/01/01 GBP $1.30
+
+2024/01/01 Test
+    Expenses:Food    100 EUR
+    Assets:Cash
+
+2024/01/02 Test
+    Expenses:Travel    50 GBP
+    Assets:Cash
+
+test bal --exchange 'EUR:$' Expenses
+             $110.00
+              50 GBP  Expenses
+             $110.00    Food
+              50 GBP    Travel
+--------------------
+             $110.00
+              50 GBP
+end test

@@ -1,0 +1,13 @@
+; Coverage test for post.cc lines 335-341, 343-345
+; Tests get_value_date and get_datetime accessors.
+; When no special xdata date is set, value_date returns the posting date
+; and datetime returns a datetime from the posting date.
+
+2024/03/01 Groceries
+    Expenses:Food     $10.00
+    Assets:Cash
+
+test reg --format "%(value_date) %(datetime)\n"
+2024/03/01 2024/03/01 00:00:00
+2024/03/01 2024/03/01 00:00:00
+end test

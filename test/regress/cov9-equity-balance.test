@@ -1,0 +1,17 @@
+; Coverage test for filters.cc line 1229:
+; Exercise posts_as_equity balance posting via equity with account filter.
+; When filtered, the balancing posting must appear.
+
+2024/01/01 Opening
+    Assets:Cash      $1000.00
+    Equity:Opening
+
+2024/01/15 Purchase
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test equity Assets
+2024/01/15 Opening Balances
+    Assets:Cash                              $950.00
+    Equity:Opening Balances
+end test

@@ -1,0 +1,21 @@
+; Coverage test for times.cc token dump/to_string and various
+; error paths in period parsing
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test period "every blah" -> 1
+__ERROR__
+Error: Unexpected date period token 'blah'
+end test
+
+test period "every 3 blah" -> 1
+__ERROR__
+Error: Unexpected date period token 'blah'
+end test
+
+test period "since since" -> 1
+__ERROR__
+Error: Unexpected date period token 'since'
+end test

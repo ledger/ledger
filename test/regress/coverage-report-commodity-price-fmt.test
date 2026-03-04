@@ -1,0 +1,14 @@
+; Coverage for report.cc lines 942-951: fn_commodity_price
+; Looks up the price of a commodity at a given date via the price history
+
+P 2024/01/01 AAPL $150.00
+P 2024/02/01 AAPL $160.00
+
+2024/01/15 Buy
+    Assets:Stocks    10 AAPL
+    Assets:Cash     $-1500.00
+
+; commodity_price returns the price at the given date
+test reg --format '%(commodity_price(amount, date))\n' Assets:Stocks
+$150.00
+end test

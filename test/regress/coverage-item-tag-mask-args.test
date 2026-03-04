@@ -1,0 +1,14 @@
+; Coverage for item.cc lines 253-254,259-260,280-281,286-287: tag/has_tag mask args
+
+2024/01/01 Test
+    ; MyTag: myvalue
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(has_tag(/My/)) %(tag(/My/))\n" Expenses
+true myvalue
+end test
+
+test reg --format "%(has_tag(/My/, /myval/)) %(tag(/My/, /myval/))\n" Expenses
+true myvalue
+end test

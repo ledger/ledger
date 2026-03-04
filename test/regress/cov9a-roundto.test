@@ -1,0 +1,10 @@
+; Coverage test for report.cc lines 797-798
+; fn_roundto rounds a value to a specific number of decimal places
+
+2024/01/01 Test
+    Expenses:Food    $10.555
+    Assets:Cash
+
+test reg --format "%(roundto(amount, 1))\n" --limit "account =~ /Expenses/"
+$10.600
+end test

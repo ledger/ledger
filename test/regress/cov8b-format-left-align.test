@@ -1,0 +1,13 @@
+; Coverage test for format.cc lines 191-200
+; Test left-alignment flag in format strings.
+; The %-N format prefix triggers ELEMENT_ALIGN_LEFT.
+; Also exercises the default break at line 197 (unreachable in practice).
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format '%-20(account)|%(amount)\n'
+Expenses:Food       |$10.00
+Assets:Cash         |$-10.00
+end test

@@ -1,0 +1,12 @@
+; Coverage for report.cc lines 933-936: fn_percent
+; Calculates the percentage of one amount relative to another
+
+2024/01/01 Test
+    Expenses:Food    $75.00
+    Expenses:Rent   $100.00
+    Assets:Cash
+
+test reg --format '%(percent(amount, $175.00))\n' Expenses
+42.86%
+57.14%
+end test

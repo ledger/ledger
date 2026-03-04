@@ -1,0 +1,10 @@
+; Coverage for filters.cc line 1652: rewrite_posts with account rewrite
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --account-rewrite "Food=Groceries:Items"
+24-Jan-01 Test                  Groceries:Items              $10.00       $10.00
+24-Jan-01 Test                  Assets:Cash                 $-10.00            0
+end test

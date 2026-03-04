@@ -1,0 +1,27 @@
+; Test times.cc lines 1099-1120: "every 2 weeks" period expression
+; in handle_every_token
+
+2026/01/05 Week 1
+    Expenses:Food   $10.00
+    Assets:Cash
+
+2026/01/12 Week 2
+    Expenses:Food   $20.00
+    Assets:Cash
+
+2026/01/19 Week 3
+    Expenses:Food   $30.00
+    Assets:Cash
+
+2026/01/26 Week 4
+    Expenses:Food   $40.00
+    Assets:Cash
+
+test reg --period "every 2 weeks" --now 2026/03/03
+25-Dec-28 - 26-Jan-10           Assets:Cash                 $-10.00      $-10.00
+                                Expenses:Food                $10.00            0
+26-Jan-11 - 26-Jan-24           Assets:Cash                 $-50.00      $-50.00
+                                Expenses:Food                $50.00            0
+26-Jan-25 - 26-Feb-07           Assets:Cash                 $-40.00      $-40.00
+                                Expenses:Food                $40.00            0
+end test

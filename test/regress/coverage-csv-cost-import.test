@@ -1,0 +1,11 @@
+; Coverage test for csv.cc lines 198-205:
+; CSV import with cost column using different commodities
+
+account Expenses:Unknown
+account Assets:Checking
+
+test convert test/regress/coverage-csv-cost-data.csv --input-date-format "%Y/%m/%d" --account Assets:Checking
+2024/01/15 * Grocery Store
+    Expenses:Unknown                       50.00 EUR
+    Assets:Checking                       -55.00 USD
+end test

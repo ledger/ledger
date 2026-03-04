@@ -1,0 +1,18 @@
+; Coverage for op.cc lines 775-798:
+; Expression error context printing for O_LAMBDA and O_CALL nodes.
+; A lambda that divides by zero triggers error context printing that
+; exercises the print function for these operator types.
+; Also covers op.cc line 520-522 (function call error rethrow).
+
+2024/01/01 Test
+    Expenses:Food    $100.00
+    Assets:Cash
+
+test eval "(x -> x / 0)(5)" -> 1
+__ERROR__
+While evaluating value expression:
+  (x -> (x / 0))(5)
+        ^^^^^^^
+While calling function '<value expr> 5':
+Error: Divide by zero
+end test

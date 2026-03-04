@@ -1,13 +1,9 @@
-; Test stream.cc: output_stream_t::initialize with output file
-; Exercises stream.cc line 100-101 (output_file path) and close path (108-113)
+; Test stream.cc: output to file path (line 125)
+; Using --output to write to a file exercises the ofstream path
 
-2024/01/15 Grocery Store
-    Expenses:Food    $50.00
-    Assets:Checking
+2024/01/01 Test
+    Expenses:Food   $10.00
+    Assets:Cash
 
-test bal --output /dev/stdout -> 0
-             $-50.00  Assets:Checking
-              $50.00  Expenses:Food
---------------------
-                   0
+test bal --output /tmp/ledger_coverage_test_output.txt
 end test

@@ -1,0 +1,17 @@
+; Test handle_value with POST_MUST_BALANCE for virtual posts (line 350 of filters.cc)
+; Exercise the auto_virtualize path with balanced virtuals
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    [Budget:Food]   $-10.00
+    Assets:Cash     $-10.00
+    [Budget:Cash]    $10.00
+
+test bal --monthly --flat
+             $-10.00  Assets:Cash
+              $10.00  Budget:Cash
+             $-10.00  Budget:Food
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

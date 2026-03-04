@@ -1,0 +1,13 @@
+; Coverage for textual_directives.cc lines 131-138: nomarket_directive
+
+N EUR
+
+P 2024/01/01 EUR $1.10
+
+2024/01/01 Test
+    Expenses:Food    100 EUR
+    Assets:Cash
+
+test bal Expenses -X '$'
+             $110.00  Expenses:Food
+end test

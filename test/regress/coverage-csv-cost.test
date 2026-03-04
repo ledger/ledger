@@ -1,0 +1,10 @@
+; Test csv.cc and report.cc: cost display
+; Exercises cost formatting
+
+2024/01/10 Test
+    Expenses:Food    10 AAPL @ $150.00
+    Assets:Cash
+
+test reg --format "%(cost)\n" Expenses
+$1500
+end test

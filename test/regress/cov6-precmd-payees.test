@@ -1,0 +1,14 @@
+; Coverage for precmd.cc: payees command
+
+2024/01/01 Grocery
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Gas    $20.00
+    Assets:Cash
+
+test payees
+Gas Station
+Grocery
+end test

@@ -1,0 +1,14 @@
+; Test N directive (nomarket_directive) (lines 131-138 of textual_directives.cc)
+; Exercise the N line which marks a commodity as nomarket
+
+N MYSTOCK
+
+2024/01/01 Test
+    Assets:Investments    10 MYSTOCK
+    Assets:Cash          $-1000.00
+
+test reg
+24-Jan-01 Test                  Assets:Investments       10 MYSTOCK   10 MYSTOCK
+                                Assets:Cash               $-1000.00    $-1000.00
+                                                                      10 MYSTOCK
+end test

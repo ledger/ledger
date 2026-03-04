@@ -1,0 +1,15 @@
+; Test error for duplicate tag annotation
+; Covers annotate.cc lines 203-204 (duplicate tag check)
+
+2024/01/01 Test
+    Assets:Brokerage    10 AAPL (lot-A) (lot-B)
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 5:
+While parsing posting:
+  Assets:Brokerage    10 AAPL (lot-A) (lot-B)
+                      ^^^^^^^^^^^^^^^^^^^^^^^
+Error: Commodity specifies more than one tag
+end test

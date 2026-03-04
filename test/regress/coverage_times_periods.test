@@ -1,0 +1,31 @@
+; Coverage test for times.cc lines 1238, 1245
+; Exercise handle_relative_token and handle_simple_period_token
+; with various period expressions
+
+2000/01/01 Ancient Transaction
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --period "last year"
+end test
+
+test reg --period "last quarter"
+end test
+
+test reg --period "last week"
+end test
+
+test reg --period "last day"
+end test
+
+test reg --period "next month"
+end test
+
+test reg --period "this year"
+end test
+
+test reg --period "this month"
+end test
+
+test reg --period "this week"
+end test

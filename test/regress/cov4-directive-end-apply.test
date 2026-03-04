@@ -1,0 +1,21 @@
+; Test end apply directive (line 835-837 of textual_directives.cc)
+; Exercise the 'end' directive through general_directive
+
+apply account Expenses
+
+01/15 Test
+    Food    $10.00
+    Assets:Cash
+
+end apply account
+
+2024/01/16 Test2
+    Income:Salary    $100.00
+    Assets:Cash
+
+test reg
+26-Jan-15 Test                  Expenses:Food                $10.00       $10.00
+                                Expenses:Assets:Cash        $-10.00            0
+24-Jan-16 Test2                 Income:Salary               $100.00      $100.00
+                                Assets:Cash                $-100.00            0
+end test

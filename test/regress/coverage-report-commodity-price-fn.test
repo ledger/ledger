@@ -1,0 +1,12 @@
+; Test report.cc: fn_commodity_price (lines 942-951)
+
+P 2024/01/01 AAPL $150.00
+
+2024/01/15 Buy
+    Assets:Brokerage   10 AAPL
+    Assets:Cash       $-1500.00
+
+test reg --format "%(commodity_price(amount, now))\n" --now "2024/01/15"
+$150.00
+0.00666666666667 AAPL
+end test

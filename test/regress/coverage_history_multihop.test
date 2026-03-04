@@ -1,0 +1,17 @@
+; Coverage test for history.cc lines 454, 488
+; Multi-hop price conversion: A -> B -> C
+
+P 2024/01/01 A 2 B
+P 2024/01/01 B 3 C
+
+2024/01/01 Test
+    Assets:Stocks    10 A
+    Assets:Cash
+
+test bal --exchange C
+                   0  Assets
+                C-60    Cash
+                 C60    Stocks
+--------------------
+                   0
+end test

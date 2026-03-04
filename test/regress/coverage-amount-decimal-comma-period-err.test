@@ -1,0 +1,20 @@
+; Coverage for amount.cc line 1194:
+; When a commodity already has COMMODITY_STYLE_DECIMAL_COMMA (established
+; by a commodity directive), encountering a period with digit grouping
+; that is not a multiple of 3 throws "Incorrect use of thousand-mark
+; period". Here "1.23,00" has only 2 digits between period and comma.
+
+commodity 1.000,00 EUR
+
+2024/01/01 Test
+    Expenses:Food    1.23,00 EUR
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 10:
+While parsing posting:
+  Expenses:Food    1.23,00 EUR
+                   ^^^^^^^^^^^
+Error: Incorrect use of thousand-mark period
+end test

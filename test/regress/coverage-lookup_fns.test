@@ -1,0 +1,96 @@
+; Coverage test for report.cc lookup table entries
+; Tests various format functions: green, join, quoted, quoted_rfc,
+; quantity, rounded, red, round, roundto, scrub, strip, should_bold,
+; truncated, to_boolean, to_int, to_date, to_amount, to_balance
+
+2024/01/15 Test Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(green)\n" Expenses
+green
+end test
+
+test reg --format "%(red)\n" Expenses
+red
+end test
+
+test reg --format "%(join(account))\n"
+Expenses:Food
+Assets:Cash
+end test
+
+test reg --format "%(quoted(account))\n"
+"Expenses:Food"
+"Assets:Cash"
+end test
+
+test reg --format "%(quoted_rfc(account))\n"
+"Expenses:Food"
+"Assets:Cash"
+end test
+
+test reg --format "%(quantity(amount))\n"
+10
+-10
+end test
+
+test reg --format "%(rounded(amount))\n"
+$10.00
+$-10.00
+end test
+
+test reg --format "%(round(amount))\n"
+$10.00
+$-10.00
+end test
+
+test reg --format "%(roundto(amount, 0))\n"
+$10.00
+$-10.00
+end test
+
+test reg --format "%(scrub(amount))\n"
+$10.00
+$-10.00
+end test
+
+test reg --format "%(strip(amount))\n"
+$10.00
+$-10.00
+end test
+
+test reg --format "%(should_bold)\n"
+false
+false
+end test
+
+test reg --format "%(truncated(account, 8))\n"
+Expens..
+Assets..
+end test
+
+test reg --format "%(to_boolean(amount))\n"
+true
+true
+end test
+
+test reg --format "%(to_int(quantity(amount)))\n"
+10
+-10
+end test
+
+test reg --format "%(to_date(date))\n"
+2024/01/15
+2024/01/15
+end test
+
+test reg --format "%(to_amount(amount))\n"
+$10.00
+$-10.00
+end test
+
+test reg --format "%(to_balance(amount))\n"
+$10.00
+$-10.00
+end test

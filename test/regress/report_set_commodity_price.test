@@ -1,0 +1,10 @@
+; Test fn_set_commodity_price to exercise lines 953-956 of report.cc
+; set_commodity_price(amount, datetime, price) sets a price on the commodity
+
+2024/01/01 Buy Stock
+    Assets:Brokerage    10 AAPL
+    Assets:Cash         -1500 EUR
+
+test reg Assets:Brokerage --format "%(set_commodity_price(amount, now, 200 EUR))%(market(amount, now))\n"
+2000 EUR
+end test

@@ -1,0 +1,19 @@
+; Coverage for post.cc lines 364, 384: fn_any and fn_all functions
+; any() evaluates an expression across all postings in a transaction
+; all() checks that all postings match
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Other
+    Expenses:Rent    $500.00
+    Assets:Checking
+
+test reg --limit "any(account =~ /Food/)"
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+test reg --limit "all(amount > 0)"
+end test

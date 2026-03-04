@@ -1,0 +1,10 @@
+; Test report.cc: fn_should_bold with --bold-if (line 617)
+
+2024/01/01 Test
+    Expenses:Food   $10.00
+    Assets:Cash
+
+test reg --format "%(should_bold)\n" --bold-if "amount > 0" --now 2024/01/15
+true
+false
+end test

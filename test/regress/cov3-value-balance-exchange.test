@@ -1,0 +1,20 @@
+; Test balance exchange with source:target syntax
+; Covers value.cc lines 1598-1634 (BALANCE path in exchange)
+
+P 2024/01/15 EUR $1.10
+P 2024/01/15 GBP $1.30
+
+2024/01/15 Test1
+    Expenses:Food    100.00 EUR
+    Assets:Cash
+
+2024/01/15 Test2
+    Expenses:Transport    50.00 GBP
+    Assets:Cash
+
+test bal --exchange "EUR:$" --no-total Expenses
+             $110.00
+           50.00 GBP  Expenses
+             $110.00    Food
+           50.00 GBP    Transport
+end test

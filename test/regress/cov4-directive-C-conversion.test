@@ -1,0 +1,13 @@
+; Test C directive (price_conversion_directive) (lines 117-122 of textual_directives.cc)
+; Exercise the C line for price conversion
+
+C 1.00 EUR = $1.10
+
+2024/01/01 Test
+    Expenses:Food    10.00 EUR
+    Assets:Cash
+
+test reg
+24-Jan-01 Test                  Expenses:Food             10.00 EUR    10.00 EUR
+                                Assets:Cash              -10.00 EUR            0
+end test

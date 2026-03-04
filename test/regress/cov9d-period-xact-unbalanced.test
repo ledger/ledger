@@ -1,0 +1,26 @@
+; Test period transaction that fails to balance
+; Covers textual_xacts.cc lines 276-278 (period xact balance failure)
+
+~ Monthly
+    Expenses:Food    $100.00
+    Expenses:Rent    $500.00
+    Assets:Cash     $-500.00
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 7:
+Unbalanced remainder is:
+             $100.00
+Amount to balance against:
+             $600.00
+While parsing periodic transaction:
+> ~ Monthly
+>     Expenses:Food    $100.00
+>     Expenses:Rent    $500.00
+>     Assets:Cash     $-500.00
+Error: Transaction does not balance
+end test

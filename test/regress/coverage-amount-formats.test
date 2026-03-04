@@ -1,0 +1,31 @@
+; Coverage tests for amount.cc
+; Test apostrophe thousands separator (line 1276-1283)
+; Test decimal comma / European style amounts (line 1198-1207)
+
+commodity CHF
+    format CHF 1'000.00
+
+commodity EUR 1.000,00
+
+; Apostrophe as thousands separator
+2024/01/01 Swiss transaction
+    Expenses:Food       CHF 1'234.56
+    Assets:Cash
+
+; European-style decimal comma
+2024/01/02 European transaction
+    Expenses:Rent       EUR 1.500,00
+    Assets:Bank
+
+test bal
+       CHF -1'234.56
+       EUR -1.500,00  Assets
+       EUR -1.500,00    Bank
+       CHF -1'234.56    Cash
+        CHF 1'234.56
+        EUR 1.500,00  Expenses
+        CHF 1'234.56    Food
+        EUR 1.500,00    Rent
+--------------------
+                   0
+end test

@@ -1,0 +1,16 @@
+; Coverage test for expr.cc lines 159-179, 217
+; Expression evaluation error produces context info
+
+2024/01/01 Test
+    Expenses:Food            $10.00
+    Assets:Cash
+
+test reg -l "amount + unknown_func()" -> 1
+__ERROR__
+While evaluating value expression:
+  (amount + unknown_func())
+            ^^^^^^^^^^^^^^
+While handling posting from "$FILE", line 5:
+>     Expenses:Food            $10.00
+Error: Unknown identifier 'unknown_func'
+end test

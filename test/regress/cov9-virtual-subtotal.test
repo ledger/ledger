@@ -1,0 +1,23 @@
+; Coverage test for filters.cc line 350:
+; Exercise force_virtual and force_must_balance in handle_value
+; via subtotal reporting with balanced virtual postings.
+; [Account] notation marks postings as virtual must-balance.
+
+2024/01/01 Paycheck
+    Assets:Cash              $3000.00
+    Income:Salary
+    [Assets:Savings]          $500.00
+    [Assets:Cash]            $-500.00
+
+2024/01/15 Paycheck
+    Assets:Cash              $3000.00
+    Income:Salary
+    [Assets:Savings]          $500.00
+    [Assets:Cash]            $-500.00
+
+test reg --monthly
+24-Jan-01 - 24-Jan-31           Assets:Cash                $6000.00     $6000.00
+                                [Assets:Cash]             $-1000.00     $5000.00
+                                [Assets:Savings]           $1000.00     $6000.00
+                                Income:Salary             $-6000.00            0
+end test

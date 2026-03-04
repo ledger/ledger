@@ -1,0 +1,16 @@
+; Coverage test for amount.cc line 214-215
+; Exercise apostrophe as thousands separator
+; Covers COMMODITY_STYLE_THOUSANDS_APOSTROPHE
+
+commodity CHF 1'000.00
+
+2024/01/01 Swiss purchase
+    Expenses:Equipment       CHF 12'345.67
+    Assets:Cash
+
+test bal
+      CHF -12'345.67  Assets:Cash
+       CHF 12'345.67  Expenses:Equipment
+--------------------
+                   0
+end test

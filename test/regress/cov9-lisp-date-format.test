@@ -1,0 +1,11 @@
+; Coverage for emacs.cc lines 49-56: lisp-date-format option
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test emacs --lisp-date-format "%Y-%m-%d"
+(("$FILE" 3 "2024-01-01" nil "Test"
+  (4 "Expenses:Food" "$10.00" nil)
+  (5 "Assets:Cash" "$-10.00" nil)))
+end test

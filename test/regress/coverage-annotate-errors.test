@@ -1,0 +1,15 @@
+; Coverage test for annotate.cc line 166:
+; Multiple valuation expression error
+
+2024/01/15 Test2
+    Assets:Stocks    10 AAPL ((market(amount, date, exchange))) ((other_expr))
+    Assets:Cash     $-1500.00
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 5:
+While parsing posting:
+  Assets:Stocks    10 AAPL ((market(amount, date, exchange))) ((other_expr))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error: Commodity specifies more than one valuation expression
+end test

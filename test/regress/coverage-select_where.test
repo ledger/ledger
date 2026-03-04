@@ -1,0 +1,10 @@
+; Coverage test for select.cc: select with where clause
+; Tests the SQL-like where filtering in select
+
+2024/01/15 Test Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test select date, payee, account, amount where account =~ /Expenses/
+24-Jan-15 Test Payee               Expenses:Food                         $10.00
+end test

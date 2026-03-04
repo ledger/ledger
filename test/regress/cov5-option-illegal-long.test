@@ -1,0 +1,11 @@
+; Coverage for option.cc line 199: missing option argument for --limit
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --limit -> 1
+__ERROR__
+While parsing option '--limit'
+Error: No argument provided for --limit
+end test

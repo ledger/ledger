@@ -1,0 +1,22 @@
+; Coverage for report.cc lines 1062-1076: to_balance, to_string, to_mask,
+; to_sequence type conversion functions
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg Expenses --format "%(to_balance(amount))\n"
+$10.00
+end test
+
+test reg Expenses --format "%(to_string(payee))\n"
+Test
+end test
+
+test reg Expenses --format "%(to_mask(\"Food\"))\n"
+Food
+end test
+
+test reg Expenses --format "%(is_seq(to_sequence(amount)))\n"
+true
+end test

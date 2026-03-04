@@ -1,0 +1,9 @@
+; Coverage for report.cc line 1851: generate precommand
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test generate --seed 1 --head 1 | head -1
+2067/12/21=2273/01/04 * (y) ifl9Cw804I4zD2HC4P5kqj
+end test

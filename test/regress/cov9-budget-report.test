@@ -1,0 +1,25 @@
+; Coverage test for filters.cc budget_posts:
+; Exercise the --budget report to trigger budget comparison logic.
+
+~ Monthly
+    Expenses:Food    $500.00
+    Assets:Cash
+
+2024/01/15 Groceries
+    Expenses:Food    $400.00
+    Assets:Cash
+
+2024/02/10 Groceries
+    Expenses:Food    $600.00
+    Assets:Cash
+
+test reg --budget --begin 2024/01/01 --end 2024/03/01
+24-Jan-01 Budget transaction    Expenses:Food              $-500.00     $-500.00
+24-Jan-01 Budget transaction    Assets:Cash                 $500.00            0
+24-Jan-15 Groceries             Expenses:Food               $400.00      $400.00
+                                Assets:Cash                $-400.00            0
+24-Feb-01 Budget transaction    Expenses:Food              $-500.00     $-500.00
+24-Feb-01 Budget transaction    Assets:Cash                 $500.00            0
+24-Feb-10 Groceries             Expenses:Food               $600.00      $600.00
+                                Assets:Cash                $-600.00            0
+end test

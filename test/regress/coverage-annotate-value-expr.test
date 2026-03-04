@@ -1,0 +1,9 @@
+; Coverage for annotate.cc line 265: annotation value_expr
+
+2024/01/01 Buy
+    Assets:Brokerage    10 AAPL {$150} ((100))
+    Assets:Cash
+
+test reg Assets:Brokerage --format "%(amount)\n"
+10 AAPL {$150} (({100}))
+end test

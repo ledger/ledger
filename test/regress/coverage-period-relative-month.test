@@ -1,0 +1,25 @@
+; Test times.cc line 1238: handle_relative_token for "this month" / "last month"
+
+2026/02/23 February tx
+    Expenses:Food   $5.00
+    Assets:Cash
+
+2026/03/02 March tx
+    Expenses:Food   $20.00
+    Assets:Cash
+
+2026/03/03 March tx2
+    Expenses:Food   $30.00
+    Assets:Cash
+
+test reg --period "this month" --now 2026/03/03
+26-Mar-02 March tx              Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+26-Mar-03 March tx2             Expenses:Food                $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test
+
+test reg --period "last month" --now 2026/03/03
+26-Feb-23 February tx           Expenses:Food                 $5.00        $5.00
+                                Assets:Cash                  $-5.00            0
+end test

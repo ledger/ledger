@@ -1,0 +1,21 @@
+; Coverage test for xact.cc lines 1129-1132
+; Tests the auto-xact cost derivation for per-unit prices.  When an
+; automated transaction copies a posting that has a per-unit cost (@),
+; the generated amount carries a price annotation without
+; ANNOTATION_PRICE_NOT_PER_UNIT, so the cost is computed by multiplying
+; the price by the amount (lines 1129-1131).
+
+= /Expenses:Electricity/
+    (Budget:Electricity)    1.0
+
+2024/01/01 Electric Bill
+    Expenses:Electricity    100 kWh @ 0.72 EUR
+    Assets:Cash
+
+test reg
+24-Jan-01 Electric Bill         Expenses:Electricity        100 kWh      100 kWh
+                                Assets:Cash                  EUR-72       EUR-72
+                                                                         100 kWh
+                                (Budget:Electricity)        100 kWh       EUR-72
+                                                                         200 kWh
+end test

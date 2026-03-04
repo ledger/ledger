@@ -1,0 +1,11 @@
+; Test token parsing with double-quoted strings (lines 230-272 of token.cc)
+; Exercise the double-quote string literal path (non-amount)
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --limit "payee == \"Test\""
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

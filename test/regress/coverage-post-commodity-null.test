@@ -1,0 +1,10 @@
+; Coverage for post.cc line 190: fn_commodity returns NULL_VALUE for commodityless amount
+
+2024/01/01 Test
+    Expenses:Food    10
+    Assets:Cash     -10
+
+test reg --format "%(commodity)X\n"
+X
+X
+end test

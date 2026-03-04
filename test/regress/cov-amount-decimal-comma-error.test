@@ -1,0 +1,18 @@
+; Coverage test for amount.cc line 1223
+; "Incorrect use of decimal comma" error
+; With --decimal-comma, periods are thousands separators.
+; If a comma appears after a period has already been seen,
+; and the comma comes with an improper placement, error is raised.
+
+2024/01/01 Bad format
+    Expenses:Food       1,000.500 EUR
+    Assets:Checking
+
+test bal --decimal-comma -> 1
+__ERROR__
+While parsing file "$FILE", line 8:
+While parsing posting:
+  Expenses:Food       1,000.500 EUR
+                      ^^^^^^^^^^^^^
+Error: Too many commas in amount
+end test

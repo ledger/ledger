@@ -1,0 +1,19 @@
+; Coverage test for filters.cc day_of_week_posts:
+; Exercise --dow (day of week) report.
+
+2024/01/01 Monday Groceries
+    Expenses:Food    $25.00
+    Assets:Cash
+
+2024/01/03 Wednesday Gas
+    Expenses:Transport    $40.00
+    Assets:Cash
+
+2024/01/08 Monday Dinner
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test reg Expenses --dow
+24-Jan-01 Mondays               Expenses:Food                $55.00       $55.00
+24-Jan-03 Wednesdays            Expenses:Transport           $40.00       $95.00
+end test

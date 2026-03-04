@@ -1,0 +1,18 @@
+; Coverage test for xact.cc lines 932,934
+; Tests the post_pred function with O_NOT and O_EQ operators in auto
+; transactions. The quick matcher handles NOT and EQ predicates.
+
+= not /Cash/
+    (Budget:Spending)           -1.0
+
+2024/01/01 Groceries
+    Expenses:Food              $50.00
+    Assets:Cash
+
+test bal
+             $-50.00  Assets:Cash
+             $-50.00  Budget:Spending
+              $50.00  Expenses:Food
+--------------------
+             $-50.00
+end test

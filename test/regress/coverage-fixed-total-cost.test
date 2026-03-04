@@ -1,0 +1,20 @@
+; Coverage test for textual_xacts.cc
+; Fixed per-unit cost (line 558-560) and total cost (line 542-548)
+
+2024/01/01 Buy stock with fixed price
+    Assets:Stocks     10 AAPL @= $150.00
+    Assets:Cash
+
+2024/01/02 Buy stock with total cost
+    Assets:Stocks     10 AAPL @@ $1500.00
+    Assets:Cash
+
+test bal
+              $-3000
+             20 AAPL  Assets
+              $-3000    Cash
+             20 AAPL    Stocks
+--------------------
+              $-3000
+             20 AAPL
+end test

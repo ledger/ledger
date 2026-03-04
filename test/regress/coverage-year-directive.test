@@ -1,20 +1,13 @@
-; Test year and Y directives
+; Test textual_directives.cc lines 884-888: year directive
+; in general_directive case y
 
-year 2023
+year 2024
 
-03/15 First Transaction
-    Expenses:Food    $10.00
-    Assets:Checking
-
-Y 2024
-
-06/01 Second Transaction
-    Expenses:Food    $20.00
-    Assets:Checking
+01/01 Test
+    Expenses:Food   $10.00
+    Assets:Cash
 
 test reg
-23-Mar-15 First Transaction     Expenses:Food                $10.00       $10.00
-                                Assets:Checking             $-10.00            0
-24-Jun-01 Second Transaction    Expenses:Food                $20.00       $20.00
-                                Assets:Checking             $-20.00            0
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
 end test

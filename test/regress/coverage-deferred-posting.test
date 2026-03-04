@@ -1,0 +1,13 @@
+; Coverage test for textual_xacts.cc lines 470-476
+; Deferred posting with <account> syntax
+
+2024/01/01 Test deferred
+    Expenses:Food            $10.00
+    <Assets:Deferred>       $-10.00
+
+test bal
+             $-10.00  Assets:Deferred
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

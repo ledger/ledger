@@ -1,0 +1,10 @@
+; Coverage for item.cc lines 497,509: seq and uuid lookup branches
+
+2024/01/01 Test
+    ; UUID: my-unique-id
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(seq) %(uuid) %(account)\n" Expenses
+2 my-unique-id Expenses:Food
+end test

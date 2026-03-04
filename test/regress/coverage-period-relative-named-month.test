@@ -1,0 +1,19 @@
+; Test times.cc lines 1001-1009: "this January" relative month name
+; in handle_relative_token with TOK_A_MONTH
+
+2025/12/01 Dec tx
+    Expenses:Food   $5.00
+    Assets:Cash
+
+2026/01/15 Jan tx
+    Expenses:Food   $10.00
+    Assets:Cash
+
+2026/03/01 Mar tx
+    Expenses:Food   $20.00
+    Assets:Cash
+
+test reg --period "this January" --now 2026/03/03
+26-Jan-15 Jan tx                Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

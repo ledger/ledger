@@ -1,0 +1,10 @@
+; Test amount parsing with total cost annotation (double braces)
+; Covers annotate.cc lines for ANNOTATION_PRICE_NOT_PER_UNIT
+
+2024/01/01 Buy Stock
+    Assets:Brokerage    10 AAPL {{$1500.00}}
+    Assets:Cash
+
+test bal --lots Assets:Brokerage
+      10 AAPL {$150}  Assets:Brokerage
+end test

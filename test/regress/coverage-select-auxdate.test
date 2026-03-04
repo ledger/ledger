@@ -1,0 +1,21 @@
+; Coverage test for select.cc lines 54, 184, 256-268: aux_date column handling
+; The aux_date column is recognized alongside date as a date-type column.
+; This exercises the same code paths as date but uses the auxiliary date.
+; When placed after another column, it triggers:
+;   L266-267: thus_far += " + " (date not first column)
+;   L268: thus_far += "int(date_width) + 1"
+
+2024/01/15=2024/01/20 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test select aux_date, amount from posts
+24-Jan-20       $50.00
+24-Jan-20      $-50.00
+end test
+
+; aux_date as second column triggers the thus_far addition at L266-267
+test select amount, aux_date from posts
+      $50.00 24-Jan-20
+     $-50.00 24-Jan-20
+end test

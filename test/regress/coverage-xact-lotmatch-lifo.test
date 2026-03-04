@@ -1,0 +1,24 @@
+; Coverage test for xact.cc lines 319-470
+; Tests LIFO lot matching in finalize().  Exercises:
+;   - lot_matching_policy == lifo (line 409-411)
+;   - LIFO sort order (newest lot consumed first)
+;   - splitting a sale across two lots
+
+2024/01/01 Buy Lot 1
+    Assets:Brokerage    5 AAPL {$150.00} [2024/01/01]
+    Assets:Cash
+
+2024/02/01 Buy Lot 2
+    Assets:Brokerage    5 AAPL {$160.00} [2024/02/01]
+    Assets:Cash
+
+2024/03/01 Sell LIFO
+    Assets:Brokerage    -7 AAPL @ $170.00
+    Assets:Cash
+
+test --lot-matching lifo reg Assets:Brokerage
+24-Jan-01 Buy Lot 1             Assets:Brokerage             5 AAPL       5 AAPL
+24-Feb-01 Buy Lot 2             Assets:Brokerage             5 AAPL      10 AAPL
+24-Mar-01 Sell LIFO             Assets:Brokerage            -5 AAPL       5 AAPL
+                                Assets:Brokerage            -2 AAPL       3 AAPL
+end test

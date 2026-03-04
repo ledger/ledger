@@ -1,0 +1,16 @@
+; Coverage test for compare.cc lines 110-131:
+; Exercise account sorting comparison via --sort.
+
+2024/01/01 Test
+    Expenses:Zebra    $5.00
+    Expenses:Apple    $10.00
+    Expenses:Mango    $3.00
+    Assets:Cash
+
+test bal Expenses --sort account --flat
+              $10.00  Expenses:Apple
+               $3.00  Expenses:Mango
+               $5.00  Expenses:Zebra
+--------------------
+              $18.00
+end test

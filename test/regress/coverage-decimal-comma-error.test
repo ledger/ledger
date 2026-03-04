@@ -1,0 +1,17 @@
+; Test amount.cc: decimal comma error
+; Exercises incorrect comma detection
+
+commodity 1,000.00 EUR
+
+2024/01/01 Test
+    Expenses:Test    1,00,00 EUR
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 7:
+While parsing posting:
+  Expenses:Test    1,00,00 EUR
+                   ^^^^^^^^^^^
+Error: Too many commas in amount
+end test

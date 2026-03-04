@@ -1,0 +1,16 @@
+; Test compare_by_commodity with same numeric price but different currencies
+; Covers commodity.cc lines 433-434 (recursion found no difference, comparing
+; prices with commodity for ordering by commodity name)
+
+2024/01/01 Buy in USD
+    Assets:Brokerage    10 AAPL {$150.00}
+    Assets:Cash        $-1500.00
+
+2024/01/02 Buy in EUR at same numeric price
+    Assets:Brokerage    5 AAPL {150.00 EUR}
+    Assets:EUR         -750.00 EUR
+
+test bal --no-total --lots Brokerage
+   10 AAPL {$150.00}
+ 5 AAPL {150.00 EUR}  Assets:Brokerage
+end test

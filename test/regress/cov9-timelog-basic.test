@@ -1,0 +1,8 @@
+; Coverage for timelog.cc lines 79, 92, 94: basic timelog check-in/out
+
+i 2024/01/01 09:00:00 Work:Project
+o 2024/01/01 17:00:00
+
+test reg
+24-Jan-01                       Work:Project                  8.00h        8.00h
+end test

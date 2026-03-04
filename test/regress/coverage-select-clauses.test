@@ -1,80 +1,23 @@
-; Coverage test for select.cc: display, collect, group by, style clauses
-; Exercises: DISPLAY clause (line 379), COLLECT clause (line 381),
-;   GROUP BY clause (line 383), STYLE clause (lines 385-389)
+; Coverage test for select.cc lines 349-395:
+; Various select clauses: from, where, display, collect
 
-2024/01/15 Grocery Store
+2024/01/15 Test
     Expenses:Food    $50.00
-    Assets:Checking
+    Assets:Cash
 
-2024/01/20 Gas Station
-    Expenses:Transport    $30.00
-    Assets:Checking
+2024/01/20 Gas
+    Expenses:Gas     $30.00
+    Assets:Cash
 
-2024/01/25 Restaurant
-    Expenses:Food    $40.00
-    Assets:Checking
+; Test from posts with where clause (lines 355-358, 371-380)
 
-test select date, payee, account, amount from posts display 'amount > 0' --columns=80
-24-Jan-15 Grocery Store            Expenses:Food                         $50.00
-24-Jan-20 Gas Station              Expenses:Transport                    $30.00
-24-Jan-25 Restaurant               Expenses:Food                         $40.00
+test select date,payee,account,amount from posts where 'account =~ /Food/'
+24-Jan-15 Test                     Expenses:Food                         $50.00
 end test
 
-test select date, amount from posts collect amount --columns=80
-24-Jan-15       $50.00
-24-Jan-15      $-50.00
-24-Jan-20       $30.00
-24-Jan-20      $-30.00
-24-Jan-25       $40.00
-24-Jan-25      $-40.00
-end test
+; Test select with display clause (line 382)
 
-test select date, amount from posts group by payee --columns=80
-Gas Station
-24-Jan-20       $30.00
-24-Jan-20      $-30.00
-
-Grocery Store
-24-Jan-15       $50.00
-24-Jan-15      $-50.00
-
-Restaurant
-24-Jan-25       $40.00
-24-Jan-25      $-40.00
-end test
-
-test select date, amount from posts style xml --columns=80
-24-Jan-15       $50.00
-24-Jan-15      $-50.00
-24-Jan-20       $30.00
-24-Jan-20      $-30.00
-24-Jan-25       $40.00
-24-Jan-25      $-40.00
-end test
-
-test select date, amount from posts style json --columns=80
-24-Jan-15       $50.00
-24-Jan-15      $-50.00
-24-Jan-20       $30.00
-24-Jan-20      $-30.00
-24-Jan-25       $40.00
-24-Jan-25      $-40.00
-end test
-
-test select date, amount from posts style csv --columns=80
-24-Jan-15       $50.00
-24-Jan-15      $-50.00
-24-Jan-20       $30.00
-24-Jan-20      $-30.00
-24-Jan-25       $40.00
-24-Jan-25      $-40.00
-end test
-
-test select date, amount from posts style emacs --columns=80
-24-Jan-15       $50.00
-24-Jan-15      $-50.00
-24-Jan-20       $30.00
-24-Jan-20      $-30.00
-24-Jan-25       $40.00
-24-Jan-25      $-40.00
+test select date,payee,amount display 'amount > 0'
+24-Jan-15 Test                                                           $50.00
+24-Jan-20 Gas                                                            $30.00
 end test

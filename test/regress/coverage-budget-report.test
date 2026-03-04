@@ -1,0 +1,21 @@
+; Coverage for filters.cc budget_posts paths
+; Tests the budget report generation with periodic transactions
+
+~ Monthly from 2024/01/01 to 2024/04/01
+    Expenses:Food    $100.00
+    Assets:Cash
+
+2024/01/15 Grocery
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/02/15 Grocery
+    Expenses:Food    $120.00
+    Assets:Cash
+
+test budget
+    $-170.00     $-300.00      $130.00   57%  Assets:Cash
+     $170.00      $300.00     $-130.00   57%  Expenses:Food
+------------ ------------ ------------ -----
+           0            0            0     0
+end test

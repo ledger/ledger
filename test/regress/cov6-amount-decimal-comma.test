@@ -1,0 +1,13 @@
+; Test amount output with decimal comma and period thousands separator
+; Covers amount.cc lines 202 (decimal comma), 213 (period thousands in time),
+; 218 (period thousands in decimal comma mode)
+
+commodity 1.000,00 EUR
+
+2024/01/01 Test
+    Expenses:Food    12.345,67 EUR
+    Assets:Cash
+
+test bal Expenses
+       12.345,67 EUR  Expenses:Food
+end test

@@ -1,0 +1,15 @@
+; Test parse error for incorrect thousand-mark period after retroactive decimal-comma
+; Covers amount.cc line 1205
+
+2024/01/01 Test
+    Expenses:Food    1.24,567 USD
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 5:
+While parsing posting:
+  Expenses:Food    1.24,567 USD
+                   ^^^^^^^^^^^^
+Error: Incorrect use of thousand-mark period
+end test

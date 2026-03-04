@@ -1,0 +1,12 @@
+; Test US-style thousands separator with negative amounts
+; Covers amount.cc line 207 (negative sign passthrough in thousands display)
+
+commodity $1,000.00
+
+2024/01/01 Test
+    Assets:Cash      $12,345.67
+    Income:Salary
+
+test bal --no-total Income
+         $-12,345.67  Income:Salary
+end test

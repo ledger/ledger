@@ -1,0 +1,12 @@
+; Test annotation with valuation expression
+; Covers annotate.cc lines 164-201 (valuation expression parsing)
+
+2024/01/01 Buy Stock
+    Assets:Brokerage    10 AAPL ((9))
+    Assets:Cash
+
+test print
+2024/01/01 Buy Stock
+    Assets:Brokerage                    10 AAPL (({9}))
+    Assets:Cash
+end test

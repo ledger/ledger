@@ -1,0 +1,20 @@
+; Coverage for history.cc lines 319, 337, 377, 397, 405, 443, 454, 488
+; Tests find_price with source-target path involving multiple edges
+
+commodity $
+    note US Dollar
+    format $1,000.00
+
+P 2024/01/01 AAPL $150.00
+P 2024/01/15 AAPL $155.00
+P 2024/02/01 AAPL $160.00
+
+2024/01/01 Buy
+    Assets:Stock    10 AAPL
+    Assets:Cash    $-1,500.00
+
+test reg --market -X $ --now=2024/02/01
+24-Jan-01 Buy                   Assets:Stock              $1,500.00    $1,500.00
+                                Assets:Cash              $-1,500.00            0
+24-Feb-01 Commodities revalued  <Revalued>                  $100.00      $100.00
+end test

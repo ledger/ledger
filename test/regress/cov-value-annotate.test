@@ -1,0 +1,26 @@
+; Coverage test for value.cc lines 1884-1885
+; Exercise annotate() on an amount value
+; Annotations are triggered by lot prices and notes
+
+commodity $
+commodity AAPL
+
+2024/01/01 Buy Stock
+    Assets:Brokerage      10 AAPL {$50.00}
+    Assets:Cash            $-500.00
+
+2024/06/01 Sell Stock
+    Assets:Cash             $600.00
+    Assets:Brokerage       -10 AAPL {$50.00} @ $60.00
+    Income:Capital Gains
+
+test bal Assets:Brokerage --lots
+end test
+
+test bal Assets:Brokerage --lot-prices
+end test
+
+test reg Assets:Brokerage
+24-Jan-01 Buy Stock             Assets:Brokerage            10 AAPL      10 AAPL
+24-Jun-01 Sell Stock            Assets:Brokerage           -10 AAPL            0
+end test

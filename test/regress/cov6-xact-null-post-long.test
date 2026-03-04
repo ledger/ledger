@@ -1,0 +1,16 @@
+; Coverage test for xact.cc line 595
+; Tests null posting balance when the balance is a long integer type.
+; When all postings use commodityless amounts (bare numbers), the balance
+; may be stored as a long/integer internally. The null posting path must
+; handle is_long() by converting to amount via to_amount().
+
+2024/01/01 Test long balance
+    Expenses:A                       5
+    Assets:B
+
+test bal
+                  -5  Assets:B
+                   5  Expenses:A
+--------------------
+                   0
+end test

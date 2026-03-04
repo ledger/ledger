@@ -1,0 +1,11 @@
+; Coverage for filters.cc transfer_details SET_PAYEE path
+; The --payee option replaces the payee name using an expression
+
+2024/01/01 Restaurant
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --payee "'Custom Payee'"
+24-Jan-01 Custom Payee          Expenses:Food                $10.00       $10.00
+24-Jan-01 Custom Payee          Assets:Cash                 $-10.00            0
+end test

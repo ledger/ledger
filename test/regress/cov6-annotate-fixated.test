@@ -1,0 +1,11 @@
+; Coverage for annotate.cc lines 313-315: fixated price valuation
+
+P 2024/01/01 AAPL $200.00
+
+2024/01/01 Buy
+    Assets:Stock    10 AAPL {=$150.00}
+    Assets:Cash
+
+test bal Assets:Stock -V
+            $1500.00  Assets:Stock
+end test

@@ -1,0 +1,11 @@
+; Coverage test for post.cc lines 541-542
+; Test resolve_expr where the expression result is a long integer,
+; triggering the to_amount conversion path.
+
+2024/01/01 Test
+    Expenses:Food    (5 * 2)
+    Assets:Cash
+
+test reg Expenses
+24-Jan-01 Test                  Expenses:Food                    10           10
+end test

@@ -1,0 +1,22 @@
+; Coverage test for src/iterators.cc: price database iteration
+; Tests pricesdb command and --market with price data to exercise
+; the price database iteration code paths.
+
+P 2024/01/01 AAPL $150.00
+P 2024/02/01 AAPL $155.00
+P 2024/03/01 AAPL $160.00
+
+2024/01/15 Buy Stock
+    Assets:Brokerage           10 AAPL
+    Assets:Checking       $-1,500.00
+
+test pricesdb
+P 2024/01/01 00:00:00 AAPL $150.00
+P 2024/01/15 00:00:00 AAPL $150.00
+P 2024/02/01 00:00:00 AAPL $155.00
+P 2024/03/01 00:00:00 AAPL $160.00
+end test
+
+test bal --market Assets:Brokerage
+           $1,600.00  Assets:Brokerage
+end test

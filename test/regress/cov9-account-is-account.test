@@ -1,0 +1,11 @@
+; Coverage for account.cc line 236: operator<< for account
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --format "%(account) %(display_total)\n"
+Assets:Cash $-10.00
+Expenses:Food $10.00
+ 0
+end test

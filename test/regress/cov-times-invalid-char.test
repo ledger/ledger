@@ -1,0 +1,12 @@
+; Coverage test for times.cc lines 1748-1752, 1775
+; Invalid character in period expression
+; Exercises token_t::expected() with wanted == '\0'
+
+2024/01/01 Test
+    Expenses:Food            $10.00
+    Assets:Cash
+
+test reg Expenses --period "@" -> 1
+__ERROR__
+Error: Invalid char '@'
+end test

@@ -1,0 +1,13 @@
+; Coverage test for filters.cc changed_values_only (revalued_only):
+; Exercise --revalued-only to show only revaluation postings.
+
+P 2024/01/01 AAPL $150.00
+P 2024/02/01 AAPL $160.00
+
+2024/01/01 Buy Stock
+    Assets:Broker    10 AAPL @ $150.00
+    Assets:Cash     $-1500.00
+
+test reg --market --revalued-only
+24-Feb-01 Commodities revalued  <Revalued>                  $100.00      $100.00
+end test

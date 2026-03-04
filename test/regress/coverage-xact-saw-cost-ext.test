@@ -1,0 +1,14 @@
+; Coverage for xact.cc lines 241-242 (saw_cost = true, break)
+; When a posting has an explicit per-unit cost (@ syntax), the finalize
+; code detects saw_cost and breaks out of the loop early.
+; Also covers line 595 (null post with single amount balance).
+
+2024/01/01 Buy Stock
+    Assets:Brokerage    10 AAPL @ $150.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Buy Stock             Assets:Brokerage            10 AAPL      10 AAPL
+                                Assets:Cash                  $-1500       $-1500
+                                                                         10 AAPL
+end test

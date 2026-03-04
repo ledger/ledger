@@ -1,0 +1,23 @@
+; Coverage test for src/filters.cc: virtual posting handling with --real
+; Tests that --real correctly filters out virtual postings while keeping
+; real ones, and exercises the POST_VIRTUAL flag path in subtotal_posts.
+
+2024/01/01 Test Transaction
+    Expenses:Food              $50.00
+    (Budget:Food)             $-50.00
+    (Equity:Adjustments)       $10.00
+    Assets:Checking           $-50.00
+
+2024/01/15 Another Transaction
+    Expenses:Rent             $500.00
+    (Budget:Rent)            $-500.00
+    Assets:Checking          $-500.00
+
+test bal --real
+            $-550.00  Assets:Checking
+             $550.00  Expenses
+              $50.00    Food
+             $500.00    Rent
+--------------------
+                   0
+end test

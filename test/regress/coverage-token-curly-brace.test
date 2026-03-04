@@ -1,0 +1,10 @@
+; Coverage test for token.cc lines 274-285
+; Tests parsing curly-brace amount in expression
+
+2024/01/01 Test
+    Expenses:Food    10 CAD
+    Assets:Cash
+
+test reg --display "amount == {10 CAD}"
+24-Jan-01 Test                  Expenses:Food                10 CAD       10 CAD
+end test

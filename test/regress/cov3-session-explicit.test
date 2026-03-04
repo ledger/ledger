@@ -1,0 +1,11 @@
+; Test session with --explicit option
+; Covers session.cc lines 111-113 (explicit handling)
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test bal --explicit --no-total
+             $-50.00  Assets:Cash
+              $50.00  Expenses:Food
+end test

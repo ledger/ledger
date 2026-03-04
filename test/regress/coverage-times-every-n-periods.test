@@ -1,0 +1,34 @@
+; Coverage for times.cc lines 1099-1146: handle_every_token
+; Tests "every N quarters", "every N days", "every N years" to exercise
+; the TOK_INT + period-unit branches
+
+2024/01/15 January
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/02/15 February
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2024/03/15 March
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test reg --period "every 2 quarters"
+24-Jan-01 - 24-Jun-30           Assets:Cash                 $-60.00      $-60.00
+                                Expenses:Food                $60.00            0
+end test
+
+test reg --period "every 3 days"
+24-Jan-15 - 24-Jan-17           Assets:Cash                 $-10.00      $-10.00
+                                Expenses:Food                $10.00            0
+24-Feb-14 - 24-Feb-16           Assets:Cash                 $-20.00      $-20.00
+                                Expenses:Food                $20.00            0
+24-Mar-15 - 24-Mar-17           Assets:Cash                 $-30.00      $-30.00
+                                Expenses:Food                $30.00            0
+end test
+
+test reg --period "every 2 years"
+24-Jan-01 - 25-Dec-31           Assets:Cash                 $-60.00      $-60.00
+                                Expenses:Food                $60.00            0
+end test

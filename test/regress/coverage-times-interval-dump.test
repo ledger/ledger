@@ -1,0 +1,59 @@
+; Coverage for times.cc lines 1561-1612: date_interval_t::dump
+; The "period" command exercises interval stabilization and sample date output
+; "today" hits the no-duration path (line 1608)
+
+2024/01/15 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test --now 2024/01/15 period "today"
+--- Period expression tokens ---
+TOK_TODAY: today
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: in year 2024 month Jan day 15
+
+--- After stabilization ---
+   range: in year 2024 month Jan day 15
+   start: 24-Jan-15
+  finish: 24-Jan-16
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jan-15
+end test
+
+test --now 2024/01/15 period "monthly"
+--- Period expression tokens ---
+TOK_MONTHLY: monthly
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+duration: 1 month
+
+--- After stabilization ---
+   start: 24-Jan-01
+duration: 1 month
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jan-01 -- 24-Jan-31
+ 2: 24-Feb-01 -- 24-Feb-29
+ 3: 24-Mar-01 -- 24-Mar-31
+ 4: 24-Apr-01 -- 24-Apr-30
+ 5: 24-May-01 -- 24-May-31
+ 6: 24-Jun-01 -- 24-Jun-30
+ 7: 24-Jul-01 -- 24-Jul-31
+ 8: 24-Aug-01 -- 24-Aug-31
+ 9: 24-Sep-01 -- 24-Sep-30
+10: 24-Oct-01 -- 24-Oct-31
+11: 24-Nov-01 -- 24-Nov-30
+12: 24-Dec-01 -- 24-Dec-31
+13: 25-Jan-01 -- 25-Jan-31
+14: 25-Feb-01 -- 25-Feb-28
+15: 25-Mar-01 -- 25-Mar-31
+16: 25-Apr-01 -- 25-Apr-30
+17: 25-May-01 -- 25-May-31
+18: 25-Jun-01 -- 25-Jun-30
+19: 25-Jul-01 -- 25-Jul-31
+20: 25-Aug-01 -- 25-Aug-31
+end test

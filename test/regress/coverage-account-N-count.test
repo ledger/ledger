@@ -1,0 +1,16 @@
+; Coverage: account.cc line 499 - 'N' function lookup (family count)
+; N is equivalent to count (family_details().posts_count)
+
+2024/01/01 Test1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Test2
+    Expenses:Food    $5.00
+    Assets:Cash
+
+test bal --format "%(account) %(N)\n"
+Assets:Cash 2
+Expenses:Food 2
+ 4
+end test

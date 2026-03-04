@@ -1,0 +1,34 @@
+; Coverage test for times.cc lines 1126-1140
+; Exercise "every quarter", "every week", "every day", "every year", "every month"
+; (singular form) in handle_every_token
+
+2024/01/01 Q1
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/04/01 Q2
+    Expenses:Food            $20.00
+    Assets:Cash
+
+2024/07/01 Q3
+    Expenses:Food            $30.00
+    Assets:Cash
+
+; "every quarter" exercises the singular TOK_QUARTER path (line 1129-1130)
+test reg Expenses --period "every quarter"
+24-Jan-01 - 24-Mar-31           Expenses:Food                $10.00       $10.00
+24-Apr-01 - 24-Jun-30           Expenses:Food                $20.00       $30.00
+24-Jul-01 - 24-Sep-30           Expenses:Food                $30.00       $60.00
+end test
+
+; "every year" exercises the singular TOK_YEAR path (line 1126-1127)
+test reg Expenses --period "every year"
+24-Jan-01 - 24-Dec-31           Expenses:Food                $60.00       $60.00
+end test
+
+; "every month" exercises the singular TOK_MONTH path (line 1132-1133)
+test reg Expenses --period "every month"
+24-Jan-01 - 24-Jan-31           Expenses:Food                $10.00       $10.00
+24-Apr-01 - 24-Apr-30           Expenses:Food                $20.00       $30.00
+24-Jul-01 - 24-Jul-31           Expenses:Food                $30.00       $60.00
+end test

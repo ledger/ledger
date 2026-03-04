@@ -1,0 +1,12 @@
+; Test select from xacts (transactions format)
+; Covers select.cc from xacts/transactions path (line 351-354)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test select "date, payee from xacts"
+2024/01/15 Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Cash
+end test

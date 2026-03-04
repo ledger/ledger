@@ -1,0 +1,18 @@
+; Coverage test for textual_directives.cc lines 662-679
+; Tag directive with assert/check sub-directives
+; Also tests the blank-line break inside tag directive (line 670)
+
+tag MyTag
+    check value =~ /./
+
+2024/01/01 Test
+    ; MyTag: hello
+    Expenses:Food            $10.00
+    Assets:Cash
+
+test bal
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

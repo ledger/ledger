@@ -1,0 +1,15 @@
+; Coverage test for account.cc lines 335-337, 443-444:
+; Exercise has_children_to_display function.
+
+2024/01/01 Test
+    Expenses:Food:Snacks    $10.00
+    Expenses:Food:Dining    $20.00
+    Assets:Cash
+
+test bal --format "%(account) hc=%(has_children_to_display)\n"
+Assets:Cash hc=false
+Expenses:Food hc=true
+Expenses:Food:Dining hc=false
+Expenses:Food:Snacks hc=false
+ hc=true
+end test

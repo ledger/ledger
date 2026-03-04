@@ -1,0 +1,40 @@
+; Coverage test for times.cc determine_when's inner switch cases
+; for TOK_QUARTER, TOK_WEEK, TOK_YEAR, TOK_DAY via "since/until"
+
+2024/04/15 April Transaction
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/07/08 July Transaction
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2025/02/15 Feb 2025 Transaction
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test reg --now 2024/07/15 --period "since last quarter"
+24-Apr-15 April Transaction     Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Jul-08 July Transaction      Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+25-Feb-15 Feb 2025 Transaction  Expenses:Food                $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test
+
+test reg --now 2024/07/15 --period "since last week"
+24-Jul-08 July Transaction      Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+25-Feb-15 Feb 2025 Transaction  Expenses:Food                $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test
+
+test reg --now 2024/07/15 --period "since next year"
+25-Feb-15 Feb 2025 Transaction  Expenses:Food                $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test
+
+test reg --now 2024/07/15 --period "since last day"
+25-Feb-15 Feb 2025 Transaction  Expenses:Food                $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test

@@ -1,10 +1,15 @@
-; Test payee UUID mapping
+; Coverage test for textual_directives.cc lines 534, 553-555
+; Payee directive with uuid sub-directive and payee alias
 
 payee Grocery Store
+    alias Grocery
     uuid abc-123-def
 
-2024/01/01 Unknown Vendor
-    ; UUID: abc-123-def
-    Expenses:Food    $10.00
-    Assets:Checking
+2024/01/01 Grocery
+    Expenses:Food            $10.00
+    Assets:Cash
 
+test reg
+24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

@@ -1,0 +1,15 @@
+; Coverage for session.cc lines 260-263: fn_min and fn_max functions
+; Also exercises value.cc comparison paths for amount vs integer
+
+2024/01/01 Test1
+    Expenses:Food    $10.00
+    Assets:Checking
+
+2024/01/02 Test2
+    Expenses:Rent    $20.00
+    Assets:Checking
+
+test reg Expenses --format '%(min(amount, 15)) %(max(amount, 15))\n'
+$10.00 15
+15 $20.00
+end test

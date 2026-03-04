@@ -1,0 +1,11 @@
+; Test --input-date-format option
+; Covers session.cc line 325 (input_date_format_)
+
+2024-01-15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg --input-date-format "%Y-%m-%d"
+24-Jan-15 Test                  Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+end test

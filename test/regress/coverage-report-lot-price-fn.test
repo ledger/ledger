@@ -1,0 +1,11 @@
+; Coverage for report.cc lines 1021-1028: fn_lot_price
+; Tests the lot_price function which returns the price annotation from a lot
+; Uses lot with price annotation to exercise the details.price branch
+
+2024/03/15 * Buy Stock
+    Assets:Brokerage          10 AAPL {$150.00}
+    Assets:Cash
+
+test reg --format "%(lot_price(amount))\n" Assets:Brokerage
+$150
+end test

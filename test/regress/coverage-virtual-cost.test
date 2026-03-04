@@ -1,6 +1,12 @@
-; Test virtual cost syntax (@ in parentheses)
+; Coverage test for textual_xacts.cc lines 536-538, 550-551
+; Virtual cost with (@) syntax
 
-2024/01/01 Buy Euros
-    Assets:Foreign    100 EUR (@) $1.10
-    Assets:Checking
+2024/01/01 Buy stock
+    Assets:Stocks  10 AAPL  (@) $150.00
+    Assets:Cash
 
+test reg
+24-Jan-01 Buy stock             Assets:Stocks               10 AAPL      10 AAPL
+                                Assets:Cash                  $-1500       $-1500
+                                                                         10 AAPL
+end test

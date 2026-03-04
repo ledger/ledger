@@ -1,0 +1,24 @@
+; Coverage test for xact.cc line 918 and auto_xact_t::extend_xact
+; Tests that an automatic transaction predicate correctly returns false
+; for non-matching transactions.  The Transfer transaction does not match
+; /Expenses:Food/, so the auto-xact is not applied to it.  The Groceries
+; transaction matches and gets the auto-generated posting.
+
+= /Expenses:Food/
+    (Budget:Food)    -1.0
+
+2024/01/01 Transfer
+    Assets:Checking    $-100.00
+    Assets:Savings     $100.00
+
+2024/01/02 Groceries
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Transfer              Assets:Checking            $-100.00     $-100.00
+                                Assets:Savings              $100.00            0
+24-Jan-02 Groceries             Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+                                (Budget:Food)               $-10.00      $-10.00
+end test

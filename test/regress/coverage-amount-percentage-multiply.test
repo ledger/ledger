@@ -1,0 +1,13 @@
+; Coverage for amount.cc lines 479-495:
+; Multiplying an amount by a percentage divides by 100 internally.
+; $100 * 19% = $19.00 (the "%" commodity triggers the special
+; division-by-100 logic). The result keeps the original commodity ($).
+
+2024/01/01 Test
+    Expenses:Food    $100.00
+    Assets:Cash
+
+test reg --format "%(amount * 19%)\n"
+$19.00
+$-19.00
+end test

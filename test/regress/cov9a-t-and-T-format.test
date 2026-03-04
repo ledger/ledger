@@ -1,0 +1,10 @@
+; Coverage test for report.cc lines 1626, 1653
+; %(t) maps to fn_display_amount, %(T) maps to fn_display_total
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(t) %(T)\n" --limit "account =~ /Expenses/"
+$10.00 $10.00
+end test

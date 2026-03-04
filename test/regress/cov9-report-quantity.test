@@ -1,0 +1,11 @@
+; Coverage test for report.cc line 779: fn_quantity
+; Test quantity() function which returns the numeric value without commodity.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format '%(quantity(amount))\n'
+10
+-10
+end test

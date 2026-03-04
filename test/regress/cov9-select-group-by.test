@@ -1,0 +1,23 @@
+; Test select with group by clause
+; Covers select.cc group by clause handling
+
+2024/01/15 Grocery Store
+    Expenses:Food    $30.00
+    Assets:Cash
+
+2024/01/20 Another Store
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2024/01/25 Gas Station
+    Expenses:Transport    $40.00
+    Assets:Cash
+
+test select "date, account, amount from posts where amount > 0 group by account"
+Expenses:Food
+24-Jan-15 Expenses:Food                                                  $30.00
+24-Jan-20 Expenses:Food                                                  $20.00
+
+Expenses:Transport
+24-Jan-25 Expenses:Transport                                             $40.00
+end test

@@ -1,0 +1,15 @@
+; Coverage for textual_directives.cc line 617: commodity default sub-directive
+
+commodity EUR
+    default
+
+2024/01/01 Test
+    Expenses:Food    100
+    Assets:Cash
+
+test bal
+                -100  Assets:Cash
+                 100  Expenses:Food
+--------------------
+                   0
+end test

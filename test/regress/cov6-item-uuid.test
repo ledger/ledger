@@ -1,0 +1,10 @@
+; Coverage for item.cc line 107: uuid accessor
+
+2024/01/01 Test
+    ; UUID: abc-123-def
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg Expenses --format '%(tag("UUID"))\n'
+abc-123-def
+end test

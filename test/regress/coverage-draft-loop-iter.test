@@ -1,0 +1,27 @@
+; Coverage test for draft.cc lines 369-376:
+; Draft xact creation iterates through postings, skipping virtual ones
+; The forward loop (non-from) skips unbalanced virtual postings
+
+2024/01/15 Grocery Store
+    (Memo:Food)      $100.00
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/01/20 Gas Station
+    Expenses:Gas     $30.00
+    Assets:Cash
+
+test xact 2024/03/01 "Grocery"
+2024/03/01 Grocery Store
+    (Memo:Food)                              $100.00
+    Expenses:Food                             $50.00
+    Assets:Cash
+end test
+
+; The reverse loop (from case) skips unbalanced virtual postings at the end
+
+test xact 2024/03/01 "Grocery" from "Cash"
+2024/03/01 Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Cash
+end test

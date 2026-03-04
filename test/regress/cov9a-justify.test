@@ -1,0 +1,10 @@
+; Coverage test for report.cc lines 826-838
+; fn_justify right-justifies and pads a value within a given width
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "[%(justify(amount, 12, -1, true))]\n" --limit "account =~ /Expenses/"
+[      $10.00]
+end test

@@ -1,0 +1,19 @@
+; Coverage for xact.cc lines 1138-1144 (auto_xact state inheritance)
+; Auto-generated postings inherit cleared/pending state from the
+; parent transaction.
+
+= Expenses
+    (Budget)    -1
+
+2024/01/01 * Cleared Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 ! Pending Test
+    Expenses:Rent    $500.00
+    Assets:Cash
+
+test reg Budget --format "%(cleared ? \"C\" : (pending ? \"P\" : \"U\")) %(payee) %(amount)\n"
+C Cleared Test $-10.00
+P Pending Test $-500.00
+end test

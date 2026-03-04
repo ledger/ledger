@@ -1,0 +1,16 @@
+; Test commodity comparison with fixated vs non-fixated prices
+; Covers commodity.cc lines 504-510 (semantic flags comparison in
+; compare_by_commodity)
+
+2024/01/01 Buy regular
+    Assets:Brokerage    10 AAPL {$150.00}
+    Assets:Cash        $-1500.00
+
+2024/01/02 Buy fixated
+    Assets:Brokerage    5 AAPL {=$150.00}
+    Assets:Cash         $-750.00
+
+test bal --no-total --lots Brokerage
+   10 AAPL {$150.00}
+   5 AAPL {=$150.00}  Assets:Brokerage
+end test

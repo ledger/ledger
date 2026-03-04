@@ -1,0 +1,10 @@
+; Test fn_lot_date to exercise lines 1012-1018 of report.cc
+; lot_date(amount) returns the date annotation of a lot
+
+2024/01/15 Buy Stock
+    Assets:Brokerage    10 AAPL {$150.00} [2024/01/15]
+    Assets:Cash
+
+test reg Assets:Brokerage --format "%(lot_date(amount))\n"
+2024/01/15
+end test

@@ -1,0 +1,13 @@
+; Test select command with account and payee columns
+; Covers select.cc lines 60 (account ident), 56 (date ident),
+;   82-85 (recursive principal identifier calls),
+;   lines 269-298 (payee/account column formatting)
+
+2024/01/15 Groceries
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test select date, payee, account, amount from posts
+24-Jan-15 Groceries                Expenses:Food                         $50.00
+24-Jan-15 Groceries                Assets:Cash                          $-50.00
+end test

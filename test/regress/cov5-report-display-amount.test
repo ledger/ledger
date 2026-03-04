@@ -1,0 +1,10 @@
+; Coverage for report.cc line 728: fn_display_amount
+; Also covers report.cc line 740: fn_display_total
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg Expenses --format "%(display_amount) %(display_total)\n"
+$10.00 $10.00
+end test

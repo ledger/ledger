@@ -1,0 +1,14 @@
+; Test select with display clause
+; Covers select.cc lines 381-382 (display keyword handling)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/02/20 Gas Station
+    Expenses:Transport    $40.00
+    Assets:Cash
+
+test select 'date, account, amount from posts display amount > 45'
+24-Jan-15 Expenses:Food                                                  $50.00
+end test

@@ -1,0 +1,12 @@
+; Test account_t::lookup for depth (line 427-428 of account.cc)
+; Exercise the depth-related accessors
+
+2024/01/01 Test
+    Expenses:Food:Groceries    $10.00
+    Assets:Cash
+
+test bal --format "%(depth):%(account)\n" --flat
+2:Assets:Cash
+3:Expenses:Food:Groceries
+0:
+end test

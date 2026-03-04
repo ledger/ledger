@@ -1,0 +1,13 @@
+; Coverage for query.cc lines 217-221: expr query keyword
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Other
+    Expenses:Gas    $20.00
+    Assets:Cash
+
+test reg expr 'account=~/Food/'
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+end test

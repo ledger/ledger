@@ -1,0 +1,14 @@
+; Coverage test for select.cc lines 364-368:
+; from commodities report
+
+P 2024/01/15 EUR $1.10
+P 2024/01/16 EUR $1.12
+
+2024/01/15 Test
+    Expenses:Food    50 EUR
+    Assets:Cash     $-55.00
+
+test select date,amount from commodities
+24-Jan-15        $1.10
+24-Jan-16        $1.12
+end test

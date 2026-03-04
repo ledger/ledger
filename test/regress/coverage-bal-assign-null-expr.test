@@ -1,0 +1,18 @@
+; Coverage for textual_xacts.cc line 634: balance assignment evaluates to null
+
+2024/01/01 Opening
+    Assets:Checking    $1000
+    Equity:Opening
+
+2024/01/02 Test
+    Expenses:Food
+    Assets:Checking  = ()
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 9:
+While parsing posting:
+  Assets:Checking  = ()
+                     ^^
+Error: Balance assignment must evaluate to a constant
+end test

@@ -1,0 +1,16 @@
+; Coverage test for amount.cc lines 211, 220
+; Exercise comma as thousands separator in amount output
+; Needs integer_digits > 3 to trigger the thousands separator logic
+
+commodity $1,000.00
+
+2024/01/01 Large purchase
+    Expenses:Equipment       $12,345.67
+    Assets:Cash
+
+test bal
+         $-12,345.67  Assets:Cash
+          $12,345.67  Expenses:Equipment
+--------------------
+                   0
+end test

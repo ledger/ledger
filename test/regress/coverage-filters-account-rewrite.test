@@ -1,0 +1,12 @@
+; Coverage test for filters.cc line 1652: account rewrite xdata
+; Tests rewrite_posts::operator() which rewrites account names.
+; Line 1652: when prev_account has xdata, flags are copied to new account.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --account-rewrite 'Expenses:Food=Expenses:Dining'
+24-Jan-01 Test                  Expenses:Dining              $10.00       $10.00
+24-Jan-01 Test                  Assets:Cash                 $-10.00            0
+end test

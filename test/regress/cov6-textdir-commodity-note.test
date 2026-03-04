@@ -1,0 +1,15 @@
+; Coverage for textual_directives.cc line 619: commodity note sub-directive
+
+commodity EUR
+    note European currency
+
+2024/01/01 Test
+    Expenses:Food    100 EUR
+    Assets:Cash
+
+test bal
+            -100 EUR  Assets:Cash
+             100 EUR  Expenses:Food
+--------------------
+                   0
+end test

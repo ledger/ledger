@@ -1,0 +1,32 @@
+; Test lot display functions for report.cc coverage
+; Covers fn_averaged_lots (line 622-627, 1481-1482),
+; fn_fifo_lots (line 629-634, 1527-1528),
+; fn_lifo_lots (line 636-641, 1551-1552)
+
+2024/01/01 Buy Lot 1
+    Assets:Broker          10 AAPL {$100.00} [2024/01/01]
+    Assets:Cash
+
+2024/02/01 Buy Lot 2
+    Assets:Broker           5 AAPL {$150.00} [2024/02/01]
+    Assets:Cash
+
+; Test averaged_lots function (line 622-627, 1481-1482)
+test reg Assets:Broker --format "%(averaged_lots(total))\n"
+10 AAPL {$100} [2024/01/01]
+15 AAPL {$116.66666667} [2024/01/01]
+end test
+
+; Test fifo_lots function (line 629-634, 1527-1528)
+test reg Assets:Broker --format "%(fifo_lots(total))\n"
+10 AAPL {$100} [2024/01/01]
+10 AAPL {$100} [2024/01/01]
+5 AAPL {$150} [2024/02/01]
+end test
+
+; Test lifo_lots function (line 636-641, 1551-1552)
+test reg Assets:Broker --format "%(lifo_lots(total))\n"
+10 AAPL {$100} [2024/01/01]
+5 AAPL {$150} [2024/02/01]
+10 AAPL {$100} [2024/01/01]
+end test

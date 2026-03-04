@@ -1,0 +1,31 @@
+; Coverage test for compare.cc lines 87-100, 109-138:
+; Sort value computation for accounts via compare_items<account_t>
+; Exercises the account sorting path in the balance report
+
+2024/01/15 Test
+    Expenses:Gas    $50.00
+    Expenses:Food   $100.00
+    Assets:Cash    $-150.00
+
+2024/02/15 Test2
+    Expenses:Gas    $30.00
+    Expenses:Food   $20.00
+    Assets:Cash    $-50.00
+
+test bal --sort amount
+            $-200.00  Assets:Cash
+             $200.00  Expenses
+              $80.00    Gas
+             $120.00    Food
+--------------------
+                   0
+end test
+
+test bal --sort -amount
+            $-200.00  Assets:Cash
+             $200.00  Expenses
+             $120.00    Food
+              $80.00    Gas
+--------------------
+                   0
+end test

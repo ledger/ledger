@@ -1,0 +1,12 @@
+; Coverage for textual_directives.cc lines 558-571: payee_rewrite_directive
+
+payee-rewrite Grocer  GROCERY STORE
+
+2024/01/01 Grocery
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(payee)\n"
+GROCERY STORE
+GROCERY STORE
+end test

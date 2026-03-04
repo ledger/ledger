@@ -1,0 +1,14 @@
+; Coverage for iterators.cc lines 130-149: generate_posts for pricedb
+
+P 2024/01/01 AAPL $150.00
+P 2024/01/15 AAPL $155.00
+P 2024/02/01 GOOG $100.00
+
+2024/01/01 Buy
+    Assets:Stock    10 AAPL
+    Assets:Cash
+
+test pricesdb
+P 2024/01/01 00:00:00 AAPL $150.00
+P 2024/01/15 00:00:00 AAPL $155.00
+end test

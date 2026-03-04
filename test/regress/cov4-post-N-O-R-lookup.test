@@ -1,0 +1,11 @@
+; Test post_t::lookup for N, O, R symbols (lines 519-531 of post.cc)
+; N maps to count, O maps to total, R maps to real
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "N=%(N) O=%(O) R=%(R)\n"
+N=1 O=$10.00 R=true
+N=2 O=$0.00 R=true
+end test

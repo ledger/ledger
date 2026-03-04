@@ -1,0 +1,14 @@
+; Coverage test for post.cc line 236 (get_cost), 243 (get_price):
+; Exercise get_has_cost, get_cost, and get_price with costs and without.
+
+2024/01/01 Buy Stock
+    Assets:Broker    10 AAPL @ $150.00
+    Assets:Cash
+
+2024/01/15 Salary
+    Income:Salary   $-5000.00
+    Assets:Cash
+
+test reg Assets:Broker --format "%(has_cost) %(cost) %(price)\n"
+true $1500.00 $1500.00
+end test

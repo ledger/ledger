@@ -1,0 +1,17 @@
+; Coverage test for op.cc O_IF ternary expression evaluation:
+; Exercise the ternary operator ? : in expressions.
+
+2024/01/01 Groceries
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/15 Big Purchase
+    Expenses:Electronics    $500.00
+    Assets:Cash
+
+test reg --format "%(amount > 0 ? \"positive\" : \"negative\") %(amount)\n"
+positive $10.00
+negative $-10.00
+positive $500.00
+negative $-500.00
+end test

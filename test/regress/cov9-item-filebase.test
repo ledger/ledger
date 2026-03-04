@@ -1,0 +1,10 @@
+; Coverage for item.cc lines 305, 312, 319: get_pathname/filebase/filepath
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(filename)\n"
+$FILE
+$FILE
+end test

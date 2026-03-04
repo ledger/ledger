@@ -1,0 +1,10 @@
+; Coverage test for report.cc line 930
+; fn_ansify_if returns arg[0] unchanged when no color string is provided
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(ansify_if(account))\n" --limit "account =~ /Expenses/"
+Expenses:Food
+end test

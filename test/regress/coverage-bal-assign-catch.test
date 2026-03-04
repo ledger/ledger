@@ -1,0 +1,19 @@
+; Test balance assignment catch for ann_diff.to_amount() failure
+; (textual_xacts.cc lines 712-713)
+2024/01/01 Buy A
+    Assets:Stocks    10 AAPL {$100.00}
+    Assets:Cash
+
+2024/01/02 Buy B
+    Assets:Stocks    5 AAPL {$110.00}
+    Assets:Cash
+
+2024/01/03 Adjust
+    Assets:Stocks    = 20 AAPL
+    Equity:Adjustments
+
+test bal Assets:Stocks --lot-prices --no-total
+              5 AAPL
+      10 AAPL {$100}
+       5 AAPL {$110}  Assets:Stocks
+end test

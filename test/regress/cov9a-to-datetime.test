@@ -1,0 +1,10 @@
+; Coverage test for report.cc line 1050-1051
+; fn_to_datetime converts a value to a datetime
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(to_datetime(date))\n" --limit "account =~ /Expenses/"
+2024/01/01 00:00:00
+end test

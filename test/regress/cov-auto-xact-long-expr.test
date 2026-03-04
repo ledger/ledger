@@ -1,0 +1,16 @@
+; Coverage test for xact.cc lines 1050-1051
+; auto_xact_t posting with null amount and an amount_expr that returns a long
+; Also covers xact.cc line 1053 (amount_error for non-simple amount)
+
+= Expenses
+    (Budget:Expenses)    (2 + 3)
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+                                (Budget:Expenses)            $50.00       $50.00
+end test

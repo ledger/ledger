@@ -1,0 +1,53 @@
+; Coverage test for history.cc lines 291, 319, 337, 377, 397, 405, 407,
+; 443, 454, 488, 523-526
+; Tests price history graph operations including:
+; Line 291: map_prices early return for missing graph_index
+; Lines 319, 377: inverted price handling in map_prices/find_price
+; Lines 337, 405, 407: find_price source/target guards
+; Lines 443, 454, 488: multi-hop price path resolution
+; Lines 523-526: print_map with and without moment
+
+P 2024/01/01 EUR 1.10 $
+P 2024/01/15 GBP 1.30 $
+P 2024/01/15 EUR 0.85 GBP
+P 2024/01/20 CHF 1.05 $
+
+2024/01/10 European Purchase
+    Assets:European           100 EUR
+    Assets:Cash
+
+2024/01/20 British Purchase
+    Assets:British            50 GBP
+    Assets:Cash
+
+2024/01/25 Swiss Purchase
+    Assets:Swiss              200 CHF
+    Assets:Cash
+
+test bal -X '$' --now="2024/02/01"
+                   0  Assets
+              $65.00    British
+            $-385.50    Cash
+             $110.50    European
+             $210.00    Swiss
+--------------------
+                   0
+end test
+
+test pricemap
+graph G {
+0[label=""];
+1[label="s"];
+2[label="%"];
+3[label="m"];
+4[label="h"];
+5[label="$"];
+6[label="EUR"];
+7[label="GBP"];
+8[label="CHF"];
+6--5 ;
+7--5 ;
+6--7 ;
+8--5 ;
+}
+end test

@@ -1,0 +1,21 @@
+; Coverage for filters.cc day_of_week_posts (lines 1304-1313)
+; Tests the --dow flag to subtotal by day of week.
+
+2024/01/01 Monday Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Tuesday Test
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2024/01/08 Another Monday
+    Expenses:Food    $15.00
+    Assets:Cash
+
+test reg --dow
+24-Jan-01 Mondays               Assets:Cash                 $-25.00      $-25.00
+                                Expenses:Food                $25.00            0
+24-Jan-02 Tuesdays              Assets:Cash                 $-20.00      $-20.00
+                                Expenses:Food                $20.00            0
+end test

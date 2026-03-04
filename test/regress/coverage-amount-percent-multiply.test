@@ -1,0 +1,13 @@
+; Coverage for amount.cc line 490:
+; When multiplying a bare amount (no commodity) by a percentage amount,
+; the result inherits the "%" commodity. quantity(amount) strips the
+; commodity, so the multiplication result takes "%" from the multiplier.
+
+2024/01/01 Test
+    Expenses:Food    100.00
+    Assets:Cash
+
+test reg --format "%(quantity(amount) * 50%)\n"
+50%
+-50%
+end test

@@ -1,0 +1,11 @@
+; Test find_account_re via account() with a regex argument
+; Covers account.cc line 119 (find_account_re)
+; and account.cc line 253 (get_account with mask argument)
+
+2024/01/15 Groceries
+    Expenses:Food:Groceries    $50.00
+    Assets:Cash
+
+test bal --format="%(account(/Groceries/) ? \"found\" : \"nope\") %(total)\n" Expenses
+found $50.00
+end test

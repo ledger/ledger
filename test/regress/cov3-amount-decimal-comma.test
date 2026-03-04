@@ -1,0 +1,12 @@
+; Test amount parsing with decimal comma style
+; Covers amount.cc lines 1221-1228, 1289-1290 (decimal comma style)
+
+commodity 1.000,00 EUR
+
+2024/01/01 European Style
+    Assets:Bank     1.234,56 EUR
+    Equity:Opening
+
+test bal Assets:Bank
+        1.234,56 EUR  Assets:Bank
+end test

@@ -1,0 +1,15 @@
+; Coverage test for xact.cc line 703-704
+; Tests the error when some postings have null amounts after balancing.
+; An unbalanced virtual posting with no amount cannot be filled in
+; by finalize(), causing the "null amounts after balancing" error.
+
+2024/03/01 Test
+    Expenses:Food     $10.00
+    Assets:Cash      $-10.00
+    (Virtual:Account)
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 9:
+Error: There cannot be null amounts after balancing a transaction
+end test

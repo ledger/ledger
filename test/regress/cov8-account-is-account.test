@@ -1,0 +1,12 @@
+; Coverage test for account.cc lines 448-449:
+; Exercise is_account function that returns true.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --format "%(is_account) %(account)\n"
+true Assets:Cash
+true Expenses:Food
+true 
+end test

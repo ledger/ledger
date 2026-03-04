@@ -1,0 +1,11 @@
+; Test meta accessor (lines 475-476 of item.cc)
+; Exercise the meta lookup (aliases to get_tag)
+
+2024/01/01 Test
+    ; Category: groceries
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --limit "account =~ /Food/" --format "%(meta(\"Category\"))\n"
+groceries
+end test

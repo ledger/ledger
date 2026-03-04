@@ -1,0 +1,10 @@
+; Test fn_quantity to exercise line 779 of report.cc
+; quantity returns the numeric value stripped of commodity
+
+2024/01/01 Test
+    Expenses:Food    $25.50
+    Assets:Cash
+
+test reg Expenses --format "%(quantity(amount))\n"
+25.5
+end test

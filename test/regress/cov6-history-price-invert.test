@@ -1,0 +1,13 @@
+; Coverage for history.cc lines 315-319: price inversion in map_prices
+
+P 2024/01/01 EUR $1.10
+P 2024/01/15 EUR $1.20
+
+2024/01/01 Buy
+    Assets:Foreign    100 EUR
+    Assets:Cash
+
+test prices EUR
+2024/01/01 EUR             $1.10
+2024/01/15 EUR             $1.20
+end test

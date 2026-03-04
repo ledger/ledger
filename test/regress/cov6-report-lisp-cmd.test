@@ -1,0 +1,10 @@
+; Coverage for report.cc line 1785: lisp command (alias for emacs format)
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test lisp Expenses
+(("$FILE" 3 (26002 21728 0) nil "Test"
+  (4 "Expenses:Food" "$10.00" nil)))
+end test

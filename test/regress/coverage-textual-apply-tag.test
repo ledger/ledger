@@ -1,0 +1,13 @@
+; Coverage for textual_directives.cc line 297: apply tag directive
+
+apply tag Project: Alpha
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+end apply tag
+
+test reg --format "%(tag('Project'))\n" Expenses
+Alpha
+end test

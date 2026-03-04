@@ -1,0 +1,13 @@
+; Coverage test for amount.cc lines 480-490, 531-540
+; Test percentage multiplication and division
+
+2024/01/01 Test percentage
+    Expenses:Tax            ($100.00 * 19%)
+    Assets:Cash
+
+test bal
+             $-19.00  Assets:Cash
+              $19.00  Expenses:Tax
+--------------------
+                   0
+end test

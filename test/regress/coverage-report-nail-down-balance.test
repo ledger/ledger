@@ -1,0 +1,15 @@
+; Coverage for report.cc lines 984-993: fn_nail_down with balance type
+; When --historical is used with multiple commodities in one account,
+; the total is a balance which triggers the BALANCE case
+
+P 2024/01/01 AAPL $150.00
+P 2024/01/01 GOOG $100.00
+
+2024/01/01 Buy stocks
+    Assets:Stocks    10 AAPL @ $150.00
+    Assets:Stocks    5 GOOG @ $100.00
+    Assets:Cash     $-2000.00
+
+test bal --historical Assets:Stocks
+            $2000.00  Assets:Stocks
+end test

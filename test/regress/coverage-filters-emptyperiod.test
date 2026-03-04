@@ -1,0 +1,20 @@
+; Coverage test for filters.cc lines 1114-1127
+; Tests interval_posts with --empty to generate null postings for gaps
+; between intervals. Line 1114: generate_empty_posts path when saw_posts
+; is false. Lines 1118-1126: creates null xact and posting for empty periods.
+
+2024/01/15 Test
+    Expenses:Food             $50.00
+    Assets:Cash
+
+2024/03/15 Test
+    Expenses:Food             $30.00
+    Assets:Cash
+
+test reg --monthly -E --align-intervals --empty
+24-Jan-01 - 24-Jan-31           Assets:Cash                 $-50.00      $-50.00
+                                Expenses:Food                $50.00            0
+24-Feb-01 - 24-Feb-29           <None>                            0            0
+24-Mar-01 - 24-Mar-31           Assets:Cash                 $-30.00      $-30.00
+                                Expenses:Food                $30.00            0
+end test

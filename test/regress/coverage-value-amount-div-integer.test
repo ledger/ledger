@@ -1,0 +1,11 @@
+; Coverage for value.cc line 700:
+; Division of an AMOUNT value by an INTEGER value (amount / long).
+
+2024/01/01 Test
+    Expenses:Food    $100.00
+    Assets:Cash
+
+test reg --format "%(amount / 2)\n"
+$50.00
+$-50.00
+end test

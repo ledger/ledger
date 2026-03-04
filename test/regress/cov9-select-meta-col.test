@@ -1,0 +1,11 @@
+; Test select with custom meta column (not date/payee/account/amount/total)
+; Covers select.cc line 323 (meta_width else branch)
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    ; Note: lunch
+    Assets:Cash
+
+test select "tag('Note') from posts where has_tag('Note')"
+lunch     
+end test

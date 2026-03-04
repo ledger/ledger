@@ -1,0 +1,30 @@
+; Coverage test for value.cc comparison with amounts and integers
+; Exercise sorting by total which involves amount comparisons
+
+commodity $
+
+2024/01/01 First
+    Expenses:Food            $30.00
+    Assets:Cash
+
+2024/01/02 Second
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/01/03 Third
+    Expenses:Food            $20.00
+    Assets:Cash
+
+; Sort by total exercises amount comparison in is_less_than
+test reg Expenses --sort total
+24-Jan-02 Second                Expenses:Food                $10.00       $10.00
+24-Jan-03 Third                 Expenses:Food                $20.00       $30.00
+24-Jan-01 First                 Expenses:Food                $30.00       $60.00
+end test
+
+; Sort by amount exercises is_less_than with amounts
+test reg Expenses --sort "amount"
+24-Jan-02 Second                Expenses:Food                $10.00       $10.00
+24-Jan-03 Third                 Expenses:Food                $20.00       $30.00
+24-Jan-01 First                 Expenses:Food                $30.00       $60.00
+end test

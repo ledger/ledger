@@ -1,0 +1,25 @@
+; Tests for sha512.cc: SHA512 buffer handling with long input
+; Covers: lines 334-351 (SHA512_Update partial buffer fill and multi-block transform)
+;         lines 397-400 (SHA512_Final padding when buffer has residual data)
+; The long payee name and deep account hierarchy ensure the hash input
+; exceeds 128 bytes (one SHA512 block), forcing the transform loop.
+
+2024/01/01 Test with a very long payee name that should make the hash input exceed one block
+    Expenses:Category:Subcategory:Deep:Deeper:Deepest  $10.00
+    Assets:Checking:Primary:Main
+
+2024/01/02 Another transaction with substantial length to exercise buffer paths
+    Expenses:Food:Groceries:Organic:Produce  $25.00
+    Assets:Checking:Primary:Main
+
+test --hashes sha512 print
+2024/01/01 Test with a very long payee name that should make the hash input exceed one block
+    ; Hash: 667a49576706e20750b67bbb794fe1156399d0a5a83efdafd63c9efb38317b6eaa0500bb36e8321a74b5ca9ba70d306b040bb2c5e479a1be786c1bf57562e6d3
+    Expenses:Category:Subcategory:Deep:Deeper:Deepest      $10.00
+    Assets:Checking:Primary:Main
+
+2024/01/02 Another transaction with substantial length to exercise buffer paths
+    ; Hash: 42ecf03dbee50abbe258e4eb4418c7f29087c4ecba00b039357de189694afae24030ab6983a125f44a5205f41a87b257dab9e5e92a144f70dd58a3b3a6889d1f
+    Expenses:Food:Groceries:Organic:Produce      $25.00
+    Assets:Checking:Primary:Main
+end test

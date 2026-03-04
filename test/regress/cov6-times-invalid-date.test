@@ -1,0 +1,13 @@
+; Coverage for times.cc line 158: invalid date format
+
+2024/13/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 3:
+While parsing transaction:
+> 2024/13/01 Test
+Error: Invalid date: 2024/13/01
+end test

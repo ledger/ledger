@@ -1,0 +1,20 @@
+; Coverage test for xact.cc lines 1031-1032
+; Tests the EXPR_GENERAL path in auto transactions.
+; When an auto transaction has an 'eval' or 'expr' directive, it is
+; evaluated for side effects (the result is discarded).
+
+= /Expenses:Food/
+    eval 1 + 1
+    (Budget:Food)              -1.0
+
+2024/01/01 Groceries
+    Expenses:Food              $50.00
+    Assets:Cash
+
+test bal
+             $-50.00  Assets:Cash
+             $-50.00  Budget:Food
+              $50.00  Expenses:Food
+--------------------
+             $-50.00
+end test

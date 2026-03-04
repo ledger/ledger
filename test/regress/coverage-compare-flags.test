@@ -1,0 +1,15 @@
+; Test commodity compare: different semantic flags
+; (commodity.cc lines 504-511)
+; Fixated vs non-fixated lot prices have different flags
+2024/01/01 Buy A
+    Assets:Stocks    10 AAPL {$100.00}
+    Assets:Cash
+
+2024/01/02 Buy B
+    Assets:Stocks    10 AAPL {=$100.00}
+    Assets:Cash
+
+test bal Assets:Stocks --lot-prices --lots
+      10 AAPL {$100}
+     10 AAPL {=$100}  Assets:Stocks
+end test

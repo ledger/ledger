@@ -1,0 +1,25 @@
+; Coverage test for xact.cc lines 614-615
+; Tests the error path when balanced virtual postings don't balance and
+; there is no null virtual posting to absorb the difference.
+
+2024/01/01 Test unbalanced virtual
+    Expenses:Food              $50.00
+    Assets:Cash               $-50.00
+    [Budget:Food]              $50.00
+    [Budget:Savings]           $10.00
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 9:
+While balancing transaction from "$FILE", lines 5-9:
+> 2024/01/01 Test unbalanced virtual
+>     Expenses:Food              $50.00
+>     Assets:Cash               $-50.00
+>     [Budget:Food]              $50.00
+>     [Budget:Savings]           $10.00
+Unbalanced remainder is:
+              $60.00
+Amount to balance against:
+             $110.00
+Error: Transaction does not balance
+end test

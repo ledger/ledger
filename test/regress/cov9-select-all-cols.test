@@ -1,0 +1,10 @@
+; Test select with date, payee, account, amount, total columns together
+; Covers select.cc lines 56, 60, 66, 72, 82, 85, 96, 146-153
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test select "date, payee, account, amount, total from posts where account =~ /Expenses/"
+24-Jan-15 Grocery Store        Expenses:Food                $50.00       $50.00
+end test

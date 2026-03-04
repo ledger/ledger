@@ -1,0 +1,10 @@
+; Coverage test for csv.cc line 262:
+; CSV import with default commodity from D directive and Total column
+
+D $1,000.00
+
+test convert test/regress/coverage-csv-default-data.csv --input-date-format "%Y/%m/%d" --account Assets:Checking
+2024/01/15 * Grocery Store
+    Expenses:Unknown                          $50.00
+    Assets:Checking                          $-50.00 = $550.00
+end test

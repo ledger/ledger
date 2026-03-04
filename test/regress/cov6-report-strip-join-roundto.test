@@ -1,0 +1,10 @@
+; Coverage for report.cc lines 740,1548,1603: fn_strip, fn_join, fn_roundto
+; Also covers lookup lines for join and roundto
+
+2024/01/01 Test
+    Expenses:Food    10.567 FOO
+    Assets:Cash
+
+test reg Expenses --format "%(strip(amount)) %(join(payee)) %(roundto(quantity(amount), 1))\n"
+10.567 FOO Test 10.6
+end test

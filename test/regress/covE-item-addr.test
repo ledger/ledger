@@ -1,0 +1,11 @@
+; Coverage for item.cc line 392: get_addr format function
+; Note: addr returns a pointer value which varies per run so we can't test output
+; This test just exercises the code path
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(addr != 0)\n" --limit "account =~ /Expenses/"
+true
+end test

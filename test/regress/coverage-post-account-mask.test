@@ -1,0 +1,13 @@
+; Coverage test for post.cc get_account with mask argument (L288-290).
+; account(/regex/) in posting context calls find_account_re on the
+; master account to locate an account by regular expression.
+; Also covers L285-287 for the string path in posting context.
+
+2024/01/01 Grocery
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(account(/Food/).total)|%(account('Expenses:Food').total)|%(account)\n"
+$10.00|$10.00|Expenses:Food
+$10.00|$10.00|Assets:Cash
+end test

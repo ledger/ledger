@@ -1,0 +1,11 @@
+; Test token parsing for assignment operator = (lines 377 of token.cc)
+; and equality == (lines 369-375)
+; Exercise the assignment path in expression context
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --limit "amount == {\$10}"
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+end test

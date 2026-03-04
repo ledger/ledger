@@ -1,0 +1,38 @@
+; Coverage test for post.cc lines 359-397:
+; any() and all() functions with skip-self option
+; Line 364: fn_any returns false when no posting matches
+; Line 384: fn_all returns true when all postings match
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Expenses:Tax     $5.00
+    Assets:Cash
+
+2024/01/20 Test2
+    Expenses:Gas     $30.00
+    Assets:Cash
+
+; Test any(EXPR, false) - exercises fn_any skip-self path (lines 368-371)
+
+test reg --limit 'any(amount > 0, false)'
+24-Jan-15 Test                  Expenses:Food                $50.00       $50.00
+                                Expenses:Tax                  $5.00       $55.00
+                                Assets:Cash                 $-55.00            0
+24-Jan-20 Test2                 Assets:Cash                 $-30.00      $-30.00
+end test
+
+; Test all(EXPR, false) - exercises fn_all skip-self path (lines 388-391)
+
+test reg --limit 'all(amount > 0, false)'
+24-Jan-15 Test                  Assets:Cash                 $-55.00      $-55.00
+24-Jan-20 Test2                 Assets:Cash                 $-30.00      $-85.00
+end test
+
+; Test all() without skip - exercises fn_all loop returning false (line 393)
+
+test reg --limit 'all(account =~ /Expenses/)'
+end test
+
+; Test any() returning false for all - no posting has amount > 9999
+test reg --limit 'any(amount > 9999)'
+end test

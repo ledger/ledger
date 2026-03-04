@@ -1,0 +1,23 @@
+; Coverage test for account.cc children_with_xdata (L532-538).
+; Uses deeply nested accounts so that children_with_xdata() recursively
+; traverses the account tree when checking for xdata during journal
+; cleanup. Also covers the account.cc valid() function (L511-530).
+
+2024/01/01 Test
+    Expenses:Food:Groceries    $10.00
+    Assets:Bank:Checking
+
+2024/01/02 Test2
+    Expenses:Food:Restaurant   $20.00
+    Assets:Bank:Savings
+
+test bal
+             $-30.00  Assets:Bank
+             $-10.00    Checking
+             $-20.00    Savings
+              $30.00  Expenses:Food
+              $10.00    Groceries
+              $20.00    Restaurant
+--------------------
+                   0
+end test

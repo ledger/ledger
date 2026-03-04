@@ -1,0 +1,39 @@
+; Test --payee, --account, --unbudgeted, --period option handlers
+; Covers payee_, account_, unbudgeted, period_ options
+
+2024/01/01 Grocery Store
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/02/01 Gas Station
+    Expenses:Gas             $20.00
+    Assets:Cash
+
+; Test --payee option (line 1347)
+test reg Expenses --payee "account"
+24-Jan-01 Expenses:Food         Expenses:Food                $10.00       $10.00
+24-Feb-01 Expenses:Gas          Expenses:Gas                 $20.00       $30.00
+end test
+
+; Test --account option (line 1220)
+test reg Expenses --account "payee"
+24-Jan-01 Grocery Store         Grocery:Expenses:Food        $10.00       $10.00
+24-Feb-01 Gas Station           Gas Stati:Expenses:Gas       $20.00       $30.00
+end test
+
+; Test --unbudgeted option (line 1398)
+test reg Expenses --unbudgeted
+24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+24-Feb-01 Gas Station           Expenses:Gas                 $20.00       $30.00
+end test
+
+; Test --period option (line 1351)
+test reg Expenses --period "monthly"
+24-Jan-01 - 24-Jan-31           Expenses:Food                $10.00       $10.00
+24-Feb-01 - 24-Feb-29           Expenses:Gas                 $20.00       $30.00
+end test
+
+; Test eval precommand (line 1839-1840)
+test eval "2+3"
+5
+end test

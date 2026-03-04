@@ -1,0 +1,11 @@
+; Test error for unrecognized format character
+; Covers format.cc lines 254-255 or 390-391 (unrecognized format char)
+
+2024/01/01 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg --format="%Z\n" Expenses -> 1
+__ERROR__
+Error: Unrecognized formatting character: Z
+end test

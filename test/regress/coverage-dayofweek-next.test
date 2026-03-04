@@ -1,0 +1,21 @@
+; Test times.cc lines 789-796: day-of-week relative date parsing with "next"
+; "next friday" from --now 2026/03/03 (Tuesday) resolves to 2026/03/13
+
+2026/03/02 Monday tx
+    Expenses:Food   $20.00
+    Assets:Cash
+
+2026/03/03 Tuesday tx
+    Expenses:Food   $30.00
+    Assets:Cash
+
+2026/03/15 Sunday tx
+    Expenses:Food   $40.00
+    Assets:Cash
+
+test reg --end "next friday" --now 2026/03/03
+26-Mar-02 Monday tx             Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+26-Mar-03 Tuesday tx            Expenses:Food                $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test

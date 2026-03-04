@@ -1,0 +1,20 @@
+; Coverage for report.cc line 528: commodities_report limit conjunction
+; When commodities_report strips state predicates from a compound limit,
+; if 2+ non-state terms remain, they are re-joined with & at line 528.
+; Here --cleared is a state predicate (stripped), while the two --limit
+; expressions survive and get conjoined: (total>0)&(commodity=~/AAPL/).
+
+P 2024/01/01 AAPL $150.00
+P 2024/01/01 GOOG $100.00
+P 2024/01/01 MSFT $200.00
+
+2024/01/01 * Buy
+    Assets:Stocks    10 AAPL @ $150.00
+    Assets:Stocks    5 GOOG @ $100.00
+    Assets:Stocks    3 MSFT @ $200.00
+    Assets:Cash
+
+test commodities --cleared --limit 'total>0' --limit 'commodity=~/AAPL/'
+$
+AAPL
+end test

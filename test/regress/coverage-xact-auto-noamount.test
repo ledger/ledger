@@ -1,0 +1,23 @@
+; Coverage test for xact.cc line 1046
+; Tests the error when an automated transaction's posting has no amount
+; and no amount expression.
+
+= /Expenses:Food/
+    Expenses:Tax
+
+2024/01/01 Groceries
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 10:
+While applying automated transaction from "$FILE", lines 5-6:
+> = /Expenses:Food/
+>     Expenses:Tax
+While extending transaction from "$FILE", lines 8-10:
+> 2024/01/01 Groceries
+>     Expenses:Food    $10.00
+>     Assets:Cash
+Error: Automated transaction's posting has no amount
+end test

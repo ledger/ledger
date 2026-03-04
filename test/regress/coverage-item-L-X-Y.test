@@ -1,0 +1,20 @@
+; Coverage: item.cc lines 520, 525, 530 - L, X, Y single-char lookups
+; L = actual (not generated/temp), X = cleared, Y = pending
+
+2024/01/01 * Cleared
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 ! Pending
+    Expenses:Gas    $5.00
+    Assets:Cash
+
+2024/01/03 Uncleared
+    Expenses:Misc    $3.00
+    Assets:Cash
+
+test reg --format "%(L) %(X) %(Y)\n" Expenses
+true true false
+true false true
+true false false
+end test

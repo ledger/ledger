@@ -1,0 +1,11 @@
+; Coverage test for value.cc lines 132-133
+; Exercise set_type(VOID) which resets storage
+; This happens when expressions produce null/void results
+
+2024/01/01 Test
+    Expenses:Food            $10.00
+    Assets:Cash
+
+; Query for non-existent data produces void values
+test reg Expenses --display "amount > $100"
+end test

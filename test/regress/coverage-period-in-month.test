@@ -1,0 +1,19 @@
+; Test times.cc lines 1230-1232: "in February" period expression
+; via handle_in_token in parse()
+
+2025/12/01 Dec tx
+    Expenses:Food   $5.00
+    Assets:Cash
+
+2026/02/15 Feb tx
+    Expenses:Food   $10.00
+    Assets:Cash
+
+2026/03/01 Mar tx
+    Expenses:Food   $20.00
+    Assets:Cash
+
+test reg --period "in February" --now 2026/03/03
+26-Feb-15 Feb tx                Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

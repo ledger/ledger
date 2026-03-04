@@ -1,0 +1,15 @@
+; Test value date comparison
+; Covers value.cc lines 1022-1024, 1027-1029 (date > and date < comparison)
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/02/20 Test
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test reg --format="%(date > [2024/02/01] ? \"after\" : \"before\")\n" Expenses
+before
+after
+end test

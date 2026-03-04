@@ -1,0 +1,9 @@
+; Coverage for report.cc line 1064: fn_to_balance
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --format "%(to_balance(total))\n" Expenses
+$10.00
+end test

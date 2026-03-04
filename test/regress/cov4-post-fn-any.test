@@ -1,0 +1,11 @@
+; Test fn_any (lines 359-378 of post.cc)
+; Exercise the any() function on postings
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash     $-10.00
+
+test reg --limit "any(account =~ /Food/)"
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

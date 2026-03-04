@@ -1,0 +1,13 @@
+; Test balance assertion with null expression (textual_xacts.cc line 636)
+2024/01/01 Test
+    Expenses:Food    $10.00 = ()
+    Assets:Cash
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 3:
+While parsing posting:
+  Expenses:Food    $10.00 = ()
+                            ^^
+Error: Balance assertion must evaluate to a constant
+end test

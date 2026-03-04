@@ -1,0 +1,12 @@
+; Coverage for xact.cc lines 595-597: fixated price balance resolution
+; Multiple commodities with fixated cost that must balance
+
+2024/01/01 Exchange
+    Assets:EUR        100.00 EUR {=$1.10}
+    Assets:USD       $-110.00
+
+test reg
+24-Jan-01 Exchange              Assets:EUR               100.00 EUR   100.00 EUR
+                                Assets:USD                 $-110.00     $-110.00
+                                                                      100.00 EUR
+end test

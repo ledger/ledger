@@ -1,0 +1,23 @@
+; Test pricesdb command with multiple commodities and price history
+; Covers commodity.cc line 79 (CURRENT_TIME() in map_prices)
+; and history.cc price mapping paths
+
+P 2024/01/01 EUR $1.10
+P 2024/02/01 EUR $1.12
+P 2024/01/01 GBP $1.30
+P 2024/03/01 GBP $1.28
+
+2024/01/01 Buy EUR
+    Assets:EUR    100 EUR
+    Assets:Cash  $-110.00
+
+2024/01/01 Buy GBP
+    Assets:GBP    50 GBP
+    Assets:Cash  $-65.00
+
+test pricesdb
+P 2024/01/01 00:00:00 EUR $1.10
+P 2024/02/01 00:00:00 EUR $1.12
+P 2024/01/01 00:00:00 GBP $1.30
+P 2024/03/01 00:00:00 GBP $1.28
+end test

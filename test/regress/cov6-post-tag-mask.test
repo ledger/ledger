@@ -1,0 +1,11 @@
+; Test post get_tag with regex mask matching a post-level tag
+; Covers post.cc line 72 (get_tag with mask returning value from post)
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+      ; Category: Lunch
+    Assets:Cash
+
+test reg --format '%(tag(/Cate/))\n' Expenses
+Lunch
+end test

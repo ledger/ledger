@@ -1,0 +1,12 @@
+; Coverage for csv.cc lines 53-58: CSV field parsing with quoted and pipe delimiters
+; Also covers csv.cc lines 83, 96: comment lines and header parsing
+; Also covers csv.cc lines 189-205: FIELD_DEBIT, FIELD_COST handling
+
+2024/01/01 Grocery
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test csv
+"2024/01/01","","Grocery","Expenses:Food","$","10","",""
+"2024/01/01","","Grocery","Assets:Cash","$","-10","",""
+end test

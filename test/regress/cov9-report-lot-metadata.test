@@ -1,0 +1,12 @@
+; Coverage test for report.cc lines 1012-1037: fn_lot_date, fn_lot_price,
+; fn_lot_tag
+; Test lot_date(), lot_price(), lot_tag() which extract annotation metadata
+; from an annotated amount (lot with price, date, and tag).
+
+2024/01/01 Buy Stock
+    Assets:Stock    10 AAPL {$100.00} [2024/01/15] (lot1)
+    Assets:Cash
+
+test reg Assets:Stock --format '%(lot_date(amount)) %(lot_price(amount)) %(lot_tag(amount))\n'
+2024/01/15 $100 lot1
+end test

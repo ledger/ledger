@@ -1,0 +1,10 @@
+; Coverage for value.cc: in_place_floor and in_place_ceiling for AMOUNT type
+; floor() rounds down, ceiling() rounds up
+
+2024/01/01 Test
+    Expenses:Food    $10.50
+    Assets:Checking
+
+test reg Expenses --format "%(floor(amount)) %(ceiling(amount))\n"
+$10.00 $11.00
+end test

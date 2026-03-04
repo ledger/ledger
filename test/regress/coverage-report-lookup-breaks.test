@@ -1,0 +1,32 @@
+; Coverage for report.cc lookup break statements
+; Lines 1536 (case 'g'), 1548 (case 'j'): function lookup falls through
+; to option lookup when the function name does not match known functions
+; but matches an option name
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+; 'gain' starts with 'g', not get_at/green -> break at 1536 -> option lookup
+test eval 'gain'
+0
+end test
+
+; 'generated' starts with 'g', not get_at/green -> break at 1536 -> option lookup
+test eval 'generated'
+0
+end test
+
+; 'group_by_' starts with 'g', not get_at/green -> break at 1536 -> option lookup
+test eval 'group_by_'
+end test
+
+; 'invert' starts with 'i', not is_seq -> break at 1541 -> option lookup
+test eval 'invert'
+0
+end test
+
+; 'immediate' starts with 'i', not is_seq -> break at 1541 -> option lookup
+test eval 'immediate'
+0
+end test

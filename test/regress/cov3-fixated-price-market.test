@@ -1,0 +1,14 @@
+; Test fixated price used in market valuation
+; Covers annotate.cc lines 313-315 (fixated price returns fixed value)
+
+2024/01/01 Buy Stock
+    Assets:Brokerage    10 AAPL {=$150.00}
+    Assets:Cash
+
+2024/06/15 Buy More
+    Assets:Brokerage    10 AAPL {=$150.00}
+    Assets:Cash
+
+test bal --market Assets:Brokerage
+               $3000  Assets:Brokerage
+end test

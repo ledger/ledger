@@ -1,0 +1,11 @@
+; Coverage for emacs.cc line 64-67: code and empty payee paths
+
+2024/01/01 (123) Test Purchase
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test emacs
+(("$FILE" 3 (26002 21728 0) "123" "Test Purchase"
+  (4 "Expenses:Food" "$10.00" nil)
+  (5 "Assets:Cash" "$-10.00" nil)))
+end test

@@ -1,0 +1,15 @@
+; Coverage: commodity.cc line 79 (map_prices with CURRENT_TIME fallback)
+; The prices command calls map_prices without a specific moment,
+; triggering the CURRENT_TIME() fallback when epoch is not set.
+
+P 2024/01/01 AAPL $150.00
+P 2024/06/01 AAPL $160.00
+
+2024/01/01 Buy
+    Assets:Brokerage    10 AAPL
+    Assets:Cash         $-1500.00
+
+test prices AAPL
+2024/01/01 AAPL          $150.00
+2024/06/01 AAPL          $160.00
+end test

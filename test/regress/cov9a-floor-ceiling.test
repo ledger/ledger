@@ -1,0 +1,10 @@
+; Coverage test for report.cc lines 786, 790
+; fn_floor and fn_ceiling round amounts down/up
+
+2024/01/01 Test
+    Expenses:Food    $10.50
+    Assets:Cash
+
+test reg --format "%(floor(amount)) %(ceiling(amount))\n" --limit "account =~ /Expenses/"
+$10.00 $11.00
+end test

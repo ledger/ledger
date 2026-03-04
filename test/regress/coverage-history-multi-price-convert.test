@@ -1,0 +1,22 @@
+; Coverage for history.cc: multi-commodity price conversion chain
+
+P 2024/01/01 EUR $1.10
+P 2024/01/01 GBP $1.30
+P 2024/06/01 EUR $1.15
+
+2024/01/01 Test
+    Expenses:EUR    100 EUR
+    Assets:Cash
+
+2024/06/01 Test2
+    Expenses:GBP    50 GBP
+    Assets:Cash
+
+test bal -V -X '$'
+            $-180.00  Assets:Cash
+             $180.00  Expenses
+             $115.00    EUR
+              $65.00    GBP
+--------------------
+                   0
+end test

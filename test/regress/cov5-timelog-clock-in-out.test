@@ -1,0 +1,8 @@
+; Coverage for timelog.cc lines 79, 111, 113: clock in/out with payee and note
+
+i 2024/01/01 09:00:00 Project:Work  Payee
+o 2024/01/01 17:00:00
+
+test reg --format "%(payee)\n"
+Payee
+end test

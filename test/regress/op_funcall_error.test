@@ -1,0 +1,26 @@
+; Test error context in function calls to cover op.cc lines 520-522
+; Triggers catch(const std::exception&) in calc_call
+2024/01/01 Test
+    Expenses:Food              $10.00
+    Assets:Checking
+
+; Error in user-defined lambda (exercises O_LAMBDA path in calc_call)
+test eval 'my_f(x) = x + "abc"; my_f(0)' -> 1
+__ERROR__
+While evaluating value expression:
+  (null; my_f(0))
+While adding abc to 0:
+While calling function 'my_f 0':
+Error: Cannot add a string to an amount
+end test
+
+; Error in built-in function (exercises FUNCTION path in calc_call)
+test eval 'format_date(1)' -> 1
+__ERROR__
+While evaluating value expression:
+  format_date(1)
+  ^^^^^^^^^^^^^^
+While converting 1:
+While calling function 'format_date 1':
+Error: Cannot convert an amount to a date
+end test

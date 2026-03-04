@@ -1,0 +1,20 @@
+; Test session with --lot-matching option
+; Covers session.cc lines 127-128 (lot_matching handling)
+
+2024/01/15 Buy lot1
+    Assets:Stocks    10 AAPL {$150}
+    Assets:Cash
+
+2024/02/20 Buy lot2
+    Assets:Stocks    5 AAPL {$160}
+    Assets:Cash
+
+2024/03/01 Sell FIFO
+    Assets:Stocks    -3 AAPL {$150} @ $170
+    Assets:Cash    $510
+    Income:Capital Gains
+
+test bal --lot-matching fifo --lots --no-total Assets:Stocks
+       7 AAPL {$150}
+       5 AAPL {$160}  Assets:Stocks
+end test

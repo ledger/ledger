@@ -1,0 +1,23 @@
+; Coverage for session.cc lines 127-128: lot_matching option
+; --lot-matching fifo sets the lot matching policy to FIFO
+
+P 2024/01/01 AAPL $150.00
+P 2024/06/01 AAPL $180.00
+
+2024/01/01 Buy
+    Assets:Brokerage    10 AAPL {$150.00}
+    Assets:Checking    $-1500.00
+
+2024/02/01 Buy More
+    Assets:Brokerage    5 AAPL {$160.00}
+    Assets:Checking    $-800.00
+
+2024/06/01 Sell
+    Assets:Brokerage   -3 AAPL {$150.00} @ $180.00
+    Assets:Checking    $540.00
+    Income:Capital Gains
+
+test --lot-matching fifo bal Assets:Brokerage --lots
+    7 AAPL {$150.00}
+    5 AAPL {$160.00}  Assets:Brokerage
+end test

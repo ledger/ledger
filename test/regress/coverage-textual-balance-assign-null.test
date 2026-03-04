@@ -1,0 +1,10 @@
+; Coverage for textual_xacts.cc lines 633-636: balance assignment
+
+2024/01/01 Test
+    Assets:Cash    = $100
+    Equity
+
+test reg
+24-Jan-01 Test                  Assets:Cash                    $100         $100
+                                Equity                        $-100            0
+end test

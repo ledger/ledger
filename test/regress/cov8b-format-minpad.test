@@ -1,0 +1,11 @@
+; Coverage test for format.cc lines 471-473
+; Test min_width padding with unicode characters.
+
+2024/01/01 Café
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format '%-20(payee)|\n'
+Café                |
+Café                |
+end test

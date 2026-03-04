@@ -1,0 +1,14 @@
+; Coverage for filters.cc line 1089: day_of_week filter
+
+2024/01/01 Monday
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Tuesday
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test reg Expenses --dow
+24-Jan-01 Mondays               Expenses:Food                $10.00       $10.00
+24-Jan-02 Tuesdays              Expenses:Food                $20.00       $30.00
+end test

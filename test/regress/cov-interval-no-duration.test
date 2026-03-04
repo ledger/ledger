@@ -1,0 +1,21 @@
+; Coverage test for filters.cc lines 1070-1071
+; interval_posts with period range but no duration
+
+2024/01/01 Test A
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/10 Test B
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2024/02/01 Test C
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test reg --period "from 2024/01/01 to 2024/01/15"
+24-Jan-01 Test A                Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Jan-10 Test B                Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test

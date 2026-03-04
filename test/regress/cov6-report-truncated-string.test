@@ -1,0 +1,11 @@
+; Coverage for report.cc line 819: fn_truncated with string value (no width arg)
+; When truncated() is called on a string without a width, it falls through
+; to format_t::truncate with width=0 (no truncation)
+
+2024/01/01 Test Long Payee Name
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg Expenses --format "%(truncated(payee))\n"
+Test Long Payee Name
+end test

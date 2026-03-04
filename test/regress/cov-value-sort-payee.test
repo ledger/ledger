@@ -1,0 +1,28 @@
+; Coverage test for value.cc string comparison in is_less_than/is_greater_than
+; Sorting by payee exercises string comparison operators
+
+2024/01/01 Charlie
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/01/02 Alice
+    Expenses:Food            $20.00
+    Assets:Cash
+
+2024/01/03 Bob
+    Expenses:Food            $30.00
+    Assets:Cash
+
+; Sort by payee exercises string comparison
+test reg Expenses --sort payee
+24-Jan-02 Alice                 Expenses:Food                $20.00       $20.00
+24-Jan-03 Bob                   Expenses:Food                $30.00       $50.00
+24-Jan-01 Charlie               Expenses:Food                $10.00       $60.00
+end test
+
+; Sort by -payee exercises reverse string comparison
+test reg Expenses --sort "-payee"
+24-Jan-01 Charlie               Expenses:Food                $10.00       $10.00
+24-Jan-03 Bob                   Expenses:Food                $30.00       $40.00
+24-Jan-02 Alice                 Expenses:Food                $20.00       $60.00
+end test

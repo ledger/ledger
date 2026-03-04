@@ -1,0 +1,17 @@
+; Coverage: account.cc line 690 - total() returning family_details.total
+; Exercises the total() function with a hierarchy of accounts
+
+2024/01/01 Test
+    Expenses:Food:Groceries    $10.00
+    Expenses:Food:Restaurant    $20.00
+    Expenses:Gas    $5.00
+    Assets:Cash
+
+test bal --format "%(account): %(total)\n" --no-total
+Assets:Cash: $-35.00
+Expenses: $35.00
+Expenses:Food: $30.00
+Expenses:Food:Groceries: $10.00
+Expenses:Food:Restaurant: $20.00
+Expenses:Gas: $5.00
+end test

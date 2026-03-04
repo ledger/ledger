@@ -1,0 +1,13 @@
+; Test --no-aliases option
+; Covers session.cc line 109 (no_aliases)
+
+alias food=Expenses:Food
+
+2024/01/15 Test
+    food    $50.00
+    Assets:Cash
+
+test reg --no-aliases
+24-Jan-15 Test                  food                         $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+end test

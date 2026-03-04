@@ -1,0 +1,38 @@
+; Coverage for times.cc lines 789-796: relative day-of-week handling
+; Tests "last monday", "next monday", and "this monday" period expressions
+; which exercise the TOK_A_WDAY case in handle_relative_token
+
+2024/01/01 Monday Entry
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Tuesday Entry
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2024/01/03 Wednesday Entry
+    Expenses:Food    $15.00
+    Assets:Cash
+
+2024/01/08 Next Monday
+    Expenses:Food    $25.00
+    Assets:Cash
+
+2024/01/15 Following Monday
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test reg --now 2024/01/10 --period "last monday"
+24-Jan-01 Monday Entry          Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+test reg --now 2024/01/10 --period "next monday"
+24-Jan-15 Following Monday      Expenses:Food                $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test
+
+test reg --now 2024/01/10 --period "this monday"
+24-Jan-08 Next Monday           Expenses:Food                $25.00       $25.00
+                                Assets:Cash                 $-25.00            0
+end test

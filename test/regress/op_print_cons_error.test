@@ -1,0 +1,14 @@
+; Test error in function call with multiple arguments
+; Covers op.cc line 588 (print_cons found=true) and line 789 (O_CALL print with O_CONS)
+2024/01/01 Test
+    Expenses:Food              $10.00
+    Assets:Checking
+
+test eval 'justify("abc", 10, 0, 0, unknown_var)' -> 1
+__ERROR__
+While evaluating value expression:
+  justify("abc", 10, 0, 0, unknown_var)
+                           ^^^^^^^^^^^
+While calling function 'justify (<#EXPR "abc">, <#EXPR {10}>, <#EXPR {0}>, 0, <#EXPR unknown_var>)':
+Error: Unknown identifier 'unknown_var'
+end test

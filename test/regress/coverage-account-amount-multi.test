@@ -1,0 +1,14 @@
+; Coverage for account.cc line 445: account amount with multiple commodities
+
+2024/01/01 Test
+    Assets:Mixed    $100.00
+    Equity
+
+2024/01/02 Test
+    Assets:Mixed    200 EUR
+    Equity
+
+test bal Assets:Mixed
+             $100.00
+             200 EUR  Assets:Mixed
+end test

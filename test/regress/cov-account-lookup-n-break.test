@@ -1,0 +1,14 @@
+; Coverage test for account.cc line 499
+; Account lookup 'N' break when fn_name starts with N but isn't just 'N'
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --display "Nada" -> 1
+__ERROR__
+While evaluating value expression:
+  Nada
+  ^^^^
+Error: Unknown identifier 'Nada'
+end test

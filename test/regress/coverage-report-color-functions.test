@@ -1,0 +1,9 @@
+; Coverage for report.cc lines 1081-1111: color name functions
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(red) %(blue) %(green) %(yellow) %(cyan) %(magenta) %(white) %(black) %(bold) %(underline) %(blink)\n" Expenses
+red blue green yellow cyan magenta white black bold underline blink
+end test

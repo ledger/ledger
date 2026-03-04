@@ -1,0 +1,13 @@
+; Test US-style thousands separator with decimal point in display
+; Covers amount.cc lines 204 (normal period output with THOUSANDS flag)
+; and line 220 (comma thousands separator output)
+
+commodity $1,000.00
+
+2024/01/01 Test
+    Expenses:Food    $12,345.67
+    Assets:Cash
+
+test bal --no-total Expenses
+          $12,345.67  Expenses:Food
+end test

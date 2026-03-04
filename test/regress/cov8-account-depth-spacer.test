@@ -1,0 +1,14 @@
+; Coverage test for account.cc lines 319-333:
+; Exercise get_depth_spacer function.
+
+2024/01/01 Test
+    Expenses:Food:Snacks    $5.00
+    Expenses:Gas            $10.00
+    Assets:Cash
+
+test bal Expenses --format "%(depth_spacer)%(account)\n"
+Expenses
+  Expenses:Food:Snacks
+  Expenses:Gas
+
+end test

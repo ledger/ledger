@@ -1,0 +1,11 @@
+; Test multiplication and division with percentage amounts
+; Covers amount.cc lines 480-496 (percentage multiplication)
+; and lines 531-548 (percentage division)
+
+2024/01/01 Test
+    Expenses:Tax    $100.00
+    Assets:Cash
+
+test reg --format="%(scrub(display_amount * 19%))\n" Expenses
+$19.00
+end test

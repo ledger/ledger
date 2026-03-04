@@ -1,0 +1,11 @@
+; Coverage for print.cc line 222: balance assignment wider than amount width
+
+2024/01/01 Test
+    Assets:Cash    = $1000000000.00
+    Equity
+
+test print --amount-width=10
+2024/01/01 Test
+    Assets:Cash                          = $1000000000.00
+    Equity
+end test

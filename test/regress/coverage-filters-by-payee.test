@@ -1,0 +1,24 @@
+; Coverage test for filters.cc line 1251: early return in by_payee_posts
+; When inserting into payee_subtotals fails (already exists), the early
+; return at line 1251 is triggered. In practice, the insert always
+; succeeds for new payees (asserted), but this test exercises the
+; by_payee_posts path generally. Also covers the normal flush at line 1233.
+
+2024/01/01 Shop
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/02/01 Shop
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2024/03/01 Restaurant
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg --by-payee
+24-Mar-01 Restaurant            Assets:Cash                 $-50.00      $-50.00
+                                Expenses:Food                $50.00            0
+24-Jan-01 Shop                  Assets:Cash                 $-30.00      $-30.00
+                                Expenses:Food                $30.00            0
+end test

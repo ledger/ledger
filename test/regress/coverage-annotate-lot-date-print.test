@@ -1,0 +1,11 @@
+; Coverage for annotate.cc lines 244-245: print annotation with lot date
+
+2024/01/01 Buy Stock
+    Assets:Brokerage    10 AAPL {$150.00} [2024/01/01]
+    Assets:Cash         $-1500.00
+
+test print
+2024/01/01 Buy Stock
+    Assets:Brokerage                    10 AAPL {$150.00} [2024/01/01]
+    Assets:Cash                            $-1500.00
+end test

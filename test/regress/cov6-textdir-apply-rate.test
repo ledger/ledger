@@ -1,0 +1,16 @@
+; Coverage for textual_directives.cc lines 289-290: apply rate directive
+
+apply fixed EUR $1.10
+
+2024/01/01 Test
+    Expenses:Food    100 EUR
+    Assets:Cash
+
+end apply fixed
+
+test bal -V
+            $-110.00  Assets:Cash
+             $110.00  Expenses:Food
+--------------------
+                   0
+end test

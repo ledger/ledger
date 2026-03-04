@@ -1,0 +1,29 @@
+; Coverage test for times.cc handle_relative_token with
+; TOK_A_MONTH, TOK_YEAR, TOK_QUARTER, TOK_WEEK, TOK_DAY
+
+2024/05/15 May Transaction
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/06/15 June Transaction
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2025/06/15 June Next Year
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test reg --now 2025/07/01 --period "last june"
+24-Jun-15 June Transaction      Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test
+
+test reg --now 2024/05/01 --period "next june"
+25-Jun-15 June Next Year        Expenses:Food                $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test
+
+test reg --now 2024/06/01 --period "this june"
+24-Jun-15 June Transaction      Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test

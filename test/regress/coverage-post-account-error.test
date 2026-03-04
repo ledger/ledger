@@ -1,0 +1,17 @@
+; Coverage test for post.cc L292: throw for invalid argument type
+; to account() function in posting context.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --limit "account(true)" -> 1
+__ERROR__
+While evaluating value expression:
+  account(true)
+  ^^^^^^^^^^^^^
+While calling function 'account 1':
+While handling posting from "$FILE", line 5:
+>     Expenses:Food    $10.00
+Error: Expected string or mask for argument 1, but received a boolean
+end test

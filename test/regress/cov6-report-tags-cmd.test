@@ -1,0 +1,10 @@
+; Coverage for report.cc line 1820: tags command
+
+2024/01/01 Test
+    ; :food:
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test tags
+food
+end test

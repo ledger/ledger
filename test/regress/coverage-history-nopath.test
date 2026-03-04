@@ -1,0 +1,30 @@
+; Coverage test for history.cc L337, L397, L405, L407
+; Tests find_price returning nullopt when:
+;   - Source commodity has no adjacent edges (L337: single-target)
+;   - Source and target are the same (L397: source == target)
+;   - Target has no graph_index (L405/L407: out of range)
+;
+; Uses -X with a target commodity that has no price relationship
+; to the source commodity, exercising the no-path-found return.
+
+P 2024/01/01 GBP $1.30
+
+2024/01/01 Test
+    Expenses:Food    10 EUR
+    Assets:Cash     -10 EUR
+
+; EUR has no price to GBP or $, so conversion fails silently
+test bal -X GBP
+             -10 EUR  Assets:Cash
+              10 EUR  Expenses:Food
+--------------------
+                   0
+end test
+
+; EUR has no price at all, -V finds no price
+test bal -V
+             -10 EUR  Assets:Cash
+              10 EUR  Expenses:Food
+--------------------
+                   0
+end test

@@ -1,0 +1,13 @@
+; Coverage test for history.cc line 488
+; Multi-hop commodity conversion via price chain A -> B -> C
+
+P 2024/01/01 A 10 B
+P 2024/01/01 B 5 C
+
+2024/01/02 Test
+    Assets:Investments    10 A
+    Assets:Cash          -100 B
+
+test bal --exchange C Assets:Investments
+                C500  Assets:Investments
+end test

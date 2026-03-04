@@ -1,0 +1,21 @@
+; Coverage test for select.cc lines 56-85:
+; Various column type matching in get_principal_identifiers
+; Tests non-standard columns (note, custom metadata) that return
+; false from the column identifier matching
+
+2024/01/15 Test
+    ; Tag: value1
+    Expenses:Food   $100.00
+    Assets:Cash
+
+; Test select with note column (unknown identifier path)
+test --columns=80 select 'date, payee, note from posts'
+24-Jan-15 Test                                                        Tag: value1
+24-Jan-15 Test                                                        Tag: value1
+end test
+
+; Test select with total column
+test --columns=80 select 'date, account, amount, total from posts'
+24-Jan-15 Expenses:Food                                    $100.00      $100.00
+24-Jan-15 Assets:Cash                                     $-100.00            0
+end test

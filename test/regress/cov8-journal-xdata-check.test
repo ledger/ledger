@@ -1,0 +1,16 @@
+; Coverage for journal.cc lines 504-512: xact has_xdata checks in valid()
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/02/01 Test2
+    Expenses:Gas     $20.00
+    Assets:Cash
+
+test bal --depth 1
+             $-30.00  Assets
+              $30.00  Expenses
+--------------------
+                   0
+end test

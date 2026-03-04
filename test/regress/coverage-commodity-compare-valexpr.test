@@ -1,0 +1,16 @@
+; Coverage test for commodity.cc lines 485, 496-498, 514-515
+; Tests compare_by_commodity with tag annotations to cover tag comparison
+; and the "all attributes match" path.
+
+2024/01/01 Buy shares
+    Assets:Brokerage    10 AAPL {$100} [2024/01/01] (lot1)
+    Assets:Cash        $-1000
+
+2024/01/02 Buy more shares
+    Assets:Brokerage    10 AAPL {$100} [2024/01/01] (lot2)
+    Assets:Cash        $-1000
+
+test bal Assets:Brokerage --lots --lot-tags
+10 AAPL {$100} [2024/01/01] (lot1)
+10 AAPL {$100} [2024/01/01] (lot2)  Assets:Brokerage
+end test

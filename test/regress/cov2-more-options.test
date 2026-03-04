@@ -1,0 +1,94 @@
+; Test more report options for report.cc coverage
+; Tests various OPT handlers and option combinations
+
+2024/01/01 Payee One
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/01/15 Payee Two
+    Expenses:Gas             $20.00
+    Assets:Cash
+
+2024/02/01 Payee Three
+    Expenses:Dining          $30.00
+    Assets:Cash
+
+; Test --market / -V option (line 787-792, 1206-1207)
+test bal Expenses --market --now 2024/03/01
+              $60.00  Expenses
+              $30.00    Dining
+              $10.00    Food
+              $20.00    Gas
+--------------------
+              $60.00
+end test
+
+; Test --weekly option (line 1210)
+test reg Expenses --weekly
+23-Dec-31 - 24-Jan-06           Expenses:Food                $10.00       $10.00
+24-Jan-14 - 24-Jan-20           Expenses:Gas                 $20.00       $30.00
+24-Jan-28 - 24-Feb-03           Expenses:Dining              $30.00       $60.00
+end test
+
+; Test --monthly option (line 1186-1187)
+test reg Expenses --monthly
+24-Jan-01 - 24-Jan-31           Expenses:Food                $10.00       $10.00
+                                Expenses:Gas                 $20.00       $30.00
+24-Feb-01 - 24-Feb-29           Expenses:Dining              $30.00       $60.00
+end test
+
+; Test --yearly option (line 1215-1217)
+test reg Expenses --yearly
+24-Jan-01 - 24-Dec-31           Expenses:Dining              $30.00       $30.00
+                                Expenses:Food                $10.00       $40.00
+                                Expenses:Gas                 $20.00       $60.00
+end test
+
+; Test --quarterly option (line 1366)
+test reg Expenses --quarterly
+24-Jan-01 - 24-Mar-31           Expenses:Dining              $30.00       $30.00
+                                Expenses:Food                $10.00       $40.00
+                                Expenses:Gas                 $20.00       $60.00
+end test
+
+; Test --average / -A option (line 1153-1154, 1232)
+test reg Expenses --monthly --average
+24-Jan-01 - 24-Jan-31           Expenses:Food                $10.00       $10.00
+                                Expenses:Gas                 $20.00       $15.00
+24-Feb-01 - 24-Feb-29           Expenses:Dining              $30.00       $20.00
+end test
+
+; Test --percent / -% option (line 1149-1150, 1350)
+test bal Expenses -%
+             100.00%  Expenses
+              50.00%    Dining
+              16.67%    Food
+              33.33%    Gas
+end test
+
+; Test --invert option (line 1305)
+test reg Expenses:Food --invert
+24-Jan-01 Payee One             Expenses:Food               $-10.00      $-10.00
+end test
+
+; Test --related / -r option (line 1372-1373)
+test reg Expenses:Food --related
+24-Jan-01 Payee One             Assets:Cash                 $-10.00      $-10.00
+end test
+
+; Test --empty / -E option (line 1165-1166)
+test bal Expenses --empty
+              $60.00  Expenses
+              $30.00    Dining
+              $10.00    Food
+              $20.00    Gas
+--------------------
+              $60.00
+end test
+
+; Test --collapse / -n option (line 1252, 1332) with expenses only
+test reg Expenses --collapse
+24-Jan-01 Payee One             Expenses:Food                $10.00       $10.00
+24-Jan-15 Payee Two             Expenses:Gas                 $20.00       $30.00
+24-Feb-01 Payee Three           Expenses:Dining              $30.00       $60.00
+end test

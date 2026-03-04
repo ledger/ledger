@@ -1,0 +1,16 @@
+; Coverage for report.cc line 1199: -S option
+
+2024/01/02 Zebra
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2024/01/01 Apple
+    Expenses:Drink    $10.00
+    Assets:Cash
+
+test reg -S payee
+24-Jan-01 Apple                 Expenses:Drink               $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Jan-02 Zebra                 Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test

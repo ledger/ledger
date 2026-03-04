@@ -1,0 +1,11 @@
+; Coverage for draft.cc: basic draft/xact command
+
+2024/01/01 Store
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test xact 2024/01/15 Store
+2024/01/15 Store
+    Expenses:Food                             $10.00
+    Assets:Cash
+end test

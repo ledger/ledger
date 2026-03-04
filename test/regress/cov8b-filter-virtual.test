@@ -1,0 +1,20 @@
+; Coverage test for filters.cc lines 345-351
+; Test POST_MUST_BALANCE flag with virtual postings.
+; Balanced virtual posts use square brackets and set POST_MUST_BALANCE.
+; This exercises the auto_virtualize check in handle_value.
+
+2024/01/01 Test
+    Expenses:Food          $10.00
+    [Budget:Food]         $-10.00
+    [Budget:Savings]       $10.00
+    Assets:Cash
+
+test bal --subtotal
+             $-10.00  Assets:Cash
+                   0  Budget
+             $-10.00    Food
+              $10.00    Savings
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

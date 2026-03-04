@@ -1,0 +1,14 @@
+; Coverage test for draft.cc lines 458-459: negative cost error
+; When a draft template posting has a negative cost value,
+; the code throws a parse_error. Exercises:
+;   L458: if (post.cost->sign() < 0) -- true branch
+;   L459: throw parse_error("A posting's cost may not be negative")
+
+2024/01/01 Grocery Store
+    Expenses:Food    10 AAPL @ $5.00
+    Assets:Cash   $-50.00
+
+test xact 2024/06/15 Grocery to Expenses:Food '@' '$-6.00' '10 AAPL' from Assets:Cash -> 1
+__ERROR__
+Error: A posting's cost may not be negative
+end test

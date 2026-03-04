@@ -1,0 +1,20 @@
+; Coverage test for amount.cc line 1223
+; "Incorrect use of decimal comma" error
+; When using decimal comma style, a comma after a period is invalid
+; because the period is treated as thousands separator and only one
+; decimal comma is allowed
+
+commodity 1.000,00 EUR
+
+2024/01/01 Bad amount
+    Expenses:Food       1.000,00,50 EUR
+    Assets:Checking
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 10:
+While parsing posting:
+  Expenses:Food       1.000,00,50 EUR
+                      ^^^^^^^^^^^^^^^
+Error: Too many commas in amount
+end test

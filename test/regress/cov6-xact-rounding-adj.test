@@ -1,0 +1,21 @@
+; Coverage test for xact.cc lines 640-641, 644-654
+; Tests the rounding adjustment path in transaction finalization.
+; When per-unit costs produce rounding artifacts, the finalize code
+; checks if the imbalance is explained by rounding differences.
+; Total cost (@@) postings should be skipped in this check.
+; This requires a transaction with per-unit cost that causes rounding.
+
+2024/01/01 Buy at per-unit price with rounding
+    Assets:Brokerage         3 AAPL @ $33.33
+    Assets:Brokerage         2 AAPL @@ $66.67
+    Assets:Cash            $-166.66
+
+test bal
+            $-166.66
+              5 AAPL  Assets
+              5 AAPL    Brokerage
+            $-166.66    Cash
+--------------------
+            $-166.66
+              5 AAPL
+end test

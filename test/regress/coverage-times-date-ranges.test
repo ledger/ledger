@@ -1,0 +1,35 @@
+; Coverage for times.cc lines 894-912, 914-923, 925-935: date range operators
+; Tests the dash operator, from/since, and until/to date range parsing
+
+2024/01/15 January
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/02/15 February
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2024/03/15 March
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test reg --period "2024/01/01 - 2024/02/28"
+24-Jan-15 January               Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Feb-15 February              Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test
+
+test reg --now 2024/06/01 --period "since january until march"
+24-Jan-15 January               Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Feb-15 February              Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test
+
+test reg --period "from 2024/01/01 to 2024/02/28"
+24-Jan-15 January               Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Feb-15 February              Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test

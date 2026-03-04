@@ -1,8 +1,11 @@
-; Test deferred posting syntax (<account>)
+; Coverage for xact.cc lines 690-692 (POST_DEFERRED path in finalize)
+; Posts with <angle bracket> accounts are deferred.
 
-2024/01/01 Payee
+2024/01/01 Test
     Expenses:Food    $10.00
-    Assets:Checking  $-10.00
-    <Deferred:Entry>  $10.00
-    <Deferred:Entry>  $-10.00
+    <Assets:Cash>   $-10.00
 
+test reg
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

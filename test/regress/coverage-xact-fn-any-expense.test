@@ -1,0 +1,8 @@
+; Test xact.cc: fn_any returns false (line 798) when no match found
+
+2024/01/10 Salary
+    Assets:Checking   $3000.00
+    Income:Salary
+
+test reg --limit "any(account =~ /Expenses/)"
+end test

@@ -1,0 +1,17 @@
+; Coverage test for xact.cc line 719
+; verify() skips postings where !must_balance() (virtual postings)
+
+= Expenses
+    (Budget:Match)    -1
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    (Virtual:Tip)     $2.00
+    Assets:Cash     $-10.00
+
+test reg
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                (Virtual:Tip)                 $2.00       $12.00
+                                Assets:Cash                 $-10.00        $2.00
+                                (Budget:Match)              $-10.00       $-8.00
+end test

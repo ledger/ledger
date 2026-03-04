@@ -1,0 +1,21 @@
+; Coverage test for account.cc earliest/latest functions (L343-362).
+; Exercises get_earliest (L343-345), get_latest (L352-354), and
+; the 'e' case in lookup (L435-440).
+
+2024/01/01 Grocery
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Gas     $30.00
+    Assets:Cash
+
+2024/01/03 Grocery
+    Expenses:Food    $5.00
+    Assets:Cash
+
+test bal --no-total --flat --format "%(earliest)|%(latest)|%(account)\n"
+2024/01/01|2024/01/03|Assets:Cash
+2024/01/01|2024/01/03|Expenses:Food
+2024/01/02|2024/01/02|Expenses:Gas
+end test

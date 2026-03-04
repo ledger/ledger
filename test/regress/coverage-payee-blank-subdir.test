@@ -1,0 +1,16 @@
+; Test textual_directives.cc line 534: break on blank whitespace line
+; inside payee directive block
+payee Grocery Store
+    alias Groceries
+  
+
+2024/01/01 Groceries
+    Expenses:Food   $10.00
+    Assets:Cash
+
+test bal
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

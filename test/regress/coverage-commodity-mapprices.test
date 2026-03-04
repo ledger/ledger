@@ -1,0 +1,16 @@
+; Coverage test for commodity.cc line 79
+; Tests commodity_t::map_prices without a specific moment, which falls
+; through to CURRENT_TIME() on line 79.
+; Also exercises the prices command which calls map_prices.
+
+P 2024/01/01 EUR 1.10 $
+P 2024/06/01 EUR 1.15 $
+
+2024/01/10 Test
+    Assets:European           100 EUR
+    Assets:Cash
+
+test prices EUR
+2024/01/01 EUR             $1.10
+2024/06/01 EUR             $1.15
+end test

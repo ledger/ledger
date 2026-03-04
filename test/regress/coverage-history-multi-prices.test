@@ -1,0 +1,20 @@
+; Coverage for history.cc: price map lookup with multiple price points
+; Tests upper_bound selection (line 186) and time-based price filtering
+; The most recent price at evaluation time ($1.20 from 2024/04/01) is used
+
+P 2024/01/01 EUR $1.10
+P 2024/02/01 EUR $1.15
+P 2024/03/01 EUR $1.08
+P 2024/04/01 EUR $1.20
+
+2024/01/15 Trip 1
+    Expenses:Travel    100 EUR
+    Assets:Checking
+
+2024/03/15 Trip 2
+    Expenses:Travel    200 EUR
+    Assets:Checking
+
+test bal --market --exchange '$' --now 2024/05/01 Expenses
+             $360.00  Expenses:Travel
+end test

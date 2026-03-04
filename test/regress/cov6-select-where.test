@@ -1,0 +1,13 @@
+; Coverage for select.cc: where clause in select
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Other
+    Expenses:Gas    $20.00
+    Assets:Cash
+
+test select date, account, amount from reg where 'account=~/Food/'
+24-Jan-01 Expenses:Food                                                  $10.00
+end test

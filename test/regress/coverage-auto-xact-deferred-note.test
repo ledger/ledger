@@ -1,0 +1,20 @@
+; Coverage test for xact.cc lines 1021-1026
+; Tests auto-xact deferred notes being applied to matching postings.
+; Tags on the auto-xact (before the postings) are applied to the
+; initial post that matches the predicate.
+
+= Expenses:Food
+    ; Category: Food
+    Liabilities:Tax  (amount * 0.10)
+    Assets:Tax       (-amount * 0.10)
+
+2024/03/01 Test
+    Expenses:Food     $100.00
+    Assets:Checking
+
+test reg --format "%(note)\n"
+ Category: Food
+
+ Category: Food
+ Category: Food
+end test

@@ -1,0 +1,12 @@
+; Test has_meta accessor (lines 463-464 of item.cc)
+; Exercise the has_meta lookup (aliases to has_tag)
+
+2024/01/01 Test
+    ; MyTag: hello
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --limit "has_meta(\"MyTag\")" --format "%(account)\n"
+Expenses:Food
+Assets:Cash
+end test

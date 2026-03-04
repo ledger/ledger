@@ -1,0 +1,11 @@
+; Coverage for report.cc lines 1030-1037: fn_lot_tag
+; Tests the lot_tag function which returns the tag annotation from a lot
+; Uses lot with tag annotation to exercise the details.tag branch
+
+2024/03/15 * Buy Stock
+    Assets:Brokerage          10 AAPL {$150.00} (mytag)
+    Assets:Cash
+
+test reg --format "%(lot_tag(amount))\n" Assets:Brokerage
+mytag
+end test

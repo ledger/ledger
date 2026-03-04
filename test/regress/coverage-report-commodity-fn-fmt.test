@@ -1,0 +1,24 @@
+; Coverage for report.cc lines 938-940: fn_commodity
+; and lines 933-936: fn_percent via format expressions
+
+P 2024/01/01 AAPL $150.00
+
+2024/01/01 Buy
+    Assets:Stocks    10 AAPL @ $150.00
+    Assets:Cash     $-1500.00
+
+; fn_commodity (line 938-940): extracts commodity symbol
+test reg --format '%(commodity(amount))\n' Assets:Stocks
+AAPL
+end test
+
+; fn_percent (line 933-936): calculates percentage
+2024/01/02 Spending
+    Expenses:Food    $75.00
+    Expenses:Rent    $100.00
+    Assets:Checking
+
+test reg --format '%(percent(amount, $175.00))\n' Expenses
+42.86%
+57.14%
+end test

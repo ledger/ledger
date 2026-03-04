@@ -1,0 +1,13 @@
+; Coverage for csv.cc line 202: default commodity in csv convert
+; and csv.cc line 58: unget in csv parsing, line 96: early return
+
+commodity $1,000.00
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test csv
+"2024/01/01","","Test","Expenses:Food","$","10","",""
+"2024/01/01","","Test","Assets:Cash","$","-10","",""
+end test

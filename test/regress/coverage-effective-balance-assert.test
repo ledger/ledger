@@ -1,0 +1,17 @@
+; Coverage test for textual_xacts.cc lines 341-358
+; Balance assertion with --effective flag (use_aux_date path)
+
+2024/01/01=2024/01/15 First deposit
+    Assets:Cash              $100.00 = $100.00
+    Equity:Opening
+
+2024/01/02=2024/01/10 Second deposit
+    Assets:Cash              $50.00 = $50.00
+    Equity:Opening
+
+test bal --effective
+             $150.00  Assets:Cash
+            $-150.00  Equity:Opening
+--------------------
+                   0
+end test

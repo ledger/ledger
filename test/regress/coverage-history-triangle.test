@@ -1,0 +1,17 @@
+; Coverage test for history.cc L488 and multi-hop price conversion
+; Tests triangular price conversion GBP -> EUR -> $ which exercises the
+; dijkstra shortest path traversal and the last_target = v_comm branch.
+
+P 2024/01/01 EUR $1.10
+P 2024/01/01 GBP 1.17 EUR
+
+2024/01/01 Test
+    Expenses:Food    10 GBP
+    Assets:Cash     -10 GBP
+
+test bal -X '$'
+             $-12.87  Assets:Cash
+              $12.87  Expenses:Food
+--------------------
+                   0
+end test

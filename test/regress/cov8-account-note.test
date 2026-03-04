@@ -1,0 +1,13 @@
+; Coverage test for account.cc line 470-472:
+; Exercise account 'note' lookup and 'n' (subcount) function.
+
+account Expenses:Food
+    note This is a food account
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal Expenses --format "%(account) n=%(n) note=%(note)\n"
+Expenses:Food n=1 note=This is a food account
+end test

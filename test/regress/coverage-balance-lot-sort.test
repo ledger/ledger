@@ -1,0 +1,22 @@
+; Coverage for balance.cc lines 259-278: FIFO lot sorting with annotated/unannotated
+
+2024/01/01 Buy lot 1
+    Assets:Stocks    10 AAPL {$100.00} [2024/01/01]
+    Assets:Cash
+
+2024/02/01 Buy lot 2
+    Assets:Stocks    5 AAPL {$110.00} [2024/02/01]
+    Assets:Cash
+
+2024/03/01 Buy unannotated
+    Assets:Stocks    3 AAPL
+    Assets:Cash
+
+test reg --format '%(fifo_lots(total))\n' Assets:Stocks
+10 AAPL {$100} [2024/01/01]
+10 AAPL {$100} [2024/01/01]
+5 AAPL {$110} [2024/02/01]
+3 AAPL
+10 AAPL {$100} [2024/01/01]
+5 AAPL {$110} [2024/02/01]
+end test

@@ -1,0 +1,57 @@
+; Coverage test for draft.cc lines 59, 123, 131, 136, 141, 145, 153, 156:
+; Empty payee mask output and various "Invalid xact command arguments" errors
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test template 2024/03/01 -> 0
+--- Input arguments ---
+("2024/03/01")
+
+--- Transaction template ---
+Date:       <today>
+Payee mask: INVALID (template expression will cause an error)
+
+<Posting copied from last related transaction>
+end test
+
+test template at -> 1
+__ERROR__
+Error: Invalid xact command arguments
+end test
+
+test template to -> 1
+__ERROR__
+Error: Invalid xact command arguments
+end test
+
+test template from -> 1
+__ERROR__
+Error: Invalid xact command arguments
+end test
+
+test template on -> 1
+__ERROR__
+Error: Invalid xact command arguments
+end test
+
+test template code -> 1
+__ERROR__
+Error: Invalid xact command arguments
+end test
+
+test template note -> 1
+__ERROR__
+Error: Invalid xact command arguments
+end test
+
+test template Grocery Expenses:Food @@ -> 1
+__ERROR__
+Error: Invalid xact command arguments
+end test
+
+test template Grocery Expenses:Food @ badamt -> 1
+__ERROR__
+Error: Invalid xact command arguments
+end test

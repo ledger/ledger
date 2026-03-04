@@ -1,0 +1,14 @@
+; Coverage for output.cc line 386: annotated commodity in output
+
+2024/01/01 Buy
+    Assets:Brokerage    10 AAPL {$150.00} [2024/01/01]
+    Assets:Cash    $-1500.00
+
+2024/01/02 Buy More
+    Assets:Brokerage    5 AAPL {$160.00} [2024/01/02]
+    Assets:Cash    $-800.00
+
+test bal Assets:Brokerage --lots --lot-prices
+10 AAPL {$150.00} [2024/01/01]
+5 AAPL {$160.00} [2024/01/02]  Assets:Brokerage
+end test

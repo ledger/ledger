@@ -1,0 +1,13 @@
+; Coverage for account.cc lines 513-525, 532-538: valid(), children_with_xdata
+
+2024/01/01 Test
+    Expenses:Food:Grocery    $10.00
+    Expenses:Food:Dining     $20.00
+    Assets:Cash
+
+test bal --depth 1
+             $-30.00  Assets
+              $30.00  Expenses
+--------------------
+                   0
+end test

@@ -1,0 +1,9 @@
+; Coverage for balance.cc line 206: commodity_amount with stripped annotations
+
+2024/01/01 Buy
+    Assets:Stock    10 AAPL {$100.00} [2024/01/01]
+    Assets:Cash
+
+test reg --format "%(quantity(market(display_total)))\n" Assets:Stock
+10
+end test

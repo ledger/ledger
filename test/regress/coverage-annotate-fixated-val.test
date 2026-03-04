@@ -1,0 +1,27 @@
+; Coverage test for annotate.cc L302, L313-315, L317-318
+; Tests annotated_commodity_t::find_price with fixated price (=) and
+; non-fixated price annotations, covering:
+;   L302: when = CURRENT_TIME() fallback when no moment specified
+;   L313-315: fixated price path returns immediately
+;   L317-318: non-fixated price sets target commodity from annotation
+
+P 2024/01/01 EUR $1.10
+P 2024/06/01 EUR $1.20
+
+; Fixated price: always uses $1.15 regardless of market price
+2024/01/01 Buy Fixed
+    Assets:Fixed     10 EUR {=$1.15}
+    Assets:Cash
+
+; Non-fixated price: uses market price
+2024/01/01 Buy Market
+    Assets:Market    10 EUR {$1.05}
+    Assets:Cash
+
+test bal -V Assets:Fixed
+              $11.50  Assets:Fixed
+end test
+
+test bal -V Assets:Market
+              $12.00  Assets:Market
+end test

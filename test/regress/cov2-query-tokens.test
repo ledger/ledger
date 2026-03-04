@@ -1,0 +1,50 @@
+; Test query tokenizer paths for query.cc coverage
+; Covers regex patterns (/regex/), quoted patterns ("quoted"),
+; = note operator at start, %meta=value with TOK_EQ path
+
+2024/01/01 (CODE1) Grocery Store
+    ; Category: food
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/02/01 (CODE2) Gas Station
+    ; Category: transport
+    Expenses:Gas             $20.00
+    Assets:Cash
+
+; Test @/regex/ query (line 75-98, regex pattern)
+test reg @/Grocery/
+24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+; Test @"quoted" query (line 75-98, quoted pattern)
+test reg @"Grocery Store"
+24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+; Test =note operator at start of arg (line 152-154)
+test reg "=food"
+24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+; Test %meta=value query (TOK_META + TOK_EQ path, line 319-333)
+test reg '%Category=food'
+24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+; Test ! (NOT) operator (line 139-141, 390-397)
+test reg Expenses and not @Gas
+24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+end test
+
+; Test | (OR) operator (line 137-138, 430-448)
+test reg @Grocery or @Gas
+24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Feb-01 Gas Station           Expenses:Gas                 $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test

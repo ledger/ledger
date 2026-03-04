@@ -1,0 +1,14 @@
+; Test --price-exp option
+; Covers session.cc line 303 (price_exp_ lookup_option)
+
+P 2024/01/10 AAPL $150.00
+P 2024/01/20 AAPL $160.00
+
+2024/01/15 Buy Stock
+    Assets:Brokerage    10 AAPL @ $150.00
+    Assets:Cash
+
+test reg --price-exp "5" --market --limit "account =~ /Brokerage/"
+24-Jan-15 Buy Stock             Assets:Brokerage           $1500.00     $1500.00
+24-Jan-20 Commodities revalued  <Revalued>                  $100.00     $1600.00
+end test

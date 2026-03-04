@@ -1,0 +1,52 @@
+; Test price history for history.cc coverage
+; Covers price graph traversal, find_price paths, map_prices, print_map
+
+P 2024/01/01 AAPL $150.00
+P 2024/02/01 AAPL $160.00
+P 2024/03/01 AAPL $170.00
+
+P 2024/01/01 EUR $1.10
+P 2024/02/01 EUR $1.12
+
+2024/01/15 Buy Stock
+    Assets:Brokerage            10 AAPL
+    Assets:Cash
+
+2024/02/15 European Trip
+    Expenses:Travel             100 EUR
+    Assets:Cash
+
+; Test market value command which exercises find_price (lines 333-501)
+test reg Assets:Brokerage --market --now 2024/03/01
+24-Jan-15 Buy Stock             Assets:Brokerage           $1500.00     $1500.00
+24-Feb-01 Commodities revalued  <Revalued>                  $100.00     $1600.00
+24-Mar-01 Commodities revalued  <Revalued>                  $100.00     $1700.00
+end test
+
+; Test prices command which exercises map_prices (lines 285-331)
+test prices AAPL
+2024/01/01 AAPL          $150.00
+2024/02/01 AAPL          $160.00
+2024/03/01 AAPL          $170.00
+end test
+
+; Test pricemap command which exercises print_map (lines 519-527)
+test pricemap
+graph G {
+0[label=""];
+1[label="s"];
+2[label="%"];
+3[label="m"];
+4[label="h"];
+5[label="$"];
+6[label="AAPL"];
+7[label="EUR"];
+6--5 ;
+7--5 ;
+}
+end test
+
+; Test exchange option (-X) which exercises find_price with target commodity
+test reg Expenses:Travel -X '$' --now 2024/03/01
+24-Feb-15 European Trip         Expenses:Travel             $112.00      $112.00
+end test

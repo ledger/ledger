@@ -1,0 +1,13 @@
+; Coverage: account.cc line 445 - has_children_to_display lookup
+
+2024/01/01 Test
+    Expenses:Food:Groceries    $10.00
+    Expenses:Gas    $5.00
+    Assets:Cash
+
+test bal --format "%(account) %(has_children_to_display)\n" --no-total
+Assets:Cash false
+Expenses true
+Expenses:Food:Groceries false
+Expenses:Gas false
+end test

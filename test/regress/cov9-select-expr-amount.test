@@ -1,0 +1,10 @@
+; Test select with expression involving amount
+; Covers select.cc lines 82, 85 (recursive expression tree traversal)
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test select "date, account, amount * 2 from posts where account =~ /Expenses/"
+24-Jan-15 Expenses:Food                                                 $100.00
+end test

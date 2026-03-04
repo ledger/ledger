@@ -1,0 +1,17 @@
+; Test exception during include parsing (textual_directives.cc lines 248-258)
+include coverage-include-error-data.dat
+
+test reg -> 1
+__ERROR__
+In file included from "$FILE", line 2:
+While parsing file "$sourcepath/test/regress/coverage-include-error-data.dat", line 3:
+While balancing transaction from "$sourcepath/test/regress/coverage-include-error-data.dat", lines 1-3:
+> 2024/01/01 Bad Transaction
+>     Expenses:Food    $10.00
+>     Assets:Cash      $5.00
+Unbalanced remainder is:
+              $15.00
+Amount to balance against:
+              $15.00
+Error: Transaction does not balance
+end test

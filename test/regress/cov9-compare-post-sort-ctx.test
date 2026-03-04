@@ -1,0 +1,23 @@
+; Coverage for compare.cc lines 87-101: post sort with context scope
+; Also targets lines 97-101: right side context path
+
+2024/01/01 Store
+    Expenses:Food    $30.00
+    Assets:Cash
+
+2024/01/02 Restaurant
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/03 Gas
+    Expenses:Gas     $20.00
+    Assets:Cash
+
+test reg --sort amount
+24-Jan-01 Store                 Assets:Cash                 $-30.00      $-30.00
+24-Jan-03 Gas                   Assets:Cash                 $-20.00      $-50.00
+24-Jan-02 Restaurant            Assets:Cash                 $-10.00      $-60.00
+                                Expenses:Food                $10.00      $-50.00
+24-Jan-03 Gas                   Expenses:Gas                 $20.00      $-30.00
+24-Jan-01 Store                 Expenses:Food                $30.00            0
+end test

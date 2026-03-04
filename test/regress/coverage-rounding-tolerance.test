@@ -1,0 +1,13 @@
+; Coverage for xact.cc lines 633-653 (rounding adjustment in balance check)
+; When a per-unit cost is used and the total is rounded differently than
+; the exact accumulated cost, the rounding tolerance check allows it.
+
+2024/01/01 Buy Bread
+    Expenses:Food    3 bread @ $3.99
+    Assets:Cash     $-11.97
+
+test reg
+24-Jan-01 Buy Bread             Expenses:Food               3 bread      3 bread
+                                Assets:Cash                 $-11.97      $-11.97
+                                                                         3 bread
+end test

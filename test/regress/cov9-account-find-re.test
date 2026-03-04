@@ -1,0 +1,10 @@
+; Coverage for account.cc line 119: find_account_re
+
+2024/01/01 Test
+    Expenses:Food:Grocery    $10.00
+    Expenses:Food:Dining     $20.00
+    Assets:Cash
+
+test bal --limit "account =~ /Grocery/"
+              $10.00  Expenses:Food:Grocery
+end test

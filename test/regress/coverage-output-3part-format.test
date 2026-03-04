@@ -1,0 +1,18 @@
+; Coverage for output.cc lines 55-58: three-part format (first%/next%/between)
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Another
+    Expenses:Drink    $5.00
+    Assets:Cash
+
+; Format with two %/ separators: first_line %/ next_lines %/ between_entries
+test reg --format '%(date) %(account) %(amount)\n%/  %(account) %(amount)\n%/---\n'
+2024/01/01 Expenses:Food $10.00
+  Assets:Cash $-10.00
+---
+2024/01/02 Expenses:Drink $5.00
+  Assets:Cash $-5.00
+end test

@@ -1,0 +1,11 @@
+; Coverage test for times.cc lines 1748-1749
+; Non-alpha non-digit character in period expression triggers expected()
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test period "+" -> 1
+__ERROR__
+Error: Invalid char '+'
+end test

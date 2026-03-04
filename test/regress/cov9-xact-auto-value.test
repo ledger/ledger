@@ -1,0 +1,14 @@
+; Coverage for xact.cc lines 1049-1054: auto xact with amount expression result
+
+= Expenses:Food
+    (Savings)    10%
+
+2024/01/01 Test
+    Expenses:Food    $100.00
+    Assets:Cash
+
+test reg --generated
+24-Jan-01 Test                  Expenses:Food               $100.00      $100.00
+                                Assets:Cash                $-100.00            0
+                                (Savings)                       10%          10%
+end test

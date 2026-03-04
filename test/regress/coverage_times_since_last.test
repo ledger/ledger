@@ -1,0 +1,35 @@
+; Coverage test for times.cc determine_when with TOK_THIS/NEXT/LAST
+; via handle_since_token and handle_until_token
+
+2024/05/15 May Transaction
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/06/15 June Transaction
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2024/07/15 July Transaction
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test reg --now 2024/07/01 --period "since last month"
+24-Jun-15 June Transaction      Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+24-Jul-15 July Transaction      Expenses:Food                $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test
+
+test reg --now 2024/07/01 --period "until last month"
+24-May-15 May Transaction       Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+test reg --now 2024/06/15 --period "since last year"
+24-May-15 May Transaction       Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Jun-15 June Transaction      Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+24-Jul-15 July Transaction      Expenses:Food                $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test

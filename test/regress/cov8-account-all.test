@@ -1,0 +1,22 @@
+; Coverage test for account.cc lines 385-395:
+; Exercise fn_all() for accounts via account check directive.
+; Using check (not assert) to avoid error exit; check just warns.
+
+account Assets:Cash
+    check all(amount < $0)
+
+2024/01/01 Test One
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/15 Test Two
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test reg Assets
+24-Jan-01 Test One              Assets:Cash                 $-10.00      $-10.00
+24-Jan-15 Test Two              Assets:Cash                 $-20.00      $-30.00
+__ERROR__
+Warning: "$FILE", line 10: Transaction check failed: all((amount < {$0.00}))
+Warning: "$FILE", line 14: Transaction check failed: all((amount < {$0.00}))
+end test

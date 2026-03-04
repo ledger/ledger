@@ -1,0 +1,16 @@
+; Coverage for value.cc lines 1805-1807: round_to_commodity_precision for sequence
+; Triggered by rounding a sequence value
+
+2024/01/15 Test
+    Expenses:Food    $50.123
+    Assets:Checking
+
+; Test: rounded(to_sequence(amount)) creates sequence, rounds it, then errors on display
+; The rounding of the sequence elements covers lines 1805-1807
+test reg --format '%(rounded(to_sequence(amount)))\n' Expenses -> 1
+__ERROR__
+While converting ($50.123):
+While handling posting from "$FILE", line 5:
+>     Expenses:Food    $50.123
+Error: Cannot convert a sequence to a string
+end test

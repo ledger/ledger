@@ -1,0 +1,20 @@
+; Coverage test for xact.cc lines 590-591
+; Tests null posting with a multi-commodity balance.
+; When a transaction has postings in multiple commodities and one null
+; posting, the null post must be split into multiple balancing posts.
+
+2024/01/01 Multi-commodity null post
+    Expenses:Food              $50.00
+    Expenses:Travel            100 EUR
+    Assets:Cash
+
+test bal
+             $-50.00
+            -100 EUR  Assets:Cash
+              $50.00
+             100 EUR  Expenses
+              $50.00    Food
+             100 EUR    Travel
+--------------------
+                   0
+end test

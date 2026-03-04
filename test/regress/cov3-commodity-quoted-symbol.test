@@ -1,0 +1,10 @@
+; Test commodity with quoted symbol containing spaces
+; Covers commodity.cc lines 346-355 (print with elide_quotes)
+
+2024/01/01 Test
+    Assets:Brokerage    10 "FUND ABC"
+    Assets:Cash   $-100.00
+
+test bal --lots Assets:Brokerage
+10 FUND ABC {$10.00} [2024/01/01]  Assets:Brokerage
+end test

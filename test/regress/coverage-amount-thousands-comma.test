@@ -1,0 +1,16 @@
+; Coverage test for amount.cc lines 204, 211, 220
+; Standard comma as thousands separator and period as decimal
+
+commodity $
+    format $1,000.00
+
+2024/01/01 Large amount
+    Expenses:Rent          $12,345.67
+    Assets:Cash
+
+test bal
+         $-12,345.67  Assets:Cash
+          $12,345.67  Expenses:Rent
+--------------------
+                   0
+end test

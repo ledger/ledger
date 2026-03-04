@@ -1,0 +1,11 @@
+; Coverage for filters.cc line 1229: equity with single commodity
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test equity
+2024/01/01 Opening Balances
+    Assets:Cash                              $-10.00
+    Expenses:Food
+end test

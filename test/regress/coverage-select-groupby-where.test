@@ -1,0 +1,30 @@
+; Coverage test for select.cc: group by, where, and collect clauses
+; Exercises:
+;   L371-379: where clause (sets limit_)
+;   L383-384: collect clause (sets amount_)
+;   L385-386: group by clause (sets group_by_)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Food    $30.00
+    Assets:Checking
+
+; group by payee exercises L385-386
+test select account, amount from posts group by payee
+Gas Station
+Expenses:Food                                                            $30.00
+Assets:Checking                                                         $-30.00
+
+Grocery Store
+Expenses:Food                                                            $50.00
+Assets:Checking                                                         $-50.00
+end test
+
+; where clause exercises L371-379
+test select date, amount from posts where 'account =~ /Food/'
+24-Jan-15       $50.00
+24-Jan-20       $30.00
+end test

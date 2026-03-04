@@ -1,11 +1,13 @@
-; Test format.cc: abbreviation of long account names
-; Exercises ABBREVIATE style in truncate() with account_abbrev_length
+; Coverage test for format.cc line 618
+; Tests account abbreviation with deeply nested account names that trigger
+; the adjust=1 minimum adjustment in the abbreviation algorithm.
+; Line 618: when adjust==0, it's set to 1 as minimum
 
-2024/01/15 Long Account Name Test
-    Expenses:PersonalItems:FoodAndDrinks:GroceriesAndSnacks:OrganicAndNatural    $100.00
-    Assets:BankingAndFinance:CheckingAccounts:PrimaryAccount:MainBalance
+2024/01/15 Test
+    Assets:Bank:Checking:SubA:SubB:SubC:SubD   $50.00
+    Liabilities:Credit:Visa:SubX:SubY:SubZ    $-50.00
 
 test reg
-24-Jan-15 Long Account Name T.. ..Gr:OrganicAndNatural      $100.00      $100.00
-                                ..Ba:Ch:Pr:MainBalance     $-100.00            0
+24-Jan-15 Test                  As:Ba:Ch:Su:Su:Su:SubD       $50.00       $50.00
+                                Li:Cr:Vi:Sub:SubY:SubZ      $-50.00            0
 end test

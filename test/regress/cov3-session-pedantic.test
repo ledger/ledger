@@ -1,0 +1,15 @@
+; Test session with pedantic checking mode
+; Covers session.cc lines 119-120 (pedantic checking mode)
+
+account Expenses:Food
+account Assets:Cash
+commodity $
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test bal --pedantic --no-total
+             $-50.00  Assets:Cash
+              $50.00  Expenses:Food
+end test

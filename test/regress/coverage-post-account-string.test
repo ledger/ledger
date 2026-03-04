@@ -1,0 +1,13 @@
+; Coverage for post.cc lines 285-287: account lookup with string argument
+; Calls get_account with a string name to find an account by full name
+
+account Expenses:Food
+account Assets:Checking
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg --format '%(null == account("Expenses:Food") ? "none" : "found")\n' Expenses
+found
+end test

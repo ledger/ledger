@@ -1,0 +1,13 @@
+; Coverage for report.cc line 626: fn_averaged_lots
+
+2024/01/01 Buy
+    Assets:Brokerage    10 AAPL {$150.00} [2024/01/01]
+    Assets:Cash
+
+2024/01/02 Buy More
+    Assets:Brokerage    10 AAPL {$160.00} [2024/01/02]
+    Assets:Cash
+
+test bal Assets:Brokerage --average-lot-prices
+      20 AAPL {$155}  Assets:Brokerage
+end test

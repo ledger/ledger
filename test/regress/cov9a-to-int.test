@@ -1,0 +1,10 @@
+; Coverage test for report.cc lines 1043-1047
+; fn_to_int converts a value to integer (long)
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(to_int(quantity(amount)))\n" --limit "account =~ /Expenses/"
+10
+end test

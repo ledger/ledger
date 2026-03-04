@@ -1,0 +1,10 @@
+; Test uuid accessor (lines 508-509 of item.cc)
+; Exercise the uuid lookup path (aliases to get_id)
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(uuid) %(account)\n" --limit "account =~ /Food/"
+2 Expenses:Food
+end test

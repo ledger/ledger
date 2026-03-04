@@ -1,0 +1,24 @@
+; Coverage test for times.cc lines 1110-1111
+; Exercise "every N months" period parsing
+; Covers TOK_MONTHS in handle_every_token
+
+2024/01/01 Month 1
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/02/01 Month 2
+    Expenses:Food            $20.00
+    Assets:Cash
+
+2024/03/01 Month 3
+    Expenses:Food            $30.00
+    Assets:Cash
+
+2024/04/01 Month 4
+    Expenses:Food            $40.00
+    Assets:Cash
+
+test reg Expenses --period "every 2 months"
+24-Jan-01 - 24-Feb-29           Expenses:Food                $30.00       $30.00
+24-Mar-01 - 24-Apr-30           Expenses:Food                $70.00      $100.00
+end test

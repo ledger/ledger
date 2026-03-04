@@ -1,0 +1,15 @@
+; Test error for duplicate valuation expression
+; Covers annotate.cc lines 165-166 (duplicate valuation expression)
+
+2024/01/01 Test
+    Assets:Brokerage    10 AAPL ((9)) ((10))
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 5:
+While parsing posting:
+  Assets:Brokerage    10 AAPL ((9)) ((10))
+                      ^^^^^^^^^^^^^^^^^^^^
+Error: Commodity specifies more than one valuation expression
+end test

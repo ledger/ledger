@@ -1,0 +1,13 @@
+; Coverage for filters.cc line 1652: rewrite_posts account rewrite
+; Tests account-rewrite directive to trigger rewriting account paths
+
+account-rewrite Expenses:Food  Expenses:Dining
+
+2024/01/01 Restaurant
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Restaurant            Expenses:Dining              $50.00       $50.00
+24-Jan-01 Restaurant            Assets:Cash                 $-50.00            0
+end test

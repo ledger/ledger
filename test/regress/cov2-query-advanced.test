@@ -1,0 +1,60 @@
+; Test advanced query operations for query.cc coverage
+; Tests meta/tag queries, expr keyword, desc keyword
+
+2024/01/01 Grocery Store
+    ; :food:
+    ; Category: groceries
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/02/01 Gas Station
+    ; :transport:
+    ; Category: fuel
+    Expenses:Gas             $20.00
+    Assets:Cash
+
+2024/03/01 Restaurant
+    ; :dining:
+    ; Category: restaurant
+    Expenses:Dining          $30.00
+    Assets:Cash
+
+; Test % (meta/tag) query operator (query.cc line 148-150)
+test reg %Category
+24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Feb-01 Gas Station           Expenses:Gas                 $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+24-Mar-01 Restaurant            Expenses:Dining              $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test
+
+; Test tag keyword with equality (query.cc lines 319-332)
+test reg tag Category=fuel
+24-Feb-01 Gas Station           Expenses:Gas                 $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test
+
+; Test meta keyword
+test reg meta Category=groceries
+24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+; Test expr keyword in query (query.cc lines 217-221, 304-305)
+test reg expr "amount > 15"
+24-Feb-01 Gas Station           Expenses:Gas                 $20.00       $20.00
+24-Mar-01 Restaurant            Expenses:Dining              $30.00       $50.00
+end test
+
+; Test 'desc' keyword (alias for payee, query.cc lines 232-233)
+test reg desc "Grocery"
+24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+; Test 'data' keyword (alias for meta, query.cc lines 242-243)
+test reg data Category=restaurant
+24-Mar-01 Restaurant            Expenses:Dining              $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test

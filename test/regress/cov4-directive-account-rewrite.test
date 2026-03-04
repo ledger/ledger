@@ -1,0 +1,14 @@
+; Test account-rewrite directive (line 573 of textual_directives.cc)
+; Exercise the account_rewrite_mappings flow
+; The account is replaced with the substitution pattern
+
+account-rewrite Food  Groceries
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Test                  Groceries                    $10.00       $10.00
+24-Jan-01 Test                  Assets:Cash                 $-10.00            0
+end test

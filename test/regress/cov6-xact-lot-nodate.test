@@ -1,0 +1,18 @@
+; Coverage test for xact.cc lines 387-398
+; Tests lot matching when lots have no explicit date in their annotation.
+; The code falls back to finding the earliest transaction date for the lot
+; from the account's postings as a date proxy for sorting.
+
+; Buy stock with price annotation but no date
+2020/01/15 Buy Lot A
+    Assets:Brokerage         5 AAPL {$100}
+    Assets:Cash             -$500
+
+2020/06/01 Sell AAPL
+    Assets:Brokerage        -3 AAPL @ $150
+    Assets:Cash              $450
+    Income:Capital Gains
+
+test --lot-matching fifo --lots bal Assets:Brokerage
+       2 AAPL {$100}  Assets:Brokerage
+end test

@@ -1,0 +1,18 @@
+; Coverage for post.cc line 384: fn_all with second arg (false)
+; When all(EXPR, false) is used, the current posting is excluded from testing
+; all(amount > 0, false) returns true for postings where ALL OTHER postings
+; in the same transaction have positive amounts
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash     $-10.00
+
+2024/01/02 AllPositive
+    Expenses:Food    $20.00
+    Expenses:Rent    $30.00
+    Assets:Cash     $-50.00
+
+test reg --limit "all(amount > 0, false)"
+24-Jan-01 Test                  Assets:Cash                 $-10.00      $-10.00
+24-Jan-02 AllPositive           Assets:Cash                 $-50.00      $-60.00
+end test

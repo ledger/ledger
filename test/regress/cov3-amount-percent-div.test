@@ -1,0 +1,10 @@
+; Test division by percentage amount
+; Covers amount.cc lines 531-548 (divide by percentage)
+
+2024/01/01 Test
+    Expenses:Tax    $19.00
+    Assets:Cash
+
+test reg --format="%(scrub(display_amount / 19%))\n" Expenses
+$100.00
+end test

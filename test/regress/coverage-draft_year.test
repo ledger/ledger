@@ -1,0 +1,15 @@
+; Coverage test for draft.cc lines 273-276: year directive in draft
+; When the xact command is used with a date without an explicit year,
+; and a Y year directive is present, the year from the directive is used
+
+Y 2023
+
+2023/06/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test xact 3/20 Grocery
+2023/03/20 Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Cash
+end test

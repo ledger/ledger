@@ -1,0 +1,26 @@
+; Coverage test for src/item.cc: tag and note access via format strings
+; Tests format expressions %(tag("name")), %(has_tag("name")).
+
+2024/01/01 Grocery Store
+    ; :Food:Organic:
+    ; Project: garden
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/02 Hardware Store
+    ; Receipt: 12345
+    Expenses:Tools             $30.00
+    Assets:Checking
+
+2024/01/03 No Tags
+    Expenses:Other             $10.00
+    Assets:Checking
+
+test reg --format="%(has_tag(\"Food\"))|%(tag(\"Project\"))|%(has_tag(\"Receipt\"))|%(tag(\"Receipt\"))\n"
+true|garden|false|
+true|garden|false|
+false||true|12345
+false||true|12345
+false||false|
+false||false|
+end test

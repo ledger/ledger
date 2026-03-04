@@ -1,0 +1,15 @@
+; Coverage test for times.cc lines 789-796
+; Exercise weekday specifier (TOK_A_WDAY) in date parsing
+; "this monday" should exercise the weekday code path
+
+2020/01/01 Old Transaction
+    Expenses:Food            $10.00
+    Assets:Cash
+
+; "this monday" - exercises TOK_THIS + TOK_A_WDAY path (line 789-796)
+test reg Expenses --begin "this monday"
+end test
+
+; "next friday" - exercises TOK_NEXT + TOK_A_WDAY path
+test reg Expenses --begin "next friday"
+end test

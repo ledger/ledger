@@ -1,0 +1,18 @@
+; Coverage test for value.cc line 1884-1885 (annotate), amount.cc line 976
+; Lot annotations with cost and date
+
+2024/01/01 Buy stock lot 1
+    Assets:Stocks   10 AAPL {$150.00} [2024/01/01]
+    Assets:Cash
+
+2024/06/01 Buy stock lot 2
+    Assets:Stocks   5 AAPL {$160.00} [2024/06/01]
+    Assets:Cash
+
+test bal
+                   0  Assets
+            -15 AAPL    Cash
+             15 AAPL    Stocks
+--------------------
+                   0
+end test

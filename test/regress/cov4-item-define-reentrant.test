@@ -1,0 +1,12 @@
+; Test item_t::define reentrant guard (line 392 of item.cc)
+; Exercise define() through tag evaluation
+
+2024/01/01 Test
+    ; TestTag: 42
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(tag('TestTag'))\n"
+42
+42
+end test

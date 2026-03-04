@@ -1,0 +1,26 @@
+; Coverage test for filters.cc line 377
+; Tests handle_value BALANCE branch via collapse_posts::report_subtotal.
+; When collapsing multi-commodity transactions, the accumulated value
+; is a BALANCE type, hitting line 377: xdata.compound_value = temp.
+
+2024/01/15 Buy
+    Assets:Brokerage          10 AAPL @ $150.00
+    Assets:Brokerage          5 GOOG @ $100.00
+    Assets:Cash              $-2000.00
+
+2024/01/15 Buy More
+    Assets:Brokerage          3 MSFT @ $200.00
+    Assets:Cash              $-600.00
+
+test reg Assets --collapse
+24-Jan-15 Buy                   <Total>                   $-2000.00
+                                                            10 AAPL
+                                                             5 GOOG    $-2000.00
+                                                                         10 AAPL
+                                                                          5 GOOG
+24-Jan-15 Buy More              <Total>                    $-600.00
+                                                             3 MSFT    $-2600.00
+                                                                         10 AAPL
+                                                                          5 GOOG
+                                                                          3 MSFT
+end test

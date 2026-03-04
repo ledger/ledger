@@ -1,0 +1,22 @@
+; Test xact.cc: fn_any and fn_all functions (lines 789-811)
+; Tests transaction-level predicates
+
+2024/01/10 Groceries
+    Expenses:Food       $50.00
+    Assets:Cash
+
+2024/01/15 Salary
+    Assets:Checking   $3000.00
+    Income:Salary
+
+test reg --limit "any(account =~ /Expenses/)"
+24-Jan-10 Groceries             Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+end test
+
+test reg --limit "all(account =~ /:/)"
+24-Jan-10 Groceries             Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+24-Jan-15 Salary                Assets:Checking            $3000.00     $3000.00
+                                Income:Salary             $-3000.00            0
+end test

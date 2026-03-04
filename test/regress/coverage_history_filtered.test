@@ -1,0 +1,18 @@
+; Coverage test for history.cc multi-hop price conversion
+; Test price chain with multiple commodities
+
+P 2024/01/01 EUR 1.10 $
+P 2024/01/01 GBP 1.25 $
+P 2024/01/01 GBP 0.88 EUR
+
+2024/01/15 Test
+    Assets:UK    100 GBP
+    Assets:US
+
+test bal --exchange EUR
+                   0  Assets
+               EUR88    UK
+              EUR-88    US
+--------------------
+                   0
+end test

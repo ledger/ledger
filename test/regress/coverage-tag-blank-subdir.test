@@ -1,0 +1,17 @@
+; Test textual_directives.cc line 670: break on blank whitespace line
+; inside tag directive block
+tag MyTag
+    check value =~ /./
+  
+
+2024/01/01 Test
+    ; MyTag: hello
+    Expenses:Food   $10.00
+    Assets:Cash
+
+test bal
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

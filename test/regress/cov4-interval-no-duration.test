@@ -1,0 +1,15 @@
+; Test interval_posts no duration (lines 1070-1071 of filters.cc)
+; When interval has no duration but has a period constraint
+
+2024/01/15 Test1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/02/15 Test2
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test reg -b 2024/01/01 -e 2024/02/01
+24-Jan-15 Test1                 Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

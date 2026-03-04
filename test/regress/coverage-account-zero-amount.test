@@ -1,0 +1,16 @@
+; Coverage: account.cc lines 269, 273 - get_amount and get_total with zero
+; SIMPLIFIED_VALUE_OR_ZERO returns zero-simplified values for empty accounts
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash   $-10.00
+
+2024/01/02 Return
+    Expenses:Food    $-10.00
+    Assets:Cash    $10.00
+
+test bal --format "%(a) %(O)\n" --empty --flat
+0 0
+0 0
+0 0
+end test

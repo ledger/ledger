@@ -1,0 +1,14 @@
+; Test day_of_week_posts (lines 1304-1313 of filters.cc)
+; Exercise the day-of-week report subtotal path
+
+2024/01/01 Test1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/08 Test2
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test reg --dow Expenses
+24-Jan-01 Mondays               Expenses:Food                $30.00       $30.00
+end test

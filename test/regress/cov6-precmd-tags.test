@@ -1,0 +1,10 @@
+; Coverage for precmd.cc: tags command
+
+2024/01/01 Test
+    ; Category: groceries
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test tags
+Category
+end test

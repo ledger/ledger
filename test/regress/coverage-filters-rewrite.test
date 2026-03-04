@@ -1,0 +1,21 @@
+; Coverage test for filters.cc line 1652
+; Tests rewrite_posts::operator() account rewrite path where prev_account
+; has xdata (line 1652: prev_account->has_xdata() branch)
+; The account-rewrite directive triggers rewrite_posts in the filter chain.
+
+account-rewrite Expenses:Food  Groceries:Food
+
+2024/01/15 Store
+    Expenses:Food             $50.00
+    Assets:Cash
+
+2024/01/20 Store
+    Expenses:Food             $30.00
+    Assets:Cash
+
+test bal
+             $-80.00  Assets:Cash
+              $80.00  Groceries:Food
+--------------------
+                   0
+end test

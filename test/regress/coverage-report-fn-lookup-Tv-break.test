@@ -1,0 +1,27 @@
+; Coverage for report.cc lines 1652, 1654: case 'T' break in FUNCTION lookup
+; A multi-character name starting with uppercase 'T' enters case 'T' at 1651,
+; is_eq(p, "T") fails because p is longer, then break fires at 1654.
+; Also line 1668: case 'v' break when name starts with 'v' but is not value_date.
+
+2024/01/01 Test
+    Expenses:Food  $10.00
+    Assets:Cash
+
+; 'Tally' starts with 'T' -> case 'T' at 1651, is_eq fails, break at 1654
+test eval 'Tally' -> 1
+__ERROR__
+While evaluating value expression:
+  Tally
+  ^^^^^
+Error: Unknown identifier 'Tally'
+end test
+
+; 'vanilla' starts with 'v' -> case 'v' at 1665, not value_date, break at 1668
+; No report option named 'vanilla', so lookup returns null -> error
+test eval 'vanilla' -> 1
+__ERROR__
+While evaluating value expression:
+  vanilla
+  ^^^^^^^
+Error: Unknown identifier 'vanilla'
+end test

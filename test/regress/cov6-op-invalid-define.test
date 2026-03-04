@@ -1,0 +1,15 @@
+; Coverage test for op.cc line 159
+; Tests the invalid function definition error path.
+; When the left side of O_DEFINE is not an IDENT or O_CALL,
+; a compile_error is thrown.
+
+2024/01/01 Test
+    Expenses:Food              $50.00
+    Assets:Cash
+
+test reg --display '1 = 2' -> 1
+__ERROR__
+While handling posting from "$FILE", line 7:
+>     Expenses:Food              $50.00
+Error: Invalid function definition
+end test

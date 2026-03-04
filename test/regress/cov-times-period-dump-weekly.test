@@ -1,0 +1,57 @@
+; Coverage test for times.cc lines 314-317
+; Exercise date_duration output for weekly and daily periods
+; via the period command dump
+
+2024/01/01 Test
+    Expenses:Food            $10.00
+    Assets:Cash
+
+test period "weekly in 2024/01"
+--- Period expression tokens ---
+TOK_WEEKLY: weekly
+TOK_IN: in
+TOK_DATE:  year 2024 month Jan
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: in year 2024 month Jan
+duration: 1 week
+
+--- After stabilization ---
+   range: in year 2024 month Jan
+   start: 24-Jan-01
+  finish: 24-Feb-01
+duration: 1 week
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jan-01 -- 24-Jan-06
+ 2: 24-Jan-07 -- 24-Jan-13
+ 3: 24-Jan-14 -- 24-Jan-20
+ 4: 24-Jan-21 -- 24-Jan-27
+ 5: 24-Jan-28 -- 24-Jan-31
+end test
+
+test period "daily since 2024/01/01 until 2024/01/04"
+--- Period expression tokens ---
+TOK_DAILY: daily
+TOK_SINCE: since
+TOK_DATE:  year 2024 month Jan day 1
+TOK_UNTIL: until
+TOK_DATE:  year 2024 month Jan day 4
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2024 month Jan day 1 to year 2024 month Jan day 4
+duration: 1 day
+
+--- After stabilization ---
+   range: from year 2024 month Jan day 1 to year 2024 month Jan day 4
+   start: 24-Jan-01
+  finish: 24-Jan-04
+duration: 1 day
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jan-01 -- 24-Jan-01
+ 2: 24-Jan-02 -- 24-Jan-02
+ 3: 24-Jan-03 -- 24-Jan-03
+end test

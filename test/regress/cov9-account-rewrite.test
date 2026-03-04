@@ -1,0 +1,17 @@
+; Coverage test for filters.cc line 1652:
+; Exercise rewrite_posts account rewriting path via --account-rewrite.
+
+2024/01/01 Groceries
+    Expenses:Food:Groceries    $25.00
+    Assets:Cash
+
+2024/01/15 Gas
+    Expenses:Transport:Gas    $40.00
+    Assets:Cash
+
+test reg --account-rewrite "Expenses:Food=Expenses:Dining"
+24-Jan-01 Groceries             Expenses:Dining              $25.00       $25.00
+24-Jan-01 Groceries             Assets:Cash                 $-25.00            0
+24-Jan-15 Gas                   Expenses:Transport:Gas       $40.00       $40.00
+                                Assets:Cash                 $-40.00            0
+end test

@@ -1,0 +1,16 @@
+; Coverage for amount.cc lines 204, 206-207, 220:
+; Negative amounts with standard comma thousands separator and period decimal.
+; The negative sign goes through line 206-207 (out << *p for '-').
+; The thousands separator goes through line 220 (out << ',').
+; The decimal point goes through line 204 (out << *p for '.').
+
+commodity $
+    format $1,000.00
+
+2024/01/01 Large Payment
+    Expenses:Rent          $12,345.67
+    Assets:Bank
+
+test reg Assets
+24-Jan-01 Large Payment         Assets:Bank             $-12,345.67  $-12,345.67
+end test

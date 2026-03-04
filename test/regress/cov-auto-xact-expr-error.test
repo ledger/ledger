@@ -1,0 +1,22 @@
+; Coverage test for xact.cc line 1053
+; auto_xact expression that returns non-amount throws error
+
+= Expenses
+    (Budget:Match)    (payee)
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 9:
+While applying automated transaction from "$FILE", lines 4-5:
+> = Expenses
+>     (Budget:Match)    (payee)
+While extending transaction from "$FILE", lines 7-9:
+> 2024/01/01 Test
+>     Expenses:Food    $10.00
+>     Assets:Cash
+Error: Amount expressions must result in a simple amount
+end test

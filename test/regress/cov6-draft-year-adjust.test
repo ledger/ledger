@@ -1,0 +1,13 @@
+; Coverage for draft.cc lines 273-276: year directive adjusting draft date
+
+Y 2024
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test xact 2/15 Payee Expenses:Food 20 Assets:Cash
+2024/02/15 Payee
+    Expenses:Food                             $20.00
+    Assets:Cash
+end test

@@ -1,0 +1,39 @@
+; Coverage test for times.cc handle_since_token and handle_until_token
+
+2020/01/15 Old Transaction
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/06/15 Mid Transaction
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2025/01/15 New Transaction
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test reg --period "since 2024"
+24-Jun-15 Mid Transaction       Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+25-Jan-15 New Transaction       Expenses:Food                $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test
+
+test reg --period "until 2024"
+20-Jan-15 Old Transaction       Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+test reg --period "from 2024"
+24-Jun-15 Mid Transaction       Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+25-Jan-15 New Transaction       Expenses:Food                $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test
+
+test reg --period "to 2025"
+20-Jan-15 Old Transaction       Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Jun-15 Mid Transaction       Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test

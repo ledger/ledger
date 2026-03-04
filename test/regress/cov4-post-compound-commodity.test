@@ -1,0 +1,12 @@
+; Test get_commodity with compound value (lines 211-213 of post.cc)
+; Exercise the POST_EXT_COMPOUND path in get_commodity
+; Also tests get_commodity_is_primary (line 220-221)
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --monthly --format "%(commodity) %(primary)\n"
+$ false
+$ false
+end test

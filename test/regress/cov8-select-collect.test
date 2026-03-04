@@ -1,0 +1,11 @@
+; Coverage test for select.cc lines 383-384:
+; Exercise select with collect clause.
+
+2024/01/01 Test
+    Expenses:Food    $25.00
+    Assets:Cash
+
+test select date, account, amount collect cost from posts
+24-Jan-01 Expenses:Food                                                  $25.00
+24-Jan-01 Assets:Cash                                                   $-25.00
+end test

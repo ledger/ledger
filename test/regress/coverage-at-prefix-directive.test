@@ -1,0 +1,15 @@
+; Test textual_directives.cc line 779: @ prefix on directives
+
+@account Expenses:Food
+    alias food
+
+2024/01/01 Test
+    food   $10.00
+    Assets:Cash
+
+test bal
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

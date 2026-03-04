@@ -1,0 +1,17 @@
+; Coverage: item.cc line 66 - has_tag(mask, value_mask) with value matching
+; Tests has_tag with both a tag mask and a value mask
+
+2024/01/01 Store
+    ; Type: grocery
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Station
+    ; Type: fuel
+    Expenses:Gas    $30.00
+    Assets:Cash
+
+test reg --limit "has_tag(/Type/, /grocery/)"
+24-Jan-01 Store                 Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

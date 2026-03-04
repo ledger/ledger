@@ -1,0 +1,16 @@
+; Coverage test for times.cc lines 917, 928, 939
+; Duplicate keywords trigger unexpected in handle_since/until/in_token
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg -p "until until" -> 1
+__ERROR__
+Error: Unexpected date period token 'until'
+end test
+
+test reg -p "in in" -> 1
+__ERROR__
+Error: Unexpected date period token 'in'
+end test

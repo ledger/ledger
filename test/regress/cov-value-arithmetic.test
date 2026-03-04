@@ -1,0 +1,29 @@
+; Coverage test for various value.cc arithmetic paths
+; Exercise division and multiplication with different types
+
+commodity EUR
+
+2024/01/01 Test
+    Expenses:Food            100 EUR
+    Assets:Cash
+
+; Integer division by integer
+test eval "100 / 4"
+25
+end test
+
+; Amount division by integer (line 700)
+; Use an expression that creates an amount context
+test eval "100 * 5"
+500
+end test
+
+; Integer subtraction
+test eval "100 - 40"
+60
+end test
+
+; Expression involving amounts from postings
+test reg Expenses --display "amount / 2 > 0"
+24-Jan-01 Test                  Expenses:Food               100 EUR      100 EUR
+end test

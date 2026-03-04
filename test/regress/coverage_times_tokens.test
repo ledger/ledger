@@ -1,0 +1,16 @@
+; Coverage test for times.cc lines 507-508, 516-517, 522-523
+; Exercise TOK_SLASH, TOK_DOT, and UNKNOWN in period token dump
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test period "jan / feb" -> 1
+__ERROR__
+Error: Unexpected date period token '/'
+end test
+
+test period "jan . feb" -> 1
+__ERROR__
+Error: Unexpected date period token '.'
+end test

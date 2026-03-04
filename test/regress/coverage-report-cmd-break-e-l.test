@@ -1,0 +1,20 @@
+; Coverage for report.cc COMMAND break statements:
+; Lines 1780 (e), 1785 (l)
+; Unknown commands whose first letter matches a COMMAND case but whose
+; name does not match any known command hit the break statement.
+
+2024/01/01 Test
+    Expenses:Food  $10.00
+    Assets:Cash
+
+; 'ephem' starts with 'e' but is not equity/entry/emacs/echo -> break at 1780
+test ephem -> 1
+__ERROR__
+Error: Unrecognized command 'ephem'
+end test
+
+; 'lobster' starts with 'l' but is not lisp -> break at 1785
+test lobster -> 1
+__ERROR__
+Error: Unrecognized command 'lobster'
+end test

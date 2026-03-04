@@ -1,0 +1,16 @@
+; Coverage test for account.cc lines 268, 272:
+; Exercise get_amount and get_total for accounts via balance report.
+
+2024/01/01 Test One
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/15 Test Two
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test bal --format "%(account)  %(amount)  %(total)\n"
+Assets:Cash  $-30.00  $-30.00
+Expenses:Food  $30.00  $30.00
+  0  0
+end test

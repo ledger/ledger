@@ -1,0 +1,27 @@
+; Coverage test for times.cc lines 1209-1213
+; Exercise date token in period parsing
+; Covers handle_date_token with TOK_DATE, TOK_INT, TOK_A_MONTH, TOK_A_WDAY
+
+2024/01/01 January
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/06/15 June
+    Expenses:Food            $20.00
+    Assets:Cash
+
+2024/12/01 December
+    Expenses:Food            $30.00
+    Assets:Cash
+
+; A month name exercises TOK_A_MONTH -> handle_date_token (line 1211)
+; "jun" refers to June of the current year (2026), so 2024 data won't match
+test reg Expenses --period "jun"
+end test
+
+; An integer exercises TOK_INT -> handle_date_token (line 1210)
+test reg Expenses --period "2024"
+24-Jan-01 January               Expenses:Food                $10.00       $10.00
+24-Jun-15 June                  Expenses:Food                $20.00       $30.00
+24-Dec-01 December              Expenses:Food                $30.00       $60.00
+end test

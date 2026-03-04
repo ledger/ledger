@@ -1,0 +1,19 @@
+; Coverage test for xact.cc lines 240-242
+; Tests saw_cost = true detection in the two-commodity finalize path.
+; When a posting has an explicit cost (@ price) without POST_COST_CALCULATED,
+; the code sets saw_cost = true and breaks out of the loop, skipping
+; the automatic per-unit cost calculation.
+
+2024/03/01 Buy Foreign Currency
+    Assets:EUR            200 EUR @ $1.10
+    Assets:Checking
+
+test bal
+               $-220
+             200 EUR  Assets
+               $-220    Checking
+             200 EUR    EUR
+--------------------
+               $-220
+             200 EUR
+end test

@@ -1,0 +1,18 @@
+; Coverage test for format.cc lines 499-509
+; Test alternative truncation modes: leading and middle.
+; The default mode is TRUNCATE_TRAILING (append ..). The --truncate option
+; switches to TRUNCATE_LEADING (prepend ..) or TRUNCATE_MIDDLE (.. in middle).
+
+2024/01/01 Test
+    Expenses:LongCategoryName:AnotherLongSubCategory:YetAnother:Final    $10.00
+    Assets:Cash
+
+test reg --truncate=leading
+24-Jan-01 Test                  ..ory:YetAnother:Final       $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+test reg --truncate=middle
+24-Jan-01 Test                  Expenses:L..ther:Final       $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

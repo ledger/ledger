@@ -1,0 +1,22 @@
+; Test color/style function lookup paths for report.cc coverage
+; Covers fn_black, fn_blue, fn_cyan, fn_green, fn_magenta, fn_red,
+; fn_underline, fn_white, fn_yellow, fn_bold, fn_blink
+
+2024/01/01 Payee
+    Expenses:Food            $10.00
+    Assets:Cash
+
+; Test various color functions via format expressions
+test reg Expenses --format "%(black) %(blue) %(cyan) %(green) %(magenta) %(red) %(underline) %(white) %(yellow) %(bold) %(blink)\n"
+black blue cyan green magenta red underline white yellow bold blink
+end test
+
+; Test null function (line 1115-1117, 1563-1564)
+test reg Expenses --format "%(null ? \"yes\" : \"no\")\n"
+no
+end test
+
+; Test value_date function (line 1666-1668)
+test reg Expenses --format "%(value_date)\n"
+2024/01/01
+end test

@@ -1,0 +1,10 @@
+; Test fn_lot_tag with tag annotation
+
+2024/01/01 Test
+    Assets:Brokerage    10 AAPL {$100.00} (sometag)
+    Assets:Cash
+
+test reg --format "%(lot_tag(amount))\n"
+sometag
+sometag
+end test

@@ -1,0 +1,20 @@
+; Coverage test for draft.cc lines 457-469: @ per-unit cost handling
+; When a draft template posting has a cost with the @ operator,
+; the code unrounds the cost, multiplies it by the amount, and
+; preserves the commodity. Exercises:
+;   L457: if (post.cost) -- entering cost handling
+;   L458: if (post.cost->sign() < 0) -- false branch (positive cost)
+;   L461: post.cost->in_place_unround()
+;   L463: if (*post.cost_operator == "@") -- true branch
+;   L467-469: cost multiplication and commodity preservation
+;   L474-476: new_post->cost = *post.cost
+
+2024/01/01 Grocery Store
+    Expenses:Food    10 AAPL @ $5.00
+    Assets:Cash   $-50.00
+
+test xact 2024/06/15 Grocery to Expenses:Food '@' '$6.00' '10 AAPL' from Assets:Cash
+2024/06/15 Grocery Store
+    Expenses:Food                            10 AAPL
+    Assets:Cash
+end test

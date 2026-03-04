@@ -1,0 +1,10 @@
+; Coverage: value.cc lines 1884-1885 (value_t::annotate for amount values)
+; Amount annotations with price, date, and tag trigger the annotate path
+
+2024/01/01 Buy Stock
+    Assets:Brokerage    10 AAPL {$150.00} [2024/01/01] (note)
+    Assets:Cash
+
+test bal --lot-prices --lot-dates --lot-tags Assets:Brokerage
+10 AAPL {$150} [2024/01/01] (note)  Assets:Brokerage
+end test

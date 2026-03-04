@@ -1,0 +1,11 @@
+; Coverage for report.cc lines 954-956: fn_set_commodity_price
+
+P 2024/01/01 AAPL $150.00
+
+2024/01/01 Buy
+    Assets:Brokerage    10 AAPL
+    Assets:Cash
+
+test bal --market -V --now 2024/01/01 Assets:Brokerage
+            $1500.00  Assets:Brokerage
+end test

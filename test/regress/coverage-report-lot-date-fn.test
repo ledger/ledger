@@ -1,0 +1,11 @@
+; Coverage for report.cc lines 1012-1019: fn_lot_date
+; Tests the lot_date function which returns the date annotation from a lot
+; Uses lot with date annotation to exercise the details.date branch
+
+2024/03/15 * Buy Stock
+    Assets:Brokerage          10 AAPL {$150.00} [2024/03/15]
+    Assets:Cash
+
+test reg --format "%(lot_date(amount))\n" Assets:Brokerage
+2024/03/15
+end test

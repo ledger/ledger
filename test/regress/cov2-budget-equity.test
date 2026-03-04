@@ -1,0 +1,40 @@
+; Test budget and equity commands for report.cc coverage
+; Covers budget_format_, unbudgeted option, equity command
+
+~ Monthly
+    Expenses:Food            $100.00
+    Assets:Cash
+
+2024/01/01 Grocery Store
+    Expenses:Food            $80.00
+    Assets:Cash
+
+2024/01/15 Gas Station
+    Expenses:Gas             $30.00
+    Assets:Cash
+
+; Test budget command (report.cc lines 1741-1748)
+test budget --budget
+    $-110.00    $-2700.00     $2590.00    4%  Assets:Cash
+      $80.00     $2700.00    $-2620.00    3%  Expenses:Food
+------------ ------------ ------------ -----
+     $-30.00            0      $-30.00     0
+end test
+
+; Test --add-budget option (report.cc line 1223)
+test bal --add-budget --begin 2024/01/01 --end 2024/02/01
+             $-10.00  Assets:Cash
+              $10.00  Expenses
+             $-20.00    Food
+              $30.00    Gas
+--------------------
+                   0
+end test
+
+; Test equity command (report.cc lines 1770-1772)
+test equity
+2024/01/15 Opening Balances
+    Assets:Cash                             $-110.00
+    Expenses:Food                             $80.00
+    Expenses:Gas                              $30.00
+end test

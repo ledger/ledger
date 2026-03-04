@@ -1,0 +1,11 @@
+; Coverage test for times.cc line 725
+; "N months today" triggers unexpected in determine_when's ago/hence switch
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg -p "2 months today" -> 1
+__ERROR__
+Error: Unexpected date period token 'today'
+end test

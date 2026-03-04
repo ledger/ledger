@@ -1,0 +1,19 @@
+; Coverage for value.cc lines 886-888, 1027-1029:
+; Sorting by date exercises the DATE comparison in is_less_than and
+; is_greater_than. Transactions are sorted chronologically even when
+; entered out of order in the journal.
+
+2024/03/01 Later
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/01/01 Earlier
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test reg --sort date
+24-Jan-01 Earlier               Expenses:Food                $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+24-Mar-01 Later                 Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+end test

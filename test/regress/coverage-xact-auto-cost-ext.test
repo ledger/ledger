@@ -1,0 +1,22 @@
+; Coverage test for xact.cc lines 1119-1134: auto xact cost handling
+; When an auto transaction matches a posting with total cost (@@),
+; the auto-generated posting inherits the price annotation.
+; Line 1126: amt.sign() < 0 triggers cost negation (in_place_negate)
+; Line 1127: in_place_negate() on the cost
+
+= /^Expenses/
+    [Assets:Budget:$account]    -1.0
+    [Assets:Checking]            1.0
+
+2024/01/01 Utility Bill
+    Expenses:Utilities    100 kWh @@ $72.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Utility Bill          Expenses:Utilities          100 kWh      100 kWh
+                                Assets:Cash                    $-72         $-72
+                                                                         100 kWh
+                                [A:Bu:Expen:Utilities]     -100 kWh         $-72
+                                [Assets:Checking]           100 kWh         $-72
+                                                                         100 kWh
+end test

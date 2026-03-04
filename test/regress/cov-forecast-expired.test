@@ -1,0 +1,15 @@
+; Coverage test for filters.cc line 1453
+; forecast_posts::add_post returns early for expired periodic transaction
+
+~ monthly from 2020/01/01 to 2020/06/01
+    Expenses:Old    $100.00
+    Assets:Cash
+
+2024/01/01 Test
+    Expenses:Food    $100.00
+    Assets:Cash
+
+test reg --forecast-while "date < [2026/04/01]"
+24-Jan-01 Test                  Expenses:Food               $100.00      $100.00
+                                Assets:Cash                $-100.00            0
+end test

@@ -1,0 +1,27 @@
+; Coverage for report.cc lines 363-379: posts_report with group_by
+
+2024/01/01 Test1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/08 Test2
+    Expenses:Rent    $500.00
+    Assets:Cash
+
+2024/01/08 Test3
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test reg --group-by payee
+Test1
+24-Jan-01 Test1                 Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+
+Test2
+24-Jan-08 Test2                 Expenses:Rent               $500.00      $500.00
+                                Assets:Cash                $-500.00            0
+
+Test3
+24-Jan-08 Test3                 Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test

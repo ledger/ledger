@@ -1,0 +1,15 @@
+; Coverage test for textual_directives.cc lines 674-678:
+; tag directive with assert sub-directive.
+
+tag MyTag
+    assert value =~ /^[A-Z]/
+
+2024/01/01 Test
+    ; MyTag: Hello
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

@@ -1,0 +1,10 @@
+; Coverage for report.cc line 930: ansify_if without color argument
+; When no color string is provided, ansify_if returns the value unchanged
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg --format '%(ansify_if(account))\n' Expenses
+Expenses:Food
+end test

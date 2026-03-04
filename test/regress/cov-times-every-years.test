@@ -1,0 +1,25 @@
+; Coverage test for times.cc lines 1105-1106
+; Exercise "every N years" period parsing
+; Also covers TOK_YEARS in handle_every_token
+; and yearly duration output (line 323-324)
+
+2020/01/01 Year 2020
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2021/01/01 Year 2021
+    Expenses:Food            $20.00
+    Assets:Cash
+
+2022/01/01 Year 2022
+    Expenses:Food            $30.00
+    Assets:Cash
+
+2023/01/01 Year 2023
+    Expenses:Food            $40.00
+    Assets:Cash
+
+test reg Expenses --period "every 2 years"
+20-Jan-01 - 21-Dec-31           Expenses:Food                $30.00       $30.00
+22-Jan-01 - 23-Dec-31           Expenses:Food                $70.00      $100.00
+end test

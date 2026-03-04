@@ -1,0 +1,18 @@
+; Coverage test for textual_xacts.cc lines 629-630
+; Balance assignment with expression
+
+2024/01/01 Opening
+    Assets:Cash              $100.00
+    Equity:Opening
+
+2024/01/02 Spend
+    Expenses:Food            $20.00
+    Assets:Cash               = ($50.00 + $30.00)
+
+test bal
+              $80.00  Assets:Cash
+            $-100.00  Equity:Opening
+              $20.00  Expenses:Food
+--------------------
+                   0
+end test

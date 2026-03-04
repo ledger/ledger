@@ -1,0 +1,22 @@
+; Coverage test for post.cc lines 172-183
+; Test that the note field returns transaction note, posting note, or both.
+; Tests get_note function paths:
+; - post with note and xact with note (concatenated with newline)
+; - post without note, xact with note (xact note only)
+; - neither post nor xact have notes (NULL_VALUE)
+
+2024/01/01 Groceries  ; xact note
+    Expenses:Food    $10.00  ; post note
+    Assets:Cash
+
+2024/01/02 No notes
+    Expenses:Rent    $500.00
+    Assets:Cash
+
+test reg --format '%(note)|\n'
+ post note
+ xact note|
+ xact note|
+|
+|
+end test

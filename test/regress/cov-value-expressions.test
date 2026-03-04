@@ -1,0 +1,32 @@
+; Coverage test for value.cc and amount.cc expression evaluation paths
+; Exercise various expression operators through format strings and
+; display predicates
+
+commodity $
+
+2024/01/01 Payee One
+    Expenses:Food            $100.00
+    Expenses:Drink            $50.00
+    Assets:Cash
+
+2024/01/02 Payee Two
+    Expenses:Food             $75.00
+    Assets:Cash
+
+; Exercise amount division through format expressions
+test reg Expenses:Food --amount "amount / 2"
+24-Jan-01 Payee One             Expenses:Food                $50.00       $50.00
+24-Jan-02 Payee Two             Expenses:Food                $37.50       $87.50
+end test
+
+; Exercise amount multiplication through format expressions
+test reg Expenses:Food --amount "amount * 3"
+24-Jan-01 Payee One             Expenses:Food               $300.00      $300.00
+24-Jan-02 Payee Two             Expenses:Food               $225.00      $525.00
+end test
+
+; Exercise negation
+test reg Expenses:Food --amount "-amount"
+24-Jan-01 Payee One             Expenses:Food              $-100.00     $-100.00
+24-Jan-02 Payee Two             Expenses:Food               $-75.00     $-175.00
+end test

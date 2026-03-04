@@ -1,0 +1,11 @@
+; Coverage for draft.cc line 370, 376: xact "from" posting copies first real posting
+
+2024/01/01 Transfer
+    Assets:Checking    $500.00
+    Assets:Savings
+
+test xact 2024/02/01 at Transfer from Savings '$200.00'
+2024/02/01 Transfer
+    Assets:Checking
+    Assets:Savings
+end test

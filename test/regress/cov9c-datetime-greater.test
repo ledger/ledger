@@ -1,0 +1,20 @@
+; Coverage: value.cc lines 1023-1024 (is_greater_than datetime comparison)
+; Sorting by datetime in descending order exercises the datetime > path
+
+2024/01/01 First
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/03 Third
+    Expenses:Food    $30.00
+    Assets:Cash
+
+2024/01/02 Second
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test reg --sort "-datetime" Expenses:Food
+24-Jan-03 Third                 Expenses:Food                $30.00       $30.00
+24-Jan-02 Second                Expenses:Food                $20.00       $50.00
+24-Jan-01 First                 Expenses:Food                $10.00       $60.00
+end test

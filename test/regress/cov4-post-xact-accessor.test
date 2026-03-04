@@ -1,0 +1,12 @@
+; Test post_t::get_xact accessor (line 510-513 of post.cc)
+; and xact_id (line 514-515)
+; Exercise accessing the parent transaction
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(xact_id)\n"
+1
+2
+end test

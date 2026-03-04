@@ -1,0 +1,11 @@
+; Coverage test for report.cc lines 77-78
+; When --output is set and --pager is on (but not --force-pager),
+; pager gets turned off.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --output /dev/stdout --pager cat --limit "account =~ /Expenses/"
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+end test

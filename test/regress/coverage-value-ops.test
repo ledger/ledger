@@ -1,0 +1,16 @@
+; Coverage tests for value.cc
+; Test balance division by single-amount balance (lines 711-712, 717-718)
+; Test boolean comparison (line 877, 1018)
+; Test datetime/date comparison (line 1024, 1029)
+
+; Use an expression to test value operations
+2024/01/01 Test
+    Expenses:Food            $10.00
+    Assets:Cash
+
+; The --balance-format exercises rounding to commodity precision (line 1802)
+test bal --balance-format "%(display_total)\n"
+$-10.00
+$10.00
+0
+end test

@@ -1,0 +1,16 @@
+; Coverage test for textual_xacts.cc lines 571-572
+; Cost as a value expression using (expr)
+
+2024/01/01 Buy stock with calculated cost
+    Assets:Stocks     10 AAPL @ ($100.00 + $50.00)
+    Assets:Cash
+
+test bal
+              $-1500
+             10 AAPL  Assets
+              $-1500    Cash
+             10 AAPL    Stocks
+--------------------
+              $-1500
+             10 AAPL
+end test

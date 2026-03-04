@@ -1,0 +1,32 @@
+; Coverage test for times.cc lines 1112-1115
+; Exercise "every N weeks" and "every N days" period parsing
+; Covers TOK_WEEKS and TOK_DAYS in handle_every_token
+
+2024/01/01 Week 1
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/01/08 Week 2
+    Expenses:Food            $20.00
+    Assets:Cash
+
+2024/01/15 Week 3
+    Expenses:Food            $30.00
+    Assets:Cash
+
+2024/01/22 Week 4
+    Expenses:Food            $40.00
+    Assets:Cash
+
+test reg Expenses --period "every 2 weeks"
+23-Dec-24 - 24-Jan-06           Expenses:Food                $10.00       $10.00
+24-Jan-07 - 24-Jan-20           Expenses:Food                $50.00       $60.00
+24-Jan-21 - 24-Feb-03           Expenses:Food                $40.00      $100.00
+end test
+
+test reg Expenses --period "every 7 days"
+24-Jan-01 - 24-Jan-07           Expenses:Food                $10.00       $10.00
+24-Jan-08 - 24-Jan-14           Expenses:Food                $20.00       $30.00
+24-Jan-15 - 24-Jan-21           Expenses:Food                $30.00       $60.00
+24-Jan-22 - 24-Jan-28           Expenses:Food                $40.00      $100.00
+end test

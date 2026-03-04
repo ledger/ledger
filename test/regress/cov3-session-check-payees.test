@@ -1,0 +1,17 @@
+; Test session with check-payees option
+; Covers session.cc lines 114-115 (check_payees handling)
+
+payee Grocery Store
+payee Gas Station
+account Expenses:Food
+account Assets:Cash
+commodity $
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test bal --check-payees --strict --no-total
+             $-50.00  Assets:Cash
+              $50.00  Expenses:Food
+end test

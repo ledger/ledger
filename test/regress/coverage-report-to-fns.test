@@ -1,0 +1,21 @@
+; Test report.cc: fn_to_amount, fn_to_balance, fn_to_string, fn_to_mask, fn_to_sequence
+; These are type conversion functions
+
+2024/01/01 Test
+    Expenses:Food   $10.00
+    Assets:Cash
+
+test reg --format "%(to_amount(amount))\n" --now 2024/01/15
+$10.00
+$-10.00
+end test
+
+test reg --format "%(to_string(account))\n" --now 2024/01/15
+Expenses:Food
+Assets:Cash
+end test
+
+test reg --format "%(to_balance(amount))\n" --now 2024/01/15
+$10.00
+$-10.00
+end test

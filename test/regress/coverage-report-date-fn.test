@@ -1,0 +1,10 @@
+; Coverage for report.cc line 1514-1515: 'date' function lookup
+; The 'date' identifier maps to fn_today in the function lookup table
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test eval --now 2024/06/15 'date'
+2024/06/15
+end test

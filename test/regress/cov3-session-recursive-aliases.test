@@ -1,0 +1,13 @@
+; Test session with recursive aliases
+; Covers session.cc lines 106-107 (recursive_aliases handling)
+
+alias food=Expenses:Food
+alias groceries=food
+
+2024/01/15 Test
+    groceries    $50.00
+    Assets:Cash
+
+test bal --recursive-aliases --no-total Expenses
+              $50.00  Expenses:Food
+end test

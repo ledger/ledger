@@ -1,0 +1,9 @@
+; Coverage for report.cc lines 1012-1037: fn_lot_date, fn_lot_price, fn_lot_tag
+
+2024/01/01 Buy
+    Assets:Brokerage    10 AAPL {$150.00} [2024/01/01] (lot1)
+    Assets:Cash
+
+test reg Assets:Brokerage --format "%(lot_date(amount)) %(lot_price(amount)) %(lot_tag(amount))\n"
+2024/01/01 $150 lot1
+end test

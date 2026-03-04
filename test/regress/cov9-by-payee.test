@@ -1,0 +1,21 @@
+; Coverage test for filters.cc around line 1251:
+; Exercise by_payee_posts via --by-payee register report.
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Cash
+
+2024/01/15 Gas Station
+    Expenses:Transport    $40.00
+    Assets:Cash
+
+2024/01/20 Grocery Store
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test reg --by-payee
+24-Jan-15 Gas Station           Assets:Cash                 $-40.00      $-40.00
+                                Expenses:Transport           $40.00            0
+24-Jan-01 Grocery Store         Assets:Cash                 $-55.00      $-55.00
+                                Expenses:Food                $55.00            0
+end test

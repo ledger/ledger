@@ -1,0 +1,13 @@
+; Coverage test for format.cc lines 158-187:
+; All format string escape sequences including default case
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+; Test: \t for tab, \\ for backslash, and \a for default case (just 'a')
+
+test reg --format '\t\\|%(account)\a\n'
+	\|Expenses:Fooda
+	\|Assets:Casha
+end test

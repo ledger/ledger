@@ -1,0 +1,15 @@
+; Coverage: amount.cc in_place_truncate with places == 0 (line 681-682)
+; A commodity with 0 decimal precision causes truncation to zero places.
+; Also exercises places > 0 path (lines 677-680) with dollar amounts.
+
+2024/01/01 Integer Commodity
+    Expenses:Stock    10 AAPL
+    Assets:Cash       $-1500.00
+
+test reg --amount "truncated(amount)" Expenses:Stock
+24-Jan-01 Integer Commodity     Expenses:Stock              10 AAPL      10 AAPL
+end test
+
+test reg --amount "truncated(amount)" Assets:Cash
+24-Jan-01 Integer Commodity     Assets:Cash               $-1500.00    $-1500.00
+end test

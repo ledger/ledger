@@ -1,0 +1,9 @@
+; Coverage for pool.cc line 128: create commodity with annotation
+
+2024/01/01 Test
+    Assets:Brokerage    10 AAPL {$150.00}
+    Assets:Cash
+
+test bal Assets:Brokerage --lots
+      10 AAPL {$150}  Assets:Brokerage
+end test

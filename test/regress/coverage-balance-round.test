@@ -1,0 +1,21 @@
+; Coverage test for value.cc lines 1802-1803
+; Balance rounding to commodity precision with multiple commodities
+
+commodity $
+    format $1,000.00
+
+commodity EUR
+    format EUR 1,000.00
+
+2024/01/01 Test
+    Expenses:Travel       EUR 100.123456
+    Assets:Euro
+
+2024/01/01 USD Expense
+    Expenses:Food       $10.123456
+    Assets:Cash
+
+test bal --flat --no-total --format "%(roundto(display_total, 2))\n" Expenses
+$10.12
+EUR 100.12
+end test

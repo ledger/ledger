@@ -1,0 +1,16 @@
+; Coverage for commodity.cc lines 470-477: tag presence comparison
+; One lot with tag, other without - tests the asymmetric tag paths
+; The lot without tag sorts first
+
+2024/01/01 Buy
+    Assets:Brokerage    10 AAPL {$150.00} (lot1)
+    Assets:Checking
+
+2024/01/15 Buy More
+    Assets:Brokerage    5 AAPL {$150.00}
+    Assets:Checking
+
+test bal --lots Assets:Brokerage
+       5 AAPL {$150}
+10 AAPL {$150} (lot1)  Assets:Brokerage
+end test

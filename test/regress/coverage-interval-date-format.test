@@ -1,0 +1,17 @@
+; Coverage for filters.cc lines 966-967 (range date format)
+; and lines 1070-1071 (interval_posts operator)
+; When using --period with --date-format, the range date format code
+; is exercised to format the period payee string.
+
+2024/01/01 Test1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/15 Test2
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test reg --period "monthly" --date-format "%Y/%m/%d"
+2024/01/01 - 2024/01/31         Assets:Cash                 $-30.00      $-30.00
+                                Expenses:Food                $30.00            0
+end test

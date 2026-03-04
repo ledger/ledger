@@ -1,0 +1,22 @@
+; Test virtual posting skip in balance assertion with --effective
+; (textual_xacts.cc line 352)
+2024/01/01=2024/01/02 Test
+    Assets:Checking    $100.00
+    Income:Salary
+
+2024/01/03=2024/01/01 Test2
+    [Assets:Checking]    $50.00
+    [Equity]
+
+2024/01/04=2024/01/03 Test3
+    Expenses:Food    $10.00
+    Assets:Checking    $-10.00 = $90.00
+
+test reg --effective
+24-Jan-02 Test                  Assets:Checking             $100.00      $100.00
+                                Income:Salary              $-100.00            0
+24-Jan-01 Test2                 [Assets:Checking]            $50.00       $50.00
+                                [Equity]                    $-50.00            0
+24-Jan-03 Test3                 Expenses:Food                $10.00       $10.00
+                                Assets:Checking             $-10.00            0
+end test

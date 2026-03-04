@@ -1,0 +1,18 @@
+; Coverage for history.cc lines 231-243: commodity alias in price graph
+
+commodity EUR
+    alias EURO
+
+P 2024/01/01 EURO $1.10
+
+2024/01/01 Buy
+    Assets:Foreign    100 EURO
+    Assets:Cash
+
+test bal -X '$'
+                   0  Assets
+            $-110.00    Cash
+             $110.00    Foreign
+--------------------
+                   0
+end test

@@ -1,0 +1,12 @@
+; Coverage test for annotate.cc lines 223-224, 231-237, 265
+; Tests printing annotated commodities with total cost
+
+2024/01/01 Buy shares
+    Assets:Brokerage    10 AAPL {{$1500}}
+    Assets:Cash
+
+test print
+2024/01/01 Buy shares
+    Assets:Brokerage                    10 AAPL {{$1500}}
+    Assets:Cash
+end test

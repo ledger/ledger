@@ -1,0 +1,19 @@
+; Coverage test for xact.cc lines 1104-1111
+; Tests auto-xact account name %(format) substitution.
+; The %(account) format directive in the auto-xact's posting account
+; name is evaluated and replaced with the formatted result at runtime.
+
+= Expenses
+    Liabilities:Tax:%(account)  (amount * 0.10)
+    Assets:Tax                 (-amount * 0.10)
+
+2024/03/01 Test
+    Expenses:Food     $100.00
+    Assets:Checking
+
+test reg --generated
+24-Mar-01 Test                  Expenses:Food               $100.00      $100.00
+                                Assets:Checking            $-100.00            0
+                                Liab:Tax:Expenses:Food       $10.00       $10.00
+                                Assets:Tax                  $-10.00            0
+end test

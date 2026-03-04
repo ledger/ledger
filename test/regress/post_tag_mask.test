@@ -1,0 +1,12 @@
+; Test post_t::get_tag with mask - covers post.cc line 72
+; When a posting has its own tag matching a mask pattern
+
+2024/01/01 Test
+    ; SomeTag: world
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --limit "has_tag(/SomeTag/)"
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

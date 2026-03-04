@@ -1,0 +1,14 @@
+; Coverage for textual_directives.cc line 633: commodity value directive
+
+P 2024/01/01 EUR $1.10
+
+commodity EUR
+    value market(amount, date, "EUR")
+
+2024/01/01 Test
+    Expenses:Food    100 EUR
+    Assets:Cash
+
+test bal Expenses
+             100 EUR  Expenses:Food
+end test

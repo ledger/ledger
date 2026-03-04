@@ -1,0 +1,10 @@
+; Test account lookup is_account (lines 448-449 of account.cc)
+; Exercise the is_account accessor on accounts
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --format "%(is_account ? \"Y\" : \"N\") %(account)\n" --flat --limit "account =~ /Food/"
+Y Expenses:Food
+end test

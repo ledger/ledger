@@ -1,0 +1,11 @@
+; Test select with custom meta data column (falls to else/meta_width path)
+; Covers select.cc lines 331-338 (custom/meta column rendering)
+
+2024/01/15 Grocery Store
+    ; Category: groceries
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test select 'date, tag("Category"), amount from posts where account =~ /Expenses/'
+24-Jan-15 groceries        $50.00
+end test

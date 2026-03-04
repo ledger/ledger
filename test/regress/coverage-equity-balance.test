@@ -1,0 +1,14 @@
+; Coverage for filters.cc lines 1166 (zero return in create_post)
+; and line 1229 (post_creator with to_amount in posts_as_equity)
+; When equity report filters to a subset of accounts, the total is
+; non-zero so the balancing Equity posting is created.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash     $-10.00
+
+test equity Expenses
+2024/01/01 Opening Balances
+    Expenses:Food                             $10.00
+    Equity:Opening Balances
+end test

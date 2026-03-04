@@ -1,0 +1,12 @@
+; Test non-fixated price annotation sets target commodity in find_price
+; Covers annotate.cc lines 316-319 (target from price commodity)
+
+P 2024/02/01 AAPL $155.00
+
+2024/01/15 Buy
+    Assets:Stocks    10 AAPL {$150.00}
+    Assets:Cash
+
+test bal --market --no-total Assets:Stocks
+            $1550.00  Assets:Stocks
+end test

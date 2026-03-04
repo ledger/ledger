@@ -1,0 +1,14 @@
+; Test select command with where clause
+; Covers select.cc lines 371-379 (where clause handling)
+
+2024/01/15 (CHK001) Grocery Store
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/02/20 Gas Station
+    Expenses:Transport    $40.00
+    Assets:Cash
+
+test select "date, payee, amount from posts where amount > 45"
+24-Jan-15 Grocery Store                                                  $50.00
+end test

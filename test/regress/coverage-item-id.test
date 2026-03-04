@@ -1,0 +1,11 @@
+; Coverage: item.cc line 343 - get_id function
+; id returns the UUID tag value or the sequence number
+
+2024/01/01 Test
+    ; UUID: abc-123
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(id)\n" Expenses
+abc-123
+end test

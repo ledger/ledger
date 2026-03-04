@@ -1,0 +1,13 @@
+; Test balance assignment with null expression (textual_xacts.cc line 633-634)
+2024/01/01 Test
+    Expenses:Food    = ()
+    Assets:Cash    $-10.00
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 3:
+While parsing posting:
+  Expenses:Food    = ()
+                     ^^
+Error: Balance assignment must evaluate to a constant
+end test

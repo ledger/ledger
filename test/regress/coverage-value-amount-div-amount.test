@@ -1,0 +1,12 @@
+; Coverage for value.cc line 704:
+; Division of an AMOUNT by another AMOUNT goes through the
+; AMOUNT/AMOUNT case in value_t::operator/=.
+
+2024/01/01 Test
+    Expenses:Food    100 EUR
+    Assets:Cash      -100 EUR
+
+test reg --format "%(amount / 25 EUR)\n"
+4 EUR
+-4 EUR
+end test

@@ -1,0 +1,10 @@
+; Test fn_set_commodity_price
+
+2024/01/01 Test
+    Assets:Brokerage    10 AAPL
+    Assets:Cash
+
+test reg --format "%(set_commodity_price(amount, now, $150))%(amount)\n"
+10 AAPL
+-10 AAPL
+end test

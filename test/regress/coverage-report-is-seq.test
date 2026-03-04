@@ -1,0 +1,11 @@
+; Coverage for report.cc line 734-736: fn_is_seq
+; Tests the is_seq function which checks if a value is a sequence
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+; Test is_seq with non-sequence value
+test reg --format '%(is_seq(amount))\n' Expenses
+false
+end test

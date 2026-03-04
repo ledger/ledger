@@ -1,0 +1,21 @@
+; Coverage test for filters.cc line 1290 (transfer_details SET_ACCOUNT)
+; Tests the transfer_details handler with --pivot to remap accounts based
+; on tag values. Line 1290 copies xdata flags from prev_account to the
+; new temp account when prev_account has xdata.
+
+2024/01/15 Groceries
+    ; Store: WholeFoods
+    Expenses:Food             $50.00
+    Assets:Cash
+
+2024/01/20 Groceries
+    ; Store: Trader
+    Expenses:Food             $30.00
+    Assets:Cash
+
+test reg --pivot Store
+24-Jan-15 Groceries             St:WholeF:Expense:Food       $50.00       $50.00
+24-Jan-15 Groceries             St:WholeFo:Assets:Cash      $-50.00            0
+24-Jan-20 Groceries             St:Trade:Expenses:Food       $30.00       $30.00
+24-Jan-20 Groceries             Sto:Trader:Assets:Cash      $-30.00            0
+end test

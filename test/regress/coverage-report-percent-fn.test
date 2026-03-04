@@ -1,0 +1,15 @@
+; Coverage for report.cc lines 935-936: fn_percent via --percent
+
+2024/01/01 Test
+    Expenses:Food    $75.00
+    Assets:Cash
+
+2024/01/02 Test
+    Expenses:Drink    $25.00
+    Assets:Cash
+
+test bal Expenses --percent
+             100.00%  Expenses
+              25.00%    Drink
+              75.00%    Food
+end test

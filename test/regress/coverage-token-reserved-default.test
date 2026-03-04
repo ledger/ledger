@@ -1,0 +1,13 @@
+; Coverage test for token.cc L122
+; Tests the default: break case in parse_reserved_word when an
+; identifier starts with a letter not matching any reserved word
+; (a, d, e, f, i, o, n, t). Using 'payee' which starts with 'p'.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --display 'payee == "Test"'
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

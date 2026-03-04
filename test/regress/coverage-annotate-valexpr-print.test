@@ -1,0 +1,13 @@
+; Coverage test for annotate.cc lines 250-251, 265:
+; Valuation expression serialization in annotation print and XML output
+
+2024/01/15 Buy
+    Assets:Stocks    10 AAPL ((market(amount, date, exchange)))
+    Assets:Cash
+
+; Test that value_expr is preserved in print output (line 250-251)
+test print
+2024/01/15 Buy
+    Assets:Stocks                       10 AAPL ((market(amount, date, exchange)))
+    Assets:Cash
+end test

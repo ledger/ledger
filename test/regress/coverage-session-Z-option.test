@@ -1,0 +1,12 @@
+; Coverage for session.cc line 303: -Z (price-exp) option
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal -Z 1440
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

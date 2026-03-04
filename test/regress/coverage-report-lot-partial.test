@@ -1,0 +1,7 @@
+2024/01/01 Buy
+    Assets:Stocks   10 AAPL {$100.00} @ $100.00
+    Assets:Cash
+
+test reg --format '%(lot_date(amount))|%(lot_price(amount))|%(lot_tag(amount))|\n' Assets:Stocks
+|$100||
+end test

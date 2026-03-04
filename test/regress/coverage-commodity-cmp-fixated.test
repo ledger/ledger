@@ -1,0 +1,16 @@
+; Coverage for commodity.cc lines 502-511: semantic flag comparison
+; Fixated price {=$150.00} vs non-fixated {$150.00} have different semantic flags
+; ANNOTATION_PRICE_FIXATED flag causes different sorting
+
+2024/01/01 Buy
+    Assets:Brokerage    10 AAPL {$150.00}
+    Assets:Checking
+
+2024/01/15 Buy More
+    Assets:Brokerage    5 AAPL {=$150.00}
+    Assets:Checking
+
+test bal --lots Assets:Brokerage
+      10 AAPL {$150}
+      5 AAPL {=$150}  Assets:Brokerage
+end test

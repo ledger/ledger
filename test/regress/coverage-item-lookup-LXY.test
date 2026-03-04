@@ -1,0 +1,19 @@
+; Coverage for item.cc lines 518-530: L, X, Y lookup branches
+
+2024/01/01 * Cleared
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 ! Pending
+    Expenses:Food    $5.00
+    Assets:Cash
+
+2024/01/03 Normal
+    Expenses:Food    $3.00
+    Assets:Cash
+
+test reg --format "%(L) %(X) %(Y) %(account)\n" Expenses
+true true false Expenses:Food
+true false true Expenses:Food
+true false false Expenses:Food
+end test

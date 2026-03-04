@@ -1,0 +1,27 @@
+; Coverage for report.cc PRECOMMAND break statements:
+; Line 1847 (case 'f'), 1851 (case 'g'), 1861 (case 'q')
+; Unknown commands whose first letter matches a PRECOMMAND case but whose
+; name does not match fire the break, then fall through to COMMAND lookup
+; which also fails, producing an error.
+
+2024/01/01 Test
+    Expenses:Food  $10.00
+    Assets:Cash
+
+; 'fix' starts with 'f' but is not 'format' -> PRECOMMAND break at 1847
+test fix -> 1
+__ERROR__
+Error: Unrecognized command 'fix'
+end test
+
+; 'geo' starts with 'g' but is not 'generate' -> PRECOMMAND break at 1851
+test geo -> 1
+__ERROR__
+Error: Unrecognized command 'geo'
+end test
+
+; 'quux' starts with 'q' but is not 'query' -> PRECOMMAND break at 1861
+test quux -> 1
+__ERROR__
+Error: Unrecognized command 'quux'
+end test

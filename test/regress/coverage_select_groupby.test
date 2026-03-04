@@ -1,0 +1,17 @@
+; Coverage test for select.cc group by clause
+
+2024/01/01 Test A
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/02/01 Test B
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test select account,total from accounts group by account
+Assets:Cash
+Assets:Cash      $-30.00
+
+Expenses:Food
+Expenses:Food       $30.00
+end test

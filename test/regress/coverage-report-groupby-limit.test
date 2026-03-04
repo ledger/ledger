@@ -1,0 +1,24 @@
+; Coverage for report.cc: posts_report with --group-by and --limit combined
+; Exercises the group_by_ branch in posts_report (lines 349-353) with a
+; limit predicate to filter postings before grouping.
+
+2024/01/01 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/01/01 Restaurant
+    Expenses:Dining    $30.00
+    Assets:Cash
+
+2024/02/15 Grocery Store
+    Expenses:Food    $40.00
+    Assets:Cash
+
+test reg --group-by payee --limit 'amount > 0'
+Grocery Store
+24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Feb-15 Grocery Store         Expenses:Food                $40.00       $90.00
+
+Restaurant
+24-Jan-01 Restaurant            Expenses:Dining              $30.00       $30.00
+end test

@@ -1,0 +1,20 @@
+; Coverage for textual_xacts.cc lines 350,352: effective date balance assignment
+
+2024/01/01 Test
+    Assets:Cash    $100.00
+    Equity
+
+2024/01/02=2024/01/03 Test2
+    Assets:Cash    $50.00
+    Equity
+
+2024/01/03 Test3
+    Assets:Cash    = $200.00
+    Equity
+
+test bal --effective
+             $200.00  Assets:Cash
+            $-200.00  Equity
+--------------------
+                   0
+end test

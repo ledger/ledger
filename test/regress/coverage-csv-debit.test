@@ -1,0 +1,11 @@
+; Coverage test for csv.cc lines 189-191:
+; CSV import with debit column (amount negation)
+
+account Expenses:Unknown
+account Assets:Checking
+
+test convert test/regress/coverage-csv-debit-data.csv --input-date-format "%Y/%m/%d" --account Assets:Checking
+2024/01/15 * Grocery Store
+    Expenses:Unknown                             -50
+    Assets:Checking
+end test

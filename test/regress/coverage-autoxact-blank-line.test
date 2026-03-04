@@ -1,0 +1,13 @@
+; Test auto xact blank line break (textual_xacts.cc line 189)
+= Expenses
+    (Budget:Unknown)        1
+ 
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+                                (Budget:Unknown)             $10.00       $10.00
+end test

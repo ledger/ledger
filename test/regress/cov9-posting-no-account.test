@@ -1,0 +1,16 @@
+; Test posting with state flag but no account name
+; Covers textual_xacts.cc line 456 (Posting has no account)
+
+2024/01/15 Test
+    * ; comment with state but no account
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 5:
+While parsing posting:
+  * ; comment with state but no account
+
+Error: Posting has no account
+end test

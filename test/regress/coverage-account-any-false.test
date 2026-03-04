@@ -1,0 +1,9 @@
+; Coverage: account.cc line 382 - fn_any returning false
+; When no posting in the account matches the expression, fn_any returns false
+
+2024/01/01 Grocery
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --limit "any(amount > 10000)"
+end test

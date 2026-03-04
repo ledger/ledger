@@ -1,0 +1,17 @@
+; Tests for sha512.cc: SHA512 hash computation
+; Covers: lines 234-241 (SHA512_Init)
+;         lines 319-366 (SHA512_Update with data)
+;         lines 411-438 (SHA512_Final)
+;         lines 440-446 (SHA512 convenience function)
+
+2024/01/01 Test
+    Expenses  $10
+    Assets
+
+; Using --hashes sha512 triggers SHA512 computation for each transaction
+test --hashes sha512 print
+2024/01/01 Test
+    ; Hash: 96be1f163a98faf84307b4b97f3b7277e8a8dd120ce40eb9e405c43b66e59beca227e0cc27dc3043985b8c30fd5cef08e660dd6693651e4eb2d11bb433446fa0
+    Expenses                                     $10
+    Assets
+end test

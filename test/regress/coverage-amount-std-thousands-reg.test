@@ -1,0 +1,16 @@
+; Coverage for amount.cc lines 204, 220:
+; Standard comma thousands separator with period decimal in register output.
+; The register command forces amount formatting through stream_out_mpq with
+; the commodity parameter, hitting line 204 (decimal point) and line 220
+; (thousands comma separator) for amounts with >3 integer digits.
+
+commodity $
+    format $1,000.00
+
+2024/01/01 Big Purchase
+    Expenses:Goods         $54,321.99
+    Assets:Bank
+
+test reg Expenses
+24-Jan-01 Big Purchase          Expenses:Goods           $54,321.99   $54,321.99
+end test

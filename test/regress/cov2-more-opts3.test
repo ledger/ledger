@@ -1,0 +1,71 @@
+; Test additional option handlers for report.cc coverage
+; Covers inject, sort-all, period-sort, display, limit, only,
+; begin, end, current, pricedb command
+
+P 2024/01/01 AAPL $100.00
+P 2024/06/01 AAPL $150.00
+
+2024/01/01 Payee
+    Assets:Broker          10 AAPL @ $100.00
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/01/15 Payee Two
+    Expenses:Gas             $20.00
+    Assets:Cash
+
+; Test --inject option (line 1306)
+test reg Expenses --inject "tag(test)"
+24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
+24-Jan-15 Payee Two             Expenses:Gas                 $20.00       $30.00
+end test
+
+; Test --sort-all option (line 1382)
+test reg Expenses --sort-all amount
+24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
+24-Jan-15 Payee Two             Expenses:Gas                 $20.00       $30.00
+end test
+
+; Test --period-sort option (line 1352, 1383)
+test reg Expenses --period-sort amount
+24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
+24-Jan-15 Payee Two             Expenses:Gas                 $20.00       $30.00
+end test
+
+; Test --display option (line 1269)
+test reg Expenses --display "amount>10"
+24-Jan-15 Payee Two             Expenses:Gas                 $20.00       $30.00
+end test
+
+; Test --limit option (line 1314)
+test reg --limit "amount>10"
+24-Jan-15 Payee Two             Expenses:Gas                 $20.00       $20.00
+end test
+
+; Test --only option (line 1342)
+test reg --only "amount>10"
+24-Jan-15 Payee Two             Expenses:Gas                 $20.00       $20.00
+end test
+
+; Test --begin option (line 1241)
+test reg --begin 2024/01/10
+24-Jan-15 Payee Two             Expenses:Gas                 $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test
+
+; Test --end option (line 1277)
+test reg Expenses --end 2024/01/10
+24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
+end test
+
+; Test --current option (line 1257)
+test reg Expenses --current
+24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
+24-Jan-15 Payee Two             Expenses:Gas                 $20.00       $30.00
+end test
+
+; Test pricedb command (line 1792-1793)
+test pricedb
+P 2024/01/01 00:00:00 AAPL $100.00
+P 2024/06/01 00:00:00 AAPL $150.00
+end test

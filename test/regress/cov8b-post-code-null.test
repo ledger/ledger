@@ -1,0 +1,18 @@
+; Coverage test for post.cc line 165
+; Test that transactions without a code return empty for the code field.
+; Also tests get_code returning NULL_VALUE when no code is present.
+
+2024/01/01 Groceries
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 (123) Payment
+    Expenses:Rent    $500.00
+    Assets:Cash
+
+test reg --format '%(code)|\n'
+|
+|
+123|
+123|
+end test

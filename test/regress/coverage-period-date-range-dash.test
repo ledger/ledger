@@ -1,0 +1,21 @@
+; Test times.cc lines 1217-1220: date range with dash operator
+; via handle_dash_operator in parse()
+
+2026/01/15 Jan tx
+    Expenses:Food   $5.00
+    Assets:Cash
+
+2026/02/15 Feb tx
+    Expenses:Food   $10.00
+    Assets:Cash
+
+2026/03/01 Mar tx
+    Expenses:Food   $20.00
+    Assets:Cash
+
+test reg --period "2026/01/01 - 2026/02/28"
+26-Jan-15 Jan tx                Expenses:Food                 $5.00        $5.00
+                                Assets:Cash                  $-5.00            0
+26-Feb-15 Feb tx                Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

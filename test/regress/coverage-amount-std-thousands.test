@@ -1,0 +1,19 @@
+; Coverage for amount.cc lines 204, 220:
+; Standard US-style output with comma thousands separator and period decimal.
+; Line 204: outputs '.' for decimal point when commodity has THOUSANDS style
+;           but NOT decimal-comma or time-colon.
+; Line 220: outputs ',' as thousands separator in the same context.
+
+commodity $
+    format $1,000.00
+
+2024/01/01 Large payment
+    Expenses:Rent          $12,345.67
+    Assets:Cash
+
+test bal
+         $-12,345.67  Assets:Cash
+          $12,345.67  Expenses:Rent
+--------------------
+                   0
+end test

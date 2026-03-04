@@ -1,0 +1,19 @@
+; Coverage for balance.cc lines 259,263,270,272,278: lot sorting FIFO order
+
+2024/01/01 Buy shares lot A
+    Assets:Brokerage    10 AAPL {$150.00} [2024/01/01]
+    Assets:Cash    $-1500.00
+
+2024/01/02 Buy shares lot B
+    Assets:Brokerage    5 AAPL {$160.00} [2024/01/02]
+    Assets:Cash    $-800.00
+
+2024/01/03 Buy shares plain
+    Assets:Brokerage    3 AAPL
+    Assets:Cash
+
+test bal Assets:Brokerage --lots --lot-dates
+              3 AAPL
+10 AAPL {$150.00} [2024/01/01]
+5 AAPL {$160.00} [2024/01/02]  Assets:Brokerage
+end test

@@ -1,0 +1,18 @@
+; Tests for query.cc: backslash escape handling
+; Covers: lines 161-162 (consume_next = true on backslash escape)
+
+2024/01/01 A&B Corp
+    Expenses  $10
+    Assets
+
+2024/01/02 Other
+    Income  $20
+    Assets
+
+; Backslash before & prevents it from being treated as AND operator
+; and includes it in the identifier (lines 161-162)
+; The query '@\&B' means payee matching regex '&B'
+test reg '@\&B'
+24-Jan-01 A&B Corp              Expenses                        $10          $10
+                                Assets                         $-10            0
+end test

@@ -1,0 +1,14 @@
+; Coverage for textual_directives.cc line 615: commodity nomarket sub-directive
+
+P 2024/01/01 EUR $1.10
+
+commodity EUR
+    nomarket
+
+2024/01/01 Test
+    Expenses:Food    100 EUR
+    Assets:Cash
+
+test bal Expenses -V
+             $110.00  Expenses:Food
+end test

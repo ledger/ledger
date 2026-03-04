@@ -1,0 +1,13 @@
+; Coverage test for xact.cc lines 690-692
+; Tests deferred postings using <Account> syntax.
+; Deferred postings (POST_DEFERRED) are added via add_deferred_post()
+; instead of the regular add_post() path.
+
+2024/03/01 Test Deferred
+    Expenses:Food     $10.00
+    <Assets:Cash>    $-10.00
+
+test reg
+24-Mar-01 Test Deferred         Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

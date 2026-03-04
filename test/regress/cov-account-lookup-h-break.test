@@ -1,0 +1,14 @@
+; Coverage test for account.cc line 445
+; Account lookup 'h' break when fn_name != has_children_to_display
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --display "hello" -> 1
+__ERROR__
+While evaluating value expression:
+  hello
+  ^^^^^
+Error: Unknown identifier 'hello'
+end test

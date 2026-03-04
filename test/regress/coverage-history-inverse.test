@@ -1,0 +1,20 @@
+; Coverage test for history.cc L372-378, L469-482
+; Tests price inversion in find_price. When the price graph has an edge
+; from EUR to $ (P EUR 1.10 $), converting $ to EUR requires inverting
+; the price. This exercises the inversion paths where price.commodity()
+; matches the source commodity.
+
+P 2024/01/01 EUR 1.10 $
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash     -$10.00
+
+; Dual-target find_price with inversion (L469-482)
+; $10 / 1.10 $/EUR ~ EUR 9
+test bal -X EUR
+               EUR-9  Assets:Cash
+                EUR9  Expenses:Food
+--------------------
+                   0
+end test

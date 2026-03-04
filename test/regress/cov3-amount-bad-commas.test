@@ -1,0 +1,17 @@
+; Test error for too many commas in decimal comma style
+; Covers amount.cc lines 1218-1219 (no_more_commas check)
+
+commodity 1.000,00 EUR
+
+2024/01/01 Test
+    Expenses:Food    1,234,56 EUR
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 7:
+While parsing posting:
+  Expenses:Food    1,234,56 EUR
+                   ^^^^^^^^^^^^
+Error: Too many commas in amount
+end test

@@ -1,0 +1,33 @@
+; Coverage test for select.cc lines 383-386:
+; collect and group by clauses
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/01/20 Gas
+    Expenses:Gas     $30.00
+    Assets:Cash
+
+; Test group by clause (line 386)
+
+test select account,amount group by account
+Assets:Cash
+Assets:Cash                                                             $-50.00
+Assets:Cash                                                             $-30.00
+
+Expenses:Food
+Expenses:Food                                                            $50.00
+
+Expenses:Gas
+Expenses:Gas                                                             $30.00
+end test
+
+; Test collect clause (line 384)
+
+test select date,payee,amount collect total
+24-Jan-15 Test                                                           $50.00
+24-Jan-15 Test                                                          $100.00
+24-Jan-20 Gas                                                           $200.00
+24-Jan-20 Gas                                                           $400.00
+end test

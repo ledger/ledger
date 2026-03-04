@@ -1,0 +1,10 @@
+; Coverage for item.cc line 476: meta function (alias for tag)
+
+2024/01/01 Test
+    ; MyMeta: metavalue
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(meta('MyMeta'))\n" Expenses
+metavalue
+end test

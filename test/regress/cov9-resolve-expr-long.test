@@ -1,0 +1,14 @@
+; Coverage test for post.cc line 542:
+; Exercise resolve_expr returning a long integer result.
+; Using an amount expression that evaluates to an integer.
+
+2024/01/01 Test
+    Expenses:Food    (5 * 2)
+    Assets:Cash
+
+test bal
+                 -10  Assets:Cash
+                  10  Expenses:Food
+--------------------
+                   0
+end test

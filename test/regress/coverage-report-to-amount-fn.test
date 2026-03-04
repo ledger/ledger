@@ -1,0 +1,10 @@
+; Coverage for report.cc line 1060: fn_to_amount
+; Converts a value to an amount type
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test eval "to_amount(10)"
+10
+end test

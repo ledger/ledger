@@ -1,0 +1,14 @@
+; Test textual_directives.cc line 832: break in case 'd' for unknown
+; directive starting with 'd' that isn't "def" or "define"
+dump foo
+
+2024/01/01 Test
+    Expenses:Food   $10.00
+    Assets:Cash
+
+test bal
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

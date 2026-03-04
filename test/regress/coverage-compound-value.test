@@ -1,0 +1,20 @@
+; Coverage for filters.cc lines 372 (AMOUNT case in handle_value)
+; and line 377 (BALANCE/SEQUENCE compound value assignment)
+; When subtotaling with multiple commodities, the balance type
+; triggers the compound_value path.
+
+2024/01/01 Test1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Test2
+    Expenses:Food    10 EUR
+    Assets:Cash
+
+test reg --monthly
+24-Jan-01 - 24-Jan-31           Assets:Cash                 $-10.00
+                                                            -10 EUR      $-10.00
+                                                                         -10 EUR
+                                Expenses:Food                $10.00
+                                                             10 EUR            0
+end test

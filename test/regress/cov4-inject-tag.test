@@ -1,0 +1,12 @@
+; Test inject_posts (lines 1562-1604 of filters.cc)
+; Exercise the tag injection path with --inject
+
+2024/01/01 Test
+    ; Amount: $5.00
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --inject "Amount" Expenses
+24-Jan-01 Test                  Amount                        $5.00        $5.00
+24-Jan-01 Test                  Expenses:Food                $10.00       $15.00
+end test

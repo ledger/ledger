@@ -1,0 +1,30 @@
+; Coverage for textual_xacts.cc line 126: auto_xact delete with non-matching skip
+
+= :tax_rule: :: /Expenses/
+    Expenses:Tax    $10.00
+    Liabilities:Tax    $-10.00
+
+= :other_rule: :: /Income/
+    Expenses:Tax    $5.00
+    Liabilities:Tax    $-5.00
+
+= :tax_rule: delete
+
+2024/01/01 Test
+    Expenses:Food    $100.00
+    Assets:Cash
+
+2024/01/02 Test2
+    Income:Salary    $-50.00
+    Assets:Cash
+
+test bal
+             $-50.00  Assets:Cash
+             $105.00  Expenses
+             $100.00    Food
+               $5.00    Tax
+             $-50.00  Income:Salary
+              $-5.00  Liabilities:Tax
+--------------------
+                   0
+end test

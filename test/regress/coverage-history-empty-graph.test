@@ -1,0 +1,14 @@
+; Coverage for history.cc line 291: early return for empty price graph
+; Use --market with a commodity that has no price entries
+
+2024/01/01 Buy
+    Assets:Stocks    10 AAPL
+    Assets:Cash
+
+test bal --market
+                   0  Assets
+            -10 AAPL    Cash
+             10 AAPL    Stocks
+--------------------
+                   0
+end test

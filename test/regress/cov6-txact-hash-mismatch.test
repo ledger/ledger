@@ -1,0 +1,17 @@
+; Coverage for textual_xacts.cc line 1011: hash mismatch
+
+2024/01/01 Test
+    ; Hash: badhash
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --hashes sha512_half -> 1
+__ERROR__
+While parsing file "$FILE", line 6:
+While parsing transaction:
+> 2024/01/01 Test
+>     ; Hash: badhash
+>     Expenses:Food    $10.00
+>     Assets:Cash
+Error: Expected hash fbaef2581d47d8f47b4e683db5c1191a2c3e3df8b0a21dba872d191082d4737e != badhash
+end test

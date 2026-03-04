@@ -1,0 +1,11 @@
+; Test sha512 processing (lines 236, 325-351, 397, 400 of sha512.cc)
+; Exercise the SHA512 hash computation through --hashes option
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --hashes sha512
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

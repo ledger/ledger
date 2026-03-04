@@ -1,0 +1,18 @@
+; Coverage for filters.cc lines 966-967:
+; subtotal_posts::report_subtotal when date_format is set.
+; Using --subtotal with --date-format exercises the branch where
+; spec_fmt is null but date_format is set, producing "- <formatted_date>"
+; as payee.
+
+2024/01/01 First
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/15 Second
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test reg --subtotal --date-format '%Y/%m/%d'
+2024/01/01 - 2024/01/15         Assets:Cash                 $-30.00      $-30.00
+                                Expenses:Food                $30.00            0
+end test

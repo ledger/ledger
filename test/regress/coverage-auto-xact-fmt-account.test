@@ -1,0 +1,14 @@
+; Coverage for xact.cc lines 1104-1111 (format expression in auto_xact account)
+; When an auto transaction account contains %(expression), the format
+; expression is evaluated to determine the account name.
+
+= Expenses
+    (Budget:%(account))    -1
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg Budget
+24-Jan-01 Test                  (Budget:Expenses:Food)      $-10.00      $-10.00
+end test

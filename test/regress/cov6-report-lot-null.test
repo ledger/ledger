@@ -1,0 +1,10 @@
+; Coverage for report.cc lines 1018,1027,1036: fn_lot_date, fn_lot_price,
+; fn_lot_tag returning NULL_VALUE when amount has no annotations
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg Expenses --format "%(lot_date(amount))%(lot_price(amount))%(lot_tag(amount))DONE\n"
+DONE
+end test

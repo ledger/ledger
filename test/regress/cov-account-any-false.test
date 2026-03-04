@@ -1,0 +1,10 @@
+; Coverage test for account.cc line 382
+; fn_any returns false when no posts in the account satisfy the predicate
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+; any() in account context returns false when no post matches
+test bal --display "any(amount > $1000)"
+end test

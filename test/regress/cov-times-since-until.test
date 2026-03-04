@@ -1,0 +1,26 @@
+; Coverage test for times.cc lines 1222-1228
+; Exercise "since" and "until" tokens in period parsing
+; Covers handle_since_token and handle_until_token
+
+2024/01/01 January
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/06/01 June
+    Expenses:Food            $20.00
+    Assets:Cash
+
+2024/12/01 December
+    Expenses:Food            $30.00
+    Assets:Cash
+
+; "since" exercises TOK_SINCE -> handle_since_token (line 1222-1223)
+test reg Expenses --period "since 2024/06/01"
+24-Jun-01 June                  Expenses:Food                $20.00       $20.00
+24-Dec-01 December              Expenses:Food                $30.00       $50.00
+end test
+
+; "until" exercises TOK_UNTIL -> handle_until_token (line 1226-1227)
+test reg Expenses --period "until 2024/06/01"
+24-Jan-01 January               Expenses:Food                $10.00       $10.00
+end test

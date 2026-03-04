@@ -1,0 +1,19 @@
+; Coverage test for post.cc lines 161-166:
+; get_code() returns code string or NULL_VALUE
+
+2024/01/15 (ABC) Test With Code
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/01/20 Test No Code
+    Expenses:Gas     $30.00
+    Assets:Cash
+
+; Test: code returns string for coded xact, empty for no-code xact
+
+test reg --format '%(code)|\n'
+ABC|
+ABC|
+|
+|
+end test

@@ -1,0 +1,18 @@
+; Test times.cc lines 1222-1228: "since" and "until" period tokens
+
+2026/01/15 Jan
+    Expenses:Food   $5.00
+    Assets:Cash
+
+2026/02/15 Feb
+    Expenses:Food   $10.00
+    Assets:Cash
+
+2026/03/01 Mar
+    Expenses:Food   $20.00
+    Assets:Cash
+
+test reg --period "since 2026/02/01 until 2026/02/28"
+26-Feb-15 Feb                   Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

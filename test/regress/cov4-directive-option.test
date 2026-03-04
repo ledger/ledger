@@ -1,0 +1,16 @@
+; Test directive option handling (lines 849-865 of textual_directives.cc)
+; Exercise the option_directive path through general_directive
+
+--pedantic
+
+account Expenses:Food
+account Assets:Cash
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

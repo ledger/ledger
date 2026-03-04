@@ -1,0 +1,13 @@
+; Coverage for print.cc line 165: boolean tag in print output
+
+2024/01/01 Test
+    ; :Reviewed:
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test print
+2024/01/01 Test
+    ; :Reviewed:
+    Expenses:Food                             $10.00
+    Assets:Cash
+end test

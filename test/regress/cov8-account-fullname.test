@@ -1,0 +1,13 @@
+; Coverage test for account.cc lines 233-236:
+; Exercise account fullname and operator<< via balance with default format.
+
+2024/01/01 Test
+    Expenses:Food:Dining    $15.00
+    Assets:Checking
+
+test bal
+             $-15.00  Assets:Checking
+              $15.00  Expenses:Food:Dining
+--------------------
+                   0
+end test

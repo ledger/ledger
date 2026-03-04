@@ -1,0 +1,12 @@
+; Coverage test for select.cc lines 364-368:
+; Exercise select from commodities.
+
+P 2024/01/01 EUR $1.10
+
+2024/01/01 Test
+    Expenses:Food    10 EUR
+    Assets:Cash
+
+test select date, account, amount from commodities
+24-Jan-01 EUR                                                             $1.10
+end test

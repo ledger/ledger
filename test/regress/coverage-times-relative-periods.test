@@ -1,0 +1,62 @@
+; Coverage for times.cc lines 781-851: handle_relative_token various cases
+; Tests "last month", "next month", "last quarter", "this quarter",
+; "last week", "next week", and "last year" period expressions
+
+2024/01/15 January
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/02/15 February
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2024/03/15 March
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test reg --now 2024/03/01 --period "last month"
+24-Feb-15 February              Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test
+
+test reg --now 2024/01/01 --period "next month"
+24-Feb-15 February              Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test
+
+test reg --now 2025/01/01 --period "last year"
+24-Jan-15 January               Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Feb-15 February              Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+24-Mar-15 March                 Expenses:Food                $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test
+
+test reg --now 2024/04/01 --period "last quarter"
+24-Jan-15 January               Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Feb-15 February              Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+24-Mar-15 March                 Expenses:Food                $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test
+
+test reg --now 2024/01/01 --period "this quarter"
+24-Jan-15 January               Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Feb-15 February              Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+24-Mar-15 March                 Expenses:Food                $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test
+
+test reg --now 2024/01/10 --period "next week"
+24-Jan-15 January               Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+test reg --now 2024/01/14 --period "this week"
+24-Jan-15 January               Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

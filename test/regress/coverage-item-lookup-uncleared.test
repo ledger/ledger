@@ -1,0 +1,14 @@
+; Coverage for item.cc line 507: uncleared lookup branch
+
+2024/01/01 * Cleared
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Uncleared
+    Expenses:Food    $5.00
+    Assets:Cash
+
+test reg --format "%(uncleared) %(account)\n" Expenses
+false Expenses:Food
+true Expenses:Food
+end test

@@ -1,0 +1,16 @@
+; Coverage for filters.cc changed_value_posts output_revaluation
+; and output_intermediate_prices paths
+; Tests market gain/loss revaluation with price history
+
+P 2024/01/01 AAPL $150.00
+P 2024/01/15 AAPL $160.00
+P 2024/02/01 AAPL $155.00
+
+2024/01/01 Buy
+    Assets:Brokerage    10 AAPL @ $150.00
+    Assets:Cash
+
+test reg --market --gain
+24-Jan-15 Commodities revalued  <Revalued>                  $100.00      $100.00
+24-Feb-01 Commodities revalued  <Revalued>                  $-50.00       $50.00
+end test

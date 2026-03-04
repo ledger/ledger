@@ -1,0 +1,9 @@
+; Test include with glob pattern
+; Covers textual_directives.cc lines 204-215 (glob include directory iteration)
+
+include cov9-include-dir/*.dat
+
+test reg
+24-Jan-15 Included Transaction  Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+end test

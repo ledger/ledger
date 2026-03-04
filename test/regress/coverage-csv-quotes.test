@@ -1,0 +1,15 @@
+; Coverage test for csv.cc lines 52-58:
+; CSV field parsing with escaped quotes and backslash escape
+
+account Expenses:Unknown
+account Assets:Checking
+
+test convert test/regress/coverage-csv-quotes-data.csv --input-date-format "%Y/%m/%d" --account Assets:Checking
+2024/01/15 * Grocery "Fresh" Store
+    Expenses:Unknown                              50
+    Assets:Checking
+
+2024/01/20 * Gas \Station
+    Expenses:Unknown                              30
+    Assets:Checking
+end test

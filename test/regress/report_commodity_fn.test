@@ -1,0 +1,10 @@
+; Test fn_commodity to exercise lines 938-940 of report.cc
+; commodity(amount) returns the commodity symbol as a string
+
+2024/01/01 Test
+    Expenses:Food    $25.00
+    Assets:Cash
+
+test reg Expenses --format "%(commodity(amount))\n"
+$
+end test

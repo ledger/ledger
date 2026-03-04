@@ -1,0 +1,10 @@
+; Test report.cc: fn_display_amount and fn_display_total lookups
+; Exercises function dispatch in lookup (lines 1626, 1652-1653)
+
+2024/01/10 Test
+    Expenses:Food    $100.00
+    Assets:Cash
+
+test reg --format "%(display_amount) %(display_total)\n" Expenses
+$100.00 $100.00
+end test

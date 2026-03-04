@@ -1,0 +1,21 @@
+; Coverage for report.cc lines 626, 633, 640:
+; averaged_lots, fifo_lots, lifo_lots else branches
+; When the argument is not a balance type, return the argument unchanged
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+; Pass an integer (quantity) to these functions;
+; integers cannot be converted to balance_t so hit else branch
+test reg --format '%(averaged_lots(quantity(amount)))\n' Expenses
+10
+end test
+
+test reg --format '%(fifo_lots(quantity(amount)))\n' Expenses
+10
+end test
+
+test reg --format '%(lifo_lots(quantity(amount)))\n' Expenses
+10
+end test

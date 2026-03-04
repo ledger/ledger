@@ -1,0 +1,11 @@
+; Coverage for timelog.cc line 107: checkout account doesn't match any checkin
+
+i 2024/01/01 08:00:00 Project:A
+i 2024/01/01 08:00:00 Project:B
+o 2024/01/01 17:00:00 Project:C
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 5:
+Error: Timelog check-out event does not match any current check-ins
+end test

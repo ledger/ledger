@@ -1,0 +1,37 @@
+; Coverage test for value.cc lines 867-877
+; Exercise boolean comparison in is_less_than
+; Boolean < Boolean comparison
+
+2024/01/01 Test
+    Expenses:Food            $10.00
+    Assets:Cash
+
+; Compare boolean values: false < true should be true
+test eval "false < true"
+1
+end test
+
+; Compare boolean values: true < false should be false
+test eval "true < false"
+0
+end test
+
+; Compare boolean values: false < false should be false
+test eval "false < false"
+0
+end test
+
+; Compare boolean values: true > false should be true
+test eval "true > false"
+1
+end test
+
+; Compare boolean values: false > false should be false
+test eval "false > false"
+0
+end test
+
+; Compare boolean values: true > true should be false
+test eval "true > true"
+0
+end test

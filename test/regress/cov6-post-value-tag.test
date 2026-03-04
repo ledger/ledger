@@ -1,0 +1,19 @@
+; Test extend_post with Value tag on a posting
+; Covers post.cc lines 660 (get Value tag), 666-669 (typed Value expression
+; divided by amount), 671 (non-typed Value expression), 684-690 (value_expr
+; set on commodity without annotation)
+
+2024/01/01 Typed value
+    Expenses:Food    10 FOO
+      ; Value:: $2.00 * amount
+    Assets:Cash
+
+2024/01/02 Simple value
+    Expenses:Drink    10 BAR
+      ; Value: $3.00
+    Assets:Cash
+
+test reg --market --now 2024/12/31 Expenses
+24-Jan-01 Typed value           Expenses:Food                $20.00       $20.00
+24-Jan-02 Simple value          Expenses:Drink               $30.00       $50.00
+end test

@@ -1,0 +1,4 @@
+; Coverage for stats.cc line 51: stats on empty journal returns NULL_VALUE
+
+test stats
+end test

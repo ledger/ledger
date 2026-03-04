@@ -1,0 +1,10 @@
+; Coverage for format.cc lines 363-382: colorize format elements
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --force-color
+24-Jan-01 [1mTest                 [0m [34mExpenses:Food         [0m       $10.00       $10.00
+                                [34mAssets:Cash           [0m      [31m$-10.00[0m            0
+end test

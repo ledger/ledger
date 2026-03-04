@@ -1,0 +1,16 @@
+; Coverage test for filters.cc line 1652
+; rewrite_posts copies xdata flags from old account to rewritten account
+; Auto_xact sets ACCOUNT_EXT_VISITED on the account during finalization
+
+= Expenses
+    (Budget:Match)    -1
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --account-rewrite "Expenses:Food=Expenses:Groceries"
+24-Jan-01 Test                  Expenses:Groceries           $10.00       $10.00
+24-Jan-01 Test                  Assets:Cash                 $-10.00            0
+                                (Budget:Match)              $-10.00      $-10.00
+end test

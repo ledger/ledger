@@ -1,0 +1,25 @@
+; Coverage test for account.cc line 630: last_reported_post
+; Tests --pivot which calls set_reported_account, populating
+; reported_posts in the account xdata. The amount() function
+; then iterates these reported_posts, hitting line 630.
+; Also covers lines 499, 504 (N and O lookup break cases).
+
+2024/01/15 Test
+    ; Store: WholeFoods
+    Expenses:Food             $30.00
+    Expenses:Food             $20.00
+    Assets:Cash
+
+test bal --pivot Store
+                   0  Store:WholeFoods
+             $-50.00    Assets:Cash
+              $50.00    Expenses:Food
+--------------------
+                   0
+end test
+
+test bal --format '%(O) %(N) %(account)\n'
+$-50.00 1 Assets:Cash
+$50.00 2 Expenses:Food
+0 3 
+end test

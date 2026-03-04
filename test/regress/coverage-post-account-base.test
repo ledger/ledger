@@ -1,10 +1,12 @@
-; Test account_base expression (exercises post.cc get_account_base)
+; Coverage test for post.cc lines 327-328, 323-324
+; Tests get_account_base (returns leaf account name)
+; and get_account_id (returns position within the account's posts).
 
-2024/01/15 * Store
-    Expenses:Food:Grocery      $50.00
-    Assets:Checking
+2024/03/01 Groceries
+    Expenses:Food:Groceries     $10.00
+    Assets:Cash
 
-test reg --format "%(account_base) %(amount)\n" -> 0
-Grocery $50.00
-Checking $-50.00
+test reg --format "%(account_base) %(account_id)\n"
+Groceries 1
+Cash 1
 end test

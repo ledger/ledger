@@ -1,0 +1,16 @@
+; Coverage test for times.cc lines 854-865
+; Exercise month name with year in period parsing
+; "january 2024" exercises TOK_A_MONTH followed by TOK_INT for year
+
+2024/01/01 January
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/06/01 June
+    Expenses:Food            $20.00
+    Assets:Cash
+
+; "jan 2024" exercises TOK_A_MONTH then peek TOK_INT -> year
+test reg Expenses --period "jan 2024"
+24-Jan-01 January               Expenses:Food                $10.00       $10.00
+end test

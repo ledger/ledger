@@ -1,0 +1,11 @@
+; Test format string with invalid %$0 field reference
+; Covers format.cc line 270 (%$0 field reference error)
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg --register-format '%(account)\n%/%$0\n' -> 1
+__ERROR__
+Error: %$ field reference must be a digit from 1-9
+end test

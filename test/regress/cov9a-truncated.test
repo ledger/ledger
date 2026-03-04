@@ -1,0 +1,10 @@
+; Coverage test for report.cc lines 809-823
+; fn_truncated truncates string display to a given width
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(truncated(account, 8))\n" --limit "account =~ /Expenses/"
+Expens..
+end test

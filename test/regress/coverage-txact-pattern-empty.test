@@ -1,0 +1,15 @@
+; Coverage for textual_xacts.cc line 79: empty match pattern
+
+= //
+    Expenses:Tax    10%
+    Assets:Cash
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 3:
+Error: Match pattern is empty
+end test

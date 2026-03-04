@@ -1,0 +1,11 @@
+; Coverage for filters.cc lines 1295-1297 (transfer_details SET_PAYEE)
+; The --payee option overrides the payee with an expression.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --payee "account"
+24-Jan-01 Expenses:Food         Expenses:Food                $10.00       $10.00
+24-Jan-01 Assets:Cash           Assets:Cash                 $-10.00            0
+end test

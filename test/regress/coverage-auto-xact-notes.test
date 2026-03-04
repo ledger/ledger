@@ -1,0 +1,16 @@
+; Coverage for xact.cc lines 1021-1027 (deferred_notes in auto_xact)
+; Notes/tags defined in auto transactions are applied to matching posts.
+
+= Expenses
+    ; AutoTag: true
+    (Budget)    -1
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(tag('AutoTag'))\n"
+true
+
+true
+end test

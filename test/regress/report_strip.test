@@ -1,0 +1,10 @@
+; Test fn_strip to exercise line 740 of report.cc
+; strip removes annotations from amounts
+
+2024/01/01 Buy Stock
+    Assets:Brokerage    10 AAPL {$150.00}
+    Assets:Cash         $-1500.00
+
+test reg Assets:Brokerage --format "%(strip(amount))\n"
+10 AAPL
+end test

@@ -1,0 +1,16 @@
+; Coverage for commodity.cc lines 436-442: price comparison with same price commodity
+; Two lots with the same price commodity ($) but different values ($100 vs $200)
+; Exercises the less-than and greater-than price comparison paths
+
+2024/01/01 Buy
+    Assets:Brokerage    10 AAPL {$100.00}
+    Assets:Checking
+
+2024/01/15 Buy More
+    Assets:Brokerage    5 AAPL {$200.00}
+    Assets:Checking
+
+test bal --lots Assets:Brokerage
+      10 AAPL {$100}
+       5 AAPL {$200}  Assets:Brokerage
+end test

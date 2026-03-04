@@ -1,0 +1,17 @@
+; Test nomarket directive (line 131-138 of textual_directives.cc)
+; Exercise the N directive (nomarket)
+; With nomarket flag, the commodity is marked COMMODITY_NOMARKET
+
+N EUR
+
+2024/01/01 Test
+    Expenses:Food    10 EUR
+    Assets:Cash     $-12.00
+
+test bal
+             $-12.00  Assets:Cash
+              10 EUR  Expenses:Food
+--------------------
+             $-12.00
+              10 EUR
+end test

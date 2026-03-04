@@ -1,0 +1,15 @@
+; Test times.cc lines 854-865: month name period without year
+; Also tests handle_date_token (line 1213)
+
+2026/01/15 January tx
+    Expenses:Food   $5.00
+    Assets:Cash
+
+2026/02/15 February tx
+    Expenses:Food   $10.00
+    Assets:Cash
+
+test reg --period "January" --now 2026/03/03
+26-Jan-15 January tx            Expenses:Food                 $5.00        $5.00
+                                Assets:Cash                  $-5.00            0
+end test

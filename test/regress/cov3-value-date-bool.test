@@ -1,0 +1,10 @@
+; Test DATE value in boolean context
+; Covers value.cc line 94 (DATE operator bool)
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg --format="%(date ? \"has date\" : \"no date\")\n" Expenses
+has date
+end test

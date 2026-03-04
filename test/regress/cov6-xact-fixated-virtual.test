@@ -1,0 +1,25 @@
+; Coverage test for xact.cc lines 319-321
+; Tests the fixated price annotation path ({=price}) with both plain virtual
+; postings (that don't must_balance) and balanced virtual postings.
+; When fixated prices trigger balance recomputation, non-must-balance and
+; balanced-virtual postings should be skipped during the recompute loop.
+
+2024/01/01 Buy Stock
+    Assets:Brokerage           10 AAPL {=$150.00}
+    Assets:Cash              $-1500.00
+    (Memo:Purchase)           $1500.00
+    [Budget:Investments]      $1500.00
+    [Budget:Cash]
+
+test bal
+           $-1500.00
+             10 AAPL  Assets
+             10 AAPL    Brokerage
+           $-1500.00    Cash
+                   0  Budget
+           $-1500.00    Cash
+            $1500.00    Investments
+            $1500.00  Memo:Purchase
+--------------------
+             10 AAPL
+end test

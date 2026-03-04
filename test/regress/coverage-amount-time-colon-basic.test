@@ -1,0 +1,14 @@
+; Coverage for amount.cc lines 179-199:
+; Time colon display converts decimal fractions of hours to minutes.
+; 1.50h becomes 1:30h (0.50 * 60 = 30 minutes).
+; 2.75h becomes 2:45h (0.75 * 60 = 45 minutes).
+
+2024/01/01 * Work morning
+    (Billable:Client)    1.50h
+
+2024/01/02 * Work afternoon
+    (Billable:Client)    2.75h
+
+test bal --time-colon
+               4:15h  Billable:Client
+end test

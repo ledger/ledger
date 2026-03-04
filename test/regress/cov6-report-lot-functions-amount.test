@@ -1,0 +1,10 @@
+; Coverage for report.cc lines 626,633,640: fn_averaged_lots, fn_fifo_lots,
+; fn_lifo_lots with simple amounts (non-balance path)
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg Expenses --format "%(averaged_lots(amount)) %(fifo_lots(amount)) %(lifo_lots(amount))\n"
+$10.00 $10.00 $10.00
+end test

@@ -1,0 +1,11 @@
+; Coverage test for post.cc lines 206-224:
+; get_commodity() with amount arg and get_commodity_is_primary()
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg --format '%(commodity(amount)) %(primary)\n'
+$ false
+$ false
+end test

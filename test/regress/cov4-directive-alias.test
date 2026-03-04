@@ -1,0 +1,13 @@
+; Test alias_directive via general_directive (lines 795-797 of textual_directives.cc)
+; Exercise the alias path through general_directive switch
+
+alias Food=Expenses:Food
+
+2024/01/01 Test
+    Food    $10.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

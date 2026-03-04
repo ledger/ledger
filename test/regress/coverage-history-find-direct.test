@@ -1,0 +1,19 @@
+; Coverage for history.cc lines 397-407: find_price with direct conversion
+; Multiple commodities with direct dollar prices
+; Each commodity has a direct path to $ in the price graph
+
+P 2024/01/01 EUR $1.10
+P 2024/01/01 GBP $1.30
+
+2024/01/15 Test
+    Expenses:Travel    500 EUR
+    Expenses:Rent      200 GBP
+    Assets:Checking
+
+test bal --market --exchange '$' --now 2024/02/01 Expenses
+             $810.00  Expenses
+             $260.00    Rent
+             $550.00    Travel
+--------------------
+             $810.00
+end test

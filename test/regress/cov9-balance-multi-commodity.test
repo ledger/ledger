@@ -1,0 +1,11 @@
+; Coverage for balance.cc lines 206, 259, 263: multi-commodity balance operations
+
+2024/01/01 Buy Stock
+    Assets:Stock     10 AAPL
+    Assets:Stock     5 GOOG
+    Assets:Cash
+
+test bal Assets:Stock --flat
+             10 AAPL
+              5 GOOG  Assets:Stock
+end test

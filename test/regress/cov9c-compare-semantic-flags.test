@@ -1,0 +1,18 @@
+; Coverage: commodity.cc lines 514-515 (compare_by_commodity semantic flags)
+; and line 485 (equal tag comparison falls through)
+; Two lots of same commodity with same price, date, tag but different
+; fixated status ({=$100} vs {$100}) to trigger semantic flag comparison.
+; Also, lots with matching tags that fall through to the next comparison.
+
+2024/01/01 Buy Lot A (non-fixated)
+    Assets:Brokerage    10 AAPL {$100.00} [2024/01/01] (lot1)
+    Assets:Cash
+
+2024/01/02 Buy Lot B (fixated, same tag)
+    Assets:Brokerage    5 AAPL {=$100.00} [2024/01/01] (lot1)
+    Assets:Cash
+
+test bal --lot-prices --lot-dates --lot-tags Assets:Brokerage
+10 AAPL {$100} [2024/01/01] (lot1)
+5 AAPL {=$100} [2024/01/01] (lot1)  Assets:Brokerage
+end test

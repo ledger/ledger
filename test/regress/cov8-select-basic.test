@@ -1,0 +1,9 @@
+; Coverage for select.cc: basic select command
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test select date, payee, account, amount from reg where account =~ /Expenses/
+24-Jan-01 Test                     Expenses:Food                         $10.00
+end test

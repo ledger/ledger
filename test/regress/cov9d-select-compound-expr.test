@@ -1,0 +1,11 @@
+; Test select with compound expression to exercise recursive identifier lookup
+; Covers select.cc lines 82, 85 (recursive get_principal_identifiers calls)
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test select amount + 0 from posts
+      $50.00
+     $-50.00
+end test

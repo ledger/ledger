@@ -1,0 +1,10 @@
+; Coverage test for textual_directives.cc lines 564, 579
+; payee-rewrite and account-rewrite without replacement argument
+
+payee-rewrite NoReplacement
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 4:
+Error: payee-rewrite directive requires a pattern and a replacement
+end test

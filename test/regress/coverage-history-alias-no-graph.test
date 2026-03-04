@@ -1,0 +1,24 @@
+; Coverage for history.cc line 233: alias_commodity early return (no graph_index)
+; "E" is used before the commodity alias maps it to EUR
+; The alias collision calls alias_commodity, but "E" has no price graph index
+
+2024/01/01 Test
+    Expenses:Travel    500 E
+    Assets:Checking
+
+commodity EUR
+    alias E
+
+2024/01/02 Test2
+    Expenses:Food    100 E
+    Assets:Checking
+
+test bal Expenses
+               500 E
+             100 EUR  Expenses
+             100 EUR    Food
+               500 E    Travel
+--------------------
+               500 E
+             100 EUR
+end test

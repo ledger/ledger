@@ -1,0 +1,29 @@
+; Coverage for times.cc lines 1085-1096: handle_simple_period_token
+; Tests "today", "yesterday", and "tomorrow" as period expressions
+
+2024/01/01 New Year
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Day After
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2024/01/03 Two Days After
+    Expenses:Food    $15.00
+    Assets:Cash
+
+test reg --now 2024/01/02 --period "today"
+24-Jan-02 Day After             Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test
+
+test reg --now 2024/01/02 --period "yesterday"
+24-Jan-01 New Year              Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+test reg --now 2024/01/02 --period "tomorrow"
+24-Jan-03 Two Days After        Expenses:Food                $15.00       $15.00
+                                Assets:Cash                 $-15.00            0
+end test

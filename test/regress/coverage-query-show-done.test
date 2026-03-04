@@ -1,0 +1,16 @@
+; Tests for query.cc: goto done after show clause
+; Covers: line 553 (goto done when unexpected token after show/for clause)
+
+2024/01/01 Test
+    Expenses  $10
+    Assets
+
+2024/01/02 Test2
+    Income  $20
+    Assets
+
+; After 'show Expenses', the ')' token is not show/only/bold/for/since/until
+; so the default case triggers 'goto done' (line 553)
+test reg show Expenses ')'
+24-Jan-01 Test                  Expenses                        $10          $10
+end test

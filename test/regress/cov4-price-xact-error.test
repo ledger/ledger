@@ -1,0 +1,14 @@
+; Test price_xact_directive error path (line 128 of textual_directives.cc)
+; Exercise the parsing failure when a P line has incomplete data
+
+P 2024/01/01
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 4:
+Error: Pricing entry failed to parse
+end test

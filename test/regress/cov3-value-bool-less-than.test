@@ -1,0 +1,15 @@
+; Test boolean less-than comparison
+; Covers value.cc lines 867-877 (boolean is_less_than)
+
+2024/01/15 * Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/02/20 Test
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test reg --format="%(cleared < true ? \"yes\" : \"no\")\n" Expenses
+no
+yes
+end test

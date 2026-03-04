@@ -1,0 +1,20 @@
+; Coverage test for value.cc lines 1568, 1580-1588
+; Exchange/market value with --exchange flag
+
+P 2024/01/01 EUR $1.10
+P 2024/01/01 GBP $1.30
+
+2024/01/01 Test EUR
+    Expenses:Travel        EUR 100.00
+    Assets:Cash
+
+2024/01/02 Test GBP
+    Expenses:Travel        GBP 50.00
+    Assets:Cash
+
+test bal --exchange $
+            $-175.00  Assets:Cash
+             $175.00  Expenses:Travel
+--------------------
+                   0
+end test

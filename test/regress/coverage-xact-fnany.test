@@ -1,0 +1,22 @@
+; Coverage test for xact.cc lines 789-798
+; Tests fn_any() - the any() predicate function for transactions.
+; any(expr) returns true if any posting in the transaction matches expr.
+; Here, only the Groceries transaction has an Expense posting, so the
+; two transfer transactions are filtered out (fn_any returns false).
+
+2024/01/01 Transfer
+    Assets:Checking    $-100.00
+    Assets:Savings     $100.00
+
+2024/01/02 Groceries
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/03 Another Transfer
+    Assets:Savings    $-50.00
+    Assets:Checking    $50.00
+
+test reg --limit 'any(account =~ /Expense/)'
+24-Jan-02 Groceries             Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

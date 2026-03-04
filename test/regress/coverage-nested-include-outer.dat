@@ -1,0 +1,5 @@
+2024/01/01 Outer Transaction
+    Expenses:Food    $10.00
+    Assets:Cash
+
+include coverage-nested-include-inner.dat

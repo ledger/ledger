@@ -1,0 +1,11 @@
+; Test journal_t::read when no default scope (line 470 of journal.cc)
+; This would require a very unusual code path - just verify basic parsing works
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

@@ -1,0 +1,21 @@
+; Test value exchange with --exchange
+; Covers value.cc lines 1555-1594 (value exchange with commodity conversion)
+
+P 2024/01/01 EUR $1.10
+P 2024/01/01 GBP $1.30
+
+2024/01/01 Test
+    Expenses:Food    100 EUR
+    Assets:Cash
+
+2024/01/02 Test
+    Expenses:Travel    50 GBP
+    Assets:Cash
+
+test bal --exchange '$' Expenses
+             $175.00  Expenses
+             $110.00    Food
+              $65.00    Travel
+--------------------
+             $175.00
+end test

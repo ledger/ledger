@@ -1,0 +1,14 @@
+; Coverage for report.cc line 1763: commodities command
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/15 Test
+    Expenses:Goods    10 EUR
+    Assets:Cash
+
+test commodities
+$
+EUR
+end test

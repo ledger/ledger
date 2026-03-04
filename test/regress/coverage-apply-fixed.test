@@ -1,17 +1,20 @@
-; Test apply fixed / end apply fixed directive
+; Coverage test for textual_directives.cc lines 346-357
+; apply fixed / apply rate directive
+
+commodity $
+commodity EUR
 
 apply fixed EUR $1.10
 
-2024/01/01 Buy Euros
-    Assets:Foreign    100 EUR
-    Assets:Checking
+2024/01/01 Test
+    Expenses:Travel        EUR 100.00
+    Assets:Cash
 
 end apply fixed
 
-test bal
-                   0  Assets
-            -100 EUR    Checking
-             100 EUR    Foreign
+test bal --exchange $
+            $-110.00  Assets:Cash
+             $110.00  Expenses:Travel
 --------------------
                    0
 end test

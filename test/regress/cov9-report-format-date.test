@@ -1,0 +1,15 @@
+; Coverage test for report.cc lines 885-898
+; Test format_date() with custom format and default format,
+; and format_datetime().
+
+2024/01/15 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg Expenses --format '%(format_date(date, "%Y-%m-%d"))\n'
+2024-01-15
+end test
+
+test reg Expenses --format '%(format_date(date))\n'
+24-Jan-15
+end test

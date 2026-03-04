@@ -1,0 +1,10 @@
+; Test fn_strip with an annotated amount
+
+2024/01/01 Test
+    Assets:Brokerage    10 AAPL {$150.00}
+    Assets:Cash
+
+test reg --format "%(strip(amount))\n"
+10 AAPL
+-10 AAPL
+end test

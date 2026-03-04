@@ -1,0 +1,34 @@
+; Tests for query.cc error paths - AND/OR/paren/metadata errors
+; Covers: line 323 (metadata equality not followed by term)
+;         line 373 (expected ')' error)
+;         line 419 (AND operator not followed by argument)
+;         line 440 (OR operator not followed by argument)
+
+2024/01/01 Test
+    ; MyTag: hello
+    Expenses  $10
+    Assets
+
+; AND operator not followed by argument (line 419)
+test reg Expenses and  -> 1
+__ERROR__
+Error: and operator not followed by argument
+end test
+
+; OR operator not followed by argument (line 440)
+test reg Expenses or  -> 1
+__ERROR__
+Error: or operator not followed by argument
+end test
+
+; expected ')' error (line 373)
+test reg '(' Expenses  -> 1
+__ERROR__
+Error: Missing ')'
+end test
+
+; metadata equality not followed by term (line 323)
+test reg '%MyTag=&'  -> 1
+__ERROR__
+Error: Metadata equality operator not followed by term
+end test

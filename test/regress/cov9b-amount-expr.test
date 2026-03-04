@@ -1,0 +1,11 @@
+; Coverage for post.cc line 542: resolve_expr with amount expression
+; Using an expression as the posting amount
+
+2024/01/01 Test
+    Expenses:Food    ($10.00 + $5.00)
+    Assets:Cash
+
+test reg
+24-Jan-01 Test                  Expenses:Food                $15.00       $15.00
+                                Assets:Cash                 $-15.00            0
+end test

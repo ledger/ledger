@@ -1,0 +1,38 @@
+; Coverage for report.cc COMMAND break statements:
+; Lines 1799 (p), 1808 (r), 1815 (s), 1820 (t), 1826 (x)
+; Unknown commands whose first letter matches a COMMAND case but whose
+; name does not match any known command hit the break statement.
+
+2024/01/01 Test
+    Expenses:Food  $10.00
+    Assets:Cash
+
+; 'peel' starts with 'p' but is not p/print/prices/pricedb/pricesdb/pricemap/payees -> break 1799
+test peel -> 1
+__ERROR__
+Error: Unrecognized command 'peel'
+end test
+
+; 'reap' starts with 'r' but is not r/reg/register/reload -> break at 1808
+test reap -> 1
+__ERROR__
+Error: Unrecognized command 'reap'
+end test
+
+; 'snap' starts with 's' but is not stats/stat/select -> break at 1815
+test snap -> 1
+__ERROR__
+Error: Unrecognized command 'snap'
+end test
+
+; 'tuck' starts with 't' but is not tags -> break at 1820
+test tuck -> 1
+__ERROR__
+Error: Unrecognized command 'tuck'
+end test
+
+; 'xerox' starts with 'x' but is not xact/xml -> break at 1826
+test xerox -> 1
+__ERROR__
+Error: Unrecognized command 'xerox'
+end test

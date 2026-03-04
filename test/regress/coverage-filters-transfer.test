@@ -1,0 +1,13 @@
+; Coverage test for filters.cc lines 1296
+; Tests transfer_details with SET_PAYEE.
+; Line 1296: SET_PAYEE path renames payee based on expression
+; --payee=account renames the payee to the account name.
+
+2024/01/15 Groceries
+    Expenses:Food             $50.00
+    Assets:Cash
+
+test reg --payee=account
+24-Jan-15 Expenses:Food         Expenses:Food                $50.00       $50.00
+24-Jan-15 Assets:Cash           Assets:Cash                 $-50.00            0
+end test

@@ -1,0 +1,17 @@
+; Coverage for value.cc line 1568:
+; When --exchange specifies a source:target pair and the source commodity
+; does not exist in the commodity pool, sources.push_back(nullptr) is
+; called. Here NONEXIST is not a known commodity.
+
+2024/01/01 Test
+    Expenses:Food    100 EUR
+    Assets:Cash      -$120.00
+
+P 2024/01/01 EUR $1.20
+
+test bal --exchange NONEXIST:$
+            $-120.00  Assets:Cash
+             $120.00  Expenses:Food
+--------------------
+                   0
+end test

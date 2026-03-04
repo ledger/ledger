@@ -1,0 +1,18 @@
+; Test boolean < amount comparison triggers error
+; Covers value.cc line 877 (BOOLEAN < non-boolean break path)
+
+2024/01/01 Test
+    ; test: yes
+    Expenses:Food    $100.00
+    Assets:Cash
+
+test reg --format "%(has_tag('test') < amount)\n" -> 1
+__ERROR__
+While evaluating value expression:
+  (has_tag("test") < amount)
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+While comparing if 1 is less than $100.00:
+While handling posting from "$FILE", line 6:
+>     Expenses:Food    $100.00
+Error: Cannot compare a boolean to an amount
+end test

@@ -1,0 +1,15 @@
+; Test and, or, not keywords in expressions
+; Covers token.cc keyword parsing (and, or, not)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/01/20 Gas Station
+    Expenses:Transport    $40.00
+    Assets:Cash
+
+test reg --limit "account =~ /Food/ or account =~ /Transport/" --limit "not (amount < 0)"
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Jan-20 Gas Station           Expenses:Transport           $40.00       $90.00
+end test

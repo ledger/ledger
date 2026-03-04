@@ -1,0 +1,19 @@
+; Coverage for op.cc O_LOOKUP calc path and expression error context:
+; Attempting to access a member on a null/void value triggers the
+; scope lookup error path. This also exercises O_LOOKUP printing
+; in the error context (op.cc lines 767-772).
+
+2024/01/01 Test
+    Expenses:Food    $100.00
+    Assets:Cash
+
+test reg --format "%(null.amount)\n" -> 1
+__ERROR__
+While calculating format expression:
+  (null.amount)
+While evaluating value expression:
+  (null.amount)
+While handling posting from "$FILE", line 7:
+>     Expenses:Food    $100.00
+Error: Expected return of a scope, but received an uninitialized value
+end test

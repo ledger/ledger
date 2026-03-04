@@ -1,0 +1,15 @@
+; Test error for missing double closing brace in total cost annotation
+; Covers annotate.cc lines 131-132 (missing double closing brace)
+
+2024/01/01 Test
+    Assets:Brokerage    10 AAPL {{$1500}
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 5:
+While parsing posting:
+  Assets:Brokerage    10 AAPL {{$1500}
+                      ^^^^^^^^^^^^^^^^
+Error: Commodity lot price lacks double closing brace
+end test

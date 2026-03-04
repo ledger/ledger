@@ -1,0 +1,9 @@
+; Coverage for session.cc lines 273-277: fn_lot_price
+
+2024/01/01 Buy
+    Assets:Stock    10 AAPL {$150.00}
+    Assets:Cash
+
+test reg --format "%(lot_price(amount))\n" Assets:Stock
+$150
+end test

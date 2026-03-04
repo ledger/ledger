@@ -1,0 +1,16 @@
+; Coverage for commodity.cc lines 430-431: recursion found disparity in comparison
+; Two lots of the same commodity with different price commodities and numeric values
+; The comparison function recurses to compare numeric values, finds a disparity
+
+2024/01/01 Buy Lot 1
+    Assets:Brokerage    10 AAPL {$150.00}
+    Assets:Checking
+
+2024/01/15 Buy Lot 2
+    Assets:Brokerage    5 AAPL {200.00 EUR}
+    Assets:Checking
+
+test bal --lots Assets:Brokerage
+      10 AAPL {$150}
+     5 AAPL {EUR200}  Assets:Brokerage
+end test

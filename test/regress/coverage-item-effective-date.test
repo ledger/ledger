@@ -1,0 +1,9 @@
+; Coverage for item.cc lines 447-448: effective_date function
+
+2024/01/01=2024/02/15 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(effective_date)\n" Expenses
+2024/02/15
+end test

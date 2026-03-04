@@ -1,0 +1,9 @@
+; Test filepath format expression
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format '%(filepath != "" ? "has_path" : "no_path")\n'
+has_path
+has_path
+end test

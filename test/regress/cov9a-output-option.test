@@ -1,0 +1,11 @@
+; Coverage test for report.cc lines 74-78
+; When --output is set, color and pager are turned off.
+; Using --output /dev/stdout still goes to stdout for test capture.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --output /dev/stdout --limit "account =~ /Expenses/"
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+end test

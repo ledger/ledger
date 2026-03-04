@@ -1,0 +1,9 @@
+; Test report.cc: normalize_options with --output file
+; Exercises color/pager off when output to file (lines 74-78)
+
+2024/01/10 Test
+    Expenses:Food    $100.00
+    Assets:Cash
+
+test bal --color --output /dev/null
+end test

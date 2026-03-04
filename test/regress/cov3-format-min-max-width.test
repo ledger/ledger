@@ -1,0 +1,10 @@
+; Test format min_width.max_width truncation
+; Covers format.cc lines 436-439, 467-473 (format truncation and padding)
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg --format="%10.5(account)\n" Expenses
+Exp..
+end test

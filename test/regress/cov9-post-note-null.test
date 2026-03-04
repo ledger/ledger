@@ -1,0 +1,12 @@
+; Coverage test for post.cc line 190:
+; Exercise get_note() returning NULL_VALUE when no note exists.
+; The posting and transaction have no notes.
+
+2024/01/01 No Notes Here
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(payee)|%(note)\n"
+No Notes Here|
+No Notes Here|
+end test

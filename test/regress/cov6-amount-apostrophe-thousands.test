@@ -1,0 +1,12 @@
+; Test amount output with apostrophe thousands separator
+; Covers amount.cc line 215 (apostrophe thousands output)
+
+commodity 1'000.00 CHF
+
+2024/01/01 Test
+    Expenses:Food    12'345.67 CHF
+    Assets:Cash
+
+test bal Expenses
+       12'345.67 CHF  Expenses:Food
+end test

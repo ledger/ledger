@@ -1,0 +1,65 @@
+; Test query operations for query.cc coverage
+; Tests TOK_CODE, TOK_PAYEE, TOK_NOTE, TOK_META, TOK_EXPR paths
+
+2024/01/01 (ABC) Grocery Store
+    ; Food purchase
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/01/02 (DEF) Gas Station
+    ; :fuel:
+    Expenses:Gas             $30.00
+    Assets:Cash
+
+2024/01/03 (GHI) Restaurant
+    ; Dinner out
+    ; :dining:
+    Expenses:Dining          $50.00
+    Assets:Cash
+
+; Test payee query with @
+test reg @"Gas Station"
+24-Jan-02 Gas Station           Expenses:Gas                 $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test
+
+; Test 'code' keyword
+test reg code DEF
+24-Jan-02 Gas Station           Expenses:Gas                 $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test
+
+; Test 'payee' keyword
+test reg payee Restaurant
+24-Jan-03 Restaurant            Expenses:Dining              $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+end test
+
+; Test note query with =
+test reg =fuel
+24-Jan-02 Gas Station           Expenses:Gas                 $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test
+
+; Test 'note' keyword
+test reg note dining
+24-Jan-03 Restaurant            Expenses:Dining              $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+end test
+
+; Test AND query
+test reg @"Grocery" and Expenses
+24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+end test
+
+; Test OR query
+test reg @"Grocery" or @"Restaurant"
+24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Jan-03 Restaurant            Expenses:Dining              $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+end test
+
+; Test NOT query
+test reg not @"Grocery" and not @"Gas" and not @"Restaurant"
+end test

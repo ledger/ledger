@@ -1,0 +1,10 @@
+; Test format escape characters
+; Covers format.cc lines 162-186 (escape char handling in parse_elements)
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg --format="%(date)\t%(account)\n" Expenses
+2024/01/15	Expenses:Food
+end test

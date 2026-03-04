@@ -1,0 +1,10 @@
+; Coverage for mask.cc line 318: fold_diacritics with valid UTF-8 accents
+
+2024/01/01 Café
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg @Café
+24-Jan-01 Café                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

@@ -1,0 +1,11 @@
+; Test post date/aux_date accessors (post.cc lines around 84-100)
+; Exercise the date-related accessors
+
+2024/01/01=2024/01/15 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(date) %(aux_date)\n"
+2024/01/01 2024/01/15
+2024/01/01 2024/01/15
+end test

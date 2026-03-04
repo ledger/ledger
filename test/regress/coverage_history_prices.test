@@ -1,0 +1,23 @@
+; Coverage test for history.cc map_prices and find_price paths
+
+P 2024/01/01 EUR 1.10 $
+P 2024/02/01 EUR 1.15 $
+P 2024/03/01 EUR 1.20 $
+
+2024/01/15 Test A
+    Assets:Europe    100 EUR
+    Assets:US
+
+2024/02/15 Test B
+    Assets:Europe    200 EUR
+    Assets:US
+
+test prices EUR
+2024/01/01 EUR             $1.10
+2024/02/01 EUR             $1.15
+2024/03/01 EUR             $1.20
+end test
+
+test bal --exchange $ Assets:Europe
+             $360.00  Assets:Europe
+end test

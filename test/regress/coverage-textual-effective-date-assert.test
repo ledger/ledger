@@ -1,0 +1,16 @@
+; Coverage for textual_xacts.cc lines 350,352: effective date balance assertion
+
+2024/01/01=2024/01/15 Test1
+    Assets:Cash    $50.00 = $50.00
+    Income:Salary
+
+2024/01/02=2024/01/10 Test2
+    Assets:Cash    $30.00 = $30.00
+    Income:Bonus
+
+test reg --effective
+24-Jan-15 Test1                 Assets:Cash                  $50.00       $50.00
+                                Income:Salary               $-50.00            0
+24-Jan-10 Test2                 Assets:Cash                  $30.00       $30.00
+                                Income:Bonus                $-30.00            0
+end test

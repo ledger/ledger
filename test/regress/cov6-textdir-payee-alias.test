@@ -1,0 +1,14 @@
+; Coverage for textual_directives.cc lines 527-556: payee directive with alias and uuid
+
+payee Grocery Store
+    alias Grocer
+    uuid abc-123
+
+2024/01/01 Grocer
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(payee)\n"
+Grocery Store
+Grocery Store
+end test

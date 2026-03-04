@@ -1,0 +1,12 @@
+; Coverage test for filters.cc line 1229
+; posts_as_equity with single commodity total
+
+2024/01/01 Test
+    Assets:Cash    $100.00
+    Equity:Opening
+
+test equity
+2024/01/01 Opening Balances
+    Assets:Cash                              $100.00
+    Equity:Opening
+end test

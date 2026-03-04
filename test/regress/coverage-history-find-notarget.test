@@ -1,0 +1,13 @@
+; Coverage for history.cc lines 337, 377: find_price without target commodity
+; --market without --exchange uses find_price(source, moment, oldest)
+; which finds the best price for the source commodity regardless of target
+
+P 2024/01/01 AAPL $150.00
+
+2024/01/15 Buy
+    Assets:Brokerage    10 AAPL
+    Assets:Checking
+
+test bal --market Assets:Brokerage --now 2024/02/01
+            $1500.00  Assets:Brokerage
+end test

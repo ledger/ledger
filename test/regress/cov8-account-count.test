@@ -1,0 +1,14 @@
+; Coverage test for account.cc lines 279-280:
+; Exercise get_count (family count) via balance report.
+
+2024/01/01 Test One
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/15 Test Two
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test bal Expenses --format "%(account) count=%(count)\n"
+Expenses:Food count=2
+end test

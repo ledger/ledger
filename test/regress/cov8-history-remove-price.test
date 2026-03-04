@@ -1,0 +1,13 @@
+; Coverage for history.cc lines 281, 291: remove_price and empty price map
+
+P 2024/01/01 AAPL $100.00
+P 2024/02/01 AAPL $110.00
+
+2024/03/01 Buy
+    Assets:Stock    10 AAPL
+    Assets:Cash
+
+test reg -X $ --now 2024/02/15
+24-Mar-01 Buy                   Assets:Stock               $1100.00     $1100.00
+                                Assets:Cash               $-1100.00            0
+end test

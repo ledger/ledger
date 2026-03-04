@@ -1,0 +1,17 @@
+; Coverage for history.cc lines 300-330: map_prices function
+; The pricedb command calls map_prices to enumerate all price entries
+; This exercises the price map iteration and time-based filtering
+
+P 2024/01/01 EUR $1.10
+P 2024/02/01 EUR $1.15
+P 2024/03/01 EUR $1.08
+
+2024/01/15 Test
+    Expenses:Travel    500 EUR
+    Assets:Checking
+
+test pricedb --now 2024/04/01
+P 2024/01/01 00:00:00 EUR $1.10
+P 2024/02/01 00:00:00 EUR $1.15
+P 2024/03/01 00:00:00 EUR $1.08
+end test

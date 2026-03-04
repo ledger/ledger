@@ -1,0 +1,16 @@
+; Coverage test for format.cc lines 272-284
+; Test %$ field reference in secondary format (after %/).
+; The %/ separator defines a secondary format for the 2nd+ postings in
+; a transaction. %$N references the Nth expression field from the primary
+; format template.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Expenses:Drink    $5.00
+    Assets:Cash
+
+test reg --format '%(account) %(amount)\n%/REF:%$1 %$2\n'
+Expenses:Food $10.00
+REF:Expenses:Drink $5.00
+REF:Assets:Cash $-15.00
+end test

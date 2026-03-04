@@ -1,0 +1,17 @@
+; Test balance rounding to commodity precision
+; Covers value.cc lines 1801-1803 (balance in_place_round_to_commodity_precision)
+
+2024/01/01 Test
+    Expenses:Food    $50.00
+    Expenses:Food    100 EUR
+    Assets:Cash
+
+2024/01/02 Test
+    Expenses:Food    $30.00
+    Expenses:Food    50 EUR
+    Assets:Cash
+
+test bal --no-total Expenses
+              $80.00
+             150 EUR  Expenses:Food
+end test

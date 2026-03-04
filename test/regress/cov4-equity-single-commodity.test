@@ -1,0 +1,17 @@
+; Test equity posting with single commodity (line 1229 of filters.cc)
+; Exercise posts_as_equity with a simple single-commodity case
+
+2024/01/15 Test1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/20 Test2
+    Expenses:Auto    $20.00
+    Assets:Cash
+
+test equity
+2024/01/20 Opening Balances
+    Assets:Cash                              $-30.00
+    Expenses:Auto                             $20.00
+    Expenses:Food                             $10.00
+end test

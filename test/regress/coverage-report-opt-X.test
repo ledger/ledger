@@ -1,0 +1,11 @@
+; Coverage for report.cc line 1214: -X option
+
+P 2024/01/01 EUR $1.10
+
+2024/01/01 Test
+    Expenses:Food    100 EUR
+    Assets:Cash
+
+test bal -X $ Expenses --now 2024/01/01
+             $110.00  Expenses:Food
+end test

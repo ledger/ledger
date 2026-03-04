@@ -1,9 +1,9 @@
-; Test echo command (exercises report.cc echo_command)
+; Coverage for report.cc: echo command
 
-2024/01/15 * Test
-    Expenses:Food              $50.00
-    Assets:Checking
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
 
-test echo "Hello from ledger"
-Hello from ledger
+test echo "Hello World"
+Hello World
 end test

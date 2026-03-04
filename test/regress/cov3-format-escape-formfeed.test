@@ -1,0 +1,10 @@
+; Test format formfeed escape character
+; Covers format.cc line 166 (\f formfeed escape)
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg --format="A\fB\n" Expenses
+AB
+end test

@@ -1,0 +1,19 @@
+; Coverage test for history.cc L488 (last_target = v_comm)
+; Tests price conversion through a multi-hop path where the prices are
+; defined in reverse direction (B->A, C->B) and we convert from A to C.
+; The dijkstra path traversal must follow the reverse edges, exercising
+; the branch where last_target is updated to v_comm instead of u_comm.
+
+P 2024/01/01 B 2.00 A
+P 2024/01/01 C 3.00 B
+
+2024/01/01 Test
+    Expenses:Food    12.00 A
+    Assets:Cash     -12.00 A
+
+test bal -X C
+                 C-2  Assets:Cash
+                  C2  Expenses:Food
+--------------------
+                   0
+end test

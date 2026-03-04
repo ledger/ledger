@@ -1,0 +1,12 @@
+; Coverage test for post.cc lookup shortcuts:
+; Single-char variables a (amount), b (cost), n (count)
+; Plus 'index' alias, 'calculated', 'cost_calculated'
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg --format '%(a)|%(b)|%(n)|%(index)|%(calculated)|%(cost_calculated)\n'
+$50.00|$50.00|1|1|false|false
+$-50.00|$-50.00|2|2|true|false
+end test

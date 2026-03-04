@@ -1,0 +1,10 @@
+; Test display with apostrophe thousands separator (Swiss style)
+; Covers amount.cc lines 214-215 (COMMODITY_STYLE_THOUSANDS_APOSTROPHE display)
+
+2024/01/01 Test
+    Expenses:Food    CHF 12'345'678.90
+    Assets:Cash
+
+test bal --no-total Expenses
+   CHF 12'345'678.90  Expenses:Food
+end test

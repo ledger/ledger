@@ -1,0 +1,17 @@
+; Coverage test for post.cc xact_id and account_id:
+; Exercise xact_id lookup in post_t via format expression.
+
+2024/01/01 First
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/15 Second
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test reg --format "%(xact_id) %(payee) %(amount)\n"
+1 First $10.00
+2 First $-10.00
+1 Second $20.00
+2 Second $-20.00
+end test

@@ -1,0 +1,12 @@
+; Coverage test for report.cc line 936: fn_percent
+; Test percent() function which computes percentage ratio of two amounts.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Expenses:Rent    $90.00
+    Assets:Cash
+
+test reg Expenses --format '%(percent(amount, 100))\n'
+10.00%
+90.00%
+end test

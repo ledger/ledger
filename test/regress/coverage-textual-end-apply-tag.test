@@ -1,0 +1,20 @@
+; Coverage for textual_directives.cc line 302: end apply tag
+
+apply tag Project: Beta
+
+2024/01/01 Inside
+    Expenses:Food    $10.00
+    Assets:Cash
+
+end apply tag
+
+2024/01/02 Outside
+    Expenses:Drink    $5.00
+    Assets:Cash
+
+test reg --format "%(tag('Project'))\n"
+Beta
+Beta
+
+
+end test

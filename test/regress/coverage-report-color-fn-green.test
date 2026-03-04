@@ -1,0 +1,10 @@
+; Coverage for report.cc line 1096: fn_green
+; Returns the string "green" for use in ansify_if coloring
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test eval "green"
+green
+end test

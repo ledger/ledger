@@ -1,0 +1,9 @@
+; Coverage for balance.cc: flat balance report
+
+2024/01/01 Test
+    Expenses:Food:Groceries    $10.00
+    Assets:Cash
+
+test bal --flat Expenses
+              $10.00  Expenses:Food:Groceries
+end test

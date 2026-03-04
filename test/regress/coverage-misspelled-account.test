@@ -1,0 +1,16 @@
+; Coverage for xact.cc lines 186-190 (account_ends_with_special_char)
+; and line 114 (empty name check - covered by the non-empty path)
+; When two null-amount postings exist and one account name ends with
+; a digit, parenthesis, brace, or bracket, a misspelling warning fires.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Savings 123
+    Assets:Cash
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 9:
+Error: Posting with null amount's account may be misspelled:
+  "Assets:Savings 123"
+end test

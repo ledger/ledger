@@ -1,0 +1,13 @@
+; Test item_t::lookup for various symbols
+; 'i' -> is_account and id (lines 467-472 of item.cc)
+; 's' -> status/state and seq (lines 493-498 of item.cc)
+; 'v' -> value_date (line 512-515 of item.cc)
+
+2024/01/01 * Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(is_account) %(status) %(seq) %(value_date)\n"
+false 1 2 2024/01/01
+false 1 3 2024/01/01
+end test

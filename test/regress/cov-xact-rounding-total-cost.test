@@ -1,0 +1,18 @@
+; Coverage test for xact.cc line 641
+; The rounding adjustment loop skips @@ (total) cost postings
+; 0.50 bread @ $3.99 = $1.995 exact, rounds to $2.00
+; The @@ total cost posting should be skipped in the rounding loop
+
+2024/01/01 Buy bread
+    Expenses:Food    0.50 bread @ $3.99
+    Expenses:Other    1 widget @@ $4.01
+    Assets:Cash    $-6.01
+
+test reg
+24-Jan-01 Buy bread             Expenses:Food            0.50 bread   0.50 bread
+                                Expenses:Other             1 widget   0.50 bread
+                                                                        1 widget
+                                Assets:Cash                  $-6.01       $-6.01
+                                                                      0.50 bread
+                                                                        1 widget
+end test

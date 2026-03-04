@@ -1,0 +1,23 @@
+; Coverage for filters.cc line 350 (POST_MUST_BALANCE in handle_value)
+; When balanced virtual postings ([Account]) go through subtotal reports,
+; the handle_value function sets POST_MUST_BALANCE based on account xdata.
+
+2024/01/01 Test1
+    Expenses:Food             $10.00
+    Assets:Cash              $-10.00
+    [Budget:Food]             $-5.00
+    [Budget:Reserve]           $5.00
+
+2024/01/15 Test2
+    Expenses:Food             $20.00
+    Assets:Cash              $-20.00
+    [Budget:Food]             $-8.00
+    [Budget:Reserve]           $8.00
+
+test bal --subtotal Budget
+                   0  Budget
+             $-13.00    Food
+              $13.00    Reserve
+--------------------
+                   0
+end test

@@ -1,0 +1,15 @@
+; Test apply fixed/rate directive (lines 346-357 of textual_directives.cc)
+; Exercise fixed exchange rate application
+
+apply fixed EUR $1.10
+
+2024/01/01 Test
+    Expenses:Food    10 EUR
+    Assets:Cash
+
+end apply fixed
+
+test reg -X $
+24-Jan-01 Test                  Expenses:Food                $11.00       $11.00
+                                Assets:Cash                 $-11.00            0
+end test

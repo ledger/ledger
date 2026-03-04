@@ -1,0 +1,14 @@
+; Coverage test for account.cc lines 450-451:
+; Exercise is_index function (alias for subcount).
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/15 Test Two
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test bal Expenses --format "%(account) is_index=%(is_index)\n"
+Expenses:Food is_index=2
+end test

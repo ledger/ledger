@@ -1,0 +1,15 @@
+; Tests for session.cc: fn_account and lot functions returning NULL_VALUE
+; Covers: session.cc line 255 (fn_account returning NULL_VALUE for non-string/mask arg)
+;         session.cc lines 278, 285, 292 (lot functions returning NULL_VALUE)
+
+2024/01/01 Test
+    Expenses  $10
+    Assets
+
+; lot_price with no annotation returns NULL_VALUE (line 278)
+; lot_date with no annotation returns NULL_VALUE (line 285)
+; lot_tag with no annotation returns NULL_VALUE (line 292)
+test reg --format '%(lot_price(amount))%(lot_date(amount))%(lot_tag(amount))%(amount)\n'
+$10
+$-10
+end test

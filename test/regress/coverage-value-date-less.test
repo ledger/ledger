@@ -1,0 +1,15 @@
+; Coverage for value.cc: date less_than comparison
+; Using --display with date < [date] exercises is_less_than for DATE type
+
+2024/01/01 Test1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/15 Test2
+    Expenses:Rent    $20.00
+    Assets:Cash
+
+test reg --display "date < [2024/01/10]"
+24-Jan-01 Test1                 Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

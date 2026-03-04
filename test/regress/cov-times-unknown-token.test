@@ -1,0 +1,14 @@
+; Coverage test for times.cc line 1266
+; Exercise unexpected token in period parsing (default case)
+; An unrecognized word that falls through all keyword checks
+; becomes UNKNOWN and triggers unexpected() at line 1266
+
+2024/01/01 Test
+    Expenses:Food            $10.00
+    Assets:Cash
+
+; "foobar" is not a recognized period token, triggers unexpected()
+test reg Expenses --period "foobar" -> 1
+__ERROR__
+Error: Unexpected date period token 'foobar'
+end test

@@ -1,0 +1,14 @@
+; Coverage for xact.cc lines 1092-1103 ($variable substitution in auto_xact)
+; When an auto transaction account contains $variable, the variable is
+; resolved from the matching post's scope.
+
+= Expenses
+    (Budget:$account)    -1
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg Budget
+24-Jan-01 Test                  (Budget:Expenses:Food)      $-10.00      $-10.00
+end test

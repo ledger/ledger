@@ -1,0 +1,17 @@
+; Coverage test for filters.cc SET_PAYEE in transfer_details:
+; Exercise --payee-rewrite to change payee names.
+
+2024/01/01 McDonalds
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/15 Burger King
+    Expenses:Food    $12.00
+    Assets:Cash
+
+test reg --payee-rewrite "McDonalds=Fast Food"
+24-Jan-01 Fast Food             Expenses:Food                $10.00       $10.00
+24-Jan-01 Fast Food             Assets:Cash                 $-10.00            0
+24-Jan-15 Burger King           Expenses:Food                $12.00       $12.00
+                                Assets:Cash                 $-12.00            0
+end test

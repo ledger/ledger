@@ -1,0 +1,14 @@
+; Coverage for amount.cc lines 1334-1337:
+; IF_DEBUG("amount.parse") block in the parse function that prints the
+; rational representation of the parsed amount. Triggered by --debug amount.parse.
+
+2024/01/01 Test
+    Expenses:Food    $25.75
+    Assets:Cash
+
+test bal --debug amount.parse 2>/dev/null
+             $-25.75  Assets:Cash
+              $25.75  Expenses:Food
+--------------------
+                   0
+end test

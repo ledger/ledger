@@ -1,0 +1,12 @@
+; Coverage for iterators.cc lines 110-111: duplicate price in commodities iterator
+
+P 2024/01/01 AAPL $150
+P 2024/01/01 AAPL $150
+
+2024/01/01 Buy
+    Assets:Brokerage    10 AAPL
+    Assets:Cash
+
+test pricesdb
+P 2024/01/01 00:00:00 AAPL $150
+end test

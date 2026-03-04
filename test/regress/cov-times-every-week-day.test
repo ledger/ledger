@@ -1,0 +1,27 @@
+; Coverage test for times.cc lines 1135-1140
+; Exercise "every week" and "every day" (singular form) in handle_every_token
+
+2024/01/01 Day 1
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/01/02 Day 2
+    Expenses:Food            $20.00
+    Assets:Cash
+
+2024/01/08 Day 3
+    Expenses:Food            $30.00
+    Assets:Cash
+
+; "every week" exercises the singular TOK_WEEK path (line 1135-1136)
+test reg Expenses --period "every week"
+23-Dec-31 - 24-Jan-06           Expenses:Food                $30.00       $30.00
+24-Jan-07 - 24-Jan-13           Expenses:Food                $30.00       $60.00
+end test
+
+; "every day" exercises the singular TOK_DAY path (line 1138-1139)
+test reg Expenses --period "every day"
+24-Jan-01 - 24-Jan-01           Expenses:Food                $10.00       $10.00
+24-Jan-02 - 24-Jan-02           Expenses:Food                $20.00       $30.00
+24-Jan-08 - 24-Jan-08           Expenses:Food                $30.00       $60.00
+end test

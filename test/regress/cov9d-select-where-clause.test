@@ -1,0 +1,14 @@
+; Test select with where clause
+; Covers select.cc line 379 (where clause handling)
+
+2024/01/15 Groceries
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/02/01 Rent
+    Expenses:Rent    $800.00
+    Assets:Cash
+
+test select date, account, amount from posts where account =~ /Food/
+24-Jan-15 Expenses:Food                                                  $50.00
+end test

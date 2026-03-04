@@ -1,0 +1,34 @@
+; Coverage test for src/account.cc: account regex lookup via bal command
+; Tests regex patterns in account names for balance reports.
+
+2024/01/01 Groceries
+    Expenses:Food:Groceries    $50.00
+    Assets:Checking
+
+2024/01/02 Restaurant
+    Expenses:Food:Dining       $30.00
+    Assets:Checking
+
+2024/01/03 Electric
+    Expenses:Utilities:Electric  $100.00
+    Assets:Checking
+
+2024/01/04 Water
+    Expenses:Utilities:Water   $40.00
+    Assets:Checking
+
+test bal /Food/
+              $80.00  Expenses:Food
+              $30.00    Dining
+              $50.00    Groceries
+--------------------
+              $80.00
+end test
+
+test bal /^Expenses:Util/
+             $140.00  Expenses:Utilities
+             $100.00    Electric
+              $40.00    Water
+--------------------
+             $140.00
+end test

@@ -1,0 +1,17 @@
+; Coverage for textual_xacts.cc lines 341-354: effective date balance assertion
+; Tests the use_aux_date path in compute_balance_diff
+
+2024/01/01=2024/01/15 Opening
+    Assets:Checking    $300
+    Assets:Checking    $200
+    Equity:Opening
+
+2024/01/02=2024/01/10 Deposit
+    Assets:Checking    $100 = $100
+    Income:Salary
+
+test --effective reg Assets:Checking
+24-Jan-15 Opening               Assets:Checking                $300         $300
+                                Assets:Checking                $200         $500
+24-Jan-10 Deposit               Assets:Checking                $100         $600
+end test

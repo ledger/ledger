@@ -1,0 +1,15 @@
+; Coverage for filters.cc line 1652:
+; rewrite_posts::operator() with account-rewrite directive.
+; When the account rewrite matches, it creates a temp post and copies
+; account xdata flags from the previous account.
+
+account-rewrite  Expenses:Food  Expenses:Groceries
+
+2024/01/01 Grocery
+    Expenses:Food    $25.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Grocery               Expenses:Groceries           $25.00       $25.00
+24-Jan-01 Grocery               Assets:Cash                 $-25.00            0
+end test
