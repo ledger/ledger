@@ -1,0 +1,3 @@
+test python test/regress/1014.py
+session.read_journal(str) works
+end test

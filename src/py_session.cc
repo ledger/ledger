@@ -77,8 +77,8 @@ void py_session_close_journal_files(session_t& session) {
   py_update_commodities();
 }
 
-boost::shared_ptr<journal_t> py_session_read_journal(session_t& session, const path& pathname) {
-  session.read_journal(pathname);
+boost::shared_ptr<journal_t> py_session_read_journal(session_t& session, const string& pathname) {
+  session.read_journal(path(pathname));
   return session.journal;
 }
 
