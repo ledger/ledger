@@ -334,34 +334,70 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
     }
 
     default: {
-      node = new expr_t::op_t(expr_t::op_t::O_MATCH);
+      // Check if this term looks like a comparison expression rather than an
+      // account name pattern.  This supports "d>=[2014/01/01]" syntax in
+      // automated transaction predicates.
+      //
+      // Case 1: term ends with > or < (e.g., "d>" from "d>=[date]")
+      //   followed by TOK_EQ and another term → parse as expression "d>=[date]"
+      // Case 2: term contains ">["  or "<[" pattern (e.g., "d>[date]")
+      //   → parse the whole term as an expression
+      assert(tok.value);
+      {
+        const string& term = *tok.value;
+        bool ends_with_cmp = !term.empty() && (term.back() == '>' || term.back() == '<');
 
-      expr_t::ptr_op_t ident = new expr_t::op_t(expr_t::op_t::IDENT);
-      switch (tok_context) {
-      case lexer_t::token_t::TOK_ACCOUNT:
-        ident->set_ident("account");
-        break;
-      case lexer_t::token_t::TOK_PAYEE:
-        ident->set_ident("payee");
-        break;
-      case lexer_t::token_t::TOK_CODE:
-        ident->set_ident("code");
-        break;
-      case lexer_t::token_t::TOK_NOTE:
-        ident->set_ident("note");
-        break;
-      default:
-        assert(false);
-        break;
+        if (ends_with_cmp && lexer.peek_token(tok_context).kind == lexer_t::token_t::TOK_EQ) {
+          lexer.next_token(tok_context); // consume the '='
+          lexer_t::token_t rhs = lexer.next_token(tok_context);
+          if (rhs.kind == lexer_t::token_t::TERM && rhs.value) {
+            try {
+              string expr_str = term + "=" + *rhs.value;
+              node = expr_t(expr_str).get_op();
+            } catch (...) {
+              node = nullptr;
+            }
+          }
+        } else if (!ends_with_cmp &&
+                   (term.find(">[") != string::npos || term.find("<[") != string::npos)) {
+          try {
+            node = expr_t(term).get_op();
+          } catch (...) {
+            node = nullptr;
+          }
+        }
       }
 
-      expr_t::ptr_op_t mask = new expr_t::op_t(expr_t::op_t::VALUE);
-      DEBUG("query.mask", "Mask from string: " << *tok.value);
-      mask->set_value(mask_t(*tok.value));
-      DEBUG("query.mask", "Mask is: " << mask->as_value().as_mask().str());
+      if (!node) {
+        node = new expr_t::op_t(expr_t::op_t::O_MATCH);
 
-      node->set_left(ident);
-      node->set_right(mask);
+        expr_t::ptr_op_t ident = new expr_t::op_t(expr_t::op_t::IDENT);
+        switch (tok_context) {
+        case lexer_t::token_t::TOK_ACCOUNT:
+          ident->set_ident("account");
+          break;
+        case lexer_t::token_t::TOK_PAYEE:
+          ident->set_ident("payee");
+          break;
+        case lexer_t::token_t::TOK_CODE:
+          ident->set_ident("code");
+          break;
+        case lexer_t::token_t::TOK_NOTE:
+          ident->set_ident("note");
+          break;
+        default:
+          assert(false);
+          break;
+        }
+
+        expr_t::ptr_op_t mask = new expr_t::op_t(expr_t::op_t::VALUE);
+        DEBUG("query.mask", "Mask from string: " << *tok.value);
+        mask->set_value(mask_t(*tok.value));
+        DEBUG("query.mask", "Mask is: " << mask->as_value().as_mask().str());
+
+        node->set_left(ident);
+        node->set_right(mask);
+      }
     }
     }
     break;
