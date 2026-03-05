@@ -21,6 +21,10 @@ account Expenses:Car
 
 ; The fix prevents segfault - print should work without crashing
 test print
+= expr payee =~ /Max/ & account =~ /Expenses:Unknown/
+    Expenses:Rent                                  1
+    Expenses:Unknown                              -1
+
 2019/12/30 * Max Mustermann  ; Rent
     Expenses:Unknown                             650
     Assets:Checking                        -650,00 €
