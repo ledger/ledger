@@ -35,6 +35,8 @@
 #include "op.h"
 #include "parser.h"
 #include "scope.h"
+// scope.h must be included before the symbol_scope_t / lexical_scope_t definitions
+// are needed by merged_expr_t methods below.
 
 #include <boost/smart_ptr/scoped_ptr.hpp>
 #include <utility>
@@ -73,6 +75,7 @@ expr_t& expr_t::operator=(const expr_t& _expr) {
     base_type::operator=(_expr);
     ptr = _expr.ptr;
     fast_path_ = _expr.fast_path_;
+    accumulator_scope_.reset();
   }
   return *this;
 }
@@ -132,7 +135,7 @@ void expr_t::detect_fast_path() {
   }
 }
 
-value_t expr_t::real_calc(scope_t& scope) {
+value_t expr_t::calc_with_scope(scope_t& scope) {
   static thread_local int eval_depth = 0;
 
   struct EvalDepthGuard {
@@ -141,11 +144,22 @@ value_t expr_t::real_calc(scope_t& scope) {
   } depth_guard;
 
   if (ptr) {
+    if (eval_depth > 256)
+      throw_(recursion_error, _f("Expression recursion depth exceeded (%1%)") % eval_depth);
+    return ptr->calc(scope);
+  }
+  return NULL_VALUE;
+}
+
+value_t expr_t::real_calc(scope_t& scope) {
+  if (ptr) {
+    if (!accumulator_scope_)
+      accumulator_scope_ = std::make_unique<symbol_scope_t>();
+    lexical_scope_t wrapped(scope, *accumulator_scope_);
+
     ptr_op_t locus;
     try {
-      if (eval_depth > 256)
-        throw_(recursion_error, _f("Expression recursion depth exceeded (%1%)") % eval_depth);
-      return ptr->calc(scope, &locus);
+      return ptr->calc(wrapped, &locus);
     } catch (const recursion_error&) {
       throw;
     } catch (const std::exception&) {
@@ -226,6 +240,38 @@ void expr_t::dump(std::ostream& out) const {
     ptr->dump(out, 0);
 }
 
+merged_expr_t::merged_expr_t(const string& _term, const string& expr, const string& merge_op)
+    : expr_t(), term(_term), base_expr(expr), merge_operator(merge_op) {
+  TRACE_CTOR(merged_expr_t, "string, string, string");
+}
+
+// NOLINTBEGIN(bugprone-copy-constructor-init)
+// Intentionally calls expr_t() rather than expr_t(other): the copy constructor
+// starts with a fresh, uncompiled expression state.  push_report() needs an
+// independent expression context for the new report, not a shared compiled state.
+merged_expr_t::merged_expr_t(const merged_expr_t& other)
+    : expr_t(), term(other.term), base_expr(other.base_expr), merge_operator(other.merge_operator),
+      exprs(other.exprs) {
+  TRACE_CTOR(merged_expr_t, "copy");
+}
+// NOLINTEND(bugprone-copy-constructor-init)
+
+merged_expr_t& merged_expr_t::operator=(const merged_expr_t& other) {
+  if (this != &other) {
+    expr_t::operator=(expr_t()); // reset to fresh uncompiled expression
+    term = other.term;
+    base_expr = other.base_expr;
+    merge_operator = other.merge_operator;
+    exprs = other.exprs;
+    // accumulator_scope_ reset is handled by expr_t::operator=() above
+  }
+  return *this;
+}
+
+merged_expr_t::~merged_expr_t() {
+  TRACE_DTOR(merged_expr_t);
+}
+
 bool merged_expr_t::check_for_single_identifier(const string& expr) {
   bool single_identifier = true;
   for (const char* p = expr.c_str(); *p; ++p)
@@ -252,7 +298,7 @@ void merged_expr_t::compile(scope_t& scope) {
     buf << "__tmp_" << term << "=(" << term << "=(" << base_expr << ")";
     for (const string& expr : exprs) {
       if (merge_operator == ";")
-        buf << merge_operator << term << "=" << expr;
+        buf << merge_operator << term << "=(" << expr << ")";
       else
         buf << merge_operator << "(" << expr << ")";
     }
@@ -262,7 +308,39 @@ void merged_expr_t::compile(scope_t& scope) {
     parse(buf.str());
   }
 
-  expr_t::compile(scope);
+  if (!accumulator_scope_)
+    accumulator_scope_ = std::make_unique<symbol_scope_t>();
+
+  // Wrap the compilation scope with a lexical scope so that O_DEFINE
+  // nodes (like "biggest=..." or "display_amount=...") store their
+  // PLUG sentinels and runtime values in the persistent accumulator_scope_
+  // rather than propagating them up to report/session.  This prevents
+  // accumulator variables from shadowing report-level functions such as
+  // fn_display_amount and fn_amount_expr in subsequent lookups.
+  lexical_scope_t wrapped(scope, *accumulator_scope_);
+  expr_t::compile(wrapped);
+}
+
+value_t merged_expr_t::real_calc(scope_t& scope) {
+  if (!accumulator_scope_)
+    accumulator_scope_ = std::make_unique<symbol_scope_t>();
+
+  // Each time the merged expression is evaluated (once per posting), wrap
+  // the posting scope with the persistent accumulator_scope_ so that:
+  //   - O_DEFINE writes (e.g. biggest=$30) go to accumulator_scope_ only
+  //   - IDENT reads first check accumulator_scope_ (for the running value),
+  //     then fall through to the posting/report/session scope chain
+  // This gives accumulator variables cross-posting persistence without
+  // polluting the global session scope.
+  //
+  // Use calc_with_scope() for recursion depth protection (eval_depth counter),
+  // but do NOT add "While evaluating value expression:" error context here.
+  // Merged expressions are evaluated from a posting handler that already
+  // provides context ("While handling posting..."), and the partially-optimised
+  // compiled tree (non-self-referential O_DEFINE nodes become null) would
+  // produce a misleading expression string.
+  lexical_scope_t wrapped(scope, *accumulator_scope_);
+  return calc_with_scope(wrapped);
 }
 
 expr_t::ptr_op_t as_expr(const value_t& val) {

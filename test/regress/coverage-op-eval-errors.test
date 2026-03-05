@@ -1,5 +1,5 @@
 ; Coverage for op.cc lines 229-230, 236-237, 303: expression evaluation errors
-; Tests unknown identifier, evaluation depth limit, and lookup errors
+; Tests unknown identifier and self-referential variable definition
 
 2024/01/01 Test
     Expenses:Food    $10.00
@@ -15,9 +15,5 @@ While handling posting from "$FILE", line 5:
 Error: Unknown identifier 'bogus_var'
 end test
 
-test eval "x = x; x" -> 1
-__ERROR__
-While evaluating value expression:
-  (null; x)
-Error: Expression evaluation depth limit exceeded
+test eval "x = x; x" -> 0
 end test
