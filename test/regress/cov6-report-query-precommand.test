@@ -25,15 +25,15 @@ test query Expenses | sed -E 's/0x[0-9a-f]+/0xXXXX/g'
 (account =~ /Expenses/)
 
 --- Expression tree ---
-0xXXXX    O_MATCH (1)
-0xXXXX     IDENT: account (1)
-0xXXXX     VALUE: /Expenses/ (1)
+0xXXXX       O_MATCH (1)
+0xXXXX        IDENT: account (1)
+0xXXXX        VALUE: /Expenses/ (1)
 
 --- Compiled tree ---
-0xXXXX    O_MATCH (1)
-0xXXXX     IDENT: account (1)
-0xXXXX      FUNCTION (1)
-0xXXXX     VALUE: /Expenses/ (1)
+0xXXXX       O_MATCH (1)
+0xXXXX        IDENT: account (1)
+0xXXXX         FUNCTION (1)
+0xXXXX        VALUE: /Expenses/ (1)
 
 --- Calculated value ---
 true
