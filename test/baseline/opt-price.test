@@ -26,14 +26,14 @@ test reg --end 2009/06/26 -V equities
 08-Jun-30 Commodities revalued  <Revalued>                     $500        $2500
 08-Jun-30 Sell some Apple sha.. Equities                     $-1250        $1250
 09-Jan-31 Commodities revalued  <Revalued>                     $250        $1500
-09-Jun-26 Commodities revalued  <Revalued>                     $500        $2000
+09-Jun-25 Commodities revalued  <Revalued>                     $500        $2000
 end test
 
 test reg --end 2009/06/26 -G equities
 08-Jun-30 Commodities revalued  <Revalued>                     $500         $500
 08-Jun-30 Sell some Apple sha.. Equities                      $-250         $250
 09-Jan-31 Commodities revalued  <Revalued>                     $250         $500
-09-Jun-26 Commodities revalued  <Revalued>                     $500        $1000
+09-Jun-25 Commodities revalued  <Revalued>                     $500        $1000
 end test
 
 test reg -I equities
