@@ -529,7 +529,8 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
 
         // Parse the optional cost (@ PER-UNIT-COST, @@ TOTAL-COST)
 
-        if (*next == '@' || (*next == '(' && *(next + 1) == '@')) {
+        if (*next == '@' || (*next == '(' && *(next + 1) == '@') ||
+            (*next == '(' && *(next + 1) == '(' && *(next + 2) == '@')) {
           DEBUG("textual.parse", "line " << context.linenum << ": "
                                          << "Found a price indicator");
 
@@ -547,8 +548,11 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
             next++;
           }
 
-          if (post->has_flags(POST_COST_VIRTUAL) && *next == ')')
+          if (post->has_flags(POST_COST_VIRTUAL) && *next == ')') {
             ++next;
+            if (*next == ')')
+              ++next;
+          }
 
           p = skip_ws(next);
           if (*p) {

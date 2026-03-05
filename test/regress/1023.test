@@ -11,5 +11,9 @@
     equity:budget
 
 test budget --add-budget --depth 2 -X USD -b 2023/01 -e 2023/02 ^expenses
-  300.00 USD                300.00 USD     0  expenses:cash
+  300.00 USD   100.00 USD   200.00 USD  300%  expenses
+  300.00 USD                300.00 USD     0    cash
+               100.00 USD  -100.00 USD     0    food
+------------ ------------ ------------ -----
+  300.00 USD   100.00 USD   200.00 USD  300%
 end test

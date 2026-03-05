@@ -208,10 +208,17 @@ void annotation_t::parse(std::istream& in) {
         in.seekg(pos, std::ios::beg);
         break;
       } else if (c == '(') {
+        in.get();
+        int d = in.peek();
+        if (d == '@') {
+          in.clear();
+          in.seekg(pos, std::ios::beg);
+          break;
+        }
+
         if (value_expr)
           throw_(amount_error, _("Commodity specifies more than one valuation expression"));
 
-        in.get();
         // Read expression with balanced parentheses to handle nested parens
         // like "market($10, date, t)" inside lot value expressions
         {
