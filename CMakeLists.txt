@@ -63,7 +63,8 @@ option(BUILD_DEBUG "Build support for runtime debugging" OFF)
 option(PRECOMPILE_SYSTEM_HH "Precompile system.hh (improves build times for all build types)" ON)
 
 option(USE_GPGME "Build with support for encrypted journals" OFF)
-option(USE_GCOV "Enable code coverage with gcov/lcov" OFF)
+option(USE_GCOV "Enable code coverage with gcov" OFF)
+option(USE_LLVM_COV "Enable code coverage with LLVM instrumentation and lcov/genhtml" OFF)
 option(USE_SANITIZERS "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
 option(BUILD_LIBRARY "Build and install Ledger as a library" ON)
 option(BUILD_DOCS "Build and install documentation" OFF)
@@ -107,6 +108,42 @@ if(USE_GCOV)
       COMMAND find ${CMAKE_BINARY_DIR} -name '*.gcda' -delete
       COMMENT "Removing .gcda files for fresh coverage run"
     )
+  endif()
+endif()
+
+if(USE_LLVM_COV)
+  if(NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    message(FATAL_ERROR "USE_LLVM_COV requires the Clang compiler")
+  endif()
+  add_compile_options(-fprofile-instr-generate -fcoverage-mapping)
+  add_link_options(-fprofile-instr-generate)
+
+  find_program(LLVM_PROFDATA llvm-profdata)
+  find_program(LLVM_COV llvm-cov)
+  find_program(GENHTML genhtml)
+  if(LLVM_PROFDATA AND LLVM_COV AND GENHTML)
+    # Generate a cmake script that handles glob expansion, output redirection,
+    # and error checking without relying on shell quoting in Makefiles.
+    configure_file(
+      "${CMAKE_SOURCE_DIR}/cmake/RunCoverage.cmake.in"
+      "${CMAKE_BINARY_DIR}/RunCoverage.cmake"
+      @ONLY
+    )
+    add_custom_target(coverage
+      COMMAND "${CMAKE_COMMAND}" -P "${CMAKE_BINARY_DIR}/RunCoverage.cmake"
+      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+      COMMENT "Generating LLVM code coverage report in coverage_html/"
+      VERBATIM
+    )
+    add_custom_target(coverage-clean
+      COMMAND "${CMAKE_COMMAND}" -E rm -f "${CMAKE_BINARY_DIR}/coverage-*.profraw"
+                                          "${CMAKE_BINARY_DIR}/coverage.profdata"
+                                          "${CMAKE_BINARY_DIR}/coverage.info"
+      COMMENT "Removing LLVM profile data files for fresh coverage run"
+      VERBATIM
+    )
+  else()
+    message(WARNING "llvm-profdata, llvm-cov, or genhtml not found; 'coverage' target unavailable")
   endif()
 endif()
 
