@@ -132,6 +132,10 @@
           "-DUSE_DOXYGEN=ON"
           "-DUSE_GPGME=ON"
           "-DBUILD_DOCS=ON"
+          # Pin CMake to the Nix-provided Python so it doesn't pick up a
+          # Homebrew Python (e.g. 3.14) that mismatches the Boost.Python build.
+          "-DPython_EXECUTABLE=${python3}/bin/python3"
+          "-DPython3_EXECUTABLE=${python3}/bin/python3"
         ];
 
         shellHook = ''
