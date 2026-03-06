@@ -72,7 +72,15 @@ jobs:
         run: npm install -g lefthook
 
       - name: Build and test
-        run: lefthook run cmake-build-and-test
+        # Wrap in `script` to allocate a pseudo-TTY; lefthook buffers all
+        # output in non-TTY mode, triggering GitHub Actions' 10-min
+        # inactivity timeout on long builds.
+        run: |
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            script -q /dev/null lefthook run cmake-build-and-test
+          else
+            script -qefc 'lefthook run cmake-build-and-test' /dev/null
+          fi
         env:
           cmakeFlags: "-DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ${{matrix.config.cmake_args}} -DPython_FIND_VERSION_MAJOR=${{matrix.config.PY_MAJOR}}"
           ASAN_OPTIONS: ${{ contains(matrix.config.cmake_args, 'USE_SANITIZERS') && 'detect_leaks=1:halt_on_error=0:log_path=/tmp/asan_log' || '' }}
@@ -196,7 +204,7 @@ jobs:
         run: npm install -g lefthook
 
       - name: Build Doxygen documentation
-        run: lefthook run cmake-doxygen
+        run: script -qefc 'lefthook run cmake-doxygen' /dev/null
         env:
           cmakeFlags: "-DUSE_DOXYGEN=ON"
 
@@ -223,7 +231,7 @@ jobs:
         run: npm install -g lefthook
 
       - name: Build PDF manual and info pages
-        run: lefthook run cmake-manual
+        run: script -qefc 'lefthook run cmake-manual' /dev/null
         env:
           cmakeFlags: "-DBUILD_DOCS=ON"
 

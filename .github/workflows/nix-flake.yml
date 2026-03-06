@@ -23,4 +23,10 @@ jobs:
       run: npm install -g lefthook
 
     - name: Ensure nix flake builds
-      run: lefthook run nix-flake-build
+      # Wrap in `script` for pseudo-TTY so lefthook streams output
+      run: |
+        if [ "$(uname)" = "Darwin" ]; then
+          script -q /dev/null lefthook run nix-flake-build
+        else
+          script -qefc 'lefthook run nix-flake-build' /dev/null
+        fi
