@@ -18,5 +18,9 @@ jobs:
         nix_path: nixpkgs=channel:nixos-unstable
 
     - uses: actions/checkout@v6
+
+    - name: Install lefthook
+      run: npm install -g lefthook
+
     - name: Ensure nix flake builds
-      run: "nix build ."
+      run: lefthook run nix-flake-build

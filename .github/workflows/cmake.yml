@@ -23,7 +23,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # os: [ubuntu-latest,macos-latest]
         config:
           - {
             os: ubuntu-latest,
@@ -69,28 +68,13 @@ jobs:
           brew uninstall cmake
           ./acprep dependencies --python
 
-      - name: Configure CMake
-        # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-        # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ${{matrix.config.cmake_args}} -DPython_FIND_VERSION_MAJOR=${{matrix.config.PY_MAJOR}}
-        env:
-          BOOST_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
+      - name: Install lefthook
+        run: npm install -g lefthook
 
-      - name: Build
-        # Build your program with the given configuration
-        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      - name: Build and test
+        run: lefthook run cmake-build-and-test
         env:
-          BOOST_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
-
-      - name: Test
-        working-directory: ${{github.workspace}}/build
-        # Execute tests defined by the CMake configuration.
-        # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-        run: ctest -C ${{env.BUILD_TYPE}} || ctest -C ${{env.BUILD_TYPE}} --rerun-failed --output-on-failure
-        env:
-          # Sanitizer output is redirected to log files via log_path to prevent
-          # it from contaminating stderr, which the test harness compares against
-          # expected output. Sanitizer findings are reported in a separate step.
+          cmakeFlags: "-DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ${{matrix.config.cmake_args}} -DPython_FIND_VERSION_MAJOR=${{matrix.config.PY_MAJOR}}"
           ASAN_OPTIONS: ${{ contains(matrix.config.cmake_args, 'USE_SANITIZERS') && 'detect_leaks=1:halt_on_error=0:log_path=/tmp/asan_log' || '' }}
           LSAN_OPTIONS: ${{ contains(matrix.config.cmake_args, 'USE_SANITIZERS') && 'suppressions=../lsan-suppressions.txt:log_path=/tmp/lsan_log' || '' }}
           UBSAN_OPTIONS: ${{ contains(matrix.config.cmake_args, 'USE_SANITIZERS') && 'print_stacktrace=1:halt_on_error=0:suppressions=../ubsan-suppressions.txt:log_path=/tmp/ubsan_log' || '' }}
@@ -208,11 +192,13 @@ jobs:
           sudo ./acprep dependencies
           sudo apt-get install -y doxygen graphviz
 
-      - name: Configure CMake
-        run: cmake -B ${{github.workspace}}/build -DUSE_DOXYGEN=ON
+      - name: Install lefthook
+        run: npm install -g lefthook
 
       - name: Build Doxygen documentation
-        run: cmake --build ${{github.workspace}}/build --target doc.doxygen
+        run: lefthook run cmake-doxygen
+        env:
+          cmakeFlags: "-DUSE_DOXYGEN=ON"
 
       - uses: actions/upload-artifact@v7
         with:
@@ -233,11 +219,13 @@ jobs:
           sudo ./acprep dependencies
           sudo apt-get install -y texinfo texlive
 
-      - name: Configure CMake
-        run: cmake -B ${{github.workspace}}/build -DBUILD_DOCS=ON
+      - name: Install lefthook
+        run: npm install -g lefthook
 
       - name: Build PDF manual and info pages
-        run: cmake --build ${{github.workspace}}/build --target doc
+        run: lefthook run cmake-manual
+        env:
+          cmakeFlags: "-DBUILD_DOCS=ON"
 
       - uses: actions/upload-artifact@v7
         with:
