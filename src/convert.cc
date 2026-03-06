@@ -29,6 +29,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   convert.cc
+ * @author John Wiegley
+ *
+ * @ingroup data
+ *
+ * @brief Implementation of the `ledger convert` CSV import command.
+ */
+
 #include <system.hh>
 
 #include "convert.h"
@@ -42,10 +51,15 @@
 
 namespace ledger {
 
+/*--- CSV import entry point ---*/
+
 value_t convert_command(call_scope_t& args) {
   report_t& report(args.context<report_t>());
   journal_t& journal(*report.session.journal.get());
 
+  // Determine the balancing account.  The --account option specifies which
+  // account the CSV amounts come from (e.g. "Assets:Checking").  If not
+  // given, a placeholder "Equity:Unknown" is used.
   string bucket_name;
   if (report.HANDLED(account_))
     bucket_name = report.HANDLER(account_).str();
@@ -55,10 +69,10 @@ value_t convert_command(call_scope_t& args) {
   account_t* bucket = journal.master->find_account(bucket_name);
   account_t* unknown = journal.master->find_account(_("Expenses:Unknown"));
 
-  // Create a flat list
+  // Snapshot existing journal transactions for payee-based account lookup.
   xacts_list current_xacts(journal.xacts_begin(), journal.xacts_end());
 
-  // Read in the series of transactions from the CSV file
+  /*--- CSV parsing and transaction creation ---*/
 
   print_xacts formatter(report);
   path csv_file_path(args.get<string>(0));
@@ -85,14 +99,19 @@ value_t convert_command(call_scope_t& args) {
 
   try {
     while (xact_t* xact = reader.read_xact(report.HANDLED(rich_data))) {
+      // Step 1: Optionally negate amounts (--invert), useful for
+      // credit-card CSVs where debits are positive.
       if (report.HANDLED(invert)) {
         for (post_t* post : xact->posts)
           post->amount.in_place_negate();
       }
 
+      // Step 2: Compute a unique reference for duplicate detection.
+      // Prefer an explicit UUID tag; fall back to SHA-1 of the raw CSV line.
       const string ref = xact->has_tag(_("UUID")) ? xact->get_tag(_("UUID"))->to_string()
                                                   : sha1sum(reader.get_last_line());
 
+      // Skip this transaction if its reference already exists in the journal.
       if (auto entry = journal.checksum_map.find(ref); entry != journal.checksum_map.end()) {
         INFO(file_context(reader.get_pathname(), reader.get_linenum())
              << " " << "Ignoring known UUID " << ref);
@@ -103,6 +122,8 @@ value_t convert_command(call_scope_t& args) {
       if (report.HANDLED(rich_data) && !xact->has_tag(_("UUID")))
         xact->set_tag(_("UUID"), string_value(ref));
 
+      // Step 3: Resolve the expense account.  With --auto-match, search
+      // existing transactions for a payee match and reuse its account.
       if (xact->posts.front()->account == nullptr) {
         if (account_t* acct = (report.HANDLED(auto_match)
                                    ? lookup_probable_account(xact->payee, current_xacts.rbegin(),
@@ -114,6 +135,7 @@ value_t convert_command(call_scope_t& args) {
           xact->posts.front()->account = unknown;
       }
 
+      // Step 4: Finalize the transaction and print it in Ledger format.
       if (!journal.add_xact(xact)) {
         checked_delete(xact);
         throw_(std::runtime_error, _("Failed to finalize derived transaction (check commodities)"));

@@ -38,6 +38,30 @@
  * @author John Wiegley
  *
  * @ingroup util
+ *
+ * @brief SQL-like SELECT statement parser for Ledger reports.
+ *
+ * Provides an alternative query syntax that lets users write queries
+ * resembling SQL SELECT statements rather than Ledger's native command-line
+ * options.  For example:
+ *
+ * @code
+ *   ledger select date, payee, account, amount from posts where account =~ /Food/
+ * @endcode
+ *
+ * The parser recognizes these clauses:
+ *
+ *   - **SELECT** columns  -- translated into a format string
+ *   - **FROM** source     -- xacts | posts | accounts | commodities
+ *   - **WHERE** expr      -- maps to `--limit`
+ *   - **DISPLAY** expr    -- maps to `--display`
+ *   - **COLLECT** expr    -- maps to `--amount`
+ *   - **GROUP BY** expr   -- maps to `--group-by`
+ *   - **STYLE** name      -- output style (csv, xml, json, emacs) (placeholder)
+ *
+ * Each clause is translated into the corresponding report option, then a
+ * reporter functor is constructed and executed just as if the user had run
+ * a traditional Ledger command with the equivalent flags.
  */
 #pragma once
 
@@ -47,6 +71,17 @@
 namespace ledger {
 
 class call_scope_t;
+
+/**
+ * @brief Execute a SQL-like SELECT query against the journal.
+ *
+ * Parses the SELECT statement from @p args, translates each clause into
+ * report options and a format string, constructs the appropriate reporter
+ * functor (for postings, accounts, or commodities), and runs it.
+ *
+ * @param args  Call scope whose arguments form the SELECT statement text.
+ * @return      The result of executing the report functor.
+ */
 value_t select_command(call_scope_t& args);
 
 } // namespace ledger

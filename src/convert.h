@@ -38,6 +38,16 @@
  * @author John Wiegley
  *
  * @ingroup data
+ *
+ * @brief CSV file import -- the `convert` command.
+ *
+ * The convert command reads a CSV file (typically a bank export), parses
+ * each row into a transaction using csv_reader, and prints the resulting
+ * Ledger-format transactions to stdout.  It supports duplicate detection
+ * via UUID tags and SHA-1 checksums, optional account auto-matching based
+ * on payee history, and amount inversion for credit-card statements.
+ *
+ * Usage: `ledger convert bank-export.csv --account Assets:Checking`
  */
 #pragma once
 
@@ -47,6 +57,17 @@ namespace ledger {
 
 class call_scope_t;
 
+/**
+ * @brief Implements the `ledger convert` command.
+ *
+ * Reads a CSV file whose path is the first positional argument, converts
+ * each row into a journal transaction, deduplicates against existing
+ * journal entries, and prints the new transactions in Ledger format.
+ *
+ * @param scope  Call scope containing the CSV file path argument and
+ *               report options (--account, --invert, --rich-data, etc.).
+ * @return       true on success.
+ */
 value_t convert_command(call_scope_t& scope);
 
 } // namespace ledger

@@ -29,6 +29,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   select.cc
+ * @author John Wiegley
+ *
+ * @ingroup util
+ *
+ * @brief Implementation of the SQL-like SELECT statement parser.
+ */
+
 #include <system.hh>
 
 #include "select.h"
@@ -44,7 +53,28 @@
 
 namespace ledger {
 
+/*--- Column identifier extraction ---*/
+
 namespace {
+
+/**
+ * @brief Walk an expression tree to find the principal column identifier.
+ *
+ * A SELECT column expression like `amount * 2` needs to be mapped to a
+ * display width and formatting style.  This function recursively inspects
+ * the expression for well-known identifiers (date, payee, account, amount,
+ * total) and records which one it found in @p ident.
+ *
+ * When @p do_transforms is true, certain identifiers are rewritten to their
+ * display equivalents (e.g. "account" becomes "display_account", "amount"
+ * becomes "display_amount") so the format string uses the properly
+ * truncated/formatted version.
+ *
+ * @param expr           Expression tree to inspect.
+ * @param ident          Output: the principal identifier found (if any).
+ * @param do_transforms  If true, rewrite identifiers to display variants.
+ * @return true if all identifiers are consistent (only one principal type).
+ */
 bool get_principal_identifiers(const expr_t::ptr_op_t& expr, string& ident,
                                bool do_transforms = false) {
   bool result = true;
@@ -90,6 +120,8 @@ bool get_principal_identifiers(const expr_t::ptr_op_t& expr, string& ident,
 }
 } // namespace
 
+/*--- SELECT command implementation ---*/
+
 value_t select_command(call_scope_t& args) {
   string text = "select " + join_args(args);
   if (text.empty())
@@ -97,8 +129,11 @@ value_t select_command(call_scope_t& args) {
 
   report_t& report(find_scope<report_t>(args));
 
-  // Our first step is to divide the select statement into its principal
-  // parts:
+  // Phase 1: Tokenize the SELECT statement into keyword/argument pairs.
+  //
+  // The regex matches each clause keyword (select, from, where, etc.)
+  // followed by its argument text, using a lookahead to stop before the
+  // next keyword.  The supported grammar is:
   //
   //   SELECT <VALEXPR-LIST>
   //   FROM <NAME>
@@ -113,15 +148,19 @@ value_t select_command(call_scope_t& args) {
                          "(?=(\\s+(from|where|display|collect|group\\s+by|style)\\s+|$))",
                          boost::regex::perl | boost::regex::icase);
 
+  // Pre-check whether this is an accounts report, because the "account"
+  // column formatting differs for account-oriented vs. posting-oriented output.
   boost::regex from_accounts_re("from\\s+accounts\\>");
   bool accounts_report = boost::regex_search(text, from_accounts_re);
 
   boost::sregex_iterator m1(text.begin(), text.end(), select_re);
   boost::sregex_iterator m2;
 
-  expr_t::ptr_op_t report_functor;
-  std::ostringstream formatter;
+  expr_t::ptr_op_t report_functor; ///< The final reporting functor to execute.
+  std::ostringstream formatter;     ///< Accumulates the format string for output.
 
+  // Phase 2: Process each clause keyword and translate it into report
+  // configuration (format string, limit expression, report functor, etc.).
   while (m1 != m2) {
     const boost::match_results<string::const_iterator>& match(*m1);
 
@@ -132,11 +171,15 @@ value_t select_command(call_scope_t& args) {
     DEBUG("select.parse", "arg: " << arg);
 
     if (keyword == "select") {
+      /*--- SELECT clause: build the format string from column expressions ---*/
+
+      // Parse the comma-separated column list into individual expressions.
       expr_t args_expr(arg);
       value_t columns(split_cons_expr(args_expr.get_op()));
       bool first = true;
-      string thus_far = "";
+      string thus_far = ""; ///< Running sum expression for column offsets.
 
+      // Determine terminal width for column layout calculations.
       std::size_t cols = 0;
 #if HAVE_IOCTL
       struct winsize ws;
@@ -174,6 +217,7 @@ value_t select_command(call_scope_t& args) {
                                     ? lexical_cast<std::size_t>(report.HANDLER(meta_width_).str())
                                     : 10);
 
+      // First pass: measure total width needed by the requested columns.
       bool saw_payee = false;
       bool saw_account = false;
 
@@ -199,6 +243,7 @@ value_t select_command(call_scope_t& args) {
         }
       }
 
+      // Distribute any remaining terminal width to payee/account columns.
       while ((saw_account || saw_payee) && cols_needed < cols) {
         if (saw_account && cols_needed < cols) {
           ++account_width;
@@ -214,6 +259,7 @@ value_t select_command(call_scope_t& args) {
         }
       }
 
+      // Shrink payee/account if the total exceeds available width.
       while ((saw_account || saw_payee) && cols_needed > cols && account_width > 5 &&
              payee_width > 5) {
         DEBUG("auto.columns", "adjusting account down");
@@ -232,6 +278,8 @@ value_t select_command(call_scope_t& args) {
         DEBUG("auto.columns", "account_width now = " << account_width);
       }
 
+      // Persist computed widths back into the report so the format engine
+      // can reference them (e.g. `int(date_width)`).
       if (!report.HANDLED(date_width_))
         report.HANDLER(date_width_).value = to_string(date_width);
       if (!report.HANDLED(payee_width_))
@@ -243,6 +291,10 @@ value_t select_command(call_scope_t& args) {
       if (!report.HANDLED(total_width_))
         report.HANDLER(total_width_).value = to_string(total_width);
 
+      // Second pass: emit format directives for each selected column.
+      // Each column becomes a `%(...)` expression in the format string,
+      // with justification, truncation, and ANSI coloring as appropriate
+      // for the column type (date, payee, account, amount, total, or meta).
       for (const value_t& column : columns.to_sequence()) {
         if (first)
           first = false;
@@ -347,6 +399,8 @@ value_t select_command(call_scope_t& args) {
       formatter << "\\n";
       DEBUG("select.parse", "formatter: " << formatter.str());
     } else if (keyword == "from") {
+      /*--- FROM clause: select the data source and report functor ---*/
+
       // NOLINTBEGIN(bugprone-branch-clone)
       if (arg == "xacts" || arg == "txns" || arg == "transactions") {
         report_functor = expr_t::op_t::wrap_functor(
@@ -369,6 +423,7 @@ value_t select_command(call_scope_t& args) {
       }
       // NOLINTEND(bugprone-branch-clone)
     } else if (keyword == "where") {
+      /*--- WHERE clause: maps to --limit ---*/
 #if 0
       query_t          query;
       keep_details_t   keeper(true, true, true);
@@ -379,12 +434,16 @@ value_t select_command(call_scope_t& args) {
       report.HANDLER(limit_).on("#select", arg);
 #endif
     } else if (keyword == "display") {
+      /*--- DISPLAY clause: maps to --display ---*/
       report.HANDLER(display_).on("#select", arg);
     } else if (keyword == "collect") {
+      /*--- COLLECT clause: maps to --amount ---*/
       report.HANDLER(amount_).on("#select", arg);
     } else if (keyword == "group by") {
+      /*--- GROUP BY clause: maps to --group-by ---*/
       report.HANDLER(group_by_).on("#select", arg);
     } else if (keyword == "style") {
+      /*--- STYLE clause: output format selection (placeholder) ---*/
       // NOLINTBEGIN(bugprone-branch-clone)
       if (arg == "csv") {
       } else if (arg == "xml") {
@@ -397,11 +456,14 @@ value_t select_command(call_scope_t& args) {
     ++m1;
   }
 
+  // Phase 3: If no FROM clause was specified, default to posting-oriented
+  // output using the format string built from the SELECT columns.
   if (!report_functor) {
     report_functor = expr_t::op_t::wrap_functor(reporter<>(
         post_handler_ptr(new format_posts(report, formatter.str())), report, string("#select")));
   }
 
+  // Execute the assembled report functor.
   call_scope_t call_args(report);
   return report_functor->as_function()(call_args);
 }

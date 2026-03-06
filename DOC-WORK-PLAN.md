@@ -7,7 +7,7 @@
 | 1 | Core Data Model | 13 files (amount, value, balance, commodity, pool, annotate, manual, manpage) | +2,154 | **Complete** |
 | 2 | Journal Model | 10 files (item, xact, post, account, journal) | +1,610 | **Complete** |
 | 3 | Expression Engine + Time | 12 files | +1,850 | **Complete** |
-| 4 | Filter Pipeline | 12 files | — | Pending |
+| 4 | Filter Pipeline | 12 files | +1,920 | **Complete** |
 | 5 | Parsing & Input | 11 files | — | Pending |
 | 6 | Output, Reporting & Commands | 23 files | — | Pending |
 | 7 | Utilities, Python & Final Harmonization | 29 files | — | Pending |

@@ -29,6 +29,33 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   chain.cc
+ * @author John Wiegley
+ *
+ * @ingroup report
+ *
+ * @brief Pipeline construction -- translating command-line options into filter chains.
+ *
+ * This file implements the two builder functions that assemble the posting
+ * filter pipeline at report time:
+ *
+ * - **chain_pre_post_handlers()** adds the outermost filters: anonymization,
+ *   the --limit predicate, and budget/forecast generation.
+ *
+ * - **chain_post_handlers()** adds the inner filters: injection, related
+ *   posts, transfer_details, interval grouping, aggregation (subtotal,
+ *   by-payee, day-of-week, equity), collapse, sorting, the --only predicate,
+ *   calc_posts, revaluation, display filtering, truncation, and the
+ *   forecast-while predicate.
+ *
+ * Both functions build the chain from the inside out: each new handler wraps
+ * the previous one, so the last handler added is the first to receive
+ * postings.  The inline chain_handlers() in chain.h calls
+ * chain_post_handlers first, then chain_pre_post_handlers, producing the
+ * complete pipeline described in the handler ordering diagram in filters.h.
+ */
+
 #include <system.hh>
 #include <utility>
 
@@ -40,6 +67,22 @@
 
 namespace ledger {
 
+/*--- Pre-post handlers (outermost filters) ---*/
+
+/**
+ * @brief Build the outer (upstream) portion of the posting filter chain.
+ *
+ * Handlers are added in inside-out order.  The resulting chain, from
+ * outermost to innermost, is:
+ *
+ * 1. **filter_posts(limit)** -- re-applied after budget/forecast so only
+ *    matching postings contribute to budget calculations.
+ * 2. **budget_posts** or **forecast_posts** -- generate synthetic periodic
+ *    postings (mutually exclusive; budget takes precedence).
+ * 3. **filter_posts(limit)** -- primary --limit predicate.
+ * 4. **anonymize_posts** -- strip identifying data (--anon).
+ * 5. [base_handler from chain_post_handlers]
+ */
 post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t& report) {
   post_handler_ptr handler(std::move(base_handler));
 
@@ -93,6 +136,25 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t
   return handler;
 }
 
+/*--- Post handlers (inner/downstream filters) ---*/
+
+/**
+ * @brief Build the inner (downstream) portion of the posting filter chain.
+ *
+ * This function adds handlers from the output handler inward.  Because each
+ * new handler wraps the previous, the code reads bottom-up relative to the
+ * data flow.  The construction order (and therefore data flow) is documented
+ * in the handler ordering diagram in filters.h.
+ *
+ * Key design notes:
+ * - The amount expression context is set here so that all downstream filters
+ *   share the same evaluation environment.
+ * - display_predicate and only_predicate are captured as local variables and
+ *   passed to collapse_posts so it can determine whether collapsed postings
+ *   would actually be displayed.
+ * - The display_filter raw pointer is threaded through to changed_value_posts
+ *   so that revaluation postings share the same <Revalued> account.
+ */
 post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& report,
                                      bool for_accounts_report) {
   post_handler_ptr handler(std::move(base_handler));
@@ -100,6 +162,8 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
   predicate_t only_predicate;
   display_filter_posts* display_filter = nullptr;
 
+  /* Set the evaluation context for amount and display expressions so that
+     all filters in the chain share the same scope. */
   expr_t& expr(report.HANDLER(amount_).expr);
   expr.set_context(&report);
 
@@ -108,7 +172,8 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
   report.HANDLER(display_total_).expr.set_context(&report);
 
   if (!for_accounts_report) {
-    // Make sure only forecast postings which match are allowed through
+    /* Forecast-while filter: must be innermost so it can stop forecast
+       postings from reaching the output handler. */
     if (report.HANDLED(forecast_while_)) {
       handler = std::make_shared<filter_posts>(
           handler, predicate_t(report.HANDLER(forecast_while_).str(), report.what_to_keep()),
@@ -138,6 +203,8 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
     }
   }
 
+  /*--- Revaluation and calculation ---*/
+
   // changed_value_posts adds virtual posts to the list to account for changes
   // in market value of commodities, which otherwise would affect the running
   // total unpredictably.
@@ -166,12 +233,16 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
     handler = std::make_shared<calc_posts>(handler, expr, calc_running, maintain_stripped, wtk);
   }
 
+  /*--- Only predicate ---*/
+
   // filter_posts will only pass through posts matching the
   // `secondary_predicate'.
   if (report.HANDLED(only_)) {
     only_predicate = predicate_t(report.HANDLER(only_).str(), report.what_to_keep());
     handler = std::make_shared<filter_posts>(handler, only_predicate, report);
   }
+
+  /*--- Sorting, collapsing, and aggregation ---*/
 
   if (!for_accounts_report) {
     // sort_posts will sort all the posts it sees, based on the `sort_order'
@@ -241,6 +312,8 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
       handler = std::make_shared<subtotal_posts>(handler, expr);
   }
 
+  /*--- Day-of-week, by-payee, and interval grouping ---*/
+
   if (report.HANDLED(dow))
     handler = std::make_shared<day_of_week_posts>(handler, expr);
   else if (report.HANDLED(by_payee))
@@ -252,6 +325,8 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
     handler = std::make_shared<interval_posts>(handler, expr, report.HANDLER(period_).str(),
                                                report.HANDLED(exact), report.HANDLED(empty),
                                                report.HANDLED(align_intervals));
+
+  /*--- Detail transfer (--date, --account, --payee, --pivot) ---*/
 
   if (report.HANDLED(date_))
     handler = std::make_shared<transfer_details>(handler, transfer_details::SET_DATE,
@@ -273,6 +348,8 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
     handler = std::make_shared<transfer_details>(handler, transfer_details::SET_PAYEE,
                                                  report.session.journal->master,
                                                  report.HANDLER(payee_).str(), report);
+
+  /*--- Payee/account rewriting and related/inject ---*/
 
   if (!report.session.journal->payee_rewrite_mappings.empty() ||
       !report.session.journal->account_rewrite_mappings.empty())
