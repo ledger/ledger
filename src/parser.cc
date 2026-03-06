@@ -29,11 +29,42 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   parser.cc
+ * @author John Wiegley
+ *
+ * @ingroup expr
+ *
+ * @brief Implementation of the Pratt expression parser.
+ *
+ * This file implements the recursive-descent, operator-precedence-climbing
+ * parser declared in parser.h.  Each `parse_*` function handles one
+ * precedence level of Ledger's expression grammar and delegates to the
+ * next-tighter level for its operands.
+ *
+ * The general pattern for binary operator levels is:
+ *   1. Call the next-higher-precedence function to get the left operand.
+ *   2. Loop: read a token; if it is an operator at this level, create an
+ *      op_t node, set the left operand, parse the right operand by calling
+ *      the higher-precedence function again, and continue the loop.
+ *   3. If the token is not at this level, push it back and return.
+ *
+ * Constant folding is performed eagerly for unary `!` and `-` when the
+ * operand is a literal VALUE node, avoiding runtime AST walks for simple
+ * cases like `!true` or `-100`.
+ *
+ * The ternary operator (`? :`) and postfix conditional (`expr if cond else alt`)
+ * are both normalized into the same O_QUERY / O_COLON AST shape, so the
+ * evaluator only needs one code path for conditionals.
+ */
+
 #include <system.hh>
 
 #include "parser.h"
 
 namespace ledger {
+
+/*--- Primary Value Terms ---*/
 
 expr_t::ptr_op_t expr_t::parser_t::parse_value_term(std::istream& in,
                                                     const parse_flags_t& tflags) const {
@@ -67,6 +98,8 @@ expr_t::ptr_op_t expr_t::parser_t::parse_value_term(std::istream& in,
 
   return node;
 }
+
+/*--- Function Call and Member Access ---*/
 
 expr_t::ptr_op_t expr_t::parser_t::parse_call_expr(std::istream& in,
                                                    const parse_flags_t& tflags) const {
@@ -115,6 +148,8 @@ expr_t::ptr_op_t expr_t::parser_t::parse_dot_expr(std::istream& in,
   return node;
 }
 
+/*--- Unary Prefix Operators ---*/
+
 expr_t::ptr_op_t expr_t::parser_t::parse_unary_expr(std::istream& in,
                                                     const parse_flags_t& tflags) const {
   ptr_op_t node;
@@ -162,6 +197,8 @@ expr_t::ptr_op_t expr_t::parser_t::parse_unary_expr(std::istream& in,
 
   return node;
 }
+
+/*--- Arithmetic Operators ---*/
 
 expr_t::ptr_op_t expr_t::parser_t::parse_mul_expr(std::istream& in,
                                                   const parse_flags_t& tflags) const {
@@ -213,6 +250,8 @@ expr_t::ptr_op_t expr_t::parser_t::parse_add_expr(std::istream& in,
   return node;
 }
 
+/*--- Comparison and Logical Operators ---*/
+
 expr_t::ptr_op_t expr_t::parser_t::parse_logic_expr(std::istream& in,
                                                     const parse_flags_t& tflags) const {
   ptr_op_t node(parse_add_expr(in, tflags));
@@ -231,6 +270,8 @@ expr_t::ptr_op_t expr_t::parser_t::parse_logic_expr(std::istream& in,
         else
           kind = op_t::O_EQ;
         break;
+      // != and !~ are desugared as O_NOT(O_EQ(...)) and O_NOT(O_MATCH(...))
+      // rather than having their own op_t kinds, reducing evaluator complexity.
       case token_t::NEQUAL:
         kind = op_t::O_EQ;
         negate = true;
@@ -329,6 +370,8 @@ expr_t::ptr_op_t expr_t::parser_t::parse_or_expr(std::istream& in,
   return node;
 }
 
+/*--- Ternary and Conditional Expressions ---*/
+
 expr_t::ptr_op_t expr_t::parser_t::parse_querycolon_expr(std::istream& in,
                                                          const parse_flags_t& tflags) const {
   ptr_op_t node(parse_or_expr(in, tflags));
@@ -337,6 +380,8 @@ expr_t::ptr_op_t expr_t::parser_t::parse_querycolon_expr(std::istream& in,
     token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
 
     if (tok.kind == token_t::QUERY) {
+      // Traditional ternary: cond ? then_expr : else_expr
+      // AST shape: O_QUERY(cond, O_COLON(then_expr, else_expr))
       ptr_op_t prev(node);
       node = new op_t(op_t::O_QUERY);
       node->set_left(prev);
@@ -354,6 +399,8 @@ expr_t::ptr_op_t expr_t::parser_t::parse_querycolon_expr(std::istream& in,
 
       node->set_right(subnode);
     } else if (tok.kind == token_t::KW_IF) {
+      // Postfix conditional: value_expr if cond [else alt_expr]
+      // Normalized to the same AST shape: O_QUERY(cond, O_COLON(value, alt))
       ptr_op_t if_op(parse_or_expr(in, tflags));
       if (!if_op)
         throw_(parse_error, _("'if' keyword not followed by argument"));
@@ -392,6 +439,8 @@ expr_t::ptr_op_t expr_t::parser_t::parse_querycolon_expr(std::istream& in,
   return node;
 }
 
+/*--- Comma-Separated Lists ---*/
+
 expr_t::ptr_op_t expr_t::parser_t::parse_comma_expr(std::istream& in,
                                                     const parse_flags_t& tflags) const {
   ptr_op_t node(parse_querycolon_expr(in, tflags));
@@ -402,6 +451,8 @@ expr_t::ptr_op_t expr_t::parser_t::parse_comma_expr(std::istream& in,
       token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
 
       if (tok.kind == token_t::COMMA) {
+        // Build a right-leaning cons list: O_CONS(a, O_CONS(b, O_CONS(c, ...)))
+        // The 'next' pointer tracks the tail for efficient appending.
         if (!next) {
           ptr_op_t prev(node);
           node = new op_t(op_t::O_CONS);
@@ -429,6 +480,8 @@ expr_t::ptr_op_t expr_t::parser_t::parse_comma_expr(std::istream& in,
   return node;
 }
 
+/*--- Lambda Expressions ---*/
+
 expr_t::ptr_op_t expr_t::parser_t::parse_lambda_expr(std::istream& in,
                                                      const parse_flags_t& tflags) const {
   ptr_op_t node(parse_comma_expr(in, tflags));
@@ -451,6 +504,8 @@ expr_t::ptr_op_t expr_t::parser_t::parse_lambda_expr(std::istream& in,
   return node;
 }
 
+/*--- Assignment Expressions ---*/
+
 expr_t::ptr_op_t expr_t::parser_t::parse_assign_expr(std::istream& in,
                                                      const parse_flags_t& tflags) const {
   ptr_op_t node(parse_lambda_expr(in, tflags));
@@ -472,6 +527,8 @@ expr_t::ptr_op_t expr_t::parser_t::parse_assign_expr(std::istream& in,
 
   return node;
 }
+
+/*--- Statement Sequences ---*/
 
 expr_t::ptr_op_t expr_t::parser_t::parse_value_expr(std::istream& in,
                                                     const parse_flags_t& tflags) const {
@@ -502,6 +559,8 @@ expr_t::ptr_op_t expr_t::parser_t::parse_value_expr(std::istream& in,
   return node;
 }
 
+/*--- Public Entry Point ---*/
+
 expr_t::ptr_op_t expr_t::parser_t::parse(std::istream& in, const parse_flags_t& flags,
                                          const optional<string>& original_string) {
   try {
@@ -515,6 +574,8 @@ expr_t::ptr_op_t expr_t::parser_t::parse(std::istream& in, const parse_flags_t& 
 
     return top_node;
   } catch (const std::exception&) {
+    // Enrich the error with positional context showing where in the
+    // original expression text the parse failure occurred.
     if (original_string) {
       add_error_context(_("While parsing value expression:"));
 

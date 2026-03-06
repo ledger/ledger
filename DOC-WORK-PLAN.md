@@ -8,7 +8,7 @@
 | 2 | Journal Model | 10 files (item, xact, post, account, journal) | +1,610 | **Complete** |
 | 3 | Expression Engine + Time | 12 files | +1,850 | **Complete** |
 | 4 | Filter Pipeline | 12 files | +1,920 | **Complete** |
-| 5 | Parsing & Input | 11 files | — | Pending |
+| 5 | Parsing & Input | 11 files | +1,107 | **Complete** |
 | 6 | Output, Reporting & Commands | 23 files | — | Pending |
 | 7 | Utilities, Python & Final Harmonization | 29 files | — | Pending |
 

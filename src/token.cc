@@ -29,12 +29,43 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   token.cc
+ * @author John Wiegley
+ *
+ * @ingroup expr
+ *
+ * @brief Implementation of the expression tokenizer.
+ *
+ * This file implements the lexical analysis (tokenization) phase of Ledger's
+ * expression engine.  The central routine is token_t::next(), which reads
+ * characters from an input stream and populates a reusable token_t with the
+ * next token's kind, symbol text, parsed value, and source length.
+ *
+ * The tokenizer handles a rich set of syntactic forms:
+ *   - Single- and multi-character operators (`+`, `==`, `->`, `&&`)
+ *   - Reserved words (`and`, `or`, `not`, `div`, `if`, `else`, `true`, `false`)
+ *   - Bracketed date literals (`[2024/01/01]`)
+ *   - Quoted strings (`'hello'`, `"$10.00"` with amount-parse fallback)
+ *   - Braced amount literals (`{$10.00}`)
+ *   - Regular expression masks (`/pattern/`)
+ *   - Numeric amounts and commodity values (delegated to amount_t::parse)
+ *   - Identifiers (`payee`, `account`, `amount`)
+ *
+ * The PARSE_OP_CONTEXT flag is important: it tells the tokenizer whether
+ * we are in an operator position (where `/` means division) or a terminal
+ * position (where `/` begins a regex).  The parser sets this flag via
+ * tflags.plus_flags(PARSE_OP_CONTEXT) when it expects an operator.
+ */
+
 #include <system.hh>
 
 #include "token.h"
 #include "parser.h"
 
 namespace ledger {
+
+/*--- Reserved Word Recognition ---*/
 
 int expr_t::token_t::parse_reserved_word(std::istream& in) {
   int c = in.peek();
@@ -127,6 +158,8 @@ int expr_t::token_t::parse_reserved_word(std::istream& in) {
   return -1;
 }
 
+/*--- Identifier Parsing ---*/
+
 void expr_t::token_t::parse_ident(std::istream& in) {
   kind = IDENT;
   length = 0;
@@ -137,6 +170,8 @@ void expr_t::token_t::parse_ident(std::istream& in) {
 
   value.set_string(buf);
 }
+
+/*--- Main Tokenizer ---*/
 
 void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
   if (in.eof()) {
@@ -161,6 +196,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
   length = 1;
 
   switch (c) {
+  // Logical operators: & (and), | (or)
   case '&':
     in.get();
     c = in.peek();
@@ -184,6 +220,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
     kind = KW_OR;
     break;
 
+  // Grouping delimiters
   case '(':
     in.get();
     kind = LPAREN;
@@ -193,6 +230,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
     kind = RPAREN;
     break;
 
+  // Bracketed date literal: [2024/01/01] parses as a date VALUE token
   case '[': {
     in.get();
 
@@ -213,6 +251,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
     break;
   }
 
+  // Single-quoted string literal: 'hello world'
   case '\'': {
     char delim;
     in.get(delim);
@@ -227,9 +266,12 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
     break;
   }
 
+  // Double-quoted string: first tries to parse as a commodity amount
+  // (e.g., "$10.00"), falling back to a plain string if that fails.
   case '"': {
     std::istream::pos_type pos = in.tellg();
 
+    // Phase 1: attempt amount parsing (handles commodity strings like "$10")
     parse_flags_t parse_flags;
     parse_flags.add_flags(PARSE_NO_ANNOT);
     if (pflags.has_flags(PARSE_NO_MIGRATE))
@@ -253,6 +295,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
       }
     } catch (const std::exception&) {} // NOLINT(bugprone-empty-catch)
 
+    // Phase 2: amount parse failed; rewind and read as a plain string
     in.clear();
     in.seekg(pos, std::ios::beg);
     if (in.fail())
@@ -271,6 +314,8 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
     break;
   }
 
+  // Braced amount literal: {$10.00} -- always parsed as an amount
+  // without commodity migration (preserves the exact commodity form)
   case '{': {
     in.get();
     amount_t temp;
@@ -284,6 +329,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
     break;
   }
 
+  // Operators beginning with '!': negation, inequality, regex non-match
   case '!':
     in.get();
     c = in.peek();
@@ -305,6 +351,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
     kind = EXCLAM;
     break;
 
+  // Arithmetic operators: -, +, *
   case '-':
     in.get();
     c = in.peek();
@@ -328,6 +375,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
     kind = STAR;
     break;
 
+  // Ternary operator tokens
   case '?':
     in.get();
     kind = QUERY;
@@ -337,6 +385,9 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
     kind = COLON;
     break;
 
+  // Slash: division in operator context, regex delimiter in terminal context.
+  // The PARSE_OP_CONTEXT flag (set by the parser after reading an operand)
+  // disambiguates these two meanings.
   case '/': {
     in.get();
     if (pflags.has_flags(PARSE_OP_CONTEXT)) { // operator context
@@ -356,6 +407,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
     break;
   }
 
+  // Operators beginning with '=': regex match, equality, assignment
   case '=':
     in.get();
     c = in.peek();
@@ -377,6 +429,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
     kind = ASSIGN;
     break;
 
+  // Comparison operators: <, <=, >, >=
   case '<':
     in.get();
     if (in.peek() == '=') {
@@ -401,6 +454,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
     kind = GREATER;
     break;
 
+  // Punctuation tokens
   case '.':
     in.get();
     kind = DOT;
@@ -416,6 +470,10 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
     kind = SEMI;
     break;
 
+  // Default case: handles numeric amounts, reserved words, and identifiers.
+  // The strategy is: first try reserved words (and/or/not/div/if/else/true/false),
+  // then try amount parsing (e.g., "$10.00", "100"), and finally fall back
+  // to identifier parsing.
   default: {
     std::istream::pos_type pos = in.tellg();
 
@@ -495,12 +553,16 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
   }
 }
 
+/*--- Stream Rewinding ---*/
+
 void expr_t::token_t::rewind(std::istream& in) {
   in.clear();
   in.seekg(-static_cast<std::streamoff>(length), std::ios::cur);
   if (in.fail())
     throw_(parse_error, _("Failed to rewind input stream"));
 }
+
+/*--- Error Reporting ---*/
 
 void expr_t::token_t::unexpected(const char wanted) {
   kind_t prev_kind = kind;
@@ -560,6 +622,8 @@ void expr_t::token_t::expected(const kind_t wanted) {
     throw;
   }
 }
+
+/*--- Stream Output Operators ---*/
 
 std::ostream& operator<<(std::ostream& out, const expr_t::token_t::kind_t& kind) {
   switch (kind) {
