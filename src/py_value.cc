@@ -29,6 +29,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   py_value.cc
+ * @brief  Python bindings for value_t -- Ledger's polymorphic value container.
+ * @ingroup python
+ *
+ * Exposes value_t to Python as the `ledger.Value` class.  value_t is a
+ * tagged union that can hold booleans, integers, dates, amounts, balances,
+ * commodities, strings, masks, or sequences.  This binding provides
+ * constructors for each variant, type introspection (is_amount, is_string,
+ * etc.), type coercion (to_amount, to_balance, etc.), full arithmetic
+ * operators with cross-type support, and the ValueType enum for type tags.
+ */
+
 #include <system.hh>
 
 #include "pyinterp.h"
@@ -47,6 +60,8 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(set_string_overloads, set_string, 0, 2)
 
 namespace {
 
+/*--- Valuation Wrapper Overloads ---*/
+
 std::optional<value_t> py_value_0(const value_t& value) {
   return value.value(CURRENT_TIME());
 }
@@ -62,6 +77,11 @@ std::optional<value_t> py_value_2d(const value_t& value, const commodity_t* in_t
   return value.value(datetime_t(moment), in_terms_of);
 }
 
+/*--- Type Introspection and Debugging ---*/
+
+/// Returns the Python type object corresponding to the value's current
+/// variant type (PyBool_Type, PyLong_Type, PyUnicode_Type, or the
+/// Boost.Python wrapper class).
 PyObject* py_base_type(value_t& value) {
   PyTypeObject* const t = value.is_boolean()  ? &PyBool_Type
                           : value.is_long()   ? &PyLong_Type
@@ -85,6 +105,8 @@ string py_label_0(const value_t& value) {
 string py_label_1(const value_t& value, const value_t::type_t& type) {
   return value.label(type);
 }
+
+/*--- Setter and Annotation Wrappers ---*/
 
 void py_set_string(value_t& value, const string& str) {
   return value.set_string(str);

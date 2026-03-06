@@ -39,6 +39,21 @@
  *
  * @ingroup report
  *
+ * @brief Property tree (XML) serialization of journal data.
+ *
+ * The `format_ptree` handler is the backend for Ledger's `xml` command.
+ * It collects all postings that flow through the report pipeline,
+ * accumulates the unique commodities and transactions they reference,
+ * and on `flush()` serializes everything into a Boost.PropertyTree
+ * which is then written as indented XML.
+ *
+ * The XML output includes three top-level sections:
+ * - `<commodities>` -- all commodities referenced by the matched postings
+ * - `<accounts>` -- the full account hierarchy (filtered to visited accounts)
+ * - `<transactions>` -- each transaction with its visited postings
+ *
+ * This is the same data available through the Python bindings, but in a
+ * machine-readable text format suitable for consumption by external tools.
  */
 #pragma once
 
@@ -53,22 +68,27 @@ class post_t;
 class report_t;
 
 /**
- * @brief Brief
+ * @brief Post handler that serializes journal data to a property tree (XML).
  *
- * Long.
+ * As postings flow through `operator()`, the handler collects the unique
+ * set of commodities and transactions they reference.  When `flush()` is
+ * called, it builds a Boost.PropertyTree containing the full account
+ * hierarchy, commodity definitions, and transaction/posting details,
+ * then writes it as indented XML to the report's output stream.
  */
 class format_ptree : public item_handler<post_t> {
 protected:
-  report_t& report;
+  report_t& report; ///< The report context (provides output stream and session)
 
   using commodities_map = std::map<string, commodity_t*>;
   using commodities_pair = std::pair<string, commodity_t*>;
 
-  commodities_map commodities;
-  std::set<xact_t*> transactions_set;
-  std::deque<xact_t*> transactions;
+  commodities_map commodities;            ///< Unique commodities seen in matched postings
+  std::set<xact_t*> transactions_set;     ///< Set for O(1) duplicate detection
+  std::deque<xact_t*> transactions;       ///< Transactions in encounter order
 
 public:
+  /// Output format selector (currently only XML is supported).
   enum format_t : uint8_t { FORMAT_XML } format;
 
   format_ptree(report_t& _report, format_t _format = FORMAT_XML)
@@ -77,9 +97,12 @@ public:
   }
   ~format_ptree() override { TRACE_DTOR(format_ptree); }
 
+  /// Build the property tree from accumulated data and write XML output.
   void flush() override;
+  /// Collect a posting: record its commodity and parent transaction.
   void operator()(post_t& post) override;
 
+  /// Reset all accumulated state for reuse.
   void clear() override {
     commodities.clear();
     transactions_set.clear();

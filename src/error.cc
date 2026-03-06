@@ -37,7 +37,24 @@
 #include "gpgme.h"
 #endif
 
+/**
+ * @file   error.cc
+ * @author John Wiegley
+ *
+ * @ingroup util
+ *
+ * @brief Error context management and source location formatting.
+ *
+ * Implements the error context stack and the helper functions that format
+ * file positions, source line caret indicators, and raw source text excerpts
+ * for inclusion in error messages.  These are used throughout the parser to
+ * provide the user with precise information about where an error occurred
+ * in their journal file.
+ */
+
 namespace ledger {
+
+/*--- Error context buffer ---*/
 
 thread_local std::ostringstream _ctxt_buffer;
 thread_local std::ostringstream _desc_buffer;
@@ -54,6 +71,8 @@ string file_context(const path& file, const std::size_t line) {
   buf << '"' << file.string() << "\", line " << line << ":";
   return buf.str();
 }
+
+/*--- Source location formatting ---*/
 
 string line_context(const string& line, const string::size_type pos,
                     const string::size_type end_pos) {

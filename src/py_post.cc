@@ -29,6 +29,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   py_post.cc
+ * @brief  Python bindings for post_t -- individual transaction line items.
+ * @ingroup python
+ *
+ * Exposes post_t to Python as the `ledger.Posting` class (inheriting from
+ * JournalItem), along with PostingXData for extended report-time data.
+ * A posting represents a single debit or credit within a transaction,
+ * linking an account to an amount.  This binding provides access to the
+ * posting's amount, cost, account, parent transaction, tags, dates, xdata,
+ * and the reported_account used during report output.
+ */
+
 #include <system.hh>
 
 #include "pyinterp.h"
@@ -42,6 +55,9 @@ using namespace boost::python;
 
 namespace {
 
+/*--- Tag Query Wrappers ---*/
+
+/// Overloads for has_tag/get_tag accepting string, mask, or mask+value_mask.
 bool py_has_tag_1s(post_t& post, const string& tag) {
   return post.has_tag(tag);
 }
@@ -62,6 +78,8 @@ std::optional<value_t> py_get_tag_2m(post_t& post, const mask_t& tag_mask,
                                      const std::optional<mask_t>& value_mask) {
   return post.get_tag(tag_mask, value_mask);
 }
+
+/*--- XData and Account Wrappers ---*/
 
 post_t::xdata_t& py_xdata(post_t& post) {
   return post.xdata();

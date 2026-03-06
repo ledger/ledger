@@ -37,27 +37,54 @@
  * @file   unistring.h
  * @author John Wiegley
  *
- * @ingroup utils
+ * @ingroup util
+ *
+ * @brief Unicode-aware string operations for column alignment.
+ *
+ * Ledger's report formatter needs to align columns correctly even when
+ * account names, payees, or commodity symbols contain multi-byte UTF-8
+ * characters or East Asian wide characters.  The `unistring` class
+ * decodes a UTF-8 string into UTF-32 codepoints and provides:
+ *
+ * - `length()`: the number of codepoints (not bytes)
+ * - `width()`: the display width in terminal columns, accounting for
+ *   double-width CJK characters via `mk_wcwidth()`
+ * - `extract()` / `extract_by_width()`: substring extraction by
+ *   codepoint index or by display-column range
+ *
+ * The `justify()` free function uses `unistring` to pad or align a
+ * string within a given column width, used by format expressions like
+ * `%(justify(account, 40))`.
  */
 #pragma once
 
 namespace ledger {
 
+/// Return the display width of a Unicode codepoint in terminal columns.
+/// Most characters are width 1; East Asian wide characters (CJK) are
+/// width 2; zero-width combining marks return 0.  This is a portable
+/// replacement for the POSIX `wcwidth()` function.
 int mk_wcwidth(boost::uint32_t ucs);
 
 /**
  * @class unistring
  *
- * @brief Abstract working with UTF-32 encoded Unicode strings
+ * @brief UTF-32 decoded Unicode string with display-width awareness.
  *
- * The input to the string is a UTF8 encoded ledger::string, which can
- * then have its true length be taken, or characters extracted.
+ * The input is a UTF-8 encoded `std::string`, which is decoded to a
+ * vector of UTF-32 codepoints on construction.  This allows O(1)
+ * codepoint indexing and correct display-width calculation for
+ * column alignment in reports.
+ *
+ * The class is intentionally simple -- it does not support mutation
+ * beyond direct access to `utf32chars`.  It is used transiently during
+ * report formatting, not as a general-purpose string type.
  */
 class unistring {
 public:
-  inline static constexpr std::size_t npos = static_cast<std::size_t>(-1);
+  inline static constexpr std::size_t npos = static_cast<std::size_t>(-1); ///< "Not found" sentinel
 
-  std::vector<boost::uint32_t> utf32chars;
+  std::vector<boost::uint32_t> utf32chars; ///< The decoded UTF-32 codepoints
 
   unistring() { TRACE_CTOR(unistring, ""); }
   unistring(const std::string& input) {
@@ -74,8 +101,11 @@ public:
   }
   ~unistring() { TRACE_DTOR(unistring); }
 
+  /// Number of Unicode codepoints (not bytes, not display columns).
   std::size_t length() const { return utf32chars.size(); }
 
+  /// Display width in terminal columns, summing `mk_wcwidth()` for each
+  /// codepoint.  East Asian wide characters contribute 2; most others 1.
   std::size_t width() const {
     std::size_t width = 0;
     for (const boost::uint32_t& ch : utf32chars) {
@@ -84,6 +114,9 @@ public:
     return width;
   }
 
+  /// Extract a substring by codepoint index range and re-encode to UTF-8.
+  /// @param begin  Starting codepoint index (0-based).
+  /// @param len    Number of codepoints to extract (0 = to end).
   std::string extract(const std::string::size_type begin = 0,
                       const std::string::size_type len = 0) const {
     std::string utf8result; // NOLINT(bugprone-unused-local-non-trivial-variable)
@@ -103,6 +136,11 @@ public:
     return utf8result;
   }
 
+  /// Extract a substring by display-column range and re-encode to UTF-8.
+  /// If a wide character straddles the begin or end boundary, its columns
+  /// are replaced with '.' padding to maintain exact width alignment.
+  /// @param begin  Starting display column.
+  /// @param len    Number of display columns to extract.
   std::string extract_by_width(std::string::size_type begin, std::size_t len) const {
     std::string utf8result;
     std::size_t this_width = width();
@@ -148,6 +186,8 @@ public:
     return utf8result;
   }
 
+  /// Find the first occurrence of codepoint @p _s starting at index @p _pos.
+  /// @return Codepoint index, or `npos` if not found.
   std::size_t find(const boost::uint32_t _s, std::size_t _pos = 0) const {
     std::size_t idx = 0;
     for (const boost::uint32_t& ch : utf32chars) {
@@ -162,6 +202,11 @@ public:
   const boost::uint32_t& operator[](const std::size_t index) const { return utf32chars[index]; }
 };
 
+/// Write @p str to @p out, padded with spaces to fill @p width display
+/// columns.  Used by format expressions to align report columns.
+/// @param right   If true, right-justify (pad on the left).
+/// @param redden  If true, wrap the text in ANSI red escape codes
+///               (used for negative amounts).
 inline void justify(std::ostream& out, const std::string& str, int width, bool right = false,
                     bool redden = false) {
   if (!right) {

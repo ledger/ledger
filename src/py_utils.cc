@@ -29,6 +29,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   py_utils.cc
+ * @brief  Python bindings for utility types and fundamental type converters.
+ * @ingroup python
+ *
+ * Registers bidirectional converters for bool and string (handling UTF-8/
+ * UTF-16/UTF-32 transparently), and exposes the flags support classes
+ * (SupportFlags8, SupportFlags16, DelegatesFlags16) used by many Ledger
+ * types for bitfield state management.  These converters and flag bindings
+ * are foundational -- they must be registered before any other binding that
+ * passes booleans or strings across the C++/Python boundary.
+ */
+
 #include <system.hh>
 
 #include "pyinterp.h"
@@ -39,6 +52,8 @@ namespace ledger {
 using namespace flags;
 using namespace python;
 using namespace boost::python;
+
+/*--- bool <-> Python bool ---*/
 
 struct bool_to_python {
   static PyObject* convert(const bool truth) {
@@ -68,6 +83,8 @@ struct bool_from_python {
 
 using bool_python_conversion = register_python_conversion<bool, bool_to_python, bool_from_python>;
 
+/*--- string <-> Python str (UTF-8) ---*/
+
 struct string_to_python {
   static PyObject* convert(const string& str) {
     // Return bytes, not characters; see __unicode__ methods for that
@@ -75,6 +92,8 @@ struct string_to_python {
   }
 };
 
+/// Extracts a UTF-8 string from a Python unicode object, handling all
+/// three internal representations (UCS-1, UCS-2/UTF-16, UCS-4/UTF-32).
 static void fill_utf8_string(string& result, PyObject* obj_ptr) {
   Py_ssize_t size;
 #if PY_MINOR_VERSION >= 3
@@ -146,6 +165,12 @@ struct string_from_python {
 using string_python_conversion =
     register_python_conversion<string, string_to_python, string_from_python>;
 
+/*--- Flags Classes and Registration ---*/
+
+/// @brief Registers flag support classes and type converters.
+///
+/// Exposes SupportFlags8, SupportFlags16, and DelegatesFlags16 for bitfield
+/// manipulation, and registers the bool and string Python converters.
 void export_utils() {
   class_<supports_flags<uint_least8_t>>("SupportFlags8")
       .def(init<supports_flags<uint_least8_t>>())

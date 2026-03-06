@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   py_journal.cc
+ * @brief  Python bindings for journal_t -- the central accounting ledger.
+ * @ingroup python
+ *
+ * Exposes journal_t to Python as the `ledger.Journal` class, along with
+ * supporting types FileInfo (source file metadata) and PostCollectorWrapper
+ * (query result iteration).  The journal is the top-level container holding
+ * all transactions, accounts, and automated/periodic entries.  This binding
+ * provides account lookup, transaction management, iterable access to
+ * transactions and postings, and a query() method that runs Ledger's full
+ * report pipeline and returns collected postings.
+ */
+
 #include <system.hh>
 
 #include "pyinterp.h"
@@ -123,6 +137,8 @@ long xacts_len(journal_t& journal) {
   }
 #endif
 
+/*--- Account Lookup Wrappers ---*/
+
 account_t* py_find_account_1(journal_t& journal, const string& name) {
   return journal.find_account(name);
 }
@@ -142,6 +158,11 @@ account_t* py_register_account(journal_t& journal, const string& name, post_t* p
   }
 #endif
 
+/*--- Query Result Collection ---*/
+
+/// Wraps a report_t and a collect_posts filter to hold query results.
+/// Owns the full filter chain (handler_chain) so that any synthetic posts
+/// created by interval or period filters remain valid while Python iterates.
 struct collector_wrapper {
   boost::shared_ptr<journal_t> journal_sp;
   report_t report;
@@ -169,6 +190,9 @@ struct collector_wrapper {
   }
 };
 
+/// Runs a Ledger query string against the journal, building the full
+/// report filter chain and collecting matching posts into a
+/// PostCollectorWrapper that Python can iterate over.
 shared_ptr<collector_wrapper> py_query(boost::shared_ptr<journal_t> journal_sp,
                                        const string& query) {
   journal_t& journal = *journal_sp;
@@ -227,6 +251,10 @@ post_t* posts_getitem(collector_wrapper& collector, long i) {
       ->posts[static_cast<std::size_t>(i)];
 }
 
+/*--- FileInfo Property Wrappers ---*/
+
+/// Adapters for journal_t::fileinfo_t fields that convert between
+/// C++ optional/path types and Python None/str.
 object py_fileinfo_filename(const journal_t::fileinfo_t& fi) {
   if (fi.filename)
     return object(fi.filename->native());

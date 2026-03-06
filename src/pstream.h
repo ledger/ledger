@@ -38,6 +38,21 @@
  * @author John Wiegley
  *
  * @ingroup util
+ *
+ * @brief An input stream backed by an in-memory character buffer.
+ *
+ * `ptristream` wraps a raw `char*` buffer as a standard `std::istream`,
+ * allowing existing parsing code (which expects istream references) to
+ * operate on in-memory data without copying into a `std::istringstream`.
+ *
+ * This is used when Ledger needs to parse expressions or data that has
+ * already been read into memory (e.g., from a pipe, a Python binding
+ * call, or an interactive command).  The stream supports seeking
+ * (`seekg`) so that the parser can backtrack when needed.
+ *
+ * Note: despite the file name suggesting "process stream" (popen),
+ * this class is actually a pointer-to-memory input stream.  The pager
+ * subprocess functionality lives in `stream.h`/`stream.cc`.
  */
 #pragma once
 
@@ -46,14 +61,22 @@
 
 namespace ledger {
 
+/**
+ * @brief An istream that reads from a raw character pointer.
+ *
+ * Wraps an existing `char*` buffer and length as a `std::istream`.
+ * The buffer is not owned or copied -- the caller must ensure it
+ * outlives the stream.  Seeking is supported (beg, cur, end).
+ */
 class ptristream : public std::istream {
+  /// Custom streambuf that reads from a fixed memory region.
   class ptrinbuf : public std::streambuf {
     ptrinbuf(const ptrinbuf&);
     ptrinbuf& operator=(const ptrinbuf&);
 
   protected:
-    char* ptr;
-    std::size_t len;
+    char* ptr;        ///< Pointer to the beginning of the buffer
+    std::size_t len;  ///< Length of the buffer in bytes
 
   public:
     ptrinbuf(char* _ptr, std::size_t _len) : ptr(_ptr), len(_len) {

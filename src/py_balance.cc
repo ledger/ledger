@@ -29,6 +29,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   py_balance.cc
+ * @brief  Python bindings for balance_t -- multi-commodity balance container.
+ * @ingroup python
+ *
+ * Exposes balance_t to Python as the `ledger.Balance` class.  A balance_t
+ * holds amounts in multiple commodities simultaneously, making it the natural
+ * result of summing postings across different currencies.  This binding
+ * provides arithmetic operators, rounding, commodity-specific extraction,
+ * market valuation, and sequence-style access (__len__, __getitem__).
+ */
+
 #include <system.hh>
 
 #include "pyinterp.h"
@@ -43,6 +55,8 @@ using namespace python;
 using namespace boost::python;
 
 namespace {
+
+/*--- Valuation Wrapper Overloads ---*/
 
 std::optional<balance_t> py_value_0(const balance_t& balance) {
   auto r = balance.value(CURRENT_TIME());
@@ -63,6 +77,9 @@ std::optional<balance_t> py_value_2d(const balance_t& balance, const commodity_t
   return r ? std::optional<balance_t>(*r) : std::nullopt;
 }
 
+/*--- Commodity Amount Extraction ---*/
+
+/// Extract the amount for a specific (or sole) commodity in the balance.
 std::optional<amount_t> py_commodity_amount_0(const balance_t& balance) {
   auto r = balance.commodity_amount();
   return r ? std::optional<amount_t>(*r) : std::nullopt;
@@ -86,6 +103,9 @@ std::optional<amount_t> py_commodity_amount_1(const balance_t& balance,
   }
 #endif
 
+/*--- Sequence Protocol ---*/
+
+/// Support __len__ and __getitem__ so Balance behaves as a sequence of amounts.
 long balance_len(balance_t& bal) {
   return static_cast<long>(bal.amounts.size());
 }
@@ -105,6 +125,8 @@ amount_t balance_getitem(balance_t& bal, long i) {
 
   return (*elem).second;
 }
+
+/*--- Annotation Stripping and String Conversion ---*/
 
 balance_t py_strip_annotations_0(balance_t& balance) {
   return balance.strip_annotations(keep_details_t());

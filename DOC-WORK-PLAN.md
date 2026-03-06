@@ -10,7 +10,7 @@
 | 4 | Filter Pipeline | 12 files | +1,920 | **Complete** |
 | 5 | Parsing & Input | 11 files | +1,107 | **Complete** |
 | 6 | Output, Reporting & Commands | 23 files | +1,884 | **Complete** |
-| 7 | Utilities, Python & Final Harmonization | 29 files | — | Pending |
+| 7 | Utilities, Python & Final Harmonization | 29 files | +1,130 | **Complete** |
 
 ## Documentation Standard
 

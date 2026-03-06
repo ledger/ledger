@@ -29,6 +29,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   py_item.cc
+ * @brief  Python bindings for item_t -- base class for all journal entries.
+ * @ingroup python
+ *
+ * Exposes item_t to Python as the `ledger.JournalItem` class, along with
+ * the Position helper and the State enum (Uncleared/Cleared/Pending).
+ * item_t is the abstract base for both xact_t and post_t, providing shared
+ * functionality: flags, note/metadata, source file position, date/aux_date,
+ * clearing state, and tag queries.  This binding establishes the base class
+ * that Posting and Transaction inherit from in the Python type hierarchy.
+ */
+
 #include <system.hh>
 
 #include "pyinterp.h"
@@ -45,6 +58,9 @@ using namespace boost::python;
 
 namespace {
 
+/*--- Tag Query Wrappers ---*/
+
+/// Overloads for has_tag/get_tag accepting string, mask, or mask+value_mask.
 bool py_has_tag_1s(item_t& item, const string& tag) {
   return item.has_tag(tag);
 }
@@ -66,6 +82,9 @@ std::optional<value_t> py_get_tag_2m(item_t& item, const mask_t& tag_mask,
   return item.get_tag(tag_mask, value_mask);
 }
 
+/*--- Position Property Wrappers ---*/
+
+/// Adapt position_t::pathname (a boost::filesystem::path) to/from Python str.
 std::string py_position_pathname(position_t const& pos) {
   return pos.pathname.native();
 }

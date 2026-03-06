@@ -29,6 +29,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   py_format.cc
+ * @brief  Python bindings for format_t -- Ledger's output format strings.
+ * @ingroup python
+ *
+ * Placeholder for the `ledger.Format` class binding.  The format_t type
+ * handles Ledger's rich format string language (used for --format options),
+ * but the Python binding is not yet implemented.  The export_format()
+ * function is called during module initialization but currently registers
+ * no classes or functions.
+ */
+
 #include <system.hh>
 
 #include "pyinterp.h"

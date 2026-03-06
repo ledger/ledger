@@ -36,7 +36,21 @@
 
 #include "stream.h"
 
+/**
+ * @file   stream.cc
+ * @author John Wiegley, Omari Norman
+ *
+ * @ingroup util
+ *
+ * @brief Output stream implementation: file, console, and pager support.
+ *
+ * Implements `output_stream_t::initialize()` and `close()`, including the
+ * `fork()`/`exec()` logic for launching a pager subprocess on Unix systems.
+ */
+
 namespace ledger {
+
+/*--- Pager subprocess management ---*/
 
 namespace {
 /**
@@ -114,6 +128,8 @@ int do_fork(std::ostream** os, const path& pager_path, pid_t* pager_pid) {
 #endif
 }
 } // namespace
+
+/*--- output_stream_t implementation ---*/
 
 void output_stream_t::initialize(const optional<path>& output_file,
                                  const optional<path>& pager_path) {
