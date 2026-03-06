@@ -18,33 +18,26 @@
 
 # ---------------------------------------------------------------------------
 # CI hooks — invoke individually with `lefthook run <name>`
+#
+# These use single run commands (not piped steps) so that output streams
+# directly to stdout. Piped steps buffer output, which triggers GitHub
+# Actions' 10-minute inactivity timeout on long builds.
 # ---------------------------------------------------------------------------
 
 cmake-build-and-test:
-  piped: true
   jobs:
-    - name: configure
-      run: cmake -B build ${cmakeFlags:--DCMAKE_BUILD_TYPE=Debug -DUSE_PYTHON=ON -DUSE_GPGME=ON}
-    - name: build
-      run: cmake --build build --parallel
-    - name: test
-      run: cd build && ctest --output-on-failure || ctest --rerun-failed --output-on-failure
+    - name: build-and-test
+      run: cmake -B build ${cmakeFlags:--DCMAKE_BUILD_TYPE=Debug -DUSE_PYTHON=ON -DUSE_GPGME=ON} && cmake --build build --parallel && (cd build && ctest --output-on-failure || ctest --rerun-failed --output-on-failure)
 
 cmake-doxygen:
-  piped: true
   jobs:
-    - name: configure
-      run: cmake -B build ${cmakeFlags:--DCMAKE_BUILD_TYPE=Debug -DUSE_DOXYGEN=ON}
     - name: build-doxygen
-      run: cmake --build build --target doc.doxygen
+      run: cmake -B build ${cmakeFlags:--DCMAKE_BUILD_TYPE=Debug -DUSE_DOXYGEN=ON} && cmake --build build --target doc.doxygen
 
 cmake-manual:
-  piped: true
   jobs:
-    - name: configure
-      run: cmake -B build ${cmakeFlags:--DCMAKE_BUILD_TYPE=Debug -DBUILD_DOCS=ON}
     - name: build-manual
-      run: cmake --build build --target doc
+      run: cmake -B build ${cmakeFlags:--DCMAKE_BUILD_TYPE=Debug -DBUILD_DOCS=ON} && cmake --build build --target doc
 
 nix-flake-build:
   jobs:
@@ -52,6 +45,9 @@ nix-flake-build:
 
 # ---------------------------------------------------------------------------
 # Pre-commit — all checks, optimized for local dev (single configure)
+#
+# Uses piped steps for readable progress output (works fine locally
+# where there is no inactivity timeout).
 # ---------------------------------------------------------------------------
 
 pre-commit:
