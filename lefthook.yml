@@ -1,0 +1,76 @@
+# lefthook.yml
+#
+# Single source of truth for build/test checks. Used both locally
+# (pre-commit) and in GitHub Actions (`lefthook run <hook-name>`).
+#
+# Set $cmakeFlags to control CMake configuration. The Nix dev shell
+# (`nix develop`) sets this automatically; CI overrides it per job.
+#
+# Excluded (long-running):
+#   - Lint: clang-format, clang-tidy, cppcheck  (lint.yml)
+#   - Performance benchmarks                     (perf.yml)
+#
+# Excluded (nightly/manual only):
+#   - Fuzz testing                               (fuzz.yml)
+#
+# Managed separately (CI-specific post-processing):
+#   - Coverage analysis       (cmake.yml: coverage job)
+
+# ---------------------------------------------------------------------------
+# CI hooks — invoke individually with `lefthook run <name>`
+# ---------------------------------------------------------------------------
+
+cmake-build-and-test:
+  piped: true
+  jobs:
+    - name: configure
+      run: cmake -B build ${cmakeFlags:--DCMAKE_BUILD_TYPE=Debug -DUSE_PYTHON=ON -DUSE_GPGME=ON}
+    - name: build
+      run: cmake --build build --parallel
+    - name: test
+      run: cd build && ctest --output-on-failure || ctest --rerun-failed --output-on-failure
+
+cmake-doxygen:
+  piped: true
+  jobs:
+    - name: configure
+      run: cmake -B build ${cmakeFlags:--DCMAKE_BUILD_TYPE=Debug -DUSE_DOXYGEN=ON}
+    - name: build-doxygen
+      run: cmake --build build --target doc.doxygen
+
+cmake-manual:
+  piped: true
+  jobs:
+    - name: configure
+      run: cmake -B build ${cmakeFlags:--DCMAKE_BUILD_TYPE=Debug -DBUILD_DOCS=ON}
+    - name: build-manual
+      run: cmake --build build --target doc
+
+nix-flake-build:
+  jobs:
+    - run: nix build .
+
+# ---------------------------------------------------------------------------
+# Pre-commit — all checks, optimized for local dev (single configure)
+# ---------------------------------------------------------------------------
+
+pre-commit:
+  parallel: true
+  jobs:
+    - name: cmake-checks
+      group:
+        piped: true
+        jobs:
+          - name: configure
+            run: cmake -B build ${cmakeFlags:--DCMAKE_BUILD_TYPE=Debug -DUSE_PYTHON=ON -DUSE_DOXYGEN=ON -DUSE_GPGME=ON -DBUILD_DOCS=ON}
+          - name: build
+            run: cmake --build build --parallel
+          - name: test
+            run: cd build && ctest --output-on-failure || ctest --rerun-failed --output-on-failure
+          - name: doxygen
+            run: cmake --build build --target doc.doxygen
+          - name: manual
+            run: cmake --build build --target doc
+
+    - name: nix-flake-build
+      run: nix build .
