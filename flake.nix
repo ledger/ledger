@@ -35,7 +35,7 @@
         ] ++ lib.optionals useReadline [
           readline
         ] ++ lib.optionals gpgmeSupport [
-          gpgme
+          gpgme gpgmepp
         ] ++ (if usePython
               then [ python3 (boost.override { enablePython = true; python = python3; }) ]
               else [ boost ]);
