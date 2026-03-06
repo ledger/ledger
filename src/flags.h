@@ -38,18 +38,53 @@
  * @author John Wiegley
  *
  * @ingroup util
+ *
+ * @brief Mixin templates for type-safe bitfield flag management.
+ *
+ * Many Ledger types (accounts, postings, commodities, expressions) carry
+ * a set of boolean flags packed into an integral type.  Rather than
+ * duplicating flag manipulation logic, these classes mix in
+ * `supports_flags<T>` to get a uniform interface for querying, setting,
+ * and clearing individual flag bits.
+ *
+ * Three class templates are provided:
+ *
+ * - **supports_flags<T,U>**: Owns a `T _flags` member and provides
+ *   `has_flags()`, `add_flags()`, `drop_flags()`, etc.  The second
+ *   template parameter `U` is the type used for bitwise operations
+ *   (useful when `T` is an enum class and operations need a wider type).
+ *
+ * - **basic_t<T,U>**: A thin value wrapper around `supports_flags`
+ *   with implicit conversions to/from the underlying integer type.
+ *   Used as a first-class flags value (e.g., as a function parameter).
+ *
+ * - **delegates_flags<T>**: A non-owning reference to another object's
+ *   `supports_flags` member.  This is used when one object (e.g., a
+ *   report filter) needs to manipulate flags owned by a different object
+ *   (e.g., the report itself).
  */
 #pragma once
 
 namespace ledger::flags {
 
+/**
+ * @brief Mixin that adds bitfield flag storage and manipulation.
+ *
+ * @tparam T  The flags storage type (typically a uint8/16/32 or enum).
+ * @tparam U  The type used for bitwise operations (defaults to T; set to
+ *            a wider unsigned type when T is a scoped enum).
+ *
+ * Classes that need boolean flag bits inherit from this template to get
+ * a uniform API.  For example, `post_t` inherits `supports_flags<uint8_t>`
+ * and defines flag constants like `POST_VIRTUAL`, `POST_CALCULATED`, etc.
+ */
 template <typename T = boost::uint_least8_t, typename U = T>
 class supports_flags {
 public:
-  using flags_t = T;
+  using flags_t = T; ///< The flags storage type
 
 protected:
-  flags_t _flags;
+  flags_t _flags; ///< The packed flag bits
 
 public:
   supports_flags() : _flags(static_cast<T>(0)) { TRACE_CTOR(supports_flags, ""); }
@@ -66,19 +101,29 @@ public:
     return *this;
   }
 
-  flags_t flags() const { return _flags; }
-  bool has_flags(const flags_t arg) const { return _flags & arg; }
+  flags_t flags() const { return _flags; } ///< Return all flags
+  bool has_flags(const flags_t arg) const {
+    return _flags & arg;
+  } ///< True if any bit in @p arg is set
 
-  void set_flags(const flags_t arg) { _flags = arg; }
-  void clear_flags() { _flags = static_cast<T>(0); }
-  void add_flags(const flags_t arg) {
+  void set_flags(const flags_t arg) { _flags = arg; } ///< Replace all flags
+  void clear_flags() { _flags = static_cast<T>(0); }  ///< Clear all flags to zero
+  void add_flags(const flags_t arg) {                 ///< Set additional flag bits
     _flags = static_cast<T>(static_cast<U>(_flags) | static_cast<U>(arg));
   }
-  void drop_flags(const flags_t arg) {
+  void drop_flags(const flags_t arg) { ///< Clear specific flag bits
     _flags = static_cast<T>(static_cast<U>(_flags) & static_cast<U>(~arg));
   }
 };
 
+/**
+ * @brief A first-class flags value with implicit conversions.
+ *
+ * Wraps `supports_flags` and adds implicit conversion operators to the
+ * underlying type, making it usable as a function parameter or return
+ * value.  Also provides `plus_flags()` and `minus_flags()` for creating
+ * modified copies without mutating the original.
+ */
 template <typename T = boost::uint_least8_t, typename U = T>
 class basic_t : public supports_flags<T, U> {
 public:
@@ -108,11 +153,13 @@ public:
   operator T() const { return supports_flags<T, U>::flags(); }
   operator U() const { return supports_flags<T, U>::flags(); }
 
+  /// Return a copy with additional flags set.
   basic_t plus_flags(const T& arg) const {
     basic_t temp(*this);
     temp.add_flags(arg);
     return temp;
   }
+  /// Return a copy with specific flags cleared.
   basic_t minus_flags(const T& arg) const {
     basic_t temp(*this);
     temp.drop_flags(arg);
@@ -120,13 +167,25 @@ public:
   }
 };
 
+/**
+ * @brief Non-owning reference to another object's flags.
+ *
+ * When one object needs to manipulate flags owned by a different object
+ * (for example, a filter modifying flags on the report that owns it),
+ * it holds a `delegates_flags` that references the owner's
+ * `supports_flags` member.  All flag operations are forwarded to the
+ * referenced object.
+ *
+ * This class is noncopyable because copying a reference proxy would be
+ * confusing -- move or re-bind explicitly instead.
+ */
 template <typename T = boost::uint_least8_t>
 class delegates_flags : public boost::noncopyable {
 public:
-  using flags_t = T;
+  using flags_t = T; ///< The flags storage type
 
 protected:
-  supports_flags<T>& _flags;
+  supports_flags<T>& _flags; ///< Reference to the actual flag storage
 
 public:
   delegates_flags() : _flags() { TRACE_CTOR(delegates_flags, ""); }

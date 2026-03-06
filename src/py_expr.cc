@@ -29,6 +29,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   py_expr.cc
+ * @brief  Python bindings for expr_t -- Ledger's expression evaluator.
+ * @ingroup python
+ *
+ * Exposes expr_t to Python as the `ledger.Expr` class.  Expressions are
+ * Ledger's calculation language used in format strings, value expressions,
+ * and queries.  This binding allows constructing an expression from a
+ * string, compiling it, evaluating it via __call__, and checking whether
+ * the expression is a constant.
+ */
+
 #include <system.hh>
 
 #include "pyinterp.h"
@@ -38,6 +50,9 @@ namespace ledger {
 using namespace boost::python;
 
 namespace {
+
+/// Wrapper so that expr_t::calc() (which requires a scope) can be called
+/// from Python via the __call__ protocol with no arguments.
 value_t py_expr_call(expr_t& expr) {
   return expr.calc();
 }

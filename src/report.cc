@@ -29,6 +29,38 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   report.cc
+ * @author John Wiegley
+ *
+ * @ingroup report
+ *
+ * @brief Implementation of report_t: option normalization, report drivers,
+ *        built-in value expression functions, option lookup, and command dispatch.
+ *
+ * This file is organized into the following sections:
+ *
+ * 1. **Option Normalization** -- normalize_options() and normalize_period()
+ *    reconcile option interactions after parsing (e.g., color auto-detection,
+ *    column width calculation, period-to-limit propagation).
+ *
+ * 2. **Query Argument Parsing** -- parse_query_args() converts positional
+ *    arguments into --limit, --only, --display, --bold-if, and --period.
+ *
+ * 3. **Report Drivers** -- posts_report(), accounts_report(), etc. assemble
+ *    the filter chain and iterate journal data through the handler pipeline.
+ *
+ * 4. **Built-in Functions** -- fn_market(), fn_scrub(), fn_justify(), etc.
+ *    implement the functions callable from value expressions and format strings.
+ *
+ * 5. **Option Lookup** -- lookup_option() uses a first-character switch table
+ *    to resolve option names to handler instances.
+ *
+ * 6. **Symbol Lookup and Command Dispatch** -- lookup() resolves functions,
+ *    options, commands, and precommands, connecting command names to report
+ *    driver + formatter combinations.
+ */
+
 #include <system.hh>
 #include <utility>
 
@@ -51,6 +83,8 @@
 #include "emacs.h"
 
 namespace ledger {
+
+/*--- Option Normalization ---*/
 
 void report_t::normalize_options(const string& verb) {
   // Patch up some of the reporting options based on what kind of
@@ -298,6 +332,8 @@ void report_t::normalize_period() {
     HANDLER(sort_xacts_).on("?normalize");
 }
 
+/*--- Query Argument Parsing ---*/
+
 void report_t::parse_query_args(const value_t& args, const string& whence) {
   query_t query(args, what_to_keep());
 
@@ -329,7 +365,10 @@ void report_t::parse_query_args(const value_t& args, const string& whence) {
   }
 }
 
+/*--- Report Drivers ---*/
+
 namespace {
+/// @brief Functor that clears extended data from journal after a posting report completes.
 struct posts_flusher {
   post_handler_ptr handler;
   report_t& report;
@@ -398,6 +437,7 @@ void report_t::xact_report(post_handler_ptr handler, xact_t& xact) {
 }
 
 namespace {
+/// @brief Pre-flush functor for grouped account reports: prints group titles.
 struct accounts_title_printer {
   acct_handler_ptr handler;
   report_t& report;
@@ -414,6 +454,8 @@ struct accounts_title_printer {
   }
 };
 
+/// @brief Post-flush functor for account reports: walks the account tree and passes
+/// accounts to the handler, applying display predicates and sort expressions.
 struct accounts_flusher {
   acct_handler_ptr handler;
   report_t& report;
@@ -556,6 +598,8 @@ void report_t::commodities_report(post_handler_ptr handler) {
 
   session.journal->clear_xdata();
 }
+
+/*--- Built-in Value Expression Functions ---*/
 
 value_t report_t::display_value(const value_t& val) {
   value_t temp(val.strip_annotations(what_to_keep()));
@@ -1075,6 +1119,8 @@ value_t report_t::fn_to_sequence(call_scope_t& args) {
   return args[0].to_sequence();
 }
 
+/*--- ANSI Color Constants and Sentinel Functions ---*/
+
 namespace {
 value_t fn_black(call_scope_t&) {
   return string_value("black");
@@ -1117,6 +1163,8 @@ value_t fn_null(call_scope_t&) {
 }
 } // namespace
 
+/*--- Interactive Commands ---*/
+
 value_t report_t::reload_command(call_scope_t&) {
   session.close_journal_files();
   session.read_journal_files();
@@ -1143,6 +1191,8 @@ value_t report_t::pricemap_command(call_scope_t& args) {
       out, args.has<string>(0) ? datetime_t(parse_date(args.get<string>(0))) : datetime_t());
   return true;
 }
+
+/*--- Option Lookup (first-character dispatched switch table) ---*/
 
 option_t<report_t>* report_t::lookup_option(const char* p) {
   switch (*p) {
@@ -1420,6 +1470,8 @@ option_t<report_t>* report_t::lookup_option(const char* p) {
   return nullptr;
 }
 
+/*--- Symbol Lookup and Command Dispatch ---*/
+
 void report_t::define(const symbol_t::kind_t kind, const string& name,
                       const expr_t::ptr_op_t& def) {
   session.define(kind, name, def);
@@ -1433,7 +1485,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
 
   switch (kind) {
   case symbol_t::FUNCTION:
-    // Support 2.x's single-letter value expression names.
+    // Phase 1: Support 2.x's single-letter value expression names.
+    // These are legacy compatibility aliases (d/m -> now, P -> market, etc.).
     if (*(p + 1) == '\0') {
       switch (*p) {
       case 'd': // NOLINT(bugprone-branch-clone)
@@ -1470,6 +1523,9 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
       }
     }
 
+    // Phase 2: Multi-character function name lookup.
+    // These are the built-in functions callable from format strings and
+    // value expressions (e.g., "market(amount, value_date, exchange)").
     switch (*p) {
     case 'a': // NOLINT(bugprone-branch-clone)
       if (is_eq(p, "amount_expr"))
@@ -1680,47 +1736,61 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
       break;
     }
 
-    // Check if they are trying to access an option's setting or value.
+    // Phase 3: Check if they are trying to access an option's setting or value.
+    // Options can be read from expressions (e.g., "options.flat" in format strings).
     if (option_t<report_t>* handler = lookup_option(p))
       return MAKE_OPT_FUNCTOR(report_t, handler);
     break;
 
   case symbol_t::OPTION:
+    // Option lookup: invoked by process_arguments() and process_option()
+    // when the user passes --option-name on the command line.
     if (option_t<report_t>* handler = lookup_option(p))
       return MAKE_OPT_HANDLER(report_t, handler);
     break;
 
+    // Command dispatch macros: these create reporter<> functors that bind a
+    // formatter to a report driver method.  When the command is invoked, the
+    // reporter parses query arguments and calls the report method.
+
 #define POSTS_REPORTER(formatter)                                                                  \
-  WRAP_FUNCTOR(reporter<>(post_handler_ptr(formatter), *this, string("#") + p))
+  WRAP_FUNCTOR(reporter<>(post_handler_ptr(formatter), *this,                                      \
+                          string("#") + p)) ///< Posting report with custom formatter
 
     // Can't use WRAP_FUNCTOR here because the template arguments
     // confuse the parser
 #define POSTS_REPORTER_(method, formatter)                                                         \
   expr_t::op_t::wrap_functor(reporter<post_t, post_handler_ptr, method>(                           \
-      post_handler_ptr(formatter), *this, string("#") + p))
+      post_handler_ptr(formatter), *this, string("#") + p)) ///< Posting report with custom method
 
 #define FORMATTED_POSTS_REPORTER(format)                                                           \
   POSTS_REPORTER(new format_posts(                                                                 \
       *this, report_format(HANDLER(format)), maybe_format(HANDLER(prepend_format_)),               \
-      HANDLED(prepend_width_) ? lexical_cast<std::size_t>(HANDLER(prepend_width_).str()) : 0))
+      HANDLED(prepend_width_) ? lexical_cast<std::size_t>(HANDLER(prepend_width_).str())           \
+                              : 0)) ///< Posting report using a named format option
 
 #define FORMATTED_COMMODITIES_REPORTER(format)                                                     \
-  POSTS_REPORTER_(                                                                                 \
-      &report_t::commodities_report,                                                               \
-      new format_posts(                                                                            \
-          *this, report_format(HANDLER(format)), maybe_format(HANDLER(prepend_format_)),           \
-          HANDLED(prepend_width_) ? lexical_cast<std::size_t>(HANDLER(prepend_width_).str()) : 0))
+  POSTS_REPORTER_(&report_t::commodities_report,                                                   \
+                  new format_posts(*this, report_format(HANDLER(format)),                          \
+                                   maybe_format(HANDLER(prepend_format_)),                         \
+                                   HANDLED(prepend_width_)                                         \
+                                       ? lexical_cast<std::size_t>(HANDLER(prepend_width_).str())  \
+                                       : 0)) ///< Commodity report using a named format option
 
 #define ACCOUNTS_REPORTER(formatter)                                                               \
   expr_t::op_t::wrap_functor(reporter<account_t, acct_handler_ptr, &report_t::accounts_report>(    \
-      acct_handler_ptr(formatter), *this, string("#") + p))
+      acct_handler_ptr(formatter), *this,                                                          \
+      string("#") + p)) ///< Account report with custom formatter
 
 #define FORMATTED_ACCOUNTS_REPORTER(format)                                                        \
   ACCOUNTS_REPORTER(new format_accounts(                                                           \
       *this, report_format(HANDLER(format)), maybe_format(HANDLER(prepend_format_)),               \
-      HANDLED(prepend_width_) ? lexical_cast<std::size_t>(HANDLER(prepend_width_).str()) : 0))
+      HANDLED(prepend_width_) ? lexical_cast<std::size_t>(HANDLER(prepend_width_).str())           \
+                              : 0)) ///< Account report using a named format option
 
   case symbol_t::COMMAND:
+    // Command dispatch: maps user-facing command names (balance, register, print, etc.)
+    // to reporter<> functors that bind a formatter to the appropriate report driver.
     switch (*p) { // NOLINT(bugprone-branch-clone,bugprone-switch-missing-default-case)
     case 'a':
       if (is_eq(p, "accounts")) {
@@ -1830,6 +1900,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
     break;
 
   case symbol_t::PRECOMMAND:
+    // Precommands run before the journal is fully read; they are debugging
+    // and utility commands (eval, parse, query, generate, etc.).
     switch (*p) {
     case 'a': // NOLINT(bugprone-branch-clone)
       if (is_eq(p, "args"))

@@ -38,6 +38,27 @@
  * @author John Wiegley
  *
  * @ingroup data
+ *
+ * @brief Boost.Iterator-based traversal of journal entries and account trees.
+ *
+ * Ledger's reporting pipeline needs to walk two fundamental structures:
+ *
+ *   1. **Postings within transactions** -- a transaction (xact_t) owns a
+ *      list of postings; reports iterate over them one by one.
+ *   2. **Account hierarchies** -- the chart of accounts is a tree; balance
+ *      reports traverse it depth-first, optionally sorting children.
+ *
+ * Every iterator in this file is a forward-only Boost iterator_facade
+ * whose value type is a raw pointer (post_t* or account_t*).  Dereferencing
+ * yields the pointer itself (not a reference to the pointee), which lets
+ * callers write `while (post_t* p = *iter++) { ... }` -- a null pointer
+ * signals exhaustion.
+ *
+ * The iterators compose naturally: journal_posts_iterator nests an
+ * xacts_iterator and an xact_posts_iterator, advancing the outer iterator
+ * whenever the inner one is exhausted.  sorted_accounts_iterator wraps a
+ * basic_accounts_iterator with an expression-driven comparison functor
+ * (compare_items) to implement the `--sort` option.
  */
 #pragma once
 
@@ -51,6 +72,18 @@ namespace ledger {
 class journal_t;
 class report_t;
 
+/**
+ * @brief CRTP base class providing Boost.Iterator facade plumbing.
+ *
+ * All Ledger iterators derive from this template.  It stores a single
+ * pointer (m_node) that doubles as both the current element and the
+ * end-of-sequence sentinel (nullptr).  Subclasses implement `increment()`
+ * to advance m_node.
+ *
+ * @tparam Derived              The concrete iterator type (CRTP).
+ * @tparam Value                The pointer type yielded (e.g. post_t*).
+ * @tparam CategoryOrTraversal  Boost traversal tag (always forward).
+ */
 template <typename Derived, typename Value, typename CategoryOrTraversal>
 class iterator_facade_base : public boost::iterator_facade<Derived, Value, CategoryOrTraversal> {
   using node_base = Value;
@@ -64,6 +97,7 @@ public:
 
   explicit iterator_facade_base(node_base p) : m_node(p) {}
 
+  /// Advance to the next element; implemented by each concrete iterator.
   void increment();
 
 private:
@@ -74,15 +108,22 @@ private:
   node_base& dereference() const { return const_cast<node_base&>(m_node); }
 
 protected:
-  node_base m_node;
+  node_base m_node; ///< Current element pointer; nullptr means past-the-end.
 };
 
+/**
+ * @brief Iterates over the postings (line items) within a single transaction.
+ *
+ * Given one xact_t, this iterator yields each post_t* in order.  It is
+ * the innermost building block used by journal_posts_iterator and
+ * posts_commodities_iterator.
+ */
 class xact_posts_iterator
     : public iterator_facade_base<xact_posts_iterator, post_t*, boost::forward_traversal_tag> {
-  posts_list::iterator posts_i;
-  posts_list::iterator posts_end;
+  posts_list::iterator posts_i;   ///< Current position in the posting list.
+  posts_list::iterator posts_end; ///< Past-the-end sentinel for the posting list.
 
-  bool posts_uninitialized;
+  bool posts_uninitialized; ///< True until reset() has been called.
 
 public:
   xact_posts_iterator() : posts_uninitialized(true) { TRACE_CTOR(xact_posts_iterator, ""); }
@@ -97,6 +138,7 @@ public:
   }
   ~xact_posts_iterator() noexcept { TRACE_DTOR(xact_posts_iterator); }
 
+  /// Point the iterator at a new transaction and advance to its first posting.
   void reset(xact_t& xact) {
     posts_i = xact.posts.begin();
     posts_end = xact.posts.end();
@@ -114,13 +156,19 @@ public:
   }
 };
 
+/**
+ * @brief Iterates over the transactions in a journal, in parse order.
+ *
+ * Walks the flat list of xact_t pointers stored in journal_t::xacts.
+ * Used standalone or as the outer loop inside journal_posts_iterator.
+ */
 class xacts_iterator
     : public iterator_facade_base<xacts_iterator, xact_t*, boost::forward_traversal_tag> {
 public:
-  xacts_list::iterator xacts_i;
-  xacts_list::iterator xacts_end;
+  xacts_list::iterator xacts_i;   ///< Current position in the transaction list.
+  xacts_list::iterator xacts_end; ///< Past-the-end sentinel.
 
-  bool xacts_uninitialized;
+  bool xacts_uninitialized; ///< True until reset() has been called.
 
   xacts_iterator() : xacts_uninitialized(true) { TRACE_CTOR(xacts_iterator, ""); }
   xacts_iterator(journal_t& journal) : xacts_uninitialized(false) {
@@ -138,8 +186,10 @@ public:
   }
   ~xacts_iterator() noexcept { TRACE_DTOR(xacts_iterator); }
 
+  /// Point the iterator at all transactions in a journal.
   void reset(journal_t& journal);
 
+  /// Point the iterator at an explicit sub-range of a transaction list.
   void reset(xacts_list::iterator beg, xacts_list::iterator end) {
     xacts_i = beg;
     xacts_end = end;
@@ -149,10 +199,19 @@ public:
   void increment();
 };
 
+/**
+ * @brief Iterates over every posting in a journal, across all transactions.
+ *
+ * Composes xacts_iterator (outer) with xact_posts_iterator (inner).
+ * When the inner iterator exhausts one transaction's postings, the outer
+ * iterator advances to the next transaction and a fresh inner iterator
+ * is created.  This is the primary iterator used by most report commands
+ * (register, balance, etc.) to feed postings into the filter chain.
+ */
 class journal_posts_iterator
     : public iterator_facade_base<journal_posts_iterator, post_t*, boost::forward_traversal_tag> {
-  xacts_iterator xacts;
-  xact_posts_iterator posts;
+  xacts_iterator xacts;      ///< Outer: walks transactions in the journal.
+  xact_posts_iterator posts; ///< Inner: walks postings in the current transaction.
 
 public:
   journal_posts_iterator() { TRACE_CTOR(journal_posts_iterator, ""); }
@@ -172,14 +231,28 @@ public:
   void increment();
 };
 
+/**
+ * @brief Synthesizes postings from commodity price history.
+ *
+ * This iterator supports the `commodities` report.  During reset() it
+ * scans every posting in the journal to collect referenced commodities,
+ * then queries each commodity's price history via commodity_t::map_prices.
+ * For each historical price point it creates a temporary transaction with
+ * a posting whose amount is the price.  The resulting synthetic postings
+ * can then flow through the normal reporting pipeline just like real ones.
+ *
+ * Temporary transactions are owned by the xact_temps list and the
+ * temporaries_t allocator, both of which live for the lifetime of this
+ * iterator.
+ */
 class posts_commodities_iterator : public iterator_facade_base<posts_commodities_iterator, post_t*,
                                                                boost::forward_traversal_tag> {
 protected:
-  journal_posts_iterator journal_posts;
-  xacts_iterator xacts;
-  xact_posts_iterator posts;
-  xacts_list xact_temps;
-  temporaries_t temps;
+  journal_posts_iterator journal_posts; ///< Used during reset() to scan all real postings.
+  xacts_iterator xacts;                 ///< Outer: walks synthetic transactions.
+  xact_posts_iterator posts;            ///< Inner: walks postings in the current synthetic xact.
+  xacts_list xact_temps;                ///< Owns the synthetic transaction objects.
+  temporaries_t temps;                  ///< Arena allocator for temporary xacts and posts.
 
 public:
   posts_commodities_iterator() { TRACE_CTOR(posts_commodities_iterator, ""); }
@@ -200,10 +273,22 @@ public:
   void increment();
 };
 
+/**
+ * @brief Depth-first traversal of the account hierarchy, in map order.
+ *
+ * Walks the tree of accounts rooted at a given account_t.  Children are
+ * visited in the order they appear in the accounts_map (lexicographic by
+ * account name).  The traversal uses an explicit stack of iterator pairs
+ * (accounts_i / accounts_end) rather than recursion, so that it can be
+ * driven incrementally from the Boost iterator facade.
+ *
+ * This iterator does NOT sort children; for sorted output, use
+ * sorted_accounts_iterator instead.
+ */
 class basic_accounts_iterator : public iterator_facade_base<basic_accounts_iterator, account_t*,
                                                             boost::forward_traversal_tag> {
-  std::list<accounts_map::const_iterator> accounts_i;
-  std::list<accounts_map::const_iterator> accounts_end;
+  std::list<accounts_map::const_iterator> accounts_i;   ///< Stack of current-child iterators.
+  std::list<accounts_map::const_iterator> accounts_end; ///< Stack of end-of-children sentinels.
 
 public:
   basic_accounts_iterator() { TRACE_CTOR(basic_accounts_iterator, ""); }
@@ -222,23 +307,39 @@ public:
   void increment();
 
 private:
+  /// Push a new level onto the traversal stack for the children of @p account.
   void push_back(account_t& account) {
     accounts_i.push_back(account.accounts.begin());
     accounts_end.push_back(account.accounts.end());
   }
 };
 
+/**
+ * @brief Depth-first traversal of accounts with expression-based sorting.
+ *
+ * Implements the `--sort EXPR` option for account-oriented reports (e.g.
+ * `ledger balance --sort total`).  At each level of the account tree the
+ * children are collected into a deque, sorted with compare_items using the
+ * user-supplied sort expression, and then iterated in that sorted order.
+ *
+ * When flatten_all is true, the entire sub-tree is flattened into one
+ * sorted list -- this supports the `--flat` display mode.
+ *
+ * Like basic_accounts_iterator, the traversal state is kept on an
+ * explicit stack so that it can be driven incrementally.
+ */
 class sorted_accounts_iterator : public iterator_facade_base<sorted_accounts_iterator, account_t*,
                                                              boost::forward_traversal_tag> {
-  expr_t sort_cmp;
-  report_t& report;
-  bool flatten_all;
+  expr_t sort_cmp;  ///< The user-supplied sort expression (e.g. "total", "-date").
+  report_t& report; ///< Report context needed to evaluate the sort expression.
+  bool flatten_all; ///< If true, flatten the entire tree before sorting (--flat).
 
   using accounts_deque_t = std::deque<account_t*>;
 
-  std::list<accounts_deque_t> accounts_list;
-  std::list<accounts_deque_t::const_iterator> sorted_accounts_i;
-  std::list<accounts_deque_t::const_iterator> sorted_accounts_end;
+  std::list<accounts_deque_t> accounts_list; ///< Sorted children at each tree level.
+  std::list<accounts_deque_t::const_iterator>
+      sorted_accounts_i; ///< Stack of current-position iterators.
+  std::list<accounts_deque_t::const_iterator> sorted_accounts_end; ///< Stack of end sentinels.
 
 public:
   sorted_accounts_iterator(account_t& account, const expr_t& _sort_cmp, report_t& _report,
@@ -260,8 +361,11 @@ public:
   void increment();
 
 private:
+  /// Collect, sort, and push the children of @p account onto the stack.
   void push_back(account_t& account);
+  /// Recursively collect all descendants of @p account into @p deque (flat mode).
   void push_all(account_t& account, accounts_deque_t& deque);
+  /// Collect immediate children of @p account into @p deque and sort them.
   void sort_accounts(account_t& account, accounts_deque_t& deque);
 };
 

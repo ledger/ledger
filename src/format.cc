@@ -29,6 +29,29 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   format.cc
+ * @author John Wiegley
+ * @brief  Format string parser and evaluator implementation.
+ *
+ * @ingroup expr
+ *
+ * This file contains the implementation of format_t: the parsing of
+ * printf-style format strings into element linked lists, the evaluation of
+ * those lists against a scope to produce output strings, and the various
+ * truncation/abbreviation strategies used to fit text into fixed-width
+ * columns.
+ *
+ * The overall data flow is:
+ *   1. parse_elements() scans the format string and builds a linked list of
+ *      element_t nodes (STRING for literal text, EXPR for `%`-directives).
+ *   2. real_calc() walks the list, evaluates each EXPR element against the
+ *      current scope, applies width/alignment constraints, and concatenates
+ *      everything into the final output string.
+ *   3. truncate() is called when an element's rendered text exceeds its
+ *      max_width, using one of four strategies (trailing, middle, leading
+ *      truncation, or intelligent account name abbreviation).
+ */
 #include <system.hh>
 
 #include "format.h"
@@ -37,8 +60,12 @@
 
 namespace ledger {
 
+/*--- Static Defaults ---*/
+
 format_t::elision_style_t format_t::default_style = TRUNCATE_TRAILING;
 bool format_t::default_style_changed = false;
+
+/*--- Debugging / Dump ---*/
 
 void format_t::element_t::dump(std::ostream& out) const {
   out << "Element: ";
@@ -73,10 +100,25 @@ void format_t::element_t::dump(std::ostream& out) const {
   }
 }
 
+/*--- Single-Letter Shortcut Expansion ---*/
+
 namespace {
+
+/**
+ * @brief Mapping from single-letter format codes to their full expression
+ *        equivalents.
+ *
+ * When the parser encounters a `%`-directive followed by a letter (e.g.,
+ * `%P`), it looks up that letter in this table and substitutes the
+ * corresponding expression string.  Placeholders like `$min`, `$max`, and
+ * `$left` are replaced with the element's actual width and alignment values.
+ *
+ * For example, `%20t` expands to
+ * `justify(scrub(display_amount), 20, -1, true, color)`.
+ */
 struct format_mapping_t {
-  char letter;
-  const char* expr;
+  char letter;      ///< The single letter after `%`.
+  const char* expr; ///< The full expression template with `$min`/`$max`/`$left` placeholders.
 } single_letter_mappings[] = {
     {'d', "aux_date ? format_date(date) + \"=\" + format_date(aux_date) : format_date(date)"},
     {'D', "date"},
@@ -96,6 +138,20 @@ struct format_mapping_t {
     {'N', "note"},
 };
 
+/**
+ * @brief Parse an expression from the current position in a format string.
+ *
+ * Called when the parser encounters `%(` or `%{`.  Reads the expression text
+ * using Ledger's expression parser (in PARSE_SINGLE or PARSE_PARTIAL mode)
+ * and advances the pointer past the consumed characters.
+ *
+ * @param p            Reference to the current scan pointer; advanced past
+ *                     the parsed expression on return.
+ * @param single_expr  If true, parse a single complete expression; if false,
+ *                     parse a partial expression (stopping at the first
+ *                     unmatched delimiter).
+ * @return             The parsed and ready-to-compile expression.
+ */
 expr_t parse_single_expression(const char*& p, bool single_expr = true) {
   string temp(p); // NOLINT(bugprone-unused-local-non-trivial-variable)
   ptristream str(const_cast<char*&>(p));
@@ -118,12 +174,16 @@ expr_t parse_single_expression(const char*& p, bool single_expr = true) {
   return expr;
 }
 
+/// @brief Create an IDENT op node, used when building AST wrappers for
+///        the scrub/justify/ansify_if calls that surround `%{..}` elements.
 inline expr_t::ptr_op_t ident_node(const string& ident) {
   expr_t::ptr_op_t node(new expr_t::op_t(expr_t::op_t::IDENT));
   node->set_ident(ident);
   return node;
 }
 } // namespace
+
+/*--- Format String Parsing ---*/
 
 format_t::element_t* format_t::parse_elements(const string& fmt, const optional<format_t&>& tmpl) {
   unique_ptr<element_t> result;
@@ -132,6 +192,8 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
 
   std::string literal_buf;
 
+  // Walk the format string character by character.  Literal characters
+  // accumulate in literal_buf; '%' and '\' trigger special handling.
   for (const char* p = fmt.c_str(); *p; p++) {
     if (*p != '%' && *p != '\\') {
       literal_buf += *p;
@@ -155,6 +217,7 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
       current = current->next.get();
     }
 
+    // Phase 1: Handle backslash escape sequences (\n, \t, etc.)
     if (*p == '\\') {
       p++;
       current->type = element_t::STRING;
@@ -187,6 +250,8 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
       continue;
     }
 
+    // Phase 2: Parse the %-directive flags, width, and max-width.
+    // Format: %[-][minwidth][.maxwidth]<specifier>
     ++p;
     while (*p == '-') {
       switch (*p) {
@@ -218,7 +283,11 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
         current->min_width = current->max_width;
     }
 
+    // Phase 3: Interpret the specifier.  Letters are looked up in the
+    // single_letter_mappings table; '(' and '{' parse inline expressions;
+    // '$' references a template element; '%' is a literal percent sign.
     if (std::isalpha(static_cast<unsigned char>(*p))) {
+      // Single-letter shortcut: expand via single_letter_mappings.
       bool found = false;
       for (std::size_t i = 0; i < (sizeof(single_letter_mappings) / sizeof(format_mapping_t));
            i++) {
@@ -287,6 +356,9 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
 
       case '(':
       case '{': {
+        // '(' parses a raw expression; '{' parses an expression and
+        // additionally wraps it in scrub()/justify()/ansify_if() calls
+        // so that monetary amounts are formatted and colorized properly.
         bool format_amount = *p == '{';
 
         current->type = element_t::EXPR;
@@ -408,17 +480,24 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
   return result.release();
 }
 
+/*--- Format Evaluation ---*/
+
 string format_t::real_calc(scope_t& scope) {
   std::ostringstream out_str;
 
+  // Walk each element in the linked list, rendering it into a per-element
+  // ostringstream, then applying width constraints before appending to the
+  // final output.
   for (element_t* elem = elements.get(); elem; elem = elem->next.get()) {
     std::ostringstream out;
 
+    // Step 1: Set alignment for this element.
     if (elem->has_flags(ELEMENT_ALIGN_LEFT))
       out << std::left;
     else
       out << std::right;
 
+    // Step 2: Render the element content.
     switch (elem->type) {
     case element_t::STRING:
       if (elem->min_width > 0)
@@ -427,12 +506,16 @@ string format_t::real_calc(scope_t& scope) {
       break;
 
     case element_t::EXPR: {
+      // Compile the expression against the current scope (lazy -- only
+      // compiled once unless mark_uncompiled() is called), then evaluate.
       expr_t& expr(std::get<expr_t>(elem->data));
       try {
         expr.compile(scope);
 
         value_t value;
         if (expr.is_function()) {
+          // Function-type expressions receive max_width as an argument,
+          // allowing them to self-truncate.
           call_scope_t args(scope);
           args.push_back(long(elem->max_width));
           value = expr.get_function()(args);
@@ -460,6 +543,8 @@ string format_t::real_calc(scope_t& scope) {
     }
     }
 
+    // Step 3: Apply width constraints.  If the rendered text is wider than
+    // max_width, truncate it.  If it is narrower than min_width, pad it.
     if (elem->max_width > 0 || elem->min_width > 0) {
       unistring temp(out.str());
       string result;
@@ -480,6 +565,8 @@ string format_t::real_calc(scope_t& scope) {
 
   return out_str.str();
 }
+
+/*--- String Truncation and Account Name Abbreviation ---*/
 
 string format_t::truncate(const unistring& ustr, const std::size_t width,
                           const std::size_t account_abbrev_length) {

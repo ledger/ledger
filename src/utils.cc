@@ -39,15 +39,30 @@
 #include <sys/cygwin.h>
 #endif
 
-/**********************************************************************
+/*--- Assertions ---*/
+
+/**
+ * @file   utils.cc
+ * @author John Wiegley
  *
- * Assertions
+ * @ingroup util
+ *
+ * @brief Implementation of general utility facilities.
+ *
+ * This file implements the infrastructure declared in utils.h: custom
+ * assertion handling, memory/object lifetime tracing, the multi-level
+ * logging system, cumulative timers, signal handlers, and path resolution.
+ * These facilities underpin every other subsystem in Ledger.
  */
 
 #if !NO_ASSERTS
 
 namespace ledger {
 
+/// Exception thrown when a Ledger assertion fails.  Unlike the standard
+/// assert() which calls abort(), this allows the error to propagate up
+/// the call stack so that the test harness or interactive session can
+/// report it gracefully.
 class assertion_failed : public std::logic_error {
 public:
   explicit assertion_failed(const string& why) noexcept : std::logic_error(why) {}
@@ -64,10 +79,7 @@ void debug_assert(const string& reason, const string& func, const string& file, 
 
 #endif
 
-/**********************************************************************
- *
- * Verification (basically, very slow asserts)
- */
+/*--- Verification and memory tracing ---*/
 
 #if VERIFY_ON
 
@@ -75,24 +87,30 @@ namespace ledger {
 
 bool verify_enabled = false;
 
+/// A (name, size) pair describing a single allocation or object instance.
 using allocation_pair = std::pair<std::string, std::size_t>;
+/// Maps pointer addresses to their allocation metadata (for tracking live/freed memory).
 using memory_map = std::map<void*, allocation_pair>;
+/// Multimap variant for object tracking, since multiple objects may share
+/// an address (e.g., sub-objects within a containing object).
 using objects_map = std::multimap<void*, allocation_pair>;
 
+/// Aggregates (count, total_bytes) for a class or allocator name.
 using count_size_pair = std::pair<std::size_t, std::size_t>;
+/// Maps class/allocator names to their aggregate counts.
 using object_count_map = std::map<std::string, count_size_pair>;
 
 namespace {
-bool memory_tracing_active = false;
+bool memory_tracing_active = false; ///< Guard against re-entrant tracing from within allocators
 
-memory_map* live_memory = nullptr;
-memory_map* freed_memory = nullptr;
-object_count_map* live_memory_count = nullptr;
-object_count_map* total_memory_count = nullptr;
-objects_map* live_objects = nullptr;
-object_count_map* live_object_count = nullptr;
-object_count_map* total_object_count = nullptr;
-object_count_map* total_ctor_count = nullptr;
+memory_map* live_memory = nullptr;              ///< Currently allocated memory blocks
+memory_map* freed_memory = nullptr;             ///< Recently freed blocks (detect double-free)
+object_count_map* live_memory_count = nullptr;  ///< Per-class live memory aggregates
+object_count_map* total_memory_count = nullptr; ///< Per-class cumulative memory aggregates
+objects_map* live_objects = nullptr;            ///< Currently alive traced objects
+object_count_map* live_object_count = nullptr;  ///< Per-class live object aggregates
+object_count_map* total_object_count = nullptr; ///< Per-class cumulative object aggregates
+object_count_map* total_ctor_count = nullptr;   ///< Per-constructor-signature call counts
 } // namespace
 
 void initialize_memory_tracing() {
@@ -138,6 +156,7 @@ void shutdown_memory_tracing() {
   total_ctor_count = nullptr;
 }
 
+/// Increment the count and accumulated size for @p name in @p the_map.
 inline void add_to_count_map(object_count_map& the_map, const char* name, std::size_t size) {
   if (auto k = the_map.find(name); k != the_map.end()) {
     (*k).second.first++;
@@ -160,6 +179,8 @@ std::size_t current_memory_size() {
 
 // #if !defined(__has_feature) || !__has_feature(address_sanitizer)
 
+/// Record a new heap allocation in the live_memory map.  Called from the
+/// global operator new overloads when memory tracing is active.
 static void trace_new_func(void* ptr, const char* which, std::size_t size) {
   if (!live_memory || !memory_tracing_active)
     return;
@@ -179,6 +200,8 @@ static void trace_new_func(void* ptr, const char* which, std::size_t size) {
   memory_tracing_active = true;
 }
 
+/// Record deallocation of a heap block, moving it from live_memory to
+/// freed_memory.  Called from the global operator delete overloads.
 static void trace_delete_func(void* ptr, const char* which) {
   if (!live_memory || !memory_tracing_active)
     return;
@@ -230,7 +253,7 @@ static void trace_delete_func(void* ptr, const char* which) {
 
 } // namespace ledger
 
-// #if !defined(__has_feature) || !__has_feature(address_sanitizer)
+/*--- Global operator new/delete overloads for memory tracing ---*/
 
 void* operator new(std::size_t size) {
   void* ptr = std::malloc(size);
@@ -265,11 +288,12 @@ void operator delete[](void* ptr, std::size_t) noexcept {
   std::free(ptr);
 }
 
-// #endif // !defined(__has_feature) || !__has_feature(address_sanitizer)
+/*--- Memory report formatting helpers ---*/
 
 namespace ledger {
 
 namespace {
+/// Write @p num to @p out with comma separators (e.g. 1,234,567).
 void stream_commified_number(std::ostream& out, std::size_t num) {
   std::ostringstream buf;
   std::ostringstream obuf;
@@ -305,6 +329,8 @@ void stream_commified_number(std::ostream& out, std::size_t num) {
   out << obuf.str();
 }
 
+/// Write @p size as a human-readable memory quantity (e.g. "42K", "3M").
+/// Values above 10MB are printed in bold; above 100MB in red.
 void stream_memory_size(std::ostream& out, std::size_t size) {
   std::ostringstream obuf;
 
@@ -467,10 +493,7 @@ void report_memory(std::ostream& out, bool report_all) {
 
 #endif // VERIFY_ON
 
-/**********************************************************************
- *
- * String wrapper
- */
+/*--- String utilities ---*/
 
 namespace ledger {
 
@@ -523,24 +546,24 @@ strings_list split_arguments(const char* line) {
 
 } // namespace ledger
 
-/**********************************************************************
- *
- * Logging
- */
+/*--- Logging ---*/
 
 namespace ledger {
 
-log_level_t _log_level = LOG_WARN;
-std::ostream* _log_stream = &std::cerr;
-thread_local std::ostringstream _log_buffer;
+log_level_t _log_level = LOG_WARN;           ///< Default: show warnings and above
+std::ostream* _log_stream = &std::cerr;      ///< Log output destination
+thread_local std::ostringstream _log_buffer; ///< Per-thread message assembly buffer
 
 #if TRACING_ON
-uint16_t _trace_level;
+uint16_t _trace_level; ///< Maximum active trace level
 #endif
 
-static bool logger_has_run = false;
-static ptime logger_start; // NOLINT(cert-err58-cpp)
+static bool logger_has_run = false; ///< True after first log message
+static ptime logger_start;          // NOLINT(cert-err58-cpp) ///< Timestamp of first log call
 
+/// Format and emit one log message.  Reads the message from the
+/// thread-local `_log_buffer`, prepends elapsed time and (optionally)
+/// memory stats, writes to `_log_stream`, then clears the buffer.
 void logger_func(log_level_t level) {
   if (!logger_has_run) {
     logger_has_run = true;
@@ -620,6 +643,9 @@ optional<boost::u32regex> _log_category_re;
 optional<boost::regex> _log_category_re;
 #endif
 
+/// If the LEDGER_DEBUG environment variable is set, enable debug logging
+/// with its value as the category filter.  This allows developers to get
+/// debug output without passing command-line flags.
 static struct _maybe_enable_debugging {
   _maybe_enable_debugging() {
     if (const char* p = std::getenv("LEDGER_DEBUG")) {
@@ -633,21 +659,21 @@ static struct _maybe_enable_debugging {
 
 #endif // DEBUG_ON
 
-/**********************************************************************
- *
- * Timers (allows log xacts to specify cumulative time spent)
- */
+/*--- Cumulative timers ---*/
 
 #if TIMERS_ON
 
 namespace ledger {
 
+/// Internal state for one named cumulative timer.  Tracks the log level
+/// at which the timer was started, the accumulated duration across
+/// multiple start/stop cycles, and whether the timer is currently running.
 struct timer_t {
-  log_level_t level;
-  ptime begin;
-  time_duration spent;
-  std::string description;
-  bool active;
+  log_level_t level;       ///< Log level at which to report
+  ptime begin;             ///< Timestamp of most recent start
+  time_duration spent;     ///< Accumulated time from previous start/stop pairs
+  std::string description; ///< Human-readable label for log output
+  bool active;             ///< True if the timer is currently running
 
   timer_t(log_level_t _level, std::string _description)
       : level(_level), begin(TRUE_CURRENT_TIME()), spent(time_duration(0, 0, 0, 0)),
@@ -741,10 +767,7 @@ void finish_timer(const char* name) {
 
 #endif // TIMERS_ON
 
-/**********************************************************************
- *
- * Signal handlers
- */
+/*--- Signal handlers ---*/
 
 caught_signal_t caught_signal = NONE_CAUGHT;
 
@@ -756,13 +779,13 @@ void sigpipe_handler(int) {
   caught_signal = PIPE_CLOSED;
 }
 
-/**********************************************************************
- *
- * General utility functions
- */
+/*--- General utility functions ---*/
 
 namespace ledger {
 
+/// Expand tilde (`~` or `~user`) prefixes in a path to the corresponding
+/// home directory.  Uses `$HOME`, falling back to `getpwuid()` or
+/// `getpwnam()` when available.
 path expand_path(const path& pathname) {
   if (pathname.empty())
     return pathname;

@@ -33,16 +33,31 @@
 
 #include "mask.h"
 
+/**
+ * @file   mask.cc
+ * @author John Wiegley
+ *
+ * @ingroup util
+ *
+ * @brief Regular expression mask implementation and diacritics folding.
+ *
+ * This file implements `mask_t` construction, assignment, and glob-to-regex
+ * conversion, as well as the `fold_diacritics()` function that strips
+ * accents from UTF-8 text for diacritics-insensitive matching.
+ */
+
 namespace ledger {
 
-bool ignore_diacritics = false;
+bool ignore_diacritics = false; ///< Set by `--ignore-diacritics` command-line option
+
+/*--- Diacritics folding ---*/
 
 namespace {
 
-// Lookup table mapping Unicode codepoints of common accented Latin
-// characters to their ASCII base equivalents.  This covers the Latin-1
-// Supplement (U+00C0-U+00FF) and Latin Extended-A (U+0100-U+017F)
-// ranges, which include the most frequently used European diacritics.
+/// Map a single Unicode codepoint to its ASCII base equivalent.
+/// Covers Latin-1 Supplement (U+00C0-U+00FF) and Latin Extended-A
+/// (U+0100-U+017F), the most common European diacritics.
+/// Returns the codepoint unchanged if no folding is defined.
 boost::uint32_t fold_codepoint(boost::uint32_t cp) {
   // NOLINTBEGIN(bugprone-branch-clone)
   switch (cp) {
@@ -310,6 +325,8 @@ boost::uint32_t fold_codepoint(boost::uint32_t cp) {
 
 } // namespace
 
+/*--- mask_t implementation ---*/
+
 string fold_diacritics(string_view text) {
   const char* p = text.data();
   std::size_t len = text.size();
@@ -353,6 +370,12 @@ mask_t& mask_t::operator=(string_view pat) {
   return *this;
 }
 
+/// Convert a shell-style glob pattern to a Perl-compatible regex and
+/// compile it.  Glob metacharacters are translated:
+///   `?` -> `.`  ,  `*` -> `.*`  ,  `[...]` -> `[...]`
+/// Other regex metacharacters are escaped.  Unlike operator=, the
+/// resulting regex is case-sensitive because globs are used for
+/// file path matching where case matters.
 mask_t& mask_t::assign_glob(string_view pat) {
   string re_pat = "";
   string_view::size_type len = pat.size();

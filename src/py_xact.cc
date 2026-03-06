@@ -29,6 +29,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   py_xact.cc
+ * @brief  Python bindings for transaction types (xact_t, auto_xact_t, period_xact_t).
+ * @ingroup python
+ *
+ * Exposes the transaction hierarchy to Python: TransactionBase (xact_base_t),
+ * Transaction (xact_t), AutomatedTransaction (auto_xact_t), and
+ * PeriodicTransaction (period_xact_t).  Transactions are dated entries
+ * containing postings.  This binding provides posting access via sequence
+ * protocol and iteration, posting add/remove, and transaction-specific
+ * properties like payee, code, predicate (automated), and period (periodic).
+ */
+
 #include <system.hh>
 
 #include "pyinterp.h"
@@ -42,6 +55,8 @@ using namespace python;
 using namespace boost::python;
 
 namespace {
+
+/*--- Posting Sequence Access ---*/
 
 long posts_len(xact_base_t& xact) {
   return static_cast<long>(xact.posts.size());

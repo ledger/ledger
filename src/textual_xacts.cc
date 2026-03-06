@@ -29,6 +29,41 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   textual_xacts.cc
+ * @author John Wiegley
+ * @brief  Transaction and posting parsing for the textual journal parser.
+ *
+ * @ingroup data
+ *
+ * This file implements the core of what makes a journal file useful: parsing
+ * the transaction and posting lines that record financial activity.  It also
+ * handles the two special transaction types -- automated (`=`) and periodic
+ * (`~`) -- which are used for automatic postings and budgeting.
+ *
+ * The main parsing functions are:
+ *
+ *   - parse_xact()  -- Parses a complete transaction (date line + postings)
+ *   - parse_post()  -- Parses a single posting line (account, amount, cost,
+ *                      balance assertion/assignment, and note)
+ *   - parse_posts() -- Reads all indented posting lines following a header
+ *
+ * The posting parser is the most complex part of the Ledger grammar.  A
+ * posting line packs a surprising amount of information:
+ *
+ *     [*|!] AccountName  AMOUNT [@ COST] [= ASSERTION] [; NOTE]
+ *
+ * Each optional component (state flag, virtual brackets, amount expression,
+ * per-unit vs total cost, fixated cost, balance assignment vs assertion,
+ * and metadata tags in notes) is handled in sequence.
+ *
+ * Balance assertions and assignments deserve special attention.  An assertion
+ * (`= AMOUNT` after a posting amount) verifies the running account balance.
+ * An assignment (`= AMOUNT` with no posting amount) computes the posting
+ * amount needed to bring the account to the target balance.  The helper
+ * compute_balance_diff() implements the arithmetic for both cases.
+ */
+
 #include "textual_internal.h"
 
 namespace ledger {
@@ -39,6 +74,8 @@ using detail::instance_t;
 using detail::parse_amount_expr;
 
 namespace {
+/// @brief Warn if an automated transaction command (enable/disable/delete)
+///        did not match any existing automated transaction.
 void check_command_has_match(parse_context_t& context, bool has_match, const string& command,
                              const mask_t& name_mask) {
   if (!has_match) {
@@ -49,11 +86,15 @@ void check_command_has_match(parse_context_t& context, bool has_match, const str
 }
 } // namespace
 
+/*--- Automated Transaction Parsing ---*/
+
 void instance_t::automated_xact_directive(char* line) {
   std::istream::pos_type pos = context.line_beg_pos;
 
   bool reveal_context = true;
 
+  // Phase 1: Extract the name/pattern from the line.  The pattern can be
+  // quoted (single, double, or slash-delimited) or a bare word.
   string name;
   char* p = skip_ws(line + 1);
   switch (*p) {
@@ -87,6 +128,7 @@ void instance_t::automated_xact_directive(char* line) {
     }
   }
 
+  // Phase 2: Extract an optional command word (enable, disable, delete, or ::).
   p = skip_ws(p);
   string command;
   for (; *p; p++) {
@@ -98,6 +140,7 @@ void instance_t::automated_xact_directive(char* line) {
   mask_t name_mask(name);
   bool has_match = false;
 
+  // Phase 3: Handle management commands that operate on existing auto-xacts.
   if (command == "enable" || command == "disable") {
     DEBUG("textual.autoxact", command << " automated transaction matching '" << name << "'");
     bool enabled = command == "enable";
@@ -130,10 +173,12 @@ void instance_t::automated_xact_directive(char* line) {
     return;
   }
 
+  // Phase 4: Parse the predicate query and build the auto_xact_t.
   optional<string> xact_name = none;
 
-  // if command is :: it means we are defining a new query, so we need to start
-  // parsing the query at `p`
+  // If command is "::" it means we are defining a named auto-xact, so we
+  // need to start parsing the query at `p` (after the name and "::").
+  // Otherwise the query starts right after the leading '='.
   char* query_start = line + 1;
   if (command == "::") {
     query_start = p;
@@ -180,6 +225,8 @@ void instance_t::automated_xact_directive(char* line) {
     ae->pos->beg_line = context.linenum;
     ae->pos->sequence = context.sequence++;
 
+    // Phase 5: Read indented continuation lines (postings, notes, and
+    // inline assert/check/expr directives).
     post_t* last_post = nullptr;
 
     while (peek_whitespace_line()) {
@@ -244,6 +291,8 @@ void instance_t::automated_xact_directive(char* line) {
   }
 }
 
+/*--- Periodic Transaction Parsing ---*/
+
 void instance_t::period_xact_directive(char* line) {
   std::istream::pos_type pos = context.line_beg_pos;
 
@@ -288,6 +337,8 @@ void instance_t::period_xact_directive(char* line) {
   }
 }
 
+/*--- Regular Transaction Directive ---*/
+
 xact_t* instance_t::xact_directive(char* line, std::streamsize len, xact_t* previous_xact) {
   TRACE_START(xacts, 1, "Time spent handling transactions:");
 
@@ -309,6 +360,8 @@ xact_t* instance_t::xact_directive(char* line, std::streamsize len, xact_t* prev
 
   return nullptr;
 }
+
+/*--- Amount Expression Parsing ---*/
 
 void detail::parse_amount_expr(std::istream& in, scope_t& scope, post_t& post, amount_t& amount,
                                const parse_flags_t& flags, const bool defer_expr,
@@ -397,13 +450,15 @@ static balance_t compute_balance_diff(const amount_t& amt, post_t* post, xact_t*
   return diff;
 }
 
+/*--- Posting Parsing ---*/
+
 post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* account, xact_t* xact,
                                bool defer_expr) {
   TRACE_START(post_details, 1, "Time spent parsing postings:");
 
   unique_ptr<post_t> post(new post_t);
 
-  post->xact = xact; // this could be NULL
+  post->xact = xact; // this could be NULL (for automated/period xacts)
   post->pos = position_t();
   post->pos->pathname = context.pathname;
   post->pos->beg_pos = context.line_beg_pos;
@@ -415,7 +470,9 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
 
   try {
 
-    // Parse the state flag
+    // Step 1: Parse the optional state flag (* = cleared, ! = pending).
+    // If no flag is present and the parent transaction has a state, the
+    // posting inherits it.
 
     assert(line);
     assert(*line);
@@ -444,7 +501,10 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
     if (xact && (xact->_state != item_t::UNCLEARED && post->_state == item_t::UNCLEARED))
       post->set_state(xact->_state);
 
-    // Parse the account name
+    // Step 2: Parse the account name.
+    // Virtual accounts are enclosed in parentheses `(Account)` or brackets
+    // `[Account]`.  Bracketed virtuals must balance; parenthesized ones need
+    // not.  Deferred accounts use angle brackets `<Account>`.
 
     if (!*p || *p == ';')
       throw parse_error(_("Posting has no account"));
@@ -481,7 +541,10 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
 
     post->account = context.journal->register_account(name, post.get(), account);
 
-    // Parse the optional amount
+    // Step 3: Parse the optional amount.
+    // The amount may be a literal number (parsed by amount_t::parse) or a
+    // parenthesized value expression (parsed by parse_amount_expr).  After
+    // parsing, any `apply fixed` rates are applied as annotations.
 
     if (next && *next && (*next != ';' && *next != '=')) {
       beg = static_cast<std::streamsize>(next - line);
@@ -527,7 +590,11 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
       } else {
         next = skip_ws(next + static_cast<std::ptrdiff_t>(stream.tellg()));
 
-        // Parse the optional cost (@ PER-UNIT-COST, @@ TOTAL-COST)
+        // Step 4: Parse the optional cost (@ PER-UNIT-COST, @@ TOTAL-COST).
+        // A single @ means per-unit cost (multiplied by the amount).
+        // Double @@ means total cost (used as-is, negated if amount is negative).
+        // Parenthesized forms like (@ ...) and ((@@ ...)) are virtual costs.
+        // A leading = after @ means a fixated (locked) cost.
 
         if (*next == '@' || (*next == '(' && *(next + 1) == '@') ||
             (*next == '(' && *(next + 1) == '(' && *(next + 2) == '@')) {
@@ -612,7 +679,15 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
       }
     }
 
-    // Parse the optional balance assignment
+    // Step 5: Parse the optional balance assignment or assertion.
+    //
+    // If the posting has no amount and `= AMOUNT` follows, it is a balance
+    // assignment: the posting amount is computed as the difference between
+    // the target balance and the account's current running total.
+    //
+    // If the posting already has an amount, `= AMOUNT` is a balance
+    // assertion: the parser verifies that the account balance equals the
+    // given amount (or throws a parse error).
 
     if (xact && next && *next == '=') {
       DEBUG("textual.parse", "line " << context.linenum << ": "
@@ -758,7 +833,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
       }
     }
 
-    // Parse the optional note
+    // Step 6: Parse the optional trailing note (may contain metadata tags).
 
     if (next && *next == ';') {
       post->append_note(++next, *context.scope, true);
@@ -767,7 +842,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
                                      << "Parsed a posting note");
     }
 
-    // There should be nothing more to read
+    // Step 7: Verify nothing remains unparsed on the line.
 
     if (next && *next)
       throw_(parse_error,
@@ -776,6 +851,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
     post->pos->end_pos = context.curr_pos;
     post->pos->end_line = context.linenum;
 
+    // Step 8: Apply tags from any active `apply tag` directives.
     std::vector<string> tags;
     get_applications<string>(tags);
     for (string& tag : tags)
@@ -796,6 +872,8 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
     throw;
   }
 }
+
+/*--- Posting Collection ---*/
 
 bool instance_t::parse_posts(account_t* account, xact_base_t& xact, const bool defer_expr) {
   TRACE_START(xact_posts, 1, "Time spent parsing postings:");
@@ -821,6 +899,8 @@ bool instance_t::parse_posts(account_t* account, xact_base_t& xact, const bool d
   return added;
 }
 
+/*--- Transaction Parsing ---*/
+
 xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* account,
                                xact_t* previous_xact) {
   TRACE_START(xact_text, 1, "Time spent parsing transaction text:");
@@ -837,7 +917,7 @@ xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* accou
 
   try {
 
-    // Parse the date
+    // Phase 1: Parse the date (and optional auxiliary/effective date after '=').
 
     char* next = next_element(line);
 
@@ -847,7 +927,7 @@ xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* accou
     }
     xact->_date = parse_date(line);
 
-    // Parse the optional cleared flag: *
+    // Phase 2: Parse the optional state flag (* = cleared, ! = pending).
 
     if (next) {
       switch (*next) {
@@ -864,7 +944,7 @@ xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* accou
       }
     }
 
-    // Parse the optional code: (TEXT)
+    // Phase 3: Parse the optional transaction code: (TEXT).
 
     if (next && *next == '(') {
       if (char* p = std::strchr(next++, ')')) {
@@ -874,7 +954,10 @@ xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* accou
       }
     }
 
-    // Parse the description text
+    // Phase 4: Parse the payee/description text.
+    // The payee ends at the first inline note separator (two+ spaces or a
+    // tab followed by ';').  The payee is validated/rewritten through the
+    // journal's payee mapping tables.
 
     if (next && *next) {
       char* p = next;
@@ -904,14 +987,17 @@ xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* accou
       xact->payee = _("<Unspecified payee>");
     }
 
-    // Parse the xact note
+    // Phase 5: Parse the optional inline note on the transaction header line.
 
     if (next && *next == ';')
       xact->append_note(++next, *context.scope, false);
 
     TRACE_STOP(xact_text, 1);
 
-    // Parse all of the posts associated with this xact
+    // Phase 6: Parse all indented continuation lines.
+    // These may be metadata notes (`;`), inline assert/check/expr directives,
+    // or posting lines.  Notes attach to the most recently parsed posting,
+    // or to the transaction itself if no posting has been seen yet.
 
     TRACE_START(xact_details, 1, "Time spent parsing transaction details:");
 
@@ -997,6 +1083,7 @@ xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* accou
     xact->pos->end_pos = context.curr_pos;
     xact->pos->end_line = context.linenum;
 
+    // Phase 7: Apply tags from any active `apply tag` directives.
     std::vector<string> tags;
     get_applications<string>(tags);
     for (string& tag : tags)
@@ -1004,6 +1091,7 @@ xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* accou
 
     TRACE_STOP(xact_details, 1);
 
+    // Phase 8: Verify or compute the transaction hash for chain integrity.
     if (hash_type != NO_HASHES) {
       const string prev_hash = (previous_xact && previous_xact->has_tag("Hash"))
                                    ? previous_xact->get_tag("Hash")->to_string()

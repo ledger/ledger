@@ -39,11 +39,22 @@
  *
  * @ingroup util
  *
- * @brief A utility class for abstracting an output stream.
+ * @brief Output stream abstraction with file, console, and pager support.
  *
- * Because Ledger might send output to a file, the console, or a pager
- * child process, different cleanup is needed for each scenario.  This
- * file abstracts those various needs.
+ * Ledger's output may go to one of three destinations:
+ *
+ * 1. **stdout** (the default) -- no special cleanup needed.
+ * 2. **A file** (specified by `--output FILE`) -- the stream owns the
+ *    `ofstream` and deletes it on close.
+ * 3. **A pager** (specified by `--pager CMD`, or the `$PAGER` environment
+ *    variable) -- Ledger forks a child process running the pager, pipes
+ *    output to it, and waits for it to exit on close.
+ *
+ * `output_stream_t` encapsulates all three cases behind a single
+ * `std::ostream*` interface.  Construction defaults to stdout; calling
+ * `initialize()` with the appropriate arguments selects the destination.
+ * The destructor (and `close()`) clean up file descriptors and child
+ * processes as needed.
  */
 #pragma once
 
@@ -66,9 +77,9 @@ class output_stream_t {
   output_stream_t& operator=(const output_stream_t&);
 
 private:
-  int pipe_to_pager_fd;
+  int pipe_to_pager_fd; ///< File descriptor of pipe to pager (-1 if not using a pager)
 #if !defined(_WIN32) && !defined(__CYGWIN__)
-  pid_t pager_pid;
+  pid_t pager_pid; ///< PID of pager child process (-1 if not forked)
 #endif
 
 public:

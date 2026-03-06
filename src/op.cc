@@ -29,6 +29,31 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   op.cc
+ * @author John Wiegley
+ *
+ * @ingroup expr
+ *
+ * @brief AST node evaluation -- the expression interpreter.
+ *
+ * This file implements the three core operations on the op_t AST:
+ *
+ *   - **compile()** -- Resolve identifiers, fold constant sub-expressions,
+ *     and process variable/function definitions (O_DEFINE, O_LAMBDA).
+ *   - **calc()** -- Tree-walking evaluation that produces a value_t from
+ *     each node, dispatching on the node's kind_t.
+ *   - **print() / dump()** -- Serialization for user-facing error messages
+ *     and internal debugging.
+ *
+ * The expression pipeline proceeds as:
+ *   text -> parse (parser_t) -> compile (op_t::compile) -> calc (op_t::calc)
+ *
+ * This corresponds to what the user sees when they write `--limit "amount > 100"`
+ * or use format strings like `%(account)`.  The parser produces an AST, compile
+ * resolves names and optimizes, and calc evaluates per-posting.
+ */
+
 #include <system.hh>
 
 #include "op.h"
@@ -38,6 +63,8 @@
 
 namespace ledger {
 
+/*--- Intrusive Pointer Support ---*/
+
 void intrusive_ptr_add_ref(const expr_t::op_t* op) {
   op->acquire();
 }
@@ -45,6 +72,8 @@ void intrusive_ptr_add_ref(const expr_t::op_t* op) {
 void intrusive_ptr_release(const expr_t::op_t* op) {
   op->release();
 }
+
+/*--- O_CONS Flattening ---*/
 
 value_t split_cons_expr(const expr_t::ptr_op_t& op) {
   if (!op) {
@@ -76,7 +105,11 @@ value_t split_cons_expr(const expr_t::ptr_op_t& op) {
   }
 }
 
+/*--- Compile-Time Helpers ---*/
+
 namespace {
+/// @brief Verify that a computed result matches the type context required
+/// by the scope, throwing calc_error on mismatch.
 inline void check_type_context(scope_t& scope, value_t& result) {
   if (scope.type_required() && scope.type_context() != value_t::VOID &&
       result.type() != scope.type_context()) {
@@ -108,6 +141,8 @@ bool op_contains_ident(const expr_t::ptr_op_t& op, const string& name) {
   return false;
 }
 } // namespace
+
+/*--- Compilation Pass ---*/
 
 expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth, scope_t* param_scope) {
   scope_t* scope_ptr = &scope;
@@ -271,7 +306,16 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth, scope_t*
   return result;
 }
 
+/*--- Runtime Evaluation (calc) ---*/
+
 namespace {
+/// @brief Resolve an IDENT node to its definition at runtime.
+///
+/// If the identifier was resolved at compile time, its definition is stored
+/// in left().  Otherwise, or if left() holds a PLUG sentinel, the identifier
+/// is looked up dynamically in the current scope chain.  This two-phase
+/// lookup is what allows accumulator patterns (e.g., `biggest=max(amount,biggest)`)
+/// to read updated values on each evaluation.
 expr_t::ptr_op_t lookup_ident(const expr_t::ptr_op_t& op, scope_t& scope) {
   expr_t::ptr_op_t def = op->left();
 
@@ -497,7 +541,12 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t* locus, const int depth) {
   }
 }
 
+/*--- Function Call Support ---*/
+
 namespace {
+/// @brief Chase an op_t through IDENT lookups and value wrappers until a
+/// callable (FUNCTION or O_LAMBDA) is found.  Used by O_CALL evaluation
+/// and the public call() method to resolve the callee before invocation.
 expr_t::ptr_op_t find_definition(expr_t::ptr_op_t op, scope_t& scope, expr_t::ptr_op_t* locus,
                                  const int depth, int recursion_depth = 0) {
   // If the object we are apply call notation to is a FUNCTION value
@@ -528,6 +577,13 @@ expr_t::ptr_op_t find_definition(expr_t::ptr_op_t op, scope_t& scope, expr_t::pt
                          depth + 1, recursion_depth + 1);
 }
 
+/// @brief Invoke an O_LAMBDA node by binding its formal parameters to the
+/// supplied call arguments and evaluating the body.
+///
+/// Parameter names are taken from the O_CONS chain in func->left(), and
+/// argument values from call_args.  If the lambda body is wrapped in a SCOPE
+/// node (capturing lexical bindings from its definition site), those bindings
+/// are layered beneath the argument scope.
 value_t call_lambda(const expr_t::ptr_op_t& func, scope_t& scope, call_scope_t& call_args,
                     expr_t::ptr_op_t* locus, const int depth) {
   std::size_t args_index(0);
@@ -652,7 +708,10 @@ value_t expr_t::op_t::calc_seq(scope_t& scope, ptr_op_t* locus, const int depth)
   return result;
 }
 
+/*--- Pretty-Printing ---*/
+
 namespace {
+/// @brief Recursively print a comma-separated O_CONS chain.
 bool print_cons(std::ostream& out, const expr_t::const_ptr_op_t& op,
                 const expr_t::op_t::context_t& context) {
   bool found = false;
@@ -671,6 +730,7 @@ bool print_cons(std::ostream& out, const expr_t::const_ptr_op_t& op,
   return found;
 }
 
+/// @brief Recursively print a semicolon-separated O_SEQ chain.
 bool print_seq(std::ostream& out, const expr_t::const_ptr_op_t& op,
                const expr_t::op_t::context_t& context) {
   bool found = false;
@@ -914,6 +974,8 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const {
   return found;
 }
 
+/*--- Debug Dump ---*/
+
 void expr_t::op_t::dump(std::ostream& out, const int depth) const {
   out.setf(std::ios::left);
   out.width((sizeof(void*) * 2) + 2);
@@ -1041,6 +1103,8 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const {
     }
   }
 }
+
+/*--- Error Context Formatting ---*/
 
 string op_context(const expr_t::ptr_op_t& op, const expr_t::ptr_op_t& locus) {
   std::ostream::pos_type start_pos, end_pos;

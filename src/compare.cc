@@ -29,6 +29,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   compare.cc
+ * @author John Wiegley
+ *
+ * @ingroup data
+ *
+ * @brief Comparison functor implementations for the `--sort` option.
+ */
+
 #include <system.hh>
 
 #include "compare.h"
@@ -40,13 +49,18 @@
 
 namespace ledger {
 
+/*--- Sort value evaluation ---*/
+
 void push_sort_value(std::list<sort_value_t>& sort_values, expr_t::ptr_op_t node, scope_t& scope) {
+  // O_CONS nodes form a linked list of comma-separated sort keys.
+  // Walk the chain, recursing into each left child.
   if (node->kind == expr_t::op_t::O_CONS) {
     while (node && node->kind == expr_t::op_t::O_CONS) {
       push_sort_value(sort_values, node->left(), scope);
       node = node->has_right() ? node->right() : nullptr;
     }
   } else {
+    // Leaf node: check for negation (descending sort), then evaluate.
     bool inverted = false;
 
     if (node->kind == expr_t::op_t::O_NEG) {
@@ -63,6 +77,8 @@ void push_sort_value(std::list<sort_value_t>& sort_values, expr_t::ptr_op_t node
   }
 }
 
+/*--- Template specializations for find_sort_values ---*/
+
 template <>
 void compare_items<post_t>::find_sort_values(std::list<sort_value_t>& sort_values, scope_t& scope) {
   bind_scope_t bound_scope(report, scope);
@@ -76,6 +92,14 @@ void compare_items<account_t>::find_sort_values(std::list<sort_value_t>& sort_va
   push_sort_value(sort_values, sort_order.get_op(), bound_scope);
 }
 
+/*--- Template specializations for operator() with sort-value caching ---*/
+
+/**
+ * Post comparison with xdata caching.  The POST_EXT_SORT_CALC flag guards
+ * against re-evaluating the sort expression for a posting that has already
+ * been seen -- this is important because std::stable_sort may compare the
+ * same element many times.
+ */
 template <>
 bool compare_items<post_t>::operator()(post_t* left, post_t* right) {
   assert(left);
@@ -106,6 +130,10 @@ bool compare_items<post_t>::operator()(post_t* left, post_t* right) {
   return sort_value_is_less_than(lxdata.sort_values, rxdata.sort_values);
 }
 
+/**
+ * Account comparison with xdata caching.  The ACCOUNT_EXT_SORT_CALC flag
+ * prevents redundant evaluation, analogous to POST_EXT_SORT_CALC for postings.
+ */
 template <>
 bool compare_items<account_t>::operator()(account_t* left, account_t* right) {
   assert(left);

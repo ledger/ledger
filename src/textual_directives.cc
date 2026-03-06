@@ -29,6 +29,49 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   textual_directives.cc
+ * @author John Wiegley
+ * @brief  Directive parsing for the textual journal parser.
+ *
+ * @ingroup data
+ *
+ * This file implements all of the non-transaction directives that can appear
+ * in a Ledger journal file.  Directives configure the journal's metadata
+ * (accounts, commodities, payees, tags), control parsing scope (`apply`,
+ * `include`, `year`), embed expressions and assertions, and handle time
+ * tracking (clock-in/out).
+ *
+ * The directives fall into several categories:
+ *
+ *   **Declaration directives** -- `account`, `commodity`, `payee`, `tag`
+ *   Pre-declare entities and attach sub-properties (alias, format, etc.).
+ *
+ *   **Scope directives** -- `apply account`, `apply tag`, `apply fixed`,
+ *   `apply year`, `end apply`
+ *   Push/pop entries on the apply stack to affect all subsequent items.
+ *
+ *   **Legacy single-character directives** -- `A`, `C`, `D`, `N`, `P`, `Y`
+ *   Inherited from the original Ledger format; each has a word-based
+ *   equivalent in the general_directive() dispatch table.
+ *
+ *   **File directives** -- `include`, `comment`/`test`, `--option`
+ *   Control which files are parsed and how options are set.
+ *
+ *   **Expression directives** -- `eval`/`expr`/`def`/`define`, `assert`,
+ *   `check`, `value`
+ *   Evaluate or verify value expressions at parse time.
+ *
+ *   **Python directives** -- `import`, `python`
+ *   Execute Python code (requires Boost.Python).
+ *
+ *   **Time tracking** -- `i`/`I` (clock-in), `o`/`O` (clock-out)
+ *   Record time-log events that are converted to transactions.
+ *
+ * The general_directive() method is the main dispatch table, mapping
+ * directive keywords to handler methods via a switch on the first character.
+ */
+
 #include "textual_internal.h"
 
 namespace ledger {
@@ -36,6 +79,8 @@ namespace ledger {
 using detail::application_t;
 using detail::fixed_rate_t;
 using detail::instance_t;
+
+/*--- Time Tracking Directives ---*/
 
 #if TIMELOG_SUPPORT
 
@@ -99,6 +144,8 @@ void instance_t::clock_out_directive(char* line, bool capitalized) {
 
 #endif // TIMELOG_SUPPORT
 
+/*--- Legacy Single-Character Directives ---*/
+
 void instance_t::default_commodity_directive(char* line) {
   amount_t amt(skip_ws(line + 1));
   VERIFY(amt.valid());
@@ -137,6 +184,8 @@ void instance_t::nomarket_directive(char* line) {
     commodity->add_flags(COMMODITY_NOMARKET | COMMODITY_KNOWN);
 }
 
+/*--- File and Option Directives ---*/
+
 void instance_t::option_directive(char* line) {
   // Check if this is a short option (single dash) vs long option (double dash)
   if (line[0] == '-' && line[1] != '-') {
@@ -156,6 +205,18 @@ void instance_t::option_directive(char* line) {
     throw_(option_error, _f("Illegal option --%1%") % (line + 2));
 }
 
+/**
+ * @brief Process an `include` directive.
+ *
+ * The include path may contain glob wildcards (e.g. `include *.ledger`).
+ * Paths are resolved relative to the directory of the current file.
+ * Recursive includes are detected and skipped; a hard depth limit of 100
+ * prevents runaway include chains.
+ *
+ * For each matched file, a new instance_t is created and parsed.  The
+ * parent file's year/epoch state is saved and restored after the include
+ * so that `year` directives in included files do not leak back.
+ */
 void instance_t::include_directive(char* line) {
   int include_depth = 0;
   for (instance_t* p = parent; p; p = p->parent)
@@ -276,6 +337,8 @@ void instance_t::include_directive(char* line) {
   if (!files_found)
     throw_(std::runtime_error, _f("File to include was not found: %1%") % filename);
 }
+
+/*--- Apply / Scope Directives ---*/
 
 void instance_t::apply_directive(char* line) {
   char* b = next_element(line);
@@ -413,6 +476,8 @@ void instance_t::end_apply_directive(char* kind) {
   apply_stack.pop_front();
 }
 
+/*--- Account Directives ---*/
+
 void instance_t::account_directive(char* line) {
   std::istream::pos_type beg_pos = context.line_beg_pos;
   std::size_t beg_linenum = context.linenum;
@@ -524,6 +589,8 @@ void instance_t::account_value_directive(account_t* account, const string& expr_
   account->value_expr = expr_t(expr_str);
 }
 
+/*--- Payee Directives ---*/
+
 void instance_t::payee_directive(char* line) {
   string payee = context.journal->register_payee(line);
 
@@ -584,6 +651,8 @@ void instance_t::account_rewrite_directive(char* line) {
   context.journal->account_rewrite_mappings.push_back(
       account_rewrite_mapping_t(mask_t(pattern), replacement));
 }
+
+/*--- Commodity Directives ---*/
 
 void instance_t::commodity_directive(char* line) {
   char* p = skip_ws(line);
@@ -659,6 +728,8 @@ void instance_t::commodity_default_directive(commodity_t& comm) {
   commodity_pool_t::current_pool->default_commodity = &comm;
 }
 
+/*--- Tag Directive ---*/
+
 void instance_t::tag_directive(char* line) {
   char* p = skip_ws(line);
   context.journal->register_metadata(p, NULL_VALUE, 0);
@@ -678,6 +749,8 @@ void instance_t::tag_directive(char* line) {
     }
   }
 }
+
+/*--- Expression and Assertion Directives ---*/
 
 void instance_t::eval_directive(char* line) {
   expr_t expr(line);
@@ -700,6 +773,8 @@ void instance_t::value_directive(char* line) {
   context.journal->value_expr = expr_t(line);
 }
 
+/*--- Comment / Test Block Directive ---*/
+
 void instance_t::comment_directive(char* line) {
   while (in.good() && !in.eof()) {
     if (read_line(line) > 0) {
@@ -709,6 +784,8 @@ void instance_t::comment_directive(char* line) {
     }
   }
 }
+
+/*--- Python Directives ---*/
 
 #if HAVE_BOOST_PYTHON
 
@@ -769,6 +846,19 @@ void instance_t::python_directive(char*) {
 
 #endif // HAVE_BOOST_PYTHON
 
+/*--- General Directive Dispatch ---*/
+
+/**
+ * @brief Main dispatch table for word-based directives.
+ *
+ * The first character of the directive keyword is used as a fast switch
+ * to narrow down candidates, then a full string comparison selects the
+ * handler.  If no built-in directive matches, the method falls through
+ * to a symbol lookup so that user-defined directives (registered via
+ * Python or the expression engine) can be invoked.
+ *
+ * @return true if a directive was handled, false otherwise.
+ */
 bool instance_t::general_directive(char* line) {
   std::string buf(line); // NOLINT(bugprone-unused-local-non-trivial-variable)
 

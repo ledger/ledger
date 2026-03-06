@@ -38,6 +38,31 @@
  * @author John Wiegley
  *
  * @ingroup expr
+ *
+ * @brief User-facing expression class and the merged-expression builder.
+ *
+ * expr_t is the primary interface to Ledger's expression engine.  It wraps
+ * the underlying op_t AST and provides a three-phase workflow:
+ *
+ *   1. **Parse** -- Convert a text string (e.g., `"amount > 100"`) into an
+ *      op_t AST via parser_t.
+ *   2. **Compile** -- Resolve identifiers and fold constants by walking the
+ *      AST against a scope_t (typically the report_t or session scope).
+ *   3. **Evaluate (calc)** -- Walk the compiled AST for each posting or
+ *      account to produce a value_t result.
+ *
+ * Expressions appear throughout Ledger: `--limit` predicates, `--display`
+ * filters, format strings (`%(expr)`), automated transaction conditions,
+ * and value expressions in the `=` directive.
+ *
+ * The @c fast_path optimization detects when an expression is a simple
+ * identifier like `"amount"` and allows callers (e.g., the posting chain
+ * filters) to bypass the full scope/calc machinery and read the posting
+ * field directly.
+ *
+ * merged_expr_t extends expr_t to support incremental expression composition:
+ * users can layer flags like `-O`, `-B`, `-V`, and `-A` which each prepend
+ * or append transformations to a base expression term.
  */
 #pragma once
 
@@ -50,33 +75,57 @@ namespace ledger {
 
 class symbol_scope_t; // forward declaration for expr_t::accumulator_scope_
 
+/**
+ * @brief High-level expression object: owns an op_t AST and drives the
+ *        parse/compile/calc pipeline.
+ *
+ * expr_t is the type that the rest of Ledger works with.  Report options
+ * like `--limit`, `--display`, and format strings all store their logic as
+ * an expr_t.  Internally it holds a root op_t (the AST) and delegates the
+ * heavy lifting to op_t::compile() and op_t::calc().
+ *
+ * An optional @c fast_path_ field allows hot-path callers to skip the
+ * scope lookup and AST evaluation for trivially simple expressions like
+ * the bare identifier `amount`.
+ *
+ * @see op_t          The AST node that this class wraps.
+ * @see expr_base_t   CRTP base providing the compile/calc/print protocol.
+ * @see merged_expr_t Derived class for composable multi-flag expressions.
+ */
 class expr_t : public expr_base_t<value_t> {
-  class parser_t;
+  class parser_t; ///< Recursive-descent parser (defined in parser.h/cc).
   using base_type = expr_base_t<value_t>;
 
 public:
-  struct token_t;
-  class op_t;
-  using ptr_op_t = intrusive_ptr<op_t>;
-  using const_ptr_op_t = intrusive_ptr<const op_t>;
+  struct token_t;                                   ///< Lexer token (defined in token.h).
+  class op_t;                                       ///< AST node (defined in op.h).
+  using ptr_op_t = intrusive_ptr<op_t>;             ///< Owning smart pointer to op_t.
+  using const_ptr_op_t = intrusive_ptr<const op_t>; ///< Const variant.
 
+  /// @brief Classification of check/assertion expressions from `check` and
+  /// `assert` directives in journal files.
   enum check_expr_kind_t : uint8_t { EXPR_GENERAL, EXPR_ASSERTION, EXPR_CHECK };
 
   using check_expr_pair = std::pair<expr_t, check_expr_kind_t>;
   using check_expr_list = std::list<check_expr_pair>;
 
-  // Fast-path identifiers for common post field lookups.  When the
-  // expression is a simple identifier like "amount", the evaluation
-  // can bypass the full scope/calc machinery and read the field
-  // directly from the post_t object.
+  /// @brief Fast-path identifiers for common posting field lookups.
+  ///
+  /// When the compiled expression is a bare identifier that maps to a
+  /// well-known posting field (currently just `amount`), callers in the
+  /// posting filter chain can detect this via fast_path() and read the
+  /// field directly from the post_t object, avoiding the overhead of
+  /// full AST evaluation through the scope chain.  This matters because
+  /// `amount` is by far the most common value expression (it is the
+  /// default when no `--amount` flag is given).
   enum class fast_path_t : uint8_t {
-    NONE = 0,
-    POST_AMOUNT, // get_amount(post) - post.amount or compound_value
+    NONE = 0,    ///< No fast path; use normal calc().
+    POST_AMOUNT, ///< Expression is "amount" (or "a"); read post_t::amount directly.
   };
 
 protected:
-  ptr_op_t ptr;
-  fast_path_t fast_path_ = fast_path_t::NONE;
+  ptr_op_t ptr;                               ///< Root of the compiled AST (null if unparsed).
+  fast_path_t fast_path_ = fast_path_t::NONE; ///< Detected shortcut, if any.
 
 public:
   expr_t();
@@ -101,12 +150,20 @@ public:
 
   void parse(std::istream& in, const parse_flags_t& flags = PARSE_DEFAULT,
              const optional<string>& original_string = none) override;
+
+  /// @brief Compile the parsed AST against @p scope, resolving identifiers
+  /// and folding constants.  Also detects fast_path optimizations.
   void compile(scope_t& scope) override;
+
+  /// @brief Evaluate the compiled AST, wrapping @p scope with the persistent
+  /// accumulator_scope_ for variable isolation.
   value_t real_calc(scope_t& scope) override;
 
+  /// @brief True if the compiled expression is a single VALUE constant.
   bool is_constant() const;
   value_t& constant_value();
   const value_t& constant_value() const;
+  /// @brief True if the compiled expression is a single FUNCTION terminal.
   bool is_function() const;
   func_t& get_function();
 
@@ -130,43 +187,66 @@ protected:
   value_t calc_with_scope(scope_t& scope);
 
 private:
+  /// @brief After compilation, inspect the root op to see if it is a bare
+  /// identifier mapping to a known posting field (e.g., "amount").
   void detect_fast_path();
 };
 
-/**
- * Dealing with expr pointers tucked into value objects.
- */
+/*--- Expression / Value Interop ---*/
+
+/// Expression AST pointers can be stored inside value_t objects (as
+/// boost::any).  These helpers test for, extract, and store such embedded
+/// expressions.  This is how O_LAMBDA results are passed around as
+/// first-class values.
+
+/// @brief Test whether a value_t contains an embedded expression op_t.
 inline bool is_expr(const value_t& val) {
   return val.is_any() && val.as_any().type() == typeid(expr_t::ptr_op_t);
 }
 
+/// @brief Extract the embedded op_t pointer from a value_t.
 expr_t::ptr_op_t as_expr(const value_t& val);
+/// @brief Store an op_t pointer inside a value_t (as boost::any).
 void set_expr(value_t& val, expr_t::ptr_op_t op);
+/// @brief Create a value_t that wraps the given op_t pointer.
 value_t expr_value(expr_t::ptr_op_t op);
 
-// A merged expression allows one to set an expression term, "foo", and
-// a base expression, "bar", and then merge in later expressions that
-// utilize foo.  For example:
-//
-//    foo: bar
-//  merge: foo * 10
-//  merge: foo + 20
-//
-// When this expression is finally compiled, the base and merged
-// elements are written into this:
-//
-//   __tmp=(foo=bar; foo=foo*10; foo=foo+20);__tmp
-//
-// This allows users to select flags like -O, -B or -I at any time, and
-// also combine flags such as -V and -A.
+/*--- Merged (Composable) Expressions ---*/
 
+/**
+ * @brief Composable expression that layers transformations onto a base term.
+ *
+ * merged_expr_t allows one to set an expression term (e.g., `"amount"`) and
+ * a base expression (e.g., `"amount"`), then merge in later transformations:
+ *
+ * @code
+ *    term:   "amount"
+ *    base:   "amount"
+ *    merge:  "amount * 10"    // from -O flag
+ *    merge:  "amount + 20"    // from -B flag
+ * @endcode
+ *
+ * When compile() is called, these are assembled into a single expression:
+ *
+ * @code
+ *    __tmp_amount=(amount=(amount); amount=(amount * 10); amount=(amount + 20); amount);
+ * __tmp_amount
+ * @endcode
+ *
+ * This allows users to combine flags like `-O`, `-B`, `-V`, and `-A` at any
+ * time, with each flag contributing a transformation that is applied in order.
+ * The @c merge_operator controls how pieces are joined (`;` for sequential
+ * assignment, or an arithmetic operator for inline combination).
+ *
+ * @see report_t  Where merged_expr_t instances are used for amount_expr and total_expr.
+ */
 class merged_expr_t : public expr_t {
 public:
-  string term;
-  string base_expr;
-  string merge_operator;
+  string term;           ///< Variable name used as the threading term (e.g., "amount").
+  string base_expr;      ///< The initial expression assigned to @c term.
+  string merge_operator; ///< Operator joining merged pieces (";" or "+", "*", etc.).
 
-  std::list<string> exprs;
+  std::list<string> exprs; ///< Accumulated transformation expressions to apply in order.
 
   merged_expr_t(const string& _term, const string& expr, const string& merge_op = ";");
   // Custom copy constructor: copies the configuration (term, base_expr, etc.)
@@ -181,23 +261,34 @@ public:
   void set_base_expr(const string& expr) { base_expr = expr; }
   void set_merge_operator(const string& merge_op) { merge_operator = merge_op; }
 
+  /// @brief If @p expr is a bare identifier (no operators), adopt it as
+  /// the new base_expr and clear all merged pieces.  Returns true if so.
   bool check_for_single_identifier(const string& expr);
 
+  /// @brief Add a transformation to the front of the merge chain.
   void prepend(const string& expr) {
     if (!check_for_single_identifier(expr))
       exprs.push_front(expr);
   }
+  /// @brief Add a transformation to the end of the merge chain.
   void append(const string& expr) {
     if (!check_for_single_identifier(expr))
       exprs.push_back(expr);
   }
   void remove(const string& expr) { exprs.remove(expr); }
 
+  /// @brief Assemble the merged expression string, parse it, and compile
+  /// against @p scope with accumulator isolation.
   void compile(scope_t& scope) override;
+
+  /// @brief Evaluate the merged expression with accumulator scope wrapping.
   value_t real_calc(scope_t& scope) override;
 };
 
 class call_scope_t;
+
+/// @brief Execute a Ledger script file (a sequence of value expressions,
+/// one per line).  Used by the `script` command.
 value_t script_command(call_scope_t& scope);
 
 } // namespace ledger

@@ -29,6 +29,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   py_session.cc
+ * @brief  Python bindings for session_t -- the top-level Ledger session.
+ * @ingroup python
+ *
+ * Exposes session_t to Python as the `ledger.Session` class and registers
+ * module-level convenience functions (read_journal, read_journal_from_string,
+ * close_journal_files).  The session manages journal file I/O and owns the
+ * journal instance.  This binding also handles rebinding the module-level
+ * `ledger.commodities` attribute when closing/reopening journal files so
+ * that Python-held commodity references remain valid.
+ */
+
 #include <system.hh>
 
 #include "pyinterp.h"
@@ -43,6 +56,11 @@ using namespace python;
 using namespace boost::python;
 
 namespace {
+
+/*--- Module-level Convenience Functions ---*/
+
+/// These free functions delegate to the global python_session, providing
+/// a simpler API (ledger.read_journal) without requiring a Session object.
 boost::shared_ptr<journal_t> py_read_journal(const string& pathname) {
   python_session->read_journal(path(pathname));
   return python_session->journal;
@@ -67,6 +85,8 @@ void py_update_commodities() {
   main_module.attr("commodities") = commodity_pool_t::current_pool;
 }
 
+/*--- Journal File Management ---*/
+
 void py_close_journal_files() {
   python_session->close_journal_files();
   py_update_commodities();
@@ -76,6 +96,8 @@ void py_session_close_journal_files(session_t& session) {
   session.close_journal_files();
   py_update_commodities();
 }
+
+/*--- Session Method Wrappers ---*/
 
 boost::shared_ptr<journal_t> py_session_read_journal(session_t& session, const string& pathname) {
   session.read_journal(path(pathname));

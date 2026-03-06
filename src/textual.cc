@@ -29,12 +29,34 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   textual.cc
+ * @author John Wiegley
+ * @brief  Top-level entry point for the textual journal parser.
+ *
+ * @ingroup data
+ *
+ * This file contains three key pieces of the parsing pipeline:
+ *
+ *   1. instance_t::parse() -- the main per-file parse loop that reads lines
+ *      and dispatches them to directive/transaction handlers.
+ *   2. instance_t::read_line() -- low-level line reading with BOM handling
+ *      and trailing whitespace stripping.
+ *   3. journal_t::read_textual() -- the public entry point that creates the
+ *      top-level instance_t and kicks off parsing.
+ *
+ * The actual directive and transaction parsing logic lives in the companion
+ * files textual_directives.cc and textual_xacts.cc, respectively.
+ */
+
 #include "textual_internal.h"
 
 namespace ledger {
 
 using detail::application_t;
 using detail::instance_t;
+
+/*--- Main Parse Loop ---*/
 
 void instance_t::parse() {
   INFO("Parsing file " << context.pathname);
@@ -50,6 +72,10 @@ void instance_t::parse() {
   bool error_flag = false;
   xact_t* previous_xact = nullptr;
 
+  // Read lines until EOF or the '^' sentinel (used by the test harness).
+  // Each iteration dispatches one top-level line.  Errors are caught,
+  // reported, and counted rather than aborting the entire parse, so that
+  // all errors in a file can be shown at once.
   while (in.good() && !in.eof() && in.peek() != '^' && in.good()) {
     try {
       if (xact_t* xact = read_next_directive(error_flag, previous_xact)) {
@@ -90,6 +116,9 @@ void instance_t::parse() {
     }
   }
 
+  // After the file is fully parsed, propagate any epoch/year changes made
+  // by year/Y directives back to the global state so that subsequent files
+  // see the updated year.
   if (std::holds_alternative<boost::optional<datetime_t>>(apply_stack.front().value)) {
     epoch = std::get<boost::optional<datetime_t>>(apply_stack.front().value);
     year_directive_year = apply_stack.front().saved_year_directive;
@@ -103,6 +132,8 @@ void instance_t::parse() {
 
   TRACE_STOP(instance_parse, 1);
 }
+
+/*--- Line Reading ---*/
 
 std::streamsize instance_t::read_line(char*& line) {
   assert(in.good());
@@ -149,6 +180,8 @@ std::streamsize instance_t::read_line(char*& line) {
   return 0;
 }
 
+/*--- Line Dispatch ---*/
+
 xact_t* instance_t::read_next_directive(bool& error_flag, xact_t* previous_xact) {
   char* line;
   std::streamsize len = read_line(line);
@@ -158,6 +191,10 @@ xact_t* instance_t::read_next_directive(bool& error_flag, xact_t* previous_xact)
   if (!std::isspace(static_cast<unsigned char>(line[0])))
     error_flag = false;
 
+  // Dispatch based on the first character of the line.  This is the
+  // primary grammar entry point: digits start a transaction, '=' and '~'
+  // start automated and periodic transactions, comment characters are
+  // skipped, and everything else is a directive.
   switch (line[0]) {
   case '\0':
     assert(false); // shouldn't ever reach here
@@ -165,21 +202,23 @@ xact_t* instance_t::read_next_directive(bool& error_flag, xact_t* previous_xact)
 
   case ' ':
   case '\t':
+    // Indented lines belong to the previous construct.  If we get here
+    // without an active error, it means there was no preceding header.
     if (!error_flag)
       throw parse_error(_("Unexpected whitespace at beginning of line"));
     break;
 
-  case ';': // comments
+  case ';': // Line comments (multiple characters accepted)
   case '#':
   case '*':
   case '|':
     break;
 
-  case '-': // option setting
+  case '-': // Option setting (e.g. "--strict")
     option_directive(line);
     break;
 
-  case '0':
+  case '0': // Lines starting with a digit are transaction dates
   case '1':
   case '2':
   case '3':
@@ -190,41 +229,44 @@ xact_t* instance_t::read_next_directive(bool& error_flag, xact_t* previous_xact)
   case '8':
   case '9':
     return xact_directive(line, len, previous_xact);
-  case '=': // automated xact
+  case '=': // Automated transaction (predicate-based)
     automated_xact_directive(line);
     break;
-  case '~': // period xact
+  case '~': // Periodic (budget) transaction
     period_xact_directive(line);
     break;
 
-  case '@':
+  case '@': // '@' and '!' are optional prefixes on directives (ignored)
   case '!':
     line++;
     [[fallthrough]];
-  default: // some other directive
+  default: // Word-based or legacy single-character directive
+    // First try the word-based directive table (account, commodity, etc.).
+    // If that does not match, fall through to the legacy single-character
+    // directives inherited from the original Ledger format.
     if (!general_directive(line)) {
       switch (line[0]) {
 #if TIMELOG_SUPPORT
-      case 'i':
+      case 'i': // clock-in (lowercase = no payee capitalization)
         clock_in_directive(line, false);
         break;
-      case 'I':
+      case 'I': // clock-in (uppercase = capitalized payee)
         clock_in_directive(line, true);
         break;
 
-      case 'o':
+      case 'o': // clock-out (lowercase)
         clock_out_directive(line, false);
         break;
-      case 'O':
+      case 'O': // clock-out (uppercase)
         clock_out_directive(line, true);
         break;
 
-      case 'h':
+      case 'h': // ignored (historical Ledger compatibility)
       case 'b':
         break;
 #endif // TIMELOG_SUPPORT
 
-      case 'A': // a default account for unbalanced posts
+      case 'A': // A -- default account for unbalanced posts
         default_account_directive(line + 1);
         break;
       case 'C': // a set of conversions
@@ -254,10 +296,26 @@ xact_t* instance_t::read_next_directive(bool& error_flag, xact_t* previous_xact)
   return nullptr;
 }
 
+/*--- Symbol Lookup ---*/
+
 expr_t::ptr_op_t instance_t::lookup(const symbol_t::kind_t kind, const string& name) {
   return context.scope->lookup(kind, name);
 }
 
+/*--- Public Entry Point ---*/
+
+/**
+ * @brief Parse the current context's journal file and all its includes.
+ *
+ * This is the public entry point called by the session to read a journal.
+ * It creates a top-level instance_t, seeds the apply stack with the master
+ * account, runs the parse loop, and then applies any deferred postings.
+ *
+ * @param context_stack  The stack with the top-level file already pushed.
+ * @param hash_type      Hash algorithm for transaction chain verification.
+ * @return The number of transactions successfully parsed.
+ * @throws error_count if any parse errors were encountered.
+ */
 std::size_t journal_t::read_textual(parse_context_stack_t& context_stack, hash_type_t hash_type) {
   TRACE_START(parsing_total, 1, "Total time spent parsing text:");
   {

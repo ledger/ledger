@@ -39,6 +39,44 @@
 
 #include "history.h"
 
+/**
+ * @file   history.cc
+ * @author John Wiegley
+ *
+ * @ingroup math
+ *
+ * @brief Commodity price history graph implementation.
+ *
+ * This file implements the Boost.Graph-based price history system.
+ * The core data structure is an undirected adjacency list where:
+ *
+ * - Each vertex represents a commodity and stores a pointer to its
+ *   `commodity_t` object.
+ * - Each edge stores a `price_map_t` (time -> exchange rate) plus a
+ *   `price_point_t` cache used during shortest-path queries.
+ *
+ * Price lookups work in two modes:
+ *
+ * 1. **Any-target** (`find_price(source, moment)`): iterates adjacent
+ *    edges of the source vertex and picks the most recently priced
+ *    neighbor.
+ *
+ * 2. **Specific-target** (`find_price(source, target, moment)`): runs
+ *    Dijkstra's algorithm on a filtered view of the graph.  The filter
+ *    (`recent_edge_weight`) excludes edges with no price at or before
+ *    the query moment, and assigns edge weights equal to the number of
+ *    seconds since the most recent price -- so the shortest path
+ *    naturally prefers the most recently priced route.
+ *
+ * The use of `f_max` (instead of addition) as the distance combiner
+ * means the total "distance" of a multi-hop path is the age of its
+ * oldest price, which is the right metric: we want the path whose
+ * worst-case price staleness is minimized.
+ */
+
+/// Binary function that returns the maximum of two values.  Used as the
+/// distance combiner in Dijkstra's algorithm so that the "distance" of
+/// a path equals the weight of its heaviest (oldest) edge.
 template <typename T>
 struct f_max
 #if __cplusplus < 201103L
@@ -57,8 +95,22 @@ BOOST_INSTALL_PROPERTY(edge, price_ratio);
 
 namespace ledger {
 
+/*--- Implementation class (PIMPL) ---*/
+
+/**
+ * @brief The actual Boost.Graph-based price graph implementation.
+ *
+ * Hidden behind the PIMPL in `commodity_history_t` to keep Boost.Graph
+ * headers out of the public interface.  The graph is an undirected
+ * adjacency list with custom edge properties for storing exchange
+ * rate histories.
+ */
 class commodity_history_impl_t : public noncopyable {
 public:
+  /// The Boost.Graph type.  Vertices carry commodity pointers; edges
+  /// carry a weight (seconds since last price), a price_map_t (the
+  /// full price history for that pair), and a cached price_point_t
+  /// (set during filtered-graph queries).
   using Graph = adjacency_list<
       vecS, vecS, undirectedS,
       property<vertex_name_t, const commodity_t*, property<vertex_index_t, std::size_t>>,
@@ -67,18 +119,20 @@ public:
           property<edge_price_ratio_t, price_map_t, property<edge_price_point_t, price_point_t>>>,
       property<graph_name_t, std::string>>;
 
-  Graph price_graph;
+  Graph price_graph; ///< The price relationship graph
 
   using vertex_descriptor = graph_traits<Graph>::vertex_descriptor;
   using edge_descriptor = graph_traits<Graph>::edge_descriptor;
 
-  using NameMap = property_map<Graph, vertex_name_t>::type;
-  using EdgeWeightMap = property_map<Graph, edge_weight_t>::type;
-  using PricePointMap = property_map<Graph, edge_price_point_t>::type;
-  using PriceRatioMap = property_map<Graph, edge_price_ratio_t>::type;
+  using NameMap = property_map<Graph, vertex_name_t>::type;       ///< Vertex -> commodity*
+  using EdgeWeightMap = property_map<Graph, edge_weight_t>::type; ///< Edge -> staleness (seconds)
+  using PricePointMap =
+      property_map<Graph, edge_price_point_t>::type; ///< Edge -> cached price point
+  using PriceRatioMap =
+      property_map<Graph, edge_price_ratio_t>::type; ///< Edge -> full price history
 
-  PricePointMap pricemap;
-  PriceRatioMap ratiomap;
+  PricePointMap pricemap; ///< Property map for cached price points
+  PriceRatioMap ratiomap; ///< Property map for price history maps
 
   commodity_history_impl_t()
       : pricemap(get(edge_price_point, price_graph)), ratiomap(get(edge_price_ratio, price_graph)) {
@@ -104,6 +158,8 @@ public:
 
   void print_map(std::ostream& out, const datetime_t& moment = datetime_t());
 };
+
+/*--- commodity_history_t PIMPL delegation ---*/
 
 commodity_history_t::commodity_history_t() {
   p_impl.reset(new commodity_history_impl_t);
@@ -152,15 +208,30 @@ void commodity_history_t::print_map(std::ostream& out, const datetime_t& moment)
   p_impl->print_map(out, moment);
 }
 
+/*--- Edge filter for time-bounded graph queries ---*/
+
+/**
+ * @brief Edge predicate for Boost.Graph filtered_graph that selects only
+ *        edges with a price at or before the reference time.
+ *
+ * When used with `filtered_graph`, this functor:
+ * 1. Finds the most recent price entry at or before `reftime` in the
+ *    edge's price_map_t.
+ * 2. Rejects the edge if no such entry exists, or if the entry is
+ *    older than `oldest`.
+ * 3. Sets the edge weight to the number of seconds between `reftime`
+ *    and the price entry's timestamp (so Dijkstra prefers recent prices).
+ * 4. Caches the selected price point on the edge for later retrieval.
+ */
 template <typename EdgeWeightMap, typename PricePointMap, typename PriceRatioMap>
 class recent_edge_weight {
 public:
-  EdgeWeightMap weight;
-  PricePointMap price_point;
-  PriceRatioMap ratios;
+  EdgeWeightMap weight;      ///< Edge weight property map (written to)
+  PricePointMap price_point; ///< Cached price point property map (written to)
+  PriceRatioMap ratios;      ///< Full price history property map (read from)
 
-  datetime_t reftime;
-  datetime_t oldest;
+  datetime_t reftime; ///< The query time ("now" for the lookup)
+  datetime_t oldest;  ///< Optional lower bound; prices older than this are rejected
 
   recent_edge_weight() {}
   recent_edge_weight(EdgeWeightMap _weight, PricePointMap _price_point, PriceRatioMap _ratios,
@@ -208,6 +279,10 @@ public:
   }
 };
 
+/*--- Filtered graph type aliases ---*/
+
+/// The filtered graph type: the full price graph with edges restricted
+/// to those having a recent-enough price entry.
 using FGraph = filtered_graph<commodity_history_impl_t::Graph,
                               recent_edge_weight<commodity_history_impl_t::EdgeWeightMap,
                                                  commodity_history_impl_t::PricePointMap,
@@ -220,6 +295,8 @@ using FPredecessorMap =
                           commodity_history_impl_t::vertex_descriptor,
                           commodity_history_impl_t::vertex_descriptor&>;
 using FDistanceMap = iterator_property_map<long*, FIndexMap, long, long&>;
+
+/*--- Graph construction ---*/
 
 void commodity_history_impl_t::add_commodity(commodity_t& comm) {
   if (!comm.graph_index()) {
@@ -282,6 +359,8 @@ void commodity_history_impl_t::remove_price(const commodity_t& source, const com
   }
 }
 
+/*--- Price enumeration ---*/
+
 void commodity_history_impl_t::map_prices(const function<void(datetime_t, const amount_t&)>& fn,
                                           const commodity_t& source, const datetime_t& moment,
                                           const datetime_t& oldest, bool bidirectionally) {
@@ -329,6 +408,8 @@ void commodity_history_impl_t::map_prices(const function<void(datetime_t, const 
     }
   }
 }
+
+/*--- Price lookup: any target ---*/
 
 std::optional<price_point_t> commodity_history_impl_t::find_price(const commodity_t& source,
                                                                   const datetime_t& moment,
@@ -389,6 +470,8 @@ std::optional<price_point_t> commodity_history_impl_t::find_price(const commodit
   }
 }
 
+/*--- Price lookup: specific target (Dijkstra shortest path) ---*/
+
 std::optional<price_point_t> commodity_history_impl_t::find_price(const commodity_t& source,
                                                                   const commodity_t& target,
                                                                   const datetime_t& moment,
@@ -424,11 +507,17 @@ std::optional<price_point_t> commodity_history_impl_t::find_price(const commodit
   FPredecessorMap predecessorMap(&predecessors[0]);
   FDistanceMap distanceMap(&distances[0]);
 
+  // Run Dijkstra from the source vertex.  The f_max combiner means
+  // the total "distance" is the staleness of the oldest price on the
+  // path, so the algorithm finds the route with the freshest worst-case
+  // price.
   dijkstra_shortest_paths(
       fg, /* start= */ sv,
       predecessor_map(predecessorMap).distance_map(distanceMap).distance_combine(f_max<long>()));
 
-  // Extract the shortest path and performance the calculations
+  // Walk the predecessor chain from target back to source, multiplying
+  // (or inverting) exchange rates along each hop to compute the
+  // composite conversion rate.
   datetime_t least_recent = moment;
   amount_t price;
 
@@ -501,6 +590,10 @@ std::optional<price_point_t> commodity_history_impl_t::find_price(const commodit
   }
 }
 
+/*--- Graphviz output ---*/
+
+/// Boost.Graph vertex label writer for Graphviz DOT output.
+/// Writes the commodity symbol as the label for each vertex.
 template <class Name>
 class label_writer {
 public:

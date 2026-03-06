@@ -29,6 +29,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   py_account.cc
+ * @brief  Python bindings for account_t -- the hierarchical chart of accounts.
+ * @ingroup python
+ *
+ * Exposes account_t to Python as the `ledger.Account` class, along with
+ * AccountXData and AccountXDataDetails for extended runtime data.  Accounts
+ * form a tree (parent/children) and aggregate posting amounts.  This binding
+ * provides child account lookup, iteration over sub-accounts and postings,
+ * amount/total computation with optional expressions, and xdata access for
+ * report-time statistics.
+ */
+
 #include <system.hh>
 
 #include "pyinterp.h"
@@ -44,6 +57,8 @@ using namespace python;
 using namespace boost::python;
 
 namespace {
+
+/*--- Sequence Protocol ---*/
 
 long accounts_len(account_t& account) {
   return static_cast<long>(account.accounts.size());
@@ -75,6 +90,8 @@ account_t& accounts_getitem(account_t& account, long i) {
   }
 #endif
 
+/*--- Extended Data and Computation Wrappers ---*/
+
 account_t::xdata_t& py_xdata(account_t& account) {
   return account.xdata();
 }
@@ -83,6 +100,8 @@ PyObject* py_account_unicode(account_t& account) {
   return str_to_py_unicode(account.fullname());
 }
 
+/// Overloads for amount() and total() that accept an optional expression
+/// for custom aggregation from the Python side.
 value_t py_amount_0(const account_t& account) {
   return account.amount();
 }

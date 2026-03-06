@@ -29,6 +29,22 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   py_times.cc
+ * @brief  Python bindings for date/time types and their conversions.
+ * @ingroup python
+ *
+ * Provides bidirectional conversion between Boost.Date_Time types
+ * (date_t, datetime_t, time_duration_t) and Python's datetime module
+ * (datetime.date, datetime.datetime, datetime.timedelta).  Also exposes
+ * the parse_datetime and parse_date utility functions and the
+ * times_initialize/times_shutdown lifecycle hooks.
+ *
+ * The converters are registered at module load time via the
+ * register_python_conversion template, making automatic conversion
+ * available wherever these types appear in the bindings.
+ */
+
 #include <system.hh>
 #include <datetime.h>
 
@@ -36,12 +52,12 @@
 #include "pyutils.h"
 #include "times.h"
 
-// jww (2007-05-04): Convert time duration objects to PyDelta
-
 namespace ledger {
 
 using namespace python;
 using namespace boost::python;
+
+/*--- date_t <-> Python datetime.date ---*/
 
 struct date_to_python {
   static PyObject* convert(const date_t& dte) {
@@ -74,6 +90,8 @@ struct date_from_python {
 };
 
 using date_python_conversion = register_python_conversion<date_t, date_to_python, date_from_python>;
+
+/*--- datetime_t <-> Python datetime.datetime ---*/
 
 struct datetime_to_python {
   static PyObject* convert(const datetime_t& moment) {
@@ -125,7 +143,8 @@ struct datetime_from_python {
 using datetime_python_conversion =
     register_python_conversion<datetime_t, datetime_to_python, datetime_from_python>;
 
-/* Convert time_duration to/from python */
+/*--- time_duration_t <-> Python datetime.timedelta ---*/
+
 struct duration_to_python {
   static int get_usecs(boost::posix_time::time_duration const& d) {
     static int64_t resolution = boost::posix_time::time_duration::ticks_per_second();
@@ -148,8 +167,8 @@ struct duration_to_python {
   }
 };
 
-/* Should support the negative values, but not the special boost time
-   durations */
+/// Supports negative values but not special Boost time durations
+/// (pos_infin, neg_infin, not_a_date_time).
 struct duration_from_python {
   static void* convertible(PyObject* obj_ptr) {
     if (!PyDelta_Check(obj_ptr))
@@ -183,6 +202,8 @@ struct duration_from_python {
 
 using duration_python_conversion =
     register_python_conversion<time_duration_t, duration_to_python, duration_from_python>;
+
+/*--- Parse Functions ---*/
 
 datetime_t py_parse_datetime(const string& str) {
   return parse_datetime(str);

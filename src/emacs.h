@@ -36,8 +36,30 @@
 /**
  * @file   emacs.h
  * @author John Wiegley
+ * @brief  Emacs Lisp (s-expression) output handler for Ledger integration.
  *
  * @ingroup report
+ *
+ * This handler produces output as Emacs Lisp s-expressions, designed to be
+ * consumed by ledger-mode in Emacs.  Rather than human-readable text, the
+ * output is a nested list structure that Emacs can `read` directly into
+ * Lisp objects for programmatic access to transaction and posting data.
+ *
+ * The output structure is:
+ * @code
+ * ((<xact-1-header>
+ *   (<posting-1-line> <posting-2-line> ...))
+ *  (<xact-2-header>
+ *   (<posting-1-line> ...)))
+ * @endcode
+ *
+ * Each transaction header includes the source file path, line number,
+ * date (as an Emacs time value or custom format), code, and payee.
+ * Each posting includes the line number, account name, amount, clearing
+ * state, and optional cost and note.
+ *
+ * This mode is activated by the `--pager=emacs` or related Emacs
+ * integration options in ledger-mode.
  */
 #pragma once
 
@@ -49,28 +71,46 @@ class xact_t;
 
 class report_t;
 
+/**
+ * @brief Terminal handler that outputs postings as Emacs Lisp s-expressions.
+ *
+ * Transactions are grouped: when a new transaction is encountered, the
+ * previous one's list is closed and a new one opened.  flush() closes
+ * the outermost list.  Strings are escaped for safe embedding in Lisp
+ * double-quoted string literals.
+ */
 class format_emacs_posts : public item_handler<post_t> {
-  format_emacs_posts();
+  format_emacs_posts(); ///< Disabled default constructor (output stream is required).
 
 protected:
-  report_t& report;
-  std::ostream& out;
-  xact_t* last_xact;
+  report_t& report;  ///< The report context (provides date format options).
+  std::ostream& out; ///< The output stream for s-expression output.
+  xact_t* last_xact; ///< Tracks the previous transaction to detect boundaries.
 
 public:
+  /// @param _report  The report context.
+  /// @param _out     The output stream to write s-expressions to.
   format_emacs_posts(report_t& _report, std::ostream& _out)
       : report(_report), out(_out), last_xact(nullptr) {
     TRACE_CTOR(format_emacs_posts, "report_t&, std::ostream&");
   }
   ~format_emacs_posts() override { TRACE_DTOR(format_emacs_posts); }
 
+  /// @brief Write the transaction header portion of the s-expression
+  ///        (file path, line number, date, code, payee).
   virtual void write_xact(xact_t& xact);
+
+  /// @brief Close the outermost list and flush the stream.
   void flush() override {
     if (last_xact)
       out << "))\n";
     out.flush();
   }
+
+  /// @brief Format a single posting as an s-expression list element.
   void operator()(post_t& post) override;
+
+  /// @brief Escape backslashes and double quotes for Lisp string literals.
   virtual string escape_string(string raw);
 };
 

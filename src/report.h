@@ -38,6 +38,27 @@
  * @author John Wiegley
  *
  * @ingroup report
+ *
+ * @brief Central report configuration: the report_t class and its option
+ *        declarations.
+ *
+ * report_t is the primary scope object for every ledger command.  It owns all
+ * user-configurable options (declared via the OPTION macros from option.h),
+ * the built-in value-expression functions available in format strings, and the
+ * entry points that drive the four report modes: posting iteration, account
+ * summation, commodity listing, and journal output.
+ *
+ * Every command invocation creates a fresh report_t (owned by the global
+ * session_t) so that option state is not carried across interactive commands.
+ * The option handlers declared here frequently cross-reference each other
+ * using the OTHER() macro -- for example, --basis activates --revalued and
+ * sets the amount expression to "rounded(cost)".  This cascading design means
+ * the user-facing options form a high-level API, while the internal expression
+ * machinery handles the details.
+ *
+ * @see option.h for the OPTION / OPTION_ / OPTION_CTOR macro system.
+ * @see report.cc for option handler implementations, built-in function bodies,
+ *      and the symbol lookup table.
  */
 #pragma once
 
@@ -100,21 +121,53 @@ class xact_t;
 //    says that the formatter should be "flushed" after the entities are
 //    iterated.  This does not happen for the commodities iteration, however.
 
+/**
+ * @brief Central report configuration and command dispatch scope.
+ *
+ * report_t inherits from scope_t and serves as the primary evaluation context
+ * for all ledger commands.  It holds:
+ *
+ * - **Option handlers** -- ~100 options declared via OPTION/OPTION_/OPTION_CTOR
+ *   macros, covering filtering (--limit, --begin, --end, --cleared, etc.),
+ *   calculation (--amount, --total, --market, --gain, --basis, etc.),
+ *   display (--format, --sort, --columns, --color, etc.), and
+ *   grouping/period (--period, --daily, --monthly, --group-by, etc.).
+ *
+ * - **Built-in functions** -- fn_market(), fn_scrub(), fn_format_date(), etc.,
+ *   callable from value expressions in format strings.
+ *
+ * - **Report drivers** -- posts_report(), accounts_report(), commodities_report()
+ *   which assemble the filter chain and iterate journal data.
+ *
+ * - **Symbol lookup** -- lookup() resolves FUNCTION, OPTION, COMMAND, and
+ *   PRECOMMAND symbols, delegating to session_t for global symbols.
+ *
+ * A new report_t is created for each command invocation so that option state
+ * is isolated.  The session_t (which owns the journal) persists across
+ * commands in interactive mode.
+ *
+ * @see option_t for the option template machinery.
+ * @see chain.h for the post_handler filter chain assembly.
+ */
 class report_t : public scope_t {
   report_t();
 
 public:
-  session_t& session;
-  output_stream_t output_stream;
+  session_t& session;            ///< The owning session (provides journal, global options)
+  output_stream_t output_stream; ///< Manages pager, file output, or stdout as configured
 
-#define BUDGET_NO_BUDGET 0x00
-#define BUDGET_BUDGETED 0x01
-#define BUDGET_UNBUDGETED 0x02
-#define BUDGET_WRAP_VALUES 0x04
+  /*--- Budget Mode Flags ---*/
 
-  datetime_t terminus;
-  optional<datetime_t> gain_from;
-  uint_least8_t budget_flags;
+#define BUDGET_NO_BUDGET 0x00   ///< No budget reporting (default)
+#define BUDGET_BUDGETED 0x01    ///< Show only budgeted accounts (--budget)
+#define BUDGET_UNBUDGETED 0x02  ///< Show only unbudgeted accounts (--unbudgeted)
+#define BUDGET_WRAP_VALUES 0x04 ///< Wrap amounts as (actual, budget) pairs for budget command
+
+  datetime_t
+      terminus; ///< Valuation date for market prices (defaults to now, adjusted by --end/--now)
+  optional<datetime_t>
+      gain_from; ///< Reference date for --gain-since (compute gain from this date's market value)
+  uint_least8_t budget_flags; ///< Bitmask of BUDGET_* flags controlling budget report behavior
 
   explicit report_t(session_t& _session)
       : session(_session), terminus(CURRENT_TIME()), budget_flags(BUDGET_NO_BUDGET) {
@@ -125,105 +178,165 @@ public:
     output_stream.close();
   }
 
+  /// @brief Close the output stream immediately (used for early cleanup).
   void quick_close() { output_stream.close(); }
 
   string description() override { return _("current report"); }
 
+  /// @brief Reconcile option interactions after all options are parsed.
+  /// Handles color/pager auto-detection, column width calculation, period
+  /// normalization, and command-specific defaults (e.g., --related-all for print).
+  /// @param verb  The command name (e.g., "balance", "register", "print").
   void normalize_options(const string& verb);
+
+  /// @brief Extract begin/end dates from --period and propagate to --limit.
+  /// If the period has no duration component (just begin/end), turns off --period.
   void normalize_period();
+
+  /// @brief Parse positional query arguments into --limit, --only, --display, etc.
+  /// Uses the query_t parser to decompose structured query expressions.
+  /// @param args    The positional arguments as a value_t sequence.
+  /// @param whence  Source label for provenance tracking.
   void parse_query_args(const value_t& args, const string& whence);
 
+  /*--- Report Drivers ---*/
+
+  /// @brief Run a posting-based report (register, csv, print, etc.).
+  /// Assembles the filter chain, iterates all journal postings, and flushes.
   void posts_report(post_handler_ptr handler);
+  /// @brief Overload that preserves the handler chain in @a saved_chain for later use.
   void posts_report(post_handler_ptr handler, post_handler_ptr& saved_chain);
+  /// @brief Run a report using randomly generated postings (for testing).
   void generate_report(post_handler_ptr handler);
+  /// @brief Run a report over a single transaction's postings (for xact/draft commands).
   void xact_report(post_handler_ptr handler, xact_t& xact);
+  /// @brief Run an account-based report (balance, budget, cleared).
+  /// First accumulates posting totals into accounts, then iterates the account tree.
   void accounts_report(acct_handler_ptr handler);
+  /// @brief Run a commodity/price report (prices, pricedb commands).
+  /// Strips state predicates from --limit since they don't apply to price entries.
   void commodities_report(post_handler_ptr handler);
 
+  /// @brief Strip annotations from a value according to what_to_keep() settings.
+  /// Called as "scrub()" in format strings to clean lot info before display.
   value_t display_value(const value_t& val);
 
-  value_t fn_amount_expr(call_scope_t& scope);
-  value_t fn_total_expr(call_scope_t& scope);
-  value_t fn_display_amount(call_scope_t& scope);
-  value_t fn_display_total(call_scope_t& scope);
-  value_t fn_top_amount(call_scope_t& val);
-  value_t fn_should_bold(call_scope_t& scope);
-  value_t fn_market(call_scope_t& scope);
-  value_t fn_get_at(call_scope_t& scope);
-  value_t fn_is_seq(call_scope_t& scope);
-  value_t fn_strip(call_scope_t& scope);
-  value_t fn_trim(call_scope_t& scope);
-  value_t fn_format(call_scope_t& scope);
-  value_t fn_print(call_scope_t& scope);
-  value_t fn_scrub(call_scope_t& scope);
-  value_t fn_quantity(call_scope_t& scope);
-  value_t fn_rounded(call_scope_t& scope);
-  value_t fn_unrounded(call_scope_t& scope);
-  value_t fn_truncated(call_scope_t& scope);
-  value_t fn_truncate(call_scope_t& scope);
-  value_t fn_floor(call_scope_t& scope);
-  value_t fn_ceiling(call_scope_t& scope);
-  value_t fn_clear_commodity(call_scope_t& scope);
-  value_t fn_round(call_scope_t& scope);
-  value_t fn_roundto(call_scope_t& scope);
-  value_t fn_unround(call_scope_t& scope);
-  value_t fn_abs(call_scope_t& scope);
-  value_t fn_justify(call_scope_t& scope);
-  value_t fn_quoted(call_scope_t& scope);
-  value_t fn_quoted_rfc(call_scope_t& scope);
-  value_t fn_join(call_scope_t& scope);
-  value_t fn_format_date(call_scope_t& scope);
-  value_t fn_format_datetime(call_scope_t& scope);
-  value_t fn_ansify_if(call_scope_t& scope);
-  value_t fn_percent(call_scope_t& scope);
-  value_t fn_commodity(call_scope_t& scope);
-  value_t fn_commodity_price(call_scope_t& scope);
-  value_t fn_set_commodity_price(call_scope_t& scope);
-  value_t fn_nail_down(call_scope_t& scope);
-  value_t fn_lot_date(call_scope_t& scope);
-  value_t fn_lot_price(call_scope_t& scope);
-  value_t fn_lot_tag(call_scope_t& scope);
-  value_t fn_to_boolean(call_scope_t& scope);
-  value_t fn_to_int(call_scope_t& scope);
-  value_t fn_to_datetime(call_scope_t& scope);
-  value_t fn_to_date(call_scope_t& scope);
-  value_t fn_to_amount(call_scope_t& scope);
-  value_t fn_to_balance(call_scope_t& scope);
-  value_t fn_to_string(call_scope_t& scope);
-  value_t fn_to_mask(call_scope_t& scope);
-  value_t fn_to_sequence(call_scope_t& scope);
-  value_t fn_averaged_lots(call_scope_t& scope);
-  value_t fn_fifo_lots(call_scope_t& scope);
-  value_t fn_lifo_lots(call_scope_t& scope);
+  /*--- Built-in Value Expression Functions ---*/
+  // These methods implement the functions callable from format strings and
+  // value expressions (e.g., "market(amount, value_date, exchange)").
+  // They are registered in lookup() under symbol_t::FUNCTION.
 
-  value_t fn_now(call_scope_t&) { return terminus; }
-  value_t fn_today(call_scope_t&) { return terminus.date(); }
+  // Core expression evaluators
+  value_t fn_amount_expr(call_scope_t& scope);    ///< Evaluate the current --amount expression
+  value_t fn_total_expr(call_scope_t& scope);     ///< Evaluate the current --total expression
+  value_t fn_display_amount(call_scope_t& scope); ///< Evaluate --display-amount expression
+  value_t
+  fn_display_total(call_scope_t& scope);    ///< Evaluate --display-total (with caching fast path)
+  value_t fn_top_amount(call_scope_t& val); ///< Extract the first amount from a balance or sequence
+  value_t
+  fn_should_bold(call_scope_t& scope); ///< Evaluate --bold-if expression for conditional formatting
 
-  value_t fn_options(call_scope_t&) { return scope_value(this); }
+  // Market value and commodity functions
+  value_t
+  fn_market(call_scope_t& scope); ///< Convert to market value: market(val [, date [, commodity]])
+  value_t fn_get_at(call_scope_t& scope); ///< Index into a sequence: get_at(seq, index)
+  value_t fn_is_seq(call_scope_t& scope); ///< Test if a value is a sequence
+  value_t fn_strip(call_scope_t& scope);  ///< Strip annotations per what_to_keep()
+  value_t fn_trim(call_scope_t& scope);   ///< Trim whitespace from a string value
+  value_t fn_format(call_scope_t& scope); ///< Apply a format string: format("%(date)")
+  value_t fn_print(call_scope_t& scope);  ///< Print values to the output stream
+  value_t fn_scrub(call_scope_t& scope);  ///< Alias for display_value() -- strip and unreduced
 
+  // Numeric rounding and precision
+  value_t fn_quantity(call_scope_t& scope);  ///< Extract the numeric quantity (strip commodity)
+  value_t fn_rounded(call_scope_t& scope);   ///< Round to commodity display precision
+  value_t fn_unrounded(call_scope_t& scope); ///< Return the unrounded (full precision) value
+  value_t fn_truncated(call_scope_t& scope); ///< Truncate display string or numeric value
+  value_t fn_truncate(call_scope_t& scope);  ///< Numeric truncation (toward zero)
+  value_t fn_floor(call_scope_t& scope);     ///< Floor: round toward negative infinity
+  value_t fn_ceiling(call_scope_t& scope);   ///< Ceiling: round toward positive infinity
+  value_t fn_clear_commodity(call_scope_t& scope); ///< Remove commodity from an amount
+  value_t fn_round(call_scope_t& scope);           ///< Round to nearest integer
+  value_t fn_roundto(call_scope_t& scope);         ///< Round to N decimal places: roundto(val, N)
+  value_t fn_unround(call_scope_t& scope);         ///< Synonym for unrounded()
+  value_t fn_abs(call_scope_t& scope);             ///< Absolute value
+
+  // Formatting and display helpers
+  value_t fn_justify(call_scope_t& scope);     ///< Justify/pad a value within a column width
+  value_t fn_quoted(call_scope_t& scope);      ///< Wrap in double quotes (backslash escaping)
+  value_t fn_quoted_rfc(call_scope_t& scope);  ///< Wrap in double quotes (RFC 4180 CSV escaping)
+  value_t fn_join(call_scope_t& scope);        ///< Replace newlines with \\n in a string
+  value_t fn_format_date(call_scope_t& scope); ///< Format a date: format_date(d [, fmt])
+  value_t
+  fn_format_datetime(call_scope_t& scope);   ///< Format a datetime: format_datetime(dt [, fmt])
+  value_t fn_ansify_if(call_scope_t& scope); ///< Wrap text in ANSI color codes if condition is met
+  value_t fn_percent(call_scope_t& scope);   ///< Compute percentage: percent(part, whole)
+
+  // Commodity and lot inspection
+  value_t fn_commodity(call_scope_t& scope);       ///< Return the commodity symbol of an amount
+  value_t fn_commodity_price(call_scope_t& scope); ///< Look up a commodity's price at a given date
+  value_t fn_set_commodity_price(call_scope_t& scope); ///< Inject a price into the price history
+  value_t fn_nail_down(call_scope_t& scope); ///< Fix an amount's per-unit cost via annotation
+  value_t fn_lot_date(call_scope_t& scope);  ///< Extract the lot date annotation
+  value_t fn_lot_price(call_scope_t& scope); ///< Extract the lot price annotation
+  value_t fn_lot_tag(call_scope_t& scope);   ///< Extract the lot tag (note) annotation
+
+  // Type conversion functions (callable as to_boolean(), to_int(), etc.)
+  value_t fn_to_boolean(call_scope_t& scope);  ///< Convert to boolean
+  value_t fn_to_int(call_scope_t& scope);      ///< Convert to integer (long)
+  value_t fn_to_datetime(call_scope_t& scope); ///< Convert to datetime
+  value_t fn_to_date(call_scope_t& scope);     ///< Convert to date
+  value_t fn_to_amount(call_scope_t& scope);   ///< Convert to amount_t
+  value_t fn_to_balance(call_scope_t& scope);  ///< Convert to balance_t
+  value_t fn_to_string(call_scope_t& scope);   ///< Convert to string
+  value_t fn_to_mask(call_scope_t& scope);     ///< Convert to regex mask
+  value_t fn_to_sequence(call_scope_t& scope); ///< Convert to sequence
+
+  // Lot averaging and ordering
+  value_t fn_averaged_lots(call_scope_t& scope); ///< Average lot prices in a balance
+  value_t fn_fifo_lots(call_scope_t& scope);     ///< FIFO lot ordering for a balance
+  value_t fn_lifo_lots(call_scope_t& scope);     ///< LIFO lot ordering for a balance
+
+  value_t fn_now(call_scope_t&) { return terminus; } ///< Return terminus (the "now" datetime)
+  value_t fn_today(call_scope_t&) { return terminus.date(); } ///< Return terminus as a date
+
+  value_t fn_options(call_scope_t&) {
+    return scope_value(this);
+  } ///< Return this report as a scope value (for "options" in format strings)
+
+  /// @brief Determine the format string for a report, preferring --format if set.
+  /// @param option  The command-specific default format option (e.g., register_format_).
+  /// @return The user's --format value, or the command default.
   string report_format(option_t<report_t>& option) {
     if (HANDLED(format_))
       return HANDLER(format_).str();
     return option.str();
   }
 
+  /// @brief Return an option's format string if set, or none.
   optional<string> maybe_format(option_t<report_t>& option) {
     if (option)
       return option.str();
     return none;
   }
 
-  value_t reload_command(call_scope_t&);
-  value_t source_command(call_scope_t& args);
-  value_t echo_command(call_scope_t& scope);
-  value_t pricemap_command(call_scope_t& scope);
+  /*--- Interactive Commands ---*/
 
+  value_t reload_command(call_scope_t&);         ///< Reload all journal files
+  value_t source_command(call_scope_t& args);    ///< Source a specific journal file or reload all
+  value_t echo_command(call_scope_t& scope);     ///< Echo a string to the output stream
+  value_t pricemap_command(call_scope_t& scope); ///< Print the commodity price graph
+
+  /// @brief Determine which lot annotation details to preserve based on --lot-* options.
+  /// Controls what information survives strip_annotations() in scrub/display_value.
   keep_details_t what_to_keep() {
     bool lots = HANDLED(lots) || HANDLED(lots_actual);
     return keep_details_t(lots || HANDLED(lot_prices), lots || HANDLED(lot_dates),
                           lots || HANDLED(lot_notes), HANDLED(lots_actual));
   }
 
+  /// @brief Print all options that have been set, with their values and sources.
+  /// Implements the --options display (ledger reg --options).
   void report_options(std::ostream& out) {
     HANDLER(abbrev_len_).report(out);
     HANDLER(account_).report(out);
@@ -360,18 +473,51 @@ public:
     HANDLER(values).report(out);
   }
 
+  /// @brief Look up an option handler by name (first-character dispatched switch table).
+  /// Called by lookup() for symbol_t::OPTION and symbol_t::FUNCTION lookups.
+  /// @param p  Option name with underscores (e.g., "sort_all_").
+  /// @return Pointer to the matching option handler, or nullptr.
   option_t<report_t>* lookup_option(const char* p);
 
+  /// @brief Define a symbol in the session scope (delegates to session.define).
   void define(const symbol_t::kind_t kind, const string& name,
               const expr_t::ptr_op_t& def) override;
 
+  /// @brief Master symbol lookup: resolves functions, options, commands, and precommands.
+  /// First checks session scope, then searches report-local functions by name,
+  /// then options (which double as value expression variables), then commands.
   expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 
   /**
-   * Option handlers
+   * @name Option Handlers
+   *
+   * All option declarations follow.  They are grouped conceptually but declared
+   * in alphabetical order.  Key groups include:
+   *
+   * - **Display options**: abbrev_len_, color, columns_, format_, truncate_, wide,
+   *   date_format_, date_width_, payee_width_, account_width_, amount_width_, total_width_
+   * - **Filtering options**: actual, begin_, end_, cleared, current, display_, empty,
+   *   limit_, only_, pending, real, uncleared, unbudgeted
+   * - **Calculation options**: amount_, total_, basis, gain, market, exchange_,
+   *   historical, price, quantity, percent, round, unround, average, deviation
+   * - **Period/grouping options**: daily, weekly, monthly, quarterly, yearly,
+   *   period_, group_by_, subtotal, collapse, by_payee, sort_, sort_all_
+   * - **Format templates**: balance_format_, register_format_, csv_format_,
+   *   budget_format_, cleared_format_, prices_format_, pricedb_format_,
+   *   plot_amount_format_, plot_total_format_, group_title_format_
+   * - **Lot options**: lot_dates, lot_prices, lot_notes, lots, lots_actual,
+   *   average_lot_prices, lots_fifo, lots_lifo
+   * - **Output control**: output_, pager_, no_pager, no_color, no_total, no_titles
+   *
+   * Options that take an argument have a trailing underscore in their name
+   * (e.g., begin_ becomes --begin VALUE on the CLI).
    */
+  ///@{
 
-  OPTION_CTOR(report_t, abbrev_len_, CTOR(report_t, abbrev_len_) { on(none, "2"); });
+  OPTION_CTOR(
+      report_t, abbrev_len_, CTOR(report_t, abbrev_len_) {
+        on(none, "2");
+      }); ///< Minimum abbreviation length for account names (default: 2)
 
   OPTION(report_t, account_);
   OPTION_(
@@ -1083,15 +1229,33 @@ public:
         OTHER(period_).on(whence, "yearly");
       });
 
-  OPTION(report_t, meta_width_);
-  OPTION(report_t, date_width_);
-  OPTION(report_t, payee_width_);
-  OPTION(report_t, account_width_);
-  OPTION(report_t, amount_width_);
-  OPTION(report_t, total_width_);
-  OPTION(report_t, values);
+  /*--- Column Width Options ---*/
+
+  OPTION(report_t, meta_width_);    ///< Width of the meta-tag prepend column
+  OPTION(report_t, date_width_);    ///< Width of the date column in register reports
+  OPTION(report_t, payee_width_);   ///< Width of the payee column in register reports
+  OPTION(report_t, account_width_); ///< Width of the account column in register reports
+  OPTION(report_t, amount_width_);  ///< Width of the amount column in register/balance reports
+  OPTION(report_t, total_width_);   ///< Width of the total column in register reports
+  OPTION(report_t, values);         ///< Show computed expression values (for debugging)
+
+  ///@}
 };
 
+/**
+ * @brief Functor that binds a formatting handler to a report method and drives execution.
+ *
+ * reporter is used in the COMMAND lookup table to connect a command name
+ * (e.g., "register", "balance") to the appropriate report driver method
+ * (posts_report, accounts_report, commodities_report) and output formatter.
+ * When invoked as a functor, it parses any remaining query arguments and
+ * then calls the report method.
+ *
+ * @tparam Type           The item type being reported (post_t or account_t).
+ * @tparam handler_ptr    The shared_ptr type for the handler (post_handler_ptr or
+ * acct_handler_ptr).
+ * @tparam report_method  Pointer to the report_t member function that drives iteration.
+ */
 template <class Type = post_t, class handler_ptr = post_handler_ptr,
           void (report_t::*report_method)(handler_ptr) = &report_t::posts_report>
 class reporter {

@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   filters.cc
+ * @author John Wiegley
+ *
+ * @ingroup report
+ *
+ * @brief Implementations of the filter handlers declared in filters.h.
+ *
+ * Each filter in the posting pipeline implements operator()(post_t&) to
+ * process incoming postings and flush() to emit accumulated results.
+ * This file is organized by filter category, matching the inventory in
+ * the filters.h module documentation.
+ */
+
 #include <system.hh>
 #include <utility>
 
@@ -41,6 +55,9 @@
 
 namespace ledger {
 
+/*--- Collection and Splitting ---*/
+
+/// Print a group title to the output handler (unless --no-titles is active).
 void post_splitter::print_title(const value_t& val) {
   if (!report.HANDLED(no_titles)) {
     std::ostringstream buf;
@@ -49,6 +66,15 @@ void post_splitter::print_title(const value_t& val) {
   }
 }
 
+/**
+ * Flush all accumulated groups through the post_chain.
+ *
+ * For each group (keyed by group_by_expr result), the preflush callback is
+ * invoked (typically to print a title), then all postings in the group are
+ * forwarded through the post_chain, which is flushed and optionally cleared
+ * (unless --group-by-cumulative is active, which preserves running totals
+ * across groups).
+ */
 void post_splitter::flush() {
   bool cumulative = report.HANDLED(group_by_cumulative);
 
@@ -70,6 +96,7 @@ void post_splitter::flush() {
   }
 }
 
+/// Evaluate group_by_expr and insert the posting into the appropriate bucket.
 void post_splitter::operator()(post_t& post) {
   bind_scope_t bound_scope(report, post);
   value_t result(group_by_expr.calc(bound_scope));
@@ -87,6 +114,18 @@ void post_splitter::operator()(post_t& post) {
   }
 }
 
+/*--- Truncation ---*/
+
+/**
+ * Flush accumulated postings, forwarding only those within the head/tail
+ * window.
+ *
+ * First counts the total number of distinct transactions, then iterates
+ * through all accumulated postings.  A posting is forwarded if its
+ * transaction index falls within the head_count window from the start
+ * and/or the tail_count window from the end.  Negative counts invert
+ * the selection (e.g., head_count=-2 skips the first 2 transactions).
+ */
 void truncate_xacts::flush() {
   if (!posts.size())
     return;
@@ -133,6 +172,13 @@ void truncate_xacts::flush() {
   item_handler<post_t>::flush();
 }
 
+/**
+ * Accumulate postings and track transaction boundaries.
+ *
+ * When only --head is active (no --tail), an early termination optimization
+ * triggers flush() as soon as head_count transactions have been seen,
+ * avoiding accumulation of the entire posting set.
+ */
 void truncate_xacts::operator()(post_t& post) {
   if (completed)
     return;
@@ -152,6 +198,16 @@ void truncate_xacts::operator()(post_t& post) {
   posts.push_back(&post);
 }
 
+/*--- Sorting ---*/
+
+/**
+ * Sort accumulated postings by sort_order and forward them downstream.
+ *
+ * Uses std::stable_sort with compare_items to preserve the relative order
+ * of postings with equal sort keys.  After sorting, the POST_EXT_SORT_CALC
+ * flag is cleared from each posting's xdata to allow re-evaluation by
+ * downstream handlers.
+ */
 void sort_posts::post_accumulated_posts() {
   std::stable_sort(posts.begin(), posts.end(), compare_items<post_t>(sort_order, report));
 
@@ -163,7 +219,10 @@ void sort_posts::post_accumulated_posts() {
   posts.clear();
 }
 
+/*--- Helper utilities ---*/
+
 namespace {
+/// Split a string by a delimiter character into a list of substrings.
 void split_string(const string& str, const char ch, std::list<string>& strings) {
   const char* b = str.c_str();
   for (const char* p = b; *p; p++) {
@@ -175,6 +234,7 @@ void split_string(const string& str, const char ch, std::list<string>& strings) 
   strings.push_back(string(b));
 }
 
+/// Create or find a temporary account from a list of path components.
 account_t* create_temp_account_from_path(std::list<string>& account_names, temporaries_t& temps,
                                          account_t* master) {
   account_t* new_account = nullptr;
@@ -193,6 +253,15 @@ account_t* create_temp_account_from_path(std::list<string>& account_names, tempo
 }
 } // namespace
 
+/*--- Anonymization ---*/
+
+/**
+ * Replace a commodity symbol with a sequential letter label (A, B, C, ..., AA, AB, ...).
+ *
+ * The mapping is stable: the same original commodity always maps to the same
+ * label within a single anonymization pass.  Commodity flags and precision
+ * are preserved from the original.
+ */
 void anonymize_posts::render_commodity(amount_t& amt) {
   commodity_t& comm(amt.commodity());
 
@@ -225,6 +294,15 @@ void anonymize_posts::render_commodity(amount_t& amt) {
   }
 }
 
+/**
+ * Anonymize a posting by replacing its payee, account names, and commodity
+ * symbols with hashed/sequential substitutes.
+ *
+ * A new temporary transaction is created for each distinct xact, with the
+ * payee replaced by a SHA1 hash.  Account names at each level are similarly
+ * hashed.  Amounts retain their numeric value but receive relabeled
+ * commodities.  Notes, codes, and tags are stripped entirely.
+ */
 void anonymize_posts::operator()(post_t& post) {
   bool copy_xact_details = false;
 
@@ -277,6 +355,19 @@ void anonymize_posts::operator()(post_t& post) {
   (*handler)(temp);
 }
 
+/*--- Calculation ---*/
+
+/**
+ * Evaluate the amount expression for this posting and update running totals.
+ *
+ * For each posting, this handler:
+ * 1. Propagates the running total and sequence count from the previous posting.
+ * 2. Evaluates amount_expr and stores the result in xdata.visited_value.
+ * 3. Marks the posting and its account as visited.
+ * 4. If calc_running_total is true, adds the visited_value to the running total.
+ * 5. If maintain_stripped_total is true, incrementally maintains a pre-stripped
+ *    display total (O(1) per posting) for downstream display_filter_posts.
+ */
 void calc_posts::operator()(post_t& post) {
   post_t::xdata_t& xdata(post.xdata());
 
@@ -319,7 +410,34 @@ void calc_posts::operator()(post_t& post) {
   last_post = &post;
 }
 
+/*--- Synthetic posting generation helper ---*/
+
 namespace {
+/**
+ * Create a synthetic (generated) posting and forward it through the handler.
+ *
+ * This helper is used by multiple filters (collapse_posts, subtotal_posts,
+ * changed_value_posts, display_filter_posts, posts_as_equity) to create
+ * temporary postings that represent computed values rather than journal entries.
+ * The posting is attached to the given xact and account, with its amount set
+ * from the value parameter.  Balance and sequence values are stored as compound
+ * values in xdata.
+ *
+ * @param value            The amount/balance to assign to the posting.
+ * @param account          The account for the synthetic posting.
+ * @param xact             The transaction to attach the posting to.
+ * @param temps            Temporary storage owning the posting's lifetime.
+ * @param handler          The downstream handler to receive the posting.
+ * @param date             Optional date override for the posting.
+ * @param act_date_p       If true, date is an actual date; if false, a value date.
+ * @param total            Optional total to store in xdata.
+ * @param direct_amount    If true, mark as POST_EXT_DIRECT_AMT.
+ * @param mark_visited     If true, mark posting and account as visited.
+ * @param bidir_link       If true, create bidirectional xact/post links.
+ * @param source_post      Optional source posting to copy metadata from.
+ * @param force_virtual    If true, force the posting to be virtual.
+ * @param force_must_balance If true, force virtual posting to require balance.
+ */
 void handle_value(const value_t& value, account_t* account, xact_t* xact, temporaries_t& temps,
                   const post_handler_ptr& handler, const date_t& date = date_t(),
                   const bool act_date_p = true, const value_t& total = value_t(),
@@ -402,6 +520,20 @@ void handle_value(const value_t& value, account_t* account, xact_t* xact, tempor
 }
 } // namespace
 
+/*--- Collapsing ---*/
+
+/**
+ * Emit the collapsed representation of the current transaction's postings.
+ *
+ * The behavior depends on flags and counts:
+ * - **--collapse-if-zero with non-zero subtotal**: pass all component postings
+ *   through uncollapsed.
+ * - **Regular collapse, single displayed post**: optimize by passing the
+ *   original posting through directly.
+ * - **Regular collapse, multiple posts**: create synthetic postings with
+ *   per-account totals (or grouped by date+account when --depth with --effective).
+ * - **--collapse-if-zero with zero subtotal**: suppress entirely.
+ */
 void collapse_posts::report_subtotal() {
   if (!count)
     return;
@@ -509,6 +641,7 @@ void collapse_posts::report_subtotal() {
   count = 0;
 }
 
+/// Find the totals bucket for an account, walking up to collapse_depth.
 value_t& collapse_posts::find_totals(account_t* account) {
   if (collapse_depth == 0)
     return totals[global_totals_account];
@@ -520,6 +653,12 @@ value_t& collapse_posts::find_totals(account_t* account) {
   return find_totals(account->parent);
 }
 
+/**
+ * Accumulate a posting into the current transaction's collapse group.
+ *
+ * When a new transaction boundary is detected, the previous transaction's
+ * accumulated postings are flushed via report_subtotal().
+ */
 void collapse_posts::operator()(post_t& post) {
   // If we've reached a new xact, report on the subtotal
   // accumulated thus far.
@@ -537,6 +676,16 @@ void collapse_posts::operator()(post_t& post) {
   count++;
 }
 
+/*--- Related posts ---*/
+
+/**
+ * For each collected posting, forward the sibling postings from its transaction.
+ *
+ * A posting is forwarded if it has not been handled yet and either:
+ * - It was not originally received (it is a "related" sibling), or
+ * - also_matching is true (include the originally matched postings too).
+ * Generated postings are excluded unless they are calculated (POST_CALCULATED).
+ */
 void related_posts::flush() {
   if (posts.size() > 0) {
     for (post_t* post : posts) {
@@ -558,6 +707,8 @@ void related_posts::flush() {
   item_handler<post_t>::flush();
 }
 
+/*--- Display filtering and rounding ---*/
+
 display_filter_posts::display_filter_posts(post_handler_ptr handler, report_t& _report,
                                            bool _show_rounding)
     : item_handler<post_t>(std::move(handler)), report(_report),
@@ -578,6 +729,18 @@ display_filter_posts::display_filter_posts(post_handler_ptr handler, report_t& _
   TRACE_CTOR(display_filter_posts, "post_handler_ptr, report_t&, bool");
 }
 
+/**
+ * Compute the rounding adjustment and decide whether to display the posting.
+ *
+ * Compares the new display total (after this posting) with the previous one.
+ * If they differ due to display rounding, emits a synthetic <Adjustment>
+ * posting to compensate.  Returns true if the posting should be displayed
+ * (non-zero display amount or --empty), false otherwise.
+ *
+ * Uses an incremental optimization when possible: instead of stripping the
+ * full running total (O(K) GMP ops), strips only this posting's contribution
+ * and adds it to the cached stripped total from the previous posting.
+ */
 bool display_filter_posts::output_rounding(post_t& post) {
   bind_scope_t bound_scope(report, post);
   value_t new_display_total;
@@ -686,10 +849,13 @@ bool display_filter_posts::output_rounding(post_t& post) {
   }
 }
 
+/// Forward the posting downstream only if output_rounding() approves it.
 void display_filter_posts::operator()(post_t& post) {
   if (output_rounding(post))
     item_handler<post_t>::operator()(post);
 }
+
+/*--- Revaluation (changed value) ---*/
 
 changed_value_posts::changed_value_posts(post_handler_ptr handler, report_t& _report,
                                          bool _for_accounts_report, bool _show_unrealized,
@@ -723,6 +889,13 @@ changed_value_posts::changed_value_posts(post_handler_ptr handler, report_t& _re
              "post_handler_ptr, report_t&, bool, bool, display_filter_posts *");
 }
 
+/**
+ * Emit final revaluation up to the report terminus date.
+ *
+ * After all real postings have been processed, this generates one last
+ * revaluation for any price changes between the last posting and the
+ * report's terminus date.
+ */
 void changed_value_posts::flush() {
   if (last_post && last_post->date() <= report.terminus.date()) {
     if (!historical_prices_only) {
@@ -735,6 +908,14 @@ void changed_value_posts::flush() {
   item_handler<post_t>::flush();
 }
 
+/**
+ * Generate a revaluation posting if the repriced total differs from last_total.
+ *
+ * Temporarily overrides the posting's xdata date to @p date, evaluates the
+ * total expression, and compares with last_total.  If they differ, a
+ * synthetic posting is emitted to either the <Revalued> account (register
+ * reports) or the equity gain/loss accounts (balance reports with --unrealized).
+ */
 void changed_value_posts::output_revaluation(post_t& post, const date_t& date) {
   if (is_valid(date))
     post.xdata().date = date;
@@ -806,6 +987,16 @@ struct insert_prices_in_map {
 };
 } // namespace
 
+/**
+ * Scan for commodity price changes between the last posting and the current one,
+ * generating a revaluation for each distinct pricing date.
+ *
+ * This handles the case where the commodity price database contains price
+ * entries between two postings.  The running total's balance is examined to
+ * find all commodities present, then each commodity's price history is
+ * queried for changes in the relevant date range.  A revaluation posting is
+ * emitted for each date where a price changed.
+ */
 void changed_value_posts::output_intermediate_prices(post_t& post, const date_t& current) {
   // To fix BZ#199, examine the balance of last_post and determine whether the
   // price of that amount changed after its date and before the new post's
@@ -902,6 +1093,18 @@ void changed_value_posts::output_intermediate_prices(post_t& post, const date_t&
   }
 }
 
+/**
+ * Process a posting, generating revaluations for price changes since the
+ * previous posting.
+ *
+ * Between consecutive postings from different transactions:
+ * 1. Intermediate price changes are scanned and revaluations emitted.
+ * 2. A direct revaluation is generated when using --historical or when
+ *    postings share the same value date.
+ *
+ * The posting is then forwarded downstream, and the current total is
+ * captured as last_total for the next comparison.
+ */
 void changed_value_posts::operator()(post_t& post) {
   if (last_post) {
     // Don't generate spurious revaluations when postings are from the same
@@ -931,6 +1134,19 @@ void changed_value_posts::operator()(post_t& post) {
   last_post = &post;
 }
 
+/*--- Subtotaling ---*/
+
+/**
+ * Emit a synthetic transaction containing one posting per accumulated
+ * account/commodity pair.
+ *
+ * The synthetic transaction's payee is formatted as a date range (e.g.,
+ * "- 2024/12/31").  If an interval is provided, its boundaries are used;
+ * otherwise, the date range is computed from the component postings.
+ *
+ * @param spec_fmt  Optional strftime format string for the payee date.
+ * @param interval  Optional interval providing start/finish dates.
+ */
 void subtotal_posts::report_subtotal(const char* spec_fmt,
                                      const optional<date_interval_t>& interval) {
   if (component_posts.empty())
@@ -992,6 +1208,14 @@ void subtotal_posts::report_subtotal(const char* spec_fmt,
   values.clear();
 }
 
+/**
+ * Accumulate a posting into the subtotal.
+ *
+ * The posting's amount is evaluated via amount_expr and added to the
+ * values_map entry for its account.  Virtual and non-virtual postings to the
+ * same account are tracked separately (using a sentinel suffix in the key)
+ * so they can be emitted with correct virtual flags in report_subtotal.
+ */
 void subtotal_posts::operator()(post_t& post) {
   component_posts.push_back(&post);
 
@@ -1045,6 +1269,9 @@ void subtotal_posts::operator()(post_t& post) {
     post.reported_account()->xdata().add_flags(ACCOUNT_EXT_HAS_UNB_VIRTUALS);
 }
 
+/*--- Interval (periodic) reporting ---*/
+
+/// Emit the subtotal for one interval period.
 void interval_posts::report_subtotal(const date_interval_t& ival) {
   if (exact_periods)
     subtotal_posts::report_subtotal();
@@ -1058,6 +1285,13 @@ struct sort_posts_by_date {
 };
 } // namespace
 
+/**
+ * Collect or forward a posting depending on whether intervals have a duration.
+ *
+ * When a duration is present (e.g., monthly), postings are accumulated for
+ * a two-pass sort-then-group in flush().  Without a duration (bare date range),
+ * postings within the range are forwarded immediately.
+ */
 void interval_posts::operator()(post_t& post) {
   // If there is a duration (such as weekly), we must generate the
   // report in two passes.  Otherwise, we only have to check whether the
@@ -1072,6 +1306,18 @@ void interval_posts::operator()(post_t& post) {
   // NOLINTEND(bugprone-branch-clone,bugprone-parent-virtual-call)
 }
 
+/**
+ * Sort all accumulated postings by date and walk through intervals,
+ * subtotaling each period.
+ *
+ * The algorithm:
+ * 1. Sort all_posts by date.
+ * 2. Determine the first interval from the earliest posting (or explicit start).
+ * 3. Walk through postings: those within the current interval are subtotaled;
+ *    when a posting falls outside, the interval is reported and advanced.
+ * 4. Empty intervals generate zero-amount postings when --empty is active.
+ * 5. The last group of postings is reported after the loop.
+ */
 void interval_posts::flush() {
   if (!interval.duration) {
     item_handler<post_t>::flush(); // NOLINT(bugprone-parent-virtual-call)
@@ -1171,6 +1417,16 @@ struct create_post_from_amount {
 };
 } // namespace
 
+/*--- Equity conversion ---*/
+
+/**
+ * Emit accumulated postings as equity opening balances.
+ *
+ * For each account with a non-zero balance, a posting is created.  A
+ * balancing posting to Equity:Opening Balances is emitted for the total.
+ * Virtual postings that don't require balancing are excluded from the
+ * equity total.
+ */
 void posts_as_equity::report_subtotal() {
   date_t finish;
   for (post_t* post : component_posts) {
@@ -1230,6 +1486,9 @@ void posts_as_equity::report_subtotal() {
   }
 }
 
+/*--- By-payee subtotaling ---*/
+
+/// Flush each payee's subtotal_posts instance and forward results downstream.
 void by_payee_posts::flush() {
   for (payee_subtotals_map::value_type& pair : payee_subtotals)
     pair.second->report_subtotal(pair.first.c_str());
@@ -1239,6 +1498,7 @@ void by_payee_posts::flush() {
   payee_subtotals.clear();
 }
 
+/// Route each posting to the subtotal_posts instance for its payee.
 void by_payee_posts::operator()(post_t& post) {
   payee_subtotals_map::iterator i = payee_subtotals.find(post.payee());
   if (i == payee_subtotals.end()) {
@@ -1255,6 +1515,18 @@ void by_payee_posts::operator()(post_t& post) {
   (*(*i).second)(post);
 }
 
+/*--- Detail transfer ---*/
+
+/**
+ * Rewrite one element (date, account, or payee) of a posting based on an expression.
+ *
+ * A temporary copy of the posting and its transaction is created.  The
+ * expression is evaluated in the posting's scope, and the result replaces
+ * the designated element:
+ * - SET_DATE: the posting's date is overridden.
+ * - SET_ACCOUNT: the expression result is prepended to the account hierarchy.
+ * - SET_PAYEE: the transaction payee is replaced.
+ */
 void transfer_details::operator()(post_t& post) {
   xact_t& xact = temps.copy_xact(*post.xact);
   xact._date = post.date();
@@ -1301,6 +1573,12 @@ void transfer_details::operator()(post_t& post) {
   item_handler<post_t>::operator()(temp);
 }
 
+/*--- Day-of-week subtotaling ---*/
+
+/**
+ * Subtotal each day's accumulated postings and emit them with the
+ * abbreviated day name as the payee (format "%As").
+ */
 void day_of_week_posts::flush() {
   for (int i = 0; i < 7; i++) {
     for (post_t* post : days_of_the_week[i])
@@ -1312,6 +1590,16 @@ void day_of_week_posts::flush() {
   subtotal_posts::flush();
 }
 
+/*--- Synthetic posting generation (budget and forecast) ---*/
+
+/**
+ * Decompose periodic transactions into individual pending postings.
+ *
+ * Each posting from each periodic transaction is paired with the
+ * transaction's date interval and added to the pending_posts list.
+ * Auto-generated postings (ITEM_GENERATED without POST_CALCULATED) are
+ * skipped because they lack a valid xact back-pointer.
+ */
 void generate_posts::add_period_xacts(period_xacts_list& period_xacts) {
   for (period_xact_t* xact : period_xacts)
     for (post_t* post : xact->posts)
@@ -1322,10 +1610,20 @@ void generate_posts::add_period_xacts(period_xacts_list& period_xacts) {
         add_post(xact->period, *post);
 }
 
+/// Add a single periodic posting to the pending list.
 void generate_posts::add_post(const date_interval_t& period, post_t& post) {
   pending_posts.push_back(pending_posts_pair(period, &post));
 }
 
+/**
+ * Generate budget postings for all pending periodic postings up to @p date.
+ *
+ * First, expired periodic postings (whose finish date has passed) are cleaned
+ * up.  Then, for each remaining periodic posting whose next occurrence is at
+ * or before @p date, a synthetic "Budget transaction" posting with a negated
+ * amount is emitted.  The loop repeats until no more budget items can be
+ * reported (since advancing one period may reveal additional occurrences).
+ */
 void budget_posts::report_budget_items(const date_t& date) {
   { // Cleanup pending items that finished before date
     // We have to keep them until the last day they apply because operator() needs them to see if a
@@ -1404,6 +1702,16 @@ void budget_posts::report_budget_items(const date_t& date) {
   } while (reported);
 }
 
+/**
+ * Process a real posting against the budget.
+ *
+ * Determines whether the posting's account (or any ancestor) matches a
+ * pending budget account.  Based on the flags:
+ * - BUDGET_BUDGETED: generate budget items up to this date, then forward
+ *   the posting (showing actual vs. budget).
+ * - BUDGET_UNBUDGETED: forward only non-budget postings, optionally wrapping
+ *   values with a VOID budget slot.
+ */
 void budget_posts::operator()(post_t& post) {
   bool post_in_budget = false;
 
@@ -1440,6 +1748,7 @@ handle:
   }
 }
 
+/// Generate remaining budget items up to the terminus and flush downstream.
 void budget_posts::flush() {
   if (flags & BUDGET_BUDGETED)
     report_budget_items(terminus);
@@ -1447,6 +1756,13 @@ void budget_posts::flush() {
   item_handler<post_t>::flush();
 }
 
+/**
+ * Add a periodic posting for forecasting, advancing its interval to CURRENT_DATE.
+ *
+ * Unlike generate_posts::add_post, this override initializes the interval
+ * and advances it past all historical periods so that only future occurrences
+ * are generated during flush().
+ */
 void forecast_posts::add_post(const date_interval_t& period, post_t& post) {
   date_interval_t i(period);
   if (!i.start && !i.find_period(CURRENT_DATE()))
@@ -1460,6 +1776,17 @@ void forecast_posts::add_post(const date_interval_t& period, post_t& post) {
     ++i;
 }
 
+/**
+ * Generate all forecast postings into the future.
+ *
+ * Iterates through pending periodic postings, always selecting the one with
+ * the earliest next occurrence.  For each, a synthetic "Forecast transaction"
+ * posting is emitted.  A periodic posting is removed from consideration when:
+ * - Its next date exceeds forecast_years beyond the last generated date, or
+ * - The generated posting matches the report query but fails the continuation
+ *   predicate (--forecast-while), or
+ * - Its interval has no more occurrences.
+ */
 void forecast_posts::flush() {
   posts_list passed;
   date_t last = CURRENT_DATE();
@@ -1559,6 +1886,16 @@ void forecast_posts::flush() {
   item_handler<post_t>::flush();
 }
 
+/*--- Tag injection ---*/
+
+/**
+ * Construct the inject_posts handler by parsing the comma-separated tag list.
+ *
+ * Each tag name is split by ':' to form an account path, and a temporary
+ * account is created for it.  The tags_list stores each tag name paired with
+ * its target account and a set tracking which transactions have already been
+ * injected (to avoid duplicates).
+ */
 inject_posts::inject_posts(post_handler_ptr handler, const string& tag_list, account_t* master)
     : item_handler<post_t>(std::move(handler)) {
   scoped_array<char> buf(new char[tag_list.length() + 1]);
@@ -1577,6 +1914,11 @@ inject_posts::inject_posts(post_handler_ptr handler, const string& tag_list, acc
   TRACE_CTOR(inject_posts, "post_handler_ptr, string, account_t *");
 }
 
+/**
+ * For each configured tag, check whether the posting or its transaction
+ * carries that tag.  If found, inject a synthetic posting with the tag's
+ * value as the amount, then forward the original posting.
+ */
 void inject_posts::operator()(post_t& post) {
   for (tags_list_pair& pair : tags_list) {
     std::optional<value_t> tag_value = post.get_tag(pair.first, false);
@@ -1603,6 +1945,17 @@ void inject_posts::operator()(post_t& post) {
   item_handler<post_t>::operator()(post);
 }
 
+/*--- Payee/account rewriting ---*/
+
+/**
+ * Apply payee and account rewrite rules from the journal to each posting.
+ *
+ * Checks the posting against all payee_rewrite_mappings (matching on the
+ * transaction payee) and account_rewrite_mappings (matching on the account
+ * fullname).  If either matches, a temporary copy is created with the
+ * rewritten payee and/or account.  Non-matching postings pass through
+ * unchanged.
+ */
 void rewrite_posts::operator()(post_t& post) {
   journal_t* journal = report.session.journal.get();
 

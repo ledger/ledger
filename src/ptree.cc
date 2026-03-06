@@ -38,14 +38,35 @@
 #include "session.h"
 #include "report.h"
 
+/**
+ * @file   ptree.cc
+ * @author John Wiegley
+ *
+ * @ingroup report
+ *
+ * @brief Property tree XML serialization implementation.
+ *
+ * Implements `format_ptree::flush()` (which builds and writes the XML
+ * document) and `format_ptree::operator()` (which collects postings
+ * and their associated commodities and transactions during the report
+ * pipeline traversal).
+ */
+
 namespace ledger {
 
+/*--- Helper predicates ---*/
+
 namespace {
+/// Predicate: returns true if the account (or any of its children)
+/// was visited during the report pass.  Used to filter the account
+/// hierarchy in the XML output so that only relevant accounts appear.
 bool account_visited_p(const account_t& acct) {
   return ((acct.has_xdata() && acct.xdata().has_flags(ACCOUNT_EXT_VISITED)) ||
           acct.children_with_flags(ACCOUNT_EXT_VISITED));
 }
 } // namespace
+
+/*--- format_ptree implementation ---*/
 
 void format_ptree::flush() {
   std::ostream& out(report.output_stream);

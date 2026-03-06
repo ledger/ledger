@@ -29,6 +29,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   iterators.cc
+ * @author John Wiegley
+ *
+ * @ingroup data
+ *
+ * @brief Implementations of journal/account traversal iterators.
+ */
+
 #include <system.hh>
 
 #include "iterators.h"
@@ -36,6 +45,8 @@
 #include "compare.h"
 
 namespace ledger {
+
+/*--- Transaction and posting iterators ---*/
 
 void xacts_iterator::reset(journal_t& journal) {
   xacts_i = journal.xacts.begin();
@@ -53,6 +64,8 @@ void xacts_iterator::increment() {
     m_node = nullptr;
 }
 
+/*--- Journal-wide posting iteration ---*/
+
 void journal_posts_iterator::reset(journal_t& journal) {
   xacts.reset(journal);
   increment();
@@ -60,6 +73,8 @@ void journal_posts_iterator::reset(journal_t& journal) {
 
 void journal_posts_iterator::increment() {
   // NOLINTBEGIN(bugprone-branch-clone)
+  // Try the next posting in the current transaction first.  If exhausted,
+  // advance to the next transaction and reset the inner posting iterator.
   if (post_t* post = *posts++) {
     m_node = post;
   } else if (xact_t* xact = *xacts++) {
@@ -71,14 +86,26 @@ void journal_posts_iterator::increment() {
   // NOLINTEND(bugprone-branch-clone)
 }
 
-namespace {
-struct create_price_xact {
-  journal_t& journal;
-  account_t* account;
-  temporaries_t& temps;
-  xacts_list& xact_temps;
+/*--- Commodity price posting synthesis ---*/
 
-  std::map<string, xact_t*> xacts_by_commodity;
+namespace {
+
+/**
+ * @brief Functor that creates synthetic transactions from commodity price data.
+ *
+ * Called by commodity_t::map_prices for each (datetime, price) pair in a
+ * commodity's price history.  It groups price postings into one transaction
+ * per commodity symbol, avoiding duplicates.  The resulting temporary
+ * transactions and postings are allocated via a temporaries_t arena and
+ * stored in an xacts_list so they persist for the iterator's lifetime.
+ */
+struct create_price_xact {
+  journal_t& journal;     ///< Journal providing the accounting context.
+  account_t* account;     ///< Target account for synthetic postings.
+  temporaries_t& temps;   ///< Arena allocator for temporary xacts/posts.
+  xacts_list& xact_temps; ///< Accumulates the synthetic transactions.
+
+  std::map<string, xact_t*> xacts_by_commodity; ///< One xact per commodity symbol.
 
   create_price_xact(journal_t& _journal, account_t* _account, temporaries_t& _temps,
                     xacts_list& _xact_temps)
@@ -87,6 +114,7 @@ struct create_price_xact {
   }
   ~create_price_xact() noexcept { TRACE_DTOR(create_price_xact); }
 
+  /// Called for each historical price point; creates or reuses a synthetic xact.
   void operator()(const datetime_t& date, const amount_t& price) {
     xact_t* xact;
     string symbol = price.commodity().symbol();
@@ -125,6 +153,7 @@ struct create_price_xact {
 } // namespace
 
 void posts_commodities_iterator::reset(journal_t& journal) {
+  // Phase 1: Scan all real postings to discover referenced commodities.
   journal_posts.reset(journal);
 
   struct commodity_symbol_compare {
@@ -141,11 +170,14 @@ void posts_commodities_iterator::reset(journal_t& journal) {
     commodities.insert(&comm.referent());
   }
 
+  // Phase 2: For each commodity, walk its price history and create
+  // synthetic transactions with postings representing each price point.
   for (commodity_t* comm : commodities)
     comm->map_prices(create_price_xact(journal, journal.master->find_account(comm->symbol()), temps,
                                        xact_temps));
 
-  // Sort transactions by date to ensure deterministic output
+  // Phase 3: Sort synthetic transactions by date for deterministic output,
+  // then initialize the outer xacts_iterator over them.
   xact_temps.sort([](const xact_t* a, const xact_t* b) { return a->date() < b->date(); });
 
   xacts.reset(xact_temps.begin(), xact_temps.end());
@@ -166,6 +198,8 @@ void posts_commodities_iterator::increment() {
   // NOLINTEND(bugprone-branch-clone)
 }
 
+/*--- Account tree traversal ---*/
+
 void basic_accounts_iterator::increment() {
   while (!accounts_i.empty() && accounts_i.back() == accounts_end.back()) {
     accounts_i.pop_back();
@@ -185,6 +219,8 @@ void basic_accounts_iterator::increment() {
     m_node = account;
   }
 }
+
+/*--- Sorted account tree traversal ---*/
 
 void sorted_accounts_iterator::push_back(account_t& account) {
   accounts_list.push_back(accounts_deque_t());

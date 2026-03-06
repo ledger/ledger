@@ -29,6 +29,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   py_amount.cc
+ * @brief  Python bindings for amount_t -- Ledger's precise monetary type.
+ * @ingroup python
+ *
+ * Exposes amount_t to Python as the `ledger.Amount` class via Boost.Python.
+ * amount_t is the fundamental numeric type in Ledger, supporting
+ * arbitrary-precision arithmetic with commodity awareness.  This binding
+ * provides constructors, full arithmetic operators, rounding/truncation,
+ * commodity market valuation, annotation handling, and string conversion
+ * for use from Python scripts and the embedded interpreter.
+ */
+
 #include <system.hh>
 
 #include "pyinterp.h"
@@ -43,6 +56,12 @@ using namespace python;
 using namespace boost::python;
 
 namespace {
+
+/*--- Valuation Wrapper Overloads ---*/
+
+/// Wrappers that adapt amount_t::value() to Python by converting the
+/// optional return into std::optional, with overloads accepting different
+/// combinations of commodity and moment parameters.
 
 std::optional<amount_t> py_value_0(const amount_t& amount) {
   auto r = amount.value(CURRENT_TIME());
@@ -63,6 +82,8 @@ std::optional<amount_t> py_value_2d(const amount_t& amount, const commodity_t* i
   return r ? std::optional<amount_t>(*r) : std::nullopt;
 }
 
+/*--- Parse Wrapper Overloads ---*/
+
 void py_parse_str_1(amount_t& amount, const string& str) {
   (void)amount.parse(str);
 }
@@ -82,6 +103,8 @@ void py_parse_str_2(amount_t& amount, const string& str, unsigned char flags) {
   }
 #endif
 
+/*--- Annotation and Strip Wrappers ---*/
+
 annotation_t& py_amount_annotation(amount_t& amount) {
   return amount.annotation();
 }
@@ -93,6 +116,9 @@ amount_t py_strip_annotations_1(amount_t& amount, const keep_details_t& keep) {
   return amount.strip_annotations(keep);
 }
 
+/*--- String Conversion ---*/
+
+/// Returns a Python unicode object for __unicode__ support.
 PyObject* py_amount_unicode(amount_t& amount) {
   return str_to_py_unicode(amount.to_string());
 }
@@ -106,6 +132,12 @@ PyObject* py_amount_unicode(amount_t& amount) {
 
 EXC_TRANSLATOR(amount_error)
 
+/// @brief Registers the Amount class and ParseFlags enum with Boost.Python.
+///
+/// The Amount class exposes constructors from long and string, full arithmetic
+/// operator overloads (including mixed Amount/long operations), precision
+/// control, rounding variants, commodity valuation, annotation support,
+/// and conversions to Python numeric and string types.
 void export_amount() {
   class_<amount_t>("Amount")
       .def("initialize", &amount_t::initialize) // only for the PyUnitTests

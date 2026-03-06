@@ -29,12 +29,41 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   query.cc
+ * @author John Wiegley
+ * @brief  Implementation of the query lexer and recursive-descent parser.
+ *
+ * @ingroup expr
+ *
+ * This file contains the core logic that translates command-line arguments
+ * into expression trees.  The pipeline is:
+ *
+ * 1. **Lexing** (next_token): Scans characters from the argument sequence,
+ *    recognizing operators (`@`, `#`, `%`, `=`, `&`, `|`, `!`), keywords
+ *    (`and`, `or`, `not`, `payee`, `code`, `expr`, `show`, `for`, etc.),
+ *    quoted patterns (`/food/`, `'grocery'`), and bare terms.
+ *
+ * 2. **Parsing** (parse_query_term through parse_query_expr): A recursive-
+ *    descent parser with standard boolean precedence builds expression
+ *    trees (expr_t::op_t nodes).  Terms are converted into O_MATCH nodes
+ *    that regex-match against the appropriate field (account, payee, code,
+ *    note), while the `expr` keyword passes raw expressions through.
+ *
+ * 3. **Section splitting** (parse_query_expr): After the main predicate,
+ *    keywords like `show`, `only`, `bold`, and `for`/`since`/`until`
+ *    start new sections, each producing a separate predicate stored in
+ *    the query_map.
+ */
+
 #include <system.hh>
 
 #include "query.h"
 #include "op.h"
 
 namespace ledger {
+
+/*--- Lexer Utilities ---*/
 
 // TODO: Extend this to handle all characters which define enclosures
 bool query_t::lexer_t::unbalanced_braces(const string& str) {
@@ -49,14 +78,18 @@ bool query_t::lexer_t::unbalanced_braces(const string& str) {
   return balance != 0;
 }
 
+/*--- Lexer: Token Production ---*/
+
 query_t::lexer_t::token_t
 query_t::lexer_t::next_token(query_t::lexer_t::token_t::kind_t tok_context) {
+  // Return cached token if one was pushed back by peek_token() or push_token().
   if (token_cache.kind != token_t::UNKNOWN) {
     token_t tok = token_cache;
     token_cache = token_t();
     return tok;
   }
 
+  // Advance to the next argument string if the current one is exhausted.
   if (arg_i == arg_end) {
     if (begin == end || ++begin == end) {
       return token_t(token_t::END_REACHED);
@@ -67,6 +100,9 @@ query_t::lexer_t::next_token(query_t::lexer_t::token_t::kind_t tok_context) {
   }
 
 resume:
+  // Phase 1: Handle quoted/delimited patterns.  Single quotes, double
+  // quotes, and forward slashes all delimit literal pattern strings that
+  // become TERM tokens.  Backslash escapes are supported within patterns.
   switch (*arg_i) {
   case '\0':
     assert(false);
@@ -98,6 +134,8 @@ resume:
   }
   }
 
+  // Phase 2: When consume_next_arg is set (by the `expr` keyword), consume
+  // the entire remainder of the current argument as a single TERM.
   if (multiple_args && consume_next_arg) {
     consume_next_arg = false;
     token_t tok(token_t::TERM, string(arg_i, arg_end));
@@ -106,6 +144,8 @@ resume:
     return tok;
   }
 
+  // Phase 3: Recognize single-character operators and then fall through
+  // to identifier/keyword scanning for multi-character tokens.
   bool consume_next = false;
   switch (*arg_i) {
   case '\0':
@@ -162,6 +202,8 @@ resume:
     ++arg_i;
     [[fallthrough]];
   default: {
+    // Phase 4: Accumulate an identifier (bare word) and then test whether
+    // it matches a keyword.  If not, it becomes a TERM token.
     string ident;
     string::const_iterator ident_start = arg_i;
     for (; arg_i != arg_end; ++arg_i) {
@@ -270,6 +312,23 @@ void query_t::lexer_t::token_t::expected(char wanted) {
   throw_(parse_error, _f("Missing '%1%'") % wanted);
 }
 
+/*--- Parser: Recursive-Descent Expression Construction ---*/
+
+/**
+ * Parse a single query term -- the lowest level of the grammar.
+ *
+ * This handles:
+ * - **Field context switches**: `code`, `payee`, `note`, `account`, `meta`,
+ *   `expr` tokens change tok_context and recurse to get the actual term.
+ * - **Section boundaries**: `show`, `only`, `bold`, `for`, `since`, `until`
+ *   are pushed back for the top-level parse_query_expr to handle.
+ * - **TERM tokens**: Depending on tok_context, become either:
+ *   - An O_MATCH node (`account =~ /pattern/`) for account/payee/code/note.
+ *   - An O_CALL to `has_tag()` for metadata, optionally with a value match.
+ *   - A raw expression parse for `expr` context.
+ *   - A comparison expression for terms containing `>[` or `<[` syntax.
+ * - **Parenthesized sub-expressions**: Recurse into parse_query_expr.
+ */
 expr_t::ptr_op_t
 query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_context) {
   expr_t::ptr_op_t node;
@@ -287,6 +346,8 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
     lexer.push_token(tok);
     break;
 
+  // Field context operators: switch the matching target and recurse to
+  // parse the following term under the new context.
   case lexer_t::token_t::TOK_CODE:
   case lexer_t::token_t::TOK_PAYEE:
   case lexer_t::token_t::TOK_NOTE:
@@ -306,6 +367,8 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
       break;
 
     case lexer_t::token_t::TOK_META: {
+      // Metadata matching: build a call to has_tag(pattern), optionally
+      // with a second argument for value matching: has_tag(pattern, value_pattern).
       node = new expr_t::op_t(expr_t::op_t::O_CALL);
 
       expr_t::ptr_op_t ident = new expr_t::op_t(expr_t::op_t::IDENT);
@@ -368,6 +431,9 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
         }
       }
 
+      // Default case: build an O_MATCH node that regex-matches the term
+      // against the appropriate field (account, payee, code, or note).
+      // E.g., "food" in account context becomes: account =~ /food/
       if (!node) {
         node = new expr_t::op_t(expr_t::op_t::O_MATCH);
 
@@ -418,6 +484,7 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
   return node;
 }
 
+/// Parse a unary expression: either `not <term>` or a plain query term.
 expr_t::ptr_op_t query_t::parser_t::parse_unary_expr(lexer_t::token_t::kind_t tok_context) {
   expr_t::ptr_op_t node;
 
@@ -442,6 +509,7 @@ expr_t::ptr_op_t query_t::parser_t::parse_unary_expr(lexer_t::token_t::kind_t to
   return node;
 }
 
+/// Parse a left-associative chain of AND-connected unary expressions.
 expr_t::ptr_op_t query_t::parser_t::parse_and_expr(lexer_t::token_t::kind_t tok_context) {
   if (expr_t::ptr_op_t node = parse_unary_expr(tok_context)) {
     while (true) {
@@ -463,6 +531,7 @@ expr_t::ptr_op_t query_t::parser_t::parse_and_expr(lexer_t::token_t::kind_t tok_
   return expr_t::ptr_op_t();
 }
 
+/// Parse a left-associative chain of OR-connected AND expressions.
 expr_t::ptr_op_t query_t::parser_t::parse_or_expr(lexer_t::token_t::kind_t tok_context) {
   if (expr_t::ptr_op_t node = parse_and_expr(tok_context)) {
     while (true) {
@@ -484,10 +553,27 @@ expr_t::ptr_op_t query_t::parser_t::parse_or_expr(lexer_t::token_t::kind_t tok_c
   return expr_t::ptr_op_t();
 }
 
+/*--- Parser: Top-Level Query Expression and Section Splitting ---*/
+
+/**
+ * Parse a complete query expression, handling section keywords.
+ *
+ * The top-level grammar is:
+ *   query := or_expr* ['show' or_expr*] ['only' or_expr*]
+ *            ['bold' or_expr*] ['for'|'since'|'until' date_terms...]
+ *
+ * Multiple consecutive or_expr results at the top level are implicitly
+ * OR-ed together (bare terms like `food groceries` mean
+ * `account =~ /food/ | account =~ /groceries/`).
+ *
+ * When not parsing a subexpression, section keywords split the query
+ * into separate predicates stored in query_map.
+ */
 expr_t::ptr_op_t query_t::parser_t::parse_query_expr(lexer_t::token_t::kind_t tok_context,
                                                      bool subexpression) {
   expr_t::ptr_op_t limiter;
 
+  // Parse the main (limit) predicate: accumulate OR-connected expressions.
   while (expr_t::ptr_op_t next = parse_or_expr(tok_context)) {
     if (!limiter) {
       limiter = next;
@@ -499,14 +585,20 @@ expr_t::ptr_op_t query_t::parser_t::parse_query_expr(lexer_t::token_t::kind_t to
     }
   }
 
+  // For top-level queries, store the limit predicate and then process
+  // any trailing section keywords (show, only, bold, for/since/until).
   if (!subexpression) {
     if (limiter)
       query_map.insert(
           query_map_t::value_type(QUERY_LIMIT, predicate_t(limiter, what_to_keep).print_to_str()));
 
+    // Process section keywords that follow the main predicate.
     lexer_t::token_t tok = lexer.peek_token(tok_context);
     while (tok.kind != lexer_t::token_t::END_REACHED) {
       switch (tok.kind) {
+
+      // show/only/bold: parse the following expressions as a separate
+      // predicate and store under the appropriate query kind.
       case lexer_t::token_t::TOK_SHOW:
       case lexer_t::token_t::TOK_ONLY:
       case lexer_t::token_t::TOK_BOLD: {
@@ -545,6 +637,9 @@ expr_t::ptr_op_t query_t::parser_t::parse_query_expr(lexer_t::token_t::kind_t to
         break;
       }
 
+      // for/since/until: accumulate the remaining terms as a date range
+      // string (not parsed into an expression tree here -- it is passed
+      // to the period parser later).
       case lexer_t::token_t::TOK_FOR:
       case lexer_t::token_t::TOK_SINCE:
       case lexer_t::token_t::TOK_UNTIL: {

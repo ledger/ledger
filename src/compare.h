@@ -38,6 +38,22 @@
  * @author John Wiegley
  *
  * @ingroup data
+ *
+ * @brief Comparison functors for sorting postings and accounts.
+ *
+ * When the user supplies `--sort EXPR` on the command line, the sort
+ * expression is parsed into an expression tree (expr_t) and wrapped in a
+ * compare_items<T> functor.  This functor is then passed to std::stable_sort
+ * to order postings or accounts.
+ *
+ * Sort expressions can be composite (e.g. `date, payee`): each sub-expression
+ * is evaluated against both operands and the results are compared
+ * lexicographically via sort_value_is_less_than (defined in value.h).  A
+ * leading `-` on any sub-expression reverses its comparison direction.
+ *
+ * Sort values are cached in extended data (xdata) so that the sort expression
+ * is evaluated at most once per item, even though the comparison functor is
+ * called O(N log N) times during sorting.
  */
 #pragma once
 
@@ -49,14 +65,39 @@ class post_t;
 class account_t;
 class report_t;
 
+/**
+ * @brief Recursively evaluate a sort expression tree and push results.
+ *
+ * Walks the O_CONS chain that represents a comma-separated list of sort
+ * keys.  Each leaf is evaluated in the given scope and appended to
+ * @p sort_values.  If a leaf is wrapped in O_NEG the resulting
+ * sort_value_t is marked as inverted (descending order).
+ *
+ * @param sort_values  Accumulator for the evaluated sort keys.
+ * @param node         Root of the sort expression (or O_CONS chain).
+ * @param scope        Evaluation scope (typically a bound posting or account).
+ */
 void push_sort_value(std::list<sort_value_t>& sort_values, expr_t::ptr_op_t node, scope_t& scope);
 
+/**
+ * @brief STL-compatible comparison functor for sorting postings or accounts.
+ *
+ * Given a sort expression (e.g. `date`, `-amount`, `account, total`), this
+ * functor evaluates both operands, caches the results in each item's
+ * extended data (xdata), and delegates to sort_value_is_less_than for the
+ * actual comparison.
+ *
+ * Template specializations exist for post_t and account_t; each binds the
+ * sort expression into the correct scope before evaluation.
+ *
+ * @tparam T  The item type being sorted (post_t or account_t).
+ */
 template <typename T>
 class compare_items {
-  expr_t sort_order;
-  report_t& report;
+  expr_t sort_order; ///< Parsed sort expression from `--sort`.
+  report_t& report;  ///< Report context for expression evaluation.
 
-  compare_items();
+  compare_items(); ///< Deleted -- a sort expression and report are required.
 
 public:
   compare_items(const expr_t& _sort_order, report_t& _report)
@@ -68,11 +109,14 @@ public:
   }
   ~compare_items() noexcept { TRACE_DTOR(compare_items); }
 
+  /// Evaluate the sort expression in @p scope and append results to @p sort_values.
   void find_sort_values(std::list<sort_value_t>& sort_values, scope_t& scope);
 
+  /// Compare two items; returns true if @p left should appear before @p right.
   bool operator()(T* left, T* right);
 };
 
+/// Evaluate a single sort-key expression node and return the result.
 sort_value_t calc_sort_value(const expr_t::ptr_op_t op);
 
 template <typename T>

@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   py_commodity.cc
+ * @brief  Python bindings for commodity_t, commodity_pool_t, and related types.
+ * @ingroup python
+ *
+ * Exposes the commodity subsystem to Python: CommodityPool (the global
+ * registry of commodities), Commodity (individual currency/stock symbols),
+ * AnnotatedCommodity (commodity with price/date/tag annotation), Annotation,
+ * KeepDetails, and PricePoint.  CommodityPool supports dict-like access
+ * (__getitem__, __contains__, keys, iteritems) and commodity exchange/pricing.
+ * This is the most complex binding file due to the breadth of the commodity
+ * and annotation type system.
+ */
+
 #include <system.hh>
 
 #include "pyinterp.h"
@@ -45,6 +59,8 @@ using namespace boost::python;
 using namespace boost::placeholders;
 
 namespace {
+
+/*--- CommodityPool Create/Find Wrappers ---*/
 
 commodity_t* py_create_1(commodity_pool_t& pool, const string& symbol) {
   return pool.create(symbol);
@@ -69,6 +85,8 @@ commodity_t* py_find_1(commodity_pool_t& pool, const string& name) {
 commodity_t* py_find_2(commodity_pool_t& pool, const string& symbol, const annotation_t& details) {
   return pool.find(symbol, details);
 }
+
+/*--- Exchange Wrappers ---*/
 
 // Exchange one commodity for another, while recording the factored price.
 
@@ -106,6 +124,8 @@ cost_breakdown_t py_exchange_7(commodity_pool_t& pool, const amount_t& amount, c
   return pool.exchange(amount, cost, is_per_unit, add_prices, moment, tag);
 }
 
+/*--- Pool Dict-like Access ---*/
+
 commodity_t* py_alias_2(commodity_pool_t& pool, const string& name, commodity_t& referent) {
   return pool.alias(name, referent);
 }
@@ -139,6 +159,10 @@ commodity_pool_t::commodities_map::iterator py_pool_commodities_end(commodity_po
   return pool.commodities.end();
 }
 
+/*--- Pool Iterator Helpers ---*/
+
+/// Transform iterators that project the keys or values from the commodities
+/// map, enabling iterkeys() and itervalues() on the Python side.
 using commodities_map_firsts_iterator =
     transform_iterator<function<string(commodity_pool_t::commodities_map::value_type&)>,
                        commodity_pool_t::commodities_map::iterator>;
@@ -172,6 +196,8 @@ commodities_map_seconds_iterator py_pool_commodities_values_end(commodity_pool_t
                   boost::bind(&commodity_pool_t::commodities_map::value_type::second, _1)));
 }
 
+/*--- Commodity Method Wrappers ---*/
+
 void py_add_price_2(commodity_t& commodity, const datetime_t& date, const amount_t& price) {
   commodity.add_price(date, price);
 }
@@ -195,6 +221,8 @@ bool py_keep_any_1(keep_details_t& details, const commodity_t& comm) {
   return details.keep_any(comm);
 }
 
+/*--- Referent and Annotation Stripping ---*/
+
 commodity_t& py_commodity_referent(commodity_t& comm) {
   return comm.referent();
 }
@@ -215,6 +243,8 @@ commodity_t& py_strip_ann_annotations_0(annotated_commodity_t& comm) {
 commodity_t& py_strip_ann_annotations_1(annotated_commodity_t& comm, const keep_details_t& keep) {
   return comm.strip_annotations(keep);
 }
+
+/*--- Annotation Property Accessors ---*/
 
 std::optional<amount_t> py_price(annotation_t& ann) {
   return ann.price;

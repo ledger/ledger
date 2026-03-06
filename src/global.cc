@@ -29,6 +29,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   global.cc
+ * @author John Wiegley
+ *
+ * @ingroup report
+ *
+ * @brief Application lifecycle: initialization, option processing, and
+ *        command execution.
+ *
+ * This file implements the global_scope_t methods that drive Ledger from
+ * start to finish.  The lifecycle is:
+ *
+ *   1. handle_debug_options() -- early scan for --debug/--trace/--verify
+ *   2. global_scope_t constructor -- create session, read env + init file
+ *   3. read_command_arguments() -- parse remaining CLI options
+ *   4. execute_command() -- resolve verb, load journal, run handler
+ *   5. destructor -- tear down (or leak, unless --verify is active)
+ */
+
 #include <system.hh>
 #include <utility>
 
@@ -44,12 +63,21 @@
 
 namespace ledger {
 
+/// Set by handle_debug_options when --args-only is present.
+/// When true, the constructor skips environment variables and the init file.
 static bool args_only = false;
+
+/// Path to the init file, captured early by handle_debug_options.
 std::string _init_file;
+
+/*--- Construction and Destruction ---*/
 
 global_scope_t::global_scope_t(char** envp) {
   epoch = CURRENT_TIME();
 
+  // Create the session object.  When Boost.Python is available, the session
+  // is actually a python_interpreter_t that extends session_t with a Python
+  // runtime, enabling Python-based value expressions and scripting.
 #if HAVE_BOOST_PYTHON
   if (!python_session.get()) {
     python_session.reset(new ledger::python_interpreter_t);
@@ -106,9 +134,16 @@ global_scope_t::~global_scope_t() {
 #endif
 }
 
+/*--- Init File Processing ---*/
+
 void global_scope_t::parse_init(const path& init_file) {
   TRACE_START(init, 1, "Read initialization file");
 
+  // The init file is parsed as a journal, but it must not contain any
+  // transactions -- only option directives and account/commodity
+  // declarations are permitted.  Automated and periodic transactions are
+  // also forbidden because they would silently affect report output in
+  // ways that are hard to debug.
   parse_context_stack_t parsing_context;
   parsing_context.push(init_file);
   parsing_context.get_current().journal = session().journal.get();
@@ -123,11 +158,11 @@ void global_scope_t::parse_init(const path& init_file) {
 }
 
 void global_scope_t::read_init() {
-  // if specified on the command line init_file_ is filled in
-  // global_scope_t::handle_debug_options.  If it was specified on the command line
-  // fail if the file doesn't exist. If no init file was specified
-  // on the command-line then try the default values, but don't fail if there
-  // isn't one.
+  // If specified on the command line, init_file_ is filled in
+  // handle_debug_options.  If it was specified on the command line,
+  // fail if the file doesn't exist.  If no init file was specified
+  // on the command line, try the default locations but don't fail
+  // if none is found.
   path init_file;
   if (HANDLED(init_file_)) {
     init_file = HANDLER(init_file_).str();
@@ -135,7 +170,7 @@ void global_scope_t::read_init() {
       throw_(parse_error, _f("Could not find specified init file %1%") % init_file);
     }
   } else {
-    // in order, try to read the init file from:
+    // In order, try to read the init file from:
     // - $XDG_CONFIG_HOME/ledger/ledgerrc
     // - $HOME/.config/ledger/ledgerrc
     // - $HOME/.ledgerrc
@@ -160,10 +195,14 @@ void global_scope_t::read_init() {
   }
 }
 
+/*--- REPL Support ---*/
+
 string global_scope_t::prompt_string() {
   std::size_t depth = std::min(report_stack.size(), std::size_t(30));
   return string(depth, ']') + " ";
 }
+
+/*--- Error Reporting ---*/
 
 void global_scope_t::report_error(const std::exception& err) {
   std::cout.flush(); // first display anything that was pending
@@ -180,10 +219,14 @@ void global_scope_t::report_error(const std::exception& err) {
   }
 }
 
+/*--- Command Execution ---*/
+
 void global_scope_t::execute_command(strings_list args, bool at_repl) {
   session().set_flush_on_next_data_file(true);
 
-  // Process the command verb, arguments and options
+  // Phase 1: Process the command verb, arguments and options.
+  // At the REPL, each line is re-parsed for options; in batch mode
+  // this was already done by read_command_arguments in main().
   if (at_repl) {
     args = read_command_arguments(report(), args);
     if (args.empty())
@@ -193,10 +236,10 @@ void global_scope_t::execute_command(strings_list args, bool at_repl) {
   strings_list::iterator arg = args.begin();
   const string verb = *arg++; // NOLINT(bugprone-unused-local-non-trivial-variable)
 
-  // Look for a precommand first, which is defined as any defined function
-  // whose name starts with "ledger_precmd_".  The difference between a
-  // precommand and a regular command is that precommands ignore the journal
-  // data file completely, nor is the user's init file read.
+  // Phase 2: Look for a precommand first, which is defined as any defined
+  // function whose name starts with "ledger_precmd_".  The difference
+  // between a precommand and a regular command is that precommands ignore
+  // the journal data file completely, nor is the user's init file read.
   //
   // Here are some examples of pre-commands:
   //
@@ -214,9 +257,9 @@ void global_scope_t::execute_command(strings_list args, bool at_repl) {
   if (bool(command = look_for_precommand(bound_scope, verb)))
     is_precommand = true;
 
-  // If it is not a pre-command, then parse the user's ledger data at this
-  // time if not done already (i.e., if not at a REPL).  Then patch up the
-  // report options based on the command verb.
+  // Phase 3: If it is not a pre-command, then parse the user's ledger
+  // data at this time if not done already (i.e., if not at a REPL).
+  // Then patch up the report options based on the command verb.
 
   if (!is_precommand) {
     if (!at_repl) {
@@ -233,9 +276,9 @@ void global_scope_t::execute_command(strings_list args, bool at_repl) {
       throw_(std::logic_error, _f("Unrecognized command '%1%'") % verb);
   }
 
-  // Create the output stream (it might be a file, the console or a PAGER
-  // subprocess) and invoke the report command.  The output stream is closed
-  // by the caller of this function.
+  // Phase 4: Create the output stream (it might be a file, the console
+  // or a PAGER subprocess) and invoke the report command.  The output
+  // stream is closed by the caller of this function.
 
   report().output_stream.initialize(
       report().HANDLED(output_) ? optional<path>(path(report().HANDLER(output_).str()))
@@ -249,9 +292,10 @@ void global_scope_t::execute_command(strings_list args, bool at_repl) {
   if (HANDLED(options))
     report_options(report(), report().output_stream);
 
-  // Create an argument scope containing the report command's arguments, and
-  // then invoke the command.  The bound scope causes lookups to happen
-  // first in the global scope, and then in the report scope.
+  // Phase 5: Create an argument scope containing the report command's
+  // arguments, and then invoke the command.  The bound scope causes
+  // lookups to happen first in the global scope, and then in the report
+  // scope.
 
   call_scope_t command_args(bound_scope);
   for (strings_list::iterator i = arg; i != args.end(); i++)
@@ -285,6 +329,8 @@ int global_scope_t::execute_command_wrapper(strings_list args, bool at_repl) {
   return status;
 }
 
+/*--- Option Reporting ---*/
+
 void global_scope_t::report_options(report_t& report, std::ostream& out) {
   out << "===============================================================================" << '\n';
   out << "[Global scope options]" << '\n';
@@ -305,6 +351,8 @@ void global_scope_t::report_options(report_t& report, std::ostream& out) {
   report.report_options(out);
   out << "===============================================================================" << '\n';
 }
+
+/*--- Option Lookup ---*/
 
 option_t<global_scope_t>* global_scope_t::lookup_option(const char* p) {
   switch (*p) {
@@ -341,6 +389,8 @@ option_t<global_scope_t>* global_scope_t::lookup_option(const char* p) {
   return nullptr;
 }
 
+/*--- Symbol Lookup ---*/
+
 expr_t::ptr_op_t global_scope_t::lookup(const symbol_t::kind_t kind, const string& name) {
   switch (kind) {
   case symbol_t::FUNCTION: // NOLINT(bugprone-branch-clone)
@@ -375,10 +425,14 @@ expr_t::ptr_op_t global_scope_t::lookup(const symbol_t::kind_t kind, const strin
   return nullptr;
 }
 
+/*--- Environment Variable Processing ---*/
+
 void global_scope_t::read_environment_settings(char* envp[]) {
   TRACE_START(environment, 1, "Processed environment variables");
 
-  // Process global-scope options (e.g., --init-file) from LEDGER_* env vars
+  // Process LEDGER_* environment variables as options, applying them
+  // first to the global scope and then to the report scope.  This
+  // allows env vars like LEDGER_FILE and LEDGER_PAGER to work.
   process_environment(const_cast<const char**>(envp), "LEDGER_", *this);
   process_environment(const_cast<const char**>(envp), "LEDGER_", report());
 
@@ -406,6 +460,8 @@ void global_scope_t::read_environment_settings(char* envp[]) {
   TRACE_FINISH(environment, 1);
 }
 
+/*--- Command-Line Argument Processing ---*/
+
 strings_list global_scope_t::read_command_arguments(scope_t& scope, strings_list args) {
   TRACE_START(arguments, 1, "Processed command-line arguments");
 
@@ -424,6 +480,8 @@ void global_scope_t::normalize_session_options() {
     INFO("Journal file is " << pathname.string());
 }
 
+/*--- Command Verb Resolution ---*/
+
 expr_t::func_t global_scope_t::look_for_precommand(scope_t& scope, const string& verb) {
   if (expr_t::ptr_op_t def = scope.lookup(symbol_t::PRECOMMAND, verb))
     return def->as_function();
@@ -437,6 +495,8 @@ expr_t::func_t global_scope_t::look_for_command(scope_t& scope, const string& ve
   else
     return expr_t::func_t();
 }
+
+/*--- Help ---*/
 
 void global_scope_t::visit_man_page() const {
 #if !defined(_WIN32) && !defined(__CYGWIN__)
@@ -457,6 +517,26 @@ void global_scope_t::visit_man_page() const {
   exit(0); // parent
 }
 
+/*--- Early Debug Option Handling ---*/
+
+/**
+ * @brief Scan argv for debug/trace options before any other initialization.
+ *
+ * This function runs before global_scope_t is constructed.  It handles
+ * options that must take effect immediately:
+ *
+ *   --args-only      : skip init file and environment (testing aid)
+ *   --verify-memory  : enable memory tracing with debug logging
+ *   --verify         : enable runtime verification checks
+ *   --verbose / -v   : set log level to LOG_INFO
+ *   --init-file PATH : override the default init file location
+ *   --debug CATEGORY : enable debug logging for a specific category
+ *   --trace LEVEL    : enable trace logging at a numeric verbosity level
+ *
+ * These are handled separately because the normal option processing
+ * infrastructure depends on the session and scope objects, which have
+ * not yet been created at this point.
+ */
 void handle_debug_options(int argc, char* argv[]) {
   for (int i = 1; i < argc; i++) {
     if (argv[i][0] == '-') {

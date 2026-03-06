@@ -29,6 +29,33 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   draft.cc
+ * @author John Wiegley
+ *
+ * @ingroup report
+ *
+ * @brief Transaction drafting: parsing template arguments, matching
+ *        historical transactions, and inserting derived entries.
+ *
+ * This file implements the "xact" and "template" commands.  The core
+ * algorithm works in three phases:
+ *
+ *   1. **Argument parsing** (parse_args): Tokenize the command-line
+ *      arguments into an xact_template_t, recognizing dates, prepositions,
+ *      payee patterns, account patterns, amounts, and costs.
+ *
+ *   2. **Historical matching** (insert): Search the journal's transaction
+ *      list (most recent first) for a payee that matches the template's
+ *      payee mask.  Two strategies are tried: first a probabilistic lookup
+ *      (via lookup_probable_account), then a simple regex match.
+ *
+ *   3. **Transaction construction** (insert): Build a new xact_t by
+ *      merging the template's explicit fields with details from the
+ *      matching historical transaction.  The result is finalized and
+ *      inserted into the journal.
+ */
+
 #include <system.hh>
 
 #include "draft.h"
@@ -43,6 +70,8 @@
 #include "times.h"
 
 namespace ledger {
+
+/*--- Template Dump ---*/
 
 void draft_t::xact_template_t::dump(std::ostream& out) const {
   if (date)
@@ -82,6 +111,25 @@ void draft_t::xact_template_t::dump(std::ostream& out) const {
   }
 }
 
+/*--- Argument Parsing ---*/
+
+/**
+ * @brief Parse the command-line arguments into an xact_template_t.
+ *
+ * The parser processes arguments left-to-right using the following rules:
+ *
+ *   - The first argument that looks like a date (digits with separators)
+ *     or a day-of-week name becomes the transaction date.
+ *   - Prepositions ("at", "to", "from", "on", "code", "note", "@", "@@")
+ *     introduce their respective fields.
+ *   - Without a preposition, the first non-date token becomes the payee.
+ *     Subsequent tokens become either accounts or amounts depending on
+ *     whether they parse as valid amount_t values.
+ *   - A trailing account with no amount is assumed to be the "from"
+ *     (source) account.
+ *   - If all postings are "from" or all are "to", a balancing posting
+ *     is added automatically.
+ */
 void draft_t::parse_args(const value_t& args) {
   regex date_mask(_("([0-9]+(?:[-/.][0-9]+)?(?:[-/.][0-9]+))?"));
   smatch what;
@@ -118,6 +166,8 @@ void draft_t::parse_args(const value_t& args) {
         check_for_date = false;
       } else {
         // NOLINTBEGIN(bugprone-branch-clone)
+
+        // Handle preposition-based argument syntax
         if (arg == "at") {
           if (++begin == end)
             throw std::runtime_error(_("Invalid xact command arguments"));
@@ -190,6 +240,8 @@ void draft_t::parse_args(const value_t& args) {
     }
   }
 
+  // Post-processing: ensure the template has balanced "to" and "from"
+  // postings, adding placeholders as needed.
   if (!tmpl->posts.empty()) {
     bool has_only_from = true;
     bool has_only_to = true;
@@ -216,6 +268,33 @@ void draft_t::parse_args(const value_t& args) {
   }
 }
 
+/*--- Transaction Construction and Insertion ---*/
+
+/**
+ * @brief Build a new transaction from the template and insert it into
+ *        the journal.
+ *
+ * The algorithm proceeds in several phases:
+ *
+ *   1. **Payee matching**: Search for the most recent historical
+ *      transaction whose payee matches the template's payee_mask.
+ *      First try probabilistic matching (lookup_probable_account),
+ *      then fall back to simple regex matching.
+ *
+ *   2. **Header construction**: Set the date, payee, code, note, and
+ *      metadata from the template, falling back to the matching
+ *      transaction for any field the template leaves unspecified.
+ *
+ *   3. **Posting construction**: For each posting in the template,
+ *      find a matching posting in the historical transaction (by
+ *      account pattern), or create a new one.  Apply any explicit
+ *      amount, cost, and commodity from the template.
+ *
+ *   4. **Finalization**: Add the transaction to the journal, which
+ *      runs the standard balance-checking and amount-inference logic.
+ *
+ * @return The newly created xact_t, owned by the journal, or nullptr.
+ */
 xact_t* draft_t::insert(journal_t& journal) {
   if (!tmpl)
     return nullptr;
@@ -229,6 +308,7 @@ xact_t* draft_t::insert(journal_t& journal) {
   // There is no need to check drafts for errors, because we generated them.
   journal.checking_style = journal_t::CHECK_PERMISSIVE;
 
+  // Phase 1: Search for a matching historical transaction
   if (xact_t* xact = lookup_probable_account(tmpl->payee_mask.str(), journal.xacts.rbegin(),
                                              journal.xacts.rend())
                          .first) {
@@ -244,6 +324,7 @@ xact_t* draft_t::insert(journal_t& journal) {
     }
   }
 
+  // Phase 2: Set the transaction date
   if (!tmpl->date && !tmpl->date_string) {
     added->_date = CURRENT_DATE();
     DEBUG("draft.xact", "Setting date to current date");
@@ -282,6 +363,7 @@ xact_t* draft_t::insert(journal_t& journal) {
 
   added->set_state(item_t::UNCLEARED);
 
+  // Phase 2 (continued): Set header fields from the match or template
   if (matching) {
     added->payee = matching->payee;
     added->code = matching->code;
@@ -306,6 +388,7 @@ xact_t* draft_t::insert(journal_t& journal) {
     DEBUG("draft.xact", "Setting payee from template: " << added->payee);
   }
 
+  // Template overrides for code and note take precedence over the match
   if (tmpl->code) {
     added->code = *tmpl->code;
     DEBUG("draft.xact", "Now setting code from template: " << *added->code);
@@ -315,7 +398,9 @@ xact_t* draft_t::insert(journal_t& journal) {
     DEBUG("draft.xact", "Now setting note from template: " << *added->note);
   }
 
+  // Phase 3: Construct postings
   if (tmpl->posts.empty()) {
+    // No postings in the template -- copy all postings from the match
     if (matching) {
       DEBUG("draft.xact", "Template had no postings, copying from match");
 
@@ -344,6 +429,7 @@ xact_t* draft_t::insert(journal_t& journal) {
 
       commodity_t* found_commodity = nullptr;
 
+      // Try to find a matching posting from the historical transaction
       if (matching) {
         if (post.account_mask) {
           DEBUG("draft.xact", "Looking for matching posting based on account mask");
@@ -383,6 +469,7 @@ xact_t* draft_t::insert(journal_t& journal) {
         DEBUG("draft.xact", "New posting was NULL, creating a blank one");
       }
 
+      // Resolve the account for the posting if not already set
       if (!new_post->account) {
         DEBUG("draft.xact", "New posting still needs an account");
 
@@ -421,6 +508,7 @@ xact_t* draft_t::insert(journal_t& journal) {
           new_post->account = acct;
           DEBUG("draft.xact", "Set new posting's account to: " << acct->fullname());
         } else {
+          // Default accounts when no account mask is provided
           if (post.from) {
             new_post->account = journal.find_account(_("Liabilities:Unknown"));
             DEBUG("draft.xact", "Set new posting's account to: Liabilities:Unknown");
@@ -432,6 +520,7 @@ xact_t* draft_t::insert(journal_t& journal) {
       }
       assert(new_post->account);
 
+      // Handle amount and commodity assignment
       if (new_post.get() && !new_post->amount.is_null()) {
         found_commodity = &new_post->amount.commodity();
 
@@ -454,6 +543,7 @@ xact_t* draft_t::insert(journal_t& journal) {
         }
       }
 
+      // Handle cost assignment (@ per-unit or @@ total)
       if (post.cost) {
         if (post.cost->sign() < 0)
           throw parse_error(_("A posting's cost may not be negative"));
@@ -475,6 +565,8 @@ xact_t* draft_t::insert(journal_t& journal) {
         DEBUG("draft.xact", "Copied over posting cost");
       }
 
+      // If the posting has a commodity from history but the template
+      // amount was uncommoditized, apply the historical commodity
       if (found_commodity && !new_post->amount.is_null() && !new_post->amount.has_commodity()) {
         new_post->amount.set_commodity(*found_commodity);
         DEBUG("draft.xact", "Set posting amount commodity to: " << new_post->amount.commodity());
@@ -491,11 +583,14 @@ xact_t* draft_t::insert(journal_t& journal) {
     }
   }
 
+  // Phase 4: Finalize and insert into the journal
   if (!journal.add_xact(added.get()))
     throw_(std::runtime_error, _("Failed to finalize derived transaction (check commodities)"));
 
   return added.release();
 }
+
+/*--- Command Handlers ---*/
 
 value_t template_command(call_scope_t& args) {
   report_t& report(find_scope<report_t>(args));

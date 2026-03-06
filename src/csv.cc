@@ -29,6 +29,36 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   csv.cc
+ * @author John Wiegley
+ *
+ * @ingroup data
+ *
+ * @brief Implementation of the CSV file parser.
+ *
+ * This file converts CSV bank statements into Ledger transactions.  The
+ * overall flow is:
+ *
+ *   1. **Header parsing** (read_index): The first non-comment line is split
+ *      into column names, each matched against regex patterns to build a
+ *      column-to-field-type index (e.g., column 0 = date, column 3 = payee).
+ *
+ *   2. **Row parsing** (read_xact): Each subsequent line is split into
+ *      fields and mapped to transaction/posting attributes according to the
+ *      index.  Two postings are created per row: one carrying the CSV
+ *      amount (with the account resolved via payee-to-account mappings)
+ *      and a balancing posting to the master account.
+ *
+ *   3. **Field reading** (read_field): Handles CSV quoting conventions
+ *      including double-quote delimiters, pipe delimiters, backslash
+ *      escapes, and doubled-quote escaping.
+ *
+ * Payee alias mappings (from `payee` directives in the journal) and
+ * account mappings (from `account` directives) are consulted during
+ * transaction construction to normalize payee names and resolve accounts.
+ */
+
 #include <system.hh>
 
 #include "csv.h"
@@ -40,10 +70,14 @@
 
 namespace ledger {
 
+/*--- Field and Line Reading ---*/
+
 string csv_reader::read_field(std::istream& in) {
   string field;
 
   char c;
+  // Quoted field: delimited by " or |.  Supports backslash escaping and
+  // doubled-quote escaping (e.g., "" within a double-quoted field).
   if (in.peek() == '"' || in.peek() == '|') {
     in.get(c);
     char x;
@@ -64,6 +98,7 @@ string csv_reader::read_field(std::istream& in) {
         field += x;
     }
   } else {
+    // Unquoted field: read until comma or end of line
     while (in.good() && !in.eof()) {
       in.get(c);
       if (in.good()) {
@@ -90,6 +125,8 @@ char* csv_reader::next_line(std::istream& in) {
   return context.linebuf;
 }
 
+/*--- Header Index Construction ---*/
+
 void csv_reader::read_index(std::istream& in) {
   char* line = next_line(in);
   if (!line)
@@ -111,6 +148,8 @@ void csv_reader::read_index(std::istream& in) {
   }
 }
 
+/*--- Transaction Construction ---*/
+
 xact_t* csv_reader::read_xact(bool rich_data) {
   char* line = next_line(*context.stream.get());
   if (!line || index.empty())
@@ -119,6 +158,9 @@ xact_t* csv_reader::read_xact(bool rich_data) {
 
   std::istringstream instr(line);
 
+  // Phase 1: Create the transaction and its primary posting.
+  // CSV transactions are marked CLEARED by default since they come
+  // from bank statements (the bank has already settled them).
   unique_ptr<xact_t> xact(new xact_t);
   unique_ptr<post_t> post(new post_t);
 
@@ -141,6 +183,8 @@ xact_t* csv_reader::read_xact(bool rich_data) {
   post->set_state(item_t::CLEARED);
   post->account = nullptr;
 
+  // Phase 2: Walk the CSV columns and populate transaction fields
+  // according to the header index built during construction.
   std::vector<int>::size_type n = 0;
   amount_t amt;
   string total;
@@ -221,12 +265,15 @@ xact_t* csv_reader::read_xact(bool rich_data) {
     n++;
   }
 
+  // Phase 3: Attach rich metadata if requested (import timestamp and
+  // the original CSV line for auditability).
   if (rich_data) {
     xact->set_tag(_("Imported"), string_value(format_date(CURRENT_DATE(), FMT_WRITTEN)));
     xact->set_tag(_("CSV"), string_value(line));
   }
 
-  // Translate the account name, if we have enough information to do so
+  // Phase 4: Resolve the primary posting's account using the journal's
+  // payee-to-account mappings (from `account` directives with payee conditions).
 
   for (account_mapping_t& value : context.journal->payees_for_unknown_accounts) {
     if (value.first.match(xact->payee)) {
@@ -237,7 +284,9 @@ xact_t* csv_reader::read_xact(bool rich_data) {
 
   xact->add_post(post.release());
 
-  // Create the "balancing post", which refers to the account for this data
+  // Phase 5: Create the balancing posting.  This posting goes to the master
+  // account (typically something like "Assets:Checking") and carries the
+  // negated amount so the transaction balances to zero.
 
   post.reset(new post_t);
 
