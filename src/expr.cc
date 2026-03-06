@@ -29,6 +29,31 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   expr.cc
+ * @author John Wiegley
+ *
+ * @ingroup expr
+ *
+ * @brief Expression compilation and evaluation entry points.
+ *
+ * This file implements the public interface of expr_t (parse, compile, calc)
+ * and the merged_expr_t composition engine.  It connects the user-facing
+ * expression strings -- from command-line options like `--limit` and
+ * `--amount`, or from format strings -- to the underlying op_t AST.
+ *
+ * Key design points:
+ *  - **Accumulator isolation**: Each expr_t owns a persistent
+ *    symbol_scope_t (accumulator_scope_) so that O_DEFINE variables
+ *    (accumulator patterns) do not leak into the report/session scope.
+ *  - **Fast-path detection**: After compilation, detect_fast_path() checks
+ *    if the expression is a bare "amount" identifier, enabling callers to
+ *    skip the full eval pipeline.
+ *  - **Merged expressions**: merged_expr_t assembles multiple transformation
+ *    strings into a single compound expression that threads a term variable
+ *    through a sequence of assignments.
+ */
+
 #include <system.hh>
 
 #include "expr.h"
@@ -42,6 +67,8 @@
 #include <utility>
 
 namespace ledger {
+
+/*--- expr_t Construction and Assignment ---*/
 
 expr_t::expr_t() : base_type() {
   TRACE_CTOR(expr_t, "");
@@ -88,6 +115,8 @@ expr_t::ptr_op_t expr_t::get_op() noexcept {
   return ptr;
 }
 
+/*--- Parsing ---*/
+
 void expr_t::parse(std::istream& in, const parse_flags_t& flags,
                    const optional<string>& original_string) {
   parser_t parser;
@@ -110,6 +139,8 @@ void expr_t::parse(std::istream& in, const parse_flags_t& flags,
   }
 }
 
+/*--- Compilation ---*/
+
 void expr_t::compile(scope_t& scope) {
   if (!compiled) {
     if (ptr) {
@@ -120,6 +151,8 @@ void expr_t::compile(scope_t& scope) {
     base_type::compile(scope);
   }
 }
+
+/*--- Fast-Path Detection ---*/
 
 void expr_t::detect_fast_path() {
   // Detect when a compiled expression is a simple identifier that
@@ -134,6 +167,8 @@ void expr_t::detect_fast_path() {
       fast_path_ = fast_path_t::POST_AMOUNT;
   }
 }
+
+/*--- Evaluation ---*/
 
 value_t expr_t::calc_with_scope(scope_t& scope) {
   static thread_local int eval_depth = 0;
@@ -201,6 +236,8 @@ value_t expr_t::real_calc(scope_t& scope) {
   return NULL_VALUE;
 }
 
+/*--- Compiled Expression Queries ---*/
+
 bool expr_t::is_constant() const {
   assert(compiled);
   return ptr && ptr->is_value();
@@ -226,6 +263,8 @@ expr_t::func_t& expr_t::get_function() {
   return ptr->as_function_lval();
 }
 
+/*--- Printing and Diagnostics ---*/
+
 string expr_t::context_to_str() const {
   return ptr ? op_context(ptr) : _("<empty expression>");
 }
@@ -239,6 +278,8 @@ void expr_t::dump(std::ostream& out) const {
   if (ptr)
     ptr->dump(out, 0);
 }
+
+/*--- merged_expr_t Implementation ---*/
 
 merged_expr_t::merged_expr_t(const string& _term, const string& expr, const string& merge_op)
     : expr_t(), term(_term), base_expr(expr), merge_operator(merge_op) {
@@ -343,6 +384,8 @@ value_t merged_expr_t::real_calc(scope_t& scope) {
   return calc_with_scope(wrapped);
 }
 
+/*--- Expression / Value Interop ---*/
+
 expr_t::ptr_op_t as_expr(const value_t& val) {
   VERIFY(val.is_any());
   return val.as_any<expr_t::ptr_op_t>();
@@ -357,6 +400,8 @@ value_t expr_value(expr_t::ptr_op_t op) {
   temp.set_any(op);
   return temp;
 }
+
+/*--- Script Command ---*/
 
 value_t script_command(call_scope_t& args) {
   std::istream* in = nullptr;

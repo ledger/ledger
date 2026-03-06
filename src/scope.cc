@@ -29,22 +29,42 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   scope.cc
+ * @author John Wiegley
+ * @brief  Implementation of scope hierarchy: symbol tables and argument resolution.
+ *
+ * @ingroup expr
+ *
+ * This file contains the implementations that cannot be inlined:
+ * - Global scope pointers (default_scope, empty_scope).
+ * - symbol_scope_t::define/lookup -- local symbol table management.
+ * - call_scope_t::resolve -- lazy argument evaluation with type coercion.
+ */
+
 #include <system.hh>
 
 #include "scope.h"
 
 namespace ledger {
 
+/*--- Global Scope Pointers ---*/
+
 scope_t* scope_t::default_scope = nullptr;
 empty_scope_t* scope_t::empty_scope = nullptr;
+
+/*--- Symbol Table Management (symbol_scope_t) ---*/
 
 void symbol_scope_t::define(const symbol_t::kind_t kind, const string& name,
                             const expr_t::ptr_op_t& def) {
   DEBUG("scope.symbols", "Defining '" << name << "' = " << def << " in " << this);
 
+  // Lazily create the symbol map on first definition.
   if (!symbols)
     symbols = symbol_map();
 
+  // Attempt to insert; if a symbol with the same (kind, name) already
+  // exists, erase the old entry and re-insert with the new definition.
   auto [iter, inserted] = symbols->insert(symbol_map::value_type(symbol_t(kind, name, def), def));
   if (!inserted) {
     auto i = symbols->find(symbol_t(kind, name));
@@ -58,6 +78,7 @@ void symbol_scope_t::define(const symbol_t::kind_t kind, const string& name,
   }
 }
 
+/// Look up a symbol: check the local table first, then delegate to parent.
 expr_t::ptr_op_t symbol_scope_t::lookup(const symbol_t::kind_t kind, const string& name) {
   if (symbols) {
     DEBUG("scope.symbols", "Looking for '" << name << "' in " << this);
@@ -70,6 +91,19 @@ expr_t::ptr_op_t symbol_scope_t::lookup(const symbol_t::kind_t kind, const strin
   return child_scope_t::lookup(kind, name);
 }
 
+/*--- Lazy Argument Resolution (call_scope_t) ---*/
+
+/**
+ * Resolve a function argument at @p index, evaluating it lazily if needed.
+ *
+ * Function arguments may arrive as unevaluated expression trees wrapped in
+ * value_t::ANY.  On first access, resolve() evaluates the expression within
+ * a context_scope_t that carries the desired type hint, then stores the
+ * result back into @c args so subsequent accesses are free.
+ *
+ * If @p required is true and the evaluated result does not match the
+ * expected @p context type, a calc_error is thrown.
+ */
 value_t& call_scope_t::resolve(const std::size_t index, value_t::type_t context,
                                const bool required) {
   if (index >= args.size())
