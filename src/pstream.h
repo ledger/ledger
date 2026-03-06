@@ -75,8 +75,8 @@ class ptristream : public std::istream {
     ptrinbuf& operator=(const ptrinbuf&);
 
   protected:
-    char* ptr;        ///< Pointer to the beginning of the buffer
-    std::size_t len;  ///< Length of the buffer in bytes
+    char* ptr;       ///< Pointer to the beginning of the buffer
+    std::size_t len; ///< Length of the buffer in bytes
 
   public:
     ptrinbuf(char* _ptr, std::size_t _len) : ptr(_ptr), len(_len) {

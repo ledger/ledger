@@ -83,9 +83,9 @@ protected:
   using commodities_map = std::map<string, commodity_t*>;
   using commodities_pair = std::pair<string, commodity_t*>;
 
-  commodities_map commodities;            ///< Unique commodities seen in matched postings
-  std::set<xact_t*> transactions_set;     ///< Set for O(1) duplicate detection
-  std::deque<xact_t*> transactions;       ///< Transactions in encounter order
+  commodities_map commodities;        ///< Unique commodities seen in matched postings
+  std::set<xact_t*> transactions_set; ///< Set for O(1) duplicate detection
+  std::deque<xact_t*> transactions;   ///< Transactions in encounter order
 
 public:
   /// Output format selector (currently only XML is supported).

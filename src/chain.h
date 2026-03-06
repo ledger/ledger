@@ -90,7 +90,8 @@ class account_t;
 template <typename T>
 class item_handler : public noncopyable {
 protected:
-  std::shared_ptr<item_handler> handler; ///< Next (downstream) handler in the chain, or nullptr for the terminal handler.
+  std::shared_ptr<item_handler>
+      handler; ///< Next (downstream) handler in the chain, or nullptr for the terminal handler.
 
 public:
   item_handler() { TRACE_CTOR(item_handler, ""); }

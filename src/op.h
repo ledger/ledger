@@ -120,63 +120,63 @@ public:
    */
   enum kind_t : uint8_t {
     /*--- Constant Terminals ---*/
-    PLUG,      ///< Internal sentinel: marks a declared-but-unassigned variable.
-    VALUE,     ///< Literal constant (integer, amount, string, date, etc.).
-    IDENT,     ///< Named identifier, resolved at compile or eval time.
+    PLUG,  ///< Internal sentinel: marks a declared-but-unassigned variable.
+    VALUE, ///< Literal constant (integer, amount, string, date, etc.).
+    IDENT, ///< Named identifier, resolved at compile or eval time.
 
     CONSTANTS, ///< Sentinel: end of constant range.
 
     /*--- Callable / Scope Terminals ---*/
-    FUNCTION,  ///< Native C++ function (std::function<value_t(call_scope_t&)>).
-    SCOPE,     ///< Lexical scope capture wrapping a sub-expression.
+    FUNCTION, ///< Native C++ function (std::function<value_t(call_scope_t&)>).
+    SCOPE,    ///< Lexical scope capture wrapping a sub-expression.
 
     TERMINALS, ///< Sentinel: end of all terminal kinds.
 
     /*--- Unary Operators ---*/
-    O_NOT,     ///< Logical negation (`not expr` or `! expr`).
-    O_NEG,     ///< Arithmetic negation (`- expr`).
+    O_NOT, ///< Logical negation (`not expr` or `! expr`).
+    O_NEG, ///< Arithmetic negation (`- expr`).
 
     UNARY_OPERATORS, ///< Sentinel: end of unary operator range.
 
     /*--- Comparison Operators ---*/
-    O_EQ,      ///< Equality test (`==`).
-    O_LT,      ///< Less than (`<`).
-    O_LTE,     ///< Less than or equal (`<=`).
-    O_GT,      ///< Greater than (`>`).
-    O_GTE,     ///< Greater than or equal (`>=`).
+    O_EQ,  ///< Equality test (`==`).
+    O_LT,  ///< Less than (`<`).
+    O_LTE, ///< Less than or equal (`<=`).
+    O_GT,  ///< Greater than (`>`).
+    O_GTE, ///< Greater than or equal (`>=`).
 
     /*--- Logical Connectives ---*/
-    O_AND,     ///< Short-circuit logical AND (`&`).
-    O_OR,      ///< Short-circuit logical OR (`|`).
+    O_AND, ///< Short-circuit logical AND (`&`).
+    O_OR,  ///< Short-circuit logical OR (`|`).
 
     /*--- Arithmetic Operators ---*/
-    O_ADD,     ///< Addition (`+`).
-    O_SUB,     ///< Subtraction (`-`).
-    O_MUL,     ///< Multiplication (`*`).
-    O_DIV,     ///< Division (`/`).
+    O_ADD, ///< Addition (`+`).
+    O_SUB, ///< Subtraction (`-`).
+    O_MUL, ///< Multiplication (`*`).
+    O_DIV, ///< Division (`/`).
 
     /*--- Ternary Conditional ---*/
-    O_QUERY,   ///< Ternary condition (`expr ? a : b`); right child is O_COLON.
-    O_COLON,   ///< Ternary branches holder; never evaluated directly.
+    O_QUERY, ///< Ternary condition (`expr ? a : b`); right child is O_COLON.
+    O_COLON, ///< Ternary branches holder; never evaluated directly.
 
     /*--- Structural Operators ---*/
-    O_CONS,    ///< Comma-separated list constructor (builds a value_t sequence).
-    O_SEQ,     ///< Semicolon-separated sequence (keeps only last result).
+    O_CONS, ///< Comma-separated list constructor (builds a value_t sequence).
+    O_SEQ,  ///< Semicolon-separated sequence (keeps only last result).
 
     /*--- Definition / Invocation ---*/
-    O_DEFINE,  ///< Variable or function definition (`name = expr`).
-    O_LOOKUP,  ///< Member access / dot operator (`obj.member`).
-    O_LAMBDA,  ///< Lambda expression (`params -> body`).
-    O_CALL,    ///< Function call (`func(args)`).
-    O_MATCH,   ///< Regex match operator (`expr =~ /pattern/`).
+    O_DEFINE, ///< Variable or function definition (`name = expr`).
+    O_LOOKUP, ///< Member access / dot operator (`obj.member`).
+    O_LAMBDA, ///< Lambda expression (`params -> body`).
+    O_CALL,   ///< Function call (`func(args)`).
+    O_MATCH,  ///< Regex match operator (`expr =~ /pattern/`).
 
     BINARY_OPERATORS, ///< Sentinel: end of binary operator range.
 
     OPERATORS, ///< Sentinel: end of all operator kinds.
 
-    UNKNOWN,   ///< Default-constructed, not yet assigned a real kind.
+    UNKNOWN, ///< Default-constructed, not yet assigned a real kind.
 
-    LAST       ///< Past-the-end sentinel for range checks and assertions.
+    LAST ///< Past-the-end sentinel for range checks and assertions.
   };
 
   kind_t kind; ///< Discriminator tag identifying this node's role in the AST.
@@ -377,11 +377,11 @@ public:
   /// printing, start_pos/end_pos are recorded so the caller can underline
   /// the offending sub-expression with carets.
   struct context_t {
-    ptr_op_t expr_op;                    ///< Root of the expression being printed.
-    ptr_op_t op_to_find;                 ///< Node to highlight (may be null).
-    std::ostream::pos_type* start_pos;   ///< Output position where op_to_find starts.
-    std::ostream::pos_type* end_pos;     ///< Output position where op_to_find ends.
-    bool relaxed;                        ///< Use relaxed (human-friendly) value formatting.
+    ptr_op_t expr_op;                  ///< Root of the expression being printed.
+    ptr_op_t op_to_find;               ///< Node to highlight (may be null).
+    std::ostream::pos_type* start_pos; ///< Output position where op_to_find starts.
+    std::ostream::pos_type* end_pos;   ///< Output position where op_to_find ends.
+    bool relaxed;                      ///< Use relaxed (human-friendly) value formatting.
 
     context_t() : start_pos(nullptr), end_pos(nullptr), relaxed(false) {}
 

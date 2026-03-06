@@ -101,15 +101,17 @@ public:
     return *this;
   }
 
-  flags_t flags() const { return _flags; }                     ///< Return all flags
-  bool has_flags(const flags_t arg) const { return _flags & arg; } ///< True if any bit in @p arg is set
+  flags_t flags() const { return _flags; } ///< Return all flags
+  bool has_flags(const flags_t arg) const {
+    return _flags & arg;
+  } ///< True if any bit in @p arg is set
 
-  void set_flags(const flags_t arg) { _flags = arg; }         ///< Replace all flags
-  void clear_flags() { _flags = static_cast<T>(0); }          ///< Clear all flags to zero
-  void add_flags(const flags_t arg) {                          ///< Set additional flag bits
+  void set_flags(const flags_t arg) { _flags = arg; } ///< Replace all flags
+  void clear_flags() { _flags = static_cast<T>(0); }  ///< Clear all flags to zero
+  void add_flags(const flags_t arg) {                 ///< Set additional flag bits
     _flags = static_cast<T>(static_cast<U>(_flags) | static_cast<U>(arg));
   }
-  void drop_flags(const flags_t arg) {                         ///< Clear specific flag bits
+  void drop_flags(const flags_t arg) { ///< Clear specific flag bits
     _flags = static_cast<T>(static_cast<U>(_flags) & static_cast<U>(~arg));
   }
 };

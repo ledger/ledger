@@ -83,9 +83,9 @@ class format_emacs_posts : public item_handler<post_t> {
   format_emacs_posts(); ///< Disabled default constructor (output stream is required).
 
 protected:
-  report_t& report;    ///< The report context (provides date format options).
-  std::ostream& out;   ///< The output stream for s-expression output.
-  xact_t* last_xact;  ///< Tracks the previous transaction to detect boundaries.
+  report_t& report;  ///< The report context (provides date format options).
+  std::ostream& out; ///< The output stream for s-expression output.
+  xact_t* last_xact; ///< Tracks the previous transaction to detect boundaries.
 
 public:
   /// @param _report  The report context.

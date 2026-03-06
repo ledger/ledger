@@ -133,7 +133,7 @@ class empty_scope_t;
  */
 class scope_t {
 public:
-  static scope_t* default_scope; ///< The global default scope (typically the active session).
+  static scope_t* default_scope;     ///< The global default scope (typically the active session).
   static empty_scope_t* empty_scope; ///< A no-op scope that resolves no symbols.
 
   explicit scope_t() { TRACE_CTOR(scope_t, ""); }
@@ -416,8 +416,8 @@ public:
  */
 class call_scope_t : public context_scope_t {
 public:
-  value_t args;        ///< The function arguments (may contain lazy expr_t::ptr_op_t values).
-  mutable void* ptr;   ///< Cached pointer to a context scope found via context<T>().
+  value_t args;      ///< The function arguments (may contain lazy expr_t::ptr_op_t values).
+  mutable void* ptr; ///< Cached pointer to a context scope found via context<T>().
 
   /**
    * @brief Lazily evaluate argument at @p index, coercing to @p context type.
@@ -431,7 +431,7 @@ public:
 
 public:
   expr_t::ptr_op_t* locus; ///< Points to the call-site op node (for error reporting).
-  const int depth;          ///< Expression evaluation depth (for recursion tracking).
+  const int depth;         ///< Expression evaluation depth (for recursion tracking).
 
   explicit call_scope_t(scope_t& _parent, expr_t::ptr_op_t* _locus = nullptr, const int _depth = 0)
       : context_scope_t(_parent, _parent.type_context(), _parent.type_required()), ptr(nullptr),

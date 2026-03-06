@@ -86,11 +86,11 @@ protected:
   using xacts_list = std::list<xact_t*>;
   using xacts_present_map = std::map<xact_t*, bool>;
 
-  report_t& report;                  ///< The report context providing options and output stream.
-  xacts_present_map xacts_present;   ///< Tracks which transactions have already been queued.
-  xacts_list xacts;                  ///< Ordered list of unique transactions to print.
-  bool print_raw;                    ///< If true, output original source text instead of reconstructing.
-  bool first_title;                  ///< Tracks whether a title separator is needed.
+  report_t& report;                ///< The report context providing options and output stream.
+  xacts_present_map xacts_present; ///< Tracks which transactions have already been queued.
+  xacts_list xacts;                ///< Ordered list of unique transactions to print.
+  bool print_raw;   ///< If true, output original source text instead of reconstructing.
+  bool first_title; ///< Tracks whether a title separator is needed.
 
 public:
   /// @param _report    The report context.

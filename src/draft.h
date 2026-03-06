@@ -104,11 +104,11 @@ class draft_t : public expr_base_t<value_t> {
    * payee pattern and let the rest be filled in from journal history.
    */
   struct xact_template_t {
-    optional<date_t> date;          ///< Explicit date, if provided
-    optional<string> date_string;   ///< Raw date string for deferred parsing
-    optional<string> code;          ///< Transaction code (e.g., check number)
-    optional<string> note;          ///< Transaction note
-    mask_t payee_mask;              ///< Pattern to match against historical payees
+    optional<date_t> date;        ///< Explicit date, if provided
+    optional<string> date_string; ///< Raw date string for deferred parsing
+    optional<string> code;        ///< Transaction code (e.g., check number)
+    optional<string> note;        ///< Transaction note
+    mask_t payee_mask;            ///< Pattern to match against historical payees
 
     /**
      * @brief A single posting within the transaction template.
@@ -118,11 +118,11 @@ class draft_t : public expr_base_t<value_t> {
      * from destination postings.
      */
     struct post_template_t {
-      bool from;                          ///< True if this is a source ("from") posting
-      optional<mask_t> account_mask;      ///< Pattern to match against account names
-      optional<amount_t> amount;          ///< Explicit amount for this posting
-      optional<string> cost_operator;     ///< "@" for per-unit or "@@" for total cost
-      optional<amount_t> cost;            ///< Cost amount, if specified
+      bool from;                      ///< True if this is a source ("from") posting
+      optional<mask_t> account_mask;  ///< Pattern to match against account names
+      optional<amount_t> amount;      ///< Explicit amount for this posting
+      optional<string> cost_operator; ///< "@" for per-unit or "@@" for total cost
+      optional<amount_t> cost;        ///< Cost amount, if specified
 
       post_template_t() : from(false) { TRACE_CTOR(post_template_t, ""); }
       ~post_template_t() noexcept { TRACE_DTOR(post_template_t); }

@@ -96,7 +96,7 @@ public:
   ~date_error() noexcept override {}
 };
 
-using datetime_t = boost::posix_time::ptime;       ///< Timestamp with date and time-of-day.
+using datetime_t = boost::posix_time::ptime;            ///< Timestamp with date and time-of-day.
 using time_duration_t = datetime_t::time_duration_type; ///< Time-of-day duration component.
 
 /// @brief Test whether a datetime value has been assigned (is not "not_a_date_time").
@@ -104,7 +104,7 @@ inline bool is_valid(const datetime_t& moment) {
   return !moment.is_not_a_date_time();
 }
 
-using date_t = boost::gregorian::date;              ///< Calendar date without time-of-day.
+using date_t = boost::gregorian::date;                   ///< Calendar date without time-of-day.
 using date_iterator_t = boost::gregorian::date_iterator; ///< Day-by-day date iterator.
 
 /// @brief Test whether a date value has been assigned (is not "not_a_date").
@@ -122,13 +122,20 @@ extern optional<datetime_t> epoch;
 extern optional<int> year_directive_year;
 
 #ifdef BOOST_DATE_TIME_HAS_HIGH_PRECISION_CLOCK
-#define TRUE_CURRENT_TIME() (boost::posix_time::microsec_clock::local_time()) ///< Wall-clock time (microsecond precision).
-#define CURRENT_TIME() (epoch ? *epoch : TRUE_CURRENT_TIME())                 ///< Effective "now", respecting --now override.
+#define TRUE_CURRENT_TIME()                                                                        \
+  (boost::posix_time::microsec_clock::local_time()) ///< Wall-clock time (microsecond precision).
+#define CURRENT_TIME()                                                                             \
+  (epoch ? *epoch : TRUE_CURRENT_TIME()) ///< Effective "now", respecting --now override.
 #else
-#define TRUE_CURRENT_TIME() (boost::posix_time::second_clock::local_time()) ///< Wall-clock time (second precision).
-#define CURRENT_TIME() (epoch ? *epoch : TRUE_CURRENT_TIME())               ///< Effective "now", respecting --now override.
+#define TRUE_CURRENT_TIME()                                                                        \
+  (boost::posix_time::second_clock::local_time()) ///< Wall-clock time (second precision).
+#define CURRENT_TIME()                                                                             \
+  (epoch ? *epoch : TRUE_CURRENT_TIME()) ///< Effective "now", respecting --now override.
 #endif
-#define CURRENT_DATE() (epoch ? epoch->date() : boost::gregorian::day_clock::local_day()) ///< Effective "today", respecting --now override.
+#define CURRENT_DATE()                                                                             \
+  (epoch ? epoch->date()                                                                           \
+         : boost::gregorian::day_clock::local_day()) ///< Effective "today", respecting --now
+                                                     ///< override.
 
 /// The day that starts each week for period alignment (default: Sunday).
 /// Configurable so that `weekly` reports can begin on Monday, etc.
@@ -138,7 +145,8 @@ extern date_time::weekdays start_of_week;
 /// @return The weekday, or none if the string is not recognized.
 optional<date_time::weekdays> string_to_day_of_week(const std::string& str);
 
-/// @brief Convert a locale-aware month name or number ("jan", "january", "0") to a months_of_year enum.
+/// @brief Convert a locale-aware month name or number ("jan", "january", "0") to a months_of_year
+/// enum.
 /// @return The month, or none if the string is not recognized.
 optional<date_time::months_of_year> string_to_month_of_year(const std::string& str);
 
@@ -428,10 +436,10 @@ public:
   using day_of_week_type = date_t::day_of_week_type;
 
 protected:
-  optional<year_type> year;           ///< Calendar year (e.g. 2024), if specified.
-  optional<month_type> month;         ///< Month of year, if specified.
-  optional<day_type> day;             ///< Day of month, if specified.
-  optional<day_of_week_type> wday;    ///< Day of week, if specified.
+  optional<year_type> year;        ///< Calendar year (e.g. 2024), if specified.
+  optional<month_type> month;      ///< Month of year, if specified.
+  optional<day_type> day;          ///< Day of month, if specified.
+  optional<day_of_week_type> wday; ///< Day of week, if specified.
 
 public:
   date_specifier_t(const optional<year_type>& _year = none,
@@ -714,9 +722,9 @@ public:
   bool aligned;            ///< True once stabilize() has aligned the interval to a reference date.
   optional<date_t> next;   ///< The start date of the next period (set by resolve_end).
 
-  optional<date_duration_t> duration;      ///< The step size for periodic iteration.
-  optional<date_t> end_of_duration;        ///< One past the last date of the current period.
-  bool since_specified = false;            ///< True if the user gave an explicit `since`/`from` date.
+  optional<date_duration_t> duration; ///< The step size for periodic iteration.
+  optional<date_t> end_of_duration;   ///< One past the last date of the current period.
+  bool since_specified = false;       ///< True if the user gave an explicit `since`/`from` date.
 
   explicit date_interval_t() : aligned(false) { TRACE_CTOR(date_interval_t, ""); }
 

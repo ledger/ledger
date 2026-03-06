@@ -65,9 +65,10 @@ namespace ledger {
 
 namespace {
 
-using score_entry_t = std::pair<xact_t*, int>;  ///< (transaction, match score)
-using scorecard_t = std::deque<score_entry_t>;   ///< Collected match scores
-using char_positions_map = std::map<uint32_t, std::size_t>; ///< Tracks last matched position per character
+using score_entry_t = std::pair<xact_t*, int>; ///< (transaction, match score)
+using scorecard_t = std::deque<score_entry_t>; ///< Collected match scores
+using char_positions_map =
+    std::map<uint32_t, std::size_t>; ///< Tracks last matched position per character
 
 /// Sort score entries by descending score.
 struct score_sorter {
@@ -76,8 +77,8 @@ struct score_sorter {
   }
 };
 
-using account_use_map = std::map<account_t*, int>;     ///< Account -> weighted usage count
-using account_use_pair = std::pair<account_t*, int>;   ///< Single entry in account_use_map
+using account_use_map = std::map<account_t*, int>;   ///< Account -> weighted usage count
+using account_use_pair = std::pair<account_t*, int>; ///< Single entry in account_use_map
 
 /// Sort account usage pairs by ascending count (for use with max_element).
 struct usage_sorter {

@@ -127,8 +127,8 @@ string source_context(const path& file, const std::istream::pos_type pos,
 /// message.  This is not a std::exception subclass; it is caught specially
 /// by the top-level error handler.
 struct error_count {
-  std::size_t count;       ///< Number of errors encountered
-  std::string message;     ///< Summary message
+  std::size_t count;   ///< Number of errors encountered
+  std::string message; ///< Summary message
   explicit error_count(std::size_t _count, std::string _msg)
       : count(_count), message(std::move(_msg)) {}
   const char* what() const { return message.c_str(); }

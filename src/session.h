@@ -110,9 +110,9 @@ public:
   /// completely overrides files from environment/init-file sources.
   bool flush_on_next_data_file;
 
-  boost::shared_ptr<journal_t> journal;     ///< The loaded journal data
-  parse_context_stack_t parsing_context;    ///< Stack of active parse contexts (for includes)
-  optional<expr_t> value_expr;              ///< User-specified value expression (--value-expr)
+  boost::shared_ptr<journal_t> journal;  ///< The loaded journal data
+  parse_context_stack_t parsing_context; ///< Stack of active parse contexts (for includes)
+  optional<expr_t> value_expr;           ///< User-specified value expression (--value-expr)
 
   explicit session_t();
   ~session_t() override {
@@ -202,10 +202,10 @@ public:
    * Option handlers
    */
 
-  OPTION(session_t, check_payees);       ///< Warn on unknown payees (with --strict)
-  OPTION(session_t, day_break);          ///< Insert day-break transactions between dates
-  OPTION(session_t, download);           ///< Download commodity prices (-Q)
-  OPTION(session_t, getquote_);          ///< Path to the price-fetching script
+  OPTION(session_t, check_payees); ///< Warn on unknown payees (with --strict)
+  OPTION(session_t, day_break);    ///< Insert day-break transactions between dates
+  OPTION(session_t, download);     ///< Download commodity prices (-Q)
+  OPTION(session_t, getquote_);    ///< Path to the price-fetching script
 
   /// Use comma as decimal separator for commodity amounts.
   OPTION_(session_t, decimal_comma, DO() { commodity_t::decimal_comma_by_default = true; });
@@ -252,15 +252,15 @@ public:
         set_input_date_format(str.c_str());
       });
 
-  OPTION(session_t, explicit);           ///< Only accept explicitly declared accounts/commodities
-  OPTION(session_t, master_account_);    ///< Parent account for all postings
-  OPTION(session_t, pedantic);           ///< Treat warnings as errors (CHECK_ERROR)
-  OPTION(session_t, permissive);         ///< Suppress balance-check warnings (CHECK_PERMISSIVE)
-  OPTION(session_t, price_db_);          ///< Path to the price history database file
-  OPTION(session_t, strict);             ///< Warn on undeclared accounts/commodities (CHECK_WARNING)
-  OPTION(session_t, value_expr_);        ///< Expression used to compute posting values
-  OPTION(session_t, recursive_aliases);  ///< Allow aliases to reference other aliases
-  OPTION(session_t, no_aliases);         ///< Disable all account alias expansion
+  OPTION(session_t, explicit);          ///< Only accept explicitly declared accounts/commodities
+  OPTION(session_t, master_account_);   ///< Parent account for all postings
+  OPTION(session_t, pedantic);          ///< Treat warnings as errors (CHECK_ERROR)
+  OPTION(session_t, permissive);        ///< Suppress balance-check warnings (CHECK_PERMISSIVE)
+  OPTION(session_t, price_db_);         ///< Path to the price history database file
+  OPTION(session_t, strict);            ///< Warn on undeclared accounts/commodities (CHECK_WARNING)
+  OPTION(session_t, value_expr_);       ///< Expression used to compute posting values
+  OPTION(session_t, recursive_aliases); ///< Allow aliases to reference other aliases
+  OPTION(session_t, no_aliases);        ///< Disable all account alias expansion
 
   /// Lot matching policy for automatic commodity disposal: "fifo", "lifo", or "none".
   OPTION_CTOR(

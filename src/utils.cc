@@ -103,9 +103,9 @@ using object_count_map = std::map<std::string, count_size_pair>;
 namespace {
 bool memory_tracing_active = false; ///< Guard against re-entrant tracing from within allocators
 
-memory_map* live_memory = nullptr;            ///< Currently allocated memory blocks
-memory_map* freed_memory = nullptr;           ///< Recently freed blocks (detect double-free)
-object_count_map* live_memory_count = nullptr; ///< Per-class live memory aggregates
+memory_map* live_memory = nullptr;              ///< Currently allocated memory blocks
+memory_map* freed_memory = nullptr;             ///< Recently freed blocks (detect double-free)
+object_count_map* live_memory_count = nullptr;  ///< Per-class live memory aggregates
 object_count_map* total_memory_count = nullptr; ///< Per-class cumulative memory aggregates
 objects_map* live_objects = nullptr;            ///< Currently alive traced objects
 object_count_map* live_object_count = nullptr;  ///< Per-class live object aggregates
@@ -550,16 +550,16 @@ strings_list split_arguments(const char* line) {
 
 namespace ledger {
 
-log_level_t _log_level = LOG_WARN;       ///< Default: show warnings and above
-std::ostream* _log_stream = &std::cerr; ///< Log output destination
+log_level_t _log_level = LOG_WARN;           ///< Default: show warnings and above
+std::ostream* _log_stream = &std::cerr;      ///< Log output destination
 thread_local std::ostringstream _log_buffer; ///< Per-thread message assembly buffer
 
 #if TRACING_ON
 uint16_t _trace_level; ///< Maximum active trace level
 #endif
 
-static bool logger_has_run = false;      ///< True after first log message
-static ptime logger_start; // NOLINT(cert-err58-cpp) ///< Timestamp of first log call
+static bool logger_has_run = false; ///< True after first log message
+static ptime logger_start;          // NOLINT(cert-err58-cpp) ///< Timestamp of first log call
 
 /// Format and emit one log message.  Reads the message from the
 /// thread-local `_log_buffer`, prepends elapsed time and (optionally)
@@ -669,11 +669,11 @@ namespace ledger {
 /// at which the timer was started, the accumulated duration across
 /// multiple start/stop cycles, and whether the timer is currently running.
 struct timer_t {
-  log_level_t level;         ///< Log level at which to report
-  ptime begin;               ///< Timestamp of most recent start
-  time_duration spent;       ///< Accumulated time from previous start/stop pairs
-  std::string description;   ///< Human-readable label for log output
-  bool active;               ///< True if the timer is currently running
+  log_level_t level;       ///< Log level at which to report
+  ptime begin;             ///< Timestamp of most recent start
+  time_duration spent;     ///< Accumulated time from previous start/stop pairs
+  std::string description; ///< Human-readable label for log output
+  bool active;             ///< True if the timer is currently running
 
   timer_t(log_level_t _level, std::string _description)
       : level(_level), begin(TRUE_CURRENT_TIME()), spent(time_duration(0, 0, 0, 0)),

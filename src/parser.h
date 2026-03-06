@@ -96,8 +96,8 @@ namespace ledger {
  * showing where in the original expression text the failure occurred.
  */
 class expr_t::parser_t : public noncopyable {
-  mutable token_t lookahead;    ///< Single-token lookahead buffer
-  mutable bool use_lookahead;   ///< True if lookahead holds an unconsumed token
+  mutable token_t lookahead;  ///< Single-token lookahead buffer
+  mutable bool use_lookahead; ///< True if lookahead holds an unconsumed token
 
   /**
    * @brief Advance to the next token, or reuse the lookahead if pushed back.

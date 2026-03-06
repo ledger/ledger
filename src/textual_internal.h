@@ -103,7 +103,8 @@ using fixed_rate_t = std::pair<commodity_t*, amount_t>;
  */
 struct application_t {
   string label; ///< The apply keyword ("account", "tag", "year", "fixed")
-  std::variant<optional<datetime_t>, account_t*, string, fixed_rate_t> value; ///< Type-specific payload
+  std::variant<optional<datetime_t>, account_t*, string, fixed_rate_t>
+      value;                          ///< Type-specific payload
   optional<int> saved_year_directive; ///< Year directive value saved before `apply year` changed it
 
   application_t(string _label, optional<datetime_t> epoch)
@@ -134,12 +135,13 @@ public:
   parse_context_stack_t& context_stack; ///< Stack of all active file contexts
   parse_context_t& context;             ///< Context for the file this instance is parsing
   std::istream& in;                     ///< Convenience reference to context.stream
-  instance_t* parent;                   ///< Parent instance when parsing an included file (nullptr for top-level)
-  std::list<application_t> apply_stack; ///< Stack of active `apply` directives (front = most recent)
-  bool no_assertions;                   ///< True when --permissive is active (skip balance assertions)
-  hash_type_t hash_type;                ///< Hash algorithm for transaction chaining (NO_HASHES to disable)
+  instance_t* parent; ///< Parent instance when parsing an included file (nullptr for top-level)
+  std::list<application_t>
+      apply_stack;       ///< Stack of active `apply` directives (front = most recent)
+  bool no_assertions;    ///< True when --permissive is active (skip balance assertions)
+  hash_type_t hash_type; ///< Hash algorithm for transaction chaining (NO_HASHES to disable)
 #if TIMELOG_SUPPORT
-  time_log_t timelog;                   ///< Accumulates clock-in/out events for time tracking
+  time_log_t timelog; ///< Accumulates clock-in/out events for time tracking
 #endif
 
   instance_t(parse_context_stack_t& _context_stack, parse_context_t& _context,
@@ -217,73 +219,102 @@ public:
 #endif
 
   /// @brief Dispatch table for word-based directives (account, commodity, include, etc.).
-  /// @return true if a known directive was handled, false to fall through to legacy single-char directives.
+  /// @return true if a known directive was handled, false to fall through to legacy single-char
+  /// directives.
   bool general_directive(char* line);
 
   /*--- Account Directives ---*/
 
-  /// @brief Handle the `account` directive and its indented sub-directives (alias, payee, value, default, assert, check, note).
+  /// @brief Handle the `account` directive and its indented sub-directives (alias, payee, value,
+  /// default, assert, check, note).
   void account_directive(char* line);
-  void account_alias_directive(account_t* account, string alias);   ///< Register an alias name that maps to this account
-  void account_payee_directive(account_t* account, string payee);  ///< Map a payee pattern to this account for unknown-account resolution
-  void account_value_directive(account_t* account, const string& expr_str); ///< Set a value expression override for the account
-  void account_default_directive(account_t* account);              ///< Make this the default (bucket) account for unbalanced postings
+  void account_alias_directive(account_t* account,
+                               string alias); ///< Register an alias name that maps to this account
+  void account_payee_directive(
+      account_t* account,
+      string payee); ///< Map a payee pattern to this account for unknown-account resolution
+  void account_value_directive(
+      account_t* account,
+      const string& expr_str); ///< Set a value expression override for the account
+  void account_default_directive(
+      account_t* account); ///< Make this the default (bucket) account for unbalanced postings
 
-  void default_account_directive(char* args); ///< Handle legacy `A` directive (default account for unbalanced postings)
-  void alias_directive(char* line);           ///< Handle top-level `alias Name=Account` directive
+  void default_account_directive(
+      char* args); ///< Handle legacy `A` directive (default account for unbalanced postings)
+  void alias_directive(char* line); ///< Handle top-level `alias Name=Account` directive
 
   /*--- Payee Directives ---*/
 
-  void payee_directive(char* line);                                ///< Handle `payee` directive and its sub-directives (alias, uuid)
-  void payee_alias_directive(const string& payee, string alias);   ///< Map an alias pattern to a canonical payee name
-  void payee_uuid_directive(const string& payee, string uuid);     ///< Map a UUID to a canonical payee name
-  void payee_rewrite_directive(char* line);                        ///< Handle `payee-rewrite PATTERN REPLACEMENT`
-  void account_rewrite_directive(char* line);                      ///< Handle `account-rewrite PATTERN REPLACEMENT`
+  void
+  payee_directive(char* line); ///< Handle `payee` directive and its sub-directives (alias, uuid)
+  void payee_alias_directive(const string& payee,
+                             string alias); ///< Map an alias pattern to a canonical payee name
+  void payee_uuid_directive(const string& payee,
+                            string uuid);     ///< Map a UUID to a canonical payee name
+  void payee_rewrite_directive(char* line);   ///< Handle `payee-rewrite PATTERN REPLACEMENT`
+  void account_rewrite_directive(char* line); ///< Handle `account-rewrite PATTERN REPLACEMENT`
 
   /*--- Commodity Directives ---*/
 
-  void commodity_directive(char* line);                                      ///< Handle `commodity` directive and its sub-directives
-  void commodity_alias_directive(commodity_t& comm, string alias);           ///< Register an alternate symbol for a commodity
-  void commodity_value_directive(commodity_t& comm, const string& expr_str); ///< Set a value expression for commodity valuation
-  void commodity_format_directive(commodity_t& comm, string format);         ///< Set the display format (precision, symbol placement)
-  void commodity_nomarket_directive(commodity_t& comm);                      ///< Mark the commodity as having no market price data
-  void commodity_default_directive(commodity_t& comm);                       ///< Make this the default commodity for bare amounts
+  void commodity_directive(char* line); ///< Handle `commodity` directive and its sub-directives
+  void commodity_alias_directive(commodity_t& comm,
+                                 string alias); ///< Register an alternate symbol for a commodity
+  void commodity_value_directive(
+      commodity_t& comm,
+      const string& expr_str); ///< Set a value expression for commodity valuation
+  void commodity_format_directive(
+      commodity_t& comm, string format); ///< Set the display format (precision, symbol placement)
+  void commodity_nomarket_directive(
+      commodity_t& comm); ///< Mark the commodity as having no market price data
+  void commodity_default_directive(
+      commodity_t& comm); ///< Make this the default commodity for bare amounts
 
-  void default_commodity_directive(char* line); ///< Handle legacy `D` directive (default commodity and its format)
+  void default_commodity_directive(
+      char* line); ///< Handle legacy `D` directive (default commodity and its format)
 
-  void tag_directive(char* line); ///< Handle `tag` directive (pre-declare metadata tags for --strict mode)
+  void tag_directive(
+      char* line); ///< Handle `tag` directive (pre-declare metadata tags for --strict mode)
 
   /*--- Apply / Scope Directives ---*/
 
-  void apply_directive(char* line);                                          ///< Dispatch `apply <keyword>` to the appropriate sub-handler
-  void apply_account_directive(char* line);                                  ///< Push an account prefix onto the apply stack
-  void apply_tag_directive(char* line);                                      ///< Push a tag to be auto-applied to all subsequent items
-  void apply_rate_directive(char* line);                                     ///< Push a fixed exchange rate onto the apply stack
-  void apply_year_directive(char* line, bool use_apply_stack = false);       ///< Set the default year (optionally via apply stack for `end apply`)
-  void end_apply_directive(char* line);                                      ///< Pop the most recent apply-stack entry, verifying the keyword matches
+  void apply_directive(char* line); ///< Dispatch `apply <keyword>` to the appropriate sub-handler
+  void apply_account_directive(char* line); ///< Push an account prefix onto the apply stack
+  void apply_tag_directive(char* line);  ///< Push a tag to be auto-applied to all subsequent items
+  void apply_rate_directive(char* line); ///< Push a fixed exchange rate onto the apply stack
+  void apply_year_directive(
+      char* line, bool use_apply_stack =
+                      false); ///< Set the default year (optionally via apply stack for `end apply`)
+  void end_apply_directive(
+      char* line); ///< Pop the most recent apply-stack entry, verifying the keyword matches
 
   /*--- Transaction Directives ---*/
 
-  xact_t* xact_directive(char* line, std::streamsize len, xact_t* previous_xact); ///< Parse a regular transaction (date + payee + postings)
-  void period_xact_directive(char* line);    ///< Parse a periodic (budget) transaction starting with `~`
-  void automated_xact_directive(char* line); ///< Parse an automated transaction starting with `=`
-  void price_xact_directive(char* line);     ///< Handle `P` directive (historical price entry)
+  xact_t*
+  xact_directive(char* line, std::streamsize len,
+                 xact_t* previous_xact); ///< Parse a regular transaction (date + payee + postings)
+  void
+  period_xact_directive(char* line); ///< Parse a periodic (budget) transaction starting with `~`
+  void automated_xact_directive(char* line);   ///< Parse an automated transaction starting with `=`
+  void price_xact_directive(char* line);       ///< Handle `P` directive (historical price entry)
   void price_conversion_directive(char* line); ///< Handle `C` directive (commodity conversion rate)
-  void nomarket_directive(char* line);       ///< Handle `N` directive (mark commodity as no-market)
+  void nomarket_directive(char* line); ///< Handle `N` directive (mark commodity as no-market)
 
   /*--- File and Evaluation Directives ---*/
 
-  void include_directive(char* line);  ///< Handle `include` directive (supports glob patterns)
-  void option_directive(char* line);   ///< Handle `--option` lines in journal files
-  void comment_directive(char* line);  ///< Handle `comment` / `test` block (skip lines until `end comment` / `end test`)
+  void include_directive(char* line); ///< Handle `include` directive (supports glob patterns)
+  void option_directive(char* line);  ///< Handle `--option` lines in journal files
+  void comment_directive(char* line); ///< Handle `comment` / `test` block (skip lines until `end
+                                      ///< comment` / `end test`)
 
-  void eval_directive(char* line);     ///< Evaluate a value expression (`eval`, `expr`, `def`, `define`)
-  void assert_directive(char* line);   ///< Evaluate an expression; throw if false (`assert`)
-  void check_directive(char* line);    ///< Evaluate an expression; warn if false (`check`)
-  void value_directive(char* line);    ///< Set the journal-wide value expression override
+  void
+  eval_directive(char* line); ///< Evaluate a value expression (`eval`, `expr`, `def`, `define`)
+  void assert_directive(char* line); ///< Evaluate an expression; throw if false (`assert`)
+  void check_directive(char* line);  ///< Evaluate an expression; warn if false (`check`)
+  void value_directive(char* line);  ///< Set the journal-wide value expression override
 
-  void import_directive(char* line);   ///< Import a Python module (`import`, requires Boost.Python)
-  void python_directive(char* line);   ///< Execute inline Python code (`python`, requires Boost.Python)
+  void import_directive(char* line); ///< Import a Python module (`import`, requires Boost.Python)
+  void
+  python_directive(char* line); ///< Execute inline Python code (`python`, requires Boost.Python)
 
   /*--- Core Parsing Methods ---*/
 

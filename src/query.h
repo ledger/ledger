@@ -122,7 +122,8 @@ public:
     string::const_iterator arg_i;      ///< Current character position within the current argument.
     string::const_iterator arg_end;    ///< End of the current argument string.
 
-    bool consume_whitespace; ///< When true, whitespace is included in identifiers (inside expr parens).
+    bool consume_whitespace; ///< When true, whitespace is included in identifiers (inside expr
+                             ///< parens).
     bool consume_next_arg;   ///< When true, the entire next argument is consumed as a single TERM.
     bool multiple_args;      ///< Whether the query spans multiple argv arguments.
 
@@ -139,15 +140,15 @@ public:
        * @brief Enumerates all token types in the query language.
        */
       enum kind_t : uint8_t {
-        UNKNOWN,     ///< Uninitialized / sentinel value.
+        UNKNOWN, ///< Uninitialized / sentinel value.
 
-        LPAREN,      ///< `(` -- opens a grouped sub-expression.
-        RPAREN,      ///< `)` -- closes a grouped sub-expression.
+        LPAREN, ///< `(` -- opens a grouped sub-expression.
+        RPAREN, ///< `)` -- closes a grouped sub-expression.
 
-        TOK_NOT,     ///< `not` or `!` -- logical negation.
-        TOK_AND,     ///< `and` or `&` -- logical conjunction.
-        TOK_OR,      ///< `or` or `|` -- logical disjunction.
-        TOK_EQ,      ///< `=` when used as a metadata value comparator (e.g., `%tag=value`).
+        TOK_NOT, ///< `not` or `!` -- logical negation.
+        TOK_AND, ///< `and` or `&` -- logical conjunction.
+        TOK_OR,  ///< `or` or `|` -- logical disjunction.
+        TOK_EQ,  ///< `=` when used as a metadata value comparator (e.g., `%tag=value`).
 
         TOK_CODE,    ///< `code` or `#` -- match transaction code field.
         TOK_PAYEE,   ///< `payee`, `desc`, or `@` -- match payee/description field.
@@ -156,16 +157,16 @@ public:
         TOK_META,    ///< `meta`, `tag`, `data`, or `%` -- match metadata tags.
         TOK_EXPR,    ///< `expr` -- pass-through a raw expression string.
 
-        TOK_SHOW,    ///< `show` -- begins the display predicate section.
-        TOK_ONLY,    ///< `only` -- begins the secondary filter section.
-        TOK_BOLD,    ///< `bold` -- begins the bold/highlight section.
-        TOK_FOR,     ///< `for` -- begins a date-range period specification.
-        TOK_SINCE,   ///< `since` -- specifies the start of a date range.
-        TOK_UNTIL,   ///< `until` -- specifies the end of a date range.
+        TOK_SHOW,  ///< `show` -- begins the display predicate section.
+        TOK_ONLY,  ///< `only` -- begins the secondary filter section.
+        TOK_BOLD,  ///< `bold` -- begins the bold/highlight section.
+        TOK_FOR,   ///< `for` -- begins a date-range period specification.
+        TOK_SINCE, ///< `since` -- specifies the start of a date range.
+        TOK_UNTIL, ///< `until` -- specifies the end of a date range.
 
-        TERM,        ///< A literal term (pattern string); value holds the text.
+        TERM, ///< A literal term (pattern string); value holds the text.
 
-        END_REACHED  ///< No more tokens available.
+        END_REACHED ///< No more tokens available.
 
       } kind;
 
@@ -303,7 +304,6 @@ public:
 
     token_t token_cache; ///< One-token lookahead cache for peek_token()/push_token().
 
-
     lexer_t(const value_t::sequence_t::const_iterator& _begin,
             const value_t::sequence_t::const_iterator& _end, bool _multiple_args = true)
         : begin(_begin), end(_end), consume_whitespace(false), consume_next_arg(false),
@@ -387,10 +387,10 @@ protected:
   class parser_t {
     friend class query_t;
 
-    value_t args;              ///< The original argument sequence (owns the strings the lexer iterates).
-    lexer_t lexer;             ///< Tokenizer over the argument sequence.
+    value_t args;  ///< The original argument sequence (owns the strings the lexer iterates).
+    lexer_t lexer; ///< Tokenizer over the argument sequence.
     keep_details_t what_to_keep; ///< Annotation-stripping policy passed to constructed predicates.
-    query_map_t query_map;     ///< Accumulated predicates keyed by query section.
+    query_map_t query_map;       ///< Accumulated predicates keyed by query section.
 
     /// @brief Parse a single atomic query term (pattern, field prefix, parens, or expr).
     expr_t::ptr_op_t parse_query_term(lexer_t::token_t::kind_t tok_context);
@@ -433,8 +433,8 @@ protected:
     }
   };
 
-  optional<parser_t> parser;     ///< Lazily constructed parser (created on first parse_args call).
-  query_map_t predicates;        ///< Cached predicate strings by section.
+  optional<parser_t> parser; ///< Lazily constructed parser (created on first parse_args call).
+  query_map_t predicates;    ///< Cached predicate strings by section.
 
 public:
   query_t() { TRACE_CTOR(query_t, ""); }

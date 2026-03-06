@@ -79,7 +79,7 @@ class output_stream_t {
 private:
   int pipe_to_pager_fd; ///< File descriptor of pipe to pager (-1 if not using a pager)
 #if !defined(_WIN32) && !defined(__CYGWIN__)
-  pid_t pager_pid;      ///< PID of pager child process (-1 if not forked)
+  pid_t pager_pid; ///< PID of pager child process (-1 if not forked)
 #endif
 
 public:

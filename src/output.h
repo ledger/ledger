@@ -86,16 +86,16 @@ class report_t;
  */
 class format_posts : public item_handler<post_t> {
 protected:
-  report_t& report;                ///< The report context providing options and output stream.
-  format_t first_line_format;      ///< Format for the first posting of each transaction.
-  format_t next_lines_format;      ///< Format for subsequent postings in the same transaction.
-  format_t between_format;         ///< Format printed between different transactions.
-  format_t prepend_format;         ///< Optional prefix prepended to every output line.
-  std::size_t prepend_width;       ///< Width reserved for the prepend column.
-  xact_t* last_xact;              ///< Tracks the previous transaction to detect boundaries.
-  post_t* last_post;              ///< Tracks the previous posting to detect date changes.
-  bool first_report_title;         ///< True until the first group title has been printed.
-  string report_title;             ///< Current group title (set by upstream grouping filters).
+  report_t& report;           ///< The report context providing options and output stream.
+  format_t first_line_format; ///< Format for the first posting of each transaction.
+  format_t next_lines_format; ///< Format for subsequent postings in the same transaction.
+  format_t between_format;    ///< Format printed between different transactions.
+  format_t prepend_format;    ///< Optional prefix prepended to every output line.
+  std::size_t prepend_width;  ///< Width reserved for the prepend column.
+  xact_t* last_xact;          ///< Tracks the previous transaction to detect boundaries.
+  post_t* last_post;          ///< Tracks the previous posting to detect date changes.
+  bool first_report_title;    ///< True until the first group title has been printed.
+  string report_title;        ///< Current group title (set by upstream grouping filters).
 
 public:
   format_posts(report_t& _report, const string& format,
@@ -136,15 +136,15 @@ public:
  */
 class format_accounts : public item_handler<account_t> {
 protected:
-  report_t& report;                    ///< The report context providing options and output stream.
-  format_t account_line_format;        ///< Format for each account line.
-  format_t total_line_format;          ///< Format for the grand total line.
-  format_t separator_format;           ///< Format for the separator between accounts and total.
-  format_t prepend_format;             ///< Optional prefix prepended to every output line.
-  std::size_t prepend_width;           ///< Width reserved for the prepend column.
-  predicate_t disp_pred;               ///< Display predicate from --display option.
-  bool first_report_title;             ///< True until the first group title has been printed.
-  string report_title;                 ///< Current group title.
+  report_t& report;             ///< The report context providing options and output stream.
+  format_t account_line_format; ///< Format for each account line.
+  format_t total_line_format;   ///< Format for the grand total line.
+  format_t separator_format;    ///< Format for the separator between accounts and total.
+  format_t prepend_format;      ///< Optional prefix prepended to every output line.
+  std::size_t prepend_width;    ///< Width reserved for the prepend column.
+  predicate_t disp_pred;        ///< Display predicate from --display option.
+  bool first_report_title;      ///< True until the first group title has been printed.
+  string report_title;          ///< Current group title.
 
   std::list<account_t*> posted_accounts; ///< Accounts queued for display (in posting order).
 
@@ -209,8 +209,8 @@ public:
   using accounts_report_map = std::map<account_t*, std::size_t, account_compare>;
 
 protected:
-  report_t& report;              ///< The report context.
-  accounts_report_map accounts;  ///< Map of accounts to their posting counts.
+  report_t& report;             ///< The report context.
+  accounts_report_map accounts; ///< Map of accounts to their posting counts.
 
 public:
   report_accounts(report_t& _report) : report(_report) { TRACE_CTOR(report_accounts, "report&"); }
@@ -235,8 +235,8 @@ public:
  */
 class report_payees : public item_handler<post_t> {
 protected:
-  report_t& report;                        ///< The report context.
-  std::map<string, std::size_t> payees;    ///< Map of payee names to posting counts.
+  report_t& report;                     ///< The report context.
+  std::map<string, std::size_t> payees; ///< Map of payee names to posting counts.
 
   using payees_pair = std::map<string, std::size_t>::value_type;
 
@@ -264,8 +264,8 @@ public:
  */
 class report_tags : public item_handler<post_t> {
 protected:
-  report_t& report;                      ///< The report context.
-  std::map<string, std::size_t> tags;    ///< Map of tag strings to occurrence counts.
+  report_t& report;                   ///< The report context.
+  std::map<string, std::size_t> tags; ///< Map of tag strings to occurrence counts.
 
   using tags_pair = std::map<string, std::size_t>::value_type;
 

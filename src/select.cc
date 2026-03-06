@@ -157,7 +157,7 @@ value_t select_command(call_scope_t& args) {
   boost::sregex_iterator m2;
 
   expr_t::ptr_op_t report_functor; ///< The final reporting functor to execute.
-  std::ostringstream formatter;     ///< Accumulates the format string for output.
+  std::ostringstream formatter;    ///< Accumulates the format string for output.
 
   // Phase 2: Process each clause keyword and translate it into report
   // configuration (format string, limit expression, report functor, etc.).

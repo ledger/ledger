@@ -93,13 +93,13 @@ class symbol_scope_t; // forward declaration for expr_t::accumulator_scope_
  * @see merged_expr_t Derived class for composable multi-flag expressions.
  */
 class expr_t : public expr_base_t<value_t> {
-  class parser_t;   ///< Recursive-descent parser (defined in parser.h/cc).
+  class parser_t; ///< Recursive-descent parser (defined in parser.h/cc).
   using base_type = expr_base_t<value_t>;
 
 public:
-  struct token_t;          ///< Lexer token (defined in token.h).
-  class op_t;              ///< AST node (defined in op.h).
-  using ptr_op_t = intrusive_ptr<op_t>;          ///< Owning smart pointer to op_t.
+  struct token_t;                                   ///< Lexer token (defined in token.h).
+  class op_t;                                       ///< AST node (defined in op.h).
+  using ptr_op_t = intrusive_ptr<op_t>;             ///< Owning smart pointer to op_t.
   using const_ptr_op_t = intrusive_ptr<const op_t>; ///< Const variant.
 
   /// @brief Classification of check/assertion expressions from `check` and
@@ -119,13 +119,13 @@ public:
   /// `amount` is by far the most common value expression (it is the
   /// default when no `--amount` flag is given).
   enum class fast_path_t : uint8_t {
-    NONE = 0,        ///< No fast path; use normal calc().
-    POST_AMOUNT,     ///< Expression is "amount" (or "a"); read post_t::amount directly.
+    NONE = 0,    ///< No fast path; use normal calc().
+    POST_AMOUNT, ///< Expression is "amount" (or "a"); read post_t::amount directly.
   };
 
 protected:
-  ptr_op_t ptr;                                ///< Root of the compiled AST (null if unparsed).
-  fast_path_t fast_path_ = fast_path_t::NONE;  ///< Detected shortcut, if any.
+  ptr_op_t ptr;                               ///< Root of the compiled AST (null if unparsed).
+  fast_path_t fast_path_ = fast_path_t::NONE; ///< Detected shortcut, if any.
 
 public:
   expr_t();
@@ -229,7 +229,8 @@ value_t expr_value(expr_t::ptr_op_t op);
  * When compile() is called, these are assembled into a single expression:
  *
  * @code
- *    __tmp_amount=(amount=(amount); amount=(amount * 10); amount=(amount + 20); amount); __tmp_amount
+ *    __tmp_amount=(amount=(amount); amount=(amount * 10); amount=(amount + 20); amount);
+ * __tmp_amount
  * @endcode
  *
  * This allows users to combine flags like `-O`, `-B`, `-V`, and `-A` at any
@@ -241,11 +242,11 @@ value_t expr_value(expr_t::ptr_op_t op);
  */
 class merged_expr_t : public expr_t {
 public:
-  string term;               ///< Variable name used as the threading term (e.g., "amount").
-  string base_expr;          ///< The initial expression assigned to @c term.
-  string merge_operator;     ///< Operator joining merged pieces (";" or "+", "*", etc.).
+  string term;           ///< Variable name used as the threading term (e.g., "amount").
+  string base_expr;      ///< The initial expression assigned to @c term.
+  string merge_operator; ///< Operator joining merged pieces (";" or "+", "*", etc.).
 
-  std::list<string> exprs;   ///< Accumulated transformation expressions to apply in order.
+  std::list<string> exprs; ///< Accumulated transformation expressions to apply in order.
 
   merged_expr_t(const string& _term, const string& expr, const string& merge_op = ";");
   // Custom copy constructor: copies the configuration (term, base_expr, etc.)

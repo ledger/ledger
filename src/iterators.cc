@@ -100,10 +100,10 @@ namespace {
  * stored in an xacts_list so they persist for the iterator's lifetime.
  */
 struct create_price_xact {
-  journal_t& journal;          ///< Journal providing the accounting context.
-  account_t* account;          ///< Target account for synthetic postings.
-  temporaries_t& temps;        ///< Arena allocator for temporary xacts/posts.
-  xacts_list& xact_temps;      ///< Accumulates the synthetic transactions.
+  journal_t& journal;     ///< Journal providing the accounting context.
+  account_t* account;     ///< Target account for synthetic postings.
+  temporaries_t& temps;   ///< Arena allocator for temporary xacts/posts.
+  xacts_list& xact_temps; ///< Accumulates the synthetic transactions.
 
   std::map<string, xact_t*> xacts_by_commodity; ///< One xact per commodity symbol.
 

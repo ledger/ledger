@@ -76,19 +76,19 @@
 namespace ledger {
 using namespace boost;
 
-using string = std::string;              ///< Default string type
-using string_view = std::string_view;    ///< Non-owning string view
-using strings_list = std::list<string>;  ///< List of strings (e.g., split arguments)
+using string = std::string;             ///< Default string type
+using string_view = std::string_view;   ///< Non-owning string view
+using strings_list = std::list<string>; ///< List of strings (e.g., split arguments)
 
 using ptime = posix_time::ptime;                 ///< Point in time (date + time)
-using time_duration = ptime::time_duration_type;  ///< Duration between two time points
-using date = gregorian::date;                     ///< Calendar date (year/month/day)
-using date_duration = gregorian::date_duration;   ///< Duration between two dates
-using seconds = posix_time::seconds;              ///< Duration in whole seconds
+using time_duration = ptime::time_duration_type; ///< Duration between two time points
+using date = gregorian::date;                    ///< Calendar date (year/month/day)
+using date_duration = gregorian::date_duration;  ///< Duration between two dates
+using seconds = posix_time::seconds;             ///< Duration in whole seconds
 
-using path = std::filesystem::path;                  ///< Filesystem path
-using ifstream = std::ifstream;                      ///< Input file stream
-using ofstream = std::ofstream;                      ///< Output file stream
+using path = std::filesystem::path;                         ///< Filesystem path
+using ifstream = std::ifstream;                             ///< Input file stream
+using ofstream = std::ofstream;                             ///< Output file stream
 using filesystem_error = std::filesystem::filesystem_error; ///< Filesystem error
 } // namespace ledger
 
@@ -116,7 +116,7 @@ using filesystem_error = std::filesystem::filesystem_error; ///< Filesystem erro
 namespace ledger {
 /// Throws assertion_failed with context about the failing expression.
 void debug_assert(const string& reason, const string& func, const string& file, std::size_t line);
-}
+} // namespace ledger
 
 /// Asserts that @p x is true; throws assertion_failed on failure.
 #define assert(x) ((x) ? ((void)0) : debug_assert(#x, BOOST_CURRENT_FUNCTION, __FILE__, __LINE__))
@@ -281,22 +281,22 @@ namespace ledger {
 /// Severity levels for the logging system, from most to least severe.
 /// The global `_log_level` must be >= a message's level for it to appear.
 enum log_level_t : uint8_t {
-  LOG_OFF = 0,   ///< Logging disabled
-  LOG_CRIT,      ///< Critical errors (unrecoverable)
-  LOG_FATAL,     ///< Fatal errors
-  LOG_ASSERT,    ///< Assertion failures
-  LOG_ERROR,     ///< Recoverable errors
-  LOG_VERIFY,    ///< Verification-level messages
-  LOG_WARN,      ///< Warnings (default threshold)
-  LOG_INFO,      ///< Informational messages (`--verbose`)
-  LOG_EXCEPT,    ///< Exception details
-  LOG_DEBUG,     ///< Debug messages (`--debug CATEGORY`)
-  LOG_TRACE,     ///< Fine-grained tracing (`--trace LEVEL`)
-  LOG_ALL        ///< Show everything
+  LOG_OFF = 0, ///< Logging disabled
+  LOG_CRIT,    ///< Critical errors (unrecoverable)
+  LOG_FATAL,   ///< Fatal errors
+  LOG_ASSERT,  ///< Assertion failures
+  LOG_ERROR,   ///< Recoverable errors
+  LOG_VERIFY,  ///< Verification-level messages
+  LOG_WARN,    ///< Warnings (default threshold)
+  LOG_INFO,    ///< Informational messages (`--verbose`)
+  LOG_EXCEPT,  ///< Exception details
+  LOG_DEBUG,   ///< Debug messages (`--debug CATEGORY`)
+  LOG_TRACE,   ///< Fine-grained tracing (`--trace LEVEL`)
+  LOG_ALL      ///< Show everything
 };
 
-extern log_level_t _log_level;                    ///< Current global log level threshold
-extern std::ostream* _log_stream;                 ///< Destination stream (defaults to stderr)
+extern log_level_t _log_level;                      ///< Current global log level threshold
+extern std::ostream* _log_stream;                   ///< Destination stream (defaults to stderr)
 extern thread_local std::ostringstream _log_buffer; ///< Per-thread buffer for message assembly
 
 /// Flush the thread-local `_log_buffer` to `_log_stream` with timestamp
@@ -387,18 +387,21 @@ inline bool category_matches(const char* cat) {
     }                                                                                              \
   } while (false)
 
-#define SHOW_INFO() (ledger::_log_level >= ledger::LOG_INFO)         ///< True if INFO messages are visible
-#define SHOW_WARN() (ledger::_log_level >= ledger::LOG_WARN)         ///< True if WARN messages are visible
-#define SHOW_ERROR() (ledger::_log_level >= ledger::LOG_ERROR)       ///< True if ERROR messages are visible
-#define SHOW_FATAL() (ledger::_log_level >= ledger::LOG_FATAL)       ///< True if FATAL messages are visible
-#define SHOW_CRITICAL() (ledger::_log_level >= ledger::LOG_CRIT)     ///< True if CRITICAL messages are visible
+#define SHOW_INFO() (ledger::_log_level >= ledger::LOG_INFO) ///< True if INFO messages are visible
+#define SHOW_WARN() (ledger::_log_level >= ledger::LOG_WARN) ///< True if WARN messages are visible
+#define SHOW_ERROR()                                                                               \
+  (ledger::_log_level >= ledger::LOG_ERROR) ///< True if ERROR messages are visible
+#define SHOW_FATAL()                                                                               \
+  (ledger::_log_level >= ledger::LOG_FATAL) ///< True if FATAL messages are visible
+#define SHOW_CRITICAL()                                                                            \
+  (ledger::_log_level >= ledger::LOG_CRIT) ///< True if CRITICAL messages are visible
 
-#define INFO(msg) LOG_MACRO(ledger::LOG_INFO, msg)           ///< Log an informational message
-#define WARN(msg) LOG_MACRO(ledger::LOG_WARN, msg)           ///< Log a warning message
-#define ERROR(msg) LOG_MACRO(ledger::LOG_ERROR, msg)         ///< Log an error message
-#define FATAL(msg) LOG_MACRO(ledger::LOG_FATAL, msg)         ///< Log a fatal error message
-#define CRITICAL(msg) LOG_MACRO(ledger::LOG_CRIT, msg)       ///< Log a critical error message
-#define EXCEPTION(msg) LOG_MACRO(ledger::LOG_EXCEPT, msg)    ///< Log exception details
+#define INFO(msg) LOG_MACRO(ledger::LOG_INFO, msg)        ///< Log an informational message
+#define WARN(msg) LOG_MACRO(ledger::LOG_WARN, msg)        ///< Log a warning message
+#define ERROR(msg) LOG_MACRO(ledger::LOG_ERROR, msg)      ///< Log an error message
+#define FATAL(msg) LOG_MACRO(ledger::LOG_FATAL, msg)      ///< Log a fatal error message
+#define CRITICAL(msg) LOG_MACRO(ledger::LOG_CRIT, msg)    ///< Log a critical error message
+#define EXCEPTION(msg) LOG_MACRO(ledger::LOG_EXCEPT, msg) ///< Log exception details
 
 } // namespace ledger
 
@@ -525,15 +528,15 @@ void finish_timer(const char* name);
 
 /// Tracks which signal, if any, has been caught since the last check.
 enum caught_signal_t : uint8_t {
-  NONE_CAUGHT,  ///< No signal pending
-  INTERRUPTED,  ///< SIGINT received (user pressed Ctrl-C)
-  PIPE_CLOSED   ///< SIGPIPE received (pager or pipe consumer exited)
+  NONE_CAUGHT, ///< No signal pending
+  INTERRUPTED, ///< SIGINT received (user pressed Ctrl-C)
+  PIPE_CLOSED  ///< SIGPIPE received (pager or pipe consumer exited)
 };
 
 extern caught_signal_t caught_signal; ///< Global signal flag, set by signal handlers
 
-void sigint_handler(int sig);   ///< SIGINT handler -- sets caught_signal to INTERRUPTED
-void sigpipe_handler(int sig);  ///< SIGPIPE handler -- sets caught_signal to PIPE_CLOSED
+void sigint_handler(int sig);  ///< SIGINT handler -- sets caught_signal to INTERRUPTED
+void sigpipe_handler(int sig); ///< SIGPIPE handler -- sets caught_signal to PIPE_CLOSED
 
 /// Poll for a pending signal and throw an appropriate exception if one
 /// has been caught.  Called at natural "safe points" during processing

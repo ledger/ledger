@@ -85,19 +85,19 @@ public:
 
   std::shared_ptr<std::istream> stream; ///< The input stream (file, string, or decrypted GPG)
 
-  path pathname;                        ///< Absolute path of the file being parsed (empty for stdin)
-  path current_directory;               ///< Working directory for resolving relative `include` paths
-  journal_t* journal;                   ///< The journal accumulating parsed data
-  account_t* master;                    ///< Root account for this parse scope (may be narrowed by `apply account`)
-  scope_t* scope;                       ///< Expression evaluation scope (typically the session)
+  path pathname;          ///< Absolute path of the file being parsed (empty for stdin)
+  path current_directory; ///< Working directory for resolving relative `include` paths
+  journal_t* journal;     ///< The journal accumulating parsed data
+  account_t* master; ///< Root account for this parse scope (may be narrowed by `apply account`)
+  scope_t* scope;    ///< Expression evaluation scope (typically the session)
   char linebuf[MAX_LINE + 1];          ///< Raw line buffer filled by std::istream::getline
-  std::istream::pos_type line_beg_pos;  ///< Stream position at the start of the current line
-  std::istream::pos_type curr_pos;      ///< Stream position after the most recently read line
-  std::size_t linenum;                  ///< 1-based line number of the most recently read line
-  std::size_t errors;                   ///< Count of parse errors encountered in this file
-  std::size_t count;                    ///< Count of transactions successfully added to the journal
-  std::size_t sequence;                 ///< Monotonically increasing sequence for ordering items across files
-  std::string last;                     ///< Text of the most recent error (for reporting after parsing)
+  std::istream::pos_type line_beg_pos; ///< Stream position at the start of the current line
+  std::istream::pos_type curr_pos;     ///< Stream position after the most recently read line
+  std::size_t linenum;                 ///< 1-based line number of the most recently read line
+  std::size_t errors;                  ///< Count of parse errors encountered in this file
+  std::size_t count;                   ///< Count of transactions successfully added to the journal
+  std::size_t sequence; ///< Monotonically increasing sequence for ordering items across files
+  std::string last;     ///< Text of the most recent error (for reporting after parsing)
 
   explicit parse_context_t(const path& cwd)
       : current_directory(cwd), master(nullptr), scope(nullptr), linenum(0), errors(0), count(0),

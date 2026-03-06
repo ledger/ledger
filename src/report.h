@@ -153,19 +153,21 @@ class report_t : public scope_t {
   report_t();
 
 public:
-  session_t& session;              ///< The owning session (provides journal, global options)
-  output_stream_t output_stream;   ///< Manages pager, file output, or stdout as configured
+  session_t& session;            ///< The owning session (provides journal, global options)
+  output_stream_t output_stream; ///< Manages pager, file output, or stdout as configured
 
   /*--- Budget Mode Flags ---*/
 
-#define BUDGET_NO_BUDGET 0x00      ///< No budget reporting (default)
-#define BUDGET_BUDGETED 0x01       ///< Show only budgeted accounts (--budget)
-#define BUDGET_UNBUDGETED 0x02     ///< Show only unbudgeted accounts (--unbudgeted)
-#define BUDGET_WRAP_VALUES 0x04    ///< Wrap amounts as (actual, budget) pairs for budget command
+#define BUDGET_NO_BUDGET 0x00   ///< No budget reporting (default)
+#define BUDGET_BUDGETED 0x01    ///< Show only budgeted accounts (--budget)
+#define BUDGET_UNBUDGETED 0x02  ///< Show only unbudgeted accounts (--unbudgeted)
+#define BUDGET_WRAP_VALUES 0x04 ///< Wrap amounts as (actual, budget) pairs for budget command
 
-  datetime_t terminus;             ///< Valuation date for market prices (defaults to now, adjusted by --end/--now)
-  optional<datetime_t> gain_from;  ///< Reference date for --gain-since (compute gain from this date's market value)
-  uint_least8_t budget_flags;      ///< Bitmask of BUDGET_* flags controlling budget report behavior
+  datetime_t
+      terminus; ///< Valuation date for market prices (defaults to now, adjusted by --end/--now)
+  optional<datetime_t>
+      gain_from; ///< Reference date for --gain-since (compute gain from this date's market value)
+  uint_least8_t budget_flags; ///< Bitmask of BUDGET_* flags controlling budget report behavior
 
   explicit report_t(session_t& _session)
       : session(_session), terminus(CURRENT_TIME()), budget_flags(BUDGET_NO_BUDGET) {
@@ -225,76 +227,82 @@ public:
   // They are registered in lookup() under symbol_t::FUNCTION.
 
   // Core expression evaluators
-  value_t fn_amount_expr(call_scope_t& scope);   ///< Evaluate the current --amount expression
+  value_t fn_amount_expr(call_scope_t& scope);    ///< Evaluate the current --amount expression
   value_t fn_total_expr(call_scope_t& scope);     ///< Evaluate the current --total expression
   value_t fn_display_amount(call_scope_t& scope); ///< Evaluate --display-amount expression
-  value_t fn_display_total(call_scope_t& scope);  ///< Evaluate --display-total (with caching fast path)
-  value_t fn_top_amount(call_scope_t& val);       ///< Extract the first amount from a balance or sequence
-  value_t fn_should_bold(call_scope_t& scope);    ///< Evaluate --bold-if expression for conditional formatting
+  value_t
+  fn_display_total(call_scope_t& scope);    ///< Evaluate --display-total (with caching fast path)
+  value_t fn_top_amount(call_scope_t& val); ///< Extract the first amount from a balance or sequence
+  value_t
+  fn_should_bold(call_scope_t& scope); ///< Evaluate --bold-if expression for conditional formatting
 
   // Market value and commodity functions
-  value_t fn_market(call_scope_t& scope);         ///< Convert to market value: market(val [, date [, commodity]])
-  value_t fn_get_at(call_scope_t& scope);         ///< Index into a sequence: get_at(seq, index)
-  value_t fn_is_seq(call_scope_t& scope);         ///< Test if a value is a sequence
-  value_t fn_strip(call_scope_t& scope);          ///< Strip annotations per what_to_keep()
-  value_t fn_trim(call_scope_t& scope);           ///< Trim whitespace from a string value
-  value_t fn_format(call_scope_t& scope);         ///< Apply a format string: format("%(date)")
-  value_t fn_print(call_scope_t& scope);          ///< Print values to the output stream
-  value_t fn_scrub(call_scope_t& scope);          ///< Alias for display_value() -- strip and unreduced
+  value_t
+  fn_market(call_scope_t& scope); ///< Convert to market value: market(val [, date [, commodity]])
+  value_t fn_get_at(call_scope_t& scope); ///< Index into a sequence: get_at(seq, index)
+  value_t fn_is_seq(call_scope_t& scope); ///< Test if a value is a sequence
+  value_t fn_strip(call_scope_t& scope);  ///< Strip annotations per what_to_keep()
+  value_t fn_trim(call_scope_t& scope);   ///< Trim whitespace from a string value
+  value_t fn_format(call_scope_t& scope); ///< Apply a format string: format("%(date)")
+  value_t fn_print(call_scope_t& scope);  ///< Print values to the output stream
+  value_t fn_scrub(call_scope_t& scope);  ///< Alias for display_value() -- strip and unreduced
 
   // Numeric rounding and precision
-  value_t fn_quantity(call_scope_t& scope);       ///< Extract the numeric quantity (strip commodity)
-  value_t fn_rounded(call_scope_t& scope);        ///< Round to commodity display precision
-  value_t fn_unrounded(call_scope_t& scope);      ///< Return the unrounded (full precision) value
-  value_t fn_truncated(call_scope_t& scope);      ///< Truncate display string or numeric value
-  value_t fn_truncate(call_scope_t& scope);       ///< Numeric truncation (toward zero)
-  value_t fn_floor(call_scope_t& scope);          ///< Floor: round toward negative infinity
-  value_t fn_ceiling(call_scope_t& scope);        ///< Ceiling: round toward positive infinity
+  value_t fn_quantity(call_scope_t& scope);  ///< Extract the numeric quantity (strip commodity)
+  value_t fn_rounded(call_scope_t& scope);   ///< Round to commodity display precision
+  value_t fn_unrounded(call_scope_t& scope); ///< Return the unrounded (full precision) value
+  value_t fn_truncated(call_scope_t& scope); ///< Truncate display string or numeric value
+  value_t fn_truncate(call_scope_t& scope);  ///< Numeric truncation (toward zero)
+  value_t fn_floor(call_scope_t& scope);     ///< Floor: round toward negative infinity
+  value_t fn_ceiling(call_scope_t& scope);   ///< Ceiling: round toward positive infinity
   value_t fn_clear_commodity(call_scope_t& scope); ///< Remove commodity from an amount
-  value_t fn_round(call_scope_t& scope);          ///< Round to nearest integer
-  value_t fn_roundto(call_scope_t& scope);        ///< Round to N decimal places: roundto(val, N)
-  value_t fn_unround(call_scope_t& scope);        ///< Synonym for unrounded()
-  value_t fn_abs(call_scope_t& scope);            ///< Absolute value
+  value_t fn_round(call_scope_t& scope);           ///< Round to nearest integer
+  value_t fn_roundto(call_scope_t& scope);         ///< Round to N decimal places: roundto(val, N)
+  value_t fn_unround(call_scope_t& scope);         ///< Synonym for unrounded()
+  value_t fn_abs(call_scope_t& scope);             ///< Absolute value
 
   // Formatting and display helpers
-  value_t fn_justify(call_scope_t& scope);        ///< Justify/pad a value within a column width
-  value_t fn_quoted(call_scope_t& scope);         ///< Wrap in double quotes (backslash escaping)
-  value_t fn_quoted_rfc(call_scope_t& scope);     ///< Wrap in double quotes (RFC 4180 CSV escaping)
-  value_t fn_join(call_scope_t& scope);           ///< Replace newlines with \\n in a string
-  value_t fn_format_date(call_scope_t& scope);    ///< Format a date: format_date(d [, fmt])
-  value_t fn_format_datetime(call_scope_t& scope); ///< Format a datetime: format_datetime(dt [, fmt])
-  value_t fn_ansify_if(call_scope_t& scope);      ///< Wrap text in ANSI color codes if condition is met
-  value_t fn_percent(call_scope_t& scope);        ///< Compute percentage: percent(part, whole)
+  value_t fn_justify(call_scope_t& scope);     ///< Justify/pad a value within a column width
+  value_t fn_quoted(call_scope_t& scope);      ///< Wrap in double quotes (backslash escaping)
+  value_t fn_quoted_rfc(call_scope_t& scope);  ///< Wrap in double quotes (RFC 4180 CSV escaping)
+  value_t fn_join(call_scope_t& scope);        ///< Replace newlines with \\n in a string
+  value_t fn_format_date(call_scope_t& scope); ///< Format a date: format_date(d [, fmt])
+  value_t
+  fn_format_datetime(call_scope_t& scope);   ///< Format a datetime: format_datetime(dt [, fmt])
+  value_t fn_ansify_if(call_scope_t& scope); ///< Wrap text in ANSI color codes if condition is met
+  value_t fn_percent(call_scope_t& scope);   ///< Compute percentage: percent(part, whole)
 
   // Commodity and lot inspection
-  value_t fn_commodity(call_scope_t& scope);      ///< Return the commodity symbol of an amount
+  value_t fn_commodity(call_scope_t& scope);       ///< Return the commodity symbol of an amount
   value_t fn_commodity_price(call_scope_t& scope); ///< Look up a commodity's price at a given date
   value_t fn_set_commodity_price(call_scope_t& scope); ///< Inject a price into the price history
-  value_t fn_nail_down(call_scope_t& scope);      ///< Fix an amount's per-unit cost via annotation
-  value_t fn_lot_date(call_scope_t& scope);       ///< Extract the lot date annotation
-  value_t fn_lot_price(call_scope_t& scope);      ///< Extract the lot price annotation
-  value_t fn_lot_tag(call_scope_t& scope);        ///< Extract the lot tag (note) annotation
+  value_t fn_nail_down(call_scope_t& scope); ///< Fix an amount's per-unit cost via annotation
+  value_t fn_lot_date(call_scope_t& scope);  ///< Extract the lot date annotation
+  value_t fn_lot_price(call_scope_t& scope); ///< Extract the lot price annotation
+  value_t fn_lot_tag(call_scope_t& scope);   ///< Extract the lot tag (note) annotation
 
   // Type conversion functions (callable as to_boolean(), to_int(), etc.)
-  value_t fn_to_boolean(call_scope_t& scope);     ///< Convert to boolean
-  value_t fn_to_int(call_scope_t& scope);         ///< Convert to integer (long)
-  value_t fn_to_datetime(call_scope_t& scope);    ///< Convert to datetime
-  value_t fn_to_date(call_scope_t& scope);        ///< Convert to date
-  value_t fn_to_amount(call_scope_t& scope);      ///< Convert to amount_t
-  value_t fn_to_balance(call_scope_t& scope);     ///< Convert to balance_t
-  value_t fn_to_string(call_scope_t& scope);      ///< Convert to string
-  value_t fn_to_mask(call_scope_t& scope);        ///< Convert to regex mask
-  value_t fn_to_sequence(call_scope_t& scope);    ///< Convert to sequence
+  value_t fn_to_boolean(call_scope_t& scope);  ///< Convert to boolean
+  value_t fn_to_int(call_scope_t& scope);      ///< Convert to integer (long)
+  value_t fn_to_datetime(call_scope_t& scope); ///< Convert to datetime
+  value_t fn_to_date(call_scope_t& scope);     ///< Convert to date
+  value_t fn_to_amount(call_scope_t& scope);   ///< Convert to amount_t
+  value_t fn_to_balance(call_scope_t& scope);  ///< Convert to balance_t
+  value_t fn_to_string(call_scope_t& scope);   ///< Convert to string
+  value_t fn_to_mask(call_scope_t& scope);     ///< Convert to regex mask
+  value_t fn_to_sequence(call_scope_t& scope); ///< Convert to sequence
 
   // Lot averaging and ordering
-  value_t fn_averaged_lots(call_scope_t& scope);  ///< Average lot prices in a balance
-  value_t fn_fifo_lots(call_scope_t& scope);      ///< FIFO lot ordering for a balance
-  value_t fn_lifo_lots(call_scope_t& scope);      ///< LIFO lot ordering for a balance
+  value_t fn_averaged_lots(call_scope_t& scope); ///< Average lot prices in a balance
+  value_t fn_fifo_lots(call_scope_t& scope);     ///< FIFO lot ordering for a balance
+  value_t fn_lifo_lots(call_scope_t& scope);     ///< LIFO lot ordering for a balance
 
-  value_t fn_now(call_scope_t&) { return terminus; }        ///< Return terminus (the "now" datetime)
+  value_t fn_now(call_scope_t&) { return terminus; } ///< Return terminus (the "now" datetime)
   value_t fn_today(call_scope_t&) { return terminus.date(); } ///< Return terminus as a date
 
-  value_t fn_options(call_scope_t&) { return scope_value(this); }  ///< Return this report as a scope value (for "options" in format strings)
+  value_t fn_options(call_scope_t&) {
+    return scope_value(this);
+  } ///< Return this report as a scope value (for "options" in format strings)
 
   /// @brief Determine the format string for a report, preferring --format if set.
   /// @param option  The command-specific default format option (e.g., register_format_).
@@ -314,10 +322,10 @@ public:
 
   /*--- Interactive Commands ---*/
 
-  value_t reload_command(call_scope_t&);            ///< Reload all journal files
-  value_t source_command(call_scope_t& args);       ///< Source a specific journal file or reload all
-  value_t echo_command(call_scope_t& scope);        ///< Echo a string to the output stream
-  value_t pricemap_command(call_scope_t& scope);    ///< Print the commodity price graph
+  value_t reload_command(call_scope_t&);         ///< Reload all journal files
+  value_t source_command(call_scope_t& args);    ///< Source a specific journal file or reload all
+  value_t echo_command(call_scope_t& scope);     ///< Echo a string to the output stream
+  value_t pricemap_command(call_scope_t& scope); ///< Print the commodity price graph
 
   /// @brief Determine which lot annotation details to preserve based on --lot-* options.
   /// Controls what information survives strip_annotations() in scrub/display_value.
@@ -506,7 +514,10 @@ public:
    */
   ///@{
 
-  OPTION_CTOR(report_t, abbrev_len_, CTOR(report_t, abbrev_len_) { on(none, "2"); }); ///< Minimum abbreviation length for account names (default: 2)
+  OPTION_CTOR(
+      report_t, abbrev_len_, CTOR(report_t, abbrev_len_) {
+        on(none, "2");
+      }); ///< Minimum abbreviation length for account names (default: 2)
 
   OPTION(report_t, account_);
   OPTION_(
@@ -1220,13 +1231,13 @@ public:
 
   /*--- Column Width Options ---*/
 
-  OPTION(report_t, meta_width_);     ///< Width of the meta-tag prepend column
-  OPTION(report_t, date_width_);     ///< Width of the date column in register reports
-  OPTION(report_t, payee_width_);    ///< Width of the payee column in register reports
-  OPTION(report_t, account_width_);  ///< Width of the account column in register reports
-  OPTION(report_t, amount_width_);   ///< Width of the amount column in register/balance reports
-  OPTION(report_t, total_width_);    ///< Width of the total column in register reports
-  OPTION(report_t, values);          ///< Show computed expression values (for debugging)
+  OPTION(report_t, meta_width_);    ///< Width of the meta-tag prepend column
+  OPTION(report_t, date_width_);    ///< Width of the date column in register reports
+  OPTION(report_t, payee_width_);   ///< Width of the payee column in register reports
+  OPTION(report_t, account_width_); ///< Width of the account column in register reports
+  OPTION(report_t, amount_width_);  ///< Width of the amount column in register/balance reports
+  OPTION(report_t, total_width_);   ///< Width of the total column in register reports
+  OPTION(report_t, values);         ///< Show computed expression values (for debugging)
 
   ///@}
 };
@@ -1241,7 +1252,8 @@ public:
  * then calls the report method.
  *
  * @tparam Type           The item type being reported (post_t or account_t).
- * @tparam handler_ptr    The shared_ptr type for the handler (post_handler_ptr or acct_handler_ptr).
+ * @tparam handler_ptr    The shared_ptr type for the handler (post_handler_ptr or
+ * acct_handler_ptr).
  * @tparam report_method  Pointer to the report_t member function that drives iteration.
  */
 template <class Type = post_t, class handler_ptr = post_handler_ptr,

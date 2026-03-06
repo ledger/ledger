@@ -193,7 +193,7 @@ struct op_bool_char_tuple {
 } // namespace
 
 strings_list process_arguments(strings_list args, scope_t& scope) {
-  bool anywhere = true;  ///< False after "--" is seen, disabling further option parsing
+  bool anywhere = true; ///< False after "--" is seen, disabling further option parsing
 
   strings_list remaining;
 

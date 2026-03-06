@@ -210,8 +210,8 @@ public:
  */
 class journal_posts_iterator
     : public iterator_facade_base<journal_posts_iterator, post_t*, boost::forward_traversal_tag> {
-  xacts_iterator xacts;       ///< Outer: walks transactions in the journal.
-  xact_posts_iterator posts;  ///< Inner: walks postings in the current transaction.
+  xacts_iterator xacts;      ///< Outer: walks transactions in the journal.
+  xact_posts_iterator posts; ///< Inner: walks postings in the current transaction.
 
 public:
   journal_posts_iterator() { TRACE_CTOR(journal_posts_iterator, ""); }
@@ -288,7 +288,7 @@ public:
 class basic_accounts_iterator : public iterator_facade_base<basic_accounts_iterator, account_t*,
                                                             boost::forward_traversal_tag> {
   std::list<accounts_map::const_iterator> accounts_i;   ///< Stack of current-child iterators.
-  std::list<accounts_map::const_iterator> accounts_end;  ///< Stack of end-of-children sentinels.
+  std::list<accounts_map::const_iterator> accounts_end; ///< Stack of end-of-children sentinels.
 
 public:
   basic_accounts_iterator() { TRACE_CTOR(basic_accounts_iterator, ""); }
@@ -330,14 +330,15 @@ private:
  */
 class sorted_accounts_iterator : public iterator_facade_base<sorted_accounts_iterator, account_t*,
                                                              boost::forward_traversal_tag> {
-  expr_t sort_cmp;    ///< The user-supplied sort expression (e.g. "total", "-date").
-  report_t& report;   ///< Report context needed to evaluate the sort expression.
-  bool flatten_all;   ///< If true, flatten the entire tree before sorting (--flat).
+  expr_t sort_cmp;  ///< The user-supplied sort expression (e.g. "total", "-date").
+  report_t& report; ///< Report context needed to evaluate the sort expression.
+  bool flatten_all; ///< If true, flatten the entire tree before sorting (--flat).
 
   using accounts_deque_t = std::deque<account_t*>;
 
-  std::list<accounts_deque_t> accounts_list;                      ///< Sorted children at each tree level.
-  std::list<accounts_deque_t::const_iterator> sorted_accounts_i;  ///< Stack of current-position iterators.
+  std::list<accounts_deque_t> accounts_list; ///< Sorted children at each tree level.
+  std::list<accounts_deque_t::const_iterator>
+      sorted_accounts_i; ///< Stack of current-position iterators.
   std::list<accounts_deque_t::const_iterator> sorted_accounts_end; ///< Stack of end sentinels.
 
 public:

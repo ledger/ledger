@@ -124,10 +124,12 @@ public:
   using vertex_descriptor = graph_traits<Graph>::vertex_descriptor;
   using edge_descriptor = graph_traits<Graph>::edge_descriptor;
 
-  using NameMap = property_map<Graph, vertex_name_t>::type;           ///< Vertex -> commodity*
-  using EdgeWeightMap = property_map<Graph, edge_weight_t>::type;     ///< Edge -> staleness (seconds)
-  using PricePointMap = property_map<Graph, edge_price_point_t>::type; ///< Edge -> cached price point
-  using PriceRatioMap = property_map<Graph, edge_price_ratio_t>::type; ///< Edge -> full price history
+  using NameMap = property_map<Graph, vertex_name_t>::type;       ///< Vertex -> commodity*
+  using EdgeWeightMap = property_map<Graph, edge_weight_t>::type; ///< Edge -> staleness (seconds)
+  using PricePointMap =
+      property_map<Graph, edge_price_point_t>::type; ///< Edge -> cached price point
+  using PriceRatioMap =
+      property_map<Graph, edge_price_ratio_t>::type; ///< Edge -> full price history
 
   PricePointMap pricemap; ///< Property map for cached price points
   PriceRatioMap ratiomap; ///< Property map for price history maps
@@ -224,12 +226,12 @@ void commodity_history_t::print_map(std::ostream& out, const datetime_t& moment)
 template <typename EdgeWeightMap, typename PricePointMap, typename PriceRatioMap>
 class recent_edge_weight {
 public:
-  EdgeWeightMap weight;       ///< Edge weight property map (written to)
-  PricePointMap price_point;  ///< Cached price point property map (written to)
-  PriceRatioMap ratios;       ///< Full price history property map (read from)
+  EdgeWeightMap weight;      ///< Edge weight property map (written to)
+  PricePointMap price_point; ///< Cached price point property map (written to)
+  PriceRatioMap ratios;      ///< Full price history property map (read from)
 
-  datetime_t reftime;  ///< The query time ("now" for the lookup)
-  datetime_t oldest;   ///< Optional lower bound; prices older than this are rejected
+  datetime_t reftime; ///< The query time ("now" for the lookup)
+  datetime_t oldest;  ///< Optional lower bound; prices older than this are rejected
 
   recent_edge_weight() {}
   recent_edge_weight(EdgeWeightMap _weight, PricePointMap _price_point, PriceRatioMap _ratios,

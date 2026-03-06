@@ -100,7 +100,7 @@ public:
 #if HAVE_BOOST_REGEX_UNICODE
   boost::u32regex expr; ///< Compiled regex (ICU Unicode-aware variant)
 #else
-  boost::regex expr;    ///< Compiled regex (byte-oriented Boost.Regex)
+  boost::regex expr; ///< Compiled regex (byte-oriented Boost.Regex)
 #endif
 
   /// Construct a mask from a Perl-compatible regex pattern string.

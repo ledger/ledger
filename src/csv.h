@@ -122,7 +122,7 @@ class csv_reader {
     FIELD_TOTAL,    ///< Running total (used for balance assertions)
     FIELD_NOTE,     ///< Transaction note
 
-    FIELD_UNKNOWN   ///< Unrecognized column; stored as a transaction tag
+    FIELD_UNKNOWN ///< Unrecognized column; stored as a transaction tag
   };
 
   /// @brief Regex patterns matched against header column names, in priority order.
@@ -200,9 +200,9 @@ public:
    */
   xact_t* read_xact(bool rich_data);
 
-  const char* get_last_line() const { return context.linebuf; }  ///< Last line read from CSV
-  path get_pathname() const { return context.pathname; }          ///< CSV file path
-  std::size_t get_linenum() const { return context.linenum; }     ///< Current line number
+  const char* get_last_line() const { return context.linebuf; } ///< Last line read from CSV
+  path get_pathname() const { return context.pathname; }        ///< CSV file path
+  std::size_t get_linenum() const { return context.linenum; }   ///< Current line number
 };
 
 } // namespace ledger

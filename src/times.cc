@@ -186,12 +186,13 @@ using datetime_io_t =
     temporal_io_t<datetime_t, posix_time::time_input_facet, posix_time::time_facet>;
 using date_io_t = temporal_io_t<date_t, gregorian::date_input_facet, gregorian::date_facet>;
 
-std::shared_ptr<datetime_io_t> input_datetime_io;    ///< Reader for "YYYY/MM/DD HH:MM:SS".
-std::shared_ptr<datetime_io_t> timelog_datetime_io;   ///< Reader for "MM/DD/YYYY HH:MM:SS" (timeclock format).
-std::shared_ptr<datetime_io_t> written_datetime_io;   ///< Writer for FMT_WRITTEN datetimes.
-std::shared_ptr<date_io_t> written_date_io;           ///< Writer for FMT_WRITTEN dates.
-std::shared_ptr<datetime_io_t> printed_datetime_io;   ///< Writer for FMT_PRINTED datetimes.
-std::shared_ptr<date_io_t> printed_date_io;           ///< Writer for FMT_PRINTED dates.
+std::shared_ptr<datetime_io_t> input_datetime_io; ///< Reader for "YYYY/MM/DD HH:MM:SS".
+std::shared_ptr<datetime_io_t>
+    timelog_datetime_io; ///< Reader for "MM/DD/YYYY HH:MM:SS" (timeclock format).
+std::shared_ptr<datetime_io_t> written_datetime_io; ///< Writer for FMT_WRITTEN datetimes.
+std::shared_ptr<date_io_t> written_date_io;         ///< Writer for FMT_WRITTEN dates.
+std::shared_ptr<datetime_io_t> printed_datetime_io; ///< Writer for FMT_PRINTED datetimes.
+std::shared_ptr<date_io_t> printed_date_io;         ///< Writer for FMT_PRINTED dates.
 
 /// The ordered list of date input formats.  Custom formats from
 /// --input-date-format are pushed to the front; built-in formats
@@ -552,34 +553,34 @@ class date_parser_t {
       enum kind_t : uint8_t {
         UNKNOWN,
 
-        TOK_DATE,      ///< A full date parsed from the input (e.g. "2024/01/15").
-        TOK_INT,       ///< A bare integer (e.g. "3" in "every 3 months").
-        TOK_SLASH,     ///< The '/' character.
-        TOK_DASH,      ///< The '-' character (range separator).
-        TOK_DOT,       ///< The '.' character.
+        TOK_DATE,  ///< A full date parsed from the input (e.g. "2024/01/15").
+        TOK_INT,   ///< A bare integer (e.g. "3" in "every 3 months").
+        TOK_SLASH, ///< The '/' character.
+        TOK_DASH,  ///< The '-' character (range separator).
+        TOK_DOT,   ///< The '.' character.
 
-        TOK_A_MONTH,   ///< A month name (e.g. "jan", "february").
-        TOK_A_WDAY,    ///< A weekday name (e.g. "mon", "tuesday").
+        TOK_A_MONTH, ///< A month name (e.g. "jan", "february").
+        TOK_A_WDAY,  ///< A weekday name (e.g. "mon", "tuesday").
 
-        TOK_AGO,       ///< The keyword "ago" (relative past).
-        TOK_HENCE,     ///< The keyword "hence" (relative future).
-        TOK_SINCE,     ///< The keyword "since" or "from" (range start).
-        TOK_UNTIL,     ///< The keyword "until" or "to" (range end).
-        TOK_IN,        ///< The keyword "in" (inclusion specifier).
-        TOK_THIS,      ///< The keyword "this" (current period).
-        TOK_NEXT,      ///< The keyword "next" (following period).
-        TOK_LAST,      ///< The keyword "last" (preceding period).
-        TOK_EVERY,     ///< The keyword "every" (recurrence prefix).
+        TOK_AGO,   ///< The keyword "ago" (relative past).
+        TOK_HENCE, ///< The keyword "hence" (relative future).
+        TOK_SINCE, ///< The keyword "since" or "from" (range start).
+        TOK_UNTIL, ///< The keyword "until" or "to" (range end).
+        TOK_IN,    ///< The keyword "in" (inclusion specifier).
+        TOK_THIS,  ///< The keyword "this" (current period).
+        TOK_NEXT,  ///< The keyword "next" (following period).
+        TOK_LAST,  ///< The keyword "last" (preceding period).
+        TOK_EVERY, ///< The keyword "every" (recurrence prefix).
 
         TOK_TODAY,     ///< The keyword "today".
         TOK_TOMORROW,  ///< The keyword "tomorrow".
         TOK_YESTERDAY, ///< The keyword "yesterday" or "yday".
 
-        TOK_YEAR,      ///< The singular unit "year".
-        TOK_QUARTER,   ///< The singular unit "quarter".
-        TOK_MONTH,     ///< The singular unit "month".
-        TOK_WEEK,      ///< The singular unit "week".
-        TOK_DAY,       ///< The singular unit "day".
+        TOK_YEAR,    ///< The singular unit "year".
+        TOK_QUARTER, ///< The singular unit "quarter".
+        TOK_MONTH,   ///< The singular unit "month".
+        TOK_WEEK,    ///< The singular unit "week".
+        TOK_DAY,     ///< The singular unit "day".
 
         TOK_YEARLY,    ///< The frequency shortcut "yearly".
         TOK_QUARTERLY, ///< The frequency shortcut "quarterly".
@@ -589,13 +590,13 @@ class date_parser_t {
         TOK_WEEKLY,    ///< The frequency shortcut "weekly".
         TOK_DAILY,     ///< The frequency shortcut "daily".
 
-        TOK_YEARS,     ///< The plural unit "years".
-        TOK_QUARTERS,  ///< The plural unit "quarters".
-        TOK_MONTHS,    ///< The plural unit "months".
-        TOK_WEEKS,     ///< The plural unit "weeks".
-        TOK_DAYS,      ///< The plural unit "days".
+        TOK_YEARS,    ///< The plural unit "years".
+        TOK_QUARTERS, ///< The plural unit "quarters".
+        TOK_MONTHS,   ///< The plural unit "months".
+        TOK_WEEKS,    ///< The plural unit "weeks".
+        TOK_DAYS,     ///< The plural unit "days".
 
-        END_REACHED    ///< Sentinel: no more input.
+        END_REACHED ///< Sentinel: no more input.
 
       } kind;
 
@@ -870,8 +871,8 @@ class date_parser_t {
     }
   };
 
-  string arg;     ///< The original period expression string.
-  lexer_t lexer;  ///< The lexer scanning over arg.
+  string arg;    ///< The original period expression string.
+  lexer_t lexer; ///< The lexer scanning over arg.
 
 public:
   date_parser_t(const string& _arg) : arg(_arg), lexer(arg.begin(), arg.end()) {
@@ -2330,8 +2331,8 @@ std::string format_date(const date_t& when, const format_type_t format_type,
 /*--- Format Configuration ---*/
 
 namespace {
-bool is_initialized = false;          ///< Guard for times_initialize/times_shutdown.
-bool explicit_date_format = false;    ///< True after set_date_format() is called.
+bool is_initialized = false;           ///< Guard for times_initialize/times_shutdown.
+bool explicit_date_format = false;     ///< True after set_date_format() is called.
 bool explicit_datetime_format = false; ///< True after set_datetime_format() is called.
 } // namespace
 

@@ -249,18 +249,18 @@ class call_scope_t;
 template <typename T>
 class option_t {
 protected:
-  const char* name;            ///< Internal name with underscores (trailing _ means wants arg)
-  string::size_type name_len;  ///< Cached strlen(name) for fast comparisons
-  const char ch;               ///< Single-character shortcut, or '\0' if none
-  bool handled;                ///< True once on() has been called (option is active)
-  optional<string> source;     ///< Where the option was set: "--opt", "$ENV", "?normalize", etc.
+  const char* name;           ///< Internal name with underscores (trailing _ means wants arg)
+  string::size_type name_len; ///< Cached strlen(name) for fast comparisons
+  const char ch;              ///< Single-character shortcut, or '\0' if none
+  bool handled;               ///< True once on() has been called (option is active)
+  optional<string> source;    ///< Where the option was set: "--opt", "$ENV", "?normalize", etc.
 
   option_t& operator=(const option_t&);
 
 public:
-  T* parent;        ///< Owning scope; set by OPT macros during lookup before handler_thunk runs
-  string value;     ///< The string argument value (empty for boolean flags)
-  bool wants_arg;   ///< True if the option takes an argument (name ends with '_')
+  T* parent;      ///< Owning scope; set by OPT macros during lookup before handler_thunk runs
+  string value;   ///< The string argument value (empty for boolean flags)
+  bool wants_arg; ///< True if the option takes an argument (name ends with '_')
 
   /// @brief Construct an option with the given internal name and optional shortcut.
   /// @param _name  Internal name string (e.g., "sort_all_"); trailing '_' sets wants_arg.
@@ -411,33 +411,41 @@ public:
 
 /*--- Structure Macros (building blocks for option declarations) ---*/
 
-#define BEGIN(type, name) struct name##option_t : public option_t<type>  ///< Opens the option struct
+#define BEGIN(type, name) struct name##option_t : public option_t<type> ///< Opens the option struct
 
-#define CTOR(type, name) name##option_t() : option_t<type>(#name)  ///< Basic constructor
-#define CTOR_(type, name, base) name##option_t() : option_t<type>(#name), base  ///< Ctor with extra init
+#define CTOR(type, name) name##option_t() : option_t<type>(#name) ///< Basic constructor
+#define CTOR_(type, name, base)                                                                    \
+  name##option_t() : option_t<type>(#name), base ///< Ctor with extra init
 #define DECL1(type, name, vartype, var, value)                                                     \
   vartype var;                                                                                     \
-  name##option_t() : option_t<type>(#name), var value  ///< Declares extra member var + constructor
+  name##option_t() : option_t<type>(#name), var value ///< Declares extra member var + constructor
 
 /*--- Handler Override Macros ---*/
 
-#define DO() virtual void handler_thunk([[maybe_unused]] const optional<string>& whence) override  ///< Override for boolean (no-arg) options
+#define DO()                                                                                       \
+  virtual void handler_thunk([[maybe_unused]] const optional<string>& whence)                      \
+      override ///< Override for boolean (no-arg) options
 #define DO_()                                                                                      \
   virtual void handler_thunk([[maybe_unused]] const optional<string>& whence,                      \
-                             [[maybe_unused]] const string& str) override  ///< Override for options taking an argument
+                             [[maybe_unused]] const string& str)                                   \
+      override ///< Override for options taking an argument
 
 /*--- Instance and Copy Macros ---*/
 
-#define END(name) name##handler  ///< Closes the struct and declares the member instance
+#define END(name) name##handler ///< Closes the struct and declares the member instance
 
-#define COPY_OPT(name, other) name##handler((other).name##handler)  ///< Copy one option's handler from another instance
+#define COPY_OPT(name, other)                                                                      \
+  name##handler((other).name##handler) ///< Copy one option's handler from another instance
 
 /*--- Factory Macros (wrap option methods as expression functors) ---*/
 
-#define MAKE_OPT_HANDLER(type, x) expr_t::op_t::wrap_functor(bind(&option_t<type>::handler, x, _1))  ///< Wrap handler() as expr_t functor
+#define MAKE_OPT_HANDLER(type, x)                                                                  \
+  expr_t::op_t::wrap_functor(                                                                      \
+      bind(&option_t<type>::handler, x, _1)) ///< Wrap handler() as expr_t functor
 
 #define MAKE_OPT_FUNCTOR(type, x)                                                                  \
-  expr_t::op_t::wrap_functor(bind(&option_t<type>::operator(), x, _1))  ///< Wrap operator() as expr_t functor
+  expr_t::op_t::wrap_functor(                                                                      \
+      bind(&option_t<type>::operator(), x, _1)) ///< Wrap operator() as expr_t functor
 
 /// @brief Test whether CLI name @a p matches internal option name @a n.
 /// Maps hyphens in @a p to underscores in @a n, and ignores a trailing
@@ -456,24 +464,25 @@ inline bool is_eq(const char* p, const char* n) {
 
 #define OPT(name)                                                                                  \
   if (is_eq(p, #name))                                                                             \
-  return ((name##handler).parent = this, &(name##handler))  ///< Exact name match
+  return ((name##handler).parent = this, &(name##handler)) ///< Exact name match
 
 #define OPT_ALT(name, alt)                                                                         \
   if (is_eq(p, #name) || is_eq(p, #alt))                                                           \
-  return ((name##handler).parent = this, &(name##handler))  ///< Match by primary or alternative name
+  return ((name##handler).parent = this, &(name##handler)) ///< Match by primary or alternative name
 
 #define OPT_(name)                                                                                 \
   if (!*(p + 1) || ((name##handler).wants_arg && *(p + 1) == '_' && !*(p + 2)) || is_eq(p, #name)) \
-  return ((name##handler).parent = this, &(name##handler))  ///< Match by full name or single-char shortcut
+  return ((name##handler).parent = this,                                                           \
+          &(name##handler)) ///< Match by full name or single-char shortcut
 
 #define OPT_CH(name)                                                                               \
   if (!*(p + 1) || ((name##handler).wants_arg && *(p + 1) == '_' && !*(p + 2)))                    \
-  return ((name##handler).parent = this, &(name##handler))  ///< Single-character-only match
+  return ((name##handler).parent = this, &(name##handler)) ///< Single-character-only match
 
 /*--- Access and Cross-Reference Macros ---*/
 
-#define HANDLER(name) name##handler     ///< Access the option's member instance
-#define HANDLED(name) HANDLER(name)     ///< Same as HANDLER; tests if option is set via bool conversion
+#define HANDLER(name) name##handler ///< Access the option's member instance
+#define HANDLED(name) HANDLER(name) ///< Same as HANDLER; tests if option is set via bool conversion
 
 /*--- Convenience Declaration Macros ---*/
 

@@ -234,8 +234,8 @@ See LICENSE file included with the distribution for details and disclaimer.");
   /// "push"/"pop" pre-commands defined at the global level.
   expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 
-  OPTION(global_scope_t, args_only);      ///< Skip init file and environment processing
-  OPTION(global_scope_t, debug_);         ///< Enable debug logging for a category
+  OPTION(global_scope_t, args_only); ///< Skip init file and environment processing
+  OPTION(global_scope_t, debug_);    ///< Enable debug logging for a category
 
   /// Open the ledger(1) man page via fork/exec.
   void visit_man_page() const;
@@ -250,12 +250,12 @@ See LICENSE file included with the distribution for details and disclaimer.");
           on(none, _init_file);
       });
 
-  OPTION(global_scope_t, options);        ///< Dump all options before command output
-  OPTION(global_scope_t, script_);        ///< Run commands from a script file
-  OPTION(global_scope_t, trace_);         ///< Set trace verbosity level
-  OPTION(global_scope_t, verbose);        ///< Enable informational log messages
-  OPTION(global_scope_t, verify);         ///< Enable runtime verification checks
-  OPTION(global_scope_t, verify_memory);  ///< Enable memory allocation tracing
+  OPTION(global_scope_t, options);       ///< Dump all options before command output
+  OPTION(global_scope_t, script_);       ///< Run commands from a script file
+  OPTION(global_scope_t, trace_);        ///< Set trace verbosity level
+  OPTION(global_scope_t, verbose);       ///< Enable informational log messages
+  OPTION(global_scope_t, verify);        ///< Enable runtime verification checks
+  OPTION(global_scope_t, verify_memory); ///< Enable memory allocation tracing
 
   OPTION_(
       global_scope_t, version, DO() { // -v

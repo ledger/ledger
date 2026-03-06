@@ -280,11 +280,11 @@ public:
   using custom_flusher_t = function<void(const value_t&)>;
 
 protected:
-  value_to_posts_map posts_map;          ///< Postings bucketed by group_by_expr result.
-  post_handler_ptr post_chain;           ///< Handler chain to flush each group through.
-  report_t& report;                      ///< Report context for expression evaluation.
-  expr_t& group_by_expr;                 ///< Expression whose value partitions postings into groups.
-  custom_flusher_t preflush_func;        ///< Called before each group is flushed (default: print_title).
+  value_to_posts_map posts_map;   ///< Postings bucketed by group_by_expr result.
+  post_handler_ptr post_chain;    ///< Handler chain to flush each group through.
+  report_t& report;               ///< Report context for expression evaluation.
+  expr_t& group_by_expr;          ///< Expression whose value partitions postings into groups.
+  custom_flusher_t preflush_func; ///< Called before each group is flushed (default: print_title).
   optional<custom_flusher_t> postflush_func; ///< Called after each group is flushed, if set.
 
 public:
@@ -398,13 +398,13 @@ public:
  * head_count=-2 skips the first 2 transactions).
  */
 class truncate_xacts : public item_handler<post_t> {
-  int head_count;              ///< Number of transactions to keep from the start (--head).
-  int tail_count;              ///< Number of transactions to keep from the end (--tail).
-  bool completed;              ///< True once early termination has occurred.
+  int head_count; ///< Number of transactions to keep from the start (--head).
+  int tail_count; ///< Number of transactions to keep from the end (--tail).
+  bool completed; ///< True once early termination has occurred.
 
-  posts_list posts;            ///< All postings seen so far (for deferred flush).
-  std::size_t xacts_seen;     ///< Count of distinct transactions encountered.
-  xact_t* last_xact;          ///< Previous transaction, for boundary detection.
+  posts_list posts;       ///< All postings seen so far (for deferred flush).
+  std::size_t xacts_seen; ///< Count of distinct transactions encountered.
+  xact_t* last_xact;      ///< Previous transaction, for boundary detection.
 
   truncate_xacts();
 
@@ -438,9 +438,9 @@ public:
 class sort_posts : public item_handler<post_t> {
   using posts_deque = std::deque<post_t*>;
 
-  posts_deque posts;           ///< Accumulated postings awaiting sort.
-  expr_t sort_order;           ///< Expression defining the sort key.
-  report_t& report;            ///< Report context for expression evaluation.
+  posts_deque posts; ///< Accumulated postings awaiting sort.
+  expr_t sort_order; ///< Expression defining the sort key.
+  report_t& report;  ///< Report context for expression evaluation.
 
   sort_posts();
 
@@ -480,8 +480,8 @@ public:
  * time a new transaction is encountered.
  */
 class sort_xacts : public item_handler<post_t> {
-  sort_posts sorter;           ///< Internal sorter flushed per transaction.
-  xact_t* last_xact;          ///< Previous transaction, for boundary detection.
+  sort_posts sorter; ///< Internal sorter flushed per transaction.
+  xact_t* last_xact; ///< Previous transaction, for boundary detection.
 
   sort_xacts();
 
@@ -526,8 +526,8 @@ public:
  * (e.g., forecast_posts) can detect which postings matched the report query.
  */
 class filter_posts : public item_handler<post_t> {
-  predicate_t pred;            ///< The predicate expression to evaluate.
-  scope_t& context;            ///< Scope for binding the predicate to each posting.
+  predicate_t pred; ///< The predicate expression to evaluate.
+  scope_t& context; ///< Scope for binding the predicate to each posting.
 
   filter_posts();
 
@@ -564,13 +564,13 @@ class anonymize_posts : public item_handler<post_t> {
   using commodity_index_map = std::map<commodity_t*, std::size_t>;
   using int_generator_t = variate_generator<mt19937&, uniform_int<>>;
 
-  temporaries_t temps;              ///< Temporary storage for anonymized xacts/posts.
-  commodity_index_map comms;        ///< Maps original commodities to sequential IDs.
-  std::size_t next_comm_id;         ///< Next available commodity ID.
-  xact_t* last_xact;               ///< Previous xact, to avoid re-anonymizing within the same xact.
-  mt19937 rnd_gen;                  ///< Mersenne Twister RNG for hash salting.
-  uniform_int<> integer_range;      ///< Range for random integer generation.
-  int_generator_t integer_gen;      ///< Random integer generator for hash input.
+  temporaries_t temps;         ///< Temporary storage for anonymized xacts/posts.
+  commodity_index_map comms;   ///< Maps original commodities to sequential IDs.
+  std::size_t next_comm_id;    ///< Next available commodity ID.
+  xact_t* last_xact;           ///< Previous xact, to avoid re-anonymizing within the same xact.
+  mt19937 rnd_gen;             ///< Mersenne Twister RNG for hash salting.
+  uniform_int<> integer_range; ///< Range for random integer generation.
+  int_generator_t integer_gen; ///< Random integer generator for hash input.
 
   anonymize_posts();
 
@@ -614,11 +614,11 @@ public:
  * display_filter_posts to skip expensive full-stripping.
  */
 class calc_posts : public item_handler<post_t> {
-  post_t* last_post;                ///< Previous posting, for running total propagation.
-  expr_t& amount_expr;              ///< Expression evaluated to compute each posting's value.
-  bool calc_running_total;          ///< Whether to maintain a running total across postings.
-  bool maintain_stripped_total;     ///< Whether to incrementally maintain a stripped display total.
-  keep_details_t what_to_keep;      ///< Annotation details to preserve when stripping.
+  post_t* last_post;            ///< Previous posting, for running total propagation.
+  expr_t& amount_expr;          ///< Expression evaluated to compute each posting's value.
+  bool calc_running_total;      ///< Whether to maintain a running total across postings.
+  bool maintain_stripped_total; ///< Whether to incrementally maintain a stripped display total.
+  keep_details_t what_to_keep;  ///< Annotation details to preserve when stripping.
 
   calc_posts();
 
@@ -656,20 +656,21 @@ class collapse_posts : public item_handler<post_t> {
 
   using totals_map = std::map<account_t*, value_t>;
 
-  expr_t& amount_expr;                 ///< Amount expression for evaluating each posting's value.
-  predicate_t display_predicate;       ///< Display predicate from --display.
-  predicate_t only_predicate;          ///< Secondary predicate from --only.
-  value_t subtotal;                    ///< Running subtotal of the current transaction.
-  std::size_t count;                   ///< Number of postings accumulated for the current xact.
+  expr_t& amount_expr;                ///< Amount expression for evaluating each posting's value.
+  predicate_t display_predicate;      ///< Display predicate from --display.
+  predicate_t only_predicate;         ///< Secondary predicate from --only.
+  value_t subtotal;                   ///< Running subtotal of the current transaction.
+  std::size_t count;                  ///< Number of postings accumulated for the current xact.
   xact_t* last_xact;                  ///< Previous transaction, for boundary detection.
-  post_t* last_post;                   ///< Last posting seen in the current transaction.
-  temporaries_t temps;                 ///< Temporary storage for synthetic xacts/posts.
-  account_t* global_totals_account;    ///< Account used when collapse_depth is 0.
-  totals_map totals;                   ///< Per-account totals within the current transaction.
-  bool only_collapse_if_zero;          ///< When true, only collapse when subtotal is zero (--collapse-if-zero).
-  unsigned short collapse_depth;       ///< Account depth at which to collapse (0 = all into one).
-  std::list<post_t*> component_posts;  ///< Original postings accumulated for the current xact.
-  report_t& report;                    ///< Report context.
+  post_t* last_post;                  ///< Last posting seen in the current transaction.
+  temporaries_t temps;                ///< Temporary storage for synthetic xacts/posts.
+  account_t* global_totals_account;   ///< Account used when collapse_depth is 0.
+  totals_map totals;                  ///< Per-account totals within the current transaction.
+  bool only_collapse_if_zero;         ///< When true, only collapse when subtotal is zero
+                                      ///< (--collapse-if-zero).
+  unsigned short collapse_depth;      ///< Account depth at which to collapse (0 = all into one).
+  std::list<post_t*> component_posts; ///< Original postings accumulated for the current xact.
+  report_t& report;                   ///< Report context.
 
   collapse_posts();
 
@@ -730,8 +731,8 @@ public:
  * also_matching is true, the original matching postings are also included.
  */
 class related_posts : public item_handler<post_t> {
-  posts_list posts;            ///< Collected postings whose siblings will be forwarded.
-  bool also_matching;          ///< If true, include the originally matched postings too (--related-all).
+  posts_list posts;   ///< Collected postings whose siblings will be forwarded.
+  bool also_matching; ///< If true, include the originally matched postings too (--related-all).
 
   related_posts();
 
@@ -769,17 +770,18 @@ public:
  * @note Requires calc_posts somewhere downstream in the chain.
  */
 class display_filter_posts : public item_handler<post_t> {
-  report_t& report;                        ///< Report context.
-  expr_t& display_amount_expr;             ///< Expression for computing the display amount.
-  expr_t& display_total_expr;              ///< Expression for computing the display total.
-  bool show_rounding;                      ///< Whether to emit rounding adjustment postings.
-  value_t last_display_total;              ///< Previous posting's display total (for diff computation).
-  value_t last_stripped_display_total;     ///< Cached stripped total for incremental optimization.
-  bool has_stripped_cache;                 ///< Whether the incremental stripped cache is valid.
-  bool incremental_strip_eligible;         ///< Whether the O(1) incremental stripping optimization can be used.
-  keep_details_t what_to_keep;             ///< Annotation details to preserve when stripping.
-  temporaries_t temps;                     ///< Temporary storage for synthetic adjustment postings.
-  account_t* rounding_account;             ///< The <Adjustment> account for rounding postings.
+  report_t& report;                    ///< Report context.
+  expr_t& display_amount_expr;         ///< Expression for computing the display amount.
+  expr_t& display_total_expr;          ///< Expression for computing the display total.
+  bool show_rounding;                  ///< Whether to emit rounding adjustment postings.
+  value_t last_display_total;          ///< Previous posting's display total (for diff computation).
+  value_t last_stripped_display_total; ///< Cached stripped total for incremental optimization.
+  bool has_stripped_cache;             ///< Whether the incremental stripped cache is valid.
+  bool incremental_strip_eligible; ///< Whether the O(1) incremental stripping optimization can be
+                                   ///< used.
+  keep_details_t what_to_keep;     ///< Annotation details to preserve when stripping.
+  temporaries_t temps;             ///< Temporary storage for synthetic adjustment postings.
+  account_t* rounding_account;     ///< The <Adjustment> account for rounding postings.
 
   display_filter_posts();
 
@@ -833,22 +835,23 @@ public:
  * @note Requires calc_posts somewhere downstream in the chain.
  */
 class changed_value_posts : public item_handler<post_t> {
-  report_t& report;                       ///< Report context.
-  expr_t& total_expr;                     ///< Expression for computing the total to compare (may be revalued_total_).
-  expr_t& display_total_expr;             ///< Expression for computing display totals.
-  bool changed_values_only;               ///< If true, only show postings where value changed (--revalued-only).
-  bool historical_prices_only;            ///< If true, skip intermediate price lookups (--historical).
-  bool for_accounts_report;               ///< Whether this is an accounts (balance) report.
-  bool show_unrealized;                   ///< Whether to generate equity gain/loss postings (--unrealized).
-  post_t* last_post;                      ///< Previous posting for comparison.
-  value_t last_total;                     ///< Total after the previous posting.
-  value_t repriced_total;                 ///< Total after repricing (set by output_revaluation).
-  temporaries_t temps;                    ///< Temporary storage for synthetic revaluation postings.
-  account_t* revalued_account;            ///< The <Revalued> account for register revaluations.
-  account_t* gains_equity_account;        ///< Equity account for unrealized gains.
-  account_t* losses_equity_account;       ///< Equity account for unrealized losses.
+  report_t& report;   ///< Report context.
+  expr_t& total_expr; ///< Expression for computing the total to compare (may be revalued_total_).
+  expr_t& display_total_expr; ///< Expression for computing display totals.
+  bool changed_values_only; ///< If true, only show postings where value changed (--revalued-only).
+  bool historical_prices_only; ///< If true, skip intermediate price lookups (--historical).
+  bool for_accounts_report;    ///< Whether this is an accounts (balance) report.
+  bool show_unrealized;        ///< Whether to generate equity gain/loss postings (--unrealized).
+  post_t* last_post;           ///< Previous posting for comparison.
+  value_t last_total;          ///< Total after the previous posting.
+  value_t repriced_total;      ///< Total after repricing (set by output_revaluation).
+  temporaries_t temps;         ///< Temporary storage for synthetic revaluation postings.
+  account_t* revalued_account; ///< The <Revalued> account for register revaluations.
+  account_t* gains_equity_account;  ///< Equity account for unrealized gains.
+  account_t* losses_equity_account; ///< Equity account for unrealized losses.
 
-  display_filter_posts* display_filter;   ///< Pointer to display_filter_posts to share the <Revalued> account.
+  display_filter_posts*
+      display_filter; ///< Pointer to display_filter_posts to share the <Revalued> account.
 
   changed_value_posts();
 
@@ -908,10 +911,10 @@ protected:
     acct_value_t();
 
   public:
-    account_t* account;    ///< The account being subtotaled.
-    value_t value;         ///< Accumulated value for this account.
-    bool is_virtual;       ///< Whether these postings are virtual (unbalanced).
-    bool must_balance;     ///< Whether virtual postings must still balance.
+    account_t* account; ///< The account being subtotaled.
+    value_t value;      ///< Accumulated value for this account.
+    bool is_virtual;    ///< Whether these postings are virtual (unbalanced).
+    bool must_balance;  ///< Whether virtual postings must still balance.
 
     acct_value_t(account_t* a, bool _is_virtual = false, bool _must_balance = false)
         : account(a), is_virtual(_is_virtual), must_balance(_must_balance) {
@@ -933,11 +936,11 @@ protected:
   using values_pair = std::pair<string, acct_value_t>;
 
 protected:
-  expr_t& amount_expr;                   ///< Expression for evaluating each posting's value.
-  values_map values;                     ///< Accumulated values keyed by account name.
-  optional<string> date_format;          ///< Custom date format for the subtotal payee string.
-  temporaries_t temps;                   ///< Temporary storage for synthetic xacts/posts.
-  std::deque<post_t*> component_posts;   ///< Original postings contributing to this subtotal.
+  expr_t& amount_expr;                 ///< Expression for evaluating each posting's value.
+  values_map values;                   ///< Accumulated values keyed by account name.
+  optional<string> date_format;        ///< Custom date format for the subtotal payee string.
+  temporaries_t temps;                 ///< Temporary storage for synthetic xacts/posts.
+  std::deque<post_t*> component_posts; ///< Original postings contributing to this subtotal.
 
 public:
   subtotal_posts(post_handler_ptr handler, expr_t& _amount_expr,
@@ -984,14 +987,14 @@ public:
  * infrastructure but calling it once per interval rather than once overall.
  */
 class interval_posts : public subtotal_posts {
-  date_interval_t start_interval;     ///< The original interval specification (preserved for clear()).
-  date_interval_t interval;           ///< Working copy advanced as periods are processed.
-  account_t* empty_account;           ///< The <None> account used for empty-period postings.
-  bool exact_periods;                 ///< If true, use exact period boundaries for report_subtotal.
-  bool generate_empty_posts;          ///< If true, emit zero-amount postings for empty periods (--empty).
-  bool align_intervals;               ///< If true, align periods to calendar boundaries (--align-intervals).
+  date_interval_t start_interval; ///< The original interval specification (preserved for clear()).
+  date_interval_t interval;       ///< Working copy advanced as periods are processed.
+  account_t* empty_account;       ///< The <None> account used for empty-period postings.
+  bool exact_periods;             ///< If true, use exact period boundaries for report_subtotal.
+  bool generate_empty_posts; ///< If true, emit zero-amount postings for empty periods (--empty).
+  bool align_intervals;      ///< If true, align periods to calendar boundaries (--align-intervals).
 
-  std::deque<post_t*> all_posts;      ///< All postings seen, sorted by date in flush().
+  std::deque<post_t*> all_posts; ///< All postings seen, sorted by date in flush().
 
   interval_posts();
 
@@ -1046,11 +1049,11 @@ public:
  * a new journal with pre-existing balances.
  */
 class posts_as_equity : public subtotal_posts {
-  report_t& report;                ///< Report context.
-  post_t* last_post;               ///< Last posting seen (for date tracking).
-  account_t* equity_account;       ///< The synthetic Equity account.
-  account_t* balance_account;      ///< The Equity:Opening Balances sub-account.
-  bool unround;                    ///< If true, unround amounts before output (--unround).
+  report_t& report;           ///< Report context.
+  post_t* last_post;          ///< Last posting seen (for date tracking).
+  account_t* equity_account;  ///< The synthetic Equity account.
+  account_t* balance_account; ///< The Equity:Opening Balances sub-account.
+  bool unround;               ///< If true, unround amounts before output (--unround).
 
   posts_as_equity();
 
@@ -1091,8 +1094,8 @@ class by_payee_posts : public item_handler<post_t> {
   using payee_subtotals_map = std::map<string, std::shared_ptr<subtotal_posts>>;
   using payee_subtotals_pair = std::pair<string, std::shared_ptr<subtotal_posts>>;
 
-  expr_t& amount_expr;                     ///< Amount expression shared with sub-totals.
-  payee_subtotals_map payee_subtotals;     ///< Per-payee subtotal_posts instances.
+  expr_t& amount_expr;                 ///< Amount expression shared with sub-totals.
+  payee_subtotals_map payee_subtotals; ///< Per-payee subtotal_posts instances.
 
   by_payee_posts();
 
@@ -1123,19 +1126,19 @@ public:
  * account hierarchy.
  */
 class transfer_details : public item_handler<post_t> {
-  account_t* master;           ///< Journal master account for resolving account paths.
-  expr_t expr;                 ///< Expression to evaluate for the replacement value.
-  scope_t& scope;              ///< Scope for expression evaluation.
-  temporaries_t temps;         ///< Temporary storage for rewritten xacts/posts.
+  account_t* master;   ///< Journal master account for resolving account paths.
+  expr_t expr;         ///< Expression to evaluate for the replacement value.
+  scope_t& scope;      ///< Scope for expression evaluation.
+  temporaries_t temps; ///< Temporary storage for rewritten xacts/posts.
 
   transfer_details();
 
 public:
   /// Which posting element to rewrite.
   enum element_t : uint8_t {
-    SET_DATE,     ///< Rewrite the posting date.
-    SET_ACCOUNT,  ///< Rewrite the account (prepending expression result).
-    SET_PAYEE     ///< Rewrite the transaction payee.
+    SET_DATE,    ///< Rewrite the posting date.
+    SET_ACCOUNT, ///< Rewrite the account (prepending expression result).
+    SET_PAYEE    ///< Rewrite the transaction payee.
   } which_element;
 
   transfer_details(post_handler_ptr handler, element_t _which_element, account_t* _master,
@@ -1166,7 +1169,7 @@ public:
  * the "%As" format (abbreviated day name as the payee).
  */
 class day_of_week_posts : public subtotal_posts {
-  posts_list days_of_the_week[7];  ///< Postings bucketed by day of week (0=Sun, 6=Sat).
+  posts_list days_of_the_week[7]; ///< Postings bucketed by day of week (0=Sun, 6=Sat).
 
   day_of_week_posts();
 
@@ -1205,8 +1208,9 @@ protected:
   using pending_posts_pair = std::pair<date_interval_t, post_t*>;
   using pending_posts_list = std::list<pending_posts_pair>;
 
-  pending_posts_list pending_posts;  ///< Periodic postings awaiting generation, each with its interval state.
-  temporaries_t temps;               ///< Temporary storage for synthetic xacts/posts.
+  pending_posts_list
+      pending_posts;   ///< Periodic postings awaiting generation, each with its interval state.
+  temporaries_t temps; ///< Temporary storage for synthetic xacts/posts.
 
 public:
   generate_posts(post_handler_ptr handler) : item_handler<post_t>(std::move(handler)) {
@@ -1249,8 +1253,8 @@ class budget_posts : public generate_posts {
 #define BUDGET_UNBUDGETED 0x02  ///< Show postings not matching any budget account.
 #define BUDGET_WRAP_VALUES 0x04 ///< Wrap values as (amount, budget) sequences for compound display.
 
-  uint_least8_t flags;         ///< Combination of BUDGET_* flags controlling behavior.
-  date_t terminus;             ///< End date for budget generation (typically report terminus).
+  uint_least8_t flags; ///< Combination of BUDGET_* flags controlling behavior.
+  date_t terminus;     ///< End date for budget generation (typically report terminus).
 
   budget_posts();
 
@@ -1276,9 +1280,9 @@ public:
  * forecast_years limit (default 5 years beyond the last valid posting).
  */
 class forecast_posts : public generate_posts {
-  predicate_t pred;                  ///< Continuation predicate; generation stops when this returns false.
-  scope_t& context;                  ///< Scope for evaluating the predicate.
-  const std::size_t forecast_years;  ///< Maximum years to project beyond the last valid posting.
+  predicate_t pred; ///< Continuation predicate; generation stops when this returns false.
+  scope_t& context; ///< Scope for evaluating the predicate.
+  const std::size_t forecast_years; ///< Maximum years to project beyond the last valid posting.
 
 public:
   forecast_posts(post_handler_ptr handler, const predicate_t& predicate, scope_t& _context,
@@ -1312,8 +1316,9 @@ class inject_posts : public item_handler<post_t> {
   using tag_mapping_pair = std::pair<account_t*, tag_injected_set>;
   using tags_list_pair = std::pair<string, tag_mapping_pair>;
 
-  std::list<tags_list_pair> tags_list;  ///< Tag names paired with their target accounts and injection tracking.
-  temporaries_t temps;                  ///< Temporary storage for synthetic xacts/posts.
+  std::list<tags_list_pair>
+      tags_list;       ///< Tag names paired with their target accounts and injection tracking.
+  temporaries_t temps; ///< Temporary storage for synthetic xacts/posts.
 
 public:
   inject_posts(post_handler_ptr handler, const string& tag_list, account_t* master);
@@ -1335,8 +1340,8 @@ public:
  * the mapping.  Non-matching postings pass through unchanged.
  */
 class rewrite_posts : public item_handler<post_t> {
-  report_t& report;            ///< Report context (provides access to the journal's rewrite mappings).
-  temporaries_t temps;         ///< Temporary storage for rewritten xacts/posts.
+  report_t& report;    ///< Report context (provides access to the journal's rewrite mappings).
+  temporaries_t temps; ///< Temporary storage for rewritten xacts/posts.
 
   rewrite_posts();
 

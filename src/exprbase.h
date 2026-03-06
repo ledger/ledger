@@ -140,9 +140,9 @@ public:
   using func_t = function<result_type(call_scope_t&)>;
 
 protected:
-  scope_t* context;  ///< Long-lived scope for no-argument calc(); set by compile() or set_context().
-  string str;        ///< Original text of the expression (for error messages and reparsing).
-  bool compiled;     ///< True once compile() has been called successfully.
+  scope_t* context; ///< Long-lived scope for no-argument calc(); set by compile() or set_context().
+  string str;       ///< Original text of the expression (for error messages and reparsing).
+  bool compiled;    ///< True once compile() has been called successfully.
 
   /// @brief Subclass hook: perform the actual evaluation.
   /// Called by calc() after ensuring the expression is compiled.

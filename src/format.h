@@ -124,11 +124,12 @@ class format_t : public expr_base_t<string>, public noncopyable {
       EXPR    ///< Compiled expression -- stored as an expr_t in `data`.
     };
 
-    kind_t type;                          ///< Whether this element holds literal text or an expression.
-    std::size_t min_width;                ///< Minimum display width (pad with spaces if shorter).
-    std::size_t max_width;                ///< Maximum display width (truncate if longer; 0 means unlimited).
-    std::variant<string, expr_t> data;    ///< The element payload: literal string or compiled expression.
-    scoped_ptr<struct element_t> next;    ///< Next element in the linked list (nullptr for the last).
+    kind_t type;           ///< Whether this element holds literal text or an expression.
+    std::size_t min_width; ///< Minimum display width (pad with spaces if shorter).
+    std::size_t max_width; ///< Maximum display width (truncate if longer; 0 means unlimited).
+    std::variant<string, expr_t>
+        data; ///< The element payload: literal string or compiled expression.
+    scoped_ptr<struct element_t> next; ///< Next element in the linked list (nullptr for the last).
 
     element_t() noexcept : supports_flags<>(), type(STRING), min_width(0), max_width(0) {
       TRACE_CTOR(element_t, "");

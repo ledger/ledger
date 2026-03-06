@@ -136,8 +136,8 @@ struct expr_t::token_t : public noncopyable {
 
   } kind; ///< The kind of this token, set by next()
 
-  char symbol[6];    ///< Short textual representation of the token for error messages
-  value_t value;     ///< Parsed value for VALUE and IDENT tokens
+  char symbol[6];     ///< Short textual representation of the token for error messages
+  value_t value;      ///< Parsed value for VALUE and IDENT tokens
   std::size_t length; ///< Number of characters consumed from the input stream
 
   explicit token_t() : kind(UNKNOWN), length(0) { TRACE_CTOR(expr_t::token_t, ""); }
