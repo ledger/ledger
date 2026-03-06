@@ -29,6 +29,38 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   main.cc
+ * @author John Wiegley
+ *
+ * @brief The application entry point.
+ *
+ * This file contains main() and orchestrates the three execution modes:
+ *
+ *   1. **Script mode** (--script FILE): Read commands from a file, one
+ *      per line, executing each as if typed at the REPL.  Blank lines
+ *      and lines beginning with '#' are skipped.
+ *
+ *   2. **Batch mode** (default): Parse command-line arguments for a
+ *      single command verb and execute it.  This is the normal invocation
+ *      path for commands like "ledger -f journal.dat balance".
+ *
+ *   3. **REPL mode** (no verb): Display the version banner, load journal
+ *      data, and enter an interactive read-eval-print loop.  Supports
+ *      readline/editline history when available.
+ *
+ * The startup sequence before mode dispatch is:
+ *   - handle_debug_options() for --debug/--trace/--verify
+ *   - Signal handler installation (SIGINT, SIGPIPE)
+ *   - global_scope_t construction (reads env, init file)
+ *   - Command-line argument parsing
+ *
+ * On exit, full cleanup (destructors, memory tracing shutdown) is only
+ * performed when --verify is active.  Otherwise, the process exits
+ * immediately and lets the OS reclaim resources, which is significantly
+ * faster for normal usage.
+ */
+
 #include <system.hh>
 
 #include "global.h" // This is where the meat of main() is, which
@@ -65,6 +97,8 @@ int main(int argc, char* argv[], char* envp[]) {
   argv0 = argv[0];
 #endif
 
+  /*--- Phase 1: Early initialization ---*/
+
   // The very first thing we do is handle some very special command-line
   // options, since they affect how the environment is setup:
   //
@@ -93,6 +127,8 @@ int main(int argc, char* argv[], char* envp[]) {
   ::textdomain("ledger");
 #endif
 
+  /*--- Phase 2: Session and argument processing ---*/
+
   global_scope_t* global_scope = nullptr;
 
   try {
@@ -110,8 +146,10 @@ int main(int argc, char* argv[], char* envp[]) {
     bind_scope_t bound_scope(*global_scope, global_scope->report());
     args = global_scope->read_command_arguments(bound_scope, args);
 
+    /*--- Phase 3: Mode dispatch ---*/
+
     if (global_scope->HANDLED(script_)) {
-      // Ledger is being invoked as a script command interpreter
+      // Script mode: execute commands from a file, one per line
       global_scope->session().read_journal_files();
 
       status = 0;
@@ -126,10 +164,10 @@ int main(int argc, char* argv[], char* envp[]) {
           status = global_scope->execute_command_wrapper(split_arguments(p), true);
       }
     } else if (!args.empty()) {
-      // User has invoke a verb at the interactive command-line
+      // Batch mode: execute the single command from the command line
       status = global_scope->execute_command_wrapper(args, false);
     } else {
-      // Commence the REPL by displaying the current Ledger version
+      // REPL mode: interactive command loop
       global_scope->show_version_info(std::cout);
 
       global_scope->session().read_journal_files();
@@ -194,10 +232,12 @@ int main(int argc, char* argv[], char* envp[]) {
     else
       std::cerr << "Exception during initialization: " << err.what() << '\n';
   } catch (const error_count& errors) {
-    // used for a "quick" exit, and is used only if help text (such as
-    // --help) was displayed
+    // Used for a "quick" exit, and is used only if help text (such as
+    // --help or --version) was displayed
     status = static_cast<int>(errors.count);
   }
+
+  /*--- Phase 4: Shutdown ---*/
 
   // If memory verification is being performed (which can be very slow), clean
   // up everything by closing the session and deleting the session object, and

@@ -29,6 +29,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   precmd.cc
+ * @author John Wiegley
+ *
+ * @ingroup report
+ *
+ * @brief Diagnostic pre-commands: parse, eval, format, period, query.
+ *
+ * All pre-commands operate without loading journal data.  For commands
+ * that need a posting context (parse, format), a hardcoded sample
+ * transaction is created via get_sample_xact() so that expressions can
+ * be compiled and evaluated in a realistic binding environment.
+ */
+
 #include <system.hh>
 
 #include "precmd.h"
@@ -42,7 +56,21 @@
 
 namespace ledger {
 
+/*--- Sample Transaction ---*/
+
 namespace {
+
+/**
+ * @brief Create a sample transaction for use by diagnostic pre-commands.
+ *
+ * The sample transaction is a hardcoded "Book Store" purchase that
+ * exercises many ledger features: metadata, typed metadata, tags, notes,
+ * lot prices, and multiple postings.  It is parsed into the session's
+ * journal so that the resulting posting can serve as a realistic binding
+ * context for compiling and evaluating expressions or format strings.
+ *
+ * @return A pointer to the first posting of the sample transaction.
+ */
 post_t* get_sample_xact(report_t& report) {
   {
     string str;
@@ -82,6 +110,21 @@ post_t* get_sample_xact(report_t& report) {
 }
 } // namespace
 
+/*--- parse Command ---*/
+
+/**
+ * @brief The "parse" pre-command: display all stages of expression processing.
+ *
+ * Given a value expression string, this command shows:
+ *   1. The raw input expression
+ *   2. The expression as re-serialized after parsing (round-trip test)
+ *   3. The expression AST before compilation
+ *   4. The expression AST after compilation (with optimizations)
+ *   5. The calculated result value
+ *
+ * This is invaluable for debugging why an expression does not produce
+ * the expected result.
+ */
 value_t parse_command(call_scope_t& args) {
   string arg = join_args(args);
   if (arg.empty())
@@ -116,6 +159,10 @@ value_t parse_command(call_scope_t& args) {
   return NULL_VALUE;
 }
 
+/*--- eval Command ---*/
+
+/// Evaluate a value expression in the current scope and print the result.
+/// Unlike "parse", this shows only the final result, not intermediate stages.
 value_t eval_command(call_scope_t& args) {
   report_t& report(find_scope<report_t>(args));
   expr_t expr(join_args(args));
@@ -127,6 +174,11 @@ value_t eval_command(call_scope_t& args) {
   return NULL_VALUE;
 }
 
+/*--- format Command ---*/
+
+/// Parse a format string, display its internal element structure, and
+/// render it against a sample posting.  Shows both the parsed elements
+/// and the final formatted output (quoted to reveal whitespace).
 value_t format_command(call_scope_t& args) {
   string arg = join_args(args);
   if (arg.empty())
@@ -153,6 +205,11 @@ value_t format_command(call_scope_t& args) {
   return NULL_VALUE;
 }
 
+/*--- period Command ---*/
+
+/// Tokenize a period expression and display the resulting date_interval_t
+/// structure, showing how Ledger interprets period strings like
+/// "monthly from 2024/01 to 2024/06".
 value_t period_command(call_scope_t& args) {
   string arg = join_args(args);
   if (arg.empty())
@@ -170,6 +227,12 @@ value_t period_command(call_scope_t& args) {
   return NULL_VALUE;
 }
 
+/*--- query Command ---*/
+
+/// Parse a query expression (the same syntax used by "bal", "reg", etc.)
+/// and display both the limit predicate (which transactions to include)
+/// and the display predicate (which to show), each run through
+/// parse_command for full AST inspection.
 value_t query_command(call_scope_t& args) {
   report_t& report(find_scope<report_t>(args));
   std::ostream& out(report.output_stream);

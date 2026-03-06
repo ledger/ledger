@@ -29,6 +29,31 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   lookup.cc
+ * @author John Wiegley
+ *
+ * @ingroup data
+ *
+ * @brief Probabilistic payee-to-account matching using fuzzy string
+ *        scoring.
+ *
+ * The matching algorithm works in two stages:
+ *
+ *   1. **Payee scoring**: Each historical transaction's payee is scored
+ *      against the search identifier.  The score reflects how closely
+ *      the characters of the identifier appear (in order, in sequence,
+ *      at similar positions) within the payee string.  Scores below 30
+ *      are discarded.  An exact match scores 100 and stops the search.
+ *
+ *   2. **Account ranking**: The top five scoring transactions are
+ *      examined.  For each posting in those transactions, the account's
+ *      usage count is incremented by the transaction's score (with a
+ *      small recency decay).  The account with the highest total wins.
+ *      Temporary/generated accounts and the reference account are
+ *      excluded.
+ */
+
 #include <system.hh>
 
 #include "lookup.h"
@@ -36,20 +61,25 @@
 
 namespace ledger {
 
-namespace {
-using score_entry_t = std::pair<xact_t*, int>;
-using scorecard_t = std::deque<score_entry_t>;
-using char_positions_map = std::map<uint32_t, std::size_t>;
+/*--- Internal Types ---*/
 
+namespace {
+
+using score_entry_t = std::pair<xact_t*, int>;  ///< (transaction, match score)
+using scorecard_t = std::deque<score_entry_t>;   ///< Collected match scores
+using char_positions_map = std::map<uint32_t, std::size_t>; ///< Tracks last matched position per character
+
+/// Sort score entries by descending score.
 struct score_sorter {
   bool operator()(const score_entry_t& left, const score_entry_t& right) const {
     return left.second > right.second;
   }
 };
 
-using account_use_map = std::map<account_t*, int>;
-using account_use_pair = std::pair<account_t*, int>;
+using account_use_map = std::map<account_t*, int>;     ///< Account -> weighted usage count
+using account_use_pair = std::pair<account_t*, int>;   ///< Single entry in account_use_map
 
+/// Sort account usage pairs by ascending count (for use with max_element).
 struct usage_sorter {
   bool operator()(const account_use_pair& left, const account_use_pair& right) const {
     return left.second < right.second;
@@ -57,12 +87,17 @@ struct usage_sorter {
 };
 } // namespace
 
+/*--- Fuzzy Matching Algorithm ---*/
+
 std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
                                                        xacts_list::reverse_iterator iter,
                                                        const xacts_list::reverse_iterator& end,
                                                        account_t* ref_account) {
   scorecard_t scores;
 
+  // Normalize the search identifier to lowercase for case-insensitive
+  // matching.  Unicode-aware lowering is not yet implemented when
+  // Boost.Regex unicode support is unavailable.
 #if !HAVE_BOOST_REGEX_UNICODE
   string lident = ident;
   to_lower(lident);
@@ -77,6 +112,8 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
   if (ref_account != nullptr)
     DEBUG("lookup.account", "  with reference account: " << ref_account->fullname());
 #endif
+
+  /*--- Stage 1: Score each historical payee ---*/
 
   xact_t* xact;
   while (iter != end && (xact = *iter++) != nullptr) {
@@ -112,7 +149,8 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
     std::size_t pos;
     char_positions_map positions;
 
-    // Walk each letter in the source identifier
+    // Walk each letter in the source identifier, scoring how well it
+    // matches the candidate payee string.
     for (const uint32_t& ch : lowered_ident.utf32chars) {
       int addend = 0;
       bool added_bonus = false;
@@ -231,6 +269,8 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
     if (score >= 30)
       scores.push_back(score_entry_t(xact, score));
   }
+
+  /*--- Stage 2: Rank accounts by usage among top matches ---*/
 
   // Sort the results by descending score, then look at every account ever
   // used among the top five.  Rank these by number of times used.  Lastly,

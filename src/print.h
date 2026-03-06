@@ -30,14 +30,30 @@
  */
 
 /**
- * @addtogroup data
+ * @addtogroup report
  */
 
 /**
- * @file   convert.h
+ * @file   print.h
  * @author John Wiegley
+ * @brief  Handler for the `print` command -- reconstructing transactions as
+ *         human-readable text.
  *
- * @ingroup data
+ * @ingroup report
+ *
+ * The `print` command outputs transactions in a canonical text format that
+ * is itself valid Ledger input.  This allows round-tripping: the output of
+ * `ledger print` can be fed back to Ledger as a journal file.
+ *
+ * Unlike the `register` and `balance` commands which use format_t format
+ * strings, the `print` command reconstructs each transaction structurally:
+ * date, state, code, payee, metadata, and posting lines are assembled
+ * directly, with careful attention to alignment, elision of redundant
+ * amounts, and preservation of cost/price annotations.
+ *
+ * The handler collects unique transactions (via their postings) and
+ * renders them in order during flush().  A `print_raw` mode is also
+ * available, which outputs the original source text verbatim.
  */
 #pragma once
 
@@ -51,27 +67,47 @@ class xact_t;
 class post_t;
 class report_t;
 
+/**
+ * @brief Terminal handler that reconstructs transactions as canonical text.
+ *
+ * As postings flow through operator(), the handler deduplicates by
+ * transaction (each xact_t is printed only once, even if multiple postings
+ * match the query).  During flush(), transactions are printed in the order
+ * their first matching posting was seen.
+ *
+ * Two modes are supported:
+ *   - **Structured print** (default): Reconstructs the transaction from its
+ *     parsed data structures, producing clean canonical output.
+ *   - **Raw print** (print_raw = true): Outputs the original source text
+ *     verbatim via print_item().
+ */
 class print_xacts : public item_handler<post_t> {
 protected:
   using xacts_list = std::list<xact_t*>;
   using xacts_present_map = std::map<xact_t*, bool>;
 
-  report_t& report;
-  xacts_present_map xacts_present;
-  xacts_list xacts;
-  bool print_raw;
-  bool first_title;
+  report_t& report;                  ///< The report context providing options and output stream.
+  xacts_present_map xacts_present;   ///< Tracks which transactions have already been queued.
+  xacts_list xacts;                  ///< Ordered list of unique transactions to print.
+  bool print_raw;                    ///< If true, output original source text instead of reconstructing.
+  bool first_title;                  ///< Tracks whether a title separator is needed.
 
 public:
+  /// @param _report    The report context.
+  /// @param _print_raw If true, use raw source output instead of structured print.
   print_xacts(report_t& _report, bool _print_raw = false)
       : report(_report), print_raw(_print_raw), first_title(true) {
     TRACE_CTOR(print_xacts, "report&, bool");
   }
   ~print_xacts() override { TRACE_DTOR(print_xacts); }
 
+  /// @brief Print a blank line between report groups.
   void title(const string&) override;
 
+  /// @brief Render all collected transactions and flush the output stream.
   void flush() override;
+
+  /// @brief Collect the transaction that owns this posting (deduplicated).
   void operator()(post_t& post) override;
 
   void clear() override {

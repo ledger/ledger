@@ -29,6 +29,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   session.cc
+ * @author John Wiegley
+ *
+ * @ingroup report
+ *
+ * @brief Session management: journal loading, commodity initialization,
+ *        and session-level function/option lookup.
+ *
+ * The session is Ledger's "document model."  It owns the journal and is
+ * responsible for reading all data files, the price database, and stdin
+ * when "-" is given as a file.  The reading order matters because the
+ * price database is loaded first (so that commodity prices are available
+ * during journal parsing), and session-level options like --strict and
+ * --pedantic must be applied to the journal before the first line is
+ * read.
+ */
+
 #include <system.hh>
 
 #include "session.h"
@@ -40,6 +58,20 @@
 
 namespace ledger {
 
+/*--- Session Context (Global State) ---*/
+
+/**
+ * @brief Initialize or shut down global subsystems tied to the session.
+ *
+ * When @p session is non-null, this initializes the time, amount, and
+ * value subsystems and registers the built-in time unit conversions
+ * (minutes to seconds, hours to minutes).  When null, it shuts them
+ * down in reverse order.
+ *
+ * This function exists because several subsystems use file-scope static
+ * variables.  Switching the "current session" re-points those globals so
+ * that a different session's data is in scope.
+ */
 void set_session_context(session_t* session) {
   if (session) {
     times_initialize();
@@ -56,15 +88,36 @@ void set_session_context(session_t* session) {
   }
 }
 
+/*--- Construction ---*/
+
 session_t::session_t() : flush_on_next_data_file(false), journal(new journal_t) {
+  // Push an initial (empty) parsing context so that the stack is never
+  // empty during the session's lifetime.
   parsing_context.push();
 
   TRACE_CTOR(session_t, "");
 }
 
+/*--- Journal Reading ---*/
+
+/**
+ * @brief Core data-loading method that reads the price database and all
+ *        journal files.
+ *
+ * The loading sequence is:
+ *   1. Determine the data files (from --file or the default ~/.ledger).
+ *   2. Apply session-level journal flags (day_break, checking_style, etc.).
+ *   3. Read the price database if one exists.
+ *   4. Read each data file in order, accumulating transactions.
+ *   5. Verify the journal's internal consistency.
+ *
+ * When reading from stdin ("-" or "/dev/stdin"), the entire input is
+ * buffered into memory first to avoid problems with pipes and TTYs.
+ */
 std::size_t session_t::read_data(const string& master_account) {
   bool populated_data_files = false;
 
+  // If no --file was specified, try ~/.ledger as a default
   if (HANDLER(file_).data_files.empty()) {
     path file;
     if (const char* home_var = std::getenv("HOME"))
@@ -80,12 +133,14 @@ std::size_t session_t::read_data(const string& master_account) {
 
   std::size_t xact_count = 0;
 
+  // Determine the master account under which all postings will be placed
   account_t* acct;
   if (master_account.empty())
     acct = journal->master;
   else
     acct = journal->find_account(master_account);
 
+  // Resolve the price database path
   optional<path> price_db_path;
   if (HANDLED(price_db_)) {
     price_db_path = resolve_path(HANDLER(price_db_).str());
@@ -100,6 +155,9 @@ std::size_t session_t::read_data(const string& master_account) {
     }
   }
 
+  // Transfer session-level option flags to the journal object before
+  // any parsing begins, because these flags affect how the parser
+  // validates input.
   if (HANDLED(day_break))
     journal->day_break = true;
 
@@ -127,6 +185,9 @@ std::size_t session_t::read_data(const string& master_account) {
   if (HANDLED(lot_matching_))
     journal->lot_matching_policy = HANDLER(lot_matching_).policy;
 
+  // Read the price database first so that commodity prices are available
+  // during journal parsing (e.g., for balance assertions involving
+  // market values).
   if (price_db_path) {
     if (exists(*price_db_path)) {
       parsing_context.push(*price_db_path);
@@ -142,6 +203,7 @@ std::size_t session_t::read_data(const string& master_account) {
     }
   }
 
+  // Read each journal data file in order
   for (const path& pathname : HANDLER(file_).data_files) {
     if (pathname == "-" || pathname == "/dev/stdin") {
       // To avoid problems with stdin and pipes, etc., we read the entire
@@ -207,6 +269,8 @@ journal_t* session_t::read_journal_files() {
   return journal.get();
 }
 
+/*--- Programmatic API ---*/
+
 journal_t* session_t::read_journal(const path& pathname) {
   journal.reset(new journal_t);
 
@@ -244,6 +308,8 @@ void session_t::close_journal_files() {
 journal_t* session_t::get_journal() {
   return journal.get();
 }
+
+/*--- Built-in Functions ---*/
 
 value_t session_t::fn_account(call_scope_t& args) {
   // NOLINTBEGIN(bugprone-branch-clone)
@@ -299,6 +365,8 @@ value_t session_t::fn_lot_tag(call_scope_t& args) {
   else
     return NULL_VALUE;
 }
+
+/*--- Option Lookup ---*/
 
 option_t<session_t>* session_t::lookup_option(const char* p) {
   // NOLINTBEGIN(bugprone-branch-clone)
@@ -366,6 +434,8 @@ option_t<session_t>* session_t::lookup_option(const char* p) {
   // NOLINTEND(bugprone-branch-clone)
   return nullptr;
 }
+
+/*--- Symbol Lookup ---*/
 
 expr_t::ptr_op_t session_t::lookup(const symbol_t::kind_t kind, const string& name) {
   const char* p = name.c_str();

@@ -38,6 +38,26 @@
  * @author John Wiegley
  *
  * @ingroup report
+ *
+ * @brief Diagnostic pre-commands that do not require journal data.
+ *
+ * Pre-commands are special command verbs (registered as PRECOMMAND symbols)
+ * that bypass journal loading entirely.  They are used for debugging and
+ * exploring Ledger's internal representations:
+ *
+ *   - **parse**  : Show how a value expression is tokenized, parsed into
+ *                  an AST, compiled, and evaluated against a sample posting.
+ *   - **eval**   : Evaluate a value expression and print the result.
+ *   - **format** : Show how a format string is parsed into format elements
+ *                  and rendered against a sample posting.
+ *   - **period** : Tokenize and parse a period expression, displaying its
+ *                  date interval structure.
+ *   - **query**  : Parse a query expression and display both the limit and
+ *                  display predicates as compiled expression trees.
+ *
+ * Because these commands do not read the journal, they execute quickly
+ * and are invaluable for understanding why a particular expression or
+ * format string produces unexpected results.
  */
 #pragma once
 
@@ -47,10 +67,19 @@ namespace ledger {
 
 class call_scope_t;
 
+/// Show expression parsing, compilation, and evaluation stages.
 value_t parse_command(call_scope_t& args);
+
+/// Evaluate a value expression and print the result.
 value_t eval_command(call_scope_t& args);
+
+/// Show format string parsing and rendering against a sample posting.
 value_t format_command(call_scope_t& args);
+
+/// Tokenize and display a period expression's date interval structure.
 value_t period_command(call_scope_t& args);
+
+/// Parse a query expression and display its limit and display predicates.
 value_t query_command(call_scope_t& args);
 
 } // namespace ledger

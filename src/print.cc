@@ -29,6 +29,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   print.cc
+ * @author John Wiegley
+ * @brief  Implementation of the `print` command -- reconstructing
+ *         transactions as canonical text.
+ *
+ * @ingroup report
+ *
+ * The `print` command differs from `register` and `balance` in that it
+ * does not use format_t format strings.  Instead, it reconstructs each
+ * transaction line by line from parsed data structures, producing output
+ * that is itself valid Ledger journal input.
+ *
+ * Key concerns handled here include:
+ *   - Eliding redundant amounts when two postings in the same commodity
+ *     are perfect inverses of each other (a common two-posting case).
+ *   - Preserving cost annotations (`@`, `@@`), balance assignments (`=`),
+ *     virtual postings (`()` and `[]`), and per-posting clearing state.
+ *   - Aligning amounts to a configurable column width.
+ *   - Printing metadata tags and multi-line notes with proper indentation.
+ *   - Supporting `--generated` to include auto-generated postings.
+ */
 #include <system.hh>
 
 #include "print.h"
@@ -40,7 +62,21 @@
 
 namespace ledger {
 
+/*--- Helper Functions ---*/
+
 namespace {
+
+/**
+ * @brief Determine whether a posting has a "simple" amount that can be
+ *        elided in two-posting transactions.
+ *
+ * A simple amount is one that was explicitly specified by the user (not
+ * calculated), is not the result of an expression, has no balance
+ * assignment, and has no explicit cost.  When both postings in a
+ * two-posting transaction have simple amounts of the same commodity,
+ * the second posting's amount can be omitted since it is always the
+ * inverse of the first.
+ */
 bool post_has_simple_amount(const post_t& post) {
   // Is the amount the result of a computation, i.e., it wasn't
   // explicit specified by the user?
@@ -70,6 +106,22 @@ bool post_has_simple_amount(const post_t& post) {
   return true;
 }
 
+/**
+ * @brief Write a note (comment) to the output, handling line wrapping and
+ *        multi-line notes.
+ *
+ * If the note would overflow the configured column width, or if the
+ * original source had the note on its own line, it is placed on a new
+ * indented line prefixed with a semicolon.  Multi-line notes are split
+ * with each continuation line indented and prefixed.
+ *
+ * @param out               The output stream.
+ * @param note              The note text.
+ * @param note_on_next_line True if the original source placed this note
+ *                          on a separate line.
+ * @param columns           The configured terminal width (0 = unlimited).
+ * @param prior_width       Characters already written on the current line.
+ */
 void print_note(std::ostream& out, const string& note, const bool note_on_next_line,
                 const std::size_t columns, const std::size_t prior_width) {
   // The 3 is for two spaces and a semi-colon before the note.
@@ -93,6 +145,19 @@ void print_note(std::ostream& out, const string& note, const bool note_on_next_l
   }
 }
 
+/**
+ * @brief Format a posting's account name, including virtual-posting
+ *        delimiters and per-posting clearing state.
+ *
+ * Virtual postings are wrapped in `()` (non-balancing) or `[]`
+ * (must-balance).  If the transaction is uncleared but the individual
+ * posting is cleared or pending, the appropriate state marker is
+ * prepended.
+ *
+ * @param xact  The parent transaction (used to check transaction-level state).
+ * @param post  The posting whose account name to format.
+ * @return      An ostringstream containing the formatted account name.
+ */
 std::ostringstream format_account_name(xact_t& xact, post_t* post) {
   std::ostringstream pbuf;
 
@@ -119,6 +184,24 @@ std::ostringstream format_account_name(xact_t& xact, post_t* post) {
   return pbuf;
 }
 
+/*--- Transaction Reconstruction ---*/
+
+/**
+ * @brief Reconstruct a single transaction as canonical text output.
+ *
+ * This is the core of the `print` command.  It writes the transaction
+ * header (date, state, code, payee, note, metadata) followed by each
+ * posting line with its account name, amount, cost, balance assignment,
+ * and note.  The output is valid Ledger journal syntax.
+ *
+ * Amount elision: In a two-posting transaction where both postings have
+ * simple amounts of the same commodity and both must balance, the second
+ * posting's amount is omitted since Ledger can infer it.
+ *
+ * @param report  The report context (provides column widths, flags).
+ * @param out     The output stream.
+ * @param xact    The transaction to print.
+ */
 void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
   format_type_t format_type = FMT_WRITTEN;
   string format_str;
@@ -130,6 +213,7 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
     format = format_str.c_str();
   }
 
+  // Phase 1: Build the transaction header line (date, state, code, payee).
   std::ostringstream buf;
 
   buf << format_date(item_t::use_aux_date ? xact.date() : xact.primary_date(), format_type, format);
@@ -155,6 +239,7 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
                unistring(leader).length());
   out << '\n';
 
+  // Phase 2: Print transaction-level metadata tags.
   if (xact.metadata) {
     for (const item_t::string_map::value_type& data : *xact.metadata) {
       if (!data.second.second) {
@@ -168,6 +253,7 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
     }
   }
 
+  // Phase 3: Print each posting line.
   std::size_t count = xact.posts.size();
   std::size_t index = 0;
 
@@ -295,6 +381,8 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
   }
 }
 } // namespace
+
+/*--- print_xacts Handler Methods ---*/
 
 void print_xacts::title(const string&) {
   if (first_title) {

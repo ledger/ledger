@@ -38,6 +38,28 @@
  * @author John Wiegley
  *
  * @ingroup data
+ *
+ * @brief Probabilistic payee-to-account matching for transaction drafting.
+ *
+ * This module provides a fuzzy-matching algorithm that, given a payee
+ * name (or partial name), searches the journal history for the most
+ * likely matching transaction and its associated accounts.  It is the
+ * core intelligence behind Ledger's "xact" command, which drafts new
+ * transactions based on historical patterns.
+ *
+ * The algorithm scores each historical payee against the search
+ * identifier using a character-by-character similarity metric that
+ * rewards:
+ *   - Exact matches (score 100, terminates search)
+ *   - In-sequence character runs (10 points, with chain bonuses)
+ *   - In-order but non-adjacent matches (5 points)
+ *   - Proximity bonuses for nearby matches
+ *   - Position decay so that early characters weigh more heavily
+ *     (useful for credit card payees that share trailing location info)
+ *
+ * After scoring, the top five matching transactions are examined to
+ * find the most frequently used account (excluding any reference
+ * account), with a recency bias applied to break ties.
  */
 #pragma once
 
@@ -45,6 +67,22 @@
 
 namespace ledger {
 
+/**
+ * @brief Find the most probable transaction and account for a given payee.
+ *
+ * Searches backward through the journal's transaction list, scoring each
+ * payee against @p ident using a fuzzy character-matching algorithm.
+ * Returns the best-matching transaction and the most commonly used
+ * account among the top matches.
+ *
+ * @param ident        The payee name (or partial name) to search for.
+ * @param iter         Reverse iterator to the start of the transaction list.
+ * @param end          Reverse iterator past the end of the transaction list.
+ * @param ref_account  If non-null, this account is excluded from the
+ *                     account frequency count (typically the "from" account).
+ * @return A pair of (best matching transaction, most probable account).
+ *         Either or both may be null if no match scores high enough.
+ */
 std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
                                                        xacts_list::reverse_iterator iter,
                                                        const xacts_list::reverse_iterator& end,

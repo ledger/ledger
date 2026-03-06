@@ -29,6 +29,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   emacs.cc
+ * @author John Wiegley
+ * @brief  Implementation of Emacs Lisp s-expression output.
+ *
+ * @ingroup report
+ *
+ * This file produces output that Emacs's ledger-mode can read directly
+ * as Lisp data.  The format is a nested alist where each transaction is
+ * a list whose car is the transaction header and whose cdr contains the
+ * posting entries.
+ *
+ * Date formatting supports three modes controlled by --lisp-date-format:
+ *   - "epoch" / "seconds" -- Unix epoch seconds as an integer
+ *   - Custom format string -- a quoted date string
+ *   - Default (no option)  -- Emacs internal time representation
+ *     `(HIGH LOW USEC)` where HIGH*65536 + LOW = epoch seconds
+ */
 #include <system.hh>
 #include <boost/algorithm/string.hpp>
 #include "emacs.h"
@@ -40,12 +58,17 @@
 
 namespace ledger {
 
+/*--- Transaction Header ---*/
+
 void format_emacs_posts::write_xact(xact_t& xact) {
   if (xact.pos)
     out << "\"" << escape_string(xact.pos->pathname.string()) << "\" " << xact.pos->beg_line << " ";
   else
     out << "\"\" " << -1 << " ";
 
+  // Format the date according to the user's preference.  The default
+  // Emacs time format (HIGH LOW 0) splits epoch seconds into two 16-bit
+  // halves, which is the native Emacs internal time representation.
   if (report.HANDLED(lisp_date_format_)) {
     string date_format = report.HANDLER(lisp_date_format_).str();
     if (date_format == "epoch" || date_format == "seconds") {
@@ -74,8 +97,12 @@ void format_emacs_posts::write_xact(xact_t& xact) {
   out << "\n";
 }
 
+/*--- Posting Output ---*/
+
 void format_emacs_posts::operator()(post_t& post) {
   if (!post.has_xdata() || !post.xdata().has_flags(POST_EXT_DISPLAYED)) {
+    // Manage the nesting structure: start a new transaction group or
+    // continue the current one.
     if (!last_xact) {
       out << "((";
       write_xact(*post.xact);
@@ -86,6 +113,7 @@ void format_emacs_posts::operator()(post_t& post) {
       out << "\n";
     }
 
+    // Each posting is a list: (LINE-NUM "ACCOUNT" "AMOUNT" STATE ["COST"] ["NOTE"])
     if (post.pos)
       out << "  (" << post.pos->beg_line << " ";
     else
@@ -94,6 +122,7 @@ void format_emacs_posts::operator()(post_t& post) {
     out << "\"" << escape_string(post.reported_account()->fullname()) << "\" \""
         << escape_string(post.amount) << "\"";
 
+    // Clearing state: nil = uncleared, t = cleared, pending = pending
     switch (post.state()) {
     case item_t::UNCLEARED:
       out << " nil";
@@ -117,6 +146,8 @@ void format_emacs_posts::operator()(post_t& post) {
     post.xdata().add_flags(POST_EXT_DISPLAYED);
   }
 }
+
+/*--- String Escaping ---*/
 
 string format_emacs_posts::escape_string(string raw) {
   replace_all(raw, "\\", "\\\\");

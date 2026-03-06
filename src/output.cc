@@ -29,6 +29,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   output.cc
+ * @author John Wiegley
+ * @brief  Implementation of posting and account output handlers.
+ *
+ * @ingroup report
+ *
+ * This file implements the terminal handlers in the filter chain that
+ * produce user-visible output.  The two main classes are format_posts
+ * (for the `register` command) and format_accounts (for the `balance`
+ * command).  Additionally, simpler listing handlers for the `accounts`,
+ * `payees`, `tags`, and `commodities` commands are implemented here.
+ *
+ * Each handler follows the same pattern:
+ *   1. operator() is called once per item (posting or account) by the
+ *      upstream filter.
+ *   2. flush() is called when all items have been delivered, to finalize
+ *      output (e.g., print totals, flush the stream).
+ */
 #include <system.hh>
 
 #include "output.h"
@@ -41,10 +60,16 @@
 
 namespace ledger {
 
+/*--- format_posts: Register Command Output ---*/
+
 format_posts::format_posts(report_t& _report, const string& format,
                            const optional<string>& _prepend_format, std::size_t _prepend_width)
     : report(_report), prepend_width(_prepend_width), last_xact(nullptr), last_post(nullptr),
       first_report_title(true) {
+  // Split the format string on "%/" into up to three sub-formats:
+  //   first_line_format %/ next_lines_format %/ between_format
+  // The next_lines and between formats can use %$N to back-reference
+  // expression fields from the first_line_format.
   const char* f = format.c_str();
 
   if (const char* p = std::strstr(f, "%/")) {
@@ -75,11 +100,16 @@ void format_posts::flush() {
 }
 
 void format_posts::operator()(post_t& post) {
+  // Skip postings that have already been displayed (deduplication flag
+  // set by the POST_EXT_DISPLAYED xdata flag).
   if (!post.has_xdata() || !post.xdata().has_flags(POST_EXT_DISPLAYED)) {
     std::ostream& out(report.output_stream);
 
+    // Bind the current posting into the scope so that format expressions
+    // like %(account), %(amount), etc. resolve against this posting.
     bind_scope_t bound_scope(report, post);
 
+    // Print a group title if one was set by an upstream grouping filter.
     if (!report_title.empty()) {
       if (first_report_title)
         first_report_title = false;
@@ -99,6 +129,10 @@ void format_posts::operator()(post_t& post) {
       out << prepend_format(bound_scope);
     }
 
+    // Select which sub-format to use:
+    //   - New transaction: print between_format (separator), then first_line_format
+    //   - Same transaction but different date: re-use first_line_format
+    //   - Same transaction and date: use next_lines_format (compact form)
     // NOLINTBEGIN(bugprone-branch-clone)
     if (last_xact != post.xact) {
       if (last_xact) {
@@ -118,6 +152,8 @@ void format_posts::operator()(post_t& post) {
     last_post = &post;
   }
 }
+
+/*--- format_accounts: Balance Command Output ---*/
 
 format_accounts::format_accounts(report_t& _report, const string& format,
                                  const optional<string>& _prepend_format,
@@ -261,7 +297,12 @@ void format_accounts::operator()(account_t& account) {
   posted_accounts.push_back(&account);
 }
 
+/*--- report_accounts: Account Listing ---*/
+
 namespace {
+/// @brief Recursively collect all accounts marked as ACCOUNT_KNOWN into the
+///        map, so that accounts referenced in the journal but not matched by
+///        the current query still appear in the `accounts` listing.
 void collect_known_accounts(account_t& account, report_accounts::accounts_report_map& accounts) {
   if (account.has_flags(ACCOUNT_KNOWN) && accounts.find(&account) == accounts.end())
     accounts.insert(report_accounts::accounts_report_map::value_type(&account, 0));
@@ -308,6 +349,8 @@ void report_accounts::operator()(post_t& post) {
     (*i).second++;
 }
 
+/*--- report_payees: Payee Listing ---*/
+
 void report_payees::flush() {
   std::ostream& out(report.output_stream);
 
@@ -325,6 +368,8 @@ void report_payees::operator()(post_t& post) {
   else
     (*i).second++;
 }
+
+/*--- report_tags: Tag Listing ---*/
 
 void report_tags::flush() {
   std::ostream& out(report.output_stream);
@@ -356,6 +401,8 @@ void report_tags::operator()(post_t& post) {
   gather_metadata(*post.xact);
   gather_metadata(post);
 }
+
+/*--- report_commodities: Commodity Listing ---*/
 
 void report_commodities::flush() {
   std::ostream& out(report.output_stream);
