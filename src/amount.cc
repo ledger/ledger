@@ -1763,8 +1763,11 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
     char* t = buf.get();
 
     while (*p) {
-      if (*p == ',' || *p == '.' || *p == '\'')
+      if (*p == ',' || *p == '.' || *p == '\'') {
         p++;
+        if (!*p)
+          break;
+      }
       *t++ = *p++;
     }
     *t = '\0';
