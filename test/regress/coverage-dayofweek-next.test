@@ -13,7 +13,7 @@
     Expenses:Food   $40.00
     Assets:Cash
 
-test reg --now 2026/03/03 --end "next friday"
+test reg --end "next friday" --now 2026/03/03
 26-Mar-02 Monday tx             Expenses:Food                $20.00       $20.00
                                 Assets:Cash                 $-20.00            0
 26-Mar-03 Tuesday tx            Expenses:Food                $30.00       $30.00

@@ -465,6 +465,30 @@ void global_scope_t::read_environment_settings(char* envp[]) {
 strings_list global_scope_t::read_command_arguments(scope_t& scope, strings_list args) {
   TRACE_START(arguments, 1, "Processed command-line arguments");
 
+  // Pre-scan for --now so that date-relative options (--begin, --end) that
+  // appear earlier on the command line resolve against the correct epoch.
+  // The --now handler is idempotent, so processing it again during the
+  // normal pass is harmless.
+  for (auto i = args.begin(); i != args.end(); ++i) {
+    if ((*i)[0] != '-' || (*i)[1] != '-')
+      continue;
+    const char* arg = (*i).c_str() + 2;
+    const char* value = nullptr;
+    if (std::strcmp(arg, "now") == 0) {
+      auto next = std::next(i);
+      if (next != args.end())
+        value = (*next).c_str();
+    } else if (std::strncmp(arg, "now=", 4) == 0) {
+      value = arg + 4;
+    }
+    if (value) {
+      date_interval_t interval(value);
+      if (optional<date_t> begin = interval.begin())
+        ledger::epoch = datetime_t(*begin);
+      break;
+    }
+  }
+
   strings_list remaining = process_arguments(std::move(args), scope);
 
   TRACE_FINISH(arguments, 1);
