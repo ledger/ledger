@@ -904,8 +904,8 @@ void changed_value_posts::flush() {
       // the correct market value at its end date, and extra intra-period
       // revaluations would create unwanted extra data points for gnuplot
       // (issue #984).
-      bool suppress_for_plot = report.HANDLED(period_) &&
-                               (report.HANDLED(amount_data) || report.HANDLED(total_data));
+      bool suppress_for_plot =
+          report.HANDLED(period_) && (report.HANDLED(amount_data) || report.HANDLED(total_data));
       if (!for_accounts_report && !suppress_for_plot)
         output_intermediate_prices(*last_post, report.terminus.date());
       output_revaluation(*last_post, report.terminus.date());
@@ -1141,8 +1141,8 @@ void changed_value_posts::operator()(post_t& post) {
       // In plot mode (-j/-J) combined with period mode (-M/--period),
       // suppress intermediate price entries between periods so that each
       // period produces exactly one data point for gnuplot (issue #984).
-      bool suppress_for_plot = report.HANDLED(period_) &&
-                               (report.HANDLED(amount_data) || report.HANDLED(total_data));
+      bool suppress_for_plot =
+          report.HANDLED(period_) && (report.HANDLED(amount_data) || report.HANDLED(total_data));
       if (!for_accounts_report && !historical_prices_only && !suppress_for_plot)
         output_intermediate_prices(*last_post, post.value_date());
 
