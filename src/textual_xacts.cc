@@ -583,6 +583,17 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
             }
           }
         }
+      } else if (!post->amount.is_null() && !defer_expr &&
+                 commodity_pool_t::current_pool->default_commodity) {
+        // Apply the default commodity (from a 'D' or 'commodity ... default'
+        // directive) to amounts that were parsed without an explicit commodity,
+        // but only for regular and periodic transactions.  Automated transactions
+        // use defer_expr=true and their commodityless amounts are multipliers
+        // (e.g. 0.062 means "6.2% of the matched amount"), not literal values.
+        post->amount.set_commodity(*commodity_pool_t::current_pool->default_commodity);
+        context.journal->register_commodity(post->amount.commodity(), post.get());
+        DEBUG("textual.parse", "line " << context.linenum << ": "
+                                       << "Applied default commodity to amount: " << post->amount);
       }
 
       if (stream.eof()) {
