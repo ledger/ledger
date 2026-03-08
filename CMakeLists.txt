@@ -238,6 +238,12 @@ if(USE_GPGME)
   find_package(Gpgmepp ${Required_Gpgmepp_Version} REQUIRED)
   set(HAVE_GPGME 1)
   include_directories(SYSTEM ${Gpgmepp_INCLUDE_DIRS})
+  # gpgmepp headers include <gpg-error.h>, which lives in the separate
+  # libgpg-error package.  The Gpgmepp cmake config does not propagate
+  # libgpg-error's include path, so add it explicitly when available.
+  if(LibGpgError_INCLUDE_DIR)
+    include_directories(SYSTEM ${LibGpgError_INCLUDE_DIR})
+  endif()
   link_directories(${Gpgmepp_LIBRARY_DIRS})
 else()
   set(HAVE_GPGME 0)

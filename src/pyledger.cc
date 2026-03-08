@@ -32,6 +32,7 @@
 #include <ledger.hh>
 
 #include "pyinterp.h"
+#include "report.h"
 
 using namespace boost::python;
 
@@ -61,6 +62,20 @@ BOOST_PYTHON_MODULE(ledger) {
     python_session.reset(new python_interpreter_t);
 
   set_session_context(python_session.get());
+
+  // When imported as a standalone Python module (not via the ledger CLI),
+  // global_scope_t is never created, so default_scope and empty_scope are
+  // still null.  Initialize them here, before initialize_for_python() calls
+  // export_session(), so that export_session() captures the correct and
+  // stable python_session pointer.  Without this, a second python_session
+  // reset inside initialize_for_python() would replace the object whose raw
+  // pointer was already registered as the Python `session` attribute, leaving
+  // it dangling (GitHub issue #2163).
+  if (!scope_t::default_scope) {
+    std::shared_ptr<session_t> session_ptr = python_session;
+    scope_t::default_scope = new report_t(*session_ptr);
+    scope_t::empty_scope   = new empty_scope_t;
+  }
 
   initialize_for_python();
 }
