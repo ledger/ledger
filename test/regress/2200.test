@@ -1,0 +1,13 @@
+; Regression test for issue #2200:
+; The `generate` precommand was producing no output because
+; generate_posts_iterator::increment() was never called in the constructor,
+; leaving m_node as nullptr and making the iterator appear empty.
+
+test generate --seed=2200 --head=1
+2206/04/08 * (J) g1pc4
+    ; jVh:Cd17aX8:LIovN6:jx9Ph:B j:LCIb71a
+    [g5:o 984hbL7:r]                             2918.78db
+    ; eEb6I
+    [Uo:3jv0QXd1p:Y S7531qTfMX:eESL7QKebYaE3p]  811.313 np @@ 8579.06 viG
+    [J9R52W:fHvFnw]
+end test
