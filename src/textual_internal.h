@@ -242,6 +242,8 @@ public:
   void default_account_directive(
       char* args); ///< Handle legacy `A` directive (default account for unbalanced postings)
   void alias_directive(char* line); ///< Handle top-level `alias Name=Account` directive
+  void command_alias_directive(
+      char* line); ///< Handle top-level `command Name = verb [options]` directive
 
   /*--- Payee Directives ---*/
 

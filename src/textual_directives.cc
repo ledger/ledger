@@ -576,6 +576,32 @@ void instance_t::alias_directive(char* line) {
   }
 }
 
+void instance_t::command_alias_directive(char* line) {
+  // Parse "NAME = EXPANSION" where EXPANSION is a ledger command with optional arguments.
+  char* e = std::strchr(line, '=');
+  if (!e)
+    throw_(parse_error,
+           _("Command alias directive requires '=': command NAME = verb [options]"));
+
+  char* z = e - 1;
+  while (std::isspace(static_cast<unsigned char>(*z)))
+    *z-- = '\0';
+  *e++ = '\0';
+  e = skip_ws(e);
+
+  string name(line);
+  trim(name);
+  string expansion(e);
+  trim(expansion);
+
+  if (name.empty())
+    throw_(parse_error, _("Command alias directive requires a name before '='"));
+  if (expansion.empty())
+    throw_(parse_error, _f("Command alias '%1%' requires an expansion after '='") % name);
+
+  context.journal->command_aliases[name] = expansion;
+}
+
 void instance_t::account_payee_directive(account_t* account, string payee) {
   trim(payee);
   context.journal->payees_for_unknown_accounts.push_back(account_mapping_t(mask_t(payee), account));
@@ -904,6 +930,9 @@ bool instance_t::general_directive(char* line) {
   case 'c':
     if (std::strcmp(p, "check") == 0) {
       check_directive(arg);
+      return true;
+    } else if (std::strcmp(p, "command") == 0) {
+      command_alias_directive(arg);
       return true;
     } else if (std::strcmp(p, "comment") == 0) {
       comment_directive(arg);

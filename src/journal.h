@@ -157,6 +157,8 @@ public:
   account_mappings_t account_mappings; ///< Regex-to-account mappings for automatic categorization.
   account_rewrite_mappings_t account_rewrite_mappings; ///< Regex-based account name rewrite rules.
   accounts_map account_aliases; ///< Account alias map from `alias Name=Target` directives.
+  std::map<string, string>
+      command_aliases; ///< Command alias map from `command Name = verb [options]` directives.
   account_mappings_t
       payees_for_unknown_accounts; ///< Payee-to-account mapping for resolving "Unknown" accounts.
   checksum_map_t checksum_map;     ///< UUID-to-transaction map for duplicate detection.

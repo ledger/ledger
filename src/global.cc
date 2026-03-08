@@ -234,7 +234,7 @@ void global_scope_t::execute_command(strings_list args, bool at_repl) {
   }
 
   strings_list::iterator arg = args.begin();
-  const string verb = *arg++; // NOLINT(bugprone-unused-local-non-trivial-variable)
+  string verb = *arg++; // NOLINT(bugprone-unused-local-non-trivial-variable)
 
   // Phase 2: Look for a precommand first, which is defined as any defined
   // function whose name starts with "ledger_precmd_".  The difference
@@ -268,6 +268,33 @@ void global_scope_t::execute_command(strings_list args, bool at_repl) {
       // (fixes #2071).
       item_t::use_aux_date = (report().HANDLED(aux_date) && !report().HANDLED(primary_date));
       session().read_journal_files();
+    }
+
+    // Expand command aliases defined via the `command` directive.
+    // This runs after journal loading so that aliases from both the init
+    // file and journal data files are available.  Example:
+    //   command monthly = bal --period "this month"
+    // The expansion is split into tokens, any options it contains are
+    // applied to the report scope, and the resulting verb replaces the
+    // original alias name.  Alias expansion is not recursive.
+    {
+      const auto alias_it = session().journal->command_aliases.find(verb);
+      if (alias_it != session().journal->command_aliases.end()) {
+        strings_list expanded = split_arguments(alias_it->second.c_str());
+        if (expanded.empty())
+          throw_(std::logic_error,
+                 _f("Command alias '%1%' expands to an empty command") % verb);
+        // Append remaining user-supplied args after the alias expansion
+        expanded.insert(expanded.end(), arg, args.end());
+        // Apply any options embedded in the expansion to the report scope,
+        // returning only the non-option args (new verb + account patterns)
+        args = read_command_arguments(report(), std::move(expanded));
+        if (args.empty())
+          throw_(std::logic_error,
+                 _f("Command alias '%1%' expands to nothing after option processing") % verb);
+        arg = args.begin();
+        verb = *arg++;
+      }
     }
 
     report().normalize_options(verb);
