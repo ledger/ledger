@@ -123,11 +123,10 @@ std::optional<price_point_t> commodity_quote_from_script(commodity_t& commodity,
     }
   } else {
     if (cmd_failed)
-      warning_(std::string("Price quote script failed for commodity '")
-               + commodity.symbol() + "'");
+      warning_(std::string("Price quote script failed for commodity '") + commodity.symbol() + "'");
     else
-      warning_(std::string("Price quote script returned no usable price for commodity '")
-               + commodity.symbol() + "'");
+      warning_(std::string("Price quote script returned no usable price for commodity '") +
+               commodity.symbol() + "'");
 
     DEBUG("commodity.download", "Failed to download price for '"
                                     << commodity.symbol() << "' (command: \""
