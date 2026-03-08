@@ -1,0 +1,15 @@
+P 2022/01/01 VTI $100.00
+P 2022/06/01 VTI $150.00
+P 2022/06/02 VTI $155.00
+P 2022/01/01 BND $80.00
+P 2022/06/01 BND $82.00
+
+2022/01/15 Investment
+    Assets:Investments:VTI  10 VTI @ $100.00
+    Assets:Investments:BND  5 BND @ $80.00
+    Assets:Checking         $-1,400.00
+
+test prices --latest
+2022/06/01 BND            $82.00
+2022/06/02 VTI           $155.00
+end test
