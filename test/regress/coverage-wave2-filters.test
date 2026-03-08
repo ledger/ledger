@@ -63,6 +63,8 @@ P 2024/03/01 AAPL $170.00
 
 test reg --market --monthly -e 2024/04/01 Assets:Brokerage
 24-Jan-01 - 24-Jan-31           Assets:Brokerage           $1500.00     $1500.00
+24-Feb-01 Commodities revalued  <Revalued>                  $100.00     $1600.00
+24-Mar-01 Commodities revalued  <Revalued>                  $100.00     $1700.00
 end test
 
 ; Test --collapse flag - covers related filter paths

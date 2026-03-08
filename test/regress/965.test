@@ -22,4 +22,5 @@ P 2024/01/30 EUR 1.25 USD
 
 test reg --gain --subtotal
 24-Jan-10 - 24-Jan-20           Assets:Investments        10.00 USD    10.00 USD
+24-Jan-30 Commodities revalued  <Revalued>                 5.00 USD    15.00 USD
 end test
