@@ -78,6 +78,7 @@ std::optional<price_point_t> commodity_quote_from_script(commodity_t& commodity,
   DEBUG("commodity.download", "invoking command: " << getquote_cmd);
 
   bool success = true;
+  bool cmd_failed = false; // popen failed or command exited non-zero
 #if !defined(_WIN32) && !defined(__CYGWIN__)
   if (FILE* fp = popen(getquote_cmd.c_str(), "r")) {
     if (std::feof(fp) || !std::fgets(buf, sizeof(buf), fp)) {
@@ -96,10 +97,13 @@ std::optional<price_point_t> commodity_quote_from_script(commodity_t& commodity,
         success = false; // Don't process truncated output
       }
     }
-    if (pclose(fp) != 0)
+    if (pclose(fp) != 0) {
       success = false;
+      cmd_failed = true;
+    }
   } else {
     success = false;
+    cmd_failed = true;
   }
 
   if (success && buf[0]) {
@@ -118,6 +122,13 @@ std::optional<price_point_t> commodity_quote_from_script(commodity_t& commodity,
       return point->second;
     }
   } else {
+    if (cmd_failed)
+      warning_(std::string("Price quote script failed for commodity '")
+               + commodity.symbol() + "'");
+    else
+      warning_(std::string("Price quote script returned no usable price for commodity '")
+               + commodity.symbol() + "'");
+
     DEBUG("commodity.download", "Failed to download price for '"
                                     << commodity.symbol() << "' (command: \""
                                     << (commodity_pool_t::current_pool->getquote
