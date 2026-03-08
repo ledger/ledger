@@ -1544,6 +1544,12 @@ void date_parser_t::finalize_period(date_interval_t& period,
  *
  * After all tokens are consumed, finalize_period() assembles these
  * into the interval's range field.
+ *
+ * If an unrecognized word is encountered after at least one valid period
+ * component has been parsed, parsing stops silently.  This lets periodic
+ * transaction headers carry a free-text description (payee name) after
+ * the period expression without triggering an error.  An unrecognized
+ * word as the very first token is still an error.
  */
 date_interval_t date_parser_t::parse() {
   optional<date_specifier_t> since_specifier;
@@ -1553,10 +1559,11 @@ date_interval_t date_parser_t::parse() {
   date_interval_t period;
   date_t today = CURRENT_DATE();
   bool end_inclusive = false;
+  bool stop_parsing = false;
 
   // Main parsing loop - process tokens sequentially
-  for (lexer_t::token_t tok = lexer.next_token(); tok.kind != lexer_t::token_t::END_REACHED;
-       tok = lexer.next_token()) {
+  for (lexer_t::token_t tok = lexer.next_token();
+       !stop_parsing && tok.kind != lexer_t::token_t::END_REACHED; tok = lexer.next_token()) {
 
     switch (tok.kind) {
     // Simple date/time specifiers
@@ -1616,7 +1623,17 @@ date_interval_t date_parser_t::parse() {
       break;
 
     default:
-      tok.unexpected();
+      // An UNKNOWN token is an unrecognized word.  If at least one period
+      // component has been parsed, stop gracefully so that a trailing
+      // free-text description (e.g. a payee name like "YouTube Premium")
+      // in a periodic transaction header is silently ignored.  A
+      // recognized punctuation token (TOK_SLASH, TOK_DOT, etc.) or an
+      // UNKNOWN word as the very first token is still a hard error.
+      if (tok.kind == lexer_t::token_t::UNKNOWN &&
+          (period.duration || since_specifier || until_specifier || inclusion_specifier))
+        stop_parsing = true;
+      else
+        tok.unexpected();
       break;
     }
   }

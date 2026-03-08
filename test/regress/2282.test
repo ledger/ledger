@@ -1,0 +1,21 @@
+; Regression test for issue #2282
+; A periodic transaction header with a free-text description after the
+; period expression should parse without error.  Before this fix,
+; "~ every month from 2023/10/06  YouTube Premium" would throw:
+;   Error: Unexpected date period token 'youtube'
+
+~ every month from 2023/10/06  YouTube Premium
+    Assets:Checking     $-13.99
+    Expenses:Entertainment
+
+2023/10/06 YouTube Premium
+    Assets:Checking     $-13.99
+    Expenses:Entertainment
+
+test balance Expenses
+              $13.99  Expenses:Entertainment
+end test
+
+test balance Assets
+             $-13.99  Assets:Checking
+end test
