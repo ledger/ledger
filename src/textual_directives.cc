@@ -580,8 +580,7 @@ void instance_t::command_alias_directive(char* line) {
   // Parse "NAME = EXPANSION" where EXPANSION is a ledger command with optional arguments.
   char* e = std::strchr(line, '=');
   if (!e)
-    throw_(parse_error,
-           _("Command alias directive requires '=': command NAME = verb [options]"));
+    throw_(parse_error, _("Command alias directive requires '=': command NAME = verb [options]"));
 
   char* z = e - 1;
   while (std::isspace(static_cast<unsigned char>(*z)))

@@ -282,8 +282,7 @@ void global_scope_t::execute_command(strings_list args, bool at_repl) {
       if (alias_it != session().journal->command_aliases.end()) {
         strings_list expanded = split_arguments(alias_it->second.c_str());
         if (expanded.empty())
-          throw_(std::logic_error,
-                 _f("Command alias '%1%' expands to an empty command") % verb);
+          throw_(std::logic_error, _f("Command alias '%1%' expands to an empty command") % verb);
         // Append remaining user-supplied args after the alias expansion
         expanded.insert(expanded.end(), arg, args.end());
         // Apply any options embedded in the expansion to the report scope,
