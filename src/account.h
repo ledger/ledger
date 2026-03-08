@@ -337,10 +337,14 @@ public:
 
     std::list<sort_value_t> sort_values; ///< Cached sort-key values for the accounts report.
 
+    value_t running_total; ///< Per-account running total maintained by calc_posts during
+                           ///< register output; used by the account_total expression.
+
     xdata_t() : supports_flags<>() { TRACE_CTOR(account_t::xdata_t, ""); }
     xdata_t(const xdata_t& other)
         : supports_flags<>(other.flags()), self_details(other.self_details),
-          family_details(other.family_details), sort_values(other.sort_values) {
+          family_details(other.family_details), sort_values(other.sort_values),
+          running_total(other.running_total) {
       TRACE_CTOR(account_t::xdata_t, "copy");
     }
     ~xdata_t() noexcept { TRACE_DTOR(account_t::xdata_t); }

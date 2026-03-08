@@ -402,6 +402,14 @@ value_t get_count(post_t& post) {
     return 1L;
 }
 
+value_t get_account_total(post_t& post) {
+  account_t* acct = post.reported_account();
+  if (acct->has_xdata() && !acct->xdata().running_total.is_null())
+    return acct->xdata().running_total;
+  else
+    return 0L;
+}
+
 /**
  * @brief Return the posting's account, with optional formatting.
  *
@@ -605,6 +613,8 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind, const string& name)
       return WRAP_FUNCTOR(get_wrapper<&get_account_base>);
     else if (name == "account_id")
       return WRAP_FUNCTOR(get_wrapper<&get_account_id>);
+    else if (name == "account_total")
+      return WRAP_FUNCTOR(get_wrapper<&get_account_total>);
     else if (name == "any")
       return WRAP_FUNCTOR(&fn_any);
     else if (name == "all")

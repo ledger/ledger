@@ -1,0 +1,29 @@
+; Test case for issue #2297
+; The account_total expression returns the per-account running balance
+; instead of the global running total across all accounts.
+;
+; Without account_total, `reg` shows the global running total which
+; resets to zero at the end of each balanced transaction.
+; With -T account_total, each posting shows the cumulative balance
+; for that specific account across all transactions.
+
+2024/01/01 Opening Balance
+    Assets:Checking    $1000.00
+    Equity:Opening Balances
+
+2024/01/05 Grocery Store
+    Expenses:Food    $100.00
+    Assets:Checking
+
+2024/01/10 More Groceries
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg -T account_total
+24-Jan-01 Opening Balance       Assets:Checking            $1000.00     $1000.00
+                                Equit:Opening Balances    $-1000.00    $-1000.00
+24-Jan-05 Grocery Store         Expenses:Food               $100.00      $100.00
+                                Assets:Checking            $-100.00      $900.00
+24-Jan-10 More Groceries        Expenses:Food                $50.00      $150.00
+                                Assets:Checking             $-50.00      $850.00
+end test
