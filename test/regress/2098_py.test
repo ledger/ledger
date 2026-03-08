@@ -1,0 +1,3 @@
+test python test/regress/2098.py
+read_journal_files() assertion is not triggered on repeated reads
+end test
