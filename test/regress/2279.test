@@ -1,0 +1,31 @@
+; Regression test for issue #2279: Modeling dividends from stock holdings
+; Demonstrates recording dividends as income alongside capital gains
+
+2004/05/01 Stock purchase
+    Assets:Broker                     50 AAPL @ $30.00
+    Expenses:Broker:Commissions        $19.95
+    Assets:Broker                  $-1,519.95
+
+2004/08/15 AAPL Dividend
+    Assets:Broker                     $25.00
+    Income:Dividends:AAPL
+
+2005/08/01 Stock sale
+    Assets:Broker                    -50 AAPL {$30.00} @ $50.00
+    Expenses:Broker:Commissions        $19.95
+    Income:Capital Gains           $-1,000.00
+    Assets:Broker                   $2,480.05
+
+; Query dividend income by stock
+test bal Income:Dividends:AAPL
+             $-25.00  Income:Dividends:AAPL
+end test
+
+; Query combined income including dividends and capital gains
+test bal "Income:Capital Gains" "Income:Dividends:AAPL"
+          $-1,025.00  Income
+          $-1,000.00    Capital Gains
+             $-25.00    Dividends:AAPL
+--------------------
+          $-1,025.00
+end test

@@ -1825,6 +1825,7 @@ in two lines since we haven't told ledger to convert commodities.
 @menu
 * Naming Commodities::
 * Buying and Selling Stock::
+* Dividends::
 * Fixing Lot Prices::
 * Complete control over commodity pricing::
 @end menu
@@ -1852,7 +1853,7 @@ Please note that, for querying quoted commodities, the quotes need to be escaped
 $ ledger -f d reg -l 'commodity == "\"Arcancia Équilibre 454\""'
 @end smallexample
 
-@node Buying and Selling Stock, Fixing Lot Prices, Naming Commodities, Currency and Commodities
+@node Buying and Selling Stock, Dividends, Naming Commodities, Currency and Commodities
 @subsection Buying and Selling Stock
 @cindex buying stock
 
@@ -1889,7 +1890,42 @@ The @samp{@{$30.00@}} is a lot price.  You can also use a lot date,
 same price/date and your taxation model is based on
 longest-held-first.
 
-@node Fixing Lot Prices, Complete control over commodity pricing, Buying and Selling Stock, Currency and Commodities
+@node Dividends, Fixing Lot Prices, Buying and Selling Stock, Currency and Commodities
+@subsection Dividends
+@cindex dividends
+@cindex stock dividends
+
+Dividends received from stock holdings can be modeled as income.  The
+simplest approach credits the cash account and debits an income account
+specific to the stock:
+
+@smallexample @c input:validate
+2004/05/01 Stock purchase
+    Assets:Broker                     50 AAPL @@ $30.00
+    Expenses:Broker:Commissions        $19.95
+    Assets:Broker                  $-1,519.95
+
+2004/08/15 AAPL Dividend
+    Assets:Broker                     $25.00
+    Income:Dividends:AAPL
+@end smallexample
+
+Using a per-stock income sub-account (e.g., @samp{Income:Dividends:AAPL})
+makes it easy to query dividend income by stock:
+
+@example
+$ ledger bal Income:Dividends:AAPL
+@end example
+
+When you later sell the stock and want a complete picture of your
+return on a particular holding, you can query both the capital gain and
+the dividends received:
+
+@example
+$ ledger bal Income:Capital\ Gains Income:Dividends:AAPL
+@end example
+
+@node Fixing Lot Prices, Complete control over commodity pricing, Dividends, Currency and Commodities
 @subsection Fixing Lot Prices
 @cindex fixing lot prices
 @cindex consumable commodity pricing
