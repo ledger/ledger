@@ -1,0 +1,18 @@
+; Regression test for issue #2095
+; The 'D' directive sets a default commodity that is applied to subsequent
+; commodityless amounts (plain numbers) seen while parsing the journal.
+; This mirrors hledger's 'D' directive behaviour.
+
+D 1000.00 $
+
+2022-01-01 Groceries
+  Expenses:Food     10
+  Assets:Cash      -10
+
+test reg Expenses:Food
+22-Jan-01 Groceries             Expenses:Food               10.00 $      10.00 $
+end test
+
+test bal Expenses:Food
+             10.00 $  Expenses:Food
+end test

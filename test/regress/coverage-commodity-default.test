@@ -8,8 +8,8 @@ commodity EUR
     Assets:Checking
 
 test bal
-                 -10  Assets:Checking
-                  10  Expenses:Food
+              EUR-10  Assets:Checking
+               EUR10  Expenses:Food
 --------------------
                    0
 end test
