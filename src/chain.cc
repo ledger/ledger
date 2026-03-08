@@ -132,8 +132,7 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t
       handler = std::make_shared<filter_posts>(
           handler, predicate_t(report.HANDLER(limit_).str(), report.what_to_keep()), report);
   } else if (report.HANDLED(expand_period)) {
-    auto expand_handler =
-        std::make_shared<expand_posts>(handler, report.terminus.date());
+    auto expand_handler = std::make_shared<expand_posts>(handler, report.terminus.date());
     expand_handler->add_period_xacts(report.session.journal->period_xacts);
     handler = expand_handler;
 
