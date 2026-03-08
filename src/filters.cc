@@ -899,7 +899,15 @@ changed_value_posts::changed_value_posts(post_handler_ptr handler, report_t& _re
 void changed_value_posts::flush() {
   if (last_post && last_post->date() <= report.terminus.date()) {
     if (!historical_prices_only) {
-      if (!for_accounts_report)
+      // In plot mode (-j/-J) combined with period mode (-M/--period),
+      // suppress intermediate price entries: each period already reflects
+      // the correct market value at its end date, and extra intra-period
+      // revaluations would create unwanted extra data points for gnuplot
+      // (issue #984).
+      bool suppress_for_plot =
+          report.HANDLED(period_) &&
+          (report.HANDLED(amount_data) || report.HANDLED(total_data));
+      if (!for_accounts_report && !suppress_for_plot)
         output_intermediate_prices(*last_post, report.terminus.date());
       output_revaluation(*last_post, report.terminus.date());
     }
@@ -917,17 +925,37 @@ void changed_value_posts::flush() {
  * reports) or the equity gain/loss accounts (balance reports with --unrealized).
  */
 void changed_value_posts::output_revaluation(post_t& post, const date_t& date) {
-  if (is_valid(date))
-    post.xdata().date = date;
+  // When interval_posts creates period-end synthetic postings, it sets
+  // xdata.value_date = range_finish (the period-end date).  Because
+  // get_value_date() checks xdata.value_date before falling back to date(),
+  // simply setting xdata.date (as done below) is insufficient: the
+  // market(display_total, value_date, exchange) expression would still use
+  // the period-end date rather than the requested revaluation date.
+  // Save and restore xdata.value_date so that intermediate price dates are
+  // correctly used when called from output_intermediate_prices.
+  date_t saved_value_date;
+  const bool date_overridden = is_valid(date);
+  if (date_overridden) {
+    post_t::xdata_t& xdata(post.xdata());
+    saved_value_date = xdata.value_date;
+    xdata.date       = date;
+    xdata.value_date = date;
+  }
 
   try {
     bind_scope_t bound_scope(report, post);
     repriced_total = total_expr.calc(bound_scope);
   } catch (...) {
-    post.xdata().date = date_t();
+    if (date_overridden) {
+      post.xdata().date       = date_t();
+      post.xdata().value_date = saved_value_date;
+    }
     throw;
   }
-  post.xdata().date = date_t();
+  if (date_overridden) {
+    post.xdata().date       = date_t();
+    post.xdata().value_date = saved_value_date;
+  }
 
   DEBUG("filters.changed_value", "output_revaluation(last_total)     = " << last_total);
   DEBUG("filters.changed_value", "output_revaluation(repriced_total) = " << repriced_total);
@@ -1111,7 +1139,13 @@ void changed_value_posts::operator()(post_t& post) {
     // transaction (e.g., stock splits with multiple prices on the same date).
     // Within a transaction, postings represent a complete operation.
     if (last_post->xact != post.xact) {
-      if (!for_accounts_report && !historical_prices_only)
+      // In plot mode (-j/-J) combined with period mode (-M/--period),
+      // suppress intermediate price entries between periods so that each
+      // period produces exactly one data point for gnuplot (issue #984).
+      bool suppress_for_plot =
+          report.HANDLED(period_) &&
+          (report.HANDLED(amount_data) || report.HANDLED(total_data));
+      if (!for_accounts_report && !historical_prices_only && !suppress_for_plot)
         output_intermediate_prices(*last_post, post.value_date());
 
       // Generate direct revaluation when:
