@@ -1329,6 +1329,7 @@ option_t<report_t>* report_t::lookup_option(const char* p) {
     else OPT(exact);
     else OPT(exchange_);
     else OPT_ALT(aux_date, effective);
+    else OPT(expand_period);
     break;
   case 'f':
     OPT(flat);

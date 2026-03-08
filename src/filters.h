@@ -1272,6 +1272,33 @@ public:
 };
 
 /**
+ * @brief Expands periodic transactions as actual (non-inverted) postings.
+ *
+ * Used by --expand-period.  Each periodic transaction in the journal is
+ * expanded into synthetic postings with their natural amounts (not negated),
+ * interleaved with actual postings in date order from the period's start
+ * through the report terminus.  Unlike budget_posts, no account filtering or
+ * amount inversion is applied; all real postings are forwarded unchanged.
+ */
+class expand_posts : public generate_posts {
+  date_t terminus; ///< End date for periodic expansion.
+
+  expand_posts();
+
+public:
+  expand_posts(post_handler_ptr handler, date_t _terminus)
+      : generate_posts(std::move(handler)), terminus(_terminus) {
+    TRACE_CTOR(expand_posts, "post_handler_ptr, date_t");
+  }
+  ~expand_posts() noexcept override { TRACE_DTOR(expand_posts); }
+
+  void report_expanded_items(const date_t& date);
+
+  void flush() override;
+  void operator()(post_t& post) override;
+};
+
+/**
  * @brief Generates forecast postings into the future until a predicate fails.
  *
  * Used by --forecast-while.  Periodic transactions are projected forward in

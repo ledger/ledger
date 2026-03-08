@@ -1,0 +1,29 @@
+; Regression test for issue #2198:
+; --expand-period expands periodic transactions as actual (non-inverted)
+; postings interleaved with real transactions in date order.
+
+~ monthly from 2022/1/1
+    Expenses:Util    $  20
+    Assets:Checking  $ -20
+
+2022/2/2 * Snack
+    Expenses:Snack   $  2
+    Assets:Checking  $ -2
+
+test bal --expand-period --begin 2022/1/1 --end 2022/3/1
+               $ -42  Assets:Checking
+                $ 42  Expenses
+                 $ 2    Snack
+                $ 40    Util
+--------------------
+                   0
+end test
+
+test reg --expand-period --begin 2022/1/1 --end 2022/3/1
+22-Jan-01 Periodic transaction  Expenses:Util                  $ 20         $ 20
+22-Jan-01 Periodic transaction  Assets:Checking               $ -20            0
+22-Feb-01 Periodic transaction  Expenses:Util                  $ 20         $ 20
+22-Feb-01 Periodic transaction  Assets:Checking               $ -20            0
+22-Feb-02 Snack                 Expenses:Snack                  $ 2          $ 2
+                                Assets:Checking                $ -2            0
+end test

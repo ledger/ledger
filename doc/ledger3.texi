@@ -7235,6 +7235,29 @@ Related to the @command{equity} command (@pxref{The @command{equity}
 command}).  Gives current account balances in the form of a register
 report.
 
+@item --expand-period
+@findex --expand-period
+Expand periodic transactions (written with @samp{~}) as actual (non-inverted)
+postings, interleaved with real transactions in date order.  Unlike
+@option{--budget}, amounts are not negated and no account filtering is
+applied; all real postings are forwarded unchanged alongside the generated
+ones.  Use @option{--begin} and @option{--end} to limit the date range.
+
+@smallexample @c input:validate
+~ monthly from 2022/1/1
+    Expenses:Rent    $1000
+    Assets:Checking
+
+2022/03/15 Coffee
+    Expenses:Food    $5
+    Assets:Checking
+@end smallexample
+
+@noindent
+Running @code{ledger reg --expand-period --begin 2022/1/1 --end 2022/4/1}
+shows the monthly rent postings alongside the real coffee purchase, all at
+their natural (non-negated) amounts.
+
 @item --exact
 Report beginning and ending of periods by the date of the first and last
 posting occurring in that period.

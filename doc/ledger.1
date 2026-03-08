@@ -600,6 +600,19 @@ Related to the
 .Ic equity
 command.  Gives current account balances in the form of a register
 report.
+.It Fl \-expand-period
+Expand periodic transactions (written with
+.Sq ~
+) as actual (non-inverted) postings, interleaved with real transactions in
+date order.
+Unlike
+.Fl \-budget ,
+amounts are not negated and no account filtering is applied.
+Use
+.Fl \-begin
+and
+.Fl \-end
+to limit the date range.
 .It Fl \-exact
 Report beginning and ending of periods by the date of the first and last
 posting occurring in that period.

@@ -1,0 +1,16 @@
+~ monthly from 2022/1/1
+    Expenses:Util    $20
+    Assets:Checking
+
+2022/2/2 * Snack
+    Expenses:Snack   $2
+    Assets:Checking
+
+test reg --expand-period --begin 2022/1/1 --end 2022/3/1
+22-Jan-01 Periodic transaction  Expenses:Util                   $20          $20
+22-Jan-01 Periodic transaction  Assets:Checking                $-20            0
+22-Feb-01 Periodic transaction  Expenses:Util                   $20          $20
+22-Feb-01 Periodic transaction  Assets:Checking                $-20            0
+22-Feb-02 Snack                 Expenses:Snack                   $2           $2
+                                Assets:Checking                 $-2            0
+end test

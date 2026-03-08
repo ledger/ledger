@@ -378,6 +378,7 @@ public:
     HANDLER(dow).report(out);
     HANDLER(empty).report(out);
     HANDLER(end_).report(out);
+    HANDLER(expand_period).report(out);
     HANDLER(equity).report(out);
     HANDLER(exact).report(out);
     HANDLER(exchange_).report(out);
@@ -781,6 +782,7 @@ public:
   OPTION(report_t, dow);
   OPTION(report_t, aux_date);
   OPTION(report_t, empty); // -E
+  OPTION(report_t, expand_period);
 
   OPTION_(
       report_t, end_, DO_() { // -e

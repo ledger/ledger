@@ -1757,6 +1757,69 @@ void budget_posts::flush() {
 }
 
 /**
+ * Generate expanded postings for all pending periodic postings up to @p date.
+ *
+ * For each pending periodic posting whose next occurrence is at or before
+ * @p date, a synthetic posting with the original (non-negated) amount is
+ * emitted.  The loop repeats until no more items can be reported.
+ */
+void expand_posts::report_expanded_items(const date_t& date) {
+  if (pending_posts.empty())
+    return;
+
+  bool reported;
+  do {
+    reported = false;
+    for (pending_posts_list::iterator i = pending_posts.begin(); i != pending_posts.end(); i++) {
+      pending_posts_list::value_type& pair(*i);
+
+      if (pair.first.finish && !pair.first.start && pair.first.finish < date)
+        continue; // skip expired posts
+
+      optional<date_t> begin = pair.first.start;
+      if (!begin) {
+        optional<date_t> range_begin;
+        if (pair.first.range)
+          range_begin = pair.first.range->begin();
+
+        if (!pair.first.find_period(range_begin ? *range_begin : date))
+          continue;
+        if (!pair.first.start)
+          throw_(std::logic_error, _("Failed to find period for periodic transaction"));
+        begin = pair.first.start;
+      }
+
+      if (*begin <= date && (!pair.first.finish || *begin < *pair.first.finish)) {
+        post_t& post = *pair.second;
+
+        ++pair.first;
+
+        xact_t& xact = temps.create_xact();
+        xact.payee = _("Periodic transaction");
+        xact._date = begin;
+
+        post_t& temp = temps.copy_post(post, xact);
+        // No negation: amounts are used as-is (unlike budget_posts)
+
+        item_handler<post_t>::operator()(temp);
+
+        reported = true;
+      }
+    }
+  } while (reported);
+}
+
+void expand_posts::operator()(post_t& post) {
+  report_expanded_items(post.date());
+  item_handler<post_t>::operator()(post);
+}
+
+void expand_posts::flush() {
+  report_expanded_items(terminus);
+  item_handler<post_t>::flush();
+}
+
+/**
  * Add a periodic posting for forecasting, advancing its interval to CURRENT_DATE.
  *
  * Unlike generate_posts::add_post, this override initializes the interval
