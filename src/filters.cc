@@ -385,9 +385,9 @@ void calc_posts::operator()(post_t& post) {
 
   account_t* acct = post.reported_account();
   acct->xdata().add_flags(ACCOUNT_EXT_VISITED);
-  add_or_set_value(acct->xdata().running_total, xdata.visited_value);
 
   if (calc_running_total) {
+    add_or_set_value(acct->xdata().running_total, xdata.visited_value);
     add_or_set_value(xdata.total, xdata.visited_value);
 
     // Incrementally maintain a stripped display total alongside the
