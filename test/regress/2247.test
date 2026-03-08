@@ -1,0 +1,34 @@
+; Regression test for issue #2247: budget --limit fails with multiple currencies.
+;
+; When the budget command is used with --limit and a commodity filter, the
+; commodity function was calling to_amount() on a compound sequence value
+; (which budget_posts sets up for display purposes), causing a crash:
+;   "Cannot convert a sequence to an amount"
+;
+; The fix: get_commodity and get_commodity_is_primary in post.cc now fall back
+; to post.amount when compound_value is a sequence, instead of trying to
+; convert the sequence to an amount.
+
+~ monthly
+    assets:bank1  500 USD
+    assets:bank2  500 EUR
+    income:work
+
+2021-01-01
+    assets:bank1  500 USD
+    assets:bank2  500 EUR
+    equity:opening balances
+
+test budget --limit '(commodity == "USD")'
+     500 USD    31500 USD   -31000 USD    2%  assets:bank1
+           0   -31500 USD    31500 USD     0  income:work
+------------ ------------ ------------ -----
+     500 USD            0      500 USD     0
+end test
+
+test budget --limit '(commodity == "EUR")'
+     500 EUR    31500 EUR   -31000 EUR    2%  assets:bank2
+           0   -31500 EUR    31500 EUR     0  income:work
+------------ ------------ ------------ -----
+     500 EUR            0      500 EUR     0
+end test

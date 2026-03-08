@@ -316,13 +316,20 @@ value_t get_use_direct_amount(post_t& post) {
  * Accepts an optional amount argument; if provided, returns that amount's
  * commodity instead of the posting's.  Annotations are stripped to return
  * the base commodity symbol.
+ *
+ * When the posting has a compound value (e.g., budget display sequences like
+ * "(actual, budget)"), and that compound value is a sequence, fall back to
+ * post.amount for the commodity.  Calling to_amount() on a sequence throws,
+ * and for budget filtering purposes the underlying amount's commodity is the
+ * correct thing to check (issue #2247).
  */
 value_t get_commodity(call_scope_t& args) {
   if (args.has<amount_t>(0)) {
     return args.get<amount_t>(0).commodity().strip_annotations(keep_details_t{});
   } else {
     post_t& post(args.context<post_t>());
-    if (post.has_xdata() && post.xdata().has_flags(POST_EXT_COMPOUND))
+    if (post.has_xdata() && post.xdata().has_flags(POST_EXT_COMPOUND) &&
+        !post.xdata().compound_value.is_sequence())
       return post.xdata().compound_value.to_amount().commodity().strip_annotations(
           keep_details_t{});
     else
@@ -331,7 +338,8 @@ value_t get_commodity(call_scope_t& args) {
 }
 
 value_t get_commodity_is_primary(post_t& post) {
-  if (post.has_xdata() && post.xdata().has_flags(POST_EXT_COMPOUND))
+  if (post.has_xdata() && post.xdata().has_flags(POST_EXT_COMPOUND) &&
+      !post.xdata().compound_value.is_sequence())
     return post.xdata().compound_value.to_amount().commodity().has_flags(COMMODITY_PRIMARY);
   else
     return post.amount.commodity().has_flags(COMMODITY_PRIMARY);
