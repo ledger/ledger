@@ -558,7 +558,7 @@ struct print_amount_from_balance {
 
   /// @brief Format and output a single amount, justified to the column width.
   void operator()(const amount_t& amount) {
-    if (amount.is_zero())
+    if (amount.is_zero() && !(flags & AMOUNT_PRINT_SHOW_ZEROS))
       return;
 
     int width;
