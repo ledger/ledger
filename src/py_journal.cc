@@ -168,6 +168,7 @@ struct collector_wrapper {
   report_t report;
   post_handler_ptr handler_chain; // Keeps the filter chain alive (owns synthetic temp posts)
   post_handler_ptr posts_collector;
+  std::vector<value_t> display_amounts; ///< Report-converted amount for each collected posting.
 
   collector_wrapper(boost::shared_ptr<journal_t> _journal_sp, report_t& base)
       : journal_sp(std::move(_journal_sp)), report(base), posts_collector(new collect_posts) {
@@ -235,6 +236,24 @@ shared_ptr<collector_wrapper> py_query(boost::shared_ptr<journal_t> journal_sp,
     journal_posts_iterator walker(*coll->report.session.journal.get());
     pass_down_posts<journal_posts_iterator>(coll->handler_chain, walker);
 
+    // Evaluate the report's display_amount_ expression for each collected
+    // posting while xdata is still intact.  This captures any commodity
+    // exchange (-X), market valuation (-V), or other display transformations
+    // so that Python callers can access the report-converted amounts rather
+    // than just the raw journal amounts (issue #2158).
+    {
+      expr_t& display_amount_expr(coll->report.HANDLER(display_amount_).expr);
+      collect_posts* collector = dynamic_cast<collect_posts*>(coll->posts_collector.get());
+      for (post_t* post : collector->posts) {
+        bind_scope_t bound_scope(coll->report, *post);
+        try {
+          coll->display_amounts.push_back(display_amount_expr.calc(bound_scope));
+        } catch (...) {
+          coll->display_amounts.push_back(value_t(post->amount));
+        }
+      }
+    }
+
     if (!coll->report.HANDLED(group_by_))
       coll->report.session.journal->clear_xdata();
   } catch (...) {
@@ -249,6 +268,14 @@ shared_ptr<collector_wrapper> py_query(boost::shared_ptr<journal_t> journal_sp,
 post_t* posts_getitem(collector_wrapper& collector, long i) {
   return dynamic_cast<collect_posts*>(collector.posts_collector.get())
       ->posts[static_cast<std::size_t>(i)];
+}
+
+/// Convert the display_amounts vector to a Python list of Value objects.
+boost::python::object py_collector_display_amounts(collector_wrapper& coll) {
+  boost::python::list result;
+  for (const value_t& v : coll.display_amounts)
+    result.append(v);
+  return result;
 }
 
 /*--- FileInfo Property Wrappers ---*/
@@ -299,7 +326,8 @@ void export_journal() {
       .def("__len__", &collector_wrapper::length)
       .def("__getitem__", posts_getitem, return_internal_reference<>())
       .def("__iter__", boost::python::range<return_internal_reference<>>(&collector_wrapper::begin,
-                                                                         &collector_wrapper::end));
+                                                                         &collector_wrapper::end))
+      .add_property("display_amounts", py_collector_display_amounts);
 
   class_<journal_t::fileinfo_t>("FileInfo")
       .def(init<path>())
