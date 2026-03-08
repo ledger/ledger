@@ -955,7 +955,7 @@ private:
 
 void date_parser_t::determine_when(date_parser_t::lexer_t::token_t& tok,
                                    date_specifier_t& specifier) {
-  date_t today = CURRENT_DATE();
+  date_t today = epoch ? epoch->date() : CURRENT_DATE();
 
   switch (tok.kind) {
   case lexer_t::token_t::TOK_DATE:
@@ -1551,7 +1551,7 @@ date_interval_t date_parser_t::parse() {
   optional<date_specifier_t> inclusion_specifier;
 
   date_interval_t period;
-  date_t today = CURRENT_DATE();
+  date_t today = epoch ? epoch->date() : CURRENT_DATE();
   bool end_inclusive = false;
 
   // Main parsing loop - process tokens sequentially
