@@ -1,0 +1,38 @@
+; Test for command aliases (issue #2284).
+; The `command` directive defines an alias for a ledger command with optional
+; arguments, similar to git aliases.  Aliases are expanded after journal loading
+; so they work whether defined in an init file or in the journal data file.
+
+command mybal = bal Expenses
+command myreg = reg --sort date Expenses
+
+2024/01/15 Groceries
+    Expenses:Food             $50
+    Assets:Checking
+
+2024/01/20 Utilities
+    Expenses:Utilities        $100
+    Assets:Checking
+
+; Test 1: Basic command alias for balance report
+test mybal
+                $150  Expenses
+                 $50    Food
+                $100    Utilities
+--------------------
+                $150
+end test
+
+; Test 2: Command alias for register report with embedded option (--sort)
+test myreg
+24-Jan-15 Groceries             Expenses:Food                   $50          $50
+24-Jan-20 Utilities             Expenses:Utilities             $100         $150
+end test
+
+; Test 3: Command alias with extra user-supplied args appended
+test mybal --flat
+                 $50  Expenses:Food
+                $100  Expenses:Utilities
+--------------------
+                $150
+end test
