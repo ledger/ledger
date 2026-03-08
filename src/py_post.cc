@@ -89,6 +89,13 @@ account_t* py_reported_account(post_t& post) {
   return post.reported_account();
 }
 
+/*--- Virtual Posting Predicates ---*/
+
+/// True when the posting uses a (parens) or [brackets] account.
+bool py_post_is_virtual(const post_t& post) {
+  return post.has_flags(POST_VIRTUAL);
+}
+
 } // unnamed namespace
 
 void export_post() {
@@ -164,6 +171,8 @@ void export_post() {
 
       .add_property("date", &post_t::date)
       .add_property("aux_date", &post_t::aux_date)
+
+      .add_property("is_virtual", py_post_is_virtual)
 
       .def("must_balance", &post_t::must_balance)
 
