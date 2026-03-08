@@ -133,7 +133,7 @@ void xact_base_t::clear_xdata() {
 value_t xact_base_t::magnitude() const {
   value_t halfbal = 0L;
   for (const post_t* post : posts) {
-    if (post->amount.sign() > 0) {
+    if (!post->amount.is_null() && post->amount.sign() > 0) {
       if (post->cost)
         halfbal += *post->cost;
       else

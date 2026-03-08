@@ -1,0 +1,27 @@
+; Regression test for #2212:
+; A balance assignment on a balanced-virtual posting ([account]) paired
+; with a real posting with no amount should give a clear "Transaction does
+; not balance" error instead of crashing with "Cannot determine sign of an
+; uninitialized amount".
+;
+; The virtual balanced posting ([assets]) must balance against other
+; balanced-virtual postings, not real postings (income:past).
+; A null-amount real posting cannot be inferred from a virtual balance.
+
+2023-03-13
+    [assets]    = 1 rsd
+    income:past
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 13:
+While balancing transaction from "$FILE", lines 11-13:
+> 2023-03-13
+>     [assets]    = 1 rsd
+>     income:past
+Unbalanced remainder is:
+               1 rsd
+Amount to balance against:
+               1 rsd
+Error: Transaction does not balance
+end test
