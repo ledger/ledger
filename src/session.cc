@@ -136,7 +136,7 @@ std::size_t session_t::read_data(const string& master_account) {
   // reading files, so the consistency check below only validates transactions
   // that were read from files in this call.
   std::size_t initial_xact_count = journal->xacts.size();
-  std::size_t xact_count         = 0;
+  std::size_t xact_count = 0;
 
   // Determine the master account under which all postings will be placed
   account_t* acct;
