@@ -256,7 +256,8 @@ protected:
   bool latest_only;                     ///< If true, emit only the most recent price per commodity.
 
 public:
-  posts_commodities_iterator() : latest_only(false) {
+  posts_commodities_iterator()
+      : latest_only(false) {
     TRACE_CTOR(posts_commodities_iterator, "");
   }
   posts_commodities_iterator(journal_t& journal, bool _latest_only = false)
