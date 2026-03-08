@@ -49,5 +49,5 @@ While parsing file "$sourcepath/test/baseline/cmd-convert6.dat", line 1:
 While parsing CSV line:
   01/01/2011,20.00 EUR,10.00 EUR,test1,
 
-Error: Cannot have two values for a single transaction
+Error: Only one of credit, debit, or amount may have a value per transaction
 end test

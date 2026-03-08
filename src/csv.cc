@@ -231,10 +231,16 @@ xact_t* csv_reader::read_xact(bool rich_data) {
       (void)amt.parse(amount_str, PARSE_NO_REDUCE);
       if (!amt.has_commodity() && commodity_pool_t::current_pool->default_commodity)
         amt.set_commodity(*commodity_pool_t::current_pool->default_commodity);
-      if (index[n] == FIELD_DEBIT)
+      // For a debit column: negate only if the value is positive (unsigned
+      // convention where the bank gives the debit amount as a positive number).
+      // If the value is already negative (signed convention, e.g. some credit
+      // unions write -70.55 in the "Amount Debit" column), it already encodes
+      // the outflow direction and must not be negated again.
+      if (index[n] == FIELD_DEBIT && amt.sign() > 0)
         amt = -amt;
       if (!post->amount.is_null())
-        throw_(csv_error, _("Cannot have two values for a single transaction"));
+        throw_(csv_error, _("Only one of credit, debit, or amount may have a "
+                            "value per transaction"));
       post->amount = amt;
       break;
     }

@@ -1,0 +1,25 @@
+; Regression test for GitHub issue #2295:
+; Support signed debit/credit amounts in CSV convert command.
+;
+; Some financial institutions (e.g. Rivermark CU) export CSV files where the
+; "Amount Debit" column already contains negative values for outflows rather
+; than the more common convention of positive debit amounts.  Previously,
+; ledger would negate the value regardless of its sign, turning a -70.55 debit
+; into +70.55 (a credit), which is wrong.
+;
+; The fix: only negate the debit column amount when it is positive (unsigned
+; convention).  If the value is already negative (signed convention), it
+; correctly represents an outflow and must be used as-is.
+
+account Expenses:Unknown
+account Assets:Checking
+
+test convert test/regress/2295.csv --input-date-format "%m/%d/%Y" --account Assets:Checking
+2018/01/05 * VZWRLSS
+    Expenses:Unknown                          -70.55
+    Assets:Checking
+
+2018/01/10 * DIRECT DEPOSIT
+    Expenses:Unknown                             500
+    Assets:Checking
+end test
