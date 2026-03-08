@@ -6034,16 +6034,27 @@ the same data.
 @findex prices
 @findex pricedb
 @findex --average
+@findex --latest
 
 The @command{prices} command displays the price history for matching
 commodities.  The @option{--average (-A)} option is useful with this
 report, to display the running average price, or @option{--deviation
 (-D)} to show each price's deviation from that average.
 
+Use @option{--latest} to display only the most recently-dated price
+for each commodity, rather than the full price history.  This is
+useful when you only need the current exchange rate that Ledger would
+use for a commodity:
+
+@smallexample
+$ ledger prices --latest VTI BND
+@end smallexample
+
 There is also a @command{pricedb} command which outputs the same
 information as @command{prices}, but does so in a format that can be
 parsed by Ledger.  This is useful for generating and tidying up
-pricedb database files.
+pricedb database files.  The @option{--latest} option works with
+@command{pricedb} as well.
 
 @node Reports about your Journals,  , Reports in other Formats, Reporting Commands
 @section Reports about your Journals
@@ -7488,6 +7499,11 @@ treat the transaction as if the ``Expected Value'' was actual.
 
 @item --invert
 Change the sign of all reported values.
+
+@item --latest
+When used with @command{prices} or @command{pricedb}, display only
+the most recently-dated price for each commodity instead of the full
+price history.
 
 @item --limit @var{EXPR}
 @itemx -l @var{EXPR}
