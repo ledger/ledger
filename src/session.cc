@@ -131,6 +131,11 @@ std::size_t session_t::read_data(const string& master_account) {
     populated_data_files = true;
   }
 
+  // Capture any transactions that already exist in the journal (e.g., added
+  // programmatically via journal.add_xact() from Python) before we start
+  // reading files, so the consistency check below only validates transactions
+  // that were read from files in this call.
+  std::size_t initial_xact_count = journal->xacts.size();
   std::size_t xact_count = 0;
 
   // Determine the master account under which all postings will be placed
@@ -237,8 +242,9 @@ std::size_t session_t::read_data(const string& master_account) {
   }
 
   DEBUG("ledger.read", "xact_count [" << xact_count << "] == journal->xacts.size() ["
-                                      << journal->xacts.size() << "]");
-  assert(xact_count == journal->xacts.size());
+                                      << journal->xacts.size() << "] - initial_xact_count ["
+                                      << initial_xact_count << "]");
+  assert(xact_count == journal->xacts.size() - initial_xact_count);
 
   if (populated_data_files)
     HANDLER(file_).data_files.clear();
