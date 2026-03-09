@@ -112,6 +112,20 @@ void report_t::normalize_options(const string& verb) {
       HANDLER(pager_).off();
   }
 
+#if defined(_WIN32) && !defined(__CYGWIN__)
+  // On Windows, ANSI escape sequences are not processed by CMD or PowerShell
+  // unless virtual terminal processing is explicitly enabled.  Enable it now
+  // if we have determined that color output will be used.
+  if (HANDLED(color)) {
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hOut != INVALID_HANDLE_VALUE) {
+      DWORD dwMode = 0;
+      if (GetConsoleMode(hOut, &dwMode))
+        SetConsoleMode(hOut, dwMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+    }
+  }
+#endif
+
   item_t::use_aux_date = (HANDLED(aux_date) && !HANDLED(primary_date));
 
   commodity_pool_t::current_pool->keep_base = HANDLED(base);

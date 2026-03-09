@@ -69,6 +69,17 @@
 /* System includes                                                        */
 /*------------------------------------------------------------------------*/
 
+// Define NOMINMAX and WIN32_LEAN_AND_MEAN before any includes on Windows to
+// prevent min/max macro conflicts and reduce header bloat.
+#if defined(_WIN32) && !defined(__CYGWIN__)
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#endif
+
 #include "utf8.h"
 
 #include <algorithm>
@@ -107,6 +118,15 @@
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 #include <io.h>
+#if defined(_WIN32) && !defined(__CYGWIN__)
+#include <windows.h>
+// ENABLE_VIRTUAL_TERMINAL_PROCESSING was introduced in Windows 10 SDK 10.0.10586.
+// Provide a fallback definition for older SDKs so the code compiles but the
+// SetConsoleMode call will simply return false on older Windows versions.
+#ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
+#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+#endif
+#endif
 #else
 #include <unistd.h>
 #endif
