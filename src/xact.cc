@@ -1260,7 +1260,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
 }
 
 void auto_xact_t::extend_xact_with_posts(xact_base_t& xact, parse_context_t& context,
-                                          const posts_list& posts_to_process) {
+                                         const posts_list& posts_to_process) {
   if (!enabled)
     return;
 
