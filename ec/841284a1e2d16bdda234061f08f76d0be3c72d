@@ -1,0 +1,822 @@
+src/amount.cc
+  05af43ff1d02acf9 1766,1768-1770
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.9",
+  "base_commit_sha": "ec841284a1e2d16bdda234061f08f76d0be3c72d",
+  "prompts": {
+    "05af43ff1d02acf9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bb31960f-6629-4aa5-a133-cb943636e259",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "<command-message>fix-ci</command-message>\n<command-name>/fix-ci</command-name>",
+          "timestamp": "2026-03-09T17:12:54.138Z"
+        },
+        {
+          "type": "user",
+          "text": "CI tests are failing for this PR. Use cpp-pro to diagnose and resolve this issue, then push your fixes to the PR and monitor the CI test results using `gh` until you observe that everything passes correctly. If any further problems should be observed, repeat this diagnose, resolve, push and monitor process until everything is working with this PR.\n",
+          "timestamp": "2026-03-09T17:12:54.138Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The user wants me to fix CI tests that are failing for the current PR on the `johnw/fix-819` branch. Let me start by understanding the current state of things - check the PR status, see what CI failures exist, and then diagnose and fix them.\n\nLet me first check the current git status and then look at the CI results.",
+          "timestamp": "2026-03-09T17:12:58.907Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me start by checking the current PR and CI status.",
+          "timestamp": "2026-03-09T17:13:00.393Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "ToolSearch",
+          "input": {
+            "max_results": 3,
+            "query": "select:Bash,Read,Glob"
+          },
+          "timestamp": "2026-03-09T17:13:00.887Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh pr list --head johnw/fix-819 --json number,title,state,url 2>&1",
+            "description": "List PRs for the fix-819 branch"
+          },
+          "timestamp": "2026-03-09T17:13:05.890Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --oneline -10",
+            "description": "Show recent commits on fix-819"
+          },
+          "timestamp": "2026-03-09T17:13:06.299Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh pr checks 2780 2>&1",
+            "description": "Check CI status for PR #2780"
+          },
+          "timestamp": "2026-03-09T17:13:11.156Z"
+        },
+        {
+          "type": "assistant",
+          "text": "One CI job is failing: `build (ubuntu-latest, Ubuntu, 3, -DUSE_PYTHON=ON -DUSE_GPGME=ON)`. Let me get the failure details.",
+          "timestamp": "2026-03-09T17:13:15.132Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh run view 22837872216 --log-failed 2>&1 | tail -200",
+            "description": "Get failed job logs from the CI run"
+          },
+          "timestamp": "2026-03-09T17:13:16.186Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/.config/claude/personal/projects/-Users-johnw-src-ledger-fix-819/bb31960f-6629-4aa5-a133-cb943636e259/tool-results/bq6q03j65.txt",
+            "offset": 650
+          },
+          "timestamp": "2026-03-09T17:13:23.509Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/.config/claude/personal/projects/-Users-johnw-src-ledger-fix-819/bb31960f-6629-4aa5-a133-cb943636e259/tool-results/bq6q03j65.txt",
+            "offset": 100
+          },
+          "timestamp": "2026-03-09T17:13:29.291Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The failing test is `RegressTest_2301`. The error is:\n- `malloc(): invalid size (unsorted)` followed by `Aborted (core dumped)`\n- This happens when running `ledger -f test/regress/2301.test reg Expenses`\n- The test expects output but gets a crash instead\n\nThis test is only failing in the Ubuntu Python-enabled build. Let me check if this test exists on the main branch or if it was added in this PR. Let me also check if this is a pre-existing failure or something introduced by the fix-819 changes.\n\nLet me look at the test file and the current source changes.",
+          "timestamp": "2026-03-09T17:13:35.861Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The failing test is `RegressTest_2301` — a crash with `malloc(): invalid size (unsorted)` on the Ubuntu Python-enabled build. Let me investigate.",
+          "timestamp": "2026-03-09T17:13:36.808Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff main..HEAD --name-only",
+            "description": "List files changed in this PR"
+          },
+          "timestamp": "2026-03-09T17:13:37.745Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log main..HEAD --oneline",
+            "description": "Show commits in this PR"
+          },
+          "timestamp": "2026-03-09T17:13:38.179Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log main --oneline -5",
+            "description": "Check recent main branch commits"
+          },
+          "timestamp": "2026-03-09T17:13:41.710Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log main --all --oneline -- test/regress/2301.test | head -5",
+            "description": "Check if 2301.test was recently changed"
+          },
+          "timestamp": "2026-03-09T17:13:42.323Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The 2301.test file isn't modified by this PR. Let me check if this test passes on main - it might be a pre-existing flaky test. Let me also look at the diff between this branch and main to understand what changed. The diff includes changes to `src/main.cc`, `src/pyinterp.cc`, `src/quotes.cc`, and some test files.\n\nWait, `src/quotes.cc` and some test files (`2335.test`, `coverage-quote-empty.test`, `coverage-quote-failure.test`) - those aren't part of the fix-819 commits. Let me check the branch base more carefully. \n\n\nLooking at the actual commits on this branch, there are three: one fixing the Python command to use the embedding API, a regression test for issue #819, and a clang-format fix. But the diff is showing quotes.cc and other unrelated files, which suggests the merge base might be different than expected.",
+          "timestamp": "2026-03-09T17:13:50.638Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git merge-base HEAD main",
+            "description": "Find merge base between fix-819 and main"
+          },
+          "timestamp": "2026-03-09T17:13:50.659Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh run list --branch main --limit 3 --json conclusion,status,name,databaseId 2>&1",
+            "description": "Check if RegressTest_2301 also fails on main"
+          },
+          "timestamp": "2026-03-09T17:13:51.156Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh run view 22840175973 --json conclusion,jobs --jq '.jobs[] | select(.name | contains(\"Ubuntu, 3\")) | {name, conclusion}' 2>&1",
+            "description": "Check Ubuntu Python build status on main"
+          },
+          "timestamp": "2026-03-09T17:13:56.343Z"
+        },
+        {
+          "type": "assistant",
+          "text": "So the Ubuntu Python build passes on main but fails on fix-819. The test that's failing (2301.test) is NOT modified by this branch — it's a pre-existing test. But it fails on this branch with a memory corruption crash (`malloc(): invalid size (unsorted)`).\n\nThis could mean that the changes in `pyinterp.cc` are introducing memory corruption that manifests when running test 2301. Let me look at what this test does and what the pyinterp.cc changes are.\n\nActually wait, the diff between main and HEAD also shows changes to `src/main.cc`, `src/quotes.cc`, and some test files that don't appear to be part of the fix-819 commits. \n\nI need to verify what the actual merge base is and whether I'm comparing the right commits.",
+          "timestamp": "2026-03-09T17:14:05.897Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The test passes on main but fails on this branch. Let me examine the test and the code changes.",
+          "timestamp": "2026-03-09T17:14:06.039Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-819/test/regress/2301.test"
+          },
+          "timestamp": "2026-03-09T17:14:06.384Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-819/src/pyinterp.cc"
+          },
+          "timestamp": "2026-03-09T17:14:06.413Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The test 2301.test is about trailing decimal marks - it doesn't involve Python at all. The crash is `malloc(): invalid size (unsorted)` which is a heap corruption error. This happens only when Python is enabled in the build.\n\nThe 2301.test was likely added recently and may be a pre-existing issue on main. Wait, I already checked - it passes on main. So this branch is introducing memory corruption.\n\nLet me check the difference between pyinterp.cc on main vs this branch more carefully. Let me also look at what other files differ.",
+          "timestamp": "2026-03-09T17:14:13.165Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The test 2301 (trailing decimal marks) doesn't involve Python, yet crashes with heap corruption only in the Python-enabled build. Let me compare the code changes more carefully.",
+          "timestamp": "2026-03-09T17:14:13.927Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff main..HEAD -- src/pyinterp.cc",
+            "description": "Show pyinterp.cc changes in this branch"
+          },
+          "timestamp": "2026-03-09T17:14:14.852Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff main..HEAD -- src/main.cc",
+            "description": "Show main.cc changes in this branch"
+          },
+          "timestamp": "2026-03-09T17:14:15.217Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The diff shows:\n1. Removed the global `char* argv0` variable from pyinterp.cc and its extern declaration + assignment in main.cc\n2. Replaced the `Py_Main()` / `PyRun_InteractiveLoop()` approach with `PyRun_SimpleString()` / `PyRun_SimpleFile()` \n\nThe test 2301.test (trailing decimals) has nothing to do with Python. But the crash happens only in the Python-enabled build. This seems like a memory corruption that manifests elsewhere.\n\nWait, let me look at the other changed files too:",
+          "timestamp": "2026-03-09T17:14:20.395Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff main..HEAD -- src/quotes.cc",
+            "description": "Show quotes.cc changes"
+          },
+          "timestamp": "2026-03-09T17:14:20.854Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff main..HEAD -- test/regress/2301.test 2>/dev/null; echo \"---\"; ls -la /Users/johnw/src/ledger/fix-819/test/regress/2301.test 2>&1; echo \"---\"; git show main:test/regress/2301.test 2>&1 | head -5",
+            "description": "Check if 2301.test exists on main vs this branch"
+          },
+          "timestamp": "2026-03-09T17:14:22.800Z"
+        },
+        {
+          "type": "assistant",
+          "text": "So 2301.test exists on both main and this branch. It's not modified by this PR. The changes in this PR are:\n\n1. `src/pyinterp.cc` - removed `argv0`, rewrote `python_command()` \n2. `src/main.cc` - removed `argv0` assignment\n3. `src/quotes.cc` - removed `cmd_failed` variable and warning messages\n\nThe quotes.cc changes are interesting - they look like they belong to the fix-2335 branch. Let me check if main already has the fix-2335 changes.",
+          "timestamp": "2026-03-09T17:14:30.283Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --oneline main -- src/quotes.cc | head -5",
+            "description": "Check quotes.cc history on main"
+          },
+          "timestamp": "2026-03-09T17:14:30.791Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git show main:src/quotes.cc | head -130 | tail -30",
+            "description": "Check quotes.cc on main around the cmd_failed area"
+          },
+          "timestamp": "2026-03-09T17:14:31.440Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The fix-819 branch is behind main — main has the `cmd_failed` variable and warning messages from the fix-2335 merge, but this branch diverged from a point before that merge (or after - let me check the merge base).\n\nWait, let me reconsider. The merge base is `e5226055` (Merge pull request #2844 from ledger/fix-2212). Main has additional commits on top:\n- `0505f249 Merge pull request #2846 from ledger/johnw/fix-2335`\n- `ab9be36f Fix clang-format violations in quotes.cc warning calls`\n\n\n- `70013c66 Warn when getquote script fails or returns no usable price`\n\nSo fix-819 branched off before the fix-2335 changes landed, which is why the diff shows those warning additions being removed — they're not actually part of this branch's changes. The test failure on 2301.test is interesting though, since it passes on main with those fix-2335 changes included.\n\nThe crash is a heap corruption error in a test about trailing decimal marks, which has nothing to do with Python or quotes. Since main's Ubuntu Python build passed, something in the pyinterp.cc changes must be causing this. The main modifications there were removing the global `argv0` variable and switching `python_command()` from `Py_Main()` to `PyRun_SimpleString()`/`PyRun_SimpleFile()`, but that shouldn't affect a test that doesn't even use Python.\n\nLooking at the removed code in main.cc and pyinterp.cc, the `argv0` removal would cause a linking error rather than a runtime crash, so that's not it. The `malloc(): invalid size (unsorted)` error is a classic glibc heap corruption detection that happens when something writes past a buffer boundary or corrupts heap metadata.\n\nLet me examine the `initialize()` function changes more closely—specifically how Python 3.12+ initialization was refactored with `PyConfig_InitPythonConfig`. I need to compare what the main branch is doing versus these changes to see if there's a mismatch in how Python is being set up.",
+          "timestamp": "2026-03-09T17:14:55.539Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff main..HEAD -- src/pyinterp.cc | head -80",
+            "description": "Show full pyinterp.cc diff including initialize changes"
+          },
+          "timestamp": "2026-03-09T17:14:55.576Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git show main:src/pyinterp.cc | diff - src/pyinterp.cc | head -150",
+            "description": "Show exact diff between main and branch pyinterp.cc"
+          },
+          "timestamp": "2026-03-09T17:14:59.800Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I see. The changes in pyinterp.cc are only to `python_command()` and the removal of `argv0`. These changes only affect the `python` command execution, which 2301.test doesn't use at all.\n\nBut wait - the 2301.test crashes with `malloc(): invalid size (unsorted)`. This is heap corruption. Let me check if this is a pre-existing failure that's also happening on main. The main CI passed, so it doesn't happen on main.\n\nWait, let me re-examine. The merge base is `e5226055`. Main is at `0505f249` which is ahead. So the question is: does main's version of 2301.test also crash?\n\n\nThe answer is no - CI passes on main. So the question becomes: what in this branch's changes could cause heap corruption for a test that doesn't involve Python? The only code changes are the removal of `argv0` and modifications to `python_command()`, but I'm realizing the branch is actually behind main on quotes.cc - it's missing the fix-2335 changes. That could be the culprit causing the crash.\n\nLet me think through this differently. The test 2301.test passes on main but crashes here, and the only C++ differences are in pyinterp.cc, main.cc, and quotes.cc. Since the test is about trailing decimals and has nothing to do with Python or price quotes, the issue must be something more fundamental - maybe this branch needs to be rebased to pick up all the fixes that landed on main since it was created. This is a heap corruption crash that only occurs in the Python-enabled build, suggesting the issue lies in how Python initialization differs between branches. The `initialize()` function appears unchanged between main and this branch, so I need to look elsewhere for what's causing the memory corruption during test 2301.\n\nThe actual code differences are minimal: removing `char* argv0`, rewriting `python_command()`, and reverting some quote handling changes. Since test 2301 doesn't even invoke Python or touch the quote logic, this points toward a static initialization or linking problem rather than direct code execution. The fact that main's CI passed all tests while this branch fails confirms it's a real regression, not a flaky test.\n\nNow I'm wondering if test 2301 was added as part of a fix on main that included corresponding C++ changes, and this branch has the test but is missing those underlying fixes. Let me trace back when that test was introduced.",
+          "timestamp": "2026-03-09T17:15:25.825Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --all --oneline -- test/regress/2301.test | grep -v checkpoint | head -5",
+            "description": "Find when 2301.test was added"
+          },
+          "timestamp": "2026-03-09T17:15:26.008Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log main --oneline -- test/regress/2301.test | head -5",
+            "description": "Check 2301.test history on main branch"
+          },
+          "timestamp": "2026-03-09T17:15:26.525Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log main --oneline -- test/regress/2301.test src/amount.cc src/amount.h | head -10",
+            "description": "Check what C++ changes accompanied the 2301 fix"
+          },
+          "timestamp": "2026-03-09T17:15:30.675Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --oneline e1181023 -1 && git show e1181023 --stat",
+            "description": "Show what files the 2301 fix changed"
+          },
+          "timestamp": "2026-03-09T17:15:31.321Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I see the problem. The 2301 fix involved changes to `src/amount.cc` alongside the test. This branch has the test file (it was added in commit `e1181023`) but may NOT have the corresponding C++ fix in `src/amount.cc`.\n\nLet me check if the branch has the `e1181023` commit.",
+          "timestamp": "2026-03-09T17:15:36.193Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Found it. The 2301 fix involved changes to `src/amount.cc`. Let me check if this branch has those changes.",
+          "timestamp": "2026-03-09T17:15:36.703Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git merge-base --is-ancestor e1181023 HEAD && echo \"contains e1181023\" || echo \"does NOT contain e1181023\"",
+            "description": "Check if fix-819 contains the 2301 fix commit"
+          },
+          "timestamp": "2026-03-09T17:15:38.059Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff main..HEAD -- src/amount.cc | head -30",
+            "description": "Check amount.cc differences between main and branch"
+          },
+          "timestamp": "2026-03-09T17:15:38.578Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The branch DOES contain the e1181023 commit, and there's no diff in amount.cc between main and this branch. So the fix for trailing decimal marks IS present. The test should pass.\n\nBut it's crashing with `malloc(): invalid size (unsorted)`. This is heap corruption. Let me think about what else could be different...\n\nLet me check if maybe this is a flaky test that sometimes fails on Ubuntu but not macOS. The macOS Python build passed.\n\nActually wait, I need to re-examine this. Let me check if maybe this test also fails on main sometimes.\n\nActually, let me look at this from a different angle. \n\nThe heap corruption error only shows up with the Python-enabled build, which suggests a library version incompatibility. But looking at the actual test output, the ledger command isn't producing any output at all—the test expects transaction entries but gets nothing instead. the program crashed with a malloc error, but only in the Ubuntu Python build—the sanitizer build passed, which suggests Python might not be enabled there. Let me figure out why the sanitizer build didn't catch this if Python is actually involved.\n\nLooking at the CI config, the sanitizer build uses `-DUSE_SANITIZERS=ON` while the failing build uses `-DUSE_PYTHON=ON`, so they're likely different configurations. The real puzzle is why linking Python would corrupt the heap in a test that doesn't even use Python.\n\nI've confirmed the test passes on main with Python enabled, so something in this branch's changes is causing the issue. The differences are in pyinterp.cc and main.cc where I removed `argv0`, plus quotes.cc is behind main—it's missing the `cmd_failed` variable and some warning messages from the fix-2335 commit.\n\nSince test 2301 doesn't involve price quotes, the quotes.cc divergence shouldn't matter here. I should rebase this branch onto main to ensure I'm testing the actual fix-819 changes against the latest codebase, and then check if this test is known to be flaky in the recent CI history.",
+          "timestamp": "2026-03-09T17:16:03.191Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh run list --branch johnw/fix-819 --limit 10 --json databaseId,conclusion,status,createdAt 2>&1",
+            "description": "Check recent CI runs for this branch"
+          },
+          "timestamp": "2026-03-09T17:16:03.531Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh run view 22837786593 --log-failed 2>&1 | grep -A 20 \"FAILED\\|FAILURE\\|malloc\"",
+            "description": "Check previous failed run for same issue"
+          },
+          "timestamp": "2026-03-09T17:16:09.049Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Same exact failure in both CI runs. It's consistent - the `RegressTest_2301` fails every time on this branch with `malloc(): invalid size (unsorted)`.\n\nThe test passes on main. The branch contains the same `e1181023` commit. The only code differences from main are in pyinterp.cc, main.cc, and quotes.cc. \n\nBut wait - quotes.cc is different because this branch diverged from main BEFORE the fix-2335 merge. The fix-2335 merge added `cmd_failed` and warning messages. The quotes.cc on this branch is the OLD version (without those changes). But the test 2301 doesn't involve price quotes.\n \nMaybe the test passes on main because of some other commit that's not on this branch. Let me check what's actually different between the two branches.",
+          "timestamp": "2026-03-09T17:16:22.579Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log main --not HEAD --oneline",
+            "description": "Show commits on main that are not in this branch"
+          },
+          "timestamp": "2026-03-09T17:16:22.719Z"
+        },
+        {
+          "type": "assistant",
+          "text": "So main has 3 extra commits compared to this branch:\n1. `70013c66 Warn when getquote script fails or returns no usable price`\n2. `ab9be36f Fix clang-format violations in quotes.cc warning calls`  \n3. `0505f249 Merge pull request #2846 from ledger/johnw/fix-2335`\n\nAll of these are quotes.cc changes. There's no way those would fix the 2301 test. The 2301 test doesn't use price quotes.\n\nOK, I need to think about this differently. The test 2301.test was added as part of commit `e1181023 fix: accept numbers with a trailing decimal mark (#2301)`. \n\nBoth main and this branch contain that commit, and the code change was in `src/amount.cc` with no differences between the two branches there. So the crash must be something else entirely — something specific to how Python initialization works when it's enabled. I'm wondering if there's an issue with `Py_InitializeFromConfig()` and whether the CI's Python version is 3.12 or later.\n\nBut wait, `initialize()` itself isn't different between the branches either, so whatever Python setup happens should be identical. The `char* argv0` removal from the main branch is interesting though — removing a global variable could shift memory layout in ways that expose latent heap corruption. Let me verify the amount.cc code is truly identical and check what the test actually expects.\n\nThe test expects exit code 0, but instead we're getting a malloc crash with exit code 134. This suggests a memory corruption issue that only surfaces when Python is linked in, probably because the binary layout changes. If there's a latent bug in the amount parsing code from that earlier commit, it might only trigger with certain memory configurations.\n\nExamining the amount parsing logic more closely...",
+          "timestamp": "2026-03-09T17:16:45.732Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git show e1181023 -- src/amount.cc",
+            "description": "Show the 2301 fix in amount.cc"
+          },
+          "timestamp": "2026-03-09T17:16:45.758Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I see it now. The code uses a local buffer `buf` - let me check what size `buf` is. The `parse_quantity` function uses a stack buffer, and the code is appending to `buf[len++]`. If `len` could be at the buffer boundary, this could cause a stack buffer overflow.\n\nLet me look at the full parse_quantity function to see the buffer size.",
+          "timestamp": "2026-03-09T17:16:50.996Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "ToolSearch",
+          "input": {
+            "max_results": 1,
+            "query": "select:Grep"
+          },
+          "timestamp": "2026-03-09T17:16:51.143Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "-A": 5,
+            "-n": true,
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-819/src/amount.cc",
+            "pattern": "parse_quantity.*\\{"
+          },
+          "timestamp": "2026-03-09T17:16:55.930Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "-A": 2,
+            "-B": 2,
+            "-n": true,
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-819/src/amount.cc",
+            "pattern": "char buf\\["
+          },
+          "timestamp": "2026-03-09T17:16:56.887Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-819/src/amount.cc",
+            "limit": 120,
+            "offset": 1438
+          },
+          "timestamp": "2026-03-09T17:17:00.486Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Looking at `parse_quantity`, the buffer is 256 bytes. The `len` variable is `string::size_type` which is typically `size_t` (unsigned). The code at line 1477 does `buf[len++] = '.'` and `buf[len] = '\\0'`.\n\nIf `len` was 255 (which is `max`), then:\n- `buf[255] = '.'` (overwriting the null terminator position, since buf is 256 bytes, indices 0-255)\n- `buf[256] = '\\0'` - **buffer overflow!**\n\n\nThis is a one-byte stack buffer overflow when the numeric string reaches exactly 255 characters, but the test inputs are all small strings like `$1,234.` and `$12,345.`, so `len` would only be around 5-6 characters. The buffer overflow isn't actually triggered by these test cases, so something else must be causing the crash.\n\nThe error message `malloc(): invalid size (unsorted)` points to heap corruption rather than stack corruption. This bug only manifests in the Python-enabled build even though the test doesn't use Python—linking with Python changes the binary layout and exposes a latent issue. I'm suspecting the problem lies in how the `commodity format $1,000.` directive is parsed, particularly with that trailing period. When the commodity parser processes this format string, it extracts `$1,000.` as an amount, parses the `$` prefix first, then calls `parse_quantity` to handle the rest. The `READ_INTO` macro reads through digits and periods, and something in that parsing logic is likely corrupting the heap.\n\nTracing through the cleanup loop, after reading `1,000.`, the code strips trailing non-digit characters—the period gets ungot and the buffer length adjusts. Then the new code peeks at what comes next and consumes the period, but I need to verify what character follows it and whether that's causing the corruption.",
+          "timestamp": "2026-03-09T17:17:21.183Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me look at the CI workflow to understand the build configuration.",
+          "timestamp": "2026-03-09T17:17:21.318Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Glob",
+          "input": {
+            "pattern": ".github/workflows/*.yml"
+          },
+          "timestamp": "2026-03-09T17:17:21.535Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff main..HEAD -- .github/workflows/cmake.yml",
+            "description": "Check if CI workflow differs between main and branch"
+          },
+          "timestamp": "2026-03-09T17:17:28.880Z"
+        },
+        {
+          "type": "assistant",
+          "text": "No difference in the CI workflow. So the CI configuration is identical.\n\nLet me think about this differently. Could the issue actually be a pre-existing issue that happens to NOT manifest on main because of the quotes.cc difference?\n\nActually wait, let me check the EXACT versions of Python on Ubuntu that CI uses. Could there be a Python compatibility issue?\n\nActually wait, I should approach this more practically. The simplest fix is to rebase onto main. This will pick up the quotes.cc changes (the only code differences besides the pyinterp.cc/main.cc fix-819 changes). If the test still fails after rebasing, then the fix-819 changes are causing the issue. If it passes, then it was the missing quotes.cc changes.\n \nBut the quotes.cc changes are just adding warning messages for price quote failures, so they shouldn't affect the 2301 test. I'm wondering if there's actually a latent bug in the fix-819 changes themselves that only shows up when linked with Python. Looking at the `parse_quantity` function, it's calling `std::strlen` on a buffer that might not be null-terminated yet.",
+          "timestamp": "2026-03-09T17:17:39.415Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "-A": 10,
+            "-n": true,
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-819/src",
+            "pattern": "#define READ_INTO"
+          },
+          "timestamp": "2026-03-09T17:17:40.021Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-819/src/utils.h",
+            "limit": 50,
+            "offset": 648
+          },
+          "timestamp": "2026-03-09T17:17:44.044Z"
+        },
+        {
+          "type": "assistant",
+          "text": "OK, `READ_INTO` does null-terminate the buffer (line 686: `*_p = '\\0'`). And it passes `p` (which has been advanced past the `-` sign if present) and `max` (which is 255, or 254 if there was a minus sign). So the READ_INTO writes at most `max` characters plus a null terminator, into `buf` starting from position `p`. Since `p` might be `buf+1` (after `-`), and `max` is 254 in that case, the total would be 1 + 254 + 1 = 256, which exactly fills the buffer.\n\n\nNow I'm looking at the code that appends a decimal point to the buffer. After getting the string length, it writes the dot and null terminator, which could theoretically overflow if `len` reaches 255. But with the actual test inputs like `$1,234.` and `$500.`, the length is nowhere near that limit, so this isn't a practical issue for these cases.\n\nLet me step back and think about why this crash only happens in the Python-enabled build on Ubuntu. The test itself doesn't involve Python at all, so maybe there's a linking issue with Boost.Python that's affecting memory allocation or causing conflicts. Or perhaps the Python initialization code is somehow interfering, though that code hasn't changed between branches.\n\nActually, the most straightforward solution would be to rebase the branch onto main to ensure it has all the latest changes and avoid any merge-related issues.",
+          "timestamp": "2026-03-09T17:18:01.109Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh run list --branch johnw/fix-819 --limit 20 --json databaseId,conclusion,status,createdAt,event 2>&1",
+            "description": "Check all CI runs for this branch"
+          },
+          "timestamp": "2026-03-09T17:18:02.230Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh run view 22500609938 --json conclusion,jobs --jq '.jobs[] | select(.conclusion != \"success\") | {name, conclusion}' 2>&1",
+            "description": "Check the Feb 27 CMake run for failures"
+          },
+          "timestamp": "2026-03-09T17:18:08.012Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh run view 22500609938 --json conclusion,jobs --jq '.jobs[] | {name, conclusion}' 2>&1",
+            "description": "Check Feb 27 CMake run job results"
+          },
+          "timestamp": "2026-03-09T17:18:14.175Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh run view 22500609918 --json conclusion,jobs --jq '.jobs[] | {name, conclusion}' 2>&1",
+            "description": "Check Feb 27 cmake.yml run job statuses"
+          },
+          "timestamp": "2026-03-09T17:18:19.195Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh run view 22500609897 --json conclusion,jobs,name --jq '{name: .name, jobs: [.jobs[] | {name, conclusion}]}' 2>&1",
+            "description": "Check Feb 27 build run details"
+          },
+          "timestamp": "2026-03-09T17:18:23.815Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh run view 22500609907 --json conclusion,jobs,name --jq '{name: .name, jobs: [.jobs[] | {name, conclusion}]}' 2>&1",
+            "description": "Check the remaining Feb 27 run"
+          },
+          "timestamp": "2026-03-09T17:18:29.288Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh run view 22500609899 --json conclusion,jobs,name --jq '{name: .name, jobs: [.jobs[] | {name, conclusion}]}' 2>&1",
+            "description": "Check the last Feb 27 run"
+          },
+          "timestamp": "2026-03-09T17:18:33.705Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Interesting! The Feb 27 run of the Ubuntu Python build **passed**! So the test 2301 passed on Feb 27 but fails on March 9. Let me check what changed between those runs.\n\nLet me look at the commits on this branch between those dates.",
+          "timestamp": "2026-03-09T17:18:39.543Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The Feb 27 runs all passed, including the Ubuntu Python build. The failure started with the March 9 runs. Let me check what changed.",
+          "timestamp": "2026-03-09T17:18:40.387Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --oneline --since=\"2026-02-27\" --until=\"2026-03-10\" -- . 2>&1",
+            "description": "Check commits between Feb 27 and Mar 9"
+          },
+          "timestamp": "2026-03-09T17:18:41.368Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --all --oneline --after=\"2026-02-27\" -- test/regress/2301.test src/amount.cc 2>&1",
+            "description": "Check for 2301-related changes after Feb 27"
+          },
+          "timestamp": "2026-03-09T17:18:42.799Z"
+        },
+        {
+          "type": "assistant",
+          "text": "There are recent commits fixing this exact issue:\n- `Fix heap corruption when parsing amounts with trailing decimal mark`\n- `Fix buffer overread in quantity punctuation-stripping loop`\n- `Fix heap corruption when separator-removal loop hits trailing mark`\n\nThese are on other branches (not on main and not on this branch). But wait, do any of these exist on main?Let me check.",
+          "timestamp": "2026-03-09T17:18:48.047Z"
+        },
+        {
+          "type": "assistant",
+          "text": "There are commits fixing this exact bug - \"Fix heap corruption when parsing amounts with trailing decimal mark\". Let me check which branches have these fixes.",
+          "timestamp": "2026-03-09T17:18:49.270Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git branch -a --contains fa337ca1 2>&1 | head -10",
+            "description": "Check which branches contain the heap corruption fix"
+          },
+          "timestamp": "2026-03-09T17:18:50.036Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log main --oneline -- src/amount.cc | head -10",
+            "description": "Check recent amount.cc changes on main"
+          },
+          "timestamp": "2026-03-09T17:18:50.735Z"
+        },
+        {
+          "type": "assistant",
+          "text": "So the heap corruption fix for 2301 is on the `johnw/fix-1934` branch, which has NOT been merged to main. But the test passes on main. Let me double check that.\n\nActually wait - but the test 2301 PASSES on main! So there must be some other reason it passes there. Or maybe the heap corruption is latent and only manifests on this branch due to binary layout differences.\n\nLet me look at the fix-1934 commit more closely.",
+          "timestamp": "2026-03-09T17:18:57.480Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git show fa337ca1 --stat && echo \"---\" && git show fa337ca1 -- src/amount.cc",
+            "description": "Show the heap corruption fix details"
+          },
+          "timestamp": "2026-03-09T17:18:57.961Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Found it. The separator-stripping loop in `amount_t::parse` reads past the null terminator when the quantity string ends with a period (trailing decimal mark from `#2301`). This fix is on `johnw/fix-1934` but hasn't been merged to main yet. However, the test passes on main because the heap corruption is latent — it only manifests with certain binary layouts (like the Python-enabled Ubuntu build).\n\nLet me apply this fix to the current branch.",
+          "timestamp": "2026-03-09T17:19:03.272Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git show fa337ca1 -- src/amount.cc | head -5 && echo \"---looking at other fixes too\" && git show c7090f2a --stat 2>&1 | head -5 && git show ee12d11f --stat 2>&1 | head -5",
+            "description": "Check if there are additional fixes to cherry-pick"
+          },
+          "timestamp": "2026-03-09T17:19:05.029Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log johnw/fix-1934 --oneline -- src/amount.cc | head -10",
+            "description": "Show the full fix history on fix-1934"
+          },
+          "timestamp": "2026-03-09T17:19:09.004Z"
+        },
+        {
+          "type": "assistant",
+          "text": "There's only one amount.cc fix on fix-1934 that's not on our branch: `fa337ca1`. The other commits (`c7090f2a`, `ee12d11f`, etc.) seem to be on other branches. Let me check the exact code location where the fix needs to go in our branch's amount.cc.",
+          "timestamp": "2026-03-09T17:19:13.525Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "-A": 8,
+            "-n": true,
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-819/src/amount.cc",
+            "pattern": "while \\(\\*p\\).*\\{"
+          },
+          "timestamp": "2026-03-09T17:19:15.294Z"
+        },
+        {
+          "type": "assistant",
+          "text": "There's the bug. When `p` points to a trailing `.`, line 1767 increments `p` past it to the null terminator, then line 1768 copies the null byte and increments `p` past it — reading into uninitialized memory. Let me apply the fix.",
+          "timestamp": "2026-03-09T17:19:20.759Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "ToolSearch",
+          "input": {
+            "max_results": 1,
+            "query": "select:Edit"
+          },
+          "timestamp": "2026-03-09T17:19:21.917Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-819/src/amount.cc",
+            "new_string": "    while (*p) {\n      if (*p == ',' || *p == '.' || *p == '\\'') {\n        p++;\n        if (!*p)\n          break;\n      }\n      *t++ = *p++;\n    }",
+            "old_string": "    while (*p) {\n      if (*p == ',' || *p == '.' || *p == '\\'')\n        p++;\n      *t++ = *p++;\n    }",
+            "replace_all": false
+          },
+          "timestamp": "2026-03-09T17:19:26.086Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me verify the fix looks correct and build locally to test.",
+          "timestamp": "2026-03-09T17:19:29.631Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-819/src/amount.cc",
+            "limit": 15,
+            "offset": 1762
+          },
+          "timestamp": "2026-03-09T17:19:30.138Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Good. Now let me build and test locally.",
+          "timestamp": "2026-03-09T17:19:35.336Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cmake -B build -DCMAKE_BUILD_TYPE=Debug -DUSE_PYTHON=OFF -DUSE_GPGME=OFF -DBoost_DIR=/nix/store/k5a24gp2r9rvn9jhrvn4g63a63kc3hpa-boost-1.89.0-dev/lib/cmake/Boost-1.89.0 -DEDIT_LIB=/nix/store/3484xxnw0d05jf4wjwaykarvi2fgk02f-libedit-20251016-3.1/lib/libedit.dylib -DEDIT_PATH=/nix/store/b6ar0114dc1k4sbcayi2mbk3hgy7xb13-libedit-20251016-3.1-dev/include -DGMP_LIB=/nix/store/35a4xm9sh4jkn25f9v3dmxzjp5xg4r8w-gmp-with-cxx-6.3.0/lib/libgmp.dylib -DGMP_PATH=/nix/store/j454zbmphm8h380k54q9kfhnr5jbva95-gmp-with-cxx-6.3.0-dev/include -DMPFR_LIB=/nix/store/1v5yh6wgnjxw172i0xqrw982xllcgasj-mpfr-4.2.2/lib/libmpfr.dylib -DMPFR_PATH=/nix/store/dkbc3lqhrqs8hr2i4q682mqqq82hdmqi-mpfr-4.2.2-dev/include -DICU_INCLUDE_DIR=/nix/store/i9yj32fp96s8qjd6c43fk54r8j6qjvzr-icu4c-76.1-dev/include 2>&1 | tail -5",
+            "description": "Configure build",
+            "timeout": 120000
+          },
+          "timestamp": "2026-03-09T17:19:50.937Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-819/build && make -j$(sysctl -n hw.ncpu) 2>&1 | tail -5",
+            "description": "Build the project",
+            "timeout": 300000
+          },
+          "timestamp": "2026-03-09T17:19:55.689Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-819 && python3 test/RegressTests.py --ledger ./build/ledger --sourcepath . test/regress/2301.test 2>&1",
+            "description": "Run the 2301 regression test",
+            "timeout": 30000
+          },
+          "timestamp": "2026-03-09T17:20:54.238Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Test passes. Now let me commit this fix and push.",
+          "timestamp": "2026-03-09T17:20:57.738Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-819 diff --stat",
+            "description": "Show working tree changes"
+          },
+          "timestamp": "2026-03-09T17:20:58.683Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-819 log --oneline -3",
+            "description": "Show recent commits for message style"
+          },
+          "timestamp": "2026-03-09T17:20:59.155Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git add src/amount.cc && git commit -m \"$(cat <<'EOF'\nFix heap corruption when parsing amounts with trailing decimal mark\n\nThe separator-stripping loop in amount_t::parse reads past the null\nterminator when the quantity string ends with a period (e.g. \"1,234.\"\nfrom the trailing decimal mark fix in #2301). When the period is\nskipped, p advances to the null terminator, then the unconditional\ncopy reads past it, overflowing the output buffer and corrupting the\nheap.\n\nAdd a null check after skipping a trailing separator to break out of\nthe loop before the unconditional copy.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n)\"",
+            "description": "Commit the heap corruption fix",
+            "timeout": 600000
+          },
+          "timestamp": "2026-03-09T17:21:08.998Z"
+        }
+      ],
+      "total_additions": 4,
+      "total_deletions": 1,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    }
+  }
+}
