@@ -194,6 +194,44 @@ class PostingTestCase(unittest.TestCase):
         # (Virtual:Unbal) is an unbalanced virtual posting: must_balance is False
         self.assertFalse(posts[0].must_balance())
 
+    def test_is_virtual_false_for_real_posting(self):
+        """Test is_virtual is False for a regular (non-virtual) posting."""
+        posts = self.journal.query("food")
+        self.assertEqual(len(posts), 1)
+        self.assertFalse(posts[0].is_virtual)
+
+    def test_is_virtual_true_for_balanced_virtual(self):
+        """Test is_virtual is True for balanced virtual [brackets] postings."""
+        posts = self.journal.query("budget and savings")
+        self.assertEqual(len(posts), 1)
+        # [Budget:Savings] is a balanced virtual posting: is_virtual is True
+        self.assertTrue(posts[0].is_virtual)
+
+    def test_is_virtual_true_for_unbalanced_virtual(self):
+        """Test is_virtual is True for unbalanced virtual (parens) postings."""
+        journal = read_journal_from_string("""
+2012-06-01 Test
+    Expenses:Food      $10.00
+    (Virtual:Unbal)    $5.00
+    Assets:Cash
+""")
+        posts = journal.query("unbal")
+        self.assertEqual(len(posts), 1)
+        # (Virtual:Unbal) is an unbalanced virtual posting: is_virtual is True
+        self.assertTrue(posts[0].is_virtual)
+
+    def test_has_flags_post_virtual(self):
+        """Test post.has_flags(POST_VIRTUAL) works for virtual postings."""
+        # Real posting: POST_VIRTUAL flag should NOT be set
+        posts = self.journal.query("food")
+        self.assertEqual(len(posts), 1)
+        self.assertFalse(posts[0].has_flags(POST_VIRTUAL))
+
+        # Balanced virtual posting: POST_VIRTUAL flag SHOULD be set
+        posts = self.journal.query("budget and savings")
+        self.assertEqual(len(posts), 1)
+        self.assertTrue(posts[0].has_flags(POST_VIRTUAL))
+
     def test_posting_note(self):
         """Test the note property inherited from item_t."""
         posts = self.journal.query("food")

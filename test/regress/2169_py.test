@@ -1,0 +1,7 @@
+test python test/regress/2169.py
+Budget:Expenses:Gas: is_virtual=True, has_flags=True
+Budget:Equity: is_virtual=True, has_flags=True
+Virtual:Tracking: is_virtual=True, has_flags=True
+Expenses:Other: is_virtual=False, has_flags=False
+Assets:Cash: is_virtual=False, has_flags=False
+end test
