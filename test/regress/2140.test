@@ -1,0 +1,38 @@
+; Regression test for GitHub issue #2140:
+; "Finding most recent price of commodity" -- the --latest option should
+; output only the most recently-dated price for each commodity instead of
+; showing the full price history.
+
+P 2022/01/01 VTI $100.00
+P 2022/06/01 VTI $150.00
+P 2022/06/02 VTI $155.00
+P 2022/01/01 BND $80.00
+P 2022/06/01 BND $82.00
+
+2022/01/15 Investment
+    Assets:Investments:VTI  10 VTI @ $100.00
+    Assets:Investments:BND  5 BND @ $80.00
+    Assets:Checking         $-1,400.00
+
+; Without --latest: full price history for both commodities
+test prices
+2022/01/01 BND            $80.00
+2022/01/15 BND            $80.00
+2022/06/01 BND            $82.00
+2022/01/01 VTI           $100.00
+2022/01/15 VTI           $100.00
+2022/06/01 VTI           $150.00
+2022/06/02 VTI           $155.00
+end test
+
+; With --latest: only the most recent price for each commodity
+test prices --latest
+2022/06/01 BND            $82.00
+2022/06/02 VTI           $155.00
+end test
+
+; --latest also works with the pricedb command
+test pricedb --latest
+P 2022/06/01 00:00:00 BND $82.00
+P 2022/06/02 00:00:00 VTI $155.00
+end test

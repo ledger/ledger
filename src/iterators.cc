@@ -172,9 +172,44 @@ void posts_commodities_iterator::reset(journal_t& journal) {
 
   // Phase 2: For each commodity, walk its price history and create
   // synthetic transactions with postings representing each price point.
-  for (commodity_t* comm : commodities)
-    comm->map_prices(create_price_xact(journal, journal.master->find_account(comm->symbol()), temps,
-                                       xact_temps));
+  // When latest_only is set, scan the full history but emit only the
+  // most recently-dated price for each commodity.
+  if (latest_only) {
+    for (commodity_t* comm : commodities) {
+      datetime_t best_when;
+      amount_t best_price;
+
+      // map_prices emits prices in ascending datetime order (price_map_t is
+      // a std::map<datetime_t, amount_t>), so the last callback gives the
+      // most recent price.  We overwrite best_when/best_price on each call
+      // so only the final (latest) entry survives.
+      comm->map_prices([&best_when, &best_price](const datetime_t& when, const amount_t& price) {
+        best_when = when;
+        best_price = price;
+      });
+
+      if (best_when.is_not_a_date_time())
+        continue; // no price history for this commodity
+
+      xact_t& xact = temps.create_xact();
+      xact_temps.push_back(&xact);
+      xact.payee = best_price.commodity().symbol();
+      xact._date = best_when.date();
+      xact._state = item_t::CLEARED;
+      xact.journal = &journal;
+
+      account_t* account = journal.master->find_account(comm->symbol());
+      post_t& post = temps.create_post(xact, account);
+      post._date = best_when.date();
+      post.amount = best_price;
+      post._state = item_t::CLEARED;
+      post.xdata().datetime = best_when;
+    }
+  } else {
+    for (commodity_t* comm : commodities)
+      comm->map_prices(create_price_xact(journal, journal.master->find_account(comm->symbol()),
+                                         temps, xact_temps));
+  }
 
   // Phase 3: Sort synthetic transactions by date for deterministic output,
   // then initialize the outer xacts_iterator over them.

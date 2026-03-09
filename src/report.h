@@ -397,6 +397,7 @@ public:
     HANDLER(immediate).report(out);
     HANDLER(inject_).report(out);
     HANDLER(invert).report(out);
+    HANDLER(latest).report(out);
     HANDLER(limit_).report(out);
     HANDLER(lisp_date_format_).report(out);
     HANDLER(lot_dates).report(out);
@@ -901,6 +902,8 @@ public:
         OTHER(display_amount_).on(whence, "-display_amount");
         OTHER(display_total_).on(whence, "-display_total");
       });
+
+  OPTION(report_t, latest);
 
   OPTION_(
       report_t, limit_,

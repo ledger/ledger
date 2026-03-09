@@ -253,17 +253,19 @@ protected:
   xact_posts_iterator posts;            ///< Inner: walks postings in the current synthetic xact.
   xacts_list xact_temps;                ///< Owns the synthetic transaction objects.
   temporaries_t temps;                  ///< Arena allocator for temporary xacts and posts.
+  bool latest_only;                     ///< If true, emit only the most recent price per commodity.
 
 public:
-  posts_commodities_iterator() { TRACE_CTOR(posts_commodities_iterator, ""); }
-  posts_commodities_iterator(journal_t& journal) {
+  posts_commodities_iterator() : latest_only(false) { TRACE_CTOR(posts_commodities_iterator, ""); }
+  posts_commodities_iterator(journal_t& journal, bool _latest_only = false)
+      : latest_only(_latest_only) {
     reset(journal);
     TRACE_CTOR(posts_commodities_iterator, "journal_t&");
   }
   posts_commodities_iterator(const posts_commodities_iterator& i)
       : iterator_facade_base<posts_commodities_iterator, post_t*, boost::forward_traversal_tag>(i),
         journal_posts(i.journal_posts), xacts(i.xacts), posts(i.posts), xact_temps(i.xact_temps),
-        temps(i.temps) {
+        temps(i.temps), latest_only(i.latest_only) {
     TRACE_CTOR(posts_commodities_iterator, "copy");
   }
   ~posts_commodities_iterator() noexcept { TRACE_DTOR(posts_commodities_iterator); }
