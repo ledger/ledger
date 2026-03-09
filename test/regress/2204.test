@@ -1,0 +1,23 @@
+; Test for issue #2204: --empty should show zero commodity amounts for
+; accounts that had postings in multiple commodities where some net to zero.
+
+2024/01/01 Buy EUR
+    Expenses:Account1    5.00 EUR
+    Assets:Cash
+
+2024/01/01 Buy USD
+    Expenses:Account1    $10.00
+    Assets:Cash
+
+2024/01/02 Return USD
+    Expenses:Account1    $-10.00
+    Assets:Cash
+
+test bal Expenses --empty
+               $0.00
+            5.00 EUR  Expenses:Account1
+end test
+
+test bal Expenses
+            5.00 EUR  Expenses:Account1
+end test

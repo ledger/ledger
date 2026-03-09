@@ -15,7 +15,7 @@
     Assets:Checking
 
 test bal --empty Expenses:Food -> 0
-                   0  Expenses:Food
+               $0.00  Expenses:Food
 end test
 
 test bal Expenses:Food -> 0

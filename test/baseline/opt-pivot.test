@@ -70,10 +70,10 @@ end test
 
 test bal assets:receivables --pivot Invoice --empty
            28.00 GBP  Invoice
-                   0    101:Assets:Receivables
+            0.00 GBP    101:Assets:Receivables
            11.00 GBP    102:Assets:Receivables
            12.00 GBP    103:Assets:Receivables
-                   0    104:Assets:Receivables
+            0.00 GBP    104:Assets:Receivables
             5.00 GBP    105:Assets:Receivables
 --------------------
            28.00 GBP
@@ -91,7 +91,7 @@ end test
 
 test bal assets:receivables --pivot Invoice --empty -p "until 2014-05-06"
            58.00 GBP  Invoice
-                   0    101:Assets:Receivables
+            0.00 GBP    101:Assets:Receivables
            11.00 GBP    102:Assets:Receivables
            12.00 GBP    103:Assets:Receivables
            15.00 GBP    104:Assets:Receivables
@@ -121,7 +121,7 @@ test bal assets:receivables --pivot Customer --empty
            28.00 GBP  Customer
            12.00 GBP    AAA:Assets:Receivables
            11.00 GBP    BBB:Assets:Receivables
-                   0    CCC:Assets:Receivables
+            0.00 GBP    CCC:Assets:Receivables
             5.00 GBP    DDD:Assets:Receivables
 --------------------
            28.00 GBP

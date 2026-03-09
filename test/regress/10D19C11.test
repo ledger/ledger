@@ -29,7 +29,7 @@
 
 test -E bal liabilities
               $-2.00  Liabilities
-                   0    MasterCard
+               $0.00    MasterCard
               $-2.00    Taxes
 --------------------
               $-2.00
