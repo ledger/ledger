@@ -94,6 +94,14 @@
 
     devShells = forAllSystems (system: let
         pkgs = nixpkgsFor.${system};
+        # Build Boost with Python support, matching exactly what the ledger
+        # package uses.  A local binding lets us reference the same derivation
+        # in both inputsFrom (via the ledger package) and in the explicit
+        # Boost_DIR cmake flag below.
+        boostWithPython = pkgs.boost.override {
+          enablePython = true;
+          python = pkgs.python3;
+        };
       in with pkgs; {
       default = mkShellNoCC {
         name = "ledger-dev";
@@ -132,6 +140,13 @@
           "-DUSE_DOXYGEN=ON"
           "-DUSE_GPGME=ON"
           "-DBUILD_DOCS=ON"
+          # Explicitly pin Boost_DIR to the Nix-provided Boost with Python.
+          # Without this, a stale CMakeCache.txt from a previous configure (e.g.
+          # one that ran when a different Boost version was current) can leave a
+          # cached Boost_DIR pointing to the wrong version.  That causes the
+          # internal find_package(boost_python) inside BoostConfig.cmake to fail
+          # with a version mismatch even though the correct Boost is available.
+          "-DBoost_DIR=${boostWithPython.dev}/lib/cmake/Boost-${boost.version}"
           # Pin CMake to the Nix-provided Python so it doesn't pick up a
           # Homebrew Python (e.g. 3.14) that mismatches the Boost.Python build.
           "-DPython_EXECUTABLE=${python3}/bin/python3"
