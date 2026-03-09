@@ -180,6 +180,60 @@ jobs:
           retention-days: 30
           if-no-files-found: error
 
+  packaging:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        name: Check out repository code
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -y
+          sudo ./acprep dependencies
+          # dpkg-dev provides dpkg-shlibdeps (for CPACK_DEBIAN_PACKAGE_SHLIBDEPS)
+          # rpm provides rpmbuild (for RPM generation)
+          sudo apt-get install -y dpkg-dev rpm
+
+      - name: Configure and build
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+
+      - name: Build DEB package
+        working-directory: build
+        run: cpack -G DEB --verbose
+
+      - name: Build RPM package
+        working-directory: build
+        run: cpack -G RPM --verbose
+
+      - name: Verify DEB package
+        working-directory: build
+        run: |
+          echo "=== DEB package info ==="
+          dpkg-deb --info *.deb
+          echo ""
+          echo "=== DEB package contents ==="
+          dpkg-deb --contents *.deb
+
+      - name: Verify RPM package
+        working-directory: build
+        run: |
+          echo "=== RPM package info ==="
+          rpm -qip *.rpm
+          echo ""
+          echo "=== RPM package contents ==="
+          rpm -qlp *.rpm
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: packages
+          path: |
+            build/*.deb
+            build/*.rpm
+          retention-days: 30
+          if-no-files-found: error
+
   doxygen:
     runs-on: ubuntu-latest
     steps:
