@@ -599,7 +599,7 @@ void journal_t::extend_xact(xact_base_t* xact) {
         continue;
 
       const posts_list::iterator before_this_at = std::prev(xact->posts.end());
-      ats[i]->extend_xact(*xact, *current_context, &filtered);
+      ats[i]->extend_xact_with_posts(*xact, *current_context, filtered);
 
       // Record all newly generated posts in self_gen[i].
       for (auto it = std::next(before_this_at); it != xact->posts.end(); ++it) {

@@ -375,8 +375,19 @@ public:
    * generated, verify() is called to ensure the transaction still
    * balances.
    */
-  virtual void extend_xact(xact_base_t& xact, parse_context_t& context,
-                           const posts_list* posts_to_process = nullptr);
+  virtual void extend_xact(xact_base_t& xact, parse_context_t& context);
+
+  /**
+   * @brief Apply this automated transaction using a caller-provided post list.
+   *
+   * Like extend_xact(), but instead of scanning xact.posts and filtering
+   * out ITEM_GENERATED posts, it processes the given @p posts_to_process
+   * list directly.  Used by the cascade logic in journal_t::extend_xact()
+   * to feed generated posts from one auto transaction into another without
+   * self-triggering.
+   */
+  void extend_xact_with_posts(xact_base_t& xact, parse_context_t& context,
+                              const posts_list& posts_to_process);
 };
 
 /**
