@@ -131,7 +131,10 @@ void export_xact() {
       .add_property("predicate", make_getter(&auto_xact_t::predicate),
                     make_setter(&auto_xact_t::predicate))
 
-      .def("extend_xact", &auto_xact_t::extend_xact);
+      .def("extend_xact",
+           +[](auto_xact_t& self, xact_base_t& xact, parse_context_t& ctx) {
+             self.extend_xact(xact, ctx);
+           });
 
   class_<period_xact_t, bases<xact_base_t>>("PeriodicTransaction")
       .def(init<string>())

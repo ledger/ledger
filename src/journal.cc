@@ -46,8 +46,6 @@
 
 #include <unordered_set>
 
-#include <unordered_set>
-
 #include "journal.h"
 #include "context.h"
 #include "amount.h"
