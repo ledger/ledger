@@ -1,0 +1,59 @@
+; Regression test for issue #2465: Simulate asset deprecation using effective dates.
+;
+; When spreading depreciation across multiple periods using per-posting effective
+; dates, each expense posting must be explicitly paired with a corresponding asset
+; decrease carrying the same effective date.  An auto-balance (null-amount) posting
+; uses the transaction's primary date, not the effective dates of sibling postings,
+; so the full asset decrease would be included even when some expenses are filtered
+; out by --effective --end.
+;
+; The correct technique for per-period depreciation is to write explicit amounts on
+; both sides of each period's entry, giving each pair the same effective date:
+;
+;   Expenses:Instruments  50 ; [=<period-date>]
+;   Assets:Instruments   -50 ; [=<period-date>]
+;
+; This way, filtering with --effective --end <date> includes only the pairs whose
+; effective date falls before <date>, leaving the asset at its current book value.
+
+2025/06/16 * Buy instruments
+    Assets:Instruments                           150
+    Assets:CA
+
+; Depreciate in three equal periods using explicit paired postings so that each
+; period's expense and the corresponding asset reduction share the same effective date.
+2025/06/16 * Deprecate instruments
+    Expenses:Instruments                          50  ; [=2025/06/01]
+    Assets:Instruments                           -50  ; [=2025/06/01]
+    Expenses:Instruments                          50  ; [=2025/08/01]
+    Assets:Instruments                           -50  ; [=2025/08/01]
+    Expenses:Instruments                          50  ; [=2025/10/01]
+    Assets:Instruments                           -50  ; [=2025/10/01]
+
+; After the first period: 50 depreciated, 100 remaining book value.
+test bal --effective --end 2025/07/01
+                 -50  Assets
+                -150    CA
+                 100    Instruments
+                  50  Expenses:Instruments
+--------------------
+                   0
+end test
+
+; After the second period: 100 depreciated, 50 remaining book value.
+test bal --effective --end 2025/10/01
+                -100  Assets
+                -150    CA
+                  50    Instruments
+                 100  Expenses:Instruments
+--------------------
+                   0
+end test
+
+; After all three periods: fully depreciated, zero book value for instruments.
+test bal --effective --end 2025/12/01
+                -150  Assets:CA
+                 150  Expenses:Instruments
+--------------------
+                   0
+end test
