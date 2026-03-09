@@ -1,0 +1,13 @@
+; Regression test for issue #2264: datetime field for timelog entries should
+; include the time component (the check-in time), not just midnight.
+
+i 2023-06-16 06:30:00 Start of test entry
+o 2023-06-16 07:00:00
+
+test reg --format '%(format_datetime(datetime, "%H:%M"))\n'
+06:30
+end test
+
+test reg --format '%(datetime)\n'
+2023/06/16 06:30:00
+end test

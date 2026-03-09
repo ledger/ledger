@@ -494,8 +494,11 @@ value_t get_value_date(post_t& post) {
   return post.date();
 }
 value_t get_datetime(post_t& post) {
-  return (!post.xdata().datetime.is_not_a_date_time() ? post.xdata().datetime
-                                                      : datetime_t(post.date()));
+  if (!post.xdata().datetime.is_not_a_date_time())
+    return post.xdata().datetime;
+  if (post.checkin)
+    return *post.checkin;
+  return datetime_t(post.date());
 }
 value_t get_checkin(post_t& post) {
   return post.checkin ? *post.checkin : NULL_VALUE;
