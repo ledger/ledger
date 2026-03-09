@@ -619,20 +619,10 @@ endif()
 
 ########################################################################
 
-# build a CPack driven installer package
+# Build CPack-driven installer packages (tarball, .deb, .rpm).
+# Generator selection and metadata live in cmake/Packaging.cmake.
 include(InstallRequiredSystemLibraries)
-
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE.md")
-set(CPACK_PACKAGE_VERSION_MAJOR "${Ledger_VERSION_MAJOR}")
-set(CPACK_PACKAGE_VERSION_MINOR "${Ledger_VERSION_MINOR}")
-set(CPACK_PACKAGE_VERSION_PATCH "${Ledger_VERSION_PATCH}${Ledger_VERSION_PRERELEASE}")
-
-set(CPACK_GENERATOR "TBZ2")
-set(CPACK_SOURCE_GENERATOR "TBZ2")
-set(CPACK_SOURCE_PACKAGE_FILE_NAME
-  "${CMAKE_PROJECT_NAME}-${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
-set(CPACK_SOURCE_IGNORE_FILES "/.git*;/.dir-locals.el;~$;/doc/website/;/doc/wiki/;/lib/*.sh;/lib/Makefile;/tools/;${CPACK_SOURCE_IGNORE_FILES}")
-
+include(${CMAKE_SOURCE_DIR}/cmake/Packaging.cmake)
 include(CPack)
 
 ### CMakeLists.txt ends here
