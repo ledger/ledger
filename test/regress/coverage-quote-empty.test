@@ -11,4 +11,6 @@ test bal --market --download --getquote $sourcepath/test/scripts/mock-getquote.s
            $-1000.00    Checking
 --------------------
                    0
+__ERROR__
+Warning: Price quote script returned no usable price for commodity 'EMPTYQUOTE'
 end test

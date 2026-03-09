@@ -1,10 +1,15 @@
-; Test --download with a getquote script that fails (returns non-zero exit)
-; This exercises the failure path in quotes.cc that sets COMMODITY_NOMARKET
+; Regression test for issue #2335:
+; getquote errors are not reported
+;
+; When the getquote script fails (non-zero exit) or returns no usable
+; price data, a warning should be emitted to stderr so the user is
+; informed rather than silently receiving no price update.
 
 2024/01/15 Buy Stock
     Assets:Brokerage        10 BADQUOTE
     Assets:Checking        $-1000.00
 
+; BADQUOTE causes mock-getquote.sh to exit 1 -- a warning must appear
 test bal --market --download --getquote $sourcepath/test/scripts/mock-getquote.sh -> 0
                    0  Assets
             $1000.00    Brokerage
