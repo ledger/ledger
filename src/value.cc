@@ -354,7 +354,7 @@ string value_t::to_string() const {
   if (is_string()) {
     return as_string();
   } else if (is_commodity()) {
-    return as_commodity().symbol();
+    return as_commodity().base_symbol();
   } else {
     value_t temp(*this);
     temp.in_place_cast(STRING);

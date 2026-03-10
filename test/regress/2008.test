@@ -1,0 +1,9 @@
+; Quoted commodity symbols should not retain quotes in CSV output
+2021/01/01 Imaginary cryptocurrency tx
+    Assets:Crypto   5 "l33tc0in" @ £123
+    Assets:Checking
+
+test csv
+"2021/01/01","","Imaginary cryptocurrency tx","Assets:Crypto","l33tc0in","5","",""
+"2021/01/01","","Imaginary cryptocurrency tx","Assets:Checking","£","-615","",""
+end test
