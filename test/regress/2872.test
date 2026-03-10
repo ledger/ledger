@@ -1,0 +1,31 @@
+; Regression test for issue #2872
+; https://github.com/ledger/ledger/issues/2872
+;
+; The original test for issue #1948 used "format 1000.000 CTG25" where
+; CTG25 was intended as a mismatching commodity symbol. However, unquoted
+; commodity names cannot contain digits (they terminate the symbol), so
+; "CTG25" is silently parsed as "CTG". The 1948.test was updated to use
+; "CTGBAR" to avoid this ambiguity.
+;
+; This file tests:
+; 1. That a quoted commodity name with digits ("CTG25") works correctly in
+;    a format directive when it matches the commodity name.
+; 2. That a mismatched quoted commodity name with digits produces a clear,
+;    accurate error message (naming the full symbol, including digits).
+
+; Invalid: unquoted "CTG25" in a format directive — the parser reads "CTG"
+; and stops at the digit, leaving "25" unconsumed.  This should be a clear
+; diagnostic rather than silently truncating to "CTG" and then producing a
+; confusing mismatch error against the wrong symbol.
+commodity CTG
+    format 1000.000 CTG25
+
+2024/01/01 Test
+    Expenses        1000.000 CTG
+    Assets
+
+test source -> 1
+__ERROR__
+While parsing file "$FILE", line 21:
+Error: unexpected characters '25' after commodity symbol in format directive
+end test

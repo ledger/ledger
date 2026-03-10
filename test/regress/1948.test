@@ -4,9 +4,9 @@
 ; Ledger should reject commodity directives where the format symbol
 ; doesn't match the commodity name
 
-; Invalid: commodity is CTGXXV but format uses CTG25
+; Invalid: commodity is CTGXXV but format uses CTGBAR
 commodity CTGXXV
-    format 1000.000 CTG25
+    format 1000.000 CTGBAR
 
 2024/01/01 Test
     Expenses        1000.000 CTGXXV
@@ -15,5 +15,6 @@ commodity CTGXXV
 test source -> 1
 __ERROR__
 While parsing file "$FILE", line 9:
-Error: commodity directive symbol CTGXXV and format directive symbol CTG should be the same
+Error: commodity directive symbol CTGXXV and format directive symbol CTGBAR should be the same
 end test
+
