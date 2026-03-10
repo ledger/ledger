@@ -41,7 +41,7 @@ class LedgerHarness:
 
     def run(self, command, verify=None, gmalloc=None, columns=True):
         ALLOWED_ENV_VARS = {
-            'PATH', 'HOME', 'TZ', 'LANG', 'LC_ALL', 'LC_CTYPE', 'TERM',
+            'PATH', 'HOME', 'TZ', 'TZDIR', 'LANG', 'LC_ALL', 'LC_CTYPE', 'TERM',
             'TMPDIR', 'TEMP', 'TMP',
             'SYSTEMROOT', 'COMSPEC', 'MSYSTEM', 'MINGW_PREFIX',
         }
