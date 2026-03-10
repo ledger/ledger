@@ -240,6 +240,8 @@ xact_t* csv_reader::read_xact(bool rich_data) {
     }
 
     case FIELD_COST: {
+      if (field.length() == 0)
+        break;
       std::istringstream amount_str(field); // NOLINT(bugprone-unused-local-non-trivial-variable)
       (void)amt.parse(amount_str, PARSE_NO_REDUCE);
       if (!amt.has_commodity() && commodity_pool_t::current_pool->default_commodity)
@@ -263,6 +265,15 @@ xact_t* csv_reader::read_xact(bool rich_data) {
       break;
     }
     n++;
+  }
+
+  // If cost was provided but shares the same commodity as the amount, it is
+  // redundant (a 1:1 no-op conversion) and would cause a validation error.
+  // Clear it so the posting is treated as a simple same-currency entry.
+  if (post->cost && !post->amount.is_null() &&
+      post->amount.commodity() == post->cost->commodity()) {
+    post->cost = std::nullopt;
+    amt = post->amount;
   }
 
   // Phase 3: Attach rich metadata if requested (import timestamp and

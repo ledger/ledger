@@ -1,0 +1,23 @@
+; Regression test for GitHub issue #2142:
+; CSV convert should handle missing or same-commodity cost fields gracefully.
+;
+; Case 1: empty cost field previously caused "No quantity specified for amount"
+; Case 2: same-commodity cost previously caused "A posting's cost must be of
+;         a different commodity than its amount"
+
+account Expenses:Unknown
+account Assets:Checking
+
+test convert test/regress/2142-data.csv --input-date-format "%Y-%m-%d" --account Assets:Checking
+2022/10/03 * Expense with conversion
+    Expenses:Unknown                          15 EUR
+    Assets:Checking                          -14 USD
+
+2022/10/07 * Expense without cost
+    Expenses:Unknown                          20 USD
+    Assets:Checking
+
+2022/10/10 * Expense same commodity cost
+    Expenses:Unknown                          30 USD
+    Assets:Checking
+end test

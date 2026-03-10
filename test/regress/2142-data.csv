@@ -1,0 +1,4 @@
+date,descr,amount,cost
+2022-10-03,Expense with conversion,15 EUR,14 USD
+2022-10-07,Expense without cost,20 USD,
+2022-10-10,Expense same commodity cost,30 USD,30 USD
