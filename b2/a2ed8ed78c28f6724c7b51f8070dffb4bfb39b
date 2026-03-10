@@ -1,0 +1,761 @@
+src/output.cc
+  41050a6cb41b7b6a 147-148
+src/post.h
+  41050a6cb41b7b6a 297
+src/report.h
+  41050a6cb41b7b6a 730,1117
+test/regress/868.test
+  41050a6cb41b7b6a 1-25
+src/post.cc
+  41050a6cb41b7b6a 266-269,685-686
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.9",
+  "base_commit_sha": "b2a2ed8ed78c28f6724c7b51f8070dffb4bfb39b",
+  "prompts": {
+    "41050a6cb41b7b6a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a9e52dc8-f261-4ee1-a208-02a3e68fb82e",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "<command-message>medium</command-message>\n<command-name>/medium</command-name>\n<command-args>The PR for this branch is invalid, and I've closed it. It has no difference from the current `main` version, whether I use `--sort amount` or `--sort payee`. Use cpp-pro to review the bug report again at https://github.com/ledger/ledger/issues/868 and implement a test that matches what the submitter offered there in the final comment, then correct Ledger to fix that case. You should start by undoing all the changes you've made thus far.</command-args>",
+          "timestamp": "2026-03-10T13:56:44.653Z"
+        },
+        {
+          "type": "user",
+          "text": "Remember the following:\n\n- Use the GitHub CLI (`gh`) for all GitHub-related tasks\n- Search the codebase for relevant files\n- Ensure code passes linting and type checking after doing any work\n- Use cpp-pro, python-pro, emacs-lisp-pro, rust-pro or haskell-pro as needed for diagnosing and analyzing PRs, fixing code, and writing any new code.\n- Use Web Search and Perplexity as need for research and discovering resources.\n- Use sequential-thinking when appropriate to break down tasks further.\n- Use context7 whenever code examples might help.\n\nThink deeply to analyze the following query, construct a well thought out plan of action based on the following context, and then carefully execute that plan step by step:\n\n\nARGUMENTS: The PR for this branch is invalid, and I've closed it. It has no difference from the current `main` version, whether I use `--sort amount` or `--sort payee`. Use cpp-pro to review the bug report again at https://github.com/ledger/ledger/issues/868 and implement a test that matches what the submitter offered there in the final comment, then correct Ledger to fix that case. You should start by undoing all the changes you've made thus far.",
+          "timestamp": "2026-03-10T13:56:44.653Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me break down the task:\n\n1. Undo all changes made so far on this branch\n2. Review the bug report at https://github.com/ledger/ledger/issues/868\n3. Implement a test that matches what the submitter offered in the final comment\n4. Fix Ledger to pass that test\n\nLet me start by checking the current state of the branch and the bug report.",
+          "timestamp": "2026-03-10T13:56:47.973Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "ToolSearch",
+          "input": {
+            "max_results": 7,
+            "query": "select:Bash,Read,Agent,Grep,Glob,Write,Edit"
+          },
+          "timestamp": "2026-03-10T13:56:48.563Z"
+        },
+        {
+          "type": "assistant",
+          "text": "\n\nLet me start by understanding the current state of the branch, fetching the bug report, and checking what changes exist.",
+          "timestamp": "2026-03-10T13:56:51.115Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --oneline main..HEAD",
+            "description": "Check commits on this branch vs main"
+          },
+          "timestamp": "2026-03-10T13:56:52.452Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff main --stat",
+            "description": "Check file changes vs main"
+          },
+          "timestamp": "2026-03-10T13:56:53.347Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 868 --repo ledger/ledger --comments",
+            "description": "Fetch bug report #868 with all comments"
+          },
+          "timestamp": "2026-03-10T13:56:54.364Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me understand the bug:\n\n1. When using `--sort=amount` (or any sort), the register report re-orders postings across transactions\n2. The payee display logic currently only shows the payee for the first posting of a transaction, then blanks it for subsequent postings of the same transaction\n3. But when postings are sorted, postings from different transactions get interleaved, so a posting might follow a posting from a different transaction but the payee gets suppressed because it's the \"same\" (it just checks if the xact changed)\n\nThe fix that Fuco1 proposed: compare the payee of the current posting with the payee of the previous posting in the sorted output, and show it when it changes (regardless of whether it's in the same transaction).\n\n\nNow I need to look at the actual code to see how the payee display logic works, then implement the fix by changing it to compare against the previous posting's payee instead of checking if the transaction changed.",
+          "timestamp": "2026-03-10T13:57:09.735Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Good, I can see the bug clearly now. The issue is that when `--sort` is used in the register report, postings get reordered and the payee display logic (which only shows payee when the transaction changes) fails to show payees correctly for reordered postings.\n\nLet me first undo all existing changes on this branch, then implement the proper fix.",
+          "timestamp": "2026-03-10T13:57:10.497Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git reset --hard main",
+            "description": "Reset branch to main, undoing all previous changes"
+          },
+          "timestamp": "2026-03-10T13:57:10.750Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Good. Now let me understand the current payee display logic by reading the relevant code.",
+          "timestamp": "2026-03-10T13:57:13.892Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-868/src/output.h"
+          },
+          "timestamp": "2026-03-10T13:57:14.345Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-868/src/output.cc"
+          },
+          "timestamp": "2026-03-10T13:57:14.609Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the code. The key issue is in `format_posts::operator()` at lines 137-148 of `output.cc`. The logic currently is:\n\n1. If `last_xact != post.xact` → this is a new transaction → print `between_format` separator and `first_line_format` (includes date + payee)\n2. If same xact but different date → print `first_line_format` (includes date + payee)\n3. Otherwise → print `next_lines_format` (no date/payee, just account + amount)\n\nWhen `--sort` is used, postings from different transactions get interleaved. So a posting from a different transaction can follow one from the previous transaction, but since `last_xact` changed, it gets `first_line_format` — but if two consecutive postings are from the SAME transaction, only the first one gets the payee displayed.\n\n\nLet me trace through the actual bug report more carefully. The transaction shows a bank deposit with a comment on the expense posting, and without `--sort`, the register output displays the date and payee on the first line, then the comment text on the second line.\n\nWhen `--sort=amount` is applied, the postings get reordered within the same transaction, which changes which posting appears first. The issue is that the code checks `last_xact` to decide whether to use the first-line format (which includes the payee), but since both postings belong to the same transaction, the second posting incorrectly gets the next-lines format even though it has a different payee that should be displayed.\n\nThe fix is to also check if the current posting's payee differs from the previous posting's payee—if it does, I should use the first-line format to show it, regardless of whether they're from the same transaction. Refining the condition logic...\n\nSo I need to add a check for when the payee changes even if the transaction stays the same—that should trigger the full first-line format to display the new payee. The structure would check the transaction first, then if it's the same transaction, check if the date or payee changed, and only use the compact format when both the transaction and payee remain unchanged. I see the issue now — when postings get sorted across transaction boundaries, comparing payees between consecutive postings regardless of which transaction they came from is actually the right approach. If the payee changes from one posting to the next in the sorted output, I should display it with `first_line_format`, and if it stays the same, I can use the compact `next_lines_format`. The tricky part is that I still need to handle transaction boundaries and date displays properly even when the output is sorted across multiple transactions.\n\nLet me think through the cases more carefully: when a new transaction appears, I should show the separator and full first line with the date and payee. If we're still in the same transaction but the date or payee changes, I need to show the first line again. For the same transaction with the same date and payee, I can use the compact format. I should check what the default register format actually includes in `first_line_format` to see how dates and payees are displayed together.",
+          "timestamp": "2026-03-10T13:57:54.089Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me understand the default register format and the `payee()` function.",
+          "timestamp": "2026-03-10T13:57:54.258Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "-n": true,
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-868/src",
+            "pattern": "register_format"
+          },
+          "timestamp": "2026-03-10T13:57:54.636Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "-n": true,
+            "context": 3,
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-868/src",
+            "pattern": "string payee\\(\\)"
+          },
+          "timestamp": "2026-03-10T13:57:55.359Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-868/src/report.h",
+            "limit": 20,
+            "offset": 1085
+          },
+          "timestamp": "2026-03-10T13:57:58.372Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-868/src/post.cc",
+            "limit": 80,
+            "offset": 1
+          },
+          "timestamp": "2026-03-10T13:57:58.973Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "-n": true,
+            "context": 10,
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-868/src/post.cc",
+            "pattern": "string post_t::payee"
+          },
+          "timestamp": "2026-03-10T13:58:03.454Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand everything. Let me now look at the format strings more carefully to understand what `first_line_format` vs `next_lines_format` looks like. The format is split on `%/` into sub-formats. Let me check the default register format more fully.",
+          "timestamp": "2026-03-10T13:58:06.795Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me see how the format string gets split — particularly what `next_lines_format` looks like.",
+          "timestamp": "2026-03-10T13:58:07.749Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-868/src/report.h",
+            "limit": 40,
+            "offset": 1088
+          },
+          "timestamp": "2026-03-10T13:58:08.580Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I can see the issue clearly. The `next_lines_format` (the part after `%/`) contains:\n\n```\n%(justify(\" \", int(date_width))) %(ansify_if(\n   justify(truncated(has_tag(\"Payee\") ? payee : \" \",\n                     int(payee_width)), int(payee_width)),\n             bold if should_bold))\n %$3 %$4 %$5\n```\n\nSo in `next_lines_format`:\n- Date is replaced with spaces (blank)\n- Payee shows `has_tag(\"Payee\") ? payee : \" \"` — it only shows the payee if the posting has a `Payee` tag. If the posting inherits its payee from the transaction, `has_tag(\"Payee\")` returns true because `has_tag` has inheritance.\n\n\n- But wait, I need to reconsider how `has_tag` works. Looking at `post_t::has_tag`, it checks the posting's own tags first, then inherits from the transaction. So if neither the posting nor the transaction has a `Payee` metadata tag, it returns false.\n\nIn the bug scenario with the transaction dated 2012/10/30 and the Expenses posting without its own Payee tag, `has_tag(\"Payee\")` would only return true if the transaction itself has that metadata tag.\n\nWhen sorting by amount, the Expenses posting (with amount -€50) gets displayed first using first_line_format, which shows the transaction's payee \"ACME Inc.\" instead of the posting's own Payee metadata \"Binders, Pens, Digital Prints\" — that's where the mismatch occurs.\n\nThe real issue is that next_lines_format needs to show the payee even when there's no Payee tag, but only if it differs from what was already displayed. I'm considering two fixes: either expose the previous posting's payee to the format expression so it can compare, or change the decision logic in the formatting operator to intelligently choose which format to apply based on whether the payee would be redundant.\n\nApproach 2 seems cleaner — I'd modify the operator to check not just transaction boundaries, but also date and payee changes, switching to the full format whenever any of these differ from the previous posting.\n\nStill writing the conditional logic...\n\nBut wait, there's an issue here. Using `first_line_format` when the payee changes within the same transaction would redundantly display the date again. Looking at the expected output, the second line should show a blank date with just the payee name, which means I need `next_lines_format` behavior for payee-only changes, not the full format. Looking at Martin's output, I can see the issue now — when sorting by amount, the payee line is showing blank instead of the payee name. The `next_lines_format` is being cut off mid-definition, but I can see it's trying to justify spacing and apply formatting. Let me trace through what's happening with the format string to understand why the payee isn't displaying correctly in the sorted output. The issue is that the format string checks for a Payee tag to decide whether to show the payee, but this breaks for sorted output where consecutive postings might be from different transactions. I need to fix this either in the format string by comparing against the previous posting's payee, or in the C++ code by handling payee changes when deciding which format to apply. Looking at how `next_lines_format` currently handles the payee field...\n\nExamining the format logic more closely, the real problem is that `has_tag(\"Payee\")` is a poor heuristic for detecting payee changes — a posting can have a different effective payee without an explicit tag, or inherit one from the transaction level. The cleanest solution would be to compare against the previous posting's payee directly in the format condition, but that requires exposing `last_post` to the expression scope, which is complicated. Let me explore a simpler workaround. Looking at the actual output format, I see the second posting line omits the date entirely and just shows the payee. But the Fuco1 comment shows a different pattern where the date repeats for each posting in the same transaction, then blank lines appear for subsequent postings. These are conflicting expectations, so I need to figure out which behavior is actually correct.\n\nThe core issue is that `next_lines_format` doesn't have access to the previous posting's payee to make the comparison. I think the real solution is to track the previous payee within the formatting logic itself, rather than trying to do the comparison in the expression. For sorted output, the issue is that consecutive postings from the same transaction might have different payees, so I need to decide whether to show the payee based on whether it differs from the previous posting's payee rather than just checking for a Payee tag. Looking at the test case, the first posting displays the transaction payee through `first_line_format`, while the second posting needs to check if its payee differs from the previous one to decide whether to display it. I could expose the previous posting in the format scope so I can directly compare payees between postings, or create a helper function like `payee_changed` that does this comparison. But actually, the simplest fix might be to rethink what the `has_tag(\"Payee\")` condition is really trying to do—it's a proxy for detecting when a payee differs, so maybe I should modify the C++ code directly to handle this logic better.\n\nIf I treat a payee change like a date change and use `first_line_format` when the payee switches, that would show the date again, but looking at the expected output, the date shouldn't repeat within the same transaction. So using `first_line_format` would be incorrect here.\n\nThe real solution is to modify `next_lines_format` to detect when the payee has changed from the previous posting and display it accordingly, rather than always replacing it with spaces. do this, I need to add a way for the format expression to access the previous posting's payee. Let me look at how format expressions access scope.\n\nActually wait, there may be an even simpler approach. What if I just change the format string condition from `has_tag(\"Payee\") ? payee : \" \"` to use a helper function? Like `should_display_payee` that I implement in C++ and expose to the expression engine?\n\nOr, even simpler: what about changing it to something like `payee != xact.payee ? payee : \" \"` where the condition compares the posting's payee against the transaction's payee directly? That way in unsorted output, the first posting would show nothing since it matches the transaction payee, while any posting with a different payee would display it. The real solution is to track what payee was actually displayed in the previous posting, then compare against that rather than just checking for a tag. I can either expose the last posting to the format expression so it can reference it directly, or set a flag on the current posting's data when the payee differs from what came before. The simplest approach is probably to handle this logic right in the formatting function itself.",
+          "timestamp": "2026-03-10T13:59:32.887Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me look at how `should_bold` and similar display-time properties are implemented.",
+          "timestamp": "2026-03-10T13:59:33.418Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "-n": true,
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-868/src",
+            "pattern": "should_bold"
+          },
+          "timestamp": "2026-03-10T13:59:34.753Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "-n": true,
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-868/src",
+            "pattern": "fn_payee"
+          },
+          "timestamp": "2026-03-10T13:59:35.215Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "-n": true,
+            "context": 3,
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-868/src/post.cc",
+            "pattern": "\"payee\""
+          },
+          "timestamp": "2026-03-10T13:59:39.308Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "-n": true,
+            "context": 5,
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-868/src/post.cc",
+            "pattern": "get_payee"
+          },
+          "timestamp": "2026-03-10T13:59:42.365Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the full picture. Let me plan the fix:\n\nThe issue is in `format_posts::operator()` in `output.cc`. When displaying postings in sorted order, the payee display logic needs to be smarter. Currently:\n\n1. `first_line_format` shows date + payee + account + amounts\n2. `next_lines_format` shows blank date + (payee if has_tag(\"Payee\") else blank) + account + amounts\n\nThe `next_lines_format` uses `has_tag(\"Payee\") ? payee : \" \"` as a heuristic for whether to show the payee. This works when postings are in natural order (same transaction), but not when they're sorted.\n \nI'll track the previous posting's payee within `format_posts` and compare it against the current one, so the template can intelligently decide whether to display the payee based on whether it's actually changed rather than relying on the tag heuristic.",
+          "timestamp": "2026-03-10T13:59:55.124Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me look at how `fn_should_bold` is implemented for reference on adding a display-time function.",
+          "timestamp": "2026-03-10T13:59:55.616Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-868/src/report.cc",
+            "limit": 25,
+            "offset": 724
+          },
+          "timestamp": "2026-03-10T13:59:56.140Z"
+        },
+        {
+          "type": "assistant",
+          "text": "OK, I think the approach should be simpler. Let me reconsider.\n\nThe `format_posts` class already tracks `last_post`. The format string in `next_lines_format` has:\n```\nhas_tag(\"Payee\") ? payee : \" \"\n```\n\nThis checks if the posting has a \"Payee\" metadata tag. If yes, it shows the payee; if no, it shows blank.\n\nThe issue is that this is wrong for sorted output. The correct check should be: \"is the payee different from the last displayed posting's payee?\"\n\nI could:\n1. Add a `payee_changed` function to `report_t` that checks `format_posts::last_post`\n   - Problem: `report_t` doesn't have access to `format_posts`\n\n2. Set a flag on the posting's xdata before formatting\n   - This is simpler! In `format_posts::operator()`, before formatting with `next_lines_format`, check if the payee changed and set a flag on the posting's xdata.\n\n3. Change the condition in `format_posts::operator()` to use `first_line_format` when the payee changes\n   - Problem: `first_line_format` shows the date, which we don't want\n\nActually, let me look more carefully at what the Fuco1 comment is really saying about this.\n\nFuco1 solved it by making `format_posts` implement `scope_t` to track the previous posting, then comparing the current payee against it in the format expression. But I think there's a simpler path here—since `format_posts` already keeps `last_post` around, I can just use that to set a flag before formatting.\n\nI'm considering adding an xdata flag like `POST_EXT_PAYEE_CHANGED` that gets set when the payee differs from the last posting, then update the format string to check that flag instead of relying on tag presence. a new function that checks this flag) instead of `has_tag(\"Payee\")`.\n\nWait, actually, I think the simplest fix is even easier. The problem is specifically in the `next_lines_format` default. What if I change `has_tag(\"Payee\") ? payee : \" \"` to just always show the payee when it differs from what was shown by the previous line?\n\nBut actually... `next_lines_format` is used for postings within the same xact AND same date. The ONLY scenario where you'd want to suppress the payee is when it's the same as what was just shown. The current `has_tag(\"Payee\")` heuristic approximates this but fails for sorted output.\n\nHmm, let me think about this from a different angle. What if I change the C++ logic in `format_posts::operator()` to NOT use `next_lines_format` when the payee changes? The issue is that `first_line_format` shows the date, but looking at the expected output, the second line needs the date blanked while still showing the payee. Neither format string gives us exactly what we want—`next_lines_format` is close but the condition for showing the payee is wrong. The fix has to be in the format expression itself, not in which format we choose. Looking at the actual output with and without sorting, I see the core issue: when postings are reordered, the second posting should display its payee through the next_lines_format (which has the Payee tag), but it's being blanked out because the condition `has_tag(\"Payee\")` isn't distinguishing between the first posting shown for a transaction versus subsequent ones. The payee value itself is correct—it's the same as the transaction's payee—but the formatting logic needs to know whether this posting is the first one displayed or not, which changes based on sort order.\n\nI could add a flag in the C++ code that marks when a posting's payee differs from the transaction's payee, then check that flag in the format expression to conditionally show the payee tag. This would require exposing the flag check as a format function, but it would solve the blanking problem by making the format logic aware of which posting is actually being displayed first.\n\nActually, the simplest fix might be to skip `next_lines_format` entirely when the payee changes—instead of trying to make the format string smart about detecting payee changes, I could just handle it directly in the C++ code by using a different formatting path when the payee differs from the last posting.\n\nLooking at the expected output, this would mean showing the date again when a new payee appears, which seems like reasonable behavior for clarity. I'm considering a different approach entirely—instead of modifying the format strings, I could handle this in the C++ code itself. The idea is to add a third display case that blanks the date while showing the payee, or create a custom expression function that intelligently displays the payee only when it differs from the previous line. This would keep the format strings clean while giving me the control I need over when each field appears. I need to store the last displayed payee in the report object so I can compare it during format evaluation. Since `report_t` is accessible through the scope chain during formatting, I can add a field to track this and create a function that returns the payee only when it differs from the previously displayed one.",
+          "timestamp": "2026-03-10T14:00:57.360Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me look at how `display_account` works — it's a similar concept of \"display this field intelligently\".",
+          "timestamp": "2026-03-10T14:00:57.636Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "-n": true,
+            "context": 3,
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-868/src/report.cc",
+            "pattern": "display_account"
+          },
+          "timestamp": "2026-03-10T14:00:58.689Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "-n": true,
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-868/src",
+            "pattern": "display_account"
+          },
+          "timestamp": "2026-03-10T14:01:02.746Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-868/src/post.cc",
+            "limit": 40,
+            "offset": 469
+          },
+          "timestamp": "2026-03-10T14:01:05.228Z"
+        },
+        {
+          "type": "assistant",
+          "text": "OK let me think about this more carefully. I think the simplest and cleanest approach is:\n\n1. Add a `display_payee` function to the posting getters (in `post.cc`), analogous to `display_account`\n2. This function needs to know whether the payee should be displayed. But how?\n3. The posting itself doesn't know about the display context (previous posting)\n\nAnother approach: set a flag on the posting's xdata BEFORE formatting it. In `format_posts::operator()`, when the payee changes from the last posting, set an xdata flag. Then the format expression can check this flag.\n\nLet me look at xdata flags:",
+          "timestamp": "2026-03-10T14:01:12.525Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "-n": true,
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-868/src/post.h",
+            "pattern": "POST_EXT_"
+          },
+          "timestamp": "2026-03-10T14:01:13.505Z"
+        },
+        {
+          "type": "assistant",
+          "text": "OK, I now have a clear plan. Let me implement the fix:\n\n1. Add a new xdata flag `POST_EXT_PAYEE_CHANGED` (value `0x0400`)\n2. In `format_posts::operator()`, before formatting with `next_lines_format`, check if the payee changed from `last_post` and set the flag\n3. Add a `get_payee_changed` function in `post.cc` that checks this flag\n4. Expose it as `payee_changed` in the expression scope\n5. Change the default `register_format_` to use `payee_changed` instead of `has_tag(\"Payee\")`Wait, but `has_tag(\"Payee\")` appears in the format string, which is baked into the compiled binary. \n\nUsers who use the default format will get the fix automatically, but those with custom formats won't—though that's expected since they've overridden the defaults. Actually, I'm wondering if there's a cleaner approach here. Instead of adding a flag and function, what if I modify the condition in `next_lines_format` directly to check whether the payee differs from the transaction's payee, rather than just checking for the tag? The tricky part is that a posting's `payee()` method falls back to the transaction's payee when there's no explicit Payee tag, so I need to be careful about how I structure that comparison.\n\nLet me reconsider this from a different angle. What if I handle this at the C++ level instead? I could set a flag in `format_posts::operator()` before the formatting happens, allowing the format string to reference it. My approach would be to add a new flag constant in the post header, then set it in the output code right before the `next_lines_format` branch executes.\n\nBut I'm also noticing this is getting complicated with multiple format strings to update. Let me think about whether there's a simpler way to handle this directly in the formatting operator itself.\n\nWhat if instead of modifying flags and format strings, I just check whether the payee changed within the same transaction and date, and if so, temporarily add a tag to the posting before formatting? That way the existing format logic would naturally show the payee when needed.\n\nActually, that's getting too complicated. Let me step back and reconsider the core problem: when postings are sorted and the payee changes between consecutive ones in the same transaction, I need to display the payee. The simplest approach might be to just use `first_line_format` in those cases, even though it includes the date—maybe that's not actually a problem in practice. bug report:\n```\n12-Oct-30 Binders, Pens, Digital Prints      Expenses:Office Supplies                            € -50,00             € -50,00\n          ACME Inc.                          Assets:Bank:Checking                                 € 50,00                    0\n```\n\nThe date is blanked. But `first_line_format` always shows the date. So using `first_line_format` would produce:\n```\n12-Oct-30 Binders, Pens, Digital Prints      Expenses:Office Supplies                            € -50,00             € -50,00\n12-Oct-30 ACME Inc.                          Assets:Bank:Checking                                 € 50,00                    0\n```\n\nThis doesn't match the expected output where the date is blanked. Though actually, showing the date again when the payee changes seems reasonable—it's consistent with how dates are handled when they actually change within a transaction. Looking at Fuco1's multi-transaction example, the formatting appears to follow a pattern where the date repeats at certain boundaries, so maybe the current behavior isn't wrong after all.\n\nWait, I'm looking more carefully at the expected output. Lines 2→3 show the same transaction with a payee change, and the date is indeed blanked. So the rule should be: when the payee changes but we're still in the same transaction and date, blank the date and use the next_lines_format with a fixed payee condition. For different dates within the same transaction, show the date. For different transactions entirely, show the separator and date.\n\nThe issue is that the payee condition in `next_lines_format` needs fixing. I think using an xdata flag to track whether the payee has already been shown would work cleanly here.\n\nActually, let me reconsider this logic more carefully before committing to a solution. more. Is there a way to fix this WITHOUT adding new flags/functions? What about just changing the condition from `has_tag(\"Payee\") ? payee : \" \"` to always showing the payee? Like just `payee`?\n\nIf we always show the payee in `next_lines_format`, then:\n- Unsorted: First posting shows \"ACME Inc.\" (first_line). Second posting shows \"Binders...\" (next_lines, payee always shown). This is CORRECT.\n- Sorted: First posting shows \"Binders...\" (first_line). Second posting shows \"ACME Inc.\" (next_lines, payee always shown). This is CORRECT.\n\nBut that would create redundancy when postings share the same payee—the standard register format blanks it out for subsequent lines, which looks cleaner. So what if I check whether the payee differs from the transaction's payee before deciding whether to display it?\n\nActually, that won't work either because the second posting's payee IS the transaction payee. The real issue is that I need to track what was displayed on the previous line to know whether to blank it out this time. A flag in the extended data structure seems like the only clean solution.\n\nSo here's my plan: I'll add a flag to track when the payee changes between postings, set it during formatting by comparing consecutive postings, expose it as a lookup function, and update the default formats to use this new flag instead of just checking for the Payee tag. Then I need to add a test to verify it works.\n\nLet me also look at what the wide register format is doing.",
+          "timestamp": "2026-03-10T14:02:06.310Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me check the wide register format too.",
+          "timestamp": "2026-03-10T14:02:06.345Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "-n": true,
+            "context": 2,
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-868/src/report.h",
+            "pattern": "wide_register_format_"
+          },
+          "timestamp": "2026-03-10T14:02:06.386Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "-n": true,
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-868/src/report.h",
+            "pattern": "has_tag.*Payee.*payee"
+          },
+          "timestamp": "2026-03-10T14:02:10.310Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Good, there are two format strings with this pattern — at lines 730 and 1117. Let me see both in context.",
+          "timestamp": "2026-03-10T14:02:13.449Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-868/src/report.h",
+            "limit": 80,
+            "offset": 685
+          },
+          "timestamp": "2026-03-10T14:02:13.949Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I see. There are actually two places where the `has_tag(\"Payee\") ? payee : \" \"` expression appears:\n1. Line 730 - in the `dc` option's register_format_\n2. Line 1117 - in the default register_format_\n\nLet me now plan and implement the fix. I'll use the cpp-pro agent to implement this since the user requested it.\n\nMy plan:\n1. Add `POST_EXT_PAYEE_CHANGED 0x0400` flag to `post.h`\n2. In `output.cc`, `format_posts::operator()`, set this flag before formatting with `next_lines_format` when the payee differs from `last_post`\n\n\n3. Add a getter method to expose this flag, then update the format strings to check for the payee change instead of the tag, and finally write a test to verify the behavior works correctly.\n\nI'll handle this implementation myself since I have all the context needed.",
+          "timestamp": "2026-03-10T14:02:25.469Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I have a complete understanding. Let me implement the fix. The approach:\n\n1. Add `POST_EXT_PAYEE_CHANGED` xdata flag\n2. Set it in `format_posts::operator()` when the payee differs from the previous posting's payee\n3. Expose it as `payee_changed` in the expression scope\n4. Update the default register format to use `payee_changed` instead of `has_tag(\"Payee\")`\n5. Add a regression test",
+          "timestamp": "2026-03-10T14:02:25.809Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-868/src/post.h",
+            "limit": 20,
+            "offset": 284
+          },
+          "timestamp": "2026-03-10T14:02:26.893Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me also look at how the post lookup function is structured to add the new getter.",
+          "timestamp": "2026-03-10T14:02:29.352Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-868/src/post.cc",
+            "limit": 80,
+            "offset": 630
+          },
+          "timestamp": "2026-03-10T14:02:30.267Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I have all the context I need. Let me implement the changes. I'll start with the cpp-pro agent to implement the fix.",
+          "timestamp": "2026-03-10T14:02:33.265Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Agent",
+          "input": {
+            "description": "Implement fix for issue #868",
+            "mode": "auto",
+            "prompt": "Fix GitHub issue #868 for the Ledger project. The bug: when using `--sort` with the register command, the payee is not displayed when it changes between sorted postings.\n\n## Bug Description\nWhen postings are reordered by `--sort amount`, the register's `next_lines_format` (used for subsequent postings in the same transaction) uses the condition `has_tag(\"Payee\") ? payee : \" \"` to decide whether to show the payee. This fails because a posting may have a different effective payee (inherited from the transaction) than the previously displayed posting, but since it has no `Payee` metadata tag, the payee is hidden.\n\n## Example\n```\n2012/10/30 * (1) ACME Inc.\n    Assets:Bank:Checking                € 50,00\n    Expenses:Office Supplies\n    ; Payee: Binders, Pens, Digital Prints\n```\n\nWithout sort: shows \"ACME Inc.\" then \"Binders, Pens, Digital Prints\" - CORRECT\nWith `--sort amount`: shows \"Binders, Pens, Digital Prints\" then blank - WRONG (should show \"ACME Inc.\" for the second posting)\n\n## Implementation Plan\n\n### 1. Add xdata flag `POST_EXT_PAYEE_CHANGED` to `src/post.h`\nAdd at line 296, after `POST_EXT_DISPLAY_TOTAL_CACHED`:\n```cpp\n#define POST_EXT_PAYEE_CHANGED 0x0400 ///< Payee differs from previous posting in display order.\n```\n\n### 2. Add getter function in `src/post.cc`\nNear line 262 (after `get_payee`), add:\n```cpp\nvalue_t get_payee_changed(post_t& post) {\n  return post.has_xdata() && post.xdata().has_flags(POST_EXT_PAYEE_CHANGED);\n}\n```\n\n### 3. Expose `payee_changed` in post_t::lookup() in `src/post.cc`\nIn the `case 'p':` section (around line 676), add:\n```cpp\n    else if (name == \"payee_changed\")\n      return WRAP_FUNCTOR(get_wrapper<&get_payee_changed>);\n```\n\n### 4. Set the flag in `format_posts::operator()` in `src/output.cc`\nIn the `else` branch (currently around line 147, the `next_lines_format` case), BEFORE calling `next_lines_format`, set the flag if the payee changed:\n```cpp\n    } else {\n      if (last_post && last_post->payee() != post.payee())\n        post.xdata().add_flags(POST_EXT_PAYEE_CHANGED);\n      out << next_lines_format(bound_scope);\n    }\n```\n\n### 5. Update format strings in `src/report.h`\nChange `has_tag(\"Payee\") ? payee : \" \"` to `payee_changed ? payee : \" \"` in TWO places:\n- Line 730 (dc option's register format)\n- Line 1117 (default register format)\n\n### 6. Create regression test `test/regress/868.test`\nMatch what the submitter showed in their final comment. Use the multi-transaction test case from Fuco1's comment:\n```\n2012/10/30 * (1) ACME Inc.\n    Assets:Bank:Checking                      $50.00\n    Foo                                       $20.00\n    Expenses:Office Supplies\n    ; Payee: Binders, Pens, Digital Prints\n\n2012/10/30 * (2) ACME Inc.\n    Assets:Bank:Checking                      $1.00\n    Foo                                       $4.00\n    Expenses:Office Supplies\n    ; Payee: Binders, Pens, Digital Prints\n```\n\nThe expected output should use `--sort amount` and show payees correctly. Use `$` instead of `€` to avoid locale issues in tests.\n\n## Important Code Locations\n- `src/post.h` lines 285-296: xdata flag definitions\n- `src/post.cc` lines 262-264: `get_payee` getter  \n- `src/post.cc` lines 676-687: `case 'p':` in post_t::lookup()\n- `src/output.cc` lines 137-149: format_posts::operator() display logic\n- `src/report.h` lines 728-733: dc register next_lines_format\n- `src/report.h` lines 1115-1120: default register next_lines_format\n\n## Constraints\n- 2-space indentation, no tabs, 100-column limit\n- Follow existing naming patterns (snake_case)\n- Don't add unnecessary comments/docstrings to unchanged code\n- Keep changes minimal and focused\n\nPlease implement all 6 steps. Do NOT build or run tests — just make the code changes and create the test file.\n",
+            "subagent_type": "cpp-pro"
+          },
+          "timestamp": "2026-03-10T14:02:59.469Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Good. Now let me verify the changes and build/test.",
+          "timestamp": "2026-03-10T14:06:41.014Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff --stat",
+            "description": "Check what files changed"
+          },
+          "timestamp": "2026-03-10T14:06:41.438Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff",
+            "description": "Review all changes"
+          },
+          "timestamp": "2026-03-10T14:06:46.591Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The changes look good. But I notice the 868.test regression test file is missing from the diff - the agent may not have created it. Let me check.",
+          "timestamp": "2026-03-10T14:06:49.831Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I notice the 868.test file isn't showing in the diff. Let me check if it was created.",
+          "timestamp": "2026-03-10T14:06:50.409Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls -la /Users/johnw/src/ledger/fix-868/test/regress/868.test 2>&1",
+            "description": "Check if 868.test was created"
+          },
+          "timestamp": "2026-03-10T14:06:51.164Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-868/test/regress/868.test"
+          },
+          "timestamp": "2026-03-10T14:06:53.991Z"
+        },
+        {
+          "type": "assistant",
+          "text": "This test doesn't match what the issue submitter described. The submitter's case involves postings from the SAME transaction with different payees (via `; Payee:` metadata tags). Let me recreate the test to match the actual bug.\n\nThe key test case from the issue is:\n```\n2012/10/30 * (1) ACME Inc.\n    Assets:Bank:Checking                € 50,00\n    Expenses:Office Supplies\n    ; Payee: Binders, Pens, Digital Prints\n```\n\nWith `--sort amount`, the expected output is:\n```\n12-Oct-30 Binders, Pens, Digital Prints      Expenses:Office Supplies                            € -50,00             € -50,00\n\n\n12-Oct-30 ACME Inc.                          Assets:Bank:Checking                                 € 50,00                    0\n```\n\nBut I need to use `$` instead of `€` for test portability. The real issue is about how payee display works within a single transaction when sorting reorders the postings—I need to create a test that specifically captures this behavior rather than just testing payee grouping.",
+          "timestamp": "2026-03-10T14:07:05.764Z"
+        },
+        {
+          "type": "assistant",
+          "text": "This test doesn't actually test the bug. The issue is about postings in the SAME transaction having different payees via the `; Payee:` metadata tag. Let me rewrite it to match the submitter's case from the final comment.",
+          "timestamp": "2026-03-10T14:07:06.145Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-868/test/regress/868.test"
+          },
+          "timestamp": "2026-03-10T14:07:06.280Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I need to create the right test. Let me first build and check the current behavior to make sure I get the expected output right. Let me build first.",
+          "timestamp": "2026-03-10T14:07:10.054Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cmake -B build -DCMAKE_BUILD_TYPE=Debug -DUSE_PYTHON=OFF -DUSE_GPGME=OFF -DBoost_DIR=/nix/store/k5a24gp2r9rvn9jhrvn4g63a63kc3hpa-boost-1.89.0-dev/lib/cmake/Boost-1.89.0 -DEDIT_LIB=/nix/store/3484xxnw0d05jf4wjwaykarvi2fgk02f-libedit-20251016-3.1/lib/libedit.dylib -DEDIT_PATH=/nix/store/b6ar0114dc1k4sbcayi2mbk3hgy7xb13-libedit-20251016-3.1-dev/include -DGMP_LIB=/nix/store/35a4xm9sh4jkn25f9v3dmxzjp5xg4r8w-gmp-with-cxx-6.3.0/lib/libgmp.dylib -DGMP_PATH=/nix/store/j454zbmphm8h380k54q9kfhnr5jbva95-gmp-with-cxx-6.3.0-dev/include -DMPFR_LIB=/nix/store/1v5yh6wgnjxw172i0xqrw982xllcgasj-mpfr-4.2.2/lib/libmpfr.dylib -DMPFR_PATH=/nix/store/dkbc3lqhrqs8hr2i4q682mqqq82hdmqi-mpfr-4.2.2-dev/include -DICU_INCLUDE_DIR=/nix/store/i9yj32fp96s8qjd6c43fk54r8j6qjvzr-icu4c-76.1-dev/include 2>&1 | tail -5",
+            "description": "Configure build",
+            "timeout": 60000
+          },
+          "timestamp": "2026-03-10T14:07:25.059Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-868/build && make -j$(sysctl -n hw.ncpu) 2>&1 | tail -10",
+            "description": "Build ledger",
+            "timeout": 300000
+          },
+          "timestamp": "2026-03-10T14:07:29.385Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Good, it builds. Now let me test with the exact scenario from the bug report.",
+          "timestamp": "2026-03-10T14:08:54.404Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat <<'EOF' | /Users/johnw/src/ledger/fix-868/build/ledger -f - reg --sort amount --columns 80\n2012/10/30 * (1) ACME Inc.\n    Assets:Bank:Checking                     $50.00\n    Expenses:Office Supplies\n    ; Payee: Binders, Pens, Digital Prints\nEOF",
+            "description": "Test the original bug case"
+          },
+          "timestamp": "2026-03-10T14:08:57.229Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The fix works. \"ACME Inc.\" is now correctly shown on the second line. Let me also test the multi-transaction case from Fuco1's comment, and verify the normal (unsorted) case still works.",
+          "timestamp": "2026-03-10T14:09:01.090Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat <<'EOF' | /Users/johnw/src/ledger/fix-868/build/ledger -f - reg --columns 80\n2012/10/30 * (1) ACME Inc.\n    Assets:Bank:Checking                     $50.00\n    Expenses:Office Supplies\n    ; Payee: Binders, Pens, Digital Prints\nEOF",
+            "description": "Test unsorted case still works"
+          },
+          "timestamp": "2026-03-10T14:09:02.011Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Unsorted case still works correctly — \"ACME Inc.\" on first line, \"Binders...\" on the second. Now let me test the more complex multi-transaction case.",
+          "timestamp": "2026-03-10T14:09:04.620Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat <<'EOF' | /Users/johnw/src/ledger/fix-868/build/ledger -f - reg --sort amount --columns 100\n2012/10/30 * (1) ACME Inc.\n    Assets:Bank:Checking                      $50.00\n    Foo                                       $20.00\n    Expenses:Office Supplies\n    ; Payee: Binders, Pens, Digital Prints\n\n2012/10/30 * (2) ACME Inc.\n    Assets:Bank:Checking                      $1.00\n    Foo                                       $4.00\n    Expenses:Office Supplies\n    ; Payee: Binders, Pens, Digital Prints\nEOF",
+            "description": "Test multi-transaction sorted case"
+          },
+          "timestamp": "2026-03-10T14:09:06.518Z"
+        },
+        {
+          "type": "assistant",
+          "text": "This matches Fuco1's expected output exactly. Now let me rewrite the regression test to match the actual bug scenario from the submitter's final comment.",
+          "timestamp": "2026-03-10T14:09:10.748Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Write",
+          "input": {
+            "content": "; Regression test for issue #868\n; When using --sort, the register should show the payee when it changes\n; between sorted postings, even for postings that inherit the transaction\n; payee (i.e. have no explicit Payee tag).\n\n2012/10/30 * (1) ACME Inc.\n    Assets:Bank:Checking                      $50.00\n    Foo                                       $20.00\n    Expenses:Office Supplies\n    ; Payee: Binders, Pens, Digital Prints\n\n2012/10/30 * (2) ACME Inc.\n    Assets:Bank:Checking                      $1.00\n    Foo                                       $4.00\n    Expenses:Office Supplies\n    ; Payee: Binders, Pens, Digital Prints\n\ntest reg --sort amount --columns 100\n12-Oct-30 Binders, Pens, Digital P.. Expenses:Office Supplies               $-70.00         $-70.00\n12-Oct-30 Binders, Pens, Digital P.. Expenses:Office Supplies                $-5.00         $-75.00\n          ACME Inc.                  Assets:Bank:Checking                     $1.00         $-74.00\n                                     Foo                                      $4.00         $-70.00\n12-Oct-30 ACME Inc.                  Foo                                     $20.00         $-50.00\n                                     Assets:Bank:Checking                    $50.00               0\nend test\n",
+            "file_path": "/Users/johnw/src/ledger/fix-868/test/regress/868.test"
+          },
+          "timestamp": "2026-03-10T14:09:16.138Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me run the regression test to confirm it passes.",
+          "timestamp": "2026-03-10T14:09:19.438Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-868 && python3 test/RegressTests.py --ledger ./build/ledger --sourcepath . test/regress/868.test 2>&1",
+            "description": "Run the new regression test"
+          },
+          "timestamp": "2026-03-10T14:09:21.217Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me run the tests that were modified and a broader set to make sure nothing is broken.",
+          "timestamp": "2026-03-10T14:09:24.036Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "python3 test/RegressTests.py --ledger ./build/ledger --sourcepath . test/regress/1647.test 2>&1",
+            "description": "Test modified 1647.test"
+          },
+          "timestamp": "2026-03-10T14:09:26.713Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "python3 test/RegressTests.py --ledger ./build/ledger --sourcepath . test/regress/coverage-post-new.test 2>&1",
+            "description": "Test modified coverage-post-new.test"
+          },
+          "timestamp": "2026-03-10T14:09:27.600Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "python3 test/RegressTests.py --ledger ./build/ledger --sourcepath . test/regress/coverage-xact-h-access.test 2>&1",
+            "description": "Test modified coverage-xact-h-access.test"
+          },
+          "timestamp": "2026-03-10T14:09:28.401Z"
+        },
+        {
+          "type": "assistant",
+          "text": "All modified tests pass. Let me run the full test suite now.",
+          "timestamp": "2026-03-10T14:09:33.572Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-868/build && ctest -j$(sysctl -n hw.ncpu) 2>&1 | tail -20",
+            "description": "Run full test suite",
+            "timeout": 600000
+          },
+          "timestamp": "2026-03-10T14:09:35.031Z"
+        },
+        {
+          "type": "assistant",
+          "text": "All 4001 tests pass, including the new regression test and the updated existing tests.\n\n## Summary\n\n**Bug**: When using `--sort` with the register command, the payee was not displayed when it changed between sorted postings. The old `next_lines_format` used `has_tag(\"Payee\")` as a heuristic for whether to show the payee on continuation lines, which failed when sorting reordered postings — a posting inheriting the transaction payee (no `Payee` tag) would show blank even though the payee differed from the previously displayed line.\n\n**Fix** (4 source files + 1 new test + 3 test updates):\n\n1. **`src/post.h`**: Added `POST_EXT_PAYEE_CHANGED` xdata flag (`0x0400`)\n2. **`src/output.cc`**: In `format_posts::operator()`, before formatting with `next_lines_format`, set `POST_EXT_PAYEE_CHANGED` if the current posting's payee differs from the previous posting's payee\n3. **`src/post.cc`**: Added `get_payee_changed()` getter and exposed it as `payee_changed` in the expression scope\n4. **`src/report.h`**: Changed `has_tag(\"Payee\") ? payee : \" \"` → `payee_changed ? payee : \" \"` in both default and dc register formats\n5. **`test/regress/868.test`**: New regression test matching the submitter's multi-transaction scenario\n6. **3 existing tests updated**: Their expected output changed because `payee_changed` correctly returns false when consecutive postings have the same payee (previously `has_tag(\"Payee\")` returned true even when both postings had the same payee via a `Payee` tag)",
+          "timestamp": "2026-03-10T14:10:07.048Z"
+        },
+        {
+          "type": "user",
+          "text": "Create a new PR, or reopen PR 2879 and update it.",
+          "timestamp": "2026-03-10T14:23:15.359Z"
+        },
+        {
+          "type": "assistant",
+          "text": "\n\nLet me check the state of PR 2879 first.",
+          "timestamp": "2026-03-10T14:23:18.733Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh pr view 2879 --repo ledger/ledger --json state,title,body,headRefName",
+            "description": "Check PR 2879 status"
+          },
+          "timestamp": "2026-03-10T14:23:19.440Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --oneline main..HEAD",
+            "description": "Check commits on branch"
+          },
+          "timestamp": "2026-03-10T14:23:24.318Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff main --stat",
+            "description": "Check changes vs main"
+          },
+          "timestamp": "2026-03-10T14:23:24.874Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The changes are unstaged and uncommitted. The branch has no commits beyond main. I need to commit first, then push, then reopen the PR and update its body.\n\nLet me commit the changes, force push (since the old commit was reset away), and reopen the PR.",
+          "timestamp": "2026-03-10T14:23:28.624Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The changes are uncommitted. Let me commit, push, and reopen the PR.",
+          "timestamp": "2026-03-10T14:23:29.161Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-868 add src/output.cc src/post.cc src/post.h src/report.h test/regress/868.test test/regress/1647.test test/regress/coverage-post-new.test test/regress/coverage-xact-h-access.test",
+            "description": "Stage all changed files"
+          },
+          "timestamp": "2026-03-10T14:23:30.523Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-868 commit -m \"$(cat <<'EOF'\nfix(register): show payee when it changes between sorted postings\n\nWhen --sort reorders postings, the register's next_lines_format used\nhas_tag(\"Payee\") to decide whether to display the payee on continuation\nlines.  This failed when sorting caused a posting that inherits the\ntransaction payee (no Payee metadata tag) to follow a posting with a\ndifferent payee — the inherited payee was incorrectly suppressed.\n\nAdd a POST_EXT_PAYEE_CHANGED xdata flag set at display time in\nformat_posts::operator() by comparing the current posting's payee\nagainst the previous posting's payee.  Expose it as payee_changed in\nthe expression scope, and use it in the default register format instead\nof has_tag(\"Payee\").\n\nFixes #868\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n)\"",
+            "description": "Commit the fix"
+          },
+          "timestamp": "2026-03-10T14:23:47.264Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "ToolSearch",
+          "input": {
+            "max_results": 1,
+            "query": "select:TaskOutput"
+          },
+          "timestamp": "2026-03-10T14:25:50.389Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskOutput",
+          "input": {
+            "block": true,
+            "task_id": "b1olyq887",
+            "timeout": 120000
+          },
+          "timestamp": "2026-03-10T14:25:53.337Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The hook is running the full pre-commit pipeline (cmake + build + ctest + doxygen). Let me wait for it to complete.",
+          "timestamp": "2026-03-10T14:27:57.529Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskOutput",
+          "input": {
+            "block": true,
+            "task_id": "b1olyq887",
+            "timeout": 600000
+          },
+          "timestamp": "2026-03-10T14:27:58.383Z"
+        }
+      ],
+      "total_additions": 126,
+      "total_deletions": 58,
+      "accepted_lines": 36,
+      "overriden_lines": 0
+    }
+  }
+}
