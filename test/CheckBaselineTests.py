@@ -2,11 +2,8 @@
 
 import argparse
 import sys
-import re
-import os
 
-from os.path import *
-from subprocess import Popen, PIPE
+from os.path import join, exists, getsize
 
 from CheckOptions import CheckOptions
 

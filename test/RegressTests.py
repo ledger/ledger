@@ -1,20 +1,11 @@
 #!/usr/bin/env python3
 
-from io import open
-
 import argparse
 import pathlib
+import subprocess
 import sys
 import os
 import re
-import tempfile
-
-multiproc = False
-try:
-    from multiprocessing import Pool
-    multiproc = True
-except:
-    pass
 
 from difflib import unified_diff
 
@@ -60,17 +51,22 @@ class RegressFile(object):
                     harness.failure(self.filename.name)
                     return None
                 command = line[5:]
+                if not command.strip():
+                    print("ERROR: %s:%d: empty command after 'test' directive"
+                          % (self.filename, self.line_num), file=sys.stderr)
+                    harness.failure(self.filename.name)
+                    return None
                 match = re.match(r'(.*) -> ([0-9]+)', command)
                 if match:
                     test.command = self.transform_line(match.group(1))
                     test.exitcode = int(match.group(2))
                 else:
-                    test.command = command
+                    test.command = self.transform_line(command)
                 in_output = True
                 test_start_line = self.line_num
 
             elif in_output:
-                if line.startswith("end test"):
+                if line.rstrip() == "end test":
                     in_output = in_error = False
                     break
                 elif in_error:
@@ -109,7 +105,7 @@ class RegressFile(object):
             # There is no equivalent to /dev/stdout, /dev/stderr, /dev/stdin
             # on Windows, so skip tests that require them.
             if '/dev/std' in test.command:
-                harness.skipped()
+                harness.skip()
                 return
         if test.command.find('-f ') != -1:
             test.command = '$ledger ' + test.command
@@ -148,7 +144,7 @@ class RegressFile(object):
                 if index < 3:
                     continue
                 if not printed:
-                    if success: print
+                    if success: print()
                     self.notify_user("FAILURE in output from %s:" % self.filename, test)
                     success = False
                     printed = True
@@ -169,22 +165,30 @@ class RegressFile(object):
                 if index < 3:
                     continue
                 if not printed:
-                    if success: print
+                    if success: print()
                     self.notify_user("FAILURE in error output from %s:"
                                      % self.filename, test)
                     success = False
                     printed = True
                 print(" ", line,)
 
-        if test.exitcode == p.wait():
+        try:
+            exit_code = p.wait(timeout=60)
+        except subprocess.TimeoutExpired:
+            p.kill()
+            p.wait()
+            self.notify_user("TIMEOUT in %s:" % self.filename, test)
+            harness.failure(self.filename.name)
+            return
+        if test.exitcode == exit_code:
             if success:
                 harness.success()
             else:
                 harness.failure(self.filename.name)
                 print("STDERR:")
-                print(p.stderr.read())
+                print(''.join(process_error))
         else:
-            if success: print
+            if success: print()
             self.notify_user("FAILURE in exit code (%d != %d) from %s:"
                              % (test.exitcode, p.returncode, self.filename),
                              test)
@@ -195,30 +199,35 @@ class RegressFile(object):
           print("WARNING: Empty testfile detected: %s" % (self.filename), file=sys.stderr)
           harness.failure(self.filename.name)
           return False
+        tests_found = 0
         test = self.read_test()
         while test:
+            tests_found += 1
             self.run_test(test)
             test = self.read_test()
+        if tests_found == 0:
+            print("WARNING: No test blocks found in: %s" % (self.filename), file=sys.stderr)
+            harness.failure(self.filename.name)
+            return False
 
     def close(self):
         self.fd.close()
 
-def do_test(path):
-    entry = RegressFile(path)
-    entry.run_tests()
-    entry.close()
+    def __enter__(self):
+        return self
 
-def init_worker(ledger, sourcepath, verify, gmalloc, python):
-    global harness
-    harness = LedgerHarness(ledger, sourcepath, verify, gmalloc, python)
+    def __exit__(self, *args):
+        self.close()
+
+def do_test(path):
+    with RegressFile(path) as entry:
+        entry.run_tests()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='RegressTests',
                                      parents=[LedgerHarness.parser()])
-    parser.add_argument('-j', '--jobs', type=int, default=1)
     parser.add_argument('tests', type=pathlib.Path)
     args = parser.parse_args()
-    multiproc &= (args.jobs >= 1)
     harness = LedgerHarness(args.ledger, args.sourcepath, args.verify,
                             args.gmalloc, args.python)
 
@@ -233,23 +242,15 @@ if __name__ == '__main__':
         sys.exit(1)
 
     if args.tests.is_dir():
-        tests = [p for p in args.tests.iterdir()
-                if (p.suffix == '.test' and
-                    (not p.match('*_py.test') or (harness.python and
-                                             not harness.verify)))]
-        if multiproc:
-            pool = Pool(args.jobs*2, initializer=init_worker,
-                        initargs=(args.ledger, args.sourcepath, args.verify,
-                                  args.gmalloc, args.python))
-            pool.map(do_test, tests, 1)
-            pool.close()
-            pool.join()
-        else:
-            for t in tests:
-                do_test(t)
+        tests = sorted([p for p in args.tests.iterdir()
+                if (p.suffix == '.test'
+                    and p.resolve().is_relative_to(args.tests.resolve())
+                    and (not p.match('*_py.test') or (harness.python and
+                                                 not harness.verify)))])
+        for t in tests:
+            do_test(t)
     else:
-        entry = RegressFile(args.tests)
-        entry.run_tests()
-        entry.close()
+        with RegressFile(args.tests) as entry:
+            entry.run_tests()
 
     harness.exit()

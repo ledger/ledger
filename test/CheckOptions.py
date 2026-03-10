@@ -8,7 +8,6 @@ import pathlib
 import argparse
 import subprocess
 
-from os.path import *
 from subprocess import Popen, PIPE
 
 class CheckOptions (object):
@@ -37,7 +36,8 @@ class CheckOptions (object):
 
   def find_pattern(self, filename, pattern):
     regex = re.compile(pattern)
-    return {match.group(1) for match in {regex.match(line) for line in open(filename)} if match}
+    with open(filename) as f:
+        return {match.group(1) for match in {regex.match(line) for line in f} if match}
 
   def find_options(self, filename):
     return self.find_pattern(filename, self.option_pattern) \
@@ -46,10 +46,6 @@ class CheckOptions (object):
   def find_functions(self, filename):
     return self.find_pattern(filename, self.function_pattern) \
           if self.function_pattern else set()
-
-  def find_symbols(self, filename):
-    return self.find_pattern(filename, self.symbol_pattern) \
-          if self.symbol_pattern else set()
 
   def find_symbols(self, filename):
     return self.find_pattern(filename, self.symbol_pattern) \
@@ -69,8 +65,8 @@ class CheckOptions (object):
     return alternates
 
   def ledger_options(self):
-    pipe   = Popen('%s --debug option.names parse true' %
-        self.ledger, shell=True, stdout=PIPE, stderr=PIPE)
+    pipe = Popen([str(self.ledger), '--debug', 'option.names', 'parse', 'true'],
+                 shell=False, stdout=PIPE, stderr=PIPE)
     regex = re.compile(r'\[DEBUG\]\s+Option:\s+(.*?)_?$')
     ledger_options = {match.group(1).replace('_', '-') for match in {regex.search(line.decode()) for line in pipe.stderr.readlines()} if match}
     return ledger_options

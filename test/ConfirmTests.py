@@ -32,12 +32,11 @@ commands = [
 ]
 
 def clean(num):
-    num = re.sub(r'(\s+|\$|,)',"", num)
+    num = re.sub(r'(\s+|\$|,)', "", num)
     m = re.search(r'([-0-9.]+)', num)
     if m:
         return float(m.group(1))
-    else:
-        return float(num)
+    return 0.0
 
 def confirm_report(command):
     index         = 1
@@ -48,7 +47,7 @@ def confirm_report(command):
     p = harness.run(re.sub(r'\$cmd', 'reg', command))
 
     for line in harness.readlines(p.stdout):
-        match = re.match(r'\\s*([-$,0-9.]+)\\s+([-$,0-9.]+)', line[54:])
+        match = re.match(r'\s*([-$,0-9.]+)\s+([-$,0-9.]+)', line[54:])
         if not match:
             continue
 
@@ -69,6 +68,8 @@ def confirm_report(command):
         index += 1
         last_line = line
 
+    p.wait()
+
     balance_total = 0.0
 
     p = harness.run(re.sub(r'\$cmd', 'bal', command))
@@ -76,6 +77,8 @@ def confirm_report(command):
     for line in harness.readlines(p.stdout):
         if line[0] != '-':
             balance_total = clean(line[:20])
+
+    p.wait()
 
     diff = abs(balance_total - running_total)
     if re.search(r' -[VGB] ', command) and diff < 0.015:

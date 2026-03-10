@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 
-import sys
 import re
-import os
+import sys
 import argparse
 
-from os.path import *
-from subprocess import Popen, PIPE
+from os.path import join
 
 from CheckOptions import CheckOptions
 
@@ -27,38 +25,36 @@ class CheckTexinfo (CheckOptions):
     function = None
     fun_doc = str()
     fun_example = False
-    fun_undocumented = False
     item_regex = re.compile(self.function_pattern)
     itemx_regex = re.compile(r'^@def(un|var)x')
     example_regex = re.compile(r'^@smallexample\s+@c\s+command:')
     fix_regex = re.compile(r'FIX')
     undocumented_regex = re.compile(r'@value{FIXME:UNDOCUMENTED}')
     comment_regex = re.compile(r'^\s*@c')
-    for line in open(filename):
-        line = line.strip()
-        if state == state_normal:
-            match = item_regex.match(line)
-            if match:
-                state = state_function
-                function = match.group(1)
-        elif state == state_function:
-            if line == '@end defun':
-                # FIXME: Do not require an example (fun_example) for now
-                if function and len(fun_doc) \
-                    and not fix_regex.search(fun_doc) \
-                    and not undocumented_regex.search(fun_doc):
-                    functions.add(function)
-                state = state_normal
-                fun_example = False
-                fun_doc = str()
-            elif itemx_regex.match(line):
-                continue
-            elif undocumented_regex.match(line):
-                fun_undocumented = True
-            elif example_regex.match(line):
-                fun_example = True
-            elif not comment_regex.match(line):
-               fun_doc += line
+    with open(filename) as f:
+        for line in f:
+            line = line.strip()
+            if state == state_normal:
+                match = item_regex.match(line)
+                if match:
+                    state = state_function
+                    function = match.group(1)
+            elif state == state_function:
+                if line == '@end defun':
+                    # FIXME: Do not require an example (fun_example) for now
+                    if function and len(fun_doc) \
+                        and not fix_regex.search(fun_doc) \
+                        and not undocumented_regex.search(fun_doc):
+                        functions.add(function)
+                    state = state_normal
+                    fun_example = False
+                    fun_doc = str()
+                elif itemx_regex.match(line):
+                    continue
+                elif example_regex.match(line):
+                    fun_example = True
+                elif not comment_regex.match(line):
+                   fun_doc += line
     return functions
 
   def find_options(self, filename):
@@ -72,28 +68,29 @@ class CheckTexinfo (CheckOptions):
     itemx_regex = re.compile(r'^@itemx')
     fix_regex = re.compile(r'FIX')
     comment_regex = re.compile(r'^\s*@c')
-    for line in open(filename):
-      line = line.strip()
-      if state == state_normal:
-        if line == '@ftable @option':
-            state = state_option_table
-      elif state == state_option_table:
-          if line == '@end ftable':
-              if option and len(opt_doc) and not fix_regex.search(opt_doc):
-                  options.add(option)
-              state = state_normal
-              option = None
-              continue
-          match = item_regex.match(line)
-          if match:
-              if option and len(opt_doc) and not fix_regex.search(opt_doc):
-                  options.add(option)
-              option = match.group(1)
-              opt_doc = str()
-          elif itemx_regex.match(line):
-              continue
-          elif not comment_regex.match(line):
-              opt_doc += line
+    with open(filename) as f:
+        for line in f:
+          line = line.strip()
+          if state == state_normal:
+            if line == '@ftable @option':
+                state = state_option_table
+          elif state == state_option_table:
+              if line == '@end ftable':
+                  if option and len(opt_doc) and not fix_regex.search(opt_doc):
+                      options.add(option)
+                  state = state_normal
+                  option = None
+                  continue
+              match = item_regex.match(line)
+              if match:
+                  if option and len(opt_doc) and not fix_regex.search(opt_doc):
+                      options.add(option)
+                  option = match.group(1)
+                  opt_doc = str()
+              elif itemx_regex.match(line):
+                  continue
+              elif not comment_regex.match(line):
+                  opt_doc += line
     return options
 
 if __name__ == "__main__":

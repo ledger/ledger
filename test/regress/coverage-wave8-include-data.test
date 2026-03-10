@@ -1,3 +1,10 @@
 2024/02/01 From Include
     Expenses:Included         $25.00
     Assets:Cash
+
+test bal
+             $-25.00  Assets:Cash
+              $25.00  Expenses:Included
+--------------------
+                   0
+end test
