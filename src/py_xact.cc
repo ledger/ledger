@@ -79,25 +79,20 @@ raw_posts_iter xact_raw_posts_end(xact_base_t& xact) {
 /*--- Posting Sequence Access ---*/
 
 long posts_len(xact_base_t& xact) {
-  return static_cast<long>(
-      std::count_if(xact.posts.begin(), xact.posts.end(),
-                    [](post_t* p) { return !p->has_flags(ITEM_GENERATED); }));
+  return static_cast<long>(xact.posts.size());
 }
 
 post_t& posts_getitem(xact_base_t& xact, long i) {
-  std::vector<post_t*> raw;
-  for (post_t* p : xact.posts)
-    if (!p->has_flags(ITEM_GENERATED))
-      raw.push_back(p);
-
-  long len = static_cast<long>(raw.size());
+  long len = static_cast<long>(xact.posts.size());
   if (labs(i) >= len) {
     PyErr_SetString(PyExc_IndexError, _("Index out of range"));
     throw_error_already_set();
   }
 
   long x = i < 0 ? len + i : i;
-  return *raw[static_cast<std::size_t>(x)];
+  auto it = xact.posts.begin();
+  std::advance(it, x);
+  return **it;
 }
 
 string py_xact_to_string(xact_t&) {
@@ -123,9 +118,12 @@ void export_xact() {
       .def("finalize", &xact_base_t::finalize)
 
       .def("__iter__",
-           boost::python::range<return_internal_reference<>>(&xact_raw_posts_begin,
-                                                             &xact_raw_posts_end))
+           boost::python::range<return_internal_reference<>>(&xact_base_t::posts_begin,
+                                                             &xact_base_t::posts_end))
       .add_property("posts",
+                    boost::python::range<return_internal_reference<>>(&xact_base_t::posts_begin,
+                                                                      &xact_base_t::posts_end))
+      .add_property("raw_posts",
                     boost::python::range<return_internal_reference<>>(&xact_raw_posts_begin,
                                                                       &xact_raw_posts_end))
 

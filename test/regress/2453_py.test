@@ -1,5 +1,9 @@
 test python test/regress/2453.py
-post count: 2
+post count: 3
+$100 Expenses:Food
+$-100 Assets:Credit
+$100 Assets:Cash
+raw post count: 2
 $100 Expenses:Food
 $-100 Assets:Credit
 end test
