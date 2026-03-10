@@ -390,12 +390,28 @@ void journal_t::register_metadata(const string& key, const value_t& value,
 }
 
 namespace {
-/** @brief Iterate all metadata on a transaction or posting and validate each tag. */
+/** @brief Iterate all metadata on a transaction or posting and validate each tag.
+ *
+ * Temporarily overrides the journal's current_context pathname and linenum
+ * with the item's source position so that --strict warnings reference the
+ * correct file and line (fixes #750 and #692).
+ */
 void check_all_metadata(journal_t& journal, std::variant<int, xact_t*, post_t*> context) {
   xact_t* xact = context.index() == 1 ? std::get<xact_t*>(context) : NULL;
   post_t* post = context.index() == 2 ? std::get<post_t*>(context) : NULL;
 
   if ((xact || post) && (xact ? xact->metadata : post->metadata)) {
+    item_t* item = xact ? static_cast<item_t*>(xact) : static_cast<item_t*>(post);
+
+    path saved_pathname;
+    std::size_t saved_linenum = 0;
+    if (journal.current_context && item->pos) {
+      saved_pathname = journal.current_context->pathname;
+      saved_linenum = journal.current_context->linenum;
+      journal.current_context->pathname = item->pos->pathname;
+      journal.current_context->linenum = item->pos->beg_line;
+    }
+
     for (const item_t::string_map::value_type& pair : xact ? *xact->metadata : *post->metadata) {
       const string& key(pair.first);
 
@@ -404,6 +420,11 @@ void check_all_metadata(journal_t& journal, std::variant<int, xact_t*, post_t*> 
         journal.register_metadata(key, *value, context);
       else
         journal.register_metadata(key, NULL_VALUE, context);
+    }
+
+    if (journal.current_context && item->pos) {
+      journal.current_context->pathname = saved_pathname;
+      journal.current_context->linenum = saved_linenum;
     }
   }
 }

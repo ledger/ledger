@@ -14,6 +14,6 @@ test -f /dev/null --strict --input-date-format '%m/%d/%Y' convert test/regress/G
     Expenses:Unknown                            -4.5
     Equity:Unknown
 __ERROR__
-Warning: "$sourcepath/test/regress/GH2521.dat", line 0: Unknown metadata tag 'posting_type'
-Warning: "$sourcepath/test/regress/GH2521.dat", line 0: Unknown metadata tag 'posting_type'
+Warning: "$sourcepath/test/regress/GH2521.dat", line 1: Unknown metadata tag 'posting_type'
+Warning: "$sourcepath/test/regress/GH2521.dat", line 2: Unknown metadata tag 'posting_type'
 end test
