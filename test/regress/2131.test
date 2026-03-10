@@ -1,0 +1,32 @@
+; Regression test for issue #2131
+;
+; When using market-value mode (-V) combined with period mode (-M/--period),
+; price changes that occur in periods containing no real transactions must
+; still generate revaluation postings in the output.
+;
+; Before the fix, output_revaluation() set xdata.date to the intermediate
+; price date but did not update xdata.value_date.  Because get_value_date()
+; checks xdata.value_date before falling back to date(), the market()
+; expression in total_expr always evaluated against the period-end date
+; (set by interval_posts) rather than the intermediate price date.  This
+; caused every intermediate revaluation to produce a diff of zero, so the
+; entries were silently dropped.
+;
+; The fix makes output_revaluation() temporarily override xdata.value_date
+; alongside xdata.date, so that market(display_total, value_date, exchange)
+; uses the correct revaluation date.
+
+commodity ACME
+    format 0 ACME
+
+P 2022/07/01 ACME $100.00
+P 2022/08/01 ACME $200.00
+
+2022/07/01 Buy ACME
+    Assets:Investments     1 ACME @ $100.00
+    Assets:Cash
+
+test reg -V -M -e 2022/09/01 Assets:Investments
+22-Jul-01 - 22-Jul-31           Assets:Investments          $100.00      $100.00
+22-Aug-01 Commodities revalued  <Revalued>                  $100.00      $200.00
+end test
