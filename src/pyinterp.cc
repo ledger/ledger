@@ -49,8 +49,6 @@ using namespace boost::python;
 
 std::shared_ptr<python_interpreter_t> python_session;
 
-char* argv0;
-
 void export_account();
 void export_amount();
 void export_balance();
@@ -321,64 +319,77 @@ value_t python_interpreter_t::python_command(call_scope_t& args) {
   if (!is_initialized)
     initialize();
 
-  int status = 1;
+  bool interactive = (args.size() == 0);
+  bool inline_code = (!interactive && args.get<string>(0) == "-c");
 
-  if (args.size() == 0) {
-    // Interactive mode: use PyRun_InteractiveLoop instead of Py_Main to avoid
-    // loading readline.so, which conflicts with libedit already loaded by
-    // ledger and causes a segfault on startup (GitHub issue #852).
-    //
-    // Save terminal settings before entering the Python REPL.  Python's
-    // PyOS_Readline may put the terminal in raw mode (disabling echo) and does
-    // not always restore the original settings when the REPL exits.  We save
-    // and restore the settings ourselves to prevent the console from being left
-    // in a broken state after 'ledger python' returns (GitHub issue #774).
-#if !defined(_WIN32) && !defined(__CYGWIN__)
-    struct termios saved_tty;
-    bool have_tty = (isatty(STDIN_FILENO) != 0 && tcgetattr(STDIN_FILENO, &saved_tty) == 0);
-#endif
-    status = PyRun_InteractiveLoop(stdin, "<stdin>");
-#if !defined(_WIN32) && !defined(__CYGWIN__)
-    if (have_tty)
-      tcsetattr(STDIN_FILENO, TCSANOW, &saved_tty);
-#endif
-  } else {
-    wchar_t** argv = new wchar_t*[args.size() + 1];
-
-    std::size_t len = std::strlen(argv0) + 1;
-    argv[0] = new wchar_t[len];
-    mbstowcs(argv[0], argv0, len);
-
-    for (std::size_t i = 0; i < args.size(); i++) {
-      string arg = args.get<string>(i);
-      std::size_t len = arg.length() + 1;
-      argv[i + 1] = new wchar_t[len];
-      mbstowcs(argv[i + 1], arg.c_str(), len);
+  // Set sys.argv by updating the Python sys module's argv attribute directly.
+  // For interactive mode sys.argv[0] is the empty string per CPython
+  // convention.  For -c mode sys.argv[0] is "-c" and the code string is not
+  // included, per CPython convention.  For script mode sys.argv contains the
+  // script name followed by any additional arguments.
+  // This approach avoids PySys_SetArgvEx, which was deprecated in Python 3.11,
+  // and does not prepend the script directory to sys.path.
+  {
+    object sys_module = import("sys");
+    list argv_list;
+    if (interactive) {
+      argv_list.append(object(string("")));
+    } else {
+      std::size_t argv_count = inline_code ? 1 : args.size();
+      for (std::size_t i = 0; i < argv_count; i++)
+        argv_list.append(object(args.get<string>(i)));
     }
-
-    try {
-      status = Py_Main(static_cast<int>(args.size()) + 1, argv);
-    } catch (const error_already_set&) {
-      PyErr_Print();
-      for (std::size_t i = 0; i < args.size() + 1; i++)
-        delete[] argv[i];
-      delete[] argv;
-      throw_(std::runtime_error, _("Failed to execute Python module"));
-    } catch (...) {
-      for (std::size_t i = 0; i < args.size() + 1; i++)
-        delete[] argv[i];
-      delete[] argv;
-      throw;
-    }
-
-    for (std::size_t i = 0; i < args.size() + 1; i++)
-      delete[] argv[i];
-    delete[] argv;
+    sys_module.attr("argv") = argv_list;
   }
 
-  if (status != 0) {
+  int status = 0;
+
+  try {
+    if (interactive) {
+      // Use code.interact() rather than Py_Main() or PyRun_InteractiveLoop()
+      // to avoid reinitializing readline and signal handlers, which conflicts
+      // with the already-initialized embedded interpreter (GitHub issue #819).
+      //
+      // Save terminal settings before entering the Python REPL.  Python's
+      // PyOS_Readline may put the terminal in raw mode (disabling echo) and
+      // does not always restore the original settings when the REPL exits.
+      // We save and restore the settings ourselves to prevent the console
+      // from being left in a broken state after 'ledger python' returns
+      // (GitHub issue #774).
+#if !defined(_WIN32) && !defined(__CYGWIN__)
+      struct termios saved_tty;
+      bool have_tty = (isatty(STDIN_FILENO) != 0 && tcgetattr(STDIN_FILENO, &saved_tty) == 0);
+#endif
+      status = PyRun_SimpleString("import code; code.interact(local=vars(__import__('__main__')))");
+#if !defined(_WIN32) && !defined(__CYGWIN__)
+      if (have_tty)
+        tcsetattr(STDIN_FILENO, TCSANOW, &saved_tty);
+#endif
+    } else if (inline_code) {
+      if (args.size() < 2)
+        throw_(std::runtime_error, _("-c requires a code argument"));
+      string code = args.get<string>(1);
+      status = PyRun_SimpleString(code.c_str());
+    } else {
+      // Script mode: open the file ourselves and run it.  PyRun_SimpleFile
+      // (closeit=0) is used so we retain ownership of the FILE* and can close
+      // it reliably.  PyRun_SimpleFile is available and non-deprecated across
+      // Python 3.8-3.14+ (it is a macro wrapping PyRun_SimpleFileExFlags on
+      // 3.13+).
+      string filename = args.get<string>(0);
+      FILE* fp = std::fopen(filename.c_str(), "r");
+      if (!fp)
+        throw_(std::runtime_error, _f("Failed to open Python script: %1%") % filename);
+      status = PyRun_SimpleFile(fp, filename.c_str());
+      std::fclose(fp);
+    }
+  } catch (const error_already_set&) {
+    PyErr_Print();
     throw_(std::runtime_error, _("Failed to execute Python module"));
   }
+
+  if (status != 0)
+    throw_(std::runtime_error, _("Failed to execute Python module"));
 
   return NULL_VALUE;
 }
