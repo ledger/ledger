@@ -1,0 +1,25 @@
+; Regression test for issue #868
+; When using --sort, postings from different transactions may be
+; interleaved.  The register format should show the payee when it
+; changes from the previous line, not just when the transaction changes.
+
+2024/01/01 Store B
+    Expenses:Food                    $20.00
+    Assets:Cash
+
+2024/01/02 Store A
+    Expenses:Food                    $15.00
+    Assets:Cash
+
+2024/01/03 Store B
+    Expenses:Food                    $10.00
+    Assets:Cash
+
+test reg --sort payee --columns 80
+24-Jan-02 Store A               Expenses:Food                $15.00       $15.00
+                                Assets:Cash                 $-15.00            0
+24-Jan-01 Store B               Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+24-Jan-03 Store B               Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

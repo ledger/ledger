@@ -149,6 +149,7 @@ void format_posts::operator()(post_t& post) {
     // NOLINTEND(bugprone-branch-clone)
 
     post.xdata().add_flags(POST_EXT_DISPLAYED);
+    report.last_displayed_payee = post.payee();
     last_post = &post;
   }
 }

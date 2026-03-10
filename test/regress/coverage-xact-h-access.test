@@ -55,5 +55,5 @@ end test
 ; Test filtering by code (exercises code lookup)
 test reg --limit "code == \"INV-001\"" --columns 80
 24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
-          Grocery Store         Assets:Checking             $-50.00            0
+                                Assets:Checking             $-50.00            0
 end test

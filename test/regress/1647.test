@@ -16,10 +16,10 @@ tag foo
 
 test reg --strict
 17-May-04 xxx                   A                         10.00 EUR    10.00 EUR
-          xxx                   B                        -10.00 EUR            0
+                                B                        -10.00 EUR            0
 end test
 
 test reg --pedantic
 17-May-04 xxx                   A                         10.00 EUR    10.00 EUR
-          xxx                   B                        -10.00 EUR            0
+                                B                        -10.00 EUR            0
 end test

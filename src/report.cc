@@ -1010,6 +1010,10 @@ value_t report_t::fn_join(call_scope_t& args) {
   return string_value(out.str());
 }
 
+value_t report_t::fn_last_payee(call_scope_t&) {
+  return string_value(last_displayed_payee);
+}
+
 value_t report_t::fn_format_date(call_scope_t& args) {
   if (args.has<string>(1))
     return string_value(format_date(args.get<date_t>(0), FMT_CUSTOM, args.get<string>(1).c_str()));
@@ -1696,7 +1700,9 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
       break;
 
     case 'l':
-      if (is_eq(p, "lifo_lots"))
+      if (is_eq(p, "last_payee"))
+        return MAKE_FUNCTOR(report_t::fn_last_payee);
+      else if (is_eq(p, "lifo_lots"))
         return MAKE_FUNCTOR(report_t::fn_lifo_lots);
       break;
 

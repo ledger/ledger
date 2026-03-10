@@ -168,6 +168,7 @@ public:
   optional<datetime_t>
       gain_from; ///< Reference date for --gain-since (compute gain from this date's market value)
   uint_least8_t budget_flags; ///< Bitmask of BUDGET_* flags controlling budget report behavior
+  string last_displayed_payee; ///< Last payee shown by register format (for payee change detection)
 
   explicit report_t(session_t& _session)
       : session(_session), terminus(CURRENT_TIME()), budget_flags(BUDGET_NO_BUDGET) {
@@ -271,6 +272,9 @@ public:
   fn_format_datetime(call_scope_t& scope);   ///< Format a datetime: format_datetime(dt [, fmt])
   value_t fn_ansify_if(call_scope_t& scope); ///< Wrap text in ANSI color codes if condition is met
   value_t fn_percent(call_scope_t& scope);   ///< Compute percentage: percent(part, whole)
+
+  // Display state
+  value_t fn_last_payee(call_scope_t& scope); ///< Last payee shown in register output
 
   // Commodity and lot inspection
   value_t fn_commodity(call_scope_t& scope);       ///< Return the commodity symbol of an amount
@@ -1114,7 +1118,7 @@ public:
                  "           bold if should_bold))\n%/"
                  "%(justify(\" \", int(date_width)))"
                  " %(ansify_if("
-                 "   justify(truncated(has_tag(\"Payee\") ? payee : \" \", "
+                 "   justify(truncated(payee != last_payee ? payee : \" \", "
                  "                     int(payee_width)), int(payee_width)),"
                  "             bold if should_bold))"
                  " %$3 %$4 %$5\n");

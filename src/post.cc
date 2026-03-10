@@ -263,6 +263,10 @@ value_t get_payee(post_t& post) {
   return string_value(post.payee());
 }
 
+value_t get_xact_payee(post_t& post) {
+  return string_value(post.xact ? post.xact->payee : "");
+}
+
 /**
  * @brief Combine the posting's note with its transaction's note.
  *
@@ -713,6 +717,8 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind, const string& name)
       return WRAP_FUNCTOR(get_wrapper<&get_xact>);
     else if (name == "xact_id")
       return WRAP_FUNCTOR(get_wrapper<&get_xact_id>);
+    else if (name == "xact_payee")
+      return WRAP_FUNCTOR(get_wrapper<&get_xact_payee>);
     break;
 
   case 'N':
