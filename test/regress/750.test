@@ -1,0 +1,18 @@
+; --strict should report tag warnings at the item's line, not end of xact
+account Assets:Cash
+account Expenses:Food
+commodity $
+
+2012-03-22 Food
+    ; :unknown_tag:
+    Expenses:Food             $20.00
+    Assets:Cash
+
+test bal --strict
+             $-20.00  Assets:Cash
+              $20.00  Expenses:Food
+--------------------
+                   0
+__ERROR__
+Warning: "$FILE", line 6: Unknown metadata tag 'unknown_tag'
+end test

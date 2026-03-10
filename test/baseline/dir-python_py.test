@@ -23,6 +23,6 @@ test reg
 12-Feb-29 KFC                   Expenses:Food                   $20          $20
                                 Assets:Cash                    $-20            0
 __ERROR__
-Warning: "$sourcepath/test/baseline/dir-python_py.test", line 18: Metadata check failed for (PATH: test/baseline/feat-import_noexist.test): check_path(value)
-Warning: "$sourcepath/test/baseline/dir-python_py.test", line 18: Metadata check failed for (PATH: test/baseline/feat-import_noexist.test): ((os.path).isfile(value))
+Warning: "$sourcepath/test/baseline/dir-python_py.test", line 15: Metadata check failed for (PATH: test/baseline/feat-import_noexist.test): check_path(value)
+Warning: "$sourcepath/test/baseline/dir-python_py.test", line 15: Metadata check failed for (PATH: test/baseline/feat-import_noexist.test): ((os.path).isfile(value))
 end test

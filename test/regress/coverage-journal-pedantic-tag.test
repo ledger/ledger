@@ -21,6 +21,6 @@ tag Category
 
 test bal --pedantic -> 1
 __ERROR__
-While parsing file "$FILE", line 20:
+While parsing file "$FILE", line 17:
 Error: Unknown metadata tag 'BadTag'
 end test

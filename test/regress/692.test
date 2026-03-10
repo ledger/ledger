@@ -1,0 +1,16 @@
+; Warnings for included files should reference the included file, not the parent
+account Assets:Bank
+
+include 692-include.dat
+
+test bal --strict
+                   0  Assets
+          -10.00 EUR    Bank
+           10.00 EUR    Test
+--------------------
+                   0
+__ERROR__
+Warning: "$sourcepath/test/regress/692-include.dat", line 2: Unknown account 'Assets:Test'
+Warning: "$sourcepath/test/regress/692-include.dat", line 2: Unknown commodity 'EUR'
+Warning: "$sourcepath/test/regress/692-include.dat", line 3: Unknown commodity 'EUR'
+end test
