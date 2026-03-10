@@ -396,6 +396,11 @@ void print_xacts::title(const string&) {
 void print_xacts::flush() {
   std::ostream& out(report.output_stream);
 
+  if (journal_t* journal = report.session.get_journal()) {
+    if (journal->bucket)
+      out << "bucket " << journal->bucket->fullname() << '\n' << '\n';
+  }
+
   bool first = true;
   for (xact_t* xact : xacts) {
     if (first)

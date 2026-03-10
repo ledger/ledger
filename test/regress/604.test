@@ -1,0 +1,13 @@
+; print should emit bucket directive so output can be re-parsed
+bucket Assets:Checking
+
+2024/01/01 Grocery Store
+    Expenses:Food                                $50
+
+test print
+bucket Assets:Checking
+
+2024/01/01 Grocery Store
+    Expenses:Food                                $50
+    Assets:Checking
+end test
