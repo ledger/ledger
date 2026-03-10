@@ -8,7 +8,6 @@ import pathlib
 import argparse
 import subprocess
 
-from os.path import join, exists, getsize, realpath, isfile
 from subprocess import Popen, PIPE
 
 class CheckOptions (object):

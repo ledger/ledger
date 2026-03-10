@@ -190,7 +190,7 @@ class DocTests:
                 with open(convert_file, 'w', encoding='utf-8') as f:
                   f.write(convert_data)
           except ValueError:
-           pass
+           pass  # No 'convert' subcommand; skip convert file setup
           error = None
           try:
             verify = subprocess.check_output(command, stderr=subprocess.STDOUT)
