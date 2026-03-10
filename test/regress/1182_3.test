@@ -12,3 +12,5 @@
     Liabilities:MasterCard        $-200.00
 
 test bal Expenses:Cookies -> 0
+               $2.00  Expenses:Cookies
+end test
