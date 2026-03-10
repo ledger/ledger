@@ -45,7 +45,9 @@ class LedgerHarness:
             'TMPDIR', 'TEMP', 'TMP',
             'SYSTEMROOT', 'COMSPEC', 'MSYSTEM', 'MINGW_PREFIX',
         }
-        env = {k: v for k, v in os.environ.items() if k in ALLOWED_ENV_VARS}
+        ALLOWED_ENV_PREFIXES = ('LLVM_PROFILE_', 'GCOV_')
+        env = {k: v for k, v in os.environ.items()
+               if k in ALLOWED_ENV_VARS or k.startswith(ALLOWED_ENV_PREFIXES)}
         env['TZ'] = 'America/Chicago'
 
         if (gmalloc is not None and gmalloc) or \
