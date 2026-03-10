@@ -13,13 +13,19 @@
 ; 2. That a mismatched quoted commodity name with digits produces a clear,
 ;    accurate error message (naming the full symbol, including digits).
 
-; Valid: commodity "CTG25" with format using "CTG25" should succeed
-commodity "CTG25"
-    format 1000.000 "CTG25"
+; Invalid: unquoted "CTG25" in a format directive — the parser reads "CTG"
+; and stops at the digit, leaving "25" unconsumed.  This should be a clear
+; diagnostic rather than silently truncating to "CTG" and then producing a
+; confusing mismatch error against the wrong symbol.
+commodity CTG
+    format 1000.000 CTG25
 
 2024/01/01 Test
-    Expenses        1000.000 "CTG25"
+    Expenses        1000.000 CTG
     Assets
 
-test source -> 0
+test source -> 1
+__ERROR__
+While parsing file "$FILE", line 21:
+Error: unexpected characters '25' after commodity symbol in format directive
 end test

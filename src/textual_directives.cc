@@ -707,7 +707,12 @@ void instance_t::commodity_format_directive(commodity_t& comm, string format) {
   // observational formatting.
   trim(format);
   amount_t amt;
-  (void)amt.parse(format, PARSE_NO_REDUCE);
+  std::istringstream in(format);
+  (void)amt.parse(in, PARSE_NO_REDUCE);
+  string trailing;
+  if (in >> trailing)
+    throw_(parse_error,
+           _f("unexpected characters '%1%' after commodity symbol in format directive") % trailing);
   if (amt.commodity() != comm)
     throw_(parse_error,
            _f("commodity directive symbol %1% and format directive symbol %2% should be the same") %
