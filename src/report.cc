@@ -67,6 +67,7 @@
 #include "report.h"
 #include "session.h"
 #include "pool.h"
+#include "op.h"
 #include "format.h"
 #include "query.h"
 #include "output.h"
@@ -334,33 +335,61 @@ void report_t::normalize_period() {
 
 /*--- Query Argument Parsing ---*/
 
+namespace {
+
+/// @brief Wrap a query AST for transaction-level (xact) commands.
+///
+/// For commands that display whole transactions (print, xact, dump), the
+/// limit predicate must be evaluated at the transaction level rather than
+/// the posting level.  Without this, "not X" is treated as "any posting
+/// satisfies not-X" (nearly always true), instead of the expected
+/// "no posting satisfies X".
+///
+/// The AST is transformed so that:
+///   - O_NOT(inner) becomes O_NOT(O_CALL("any", inner))
+///   - other nodes become O_CALL("any", root)
+///
+/// This matches the documented workaround: print -l "not any(account =~ /X/)"
+expr_t::ptr_op_t wrap_xact_predicate(expr_t::ptr_op_t op) {
+  using op_t = expr_t::op_t;
+
+  // Build O_CALL("any", argument) for a given argument subtree.
+  auto make_any_call = [](const expr_t::ptr_op_t& arg) -> expr_t::ptr_op_t {
+    expr_t::ptr_op_t ident = new op_t(op_t::IDENT);
+    ident->set_ident("any");
+    return op_t::new_node(op_t::O_CALL, ident, arg);
+  };
+
+  if (op->kind == op_t::O_NOT) {
+    // NOT(inner) -> NOT(any(inner))
+    return op_t::new_node(op_t::O_NOT, make_any_call(op->left()));
+  } else {
+    // PRED -> any(PRED)
+    return make_any_call(op);
+  }
+}
+
+} // namespace
+
 void report_t::parse_query_args(const value_t& args, const string& whence) {
-  query_t query(args, what_to_keep());
+  if (args.empty())
+    return;
 
-  if (query.has_query(query_t::QUERY_LIMIT)) {
-    string pred = query.get_query(query_t::QUERY_LIMIT);
+  query_t query;
+  expr_t::ptr_op_t limit_op = query.parse_args(args, what_to_keep());
 
-    // For commands that display whole transactions (print, xact, dump), the
-    // limit predicate must be evaluated at the transaction level rather than
-    // the posting level.  Without this, "not X" is treated as "any posting
-    // satisfies not-X" (nearly always true), instead of the expected
-    // "no posting satisfies X".
-    //
-    // We detect these commands by the presence of the related_all flag set in
-    // normalize_options().  The predicate is rewritten so that:
-    //   - "(! INNER)" becomes "(! any(INNER))"  — negation lifted to xact level
-    //   - "PRED" becomes "any(PRED)"             — use any-posting semantics
-    //
-    // This matches the documented workaround: print -l "not any(account =~ /X/)"
-    if (HANDLED(related_all) && !pred.empty()) {
-      if (pred.size() > 3 && pred[0] == '(' && pred[1] == '!' && pred[2] == ' ') {
-        // NOT expression serialized as "(! INNER)" — lift not outside any()
-        string inner = pred.substr(3, pred.size() - 4);
-        pred = "(! any(" + inner + "))";
-      } else {
-        pred = "any(" + pred + ")";
-      }
+  if (limit_op) {
+    string pred;
+
+    // For commands that display whole transactions (print, xact, dump),
+    // wrap the predicate in any() at the AST level so that the filter
+    // operates on the transaction rather than individual postings.
+    if (HANDLED(related_all)) {
+      expr_t::ptr_op_t wrapped = wrap_xact_predicate(limit_op);
+      pred = predicate_t(wrapped, what_to_keep()).print_to_str();
       DEBUG("report.predicate", "Xact-level limit predicate = " << pred);
+    } else {
+      pred = query.get_query(query_t::QUERY_LIMIT);
     }
 
     HANDLER(limit_).on(whence, pred);
