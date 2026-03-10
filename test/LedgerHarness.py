@@ -44,6 +44,8 @@ class LedgerHarness:
             'PATH', 'HOME', 'TZ', 'TZDIR', 'LANG', 'LC_ALL', 'LC_CTYPE', 'TERM',
             'TMPDIR', 'TEMP', 'TMP',
             'SYSTEMROOT', 'COMSPEC', 'MSYSTEM', 'MINGW_PREFIX',
+            'ASAN_OPTIONS', 'LSAN_OPTIONS', 'UBSAN_OPTIONS', 'MSAN_OPTIONS',
+            'TSAN_OPTIONS',
         }
         ALLOWED_ENV_PREFIXES = ('LLVM_PROFILE_', 'GCOV_')
         env = {k: v for k, v in os.environ.items()
