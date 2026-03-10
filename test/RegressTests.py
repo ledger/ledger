@@ -26,6 +26,11 @@ class RegressFile(object):
     def __init__(self, filename):
         self.filename = filename
         self.fd = open(self.filename, encoding='utf-8')
+        self.line_num = 0
+
+    def readline(self):
+        self.line_num += 1
+        return self.fd.readline()
 
     def transform_line(self, line):
         return line\
@@ -41,11 +46,19 @@ class RegressFile(object):
 
         in_output = False
         in_error  = False
+        test_start_line = 0
 
-        line = self.fd.readline()
+        line = self.readline()
         test = Test()
         while line:
             if line.startswith("test "):
+                if in_output:
+                    print("ERROR: %s:%d: new 'test' directive without preceding "
+                          "'end test' (block started at line %d)"
+                          % (self.filename, self.line_num, test_start_line),
+                          file=sys.stderr)
+                    harness.failure(self.filename.name)
+                    return None
                 command = line[5:]
                 match = re.match(r'(.*) -> ([0-9]+)', command)
                 if match:
@@ -54,6 +67,7 @@ class RegressFile(object):
                 else:
                     test.command = command
                 in_output = True
+                test_start_line = self.line_num
 
             elif in_output:
                 if line.startswith("end test"):
@@ -70,8 +84,15 @@ class RegressFile(object):
                         if test.output is None:
                             test.output = []
                         test.output.append(self.transform_line(line))
-            line = self.fd.readline()
-            #print("line =", line)
+            line = self.readline()
+
+        if in_output:
+            print("ERROR: %s:%d: unterminated test block "
+                  "(missing 'end test' before end of file)"
+                  % (self.filename, test_start_line),
+                  file=sys.stderr)
+            harness.failure(self.filename.name)
+            return None
 
         return test.command and test
 
