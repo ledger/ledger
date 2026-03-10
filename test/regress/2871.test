@@ -1,0 +1,20 @@
+; Regression test for issue #2871:
+; ((@)) is not a valid virtual price indicator; it should be rejected.
+; The correct forms are (@) for virtual per-unit cost and (@@) for
+; virtual total cost.
+
+2020-06-22 * Invalid ((@)) syntax
+    Assets:Test               10.00 EUR {1.23 USD} ((@)) 1.30 USD
+    Assets:Bank
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 7:
+While parsing value expression:
+  @
+
+While parsing posting:
+  Assets:Test               10.00 EUR {1.23 USD} ((@)) 1.30 USD
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error: Invalid char '@'
+end test
