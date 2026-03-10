@@ -6,11 +6,11 @@
     Assets:Bank
 
 2020-06-22 * Virtual total price with lot note
-    Assets:Test               10.00 EUR {1.23 USD} (this is a note) ((@)) 1.30 USD
+    Assets:Test               10.00 EUR {1.23 USD} (this is a note) (@@) 1.30 USD
     Assets:Bank
 
 2020-06-22 * Virtual total price without lot note
-    Assets:Test               10.00 EUR {1.23 USD} ((@)) 1.30 USD
+    Assets:Test               10.00 EUR {1.23 USD} (@@) 1.30 USD
     Assets:Bank
 
 test bal Assets:Test

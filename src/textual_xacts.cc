@@ -593,11 +593,11 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
         // Step 4: Parse the optional cost (@ PER-UNIT-COST, @@ TOTAL-COST).
         // A single @ means per-unit cost (multiplied by the amount).
         // Double @@ means total cost (used as-is, negated if amount is negative).
-        // Parenthesized forms like (@ ...) and ((@@ ...)) are virtual costs.
+        // Parenthesized forms (@) and (@@) are virtual costs that do not update
+        // the price history database.
         // A leading = after @ means a fixated (locked) cost.
 
-        if (*next == '@' || (*next == '(' && *(next + 1) == '@') ||
-            (*next == '(' && *(next + 1) == '(' && *(next + 2) == '@')) {
+        if (*next == '@' || (*next == '(' && *(next + 1) == '@')) {
           DEBUG("textual.parse", "line " << context.linenum << ": "
                                          << "Found a price indicator");
 
@@ -615,11 +615,8 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
             next++;
           }
 
-          if (post->has_flags(POST_COST_VIRTUAL) && *next == ')') {
+          if (post->has_flags(POST_COST_VIRTUAL) && *next == ')')
             ++next;
-            if (*next == ')')
-              ++next;
-          }
 
           p = skip_ws(next);
           if (*p) {
