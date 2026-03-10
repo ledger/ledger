@@ -294,6 +294,7 @@ public:
 #define POST_EXT_MATCHES 0x0080    ///< Posting matches the current query predicate.
 #define POST_EXT_CONSIDERED 0x0100 ///< Posting has already been counted toward account totals.
 #define POST_EXT_DISPLAY_TOTAL_CACHED 0x0200 ///< display_total has been computed and cached.
+#define POST_EXT_PAYEE_CHANGED 0x0400 ///< Payee differs from previous posting in display order.
 
     value_t visited_value;  ///< Value recorded when the posting was visited.
     value_t compound_value; ///< Compound value set by filters (overrides amount when

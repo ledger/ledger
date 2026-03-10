@@ -37,7 +37,7 @@ end test
 
 test reg @Override
 24-Jan-02 Override Payee        Expenses:Food                $15.00       $15.00
-          Override Payee        Assets:Cash                 $-15.00            0
+                                Assets:Cash                 $-15.00            0
 end test
 
 test reg %receipt
