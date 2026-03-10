@@ -2491,25 +2491,6 @@ bucket Assets:Checking
     Assets:Checking:Business            $ 30.00
 @end smallexample
 
-@item capture
-@c instance_t::account_mapping_directive
-@findex capture
-@findex print
-@findex register
-
-Directs Ledger to replace any account matching a regex with the given
-account.  For example:
-
-@smallexample @c input:validate
-capture  Expenses:Deductible:Medical  Medical
-@end smallexample
-
-Would cause any posting with @samp{Medical} in its name to be replaced
-with @samp{Expenses:Deductible:Medical}.
-
-Ledger will display the mapped payees in @command{print} and
-@command{register} reports.
-
 @item check
 @findex check
 @cindex assertions
