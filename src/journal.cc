@@ -605,6 +605,8 @@ std::size_t journal_t::read(parse_context_stack_t& context, hash_type_t hash_typ
   if (should_clear_xdata)
     clear_xdata();
 
+  current_context = nullptr;
+
   return count;
 }
 
