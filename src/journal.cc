@@ -537,6 +537,8 @@ bool journal_t::add_xact(xact_t* xact) {
 }
 
 void journal_t::extend_xact(xact_base_t* xact) {
+  if (!current_context)
+    return;
   for (unique_ptr<auto_xact_t>& auto_xact : auto_xacts)
     auto_xact->extend_xact(*xact, *current_context);
 }
