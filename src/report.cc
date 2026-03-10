@@ -350,7 +350,7 @@ namespace {
 ///   - other nodes become O_CALL("any", root)
 ///
 /// This matches the documented workaround: print -l "not any(account =~ /X/)"
-expr_t::ptr_op_t wrap_xact_predicate(expr_t::ptr_op_t op) {
+expr_t::ptr_op_t wrap_xact_predicate(const expr_t::ptr_op_t& op) {
   using op_t = expr_t::op_t;
 
   // Build O_CALL("any", argument) for a given argument subtree.
