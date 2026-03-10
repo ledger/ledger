@@ -1,0 +1,493 @@
+src/journal.cc
+  62339c01ceb35232 608-609
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.9",
+  "base_commit_sha": "37aae8f3399d667b7fc9d14c160d2e262c0cfb68",
+  "prompts": {
+    "62339c01ceb35232": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "db49dae7-04bc-4b86-9385-60be30a15aa8",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "<command-message>fix-ci</command-message>\n<command-name>/fix-ci</command-name>",
+          "timestamp": "2026-03-10T14:01:19.401Z"
+        },
+        {
+          "type": "user",
+          "text": "CI tests are failing for this PR. Use cpp-pro to diagnose and resolve this issue, then push your fixes to the PR and monitor the CI test results using `gh` until you observe that everything passes correctly. If any further problems should be observed, repeat this diagnose, resolve, push and monitor process until everything is working with this PR.\n",
+          "timestamp": "2026-03-10T14:01:19.401Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The user wants me to fix CI tests that are failing for the current PR on the `john********-692` branch. Let me start by understanding what's going on with this PR and what CI failures exist.\n\nLet me first check the current state of the branch and find the PR.",
+          "timestamp": "2026-03-10T14:01:24.278Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "ToolSearch",
+          "input": {
+            "max_results": 5,
+            "query": "select:Bash,Read,Grep,Glob,Agent"
+          },
+          "timestamp": "2026-03-10T14:01:24.906Z"
+        },
+        {
+          "type": "assistant",
+          "text": "\n\nLet me start by checking the current PR status and CI failures.",
+          "timestamp": "2026-03-10T14:01:28.384Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh pr list --head johnw/fix-750-692 --json number,title,url --jq '.[0]'",
+            "description": "Find the PR for this branch"
+          },
+          "timestamp": "2026-03-10T14:01:30.524Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --oneline -5",
+            "description": "Show recent commits on this branch"
+          },
+          "timestamp": "2026-03-10T14:01:30.938Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh pr checks 2878 2>&1",
+            "description": "Check CI status for PR #2878"
+          },
+          "timestamp": "2026-03-10T14:01:35.354Z"
+        },
+        {
+          "type": "assistant",
+          "text": "One failure: the Ubuntu-Sanitizers build. Let me get the details.",
+          "timestamp": "2026-03-10T14:01:39.037Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh run view 22889853497 --job 66410536149 --log-failed 2>&1 | tail -100",
+            "description": "Get failed job logs"
+          },
+          "timestamp": "2026-03-10T14:01:39.653Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The CI failure is in the sanitizer build. Two key issues:\n\n1. **Test failure**: `RegressTest_2348` - exit code mismatch (0 != 1), meaning the test expected exit code 1 but got 0.\n2. **Heap-use-after-free**: in `src/journal.cc:410` in `check_all_metadata` - this is directly related to the fix for #750/#692.\n\nLet me look at the test file 2348.test and the code change in journal.cc to understand both issues. But first, let me get more log context to understand the heap-use-after-free better.",
+          "timestamp": "2026-03-10T14:01:50.883Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Two issues found:\n1. **Test failure**: `RegressTest_2348` - expected exit code 1 but got 0\n2. **Heap-use-after-free**: in `src/journal.cc:410` in `check_all_metadata`\n\nLet me investigate both issues. The heap-use-after-free is in the code I changed for this PR.",
+          "timestamp": "2026-03-10T14:01:52.316Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-750-692/test/regress/2348.test"
+          },
+          "timestamp": "2026-03-10T14:01:53.223Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-750-692/src/journal.cc",
+            "limit": 60,
+            "offset": 390
+          },
+          "timestamp": "2026-03-10T14:01:54.091Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff main -- src/journal.cc",
+            "description": "Show the changes in journal.cc for this PR"
+          },
+          "timestamp": "2026-03-10T14:01:54.688Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the two issues:\n\n1. **Test 2348.test**: This test expects exit code 0 (`-> 0`), but the `__ERROR__` section includes a warning about \"Unknown metadata tag 'Tag'\" at line 2. My fix changed the line number reporting, so the warning now reports a different line number. The test expects line 2, but my fix would make it report line 3 (where the `; Tag: Hello` metadata actually is on line 3). Wait, let me re-read...\n\nActually, the test expects:\n```\nWarning: \"$FILE\", line 2: Unknown metadata tag 'Tag'\n\n\n```\n\nBut my fix changes the line to point to the item's position (`item->pos->beg_line`). For a posting, `beg_line` would be line 2 (where the posting starts). The metadata is on line 3. But the warning message says line 2, which is the posting line, not the metadata line.\n\nWait, but looking at the error message \"FAILURE in exit code (0 != 1)\" - the test expects exit code 0 but got exit code 1. Or rather, the test expected a specific exit code but got a different one.\n\nLooking at the test again, I need to understand what the actual test input is and what the expected behavior should be.\n\nI'm trying to figure out the exit code format in the test output. The notation `(0 != 1)` is ambiguous - it could mean the expected exit code was 0 and actual was 1, or vice versa. The test line shows `-> 0`, which suggests the expected exit code is 0, so the actual exit code must be 1.\n\n```\nSUMMARY: AddressSanitizer: heap-use-after-free /home/runner/work/ledger/ledger/src/journal.cc:410 in check_all_metadata\n```\n\nThe heap-use-after-free is happening at line 410 in `check_all_metadata`, which is likely causing the crash and non-zero exit code. I need to look more closely at what's happening at that line in the actual source code.\n\nLooking at the lines around the error, I can see we're accessing `journal.current_context->linenum` and `journal.current_context->pathname`, but the real problem is that `journal.current_context` is a dangling pointer—it's pointing to memory that's already been freed. The null check passes, but the underlying memory has been deallocated, so any dereference causes the use-after-free. The issue is that `current_context` is a raw pointer set during parsing, but when `check_all_metadata` gets called from the `xact` command outside of the normal parsing flow, it's likely pointing to a `parse_context_t` that was allocated on the stack and has already been destroyed. So my code is dereferencing freed memory when it tries to access `current_context->pathname` and `current_context->linenum`.",
+          "timestamp": "2026-03-10T14:02:19.182Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I need to understand the heap-use-after-free. Let me look at how `current_context` is managed and called during the `xact` command path.",
+          "timestamp": "2026-03-10T14:02:19.484Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-750-692/src/journal.h",
+            "pattern": "current_context"
+          },
+          "timestamp": "2026-03-10T14:02:20.341Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "glob": "*.cc",
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-750-692/src",
+            "pattern": "current_context"
+          },
+          "timestamp": "2026-03-10T14:02:21.195Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I see the picture clearly. The `current_context` is set during `journal_t::read()` (line 576: `current_context = &current;`) and reset to nullptr at line 598 (`current_context = nullptr;`). During parsing, it's valid.\n\nBut the `xact` command goes through a different path. The `xact` command creates transactions programmatically, not by reading from a file. So `current_context` might be set during parsing of the initial journal file (the test file), but when the `xact` command later generates a transaction, it calls `check_all_metadata` but `current_context` might:\n\n\n- Be nullptr after parsing completes, or\n- Point to freed memory if the stack-allocated `parse_context_t` has been destroyed\n\nI need to trace how `check_all_metadata` is actually invoked to understand which scenario is happening.",
+          "timestamp": "2026-03-10T14:02:28.555Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "context": 3,
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-750-692/src/journal.cc",
+            "pattern": "check_all_metadata"
+          },
+          "timestamp": "2026-03-10T14:02:28.577Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-750-692/src/journal.cc",
+            "limit": 50,
+            "offset": 450
+          },
+          "timestamp": "2026-03-10T14:02:31.961Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me look at how `add_xact` is called by the `xact` command. The `xact` command likely calls this after parsing is complete and `current_context` is set to nullptr. But the ASAN says it's a heap-use-after-free, not a null pointer dereference. This means `current_context` is non-null but points to freed memory.\n\nLet me check the `xact` command path more carefully.",
+          "timestamp": "2026-03-10T14:02:37.258Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "glob": "*.cc",
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-750-692/src",
+            "pattern": "xact_command|cmd_xact|draft_xact"
+          },
+          "timestamp": "2026-03-10T14:02:39.152Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-750-692/src",
+            "pattern": "class xact_command|xact_command_t"
+          },
+          "timestamp": "2026-03-10T14:02:39.568Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-750-692/src/draft.cc",
+            "limit": 80,
+            "offset": 600
+          },
+          "timestamp": "2026-03-10T14:02:42.454Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "context": 5,
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-750-692/src/draft.cc",
+            "pattern": "draft_t::insert"
+          },
+          "timestamp": "2026-03-10T14:02:46.405Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-750-692/src/draft.cc",
+            "limit": 100,
+            "offset": 298
+          },
+          "timestamp": "2026-03-10T14:02:49.402Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I see the issue. When `draft_t::insert()` calls `journal.add_xact(added.get())`, the `journal.current_context` should be nullptr since parsing has completed. But the ASAN says it's a heap-use-after-free, meaning `current_context` points to freed memory rather than being nullptr.\n\nLet me look at the lifecycle of `current_context` more carefully. Looking at the parsing code:\n\n```cpp\n// journal.cc:576\ncurrent_context = &current;\n// ...\n// journal.cc:598\ncurrent_context = nullptr;\n```\n\nThe `xact` command is called after the journal is read and `current_context` should be nullptr. \n\nI need to trace through whether `add_xact` might be called during nested parsing like `include` directives where `current_context` could reference a stack variable that's already been freed. The `xact` command invokes `draft.insert(journal)` which eventually calls `journal.add_xact()`, and at that point `current_context` should definitely be nullptr since parsing is done. But wait, the failing test is `xact --strict`, so the `--strict` flag with its `CHECK_WARNING` behavior might be triggering something different. Let me look at what the test file actually contains to understand the specific scenario. I'm tracking down where `current_context` becomes a dangling pointer by examining the code flow. The issue appears to be in how `current_context` is managed across function calls — it's being set to point at a local stack variable in `read()`, and while it's supposed to be reset to nullptr when the function exits, something in the execution path might be leaving it pointing to freed memory instead. Hmm, but what about the `convert.cc:92` path? There's a RAII guard there. Let me look at that more carefully.\n\nActually wait, maybe the issue is with the `xact` command's interaction with `--strict`. When `--strict` is passed, `journal.checking_style` is set to `CHECK_WARNING`. Then when `add_xact` → `check_all_metadata` → `register_metadata` runs, it tries to use `current_context->warning()`. But `current_context` is nullptr!\n\nLet me check the `register_metadata` function - it's dereferencing `current_context` without checking if it's null, which would cause a null pointer dereference.\n\nBut hold on - `draft_t::insert` explicitly sets `journal.checking_style = CHECK_PERMISSIVE` at line 309, which should skip metadata checks entirely. So the question is whether `--strict` overrides this setting somewhere. Looking at the flow, `add_xact()` is called from within `insert()`, so `checking_style` should still be permissive at that point, not the `CHECK_WARNING` that `--strict` would set.\n\nLet me trace through the actual execution path more carefully to understand where the null pointer dereference is happening.",
+          "timestamp": "2026-03-10T14:03:17.224Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-750-692/src/draft.cc",
+            "limit": 110,
+            "offset": 395
+          },
+          "timestamp": "2026-03-10T14:03:17.568Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-750-692/src/draft.cc",
+            "limit": 100,
+            "offset": 505
+          },
+          "timestamp": "2026-03-10T14:03:20.592Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I see the important line - `insert()` sets `journal.checking_style = journal_t::CHECK_PERMISSIVE` at line 309. So metadata checks would be skipped. But wait, the `xact --strict` test (2348.test) expects warnings. So the `--strict` flag must override the checking style somewhere.\n\nLet me check how `--strict` is handled. The `--strict` flag sets the checking style during journal read, not during the xact command. Let me look at the full flow more carefully.\n\nActually, looking at the test output again:\n```\nFAILURE in exit code (0 != 1) from test/regress/2348.test:\n\n\n```\n\nThe test expects exit code 0, but the command returned exit code 1 instead. Let me re-examine the test format to understand what's happening.\n\nActually, I see the issue now. The test syntax `test xact --strict 2024/05/12 Foobar -> 0` expects exit code 0, and the failure message `FAILURE in exit code (0 != 1)` confirms the command returned 1 when it shouldn't have.\n\nWith sanitizers enabled, a heap-use-after-free could trigger ASAN to abort the process and return exit code 1. Let me trace through the lifecycle of `current_context` in the journal reading code to see if there's a use-after-free happening. The context is set to a stack-allocated object during reading, then cleared afterward, but I need to verify whether `current_context` might be pointing to freed heap memory somewhere.",
+          "timestamp": "2026-03-10T14:03:33.932Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-750-692/src/journal.cc",
+            "limit": 45,
+            "offset": 565
+          },
+          "timestamp": "2026-03-10T14:03:34.038Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I see a problem! The `current_context` is set to `&current` at line 576, but it's only set back to `nullptr` in the `catch` block at line 598. If parsing succeeds (no exception), `current_context` is NEVER set back to nullptr! It continues pointing to the `parse_context_t` object that's owned by the `parse_context_stack_t` passed by reference.\n\nSo after `read()` returns, `current_context` still points to that `parse_context_t`. If the `parse_context_stack_t` is destroyed before `add_xact` is called (via the `xact` command), then `current_context` would be a dangling pointer.\n \nActually, this is a pre-existing bug that my changes just exposed—before I started accessing `current_context->pathname` and `current_context->linenum` directly, the dangling pointer wasn't causing problems. But looking back at the code, `register_metadata` already dereferences `current_context` to issue warnings, so this bug would have triggered if the checking style was `CHECK_WARNING` and the stack was destroyed at the right moment.\n\nLet me trace through what's happening with the `--strict` flag in the test. The test output shows warnings for unknown accounts, commodities, and metadata tags, which means the code is reaching those warning calls. I need to understand how `--strict` affects the checking behavior and whether it's preventing the crash or if something else is protecting `current_context` from being dangling at that point. So the test expects these warnings on stderr. But the `draft_t::insert()` sets `CHECK_PERMISSIVE`, which would suppress them. These warnings are generated during the initial journal read with `--strict`, not during the `xact` command.\n\nWait, no. The test file itself IS the journal. So when ledger reads it, it reads lines 1-4 as journal data (the transaction), then encounters `test xact --strict ...` which is the command. During reading, with `--strict`, it would warn about unknown accounts, commodities, and tags.\n\nSo the warnings come from the initial journal parsing, not from the `xact` command. And during parsing, `current_context` IS valid. So my code changes the line numbers reported in the warnings during initial parsing.\n\nBut then why does the sanitizer report heap-use-after-free in `check_all_metadata`? The call stack shows this happens at line 410. Looking at `add_xact` at line 467, it's called both during initial parsing AND from `draft_t::insert()`. During initial parsing, `current_context` is valid. But `draft_t::insert()` also calls `add_xact`.\n\nThe ASAN error means that sometime during the test, `check_all_metadata` accesses `current_context` after it's been freed. This would happen during the `xact` command path. But `insert()` sets `CHECK_PERMISSIVE`, so the warning code wouldn't be reached. My code is different though — I access `current_context->pathname` and `current_context->linenum` in `check_all_metadata` BEFORE calling `register_metadata`. And this code runs regardless of checking style! That's the problem — I'm dereferencing a freed pointer unconditionally.\n\nDefining the metadata check function... I see the real issue now — `read()` takes the `parse_context_stack_t` by reference, so `current_context` points to a stack object that gets destroyed after `read()` returns, leaving a dangling pointer. The bug is that `read()` never clears `current_context` on success, so it remains pointing to freed memory when the `xact` command later tries to access it.\n\nLet me trace where `journal.read()` is actually called to confirm this is the problematic path.",
+          "timestamp": "2026-03-10T14:04:03.012Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I see the issue. `journal_t::read()` doesn't reset `current_context` to nullptr on the success path — only in the catch block. After parsing completes, `current_context` is a dangling pointer. My code in `check_all_metadata` accesses it, causing the heap-use-after-free.\n\nLet me verify the call chain and look at a few more things.",
+          "timestamp": "2026-03-10T14:04:03.440Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "glob": "*.cc",
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-750-692/src",
+            "pattern": "journal.*read\\("
+          },
+          "timestamp": "2026-03-10T14:04:04.826Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-750-692/src/journal.cc",
+            "limit": 55,
+            "offset": 340
+          },
+          "timestamp": "2026-03-10T14:04:05.097Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the full picture:\n\n1. `journal_t::read()` sets `current_context = &current` but doesn't reset it to nullptr on the success path. This is a pre-existing bug.\n\n2. My code in `check_all_metadata` accesses `journal.current_context->pathname` and `journal.current_context->linenum` when `current_context` is non-null and `item->pos` is non-null. But after parsing completes, `current_context` is dangling.\n\n3. For the `xact` command, the flow is:\n   - Journal is read (current_context set, but not reset on success)\n   - Parse context stack is destroyed (current_context becomes dangling)\n   - `xact` command runs → `draft_t::insert()` → `journal.add_xact()` → `check_all_metadata()`\n   - `check_all_metadata` checks `journal.current_context` (non-null, dangling) → heap-use-after-free\n\nThe existing code in `register_metadata` also accesses `current_context`, but `draft_t::insert()` sets `checking_style = CHECK_PERMISSIVE`, so the `current_context->warning()` call is never reached during that path.\n\nThe `tag_check_exprs` map is likely empty for the generated xact, so the `current_context->scope` access also gets skipped. I think the cleanest solution is to reset `current_context = nullptr` at the end of `read()` on success—this fixes both the immediate issue and the pre-existing problem, and makes any guard in `check_all_metadata` work correctly by checking for null. I should verify nothing else depends on `current_context` remaining set after parsing completes.\n\nLooking at where `read()` gets called, it's invoked in loops across multiple files, and the `parse_context_stack_t` is passed by reference so it might outlive individual calls. I'm also noticing that `include` directive handling in the textual directives code saves and restores `current_context` during parsing, so I need to be careful about when and how I clear it.\n\nThe real issue is that after all parsing is complete, `current_context` still points to the last file's context, and if that context gets destroyed afterward, we'd have a dangling pointer.\n\nThe cleanest solution is to set `current_context` back to nullptr at the end of `read()` on the success path. This shouldn't break anything since the loop in `session.cc` just calls `read()` repeatedly, and each call would reset the context anyway. I need to check if anything in `textual_directives.cc` depends on the context persisting between calls.\n\nLooking at the include directive handler, it saves and restores `current_context` during parsing, which is fine since the context is valid then. And `register_metadata` only accesses it during parsing or when protected by `CHECK_PERMISSIVE`. So resetting it after `read()` completes should be safe.\n\nNow I'm wondering if my fix will make the 2348 test pass. That test runs `xact --strict` on a journal and expects warnings from the initial parse with specific line numbers. With my change, those warnings would report the correct line positions instead of whatever the parsing context was pointing to. Let me trace through what the test expects to see...\n\nThe warnings should be for unknown accounts and commodities on lines 2 and 4, plus an unknown metadata tag. But I'm noticing the metadata tag warning is expected at line 2 even though the tag itself is on line 3 — that's where my fix might affect things, since I'm changing how metadata line numbers get reported. says line 2. Why?\n\nBefore my fix, the warning would use `current_context->linenum` which during parsing is the current line being parsed. When `check_all_metadata` is called from `add_xact` (which is called at the end of parsing the transaction), `current_context->linenum` would be at the line after the last posting (or the first non-posting line). \n\nWait, actually, `check_all_metadata` is called from `add_xact`. During parsing, `add_xact` is called after the entire transaction is read. At that point, `current_context->linenum` would be whatever line the parser is at.\n\nActually, let me think about this differently. The warning for \"Unknown metadata tag 'Tag'\" currently says line 2 in the test expectation. Line 2 is the posting line. The metadata is on line 3. With my fix, it should say line 2 because I use `item->pos->beg_line`, and for a posting, `beg_line` is line 2.\n\nBut wait—`check_all_metadata` gets called twice in `add_xact`: once for transaction metadata and once for each posting's metadata. The metadata `Tag: Hello` is on the posting, so when checking the posting's metadata, `item->pos->beg_line` would be line 2 (the posting's start line), even though the metadata itself is on line 3. Before my fix, the warning would use the parser's current line number at the time `add_xact` is called, which would be wherever the parser had reached by then.\n\nThe test expects line 2, which matches the posting's `beg_line`. So my fix maintains the same behavior for posting metadata.\n\nBut now I'm seeing the real issue: the test is failing with exit code 1 under ASAN, which means a heap-use-after-free crash. The problem is that `current_context` is dangling during the `xact` command—it's non-null but pointing to freed memory. When my code accesses `journal.current_context->pathname`, it triggers the heap-use-after-free. The fix is to reset `current_context` to null after it's no longer valid.\n\nWith that fix in place, during initial parsing `current_context` will be valid so my override logic works correctly, but during the `xact` command it'll be null and the override gets skipped. I need to verify what the corrected line numbers would be for the warnings—account warnings come from `register_account()` so they're unaffected, but I should check where commodity warnings originate.\n\nThe metadata tag warning comes through `register_metadata()` via `check_all_metadata()`, and with my fix it would report the posting's line number (line 2) rather than the metadata item's line. That means the test expectations I updated should still hold, though I want to double-check those baseline file changes to make sure they're consistent.\n\nActually, I'm getting distracted from the real problem—the heap-use-after-free. The fix is to reset `current_context` to null at the end of `read()`, but I need to verify that nothing downstream depends on `current_context` being set after the call returns. Looking at the session code, I should check if anything accesses `journal->current_context` after the read completes. The safer approach might be to make `check_all_metadata` more defensive instead of relying on `current_context` being null when we're not actively parsing.\n\nSince `current_context` is a raw pointer, there's no way to tell if it's dangling, so the real fix needs both parts: reset `current_context` to null at the end of `read()` to eliminate the dangling pointer, and keep the null check in `check_all_metadata` so it works correctly. Let me implement this. I should also verify the test expectations—the warnings for unknown accounts, commodities, and metadata tags should remain unchanged since my fix doesn't affect how those are generated during the initial journal read.\n\nLooking at the other test baselines I updated, those changes shifted line numbers from the transaction's context line to the item's `beg_line` because the metadata was on the transaction itself rather than a posting. So my fix plan is to add `current_context = nullptr;` at the end of `journal_t::read()` on the success path, then verify the test expectations are correct.\n\nNow checking the 2348 test's expected warnings — the account and commodity warnings are tied to their posting lines, while the metadata tag warning was previously reported at whatever `current_context->linenum` was during `add_xact`, which appears to have been line 2, but with my fix it should report at `item->pos->beg_line` instead. I'm realizing that before my changes, `check_all_metadata` was already being called and would trigger `register_metadata` with `CHECK_WARNING` during parsing, so the warning would use whatever line number was current when `add_xact` was invoked. The test expects line 2 for the metadata tag warning, which makes me wonder if this test was something I added or if it was already there.",
+          "timestamp": "2026-03-10T14:05:13.055Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me check if test 2348 was added by this PR or is pre-existing.",
+          "timestamp": "2026-03-10T14:05:13.083Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --oneline --all -- test/regress/2348.test | head -5",
+            "description": "Check history of test 2348"
+          },
+          "timestamp": "2026-03-10T14:05:13.695Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff main -- test/regress/2348.test",
+            "description": "Check if 2348.test was changed in this PR"
+          },
+          "timestamp": "2026-03-10T14:05:14.370Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I see. Test 2348 was pre-existing, and my PR changed the expected line number for the metadata tag warning from line 4 to line 2. Originally it said line 4 (which was the context line at the time `add_xact` is called — probably the last posting line) and I changed it to line 2 (the posting's `beg_line` — because that's what my code does, override `current_context->linenum` with `item->pos->beg_line`).\n\nBut actually, the metadata `; Tag: Hello` is on line 3. So neither line 2 nor line 4 is \"correct\" in the sense of pointing to the actual metadata line. \n\nThe real problem is that my PR overrides `current_context` with the item's position information, but when `check_all_metadata` gets called during the `xact` command through the insertion flow, `current_context` ends up being a dangling pointer because `read()` has already finished.\n\nThe solution is straightforward: I need to reset `current_context` to nullptr at the end of `journal_t::read()` on the success path. This way, during initial parsing my override works correctly since `current_context` is valid, but during the `xact` command it's nullptr so the guard prevents the override, and since we're in `CHECK_PERMISSIVE` mode anyway, `register_metadata` won't try to access it.\n\nLet me apply this fix now.",
+          "timestamp": "2026-03-10T14:05:29.429Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the full picture. The issue is:\n\n1. `journal_t::read()` sets `current_context` but **never resets it to nullptr on the success path** — only in the catch block\n2. After parsing completes and the `parse_context_stack_t` is destroyed, `current_context` becomes a dangling pointer\n3. When the `xact` command calls `add_xact()` → `check_all_metadata()`, my code accesses the dangling `current_context`\n\nLet me use the cpp-pro agent to fix this properly and update the test.",
+          "timestamp": "2026-03-10T14:05:30.211Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Agent",
+          "input": {
+            "description": "Fix heap-use-after-free in check_all_metadata",
+            "mode": "auto",
+            "prompt": "We need to fix a heap-use-after-free in the ledger C++ project at `/Users/johnw/src/ledger/fix-750-692/`.\n\n## Problem\n\nThe CI sanitizer build fails with:\n```\nSUMMARY: AddressSanitizer: heap-use-after-free /home/runner/work/ledger/ledger/src/journal.cc:410 in check_all_metadata\n```\n\nAnd test `RegressTest_2348` fails because the ASAN crash causes exit code 1 instead of 0.\n\n## Root Cause\n\nIn `src/journal.cc`, the `journal_t::read()` function (around line 571-608) sets `current_context = &current;` at line 576 but only resets it to `nullptr` in the catch block (line 598). On the success path, `current_context` remains pointing to a `parse_context_t` that may be subsequently freed.\n\nWhen the `xact` command later calls `add_xact()` → `check_all_metadata()`, the PR's new code at lines 408-412 accesses `journal.current_context->pathname` and `journal.current_context->linenum` through this dangling pointer.\n\n## Fix Required\n\nAdd `current_context = nullptr;` at the end of `journal_t::read()` on the success path, right after the `clear_xdata()` call (around line 606-607). This ensures `current_context` is always nullptr when parsing is not actively in progress.\n\nThe fix should go right before `return count;` at line 608.\n\nPlease:\n1. Read the relevant section of `src/journal.cc` (lines 565-610) to confirm the exact location\n2. Add `current_context = nullptr;` after the `if (should_clear_xdata) clear_xdata();` block and before `return count;`\n3. That's the only code change needed — don't modify `check_all_metadata` or any test files\n",
+            "subagent_type": "cpp-pro"
+          },
+          "timestamp": "2026-03-10T14:05:46.849Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Good. Let me verify the fix and build/test locally before pushing.",
+          "timestamp": "2026-03-10T14:06:12.152Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-750-692/src/journal.cc",
+            "limit": 20,
+            "offset": 595
+          },
+          "timestamp": "2026-03-10T14:06:12.816Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Good. Now let me build and run the failing test locally.",
+          "timestamp": "2026-03-10T14:06:15.669Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cmake -B build -DCMAKE_BUILD_TYPE=Debug -DUSE_PYTHON=OFF -DUSE_GPGME=OFF -DBoost_DIR=/nix/store/k5a24gp2r9rvn9jhrvn4g63a63kc3hpa-boost-1.89.0-dev/lib/cmake/Boost-1.89.0 -DEDIT_LIB=/nix/store/3484xxnw0d05jf4wjwaykarvi2fgk02f-libedit-20251016-3.1/lib/libedit.dylib -DEDIT_PATH=/nix/store/b6ar0114dc1k4sbcayi2mbk3hgy7xb13-libedit-20251016-3.1-dev/include -DGMP_LIB=/nix/store/35a4xm9sh4jkn25f9v3dmxzjp5xg4r8w-gmp-with-cxx-6.3.0/lib/libgmp.dylib -DGMP_PATH=/nix/store/j454zbmphm8h380k54q9kfhnr5jbva95-gmp-with-cxx-6.3.0-dev/include -DMPFR_LIB=/nix/store/1v5yh6wgnjxw172i0xqrw982xllcgasj-mpfr-4.2.2/lib/libmpfr.dylib -DMPFR_PATH=/nix/store/dkbc3lqhrqs8hr2i4q682mqqq82hdmqi-mpfr-4.2.2-dev/include -DICU_INCLUDE_DIR=/nix/store/i9yj32fp96s8qjd6c43fk54r8j6qjvzr-icu4c-76.1-dev/include 2>&1 | tail -5",
+            "description": "Configure cmake build",
+            "timeout": 60000
+          },
+          "timestamp": "2026-03-10T14:06:30.995Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-750-692/build && make -j$(sysctl -n hw.ncpu) 2>&1 | tail -5",
+            "description": "Build the project",
+            "timeout": 300000
+          },
+          "timestamp": "2026-03-10T14:06:34.579Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Build succeeded. Now let me run the failing test and the baseline tests that were updated by this PR.",
+          "timestamp": "2026-03-10T14:07:30.167Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest -R 2348 -V 2>&1 | tail -30",
+            "description": "Run test 2348",
+            "timeout": 60000
+          },
+          "timestamp": "2026-03-10T14:07:31.485Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest -R \"dir-import_py|dir-python_py|feat-import_py\" -V 2>&1 | tail -30",
+            "description": "Run the updated baseline tests",
+            "timeout": 60000
+          },
+          "timestamp": "2026-03-10T14:07:32.924Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Test 2348 passes. The baseline Python tests aren't found because we built without Python (`-DUSE_PYTHON=OFF`). That's fine — those tests will be validated by CI.\n\nLet me also run a broader test to make sure nothing else is broken.",
+          "timestamp": "2026-03-10T14:07:38.396Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Test 2348 passes. The Python baseline tests aren't available without Python bindings, but those passed in CI already. Let me run a broader test suite to check for regressions.",
+          "timestamp": "2026-03-10T14:07:39.282Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest -j$(sysctl -n hw.ncpu) 2>&1 | tail -10",
+            "description": "Run full test suite",
+            "timeout": 600000
+          },
+          "timestamp": "2026-03-10T14:07:40.202Z"
+        },
+        {
+          "type": "assistant",
+          "text": "All 3996 tests pass. Now let me commit and push the fix.",
+          "timestamp": "2026-03-10T14:08:17.911Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff",
+            "description": "Show the change to commit"
+          },
+          "timestamp": "2026-03-10T14:08:18.380Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git add src/journal.cc && git commit -m \"$(cat <<'EOF'\nfix(journal): reset current_context after read() to prevent dangling pointer\n\njournal_t::read() set current_context to point at the active parse_context_t\nbut only reset it to nullptr in the catch block. On the success path,\ncurrent_context remained pointing at a parse_context_t that could be freed\nafter read() returned. When the xact command later called add_xact() →\ncheck_all_metadata(), the context override code accessed the dangling pointer,\ncausing a heap-use-after-free detected by AddressSanitizer.\n\nReset current_context = nullptr on the success path as well, matching the\nerror path behavior.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n)\"",
+            "description": "Commit the fix",
+            "timeout": 600000
+          },
+          "timestamp": "2026-03-10T14:08:25.764Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "pwd && git status",
+            "description": "Check current directory and git status"
+          },
+          "timestamp": "2026-03-10T14:08:28.584Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-750-692 && git add src/journal.cc && git commit -m \"$(cat <<'EOF'\nfix(journal): reset current_context after read() to prevent dangling pointer\n\njournal_t::read() set current_context to point at the active parse_context_t\nbut only reset it to nullptr in the catch block. On the success path,\ncurrent_context remained pointing at a parse_context_t that could be freed\nafter read() returned. When the xact command later called add_xact() →\ncheck_all_metadata(), the context override code accessed the dangling pointer,\ncausing a heap-use-after-free detected by AddressSanitizer.\n\nReset current_context = nullptr on the success path as well, matching the\nerror path behavior.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n)\"",
+            "description": "Commit the fix from repo root",
+            "timeout": 600000
+          },
+          "timestamp": "2026-03-10T14:08:37.734Z"
+        }
+      ],
+      "total_additions": 4,
+      "total_deletions": 0,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}
