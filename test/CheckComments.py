@@ -118,4 +118,6 @@ for path in args.path:
             if comment:
                 comment_count += len(comment)
 
+    fd.close()
+
 sys.exit(errors)

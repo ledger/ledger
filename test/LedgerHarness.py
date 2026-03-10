@@ -5,41 +5,12 @@ import pathlib
 import shlex
 import sys
 import os
-import re
+import subprocess
 
 from subprocess import Popen, PIPE
 
-import types
-import copyreg
-
-def _pickle_method(method):
-    func_name = method.im_func.__name__
-    obj = method.im_self
-    cls = method.im_class
-    return _unpickle_method, (func_name, obj, cls)
-
-def _unpickle_method(func_name, obj, cls):
-    for cls in cls.mro():
-        try:
-            func = cls.__dict__[func_name]
-        except KeyError:
-            pass
-        else:
-            break
-    return func.__get__(obj, cls)
-
-copyreg.pickle(types.MethodType, _pickle_method, _unpickle_method)
 
 class LedgerHarness:
-    ledger     = None
-    sourcepath = None
-    skipped    = 0
-    succeeded  = 0
-    failed     = 0
-    verify     = False
-    gmalloc    = False
-    python     = False
-
     @staticmethod
     def parser():
       parser = argparse.ArgumentParser(add_help=False)
@@ -60,12 +31,22 @@ class LedgerHarness:
 
         self.ledger     = ledger.resolve()
         self.sourcepath = sourcepath.resolve()
+        self.skipped    = 0
+        self.succeeded  = 0
+        self.failed     = 0
         self.verify     = verify
         self.gmalloc    = gmalloc
         self.python     = python
+        self.failures   = []
 
     def run(self, command, verify=None, gmalloc=None, columns=True):
-        env = os.environ.copy()
+        ALLOWED_ENV_VARS = {
+            'PATH', 'HOME', 'TZ', 'LANG', 'LC_ALL', 'LC_CTYPE', 'TERM',
+            'TMPDIR', 'TEMP', 'TMP',
+            'SYSTEMROOT', 'COMSPEC', 'MSYSTEM', 'MINGW_PREFIX',
+        }
+        env = {k: v for k, v in os.environ.items() if k in ALLOWED_ENV_VARS}
+        env['TZ'] = 'America/Chicago'
 
         if (gmalloc is not None and gmalloc) or \
            (gmalloc is None and self.gmalloc):
@@ -92,7 +73,7 @@ class LedgerHarness:
             valgrind = '/opt/local/bin/valgrind'
 
         if os.path.isfile(valgrind) and '--verify' in cmd:
-            command = shlex.join([valgrind, '-q', command])
+            command = shlex.join([valgrind, '-q']) + ' ' + command
 
         ismsys2 = 'MSYSTEM' in os.environ
         if ismsys2:
@@ -105,13 +86,12 @@ class LedgerHarness:
                      cwd=self.sourcepath)
 
     def read(self, fd):
-        text = ""
+        chunks = []
         text_data = os.read(fd.fileno(), 8192)
         while text_data:
-            if text_data:
-                text += text_data
+            chunks.append(text_data)
             text_data = os.read(fd.fileno(), 8192)
-        return text
+        return b"".join(chunks)
 
     def readlines(self, fd):
         lines = []
@@ -121,10 +101,19 @@ class LedgerHarness:
                 lines.append(line)
         return lines
 
+    SUBPROCESS_TIMEOUT = 60
+
     def wait(self, process, msg='Ledger invocation failed:'):
-        if process.wait() != 0:
-            print(msg)
-            print(process.stderr.read())
+        try:
+            if process.wait(timeout=self.SUBPROCESS_TIMEOUT) != 0:
+                print(msg)
+                print(process.stderr.read().decode('utf-8', errors='replace'))
+                self.failure()
+                return False
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait()
+            print(f'{msg} (timed out after {self.SUBPROCESS_TIMEOUT}s)')
             self.failure()
             return False
         return True
@@ -143,6 +132,7 @@ class LedgerHarness:
         sys.stdout.write("E")
         if name:
             sys.stdout.write("[%s]" % name)
+            self.failures.append(name)
         sys.stdout.flush()
         self.failed += 1
 
@@ -154,9 +144,12 @@ class LedgerHarness:
             print(f"SKIPPED ({self.skipped})")
         if self.failed > 0:
             print(f"FAILED ({self.failed})")
+            if self.failures:
+                print("Failed tests:")
+                for name in self.failures:
+                    print(f"  - {name}")
         print()
-
-        sys.exit(self.failed)
+        sys.exit(0 if self.failed == 0 else 1)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='LedgerHarness', parents=[LedgerHarness.parser()])

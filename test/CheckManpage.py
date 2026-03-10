@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 
 import sys
-import re
-import os
 import argparse
 
-from os.path import *
-from subprocess import Popen, PIPE
+from os.path import join
 
 from CheckOptions import CheckOptions
 

@@ -7,26 +7,16 @@ import argparse
 import pathlib
 import sys
 import os
-import re
 
 from difflib import ndiff
-
-multiproc = False
-try:
-    from multiprocessing import Pool
-    multiproc = True
-except:
-    pass
 
 from LedgerHarness import LedgerHarness
 
 parser = argparse.ArgumentParser(prog='GenerateTests', parents=[LedgerHarness.parser()])
-parser.add_argument('-j', '--jobs', type=int, default=1)
 parser.add_argument('tests', type=pathlib.Path)
 parser.add_argument('beg_range', nargs='?', type=int, default=1)
 parser.add_argument('end_range', nargs='?', type=int, default=20)
 args = parser.parse_args()
-multiproc &= (args.jobs >= 1)
 harness = LedgerHarness(args.ledger, args.sourcepath, args.verify, args.gmalloc, args.python)
 
 if not os.path.isdir(args.tests) and not os.path.isfile(args.tests):
@@ -135,19 +125,7 @@ def run_gen_test(i):
         harness.failure()
     return harness.failed
 
-if multiproc:
-    pool = Pool(args.jobs*2)
-else:
-    pool = None
-
-if pool:
-    pool.map(run_gen_test, range(args.beg_range, args.end_range))
-else:
-    for i in range(args.beg_range, args.end_range):
-        run_gen_test(i)
-
-if pool:
-    pool.close()
-    pool.join()
+for i in range(args.beg_range, args.end_range):
+    run_gen_test(i)
 
 harness.exit()
