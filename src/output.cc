@@ -144,6 +144,8 @@ void format_posts::operator()(post_t& post) {
     } else if (last_post && last_post->date() != post.date()) {
       out << first_line_format(bound_scope);
     } else {
+      if (last_post && last_post->payee() != post.payee())
+        post.xdata().add_flags(POST_EXT_PAYEE_CHANGED);
       out << next_lines_format(bound_scope);
     }
     // NOLINTEND(bugprone-branch-clone)

@@ -263,6 +263,10 @@ value_t get_payee(post_t& post) {
   return string_value(post.payee());
 }
 
+value_t get_payee_changed(post_t& post) {
+  return post.has_xdata() && post.xdata().has_flags(POST_EXT_PAYEE_CHANGED);
+}
+
 /**
  * @brief Combine the posting's note with its transaction's note.
  *
@@ -678,6 +682,8 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind, const string& name)
       return WRAP_FUNCTOR(get_wrapper<&get_this>);
     else if (name == "payee")
       return WRAP_FUNCTOR(get_wrapper<&get_payee>);
+    else if (name == "payee_changed")
+      return WRAP_FUNCTOR(get_wrapper<&get_payee_changed>);
     else if (name == "primary")
       return WRAP_FUNCTOR(get_wrapper<&get_commodity_is_primary>);
     else if (name == "price")
