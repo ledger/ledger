@@ -1,0 +1,30 @@
+; Regression test for GitHub issue #1827:
+; Balanced-virtual postings ([Account]) must balance against one another,
+; not against real postings.  A transaction where real and virtual amounts
+; cross-cancel globally but neither group balances independently must be
+; rejected.
+;
+; The real postings here sum to $1.00 (not zero) and the balanced-virtual
+; postings sum to $-1.00 (not zero).
+
+2019-09-12 Test
+  Assets:Bank:Checking  $-10.00
+  Expenses:Food  $11.00
+  [Budgets:Total]  $10.00
+  [Budgets:Food]  $-11.00
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 14:
+While balancing transaction from "$FILE", lines 10-14:
+> 2019-09-12 Test
+>   Assets:Bank:Checking  $-10.00
+>   Expenses:Food  $11.00
+>   [Budgets:Total]  $10.00
+>   [Budgets:Food]  $-11.00
+Unbalanced remainder is:
+               $1.00
+Amount to balance against:
+              $21.00
+Error: Transaction does not balance
+end test
