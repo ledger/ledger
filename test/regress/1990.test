@@ -1,0 +1,28 @@
+; Regression test for issue #1990: unary '+' in amounts should be accepted.
+
+; Prefix symbol with unary '+' after symbol ($+10.00)
+2015/10/12 Exxon
+    Expenses:Gas             $+10.00
+    Liabilities:MasterCard   $-10.00
+
+test bal Expenses:Gas
+              $10.00  Expenses:Gas
+end test
+
+; Unary '+' before prefix symbol (+$5.00)
+2015/10/13 Groceries
+    Expenses:Food            +$5.00
+    Liabilities:MasterCard   -$5.00
+
+test bal Expenses:Food
+               $5.00  Expenses:Food
+end test
+
+; Unary '+' before bare number with suffix commodity (+10.00 USD)
+2015/10/14 Gas Station
+    Expenses:Fuel            +10.00 USD
+    Liabilities:CreditCard   -10.00 USD
+
+test bal Expenses:Fuel
+           10.00 USD  Expenses:Fuel
+end test
