@@ -1,5 +1,5 @@
-; Test account.cc: account depth_spacer and depth functions
-; Exercises get_depth_spacer, get_depth, partial_name
+; Test account.cc: get_depth and get_account lookup functions
+; Exercises the 'a' case (account) and 'd' case (depth) in account_t::lookup
 
 2024/01/15 Grocery Store
     Expenses:Food:Groceries    $50.00

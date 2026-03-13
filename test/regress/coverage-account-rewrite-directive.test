@@ -1,5 +1,5 @@
-; Test textual_directives.cc lines 792-794: account-rewrite directive
-; in general_directive case a
+; Test textual_directives.cc: account-rewrite directive parsing
+; in general_directive case 'a' (line 887)
 
 account-rewrite /Food/  Expenses:Groceries
 
