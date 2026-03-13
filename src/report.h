@@ -1024,8 +1024,8 @@ public:
 
   OPTION_(
       report_t, percent, DO() { // -%
-        OTHER(total_).on(whence, "((is_account&parent&parent.total)?"
-                                 "  percent(scrub(total), scrub(parent.total)):0)");
+        OTHER(total_).on(whence, "((is_account&display_parent&display_parent.total)?"
+                                 "  percent(scrub(total), scrub(display_parent.total)):0)");
       });
 
   OPTION_(

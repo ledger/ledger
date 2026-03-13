@@ -415,6 +415,21 @@ value_t get_parent_account(account_t& account) {
   return scope_value(account.parent);
 }
 
+value_t get_display_parent_account(account_t& account) {
+  // Returns the nearest non-elided ancestor for percentage calculations.
+  // An ancestor is "elided" when it has exactly 1 child to display AND
+  // does not itself have ACCOUNT_EXT_TO_DISPLAY set.
+  // If all ancestors are elided (e.g., account is at display depth 0),
+  // falls back to the direct structural parent to preserve existing behavior.
+  for (account_t* acct = account.parent; acct && acct->parent; acct = acct->parent) {
+    std::size_t count = acct->children_with_flags(ACCOUNT_EXT_TO_DISPLAY);
+    if (count > 1 || acct->has_xflags(ACCOUNT_EXT_TO_DISPLAY))
+      return scope_value(acct);
+  }
+  // All ancestors were elided; fall back to direct parent
+  return scope_value(account.parent);
+}
+
 value_t fn_any(call_scope_t& args) {
   account_t& account(args.context<account_t>());
   expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
@@ -483,6 +498,8 @@ expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind, const string& fn
       return WRAP_FUNCTOR(get_wrapper<&get_depth_parent>);
     else if (fn_name == "depth_spacer")
       return WRAP_FUNCTOR(get_wrapper<&get_depth_spacer>);
+    else if (fn_name == "display_parent")
+      return WRAP_FUNCTOR(get_wrapper<&get_display_parent_account>);
     break;
 
   case 'e':

@@ -108,7 +108,7 @@ end test
 ; Test --percent option with balance
 test bal --percent Expenses
              100.00%  Expenses
-             100.00%    Auto:Gas
+              31.82%    Auto:Gas
               68.18%    Food
               66.67%      Groceries
               33.33%      Restaurant
