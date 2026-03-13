@@ -391,11 +391,12 @@ static balance_t compute_balance_diff(const amount_t& amt, post_t* post, xact_t*
                                       bool strip_annotations, parse_context_t& context) {
   bool real_only = !post->has_flags(POST_VIRTUAL | POST_IS_TIMELOG);
   value_t account_total;
-  if (item_t::use_aux_date) {
-    // When using effective dates, only count posts whose effective date is on
-    // or before the current posting's effective date, so that balance
-    // assertions respect --effective ordering rather than file order
-    // (fixes #2071).
+  // Always filter by date (effective when --effective, primary otherwise): only
+  // count posts whose date is on or before the current posting's date, so that
+  // balance assertions and assignments respect date ordering rather than file
+  // order.  This fixes #1092 (primary-date ordering) and #2071 (effective-date
+  // ordering) with a single unified code path.
+  {
     date_t cutoff = post->date();
     std::set<const post_t*> seen;
     for (const post_t* p : post->account->posts) {
@@ -406,8 +407,6 @@ static balance_t compute_balance_diff(const amount_t& amt, post_t* post, xact_t*
       if (!p->amount.is_null() && p->date() <= cutoff)
         add_or_set_value(account_total, p->amount);
     }
-  } else {
-    account_total = post->account->self_total(real_only);
   }
   if (strip_annotations)
     account_total = account_total.strip_annotations(keep_details_t());
