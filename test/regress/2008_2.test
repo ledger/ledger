@@ -1,0 +1,10 @@
+; Additional regression test for issue #2008
+; Verify that unquoted commodities are unaffected by the base_symbol() fix.
+2021/01/01 Normal stock purchase
+    Assets:Stocks   5 AAPL @ $150
+    Assets:Checking
+
+test csv
+"2021/01/01","","Normal stock purchase","Assets:Stocks","AAPL","5","",""
+"2021/01/01","","Normal stock purchase","Assets:Checking","$","-750","",""
+end test
