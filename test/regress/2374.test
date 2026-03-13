@@ -1,0 +1,21 @@
+~ yearly
+    Expenses:Necessary    13,000,000 CUR
+    Expenses:Unnecessary  31,000,000 CUR
+    Assets
+
+2024-02-01 * Necessities
+    Expenses:Necessary    3,456,789 CUR
+    Assets
+
+2024-02-01 * Nice-To-Haves
+    Expenses:Unnecessary  23,456,789 CUR
+    Assets
+
+test budget --amount-width 20 -p "2024"
+     -26,913,578 CUR      -44,000,000 CUR       17,086,422 CUR   61%  Assets
+      26,913,578 CUR       44,000,000 CUR      -17,086,422 CUR   61%  Expenses
+       3,456,789 CUR       13,000,000 CUR       -9,543,211 CUR   27%    Necessary
+      23,456,789 CUR       31,000,000 CUR       -7,543,211 CUR   76%    Unnecessary
+-------------------- -------------------- -------------------- -----
+                   0                    0                    0     0
+end test

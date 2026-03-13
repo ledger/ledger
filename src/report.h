@@ -621,7 +621,8 @@ public:
                  "%-(ansify_if(partial_account(options.flat), blue if color))\n"
                  "%/%$1 %$2 %$3 %$4\n%/"
                  "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
-                 "------------ ------------ ------------ -----\n");
+                 "%(\"-\" * int(amount_width)) %(\"-\" * int(amount_width))"
+                 " %(\"-\" * int(amount_width)) -----\n");
       });
 
   OPTION(report_t, by_payee); // -P
