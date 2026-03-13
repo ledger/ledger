@@ -214,9 +214,8 @@ string query_t::lexer_t::scan_identifier(token_t::kind_t tok_context, bool consu
 
   // Strip trailing whitespace (can accumulate when multiple_args is true
   // and whitespace precedes an operator).
-  while (!ident.empty() &&
-         (ident.back() == ' ' || ident.back() == '\t' || ident.back() == '\r' ||
-          ident.back() == '\n'))
+  while (!ident.empty() && (ident.back() == ' ' || ident.back() == '\t' || ident.back() == '\r' ||
+                            ident.back() == '\n'))
     ident.pop_back();
 
   return ident;
@@ -226,7 +225,7 @@ string query_t::lexer_t::scan_identifier(token_t::kind_t tok_context, bool consu
 /// If the identifier is a keyword, return the corresponding token;
 /// otherwise return a TERM token containing the identifier text.
 query_t::lexer_t::token_t query_t::lexer_t::match_keyword(const string& ident,
-                                                           string::const_iterator ident_start) {
+                                                          string::const_iterator ident_start) {
   // When multiple_args is true, whitespace is included in identifiers, so
   // "expr foo" may be read as a single token instead of recognizing "expr"
   // as a keyword.  Detect this case and rewind arg_i to after the keyword
@@ -391,9 +390,8 @@ void query_t::lexer_t::token_t::expected(char wanted) {
  * Build a metadata matching node: has_tag(pattern), or has_tag(pattern, value)
  * if followed by `= value_pattern`.
  */
-expr_t::ptr_op_t
-query_t::parser_t::make_meta_node(const string& tag_pattern,
-                                   query_t::lexer_t::token_t::kind_t tok_context) {
+expr_t::ptr_op_t query_t::parser_t::make_meta_node(const string& tag_pattern,
+                                                   query_t::lexer_t::token_t::kind_t tok_context) {
   expr_t::ptr_op_t node = new expr_t::op_t(expr_t::op_t::O_CALL);
 
   expr_t::ptr_op_t ident = new expr_t::op_t(expr_t::op_t::IDENT);
@@ -432,7 +430,7 @@ query_t::parser_t::make_meta_node(const string& tag_pattern,
  */
 expr_t::ptr_op_t
 query_t::parser_t::try_parse_comparison(const string& term,
-                                         query_t::lexer_t::token_t::kind_t tok_context) {
+                                        query_t::lexer_t::token_t::kind_t tok_context) {
   bool ends_with_cmp = !term.empty() && (term.back() == '>' || term.back() == '<');
 
   if (ends_with_cmp && lexer.peek_token(tok_context).kind == lexer_t::token_t::TOK_EQ) {
@@ -462,9 +460,8 @@ query_t::parser_t::try_parse_comparison(const string& term,
  * indicated by tok_context.  E.g., in TOK_ACCOUNT context, "food" becomes:
  *   account =~ /food/
  */
-expr_t::ptr_op_t
-query_t::parser_t::make_match_node(query_t::lexer_t::token_t::kind_t tok_context,
-                                    const string& pattern) {
+expr_t::ptr_op_t query_t::parser_t::make_match_node(query_t::lexer_t::token_t::kind_t tok_context,
+                                                    const string& pattern) {
   expr_t::ptr_op_t node = new expr_t::op_t(expr_t::op_t::O_MATCH);
 
   expr_t::ptr_op_t ident = new expr_t::op_t(expr_t::op_t::IDENT);

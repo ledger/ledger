@@ -407,7 +407,8 @@ protected:
   class parser_t {
     friend class query_t;
 
-    static constexpr int MAX_PARSE_DEPTH = 256; ///< Guard against stack overflow from nested parens.
+    static constexpr int MAX_PARSE_DEPTH =
+        256; ///< Guard against stack overflow from nested parens.
 
     value_t args;  ///< The original argument sequence (owns the strings the lexer iterates).
     lexer_t lexer; ///< Tokenizer over the argument sequence.
@@ -434,14 +435,13 @@ protected:
 
     /// @brief Build a metadata matching node: has_tag(pattern) or has_tag(pattern, value).
     expr_t::ptr_op_t make_meta_node(const string& tag_pattern,
-                                     lexer_t::token_t::kind_t tok_context);
+                                    lexer_t::token_t::kind_t tok_context);
     /// @brief Try to parse a term as a comparison expression (e.g., "d>=[date]").
     /// @return The expression node if the term is a comparison, nullptr otherwise.
-    expr_t::ptr_op_t try_parse_comparison(const string& term,
-                                           lexer_t::token_t::kind_t tok_context);
+    expr_t::ptr_op_t try_parse_comparison(const string& term, lexer_t::token_t::kind_t tok_context);
     /// @brief Build an O_MATCH node that regex-matches a pattern against the given field.
     static expr_t::ptr_op_t make_match_node(lexer_t::token_t::kind_t tok_context,
-                                             const string& pattern);
+                                            const string& pattern);
 
   public:
     parser_t(const value_t& _args, const keep_details_t& _what_to_keep = keep_details_t(),
