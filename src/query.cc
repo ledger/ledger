@@ -229,12 +229,10 @@ resume:
           // This means "= income:b c" matches "income:b c" exactly, while
           // "= income:b and income:c" still parses as two AND-ed patterns.
           auto is_query_kw = [](const string& w) -> bool {
-            return w == "and" || w == "or"  || w == "not"   ||
-                   w == "expr"                               ||
-                   w == "code" || w == "payee" || w == "desc"  ||
-                   w == "note" || w == "tag"   || w == "meta"  || w == "data" ||
-                   w == "show" || w == "only"  || w == "bold"  ||
-                   w == "for"  || w == "since" || w == "until";
+            return w == "and" || w == "or" || w == "not" || w == "expr" || w == "code" ||
+                   w == "payee" || w == "desc" || w == "note" || w == "tag" || w == "meta" ||
+                   w == "data" || w == "show" || w == "only" || w == "bold" || w == "for" ||
+                   w == "since" || w == "until";
           };
           // If the token accumulated so far is itself a keyword, stop now.
           if (is_query_kw(ident))
@@ -253,21 +251,18 @@ resume:
           // for '^' since it begins a regex anchor (e.g. "~ ^A" should stay
           // as two separate TERM tokens, not collapse into "~ ^A").
           char ahead = *peek;
-          if (ahead == '&' || ahead == '|' || ahead == '!' || ahead == '@' ||
-              ahead == '#' || ahead == '%' || ahead == '(' || ahead == ')' ||
-              ahead == '/' || ahead == '\'' || ahead == '"' || ahead == '=' ||
-              ahead == '^') {
+          if (ahead == '&' || ahead == '|' || ahead == '!' || ahead == '@' || ahead == '#' ||
+              ahead == '%' || ahead == '(' || ahead == ')' || ahead == '/' || ahead == '\'' ||
+              ahead == '"' || ahead == '=' || ahead == '^') {
             goto test_ident;
           }
           // Read ahead to find the boundary of the next word and test it.
           auto word_end = peek;
-          while (word_end != arg_end &&
-                 *word_end != ' ' && *word_end != '\t' &&
-                 *word_end != '\n' && *word_end != '\r' &&
-                 *word_end != '&' && *word_end != '|' && *word_end != '!' &&
-                 *word_end != '(' && *word_end != ')' && *word_end != '@' &&
-                 *word_end != '#' && *word_end != '%' && *word_end != '=' &&
-                 *word_end != '/' && *word_end != '\'' && *word_end != '"')
+          while (word_end != arg_end && *word_end != ' ' && *word_end != '\t' &&
+                 *word_end != '\n' && *word_end != '\r' && *word_end != '&' && *word_end != '|' &&
+                 *word_end != '!' && *word_end != '(' && *word_end != ')' && *word_end != '@' &&
+                 *word_end != '#' && *word_end != '%' && *word_end != '=' && *word_end != '/' &&
+                 *word_end != '\'' && *word_end != '"')
             ++word_end;
           if (is_query_kw(string(peek, word_end)))
             goto test_ident;
