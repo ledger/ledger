@@ -1360,11 +1360,24 @@ void interval_posts::flush() {
   std::stable_sort(all_posts.begin(), all_posts.end(), sort_posts_by_date());
 
   // only if the interval has no start use the earliest post
-  if (!(interval.begin() && interval.find_period(*interval.begin(), align_intervals)))
-    // Determine the beginning interval by using the earliest post
-    if (all_posts.size() > 0 && all_posts.front() &&
-        !interval.find_period(all_posts.front()->date(), align_intervals))
+  if (!(interval.begin() && interval.find_period(*interval.begin(), align_intervals))) {
+    // Determine the beginning interval.  When --empty is active and a report
+    // begin date was supplied that precedes the first posting, start from that
+    // date so that empty leading periods are counted (important for --average,
+    // which uses the period count as its denominator).  Otherwise fall back to
+    // the earliest posting date as before.
+    date_t anchor;
+    if (generate_empty_posts && begin_of_report_ && !all_posts.empty() &&
+        *begin_of_report_ < all_posts.front()->date())
+      anchor = *begin_of_report_;
+    else if (!all_posts.empty())
+      anchor = all_posts.front()->date();
+    else
+      anchor = date_t(); // empty: nothing to do
+
+    if (!all_posts.empty() && !interval.find_period(anchor, align_intervals))
       throw_(std::logic_error, _("Failed to find period for interval report"));
+  }
 
   // Walk the interval forward reporting all posts within each one
   // before moving on, until we reach the end of all_posts

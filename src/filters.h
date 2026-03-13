@@ -993,6 +993,7 @@ class interval_posts : public subtotal_posts {
   bool exact_periods;             ///< If true, use exact period boundaries for report_subtotal.
   bool generate_empty_posts; ///< If true, emit zero-amount postings for empty periods (--empty).
   bool align_intervals;      ///< If true, align periods to calendar boundaries (--align-intervals).
+  optional<date_t> begin_of_report_; ///< Report begin date (-b) for anchoring empty leading periods.
 
   std::deque<post_t*> all_posts; ///< All postings seen, sorted by date in flush().
 
@@ -1001,10 +1002,12 @@ class interval_posts : public subtotal_posts {
 public:
   interval_posts(post_handler_ptr _handler, expr_t& amount_expr, const date_interval_t& _interval,
                  bool _exact_periods = false, bool _generate_empty_posts = false,
-                 bool _align_intervals = false)
+                 bool _align_intervals = false,
+                 const optional<date_t>& _begin_of_report = none)
       : subtotal_posts(std::move(_handler), amount_expr), start_interval(_interval),
         interval(start_interval), exact_periods(_exact_periods),
-        generate_empty_posts(_generate_empty_posts), align_intervals(_align_intervals) {
+        generate_empty_posts(_generate_empty_posts), align_intervals(_align_intervals),
+        begin_of_report_(_begin_of_report) {
     create_accounts();
     TRACE_CTOR(interval_posts, "post_handler_ptr, expr_t&, date_interval_t, bool, bool");
   }
