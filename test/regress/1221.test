@@ -1,10 +1,13 @@
 ; Test for issue #1221: Null pointer dereference in apply_tag_directive
-; This test verifies that the apply tag directive properly handles
-; missing arguments and doesn't crash with a null pointer dereference.
+; The original bug was a crash when apply_tag_directive was called with
+; a NULL pointer, causing a SEGV in strlen via trim_ws.  The fix added
+; null checks to all apply_*_directive functions.
 ;
-; The original bug report showed a crash when apply_tag_directive was
-; called with a NULL pointer, causing a SEGV in strlen via trim_ws.
-; The fix adds null checks to all apply_*_directive functions.
+; NOTE: The crash scenario (missing argument) cannot be tested here
+; because it would cause ledger to exit with an error, and the journal
+; data from the error case would not parse for subsequent test blocks.
+; This test verifies that valid apply tag usage works correctly after
+; the null-check fix.
 
 ; Valid usage: apply tag with argument should work correctly
 apply tag Important

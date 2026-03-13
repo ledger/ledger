@@ -13,9 +13,9 @@
 ; postings have proper scope parent linkage whether created from C++ or
 ; Python.
 ;
-; Since Python bindings require Boost.Python which may not be available,
-; this test validates basic posting operations work correctly with the
-; new scope parent linkage.
+; NOTE: The Python-specific crash cannot be reproduced without
+; Boost.Python bindings.  This test verifies that expression evaluation
+; (print, reg, bal) works correctly after the scope parent refactoring.
 
 2012-02-29 01:13:49 * KFC
     ; lots: buy

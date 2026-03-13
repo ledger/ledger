@@ -1,7 +1,11 @@
 ; Test for issue #1163: Interactive mode crash after multiple commands
-; This test ensures that output_stream_t properly cleans up resources
-; when multiple commands are executed in succession, preventing the
-; resource leak that caused crashes after 3-10 commands in interactive mode.
+; The original bug was a resource leak in output_stream_t that caused
+; crashes after 3-10 commands in interactive mode.
+;
+; NOTE: The test harness runs each test block as a separate process,
+; so it cannot reproduce the interactive multi-command crash scenario.
+; These test blocks exercise the same formatted balance queries that
+; triggered the original bug, verifying the output is correct.
 
 2009/01/01 Opening Balance
     Assets:Checking    1000.00 BGN

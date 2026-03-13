@@ -1,5 +1,5 @@
 ; Regression test for issue #164: Allow FIFO and LIFO commodity lot usage
-; Test automatic FIFO/LIFO lot matching when selling without explicit lot annotation
+; Test that --lots, --lots-fifo, and --lots-lifo display lot ordering correctly
 
 2020/01/01 Buy BTC - Lot 1
     Assets:Crypto       1 BTC {$5000} [2020/01/01]

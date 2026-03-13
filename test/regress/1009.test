@@ -1,12 +1,15 @@
 ; Regression test for GitHub issue #1009
-; ledger crashes with "Exception during initialization:
+; ledger crashed with "Exception during initialization:
 ; boost::filesystem::current_path: No such file or directory"
 ; when run from a non-existent (deleted) directory.
 ;
-; The fix adds safe_current_path() which catches the error_code from
+; The fix added safe_current_path() which catches the error_code from
 ; boost::filesystem::current_path() and falls back to "/" when the
-; current working directory is unavailable (e.g., deleted or a
-; disconnected FUSE mount).
+; current working directory is unavailable.
+;
+; NOTE: The crash scenario (deleted CWD) cannot be reproduced by the
+; test harness.  This test serves as a basic smoke test to verify
+; ledger runs correctly after the safe_current_path() refactoring.
 
 2024/01/01 Opening Balance
     Assets:Checking         $1000.00
