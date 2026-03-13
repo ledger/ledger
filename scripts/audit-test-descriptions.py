@@ -143,7 +143,7 @@ def load_completed(results_file):
     return completed
 
 
-async def review_file(filepath, semaphore, results_fh, stats):
+async def review_file(filepath, semaphore, results_fh, stats, timeout=120):
     """Review a single test file using Claude CLI."""
     async with semaphore:
         rel = str(filepath.relative_to(REPO_ROOT))
@@ -189,7 +189,7 @@ async def review_file(filepath, semaphore, results_fh, stats):
                 env=env,
             )
             stdout, stderr = await asyncio.wait_for(
-                proc.communicate(), timeout=120
+                proc.communicate(), timeout=timeout
             )
             raw = stdout.decode("utf-8", errors="replace").strip()
 
@@ -208,7 +208,7 @@ async def review_file(filepath, semaphore, results_fh, stats):
             result = {
                 "file": rel,
                 "verdict": "error",
-                "error": "timeout after 120s",
+                "error": f"timeout after {timeout}s",
             }
             stats["errors"] += 1
         except json.JSONDecodeError:
@@ -279,6 +279,14 @@ async def main():
         "--output-prefix", type=str, default=None,
         help="Output file prefix (default: scripts/audit-results)",
     )
+    parser.add_argument(
+        "--timeout", type=int, default=120,
+        help="Timeout per file in seconds (default: 120)",
+    )
+    parser.add_argument(
+        "--retry-errors", action="store_true",
+        help="Remove error entries from results file before resuming (use with --resume)",
+    )
     args = parser.parse_args()
 
     global RESULTS_FILE, SUMMARY_FILE
@@ -305,6 +313,29 @@ async def main():
     if args.category:
         all_files = [(c, f) for c, f in all_files if c == args.category]
         print(f"Filtered to {len(all_files)} files in category '{args.category}'")
+
+    # Remove error entries if retrying
+    if args.retry_errors and RESULTS_FILE.exists():
+        lines = []
+        removed = 0
+        with open(RESULTS_FILE) as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    rec = json.loads(line)
+                    if rec.get("verdict") == "error":
+                        removed += 1
+                        continue
+                except json.JSONDecodeError:
+                    removed += 1
+                    continue
+                lines.append(line)
+        with open(RESULTS_FILE, "w") as fh:
+            for line in lines:
+                fh.write(line + "\n")
+        print(f"Removed {removed} error entries from {RESULTS_FILE}")
 
     # Resume support
     completed = set()
@@ -342,7 +373,7 @@ async def main():
 
     with open(RESULTS_FILE, mode) as results_fh:
         tasks = [
-            review_file(filepath, semaphore, results_fh, stats)
+            review_file(filepath, semaphore, results_fh, stats, timeout=args.timeout)
             for _, filepath in all_files
         ]
         await asyncio.gather(*tasks)
