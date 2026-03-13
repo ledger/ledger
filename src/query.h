@@ -311,6 +311,7 @@ public:
       assert(begin != end);
       arg_i = (*begin).as_string().begin();
       arg_end = (*begin).as_string().end();
+      prev_arg_i = arg_i;
 
       TRACE_CTOR(query_t::lexer_t, "");
     }
@@ -331,6 +332,25 @@ public:
      */
     token_t next_token(token_t::kind_t tok_context = token_t::UNKNOWN);
 
+  private:
+    /// @brief Scan a quoted or delimited pattern (`'...'`, `"..."`, `/.../`).
+    /// @pre *arg_i is the opening delimiter.
+    /// @return A TERM token containing the pattern text (without delimiters).
+    token_t scan_quoted_pattern();
+
+    /// @brief Accumulate a bare-word identifier until an operator boundary.
+    /// @param tok_context Affects which characters are boundaries (TOK_EXPR is permissive).
+    /// @param consume_next When true, operator chars are consumed into the identifier.
+    /// @param[out] hit_boundary Set to true if scanning stopped at an operator boundary
+    ///             rather than end-of-argument.
+    /// @return The accumulated identifier string.
+    string scan_identifier(token_t::kind_t tok_context, bool consume_next, bool& hit_boundary);
+
+    /// @brief Match a completed identifier against known keywords.
+    /// @return The corresponding keyword token, or TERM with the identifier as value.
+    token_t match_keyword(const string& ident, string::const_iterator ident_start);
+
+  public:
     /// @brief Push a token back into the one-element lookahead cache.
     void push_token(const token_t& tok) {
       assert(token_cache.kind == token_t::UNKNOWN);
@@ -387,10 +407,14 @@ protected:
   class parser_t {
     friend class query_t;
 
+    static constexpr int MAX_PARSE_DEPTH =
+        256; ///< Guard against stack overflow from nested parens.
+
     value_t args;  ///< The original argument sequence (owns the strings the lexer iterates).
     lexer_t lexer; ///< Tokenizer over the argument sequence.
     keep_details_t what_to_keep; ///< Annotation-stripping policy passed to constructed predicates.
     query_map_t query_map;       ///< Accumulated predicates keyed by query section.
+    int parse_depth = 0;         ///< Current recursion depth for parenthesized expressions.
 
     /// @brief Parse a single atomic query term (pattern, field prefix, parens, or expr).
     expr_t::ptr_op_t parse_query_term(lexer_t::token_t::kind_t tok_context);
@@ -409,13 +433,25 @@ protected:
     expr_t::ptr_op_t parse_query_expr(lexer_t::token_t::kind_t tok_context,
                                       bool subexpression = false);
 
+    /// @brief Build a metadata matching node: has_tag(pattern) or has_tag(pattern, value).
+    expr_t::ptr_op_t make_meta_node(const string& tag_pattern,
+                                    lexer_t::token_t::kind_t tok_context);
+    /// @brief Try to parse a term as a comparison expression (e.g., "d>=[date]").
+    /// @return The expression node if the term is a comparison, nullptr otherwise.
+    expr_t::ptr_op_t try_parse_comparison(const string& term, lexer_t::token_t::kind_t tok_context);
+    /// @brief Build an O_MATCH node that regex-matches a pattern against the given field.
+    static expr_t::ptr_op_t make_match_node(lexer_t::token_t::kind_t tok_context,
+                                            const string& pattern);
+
   public:
     parser_t(const value_t& _args, const keep_details_t& _what_to_keep = keep_details_t(),
              bool multiple_args = true)
         : args(_args), lexer(args.begin(), args.end(), multiple_args), what_to_keep(_what_to_keep) {
       TRACE_CTOR(query_t::parser_t, "value_t, keep_details_t, bool");
     }
-    parser_t(const parser_t& other) : args(other.args), lexer(other.lexer) {
+    parser_t(const parser_t& other)
+        : args(other.args), lexer(other.lexer), what_to_keep(other.what_to_keep),
+          query_map(other.query_map), parse_depth(other.parse_depth) {
       TRACE_CTOR(query_t::parser_t, "copy");
     }
     ~parser_t() noexcept { TRACE_DTOR(query_t::parser_t); }

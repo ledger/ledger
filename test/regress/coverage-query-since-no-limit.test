@@ -1,0 +1,19 @@
+; Test since/until with no preceding limit predicate
+; Exercises parse_query_expr section handling when limiter is null
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 Gas Station
+    Expenses:Gas    $40.00
+    Assets:Checking
+
+2024/06/15 Rent Payment
+    Expenses:Rent    $1000.00
+    Assets:Checking
+
+test reg since 2024/03 -> 0
+24-Jun-15 Rent Payment          Expenses:Rent              $1000.00     $1000.00
+                                Assets:Checking           $-1000.00            0
+end test
