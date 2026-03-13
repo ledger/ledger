@@ -389,7 +389,24 @@ void detail::parse_amount_expr(std::istream& in, scope_t& scope, post_t& post, a
  */
 static balance_t compute_balance_diff(const amount_t& amt, post_t* post, xact_t* xact,
                                       bool strip_annotations, parse_context_t& context) {
-  bool real_only = !post->has_flags(POST_VIRTUAL | POST_IS_TIMELOG);
+  // A real posting uses real_only=true so that the real and virtual balances
+  // of an account can be asserted independently (#543). Exception: if the
+  // account has no prior real postings at all, fall back to the combined
+  // (real + virtual) total so that patterns like tracking reimbursements
+  // with virtual postings and then settling with a real posting remain
+  // assertable (#1959).
+  bool real_only;
+  if (!post->has_flags(POST_VIRTUAL | POST_IS_TIMELOG)) {
+    real_only = false;
+    for (const post_t* p : post->account->posts) {
+      if (!p->has_flags(POST_VIRTUAL | POST_IS_TIMELOG)) {
+        real_only = true;
+        break;
+      }
+    }
+  } else {
+    real_only = false;
+  }
   value_t account_total;
   if (item_t::use_aux_date) {
     // When using effective dates, only count posts whose effective date is on
@@ -436,8 +453,8 @@ static balance_t compute_balance_diff(const amount_t& amt, post_t* post, xact_t*
 
   // Subtract amounts from previous posts to this account in the xact.
   for (post_t* p : xact->posts) {
-    if (p->account == post->account && (!p->has_flags(POST_VIRTUAL | POST_IS_TIMELOG) ||
-                                        post->has_flags(POST_VIRTUAL | POST_IS_TIMELOG))) {
+    if (p->account == post->account &&
+        (!real_only || !p->has_flags(POST_VIRTUAL | POST_IS_TIMELOG))) {
       amount_t p_amt(strip_annotations ? p->amount.strip_annotations(keep_details_t()) : p->amount);
       diff -= p_amt;
       DEBUG("textual.parse", "line " << context.linenum << ": "

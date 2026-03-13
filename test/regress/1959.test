@@ -1,0 +1,37 @@
+; Regression test for issue #1959: balance assertions mixing virtual and real
+; postings with the same account should work correctly.
+;
+; When an account has only virtual postings in its history, a real posting with
+; a balance assertion should check the combined (real + virtual) total, not just
+; the real balance.  This matches the behaviour of `bal` which shows the total.
+
+commodity $
+  note American Dollars
+  format $1,000.00
+  alias USD
+
+account Assets:Current Assets:Checking Account
+account Assets:Debts:Reimb
+account Expenses:Miscellaneous
+account Liabilities:Credit Card
+
+2020-04-04 Amazon.com
+  Expenses:Miscellaneous  USD 10
+  Liabilities:Credit Card  USD -10
+  (Assets:Debts:Reimb)  USD 10
+
+2020-04-11 Amazon.com
+  Expenses:Miscellaneous  USD 20
+  Liabilities:Credit Card  USD -20
+  (Assets:Debts:Reimb)  USD 20
+
+2020-04-15 reimb
+  Assets:Current Assets:Checking Account  USD 30
+  Assets:Debts:Reimb  USD -30 = 0
+
+test bal Assets:Debts:Reimb
+end test
+
+test bal -R Assets:Debts:Reimb
+             $-30.00  Assets:Debts:Reimb
+end test
