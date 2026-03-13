@@ -1638,8 +1638,11 @@ void generate_posts::add_period_xacts(period_xacts_list& period_xacts) {
       // Skip auto-transaction-generated posts (ITEM_GENERATED without
       // POST_CALCULATED); they have no xact back-pointer and should not
       // produce independent forecast/budget entries.
-      if (!post->has_flags(ITEM_GENERATED) || post->has_flags(POST_CALCULATED))
+      if (!post->has_flags(ITEM_GENERATED) || post->has_flags(POST_CALCULATED)) {
+        if (!xact->payee.empty() && post->payee().empty())
+          post->set_payee(xact->payee);
         add_post(xact->period, *post);
+      }
 }
 
 /// Add a single periodic posting to the pending list.
@@ -1711,7 +1714,10 @@ void budget_posts::report_budget_items(const date_t& date) {
         DEBUG("budget.generate", "Reporting budget for " << post.reported_account()->fullname());
 
         xact_t& xact = temps.create_xact();
-        xact.payee = _("Budget transaction");
+        {
+          string post_payee = post.payee();
+          xact.payee = post_payee.empty() ? _("Budget transaction") : post_payee;
+        }
         xact._date = begin;
 
         post_t& temp = temps.copy_post(post, xact);
@@ -1883,7 +1889,10 @@ void forecast_posts::flush() {
     // "Forecast transaction".
     post_t& post = *(*least).second;
     xact_t& xact = temps.create_xact();
-    xact.payee = _("Forecast transaction");
+    {
+      string post_payee = post.payee();
+      xact.payee = post_payee.empty() ? _("Forecast transaction") : post_payee;
+    }
     xact._date = next;
     post_t& temp = temps.copy_post(post, xact);
 

@@ -401,10 +401,11 @@ class period_xact_t : public xact_base_t {
 public:
   date_interval_t period; ///< Parsed recurrence interval (e.g., "Monthly", "Every 2 weeks").
   string period_string;   ///< Original period text from the journal file.
+  string payee;           ///< Optional payee for generated budget/forecast transactions.
 
   period_xact_t() { TRACE_CTOR(period_xact_t, ""); }
   period_xact_t(const period_xact_t& e)
-      : xact_base_t(e), period(e.period), period_string(e.period_string) {
+      : xact_base_t(e), period(e.period), period_string(e.period_string), payee(e.payee) {
     TRACE_CTOR(period_xact_t, "copy");
   }
   period_xact_t(const string& _period) : period(_period), period_string(_period) {

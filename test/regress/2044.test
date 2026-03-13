@@ -1,0 +1,22 @@
+; Regression test for GitHub issue #2044
+; Periodic transactions may specify an optional payee after two spaces or a tab.
+; The payee is used for generated forecast/budget transactions instead of the
+; default "Forecast transaction" / "Budget transaction".
+
+~ monthly from 2024/01/01  Grocery Fund
+    Expenses:Food          $100.00
+    Assets:Checking
+
+; Forecast: period payee "Grocery Fund" appears instead of "Forecast transaction"
+test reg --forecast 'date <[2024/03/01]' --now=2024/01/01 --format "%(payee) %(account) %(amount)\n"
+Grocery Fund Expenses:Food $100.00
+Grocery Fund Assets:Checking $-100.00
+end test
+
+; Budget: period payee "Grocery Fund" appears instead of "Budget transaction"
+test --budget --now "2024/02/15" reg --format "%(payee) %(account) %(amount)\n"
+Grocery Fund Expenses:Food $-100.00
+Grocery Fund Assets:Checking $100.00
+Grocery Fund Expenses:Food $-100.00
+Grocery Fund Assets:Checking $100.00
+end test

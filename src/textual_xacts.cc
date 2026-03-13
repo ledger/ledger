@@ -300,12 +300,68 @@ void instance_t::period_xact_directive(char* line) {
 
   try {
 
-    unique_ptr<period_xact_t> pe(new period_xact_t(skip_ws(line + 1)));
+    const char* header = skip_ws(line + 1);
+    string period_str;
+    string payee_str;
+
+    // Split header on tab or two-or-more consecutive spaces; the left part is
+    // the period expression and the right part (trimmed) is the optional payee.
+    const char* inline_note = nullptr;
+    {
+      const char* p = header;
+      std::size_t spaces = 0;
+      const char* sep = nullptr;
+      while (*p) {
+        if (*p == '\t') {
+          sep = p;
+          break;
+        } else if (*p == ' ') {
+          if (++spaces >= 2 && !sep)
+            sep = p - (spaces - 1);
+        } else {
+          spaces = 0;
+        }
+        ++p;
+      }
+      if (sep) {
+        period_str = string(header, sep);
+        const char* rest = sep;
+        while (*rest == ' ' || *rest == '\t')
+          ++rest;
+        // Find the end of the payee, stopping at "; note".
+        const char* note_start = nullptr;
+        const char* q = rest;
+        while (*q) {
+          if (*q == ';' && (q == rest || *(q - 1) == ' ')) {
+            note_start = q;
+            break;
+          }
+          ++q;
+        }
+        string raw_payee(rest, note_start ? note_start : q);
+        // Trim trailing whitespace from payee.
+        while (!raw_payee.empty() && std::isspace(static_cast<unsigned char>(raw_payee.back())))
+          raw_payee.pop_back();
+        payee_str = raw_payee;
+        if (note_start)
+          inline_note = note_start + 1;
+      } else {
+        period_str = string(header);
+      }
+    }
+
+    unique_ptr<period_xact_t> pe(new period_xact_t(period_str));
+    if (!payee_str.empty())
+      pe->payee = context.journal->validate_payee(payee_str);
+
     pe->pos = position_t();
     pe->pos->pathname = context.pathname;
     pe->pos->beg_pos = context.line_beg_pos;
     pe->pos->beg_line = context.linenum;
     pe->pos->sequence = context.sequence++;
+
+    if (inline_note)
+      pe->append_note(inline_note, *context.scope, false);
 
     reveal_context = false;
 
