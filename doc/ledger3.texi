@@ -8940,6 +8940,15 @@ In the matching criteria used by automated postings.
 Value expressions support most simple math and logic operators, in
 addition to a set of functions and variables.
 
+Note: Ledger also has ``query expressions,'' which are a shorthand
+that gets translated into value expressions before evaluation.  For
+instance, typing @samp{cash} on the command line is equivalent to
+@samp{(account =~ /cash/)}.  Query expressions don't add any
+functionality of their own -- they're purely a convenience at the
+command line.  Options like @option{--limit @var{EXPR} (-l)} always
+take a value expression, while bare arguments after the command name
+are treated as query expressions.
+
 @c A function's argument is whatever follows it.  The following is
 @c a display predicate that I use with the @command{balance} command:
 
@@ -8982,6 +8991,12 @@ $ ledger -b "this month" register checking
 @section Variables
 @findex --amount @var{EXPR}
 @findex --total @var{VEXPR}
+
+In addition to the single-letter aliases listed here, value
+expressions also accept longer named variables -- @code{account},
+@code{payee}, @code{commodity}, @code{note}, @code{comment},
+@code{code}, @code{date}, and others.  These are documented
+individually in the @ref{Miscellaneous} section.
 
 Below are the one letter variables available in any value expression.
 For the @command{register} and @command{print} commands, these variables
@@ -9130,32 +9145,47 @@ The operators, in order of precedence, are:
 @node Unary Operators, Binary Operators, Operators, Operators
 @subsection Unary Operators
 
-@code{not} (@code{!})
-@code{neg}
+@table @code
+@item not
+@itemx !
+Logical negation.  @code{not cleared} is equivalent to @code{!cleared}.
+@item neg
+Arithmetic negation.
+@end table
 
 @node Binary Operators,  , Unary Operators, Operators
 @subsection Binary Operators
 
-@code{==}
-@code{<}
-@code{<=}
-@code{>}
-@code{>=}
-@code{and}
-@code{or}
-@code{+}
-@code{-}
-@code{*}
-@code{/}
-@code{QUERY}
-@code{COLON}
-@code{CONS}
-@code{SEQ}
-@code{DEFINE}
-@code{LOOKUP}
-@code{LAMBDA}
-@code{CALL}
-@code{MATCH}
+@table @code
+@item ==
+@itemx !=
+Equality and inequality.  @code{cleared == 1} or @code{cleared != 0}.
+@item <
+@itemx <=
+@itemx >
+@itemx >=
+Numeric comparisons.
+@item =~
+@itemx !~
+Regular expression match and negated match.  The right-hand side must
+be a regex delimited by forward slashes.  For example,
+@samp{account =~ /Assets/} matches postings whose account name
+contains @samp{Assets}, and @samp{commodity !~ /€/} matches postings
+whose commodity isn't the euro.
+@item and
+@itemx &
+Logical AND -- both sides must be true.
+@item or
+@itemx |
+Logical OR -- at least one side must be true.
+@item +
+@itemx -
+@itemx *
+@itemx /
+Arithmetic operators.
+@item ? :
+Ternary conditional: @samp{EXPR ? VALUE_IF_TRUE : VALUE_IF_FALSE}.
+@end table
 
 @node Complex expressions,  , Operators, Value Expressions
 @section Complex expressions
@@ -9408,9 +9438,20 @@ Assets:Cash C0D3
 @end smallexample
 @end defvar
 
-@defvar commodity
-Return the commodity of the posting amount.
+@defvar comment
+The posting-level comment only (the text after @samp{;} on the
+posting line itself).  This won't match the transaction header's note
+or comments on other postings -- use @code{note} for that.
+@xref{Complex expressions} for details.
+
+@smallexample
+$ ledger reg --limit 'comment =~ /phone/'
+@end smallexample
 @end defvar
+
+@defvar commodity
+The commodity of the posting amount, as a string.
+
 @smallexample @c command:2CD27D7,with_input:3406FC1
 $ ledger -f expr.dat --format "%(account) %(commodity)\n" reg
 @end smallexample
@@ -9419,16 +9460,24 @@ Assets:Cash ¤
 Expenses:Office Supplies ¤
 @end smallexample
 
+Since it's a string, you can match it with regular expressions:
+
+@smallexample
+$ ledger bal --limit 'commodity =~ /USD/'
+$ ledger reg --limit 'commodity !~ /EUR/'
+@end smallexample
+@end defvar
+
 @defvar date
 @defvarx d
 Return the date of the posting.
-@end defvar
 @smallexample @c command:67EBA45,with_input:3406FC1
 $ ledger -f expr.dat --format "%(date) %(account)\n" reg assets
 @end smallexample
 @smallexample @c output:67EBA45
 2015/01/16 Assets:Cash
 @end smallexample
+@end defvar
 
 @defvar display_account
 Return the concerned account, surrounded with @code{[]} or @code{()} for
@@ -9493,6 +9542,21 @@ Return the value in @var{sequence} at @var{index}.  The first element is @var{in
 @value{InternalUseOnly}
 @end defun
 
+@defun has_tag tag_name
+@defunx has_meta tag_name
+True if the posting or its parent transaction has a tag named
+@var{tag_name}.  The argument can be a string or a regex:
+
+@smallexample
+$ ledger reg --limit 'has_tag("Project")'
+$ ledger reg --limit 'has_tag(/^Project/)'
+@end smallexample
+
+@code{has_meta} is a synonym.  To get the tag's @emph{value}, use
+@code{tag} instead.  @samp{%/REGEX/} is a shorthand
+(@pxref{Complex expressions}).
+@end defun
+
 @defun is_seq value
 Return true if @var{value} is a sequence.  @value{InternalUseOnly}
 @end defun
@@ -9547,6 +9611,17 @@ Fix the precision of an amount.
 Return the current datetime.
 @end defvar
 
+@defvar note
+All comments associated with the transaction and its postings.  This
+is the broadest search -- it covers the transaction header, posting
+comments, and metadata tags.  Use @code{comment} if you only want
+the posting's own comment.  @xref{Complex expressions} for details.
+
+@smallexample
+$ ledger reg --limit 'note =~ /vacation/'
+@end smallexample
+@end defvar
+
 @defvar options
 A variable that allows access to the values of the given command-line options
 using the long option names, e.g. to see whether @option{--daily} or @option{-D}
@@ -9557,6 +9632,18 @@ $ ledger -f expr.dat -X $ -D --format "%(options.daily) %(options.exchange)\n" r
 @smallexample @c output:C1FC7A7
 true $
 @end smallexample
+@end defvar
+
+@defvar payee
+The payee (description) of the posting's parent transaction.
+
+@smallexample
+$ ledger reg --limit 'payee =~ /Grocery/'
+$ ledger reg --limit 'not (payee =~ /Transfer/)'
+@end smallexample
+
+@samp{@@/REGEX/} is a shorthand for @samp{payee =~ /REGEX/}
+(@pxref{Complex expressions}).
 @end defvar
 
 @defun percent value_a value_b
@@ -9675,6 +9762,19 @@ Convert @var{value} to a sequence.  @value{InternalUseOnly}
 @defun to_string value
 @defunx str value
 Convert @var{value} to a character string.
+@end defun
+
+@defun tag tag_name
+@defunx meta tag_name
+Return the value of the metadata tag @var{tag_name} from the posting
+or its parent transaction.  Empty if the tag isn't present.
+
+@smallexample
+$ ledger reg --limit 'tag("Project") =~ /Vacation/'
+@end smallexample
+
+@code{meta} is a synonym.  To test for the @emph{presence} of a tag
+without examining its value, use @code{has_tag} instead.
 @end defun
 
 @defvar today
