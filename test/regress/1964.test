@@ -3,7 +3,8 @@
 ; from the SHA-1 of the CSV line resolves to the canonical payee name and
 ; the associated account directive takes effect.
 ;
-; The UUID below is the SHA-1 of the CSV data line:
+; The UUID below is the first 256 bits (64 hex chars) of the SHA-512 hash of
+; the CSV data line:
 ;   01/05/2018,Xpayee Store,-1.00 USD
 
 account Assets:Checking
@@ -12,7 +13,7 @@ account Expenses:Groceries
     payee Xpayee Store
 
 payee Xpayee Store
-    uuid 14f7c7624d896aca134725618ab2b0b014a48543
+    uuid cc1a0a1788f117814f82748e0cc849c409d5de52f6a40eedb55674b2f1b7d50f
 
 test -f $FILE convert $sourcepath/test/input/1964.csv --input-date-format %m/%d/%Y --account Assets:Checking --invert
 2018/01/05 * Xpayee Store

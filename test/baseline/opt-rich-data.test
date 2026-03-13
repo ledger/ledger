@@ -12,14 +12,14 @@ test -f /dev/null convert test/baseline/feat-convert-with-directives.dat --detai
 2012/01/01 * KFC
     ; CSV: 2012/01/01,KFC,$10
     ; Imported: 2014/08/01
-    ; UUID: 4352cc5a03f882f6f159b90a518667bde7200351
+    ; UUID: 1407054ab4c107c8c0e617416e044ba42cd8bfe51e474c41f0dd65df69f3f4ac
     Expenses:Unknown                             $10
     Equity:Unknown
 
 2012/01/02 * REWE SAGT DANKE  123454321
     ; CSV: 2012/01/02,"REWE SAGT DANKE  123454321",10€
     ; Imported: 2014/08/01
-    ; UUID: 4d04439fba0c7336377d1191c545efd0cfa15437
+    ; UUID: a38cbf392a43561c644a39a3e936fa8f8c2560e861b5cb5ae0eb4c08bacb1d3a
     Expenses:Unknown                             10€
     Equity:Unknown
 end test
@@ -28,14 +28,14 @@ test -f /dev/null convert test/baseline/feat-convert-with-directives.dat --rich-
 01-01-2012 * KFC
     ; CSV: 2012/01/01,KFC,$10
     ; Imported: 01-08-2014
-    ; UUID: 4352cc5a03f882f6f159b90a518667bde7200351
+    ; UUID: 1407054ab4c107c8c0e617416e044ba42cd8bfe51e474c41f0dd65df69f3f4ac
     Expenses:Unknown                             $10
     Equity:Unknown
 
 02-01-2012 * REWE SAGT DANKE  123454321
     ; CSV: 2012/01/02,"REWE SAGT DANKE  123454321",10€
     ; Imported: 01-08-2014
-    ; UUID: 4d04439fba0c7336377d1191c545efd0cfa15437
+    ; UUID: a38cbf392a43561c644a39a3e936fa8f8c2560e861b5cb5ae0eb4c08bacb1d3a
     Expenses:Unknown                             10€
     Equity:Unknown
 end test
