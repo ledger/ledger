@@ -1,0 +1,694 @@
+test/regress/563.test
+  e7098e3497d6aed6 1-21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.9",
+  "base_commit_sha": "7efe079f1e4e5c7e28e878cb95c3e8d6239c34e5",
+  "prompts": {
+    "e7098e3497d6aed6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c220509c-f24c-43a8-b161-fbe8a2962746",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "<command-message>fix</command-message>\n<command-name>/fix</command-name>\n<command-args>563</command-args>",
+          "timestamp": "2026-03-13T06:46:20.907Z"
+        },
+        {
+          "type": "user",
+          "text": "# Think, Research, Plan, Act, Review\n\nThink deeply to analyze the following query, construct a well thought out plan of action based on the following context, and then carefully execute that plan step by step.\n\nIf you find that the bug or feature you’re attempting to fix has already been addressed in an earlier commit, just add a regression test to demonstrate the item has been dealt with.\n\nCreate a PR for each using my jwiegley user on GitHub. The author/committer for all new commits should be signed by johnw@newartisans.com.\n\nThis series of jobs will take a long time, so make a comprehensive and effective plan and then execute step by step until you have completed them all and added new regression tests for each.\n\nNow, please analyze and fix the GitHub issue: 563.\n\nNOTE: Do not work on a bug that already has a PR open that addresses it. In that case, just give the PR number and stop immediately.\n\n# Follow these steps\n\n1. Use `gh issue view` to get the issue details\n2. Understand the problem described in the issue\n3. Search the codebase for relevant files\n4. Implement the necessary changes to fix the issue\n5. Write and run tests to verify the fix\n6. Ensure code passes linting and type checking\n7. Leave your work uncommitted in the working tree, so it can be reviewed.\n\nRemember the following:\n- Use the GitHub CLI (`gh`) for all GitHub-related tasks\n- Search the codebase for relevant files\n- Ensure code passes linting and type checking after doing any work\n- Use cpp-pro, python-pro, emacs-lisp-pro, rust-pro or haskell-pro as needed for diagnosing and analyzing PRs, fixing code, and writing any new code.\n- Use Web Search and Perplexity as need for research and discovering resources.\n- Use sequential-thinking when appropriate to break down tasks further.\n- Use context7 whenever code examples might help.\n\nCommit all work as a series of atomic, logically sequenced commits. Each commit should represent one coherent change that can be understood, reviewed, and reverted independently.\n\n# Commit Decomposition Principles\n\n**Scope each commit to a single logical change.** A commit should do exactly one thing: add a function, fix a bug, refactor a module, update documentation. If you find yourself writing \"and\" in a commit message, consider splitting the commit.\n\n**Sequence commits to tell a story.** Arrange commits so each builds naturally on the previous. A reviewer reading the series should understand why each change was made and how the code evolved. Foundational changes come before dependent ones.\n\n**Keep each commit in a working state.** Every commit should compile, pass tests, and not introduce obvious regressions. This enables bisection for debugging and allows reviewers to check out any point in history.\n\n# Categorizing Changes\n\nBefore committing, analyze the working tree and group changes into categories:\n\n1. **Infrastructure/setup changes** — new dependencies, configuration, tooling\n2. **Refactoring** — restructuring existing code without changing behavior\n3. **New functionality** — features, APIs, modules\n4. **Bug fixes** — corrections to existing behavior\n5. **Tests** — new or modified test coverage\n6. **Documentation** — comments, READMEs, inline docs\n\nCommit these categories in order when dependencies exist between them. Refactoring that enables a new feature should precede the feature commit.\n\n# Commit Message Format\n\n```\n<summary>\n\n<body>\n\n<footer>\n```\n\n**Summary line:** Imperative mood, no period, under 50 characters. Describe what applying the commit does, not what you did.\n\n**Body:** Explain the motivation and contrast with previous behavior. Wrap at 72 characters. Focus on *why*, not *what* (the diff shows what).\n\n**Footer:** Reference issues, breaking changes, or co-authors.\n\n# Staging Strategy\n\nUse selective staging to craft precise commits:\n\n- `git add -p` for hunks within files\n- `git add <specific-files>` to group related files\n- Review staged changes with `git diff --staged` before committing\n\nWhen a single file contains changes belonging to multiple logical commits, stage hunks separately rather than committing the entire file.\n\n# Quality Checklist\n\nBefore finalizing each commit:\n\n- [ ] Does this commit do exactly one thing?\n- [ ] Could someone understand this change without seeing other commits?\n- [ ] Is the commit message searchable? Will someone find this when grepping history?\n- [ ] Does the code compile and pass tests at this point?\n- [ ] Would reverting this commit cleanly undo one logical change?\n\n# Example Decomposition\n\nGiven work that adds a feature with tests and required refactoring:\n\n```\n1. Extract token validation into dedicated module\n2. Add unit tests for token validation\n3. Implement refresh token rotation\n4. Add integration tests for token refresh flow\n5. Document refresh token behavior in API guide\n```\n\nEach commit is independently reviewable, the sequence shows logical progression, and future developers can find relevant changes through targeted searches.\n\n# Handling Mixed Changes\n\nIf the working tree contains entangled changes:\n\n1. **Identify the distinct changes** — list what logical modifications exist\n2. **Determine dependencies** — which changes require others to be present\n3. **Create a commit plan** — order commits to satisfy dependencies\n4. **Stage incrementally** — use partial staging to isolate each change\n5. **Verify at each step** — ensure the repository works after each commit\n\nWhen changes are too entangled to separate cleanly, prefer a slightly larger commit with a clear message over a commit that leaves the repository in a broken state.\n",
+          "timestamp": "2026-03-13T06:46:20.907Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 563 --repo ledger/ledger 2>&1 | head -80",
+            "description": "Get issue #563 details"
+          },
+          "timestamp": "2026-03-13T06:46:28.976Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh pr list --repo ledger/ledger --search \"563\" --state open 2>&1",
+            "description": "Check for existing PRs for issue 563"
+          },
+          "timestamp": "2026-03-13T06:46:29.935Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh pr list --repo ledger/ledger --search \"fixes #563 OR fix #563 OR closes #563\" --state all 2>&1 | head -20",
+            "description": "Check for PRs that fix issue 563"
+          },
+          "timestamp": "2026-03-13T06:46:34.257Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 563 --repo ledger/ledger --comments 2>&1 | tail -60",
+            "description": "Get issue 563 comments"
+          },
+          "timestamp": "2026-03-13T06:46:34.844Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 1827 --repo ledger/ledger 2>&1 | head -50",
+            "description": "Check related issue 1827"
+          },
+          "timestamp": "2026-03-13T06:46:45.247Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -r \"null amount\" /Users/johnw/src/ledger/fix-563/src/ 2>/dev/null | head -20",
+            "description": "Search for null amount error message in source"
+          },
+          "timestamp": "2026-03-13T06:46:46.233Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-563/src/xact.cc"
+          },
+          "timestamp": "2026-03-13T06:46:52.680Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"null amount\\|Only one posting\\|null_post\\|auto_fill\\|POST_VIRTUAL\\|has_null\" /Users/johnw/src/ledger/fix-563/src/xact.cc | head -60",
+            "description": "Find null amount handling in xact.cc"
+          },
+          "timestamp": "2026-03-13T06:46:58.622Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-563/src/xact.cc",
+            "limit": 250,
+            "offset": 165
+          },
+          "timestamp": "2026-03-13T06:47:04.858Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-563/src/xact.cc",
+            "limit": 200,
+            "offset": 414
+          },
+          "timestamp": "2026-03-13T06:47:11.725Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-563/src/xact.cc",
+            "limit": 200,
+            "offset": 700
+          },
+          "timestamp": "2026-03-13T06:47:19.678Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"POST_VIRTUAL\\|POST_MUST_BALANCE\\|must_balance\" /Users/johnw/src/ledger/fix-563/src/post.h | head -40",
+            "description": "Check post flags definitions"
+          },
+          "timestamp": "2026-03-13T06:47:34.631Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me create a test file to reproduce the issue:",
+          "timestamp": "2026-03-13T06:47:45.194Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat > /tmp/test563.dat << 'EOF'\n2018/04/10 * Adagio Teas\n    [Assets:Funds:Reserves:Liabilities]     $82.00\n    [Assets:Funds:Toys]\n    Expenses:Thingamabobs                   $82.00\n    Liabilities:Discover\nEOF\n/Users/johnw/src/ledger/fix-563/build/ledger -f /tmp/test563.dat balance 2>&1",
+            "description": "Test the issue example"
+          },
+          "timestamp": "2026-03-13T06:47:47.605Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-563/ 2>&1",
+            "description": "Check the fix-563 directory"
+          },
+          "timestamp": "2026-03-13T06:47:55.182Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/main/build/ledger 2>/dev/null && echo \"exists\" || echo \"not found\"",
+            "description": "Check main ledger binary"
+          },
+          "timestamp": "2026-03-13T06:48:03.071Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "find /Users/johnw/src/ledger/ -name \"ledger\" -type f 2>/dev/null | head -5",
+            "description": "Find ledger binary"
+          },
+          "timestamp": "2026-03-13T06:48:03.755Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat > /tmp/test563.dat << 'EOF'\n2018/04/10 * Adagio Teas\n    [Assets:Funds:Reserves:Liabilities]     $82.00\n    [Assets:Funds:Toys]\n    Expenses:Thingamabobs                   $82.00\n    Liabilities:Discover\nEOF\n/Users/johnw/src/ledger/fix-1934/build/ledger -f /tmp/test563.dat balance 2>&1",
+            "description": "Test the issue example with available ledger binary"
+          },
+          "timestamp": "2026-03-13T06:48:13.155Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "# Test case from the issue - seems to work!\n# Let's try with multiple null amounts in the same category (should still error)\ncat > /tmp/test563b.dat << 'EOF'\n2018/04/10 * Adagio Teas\n    [Assets:Funds:Reserves:Liabilities]     $82.00\n    [Assets:Funds:Toys]\n    Expenses:Thingamabobs\n    Liabilities:Discover\nEOF\n/Users/johnw/src/ledger/fix-1934/build/ledger -f /tmp/test563b.dat balance 2>&1",
+            "description": "Test with multiple null amounts in real postings (should still error)"
+          },
+          "timestamp": "2026-03-13T06:48:23.427Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "# Test with multiple null amounts in virtual postings\ncat > /tmp/test563c.dat << 'EOF'\n2018/04/10 * Adagio Teas\n    [Assets:Funds:Reserves:Liabilities]\n    [Assets:Funds:Toys]\n    Expenses:Thingamabobs                   $82.00\n    Liabilities:Discover                    $-82.00\nEOF\n/Users/johnw/src/ledger/fix-1934/build/ledger -f /tmp/test563c.dat balance 2>&1",
+            "description": "Test with multiple null amounts in virtual postings (should still error)"
+          },
+          "timestamp": "2026-03-13T06:48:30.879Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --oneline -20 2>&1",
+            "description": "Check git log for fix-563 branch"
+          },
+          "timestamp": "2026-03-13T06:48:41.021Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff main...HEAD -- src/xact.cc 2>&1 | head -20",
+            "description": "Check if xact.cc was already changed on this branch"
+          },
+          "timestamp": "2026-03-13T06:48:41.946Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --all --oneline -- src/xact.cc | head -20",
+            "description": "Check git history for xact.cc changes"
+          },
+          "timestamp": "2026-03-13T06:48:51.335Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --oneline --all --grep=\"563\" 2>&1 | head -10",
+            "description": "Check for any commits related to issue 563"
+          },
+          "timestamp": "2026-03-13T06:48:52.027Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --oneline --all --grep=\"null.*virtual\\|virtual.*null\\|balanced.*virtual.*null\" 2>&1 | head -10",
+            "description": "Check for null virtual posting fixes in history"
+          },
+          "timestamp": "2026-03-13T06:48:58.644Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --oneline --all --grep=\"virtual_null_post\\|null.*post.*virtual\" 2>&1 | head -10",
+            "description": "Check for virtual_null_post in history"
+          },
+          "timestamp": "2026-03-13T06:48:59.205Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git show debce12a --stat 2>&1 | head -20",
+            "description": "Check commit debce12a details"
+          },
+          "timestamp": "2026-03-13T06:49:05.684Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --oneline --format='%H %ad %s' --date=format:'%Y-%m-%d' 2>&1 | grep -i \"null\\|563\\|virtual\" | head -20",
+            "description": "Check recent commits about null and virtual"
+          },
+          "timestamp": "2026-03-13T06:49:06.632Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git show 8f7f445b --stat 2>&1",
+            "description": "Check the commit that fixed virtual balance tracking"
+          },
+          "timestamp": "2026-03-13T06:49:15.599Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git show 8f7f445b 2>&1 | head -60",
+            "description": "Show the fix for virtual balance tracking"
+          },
+          "timestamp": "2026-03-13T06:49:15.852Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-563/test/regress/563* 2>&1",
+            "description": "Check for existing test for issue 563"
+          },
+          "timestamp": "2026-03-13T06:49:26.301Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -r \"null amount\\|563\\|only one posting\" /Users/johnw/src/ledger/fix-563/test/ 2>/dev/null | grep -v \".pyc\" | head -20",
+            "description": "Check for existing tests related to issue 563"
+          },
+          "timestamp": "2026-03-13T06:49:27.094Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -r \"null amount\\|only one posting\" /Users/johnw/src/ledger/fix-563/test/ 2>/dev/null | grep -v \".pyc\" | head -20",
+            "description": "Check for existing tests related to null amounts"
+          },
+          "timestamp": "2026-03-13T06:49:34.392Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -r \"Assets:Funds\" /Users/johnw/src/ledger/fix-563/test/regress/ 2>/dev/null | head -5",
+            "description": "Check if any existing test uses virtual envelope budgeting"
+          },
+          "timestamp": "2026-03-13T06:49:35.454Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"563\\|virtual.*null\\|null.*virtual\\|balanced.*virtual.*null\" /Users/johnw/src/ledger/fix-563/test/unit/t_xact.cc | head -30",
+            "description": "Check unit tests for virtual null amount handling"
+          },
+          "timestamp": "2026-03-13T06:49:44.351Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"POST_VIRTUAL\\|virtual_null\\|envelope\\|budget\" /Users/johnw/src/ledger/fix-563/test/unit/t_xact.cc | head -20",
+            "description": "Check unit tests for virtual posting null amounts"
+          },
+          "timestamp": "2026-03-13T06:49:44.805Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-563/test/unit/t_xact.cc",
+            "limit": 80,
+            "offset": 1185
+          },
+          "timestamp": "2026-03-13T06:49:51.618Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "# Test the original issue example\ncat > /tmp/test563_full.dat << 'EOF'\n2018/04/10 * Adagio Teas\n    [Assets:Funds:Reserves:Liabilities]     $82.00\n    [Assets:Funds:Toys]\n    Expenses:Thingamabobs                   $82.00\n    Liabilities:Discover\nEOF\n/Users/johnw/src/ledger/check-tests/build/ledger -f /tmp/test563_full.dat balance 2>&1\necho \"exit: $?\"",
+            "description": "Test issue 563 example with check-tests binary"
+          },
+          "timestamp": "2026-03-13T06:50:12.143Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "# Test that two null amounts in the same category (real postings) still errors\ncat > /tmp/test563_two_real.dat << 'EOF'\n2018/04/10 * Test\n    Expenses:A                              $100.00\n    Assets:B\n    Assets:C\nEOF\n/Users/johnw/src/ledger/check-tests/build/ledger -f /tmp/test563_two_real.dat balance 2>&1\necho \"exit: $?\"",
+            "description": "Test that two null amounts in real postings still errors"
+          },
+          "timestamp": "2026-03-13T06:50:20.043Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "# Test that two null amounts in the same virtual category still errors\ncat > /tmp/test563_two_virt.dat << 'EOF'\n2018/04/10 * Test\n    [Budget:A]                              $100.00\n    [Budget:B]\n    [Budget:C]\n    Expenses:Food                           $100.00\n    Assets:Cash                             $-100.00\nEOF\n/Users/johnw/src/ledger/check-tests/build/ledger -f /tmp/test563_two_virt.dat balance 2>&1\necho \"exit: $?\"",
+            "description": "Test that two null amounts in balanced-virtual postings still errors"
+          },
+          "timestamp": "2026-03-13T06:50:27.879Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me look at some existing regression tests to understand the format:",
+          "timestamp": "2026-03-13T06:50:34.932Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat /Users/johnw/src/ledger/fix-563/test/regress/2105.test 2>/dev/null || ls /Users/johnw/src/ledger/fix-563/test/regress/ | grep -E \"^2[0-9]{3}\\.test$\" | tail -5 | xargs -I{} cat /Users/johnw/src/ledger/fix-563/test/regress/{}",
+            "description": "Look at existing regression tests for format reference"
+          },
+          "timestamp": "2026-03-13T06:50:37.067Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat /Users/johnw/src/ledger/fix-563/test/regress/2008.test",
+            "description": "Look at another regression test for format"
+          },
+          "timestamp": "2026-03-13T06:50:44.412Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I'll create the regression test for issue #563:",
+          "timestamp": "2026-03-13T06:50:51.436Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Write",
+          "input": {
+            "content": "; Regression test for GitHub issue #563:\n; When a transaction has one null-amount real posting and one null-amount\n; balanced-virtual posting, both amounts should be inferrable independently.\n; Real postings balance against real postings; balanced-virtual postings\n; ([Account]) balance against other balanced-virtual postings.\n\n2018/04/10 * Adagio Teas\n    [Assets:Funds:Reserves:Liabilities]     $82.00\n    [Assets:Funds:Toys]\n    Expenses:Thingamabobs                   $82.00\n    Liabilities:Discover\n\ntest bal\n                   0  Assets:Funds\n              $82.00    Reserves:Liabilities\n             $-82.00    Toys\n              $82.00  Expenses:Thingamabobs\n             $-82.00  Liabilities:Discover\n--------------------\n                   0\nend test\n",
+            "file_path": "/Users/johnw/src/ledger/fix-563/test/regress/563.test"
+          },
+          "timestamp": "2026-03-13T06:50:54.262Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "python3 test/RegressTests.py --ledger /Users/johnw/src/ledger/check-tests/build/ledger --sourcepath . test/regress/563.test 2>&1",
+            "description": "Run the new regression test"
+          },
+          "timestamp": "2026-03-13T06:51:01.629Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The test passes. Now let me build the fix-563 branch so I can run all the tests locally:",
+          "timestamp": "2026-03-13T06:51:09.062Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls build 2>/dev/null || echo \"No build dir\"",
+            "description": "Check if build directory exists"
+          },
+          "timestamp": "2026-03-13T06:51:10.515Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Agent",
+          "input": {
+            "description": "Build ledger and run test 563",
+            "prompt": "Build the ledger project in /Users/johnw/src/ledger/fix-563 and run only the regression test for issue 563.\n\nThe working directory is /Users/johnw/src/ledger/fix-563.\n\nBuilding notes:\n- Use the cmake flags from CLAUDE.md memory:\n```bash\ncmake -B build -DCMAKE_BUILD_TYPE=Debug \\\n  -DUSE_PYTHON=OFF -DUSE_GPGME=OFF \\\n  -DBoost_DIR=/nix/store/k5a24gp2r9rvn9jhrvn4g63a63kc3hpa-boost-1.89.0-dev/lib/cmake/Boost-1.89.0 \\\n  -DEDIT_LIB=/nix/store/3484xxnw0d05jf4wjwaykarvi2fgk02f-libedit-20251016-3.1/lib/libedit.dylib \\\n  -DEDIT_PATH=/nix/store/b6ar0114dc1k4sbcayi2mbk3hgy7xb13-libedit-20251016-3.1-dev/include \\\n  -DGMP_LIB=/nix/store/35a4xm9sh4jkn25f9v3dmxzjp5xg4r8w-gmp-with-cxx-6.3.0/lib/libgmp.dylib \\\n  -DGMP_PATH=/nix/store/j454zbmphm8h380k54q9kfhnr5jbva95-gmp-with-cxx-6.3.0-dev/include \\\n  -DMPFR_LIB=/nix/store/1v5yh6wgnjxw172i0xqrw982xllcgasj-mpfr-4.2.2/lib/libmpfr.dylib \\\n  -DMPFR_PATH=/nix/store/dkbc3lqhrqs8hr2i4q682mqqq82hdmqi-mpfr-4.2.2-dev/include \\\n  -DICU_INCLUDE_DIR=/nix/store/i9yj32fp96s8qjd6c43fk54r8j6qjvzr-icu4c-76.1-dev/include\n```\n\n- Build: `cd build && make -j$(sysctl -n hw.ncpu) ledger 2>&1 | tail -5`\n- Run test: `python3 test/RegressTests.py --ledger ./build/ledger --sourcepath . test/regress/563.test`\n\nReport back: whether the build succeeded, and whether the test passed.",
+            "run_in_background": false,
+            "subagent_type": "general-purpose"
+          },
+          "timestamp": "2026-03-13T06:51:33.546Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Both build and test pass. Now let me commit the regression test:",
+          "timestamp": "2026-03-13T06:52:35.502Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git status 2>&1",
+            "description": "Check git status"
+          },
+          "timestamp": "2026-03-13T06:52:35.957Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --oneline -3 2>&1",
+            "description": "Check recent commits"
+          },
+          "timestamp": "2026-03-13T06:52:36.463Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git add test/regress/563.test",
+            "description": "Stage the regression test"
+          },
+          "timestamp": "2026-03-13T06:52:43.187Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -c user.email=\"johnw@newartisans.com\" -c user.name=\"John Wiegley\" commit -m \"$(cat <<'EOF'\ntest(regress): add regression test for issue #563\n\nAllow one null-amount posting per balance group when a transaction\nmixes real and balanced-virtual ([Account]) postings.  Real postings\nbalance independently from balanced-virtual postings, so each group\nmay have its own single null-amount posting whose value is inferred\nfrom the negation of that group's running balance.\n\nThe fix was already present (commit 8f7f445b introduced separate\nbalance accumulators for real vs balanced-virtual postings), but no\nregression test existed.  This test locks in the behaviour so it\ncannot regress.\n\nFixes: https://github.com/ledger/ledger/issues/563\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n)\"",
+            "description": "Commit regression test for issue 563"
+          },
+          "timestamp": "2026-03-13T06:52:54.030Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "sleep 8 && cat /private/tmp/claude-501/-Users-johnw-src-ledger-fix-563/c220509c-f24c-43a8-b161-fbe8a2962746/tasks/bq240g6hy.output 2>&1",
+            "description": "Check commit output"
+          },
+          "timestamp": "2026-03-13T06:55:01.928Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls -la .lefthook-local.yml 2>/dev/null || echo \"no local lefthook config\"\ncat .lefthook-local.yml 2>/dev/null",
+            "description": "Check for lefthook local config"
+          },
+          "timestamp": "2026-03-13T06:55:20.722Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat /Users/johnw/src/ledger/fix-2204/.lefthook-local.yml 2>/dev/null || cat /Users/johnw/src/ledger/fix-2008/.lefthook-local.yml 2>/dev/null",
+            "description": "Get a working lefthook-local config from another worktree"
+          },
+          "timestamp": "2026-03-13T06:55:28.565Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "find /Users/johnw/src/ledger -name \".lefthook-local.yml\" 2>/dev/null | head -5",
+            "description": "Find lefthook-local configs in other worktrees"
+          },
+          "timestamp": "2026-03-13T06:55:35.149Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-563/lefthook.yml"
+          },
+          "timestamp": "2026-03-13T06:55:43.338Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Write",
+          "input": {
+            "content": "pre-commit:\n  parallel: true\n  jobs:\n    - name: cmake-checks\n      group:\n        piped: true\n        jobs:\n          - name: configure\n            run: cmake -B build -DCMAKE_BUILD_TYPE=Debug -DUSE_PYTHON=OFF -DUSE_GPGME=OFF -DUSE_DOXYGEN=ON -DBUILD_DOCS=ON\n          - name: build\n            run: cmake --build build --parallel\n          - name: test\n            run: cd build && ctest --output-on-failure || ctest --rerun-failed --output-on-failure\n          - name: doxygen\n            run: cmake --build build --target doc.doxygen\n          - name: manual\n            run: cmake --build build --target doc\n\n    - name: nix-flake-build\n      run: nix build .\n",
+            "file_path": "/Users/johnw/src/ledger/fix-563/.lefthook-local.yml"
+          },
+          "timestamp": "2026-03-13T06:55:53.889Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -c user.email=\"johnw@newartisans.com\" -c user.name=\"John Wiegley\" commit -m \"$(cat <<'EOF'\ntest(regress): add regression test for issue #563\n\nAllow one null-amount posting per balance group when a transaction\nmixes real and balanced-virtual ([Account]) postings.  Real postings\nbalance independently from balanced-virtual postings, so each group\nmay have its own single null-amount posting whose value is inferred\nfrom the negation of that group's running balance.\n\nThe fix was already present (commit 8f7f445b introduced separate\nbalance accumulators for real vs balanced-virtual postings), but no\nregression test existed.  This test locks in the behaviour so it\ncannot regress.\n\nFixes: https://github.com/ledger/ledger/issues/563\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n)\" 2>&1 &\necho \"Commit started in background, PID $!\"",
+            "description": "Commit the regression test with lefthook validation"
+          },
+          "timestamp": "2026-03-13T06:56:08.638Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "sleep 60 && git log --oneline -3 2>&1",
+            "description": "Wait for commit and check git log",
+            "timeout": 120000
+          },
+          "timestamp": "2026-03-13T06:56:18.273Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "sleep 120 && git log --oneline -3 2>&1",
+            "description": "Wait more for commit to complete",
+            "timeout": 180000
+          },
+          "timestamp": "2026-03-13T06:57:26.796Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git status 2>&1",
+            "description": "Check git status to see what happened"
+          },
+          "timestamp": "2026-03-13T06:59:32.225Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ps aux | grep -E \"cmake|make|ctest|lefthook|nix build\" | grep -v grep | head -10 2>&1",
+            "description": "Check if any build processes are still running"
+          },
+          "timestamp": "2026-03-13T06:59:39.956Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The system is busy with another build. Let me wait for the commit to complete:",
+          "timestamp": "2026-03-13T06:59:46.889Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "sleep 300 && git log --oneline -3 2>&1",
+            "description": "Wait 5 minutes and check if commit succeeded",
+            "timeout": 360000
+          },
+          "timestamp": "2026-03-13T06:59:48.101Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ps aux 2>/dev/null | grep -E \"lefthook|cmake|make|ctest\" | grep \"fix-563\" | grep -v grep | head -5",
+            "description": "Check if lefthook for fix-563 is still running"
+          },
+          "timestamp": "2026-03-13T07:04:57.483Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git status 2>&1",
+            "description": "Check git status"
+          },
+          "timestamp": "2026-03-13T07:05:09.446Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -E \"USE_PYTHON|Python\" build/CMakeCache.txt 2>/dev/null | head -5",
+            "description": "Check cmake cache for Python settings"
+          },
+          "timestamp": "2026-03-13T07:05:24.086Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls .git/ 2>&1 | grep -E \"COMMIT|MERGE|CHERRY\" | head -10",
+            "description": "Check for any git commit state files"
+          },
+          "timestamp": "2026-03-13T07:05:34.720Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "# Try committing again now that lefthook-local.yml is in place\ngit -c user.email=\"johnw@newartisans.com\" -c user.name=\"John Wiegley\" commit -m \"$(cat <<'EOF'\ntest(regress): add regression test for issue #563\n\nAllow one null-amount posting per balance group when a transaction\nmixes real and balanced-virtual ([Account]) postings.  Real postings\nbalance independently from balanced-virtual postings, so each group\nmay have its own single null-amount posting whose value is inferred\nfrom the negation of that group's running balance.\n\nThe fix was already present (commit 8f7f445b introduced separate\nbalance accumulators for real vs balanced-virtual postings), but no\nregression test existed.  This test locks in the behaviour so it\ncannot regress.\n\nFixes: https://github.com/ledger/ledger/issues/563\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n)\" 2>&1 | tail -5 &\necho \"Commit PID: $!\"",
+            "description": "Retry commit with lefthook-local.yml in place"
+          },
+          "timestamp": "2026-03-13T07:05:43.625Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "sleep 600 && git log --oneline -3 2>&1",
+            "description": "Wait 10 minutes and check commit status",
+            "timeout": 660000
+          },
+          "timestamp": "2026-03-13T07:05:47.135Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git status 2>&1 && ls -la build/*.log 2>/dev/null",
+            "description": "Check git status and any log files"
+          },
+          "timestamp": "2026-03-13T07:15:53.159Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "# Try running the pre-commit hook directly to see what fails\nlefthook run pre-commit 2>&1 | tail -40",
+            "description": "Run pre-commit hook directly to see error",
+            "timeout": 600000
+          },
+          "timestamp": "2026-03-13T07:15:58.412Z"
+        }
+      ],
+      "total_additions": 41,
+      "total_deletions": 0,
+      "accepted_lines": 41,
+      "overriden_lines": 0
+    }
+  }
+}
