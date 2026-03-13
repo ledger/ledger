@@ -1,4 +1,4 @@
-; Coverage test for query.cc: for, since and until query keywords
+; Coverage test for query.cc: for and since query keywords
 
 2023/11/01 November
     Expenses:Food    $10.00

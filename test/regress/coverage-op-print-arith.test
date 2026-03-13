@@ -1,6 +1,5 @@
 ; Coverage test for op.cc: print() method for arithmetic operators
-; Exercises: print O_ADD (lines 648-653), O_SUB (lines 655-660),
-;   O_MUL (lines 662-667), O_DIV (lines 669-674) via select column expressions
+; Exercises: print O_ADD and O_DIV via select column expressions
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00

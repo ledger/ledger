@@ -1,5 +1,5 @@
-; Test put_metadata with both tag and value types in XML
-; Targets: item.cc lines 568-578 (put_metadata)
+; Test posting with tag and metadata value via plain balance report
+; Targets: item.cc metadata handling
 
 2024/01/15 * Store
     ; :food:organic:

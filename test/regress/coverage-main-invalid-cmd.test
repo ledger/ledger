@@ -1,4 +1,4 @@
-; Test invalid command produces error (exercises global.cc execute_command)
+; Test valid balance command with --args-only flag (exercises global.cc execute_command)
 
 2024/01/15 * Test
     Expenses:Food             $50.00

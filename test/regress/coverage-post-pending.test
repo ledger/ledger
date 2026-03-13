@@ -1,4 +1,4 @@
-; Test posting with pending state flag
+; Test posting with pending state flag (journal-only; no test/end test blocks)
 
 2024/01/01 Payee
     ! Expenses:Food    $10.00

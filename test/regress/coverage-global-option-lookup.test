@@ -1,6 +1,5 @@
-; Test global.cc: various option lookup paths
-; Exercises lookup_option cases: 'a' (args_only), 'h' (help), 'o' (options),
-; 't' (trace_), and 'v' (verbose, verify, verify_memory, version)
+; Test global.cc: option lookup and --options display
+; Exercises lookup_option case 'o' (options)
 
 2024/01/01 Test
     Expenses:Food    $25.00

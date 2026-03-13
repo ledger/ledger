@@ -1,5 +1,5 @@
-; Coverage tests for mask.cc - diacritics folding and glob patterns
-; Covers fold_codepoint, fold_diacritics, assign_glob
+; Coverage tests for mask.cc - account name matching with accented payees
+; Covers mask_t regex matching via account filter
 
 ; Use accented characters in payee names to trigger diacritics folding
 2024/01/01 Café Résumé
