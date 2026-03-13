@@ -1,0 +1,29 @@
+; Regression test for GitHub issue #2883.
+;
+; ledger convert would segfault (null dereference of current_context) when
+; the journal contained a tag assertion and an existing transaction already
+; carried that tag.  The crash occurred because journal.current_context was
+; not set when check_all_metadata ran inside add_xact during convert.
+;
+; Reproduces the "second-run" scenario: after a first import is appended to
+; the ledger file, a subsequent convert on a new CSV must correctly evaluate
+; the tag assertion without crashing.
+
+tag reference_id
+    assert value =~ /REF[0-9]+/
+
+; This transaction simulates the output of a prior convert run that was
+; appended to the journal.  Loading it causes check_all_metadata to evaluate
+; the tag assertion during journal read, leaving the expression object in a
+; previously-compiled state before convert_command runs.
+2025/01/10 * Existing Payment
+    ; reference_id: REF12345
+    Assets:Bank                           $-100.00
+    Expenses:Unknown
+
+test convert test/regress/GH2883.csv --input-date-format "%Y-%m-%d" --account Assets:Bank
+2025/01/20 * New Purchase
+    ; reference_id: REF99999
+    Expenses:Unknown                             -50
+    Assets:Bank
+end test

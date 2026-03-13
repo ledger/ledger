@@ -377,7 +377,12 @@ void journal_t::register_metadata(const string& key, const value_t& value,
       value_scope_t val_scope(bound_scope, value);
 
       (*i).second.first.mark_uncompiled();
-      if (!(*i).second.first.calc(val_scope).to_boolean()) {
+      bool holds = (*i).second.first.calc(val_scope).to_boolean();
+      // Clear context immediately: val_scope is stack-allocated and will be
+      // destroyed when this scope exits.  Leaving a dangling pointer behind
+      // would cause a use-after-free the next time the expression is compiled.
+      (*i).second.first.set_context(nullptr);
+      if (!holds) {
         if ((*i).second.second == expr_t::EXPR_ASSERTION)
           throw_(parse_error, _f("Metadata assertion failed for (%1%: %2%): %3%") % key % value %
                                   (*i).second.first);
