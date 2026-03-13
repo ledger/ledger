@@ -1,0 +1,17 @@
+; Test error when code keyword has no argument
+; Exercises parse_query_term line 359: operator not followed by argument
+
+2024/01/01 Test
+    Expenses  $10
+    Assets
+
+test reg code -> 1
+__ERROR__
+Error: code operator not followed by argument
+end test
+
+; Same error for expr keyword with no argument
+test reg expr -> 1
+__ERROR__
+Error: expr operator not followed by argument
+end test

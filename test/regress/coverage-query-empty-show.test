@@ -1,0 +1,14 @@
+; Test that 'show' with no following term is a no-op
+; Exercises parse_query_expr show section with empty expression
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 Gas Station
+    Expenses:Gas    $40.00
+    Assets:Checking
+
+test reg Food show -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+end test

@@ -1411,6 +1411,98 @@ BOOST_AUTO_TEST_CASE(testQueryConstructEmpty)
 }
 
 // -----------------------------------------------------------------------
+// Baseline tests for query parser coverage gaps
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testQueryLexerAccountNotKeyword)
+{
+  // Note: despite TOK_ACCOUNT existing in the enum, the lexer has no
+  // keyword check for "account" -- it becomes a plain TERM.
+#ifndef NOT_FOR_PYTHON
+  value_t args;
+  args.push_back(string_value("account"));
+  args.push_back(string_value("Food"));
+  query_t::lexer_t tokens(args.begin(), args.end());
+
+  query_t::lexer_t::token_t tok = tokens.next_token();
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tok.kind);
+  BOOST_CHECK(tok.value && *tok.value == "account");
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
+#endif
+}
+
+BOOST_AUTO_TEST_CASE(testQueryParseImplicitOr)
+{
+  // Multiple bare terms at top level are implicitly OR'd
+#ifndef NOT_FOR_PYTHON
+  query_t query;
+  value_t args;
+  args.push_back(string_value("Food"));
+  args.push_back(string_value("Gas"));
+  query.parse_args(args);
+  BOOST_CHECK(query.has_query(query_t::QUERY_LIMIT));
+  // The predicate should contain both terms connected by OR
+  string pred = query.get_query(query_t::QUERY_LIMIT);
+  BOOST_CHECK(pred.find("Food") != string::npos);
+  BOOST_CHECK(pred.find("Gas") != string::npos);
+#endif
+}
+
+BOOST_AUTO_TEST_CASE(testQueryParseCodeNoArg)
+{
+  // 'code' keyword with no following argument should throw
+#ifndef NOT_FOR_PYTHON
+  query_t query;
+  value_t args;
+  args.push_back(string_value("code"));
+  BOOST_CHECK_THROW(query.parse_args(args), parse_error);
+#endif
+}
+
+BOOST_AUTO_TEST_CASE(testQueryParseExprNoArg)
+{
+  // 'expr' keyword with no following argument should throw
+#ifndef NOT_FOR_PYTHON
+  query_t query;
+  value_t args;
+  args.push_back(string_value("expr"));
+  BOOST_CHECK_THROW(query.parse_args(args), parse_error);
+#endif
+}
+
+BOOST_AUTO_TEST_CASE(testQueryParseSinceNoLimit)
+{
+  // 'since' with no limit predicate should still populate QUERY_FOR
+#ifndef NOT_FOR_PYTHON
+  query_t query;
+  value_t args;
+  args.push_back(string_value("since"));
+  args.push_back(string_value("2024/03"));
+  query.parse_args(args);
+  BOOST_CHECK(! query.has_query(query_t::QUERY_LIMIT));
+  BOOST_CHECK(query.has_query(query_t::QUERY_FOR));
+  BOOST_CHECK(query.get_query(query_t::QUERY_FOR).find("since") != string::npos);
+#endif
+}
+
+BOOST_AUTO_TEST_CASE(testQueryParseNestedParens)
+{
+  // Nested parentheses: ((Food and @Grocery) or Gas)
+#ifndef NOT_FOR_PYTHON
+  query_t query;
+  value_t args;
+  args.push_back(string_value("((Food"));
+  args.push_back(string_value("and"));
+  args.push_back(string_value("@Grocery)"));
+  args.push_back(string_value("or"));
+  args.push_back(string_value("Gas)"));
+  query.parse_args(args);
+  BOOST_CHECK(query.has_query(query_t::QUERY_LIMIT));
+#endif
+}
+
+// -----------------------------------------------------------------------
 // Expression error path tests - cover expr.cc uncovered lines
 // -----------------------------------------------------------------------
 
