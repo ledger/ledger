@@ -1444,6 +1444,8 @@ void parse_quantity(std::istream& in, string& value) {
     *p++ = c;
     max--;
     in.get();
+  } else if (c == '+') {
+    in.get(); // consume unary '+'; value is positive by default
   }
   READ_INTO(in, p, max, c,
             std::isdigit(static_cast<unsigned char>(c)) || c == '.' || c == ',' || c == '\'');
@@ -1525,6 +1527,9 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
   if (c == '-') {
     negative = true;
     in.get();
+    c = peek_next_nonws(in);
+  } else if (c == '+') {
+    in.get(); // consume unary '+'; value is positive by default
     c = peek_next_nonws(in);
   }
 
