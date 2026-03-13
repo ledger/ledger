@@ -249,11 +249,14 @@ resume:
             // Trailing whitespace only — stop the token.
             goto test_ident;
           }
-          // A special operator character always stops the token.
+          // A special operator character always stops the token.  Also stop
+          // for '^' since it begins a regex anchor (e.g. "~ ^A" should stay
+          // as two separate TERM tokens, not collapse into "~ ^A").
           char ahead = *peek;
           if (ahead == '&' || ahead == '|' || ahead == '!' || ahead == '@' ||
               ahead == '#' || ahead == '%' || ahead == '(' || ahead == ')' ||
-              ahead == '/' || ahead == '\'' || ahead == '"' || ahead == '=') {
+              ahead == '/' || ahead == '\'' || ahead == '"' || ahead == '=' ||
+              ahead == '^') {
             goto test_ident;
           }
           // Read ahead to find the boundary of the next word and test it.
