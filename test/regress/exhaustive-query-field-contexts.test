@@ -1,0 +1,240 @@
+; Exhaustive regression test for query parser field contexts and pattern types.
+;
+; This file tests every field context operator (bare account, @payee, #code,
+; =note, %meta) with every supported pattern type (bare term, single-quoted,
+; double-quoted, /regex/), as well as all keyword synonyms (payee/desc,
+; note, code, meta/tag/data, account, expr) and metadata equality matching.
+;
+; Each test block is self-contained and documents its expected output, making
+; this a comprehensive reference for the query grammar.
+
+2024/01/01 (1001) Grocery Store
+    ; Category: food
+    ; Receipt: yes
+    Expenses:Food    $25.00
+    ; bought apples
+    Assets:Checking
+
+2024/01/02 (1002) Gas Station
+    ; Category: transport
+    Expenses:Gas    $40.00
+    ; fuel for car
+    Assets:Checking
+
+2024/01/03 (1003) Restaurant
+    ; Category: food
+    ; Meal: dinner
+    Expenses:Food:Dining    $50.00
+    ; birthday celebration
+    Assets:Checking
+
+2024/01/04 (1004) Electric Company
+    ; Category: utility
+    Expenses:Utilities    $100.00
+    ; monthly bill
+    Assets:Checking
+
+2024/01/05 (1005) Bookstore
+    ; Category: education
+    Expenses:Entertainment    $30.00
+    ; gift for friend
+    Assets:Checking
+
+2024/02/01 (2001) Supermarket
+    ; Category: food
+    Expenses:Food    $35.00
+    ; weekly groceries
+    Assets:Checking
+
+2024/03/01 (3001) Coffee Shop
+    ; Category: food
+    Expenses:Food:Dining    $15.00
+    ; morning latte
+    Assets:Checking
+
+; 1. Account context (default) - bare term
+test reg Food -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $75.00
+24-Feb-01 Supermarket           Expenses:Food                $35.00      $110.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00      $125.00
+end test
+
+; 2. Account context - single-quoted pattern
+test reg 'Food' -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $75.00
+24-Feb-01 Supermarket           Expenses:Food                $35.00      $110.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00      $125.00
+end test
+
+; 3. Account context - double-quoted pattern
+test reg "Food" -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $75.00
+24-Feb-01 Supermarket           Expenses:Food                $35.00      $110.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00      $125.00
+end test
+
+; 4. Account context - regex delimited pattern
+test reg /Food/ -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $75.00
+24-Feb-01 Supermarket           Expenses:Food                $35.00      $110.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00      $125.00
+end test
+
+; 5. Account context - regex with metachar (. matches any)
+test reg /Fo.d/ -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $75.00
+24-Feb-01 Supermarket           Expenses:Food                $35.00      $110.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00      $125.00
+end test
+
+; 6. Payee with @ operator
+test reg @Grocery -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+end test
+
+; 7. Payee with @ and regex pattern
+test reg @/Store/ -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+24-Jan-05 Bookstore             Expenses:Entertainment       $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+end test
+
+; 8. Payee with 'payee' keyword
+test reg payee Grocery -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+end test
+
+; 9. Payee with 'desc' keyword (synonym)
+test reg desc Grocery -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+end test
+
+; 10. Code with # operator (quoted for shell)
+test reg "#1001" -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+end test
+
+; 11. Code with # and regex (matches codes 1001-1005, quoted for shell)
+test reg "#/100./" -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $40.00
+                                Assets:Checking             $-40.00            0
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Jan-04 Electric Company      Expenses:Utilities          $100.00      $100.00
+                                Assets:Checking            $-100.00            0
+24-Jan-05 Bookstore             Expenses:Entertainment       $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+end test
+
+; 12. Code with 'code' keyword
+test reg code 1001 -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+end test
+
+; 13. Note with = operator
+test reg =apples -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+end test
+
+; 14. Note with = and regex
+test reg =/birthday/ -> 0
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $50.00
+end test
+
+; 15. Note with 'note' keyword
+test reg note apples -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+end test
+
+; 16. Metadata with % (match tag name)
+test reg %Receipt -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+end test
+
+; 17. Metadata with % and regex
+test reg %/Cate/ -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $40.00
+                                Assets:Checking             $-40.00            0
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Jan-04 Electric Company      Expenses:Utilities          $100.00      $100.00
+                                Assets:Checking            $-100.00            0
+24-Jan-05 Bookstore             Expenses:Entertainment       $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+24-Feb-01 Supermarket           Expenses:Food                $35.00       $35.00
+                                Assets:Checking             $-35.00            0
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00       $15.00
+                                Assets:Checking             $-15.00            0
+end test
+
+; 18. Metadata with %tag=value
+test reg %Category=food -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Feb-01 Supermarket           Expenses:Food                $35.00       $35.00
+                                Assets:Checking             $-35.00            0
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00       $15.00
+                                Assets:Checking             $-15.00            0
+end test
+
+; 19. Metadata with %tag=value (different tag and value)
+test reg %Meal=dinner -> 0
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+; 20. Metadata with 'meta' keyword
+test reg meta Receipt -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+end test
+
+; 21. Metadata with 'tag' keyword (synonym)
+test reg tag Receipt -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+end test
+
+; 22. Metadata with 'data' keyword (synonym)
+test reg data Receipt -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+end test
+
+; 23. Metadata keyword + value match: meta X = Y
+test reg meta Meal = dinner -> 0
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+; 24. Expr keyword with expression
+test reg expr 'amount > 40' -> 0
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $50.00
+24-Jan-04 Electric Company      Expenses:Utilities          $100.00      $150.00
+end test
+
+; 25. 'account' as keyword - explicit account context
+test reg account Food -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $75.00
+24-Feb-01 Supermarket           Expenses:Food                $35.00      $110.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00      $125.00
+end test

@@ -1,0 +1,99 @@
+; Exhaustive error path coverage for the query parser (query.cc).
+;
+; Each test block triggers a distinct error path in the recursive-descent
+; parser or lexer.  The 14 cases cover:
+;   - Field-context operators with no following argument (code, payee, note,
+;     meta, expr)
+;   - Boolean operators with missing operand (not, and, or)
+;   - Unmatched parenthesis
+;   - Shorthand operators with no following argument (@, #, =, %)
+;   - Metadata equality with no value term (%mytag=)
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+; 1. code with no argument
+test reg code -> 1
+__ERROR__
+Error: code operator not followed by argument
+end test
+
+; 2. payee with no argument
+test reg payee -> 1
+__ERROR__
+Error: payee operator not followed by argument
+end test
+
+; 3. note with no argument
+test reg note -> 1
+__ERROR__
+Error: note operator not followed by argument
+end test
+
+; 4. meta with no argument
+test reg meta -> 1
+__ERROR__
+Error: meta operator not followed by argument
+end test
+
+; 5. expr with no argument
+test reg expr -> 1
+__ERROR__
+Error: expr operator not followed by argument
+end test
+
+; 6. not with no argument
+test reg "not" -> 1
+__ERROR__
+Error: not operator not followed by argument
+end test
+
+; 7. and with no right-hand side
+test reg Expenses and -> 1
+__ERROR__
+Error: and operator not followed by argument
+end test
+
+; 8. or with no right-hand side
+test reg Expenses or -> 1
+__ERROR__
+Error: or operator not followed by argument
+end test
+
+; 9. Unmatched opening paren
+test reg '(' Expenses -> 1
+__ERROR__
+Error: Missing ')'
+end test
+
+; 10. @ (payee shorthand) with no argument
+test reg @ -> 1
+__ERROR__
+Error: payee operator not followed by argument
+end test
+
+; 11. # (code shorthand) with no argument
+test reg '#' -> 1
+__ERROR__
+Error: code operator not followed by argument
+end test
+
+; 12. = (note shorthand, leading position) with no argument
+test reg = -> 1
+__ERROR__
+Error: note operator not followed by argument
+end test
+
+; 13. % (meta shorthand) with no argument
+test reg % -> 1
+__ERROR__
+Error: meta operator not followed by argument
+end test
+
+; 14. Metadata equality with no value: %mytag=
+;     After consuming '=' the parser expects a TERM but finds end-of-input.
+test reg "%mytag=" -> 1
+__ERROR__
+Error: Metadata equality operator not followed by term
+end test

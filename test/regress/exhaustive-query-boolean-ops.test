@@ -1,0 +1,238 @@
+; Exhaustive tests for query parser boolean operators and precedence.
+;
+; This file tests:
+;   - Explicit AND ('and' keyword, '&' operator, inline '&')
+;   - Explicit OR ('or' keyword, '|' operator, inline '|')
+;   - NOT ('not' keyword)
+;   - Implicit OR (adjacent bare terms)
+;   - Three-way chains (AND, OR, implicit OR)
+;   - Operator precedence (not > and > or)
+;   - Boolean operators with field prefixes (@payee, #code, %tag)
+;   - Mixed field contexts with boolean operators
+
+2024/01/01 (1001) Grocery Store
+    ; Category: food
+    ; Receipt: yes
+    Expenses:Food    $25.00
+    ; bought apples
+    Assets:Checking
+
+2024/01/02 (1002) Gas Station
+    ; Category: transport
+    Expenses:Gas    $40.00
+    ; fuel for car
+    Assets:Checking
+
+2024/01/03 (1003) Restaurant
+    ; Category: food
+    ; Meal: dinner
+    Expenses:Food:Dining    $50.00
+    ; birthday celebration
+    Assets:Checking
+
+2024/01/04 (1004) Electric Company
+    ; Category: utility
+    Expenses:Utilities    $100.00
+    ; monthly bill
+    Assets:Checking
+
+2024/01/05 (1005) Bookstore
+    ; Category: education
+    Expenses:Entertainment    $30.00
+    ; gift for friend
+    Assets:Checking
+
+2024/02/01 (2001) Supermarket
+    ; Category: food
+    Expenses:Food    $35.00
+    ; weekly groceries
+    Assets:Checking
+
+2024/03/01 (3001) Coffee Shop
+    ; Category: food
+    Expenses:Food:Dining    $15.00
+    ; morning latte
+    Assets:Checking
+
+; 1. Explicit AND with 'and' keyword
+test reg Food and Dining -> 0
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $50.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00       $65.00
+end test
+
+; 2. Explicit AND with '&' operator
+test reg Food '&' Dining -> 0
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $50.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00       $65.00
+end test
+
+; 3. Inline AND (& no spaces, single arg)
+test reg 'Food&Dining' -> 0
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $50.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00       $65.00
+end test
+
+; 4. Explicit OR with 'or' keyword
+test reg Food or Gas -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $65.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00      $115.00
+24-Feb-01 Supermarket           Expenses:Food                $35.00      $150.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00      $165.00
+end test
+
+; 5. Explicit OR with '|' operator
+test reg Food '|' Gas -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $65.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00      $115.00
+24-Feb-01 Supermarket           Expenses:Food                $35.00      $150.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00      $165.00
+end test
+
+; 6. Inline OR (| no spaces, single arg)
+test reg 'Food|Gas' -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $65.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00      $115.00
+24-Feb-01 Supermarket           Expenses:Food                $35.00      $150.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00      $165.00
+end test
+
+; 7. NOT with 'not' keyword
+test reg not Food -> 0
+24-Jan-01 Grocery Store         Assets:Checking             $-25.00      $-25.00
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $15.00
+                                Assets:Checking             $-40.00      $-25.00
+24-Jan-03 Restaurant            Assets:Checking             $-50.00      $-75.00
+24-Jan-04 Electric Company      Expenses:Utilities          $100.00       $25.00
+                                Assets:Checking            $-100.00      $-75.00
+24-Jan-05 Bookstore             Expenses:Entertainment       $30.00      $-45.00
+                                Assets:Checking             $-30.00      $-75.00
+24-Feb-01 Supermarket           Assets:Checking             $-35.00     $-110.00
+24-Mar-01 Coffee Shop           Assets:Checking             $-15.00     $-125.00
+end test
+
+; 8. Implicit OR (adjacent bare terms at top level)
+test reg Food Gas -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $65.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00      $115.00
+24-Feb-01 Supermarket           Expenses:Food                $35.00      $150.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00      $165.00
+end test
+
+; 9. Three-way implicit OR
+test reg Food Gas Utilities -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $65.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00      $115.00
+24-Jan-04 Electric Company      Expenses:Utilities          $100.00      $215.00
+24-Feb-01 Supermarket           Expenses:Food                $35.00      $250.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00      $265.00
+end test
+
+; 10. Three-way AND chain
+test reg Expenses and Food and Dining -> 0
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $50.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00       $65.00
+end test
+
+; 11. Three-way OR chain
+test reg Food or Gas or Utilities -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $65.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00      $115.00
+24-Jan-04 Electric Company      Expenses:Utilities          $100.00      $215.00
+24-Feb-01 Supermarket           Expenses:Food                $35.00      $250.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00      $265.00
+end test
+
+; 12. Precedence: not X or Y -> (not X) | Y (not binds tighter than or)
+test reg not Food or Gas -> 0
+24-Jan-01 Grocery Store         Assets:Checking             $-25.00      $-25.00
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $15.00
+                                Assets:Checking             $-40.00      $-25.00
+24-Jan-03 Restaurant            Assets:Checking             $-50.00      $-75.00
+24-Jan-04 Electric Company      Expenses:Utilities          $100.00       $25.00
+                                Assets:Checking            $-100.00      $-75.00
+24-Jan-05 Bookstore             Expenses:Entertainment       $30.00      $-45.00
+                                Assets:Checking             $-30.00      $-75.00
+24-Feb-01 Supermarket           Assets:Checking             $-35.00     $-110.00
+24-Mar-01 Coffee Shop           Assets:Checking             $-15.00     $-125.00
+end test
+
+; 13. Precedence: not X and Y -> (not X) & Y (not binds tighter than and)
+test reg not Expenses and Checking -> 0
+24-Jan-01 Grocery Store         Assets:Checking             $-25.00      $-25.00
+24-Jan-02 Gas Station           Assets:Checking             $-40.00      $-65.00
+24-Jan-03 Restaurant            Assets:Checking             $-50.00     $-115.00
+24-Jan-04 Electric Company      Assets:Checking            $-100.00     $-215.00
+24-Jan-05 Bookstore             Assets:Checking             $-30.00     $-245.00
+24-Feb-01 Supermarket           Assets:Checking             $-35.00     $-280.00
+24-Mar-01 Coffee Shop           Assets:Checking             $-15.00     $-295.00
+end test
+
+; 14. Precedence: X and Y or Z -> (X & Y) | Z (and binds tighter than or)
+test reg Food and Dining or Gas -> 0
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $40.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $90.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00      $105.00
+end test
+
+; 15. Precedence: X or Y and Z -> X | (Y & Z) (and binds tighter than or)
+test reg Gas or Food and Dining -> 0
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $40.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $90.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00      $105.00
+end test
+
+; 16. NOT with field prefix: not @payee
+test reg not @Grocery -> 0
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $40.00
+                                Assets:Checking             $-40.00            0
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Jan-04 Electric Company      Expenses:Utilities          $100.00      $100.00
+                                Assets:Checking            $-100.00            0
+24-Jan-05 Bookstore             Expenses:Entertainment       $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+24-Feb-01 Supermarket           Expenses:Food                $35.00       $35.00
+                                Assets:Checking             $-35.00            0
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00       $15.00
+                                Assets:Checking             $-15.00            0
+end test
+
+; 17. AND with mixed field contexts: @payee and account
+test reg @Grocery and Food -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+end test
+
+; 18. OR with mixed field contexts: @payee or #code
+test reg @Restaurant or "#1002" -> 0
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $40.00
+                                Assets:Checking             $-40.00            0
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+; 19. NOT with meta: not %tag and account
+test reg not %Receipt and Expenses -> 0
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $40.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $90.00
+24-Jan-04 Electric Company      Expenses:Utilities          $100.00      $190.00
+24-Jan-05 Bookstore             Expenses:Entertainment       $30.00      $220.00
+24-Feb-01 Supermarket           Expenses:Food                $35.00      $255.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00      $270.00
+end test
+
+; 20. Implicit OR with field prefixes: @X Y #Z (each sets its own context)
+test reg @Grocery Food "#1004" -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $50.00
+24-Jan-04 Electric Company      Expenses:Utilities          $100.00      $150.00
+                                Assets:Checking            $-100.00       $50.00
+24-Feb-01 Supermarket           Expenses:Food                $35.00       $85.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00      $100.00
+end test

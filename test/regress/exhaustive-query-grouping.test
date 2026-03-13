@@ -1,0 +1,172 @@
+; Exhaustive regression tests for query parser parenthesization patterns.
+;
+; Tests every combination of grouping with parentheses, including:
+;   - Simple and nested parens around single terms
+;   - AND/OR inside parens
+;   - Parens overriding default precedence (left and right positions)
+;   - NOT inside and outside parens
+;   - Field prefixes (@payee, #code) inside parens
+;   - Complex nested combinations of all the above
+
+2024/01/01 (1001) Grocery Store
+    ; Category: food
+    ; Receipt: yes
+    Expenses:Food    $25.00
+    ; bought apples
+    Assets:Checking
+
+2024/01/02 (1002) Gas Station
+    ; Category: transport
+    Expenses:Gas    $40.00
+    ; fuel for car
+    Assets:Checking
+
+2024/01/03 (1003) Restaurant
+    ; Category: food
+    ; Meal: dinner
+    Expenses:Food:Dining    $50.00
+    ; birthday celebration
+    Assets:Checking
+
+2024/01/04 (1004) Electric Company
+    ; Category: utility
+    Expenses:Utilities    $100.00
+    ; monthly bill
+    Assets:Checking
+
+2024/01/05 (1005) Bookstore
+    ; Category: education
+    Expenses:Entertainment    $30.00
+    ; gift for friend
+    Assets:Checking
+
+2024/02/01 (2001) Supermarket
+    ; Category: food
+    Expenses:Food    $35.00
+    ; weekly groceries
+    Assets:Checking
+
+2024/03/01 (3001) Coffee Shop
+    ; Category: food
+    Expenses:Food:Dining    $15.00
+    ; morning latte
+    Assets:Checking
+
+; 1. Simple parens around single term: (Food)
+test reg '(' Food ')' -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $75.00
+24-Feb-01 Supermarket           Expenses:Food                $35.00      $110.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00      $125.00
+end test
+
+; 2. Double-nested parens: ((Food))
+test reg '(' '(' Food ')' ')' -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $75.00
+24-Feb-01 Supermarket           Expenses:Food                $35.00      $110.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00      $125.00
+end test
+
+; 3. AND in parens: (Food and Dining)
+test reg '(' Food and Dining ')' -> 0
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $50.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00       $65.00
+end test
+
+; 4. OR in parens: (Food or Gas)
+test reg '(' Food or Gas ')' -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $65.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00      $115.00
+24-Feb-01 Supermarket           Expenses:Food                $35.00      $150.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00      $165.00
+end test
+
+; 5. Parens override precedence: (Food or Gas) and Expenses
+test reg '(' Food or Gas ')' and Expenses -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $65.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00      $115.00
+24-Feb-01 Supermarket           Expenses:Food                $35.00      $150.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00      $165.00
+end test
+
+; 6. Parens on right: Expenses and (Food or Gas)
+test reg Expenses and '(' Food or Gas ')' -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $65.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00      $115.00
+24-Feb-01 Supermarket           Expenses:Food                $35.00      $150.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00      $165.00
+end test
+
+; 7. (X and Y) or Z: (Food and Dining) or Gas
+test reg '(' Food and Dining ')' or Gas -> 0
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $40.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $90.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00      $105.00
+end test
+
+; 8. NOT in parens: (not Food)
+test reg '(' not Food ')' -> 0
+24-Jan-01 Grocery Store         Assets:Checking             $-25.00      $-25.00
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $15.00
+                                Assets:Checking             $-40.00      $-25.00
+24-Jan-03 Restaurant            Assets:Checking             $-50.00      $-75.00
+24-Jan-04 Electric Company      Expenses:Utilities          $100.00       $25.00
+                                Assets:Checking            $-100.00      $-75.00
+24-Jan-05 Bookstore             Expenses:Entertainment       $30.00      $-45.00
+                                Assets:Checking             $-30.00      $-75.00
+24-Feb-01 Supermarket           Assets:Checking             $-35.00     $-110.00
+24-Mar-01 Coffee Shop           Assets:Checking             $-15.00     $-125.00
+end test
+
+; 9. NOT of grouped OR: not (Food or Gas)
+test reg not '(' Food or Gas ')' -> 0
+24-Jan-01 Grocery Store         Assets:Checking             $-25.00      $-25.00
+24-Jan-02 Gas Station           Assets:Checking             $-40.00      $-65.00
+24-Jan-03 Restaurant            Assets:Checking             $-50.00     $-115.00
+24-Jan-04 Electric Company      Expenses:Utilities          $100.00      $-15.00
+                                Assets:Checking            $-100.00     $-115.00
+24-Jan-05 Bookstore             Expenses:Entertainment       $30.00      $-85.00
+                                Assets:Checking             $-30.00     $-115.00
+24-Feb-01 Supermarket           Assets:Checking             $-35.00     $-150.00
+24-Mar-01 Coffee Shop           Assets:Checking             $-15.00     $-165.00
+end test
+
+; 10. NOT with field prefix in parens: not (@Grocery)
+test reg not '(' @Grocery ')' -> 0
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $40.00
+                                Assets:Checking             $-40.00            0
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Jan-04 Electric Company      Expenses:Utilities          $100.00      $100.00
+                                Assets:Checking            $-100.00            0
+24-Jan-05 Bookstore             Expenses:Entertainment       $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+24-Feb-01 Supermarket           Expenses:Food                $35.00       $35.00
+                                Assets:Checking             $-35.00            0
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00       $15.00
+                                Assets:Checking             $-15.00            0
+end test
+
+; 11. Field prefixes in parens: (@Restaurant or #1002)
+test reg '(' @Restaurant or '#1002' ')' -> 0
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $40.00
+                                Assets:Checking             $-40.00            0
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+; 12. Complex nested: ((@Grocery and Food) or Gas)
+test reg '(' '(' @Grocery and Food ')' or Gas ')' -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $65.00
+end test
+
+; 13. Complex: (@Restaurant and Food) or (#1002 and Gas)
+test reg '(' @Restaurant and Food ')' or '(' '#1002' and Gas ')' -> 0
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $40.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $90.00
+end test
