@@ -213,10 +213,11 @@ void report_t::normalize_options(const string& verb) {
   if (HANDLED(percent)) {
     commodity_t::decimal_comma_by_default = false;
     if (HANDLED(market)) {
-      HANDLER(total_).on("?normalize", "(__tmp = market(parent.total, value_date, exchange);"
-                                       " ((is_account & parent & __tmp) ?"
-                                       "   percent(scrub(market(total, value_date, exchange)), "
-                                       "           scrub(__tmp)) : 0))");
+      HANDLER(total_).on("?normalize",
+                         "(__tmp = market(display_parent.total, value_date, exchange);"
+                         " ((is_account & display_parent & __tmp) ?"
+                         "   percent(scrub(market(total, value_date, exchange)), "
+                         "           scrub(__tmp)) : 0))");
     }
   }
 

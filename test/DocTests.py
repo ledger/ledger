@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 
-from io import open
-
 import os
 import re
 import sys
 import shlex
-import locale
 import hashlib
 import argparse
 import subprocess
@@ -15,7 +12,6 @@ from difflib import unified_diff
 
 class DocTests:
   def __init__(self, args):
-    scriptpath      = os.path.dirname(os.path.realpath(__file__))
     self.ledger     = os.path.realpath(args.ledger)
     self.sourcepath = os.path.realpath(args.file)
     self.verbose    = args.verbose
@@ -171,55 +167,60 @@ class DocTests:
         if not input:
           input = example.get(self.validate_dat_token, {}).get(self.validate_dat_token)
 
-      if command and (output != None or validation):
+      if command and (output is not None or validation):
         test_file_created = False
-        if findex:
-          scriptpath = os.path.dirname(os.path.realpath(__file__))
-          test_input_dir = os.path.join(scriptpath, '..', 'test', 'input')
-          test_file = command[findex]
-          if not os.path.exists(test_file):
-            if input:
-              test_file_created = True
-              with open(test_file, 'w', encoding='utf-8') as f:
-                f.write(input)
-            elif os.path.exists(os.path.join(test_input_dir, test_file)):
-              command[findex] = os.path.join(test_input_dir, test_file)
+        convert_file_created = False
         try:
-          convert_idx  = command.index(str('convert'))
-          convert_file = command[convert_idx+1]
-          convert_data = example[self.testfile_token][self.testfile_token]
-          if not os.path.exists(convert_file):
-              with open(convert_file, 'w', encoding='utf-8') as f:
-                f.write(convert_data)
-        except ValueError:
-         pass
-        error = None
-        try:
-          verify = subprocess.check_output(command, stderr=subprocess.STDOUT)
-          verify = verify.decode('utf-8')
-          if sys.platform == 'win32':
-            verify = verify.replace('\r\n', '\n')
-          valid = (output == verify) or (not error and validation)
-        except subprocess.CalledProcessError as e:
-          error = e.output
-          valid = False
-          failed.add(test_id)
-        if valid and test_file_created:
-          os.remove(test_file)
-        if self.verbose > 0:
-          print(test_id, ':', 'Passed' if valid else 'FAILED: {}'.format(error) if error else 'FAILED')
-        else:
-          sys.stdout.write('.' if valid else 'E')
-          sys.stdout.flush()
+          if findex:
+            test_input_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'test', 'input')
+            test_file = command[findex]
+            if not os.path.exists(test_file):
+              if input:
+                test_file_created = True
+                with open(test_file, 'w', encoding='utf-8') as f:
+                  f.write(input)
+              elif os.path.exists(os.path.join(test_input_dir, test_file)):
+                command[findex] = os.path.join(test_input_dir, test_file)
+          try:
+            convert_idx  = command.index(str('convert'))
+            convert_file = command[convert_idx+1]
+            convert_data = example[self.testfile_token][self.testfile_token]
+            if not os.path.exists(convert_file):
+                convert_file_created = True
+                with open(convert_file, 'w', encoding='utf-8') as f:
+                  f.write(convert_data)
+          except ValueError:
+           pass  # No 'convert' subcommand; skip convert file setup
+          error = None
+          try:
+            verify = subprocess.check_output(command, stderr=subprocess.STDOUT)
+            verify = verify.decode('utf-8')
+            if sys.platform == 'win32':
+              verify = verify.replace('\r\n', '\n')
+            valid = (output == verify) or (not error and validation)
+          except subprocess.CalledProcessError as e:
+            error = e.output
+            valid = False
+            failed.add(test_id)
+          if self.verbose > 0:
+            print(test_id, ':', 'Passed' if valid else 'FAILED: {}'.format(error) if error else 'FAILED')
+          else:
+            sys.stdout.write('.' if valid else 'E')
+            sys.stdout.flush()
 
-        if not (valid or error):
-          failed.add(test_id)
-          if self.verbose > 1:
-            print(' '.join(command))
-            if not validation:
-              for line in unified_diff(output.split('\n'), verify.split('\n'), fromfile='generated', tofile='expected'):
-                print(line)
-              print()
+          if not (valid or error):
+            failed.add(test_id)
+            if self.verbose > 1:
+              print(' '.join(command))
+              if not validation:
+                for line in unified_diff(output.split('\n'), verify.split('\n'), fromfile='generated', tofile='expected'):
+                  print(line)
+                print()
+        finally:
+          if test_file_created and os.path.exists(test_file):
+            os.remove(test_file)
+          if convert_file_created and os.path.exists(convert_file):
+            os.remove(convert_file)
       else:
         if self.verbose > 0:
           print(test_id, ':', 'Skipped')

@@ -8,3 +8,12 @@
     Expenses:Food    $100.00
     Assets:Checking
 
+test bal
+            $-100.00  Assets:Checking
+             $110.00  Expenses
+             $100.00    Food
+              $10.00    Tax
+--------------------
+              $10.00
+end test
+

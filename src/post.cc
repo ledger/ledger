@@ -395,6 +395,54 @@ value_t get_price(post_t& post) {
 }
 
 /**
+ * @brief Return the realized capital gain (or loss) for a sell posting.
+ *
+ * Computes the capital gain by subtracting the market value of the amount
+ * (looked up in the price history at the posting's value_date) from the
+ * cost basis stored on the posting.  Returns a positive value for a profit
+ * and a negative value for a loss.
+ *
+ * Only applicable to sell postings (negative amount) that carry a lot-price
+ * annotation, e.g. "-50 AAPL {$30.00} @ $45.00".  For such a posting the
+ * cost basis (after transaction finalization) equals the lot value
+ * (lot_price × |quantity|, with the sign of the amount), and the market
+ * value is the sell price × quantity from the price history.  The gain is
+ * therefore cost_basis − market_value.
+ *
+ * Returns zero for:
+ *   - buy or hold postings (non-negative amount),
+ *   - postings without a lot-price annotation,
+ *   - postings for which no market price can be determined.
+ */
+value_t get_capital_gain(post_t& post) {
+  // Only applicable to sell postings (negative amount).
+  if (post.amount.is_null() || post.amount.sign() >= 0)
+    return 0L;
+
+  // Require a lot-price annotation to establish the cost basis.
+  if (!post.amount.has_annotation() || !post.amount.annotation().price)
+    return 0L;
+
+  // Use the posting's effective value_date for market price lookup.
+  date_t vdate;
+  if (post.has_xdata() && !post.xdata().value_date.is_not_a_date())
+    vdate = post.xdata().value_date;
+  else
+    vdate = post.date();
+
+  // Look up the market value of the amount at vdate.
+  std::optional<amount_t> market_opt = post.amount.value(datetime_t(vdate));
+  if (!market_opt)
+    return 0L;
+
+  // capital_gain = cost_basis − market_value.
+  // Both values are negative for a sell posting; subtracting a more-negative
+  // market value from a less-negative cost basis yields a positive gain.
+  // Example: cost = −$1500, market = −$2500 → gain = −$1500 − (−$2500) = $1000.
+  return get_cost(post) - value_t(*market_opt);
+}
+
+/**
  * @brief Return the running total, or the amount if no total is accumulated.
  */
 value_t get_total(post_t& post) {
@@ -632,6 +680,8 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind, const string& name)
       return WRAP_FUNCTOR(get_wrapper<&get_code>);
     else if (name == "cost")
       return WRAP_FUNCTOR(get_wrapper<&get_cost>);
+    else if (name == "capital_gain")
+      return WRAP_FUNCTOR(get_wrapper<&get_capital_gain>);
     else if (name == "cost_calculated")
       return WRAP_FUNCTOR(get_wrapper<&get_is_cost_calculated>);
     else if (name == "count")

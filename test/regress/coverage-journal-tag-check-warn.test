@@ -26,5 +26,5 @@ test bal --pedantic -> 0
 --------------------
                    0
 __ERROR__
-Warning: "$FILE", line 21: Metadata check failed for (Category: auto): (value =~ /food/)
+Warning: "$FILE", line 18: Metadata check failed for (Category: auto): (value =~ /food/)
 end test

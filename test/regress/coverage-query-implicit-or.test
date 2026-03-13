@@ -1,0 +1,20 @@
+; Test that multiple bare terms are implicitly OR'd at top level
+; Exercises parse_query_expr lines 577-586: accumulate OR-connected expressions
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 Gas Station
+    Expenses:Gas    $40.00
+    Assets:Checking
+
+2024/01/03 Restaurant
+    Expenses:Food:Dining    $50.00
+    Assets:Checking
+
+test reg Food Gas -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $65.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00      $115.00
+end test

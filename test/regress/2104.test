@@ -1,38 +1,59 @@
-; Regression test for GitHub issue #2104
-; "error when using `expr date` invoked from a periodic transaction"
+; Regression test for issue #2104:
+; Using `expr date` in an automated transaction predicate combined with a
+; periodic transaction previously triggered an assertion failure in
+; post_t::primary_date() because period_xact_t postings have no xact
+; back-pointer (xact = nullptr), so their primary date could not be
+; resolved.  Fixed by returning CURRENT_DATE() as a fallback instead of
+; asserting.
 ;
-; When an automated transaction predicate contains `expr date < [DATE]`
-; and is applied to postings from a periodic transaction (~ monthly, etc.),
-; it should not crash with an assertion failure in primary_date().
+; Also exercises issue #2079: plain account-predicate automated
+; transactions combined with periodic transactions produced the same
+; crash via the stats command.
 ;
-; The crash occurred because periodic transaction postings have xact == nullptr,
-; and the old code had assert(xact) in primary_date(). The fix returns
-; CURRENT_DATE() as a fallback when xact is null, so the predicate evaluates
-; against the current date rather than crashing.
-;
-; Additionally, the automated transaction's generated postings are skipped
-; during budget generation (ITEM_GENERATED without POST_CALCULATED), so
-; the budget output is unaffected by the date-constrained auto transaction.
+; After the fix, `reg --budget` runs without error, and the date predicate
+; correctly filters which *regular* transaction postings trigger the
+; automated transaction (before vs. after the 2023-01-01 cutoff).
 
 = income:salary and expr date < [2023/01/01]
-    expense:gym         $50
-    assets:bank        -$50
+    expense:gym                                  $50
+    assets:bank                                 -$50
 
 ~ monthly
-    assets:bank         $1,000
-    income:salary      -$1,000
+    assets:bank                              $1,000
+    income:salary                           -$1,000
 
-; When --now is before the date cutoff, the auto transaction predicate
-; evaluates to TRUE against CURRENT_DATE(), but its generated postings
-; are ITEM_GENERATED and skipped during budget generation.
-test reg --budget --now 2022/06/15
-22-Jun-01 Budget transaction    assets:bank                 $-1,000      $-1,000
-22-Jun-01 Budget transaction    income:salary                $1,000            0
+2022/01/15 Payee
+    income:salary                           -$5,000
+    assets:bank                              $5,000
+
+2024/06/01 Payee
+    income:salary                           -$5,000
+    assets:bank                              $5,000
+
+; Combining expr date predicate with a periodic transaction must not crash.
+; The period transaction's postings have no date; the auto_xact predicate
+; is evaluated using CURRENT_DATE() as a fallback (with --now pinned here
+; so that the generated budget period is deterministic).
+test --now 2022/02/01 --begin 2022/01/01 --end 2022/02/01 reg --budget
+22-Jan-01 Budget transaction    assets:bank                 $-1,000      $-1,000
+22-Jan-01 Budget transaction    income:salary                $1,000            0
+22-Jan-15 Payee                 income:salary               $-5,000      $-5,000
+                                assets:bank                  $5,000            0
+                                assets:bank                    $-50         $-50
 end test
 
-; When --now is after the date cutoff, the auto transaction predicate
-; evaluates to FALSE, and the budget output is identical.
-test reg --budget --now 2023/06/15
-23-Jun-01 Budget transaction    assets:bank                 $-1,000      $-1,000
-23-Jun-01 Budget transaction    income:salary                $1,000            0
+; Automated transaction IS applied to a regular posting whose date is
+; before the 2023-01-01 cutoff: expense:gym $50 is added.
+test --begin 2022/01/01 --end 2022/06/01 reg
+22-Jan-15 Payee                 income:salary               $-5,000      $-5,000
+                                assets:bank                  $5,000            0
+                                expense:gym                     $50          $50
+                                assets:bank                    $-50            0
+end test
+
+; Automated transaction is NOT applied to a regular posting whose date is
+; after the 2023-01-01 cutoff: no expense:gym, no extra assets:bank entry.
+test --begin 2024/01/01 --end 2025/01/01 reg
+24-Jun-01 Payee                 income:salary               $-5,000      $-5,000
+                                assets:bank                  $5,000            0
 end test

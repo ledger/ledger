@@ -4,3 +4,13 @@
     Assets:Foreign    100 EUR (@@) $110.00
     Assets:Checking
 
+test bal
+               $-110
+             100 EUR  Assets
+               $-110    Checking
+             100 EUR    Foreign
+--------------------
+               $-110
+             100 EUR
+end test
+

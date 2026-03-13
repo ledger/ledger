@@ -321,10 +321,24 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
 
   // interval_posts groups posts together based on a time period, such as
   // weekly or monthly.
-  if (report.HANDLED(period_))
-    handler = std::make_shared<interval_posts>(handler, expr, report.HANDLER(period_).str(),
-                                               report.HANDLED(exact), report.HANDLED(empty),
-                                               report.HANDLED(align_intervals));
+  if (report.HANDLED(period_)) {
+    date_interval_t interval(report.HANDLER(period_).str());
+
+    // When -b is specified but the period string has no explicit range start,
+    // pass the report begin date to interval_posts so that flush() can start
+    // generating empty leading periods from that date when --empty is active.
+    // This makes the running average (-A) count from the requested start date
+    // rather than from the first transaction's date.
+    optional<date_t> begin_of_report;
+    if (report.HANDLED(begin_) && !interval.begin()) {
+      date_interval_t begin_interval(report.HANDLER(begin_).str());
+      begin_of_report = begin_interval.begin();
+    }
+
+    handler = std::make_shared<interval_posts>(handler, expr, interval, report.HANDLED(exact),
+                                               report.HANDLED(empty),
+                                               report.HANDLED(align_intervals), begin_of_report);
+  }
 
   /*--- Detail transfer (--date, --account, --payee, --pivot) ---*/
 

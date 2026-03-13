@@ -43,8 +43,8 @@ end test
 ; --- Test 4: fn_percent (line 836) with --percent ---
 test bal --percent --no-total Expenses
              100.00%  Expenses
-             100.00%    Auto:Gas
-             100.00%    Food:Groceries
+              41.18%    Auto:Gas
+              58.82%    Food:Groceries
 end test
 
 ; --- Test 5: lot_date (lines 912-919) ---

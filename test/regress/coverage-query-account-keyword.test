@@ -1,0 +1,22 @@
+; Test 'account' as a bare term in query context
+; Note: despite TOK_ACCOUNT existing in the token enum, the lexer does NOT
+; recognize 'account' as a keyword -- it becomes a plain TERM.
+; Here 'account' matches nothing (no account name contains "account"),
+; and 'Food' matches via implicit OR, so only Food entries appear.
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 Gas Station
+    Expenses:Gas    $40.00
+    Assets:Checking
+
+2024/01/03 Restaurant
+    Expenses:Food:Dining    $50.00
+    Assets:Checking
+
+test reg account Food -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $75.00
+end test

@@ -1,0 +1,21 @@
+; Regression test for GitHub issue #563:
+; When a transaction has one null-amount real posting and one null-amount
+; balanced-virtual posting, both amounts should be inferrable independently.
+; Real postings balance against real postings; balanced-virtual postings
+; ([Account]) balance against other balanced-virtual postings.
+
+2018/04/10 * Adagio Teas
+    [Assets:Funds:Reserves:Liabilities]     $82.00
+    [Assets:Funds:Toys]
+    Expenses:Thingamabobs                   $82.00
+    Liabilities:Discover
+
+test bal
+                   0  Assets:Funds
+              $82.00    Reserves:Liabilities
+             $-82.00    Toys
+              $82.00  Expenses:Thingamabobs
+             $-82.00  Liabilities:Discover
+--------------------
+                   0
+end test

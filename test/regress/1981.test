@@ -1,0 +1,30 @@
+; Regression test for issue #1981: custom report interval
+;
+; The --align-intervals option combined with a 'from' date enables running
+; monthly reports that start on a day other than the 1st. For example,
+; running a "month" from the 20th to the 19th.
+
+2024/01/15 Mid-January Purchase
+    Expenses:Food           $50.00
+    Assets:Cash
+
+2024/01/20 After-20th Purchase
+    Expenses:Food           $30.00
+    Assets:Cash
+
+2024/02/05 February Purchase
+    Expenses:Food           $40.00
+    Assets:Cash
+
+2024/02/25 Late February Purchase
+    Expenses:Food           $60.00
+    Assets:Cash
+
+2024/03/10 March Purchase
+    Expenses:Food           $20.00
+    Assets:Cash
+
+test reg Expenses -p "monthly from 2024/01/20" --align-intervals
+24-Jan-20 - 24-Feb-19           Expenses:Food                $70.00       $70.00
+24-Feb-20 - 24-Mar-19           Expenses:Food                $80.00      $150.00
+end test

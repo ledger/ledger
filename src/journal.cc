@@ -377,7 +377,12 @@ void journal_t::register_metadata(const string& key, const value_t& value,
       value_scope_t val_scope(bound_scope, value);
 
       (*i).second.first.mark_uncompiled();
-      if (!(*i).second.first.calc(val_scope).to_boolean()) {
+      bool holds = (*i).second.first.calc(val_scope).to_boolean();
+      // Clear context immediately: val_scope is stack-allocated and will be
+      // destroyed when this scope exits.  Leaving a dangling pointer behind
+      // would cause a use-after-free the next time the expression is compiled.
+      (*i).second.first.set_context(nullptr);
+      if (!holds) {
         if ((*i).second.second == expr_t::EXPR_ASSERTION)
           throw_(parse_error, _f("Metadata assertion failed for (%1%: %2%): %3%") % key % value %
                                   (*i).second.first);
@@ -390,12 +395,28 @@ void journal_t::register_metadata(const string& key, const value_t& value,
 }
 
 namespace {
-/** @brief Iterate all metadata on a transaction or posting and validate each tag. */
+/** @brief Iterate all metadata on a transaction or posting and validate each tag.
+ *
+ * Temporarily overrides the journal's current_context pathname and linenum
+ * with the item's source position so that --strict warnings reference the
+ * correct file and line (fixes #750 and #692).
+ */
 void check_all_metadata(journal_t& journal, std::variant<int, xact_t*, post_t*> context) {
   xact_t* xact = context.index() == 1 ? std::get<xact_t*>(context) : NULL;
   post_t* post = context.index() == 2 ? std::get<post_t*>(context) : NULL;
 
   if ((xact || post) && (xact ? xact->metadata : post->metadata)) {
+    item_t* item = xact ? static_cast<item_t*>(xact) : static_cast<item_t*>(post);
+
+    path saved_pathname;
+    std::size_t saved_linenum = 0;
+    if (journal.current_context && item->pos) {
+      saved_pathname = journal.current_context->pathname;
+      saved_linenum = journal.current_context->linenum;
+      journal.current_context->pathname = item->pos->pathname;
+      journal.current_context->linenum = item->pos->beg_line;
+    }
+
     for (const item_t::string_map::value_type& pair : xact ? *xact->metadata : *post->metadata) {
       const string& key(pair.first);
 
@@ -404,6 +425,11 @@ void check_all_metadata(journal_t& journal, std::variant<int, xact_t*, post_t*> 
         journal.register_metadata(key, *value, context);
       else
         journal.register_metadata(key, NULL_VALUE, context);
+    }
+
+    if (journal.current_context && item->pos) {
+      journal.current_context->pathname = saved_pathname;
+      journal.current_context->linenum = saved_linenum;
     }
   }
 }
@@ -516,6 +542,8 @@ bool journal_t::add_xact(xact_t* xact) {
 }
 
 void journal_t::extend_xact(xact_base_t* xact) {
+  if (!current_context)
+    return;
   for (unique_ptr<auto_xact_t>& auto_xact : auto_xacts)
     auto_xact->extend_xact(*xact, *current_context);
 }
@@ -583,6 +611,8 @@ std::size_t journal_t::read(parse_context_stack_t& context, hash_type_t hash_typ
   // posting amounts.
   if (should_clear_xdata)
     clear_xdata();
+
+  current_context = nullptr;
 
   return count;
 }

@@ -1,0 +1,242 @@
+; Exhaustive regression test for query parser section keywords.
+; Tests every section keyword (show, only, for, since, until) individually
+; and in combination, covering limit predicates, display predicates, date
+; constraints, empty sections, boolean operators within sections, and
+; multi-section queries.
+
+2024/01/01 (1001) Grocery Store
+    ; Category: food
+    ; Receipt: yes
+    Expenses:Food    $25.00
+    ; bought apples
+    Assets:Checking
+
+2024/01/02 (1002) Gas Station
+    ; Category: transport
+    Expenses:Gas    $40.00
+    ; fuel for car
+    Assets:Checking
+
+2024/01/03 (1003) Restaurant
+    ; Category: food
+    ; Meal: dinner
+    Expenses:Food:Dining    $50.00
+    ; birthday celebration
+    Assets:Checking
+
+2024/01/04 (1004) Electric Company
+    ; Category: utility
+    Expenses:Utilities    $100.00
+    ; monthly bill
+    Assets:Checking
+
+2024/01/05 (1005) Bookstore
+    ; Category: education
+    Expenses:Entertainment    $30.00
+    ; gift for friend
+    Assets:Checking
+
+2024/02/01 (2001) Supermarket
+    ; Category: food
+    Expenses:Food    $35.00
+    ; weekly groceries
+    Assets:Checking
+
+2024/03/01 (3001) Coffee Shop
+    ; Category: food
+    Expenses:Food:Dining    $15.00
+    ; morning latte
+    Assets:Checking
+
+; 1. show section: limit + show
+; The limit predicate selects Food postings; show filters display to Expenses.
+; Since all Food postings are under Expenses, all four are displayed.
+test reg Food show Expenses -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $75.00
+24-Feb-01 Supermarket           Expenses:Food                $35.00      $110.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00      $125.00
+end test
+
+; 2. only section: limit + only
+; The limit selects Food postings; only further restricts to Dining subaccount.
+test reg Food only Dining -> 0
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $50.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00       $65.00
+end test
+
+; 3. show with no limit (empty limit)
+; No limit predicate means all postings are collected; show filters display
+; to Food accounts. Running total resets because non-displayed postings
+; do not contribute to the visible running total.
+test reg show Food -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $50.00
+24-Feb-01 Supermarket           Expenses:Food                $35.00       $35.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00       $15.00
+end test
+
+; 4. show with AND expression in show section
+; Limit selects all Expenses postings; show displays only those matching
+; both Food AND Dining. Running total includes all Expenses (hidden ones
+; still accumulate).
+test reg Expenses show Food and Dining -> 0
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00      $115.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00      $295.00
+end test
+
+; 5. show with OR expression in show section
+; Limit selects all Expenses postings; show displays those matching Food
+; or Gas. Running total includes all Expenses (hidden ones accumulate).
+test reg Expenses show Food or Gas -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $65.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00      $115.00
+24-Feb-01 Supermarket           Expenses:Food                $35.00      $280.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00      $295.00
+end test
+
+; 6. Empty show section (show with no following expression)
+; The show keyword with no expression is a no-op; behaves the same as
+; the limit alone.
+test reg Food show -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $75.00
+24-Feb-01 Supermarket           Expenses:Food                $35.00      $110.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00      $125.00
+end test
+
+; 7. for section: limit + for
+; Limit selects Food postings; for constrains the date range to January 2024.
+test reg Food for 2024/01 -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $75.00
+end test
+
+; 8. since section
+; Limit selects Food postings; since constrains to dates on or after Feb 2024.
+test reg Food since 2024/02 -> 0
+24-Feb-01 Supermarket           Expenses:Food                $35.00       $35.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00       $50.00
+end test
+
+; 9. until section
+; Limit selects Food postings; until constrains to dates before Feb 2024.
+test reg Food until 2024/02 -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $75.00
+end test
+
+; 10. for only (no limit predicate)
+; No limit predicate means all postings are collected; for constrains to
+; January 2024. Both sides of each transaction are shown.
+test reg for 2024/01 -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $40.00
+                                Assets:Checking             $-40.00            0
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Jan-04 Electric Company      Expenses:Utilities          $100.00      $100.00
+                                Assets:Checking            $-100.00            0
+24-Jan-05 Bookstore             Expenses:Entertainment       $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+end test
+
+; 11. since only (no limit predicate)
+; No limit predicate; since constrains to dates on or after March 2024.
+test reg since 2024/03 -> 0
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00       $15.00
+                                Assets:Checking             $-15.00            0
+end test
+
+; 12. until only (no limit predicate)
+; No limit predicate; until constrains to dates before Feb 2024.
+test reg until 2024/02 -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $40.00
+                                Assets:Checking             $-40.00            0
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Jan-04 Electric Company      Expenses:Utilities          $100.00      $100.00
+                                Assets:Checking            $-100.00            0
+24-Jan-05 Bookstore             Expenses:Entertainment       $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+end test
+
+; 13. for with show after: for X show Y
+; No limit predicate; for constrains to January 2024; show filters display
+; to Food accounts. Running total resets between displayed entries because
+; non-Food postings are hidden.
+test reg for 2024/01 show Food -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $50.00
+end test
+
+; 14. limit + show + for (three sections)
+; Limit selects Food postings; show filters display to Expenses; for
+; constrains to January 2024. All three sections combine.
+test reg Food show Expenses for 2024/01 -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $75.00
+end test
+
+; 15. limit + only + for (three sections)
+; Limit selects Expenses postings; only further restricts to Food; for
+; constrains to January 2024.
+test reg Expenses only Food for 2024/01 -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $75.00
+end test
+
+; 16. limit + show + only (two display sections)
+; Limit selects Expenses postings; show filters display to Food; only
+; further restricts display to Dining.
+test reg Expenses show Food only Dining -> 0
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $50.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00       $65.00
+end test
+
+; 17. since + show
+; No limit predicate; since constrains to dates on or after Feb 2024;
+; show filters display to Food accounts.
+test reg since 2024/02 show Food -> 0
+24-Feb-01 Supermarket           Expenses:Food                $35.00       $35.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00       $15.00
+end test
+
+; 18. until + show
+; No limit predicate; until constrains to dates before Feb 2024; show
+; filters display to Food accounts.
+test reg until 2024/02 show Food -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00       $50.00
+end test
+
+; 19. for since (since inside for block)
+; Limit selects Expenses postings; for block contains since, constraining
+; to dates on or after Feb 2024.
+test reg Expenses for since 2024/02 -> 0
+24-Feb-01 Supermarket           Expenses:Food                $35.00       $35.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00       $50.00
+end test
+
+; 20. for until (until inside for block)
+; Limit selects Expenses postings; for block contains until, constraining
+; to dates before Feb 2024.
+test reg Expenses for until 2024/02 -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $65.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $50.00      $115.00
+24-Jan-04 Electric Company      Expenses:Utilities          $100.00      $215.00
+24-Jan-05 Bookstore             Expenses:Entertainment       $30.00      $245.00
+end test
+
+; 21. for since X show Y (for section followed by show)
+; No limit predicate; for block contains since 2024/01/15 (excludes entries
+; before Jan 15); show filters display to Expenses accounts.
+test reg for since 2024/01/15 show Expenses -> 0
+24-Feb-01 Supermarket           Expenses:Food                $35.00       $35.00
+24-Mar-01 Coffee Shop           Expenses:Food:Dining         $15.00       $15.00
+end test

@@ -12,5 +12,5 @@ __ERROR__
 Warning: "$FILE", line 2: Unknown account 'Expenses:Fournitures'
 Warning: "$FILE", line 2: Unknown commodity 'EUR'
 Warning: "$FILE", line 4: Unknown account 'Assets:Cash'
-Warning: "$FILE", line 4: Unknown metadata tag 'Tag'
+Warning: "$FILE", line 2: Unknown metadata tag 'Tag'
 end test

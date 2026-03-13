@@ -31,6 +31,6 @@ test bal --explicit --strict
 __ERROR__
 Warning: "$FILE", line 18: Unknown account 'Expenses:Food'
 Warning: "$FILE", line 18: Unknown commodity 'EUR'
-Warning: "$FILE", line 19: Unknown metadata tag 'food'
+Warning: "$FILE", line 16: Unknown metadata tag 'food'
 end test
 
