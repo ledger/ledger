@@ -1,0 +1,27 @@
+; Regression test for issue #872:
+; "parse error in '= expr has_tag("TAG")'"
+;
+; When an automated transaction uses 'expr has_tag("TAG")' with double-quoted
+; string arguments in the value expression, the query parser must correctly
+; parse the full expression including the closing parenthesis.
+;
+; Previously, the closing ')' in has_tag("TAG") was mis-tokenized as an
+; RPAREN boundary rather than being consumed as part of the expression,
+; causing a parse error: "Invalid token '<end of input>' (wanted ')')".
+
+= expr has_tag("SecondTag")
+    Expenses:Cookies  $1
+    $account         -$1
+
+2004/05/27 Book Store
+    ; This note applies to all postings. :SecondTag:
+    Expenses:Books                 20 BOOK @  $10
+    ; Metadata: Some Value
+    ; Typed:: $100 + $200
+    ; :ExampleTag:
+    ; Here follows a note describing the posting.
+    Liabilities:MasterCard        $-200.00
+
+test bal Expenses:Cookies -> 0
+               $2.00  Expenses:Cookies
+end test
