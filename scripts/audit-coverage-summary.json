@@ -1,0 +1,1202 @@
+{
+  "total_reviewed": 2254,
+  "mismatches": 74,
+  "mismatch_files": [
+    {
+      "file": "test/regress/coverage-004.test",
+      "summary": "Expected output on line 26 has a typo: 'Expense:Food:Groceries' instead of 'Expenses:Food:Groceries', which would cause the second test block to fail",
+      "issues": [
+        {
+          "line": 26,
+          "description_says": "Expense:Food:Groceries (missing trailing 's')",
+          "actually_tests": "The journal defines the account as Expenses:Food:Groceries; ledger would output 'Expenses:Food:Groceries' in the register, so this expected output line is wrong and would cause the test to fail",
+          "severity": "high"
+        }
+      ],
+      "confidence": 0.95
+    },
+    {
+      "file": "test/regress/coverage-account-any.test",
+      "summary": "Comment claims the file also exercises fn_all, but no test block uses 'all()' \u2014 only fn_any is tested.",
+      "issues": [
+        {
+          "line": 3,
+          "description_says": "Also exercises fn_all (L385-395)",
+          "actually_tests": "Only fn_any is exercised; there is no test block using 'all()' anywhere in the file",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.95
+    },
+    {
+      "file": "test/regress/coverage-averaged-lots.test",
+      "summary": "Header comment claims to exercise three lot functions (averaged, fifo, lifo) but only averaged_lots is actually tested",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "Tests fn_averaged_lots, fn_fifo_lots, fn_lifo_lots (lines 622-641)",
+          "actually_tests": "Only fn_averaged_lots is exercised; there are no test blocks using fifo_lots or lifo_lots",
+          "severity": "high"
+        }
+      ],
+      "confidence": 0.95
+    },
+    {
+      "file": "test/regress/coverage-edge-unicode.test",
+      "summary": "Comment claims Unicode/wide-character testing, but all account names, payees, and amounts are 7-bit ASCII; no unistring.h functionality is exercised.",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "Test Unicode account/payee names and wide characters (exercises unistring.h)",
+          "actually_tests": "Basic balance report with French-named but pure ASCII accounts ('Actifs:Compte Courant', 'Expenses:Nourriture') and ASCII payee 'Cafe' \u2014 no Unicode code points, no accented characters, no wide characters",
+          "severity": "high"
+        }
+      ],
+      "confidence": 0.95
+    },
+    {
+      "file": "test/regress/coverage-emacs-new.test",
+      "summary": "File claims to test emacs.cc and Emacs lisp output format but the only test block runs a plain `bal Expenses` command with no emacs-specific flags (e.g. --amount-data / -j, or the `emacs` sub-command)",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "Coverage tests for emacs.cc",
+          "actually_tests": "A plain balance report with no emacs-related options or commands",
+          "severity": "high"
+        },
+        {
+          "line": 2,
+          "description_says": "Tests: Emacs lisp output format",
+          "actually_tests": "Standard `bal Expenses` command producing normal text output, not Emacs lisp format",
+          "severity": "high"
+        }
+      ],
+      "confidence": 0.95
+    },
+    {
+      "file": "test/regress/coverage-filebase-format.test",
+      "summary": "Header comment claims to test three format expressions (filename, filebase, filepath) but only `filebase` is actually tested",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "Test filename/filebase/filepath format expressions",
+          "actually_tests": "Only tests the `filebase` format expression; neither `filename` nor `filepath` format expressions are tested anywhere in the file",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.95
+    },
+    {
+      "file": "test/regress/coverage-account-amount-expr.test",
+      "summary": "Comment claims to test latest/earliest account functions but the single test block only uses count and subcount format fields",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "Tests account subcount, count, latest, earliest functions",
+          "actually_tests": "Only count and subcount are exercised; latest and earliest fields are never referenced in any test block",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.92
+    },
+    {
+      "file": "test/regress/coverage-account-valexpr.test",
+      "summary": "Description claims to test depth_spacer and partial_name, but the test only exercises the depth function with the full account name; neither depth_spacer nor partial_name appear in the format string",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "Tests account depth_spacer function (get_depth_spacer)",
+          "actually_tests": "The format string uses %(depth) only; %(depth_spacer) never appears in the test",
+          "severity": "high"
+        },
+        {
+          "line": 2,
+          "description_says": "Exercises partial_name function",
+          "actually_tests": "The format string uses %(account) which returns the full account name, not %(partial_name)",
+          "severity": "high"
+        }
+      ],
+      "confidence": 0.92
+    },
+    {
+      "file": "test/regress/coverage-amount-time-colon-minutes.test",
+      "summary": "Two comment inaccuracies: claim of fractional-minutes-to-seconds conversion (untested feature) and example of 90m\u21921:30h that doesn't match what the test actually asserts (135m\u21922:15h balance)",
+      "issues": [
+        {
+          "line": 3,
+          "description_says": "Fractional minutes are converted to seconds in the display",
+          "actually_tests": "No fractional minutes appear anywhere in the journal data; both postings use whole minutes (90m and 45m)",
+          "severity": "medium"
+        },
+        {
+          "line": 4,
+          "description_says": "90m with --time-colon converts to 1:30h (minutes to hours)",
+          "actually_tests": "The test verifies the combined balance of 135m (90m + 45m) displays as 2:15h, not the individual conversion of 90m to 1:30h",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.92
+    },
+    {
+      "file": "test/regress/coverage-auto-xact-check-exprs.test",
+      "summary": "Header comment claims eval expressions are tested but the file only contains assert and check expressions in the auto transactions",
+      "issues": [
+        {
+          "line": 2,
+          "description_says": "Tests assert, check, and eval expressions in auto transactions",
+          "actually_tests": "Only assert and check expressions are present; there is no eval expression anywhere in the file",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.92
+    },
+    {
+      "file": "test/regress/coverage-commodity-decimal-comma.test",
+      "summary": "Line 2 incorrectly claims the test exercises XML output; the actual test command is 'bal' (balance).",
+      "issues": [
+        {
+          "line": 2,
+          "description_says": "Tests COMMODITY_STYLE_DECIMAL_COMMA flag in XML output",
+          "actually_tests": "The test block uses 'bal' (balance command), not XML output. There is no XML output tested anywhere in the file.",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.92
+    },
+    {
+      "file": "test/regress/coverage-expr-and-or.test",
+      "summary": "Comments claim to test both AND and OR operators, but the only test command uses 'and not' \u2014 OR is never exercised.",
+      "issues": [
+        {
+          "line": 2,
+          "description_says": "AND/OR in query expressions",
+          "actually_tests": "Only AND and NOT operators; no OR operator appears anywhere in the test",
+          "severity": "medium"
+        },
+        {
+          "line": 3,
+          "description_says": "Exercises O_AND and O_OR calc paths",
+          "actually_tests": "The single test block uses 'food and not dining' \u2014 exercises O_AND (and O_NOT), but O_OR is never exercised",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.92
+    },
+    {
+      "file": "test/regress/coverage-filter-collapse-depth.test",
+      "summary": "Description falsely claims a 'depth option' and 'depth-based account collapsing' \u2014 neither exists in the test; the three distinct-payee transactions are never collapsed by --collapse, and there is a typo in the expected account name (Expense: vs Expenses:)",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "Test collapse_posts filter with depth option (covers filters.h collapse_posts) \u2014 Exercises collapse filtering with depth-based account collapsing",
+          "actually_tests": "reg --collapse Expenses \u2014 there is no depth option used at all; the test uses only --collapse with an account filter, no --depth flag",
+          "severity": "high"
+        },
+        {
+          "line": 23,
+          "description_says": "collapse filtering collapses postings",
+          "actually_tests": "All three transactions have different payees (Grocery Store, Gas Station, Restaurant), so --collapse does not collapse any of them \u2014 no actual collapsing occurs, making this a test of register output filtered to Expenses accounts, not of the collapse behavior",
+          "severity": "high"
+        },
+        {
+          "line": 24,
+          "description_says": "account name Expense:Food:Groceries in expected output",
+          "actually_tests": "journal entry uses Expenses:Food:Groceries (with trailing 's'); the expected output is missing the 's' and would likely cause a test failure",
+          "severity": "high"
+        }
+      ],
+      "confidence": 0.92
+    },
+    {
+      "file": "test/regress/coverage-006.test",
+      "summary": "Header comment claims the test covers both unknown accounts and unknown commodities, but the test only exercises the unknown account case",
+      "issues": [
+        {
+          "line": 2,
+          "description_says": "Tests that --strict warns on unknown accounts and commodities, and --pedantic errors on them",
+          "actually_tests": "Only unknown accounts are tested \u2014 commodity '$' is declared, and no undeclared commodities appear in the transactions, so the commodity-checking behavior of --strict/--pedantic is never exercised",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.9
+    },
+    {
+      "file": "test/regress/coverage-annotate-valexpr-print.test",
+      "summary": "File claims to test both print and XML valuation expression serialization but only includes a print test; the XML coverage claim is unsubstantiated.",
+      "issues": [
+        {
+          "line": 2,
+          "description_says": "Valuation expression serialization in annotation print and XML output",
+          "actually_tests": "Only print output is tested; there is no XML test block in the file",
+          "severity": "medium"
+        },
+        {
+          "line": 1,
+          "description_says": "Coverage test for annotate.cc lines 250-251, 265",
+          "actually_tests": "Only lines 250-251 (print path) are exercised; line 265 (XML output path) has no corresponding test block",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.9
+    },
+    {
+      "file": "test/regress/coverage-columns-env.test",
+      "summary": "Comment claims to test COLUMNS env var and 80-column fallback, but the single test block uses --columns 60 command-line flag instead",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "Tests COLUMNS environment variable handling (report.cc lines 211-212)",
+          "actually_tests": "Tests --columns command-line option with value 60, not the COLUMNS environment variable",
+          "severity": "medium"
+        },
+        {
+          "line": 2,
+          "description_says": "Tests fallback to 80 columns (line 218)",
+          "actually_tests": "No test block exercises the fallback behavior; only one test using explicit --columns 60",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.9
+    },
+    {
+      "file": "test/regress/coverage-account-lookup.test",
+      "summary": "Comment claims to cover five account.cc lookup cases (h, n, N, O, e) but the file contains only one test block that exercises solely the 'h' (has_children_to_display) case",
+      "issues": [
+        {
+          "line": 3,
+          "description_says": "Exercises 'n' case (L467-472, note), 'N' case (L496-499), 'O' case (L501-504)",
+          "actually_tests": "The single test block only uses has_children_to_display in the format string; note, 'N', and 'O' lookup cases are never exercised",
+          "severity": "high"
+        },
+        {
+          "line": 4,
+          "description_says": "Exercises 'e' case (L435-440, earliest) and other lookup branches",
+          "actually_tests": "No format field referencing 'earliest' or any other account attribute appears in any test block; only has_children_to_display is used",
+          "severity": "high"
+        }
+      ],
+      "confidence": 0.88
+    },
+    {
+      "file": "test/regress/coverage-account-rewrite-directive.test",
+      "summary": "account-rewrite directive is set up to map /Food/ \u2192 Expenses:Groceries, but expected balance output still shows Expenses:Food rather than Expenses:Groceries, so the test does not verify the rewrite functionality it claims to test",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "Tests the account-rewrite directive, which should rewrite Expenses:Food (matching /Food/) to Expenses:Groceries",
+          "actually_tests": "The account-rewrite directive is declared but the balance output still shows Expenses:Food \u2014 the rewrite never appears in the expected output, so the test only verifies the directive is parsed without error, not that it actually rewrites account names",
+          "severity": "high"
+        }
+      ],
+      "confidence": 0.88
+    },
+    {
+      "file": "test/regress/coverage-amount-new-annotations.test",
+      "summary": "Line 4 mislabels `@` per-unit price annotation as 'Lot price annotation'; the same `@` syntax at line 8 is correctly labeled 'Per-unit price annotation', and `{}` lot price notation is separately introduced at line 12.",
+      "issues": [
+        {
+          "line": 4,
+          "description_says": "Lot price annotation - exercises amount.cc annotate (lines 889-913)",
+          "actually_tests": "Per-unit price annotation using `@` syntax (10 AAPL @ $150.00), which is per-unit cost basis, not lot price. Lot price uses `{}` notation (as correctly identified at line 12). Line 8 uses identical `@` syntax and correctly labels it 'Per-unit price annotation'.",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.88
+    },
+    {
+      "file": "test/regress/coverage-balance-h-multicomm.test",
+      "summary": "Line 23 says 'register' but uses bal; line 41 claims to test empty accounts but --empty has no visible effect since Assets:Savings is non-zero; header overclaims *= /= and abs coverage",
+      "issues": [
+        {
+          "line": 23,
+          "description_says": "Test multi-commodity register (exercises balance addition)",
+          "actually_tests": "bal (balance) command, not reg (register); the word 'register' is wrong",
+          "severity": "medium"
+        },
+        {
+          "line": 41,
+          "description_says": "Test balance with empty accounts via --empty",
+          "actually_tests": "bal --empty Assets, but Assets:Savings has a non-zero balance so --empty has no visible effect; the output is identical to the first test and no empty accounts are shown",
+          "severity": "medium"
+        },
+        {
+          "line": 2,
+          "description_says": "Exercises balance_t += -= *= /= with different types",
+          "actually_tests": "Only bal commands are used; there are no operations that would specifically exercise *= or /= on balance_t (no --quantity multiplications or divisions appear in any test block)",
+          "severity": "low"
+        },
+        {
+          "line": 36,
+          "description_says": "Test balance abs via --market (exercises balance_t abs indirectly)",
+          "actually_tests": "Market-value conversion of multi-commodity expenses to a single USD total; --market does currency conversion, not abs(); nothing about the test specifically exercises an absolute-value path",
+          "severity": "low"
+        }
+      ],
+      "confidence": 0.88
+    },
+    {
+      "file": "test/regress/coverage-directives.test",
+      "summary": "Header claims to cover 'apply account/tag without args' (absent from file) and 'commodity directive with blank sub-line' (commodity actually has a non-blank sub-line)",
+      "issues": [
+        {
+          "line": 2,
+          "description_says": "Covers: apply account/tag without args (lines 297, 307)",
+          "actually_tests": "No 'apply account' or 'apply tag' directives appear anywhere in the file; those code paths are not exercised at all",
+          "severity": "high"
+        },
+        {
+          "line": 4,
+          "description_says": "commodity directive with blank sub-line (line 600)",
+          "actually_tests": "The @commodity directive at line ~19 has a non-blank sub-line ('    format $1,000.00'), so the blank-sub-line code path is not exercised",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.88
+    },
+    {
+      "file": "test/regress/coverage-expr-compare.test",
+      "summary": "Comment claims to exercise all five comparison operators but the single test block only uses >= (O_GTE)",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "comparison operators (O_EQ, O_LT, O_LTE, O_GT, O_GTE) \u2014 implying all five operators are tested",
+          "actually_tests": "only O_GTE (>=) via --display \"amount >= 50\"; no test block uses ==, <, <=, or >",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.88
+    },
+    {
+      "file": "test/regress/coverage-expr-functions.test",
+      "summary": "Header comment omits to_string() from its list of exercised functions, and understates the eval arithmetic coverage",
+      "issues": [
+        {
+          "line": 2,
+          "description_says": "exercises quantity(), commodity(), abs(), format_date(), truncated(), join(), eval command, today, now, count, depth, ternary operator",
+          "actually_tests": "all of the listed functions plus to_string(), which has its own dedicated test block using %(to_string(amount))",
+          "severity": "medium"
+        },
+        {
+          "line": 2,
+          "description_says": "eval command (implied: just today/now/format_date)",
+          "actually_tests": "eval is used for five basic arithmetic expressions (2+3, 10-3, 4*5, 20/4, (2+3)*4) as well as today, now, and format_date \u2014 the arithmetic coverage is unmentioned",
+          "severity": "low"
+        }
+      ],
+      "confidence": 0.88
+    },
+    {
+      "file": "test/regress/coverage-expr-string.test",
+      "summary": "Header claims 'string operations' but roughly half the eval tests exercise numeric comparisons, boolean logic, and arithmetic that have no string involvement",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "Test string operations in expressions (exercises regex matching, justify, payee access)",
+          "actually_tests": "Mix of string operations, numeric comparisons (5>3, 5>=5, 3<=5), boolean/logical operations (true or false, true and false, !false), arithmetic (0-5), and ternary operator \u2014 not predominantly string operations",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.88
+    },
+    {
+      "file": "test/regress/coverage-directives-more-new.test",
+      "summary": "Header comment claims the file tests the 'value directive' but no value directive is present in the journal data or test blocks.",
+      "issues": [
+        {
+          "line": 3,
+          "description_says": "Tests: value directive",
+          "actually_tests": "No 'value' directive appears anywhere in the file; the file tests apply year, apply fixed, check, assert, comment block, and define \u2014 but not the value directive",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.87
+    },
+    {
+      "file": "test/regress/coverage-005.test",
+      "summary": "Header comment falsely claims the file tests quoted commodities; no quoted commodity syntax is present in the journal data or test blocks.",
+      "issues": [
+        {
+          "line": 2,
+          "description_says": "Tests multiple commodities, quoted commodities, and commodity directive",
+          "actually_tests": "No quoted commodities (e.g. \"AAPL\" or \"CTG 25\") appear anywhere in the test \u2014 AAPL is an ordinary unquoted symbol; the test covers multi-commodity balances and the commodity directive only",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.85
+    },
+    {
+      "file": "test/regress/coverage-account-cleared-details.test",
+      "summary": "Comment claims to test 'cleared/virtual post counting' but test data contains no virtual postings; only cleared vs uncleared transactions are present",
+      "issues": [
+        {
+          "line": 2,
+          "description_says": "Tests cleared/virtual post counting and date tracking",
+          "actually_tests": "Tests cleared post counting and date tracking only \u2014 there are no virtual postings (parenthesized accounts) anywhere in the journal data",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.85
+    },
+    {
+      "file": "test/regress/coverage-amount-percent.test",
+      "summary": "Comment claims to test both percentage multiplication and division, but only multiplication is present in the test",
+      "issues": [
+        {
+          "line": 2,
+          "description_says": "Test percentage multiplication and division",
+          "actually_tests": "Only percentage multiplication is tested ($100.00 * 19%); no division operation appears anywhere in the file",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.85
+    },
+    {
+      "file": "test/regress/coverage-amount-new-ops.test",
+      "summary": "Header lists 'truncation' and 'invert' as covered but neither is tested; 'negate' is tested but not listed in the header",
+      "issues": [
+        {
+          "line": 2,
+          "description_says": "Tests precision, rounding, truncation, floor, ceiling, invert",
+          "actually_tests": "Tests floor, ceiling, unround, division, negate, and sign comparisons \u2014 no truncation or invert tests are present; negate is omitted from the list",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.85
+    },
+    {
+      "file": "test/regress/coverage-annotate-new.test",
+      "summary": "Header claims to cover 'total prices' but the file only tests per-unit lot costs ({$N}) and fixated per-unit prices ({=$N}); no total price (@@) annotations exist",
+      "issues": [
+        {
+          "line": 2,
+          "description_says": "Tests: lot pricing, per-unit and total prices, fixated prices, lot dates, lot tags",
+          "actually_tests": "Only per-unit prices are present (@ or {$N} notation); there are no total price annotations (@@ or equivalent) anywhere in the file",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.85
+    },
+    {
+      "file": "test/regress/coverage-auto-check-expr.test",
+      "summary": "Comment claims 'check and assert' but only 'check' is present; no test blocks exist to exercise any behavior",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "inline check and assert",
+          "actually_tests": "only a 'check' directive is present; no 'assert' directive appears anywhere in the file",
+          "severity": "medium"
+        },
+        {
+          "line": 1,
+          "description_says": "automated transaction with inline check and assert",
+          "actually_tests": "the file has no test blocks (no 'test ... end test' sections), so nothing is explicitly verified; the implicit test is only that parsing succeeds with exit code 0",
+          "severity": "low"
+        }
+      ],
+      "confidence": 0.85
+    },
+    {
+      "file": "test/regress/coverage-autoxact-check-assert.test",
+      "summary": "Comment incorrectly names the third sub-directive 'expr' when the test file uses 'eval'",
+      "issues": [
+        {
+          "line": 2,
+          "description_says": "assert/check/expr sub-directives",
+          "actually_tests": "assert/check/eval sub-directives \u2014 the keyword used in the automated transaction is 'eval', not 'expr'",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.85
+    },
+    {
+      "file": "test/regress/coverage-commodity-new.test",
+      "summary": "Header claims to test 'commodity comparison' and 'annotations with dates/tags' but the file only exercises price history via P directives and basic per-unit price annotation (@); lot dates/tags and commodity comparison are absent",
+      "issues": [
+        {
+          "line": 2,
+          "description_says": "commodity comparison",
+          "actually_tests": "No commodity comparison tests are present; the file tests price history lookup (P directives + --market) and simple balance/register output",
+          "severity": "medium"
+        },
+        {
+          "line": 2,
+          "description_says": "annotations with dates/tags",
+          "actually_tests": "Only per-unit price annotations (@ $150.00) are used; there are no lot-date or lot-tag annotations anywhere in the file",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.85
+    },
+    {
+      "file": "test/regress/coverage-csv-cost.test",
+      "summary": "Comment claims to test csv.cc but the test block uses 'reg' not 'csv'; cost formatting via %(cost) in register output is accurate but csv.cc is not exercised",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "Test csv.cc and report.cc: cost display",
+          "actually_tests": "Uses 'reg' (register) command with --format %(cost), not the csv command; csv.cc is not exercised",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.85
+    },
+    {
+      "file": "test/regress/coverage-directives-account-new.test",
+      "summary": "Header comment over-claims test coverage: lists 'value' and 'payee' account subdirectives, payee 'uuid', and commodity 'default' subdirective, none of which appear in the actual test file.",
+      "issues": [
+        {
+          "line": 2,
+          "description_says": "account subdirectives include 'value' and 'payee'",
+          "actually_tests": "account subdirectives only use 'alias' and 'default'; no 'value' or 'payee' subdirectives appear in any account block",
+          "severity": "medium"
+        },
+        {
+          "line": 3,
+          "description_says": "payee alias/uuid",
+          "actually_tests": "payee directive only uses 'alias'; no 'uuid' subdirective is present anywhere in the file",
+          "severity": "medium"
+        },
+        {
+          "line": 3,
+          "description_says": "commodity alias/nomarket/default",
+          "actually_tests": "commodity directive uses 'alias' and 'nomarket' only; no 'default' subdirective appears in the commodity block",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.85
+    },
+    {
+      "file": "test/regress/coverage-directives-new.test",
+      "summary": "Header claims to test the 'comment' directive but no comment/end comment block exists in the file; alias tested is a payee subdirective, not the top-level account alias directive",
+      "issues": [
+        {
+          "line": 3,
+          "description_says": "tests comment directive",
+          "actually_tests": "no comment/end comment block appears anywhere in the file; only inline ; comments are present, which are not the 'comment' directive",
+          "severity": "medium"
+        },
+        {
+          "line": 3,
+          "description_says": "tests alias directive",
+          "actually_tests": "the file uses 'alias' as a payee subdirective (within 'payee Grocery'), not the top-level 'alias' account-aliasing directive",
+          "severity": "low"
+        }
+      ],
+      "confidence": 0.85
+    },
+    {
+      "file": "test/regress/coverage-draft-loop-iter.test",
+      "summary": "First test claims the forward loop skips unbalanced virtual postings, but the expected output explicitly includes (Memo:Food) $100.00, contradicting the description",
+      "issues": [
+        {
+          "line": 3,
+          "description_says": "The forward loop (non-from) skips unbalanced virtual postings",
+          "actually_tests": "The expected output for the non-from xact test INCLUDES the unbalanced virtual posting (Memo:Food) $100.00 \u2014 so virtual postings are NOT skipped in the output; the description contradicts the expected output",
+          "severity": "high"
+        }
+      ],
+      "confidence": 0.85
+    },
+    {
+      "file": "test/regress/coverage-emacs-empty-payee.test",
+      "summary": "Filename 'coverage-emacs-empty-payee.test' implies this tests emacs output when payee is empty, but the test uses a non-empty payee 'Test'; the comment describes generic emacs format coverage with no mention of empty payee",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "Coverage for emacs.cc: emacs output format (filename implies empty payee case)",
+          "actually_tests": "Normal emacs output format with a non-empty payee 'Test'",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.85
+    },
+    {
+      "file": "test/regress/coverage-expr-negation.test",
+      "summary": "Header claims O_NEG unary negation is tested but tests use binary subtraction (O_SUB) instead; O_NOT tests are accurate",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "O_NEG (negation) operator is exercised",
+          "actually_tests": "All 'negation' tests use binary subtraction `0 - x` (O_SUB), not unary negation `-x` (O_NEG). Unary negation would look like `eval \"-5\"` or `%(- amount)`, not `0 - 5` or `%(0 - amount)`.",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.85
+    },
+    {
+      "file": "test/regress/coverage-account-misc.test",
+      "summary": "Two functions claimed in the header comment (use_direct_amount, latest_cleared) are absent from the actual format string and therefore not exercised by the test",
+      "issues": [
+        {
+          "line": 5,
+          "description_says": "Exercises use_direct_amount (L492-494)",
+          "actually_tests": "The format string '%(l)|%(is_account)|%(is_index)|%(subcount)|%(account_base)|%(account)' contains no use_direct_amount field; that function is never invoked in any test block",
+          "severity": "medium"
+        },
+        {
+          "line": 6,
+          "description_says": "Also covers latest_cleared (L457-458)",
+          "actually_tests": "The format string contains no %(latest_cleared) field; despite having cleared (*) transactions in the journal, the cleared-date function is never queried in any test block",
+          "severity": "medium"
+        },
+        {
+          "line": 5,
+          "description_says": "addr (L411-412) is exercised",
+          "actually_tests": "The format string uses %(account) (full account path), which may or may not call the addr() accessor internally; addr is not directly referenced as a format token, so coverage of that specific code path is uncertain",
+          "severity": "low"
+        }
+      ],
+      "confidence": 0.82
+    },
+    {
+      "file": "test/regress/coverage-account-subdirectives.test",
+      "summary": "Comment claims to test 'value' account subdirective but no such subdirective is present in the test data; the six items listed (payee, value, default, note, check, eval) only five are actually exercised.",
+      "issues": [
+        {
+          "line": 2,
+          "description_says": "Account directive with payee, value, default, note, check, eval",
+          "actually_tests": "Account subdirectives payee, note, check, eval (on Expenses:Food) and default (on Assets:Cash) \u2014 no 'value' subdirective appears anywhere in the file",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.82
+    },
+    {
+      "file": "test/regress/coverage-define-directive.test",
+      "summary": "Comment claims to test define directive with expression, but my_var is never used \u2014 the test only exercises a plain bal command unrelated to the define.",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "Test define directive with expression",
+          "actually_tests": "The define directive (my_var=42) is declared but never referenced or used anywhere in the transaction data or test command. The test only verifies a basic balance output for a simple $10 transaction; the defined variable plays no role in the result.",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.82
+    },
+    {
+      "file": "test/regress/coverage-dayofweek-next.test",
+      "summary": "--now flag is placed after --end \"next friday\" (wrong order per fix applied to sibling dayofweek tests), making the reference epoch likely ineffective; additionally the test data has a gap between the two possible resolution dates so the specific claim of Mar 13 is unverifiable",
+      "issues": [
+        {
+          "line": 21,
+          "description_says": "\"next friday\" resolved from --now 2026/03/03 (Tuesday) as the reference epoch",
+          "actually_tests": "--now appears AFTER --end \"next friday\" in the command, so the relative date is parsed before the epoch is set; the actual reference is the system date, not 2026/03/03",
+          "severity": "high"
+        },
+        {
+          "line": 2,
+          "description_says": "\"next friday\" from --now 2026/03/03 resolves to 2026/03/13",
+          "actually_tests": "The test data has no transaction between 2026/03/06 and 2026/03/12, so the output is identical whether \"next friday\" resolves to Mar 6 or Mar 13 \u2014 the claimed resolution of Mar 13 cannot be verified from the test output",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.82
+    },
+    {
+      "file": "test/regress/coverage-dayofweek-last.test",
+      "summary": "Argument ordering bug: --begin precedes --now, so --now may not control the \"last wednesday\" epoch resolution as the comment claims",
+      "issues": [
+        {
+          "line": 20,
+          "description_says": "\"last wednesday\" from --now 2026/03/03 (Tuesday) resolves to 2026/02/25",
+          "actually_tests": "command has --begin \"last wednesday\" before --now 2026/03/03; per known Ledger behavior, --now must precede --begin for relative date parsing to use the overridden epoch \u2014 with this ordering, \"last wednesday\" may resolve from the system clock rather than from 2026/03/03",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.82
+    },
+    {
+      "file": "test/regress/coverage-filter-collapse-if-zero.test",
+      "summary": "Header claims to test collapse_posts behavior with only_collapse_if_zero, but the test command omits --collapse so collapse_posts is never activated; the output is just normal register output",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "Test collapse_posts with only_collapse_if_zero option",
+          "actually_tests": "The test command '--collapse-if-zero reg Expenses' does not include '--collapse', so the collapse_posts filter is never added to the processing chain; the option has no observable effect",
+          "severity": "high"
+        },
+        {
+          "line": 2,
+          "description_says": "Covers: collapse_posts::report_subtotal() non-zero branch with only_collapse_if_zero",
+          "actually_tests": "collapse_posts::report_subtotal() is never invoked because --collapse is absent; the expected output shows ordinary uncollapsed register postings identical to plain 'reg Expenses'",
+          "severity": "high"
+        }
+      ],
+      "confidence": 0.82
+    },
+    {
+      "file": "test/regress/coverage-filter-equity-unround.test",
+      "summary": "File is named 'equity-unround' but neither the description nor the test block exercises any unrounding behavior; the test simply verifies basic equity output with round numbers and no --unround flag.",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "Test posts_as_equity filter (covers filters.h posts_as_equity class) - Exercises the equity command which generates opening balances",
+          "actually_tests": "The test does exercise the equity command and posts_as_equity filter, but the filename 'coverage-filter-equity-unround.test' strongly implies this file tests unrounded equity output (i.e., the --unround flag or unrounded amount behavior), which is neither described in the comments nor exercised in the test block",
+          "severity": "medium"
+        },
+        {
+          "line": 10,
+          "description_says": "The filename implies unrounded amounts are involved",
+          "actually_tests": "The test uses plain 'test equity' with no --unround flag, and all amounts in the expected output (5 AAPL, $-700.00, $700.00, -5 AAPL) are already round values - there is no rounding behavior being tested",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.82
+    },
+    {
+      "file": "test/regress/coverage-annotate-compare.test",
+      "summary": "--sort 'd' should produce date-ordered output but expected output is price-ordered ($145<$150<$155), contradicting the date-sort claim; description also overstates coverage of symbol, date, tag, and flag comparison branches",
+      "issues": [
+        {
+          "line": 17,
+          "description_says": "--sort 'd' exercises date ordering in annotation_t::operator<",
+          "actually_tests": "Output is sorted by price ascending ($145 < $150 < $155), not by date: date ascending would give Lot A (Jan 1), Lot B (Jan 2), Lot C (Jan 3); price ascending gives Lot C, Lot A, Lot B which matches the expected output \u2014 the sort key 'd' (date) does not explain the observed ordering",
+          "severity": "high"
+        },
+        {
+          "line": 3,
+          "description_says": "price commodity symbol comparison is exercised",
+          "actually_tests": "All three lot prices use the same commodity symbol ($), so the symbol comparison always returns equal and never acts as a tiebreaker; symbol-difference comparison is never reached",
+          "severity": "medium"
+        },
+        {
+          "line": 3,
+          "description_says": "date, tag, and flag ordering are exercised",
+          "actually_tests": "Since all three lot prices differ ($145, $150, $155), price-value comparison determines the order before date, tag, or flag comparisons are reached; those code paths are not exercised as distinguishing factors",
+          "severity": "low"
+        }
+      ],
+      "confidence": 0.8
+    },
+    {
+      "file": "test/regress/coverage-autoxact-commands.test",
+      "summary": "Line numbers for check_command_has_match are misattributed (45-48 is the file header comment, not the function), and the warning path is not actually exercised since the named auto-xact always matches.",
+      "issues": [
+        {
+          "line": 2,
+          "description_says": "Lines 45-48 (check_command_has_match warning)",
+          "actually_tests": "Lines 45-48 in textual_xacts.cc are part of the file header doxygen comment listing parse_xact/parse_post/parse_posts \u2014 unrelated to check_command_has_match. That function is defined at lines 77-86.",
+          "severity": "medium"
+        },
+        {
+          "line": 2,
+          "description_says": "check_command_has_match warning path covered",
+          "actually_tests": "The warning branch (if !has_match) inside check_command_has_match is never triggered: the named auto-xact '= \"food\"' is defined before all three commands (disable/enable/delete), so has_match is always true. The warning path at line 81 is not exercised.",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.8
+    },
+    {
+      "file": "test/regress/coverage-compare-sort-posts.test",
+      "summary": "The comment claims to exercise multi-field sort expressions, but the test data has unique payees so the secondary -amount sort key never affects ordering \u2014 the tie-breaking code path in compare_items is not actually covered",
+      "issues": [
+        {
+          "line": 3,
+          "description_says": "multi-field sort expressions (implying both fields affect ordering)",
+          "actually_tests": "sort by 'payee, -amount' but all three payees are unique (Gas Station, Grocery Store, Restaurant), so the secondary -amount field never breaks any tie and is never evaluated during comparison",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.8
+    },
+    {
+      "file": "test/regress/coverage-edge-pending-cleared.test",
+      "summary": "Comment understates scope: test covers --cleared, --pending, and --uncleared filtering modes, but description only references 'cleared report'",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "Test cleared report with mixed states (exercises precmd.cc cleared report)",
+          "actually_tests": "Three distinct filtering modes: --cleared, --pending, AND --uncleared; the comment narrowly mentions only 'cleared report' but the test equally exercises pending and uncleared filtering",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.8
+    },
+    {
+      "file": "test/regress/coverage-account-check.test",
+      "summary": "Description claims to test the check subdirective, but the single test block only verifies balance output for a conforming posting; no test covers what happens when the commodity constraint is violated, making the check directive incidental to the test outcome",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "Test account directive with check subdirective",
+          "actually_tests": "Balance output with a valid posting; the check subdirective is present but its constraint is never exercised \u2014 removing it would produce identical test output",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.75
+    },
+    {
+      "file": "test/regress/coverage-account-any-all.test",
+      "summary": "Primary mismatch: first test comment claims any() filters some accounts, but the expected output shows all accounts pass because any() is transaction-scoped; secondary issues are inconsistent line references in comments.",
+      "issues": [
+        {
+          "line": 20,
+          "description_says": "Test any() returning true for some accounts, false for others",
+          "actually_tests": "any(amount > 0) returns true for ALL accounts \u2014 the expected output shows both Assets:Cash (-$30) and Expenses:Food ($30). In ledger, any() is transaction-scoped, so it is true for every posting because every transaction contains at least one positive posting (Expenses:Food). No account is filtered out.",
+          "severity": "medium"
+        },
+        {
+          "line": 27,
+          "description_says": "line 393 account.cc",
+          "actually_tests": "The header comments list coverage targets as lines 382, 400, 445, and 472 \u2014 line 393 is not mentioned there. The inline comment references a line number inconsistent with the header.",
+          "severity": "low"
+        },
+        {
+          "line": 3,
+          "description_says": "Line 400: account_t::lookup returns nullptr for non-FUNCTION kind",
+          "actually_tests": "None of the three test blocks obviously exercise account_t::lookup with a non-FUNCTION kind. The tests only use any()/all() predicates with balance; it is unclear which test is supposed to hit line 400.",
+          "severity": "low"
+        }
+      ],
+      "confidence": 0.75
+    },
+    {
+      "file": "test/regress/coverage-account-find-re.test",
+      "summary": "Comment claims the test exercises find_account_re via `account(/regex/)` function-call syntax (post.cc get_account with mask arg), but the actual test uses `account =~ /Food/` operator syntax, which may exercise a different code path",
+      "issues": [
+        {
+          "line": 3,
+          "description_says": "This exercises find_account_re through post context account(/regex/) syntax",
+          "actually_tests": "The test uses `account =~ /Food/` (the =~ regex operator), not the `account(/regex/)` function-call syntax",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.75
+    },
+    {
+      "file": "test/regress/coverage-account-getaccount.test",
+      "summary": "Primary description (account() truthy/falsy based on existence) is accurate, but the claim about testing L400 nullptr return for unrecognized function names is not supported by either test block",
+      "issues": [
+        {
+          "line": 4,
+          "description_says": "Also tests account_t::lookup L400 (nullptr return) when a function name doesn't match any known function in the switch",
+          "actually_tests": "Both test blocks only use account() which is a known/valid function; no test exercises an unknown function name that would trigger the nullptr fallthrough path",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.75
+    },
+    {
+      "file": "test/regress/coverage-account-new.test",
+      "summary": "Header claims to test 'fullname' and account sub-directives (including payee), but no test exercises fullname display and the payee auto-matching sub-directive is declared but never verified.",
+      "issues": [
+        {
+          "line": 2,
+          "description_says": "Tests: account directives with sub-directives, account depth, fullname",
+          "actually_tests": "No test block exercises fullname functionality \u2014 no format string uses %(fullname), no --no-aliases flag, and no comparison between alias and fullname display. The accounts command shows canonical names by default, but that is not a targeted fullname test.",
+          "severity": "medium"
+        },
+        {
+          "line": 4,
+          "description_says": "account Expenses:Food with 'payee Grocery' sub-directive implies payee auto-matching is being tested",
+          "actually_tests": "The transaction uses the explicit 'food' alias for the posting, not payee auto-matching. The 'payee Grocery' sub-directive is declared but no test verifies that it causes Grocery transactions to auto-post to Expenses:Food.",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.75
+    },
+    {
+      "file": "test/regress/coverage-apply-fixed.test",
+      "summary": "Comment header claims to cover both 'apply fixed' and 'apply rate' directives but only 'apply fixed' is actually tested; the math and command are otherwise correct",
+      "issues": [
+        {
+          "line": 2,
+          "description_says": "apply fixed / apply rate directive",
+          "actually_tests": "Only 'apply fixed' is used; 'apply rate' is a distinct Ledger directive that is not exercised anywhere in this test file",
+          "severity": "low"
+        }
+      ],
+      "confidence": 0.75
+    },
+    {
+      "file": "test/regress/coverage-assert-check-directive.test",
+      "summary": "Comment incorrectly claims both directives go through switch case 'a'; 'check' starts with 'c' and would use a different case",
+      "issues": [
+        {
+          "line": 2,
+          "description_says": "both 'assert' and 'check' directives are handled via general_directive switch case 'a'",
+          "actually_tests": "'assert' begins with 'a' and would be switch case 'a', but 'check' begins with 'c' and would be switch case 'c' \u2014 two different switch cases are exercised, not one",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.75
+    },
+    {
+      "file": "test/regress/coverage-auto-xact-assert-fail.test",
+      "summary": "Description accurately describes the auto_xact assert scenario but mischaracterizes the exception type as 'parse error' when Ledger actually throws a 'Transaction assertion failed' error",
+      "issues": [
+        {
+          "line": 2,
+          "description_says": "a parse error is thrown",
+          "actually_tests": "a transaction assertion failure ('Transaction assertion failed: (amount < {0})') \u2014 which is an assertion_failed error, not a parse_error",
+          "severity": "low"
+        }
+      ],
+      "confidence": 0.75
+    },
+    {
+      "file": "test/regress/coverage-balance-compare.test",
+      "summary": "Header claims to cover operator== and sorting comparisons, but operator== is never explicitly exercised and the second test block tests only output formatting, not sorting",
+      "issues": [
+        {
+          "line": 2,
+          "description_says": "operator== for balance (equality comparison)",
+          "actually_tests": "Neither test block exercises an equality comparison; test 1 uses --sort total (ordering/operator<) and test 2 is a plain format output test with no sorting or equality",
+          "severity": "medium"
+        },
+        {
+          "line": 19,
+          "description_says": "Test focuses on balance comparison operations for sorting",
+          "actually_tests": "The second test block (bal --flat --no-total --format) is a straightforward formatting test that does not exercise sorting or comparison at all",
+          "severity": "low"
+        }
+      ],
+      "confidence": 0.75
+    },
+    {
+      "file": "test/regress/coverage-color-funcs.test",
+      "summary": "Description says 'color name functions' but test also covers text formatting functions (bold, underline, blink) that are not color names",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "color name functions (fn_black, fn_red, fn_green, etc.)",
+          "actually_tests": "The format string also exercises %(bold), %(underline), and %(blink) which are text formatting/attribute functions, not color name functions",
+          "severity": "low"
+        }
+      ],
+      "confidence": 0.75
+    },
+    {
+      "file": "test/regress/coverage-commodity-subdirectives.test",
+      "summary": "Comment omits 'format' sub-directive, and the $ commodity's format/default directives are declared but not functionally exercised by any transaction in the test",
+      "issues": [
+        {
+          "line": 2,
+          "description_says": "Commodity directive with nomarket, default, note, alias sub-directives",
+          "actually_tests": "Also tests the 'format' sub-directive (commodity $ uses 'format $1,000.00'), which is absent from the comment's list",
+          "severity": "low"
+        },
+        {
+          "line": 9,
+          "description_says": "commodity $ with format $1,000.00 and default sub-directives is covered",
+          "actually_tests": "The $ commodity directives are declared but no transaction uses dollar amounts \u2014 the format and default sub-directives are parsed but their runtime behavior (formatting dollar values, using $ as default commodity) is never exercised or visible in the test output",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.75
+    },
+    {
+      "file": "test/regress/coverage-effective-bal-assert.test",
+      "summary": "Description implies the focus is balance assertion behavior with --effective, but the sole test block runs 'reg --effective' to verify register output in aux-date order; the balance assertion is incidentally present in the data but its interaction with --effective is not directly tested",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "Test balance assertion with --effective using aux dates",
+          "actually_tests": "Register display using aux dates (--effective flag); the balance assertion '= $90.00' is present in the transaction data and is trivially satisfied, but no test block directly exercises or verifies balance assertion behavior with --effective (e.g., no test that the assertion is evaluated at the aux date, no error-case test showing assertion failure)",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.75
+    },
+    {
+      "file": "test/regress/coverage-edge-predicate.test",
+      "summary": "Expected output has 'Expense:Food:Groceries' (22 chars) where journal defines 'Expenses:Food:Groceries' (23 chars) \u2014 appears to be a typo rather than intentional column truncation since the truncation is inconsistent across entries; filename's 'edge' claim is not reflected in descriptions or test content",
+      "issues": [
+        {
+          "line": 16,
+          "description_says": "account Expenses:Food:Groceries (from journal)",
+          "actually_tests": "expected output shows 'Expense:Food:Groceries' (missing trailing 's') \u2014 either a typo in expected output or the test would fail; same account name appears correctly in the journal as 'Expenses:Food:Groceries'",
+          "severity": "medium"
+        },
+        {
+          "line": 23,
+          "description_says": "account Expenses:Food:Groceries (from journal)",
+          "actually_tests": "expected output again shows 'Expense:Food:Groceries' (truncated) for two Grocery Store entries in test 2, while the Gas Station entry correctly shows 'Expenses:Auto:Gas' untruncated \u2014 the truncation is inconsistent and likely wrong",
+          "severity": "medium"
+        },
+        {
+          "line": 1,
+          "description_says": "filename says 'edge-predicate' implying edge cases are covered",
+          "actually_tests": "the comment only says 'complex predicate expressions' without specifying what edge cases are exercised; the tests use standard AND/OR compound predicates with =~ and >= operators, which are not particularly edge-case scenarios",
+          "severity": "low"
+        }
+      ],
+      "confidence": 0.75
+    },
+    {
+      "file": "test/regress/coverage-emacs-cost.test",
+      "summary": "Cost-path claim is accurate (lot annotation and cost column appear in output), but the 'note paths' claim is misleading: the transaction note is completely absent from the expected emacs output, so the test does not demonstrably verify any note-handling code path.",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "exercises emacs.cc cost and note paths",
+          "actually_tests": "The transaction note '; Note: test note' on line 8 does not appear anywhere in the expected emacs output; the 'nil' slot in the 'Another Purchase' header (which could be the note field) is nil despite the note being present, so no note-specific output is verified",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.75
+    },
+    {
+      "file": "test/regress/coverage-filter-display-rounding.test",
+      "summary": "Test exercises market value balance display correctly, but filename implies rounding coverage that is absent, and the claimed 'changed_value_posts' code path is questionable for a plain bal --market command",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "filename 'coverage-filter-display-rounding' implies rounding behavior is being tested",
+          "actually_tests": "plain market value conversion with no rounding edge cases, no --round option, and no scenarios where rounding would produce observable differences",
+          "severity": "medium"
+        },
+        {
+          "line": 2,
+          "description_says": "Covers display_filter_posts, changed_value_posts paths",
+          "actually_tests": "bal --market --exchange '$' on a stock with a price history; changed_value_posts is typically in the filter chain for register commands tracking value changes over time, not for a simple balance report",
+          "severity": "low"
+        }
+      ],
+      "confidence": 0.75
+    },
+    {
+      "file": "test/regress/coverage-amount-new-reduce.test",
+      "summary": "Test exercises unreduce path (7200s \u2192 2.00h) but inline comment claims in_place_reduce is being exercised; header is more accurate by saying 'reduce/unreduce'.",
+      "issues": [
+        {
+          "line": 11,
+          "description_says": "Reduce exercises in_place_reduce (lines 705-713)",
+          "actually_tests": "The test posts 7200s (already in base/smallest unit) and expects display as 2.00h, which is the in_place_unreduce direction (base \u2192 larger unit), not in_place_reduce (larger \u2192 base). in_place_reduce on 7200s would be a no-op since seconds are already the most reduced form.",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.72
+    },
+    {
+      "file": "test/regress/coverage-amount-thousand-comma-period-err.test",
+      "summary": "Description implies period precedes comma ('period has already been seen'), but the test input $1,2345.67 has comma-then-period; the triggering sequence is the reverse of what the comment describes",
+      "issues": [
+        {
+          "line": 3,
+          "description_says": "a comma is detected as a decimal separator (more than 3 digits follow it), but a period has already been seen \u2014 implying the period precedes the comma in the input",
+          "actually_tests": "$1,2345.67 has the comma before the period; when the comma is encountered no period has yet been seen; the period appears after the comma",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.72
+    },
+    {
+      "file": "test/regress/coverage-annotate-total-cost.test",
+      "summary": "Expected output shows Checking receiving -10 AAPL rather than -$1500.00, inconsistent with the 'Buy at fixated total cost' payee description and standard double-entry accounting for a cash purchase.",
+      "issues": [
+        {
+          "line": 14,
+          "description_says": "Transaction payee 'Buy at fixated total cost' implies a cash-for-stock purchase where Assets:Checking receives -$1500.00 (the cash outflow)",
+          "actually_tests": "Expected output shows Assets:Checking as '-10 AAPL {=$150.00}' \u2014 the same commodity as Brokerage \u2014 which contradicts a cash purchase scenario. The total netting to 0 in AAPL units implies both accounts hold AAPL, not that cash was exchanged for stock.",
+          "severity": "high"
+        }
+      ],
+      "confidence": 0.72
+    },
+    {
+      "file": "test/regress/coverage-default-commodity.test",
+      "summary": "Comment claims to test the D directive's default commodity effect, but expected output shows bare integers (-10, 10) without dollar formatting, making it unclear whether the D directive is actually being verified or its formatting effect silently absent.",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "Test D directive (default commodity) \u2014 implies the D directive applies dollar commodity formatting to bare amounts",
+          "actually_tests": "The D directive is present but the expected output shows bare numbers (-10, 10) without the $-sign or decimal places, suggesting either the D directive is not applying its commodity format to the bare amount 10.00, or the test verifies that bare amounts remain unformatted despite the D directive",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.72
+    },
+    {
+      "file": "test/regress/coverage-draft-template-date.test",
+      "summary": "Comments focus exclusively on account masks but the test's distinguishing feature (per its filename) is date handling \u2014 specifically that 'on DATE' does not propagate to the template dump output, which shows '<today>' instead; description is incomplete/misleading about the test's actual focus",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "Test draft template command with account masks (covers draft.cc lines 67-77)",
+          "actually_tests": "The test also explicitly exercises date handling: the command passes 'on 2024/03/01' but the expected output shows 'Date: <today>' \u2014 the date aspect is central to what's being tested (as the filename 'coverage-draft-template-date.test' makes clear), yet the comments never mention it",
+          "severity": "medium"
+        },
+        {
+          "line": 2,
+          "description_says": "Exercises the template dump function with account masks in postings",
+          "actually_tests": "The primary differentiator of this test from other template tests is the date behavior: despite specifying 'on 2024/03/01', the template output emits 'Date: <today>' \u2014 this behavior (that the 'on' date does not appear in the template dump output) is what the filename documents but what the comments entirely omit",
+          "severity": "low"
+        }
+      ],
+      "confidence": 0.72
+    },
+    {
+      "file": "test/regress/coverage-auto-xact-deferred-note.test",
+      "summary": "Description says note applies to 'the initial post that matches the predicate' but output shows it applies to all three auto-xact-related postings (matched + both generated); the description undercounts the scope of propagation",
+      "issues": [
+        {
+          "line": 4,
+          "description_says": "Tags on the auto-xact (before the postings) are applied to the initial post that matches the predicate",
+          "actually_tests": "The note appears on all three auto-xact-related postings (Expenses:Food, Liabilities:Tax, Assets:Tax), not just the initial matching post \u2014 the blank line in the output corresponds to Assets:Checking (no note), while all three auto-xact postings carry the note",
+          "severity": "low"
+        }
+      ],
+      "confidence": 0.7
+    },
+    {
+      "file": "test/regress/coverage-autoxact-note.test",
+      "summary": "Description claims test covers a 'blank sub-line break' in an automated transaction, but no such blank line appears in the auto-xact block; the note is also a header note (before postings), not a trailing note in the usual sense.",
+      "issues": [
+        {
+          "line": 2,
+          "description_says": "Automated transaction with trailing note and blank sub-line break",
+          "actually_tests": "The automated transaction has a note sub-line (before the posting), but there is no blank sub-line break anywhere in the auto-xact block",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.7
+    },
+    {
+      "file": "test/regress/coverage-commodity-price.test",
+      "summary": "Description overstates specificity: claims to test the CURRENT_TIME() fallback in map_prices but the test just lists all price entries with no time-sensitive expected output; the EUR transaction is also irrelevant noise",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "Tests map_prices with CURRENT_TIME() fallback (line 79 triggered when no moment and no epoch)",
+          "actually_tests": "The test only verifies that 'prices EUR' lists all three price directives; it does not verify any behavior dependent on the current time \u2014 the expected output is fixed and would be identical regardless of whether CURRENT_TIME() or any other time value is used as the fallback",
+          "severity": "medium"
+        },
+        {
+          "line": 14,
+          "description_says": "The prices command calls map_prices with no explicit moment, triggering the CURRENT_TIME() fallback",
+          "actually_tests": "The prices command lists all P directives for EUR; the output is not time-bounded so there is no observable difference from the CURRENT_TIME() fallback vs any other fallback value",
+          "severity": "medium"
+        },
+        {
+          "line": 10,
+          "description_says": "Transaction payee 'Test' implies a meaningful test scenario",
+          "actually_tests": "The transaction (10 EUR purchase on 2024/01/15) is entirely unused by the 'prices EUR' command, which reads only P directives; the transaction data is extraneous and its payee describes nothing",
+          "severity": "low"
+        }
+      ],
+      "confidence": 0.7
+    },
+    {
+      "file": "test/regress/coverage-commodity-xml-flags.test",
+      "summary": "Filename implies XML commodity flag serialization coverage, but the test uses `reg` (not `xml`), so the claimed coverage of commodity.cc lines 506-507 may be inaccurate if those lines are in an XML output path.",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "Test commodity output with thousands separator (covers commodity.cc lines 506-507)",
+          "actually_tests": "The test uses the `reg` command to verify register output formatting. If commodity.cc lines 506-507 are in an XML serialization path (as the filename 'coverage-commodity-xml-flags' strongly implies), then the `reg` command would not exercise those lines at all.",
+          "severity": "medium"
+        },
+        {
+          "line": 1,
+          "description_says": "File name 'coverage-commodity-xml-flags' implies testing XML output of commodity flags",
+          "actually_tests": "Neither the test command (`reg`) nor any internal comment references XML output. The test only verifies that thousands-separator-formatted amounts appear correctly in register output. There is no `xml` command invocation anywhere in the file.",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.65
+    }
+  ]
+}
