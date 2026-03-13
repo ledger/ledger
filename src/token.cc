@@ -393,16 +393,42 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
     if (pflags.has_flags(PARSE_OP_CONTEXT)) { // operator context
       kind = SLASH;
     } else { // terminal context
-      // Read in the regexp
-      char buf[4096];
-      READ_INTO_(in, buf, 4095, c, length, c != '/');
-      if (c != '/')
+      // Read the regexp pattern, preserving backslash sequences for the regex
+      // engine. Only \/ is treated as an escaped delimiter (the backslash is
+      // stripped so that / does not terminate the pattern early); all other
+      // \X sequences are passed through unchanged so that the regex engine can
+      // interpret them (e.g., \| for literal pipe, \d for digit class).
+      string pat;
+      bool found_closing = false;
+      while (in.good() && !in.eof()) {
+        c = in.get();
+        if (in.eof())
+          break;
+        length++;
+        if (c == '\\') {
+          int next = in.peek();
+          if (next == '/') {
+            // Escaped delimiter: consume the slash and emit just '/'
+            in.get();
+            length++;
+            pat.push_back('/');
+          } else {
+            // All other escape sequences: pass the backslash through so the
+            // regex engine sees the full \X pair (e.g., \| → literal pipe)
+            pat.push_back('\\');
+          }
+        } else if (c == '/') {
+          found_closing = true;
+          break;
+        } else {
+          pat.push_back(static_cast<char>(c));
+        }
+      }
+      if (!found_closing)
         expected('/', c);
-      in.get();
-      length++;
 
       kind = VALUE;
-      value.set_mask(buf);
+      value.set_mask(pat);
     }
     break;
   }
