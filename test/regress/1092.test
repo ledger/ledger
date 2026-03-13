@@ -1,0 +1,31 @@
+; Regression test for issue #1092: balance assignments were evaluated in file
+; (parse) order rather than transaction date order.
+;
+; When a later-dated transaction appears before a balance assignment in the
+; ledger file, the balance assignment should compute the posting amount based
+; on the account balance as of its own transaction date — ignoring any
+; transactions with a later date, even if those appear earlier in the file.
+;
+; In this example the July 20 transfer appears first in the file, but the
+; July 10 balance assignment must treat Liabilities:Test as having a zero
+; balance at that date (not -$30.00 from the later-dated transfer).  The
+; correct final balance of Liabilities:Test is therefore -$230.00 (the
+; assignment sets it to -$200 on July 10, then the transfer adds another
+; -$30 on July 20), not -$200.00 (which would result from using the file-
+; order running balance of -$30 when computing the assignment amount).
+
+2020/07/20 Transfer
+    Expenses:Misc              $30.00
+    Liabilities:Test
+
+2020/07/10 Opening Balance
+    Liabilities:Test                      = $-200.00
+    Equity:Opening Balances
+
+test bal
+             $200.00  Equity:Opening Balances
+              $30.00  Expenses:Misc
+            $-230.00  Liabilities:Test
+--------------------
+                   0
+end test
