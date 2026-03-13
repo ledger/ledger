@@ -1,0 +1,37 @@
+; Regression test for issue #2032: monthly average (-MA) should count from
+; the report begin date (-b), not from the first transaction date.
+;
+; With -b 2020/01 -MA, January and February are empty but should be counted
+; in the average denominator.  March is the 3rd month, so 30 USD / 3 = 10 USD.
+; (Before the fix, March showed 30 USD / 1 = 30 USD, and April 30 USD / 2 = 15 USD.)
+
+2020/03/01 * Bill
+    Expenses:Bill                                 30 USD
+    Assets:Bank
+
+2020/06/01 * Bill
+    Expenses:Bill                                 30 USD
+    Assets:Bank
+
+2020/09/01 * Bill
+    Expenses:Bill                                 30 USD
+    Assets:Bank
+
+2020/12/01 * Bill
+    Expenses:Bill                                 30 USD
+    Assets:Bank
+
+test reg Expenses -b 2020/01 -MA
+20-Jan-01 - 20-Jan-31           <None>                            0            0
+20-Feb-01 - 20-Feb-29           <None>                            0            0
+20-Mar-01 - 20-Mar-31           Expenses:Bill                30 USD       10 USD
+20-Apr-01 - 20-Apr-30           <None>                            0        8 USD
+20-May-01 - 20-May-31           <None>                            0        6 USD
+20-Jun-01 - 20-Jun-30           Expenses:Bill                30 USD       10 USD
+20-Jul-01 - 20-Jul-31           <None>                            0        9 USD
+20-Aug-01 - 20-Aug-31           <None>                            0        8 USD
+20-Sep-01 - 20-Sep-30           Expenses:Bill                30 USD       10 USD
+20-Oct-01 - 20-Oct-31           <None>                            0        9 USD
+20-Nov-01 - 20-Nov-30           <None>                            0        8 USD
+20-Dec-01 - 20-Dec-31           Expenses:Bill                30 USD       10 USD
+end test
