@@ -1,0 +1,48 @@
+; Test for issue #1996: capital_gain value expression variable
+;
+; capital_gain returns the realized capital gain (positive) or loss (negative)
+; for a sell posting that has a lot-price annotation.  It computes:
+;   cost_basis - market_value_at_value_date
+; where cost_basis is the post's cost (basis_cost after finalization) and
+; market_value is looked up from the commodity price history at value_date.
+;
+; Returns zero for:
+;   - buy postings (non-negative amount),
+;   - postings without a lot-price annotation, and
+;   - postings for which no market price can be determined.
+
+P 2004/05/01 00:00:00 AAPL $30.00
+P 2005/08/01 00:00:00 AAPL $50.00
+P 2006/06/01 00:00:00 AAPL $60.00
+
+= Assets:Broker
+  (Income:Capital Gains)    (-(capital_gain))
+  (Expenses:Taxes)          (capital_gain * 0.3)
+
+2004/05/01 Stock purchase
+    Assets:Broker                     50 AAPL @ $30.00
+    Assets:Cash                      $-1,500.00
+
+2005/08/01 Stock sale
+    Assets:Broker                    -50 AAPL {$30.00} @ $50.00
+    Income:Capital Gains           $-1,000.00
+    Assets:Cash                    $2,500.00
+
+2006/06/01 Second sale
+    Assets:Broker                    -25 AAPL {$30.00} @ $60.00
+    Assets:Cash
+
+; capital_gain returns 0 for buy postings and non-zero for sells with lot annotation
+test reg --format '%(date) %(account) %(capital_gain)\n' Assets:Broker
+2004/05/01 Assets:Broker 0
+2005/08/01 Assets:Broker $1,000.00
+2006/06/01 Assets:Broker $750.00
+end test
+
+; capital_gain works in automatic transaction expressions
+test bal Income Expenses
+             $525.00  Expenses:Taxes
+          $-2,750.00  Income:Capital Gains
+--------------------
+          $-2,225.00
+end test
