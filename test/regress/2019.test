@@ -1,0 +1,23 @@
+; Regression test for issue #2019:
+; Account names with embedded spaces in automated transaction predicates
+; should not require quoting.  The unquoted form "= income:b c" should
+; be treated as a single pattern matching the account "income:b c",
+; equivalent to "= 'income:b c'".
+
+account liabilities:a
+account income:b c
+
+= income:b c
+    liabilities:a  -1
+    equity:adjustments  1
+
+2021/03/18 * test
+    income:b c  $1.00
+    equity:adjustments
+
+test bal
+               $1.00  income:b c
+              $-1.00  liabilities:a
+--------------------
+                   0
+end test

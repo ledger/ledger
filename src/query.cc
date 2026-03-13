@@ -216,9 +216,64 @@ resume:
       case '\t':
       case '\n':
       case '\r':
-        if (!multiple_args && !consume_whitespace && !consume_next_arg)
-          goto test_ident;
-        else
+        if (!multiple_args && !consume_whitespace && !consume_next_arg) {
+          // When parsing a single predicate string (not multiple command-line
+          // args), spaces normally terminate the current token.  However,
+          // account names can contain embedded spaces (e.g. "income:b c").
+          // To support unquoted multi-word account names, peek ahead: if the
+          // next non-whitespace content is a query keyword or a special
+          // operator character, stop the token as usual.  If it is a plain
+          // word, include this space in the token so the whole thing becomes
+          // one TERM (equivalent to quoting the name).
+          //
+          // This means "= income:b c" matches "income:b c" exactly, while
+          // "= income:b and income:c" still parses as two AND-ed patterns.
+          auto is_query_kw = [](const string& w) -> bool {
+            return w == "and" || w == "or"  || w == "not"   ||
+                   w == "expr"                               ||
+                   w == "code" || w == "payee" || w == "desc"  ||
+                   w == "note" || w == "tag"   || w == "meta"  || w == "data" ||
+                   w == "show" || w == "only"  || w == "bold"  ||
+                   w == "for"  || w == "since" || w == "until";
+          };
+          // If the token accumulated so far is itself a keyword, stop now.
+          if (is_query_kw(ident))
+            goto test_ident;
+          // Peek past this whitespace run.
+          auto peek = arg_i;
+          ++peek;
+          while (peek != arg_end &&
+                 (*peek == ' ' || *peek == '\t' || *peek == '\n' || *peek == '\r'))
+            ++peek;
+          if (peek == arg_end) {
+            // Trailing whitespace only — stop the token.
+            goto test_ident;
+          }
+          // A special operator character always stops the token.
+          char ahead = *peek;
+          if (ahead == '&' || ahead == '|' || ahead == '!' || ahead == '@' ||
+              ahead == '#' || ahead == '%' || ahead == '(' || ahead == ')' ||
+              ahead == '/' || ahead == '\'' || ahead == '"' || ahead == '=') {
+            goto test_ident;
+          }
+          // Read ahead to find the boundary of the next word and test it.
+          auto word_end = peek;
+          while (word_end != arg_end &&
+                 *word_end != ' ' && *word_end != '\t' &&
+                 *word_end != '\n' && *word_end != '\r' &&
+                 *word_end != '&' && *word_end != '|' && *word_end != '!' &&
+                 *word_end != '(' && *word_end != ')' && *word_end != '@' &&
+                 *word_end != '#' && *word_end != '%' && *word_end != '=' &&
+                 *word_end != '/' && *word_end != '\'' && *word_end != '"')
+            ++word_end;
+          if (is_query_kw(string(peek, word_end)))
+            goto test_ident;
+          // The following content is a plain word: absorb this whitespace run
+          // as a single space and advance arg_i so the loop's ++arg_i lands
+          // on peek (first char of that plain word).
+          ident.push_back(' ');
+          arg_i = peek - 1;
+        } else
           ident.push_back(*arg_i);
         break;
 
