@@ -1,0 +1,19 @@
+; Regression test for issue #2033:
+; --percent for accounts with an elided intermediate parent (compound names
+; like "Travel:Airfare" where Travel has only one child) should report the
+; percentage relative to the nearest non-elided ancestor, not relative to the
+; elided intermediate parent (which always gives 100%).
+
+2024/01/01 Test
+    Expenses:Travel:Airfare    $500.00
+    Expenses:Food              $300.00
+    Expenses:Gas               $200.00
+    Assets:Checking            -$1000.00
+
+test bal --percent
+             100.00%  Assets:Checking
+                   0  Expenses
+              30.00%    Food
+              20.00%    Gas
+              50.00%    Travel:Airfare
+end test
