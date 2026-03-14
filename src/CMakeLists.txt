@@ -209,6 +209,7 @@ if(SKBUILD)
   install(TARGETS _core DESTINATION lpy/core)
   install(FILES ${PROJECT_SOURCE_DIR}/python/lpy/__init__.py DESTINATION lpy)
   install(FILES ${PROJECT_SOURCE_DIR}/python/lpy/core/__init__.py DESTINATION lpy/core)
+  install(FILES ${PROJECT_SOURCE_DIR}/python/ledger/__init__.py DESTINATION ledger)
 else()
   if(BUILD_LIBRARY)
     set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
@@ -275,13 +276,15 @@ else()
       add_custom_command(
         TARGET libledger POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-          $<TARGET_FILE:libledger> "${CMAKE_BINARY_DIR}/lpy/core/${_ledger_python_module_name}"
+          $<TARGET_FILE:libledger> "${CMAKE_BINARY_DIR}/python/lpy/core/${_ledger_python_module_name}"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-          "${PROJECT_SOURCE_DIR}/python/lpy/__init__.py" "${CMAKE_BINARY_DIR}/lpy/__init__.py"
+          "${PROJECT_SOURCE_DIR}/python/lpy/__init__.py" "${CMAKE_BINARY_DIR}/python/lpy/__init__.py"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-          "${PROJECT_SOURCE_DIR}/python/lpy/core/__init__.py" "${CMAKE_BINARY_DIR}/lpy/core/__init__.py")
+          "${PROJECT_SOURCE_DIR}/python/lpy/core/__init__.py" "${CMAKE_BINARY_DIR}/python/lpy/core/__init__.py"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          "${PROJECT_SOURCE_DIR}/python/ledger/__init__.py" "${CMAKE_BINARY_DIR}/python/ledger/__init__.py")
       install(
-        FILES "${CMAKE_BINARY_DIR}/lpy/core/${_ledger_python_module_name}"
+        FILES "${CMAKE_BINARY_DIR}/python/lpy/core/${_ledger_python_module_name}"
         DESTINATION "${LEDGER_PYTHON_INSTALL_DIR}/lpy/core")
       install(
         FILES "${PROJECT_SOURCE_DIR}/python/lpy/__init__.py"
@@ -289,6 +292,9 @@ else()
       install(
         FILES "${PROJECT_SOURCE_DIR}/python/lpy/core/__init__.py"
         DESTINATION "${LEDGER_PYTHON_INSTALL_DIR}/lpy/core")
+      install(
+        FILES "${PROJECT_SOURCE_DIR}/python/ledger/__init__.py"
+        DESTINATION "${LEDGER_PYTHON_INSTALL_DIR}/ledger")
     else()
       message(WARNING "Python_SITEARCH not set. Will not install python module.")
     endif()
