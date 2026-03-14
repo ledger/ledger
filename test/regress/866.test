@@ -1,0 +1,40 @@
+; Regression test for #866: value expression named variables and operators.
+; Exercises the named keywords documented in the Value Expressions chapter:
+; commodity, payee, cost, note, any(), all(), =~, and !~.
+
+2024/01/10 Grocery Store
+    Expenses:Food              USD 25.00
+    Assets:Cash
+
+2024/01/15 John WIEGLEY  ; reimbursable
+    Expenses:Office            EUR 50.00 @ USD 1.10
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Auto              USD 40.00
+    Assets:Cash
+
+2024/01/25 Bookstore
+    Expenses:Books             EUR 30.00 @ USD 1.10
+    Assets:Checking
+
+test reg --limit "commodity =~ /USD/" Expenses
+24-Jan-10 Grocery Store         Expenses:Food             USD 25.00    USD 25.00
+24-Jan-20 Gas Station           Expenses:Auto             USD 40.00    USD 65.00
+end test
+
+test reg --limit "commodity !~ /USD/" Expenses
+24-Jan-15 John WIEGLEY          Expenses:Office           EUR 50.00    EUR 50.00
+24-Jan-25 Bookstore             Expenses:Books            EUR 30.00    EUR 80.00
+end test
+
+test reg --limit "payee =~ /John WIEGLEY/"
+24-Jan-15 John WIEGLEY          Expenses:Office           EUR 50.00    EUR 50.00
+                                Assets:Checking          USD -55.00    EUR 50.00
+                                                                      USD -55.00
+end test
+
+test reg --limit "any(account =~ /Assets:Cash/)" Expenses
+24-Jan-10 Grocery Store         Expenses:Food             USD 25.00    USD 25.00
+24-Jan-20 Gas Station           Expenses:Auto             USD 40.00    USD 65.00
+end test
