@@ -1,0 +1,28 @@
+; Bug #1943: --invert not applied when --collapse combines multiple sub-accounts
+; When multiple transactions on the same day post to different sub-accounts,
+; --collapse (optionally combined with --daily) must still negate the display
+; amount and running total when --invert is active.
+
+2020/07/11 Entry 1
+  Expenses:Example1    1000.00 EUR
+  Assets:Example      -1000.00 EUR
+
+2020/07/11 Entry 2
+  Expenses:Example2     100.00 EUR
+  Assets:Example        -100.00 EUR
+
+; Without --invert: collapsed daily total is positive
+test reg Expenses --daily --collapse
+20-Jul-11 - 20-Jul-11           <Total>                 1100.00 EUR  1100.00 EUR
+end test
+
+; With --invert: collapsed daily total must be negated
+test reg Expenses --daily --collapse --invert
+20-Jul-11 - 20-Jul-11           <Total>                -1100.00 EUR -1100.00 EUR
+end test
+
+; --invert without period grouping: individual entries are negated
+test reg Expenses --invert
+20-Jul-11 Entry 1               Expenses:Example1      -1000.00 EUR -1000.00 EUR
+20-Jul-11 Entry 2               Expenses:Example2       -100.00 EUR -1100.00 EUR
+end test
