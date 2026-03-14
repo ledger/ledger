@@ -196,17 +196,17 @@ if(SKBUILD)
   # directly from all sources (no separate libledger shared library).
   # Python sources are already included in LEDGER_SOURCES via the
   # HAVE_BOOST_PYTHON block above.
-  Python_add_library(ledger MODULE ${LEDGER_SOURCES} WITH_SOABI)
-  add_ledger_library_dependencies(ledger)
+  Python_add_library(_core MODULE ${LEDGER_SOURCES} WITH_SOABI)
+  add_ledger_library_dependencies(_core)
 
   # Precompiled headers for system.hh reduce build times.
   if(PRECOMPILE_SYSTEM_HH)
-    target_precompile_headers(ledger PRIVATE ${PROJECT_BINARY_DIR}/system.hh)
+    target_precompile_headers(_core PRIVATE ${PROJECT_BINARY_DIR}/system.hh)
   endif()
 
   # Install directly to the site-packages root; scikit-build-core maps
   # DESTDIR / CMAKE_INSTALL_PREFIX to the wheel's site-packages directory.
-  install(TARGETS ledger DESTINATION .)
+  install(TARGETS _core DESTINATION .)
 else()
   if(BUILD_LIBRARY)
     set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
@@ -253,11 +253,11 @@ else()
   if(USE_PYTHON)
     if(Python_SITEARCH)
       if(WIN32 AND NOT CYGWIN)
-        set(_ledger_python_module_name "ledger.pyd")
+        set(_ledger_python_module_name "_core.pyd")
       elseif(CMAKE_SYSTEM_NAME STREQUAL Darwin)
-        set(_ledger_python_module_name "ledger.so")
+        set(_ledger_python_module_name "_core.so")
       else()
-        set(_ledger_python_module_name "ledger${CMAKE_SHARED_LIBRARY_SUFFIX}")
+        set(_ledger_python_module_name "_core${CMAKE_SHARED_LIBRARY_SUFFIX}")
       endif()
 
       # Allow packagers to override where the Python module is installed.
