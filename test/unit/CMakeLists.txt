@@ -1,5 +1,8 @@
 macro(add_ledger_test _name)
   target_link_libraries(${_name} libledger)
+  # Unit tests use BOOST_TEST_DYN_LINK and need a direct link to the
+  # Boost.Test shared library so the linker can resolve unit_test_main.
+  target_link_libraries(${_name} Boost::unit_test_framework)
   add_test(Ledger${_name} ${PROJECT_BINARY_DIR}/${_name})
   set_tests_properties(Ledger${_name}
     PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}")

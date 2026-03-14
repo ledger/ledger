@@ -404,6 +404,15 @@ check_library_exists(readline add_history "" HAVE_READLINE)
 find_opt_library_and_header(READLINE_PATH readline/history.h READLINE_LIB readline HAVE_READLINE)
 endif()
 
+# On Linux with glibc < 2.17, clock_gettime is in librt rather than libc.
+# Detect and link librt when needed (e.g., older conda/glibc environments).
+if(UNIX AND NOT APPLE)
+  check_library_exists(rt clock_gettime "" HAVE_CLOCK_GETTIME_IN_RT)
+  if(HAVE_CLOCK_GETTIME_IN_RT)
+    find_library(RT_LIBRARY rt)
+  endif()
+endif()
+
 
 #find_package(Gettext)           # Used for running tests
 
@@ -424,6 +433,9 @@ macro(add_ledger_library_dependencies _target)
   target_link_libraries(${_target} ${GMP_LIB})
   target_link_libraries(${_target} ${MPFR_LIB})
   target_link_libraries(${_target} ${PROFILE_LIBS})
+  if(HAVE_CLOCK_GETTIME_IN_RT AND RT_LIBRARY)
+    target_link_libraries(${_target} ${RT_LIBRARY})
+  endif()
   if(HAVE_EDIT)
     target_link_libraries(${_target} ${EDIT_LIB})
   endif()
