@@ -1,4 +1,4 @@
-import ledger
+from lpy import core
 
 # Regression test for issue #976.
 #
@@ -8,7 +8,7 @@ import ledger
 # initialize() then creates a *new* pool.
 #
 # Any commodity_t* raw pointer obtained before the call (including the
-# one backing ledger.commodities, captured at Python import time) now
+# one backing core.commodities, captured at Python import time) now
 # belongs to the *old* pool and carries a graph_index that is an index
 # into the *old* pool's Boost.Graph price-history graph.  When that
 # commodity is later passed as the `target` argument to find_price() on
@@ -18,17 +18,17 @@ import ledger
 # comparison inside commodity_history_impl_t::find_price.
 #
 # The fix is to replace only the commodity pool in close_journal_files()
-# without touching the GMP temporaries, and to update ledger.commodities
+# without touching the GMP temporaries, and to update core.commodities
 # in py_close_journal_files() so Python code sees the new pool.
 
 # 1. Bare close_journal_files() must not crash.
-ledger.close_journal_files()
+core.close_journal_files()
 
 # 2. Reading a journal, closing, then reading again must not crash.
-j1 = ledger.read_journal("test/regress/976.dat")
-ledger.close_journal_files()
-j2 = ledger.read_journal("test/regress/976.dat")
+j1 = core.read_journal("test/regress/976.dat")
+core.close_journal_files()
+j2 = core.read_journal("test/regress/976.dat")
 
-# 3. ledger.commodities must reflect the new pool after close.
-eur = ledger.commodities.find_or_create("EUR")
+# 3. core.commodities must reflect the new pool after close.
+eur = core.commodities.find_or_create("EUR")
 print(eur.symbol)

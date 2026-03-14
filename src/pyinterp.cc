@@ -167,6 +167,28 @@ void python_interpreter_t::initialize() {
     PyDict_SetItemString(PyImport_GetModuleDict(), "lpy.core._core", core_mod);
     Py_XDECREF(core_mod);
 
+    // Programmatically create the lpy and lpy.core module hierarchy in
+    // sys.modules so that "from lpy import core" works in the embedded CLI
+    // case where no PYTHONPATH is set and the on-disk packages are not
+    // available.  The guards ensure this is a no-op when the real packages
+    // have already been loaded from disk (e.g. via PYTHONPATH or install).
+    PyRun_SimpleString(
+        "import sys, types\n"
+        "if 'lpy.core' not in sys.modules:\n"
+        "    _core = sys.modules['_core']\n"
+        "    _public = [n for n in dir(_core) if not n.startswith('_')]\n"
+        "    _lpy_core = types.ModuleType('lpy.core')\n"
+        "    _lpy_core.__package__ = 'lpy'\n"
+        "    _lpy_core.__path__ = []\n"
+        "    for _n in _public:\n"
+        "        setattr(_lpy_core, _n, getattr(_core, _n))\n"
+        "    sys.modules['lpy.core'] = _lpy_core\n"
+        "    _lpy = types.ModuleType('lpy')\n"
+        "    _lpy.__package__ = 'lpy'\n"
+        "    _lpy.__path__ = []\n"
+        "    _lpy.core = _lpy_core\n"
+        "    sys.modules['lpy'] = _lpy\n");
+
     is_initialized = true;
   } catch (const error_already_set&) {
     PyErr_Print();
