@@ -373,9 +373,36 @@ void calc_posts::operator()(post_t& post) {
 
   if (last_post) {
     assert(last_post->has_xdata());
-    if (calc_running_total)
-      xdata.total = last_post->xdata().total;
-    xdata.count = last_post->xdata().count + 1;
+    // When --average is active with an interval report (e.g. --monthly),
+    // interval_posts emits one ITEM_GENERATED posting per account per period,
+    // all sharing the same synthetic xact.  Two adjustments are needed:
+    //
+    // 1. Count stability: keep the period counter the same for all accounts
+    //    within the same period group, so --average divides by the number of
+    //    elapsed intervals rather than the number of account rows.
+    //
+    // 2. Per-account total (only when period_average_ is enabled): seed each
+    //    account's running total from its own accumulator rather than from the
+    //    global running total.  Without this, the second and later accounts in
+    //    a period inherit the blended total of all preceding accounts, making
+    //    each account's average wrong.
+    bool same_generated_group =
+        (post.has_flags(ITEM_GENERATED) && last_post->has_flags(ITEM_GENERATED) &&
+         post.xact == last_post->xact);
+    if (same_generated_group)
+      xdata.count = last_post->xdata().count;
+    else
+      xdata.count = last_post->xdata().count + 1;
+    if (calc_running_total) {
+      if (period_average_ && post.has_flags(ITEM_GENERATED)) {
+        // Seed from this account's own running total, not the global one.
+        auto it = account_period_totals_.find(post.account);
+        if (it != account_period_totals_.end())
+          xdata.total = it->second;
+      } else {
+        xdata.total = last_post->xdata().total;
+      }
+    }
   } else {
     xdata.count = 1;
   }
@@ -388,6 +415,10 @@ void calc_posts::operator()(post_t& post) {
 
   if (calc_running_total) {
     add_or_set_value(xdata.total, xdata.visited_value);
+    // Update the per-account accumulator for ITEM_GENERATED postings so that
+    // subsequent periods for the same account carry the correct baseline.
+    if (period_average_ && post.has_flags(ITEM_GENERATED))
+      account_period_totals_[post.account] = xdata.total;
 
     // Incrementally maintain a stripped display total alongside the
     // regular total.  Instead of stripping the entire running total

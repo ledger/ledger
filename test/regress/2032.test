@@ -25,13 +25,13 @@ test reg Expenses -b 2020/01 -MA
 20-Jan-01 - 20-Jan-31           <None>                            0            0
 20-Feb-01 - 20-Feb-29           <None>                            0            0
 20-Mar-01 - 20-Mar-31           Expenses:Bill                30 USD       10 USD
-20-Apr-01 - 20-Apr-30           <None>                            0        8 USD
-20-May-01 - 20-May-31           <None>                            0        6 USD
+20-Apr-01 - 20-Apr-30           <None>                            0            0
+20-May-01 - 20-May-31           <None>                            0            0
 20-Jun-01 - 20-Jun-30           Expenses:Bill                30 USD       10 USD
-20-Jul-01 - 20-Jul-31           <None>                            0        9 USD
-20-Aug-01 - 20-Aug-31           <None>                            0        8 USD
+20-Jul-01 - 20-Jul-31           <None>                            0            0
+20-Aug-01 - 20-Aug-31           <None>                            0            0
 20-Sep-01 - 20-Sep-30           Expenses:Bill                30 USD       10 USD
-20-Oct-01 - 20-Oct-31           <None>                            0        9 USD
-20-Nov-01 - 20-Nov-30           <None>                            0        8 USD
+20-Oct-01 - 20-Oct-31           <None>                            0            0
+20-Nov-01 - 20-Nov-30           <None>                            0            0
 20-Dec-01 - 20-Dec-31           Expenses:Bill                30 USD       10 USD
 end test
