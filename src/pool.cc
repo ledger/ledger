@@ -486,6 +486,10 @@ commodity_pool_t::parse_price_directive(char* line, bool do_not_add_price, bool 
 
   DEBUG("commodity.download", "Looking up symbol: " << symbol);
   if (commodity_t* commodity = find_or_create(symbol)) {
+    if (point.price.has_commodity() && commodity->referent() == point.price.commodity().referent())
+      throw_(parse_error,
+             _f("A price directive may not use the same commodity for both source and price: %1%") %
+                 symbol);
     DEBUG("commodity.download",
           "Adding price for " << symbol << ": " << point.when << " " << point.price);
     if (!do_not_add_price)
