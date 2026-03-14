@@ -64,7 +64,7 @@ void export_utils();
 void export_value();
 void export_xact();
 
-extern "C" PyObject* PyInit_ledger();
+extern "C" PyObject* PyInit__core();
 
 void initialize_for_python() {
   export_times();
@@ -141,7 +141,8 @@ void python_interpreter_t::initialize() {
     // converter is already registered and no further setup is required.
     if (!Py_IsInitialized()) {
       // PyImport_AppendInittab docs: "This should be called before Py_Initialize()".
-      PyImport_AppendInittab((const char*)"ledger", PyInit_ledger);
+      // PyImport_AppendInittab docs: "This should be called before Py_Initialize()".
+      PyImport_AppendInittab((const char*)"_core", PyInit__core);
 
       // Unbuffer stdio to avoid python output getting stuck in buffer when
       // stdout is not a TTY. Normally buffers are flushed by Py_Finalize but
@@ -175,7 +176,7 @@ void python_interpreter_t::initialize() {
     // PyImport_ImportModule returns the cached module if "ledger" is
     // already in sys.modules, so this does not re-run PyInit_ledger and
     // will not cause duplicate converter registration.
-    PyImport_ImportModule("ledger");
+    PyImport_ImportModule("_core");
 
     is_initialized = true;
   } catch (const error_already_set&) {
