@@ -215,7 +215,7 @@
           echo "  - gcov: Not available on $(uname)"
           ''}
           echo "  - lcov: $(lcov --version | head -1)"
-          echo "  - llvm-cov: $(llvm-cov --version | head -1)"
+          echo "  - llvm-cov: $(llvm-cov --version | grep -o 'version.*')"
         '';
       };
     });
