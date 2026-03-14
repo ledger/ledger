@@ -6,7 +6,7 @@
 #     read_journal(ledger::session_t {lvalue}, boost::filesystem::path)
 # The fix accepts a plain string and converts it to a path internally.
 
-import ledger
+from lpy import core
 import os
 import tempfile
 
@@ -21,7 +21,7 @@ with tempfile.NamedTemporaryFile(mode='w', suffix='.ledger', delete=False) as f:
     tmppath = f.name
 
 try:
-    s = ledger.Session()
+    s = core.Session()
     journal = s.read_journal(tmppath)
     xacts = list(journal.xacts)
     assert len(xacts) == 1, "Expected 1 transaction"

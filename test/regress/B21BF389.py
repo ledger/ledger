@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import sys
-import ledger
+from lpy import core
 
-for post in ledger.read_journal(__file__.replace(".py", "_py.test")).query("income"):
+for post in core.read_journal(__file__.replace(".py", "_py.test")).query("income"):
   reference = post.tag("Reference")
   print(reference)

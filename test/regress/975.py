@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-import ledger
+from lpy import core
 
-comms = ledger.commodities
+comms = core.commodities
 eur = comms.find_or_create('EUR')
 
 def balance_posts_subaccts(account):
-    total = ledger.Balance()
+    total = core.Balance()
     for post in account.posts():
         total += post.amount
     for subacct in account.accounts():
@@ -17,15 +17,15 @@ def balance_for_account(journal, acctname):
     account = journal.find_account_re(acctname)
     return balance_posts_subaccts(account)
 
-ledger.read_journal_from_string("""
+core.read_journal_from_string("""
 2012-01-01 * Opening balance
     Assets:Cash                           100.00 EUR
     Equity:Opening balance
 """)
 
-ledger.session.close_journal_files()
+core.session.close_journal_files()
 
-journal = ledger.read_journal_from_string("""
+journal = core.read_journal_from_string("""
 2013-01-01 * foo
     Assets:A                                1.00 EUR
     Equity:Opening balance

@@ -5,10 +5,10 @@
 #   boost::optional<boost::filesystem::path>
 # because no Python converter was registered for boost::optional<path>.
 
-import ledger
+from lpy import core
 import os
 
-journal = ledger.read_journal_from_string("""
+journal = core.read_journal_from_string("""
 2024/01/01 Payee
     Expenses:Food    $10.00
     Assets:Cash

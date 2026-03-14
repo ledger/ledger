@@ -1,6 +1,6 @@
-import ledger
+from lpy import core
 
-journal = ledger.read_journal("test/regress/790_py.test")
+journal = core.read_journal("test/regress/790_py.test")
 
 # This query with -M (monthly) was previously causing a segfault
 # because the filter chain (interval_posts) was destroyed before
