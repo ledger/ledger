@@ -1,4 +1,5 @@
-; Test Unicode account/payee names and wide characters (exercises unistring.h)
+; Test balance report with column-width formatting (--columns=80)
+; Uses non-English account names to exercise justify() column alignment
 
 2024/01/15 * Cafe
     Expenses:Nourriture       $50.00

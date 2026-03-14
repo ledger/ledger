@@ -1,6 +1,6 @@
 ; Coverage test for annotate.cc: annotation_t::operator< comparison
-; Exercises annotate.cc lines 42-98: full comparison operator including
-; price commodity symbol comparison, date, tag, and flag ordering
+; Exercises annotate.cc lines 42-98: --lots causes lot annotations to be
+; compared via operator<, covering price, date, tag, and flag ordering
 
 2024/01/01 Buy Lot A
     Assets:Brokerage    10 AAPL {$150.00} [2024/01/01] (lotA)

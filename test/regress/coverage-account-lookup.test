@@ -1,7 +1,5 @@
 ; Coverage test for account.cc lookup switch cases.
-; Exercises the 'h' case (L442-445, has_children_to_display),
-; 'n' case (L467-472, note), 'N' case (L496-499), 'O' case (L501-504),
-; 'e' case (L435-440, earliest), and other lookup branches.
+; Exercises the 'h' case (has_children_to_display) in account_t::lookup.
 
 2024/01/01 Grocery
     Expenses:Food    $10.00

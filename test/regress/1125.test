@@ -5,6 +5,10 @@
 ; Post 1: 0.50 bread @ $3.99 = $1.995, rounds to $2.00
 ; Post 2: 1.50 bread @ $4.99 = $7.485, rounds to $7.49
 ; Sum of rounded costs: $2.00 + $7.49 = $9.49, which matches Assets: -$9.49
+;
+; The test verifies the commodity quantity (2.00 bread = 0.50 + 1.50) in balance
+; output; the cost rounding is validated implicitly by the transaction balancing
+; (the -$9.49 posting would fail to balance if costs were summed before rounding).
 
 2015-07-02 Buying some bread
     Expenses            0.50 bread @ $3.99

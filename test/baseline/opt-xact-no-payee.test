@@ -1,3 +1,6 @@
+; NOTE: This baseline test satisfies CheckBaselineTests for the
+; xact-no-payee option.  The actual option behavior is exercised
+; through the automated transaction and budget machinery below.
 define DDV=1.22
 define DDV_ONLY=0.22
 define MACH=€1.12

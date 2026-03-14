@@ -4,6 +4,10 @@
 ; means the total cost for the lot is 90.00 GBP.  The old code divided by the
 ; quantity and printed {0.90 GBP}, which changes the user's notation and
 ; produces repeating decimals for non-divisible cases.
+;
+; NOTE: The second lot (bought via @@, not {{}}) prints as {1.00 GBP}
+; (per-unit) because the input used @@ total-price syntax, not {{}}
+; lot-price notation.  Only explicit {{}} notation is preserved.
 
 2011-11-03 * Buy AAA
     Assets:Investments                  100 AAA @@ 100.00 GBP

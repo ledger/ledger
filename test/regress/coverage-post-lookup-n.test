@@ -1,5 +1,5 @@
-; Test post_t::lookup for N, n, and index symbols
-; Targets: post.cc lines 446, 457-458, 504-505
+; Test post_t::lookup for O (total) symbol
+; Targets: post.cc (O_LOOKUP)
 
 2024/01/15 * Store
     Expenses:Food              $50.00

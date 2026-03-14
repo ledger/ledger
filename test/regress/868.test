@@ -23,3 +23,23 @@ test reg --sort amount --columns 100
 12-Oct-30 ACME Inc.                  Foo                                     $20.00         $-50.00
                                      Assets:Bank:Checking                    $50.00               0
 end test
+
+; Test the payee_changed expression function directly
+test reg --sort amount --format '%(payee_changed)\n'
+false
+false
+true
+false
+false
+false
+end test
+
+; Test the --dc register format also uses payee_changed correctly
+test reg --dc --sort amount --columns 100
+12-Oct-30 Binders, Pens, Digi.. Expe:Office Supplies               0          $70.00         $-70.00
+12-Oct-30 Binders, Pens, Digi.. Expe:Office Supplies               0           $5.00         $-75.00
+          ACME Inc.             Assets:Bank:Checking           $1.00               0         $-74.00
+                                Foo                            $4.00               0         $-70.00
+12-Oct-30 ACME Inc.             Foo                           $20.00               0         $-50.00
+                                Assets:Bank:Checking          $50.00               0               0
+end test

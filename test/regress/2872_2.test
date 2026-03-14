@@ -1,0 +1,16 @@
+; Additional regression test for issue #2872
+; Verify that a valid quoted commodity name with digits works correctly
+; in a format directive (the unquoted case is diagnosed in 2872.test).
+commodity "CTG25"
+    format 1000.000 "CTG25"
+
+2024/01/01 Quoted Valid
+    Expenses        1000.000 "CTG25"
+    Assets
+
+test source -> 0
+end test
+
+test bal Expenses
+      1000.000 CTG25  Expenses
+end test

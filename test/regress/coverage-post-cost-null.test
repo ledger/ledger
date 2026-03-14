@@ -1,4 +1,4 @@
-; Test get_cost and get_price with null amount and no cost
+; Test get_cost and get_price with an explicit cost
 ; Targets: post.cc lines 222-231 (get_cost paths), 233-240 (get_price paths)
 
 2024/01/15 * Buy Stock

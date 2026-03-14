@@ -1,5 +1,5 @@
-; Test collapse_posts filter with depth option (covers filters.h collapse_posts)
-; Exercises collapse filtering with depth-based account collapsing
+; Test collapse_posts filter with account query (covers filters.h collapse_posts)
+; Exercises collapse filtering restricted to matching accounts
 
 2024/01/15 Grocery Store
     Expenses:Food:Groceries              $50.00

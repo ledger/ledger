@@ -1,6 +1,5 @@
-; Coverage test for query.cc: query by code using code keyword and # prefix
-; Exercises query.cc lines 146-147: TOK_CODE token via '#' prefix
-; and lines 271-277: code matching in parse_query_term
+; Coverage test for query.cc: query by code using the code keyword
+; Exercises query.cc lines 271-277: code matching in parse_query_term
 
 2024/01/01 (CHK001) Grocery Store
     Expenses:Food    $25.00

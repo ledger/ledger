@@ -1,5 +1,5 @@
-; Coverage tests for emacs.cc
-; Tests: Emacs lisp output format
+; Basic balance report filtering by account name
+; Tests: bal command with account name argument
 
 2024/01/01 Grocery Store
     Expenses:Food                    $50.00

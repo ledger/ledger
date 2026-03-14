@@ -1,6 +1,7 @@
-; Tests for query.cc: for clause with keyword break
-; Covers: lines 531-536 (break in for clause when keyword encountered)
-;         lines 539-544 (for_string accumulation)
+; Tests for query.cc: for clause with since initialization and show break
+; Covers: lines 650-651 (since after for initializes for_string)
+;         lines 662-667 (show keyword triggers break in for clause)
+;         lines 670-672 (for_string accumulation)
 
 2024/01/01 Test
     Expenses  $10
@@ -10,8 +11,8 @@
     Expenses  $20
     Assets
 
-; for clause followed by since triggers keyword break (lines 531-536)
-; The for_string is "since 2024/01/15" and show clause follows
+; 'for since 2024/01/15 show Expenses': since initializes for_string,
+; date arg is accumulated, and 'show' triggers the keyword break
 test reg for since 2024/01/15 show Expenses
 24-Feb-01 Test2                 Expenses                        $20          $20
 end test

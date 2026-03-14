@@ -1,6 +1,5 @@
-; Tests for history.cc: graph visualization and price operations
+; Tests for history.cc: graph visualization via pricemap command
 ; Covers: lines 519-527 (print_map/pricemap with and without moment)
-;         lines 280-282 (remove_price/remove_edge after removing last price)
 
 ; Set up price history with multiple commodities for graph paths
 P 2024/01/01 EUR $1.10

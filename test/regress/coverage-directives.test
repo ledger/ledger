@@ -1,11 +1,9 @@
 ; Coverage tests for textual_directives.cc
-; Covers: apply account/tag without args (lines 297, 307),
-;         payee directive with blank sub-line (line 534),
-;         tag directive with blank sub-line (line 670),
-;         account directive with blank sub-line (line 429),
-;         commodity directive with blank sub-line (line 600),
-;         bucket directive (line 812), define directive (line 832),
-;         year directive (line 889), @ prefix on directives (line 779)
+; Covers: bucket directive, define directive, year directive,
+;         @ prefix on directives, payee directive with alias sub-line,
+;         payee directive with blank sub-line,
+;         tag directive with blank sub-line,
+;         account directive with blank sub-line
 
 ; Test 'bucket' directive (case 'b' in general_directive, line 808-812)
 bucket Assets:Checking

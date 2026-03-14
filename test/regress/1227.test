@@ -57,3 +57,14 @@ test print not payee Pension
     Assets:Baz                                $30.00
     Expenses:Qux
 end test
+
+; Verify the explicit any() wrapper also works via -l (the documented workaround)
+test print -l 'not any(account =~ /pension/)'
+2018/01/01 Grocery
+    Assets:Foo                                $10.00
+    Expenses:Bar
+
+2018/01/03 Hardware
+    Assets:Baz                                $30.00
+    Expenses:Qux
+end test

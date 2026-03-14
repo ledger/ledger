@@ -1,5 +1,5 @@
-; Test report.cc: fn_averaged_lots, fn_fifo_lots, fn_lifo_lots
-; Exercises lot pricing functions (lines 622-641)
+; Test report.cc: fn_averaged_lots
+; Exercises averaged lot pricing function
 
 2024/01/15 Buy Stock
     Assets:Brokerage         10 AAPL {$150.00}

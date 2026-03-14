@@ -1,7 +1,9 @@
 ; Regression test for issue #773
-; Python interpreter should not segfault on second command.
-; This tests basic python integration stability by running
-; a simple ledger query through the python interface.
+; The original bug was a Python interpreter segfault on the second command.
+;
+; NOTE: The Python-specific crash cannot be reproduced without Boost.Python
+; bindings.  This test serves as a basic smoke test to verify ledger runs
+; correctly after the fix to the Python interpreter lifecycle.
 
 2015/01/01 Test payee
     Expenses:Food              $10.00

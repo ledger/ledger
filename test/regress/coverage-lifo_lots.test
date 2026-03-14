@@ -1,5 +1,6 @@
 ; Coverage test for report.cc lifo_lots lookup (line 1552)
-; Tests the lifo_lots function with lot pricing
+; Tests the lifo_lots function with individual amounts (amount_t passthrough;
+; does not trigger the balance_t/lifo_lot_prices path)
 
 2024/01/15 Buy
     Assets:Stock    10 AAPL @ $150
