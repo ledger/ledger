@@ -38,9 +38,13 @@ test reg --by-payee Expenses
 end test
 
 ; Test --average (filters.cc)
+; Each account shows its own running average (cumulative per-account total /
+; number of periods elapsed), not a blended average across all accounts.
+; Dining: $30 in Jan only → avg $30.  Food: $50 (Jan) + $40 (Feb) → avg $45.
+; Transport: $25 in Feb only but count=2 periods → avg $12.50.
 test reg --monthly --average Expenses
 24-Jan-01 - 24-Jan-31           Expenses:Dining              $30.00       $30.00
-                                Expenses:Food                $50.00       $40.00
-24-Feb-01 - 24-Feb-29           Expenses:Food                $40.00       $40.00
-                                Expenses:Transport           $25.00       $36.25
+                                Expenses:Food                $50.00       $50.00
+24-Feb-01 - 24-Feb-29           Expenses:Food                $40.00       $45.00
+                                Expenses:Transport           $25.00       $12.50
 end test

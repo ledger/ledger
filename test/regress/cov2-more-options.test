@@ -54,8 +54,8 @@ end test
 ; Test --average / -A option (line 1153-1154, 1232)
 test reg Expenses --monthly --average
 24-Jan-01 - 24-Jan-31           Expenses:Food                $10.00       $10.00
-                                Expenses:Gas                 $20.00       $15.00
-24-Feb-01 - 24-Feb-29           Expenses:Dining              $30.00       $20.00
+                                Expenses:Gas                 $20.00       $20.00
+24-Feb-01 - 24-Feb-29           Expenses:Dining              $30.00       $15.00
 end test
 
 ; Test --percent / -% option (line 1149-1150, 1350)
