@@ -73,8 +73,14 @@ bool post_t::has_tag(const mask_t& tag_mask, const std::optional<mask_t>& value_
                      bool inherit) const {
   if (item_t::has_tag(tag_mask, value_mask))
     return true;
-  if (inherit && xact)
-    return xact->has_tag(tag_mask, value_mask);
+  if (inherit && xact) {
+    // Only inherit from the parent transaction when this posting does not have
+    // any value for the tag.  If the posting owns the tag (even with a value
+    // that doesn't satisfy value_mask), the posting's own value shadows the
+    // transaction's.
+    if (!item_t::has_tag(tag_mask))
+      return xact->has_tag(tag_mask, value_mask);
+  }
   return false;
 }
 
@@ -91,8 +97,14 @@ std::optional<value_t> post_t::get_tag(const mask_t& tag_mask,
                                        bool inherit) const {
   if (std::optional<value_t> value = item_t::get_tag(tag_mask, value_mask))
     return value;
-  if (inherit && xact)
-    return xact->get_tag(tag_mask, value_mask);
+  if (inherit && xact) {
+    // Only inherit from the parent transaction when this posting does not have
+    // any value for the tag.  If the posting owns the tag (even with a value
+    // that doesn't satisfy value_mask), the posting's own value shadows the
+    // transaction's.
+    if (!item_t::has_tag(tag_mask))
+      return xact->get_tag(tag_mask, value_mask);
+  }
   return std::nullopt;
 }
 
