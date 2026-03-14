@@ -494,11 +494,9 @@ $ ledger -f drewr3.dat balance
 Ledger will generate:
 
 @smallexample @c output:1071890
-         $ -3,804.00  Assets
-          $ 1,396.00    Checking
-             $ 30.00      Business
-         $ -5,200.00    Savings
-         $ -1,000.00  Equity:Opening Balances
+          $ 1,396.00  Assets:Checking
+             $ 30.00    Business
+         $ -6,200.00  Equity:Opening Balances
           $ 6,654.00  Expenses
           $ 5,500.00    Auto
              $ 20.00    Books
@@ -527,16 +525,14 @@ $ ledger -f drewr3.dat balance Assets Liabilities
 @end smallexample
 
 @smallexample @c output:5BF4D8E
-         $ -3,804.00  Assets
-          $ 1,396.00    Checking
-             $ 30.00      Business
-         $ -5,200.00    Savings
+          $ 1,396.00  Assets:Checking
+             $ 30.00    Business
             $ -63.60  Liabilities
             $ -20.00    MasterCard
             $ 200.00    Mortgage:Principal
            $ -243.60    Tithe
 --------------------
-         $ -3,867.60
+          $ 1,332.40
 @end smallexample
 
 @node Register Report, Cleared Report, Balance Report, Run a Few Reports
@@ -555,7 +551,8 @@ Ledger will generate:
 
 @smallexample @c output:66E3A2C
 10-Dec-01 Checking balance      Assets:Checking          $ 1,000.00   $ 1,000.00
-                                Equit:Opening Balances  $ -1,000.00            0
+                                Assets:Savings           $ 5,200.00   $ 6,200.00
+                                Equit:Opening Balances  $ -6,200.00            0
 10-Dec-20 Organic Co-op         Expense:Food:Groceries      $ 37.50      $ 37.50
                                 Expense:Food:Groceries      $ 37.50      $ 75.00
                                 Expense:Food:Groceries      $ 37.50     $ 112.50
@@ -655,11 +652,11 @@ $ ledger -f drewr3.dat cleared
 @end smallexample
 
 @smallexample @c output:B86F6A6
-     $ -3,804.00            $ 775.00                 Assets
+      $ 1,396.00          $ 5,975.00                 Assets
       $ 1,396.00            $ 775.00    10-Dec-20      Checking
          $ 30.00                   0                     Business
-     $ -5,200.00                   0                   Savings
-     $ -1,000.00         $ -1,000.00    10-Dec-01    Equity:Opening Balances
+               0          $ 5,200.00    10-Dec-01      Savings
+     $ -6,200.00         $ -6,200.00    10-Dec-01    Equity:Opening Balances
       $ 6,654.00            $ 225.00                 Expenses
       $ 5,500.00                   0                   Auto
          $ 20.00                   0                   Books
@@ -4827,11 +4824,9 @@ $ ledger balance -f drewr3.dat
 which will print the balances of every account in your journal.
 
 @smallexample @c output:1D00D56
-         $ -3,804.00  Assets
-          $ 1,396.00    Checking
-             $ 30.00      Business
-         $ -5,200.00    Savings
-         $ -1,000.00  Equity:Opening Balances
+          $ 1,396.00  Assets:Checking
+             $ 30.00    Business
+         $ -6,200.00  Equity:Opening Balances
           $ 6,654.00  Expenses
           $ 5,500.00    Auto
              $ 20.00    Books
@@ -6823,11 +6818,9 @@ $ ledger -f drewr3.dat bal --no-total --master-account HUMBUG
 
 @smallexample @c output:A76BB56
                    0  HUMBUG
-         $ -3,804.00    Assets
-          $ 1,396.00      Checking
-             $ 30.00        Business
-         $ -5,200.00      Savings
-         $ -1,000.00    Equity:Opening Balances
+          $ 1,396.00    Assets:Checking
+             $ 30.00      Business
+         $ -6,200.00    Equity:Opening Balances
           $ 6,654.00    Expenses
           $ 5,500.00      Auto
              $ 20.00      Books
@@ -11519,6 +11512,7 @@ features, include automatic and virtual transactions,
 
 2010/12/01 * Checking balance
   Assets:Checking                   $1,000.00
+  Assets:Savings                    $5,200.00
   Equity:Opening Balances
 
 2010/12/20 * Organic Co-op

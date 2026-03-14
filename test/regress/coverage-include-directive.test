@@ -3,10 +3,8 @@
 include ../input/drewr3.dat
 
 test bal Assets -> 0
-         $ -3,804.00  Assets
-          $ 1,396.00    Checking
-             $ 30.00      Business
-         $ -5,200.00    Savings
+          $ 1,396.00  Assets:Checking
+             $ 30.00    Business
 --------------------
-         $ -3,804.00
+          $ 1,396.00
 end test
