@@ -1,0 +1,27 @@
+; Regression test for GitHub issue #1869:
+; getquote is called with an empty second argument when --market is used
+; without --exchange, even though a price history entry exists that
+; implies a concrete exchange commodity.
+;
+; When a commodity (BTC) has a price history entry denominated in a known
+; currency ($), the download script should be invoked as:
+;   getquote BTC $
+; not as:
+;   getquote BTC ''
+;
+; The mock script exits 1 if called with an empty exchange commodity ($2),
+; which would leave BTC valued at the stale P-directive price.  With the
+; fix, getquote receives '$' as $2, returns a fresh $40000 quote, and the
+; balance reflects that updated price.
+P 2024/01/01 BTC $3.00
+
+2024/06/01 Bitcoin Mining
+    Assets:BTC    1 BTC
+    Income:Mining
+
+test bal --market --download --getquote $sourcepath/test/scripts/mock-getquote-with-exchange.sh
+           $40000.00  Assets:BTC
+          $-40000.00  Income:Mining
+--------------------
+                   0
+end test
