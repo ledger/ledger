@@ -5421,7 +5421,7 @@ you will get the result:
     ; balance: 00001646.89
     ; CSV: 767406,12/13/2011,"Deposit","CASH DEPOSIT",,45.00,00001646.89,,
     ; Imported: 2012/01/13
-    ; UUID: cfb12d9fd0f8d958edcaa8ae26b8fa2d3993c28bac4f55dcb49f16142ad4753d
+    ; UUID: ce0b7d42b02ce5eaf0d828c3b1028041fd09494c
     Expenses:Unknown                             -45
     Assets:MyBank
 
@@ -5429,7 +5429,7 @@ you will get the result:
     ; balance: 00001640.04
     ; CSV: 767718,12/13/2011,"Withdrawal","ACE HARDWARE 16335 S HOUGHTON RD",8.80,,00001640.04,,
     ; Imported: 2012/01/13
-    ; UUID: 2140a0c6b0429eb820aa22f8175e8e42f7693895ab3b0b0bf1a5d8f0e7825bf7
+    ; UUID: 0aaf85911adc447ea2d5377ff6a60d6b2940047f
     Expenses:Unknown                             8.8
     Assets:MyBank
 @end smallexample

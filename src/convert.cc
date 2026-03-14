@@ -107,10 +107,9 @@ value_t convert_command(call_scope_t& args) {
       }
 
       // Step 2: Compute a unique reference for duplicate detection.
-      // Prefer an explicit UUID tag; fall back to the first 256 bits of the
-      // SHA-512 hash of the raw CSV line (stronger than SHA-1).
+      // Prefer an explicit UUID tag; fall back to SHA-1 of the raw CSV line.
       const string ref = xact->has_tag(_("UUID")) ? xact->get_tag(_("UUID"))->to_string()
-                                                  : sha512_256sum(reader.get_last_line());
+                                                  : sha1sum(reader.get_last_line());
 
       // Skip this transaction if its reference already exists in the journal.
       if (auto entry = journal.checksum_map.find(ref); entry != journal.checksum_map.end()) {

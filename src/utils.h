@@ -768,26 +768,6 @@ inline string sha1sum(const string& str,
   return digest_to_hex(message_digest, len);
 }
 
-// Forward-declare the SHA-512 implementation (defined in sha512.cc).
-extern "C" unsigned char* SHA512(void* data, unsigned int data_len, unsigned char* digest);
-
-/// Compute the SHA-512 hash of @p str and return the first 256 bits as a
-/// 64-character lowercase hex string.  Used to generate stable content-
-/// addressed identifiers (e.g. for CSV lines during import) with a stronger
-/// hash than SHA-1.
-inline string sha512_256sum(const string& str) {
-  // SHA-512 produces 64 bytes; we keep only the first 32 (256 bits).
-  static constexpr std::size_t DIGEST_BYTES = 64;
-  static constexpr std::size_t HALF_BYTES = 32;
-  unsigned char digest[DIGEST_BYTES];
-  SHA512(const_cast<char*>(str.c_str()), static_cast<unsigned int>(str.size()), digest);
-  std::ostringstream buf;
-  buf << std::hex << std::setfill('0');
-  for (std::size_t i = 0; i < HALF_BYTES; ++i)
-    buf << std::setw(2) << static_cast<unsigned int>(digest[i]);
-  return buf.str();
-}
-
 /// Selects which hash algorithm to use for transaction checksums.
 enum hash_type_t : uint8_t {
   NO_HASHES = 0,       ///< No hashing
