@@ -152,6 +152,7 @@ public:
     copy_details(post);
     TRACE_CTOR(post_t, "copy");
   }
+  post_t& operator=(const post_t&) = default;
   ~post_t() override { TRACE_DTOR(post_t); }
 
   string description() override {
@@ -319,6 +320,7 @@ public:
           account(other.account), sort_values(other.sort_values) {
       TRACE_CTOR(post_t::xdata_t, "copy");
     }
+    xdata_t& operator=(const xdata_t&) = default;
     ~xdata_t() noexcept { TRACE_DTOR(post_t::xdata_t); }
   };
 

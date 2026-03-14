@@ -179,6 +179,7 @@ public:
     copy_details(item);
     TRACE_CTOR(item_t, "copy");
   }
+  item_t& operator=(const item_t&) = default;
   ~item_t() override { TRACE_DTOR(item_t); }
 
   /** @brief Copy all mutable fields from another item.

@@ -112,6 +112,7 @@ struct symbol_t {
   symbol_t(const symbol_t& sym) : kind(sym.kind), name(sym.name), definition(sym.definition) {
     TRACE_CTOR(symbol_t, "copy");
   }
+  symbol_t& operator=(const symbol_t&) = default;
   ~symbol_t() noexcept { TRACE_DTOR(symbol_t); }
 
   bool operator<(const symbol_t& sym) const { return kind < sym.kind || name < sym.name; }

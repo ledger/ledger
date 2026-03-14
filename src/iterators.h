@@ -93,6 +93,7 @@ public:
   iterator_facade_base(const iterator_facade_base& i) : m_node(i.m_node) {
     TRACE_CTOR(iterator_facade_base, "copy");
   }
+  iterator_facade_base& operator=(const iterator_facade_base&) = default;
   ~iterator_facade_base() noexcept { TRACE_DTOR(iterator_facade_base); }
 
   explicit iterator_facade_base(node_base p) : m_node(p) {}
@@ -136,6 +137,7 @@ public:
         posts_i(i.posts_i), posts_end(i.posts_end), posts_uninitialized(i.posts_uninitialized) {
     TRACE_CTOR(xact_posts_iterator, "copy");
   }
+  xact_posts_iterator& operator=(const xact_posts_iterator&) = default;
   ~xact_posts_iterator() noexcept { TRACE_DTOR(xact_posts_iterator); }
 
   /// Point the iterator at a new transaction and advance to its first posting.
@@ -184,6 +186,7 @@ public:
         xacts_i(i.xacts_i), xacts_end(i.xacts_end), xacts_uninitialized(i.xacts_uninitialized) {
     TRACE_CTOR(xacts_iterator, "copy");
   }
+  xacts_iterator& operator=(const xacts_iterator&) = default;
   ~xacts_iterator() noexcept { TRACE_DTOR(xacts_iterator); }
 
   /// Point the iterator at all transactions in a journal.
@@ -224,6 +227,7 @@ public:
         xacts(i.xacts), posts(i.posts) {
     TRACE_CTOR(journal_posts_iterator, "copy");
   }
+  journal_posts_iterator& operator=(const journal_posts_iterator&) = default;
   ~journal_posts_iterator() noexcept { TRACE_DTOR(journal_posts_iterator); }
 
   void reset(journal_t& journal);
@@ -268,6 +272,7 @@ public:
         temps(i.temps), latest_only(i.latest_only) {
     TRACE_CTOR(posts_commodities_iterator, "copy");
   }
+  posts_commodities_iterator& operator=(const posts_commodities_iterator&) = default;
   ~posts_commodities_iterator() noexcept { TRACE_DTOR(posts_commodities_iterator); }
 
   void reset(journal_t& journal);
@@ -304,6 +309,7 @@ public:
         accounts_i(i.accounts_i), accounts_end(i.accounts_end) {
     TRACE_CTOR(basic_accounts_iterator, "copy");
   }
+  basic_accounts_iterator& operator=(const basic_accounts_iterator&) = default;
   ~basic_accounts_iterator() noexcept { TRACE_DTOR(basic_accounts_iterator); }
 
   void increment();
@@ -358,6 +364,7 @@ public:
         sorted_accounts_end(i.sorted_accounts_end) {
     TRACE_CTOR(sorted_accounts_iterator, "copy");
   }
+  sorted_accounts_iterator& operator=(const sorted_accounts_iterator&) = delete;
   ~sorted_accounts_iterator() noexcept { TRACE_DTOR(sorted_accounts_iterator); }
 
   void increment();

@@ -126,6 +126,7 @@ public:
         note(other.note), depth(other.depth), accounts(other.accounts) {
     TRACE_CTOR(account_t, "copy");
   }
+  account_t& operator=(const account_t&) = default;
   ~account_t() override;
 
   string description() override { return string(_("account ")) + fullname(); }
@@ -343,6 +344,7 @@ public:
           family_details(other.family_details), sort_values(other.sort_values) {
       TRACE_CTOR(account_t::xdata_t, "copy");
     }
+    xdata_t& operator=(const xdata_t&) = default;
     ~xdata_t() noexcept { TRACE_DTOR(account_t::xdata_t); }
   };
 

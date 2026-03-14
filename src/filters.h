@@ -944,6 +944,7 @@ protected:
           must_balance(av.must_balance) {
       TRACE_CTOR(acct_value_t, "copy");
     }
+    acct_value_t& operator=(const acct_value_t&) = default;
     ~acct_value_t() noexcept { TRACE_DTOR(acct_value_t); }
   };
 
