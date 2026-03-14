@@ -1,0 +1,33 @@
+; Test for issue #1884: --balance-format with quoted value in init file.
+;
+; When specifying --balance-format (or other format options) in a .ledgerrc
+; init file, the value is read as raw text without shell processing.  Users
+; need to wrap the value in double-quotes to handle spaces, and use \" inside
+; those quotes to embed a literal double-quote (e.g., for empty string
+; literals in expressions like `depth_spacer : ""`).
+;
+; This test verifies that:
+;   1. Double-quoted option values in init files have their outer quotes
+;      stripped and \" sequences unescaped to ".
+;   2. The resulting format string is parsed correctly, including expressions
+;      that use "" (empty string literal).
+
+2024/01/01 Groceries
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/01/15 Books
+    Expenses:Books   $25.00
+    Assets:Cash
+
+; Verify that \" inside a double-quoted init-file option value is unescaped.
+; The format uses the expression `!options.flat ? depth_spacer : ""` which
+; requires a literal double-quote inside the init-file quoted value.
+test bal --init-file $sourcepath/test/regress/1884.ledgerrc
+             $-75.00  Assets:Cash
+              $75.00  Expenses
+              $25.00    Books
+              $50.00    Food
+--------------------
+                   0
+end test
