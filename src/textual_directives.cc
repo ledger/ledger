@@ -656,6 +656,22 @@ void instance_t::account_rewrite_directive(char* line) {
 
 void instance_t::commodity_directive(char* line) {
   char* p = skip_ws(line);
+
+  // If the argument starts with a digit AND contains '=', treat it as a price
+  // conversion of the form "N X = M Y" (e.g., "commodity 1 eur = 2 slices"),
+  // equivalent to the C directive.  Without this, parse_symbol() would silently
+  // extract just "1" as the symbol and discard "eur = 2 slices", causing the
+  // intended price conversion to be silently ignored.
+  if (std::isdigit(static_cast<unsigned char>(*p))) {
+    if (char* eq = std::strchr(p, '=')) {
+      *eq++ = '\0';
+      amount_t::parse_conversion(p, eq);
+      return;
+    }
+    // No '=': fall through and let the normal parse_symbol() path handle it
+    // (e.g., "commodity 1,000.00 USD" defines a format style).
+  }
+
   string symbol; // NOLINT(bugprone-unused-local-non-trivial-variable)
   commodity_t::parse_symbol(p, symbol);
 
