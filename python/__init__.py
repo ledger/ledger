@@ -1,1 +1,1 @@
-from ._core import *
+from lpy.core import *

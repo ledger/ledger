@@ -160,7 +160,12 @@ void python_interpreter_t::initialize() {
     hack_system_paths();
 
     main_module = import_module("__main__");
-    PyImport_ImportModule("_core");
+    // Load _core and alias it as lpy._core so that relative imports inside
+    // the lpy package (e.g. "from .._core import *" in lpy/core/__init__.py)
+    // resolve correctly when running embedded in the ledger CLI.
+    PyObject* core_mod = PyImport_ImportModule("_core");
+    PyDict_SetItemString(PyImport_GetModuleDict(), "lpy.core._core", core_mod);
+    Py_XDECREF(core_mod);
 
     is_initialized = true;
   } catch (const error_already_set&) {
@@ -187,17 +192,17 @@ void python_interpreter_t::hack_system_paths() {
     path pathname(str());
     DEBUG("python.interp", "sys.path = " << pathname);
 
-    if (exists(pathname / "ledger" / "__init__.py")) {
-      if (object module_ledger = import("ledger")) {
-        DEBUG("python.interp", "Setting ledger.__path__ = " << (pathname / "ledger"));
+    if (exists(pathname / "lpy" / "__init__.py")) {
+      if (object module_lpy = import("lpy")) {
+        DEBUG("python.interp", "Setting lpy.__path__ = " << (pathname / "lpy"));
 
-        object ledger_dict = module_ledger.attr("__dict__");
+        object lpy_dict = module_lpy.attr("__dict__");
         list temp_list;
-        temp_list.append((pathname / "ledger").string());
+        temp_list.append((pathname / "lpy").string());
 
-        ledger_dict["__path__"] = temp_list;
+        lpy_dict["__path__"] = temp_list;
       } else {
-        throw_(std::runtime_error, _("Python failed to initialize (couldn't find ledger)"));
+        throw_(std::runtime_error, _("Python failed to initialize (couldn't find lpy)"));
       }
 #if DEBUG_ON
       path_initialized = true;
@@ -207,7 +212,7 @@ void python_interpreter_t::hack_system_paths() {
   }
 #if DEBUG_ON
   if (!path_initialized)
-    DEBUG("python.init", "Ledger failed to find 'ledger/__init__.py' on the PYTHONPATH");
+    DEBUG("python.init", "Ledger failed to find 'lpy/__init__.py' on the PYTHONPATH");
 #endif
 }
 
