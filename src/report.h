@@ -755,6 +755,17 @@ public:
                       "%$1 %$2 %$3\n%/"
                       "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
                       "--------------------------------------------\n");
+
+        OTHER(csv_format_)
+            .on(none, "%(quoted(date)),"
+                      "%(quoted(code)),"
+                      "%(quoted(payee)),"
+                      "%(quoted(display_account)),"
+                      "%(quoted(commodity(scrub(get_at(display_amount, 0) || get_at(display_amount, 1) || 0)))),"
+                      "%(quoted(quantity(scrub(abs(get_at(display_amount, 0) || 0))))),"
+                      "%(quoted(quantity(scrub(abs(get_at(display_amount, 1) || 0))))),"
+                      "%(quoted(cleared ? \"*\" : (pending ? \"!\" : \"\"))),"
+                      "%(quoted(join(note | xact.note)))\n");
       });
 
   OPTION_(report_t, depth_, DO_() { OTHER(display_).on(whence, string("depth<=") + str); });
