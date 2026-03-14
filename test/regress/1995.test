@@ -16,7 +16,10 @@ test reg --related-all Expenses:Food
                                 Budget:Total                $-50.00            0
 end test
 
-; Verify --related (without --all) still excludes generated postings
+; Verify --related (without --all) includes auto-transaction generated postings.
+; See issue #1832: automated transactions should appear in --related output.
 test reg --related Expenses:Food
 24-Jan-15 Grocery               Assets:Checking             $-50.00      $-50.00
+                                Budget:Food                  $50.00            0
+                                Budget:Total                $-50.00      $-50.00
 end test
