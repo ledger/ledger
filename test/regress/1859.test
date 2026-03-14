@@ -1,0 +1,26 @@
+; Regression test for GitHub issue #1859:
+; --input-date-format should be respected by the xact/entry command.
+;
+; The original bug: parse_args() called regex_match() on a temporary
+; std::string (from (*begin).to_string()), then immediately used the
+; resulting smatch submatches to call parse_date(what[0]).  Since smatch
+; stores iterators into the input string (not a copy), and the temporary
+; string was destroyed at the semicolon ending the regex_match() call,
+; the what[0] iterators were dangling.  parse_date() then received an
+; empty string and threw "Error: Invalid date: ".
+;
+; The fix (commit efd55c76) assigns (*begin).to_string() to a named local
+; variable so the string stays alive until after what[0] is consumed.
+
+2020/01/01 Test Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+; With --input-date-format "%d/%m/%Y", the date "04/02/2020" should be
+; parsed as day=04, month=02, year=2020 (i.e. 2020-Feb-04), not as
+; month=04, day=02 (which would be 2020-Apr-02 in the default %m/%d format).
+test --now "2020/02/05" xact --input-date-format "%d/%m/%Y" "04/02/2020" "Test Payee" "Expenses:Food" 10 "Assets:Cash"
+2020/02/04 Test Payee
+    Expenses:Food                             $10.00
+    Assets:Cash
+end test
