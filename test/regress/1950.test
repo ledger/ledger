@@ -1,0 +1,23 @@
+; Regression test for issue #1950:
+; --average (-A) should compute per-account averages, not a global average
+; across all accounts.  With --monthly and multiple accounts in the same
+; period, the running count was a global row counter rather than a period
+; counter, causing the second account's average to be contaminated by the
+; first account's presence in the same period.
+
+2022/01/01 January
+    Expenses:Acc1               $100.00
+    Assets:Cash
+
+2022/01/15 January
+    Expenses:Acc2               $200.00
+    Assets:Cash
+
+; Both accounts appear in January (period 1).  With the bug, Acc2 showed
+; $150 (= $300 global total / count=2 global rows).  With the fix, both
+; accounts use count=1 (one period elapsed) and report their own totals:
+; Acc1: $100/1 = $100, Acc2: $200/1 = $200.
+test reg --monthly --average ^Expenses
+22-Jan-01 - 22-Jan-31           Expenses:Acc1               $100.00      $100.00
+                                Expenses:Acc2               $200.00      $200.00
+end test

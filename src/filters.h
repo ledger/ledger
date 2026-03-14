@@ -620,15 +620,29 @@ class calc_posts : public item_handler<post_t> {
   bool maintain_stripped_total; ///< Whether to incrementally maintain a stripped display total.
   keep_details_t what_to_keep;  ///< Annotation details to preserve when stripping.
 
+  /// When true, use per-account running totals for synthetic (ITEM_GENERATED)
+  /// postings instead of the global running total.
+  ///
+  /// This is enabled when --average (-A) is active.  Without it, a period
+  /// report with multiple accounts per interval (e.g. --monthly with two
+  /// expense accounts) would blend all accounts into a single global total,
+  /// causing --average to produce wrong per-account averages.  With it, each
+  /// account accumulates only its own postings, so every account's average is
+  /// computed independently.
+  bool period_average_;
+
+  /// Per-account running totals, populated only when period_average_ is true.
+  std::map<account_t*, value_t> account_period_totals_;
+
   calc_posts();
 
 public:
   calc_posts(post_handler_ptr handler, expr_t& _amount_expr, bool _calc_running_total = false,
              bool _maintain_stripped = false,
-             const keep_details_t& _what_to_keep = keep_details_t())
+             const keep_details_t& _what_to_keep = keep_details_t(), bool _period_average = false)
       : item_handler<post_t>(std::move(handler)), last_post(nullptr), amount_expr(_amount_expr),
         calc_running_total(_calc_running_total), maintain_stripped_total(_maintain_stripped),
-        what_to_keep(_what_to_keep) {
+        what_to_keep(_what_to_keep), period_average_(_period_average) {
     TRACE_CTOR(calc_posts, "post_handler_ptr, expr_t&, bool");
   }
   ~calc_posts() override { TRACE_DTOR(calc_posts); }
@@ -637,6 +651,7 @@ public:
 
   void clear() override {
     last_post = nullptr;
+    account_period_totals_.clear();
     amount_expr.mark_uncompiled();
 
     item_handler<post_t>::clear();
