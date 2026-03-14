@@ -567,6 +567,23 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
             post->add_flags(POST_AMOUNT_USER_DATE);
         }
 
+        if (post->amount.commodity().has_flags(COMMODITY_STYLE_NO_MIGRATE) &&
+            post->amount.precision() > post->amount.commodity().precision()) {
+          if (context.journal->checking_style == journal_t::CHECK_WARNING) {
+            context.warning(
+                _f("Amount for commodity '%1%' has %2% decimal places but declared format only "
+                   "shows %3%") %
+                post->amount.commodity().symbol() % post->amount.precision() %
+                post->amount.commodity().precision());
+          } else if (context.journal->checking_style == journal_t::CHECK_ERROR) {
+            throw_(parse_error,
+                   _f("Amount for commodity '%1%' has %2% decimal places but declared format only "
+                      "shows %3%") %
+                       post->amount.commodity().symbol() % post->amount.precision() %
+                       post->amount.commodity().precision());
+          }
+        }
+
         context.journal->register_commodity(post->amount.commodity(), post.get());
 
         if (!post->amount.has_annotation()) {

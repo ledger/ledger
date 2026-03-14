@@ -1,0 +1,39 @@
+; Regression test for issue #1941: warn when an amount has more decimal places
+; than the declared commodity format precision (requires --strict).
+;
+; When a commodity format is declared with limited precision (e.g. "1,000.00
+; USD" for 2 decimal places) and --strict is active, any posting with a
+; higher-precision amount (e.g. 1.12345 USD) should produce a warning.
+
+commodity USD
+  format 1,000.00 USD
+
+account Assets:Portfolio
+account Assets:Cash
+
+2024/01/01 Investment Purchase
+    Assets:Portfolio    1.12345 USD
+    Assets:Cash        -1.12345 USD
+
+; Without --strict: no warning, amount displayed at declared precision
+test reg --format "%(amount)\n" Assets:Portfolio
+1.12 USD
+end test
+
+; With --strict: warns about excess precision on both postings
+test reg --strict --format "%(amount)\n" Assets:Portfolio
+1.12 USD
+__ERROR__
+Warning: "$FILE", line 15: Amount for commodity 'USD' has 5 decimal places but declared format only shows 2
+Warning: "$FILE", line 16: Amount for commodity 'USD' has 5 decimal places but declared format only shows 2
+end test
+
+; With --pedantic: throws an error on excess precision
+test reg --pedantic --format "%(amount)\n" Assets:Portfolio -> 1
+__ERROR__
+While parsing file "$FILE", line 15:
+While parsing posting:
+  Assets:Portfolio    1.12345 USD
+                      ^^^^^^^^^^^
+Error: Amount for commodity 'USD' has 5 decimal places but declared format only shows 2
+end test
