@@ -1,0 +1,31 @@
+; Regression test for issue #1828:
+; "commodity 1 eur = 2 slices" should set up a price conversion, equivalent
+; to "C 1 eur = 2 slices".  Previously the directive silently created a
+; commodity named "1" and discarded the rest, so the conversion was never
+; registered and an imbalanced transaction was accepted without error.
+
+commodity eur
+commodity slices
+commodity 1 eur = 2 slices
+
+account Foo
+account Bar
+
+; 3 eur != 2 slices (since 1 eur = 2 slices, 3 eur = 6 slices).
+2019/09/20 Unbalanced
+    Foo          -2 slices
+    Bar           3 eur
+
+test bal --explicit --pedantic -> 1
+__ERROR__
+While parsing file "$FILE", line 17:
+While balancing transaction from "$FILE", lines 15-17:
+> 2019/09/20 Unbalanced
+>     Foo          -2 slices
+>     Bar           3 eur
+Unbalanced remainder is:
+            4 slices
+Amount to balance against:
+               3 eur
+Error: Transaction does not balance
+end test
