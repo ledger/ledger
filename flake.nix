@@ -59,6 +59,8 @@
           # Install the Python module into our own 'py' output rather than the
           # read-only Python store path.
           "-DLEDGER_PYTHON_INSTALL_DIR=${placeholder "py"}/${python3.sitePackages}"
+          # Install Python examples (demo.py) into the 'py' output as well.
+          "-DLEDGER_PYTHON_EXAMPLES_INSTALL_DIR=${placeholder "py"}/share"
         ];
 
         installTargets = [ "doc" "install" ];
