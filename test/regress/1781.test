@@ -1,0 +1,36 @@
+; Regression test for issue #1781
+; Backslash escaping in regex patterns required double-escaping (\\|) instead
+; of the standard single-escaping (\|). In /.../ regex literals, backslash
+; sequences should be passed through to the regex engine unchanged, so that
+; \| matches a literal pipe character, \d matches a digit, etc.
+; Only \/ needs special treatment (stripping the backslash) to allow a literal
+; slash inside a /.../  pattern without terminating it early.
+
+2019-01-01 * Test 1
+    Assets:A                1.00 EUR
+    Assets:B               -1.00 EUR
+
+2019-02-01 * Test 2 | Test 2
+    Assets:A                2.00 EUR
+    Assets:B               -2.00 EUR
+
+2019-03-01 * Test 3 | Test 3
+    Assets:A                3.00 EUR
+    Assets:B               -3.00 EUR
+
+; Single backslash should escape | in a value expression regex (token.cc path)
+; The argument is single-quoted so the shell passes the literal backslash to ledger
+test payees -l 'payee =~ /\|/'
+Test 2 | Test 2
+Test 3 | Test 3
+end test
+
+; Single backslash should escape | in a query regex (query.cc path)
+; @/regex/ uses the payee matching context; the argument is single-quoted so
+; the shell passes the literal backslash to ledger's query parser
+test reg '@/\|/'
+19-Feb-01 Test 2 | Test 2       Assets:A                   2.00 EUR     2.00 EUR
+                                Assets:B                  -2.00 EUR            0
+19-Mar-01 Test 3 | Test 3       Assets:A                   3.00 EUR     3.00 EUR
+                                Assets:B                  -3.00 EUR            0
+end test

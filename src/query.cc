@@ -126,11 +126,18 @@ bool query_t::lexer_t::unbalanced_braces(const string& str) {
 query_t::lexer_t::token_t query_t::lexer_t::scan_quoted_pattern() {
   string pat;
   char closing = *arg_i;
+  bool is_regex = (closing == '/');
   bool found_closing = false;
   for (++arg_i; arg_i != arg_end; ++arg_i) {
     if (*arg_i == '\\') {
       if (++arg_i == arg_end)
         throw_(parse_error, _("Unexpected '\\' at end of pattern"));
+      if (is_regex && *arg_i != closing) {
+        // For regex patterns /.../: preserve the backslash so the regex engine
+        // can interpret escape sequences (e.g., \| for literal pipe). Only
+        // \/ is consumed as a delimiter escape (backslash stripped).
+        pat.push_back('\\');
+      }
     } else if (*arg_i == closing) {
       ++arg_i;
       found_closing = true;
