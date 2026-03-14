@@ -262,8 +262,17 @@ commodity_t::check_for_updated_price(const std::optional<price_point_t>& point,
 
     if (exceeds_leeway) {
       DEBUG("commodity.download", "attempting to download a more current quote...");
+      // When no explicit exchange commodity was requested, infer it from the
+      // existing price point so the getquote script receives a concrete target
+      // (e.g., "getquote BTC $") rather than an empty second argument
+      // ("getquote BTC ''").  An empty second argument is surprising for
+      // scripts that expect to know which currency to return, and can cause
+      // scripts to fail or behave unexpectedly (issue #1869).
+      const commodity_t* effective_exchange = in_terms_of;
+      if (!effective_exchange && point && point->price.has_commodity())
+        effective_exchange = point->price.commodity_ptr();
       if (std::optional<price_point_t> quote =
-              pool().get_commodity_quote(referent(), in_terms_of)) {
+              pool().get_commodity_quote(referent(), effective_exchange)) {
         referent().base->last_quote = TRUE_CURRENT_TIME(); // record download time (issue #996)
         if (!in_terms_of ||
             (quote->price.has_commodity() && quote->price.commodity_ptr() == in_terms_of))
