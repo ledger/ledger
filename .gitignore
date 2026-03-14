@@ -59,7 +59,7 @@ doc/report/
 doc/version.texi
 install-sh
 intl/
-ledger
+/ledger
 libtool
 ltmain.sh
 m4/
