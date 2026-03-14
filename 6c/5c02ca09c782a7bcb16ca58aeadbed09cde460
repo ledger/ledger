@@ -1,0 +1,758 @@
+test/regress/1826.test
+  a856f373ac54d3a7 1-23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.9",
+  "base_commit_sha": "6c5c02ca09c782a7bcb16ca58aeadbed09cde460",
+  "prompts": {
+    "a856f373ac54d3a7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8e110640-1866-4083-87f1-9972d101c9cb",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "<command-message>fix</command-message>\n<command-name>/fix</command-name>\n<command-args>1826</command-args>",
+          "timestamp": "2026-03-14T18:41:18.271Z"
+        },
+        {
+          "type": "user",
+          "text": "# Think, Research, Plan, Act, Review\n\nThink deeply to analyze the following query, construct a well thought out plan of action based on the following context, and then carefully execute that plan step by step.\n\nIf you find that the bug or feature you’re attempting to fix has already been addressed in an earlier commit, just add a regression test to demonstrate the item has been dealt with.\n\nCreate a PR for each using my jwiegley user on GitHub. The author/committer for all new commits should be signed by johnw@newartisans.com.\n\nThis series of jobs will take a long time, so make a comprehensive and effective plan and then execute step by step until you have completed them all and added new regression tests for each.\n\nNow, please analyze and fix the GitHub issue: 1826.\n\nNOTE: Do not work on a bug that already has a PR open that addresses it. In that case, just give the PR number and stop immediately.\n\n# Follow these steps\n\n1. Use `gh issue view` to get the issue details\n2. Understand the problem described in the issue\n3. Search the codebase for relevant files\n4. Implement the necessary changes to fix the issue\n5. Write and run tests to verify the fix\n6. Ensure code passes linting and type checking\n7. Leave your work uncommitted in the working tree, so it can be reviewed.\n\nRemember the following:\n- Use the GitHub CLI (`gh`) for all GitHub-related tasks\n- Search the codebase for relevant files\n- Ensure code passes linting and type checking after doing any work\n- Use cpp-pro, python-pro, emacs-lisp-pro, rust-pro or haskell-pro as needed for diagnosing and analyzing PRs, fixing code, and writing any new code.\n- Use Web Search and Perplexity as need for research and discovering resources.\n- Use sequential-thinking when appropriate to break down tasks further.\n- Use context7 whenever code examples might help.\n\nCommit all work as a series of atomic, logically sequenced commits. Each commit should represent one coherent change that can be understood, reviewed, and reverted independently.\n\n# Commit Decomposition Principles\n\n**Scope each commit to a single logical change.** A commit should do exactly one thing: add a function, fix a bug, refactor a module, update documentation. If you find yourself writing \"and\" in a commit message, consider splitting the commit.\n\n**Sequence commits to tell a story.** Arrange commits so each builds naturally on the previous. A reviewer reading the series should understand why each change was made and how the code evolved. Foundational changes come before dependent ones.\n\n**Keep each commit in a working state.** Every commit should compile, pass tests, and not introduce obvious regressions. This enables bisection for debugging and allows reviewers to check out any point in history.\n\n# Categorizing Changes\n\nBefore committing, analyze the working tree and group changes into categories:\n\n1. **Infrastructure/setup changes** — new dependencies, configuration, tooling\n2. **Refactoring** — restructuring existing code without changing behavior\n3. **New functionality** — features, APIs, modules\n4. **Bug fixes** — corrections to existing behavior\n5. **Tests** — new or modified test coverage\n6. **Documentation** — comments, READMEs, inline docs\n\nCommit these categories in order when dependencies exist between them. Refactoring that enables a new feature should precede the feature commit.\n\n# Commit Message Format\n\n```\n<summary>\n\n<body>\n\n<footer>\n```\n\n**Summary line:** Imperative mood, no period, under 50 characters. Describe what applying the commit does, not what you did.\n\n**Body:** Explain the motivation and contrast with previous behavior. Wrap at 72 characters. Focus on *why*, not *what* (the diff shows what).\n\n**Footer:** Reference issues, breaking changes, or co-authors.\n\n# Staging Strategy\n\nUse selective staging to craft precise commits:\n\n- `git add -p` for hunks within files\n- `git add <specific-files>` to group related files\n- Review staged changes with `git diff --staged` before committing\n\nWhen a single file contains changes belonging to multiple logical commits, stage hunks separately rather than committing the entire file.\n\n# Quality Checklist\n\nBefore finalizing each commit:\n\n- [ ] Does this commit do exactly one thing?\n- [ ] Could someone understand this change without seeing other commits?\n- [ ] Is the commit message searchable? Will someone find this when grepping history?\n- [ ] Does the code compile and pass tests at this point?\n- [ ] Would reverting this commit cleanly undo one logical change?\n\n# Example Decomposition\n\nGiven work that adds a feature with tests and required refactoring:\n\n```\n1. Extract token validation into dedicated module\n2. Add unit tests for token validation\n3. Implement refresh token rotation\n4. Add integration tests for token refresh flow\n5. Document refresh token behavior in API guide\n```\n\nEach commit is independently reviewable, the sequence shows logical progression, and future developers can find relevant changes through targeted searches.\n\n# Handling Mixed Changes\n\nIf the working tree contains entangled changes:\n\n1. **Identify the distinct changes** — list what logical modifications exist\n2. **Determine dependencies** — which changes require others to be present\n3. **Create a commit plan** — order commits to satisfy dependencies\n4. **Stage incrementally** — use partial staging to isolate each change\n5. **Verify at each step** — ensure the repository works after each commit\n\nWhen changes are too entangled to separate cleanly, prefer a slightly larger commit with a clear message over a commit that leaves the repository in a broken state.\n",
+          "timestamp": "2026-03-14T18:41:18.271Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 1826 --repo ledger/ledger 2>&1",
+            "description": "View GitHub issue #1826"
+          },
+          "timestamp": "2026-03-14T18:41:22.804Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh pr list --repo ledger/ledger --search \"1826\" 2>&1",
+            "description": "Check for existing PRs mentioning issue 1826"
+          },
+          "timestamp": "2026-03-14T18:41:23.322Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh pr list --repo ledger/ledger --state open 2>&1 | grep -i \"1826\\|null posting\\|virtual\\|balance\" | head -20",
+            "description": "Search for PRs related to issue 1826"
+          },
+          "timestamp": "2026-03-14T18:41:33.094Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"null\\|elided\\|AUTO_BALANCE\\|null_post\\|balance.*post\\|virtual\" src/textual.cc | head -50",
+            "description": "Search for null posting handling in textual parser"
+          },
+          "timestamp": "2026-03-14T18:41:39.618Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"null_post\\|virtual_post\\|VIRTUAL\\|AUTO_BALANCE\\|empty.*amount\\|no.*amount\" src/textual.cc | head -50",
+            "description": "Search for virtual posting and null posting handling"
+          },
+          "timestamp": "2026-03-14T18:41:43.760Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"null_post\\|virtual_post\\|VIRTUAL\\|AUTO_BALANCE\" src/xact.cc | head -50",
+            "description": "Search for virtual posting handling in xact.cc"
+          },
+          "timestamp": "2026-03-14T18:41:46.619Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1826/src/xact.cc",
+            "limit": 200,
+            "offset": 260
+          },
+          "timestamp": "2026-03-14T18:41:50.570Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1826/src/xact.cc",
+            "limit": 200,
+            "offset": 460
+          },
+          "timestamp": "2026-03-14T18:41:54.340Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1826/src/xact.cc",
+            "limit": 200,
+            "offset": 660
+          },
+          "timestamp": "2026-03-14T18:41:57.292Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1826/src/xact.cc",
+            "limit": 80,
+            "offset": 180
+          },
+          "timestamp": "2026-03-14T18:42:00.704Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I need to understand what happens when `add_balancing_post` creates additional postings. Let me check the posting flags:",
+          "timestamp": "2026-03-14T18:42:13.976Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"POST_VIRTUAL\\|POST_MUST_BALANCE\" src/post.h | head -30",
+            "description": "Check posting flag definitions"
+          },
+          "timestamp": "2026-03-14T18:42:14.925Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"POST_VIRTUAL\\|POST_MUST_BALANCE\\|\\[.*\\]\" src/textual.cc | head -40",
+            "description": "Check how virtual postings are parsed in textual.cc"
+          },
+          "timestamp": "2026-03-14T18:42:17.565Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"POST_VIRTUAL\\|POST_MUST_BALANCE\\|\\[.*\\]\\|virtual\" src/textual.cc | head -40",
+            "description": "Search for virtual posting parsing in textual.cc"
+          },
+          "timestamp": "2026-03-14T18:42:21.388Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"POST_VIRTUAL\\|POST_MUST_BALANCE\" src/textual.cc 2>/dev/null | head -30",
+            "description": "Search for POST_VIRTUAL in textual.cc"
+          },
+          "timestamp": "2026-03-14T18:42:24.730Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"POST_VIRTUAL\\|POST_MUST_BALANCE\\|add_flags.*VIRTUAL\\|virtual\\|balance\" src/*.cc | grep -i \"virtual\" | head -30",
+            "description": "Find where POST_VIRTUAL flag is set"
+          },
+          "timestamp": "2026-03-14T18:42:27.720Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"POST_VIRTUAL\\|POST_MUST_BALANCE\" src/parse.cc 2>/dev/null | head -30",
+            "description": "Search parse.cc for virtual posting flag setting"
+          },
+          "timestamp": "2026-03-14T18:42:30.109Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"POST_VIRTUAL\\|POST_MUST_BALANCE\" src/ | grep \"add_flags\\|set_flags\" | head -20",
+            "description": "Find where POST_VIRTUAL flag is set on postings"
+          },
+          "timestamp": "2026-03-14T18:42:32.514Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1826/src/textual_xacts.cc",
+            "limit": 50,
+            "offset": 505
+          },
+          "timestamp": "2026-03-14T18:42:35.307Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"copy_details\" src/post.cc src/post.h src/item.h src/item.cc 2>/dev/null | head -20",
+            "description": "Find copy_details method definition"
+          },
+          "timestamp": "2026-03-14T18:42:52.521Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1826/src/post.h",
+            "limit": 30,
+            "offset": 260
+          },
+          "timestamp": "2026-03-14T18:42:55.686Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1826/src/item.h",
+            "limit": 30,
+            "offset": 185
+          },
+          "timestamp": "2026-03-14T18:42:58.132Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me create a test case to reproduce the issue:",
+          "timestamp": "2026-03-14T18:43:07.095Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat > /tmp/test1826.dat << 'EOF'\n2019/07/01 * United States Treasury\n    Assets:Investments:I-Bonds    1000 \"IB0719\" @ $1.00\n    Assets:Bank:Checking          $-1000.00\n\n2019/07/31 * United States Treasury\n    Assets:Investments:I-Bonds    1000 \"IB0719\" @ $1.00\n    Assets:Bank:Checking          $-1000.00\n\n2019/08/30 * United States Treasury\n    Assets:Investments:I-Bonds    1000 \"IB0819\" @ $1.00\n    Assets:Bank:Checking          $-1000.00\n\n2019/08/30 * I-Bond Virtual Movement\n    [Assets:LTS:Future Plans]     2000 \"IB0719\"\n    [Assets:LTS:Future Plans]     1000 \"IB0819\"\n    [Assets:Investments:I-Bonds]\nEOF\n\n./build/ledger -f /tmp/test1826.dat print 2>&1",
+            "description": "Test issue 1826 with current build"
+          },
+          "timestamp": "2026-03-14T18:43:11.180Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1826/",
+            "description": "Check fix-1826 directory structure"
+          },
+          "timestamp": "2026-03-14T18:43:13.341Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/ | head -20",
+            "description": "List ledger directories"
+          },
+          "timestamp": "2026-03-14T18:43:16.891Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/main/build/ 2>/dev/null | head -5 || ls /Users/johnw/src/ledger/fix-1826/build/ 2>/dev/null | head -5",
+            "description": "Find build directories"
+          },
+          "timestamp": "2026-03-14T18:43:19.348Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/main/build/ledger 2>/dev/null || ls /Users/johnw/src/ledger/fix-1826/build/ledger 2>/dev/null || find /Users/johnw/src/ledger -name \"ledger\" -type f -executable 2>/dev/null | head -5",
+            "description": "Find ledger executable"
+          },
+          "timestamp": "2026-03-14T18:43:24.446Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "/Users/johnw/src/ledger/check-tests/build/ledger -f /tmp/test1826.dat print 2>&1",
+            "description": "Test issue 1826 with existing ledger binary"
+          },
+          "timestamp": "2026-03-14T18:43:27.456Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "/Users/johnw/src/ledger/check-tests/build/ledger -f /tmp/test1826.dat reg 2>&1",
+            "description": "Test issue 1826 register output"
+          },
+          "timestamp": "2026-03-14T18:43:30.476Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "/Users/johnw/src/ledger/check-tests/build/ledger -f /tmp/test1826.dat bal 2>&1",
+            "description": "Test balance output for issue 1826"
+          },
+          "timestamp": "2026-03-14T18:43:44.405Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/main && git log --oneline --all | head -30",
+            "description": "Check recent commits in main"
+          },
+          "timestamp": "2026-03-14T18:44:02.511Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/main && git log --oneline --all | grep -i \"1826\\|virtual\\|null post\\|balancing\" | head -20",
+            "description": "Check if there are commits related to issue 1826"
+          },
+          "timestamp": "2026-03-14T18:44:06.476Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/main && git show fe6d8553 --stat 2>&1",
+            "description": "Show commit that fixed virtual posting multi-commodity"
+          },
+          "timestamp": "2026-03-14T18:44:10.885Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/main && git show b1ae97f6 2>&1",
+            "description": "Show the actual PR commit"
+          },
+          "timestamp": "2026-03-14T18:44:13.872Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/main && git show 8f7f445b --stat 2>&1",
+            "description": "Show commit that tracked real and virtual balances independently"
+          },
+          "timestamp": "2026-03-14T18:44:19.664Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "/Users/johnw/src/ledger/check-tests/build/ledger -f /tmp/test1826.dat bal --real 2>&1",
+            "description": "Check real balance (excluding virtual)"
+          },
+          "timestamp": "2026-03-14T18:44:42.210Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "/Users/johnw/src/ledger/check-tests/build/ledger -f /tmp/test1826.dat bal --virtual 2>&1\n/Users/johnw/src/ledger/check-tests/build/ledger -f /tmp/test1826.dat bal \"^\\\\[\" 2>&1",
+            "description": "Check virtual balance and bracket accounts"
+          },
+          "timestamp": "2026-03-14T18:44:48.509Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "/Users/johnw/src/ledger/check-tests/build/ledger -f /tmp/test1826.dat bal \"Assets:LTS:Future Plans\" 2>&1\n/Users/johnw/src/ledger/check-tests/build/ledger -f /tmp/test1826.dat bal \"Assets:Investments:I-Bonds\" 2>&1",
+            "description": "Check balance for specific virtual accounts"
+          },
+          "timestamp": "2026-03-14T18:44:52.216Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "/Users/johnw/src/ledger/check-tests/build/ledger -f /tmp/test1826.dat bal \"Assets:Investments:I-Bonds\" 2>&1",
+            "description": "Check balance for investments account"
+          },
+          "timestamp": "2026-03-14T18:44:55.326Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "/Users/johnw/src/ledger/check-tests/build/ledger -f /tmp/test1826.dat reg \"Assets:Investments:I-Bonds\" 2>&1",
+            "description": "Register for I-Bonds account"
+          },
+          "timestamp": "2026-03-14T18:45:00.589Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/main && git show 8f7f445b 2>&1",
+            "description": "Show the full virtual balance fix commit"
+          },
+          "timestamp": "2026-03-14T18:45:15.638Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/main && git log --oneline 8f7f445b~5..8f7f445b 2>&1",
+            "description": "Show commits around the virtual balance fix"
+          },
+          "timestamp": "2026-03-14T18:45:29.842Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/main && git show 8f7f445b~1:src/xact.cc | head -200 | tail -80 2>&1",
+            "description": "Look at original xact.cc code before the virtual balance fix"
+          },
+          "timestamp": "2026-03-14T18:45:32.755Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"POST_VIRTUAL\\|virtual.*format\\|\\[.*\\]\\|bracket\" src/format.cc src/output.cc 2>/dev/null | grep -i \"bracket\\|virtual\\|\\[\" | head -30",
+            "description": "Find how virtual postings are formatted with brackets"
+          },
+          "timestamp": "2026-03-14T18:45:45.603Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"virtual\\|VIRTUAL\\|bracket\\|\\[.*\\]\\|account.*name\" src/report.cc | grep -i \"virtual\\|bracket\" | head -20",
+            "description": "Find virtual account formatting in report.cc"
+          },
+          "timestamp": "2026-03-14T18:45:48.485Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"POST_VIRTUAL\\|virtual.*\\[.*\\]\\|\\[.*\\].*virtual\\|brackets\\|bracket\" src/ | grep -v \"^\\#\\|//\" | head -20",
+            "description": "Find how brackets are added to virtual posting names"
+          },
+          "timestamp": "2026-03-14T18:45:51.623Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1826/src/print.cc",
+            "limit": 30,
+            "offset": 160
+          },
+          "timestamp": "2026-03-14T18:46:01.365Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/main && git log --oneline -- src/xact.cc | head -30",
+            "description": "Show git history for xact.cc"
+          },
+          "timestamp": "2026-03-14T18:46:19.515Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/main && git log --oneline --all -- src/xact.cc | grep -i \"1826\\|virtual\\|null\" | head -20",
+            "description": "Find commits related to issue 1826 in xact.cc"
+          },
+          "timestamp": "2026-03-14T18:46:24.334Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/main && git show debce12a 2>&1",
+            "description": "Show commit that transferred null post flags"
+          },
+          "timestamp": "2026-03-14T18:46:31.992Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1826/src/xact.cc",
+            "limit": 15,
+            "offset": 195
+          },
+          "timestamp": "2026-03-14T18:46:42.581Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me check if there's already a regression test for this scenario:",
+          "timestamp": "2026-03-14T18:47:03.482Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1826/test/regress/ | grep \"1826\\|988\" 2>&1",
+            "description": "Check if regression tests exist for 1826 or 988"
+          },
+          "timestamp": "2026-03-14T18:47:04.524Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1826/test/regress/988.test"
+          },
+          "timestamp": "2026-03-14T18:47:07.461Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "/Users/johnw/src/ledger/check-tests/build/ledger -f /tmp/test1826.dat reg --real 2>&1",
+            "description": "Test register with real-only postings"
+          },
+          "timestamp": "2026-03-14T18:47:16.034Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat > /tmp/test1826_simple.dat << 'EOF'\n2019/08/30 * I-Bond Virtual Movement\n    [Assets:LTS:Future Plans]     2000 \"IB0719\"\n    [Assets:LTS:Future Plans]     1000 \"IB0819\"\n    [Assets:Investments:I-Bonds]\nEOF\n\n/Users/johnw/src/ledger/check-tests/build/ledger -f /tmp/test1826_simple.dat print 2>&1\necho \"---\"\n/Users/johnw/src/ledger/check-tests/build/ledger -f /tmp/test1826_simple.dat reg 2>&1",
+            "description": "Test simplified version of issue 1826"
+          },
+          "timestamp": "2026-03-14T18:47:20.525Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me create a regression test for issue #1826:",
+          "timestamp": "2026-03-14T18:47:25.789Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat > /tmp/test_1826.dat << 'EOF'\n; Regression test for issue #1826\n; Null postings in virtual (balanced) transactions with multiple commodities\n; should generate virtual (not real) balancing postings.\n\n2019/08/30 * I-Bond Virtual Movement\n    [Assets:LTS:Future Plans]     2000 \"IB0719\"\n    [Assets:LTS:Future Plans]     1000 \"IB0819\"\n    [Assets:Investments:I-Bonds]\nEOF\n\necho \"=== print output ===\"\n/Users/johnw/src/ledger/check-tests/build/ledger -f /tmp/test_1826.dat print 2>&1\necho \"=== bal --real (should be empty) ===\"\n/Users/johnw/src/ledger/check-tests/build/ledger -f /tmp/test_1826.dat bal --real 2>&1\necho \"exit: $?\"\necho \"=== reg output ===\"\n/Users/johnw/src/ledger/check-tests/build/ledger -f /tmp/test_1826.dat reg 2>&1",
+            "description": "Test the 1826 scenario to determine expected output"
+          },
+          "timestamp": "2026-03-14T18:47:29.047Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "/Users/johnw/src/ledger/check-tests/build/ledger -f /tmp/test_1826.dat bal 2>&1",
+            "description": "Check full balance output for test case"
+          },
+          "timestamp": "2026-03-14T18:47:36.179Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I'll create the regression test for issue #1826:",
+          "timestamp": "2026-03-14T18:47:43.418Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Write",
+          "input": {
+            "content": "; Regression test for issue #1826\n; A null posting in a balanced-virtual ([Account]) transaction with multiple\n; commodities should generate additional virtual (not real) balancing postings.\n; Previously, the second generated posting lost its virtual flags and was\n; treated as a real posting, corrupting the real-account balance.\n\n2019/08/30 * I-Bond Virtual Movement\n    [Assets:LTS:Future Plans]     2000 \"IB0719\"\n    [Assets:LTS:Future Plans]     1000 \"IB0819\"\n    [Assets:Investments:I-Bonds]\n\ntest bal --real\nend test\n\ntest bal\n                   0  Assets\n        -2000 IB0719\n        -1000 IB0819    Investments:I-Bonds\n         2000 IB0719\n         1000 IB0819    LTS:Future Plans\n--------------------\n                   0\nend test\n",
+            "file_path": "/Users/johnw/src/ledger/fix-1826/test/regress/1826.test"
+          },
+          "timestamp": "2026-03-14T18:47:46.852Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "python3 test/RegressTests.py --ledger /Users/johnw/src/ledger/check-tests/build/ledger --sourcepath . test/regress/1826.test 2>&1",
+            "description": "Run the new regression test"
+          },
+          "timestamp": "2026-03-14T18:47:51.574Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Both tests pass. Now let me commit the work:",
+          "timestamp": "2026-03-14T18:47:55.083Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff --stat 2>&1",
+            "description": "Check what files have changed"
+          },
+          "timestamp": "2026-03-14T18:47:55.750Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git status 2>&1",
+            "description": "Check git status"
+          },
+          "timestamp": "2026-03-14T18:47:58.523Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --oneline -5 2>&1",
+            "description": "Show recent commits"
+          },
+          "timestamp": "2026-03-14T18:48:04.503Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git add test/regress/1826.test && git commit -m \"$(cat <<'EOF'\ntest(regress): add regression test for issue #1826\n\nVerify that a null posting in a balanced-virtual ([Account]) transaction\nwith multiple commodities generates additional virtual (not real)\nbalancing postings.\n\nThe fix for this was previously applied (commit debce12a) and later\nstrengthened by separately tracking real and virtual balances\n(commit 8f7f445b).  Add a regression test using the exact scenario from\nthe bug report to prevent regressions.\n\nFixes #1826.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n)\"",
+            "description": "Commit the regression test"
+          },
+          "timestamp": "2026-03-14T18:48:11.474Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "sleep 30 && cat /private/tmp/claude-501/-Users-johnw-src-ledger-fix-1826/8e110640-1866-4083-87f1-9972d101c9cb/tasks/bjtwfo1pg.output 2>&1",
+            "description": "Wait for commit to complete",
+            "timeout": 300000
+          },
+          "timestamp": "2026-03-14T18:50:14.677Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git status 2>&1",
+            "description": "Check git status after failed commit"
+          },
+          "timestamp": "2026-03-14T18:50:48.253Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c 'echo ok' 2>&1 | tail -5",
+            "description": "Pre-build nix develop derivation",
+            "timeout": 300000
+          },
+          "timestamp": "2026-03-14T18:50:51.535Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c 'git commit -m \"$(cat <<'\"'\"'EOF'\"'\"'\ntest(regress): add regression test for issue #1826\n\nVerify that a null posting in a balanced-virtual ([Account]) transaction\nwith multiple commodities generates additional virtual (not real)\nbalancing postings.\n\nThe fix for this was previously applied (commit debce12a) and later\nstrengthened by separately tracking real and virtual balances\n(commit 8f7f445b).  Add a regression test using the exact scenario from\nthe bug report to prevent regressions.\n\nFixes #1826.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n)\"' 2>&1",
+            "description": "Commit regression test inside nix develop",
+            "timeout": 600000
+          },
+          "timestamp": "2026-03-14T18:52:47.252Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "sleep 60 && cat /private/tmp/claude-501/-Users-johnw-src-ledger-fix-1826/8e110640-1866-4083-87f1-9972d101c9cb/tasks/byclld0v6.output 2>&1 | tail -40",
+            "description": "Monitor commit progress",
+            "timeout": 120000
+          },
+          "timestamp": "2026-03-14T19:02:51.175Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "sleep 60 && cat /private/tmp/claude-501/-Users-johnw-src-ledger-fix-1826/8e110640-1866-4083-87f1-9972d101c9cb/tasks/byclld0v6.output 2>&1 | tail -20",
+            "description": "Monitor commit further",
+            "timeout": 120000
+          },
+          "timestamp": "2026-03-14T19:03:54.330Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "sleep 120 && cat /private/tmp/claude-501/-Users-johnw-src-ledger-fix-1826/8e110640-1866-4083-87f1-9972d101c9cb/tasks/byclld0v6.output 2>&1 | tail -30",
+            "description": "Wait for commit to fully complete",
+            "timeout": 180000
+          },
+          "timestamp": "2026-03-14T19:04:58.040Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "ToolSearch",
+          "input": {
+            "max_results": 1,
+            "query": "TaskOutput"
+          },
+          "timestamp": "2026-03-14T19:07:00.588Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskOutput",
+          "input": {
+            "block": true,
+            "task_id": "byclld0v6",
+            "timeout": 600000
+          },
+          "timestamp": "2026-03-14T19:07:03.945Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskOutput",
+          "input": {
+            "block": true,
+            "task_id": "byclld0v6",
+            "timeout": 600000
+          },
+          "timestamp": "2026-03-14T19:17:07.611Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The commit is still running through the full validation suite (doxygen, build, tests). Let me wait for it to finish:",
+          "timestamp": "2026-03-14T19:27:11.022Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskOutput",
+          "input": {
+            "block": true,
+            "task_id": "byclld0v6",
+            "timeout": 600000
+          },
+          "timestamp": "2026-03-14T19:27:11.484Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The build/test suite is still running. Let me wait for it to complete:",
+          "timestamp": "2026-03-14T19:37:14.736Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskOutput",
+          "input": {
+            "block": true,
+            "task_id": "byclld0v6",
+            "timeout": 600000
+          },
+          "timestamp": "2026-03-14T19:37:15.629Z"
+        }
+      ],
+      "total_additions": 46,
+      "total_deletions": 0,
+      "accepted_lines": 23,
+      "overriden_lines": 0
+    }
+  }
+}
