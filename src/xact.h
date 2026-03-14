@@ -108,6 +108,7 @@ public:
 
   xact_base_t() : item_t(), journal(nullptr) { TRACE_CTOR(xact_base_t, ""); }
   xact_base_t(const xact_base_t& e);
+  xact_base_t& operator=(const xact_base_t&) = default;
 
   ~xact_base_t() override;
 
@@ -198,6 +199,7 @@ public:
 
   xact_t() { TRACE_CTOR(xact_t, ""); }
   xact_t(const xact_t& e);
+  xact_t& operator=(const xact_t&) = default;
 
   ~xact_t() override { TRACE_DTOR(xact_t); }
 
@@ -325,6 +327,7 @@ public:
         active_post(other.active_post) {
     TRACE_CTOR(auto_xact_t, "copy");
   }
+  auto_xact_t& operator=(const auto_xact_t&) = default;
   auto_xact_t(const predicate_t& _predicate)
       : predicate(_predicate), name(none), try_quick_match(true), enabled(true),
         active_post(nullptr) {
@@ -407,6 +410,7 @@ public:
       : xact_base_t(e), period(e.period), period_string(e.period_string) {
     TRACE_CTOR(period_xact_t, "copy");
   }
+  period_xact_t& operator=(const period_xact_t&) = default;
   period_xact_t(const string& _period) : period(_period), period_string(_period) {
     TRACE_CTOR(period_xact_t, "const string&");
   }

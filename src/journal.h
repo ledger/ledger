@@ -131,6 +131,7 @@ public:
         : filename(info.filename), modtime(info.modtime), from_stream(info.from_stream) {
       TRACE_CTOR(journal_t::fileinfo_t, "copy");
     }
+    fileinfo_t& operator=(const fileinfo_t&) = default;
     ~fileinfo_t() noexcept { TRACE_DTOR(journal_t::fileinfo_t); }
   };
 

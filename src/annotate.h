@@ -111,6 +111,7 @@ struct annotation_t : public flags::supports_flags<>, public equality_comparable
         value_expr(other.value_expr) {
     TRACE_CTOR(annotation_t, "copy");
   }
+  annotation_t& operator=(const annotation_t&) = default;
   ~annotation_t() { TRACE_DTOR(annotation_t); }
 
   operator bool() const { return price || date || tag || value_expr; }

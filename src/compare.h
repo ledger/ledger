@@ -107,6 +107,7 @@ public:
   compare_items(const compare_items& other) : sort_order(other.sort_order), report(other.report) {
     TRACE_CTOR(compare_items, "copy");
   }
+  compare_items& operator=(const compare_items&) = delete;
   ~compare_items() noexcept { TRACE_DTOR(compare_items); }
 
   /// Evaluate the sort expression in @p scope and append results to @p sort_values.

@@ -319,6 +319,7 @@ struct date_duration_t {
   date_duration_t(const date_duration_t& dur) : quantum(dur.quantum), length(dur.length) {
     TRACE_CTOR(date_duration_t, "copy");
   }
+  date_duration_t& operator=(const date_duration_t&) = default;
   ~date_duration_t() noexcept { TRACE_DTOR(date_duration_t); }
 
   /// @brief Advance a date forward by this duration.
@@ -559,6 +560,7 @@ public:
         end_inclusive(other.end_inclusive) {
     TRACE_CTOR(date_range_t, "date_range_t");
   }
+  date_range_t& operator=(const date_range_t&) = default;
   ~date_range_t() noexcept { TRACE_DTOR(date_range_t); }
 
   /// @brief Resolve the start of the range to a concrete date, or none if unbounded.
@@ -628,6 +630,7 @@ public:
       : specifier_or_range(other.specifier_or_range) {
     TRACE_CTOR(date_specifier_or_range_t, "copy");
   }
+  date_specifier_or_range_t& operator=(const date_specifier_or_range_t&) = default;
   date_specifier_or_range_t(const date_specifier_t& specifier) : specifier_or_range(specifier) {
     TRACE_CTOR(date_specifier_or_range_t, "date_specifier_t");
   }
