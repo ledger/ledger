@@ -556,6 +556,7 @@ add_subdirectory(src)
 if(NOT SKBUILD)
   add_subdirectory(doc)
   add_subdirectory(contrib)
+  add_subdirectory(examples)
   add_subdirectory(test)
 endif()
 
