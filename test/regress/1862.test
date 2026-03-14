@@ -1,0 +1,15 @@
+; Regression test for issue #1862.
+;
+; A stray or unbalanced trailing quote in an include path (e.g.
+; `include test.ledger"`) used to produce a confusing error message
+; containing a stray `&` (old Boost) or backslash-escaped quote `\"` (C++17
+; std::filesystem::path with std::quoted).  The error must show the raw
+; filename without any extra backslash escaping.
+
+include /nonexistent-1862/test.ledger"
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 9:
+Error: File to include was not found: /nonexistent-1862/test.ledger"
+end test

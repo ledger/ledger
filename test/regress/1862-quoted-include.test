@@ -1,0 +1,13 @@
+; Regression test for issue #1862 (quote stripping in include paths).
+;
+; Balanced surrounding double-quotes and single-quotes are now stripped from
+; include paths, so `include "file.ledger"` and `include 'file.ledger'` work
+; as expected.  The error message also shows the raw (stripped) path.
+
+include "/nonexistent-1862/quoted.ledger"
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 7:
+Error: File to include was not found: /nonexistent-1862/quoted.ledger
+end test
