@@ -196,8 +196,7 @@ if(BUILD_LIBRARY)
   add_library(libledger SHARED ${LEDGER_SOURCES})
   add_ledger_library_dependencies(libledger)
   set_target_properties(libledger PROPERTIES
-    PREFIX ""
-    INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
+    OUTPUT_NAME "ledger"
     VERSION ${Ledger_VERSION_MAJOR}
     SOVERSION ${Ledger_VERSION_MAJOR})
   set_source_files_properties(
