@@ -187,7 +187,16 @@ void python_interpreter_t::initialize() {
         "    _lpy.__package__ = 'lpy'\n"
         "    _lpy.__path__ = []\n"
         "    _lpy.core = _lpy_core\n"
-        "    sys.modules['lpy'] = _lpy\n");
+        "    sys.modules['lpy'] = _lpy\n"
+        "if 'ledger' not in sys.modules:\n"
+        "    _lpy_core = sys.modules['lpy.core']\n"
+        "    _public = [n for n in dir(_lpy_core) if not n.startswith('_')]\n"
+        "    _ledger = types.ModuleType('ledger')\n"
+        "    _ledger.__package__ = 'ledger'\n"
+        "    _ledger.__path__ = []\n"
+        "    for _n in _public:\n"
+        "        setattr(_ledger, _n, getattr(_lpy_core, _n))\n"
+        "    sys.modules['ledger'] = _ledger\n");
 
     is_initialized = true;
   } catch (const error_already_set&) {
