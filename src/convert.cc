@@ -122,6 +122,29 @@ value_t convert_command(call_scope_t& args) {
       if (report.HANDLED(rich_data) && !xact->has_tag(_("UUID")))
         xact->set_tag(_("UUID"), string_value(ref));
 
+      // Step 2b: Apply UUID-to-payee mapping.  A journal `payee` directive
+      // can declare a UUID that identifies this transaction (computed as the
+      // SHA-1 of the CSV line).  When found, override the CSV description with
+      // the canonical payee name so that subsequent payee-to-account mappings
+      // (from `account` directives) can match correctly.
+      {
+        auto uuid_it = journal.payee_uuid_mappings.find(ref);
+        if (uuid_it != journal.payee_uuid_mappings.end()) {
+          xact->payee = uuid_it->second;
+          // Re-apply payee-to-account mapping with the resolved payee name
+          // so that `account` directives with a matching `payee` sub-directive
+          // take effect even though the CSV reader ran before we knew the payee.
+          if (xact->posts.front()->account == nullptr) {
+            for (account_mapping_t& value : journal.payees_for_unknown_accounts) {
+              if (value.first.match(xact->payee)) {
+                xact->posts.front()->account = value.second;
+                break;
+              }
+            }
+          }
+        }
+      }
+
       // Step 3: Resolve the expense account.  With --auto-match, search
       // existing transactions for a payee match and reuse its account.
       if (xact->posts.front()->account == nullptr) {

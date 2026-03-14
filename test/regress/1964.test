@@ -1,0 +1,21 @@
+; Regression test for issue #1964:
+; `ledger convert` should apply payee uuid mappings so that a UUID derived
+; from the SHA-1 of the CSV line resolves to the canonical payee name and
+; the associated account directive takes effect.
+;
+; The UUID below is the SHA-1 of the CSV data line:
+;   01/05/2018,Xpayee Store,-1.00 USD
+
+account Assets:Checking
+
+account Expenses:Groceries
+    payee Xpayee Store
+
+payee Xpayee Store
+    uuid 14f7c7624d896aca134725618ab2b0b014a48543
+
+test -f $FILE convert $sourcepath/test/input/1964.csv --input-date-format %m/%d/%Y --account Assets:Checking --invert
+2018/01/05 * Xpayee Store
+    Expenses:Groceries                      1.00 USD
+    Assets:Checking
+end test
