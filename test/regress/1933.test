@@ -1,0 +1,21 @@
+; Regression test for issue #1933:
+; Numbers starting with a decimal point (no leading digit) should parse
+; correctly when the commodity symbol follows the number as a suffix.
+; E.g., ".10USD" and ".10$" should parse the same as "0.10 USD" / "0.10 $".
+
+2020-06-19 * Suffix commodity after leading-dot number
+    A
+    B          .10USD
+
+2020-06-20 * Dollar sign suffix after leading-dot number
+    A           .10$
+    B
+
+test bal
+               0.10$
+            -0.10USD  A
+              -0.10$
+             0.10USD  B
+--------------------
+                   0
+end test

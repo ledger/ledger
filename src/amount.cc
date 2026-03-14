@@ -1534,7 +1534,7 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
   }
 
   char n;
-  if (std::isdigit(static_cast<unsigned char>(c))) {
+  if (std::isdigit(static_cast<unsigned char>(c)) || c == '.') {
     parse_quantity(in, quant);
 
     n = in.eof() ? '\n' : static_cast<char>(in.peek());
