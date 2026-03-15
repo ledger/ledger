@@ -1,0 +1,23 @@
+; Regression test for issue #1826
+; A null posting in a balanced-virtual ([Account]) transaction with multiple
+; commodities should generate additional virtual (not real) balancing postings.
+; Previously, the second generated posting lost its virtual flags and was
+; treated as a real posting, corrupting the real-account balance.
+
+2019/08/30 * I-Bond Virtual Movement
+    [Assets:LTS:Future Plans]     2000 "IB0719"
+    [Assets:LTS:Future Plans]     1000 "IB0819"
+    [Assets:Investments:I-Bonds]
+
+test bal --real
+end test
+
+test bal
+                   0  Assets
+        -2000 IB0719
+        -1000 IB0819    Investments:I-Bonds
+         2000 IB0719
+         1000 IB0819    LTS:Future Plans
+--------------------
+                   0
+end test
