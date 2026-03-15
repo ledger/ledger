@@ -115,6 +115,7 @@ public:
         count(context.count), sequence(context.sequence) {
     std::memcpy(linebuf, context.linebuf, MAX_LINE);
   }
+  parse_context_t& operator=(const parse_context_t&) = default;
 
   /// @brief Return a human-readable "file:line" string for error messages.
   string location() const { return file_context(pathname, linenum); }
