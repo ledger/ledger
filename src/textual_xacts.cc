@@ -865,11 +865,12 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
     post->pos->end_pos = context.curr_pos;
     post->pos->end_line = context.linenum;
 
-    // Step 8: Apply tags from any active `apply tag` directives.
-    std::vector<string> tags;
-    get_applications<string>(tags);
-    for (string& tag : tags)
-      post->parse_tags(tag.c_str(), *context.scope, true);
+    // Note: `apply tag` directives are applied to the transaction (see Phase 7
+    // in parse_xact), not to individual postings.  Postings inherit applied
+    // tags from their parent transaction through the normal inheritance chain
+    // (post_t::has_tag / get_tag fall back to xact).  Applying them here with
+    // overwrite=true would let the outermost directive beat posting-level and
+    // transaction-level tags, which is the wrong priority order.
 
     string post_payee = post->payee_from_tag();
     if (post_payee != "")

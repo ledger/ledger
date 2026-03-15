@@ -1,0 +1,111 @@
+; Regression test for GitHub issue #1922
+; Metadata tag inheritance must follow a consistent priority order:
+;   posting's own tag  >  transaction tag  >  innermost apply tag  >  outermost
+;
+; Two bugs are fixed:
+; Bug A: has_tag(/key/, /value/) and %key=value incorrectly fell through to
+;        inherit the transaction's value even when the posting owned a tag
+;        with a different value for the same key.
+; Bug B: apply tag directives were applied directly to each posting with
+;        overwrite=true, so the outermost apply tag could override the
+;        transaction's own tag or a posting's own tag.
+
+; -----------------------------------------------------------------------
+; Journal data
+
+; Bug A test: transaction has month: D; OwnTag posting also has month: E.
+; OwnTag's own E must shadow the transaction's D for has_tag/get_tag.
+; NoTag has no own month tag -> inherits D from the transaction.
+
+2020/01/01  Bug1Test
+    ; month: D
+    OwnTag  100   ; month: E
+    NoTag  -100
+
+; Bug B test: nested apply tag (outer A, inner B) with a transaction that
+; sets its own month: D and a posting that sets its own month: E.
+; The transaction's D must win over both apply tags for NoTag.
+; OwnTag's E must win over everything.
+
+apply tag month: A
+
+apply tag month: B
+
+2020/02/01  Bug2Test
+    ; month: D
+    OwnTag  100   ; month: E
+    NoTag  -100
+
+end tag
+
+end tag
+
+; Bug B extension: when neither the transaction nor any posting sets a tag,
+; the innermost apply tag wins.
+
+apply tag month: A
+
+apply tag month: B
+
+2020/03/01  ApplyOnlyTest
+    P  50
+    Q  -50
+
+end tag
+
+end tag
+
+; -----------------------------------------------------------------------
+; Tests for Bug A: posting's own tag must shadow the transaction's tag in
+; has_tag(mask, value_mask) and tag() queries.
+
+; NoTag inherits month=D from the transaction.
+test reg -b 2020/01/01 -e 2020/02/01 -l "has_tag(/month/, /D/)"
+20-Jan-01 Bug1Test              NoTag                          -100         -100
+end test
+
+; OwnTag has its own month=E; must not inherit D from the transaction.
+test reg -b 2020/01/01 -e 2020/02/01 -l "has_tag(/month/, /E/)"
+20-Jan-01 Bug1Test              OwnTag                          100          100
+end test
+
+; tag() and has_tag(mask, value_mask) must be consistent.
+test reg --meta "month" -b 2020/01/01 -e 2020/02/01 -l "tag('month') =~ /^D$/"
+D20-Jan-01 Bug1Test              NoTag                          -100         -100
+end test
+
+test reg --meta "month" -b 2020/01/01 -e 2020/02/01 -l "tag('month') =~ /^E$/"
+E20-Jan-01 Bug1Test              OwnTag                          100          100
+end test
+
+; -----------------------------------------------------------------------
+; Tests for Bug B: apply tag must not override transaction or posting tags.
+
+; apply tag A and B are both overridden by the transaction's own month: D.
+test reg --meta "month" -b 2020/02/01 -e 2020/03/01 -l "tag('month') =~ /^A$/"
+end test
+
+test reg --meta "month" -b 2020/02/01 -e 2020/03/01 -l "tag('month') =~ /^B$/"
+end test
+
+; NoTag inherits D from the transaction (apply_tag B and A are lower priority).
+test reg --meta "month" -b 2020/02/01 -e 2020/03/01 -l "tag('month') =~ /^D$/"
+D20-Feb-01 Bug2Test              NoTag                          -100         -100
+end test
+
+; OwnTag's own month=E is not overridden by apply_tag or transaction.
+test reg --meta "month" -b 2020/02/01 -e 2020/03/01 -l "tag('month') =~ /^E$/"
+E20-Feb-01 Bug2Test              OwnTag                          100          100
+end test
+
+; -----------------------------------------------------------------------
+; Tests for Bug B continued: when no transaction/posting tags override,
+; innermost apply tag (B) wins over outermost (A).
+
+test reg --meta "month" -b 2020/03/01 -e 2020/04/01 -l "tag('month') =~ /^B$/"
+B20-Mar-01 ApplyOnlyTest         P                                50           50
+B                                Q                               -50            0
+end test
+
+test reg --meta "month" -b 2020/03/01 -e 2020/04/01 -l "tag('month') =~ /^A$/"
+end test
