@@ -1,0 +1,27 @@
+; Budget report should not crash when budget accounts contain multiple commodities.
+; Previously, quantity() returned 0 for multi-commodity balances, causing a
+; divide-by-zero in the percentage column calculation.
+
+~ Monthly
+  Expenses:Food   $200
+  Expenses:Stocks  3 AAPL
+  Assets:Checking
+
+2024/01/15 Grocery Store
+  Expenses:Food   $150
+  Assets:Checking
+
+2024/01/20 Buy Stock
+  Expenses:Stocks  2 AAPL
+  Assets:Checking
+
+test budget --period 'January 2024' --flat --no-color
+       $-150
+-2 AAPL        $-200
+                  -3 AAPL          $50
+                                1 AAPL     0  Assets:Checking
+        $150         $200         $-50   75%  Expenses:Food
+      2 AAPL       3 AAPL      -1 AAPL   67%  Expenses:Stocks
+------------ ------------ ------------ -----
+           0            0            0     0
+end test
