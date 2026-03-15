@@ -224,6 +224,18 @@ void instance_t::include_directive(char* line) {
   if (include_depth > 100)
     throw_(parse_error, _("Maximum include depth exceeded (100)"));
 
+  // Strip balanced surrounding quotes (" or ') from the include path so that
+  // both `include "file.ledger"` and `include 'file.ledger'` work as expected.
+  // We also avoid the confusing case where a stray trailing quote (e.g.
+  // `include test.ledger"`) is silently embedded in the filename.
+  {
+    std::size_t line_len = std::strlen(line);
+    if (line_len >= 2 && (line[0] == '"' || line[0] == '\'') && line[line_len - 1] == line[0]) {
+      line[line_len - 1] = '\0';
+      ++line;
+    }
+  }
+
   path filename;
 
   DEBUG("textual.include", "include: " << line);
@@ -335,7 +347,7 @@ void instance_t::include_directive(char* line) {
   }
 
   if (!files_found)
-    throw_(std::runtime_error, _f("File to include was not found: %1%") % filename);
+    throw_(std::runtime_error, _f("File to include was not found: %1%") % filename.string());
 }
 
 /*--- Apply / Scope Directives ---*/
