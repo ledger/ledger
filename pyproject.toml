@@ -32,7 +32,7 @@ Repository = "https://github.com/ledger/ledger"
 
 [tool.scikit-build]
 # Development.Module (CMake 3.18+) is required for Python extension builds.
-cmake.minimum-version = "3.18"
+cmake.version = ">=3.18"
 # No Python package directory: all files are installed via CMake install() commands.
 wheel.packages = []
 
