@@ -1,0 +1,19 @@
+; Regression test for issue #1852: assertion failure when using `ledger equity`
+; with a transaction that has a total-cost annotation (@@ price) in a foreign
+; currency.  The compare_by_commodity comparator used to hit assert(false) when
+; two annotated commodities had prices in different currencies whose numeric
+; values compared equal during the recursive call.
+
+2019/09/16=2019/09/18 * Test
+    Liabilities:Credit Card   -13.33 CAD @@ $10.08
+    Assets:Receivables                   $13.33
+    Expenses:Test
+
+test equity
+2019/09/16 Opening Balances
+    Assets:Receivables                        $13.33
+    Expenses:Test                             $-3.25
+    Liabilities:Credit Card               -13.33 CAD
+    Equity:Opening Balances                  $-10.08
+    Equity:Opening Balances                13.33 CAD
+end test
