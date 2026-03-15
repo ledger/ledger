@@ -1,0 +1,23 @@
+= /^Expenses:Tax/ and not %Tax-Year and expr commodity == 'EUR'
+    ; Tax-Year:: (format_date(effective_date or date, "%Y"))
+
+2018-12-01 * Tax payment for 2018
+    Expenses:Tax            18.00 EUR
+    Assets:Bank
+
+2019-02-01 * Tax payment for 2019
+    Expenses:Tax            19.00 EUR
+    Assets:Bank
+
+2019-03-01 * Tax refund for 2018
+    ; Tax-Year:: 2018
+    Assets:Bank             2.00 EUR
+    Expenses:Tax           -2.00 EUR
+
+test bal Expenses:Tax --pivot Tax-Year
+           35.00 EUR  Tax-Year
+           16.00 EUR    2018:Expenses:Tax
+           19.00 EUR    2019:Expenses:Tax
+--------------------
+           35.00 EUR
+end test

@@ -4784,6 +4784,62 @@ directly in each posting's metadata and retrieve it with @code{tag()}:
 Here, the first household item is taxed at 8.25% and the second at 9%,
 with each rate stored directly in the posting's metadata.
 
+@subsubsection Grouping by Tax Year
+
+A common question is how to track expenses across multiple tax years,
+including refunds that belong to a prior year.  One approach is to use
+an automated transaction to automatically tag each posting with its tax
+year, and then use @option{--pivot} to group the balance report by that
+tag.
+
+The automated transaction below tags every new @samp{Expenses:Tax}
+posting with a @samp{Tax-Year} value derived from the posting's
+effective date (or transaction date if no effective date is present).
+The condition @samp{not %Tax-Year} ensures that postings already
+carrying an explicit @samp{Tax-Year} tag---such as refunds attributed
+to a prior year---are left untouched:
+
+@smallexample @c input:5295914
+= /^Expenses:Tax/ and not %Tax-Year and expr commodity == 'EUR'
+    ; Tax-Year:: (format_date(effective_date or date, "%Y"))
+
+2018-12-01 * Tax payment for 2018
+    Expenses:Tax            18.00 EUR
+    Assets:Bank
+
+2019-02-01 * Tax payment for 2019
+    Expenses:Tax            19.00 EUR
+    Assets:Bank
+
+2019-03-01 * Tax refund for 2018
+    ; Tax-Year:: 2018
+    Assets:Bank             2.00 EUR
+    Expenses:Tax           -2.00 EUR
+@end smallexample
+
+The 2019-03-01 refund carries an explicit @samp{; Tax-Year:: 2018} tag so
+that it is credited against the 2018 tax liability rather than 2019.
+Without this tag the automated transaction would assign it to 2019,
+producing a misleading year-end total.
+
+Running a balance report with @option{--pivot Tax-Year} groups the
+accounts under the tag value:
+
+@smallexample @c command:5295914
+$ ledger bal Expenses:Tax --pivot Tax-Year
+@end smallexample
+@smallexample @c output:5295914
+           35.00 EUR  Tax-Year
+           16.00 EUR    2018:Expenses:Tax
+           19.00 EUR    2019:Expenses:Tax
+--------------------
+           35.00 EUR
+@end smallexample
+
+The 2018 total (16.00 EUR) correctly reflects the original 18.00 EUR
+payment minus the 2.00 EUR refund, even though the refund transaction
+occurred in 2019.
+
 @node Building Reports, Reporting Commands, Transactions, Top
 @chapter Building Reports
 
