@@ -1,0 +1,20 @@
+2019/04/01 * Employer
+    Assets:Cash                 $100.00
+    Income:Salary
+
+2019/04/05 KFC
+    Expenses:Food               $20.00
+    Assets:Cash
+
+2019/04/10 Refund
+    Assets:Cash                 $5.00
+    Expenses:Food
+
+test csv --dc
+"2019/04/01","","Employer","Assets:Cash","$","100","0","*",""
+"2019/04/01","","Employer","Income:Salary","$","0","100","*",""
+"2019/04/05","","KFC","Expenses:Food","$","20","0","",""
+"2019/04/05","","KFC","Assets:Cash","$","0","20","",""
+"2019/04/10","","Refund","Assets:Cash","$","5","0","",""
+"2019/04/10","","Refund","Expenses:Food","$","0","5","",""
+end test
