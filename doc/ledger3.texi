@@ -6625,6 +6625,11 @@ When used with @option{--gain}, compute unrealised gain relative to the
 market value at @var{DATE} rather than each lot's original cost basis.
 Only appreciation since @var{DATE} is reported.
 
+@item --plopen
+Show the unrealized P/L (P/L Open) for currently-open positions, priced
+at today's market value.  Unlike @option{--gain}, no synthetic
+revaluation postings are generated.
+
 @item --lot-matching @var{POLICY}
 Automatically match unannotated commodity sales against existing lots
 using FIFO or LIFO order.  @var{POLICY} must be @samp{fifo} or
@@ -7615,6 +7620,41 @@ the transactions that satisfy the period expression with be displayed.
 For a @command{balance} report only those transactions will be accounted
 in the final balances.
 
+@item --plopen
+@findex --plopen
+Show the unrealized P/L (Profit/Loss Open) for all currently-open positions.
+For each posting with a cost basis, the displayed amount is:
+
+@example
+market(amount, today, exchange) - cost
+@end example
+
+@noindent
+where @samp{today} is the current date (or the date set via
+@option{--now}).  Unlike @option{--gain} (@option{-G}), @option{--plopen}
+does @emph{not} enable @option{--revalued} and generates no synthetic
+revaluation postings.  This makes it ideal for a @command{balance} report
+that answers the question ``Has my current position made a profit?''
+
+@subsubheading Example
+
+@smallexample @c input:validate
+P 2024/01/01 AAPL $150.00
+P 2024/06/01 AAPL $200.00
+
+2024/01/01 Buy
+    Assets:Brokerage    10 AAPL @@ $150.00
+    Assets:Cash
+@end smallexample
+
+@smallexample
+$ ledger bal --plopen --now 2024/06/01 Assets:Brokerage
+             $500.00  Assets:Brokerage
+@end smallexample
+
+@noindent
+The $500 is the unrealized gain: 10×($200@minus{}$150).
+
 @item --pivot @var{TAG}
 Produce a balance pivot report @emph{around} the given @var{TAG}.  For
 example, if you have multiple cars and track each fuel purchase in
@@ -8402,6 +8442,12 @@ value at @var{DATE} rather than original cost.  Use this to measure
 performance within a period: positions held before @var{DATE} use their
 market value at @var{DATE} as the baseline, so only appreciation since
 that date is counted.
+
+@item --plopen
+Show the unrealized P/L (P/L Open) for currently-open positions at
+today's market price.  Unlike @option{--gain}, no synthetic revaluation
+postings are generated; the report shows a snapshot of each lot's
+unrealized gain or loss right now.
 
 @end ftable
 

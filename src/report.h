@@ -1052,6 +1052,30 @@ public:
 
   OPTION(report_t, pivot_);
 
+  OPTION_(
+      report_t, plopen, DO() {
+        // Compute unrealized P&L for open positions: market(amount) - cost.
+        // Like --gain but without --revalued, so no synthetic revaluation
+        // postings are generated.  Prices are looked up at today (not
+        // value_date) so each posting reflects its current mark-to-market
+        // gain rather than the historical gain at the posting date.
+        OTHER(amount_).expr.set_base_expr("(amount, cost)");
+
+        OTHER(display_amount_)
+            .on(whence, "use_direct_amount ? amount :"
+                        " (is_seq(get_at(amount_expr, 0)) ?"
+                        "  (get_at(get_at(amount_expr, 0), 1) ?"
+                        "    market(get_at(get_at(amount_expr, 0), 0), today, exchange)"
+                        "    - get_at(get_at(amount_expr, 0), 1) :"
+                        "    get_at(get_at(amount_expr, 0), 0)) :"
+                        "  market(get_at(amount_expr, 0), today, exchange)"
+                        "  - get_at(amount_expr, 1))");
+        OTHER(display_total_)
+            .on(whence, "use_direct_amount ? total_expr :"
+                        " market(get_at(total_expr, 0), today, exchange)"
+                        " - get_at(total_expr, 1)");
+      });
+
   OPTION_CTOR(
       report_t, plot_amount_format_, CTOR(report_t, plot_amount_format_) {
         on(none, "%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(display_amount)))\n");

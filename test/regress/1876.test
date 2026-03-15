@@ -1,0 +1,31 @@
+; Regression test for issue #1876: --plopen shows unrealized P&L for open
+; positions by computing market(amount, today) - cost for each posting.
+;
+; Two lots of FOO are purchased at different prices.  With --plopen and a
+; fixed --now date, each lot shows its unrealized gain at today's price.
+; No synthetic revaluation postings are generated (unlike --gain).
+
+P 2023/01/01 FOO $200.00
+P 2023/06/01 FOO $250.00
+
+2023/01/01 Buy FOO lot A
+    Assets:Stock    10 FOO @ $200.00
+    Assets:Cash    $-2000.00
+
+2023/02/01 Buy FOO lot B
+    Assets:Stock    5 FOO @ $180.00
+    Assets:Cash    $-900.00
+
+; bal --plopen shows the total unrealized P&L across all open lots:
+;   lot A: 10 x ($250 - $200) = $500
+;   lot B:  5 x ($250 - $180) = $350
+;   total: $850
+test bal --plopen --now 2023/06/01 Assets:Stock
+             $850.00  Assets:Stock
+end test
+
+; reg --plopen shows each lot's contribution without synthetic revaluations:
+test reg --plopen --now 2023/06/01 Assets:Stock
+23-Jan-01 Buy FOO lot A         Assets:Stock                $500.00      $500.00
+23-Feb-01 Buy FOO lot B         Assets:Stock                $350.00      $850.00
+end test

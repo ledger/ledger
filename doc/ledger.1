@@ -223,6 +223,22 @@ option instead.
 .It Fl \-period Ar time-period Pq Fl p
 Show postings only for the given
 .Ar time-period .
+.It Fl \-plopen
+Show the unrealized gain or loss for all currently-open positions
+(P/L Open).
+For each lot, the displayed amount is
+.Sy market(amount, today) \- cost ,
+where
+.Sy today
+is the date set by
+.Fl \-now
+(or the current date if not overridden).
+Unlike
+.Fl \-gain ,
+no synthetic revaluation postings are generated; only actual postings
+are shown.
+This answers the question
+.Qq Has my current position made a profit?
 .It Fl \-related Pq Fl r
 Show postings that are related to those that would have been shown.  It has
 the effect of displaying the
@@ -897,6 +913,34 @@ Produce a balance pivot report
 .Qq around
 the given
 .Ar TAG .
+.It Fl \-plopen
+Show the unrealized P/L (Profit/Loss Open) for all currently-open positions.
+For each lot, the displayed amount is
+.Sy market(amount, today) \- cost ,
+where
+.Sy today
+is controlled by
+.Fl \-now .
+Unlike
+.Fl \-gain
+.Pq Fl G ,
+.Fl \-plopen
+does not enable
+.Fl \-revalued
+and generates no synthetic revaluation postings.  The result is a
+clean snapshot of each open lot's unrealized gain or loss at the
+current market price:
+.Bd -literal -offset indent
+P 2024/01/01 AAPL $150.00
+P 2024/06/01 AAPL $200.00
+
+2024/01/01 Buy
+    Assets:Brokerage    10 AAPL @@ $150.00
+    Assets:Cash
+.Ed
+.Pp
+.Ic ledger bal --plopen --now 2024/06/01
+reports $500: 10 \[mu] ($200 \[mi] $150).
 .It Fl \-plot-amount-format Ar FMT
 Define the output format for an amount data plot.
 .It Fl \-plot-total-format Ar FMT
