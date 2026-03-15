@@ -1,0 +1,21 @@
+; Test that --effective uses effective dates for lot annotations.
+; When a posting has an effective date (via [=date] in a comment),
+; the --effective flag should cause that date to appear as the lot date.
+
+2019/10/20 Buy of shares
+    Assets:Stocks  10 AAPL @@ 50.00 EUR
+    Assets:Stocks  10 AAPL @@ 55.00 EUR  ; [=2019/10/21]
+    Assets:Stocks  10 AAPL @@ 60.00 EUR  ; [=2019/10/25]
+    Ingress        -165.00 EUR
+
+test bal Stock --lots
+10 AAPL {5.00 EUR} [2019/10/20]
+10 AAPL {5.50 EUR} [2019/10/20]
+10 AAPL {6.00 EUR} [2019/10/20]  Assets:Stocks
+end test
+
+test bal Stock --lots --effective
+10 AAPL {5.00 EUR} [2019/10/20]
+10 AAPL {5.50 EUR} [2019/10/21]
+10 AAPL {6.00 EUR} [2019/10/25]  Assets:Stocks
+end test
