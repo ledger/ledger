@@ -1,0 +1,1 @@
+--balance-format "%(justify(scrub(display_total), 20, -1, true, color))  %(!options.flat ? depth_spacer : \"\")%-(ansify_if(partial_account(options.flat), blue if color))\n%/%$1\n%/--------------------\n"

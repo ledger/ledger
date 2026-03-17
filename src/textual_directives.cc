@@ -201,6 +201,29 @@ void instance_t::option_directive(char* line) {
       *p++ = '\0';
   }
 
+  // Strip outer quotes and process escape sequences in the option value.
+  // Double-quoted strings: process only \" -> " and \\ -> \ (leave all other
+  // escape sequences such as \n and \t for the format parser).
+  // Single-quoted strings: strip quotes with no escape processing at all.
+  string unquoted;
+  if (p && *p == '"') {
+    const char* s = p + 1;
+    while (*s && *s != '"') {
+      if (*s == '\\' && (*(s + 1) == '"' || *(s + 1) == '\\')) {
+        unquoted += *(s + 1);
+        s += 2;
+      } else {
+        unquoted += *s++;
+      }
+    }
+    p = const_cast<char*>(unquoted.c_str());
+  } else if (p && *p == '\'') {
+    const char* s = p + 1;
+    while (*s && *s != '\'')
+      unquoted += *s++;
+    p = const_cast<char*>(unquoted.c_str());
+  }
+
   if (!process_option(context.pathname.string(), line + 2, *context.scope, p, line))
     throw_(option_error, _f("Illegal option --%1%") % (line + 2));
 }
