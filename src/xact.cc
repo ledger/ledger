@@ -192,13 +192,48 @@ struct add_balancing_post {
   }
   ~add_balancing_post() noexcept { TRACE_DTOR(add_balancing_post); }
 
+  void set_cost_prec_if_needed(amount_t& amt) {
+    commodity_t& comm = amt.commodity();
+    if (comm.precision() > 0)
+      return;
+    // The commodity's display precision is 0 (never saw an explicit
+    // amount for it).  Scan postings for an inline cost that uses
+    // this commodity and recover the per-unit cost precision, then
+    // check whether the auto-balanced amount actually has meaningful
+    // fractional digits at that precision.
+    for (auto& post : xact.posts) {
+      if (post->cost && post->amount) {
+        const amount_t& cost = *post->cost;
+        if (&cost.commodity() == &comm.referent()) {
+          auto cost_prec = cost.precision();
+          auto amt_prec = post->amount.precision();
+          auto price_prec = cost_prec > amt_prec ? cost_prec - amt_prec : cost_prec;
+          if (price_prec > 0) {
+            amount_t rounded(amt);
+            rounded.in_place_roundto(price_prec);
+            if (amt != rounded)
+              continue; // fractional digits extend beyond price_prec
+            // Check that the amount has meaningful fractional digits
+            amount_t truncated(amt);
+            truncated.in_place_truncate();
+            if (amt != truncated)
+              amt.set_cost_precision(price_prec);
+            return;
+          }
+        }
+      }
+    }
+  }
+
   void operator()(const amount_t& amount) {
     if (first) {
       null_post->amount = amount.negated();
+      set_cost_prec_if_needed(null_post->amount);
       null_post->add_flags(POST_CALCULATED);
       first = false;
     } else {
       unique_ptr<post_t> p(new post_t(null_post->account, amount.negated()));
+      set_cost_prec_if_needed(p->amount);
       p->copy_details(*null_post);
       p->set_flags(null_post->flags() | ITEM_GENERATED | POST_CALCULATED);
       xact.add_post(p.release());
