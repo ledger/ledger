@@ -1,0 +1,60 @@
+; Regression test for GitHub issue #1138: ledger mistakes decimal comma
+; for thousands marker when exactly 3 digits follow the comma.
+;
+; When ledger sees "0,0255" it correctly determines the comma is a decimal
+; separator (4 digits after the comma cannot be a thousands group).  But
+; when it later sees "0,025" for the same commodity (exactly 3 digits after
+; the comma), it must remember the commodity already uses decimal-comma
+; style rather than re-guessing it as a thousands separator.
+;
+; Even without prior context, "0,025" should be parsed as 0.025 because the
+; integer part is zero -- a number like "0,025" makes no sense as a
+; thousands-separated integer (that would be just "25").
+
+; --- Test 1: zero-integer 4-digit decimal comma followed by 3-digit ---
+; The 4-digit amount sets COMMODITY_STYLE_DECIMAL_COMMA on the commodity;
+; the 3-digit amount must honour that flag.
+
+2015-10-17 foo bar baz
+    Interest                                0,0255 intrate
+    Dummy
+
+2015-10-18 foo bar quux
+    Interest                                0,025 intrate
+    Dummy
+
+test reg Interest
+15-Oct-17 foo bar baz           Interest               0,0255 intrate 0,0255 intrate
+15-Oct-18 foo bar quux          Interest               0,0250 intrate 0,0505 intrate
+end test
+
+; --- Test 2: reversed order -- 3-digit first, then 4-digit ---
+; Even when the 3-digit amount appears first, the zero integer part
+; heuristic detects it as a decimal comma.
+
+2016-01-01 first
+    Income                                  0,075 rate
+    Dummy2
+
+2016-01-02 second
+    Income                                  0,0812 rate
+    Dummy2
+
+test reg Income
+16-Jan-01 first                 Income                  0,0750 rate  0,0750 rate
+16-Jan-02 second                Income                  0,0812 rate  0,1562 rate
+end test
+
+; --- Test 3: balance assertions with decimal commas (original report) ---
+
+2017-03-01 setup
+    Account                                 = 0,0255 thing
+    Dummy3
+
+2017-03-02 update
+    Account                                 = 0,025 thing
+    Dummy3
+
+test bal Account
+        0,0250 thing  Account
+end test
