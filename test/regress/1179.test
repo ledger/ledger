@@ -1,0 +1,18 @@
+; Regression test for issue #1179
+; --daily --average should divide running total by number of periods,
+; not by number of postings across all accounts.
+
+2016/08/01
+    A:B         10.00
+    Equity
+
+2016/08/02
+    A:B         10.00
+    A:B:C        1.00
+    Equity
+
+test reg --columns 80 --daily --average A:B
+16-Aug-01 - 16-Aug-01           A:B                              10           10
+16-Aug-02 - 16-Aug-02           A:B                              10           10
+                                A:B:C                             1          0.5
+end test
