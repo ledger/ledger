@@ -200,7 +200,7 @@ public:
    */
   xact_t* read_xact(bool rich_data);
 
-  const char* get_last_line() const { return context.linebuf; } ///< Last line read from CSV
+  const std::string& get_last_line() const { return context.linebuf; } ///< Last line read from CSV
   path get_pathname() const { return context.pathname; }        ///< CSV file path
   std::size_t get_linenum() const { return context.linenum; }   ///< Current line number
 };

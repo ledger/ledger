@@ -143,41 +143,38 @@ std::streamsize instance_t::read_line(char*& line) {
 
   check_for_signal();
 
-  const size_t maxLine = parse_context_t::MAX_LINE;
-  in.getline(context.linebuf, maxLine);
-  std::streamsize len = in.gcount();
-
-  if (in.fail() && len == (parse_context_t::MAX_LINE - 1)) {
-    throw_(parse_error, _f("Line exceeds %1% characters") % maxLine);
+  if (!std::getline(in, context.linebuf)) {
+    return 0;
   }
 
-  if (len > 0) {
-    context.linenum++;
+  std::streamsize len = static_cast<std::streamsize>(context.linebuf.size());
 
-    context.curr_pos = context.line_beg_pos;
-    context.curr_pos += len;
+  context.linenum++;
 
-    if (context.linenum == 1 &&
-        utf8::starts_with_bom(context.linebuf, context.linebuf + sizeof(context.linebuf))) {
-      line = &context.linebuf[3];
-      len -= 3;
-    } else {
-      line = context.linebuf;
-    }
-
-    if (!in.eof()) {
-      // if we are not at the end of the file, len includes the new line character,
-      // even through it does not appear in linebuf
-      --len;
-    }
-
-    // strip trailing whitespace
-    while (len > 0 && std::isspace(static_cast<unsigned char>(line[len - 1])))
-      line[--len] = '\0';
-
-    return len;
+  context.curr_pos = context.line_beg_pos;
+  context.curr_pos += static_cast<std::streamoff>(len);
+  if (!in.eof()) {
+    // std::getline consumes the newline delimiter but does not store it;
+    // advance curr_pos past it so the next line_beg_pos is correct.
+    context.curr_pos += 1;
   }
-  return 0;
+
+  if (context.linenum == 1 &&
+      utf8::starts_with_bom(context.linebuf.c_str(),
+                            context.linebuf.c_str() + context.linebuf.size())) {
+    context.linebuf.erase(0, 3);
+    len -= 3;
+  }
+
+  // strip trailing whitespace
+  while (len > 0 &&
+         std::isspace(static_cast<unsigned char>(context.linebuf[static_cast<std::size_t>(len - 1)])))
+    --len;
+  context.linebuf.resize(static_cast<std::size_t>(len));
+
+  line = context.linebuf.data();
+
+  return len;
 }
 
 /*--- Line Dispatch ---*/
