@@ -392,8 +392,8 @@ value_t get_cost(post_t& post) {
     // commodity (e.g., stock splits where Phase 3 computes a lot-to-lot
     // "exchange rate"), prefer the annotation-derived cost which
     // represents the true basis in the cost commodity.
-    if (post.has_flags(POST_COST_CALCULATED) &&
-        post.amount.has_annotation() && post.amount.annotation().price &&
+    if (post.has_flags(POST_COST_CALCULATED) && post.amount.has_annotation() &&
+        post.amount.annotation().price &&
         post.cost->commodity().referent() == post.amount.commodity().referent())
       return *post.amount.price();
     return *post.cost;
