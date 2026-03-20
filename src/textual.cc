@@ -167,8 +167,8 @@ std::streamsize instance_t::read_line(char*& line) {
   }
 
   // strip trailing whitespace
-  while (len > 0 &&
-         std::isspace(static_cast<unsigned char>(context.linebuf[static_cast<std::size_t>(len - 1)])))
+  while (len > 0 && std::isspace(static_cast<unsigned char>(
+                        context.linebuf[static_cast<std::size_t>(len - 1)])))
     --len;
   context.linebuf.resize(static_cast<std::size_t>(len));
 
