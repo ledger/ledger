@@ -63,6 +63,7 @@
 #include "post.h"
 #include "account.h"
 #include "journal.h"
+#include "pool.h"
 #include "session.h"
 #include "report.h"
 #include "lookup.h"
@@ -573,6 +574,20 @@ xact_t* draft_t::insert(journal_t& journal) {
 
         new_post->amount = new_post->amount.rounded();
         DEBUG("draft.xact", "Rounded posting amount to: " << new_post->amount);
+      }
+
+      // If the amount is still uncommoditized, apply the default
+      // commodity from the D directive so that the display format
+      // (precision, symbol) is preserved.
+      if (!new_post->amount.is_null() && !new_post->amount.has_commodity()) {
+        commodity_t* default_commodity = commodity_pool_t::current_pool->default_commodity;
+        if (default_commodity && *default_commodity) {
+          new_post->amount.set_commodity(*default_commodity);
+          DEBUG("draft.xact", "Applied default commodity: " << new_post->amount.commodity());
+
+          new_post->amount = new_post->amount.rounded();
+          DEBUG("draft.xact", "Rounded to default commodity precision: " << new_post->amount);
+        }
       }
 
       added->add_post(new_post.release());
