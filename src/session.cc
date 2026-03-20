@@ -358,13 +358,12 @@ namespace {
 /// so that lot_price, lot_date, and lot_tag can be called with zero
 /// arguments.
 amount_t resolve_lot_amount(call_scope_t& args) {
-  if (! args.empty())
+  if (!args.empty())
     return args.get<amount_t>(0, false);
 
-  if (expr_t::ptr_op_t amount_op =
-      args.lookup(symbol_t::FUNCTION, "amount")) {
+  if (expr_t::ptr_op_t amount_op = args.lookup(symbol_t::FUNCTION, "amount")) {
     value_t val = amount_op->calc(args);
-    if (! val.is_null())
+    if (!val.is_null())
       return val.to_amount();
   }
   return amount_t();
