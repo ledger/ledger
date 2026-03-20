@@ -1,0 +1,25 @@
+; Multiple balance resets should not error about null amounts
+2014/12/28 Insert
+  Source
+  Target  2 Foo
+
+2014/12/28 Insert
+  Source
+  Target  1 Bar
+
+2014/12/29 Check
+  Target  = 2 Bar
+  Source
+
+2014/12/29 Check
+  Target  = 2 Foo
+  Source
+
+test balance
+              -2 Bar
+              -2 Foo  Source
+               2 Bar
+               2 Foo  Target
+--------------------
+                   0
+end test
