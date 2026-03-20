@@ -369,23 +369,40 @@ value_t get_commodity_is_primary(post_t& post) {
 }
 
 value_t get_has_cost(post_t& post) {
-  return post.cost ? true : false;
+  if (post.cost)
+    return true;
+  if (post.amount.has_annotation() && post.amount.annotation().price)
+    return true;
+  return false;
 }
 
 /**
  * @brief Return the cost of the posting, falling back to the amount.
  *
  * If a cost is recorded (currency conversion or lot price), returns it.
+ * When no explicit cost exists but the amount carries a lot price
+ * annotation ({price} or {{price}}), the cost is derived from that
+ * annotation so that -B correctly reports the basis.
  * Otherwise returns the compound value or raw amount, since a posting
  * in a single commodity has cost equal to amount.
  */
 value_t get_cost(post_t& post) {
-  if (post.cost)
+  if (post.cost) {
+    // When cost was auto-calculated between lots of the same base
+    // commodity (e.g., stock splits where Phase 3 computes a lot-to-lot
+    // "exchange rate"), prefer the annotation-derived cost which
+    // represents the true basis in the cost commodity.
+    if (post.has_flags(POST_COST_CALCULATED) &&
+        post.amount.has_annotation() && post.amount.annotation().price &&
+        post.cost->commodity().referent() == post.amount.commodity().referent())
+      return *post.amount.price();
     return *post.cost;
-  else if (post.has_xdata() && post.xdata().has_flags(POST_EXT_COMPOUND))
+  } else if (post.has_xdata() && post.xdata().has_flags(POST_EXT_COMPOUND))
     return post.xdata().compound_value;
   else if (post.amount.is_null())
     return 0L;
+  else if (post.amount.has_annotation() && post.amount.annotation().price)
+    return *post.amount.price();
   else
     return post.amount;
 }
