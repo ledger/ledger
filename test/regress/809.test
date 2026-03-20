@@ -1,0 +1,15 @@
+; Regression test for bug #809
+; The xact command should apply the default commodity (D directive) to
+; bare amounts so that precision and symbol are preserved.
+
+D $1,000.00
+
+2012/07/18 Someone
+    Expenses:Food    $12.00
+    Assets:Cash
+
+test xact 2012/07/19 "New Payee" 12.00 Expenses:Food
+2012/07/19 New Payee
+    Expenses:Unknown                          $12.00
+    Expenses:Food
+end test
