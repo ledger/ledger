@@ -1,0 +1,34 @@
+; Balance assignment that results in zero change should not error.
+; When a balance assignment computes a zero diff (the account is already
+; at the target balance), ledger must not treat the posting as null and
+; must not produce "Only one posting with null amount allowed per
+; transaction".
+1/1 A
+    a  10 p
+    z
+
+1/2 B
+    a  = 0 p
+    b
+
+1/3 C
+    a  = 0 p
+    c
+
+test bal --empty
+                 0 p  a
+                10 p  b
+                 0 p  c
+               -10 p  z
+--------------------
+                   0
+end test
+
+test reg --empty
+26-Jan-01 A                     a                              10 p         10 p
+                                z                             -10 p            0
+26-Jan-02 B                     a                             -10 p        -10 p
+                                b                              10 p            0
+26-Jan-03 C                     a                                 0            0
+                                c                                 0            0
+end test
