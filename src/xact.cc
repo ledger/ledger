@@ -1294,59 +1294,76 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
 
       bind_scope_t bound_scope(*scope_t::default_scope, *initial_post);
 
+      // Temporarily disable use_aux_date during predicate and check
+      // expression evaluation so that date() returns the primary date
+      // and expressions like "aux_date != date" work correctly.  Without
+      // this, --effective makes date() return aux_date, collapsing the
+      // two and breaking predicates that distinguish them (fixes #2945).
       bool matches_predicate = false;
-      if (try_quick_match) {
-        try {
-          bool found_memoized_result = false;
-          if (!memoized_results.empty()) {
-            std::map<string, bool>::iterator i =
-                memoized_results.find(initial_post->account->fullname());
-            if (i != memoized_results.end()) {
-              found_memoized_result = true;
-              matches_predicate = (*i).second;
-            }
-          }
+      {
+        bool saved = item_t::use_aux_date;
+        item_t::use_aux_date = false;
+        struct restore_guard {
+          bool& flag;
+          bool  val;
+          ~restore_guard() { flag = val; }
+        } guard{item_t::use_aux_date, saved};
 
-          // Since the majority of people who use automated transactions simply
-          // match against account names, try using a *much* faster version of
-          // the predicate evaluator.
-          if (!found_memoized_result) {
-            matches_predicate = post_pred(predicate.get_op(), *initial_post);
-            memoized_results.insert(
-                std::pair<string, bool>(initial_post->account->fullname(), matches_predicate));
+        if (try_quick_match) {
+          try {
+            bool found_memoized_result = false;
+            if (!memoized_results.empty()) {
+              std::map<string, bool>::iterator i =
+                  memoized_results.find(initial_post->account->fullname());
+              if (i != memoized_results.end()) {
+                found_memoized_result = true;
+                matches_predicate = (*i).second;
+              }
+            }
+
+            // Since the majority of people who use automated transactions simply
+            // match against account names, try using a *much* faster version of
+            // the predicate evaluator.
+            if (!found_memoized_result) {
+              matches_predicate = post_pred(predicate.get_op(), *initial_post);
+              memoized_results.insert(
+                  std::pair<string, bool>(initial_post->account->fullname(), matches_predicate));
+            }
+          } catch (...) {
+            DEBUG("xact.extend.fail", "The quick matcher failed, going back to regular eval");
+            try_quick_match = false;
+            memoized_results.clear(); // Clear any incorrect cached results
+            matches_predicate = predicate(bound_scope);
           }
-        } catch (...) {
-          DEBUG("xact.extend.fail", "The quick matcher failed, going back to regular eval");
-          try_quick_match = false;
-          memoized_results.clear(); // Clear any incorrect cached results
+        } else {
           matches_predicate = predicate(bound_scope);
         }
-      } else {
-        matches_predicate = predicate(bound_scope);
-      }
 
-      if (matches_predicate) {
-        if (deferred_notes) {
-          for (deferred_tag_data_t& data : *deferred_notes) {
-            if (data.apply_to_post == nullptr)
-              initial_post->append_note(apply_format(data.tag_data, bound_scope).c_str(),
-                                        bound_scope, data.overwrite_existing);
+        if (matches_predicate) {
+          if (deferred_notes) {
+            for (deferred_tag_data_t& data : *deferred_notes) {
+              if (data.apply_to_post == nullptr)
+                initial_post->append_note(apply_format(data.tag_data, bound_scope).c_str(),
+                                          bound_scope, data.overwrite_existing);
+            }
           }
-        }
 
-        if (check_exprs) {
-          for (expr_t::check_expr_pair& pair : *check_exprs) {
-            if (pair.second == expr_t::EXPR_GENERAL) {
-              pair.first.calc(bound_scope);
-            } else if (!pair.first.calc(bound_scope).to_boolean()) {
-              if (pair.second == expr_t::EXPR_ASSERTION)
-                throw_(parse_error, _f("Transaction assertion failed: %1%") % pair.first);
-              else
-                context.warning(_f("Transaction check failed: %1%") % pair.first);
+          if (check_exprs) {
+            for (expr_t::check_expr_pair& pair : *check_exprs) {
+              if (pair.second == expr_t::EXPR_GENERAL) {
+                pair.first.calc(bound_scope);
+              } else if (!pair.first.calc(bound_scope).to_boolean()) {
+                if (pair.second == expr_t::EXPR_ASSERTION)
+                  throw_(parse_error, _f("Transaction assertion failed: %1%") % pair.first);
+                else
+                  context.warning(_f("Transaction check failed: %1%") % pair.first);
+              }
             }
           }
         }
+      } // use_aux_date restored here by guard destructor
 
+      if (matches_predicate) {
         for (post_t* post : posts) {
           amount_t post_amount;
           if (post->amount.is_null()) {
