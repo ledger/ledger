@@ -1,0 +1,18 @@
+= /Expenses:Eating Out/
+    [Budget:Eating Out]                           -1
+    [Assets:Checking]                              1
+
+2019-07-18 jones
+    Expenses:Eating Out                          $20 ; [=2019/07/19]
+    Expenses:Eating Out                          $20 ; [=2019/07/20]
+    Assets:Checking
+
+test reg --effective --sort date
+19-Jul-18 jones                 Assets:Checking                $-40         $-40
+19-Jul-19 jones                 Expenses:Eating Out             $20         $-20
+                                [Budget:Eating Out]            $-20         $-40
+                                [Assets:Checking]               $20         $-20
+19-Jul-20 jones                 Expenses:Eating Out             $20            0
+                                [Budget:Eating Out]            $-20         $-20
+                                [Assets:Checking]               $20            0
+end test

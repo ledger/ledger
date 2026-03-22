@@ -1422,6 +1422,15 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
           // the automated xact's one.
           auto new_post = std::make_unique<post_t>(account, amt);
           new_post->copy_details(*post);
+
+          // Propagate the matched posting's date overrides to the
+          // generated posting so that auto-generated postings respect
+          // effective dates and posting-level date overrides.
+          if (!post->_date && initial_post->_date)
+            new_post->_date = initial_post->_date;
+          if (!post->_date_aux && initial_post->_date_aux)
+            new_post->_date_aux = initial_post->_date_aux;
+
           if (post->cost)
             new_post->cost = post->cost;
           else if (initial_post->cost && amt.has_annotation() && amt.annotation().price) {
