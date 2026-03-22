@@ -1,0 +1,37 @@
+; Forecast entries should not extend past the forecast period.
+; Bug #1605: balance command accumulated forecast entries beyond the
+; --forecast-while date boundary because the continuation predicate
+; was never evaluated for accounts reports.
+
+~ Monthly
+  Income:Salary           -100.00
+  Assets:Checking
+
+2024/01/01 Start
+  Equity                    -1.00
+  Assets:Checking
+
+test reg --now=2024/06/01 --forecast-while 'd < [2024/09/01]'
+24-Jan-01 Start                 Equity                           -1           -1
+                                Assets:Checking                   1            0
+24-Jul-01 Forecast transaction  Income:Salary                  -100         -100
+24-Jul-01 Forecast transaction  Assets:Checking                 100            0
+24-Aug-01 Forecast transaction  Income:Salary                  -100         -100
+24-Aug-01 Forecast transaction  Assets:Checking                 100            0
+end test
+
+test bal --now=2024/06/01 --forecast-while 'd < [2024/09/01]' -s
+                 201  Assets:Checking
+                  -1  Equity
+                -200  Income:Salary
+--------------------
+                   0
+end test
+
+test bal --now=2024/06/01 --forecast-while 'd < [2024/09/01]' -s ^
+                 201  Assets:Checking
+                  -1  Equity
+                -200  Income:Salary
+--------------------
+                   0
+end test
