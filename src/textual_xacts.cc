@@ -436,8 +436,9 @@ static balance_t compute_balance_diff(const amount_t& amt, post_t* post, xact_t*
 
   // Subtract amounts from previous posts to this account in the xact.
   for (post_t* p : xact->posts) {
-    if (p->account == post->account && (!p->has_flags(POST_VIRTUAL | POST_IS_TIMELOG) ||
-                                        post->has_flags(POST_VIRTUAL | POST_IS_TIMELOG))) {
+    if (p->account == post->account && !p->amount.is_null() &&
+        (!p->has_flags(POST_VIRTUAL | POST_IS_TIMELOG) ||
+         post->has_flags(POST_VIRTUAL | POST_IS_TIMELOG))) {
       amount_t p_amt(strip_annotations ? p->amount.strip_annotations(keep_details_t()) : p->amount);
       diff -= p_amt;
       DEBUG("textual.parse", "line " << context.linenum << ": "
@@ -567,7 +568,8 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
             post->add_flags(POST_AMOUNT_USER_DATE);
         }
 
-        if (post->amount.commodity().has_flags(COMMODITY_STYLE_NO_MIGRATE) &&
+        if (!post->amount_expr &&
+            post->amount.commodity().has_flags(COMMODITY_STYLE_NO_MIGRATE) &&
             post->amount.precision() > post->amount.commodity().precision()) {
           if (context.journal->checking_style == journal_t::CHECK_WARNING) {
             context.warning(
@@ -784,45 +786,40 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
         }
 
         if (post->amount.is_null()) {
-          // balance assignment
-          if (no_assertions) {
-            // With --permissive, skip computing the posting amount from the
-            // balance assignment.  Leave post->amount null so that finalize()
-            // will auto-compute the balancing amount from the other postings.
-            DEBUG("textual.parse", "line " << context.linenum << ": "
-                                           << "Skipping balance assignment (permissive mode)");
-          } else {
-            if (!diff.is_zero()) {
-              if (strip) {
-                // Recompute the diff preserving lot annotations (cost basis
-                // and lot date) so that the assigned amount retains them.
-                balance_t ann_diff = compute_balance_diff(amt, post.get(), xact, false, context);
-                // Use annotated diff if it can be represented as a single
-                // amount; fall back to the stripped diff otherwise (e.g.
-                // when multiple lots with different annotations exist).
-                try {
-                  post->amount = ann_diff.to_amount();
-                } catch (...) {
-                  post->amount = diff.to_amount();
-                }
-              } else {
-                // Diff already has annotations; use it directly.
-                try {
-                  post->amount = diff.to_amount();
-                } catch (...) {
-                  post->amount = diff.strip_annotations(keep_details_t()).to_amount();
-                }
+          // balance assignment: compute the amount needed to bring the
+          // account to the declared balance target.  This runs regardless
+          // of --permissive; the permissive flag only suppresses balance
+          // ASSERTION errors (checked below), not balance assignments.
+          if (!diff.is_zero()) {
+            if (strip) {
+              // Recompute the diff preserving lot annotations (cost basis
+              // and lot date) so that the assigned amount retains them.
+              balance_t ann_diff = compute_balance_diff(amt, post.get(), xact, false, context);
+              // Use annotated diff if it can be represented as a single
+              // amount; fall back to the stripped diff otherwise (e.g.
+              // when multiple lots with different annotations exist).
+              try {
+                post->amount = ann_diff.to_amount();
+              } catch (...) {
+                post->amount = diff.to_amount();
               }
-              DEBUG("textual.parse", "line " << context.linenum << ": "
-                                             << "Overwrite null posting with " << post->amount);
             } else {
-              post->amount = amt - amt; // this is '0' with the correct commodity.
-              DEBUG("textual.parse", "line " << context.linenum << ": "
-                                             << "Overwrite null posting with zero diff with "
-                                             << amt - amt);
+              // Diff already has annotations; use it directly.
+              try {
+                post->amount = diff.to_amount();
+              } catch (...) {
+                post->amount = diff.strip_annotations(keep_details_t()).to_amount();
+              }
             }
-            post->add_flags(POST_CALCULATED);
+            DEBUG("textual.parse", "line " << context.linenum << ": "
+                                           << "Overwrite null posting with " << post->amount);
+          } else {
+            post->amount = amt - amt; // this is '0' with the correct commodity.
+            DEBUG("textual.parse", "line " << context.linenum << ": "
+                                           << "Overwrite null posting with zero diff with "
+                                           << amt - amt);
           }
+          post->add_flags(POST_CALCULATED);
         } else {
           // balance assertion
           amount_t post_amt(strip ? post->amount.reduced().strip_annotations(keep_details_t())
