@@ -1912,14 +1912,13 @@ void forecast_posts::flush() {
     // Collect all pending postings that share this earliest start date,
     // so they can be generated and evaluated as a group.
     std::list<pending_posts_list::iterator> same_date;
-    for (pending_posts_list::iterator i = pending_posts.begin();
-         i != pending_posts.end(); i++) {
+    for (pending_posts_list::iterator i = pending_posts.begin(); i != pending_posts.end(); i++) {
       if (*(*i).first.start == earliest_date)
         same_date.push_back(i);
     }
 
     // Remove postings whose next date exceeds the forecast year limit.
-    for (auto sit = same_date.begin(); sit != same_date.end(); ) {
+    for (auto sit = same_date.begin(); sit != same_date.end();) {
       if ((**sit).first.finish)
         assert(*(**sit).first.start < *(**sit).first.finish);
 
@@ -1929,8 +1928,7 @@ void forecast_posts::flush() {
       if (static_cast<std::size_t>((next - last).days()) >
           static_cast<std::size_t>(365U) * forecast_years) {
         DEBUG("filters.forecast",
-              "Forecast transaction exceeds " << forecast_years
-              << " years beyond today");
+              "Forecast transaction exceeds " << forecast_years << " years beyond today");
         pending_posts.erase(*sit);
         sit = same_date.erase(sit);
       } else {
