@@ -1,0 +1,15 @@
+; Forecast should respect 'from'/'since' in periodic transactions even
+; when --now is before the 'from' date (BZ#1044).
+
+~ Monthly from 2024/06/01
+    Expenses:Rent             $1000.00
+    Assets:Checking
+
+test reg --forecast-while "date < [2024/09/01]" --now "2024/03/15" -> 0
+24-Jun-01 Forecast transaction  Expenses:Rent              $1000.00     $1000.00
+24-Jun-01 Forecast transaction  Assets:Checking           $-1000.00            0
+24-Jul-01 Forecast transaction  Expenses:Rent              $1000.00     $1000.00
+24-Jul-01 Forecast transaction  Assets:Checking           $-1000.00            0
+24-Aug-01 Forecast transaction  Expenses:Rent              $1000.00     $1000.00
+24-Aug-01 Forecast transaction  Assets:Checking           $-1000.00            0
+end test

@@ -1832,16 +1832,33 @@ void budget_posts::flush() {
 }
 
 /**
- * Add a periodic posting for forecasting, advancing its interval to CURRENT_DATE.
+ * Add a periodic posting for forecasting, initializing its interval.
  *
  * Unlike generate_posts::add_post, this override initializes the interval
- * and advances it past all historical periods so that only future occurrences
- * are generated during flush().
+ * via find_period so that only future occurrences are generated during
+ * flush().  If the period has a 'from'/'since' date in the future, the
+ * interval is adjusted so that forecasting begins at that date rather
+ * than being silently dropped (#1044).
  */
 void forecast_posts::add_post(const date_interval_t& period, post_t& post) {
   date_interval_t i(period);
-  if (!i.start && !i.find_period(CURRENT_DATE()))
-    return;
+  if (!i.start) {
+    if (!i.find_period(CURRENT_DATE())) {
+      // find_period failed.  If it's because CURRENT_DATE is before the
+      // period's 'from'/'since' date, stabilize() will have set start
+      // to the future range begin.  Back up one period so that flush()
+      // — which uses 'next' as the first forecast date — generates a
+      // posting at that date (#1044).  If start is not in the future
+      // (period expired or otherwise invalid), give up.
+      if (!i.start || !i.duration || *i.start <= CURRENT_DATE())
+        return;
+      date_t future_start = *i.start;
+      i.start = i.duration->subtract(future_start);
+      i.end_of_duration = none;
+      i.next = none;
+      i.resolve_end();
+    }
+  }
 
   generate_posts::add_post(i, post);
 
