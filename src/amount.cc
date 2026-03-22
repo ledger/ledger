@@ -160,7 +160,8 @@ struct amount_t::bigint_t : public flags::supports_flags<> {
       return false;
     }
     if (flags() & ~(BIGINT_BULK_ALLOC | BIGINT_KEEP_PREC | BIGINT_COST_PREC)) {
-      DEBUG("ledger.validate", "amount_t::bigint_t: flags() & ~(BULK_ALLOC | KEEP_PREC | COST_PREC)");
+      DEBUG("ledger.validate",
+            "amount_t::bigint_t: flags() & ~(BULK_ALLOC | KEEP_PREC | COST_PREC)");
       return false;
     }
     return true;
