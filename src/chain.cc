@@ -177,8 +177,7 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
      exclude forecast entries that fall outside the forecast period. */
   if (report.HANDLED(forecast_while_)) {
     handler = std::make_shared<filter_posts>(
-        handler, predicate_t(report.HANDLER(forecast_while_).str(), report.what_to_keep()),
-        report);
+        handler, predicate_t(report.HANDLER(forecast_while_).str(), report.what_to_keep()), report);
   }
 
   if (!for_accounts_report) {
