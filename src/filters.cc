@@ -1840,8 +1840,19 @@ void budget_posts::flush() {
  */
 void forecast_posts::add_post(const date_interval_t& period, post_t& post) {
   date_interval_t i(period);
-  if (!i.start && !i.find_period(CURRENT_DATE()))
-    return;
+  if (!i.start && !i.find_period(CURRENT_DATE())) {
+    // find_period failed, but stabilize() (called inside) may have set
+    // i.start to a future date.  If so, the interval is valid for
+    // forecasting.  Step back one period so that flush() generates a
+    // posting at the original start date (via next).
+    if (!i.start || !i.duration || *i.start <= CURRENT_DATE())
+      return;
+    date_t future_start = *i.start;
+    i.start = i.duration->subtract(future_start);
+    i.end_of_duration = none;
+    i.next = none;
+    i.resolve_end();
+  }
 
   generate_posts::add_post(i, post);
 
