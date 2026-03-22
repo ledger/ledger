@@ -1854,13 +1854,18 @@ void forecast_posts::add_post(const date_interval_t& period, post_t& post) {
 /**
  * Generate all forecast postings into the future.
  *
- * Iterates through pending periodic postings, always selecting the one with
- * the earliest next occurrence.  For each, a synthetic "Forecast transaction"
- * posting is emitted.  A periodic posting is removed from consideration when:
- * - Its next date exceeds forecast_years beyond the last generated date, or
- * - The generated posting matches the report query but fails the continuation
- *   predicate (--forecast-while), or
- * - Its interval has no more occurrences.
+ * Iterates through pending periodic postings, generating synthetic postings
+ * in date order.  All postings sharing the same earliest start date are
+ * generated as a group before evaluating the continuation predicate.  This
+ * ensures that the predicate sees the cumulative running total after all
+ * same-date postings, preventing one posting's intermediate total from
+ * prematurely terminating another posting in the same period.
+ *
+ * A group of same-date postings is removed from consideration when:
+ * - Any posting's next date exceeds forecast_years beyond today, or
+ * - The last generated posting that matched the report query fails the
+ *   continuation predicate (--forecast-while), or
+ * - A posting's interval has no more occurrences.
  */
 void forecast_posts::flush() {
   posts_list passed;
@@ -1894,8 +1899,7 @@ void forecast_posts::flush() {
   // forecast and is removed from the set.
 
   while (pending_posts.size() > 0) {
-    // At each step through the loop, we find the first periodic posting whose
-    // period contains the earliest starting date.
+    // Find the earliest start date among all pending postings.
     pending_posts_list::iterator least = pending_posts.begin();
     for (pending_posts_list::iterator i = ++pending_posts.begin(); i != pending_posts.end(); i++) {
       assert((*i).first.start);
@@ -1903,58 +1907,80 @@ void forecast_posts::flush() {
       if (*(*i).first.start < *(*least).first.start)
         least = i;
     }
+    date_t earliest_date = *(*least).first.start;
 
-    if ((*least).first.finish)
-      assert(*(*least).first.start < *(*least).first.finish);
-
-    // If the next date in the series for this periodic posting is more than 5
-    // years beyond the last valid post we generated, drop it from further
-    // consideration.
-    date_t& next(*(*least).first.next);
-    assert(next > *(*least).first.start);
-
-    if (static_cast<std::size_t>((next - last).days()) >
-        static_cast<std::size_t>(365U) * forecast_years) {
-      DEBUG("filters.forecast",
-            "Forecast transaction exceeds " << forecast_years << " years beyond today");
-      pending_posts.erase(least);
-      continue;
+    // Collect all pending postings that share this earliest start date,
+    // so they can be generated and evaluated as a group.
+    std::list<pending_posts_list::iterator> same_date;
+    for (pending_posts_list::iterator i = pending_posts.begin();
+         i != pending_posts.end(); i++) {
+      if (*(*i).first.start == earliest_date)
+        same_date.push_back(i);
     }
 
-    // `post' refers to the posting defined in the period transaction.  We
-    // make a copy of it within a temporary transaction with the payee
-    // "Forecast transaction".
-    post_t& post = *(*least).second;
-    xact_t& xact = temps.create_xact();
-    xact.payee = _("Forecast transaction");
-    xact._date = next;
-    post_t& temp = temps.copy_post(post, xact);
+    // Remove postings whose next date exceeds the forecast year limit.
+    for (auto sit = same_date.begin(); sit != same_date.end(); ) {
+      if ((**sit).first.finish)
+        assert(*(**sit).first.start < *(**sit).first.finish);
 
-    // Submit the generated posting
-    DEBUG("filters.forecast", "Forecast transaction: " << temp.date() << " "
-                                                       << temp.account->fullname() << " "
-                                                       << temp.amount);
-    item_handler<post_t>::operator()(temp);
+      date_t& next(*(**sit).first.next);
+      assert(next > *(**sit).first.start);
 
-    // If the generated posting matches the user's report query, check whether
-    // it also fails to match the continuation condition for the forecast.  If
-    // it does, drop this periodic posting from consideration.
-    if (temp.has_xdata() && temp.xdata().has_flags(POST_EXT_MATCHES)) {
+      if (static_cast<std::size_t>((next - last).days()) >
+          static_cast<std::size_t>(365U) * forecast_years) {
+        DEBUG("filters.forecast",
+              "Forecast transaction exceeds " << forecast_years
+              << " years beyond today");
+        pending_posts.erase(*sit);
+        sit = same_date.erase(sit);
+      } else {
+        ++sit;
+      }
+    }
+    if (same_date.empty())
+      continue;
+
+    // Generate all postings for this date.  Track the last one that
+    // matched the report query so we can evaluate the continuation
+    // predicate after all same-date effects are reflected in the
+    // running total.
+    post_t* last_match = nullptr;
+    for (auto& it : same_date) {
+      post_t& post = *(*it).second;
+      xact_t& xact = temps.create_xact();
+      xact.payee = _("Forecast transaction");
+      xact._date = *(*it).first.next;
+      post_t& temp = temps.copy_post(post, xact);
+
+      DEBUG("filters.forecast", "Forecast transaction: " << temp.date() << " "
+                                                         << temp.account->fullname() << " "
+                                                         << temp.amount);
+      item_handler<post_t>::operator()(temp);
+
+      if (temp.has_xdata() && temp.xdata().has_flags(POST_EXT_MATCHES))
+        last_match = &temp;
+    }
+
+    // After all same-date postings have been generated, check the
+    // continuation predicate on the last posting that matched the
+    // report query.  This reflects the cumulative effect of ALL
+    // same-date postings, not just one in isolation.
+    if (last_match) {
       DEBUG("filters.forecast", "  matches report query");
-      bind_scope_t bound_scope(context, temp);
+      bind_scope_t bound_scope(context, *last_match);
       if (!pred(bound_scope)) {
         DEBUG("filters.forecast", "  fails to match continuation criteria");
-        pending_posts.erase(least);
+        for (auto& it : same_date)
+          pending_posts.erase(it);
         continue;
       }
     }
 
-    // Increment the 'least', but remove it from pending_posts if it
-    // exceeds its own boundaries.
-    ++(*least).first;
-    if (!(*least).first.start) {
-      pending_posts.erase(least);
-      continue;
+    // Advance each posting's interval; remove exhausted ones.
+    for (auto& it : same_date) {
+      ++(*it).first;
+      if (!(*it).first.start)
+        pending_posts.erase(it);
     }
   }
 
