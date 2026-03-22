@@ -1863,7 +1863,6 @@ void forecast_posts::add_post(const date_interval_t& period, post_t& post) {
  * - Its interval has no more occurrences.
  */
 void forecast_posts::flush() {
-  posts_list passed;
   date_t last = CURRENT_DATE();
 
   // If there are period transactions to apply in a continuing series until
@@ -1930,15 +1929,36 @@ void forecast_posts::flush() {
     xact._date = next;
     post_t& temp = temps.copy_post(post, xact);
 
+    // Pre-check the forecast predicate BEFORE submitting the posting
+    // downstream.  For date-based predicates (e.g. 'd<[2016/03/02]'),
+    // this prevents a posting that falls outside the forecast window
+    // from ever reaching calc_posts and corrupting the running total.
+    // For total-based predicates (e.g. 'total < $3500'), the total is
+    // not yet accumulated so get_total() returns the posting's own
+    // amount, which will typically pass the check; the post-submission
+    // fallback below handles termination in that case.  (Fixes #1148.)
+    {
+      bind_scope_t bound_scope(context, temp);
+      if (!pred(bound_scope)) {
+        DEBUG("filters.forecast",
+              "Forecast transaction pruned (pre-check): "
+                  << temp.date() << " " << temp.account->fullname()
+                  << " " << temp.amount);
+        pending_posts.erase(least);
+        continue;
+      }
+    }
+
     // Submit the generated posting
     DEBUG("filters.forecast", "Forecast transaction: " << temp.date() << " "
                                                        << temp.account->fullname() << " "
                                                        << temp.amount);
     item_handler<post_t>::operator()(temp);
 
-    // If the generated posting matches the user's report query, check whether
-    // it also fails to match the continuation condition for the forecast.  If
-    // it does, drop this periodic posting from consideration.
+    // Post-submission fallback: if the posting matched the report query,
+    // re-check the predicate now that calc_posts has updated the running
+    // total.  This catches total-based predicates (e.g. 'total < $3500')
+    // that could not be evaluated before submission.
     if (temp.has_xdata() && temp.xdata().has_flags(POST_EXT_MATCHES)) {
       DEBUG("filters.forecast", "  matches report query");
       bind_scope_t bound_scope(context, temp);
