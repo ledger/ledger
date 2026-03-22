@@ -1940,10 +1940,9 @@ void forecast_posts::flush() {
     {
       bind_scope_t bound_scope(context, temp);
       if (!pred(bound_scope)) {
-        DEBUG("filters.forecast",
-              "Forecast transaction pruned (pre-check): "
-                  << temp.date() << " " << temp.account->fullname()
-                  << " " << temp.amount);
+        DEBUG("filters.forecast", "Forecast transaction pruned (pre-check): "
+                                      << temp.date() << " " << temp.account->fullname() << " "
+                                      << temp.amount);
         pending_posts.erase(least);
         continue;
       }
