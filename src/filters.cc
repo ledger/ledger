@@ -1863,7 +1863,6 @@ void forecast_posts::add_post(const date_interval_t& period, post_t& post) {
  * - Its interval has no more occurrences.
  */
 void forecast_posts::flush() {
-  posts_list passed;
   date_t last = CURRENT_DATE();
 
   // If there are period transactions to apply in a continuing series until
@@ -1894,13 +1893,15 @@ void forecast_posts::flush() {
   // forecast and is removed from the set.
 
   while (pending_posts.size() > 0) {
-    // At each step through the loop, we find the first periodic posting whose
-    // period contains the earliest starting date.
+    // At each step through the loop, we find the periodic posting whose next
+    // scheduled date is earliest.  We compare on `next' rather than `start'
+    // so that the emitted transactions come out in chronological order even
+    // when periodic transactions have different intervals.
     pending_posts_list::iterator least = pending_posts.begin();
     for (pending_posts_list::iterator i = ++pending_posts.begin(); i != pending_posts.end(); i++) {
-      assert((*i).first.start);
-      assert((*least).first.start);
-      if (*(*i).first.start < *(*least).first.start)
+      assert((*i).first.next);
+      assert((*least).first.next);
+      if (*(*i).first.next < *(*least).first.next)
         least = i;
     }
 

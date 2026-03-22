@@ -1,0 +1,22 @@
+; Forecast results should be ordered by date when mixing periodic
+; transactions with different intervals (e.g. monthly and yearly).
+~ Monthly
+    Expenses:MonthlyExpense           $11.00
+    Assets
+
+~ Yearly
+    Expenses:YearlyExpense   $88.00
+    Assets
+
+test reg --forecast 'date<[2016/04]' --now=2015/11/15
+15-Dec-01 Forecast transaction  Expense:MonthlyExpense       $11.00       $11.00
+15-Dec-01 Forecast transaction  Assets                      $-11.00            0
+16-Jan-01 Forecast transaction  Expense:MonthlyExpense       $11.00       $11.00
+16-Jan-01 Forecast transaction  Assets                      $-11.00            0
+16-Jan-01 Forecast transaction  Expenses:YearlyExpense       $88.00       $88.00
+16-Jan-01 Forecast transaction  Assets                      $-88.00            0
+16-Feb-01 Forecast transaction  Expense:MonthlyExpense       $11.00       $11.00
+16-Feb-01 Forecast transaction  Assets                      $-11.00            0
+16-Mar-01 Forecast transaction  Expense:MonthlyExpense       $11.00       $11.00
+16-Mar-01 Forecast transaction  Assets                      $-11.00            0
+end test
