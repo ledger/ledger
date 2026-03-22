@@ -91,8 +91,6 @@ public:
     const char* p = input.c_str();
     std::size_t len = input.length();
 
-    if (len >= 4096)
-      throw_(std::length_error, _f("String too long for unistring: %1% bytes") % len);
     if (!utf8::is_valid(p, p + len))
       throw_(std::runtime_error, _("Invalid UTF-8 sequence in string"));
     utf8::utf8to32(p, p + len, std::back_inserter(utf32chars));
