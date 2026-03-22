@@ -1834,10 +1834,21 @@ void date_interval_t::stabilize(const optional<date_t>& date, bool align_interva
 
       // Phase 3: Clamp to the original range boundaries
       if (initial_start && (!start || *start < *initial_start)) {
-        // Using the discovered start, find the end of the period
+        // Compute end_of_duration from the quantum-aligned start before
+        // clamping, so that weekly/monthly periods keep their natural
+        // period boundary.
         resolve_end();
 
         start = initial_start;
+
+        // If end_of_duration (computed from the old start) is no longer
+        // past the clamped start, it is stale and must be recomputed.
+        // This happens for daily periods where the old start was before
+        // initial_start (e.g. --now is before the "from" date).
+        if (end_of_duration && *end_of_duration <= *start) {
+          end_of_duration = none;
+          next = none;
+        }
         DEBUG("times.interval", "stabilize: start reset to initial start");
       }
       if (initial_finish && (!finish || *finish > *initial_finish)) {

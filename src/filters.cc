@@ -1840,8 +1840,16 @@ void budget_posts::flush() {
  */
 void forecast_posts::add_post(const date_interval_t& period, post_t& post) {
   date_interval_t i(period);
-  if (!i.start && !i.find_period(CURRENT_DATE()))
-    return;
+  if (!i.start && !i.find_period(CURRENT_DATE())) {
+    // find_period fails when CURRENT_DATE is outside the interval.
+    // There are two distinct cases:
+    //  (a) The period starts in the future — keep the posting so
+    //      flush() generates it when the time comes.
+    //  (b) The period has expired (finish <= CURRENT_DATE) or could
+    //      not be initialized — drop it.
+    if (!i.start || (i.finish && CURRENT_DATE() >= *i.finish))
+      return;
+  }
 
   generate_posts::add_post(i, post);
 
