@@ -8,10 +8,10 @@
     Assets:Cash
 
 test reg --forecast "d<[2024/05/01]" --now 2024/01/01
+24-Jan-01 Forecast transaction  Expenses:Food               $100.00      $100.00
+24-Jan-01 Forecast transaction  Assets:Cash                $-100.00            0
 24-Feb-01 Forecast transaction  Expenses:Food               $100.00      $100.00
 24-Feb-01 Forecast transaction  Assets:Cash                $-100.00            0
 24-Mar-01 Forecast transaction  Expenses:Food               $100.00      $100.00
 24-Mar-01 Forecast transaction  Assets:Cash                $-100.00            0
-24-Apr-01 Forecast transaction  Expenses:Food               $100.00      $100.00
-24-Apr-01 Forecast transaction  Assets:Cash                $-100.00            0
 end test
