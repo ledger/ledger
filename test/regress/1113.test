@@ -1,0 +1,27 @@
+; Regression test for issue #1113
+; 'from' and 'until' not handled correctly by --forecast
+;
+; 1. A periodic transaction with 'from' set to a future date should
+;    appear in --forecast output starting at the from-date.
+; 2. A periodic transaction with 'until' set to a past date should be
+;    silently omitted (not cause an error).
+
+; --- Test 1: future 'from' date ---
+
+~ monthly from 2024/05/01
+    Expenses:Food    $100.00
+    Assets:Cash
+
+test reg --now 2024/01/01 --forecast-while "date < [2024/08/01]"
+24-May-01 Forecast transaction  Expenses:Food               $100.00      $100.00
+24-May-01 Forecast transaction  Assets:Cash                $-100.00            0
+24-Jun-01 Forecast transaction  Expenses:Food               $100.00      $100.00
+24-Jun-01 Forecast transaction  Assets:Cash                $-100.00            0
+24-Jul-01 Forecast transaction  Expenses:Food               $100.00      $100.00
+24-Jul-01 Forecast transaction  Assets:Cash                $-100.00            0
+end test
+
+; --- Test 2: past 'until' date produces no output ---
+
+test reg --now 2024/06/01 --forecast-while "date < [2024/12/01]"
+end test

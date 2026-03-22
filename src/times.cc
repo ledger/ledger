@@ -1640,6 +1640,14 @@ void date_interval_t::parse(const string& str) {
   *this = parser.parse();
 }
 
+date_t date_interval_t::add_duration(const date_t& date, const date_duration_t& duration) {
+  return duration.add(date);
+}
+
+date_t date_interval_t::subtract_duration(const date_t& date, const date_duration_t& duration) {
+  return duration.subtract(date);
+}
+
 /**
  * @brief Compute end_of_duration and next from the current start and duration.
  *

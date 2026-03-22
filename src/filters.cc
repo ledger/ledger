@@ -1840,14 +1840,34 @@ void budget_posts::flush() {
  */
 void forecast_posts::add_post(const date_interval_t& period, post_t& post) {
   date_interval_t i(period);
-  if (!i.start && !i.find_period(CURRENT_DATE()))
+  if (!i.start)
+    i.find_period(CURRENT_DATE());
+
+  if (!i.start)
     return;
+
+  // Drop intervals whose finish date is entirely in the past.
+  if (i.finish && CURRENT_DATE() > *i.finish)
+    return;
+
+  if (*i.start > CURRENT_DATE()) {
+    // The interval starts in the future (e.g. "from 2024/05/01" when today
+    // is 2024/01/01).  Back up one period so that flush() — which emits at
+    // 'next', not 'start' — will produce its first posting on the from-date.
+    date_t from_date = *i.start;
+    i.start = date_interval_t::subtract_duration(from_date, *i.duration);
+    i.end_of_duration = none;
+    i.next = none;
+    i.resolve_end();
+  } else if (!i.end_of_duration) {
+    i.resolve_end();
+  }
 
   generate_posts::add_post(i, post);
 
   // Advance the period's interval until it is at or beyond the current
   // date.
-  while (*i.start < CURRENT_DATE())
+  while (i.start && *i.start < CURRENT_DATE())
     ++i;
 }
 
