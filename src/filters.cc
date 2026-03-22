@@ -1863,7 +1863,6 @@ void forecast_posts::add_post(const date_interval_t& period, post_t& post) {
  * - Its interval has no more occurrences.
  */
 void forecast_posts::flush() {
-  posts_list passed;
   date_t last = CURRENT_DATE();
 
   // If there are period transactions to apply in a continuing series until
@@ -1936,17 +1935,20 @@ void forecast_posts::flush() {
                                                        << temp.amount);
     item_handler<post_t>::operator()(temp);
 
-    // If the generated posting matches the user's report query, check whether
-    // it also fails to match the continuation condition for the forecast.  If
-    // it does, drop this periodic posting from consideration.
-    if (temp.has_xdata() && temp.xdata().has_flags(POST_EXT_MATCHES)) {
-      DEBUG("filters.forecast", "  matches report query");
-      bind_scope_t bound_scope(context, temp);
-      if (!pred(bound_scope)) {
-        DEBUG("filters.forecast", "  fails to match continuation criteria");
-        pending_posts.erase(least);
-        continue;
-      }
+    // Check whether the generated posting fails to match the continuation
+    // condition for the forecast.  If it does, drop this periodic posting
+    // from further consideration.  The predicate is evaluated after emission
+    // so that calc_posts has computed the running total (needed for
+    // value-based predicates like "total < $3500").  We also remove the
+    // POST_EXT_VISITED flag so that accounts reports (balance) do not
+    // count this posting in their totals.
+    bind_scope_t bound_scope(context, temp);
+    if (!pred(bound_scope)) {
+      DEBUG("filters.forecast", "  fails to match continuation criteria");
+      if (temp.has_xdata())
+        temp.xdata().drop_flags(POST_EXT_VISITED);
+      pending_posts.erase(least);
+      continue;
     }
 
     // Increment the 'least', but remove it from pending_posts if it
