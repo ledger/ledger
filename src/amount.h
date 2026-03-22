@@ -293,6 +293,12 @@ public:
   void set_keep_precision(const bool keep = true) const;
   precision_t display_precision() const;
 
+  /** Mark this amount as having cost-derived display precision.
+      Rounds the stored value to @a prec decimal places, sets the
+      internal precision to @a prec, and flags the amount so that
+      trailing zeros are preserved to that precision during output. */
+  void set_cost_precision(precision_t prec);
+
   /** Returns the negated value of an amount.
       @see operator-()
   */
