@@ -1835,8 +1835,8 @@ void budget_posts::flush() {
  * Add a periodic posting for forecasting, advancing its interval to CURRENT_DATE.
  *
  * Unlike generate_posts::add_post, this override initializes the interval
- * and advances it past all historical periods so that only future occurrences
- * are generated during flush().
+ * and advances it past all fully-elapsed historical periods so that only the
+ * current and future periods are generated during flush().
  */
 void forecast_posts::add_post(const date_interval_t& period, post_t& post) {
   date_interval_t i(period);
@@ -1845,10 +1845,14 @@ void forecast_posts::add_post(const date_interval_t& period, post_t& post) {
 
   generate_posts::add_post(i, post);
 
-  // Advance the period's interval until it is at or beyond the current
-  // date.
-  while (*i.start < CURRENT_DATE())
-    ++i;
+  // Advance the stored interval past all fully-elapsed periods, keeping
+  // the period that contains CURRENT_DATE() so the current period's
+  // forecast is included.
+  date_interval_t& stored = pending_posts.back().first;
+  if (!stored.next)
+    stored.stabilize(CURRENT_DATE());
+  while (stored.next && *stored.next <= CURRENT_DATE())
+    ++stored;
 }
 
 /**
@@ -1927,7 +1931,7 @@ void forecast_posts::flush() {
     post_t& post = *(*least).second;
     xact_t& xact = temps.create_xact();
     xact.payee = _("Forecast transaction");
-    xact._date = next;
+    xact._date = *(*least).first.start;
     post_t& temp = temps.copy_post(post, xact);
 
     // Submit the generated posting
