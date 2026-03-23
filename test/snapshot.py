@@ -33,16 +33,34 @@ class Combo:
 # Filename encoding
 # ---------------------------------------------------------------------------
 
+def _sanitize_filename_part(s: str) -> str:
+    """Replace filesystem-unsafe characters with distinct safe substitutes."""
+    table = str.maketrans({
+        '/': '{slash}',
+        '\\': '{bslash}',
+        ':': '{colon}',
+        '*': '{star}',
+        '?': '{q}',
+        '"': '{dq}',
+        '<': '{lt}',
+        '>': '{gt}',
+        '|': '{pipe}',
+    })
+    return s.translate(table)
+
+
 def combo_to_filename(combo: Combo) -> str:
     """Deterministic filename for a combo's output file."""
     parts = [combo.command]
     for opt in sorted(combo.options):
-        parts.append("-".join(opt).lstrip("-"))
+        parts.append(_sanitize_filename_part("-".join(opt).lstrip("-")))
     name = "--".join(parts) + ".txt"
     if len(name.encode("utf-8")) > 255:
         full_hash = hashlib.sha256(name.encode()).hexdigest()[:8]
         name = name[:240] + "--" + full_hash + ".txt"
-    return name
+    # Lowercase for case-insensitive filesystem determinism (macOS APFS).
+    # The original command is preserved in the file's # Command: header.
+    return name.lower()
 
 
 def combo_to_cmdline(combo: Combo) -> list[str]:
