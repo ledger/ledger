@@ -568,8 +568,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
             post->add_flags(POST_AMOUNT_USER_DATE);
         }
 
-        if (!post->amount_expr &&
-            post->amount.commodity().has_flags(COMMODITY_STYLE_NO_MIGRATE) &&
+        if (!post->amount_expr && post->amount.commodity().has_flags(COMMODITY_STYLE_NO_MIGRATE) &&
             post->amount.precision() > post->amount.commodity().precision()) {
           if (context.journal->checking_style == journal_t::CHECK_WARNING) {
             context.warning(

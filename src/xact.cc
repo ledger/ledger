@@ -1305,7 +1305,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
         item_t::use_aux_date = false;
         struct restore_guard {
           bool& flag;
-          bool  val;
+          bool val;
           ~restore_guard() { flag = val; }
         } guard{item_t::use_aux_date, saved};
 
