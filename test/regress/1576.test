@@ -1,0 +1,17 @@
+; Forecast should include current month's budget (GitHub issue #1576)
+;
+; When using --forecast, the period that contains the current date
+; should be included in the output, not skipped.
+
+~ Monthly
+    Expenses:Rent             $1000.00
+    Assets:Checking
+
+test reg --forecast-while "date < [2011/06/01]" --now "2011/03/15" --columns 80
+11-Mar-01 Forecast transaction  Expenses:Rent              $1000.00     $1000.00
+11-Mar-01 Forecast transaction  Assets:Checking           $-1000.00            0
+11-Apr-01 Forecast transaction  Expenses:Rent              $1000.00     $1000.00
+11-Apr-01 Forecast transaction  Assets:Checking           $-1000.00            0
+11-May-01 Forecast transaction  Expenses:Rent              $1000.00     $1000.00
+11-May-01 Forecast transaction  Assets:Checking           $-1000.00            0
+end test

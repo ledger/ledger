@@ -10,7 +10,8 @@
     Assets:Checking
 
 test reg --now 2024/01/01 --forecast-while 'd<[2024/01/22]' Expenses
-24-Jan-07 Forecast transaction  Expenses:Food               $100.00      $100.00
-24-Jan-14 Forecast transaction  Expenses:Food               $100.00      $200.00
-24-Jan-21 Forecast transaction  Expenses:Food               $100.00      $300.00
+23-Dec-31 Forecast transaction  Expenses:Food               $100.00      $100.00
+24-Jan-07 Forecast transaction  Expenses:Food               $100.00      $200.00
+24-Jan-14 Forecast transaction  Expenses:Food               $100.00      $300.00
+24-Jan-21 Forecast transaction  Expenses:Food               $100.00      $400.00
 end test

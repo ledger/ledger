@@ -1,0 +1,33 @@
+; Forecast should not "forget" periodic transactions when a same-date
+; posting temporarily causes the running total to fail the continuation
+; predicate.  Both periodic transactions must continue generating
+; until the cumulative effect permanently violates the condition.
+
+~ Monthly
+    Expenses:Food  100
+    Assets:Checking
+
+~ Monthly
+    Income  -80
+    Assets:Checking
+
+2016/01/01 Initial state
+    Assets:Checking  150
+    Equity
+
+2016/01/15 Grocery
+    Expenses:Food  20
+    Assets:Checking
+
+test reg assets --forecast "T>={0}" --now 2016/01/16 --columns 80
+16-Jan-01 Initial state         Assets:Checking                 150          150
+16-Jan-15 Grocery               Assets:Checking                 -20          130
+16-Jan-01 Forecast transaction  Assets:Checking                -100           30
+16-Jan-01 Forecast transaction  Assets:Checking                  80          110
+16-Feb-01 Forecast transaction  Assets:Checking                -100           10
+16-Feb-01 Forecast transaction  Assets:Checking                  80           90
+16-Mar-01 Forecast transaction  Assets:Checking                  80           70
+16-Apr-01 Forecast transaction  Assets:Checking                  80           50
+16-May-01 Forecast transaction  Assets:Checking                  80           30
+16-Jun-01 Forecast transaction  Assets:Checking                  80           10
+end test

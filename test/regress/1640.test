@@ -7,6 +7,8 @@
   B
 
 test reg --now 2011/08/05 --forecast 'd<[2011/08/16]'
+11-Aug-05 Forecast transaction  A                                 1            1
+11-Aug-05 Forecast transaction  B                                -1            0
 11-Aug-07 Forecast transaction  A                                 1            1
 11-Aug-07 Forecast transaction  B                                -1            0
 11-Aug-09 Forecast transaction  A                                 1            1
