@@ -391,11 +391,13 @@ static balance_t compute_balance_diff(const amount_t& amt, post_t* post, xact_t*
                                       bool strip_annotations, parse_context_t& context) {
   bool real_only = !post->has_flags(POST_VIRTUAL | POST_IS_TIMELOG);
   value_t account_total;
-  if (item_t::use_aux_date) {
-    // When using effective dates, only count posts whose effective date is on
-    // or before the current posting's effective date, so that balance
-    // assertions respect --effective ordering rather than file order
-    // (fixes #2071).
+  if (item_t::use_aux_date && post->aux_date()) {
+    // When using effective dates and the current posting has an explicit
+    // effective date, only count posts whose effective date is on or before
+    // the current posting's effective date, so that balance assertions
+    // respect --effective ordering rather than file order (fixes #2071).
+    // Only apply this filtering when the posting itself has an aux date;
+    // postings without aux dates use file-order accumulation (fixes #2966).
     date_t cutoff = post->date();
     std::set<const post_t*> seen;
     for (const post_t* p : post->account->posts) {
