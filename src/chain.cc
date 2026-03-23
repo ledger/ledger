@@ -171,15 +171,17 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
   report.HANDLER(display_amount_).expr.set_context(&report);
   report.HANDLER(display_total_).expr.set_context(&report);
 
-  if (!for_accounts_report) {
-    /* Forecast-while filter: must be innermost so it can stop forecast
-       postings from reaching the output handler. */
-    if (report.HANDLED(forecast_while_)) {
-      handler = std::make_shared<filter_posts>(
-          handler, predicate_t(report.HANDLER(forecast_while_).str(), report.what_to_keep()),
-          report);
-    }
+  /* Forecast-while filter: must be innermost so it can stop forecast
+     postings from reaching the output handler.  This applies to both
+     posting reports (register) and accounts reports (balance) so that
+     --forecast-while correctly bounds forecast entries for all report
+     types.  (#1605) */
+  if (report.HANDLED(forecast_while_)) {
+    handler = std::make_shared<filter_posts>(
+        handler, predicate_t(report.HANDLER(forecast_while_).str(), report.what_to_keep()), report);
+  }
 
+  if (!for_accounts_report) {
     // truncate_xacts cuts off a certain number of _xacts_ from being
     // displayed.  It does not affect calculation.
     if (report.HANDLED(head_) || report.HANDLED(tail_))

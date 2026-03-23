@@ -1,0 +1,22 @@
+; Forecast with --now before periodic transaction start date (Bug #1161)
+;
+; When --now is set to a date before the periodic transaction's "from"
+; date, forecast postings should still be generated.
+
+2016/4/8
+    E               50
+    Cash
+
+~ daily from 2016/4/8 to 2016/4/9
+    E              100
+    Cash          -100
+
+test reg --forecast "d<=[2017/3/1]" cash --now 2016/4/7 --columns 80
+16-Apr-08 <Unspecified payee>   Cash                            -50          -50
+16-Apr-08 Forecast transaction  Cash                           -100         -150
+end test
+
+test reg --forecast "d<=[2017/3/1]" cash --now 2016/4/8 --columns 80
+16-Apr-08 <Unspecified payee>   Cash                            -50          -50
+16-Apr-08 Forecast transaction  Cash                           -100         -150
+end test
