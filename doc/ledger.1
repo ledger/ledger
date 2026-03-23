@@ -1262,17 +1262,18 @@ Return the amount of the posting.
 Return the calculated amount of the posting according to the
 .Fl \-amount
 option.
-.It Fn ansify_if value color bool
+.It Fn ansify_if value color
 Render the given
 .Ar value
 as a string, applying the proper ANSI escape codes to display it in the given
+.Ar color .
+If
 .Ar color
-if
-.Ar bool
-is true.  It typically checks the value of the option
-.Fl \-color ,
-for example:
-.Dl Li ansify_if(amount, "blue", options.color)
+is not provided, the value is returned unchanged.  The condition is
+typically embedded in the color argument using an
+.Li if
+expression, for example:
+.Dl Li ansify_if(amount, blue if options.color)
 .It Sy beg_line
 Line number where entry for posting begins.
 .It Sy beg_pos
