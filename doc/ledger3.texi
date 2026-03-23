@@ -1970,15 +1970,17 @@ both exist, you ask?  To support things like this:
 
 @smallexample @c input:validate
 2009/01/01 Shell
-    Expenses:Gasoline             11 GAL @{=$2.299@} @@ $2.30
+    Expenses:Gasoline             11 GAL @{=$2.299@} @@ $25.30
     Assets:Checking
 @end smallexample
 
 This transaction says that you bought 11 gallons priced at $2.299 per
-gallon at a @emph{cost to you} of $2.30 per gallon.  Ledger
-auto-generates a balance posting in this case to Equity:Capital Losses
-to reflect the 1.1 cent difference, which is then balanced by
-Assets:Checking because its amount is null.
+gallon at a @emph{cost to you} of $25.30 in total.  Since the fixed lot
+price totals $25.289 (11 x $2.299) while the actual cost
+is $25.30, Ledger adjusts the cost to match the fixed lot price so
+that the transaction balances.  The 1.1 cent difference is absorbed
+into the cost, so Assets:Checking will reflect $25.289 rather than
+$25.30.
 
 @node Complete control over commodity pricing,  , Fixing Lot Prices, Currency and Commodities
 @subsection Complete control over commodity pricing
