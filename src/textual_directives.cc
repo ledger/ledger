@@ -627,7 +627,11 @@ void instance_t::account_value_directive(account_t* account, const string& expr_
 /*--- Payee Directives ---*/
 
 void instance_t::payee_directive(char* line) {
+  char* alias = next_element(line, true);
   string payee = context.journal->register_payee(line);
+
+  if (alias)
+    payee_alias_directive(payee, alias);
 
   while (peek_whitespace_line()) {
     read_line(line);

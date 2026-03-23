@@ -1,0 +1,27 @@
+; Regression test for issue #767
+; payee directive supports inline alias on the same line,
+; separated by double space or tab.
+
+payee Amazon.com  B.*k Store
+payee BestBuy	Best.*Buy
+
+2024/01/15 Book Store Online
+    Expenses:Books    $25.00
+    Assets:Cash
+
+2024/01/20 BestBuy Electronics
+    Expenses:Electronics    $50.00
+    Assets:Cash
+
+2024/01/25 Grocery Store
+    Expenses:Food    $15.00
+    Assets:Cash
+
+test reg --format "%(payee)\n"
+Amazon.com
+Amazon.com
+BestBuy
+BestBuy
+Grocery Store
+Grocery Store
+end test
