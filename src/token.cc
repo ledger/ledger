@@ -412,9 +412,16 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
             in.get();
             length++;
             pat.push_back('/');
+          } else if (next == '\\') {
+            // Collapse \\\\ to \\ for backward compatibility: users who
+            // previously wrote \\\\* to get regex \\* (literal star) will
+            // still get the same result (fixes #2946).
+            in.get();
+            length++;
+            pat.push_back('\\');
           } else {
             // All other escape sequences: pass the backslash through so the
-            // regex engine sees the full \X pair (e.g., \| → literal pipe)
+            // regex engine sees the full \\X pair (e.g., \\| → literal pipe)
             pat.push_back('\\');
           }
         } else if (c == '/') {

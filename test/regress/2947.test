@@ -1,0 +1,25 @@
+; Regression test for issue #2947: --strict precision warning must not fire
+; for expression-computed amounts.
+;
+; Expressions like (amount * rate) naturally produce intermediate precision
+; that exceeds the commodity format declaration.  The precision check should
+; only apply to user-typed literal amounts, not calculated ones.
+
+define salestax = 1.09625
+define cardtxn(amount, taxrate) = (amount * taxrate)
+
+commodity $
+    format $1,000.00
+account Expenses:Bar
+account Assets:Baz
+
+2024/12/05 * Foo
+    Expenses:Bar                  (cardtxn($6.99, salestax))
+    Assets:Baz
+
+test bal --strict
+              $-7.66  Assets:Baz
+               $7.66  Expenses:Bar
+--------------------
+                   0
+end test

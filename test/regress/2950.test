@@ -1,0 +1,22 @@
+; Regression test for issue #2950: commodity format precision enforcement.
+;
+; Expression-computed amounts (e.g., €10.04 * 0.172) should not trigger
+; precision warnings/errors even when the result exceeds the declared
+; commodity format precision.
+
+commodity €
+    format €1000.000
+
+account Expenses:Tax
+account Assets:Cash
+
+2025/06/03 * Tax calculation
+    Expenses:Tax                          (€10.04 * 0.172)
+    Assets:Cash
+
+test bal --strict
+             €-1.727  Assets:Cash
+              €1.727  Expenses:Tax
+--------------------
+                   0
+end test

@@ -1,0 +1,26 @@
+; Regression test for issue #2944: balance assignments must work with
+; --permissive.  A balance-assignment-only posting (= $value with no
+; explicit amount) should compute the posting amount from the target
+; balance, even when --permissive is active.  The old bug left such
+; postings with null amounts, causing "Only one posting with null amount"
+; or "Cannot strip commodity annotations from an uninitialized amount".
+
+2018/08/01 * First
+    Assets:Foo             $12.34
+    Equity:Opening Balances
+
+2018/09/01 * Second
+    Assets:Foo             $44.44
+    Equity:Opening Balances
+
+; Balance assignment: set Assets:Foo to $78.90 (adding $22.12)
+2018/12/31 * Test Assignment
+    Assets:Foo                                     = $78.90
+    Equity:Opening Balances
+
+test bal --permissive
+              $78.90  Assets:Foo
+             $-78.90  Equity:Opening Balances
+--------------------
+                   0
+end test

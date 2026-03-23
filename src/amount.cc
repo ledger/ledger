@@ -1814,6 +1814,12 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
     if (details.has_flags(ANNOTATION_PRICE_NOT_PER_UNIT)) {
       assert(details.price);
       *details.price /= this->abs();
+      // Normalize per-unit cost to display precision, matching the
+      // normalization in pool.cc::exchange() so that lot annotations from
+      // {{total_price}} syntax match those created by @@ syntax
+      // (fixes #2948).
+      if (details.price->has_commodity() && details.price->keep_precision())
+        details.price->in_place_roundto(static_cast<int>(details.price->display_precision()));
     }
     set_commodity(*commodity_pool_t::current_pool->find_or_create(*commodity_, details));
   }
