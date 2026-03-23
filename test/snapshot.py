@@ -14,7 +14,7 @@ import time
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Any
 
 
 # ---------------------------------------------------------------------------
@@ -474,15 +474,8 @@ def mine_texinfo(texi_path: Path, known_commands: set[str]) -> list[Combo]:
     except OSError:
         return []
 
-    in_example = False
     for lineno, line in enumerate(lines, 1):
         stripped = line.strip()
-        if stripped == "@smallexample":
-            in_example = True
-            continue
-        if stripped == "@end smallexample":
-            in_example = False
-            continue
 
         # Look for ledger invocations both inside and outside examples
         # Pattern: "$ ledger ..." or "ledger ..." at start of line
@@ -560,7 +553,7 @@ def mine_manpage(man_path: Path, known_commands: set[str]) -> list[Combo]:
 # Combo mining aggregator
 # ---------------------------------------------------------------------------
 
-def mine_combos(source_root: Path, known_commands: set[str]) -> list[Combo]:
+def mine_combos(source_root: Path) -> list[Combo]:
     """Mine combos from test files and documentation."""
     all_known = set(ALL_KNOWN_COMMANDS)
     combos: list[Combo] = []
@@ -735,7 +728,6 @@ def format_output(
     exit_code: int | str,
     stdout: str,
     stderr: str,
-    ledger_binary: Path,
     data_file: Path,
     timeout: int,
 ) -> str:
@@ -848,7 +840,7 @@ def main(argv: list[str] | None = None) -> int:
             if (candidate / "test").is_dir():
                 source_root = candidate
         if source_root is not None and source_root.is_dir():
-            mined = mine_combos(source_root, set(c.command for c in curated) if curated else set())
+            mined = mine_combos(source_root)
             # Deduplicate mined against curated
             curated_keys = {(c.command, c.options) for c in curated}
             mined = [c for c in mined if (c.command, c.options) not in curated_keys]
@@ -889,7 +881,7 @@ def main(argv: list[str] | None = None) -> int:
     # SIGINT handler
     original_sigint = signal.getsignal(signal.SIGINT)
 
-    def sigint_handler(signum, frame):
+    def sigint_handler(_signum: int, _frame: Any) -> None:
         global _interrupted
         _interrupted = True
         print("\nInterrupted — finishing in-progress work...", file=sys.stderr)
@@ -927,7 +919,7 @@ def main(argv: list[str] | None = None) -> int:
                 # Write output file
                 filename = combo_to_filename(combo)
                 content = format_output(combo, exit_code, stdout, stderr,
-                                        args.ledger_binary, args.data_file, args.timeout)
+                                        args.data_file, args.timeout)
                 (args.output_dir / filename).write_text(content, encoding="utf-8")
 
                 if args.verbose:
@@ -940,7 +932,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # Write metadata
     write_metadata(args.output_dir, args.ledger_binary, args.data_file,
-                   total, len(curated), len(mined), elapsed, args.jobs or os.cpu_count())
+                   total, len(curated), len(mined), elapsed, args.jobs or os.cpu_count() or 1)
 
     # Summary (always to stderr)
     print(f"\n--- Snapshot Summary ---", file=sys.stderr)
