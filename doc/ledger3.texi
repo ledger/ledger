@@ -9485,16 +9485,19 @@ Return the calculated amount of the posting according to the @option{--amount}
 option.
 @end defun
 
-@defun ansify_if value color bool
-Render the given @var{expression} as a string, applying the proper ANSI escape
-codes to display it in the given @var{color} if @var{bool} is true.  It
-typically checks the value of the option @option{--color}.  Since ANSI escape
-codes include non-printable character sequences, such as escape @kbd{^[}
-the following example may not appear as the final result on the command-line.
-@smallexample @c command:4D836EE,with_input:3406FC1
-$ ledger -f expr.dat --format "%(ansify_if(account, blue, options.color))\n" reg
+@defun ansify_if value color
+Render the given @var{value} as a string, applying the proper ANSI escape
+codes to display it in the given @var{color}.  If @var{color} is not
+provided, the value is returned unchanged.  The condition is typically
+embedded in the color argument using an @code{if} expression, e.g.,
+@code{blue if color}, which checks the value of the option
+@option{--color}.  Since ANSI escape codes include non-printable character
+sequences, such as escape @kbd{^[} the following example may not appear
+as the final result on the command-line.
+@smallexample @c command:51FA103,with_input:3406FC1
+$ ledger -f expr.dat --format "%(ansify_if(account, blue))\n" reg
 @end smallexample
-@smallexample @c output:4D836EE
+@smallexample @c output:51FA103
 [34mAssets:Cash[0m
 [34mExpenses:Office Supplies[0m
 @end smallexample
