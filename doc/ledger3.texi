@@ -2331,6 +2331,20 @@ The @code{check} and @code{assert} directives warn or raise an error
 (respectively) if the given value expression evaluates to false within
 the context of any posting.
 
+While Ledger does not have explicit open/close directives for
+accounts, you can use @code{check} or @code{assert} to enforce date
+ranges, effectively ``closing'' an account after a certain date:
+
+@smallexample @c input:validate
+account Expenses:Food
+    check date >= [2016-02-03]
+    check date <= [2017-03-03]
+@end smallexample
+
+With the above, any posting to @samp{Expenses:Food} outside the given
+date range will produce a warning.  Use @code{assert} instead of
+@code{check} to make it a hard error.
+
 The @code{eval} directive evaluates the value expression in the
 context of the account at the time of definition.  At the moment this
 has little value.
