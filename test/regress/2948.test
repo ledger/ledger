@@ -1,0 +1,22 @@
+; Regression test for issue #2948: lot annotations from {{total_price}}
+; syntax must match those created by @@ syntax.
+;
+; When using {{£100}} to remove a lot whose cost was recorded via @@ £100,
+; the per-unit price must be normalized to the same display precision in
+; both code paths, otherwise the lots don't match and annotations leak
+; into the balance report.
+
+2025/09/04 * Broker
+    Assets:Brokerage                       $123.45   @@ £100
+    Assets:Brokerage                      -$123.45   {{£100}} [2025-09-04] @ $1
+    Expenses:Finance:Fees                    $1.00
+    Assets:Brokerage
+
+test bal --lots
+             $122.45
+               £-100  Assets:Brokerage
+               $1.00  Expenses:Finance:Fees
+--------------------
+             $123.45
+               £-100
+end test
