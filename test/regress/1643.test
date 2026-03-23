@@ -1,0 +1,25 @@
+; Regression test for issue #1643: Use check/assert on account directives
+; to enforce date ranges, effectively "closing" an account.
+
+account Expenses:Food
+    check date >= [2016-02-03]
+    check date <= [2017-03-03]
+
+; This transaction is within the valid date range (no warning).
+2016/06/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Cash
+
+; This transaction is outside the valid date range (warning).
+2018/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Cash
+
+test bal
+             $-75.00  Assets:Cash
+              $75.00  Expenses:Food
+--------------------
+                   0
+__ERROR__
+Warning: "$FILE", line 16: Transaction check failed: (date <= [2017/03/03])
+end test
