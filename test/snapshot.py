@@ -878,7 +878,7 @@ def main(argv: list[str] | None = None) -> int:
         all_combos = validate_coverage(all_combos, args.ledger_binary, args.verbose)
 
     if args.dry_run:
-        for combo in sorted(all_combos, key=lambda c: combo_to_filename(c)):
+        for combo in sorted(all_combos, key=combo_to_filename):
             opts = " ".join(o for t in combo.options for o in t)
             source_tag = f"  [{combo.source}]" if args.verbose else ""
             print(f"{combo.command} {opts}{source_tag}".strip())
