@@ -318,11 +318,23 @@ value_t get_total(account_t& account) {
 }
 
 value_t get_subcount(account_t& account) {
-  return long(account.self_details().posts_count);
+  std::size_t count = 0;
+  for (const post_t* post : account.posts) {
+    if (post->has_xdata() && post->xdata().has_flags(POST_EXT_VISITED))
+      count++;
+  }
+  return long(count);
 }
 
 value_t get_count(account_t& account) {
-  return long(account.family_details().posts_count);
+  std::size_t count = 0;
+  for (const post_t* post : account.posts) {
+    if (post->has_xdata() && post->xdata().has_flags(POST_EXT_VISITED))
+      count++;
+  }
+  for (const accounts_map::value_type& pair : account.accounts)
+    count += get_count(*pair.second).to_long();
+  return long(count);
 }
 value_t get_cost(account_t&) {
   throw_(calc_error, _("An account does not have a 'cost' value"));
