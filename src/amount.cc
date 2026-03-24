@@ -1814,12 +1814,18 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
     if (details.has_flags(ANNOTATION_PRICE_NOT_PER_UNIT)) {
       assert(details.price);
       *details.price /= this->abs();
-      // Normalize per-unit cost to display precision, matching the
-      // normalization in pool.cc::exchange() so that lot annotations from
-      // {{total_price}} syntax match those created by @@ syntax
-      // (fixes #2948).
-      if (details.price->has_commodity() && details.price->keep_precision())
-        details.price->in_place_roundto(static_cast<int>(details.price->display_precision()));
+      // Normalize per-unit cost to a stable precision, matching the
+      // normalization in pool.cc::exchange().  The rounding precision is
+      // derived from the divisor (quantity) and cost commodity precision,
+      // deliberately excluding the dividend (total cost) precision.
+      // This ensures that {{$250}} and @@ $250.00 produce identical
+      // per-unit prices despite differing internal precision metadata
+      // (fixes #2948, #2975).
+      if (details.price->has_commodity() && details.price->keep_precision()) {
+        int round_prec = static_cast<int>(
+            this->precision() + details.price->commodity().precision() + extend_by_digits);
+        details.price->in_place_roundto(round_prec);
+      }
     }
     set_commodity(*commodity_pool_t::current_pool->find_or_create(*commodity_, details));
   }
