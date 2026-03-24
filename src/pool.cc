@@ -351,11 +351,31 @@ cost_breakdown_t commodity_pool_t::exchange(const amount_t& amount, const amount
   if (cost.has_annotation())
     per_unit_cost = per_unit_cost.strip_annotations(keep_details_t());
 
-  // Normalize per-unit cost to its display precision so that lot prices
-  // computed from total costs (@@) can be matched against the displayed value
-  // when users reference them explicitly (fixes issue #1032).
-  if (per_unit_cost.has_commodity() && per_unit_cost.keep_precision())
-    per_unit_cost.in_place_roundto(static_cast<int>(per_unit_cost.display_precision()));
+  // Normalize per-unit cost to a stable precision so that lot prices are
+  // deterministic regardless of how the total cost was written.  Without
+  // this, `@@ $250` and `@@ $250.00` would produce different per-unit
+  // prices because the internal precision metadata of the cost amount
+  // differs (0 vs 2), leading to different division precisions.
+  //
+  // For costs computed by division (total cost / quantity), the rounding
+  // precision is derived from the divisor (quantity) precision and the
+  // cost commodity's display precision, deliberately excluding the
+  // dividend (total cost) precision.  This ensures that $250 and $250.00
+  // -- which are the same GMP rational -- produce identical per-unit
+  // prices after rounding (fixes #2975).
+  //
+  // For per-unit costs (no division), the existing display_precision()
+  // is used, preserving the user-typed precision (fixes #1032).
+  if (per_unit_cost.has_commodity() && per_unit_cost.keep_precision()) {
+    int round_prec;
+    if (!is_per_unit && !amount.is_zero()) {
+      round_prec = static_cast<int>(
+          amount.precision() + per_unit_cost.commodity().precision() + amount_t::extend_by_digits);
+    } else {
+      round_prec = static_cast<int>(per_unit_cost.display_precision());
+    }
+    per_unit_cost.in_place_roundto(round_prec);
+  }
 
   DEBUG("commodity.prices.add", "exchange: per-unit-cost = " << per_unit_cost);
 
