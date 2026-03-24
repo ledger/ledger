@@ -1,0 +1,15 @@
+2025/01/01 * Testing
+    Assets:Brokerage                101 FOO @@ $250.00
+    Assets:Brokerage              -$250
+
+2025/01/02 * Testing
+    Assets:Brokerage               -101 FOO {{$250}} [2025-01-01] @@ $500
+    Assets:Brokerage               $500
+    Income:Capital Gains
+
+test bal --lots
+                $250  Assets:Brokerage
+               $-250  Income:Capital Gains
+--------------------
+                   0
+end test
