@@ -1,0 +1,171 @@
+; Comprehensive tests for --average across report types, period options,
+; and interactions with --collapse.  Serves as a regression suite for
+; issues #1950 and #2980.
+
+; --- Journal data: three months of expenses across two accounts ---
+
+2025/01/05 Paycheck
+    Assets:Checking                    $5,000
+    Income:Salary
+
+2025/01/10 Groceries
+    Expenses:Food                        $200
+    Assets:Checking
+
+2025/01/15 Utilities
+    Expenses:Utilities                   $100
+    Assets:Checking
+
+2025/02/05 Paycheck
+    Assets:Checking                    $5,000
+    Income:Salary
+
+2025/02/10 Groceries
+    Expenses:Food                        $300
+    Assets:Checking
+
+2025/02/15 Utilities
+    Expenses:Utilities                   $150
+    Assets:Checking
+
+2025/03/05 Paycheck
+    Assets:Checking                    $5,000
+    Income:Salary
+
+2025/03/10 Groceries
+    Expenses:Food                        $250
+    Assets:Checking
+
+2025/03/15 Utilities
+    Expenses:Utilities                   $200
+    Assets:Checking
+
+; ---------------------------------------------------------------
+; 1) register --average (no period grouping)
+;    Running average across raw postings.
+; ---------------------------------------------------------------
+test reg --average ^Expenses
+25-Jan-10 Groceries             Expenses:Food                  $200         $200
+25-Jan-15 Utilities             Expenses:Utilities             $100         $150
+25-Feb-10 Groceries             Expenses:Food                  $300         $200
+25-Feb-15 Utilities             Expenses:Utilities             $150         $188
+25-Mar-10 Groceries             Expenses:Food                  $250         $200
+25-Mar-15 Utilities             Expenses:Utilities             $200         $200
+end test
+
+; ---------------------------------------------------------------
+; 2) register --monthly --average, multiple accounts per period
+;    Per-account running averages (fix for #1950).
+;    Food:  200 → (200+300)/2=250 → (200+300+250)/3=250
+;    Utils: 100 → (100+150)/2=125 → (100+150+200)/3=150
+; ---------------------------------------------------------------
+test reg --monthly --average ^Expenses
+25-Jan-01 - 25-Jan-31           Expenses:Food                  $200         $200
+                                Expenses:Utilities             $100         $100
+25-Feb-01 - 25-Feb-28           Expenses:Food                  $300         $250
+                                Expenses:Utilities             $150         $125
+25-Mar-01 - 25-Mar-31           Expenses:Food                  $250         $250
+                                Expenses:Utilities             $200         $150
+end test
+
+; ---------------------------------------------------------------
+; 3) register --monthly --average, single account
+;    Verifies per-account average for a single filtered account.
+; ---------------------------------------------------------------
+test reg --monthly --average Expenses:Food
+25-Jan-01 - 25-Jan-31           Expenses:Food                  $200         $200
+25-Feb-01 - 25-Feb-28           Expenses:Food                  $300         $250
+25-Mar-01 - 25-Mar-31           Expenses:Food                  $250         $250
+end test
+
+; ---------------------------------------------------------------
+; 4) register --monthly --average --collapse
+;    Collapse merges accounts → per-account tracking disabled (#2980).
+;    Running average of collapsed totals: 300 → (300+450)/2=375 → (300+450+450)/3=400
+; ---------------------------------------------------------------
+test reg --monthly --average --collapse ^Expenses
+25-Jan-01 - 25-Jan-31           <Total>                        $300         $300
+25-Feb-01 - 25-Feb-28           <Total>                        $450         $375
+25-Mar-01 - 25-Mar-31           <Total>                        $450         $400
+end test
+
+; ---------------------------------------------------------------
+; 5) register --quarterly --average
+;    Single quarter → averages equal period totals.
+; ---------------------------------------------------------------
+test reg --quarterly --average ^Expenses
+25-Jan-01 - 25-Mar-31           Expenses:Food                  $750         $750
+                                Expenses:Utilities             $450         $450
+end test
+
+; ---------------------------------------------------------------
+; 6) register --yearly --average
+;    Single year → averages equal period totals.
+; ---------------------------------------------------------------
+test reg --yearly --average ^Expenses
+25-Jan-01 - 25-Dec-31           Expenses:Food                  $750         $750
+                                Expenses:Utilities             $450         $450
+end test
+
+; ---------------------------------------------------------------
+; 7) register --monthly --average for income (negative amounts)
+;    Verify averaging works with negative running totals.
+; ---------------------------------------------------------------
+test reg --monthly --average ^Income
+25-Jan-01 - 25-Jan-31           Income:Salary               $-5,000      $-5,000
+25-Feb-01 - 25-Feb-28           Income:Salary               $-5,000      $-5,000
+25-Mar-01 - 25-Mar-31           Income:Salary               $-5,000      $-5,000
+end test
+
+; ---------------------------------------------------------------
+; 8) balance --monthly --average
+; ---------------------------------------------------------------
+test bal --monthly --average ^Expenses
+                $100  Expenses
+                $125    Food
+                 $75    Utilities
+--------------------
+                 $50
+end test
+
+; ---------------------------------------------------------------
+; 9) balance --average (no period grouping)
+; ---------------------------------------------------------------
+test bal --average ^Expenses
+                $200  Expenses
+                $250    Food
+                $150    Utilities
+--------------------
+                 $67
+end test
+
+; ---------------------------------------------------------------
+; 10) balance --quarterly --average
+; ---------------------------------------------------------------
+test bal --quarterly --average ^Expenses
+                $150  Expenses
+                $188    Food
+                $112    Utilities
+--------------------
+                 $60
+end test
+
+; ---------------------------------------------------------------
+; 11) balance --monthly --average, single account
+; ---------------------------------------------------------------
+test bal --monthly --average Expenses:Food
+                $125  Expenses:Food
+end test
+
+; ---------------------------------------------------------------
+; 12) register --monthly --deviation
+;    Deviation = amount - running_average; verifies related path.
+; ---------------------------------------------------------------
+test reg --monthly --deviation ^Expenses
+25-Jan-01 - 25-Jan-31           Expenses:Food                  $200            0
+                                Expenses:Utilities             $100        $-200
+25-Feb-01 - 25-Feb-28           Expenses:Food                  $300        $-300
+                                Expenses:Utilities             $150        $-600
+25-Mar-01 - 25-Mar-31           Expenses:Food                  $250        $-750
+                                Expenses:Utilities             $200      $-1,000
+end test
