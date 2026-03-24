@@ -680,8 +680,7 @@ bool xact_base_t::finalize() {
             // rounding artifact.  Round the gain/loss to the commodity's
             // display precision to eliminate this artifact (#2975).
             if (gain_loss.has_commodity())
-              gain_loss.in_place_roundto(
-                  static_cast<int>(gain_loss.commodity().precision()));
+              gain_loss.in_place_roundto(static_cast<int>(gain_loss.commodity().precision()));
             gain_loss.in_place_round();
             DEBUG("xact.finalize", "gain_loss rounds to = " << gain_loss);
             if (post->must_balance())
@@ -730,8 +729,7 @@ bool xact_base_t::finalize() {
               if (amount_t gain_loss = from_cost - to_cost) {
                 DEBUG("xact.finalize", "Commodity swap gain_loss = " << gain_loss);
                 if (gain_loss.has_commodity())
-                  gain_loss.in_place_roundto(
-                      static_cast<int>(gain_loss.commodity().precision()));
+                  gain_loss.in_place_roundto(static_cast<int>(gain_loss.commodity().precision()));
                 gain_loss.in_place_round();
                 DEBUG("xact.finalize", "Commodity swap gain_loss rounds to = " << gain_loss);
 

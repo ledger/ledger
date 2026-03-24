@@ -369,8 +369,8 @@ cost_breakdown_t commodity_pool_t::exchange(const amount_t& amount, const amount
   if (per_unit_cost.has_commodity() && per_unit_cost.keep_precision()) {
     int round_prec;
     if (!is_per_unit && !amount.is_zero()) {
-      round_prec = static_cast<int>(
-          amount.precision() + per_unit_cost.commodity().precision() + amount_t::extend_by_digits);
+      round_prec = static_cast<int>(amount.precision() + per_unit_cost.commodity().precision() +
+                                    amount_t::extend_by_digits);
     } else {
       round_prec = static_cast<int>(per_unit_cost.display_precision());
     }
