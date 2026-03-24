@@ -1,0 +1,46 @@
+; Regression test for issue #2980: --average with --collapse --monthly
+; should maintain a correct running average when account identity changes
+; between periods (e.g., distributed expenses followed by regular expenses).
+; The per-account running-total tracking from #1950 must not be used when
+; --collapse is active, since collapse merges accounts and changes identity.
+
+2025/12/31 * Annual Distributed Expense
+    Expenses:Subscriptions                          $1,000    ; [2025/01/01]
+    Expenses:Subscriptions                          $1,000    ; [2025/02/01]
+    Expenses:Subscriptions                          $1,000    ; [2025/03/01]
+    Expenses:Subscriptions                          $1,000    ; [2025/04/01]
+    Expenses:Subscriptions                          $1,000    ; [2025/05/01]
+    Expenses:Subscriptions                          $1,000    ; [2025/06/01]
+    Expenses:Subscriptions                          $1,000    ; [2025/07/01]
+    Expenses:Subscriptions                          $1,000    ; [2025/08/01]
+    Expenses:Subscriptions                          $1,000    ; [2025/09/01]
+    Expenses:Subscriptions                          $1,000    ; [2025/10/01]
+    Expenses:Subscriptions                          $1,000    ; [2025/11/01]
+    Expenses:Subscriptions                            $500    ; [2025/12/01]
+    Assets:Checking
+2025/12/01 * Monthly Expense
+    Expenses:Entertainment                      $500
+    Assets:Checking
+2026/01/01 * Monthly Expense
+    Expenses:Entertainment                      $1,000
+    Assets:Checking
+2026/02/01 * Monthly Expense
+    Expenses:Entertainment                      $1,000
+    Assets:Checking
+
+test reg --collapse --monthly --average ^Expenses
+25-Jan-01 - 25-Jan-31           Expenses:Subscriptions       $1,000       $1,000
+25-Feb-01 - 25-Feb-28           Expenses:Subscriptions       $1,000       $1,000
+25-Mar-01 - 25-Mar-31           Expenses:Subscriptions       $1,000       $1,000
+25-Apr-01 - 25-Apr-30           Expenses:Subscriptions       $1,000       $1,000
+25-May-01 - 25-May-31           Expenses:Subscriptions       $1,000       $1,000
+25-Jun-01 - 25-Jun-30           Expenses:Subscriptions       $1,000       $1,000
+25-Jul-01 - 25-Jul-31           Expenses:Subscriptions       $1,000       $1,000
+25-Aug-01 - 25-Aug-31           Expenses:Subscriptions       $1,000       $1,000
+25-Sep-01 - 25-Sep-30           Expenses:Subscriptions       $1,000       $1,000
+25-Oct-01 - 25-Oct-31           Expenses:Subscriptions       $1,000       $1,000
+25-Nov-01 - 25-Nov-30           Expenses:Subscriptions       $1,000       $1,000
+25-Dec-01 - 25-Dec-31           <Total>                      $1,000       $1,000
+26-Jan-01 - 26-Jan-31           Expenses:Entertainment       $1,000       $1,000
+26-Feb-01 - 26-Feb-28           Expenses:Entertainment       $1,000       $1,000
+end test
