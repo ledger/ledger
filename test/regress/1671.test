@@ -1,0 +1,18 @@
+; Regression test for issue #1671
+; Period options (-M, --monthly, etc.) should not error when an account
+; has both virtual and non-virtual postings.
+
+2019/04/13 Test1
+    Assets:savings                             $1000
+    Equity:balance
+
+2019/04/13 Test2
+    [Assets:savings]                            $200
+    [Assets:Budget:test]
+
+test register -M
+19-Apr-01 - 19-Apr-30           [Assets:Budget:test]          $-200        $-200
+                                Assets:savings                $1000         $800
+                                [Assets:savings]               $200        $1000
+                                Equity:balance               $-1000            0
+end test

@@ -1,0 +1,25 @@
+; Inline cost amounts should set the price commodity's display precision
+; so that auto-balanced amounts render correctly and balance assertions
+; detect mismatches.  Previously, `@ $1.03` left the $ commodity at
+; precision 0, causing $-10.30 to display as $-10 and balance assertions
+; against $-10.00 to incorrectly pass.
+
+2015/12/15
+    Assets:Stock                10 AAPL @  $1.03
+    Assets:Checking
+
+test bal Assets:Checking
+             $-10.30  Assets:Checking
+end test
+
+test bal Assets:Stock
+             10 AAPL  Assets:Stock
+end test
+
+; Balance assertion against the correct amount should succeed.
+2015/12/16
+    [Assets:Checking]           $0  = $-10.30
+
+test bal Assets:Checking
+             $-10.30  Assets:Checking
+end test

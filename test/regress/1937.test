@@ -1,0 +1,38 @@
+; Regression test for issue #1937
+; Verify that automated transactions can use tag() to extract metadata
+; values (e.g., VAT rates) and apply them as value expressions.
+
+= /Expenses:/ and %VAT
+    Expenses:VAT                    (tag("VAT"))
+    $account                       (-tag("VAT"))
+
+2020-06-24 * Computer purchase
+    ; VAT:: 0.19
+    Expenses:Computer                 300.00 EUR
+    Assets:Bank                      -300.00 EUR
+
+2020-06-25 * Books
+    ; VAT:: 0.07
+    Expenses:Training                  40.00 EUR
+    Assets:Bank                       -40.00 EUR
+
+test reg
+20-Jun-24 Computer purchase     Expenses:Computer        300.00 EUR   300.00 EUR
+                                Assets:Bank             -300.00 EUR            0
+                                Expenses:VAT              57.00 EUR    57.00 EUR
+                                Expenses:Computer        -57.00 EUR            0
+20-Jun-25 Books                 Expenses:Training         40.00 EUR    40.00 EUR
+                                Assets:Bank              -40.00 EUR            0
+                                Expenses:VAT               2.80 EUR     2.80 EUR
+                                Expenses:Training         -2.80 EUR            0
+end test
+
+test bal
+         -340.00 EUR  Assets:Bank
+          340.00 EUR  Expenses
+          243.00 EUR    Computer
+           37.20 EUR    Training
+           59.80 EUR    VAT
+--------------------
+                   0
+end test

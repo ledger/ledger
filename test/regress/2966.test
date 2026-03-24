@@ -1,0 +1,30 @@
+; Regression test for issue #2966: balance assertions fail in --effective mode
+; when transactions with effective dates are followed by transactions without.
+;
+; The second transaction has an effective date of 2024/10/01 (via the xact
+; header "2024/09/25=2024/10/01").  The third transaction has no effective
+; date (2024/09/30).  Without the fix, compute_balance_diff() excluded the
+; second transaction's posting from the account total when checking the third
+; transaction's balance assertion, because 10/01 > 09/30 in effective-date
+; ordering.  The fix restricts effective-date filtering to postings that
+; themselves have an explicit effective date.
+
+2024/09/13 * Cafe
+    Expenses:Dining                          $5
+    Liabilities:CreditCard
+
+2024/09/25=2024/10/01 * Visa
+    Liabilities:CreditCard                   $5 = $0
+    Assets:Checking
+
+2024/09/30 * Cafe
+    Expenses:Dining                          $5
+    Liabilities:CreditCard                  -$5 = -$5
+
+test bal --effective
+                 $-5  Assets:Checking
+                 $10  Expenses:Dining
+                 $-5  Liabilities:CreditCard
+--------------------
+                   0
+end test

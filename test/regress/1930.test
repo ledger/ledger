@@ -1,0 +1,36 @@
+; Budget contra-entries are negated by design: periodic "expenses:rent $450"
+; generates a contra-entry of -$450 in the register, meaning $450 of
+; unspent budget. When actual spending matches, they net to zero.
+
+~ Monthly
+  expenses:rent             $450
+  expenses:phone            $50
+  assets:checking
+
+2020/06/16 Paycheck
+  assets:checking           $1000
+  income:salary
+
+2020/06/20 Landlord
+  expenses:rent             $450
+  assets:checking
+
+test reg --budget --now=2020/07/01
+20-Jun-01 Budget transaction    expenses:rent                 $-450        $-450
+20-Jun-01 Budget transaction    expenses:phone                 $-50        $-500
+20-Jun-01 Budget transaction    assets:checking                $500            0
+20-Jun-16 Paycheck              assets:checking               $1000        $1000
+20-Jun-20 Landlord              expenses:rent                  $450        $1450
+                                assets:checking               $-450        $1000
+20-Jul-01 Budget transaction    expenses:rent                 $-450         $550
+20-Jul-01 Budget transaction    expenses:phone                 $-50         $500
+20-Jul-01 Budget transaction    assets:checking                $500        $1000
+end test
+
+test reg --budget --monthly --now=2020/07/01
+20-Jun-01 - 20-Jun-30           assets:checking               $1050        $1050
+                                expenses:phone                 $-50        $1000
+20-Jul-01 - 20-Jul-31           assets:checking                $500        $1500
+                                expenses:phone                 $-50        $1450
+                                expenses:rent                 $-450        $1000
+end test

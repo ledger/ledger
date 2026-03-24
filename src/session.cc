@@ -350,22 +350,42 @@ value_t session_t::fn_str(call_scope_t& args) {
   return string_value(args[0].to_string());
 }
 
+namespace {
+/// @brief Resolve the amount to inspect for lot annotation functions.
+///
+/// If an explicit argument is provided, use it.  Otherwise, look up
+/// "amount" from the scope chain (e.g., the current posting's amount),
+/// so that lot_price, lot_date, and lot_tag can be called with zero
+/// arguments.
+amount_t resolve_lot_amount(call_scope_t& args) {
+  if (!args.empty())
+    return args.get<amount_t>(0, false);
+
+  if (expr_t::ptr_op_t amount_op = args.lookup(symbol_t::FUNCTION, "amount")) {
+    value_t val = amount_op->calc(args);
+    if (!val.is_null())
+      return val.to_amount();
+  }
+  return amount_t();
+}
+} // namespace
+
 value_t session_t::fn_lot_price(call_scope_t& args) {
-  amount_t amt(args.get<amount_t>(0, false));
+  amount_t amt(resolve_lot_amount(args));
   if (amt.has_annotation() && amt.annotation().price)
     return *amt.annotation().price;
   else
     return NULL_VALUE;
 }
 value_t session_t::fn_lot_date(call_scope_t& args) {
-  amount_t amt(args.get<amount_t>(0, false));
+  amount_t amt(resolve_lot_amount(args));
   if (amt.has_annotation() && amt.annotation().date)
     return *amt.annotation().date;
   else
     return NULL_VALUE;
 }
 value_t session_t::fn_lot_tag(call_scope_t& args) {
-  amount_t amt(args.get<amount_t>(0, false));
+  amount_t amt(resolve_lot_amount(args));
   if (amt.has_annotation() && amt.annotation().tag)
     return string_value(*amt.annotation().tag);
   else

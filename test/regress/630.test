@@ -1,0 +1,30 @@
+; Test for issue #630 - Basis cost should follow commodities with lot pricing
+;
+; When using lot prices ({$150.00}), the --basis flag should report the
+; cost basis (quantity * lot price), not the original commodity amount.
+; Previously, --basis only worked with @ cost syntax, ignoring {} annotations.
+
+2024/01/15 * Buy stock
+    Assets:Brokerage       10 AAPL {$150.00}
+    Assets:Checking
+
+2024/02/15 * Buy more
+    Assets:Brokerage        5 AAPL {$160.00}
+    Assets:Checking
+
+; --basis should show cost basis from lot prices ($2300 = 10*150 + 5*160)
+test bal --basis --args-only --columns=80 -> 0
+                   0  Assets
+               $2300    Brokerage
+              $-2300    Checking
+--------------------
+                   0
+end test
+
+; Register should also show cost basis
+test reg --basis --args-only --columns=80
+24-Jan-15 Buy stock             Assets:Brokerage              $1500        $1500
+                                Assets:Checking              $-1500            0
+24-Feb-15 Buy more              Assets:Brokerage               $800         $800
+                                Assets:Checking               $-800            0
+end test

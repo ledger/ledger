@@ -115,14 +115,14 @@ string csv_reader::read_field(std::istream& in) {
 
 char* csv_reader::next_line(std::istream& in) {
   while (in.good() && !in.eof() && in.peek() == '#')
-    in.getline(context.linebuf, parse_context_t::MAX_LINE);
+    std::getline(in, context.linebuf);
 
   if (!in.good() || in.eof() || in.peek() == -1)
     return nullptr;
 
-  in.getline(context.linebuf, parse_context_t::MAX_LINE);
+  std::getline(in, context.linebuf);
 
-  return context.linebuf;
+  return context.linebuf.data();
 }
 
 /*--- Header Index Construction ---*/

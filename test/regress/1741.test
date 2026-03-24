@@ -1,0 +1,17 @@
+; Regression test for issue #1741
+; ansify_if takes two arguments (value, color), not three.
+; The condition is embedded in the color argument using "X if Y" syntax.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+; Two-argument form with conditional color (the correct documented usage)
+test reg --force-color --format "%(ansify_if(account, blue if options.color))\n" Expenses
+[34mExpenses:Food[0m
+end test
+
+; When condition is false, no color is applied
+test reg --format "%(ansify_if(account, blue if 0))\n" Expenses
+Expenses:Food
+end test

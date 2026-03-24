@@ -389,10 +389,33 @@ endmacro()
 
 find_req_library_and_header(GMP_PATH gmp.h GMP_LIB gmp)
 if(GMP_PATH AND EXISTS "${GMP_PATH}/gmp.h")
+  # Try reading version defines directly from gmp.h
   file(STRINGS "${GMP_PATH}/gmp.h" gmp_header_str REGEX "^#define[\t ]+__GNU_MP_VERSION(_MINOR|_PATCHLEVEL)?[\t ]+[0-9]+")
-  string(REGEX REPLACE ".*#define __GNU_MP_VERSION[\t ]+([0-9]+).*" "\\1" GMP_VERSION_MAJOR "${gmp_header_str}")
-  string(REGEX REPLACE ".*#define __GNU_MP_VERSION_MINOR[\t ]+([0-9]+).*" "\\1" GMP_VERSION_MINOR "${gmp_header_str}")
-  string(REGEX REPLACE ".*#define __GNU_MP_VERSION_PATCHLEVEL[\t ]+([0-9]+).*" "\\1" GMP_VERSION_PATCH "${gmp_header_str}")
+  if(NOT gmp_header_str)
+    # On multi-arch systems (e.g. Fedora), gmp.h is a dispatcher that
+    # includes arch-specific headers.  Fall back to the preprocessor to
+    # resolve the version macros (fixes #2949).
+    file(WRITE "${CMAKE_BINARY_DIR}/gmp_version_check.c"
+      "#include <gmp.h>\nGMP_V __GNU_MP_VERSION\nGMP_VMIN __GNU_MP_VERSION_MINOR\nGMP_VPATCH __GNU_MP_VERSION_PATCHLEVEL\n")
+    execute_process(
+      COMMAND ${CMAKE_C_COMPILER} -I${GMP_PATH} -E "${CMAKE_BINARY_DIR}/gmp_version_check.c"
+      OUTPUT_VARIABLE gmp_pp_output
+      ERROR_QUIET
+      RESULT_VARIABLE gmp_pp_result)
+    if(gmp_pp_result EQUAL 0)
+      string(REGEX MATCH "GMP_V ([0-9]+)" _match "${gmp_pp_output}")
+      set(GMP_VERSION_MAJOR "${CMAKE_MATCH_1}")
+      string(REGEX MATCH "GMP_VMIN ([0-9]+)" _match "${gmp_pp_output}")
+      set(GMP_VERSION_MINOR "${CMAKE_MATCH_1}")
+      string(REGEX MATCH "GMP_VPATCH ([0-9]+)" _match "${gmp_pp_output}")
+      set(GMP_VERSION_PATCH "${CMAKE_MATCH_1}")
+    endif()
+    file(REMOVE "${CMAKE_BINARY_DIR}/gmp_version_check.c")
+  else()
+    string(REGEX REPLACE ".*#define __GNU_MP_VERSION[\t ]+([0-9]+).*" "\\1" GMP_VERSION_MAJOR "${gmp_header_str}")
+    string(REGEX REPLACE ".*#define __GNU_MP_VERSION_MINOR[\t ]+([0-9]+).*" "\\1" GMP_VERSION_MINOR "${gmp_header_str}")
+    string(REGEX REPLACE ".*#define __GNU_MP_VERSION_PATCHLEVEL[\t ]+([0-9]+).*" "\\1" GMP_VERSION_PATCH "${gmp_header_str}")
+  endif()
   unset(gmp_header_str)
   set(GMP_VERSION_STRING "${GMP_VERSION_MAJOR}.${GMP_VERSION_MINOR}.${GMP_VERSION_PATCH}")
   if("${GMP_VERSION_STRING}" VERSION_LESS ${Required_Gmp_Version})

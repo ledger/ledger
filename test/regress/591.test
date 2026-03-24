@@ -1,0 +1,19 @@
+; Forecast with future start date should generate entries (BZ#591)
+; When a periodic transaction's start date is in the future relative to
+; the current date, forecast should still produce entries beginning at
+; that future start date.
+
+~ every 14 days from 2026/04/01
+    Expenses:Bills    $100.00
+    Assets:Checking
+
+test reg --now=2026/03/15 --forecast-while "d<[2026/05/15]" --columns 80
+26-Apr-01 Forecast transaction  Expenses:Bills              $100.00      $100.00
+26-Apr-01 Forecast transaction  Assets:Checking            $-100.00            0
+26-Apr-15 Forecast transaction  Expenses:Bills              $100.00      $100.00
+26-Apr-15 Forecast transaction  Assets:Checking            $-100.00            0
+26-Apr-29 Forecast transaction  Expenses:Bills              $100.00      $100.00
+26-Apr-29 Forecast transaction  Assets:Checking            $-100.00            0
+26-May-13 Forecast transaction  Expenses:Bills              $100.00      $100.00
+26-May-13 Forecast transaction  Assets:Checking            $-100.00            0
+end test

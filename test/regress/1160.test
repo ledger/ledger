@@ -1,0 +1,35 @@
+; Regression test for issue #1160
+; lot_price, lot_date, and lot_tag should accept zero or one arguments.
+; When called with zero arguments, they default to the current posting's amount.
+
+2024/01/15 Buy shares
+    Assets:Brokerage          10 AAPL {$150.00} [2024/01/15] (tag1)
+    Assets:Cash              $-1500.00
+
+2024/02/01 Expenses
+    Expenses:Food             $25.00
+    Assets:Cash
+
+; Test lot_price with explicit argument (existing behavior)
+test reg --format "%(lot_price(amount))\n" Assets:Brokerage
+$150.00
+end test
+
+; Test lot_price with zero arguments (new behavior)
+test reg --format "%(lot_price)\n" Assets:Brokerage
+$150.00
+end test
+
+; Test lot_date with zero arguments
+test reg --format "%(lot_date)\n" Assets:Brokerage
+2024/01/15
+end test
+
+; Test lot_tag with zero arguments
+test reg --format "%(lot_tag)\n" Assets:Brokerage
+tag1
+end test
+
+; Test that zero-argument forms return empty for non-annotated amounts
+test reg --format "%(lot_price)%(lot_date)%(lot_tag)\n" Expenses:Food
+end test

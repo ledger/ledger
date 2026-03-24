@@ -1640,6 +1640,14 @@ void date_interval_t::parse(const string& str) {
   *this = parser.parse();
 }
 
+date_t date_interval_t::add_duration(const date_t& date, const date_duration_t& duration) {
+  return duration.add(date);
+}
+
+date_t date_interval_t::subtract_duration(const date_t& date, const date_duration_t& duration) {
+  return duration.subtract(date);
+}
+
 /**
  * @brief Compute end_of_duration and next from the current start and duration.
  *
@@ -1834,10 +1842,21 @@ void date_interval_t::stabilize(const optional<date_t>& date, bool align_interva
 
       // Phase 3: Clamp to the original range boundaries
       if (initial_start && (!start || *start < *initial_start)) {
-        // Using the discovered start, find the end of the period
+        // Compute end_of_duration from the quantum-aligned start before
+        // clamping, so that weekly/monthly periods keep their natural
+        // period boundary.
         resolve_end();
 
         start = initial_start;
+
+        // If end_of_duration (computed from the old start) is no longer
+        // past the clamped start, it is stale and must be recomputed.
+        if (end_of_duration && *end_of_duration <= *start) {
+          end_of_duration = none;
+          next = none;
+          resolve_end();
+        }
+
         DEBUG("times.interval", "stabilize: start reset to initial start");
       }
       if (initial_finish && (!finish || *finish > *initial_finish)) {

@@ -1,22 +1,26 @@
-; Test that --permissive suppresses balance assertion errors when an
-; elided (auto-computed) amount is combined with a balance assignment.
-; Without --permissive, the balance assignment sets Assets:Checking to
-; $12345, making the transaction unbalanced ($3141 + $12345 = $15486).
-; With --permissive, the balance assignment is skipped and the elided
-; amount is auto-computed as -$3141 to balance the transaction.
+; Regression test for issue #2005: balance assignments with --permissive.
+;
+; When a posting uses the balance assignment syntax with no explicit amount
+; (e.g., Assets:Checking =$12345), --permissive does not change the balance
+; assignment semantics.  The assignment computes the amount needed to bring
+; the account to the target balance.  If that amount causes the transaction
+; not to balance, the error is reported normally — --permissive only
+; suppresses balance ASSERTION errors, not balance assignment computation.
 
 2021/02/14 Test transaction
   Liabilities:Visa  $3141
   Assets:Checking  =$12345
 
-test bal --permissive
-              $-3141  Assets:Checking
-               $3141  Liabilities:Visa
---------------------
-                   0
-end test
-
-test reg --permissive
-21-Feb-14 Test transaction      Liabilities:Visa              $3141        $3141
-                                Assets:Checking              $-3141            0
+test bal --permissive -> 1
+__ERROR__
+While parsing file "$FILE", line 12:
+While balancing transaction from "$FILE", lines 10-12:
+> 2021/02/14 Test transaction
+>   Liabilities:Visa  $3141
+>   Assets:Checking  =$12345
+Unbalanced remainder is:
+              $15486
+Amount to balance against:
+              $15486
+Error: Transaction does not balance
 end test

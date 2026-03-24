@@ -17,6 +17,8 @@
 test reg --now="2024/06/15" --forecast-while="date < [2024/10/01]"
 24-Jun-15 Initial               Expenses:Food                $50.00       $50.00
                                 Assets:Checking             $-50.00            0
+24-Jun-01 Forecast transaction  Expenses:Rent              $1000.00     $1000.00
+24-Jun-01 Forecast transaction  Assets:Checking           $-1000.00            0
 24-Jul-01 Forecast transaction  Expenses:Rent              $1000.00     $1000.00
 24-Jul-01 Forecast transaction  Assets:Checking           $-1000.00            0
 24-Aug-01 Forecast transaction  Expenses:Rent              $1000.00     $1000.00

@@ -1,0 +1,22 @@
+; Regression test for issue #2945: aux_date vs date in --effective mode.
+;
+; When --effective is used, item_t::use_aux_date must NOT be set during
+; journal parsing.  If it is, then date() returns the aux_date during
+; automated transaction evaluation, making "aux_date != date" always
+; false — which breaks assertions and predicates that distinguish the
+; two dates.  The global use_aux_date flag should only take effect at
+; report time, not during parsing.
+
+= expr "cleared and aux_date"
+    assert aux_date != date
+
+2018/12/31=2028/11/01 * Test
+    Expenses:Foo     $100
+    Assets:Checking
+
+test bal --effective
+               $-100  Assets:Checking
+                $100  Expenses:Foo
+--------------------
+                   0
+end test
