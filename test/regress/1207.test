@@ -27,9 +27,9 @@
     Assets
 
 test --monthly --average balance ^Expenses
-                 $14  Expenses
-                 $22    AccountA
-                  $3    AccountB
+                 $50  Expenses
+                 $90    AccountA
+                 $10    AccountB
 --------------------
-                 $12
+                 $50
 end test

@@ -66,7 +66,7 @@ test bal --format '%(N)\n' --flat Expenses
 1
 1
 1
-5
+3
 end test
 
 ; Test O (total) lookup - covers account.cc line 490-491
