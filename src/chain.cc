@@ -232,8 +232,21 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
                              report.HANDLER(total_).expr.exprs.empty() &&
                              report.HANDLER(total_).expr.base_expr == "total" && !wtk.keep_all();
 
+    // Per-account period averaging (period_average_) tracks independent
+    // running totals for each account across interval periods, so that
+    // multi-account period groups each show their own average.  Disable it
+    // when --collapse, --depth, or auto-collapse-for-plot will be in the
+    // chain: collapse reduces multi-account periods to a single post,
+    // making per-account seeding unnecessary and harmful (the changing
+    // account identity causes the accumulator to miss, resetting the
+    // running total).
+    bool will_collapse = report.HANDLED(collapse) || report.HANDLED(depth_) ||
+                          (!report.HANDLED(collapse) && !report.HANDLED(depth_) &&
+                           report.HANDLED(period_) &&
+                           (report.HANDLED(amount_data) || report.HANDLED(total_data)));
+    bool period_average = report.HANDLED(average) && !will_collapse;
     handler = std::make_shared<calc_posts>(handler, expr, calc_running, maintain_stripped, wtk,
-                                           report.HANDLED(average));
+                                           period_average);
   }
 
   /*--- Only predicate ---*/
