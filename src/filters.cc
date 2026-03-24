@@ -387,9 +387,8 @@ void calc_posts::operator()(post_t& post) {
   bool same_generated_group = false;
   if (last_post) {
     assert(last_post->has_xdata());
-    same_generated_group =
-        (post.has_flags(ITEM_GENERATED) && last_post->has_flags(ITEM_GENERATED) &&
-         post.xact == last_post->xact);
+    same_generated_group = (post.has_flags(ITEM_GENERATED) &&
+                            last_post->has_flags(ITEM_GENERATED) && post.xact == last_post->xact);
     if (same_generated_group)
       xdata.count = last_post->xdata().count;
     else
