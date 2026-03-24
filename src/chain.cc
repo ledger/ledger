@@ -233,7 +233,7 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
                              report.HANDLER(total_).expr.base_expr == "total" && !wtk.keep_all();
 
     handler = std::make_shared<calc_posts>(handler, expr, calc_running, maintain_stripped, wtk,
-                                           report.HANDLED(average));
+                                           report.HANDLED(average) && !report.HANDLED(collapse));
   }
 
   /*--- Only predicate ---*/
