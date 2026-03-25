@@ -408,13 +408,16 @@ static balance_t compute_balance_diff(const amount_t& amt, post_t* post, xact_t*
     real_only = false;
   }
   value_t account_total;
-  if (item_t::use_aux_date && post->aux_date()) {
-    // When using effective dates and the current posting has an explicit
-    // effective date, only count posts whose effective date is on or before
-    // the current posting's effective date, so that balance assertions
-    // respect --effective ordering rather than file order (fixes #2071).
-    // Only apply this filtering when the posting itself has an aux date;
-    // postings without aux dates use file-order accumulation (fixes #2966).
+  if (item_t::use_aux_date && !post->aux_date()) {
+    // When --effective is active but the current posting has no auxiliary
+    // date, fall back to file-order accumulation so that assertions on
+    // postings without effective dates still work correctly (fixes #2966).
+    account_total = post->account->self_total(real_only);
+  } else {
+    // Only count posts whose date is on or before the current posting's
+    // date, so that balance assertions respect date ordering rather than
+    // file order.  This handles both normal mode (primary dates, #769)
+    // and --effective mode (auxiliary dates, #2071).
     date_t cutoff = post->date();
     std::set<const post_t*> seen;
     for (const post_t* p : post->account->posts) {
@@ -425,8 +428,6 @@ static balance_t compute_balance_diff(const amount_t& amt, post_t* post, xact_t*
       if (!p->amount.is_null() && p->date() <= cutoff)
         add_or_set_value(account_total, p->amount);
     }
-  } else {
-    account_total = post->account->self_total(real_only);
   }
   if (strip_annotations)
     account_total = account_total.strip_annotations(keep_details_t());
