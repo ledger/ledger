@@ -885,7 +885,9 @@ bool display_filter_posts::output_rounding(post_t& post) {
     }
     return true;
   } else {
-    return report.HANDLED(empty) || post.assigned_amount.has_value();
+    return report.HANDLED(empty) ||
+           (post.assigned_amount.has_value() &&
+            !post.has_flags(POST_CALCULATED));
   }
 }
 
