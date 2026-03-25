@@ -1,0 +1,15 @@
+; display_total should not crash with non-dollar commodities (BZ#673)
+;
+; Using display_total in a width-constrained format string used to trigger
+; an assertion failure in unistring when the account held non-dollar
+; commodities.
+
+2008/10/07  fidelity
+    ass:fidelity        -1200 VLKAY @  $10.90
+    ass:fidelity        1200 VLKAY @  $76.35
+    inc:cap.gains
+
+test reg --format "%10(date) %-.30(payee) %20(display_total)\n" ass:fidelity
+2008/10/07 fidelity                                -1200 VLKAY
+2008/10/07 fidelity                                          0
+end test
