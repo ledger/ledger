@@ -1,0 +1,27 @@
+; Regression test for #1097: commodity comparison with quoted symbols
+;
+; When a commodity name contains spaces or digits (requiring quotes in
+; journal syntax), assert/check directives and --limit expressions
+; should match using the unquoted base symbol name.
+
+account Assets
+	assert commodity == "abc def"
+
+2024/01/01 Simple posting
+	Expenses    1 "abc def"
+	Assets
+
+2024/01/02 Multiplication
+	Expenses
+	Assets  (2 * 1 "abc def")
+
+test bal Assets
+           1 abc def  Assets
+end test
+
+test bal -l "commodity == 'abc def'"
+           1 abc def  Assets
+          -1 abc def  Expenses
+--------------------
+                   0
+end test
