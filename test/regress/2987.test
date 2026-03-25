@@ -1,0 +1,35 @@
+; Regression test for issue #2987
+;
+; Periodic report with automated transactions should show per-account
+; postings within each period, not collapse them into a single total.
+; The auto-collapse behavior introduced for issue #984 was too aggressive
+; and merged unrelated account postings, losing important detail.
+= expr (commodity == 'FOO' and account =~ /^Assets:/)
+    (Allocation:Equities)             1.000
+= expr (commodity == '$' and account =~ /^Assets:/)
+    (Allocation:Cash)                          1.000
+
+commodity $
+    alias USD
+
+2023/01/01 * Test
+    Assets:Brokerage                    10 FOO @ $100
+    Assets:Checking                     $1000
+    Income:Employment
+2023/02/01 * Test
+    Assets:Brokerage                    10 FOO @ $100
+    Assets:Checking                     $1000
+    Income:Employment
+2023/03/01 * Test
+    Assets:Brokerage                    10 FOO @ $100
+    Assets:Checking                     $1000
+    Income:Employment
+
+test reg -X USD --no-pager -J --monthly ^Allocation:
+2023-01-01 1000
+2023-01-01 2000
+2023-02-01 3000
+2023-02-01 4000
+2023-03-01 5000
+2023-03-01 6000
+end test

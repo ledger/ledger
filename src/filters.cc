@@ -846,30 +846,20 @@ bool display_filter_posts::output_rounding(post_t& post) {
       DEBUG("filters.changed_value.rounding",
             "rounding.last_display_total    = " << last_display_total);
 
-      // In period+plot mode (-M with -j/-J), suppress the revaluation
-      // adjustment posting.  Market value changes between periods are already
-      // reflected in the final posting's display_total via market(), so the
-      // intermediate adjustment would only create an unwanted extra data point
-      // for each period in the plot output (issue #984).
-      bool suppress_period_plot_adjustment =
-          report.HANDLED(period_) && (report.HANDLED(amount_data) || report.HANDLED(total_data));
+      if (value_t diff = precise_display_total - last_display_total) {
+        DEBUG("filters.changed_value.rounding", "rounding.diff                  = " << diff);
 
-      if (!suppress_period_plot_adjustment) {
-        if (value_t diff = precise_display_total - last_display_total) {
-          DEBUG("filters.changed_value.rounding", "rounding.diff                  = " << diff);
-
-          handle_value(/* value=         */ diff,
-                       /* account=       */ rounding_account,
-                       /* xact=          */ post.xact,
-                       /* temps=         */ temps,
-                       /* handler=       */ handler,
-                       /* date=          */ date_t(),
-                       /* act_date_p=    */ true,
-                       /* total=         */ precise_display_total,
-                       /* direct_amount= */ true,
-                       /* mark_visited=  */ false,
-                       /* bidir_link=    */ false);
-        }
+        handle_value(/* value=         */ diff,
+                     /* account=       */ rounding_account,
+                     /* xact=          */ post.xact,
+                     /* temps=         */ temps,
+                     /* handler=       */ handler,
+                     /* date=          */ date_t(),
+                     /* act_date_p=    */ true,
+                     /* total=         */ precise_display_total,
+                     /* direct_amount= */ true,
+                     /* mark_visited=  */ false,
+                     /* bidir_link=    */ false);
       }
     }
     if (show_rounding) {
