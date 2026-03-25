@@ -1,0 +1,26 @@
+; Regression test for issue #1680
+; Account assertions should be checked for automated postings.
+
+account Budget:Food
+    assert amount >= 0.00 EUR
+
+= /Expenses:Food/
+    Budget:Food                       -1.0
+    Budget:Unbudgeted                  1.0
+
+2018-06-13 * Groceries store
+    Assets:Bank:Checking               -700 EUR
+    Expenses:Food                       700 EUR
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 13:
+While applying automated transaction from "$FILE", lines 4-5:
+> account Budget:Food
+>     assert amount >= 0.00 EUR
+While extending transaction from "$FILE", lines 11-13:
+> 2018-06-13 * Groceries store
+>     Assets:Bank:Checking               -700 EUR
+>     Expenses:Food                       700 EUR
+Error: Transaction assertion failed: (amount >= {0.00 EUR})
+end test
