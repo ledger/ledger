@@ -1,0 +1,36 @@
+; Regression test for issue #1664
+;
+; Zero-amount postings with balance assertions should not be dropped
+; from print and reg output.
+
+2018-04-07 Test 1
+    liabilities:credit-card    -1.00 EUR
+    equity:opening-balances
+
+2018-04-07 Test 2
+    liabilities:credit-card     1.00 EUR
+    equity:opening-balances
+
+2018-04-07 Test 3
+    liabilities:credit-card    0.00 EUR = 0.00 EUR
+    equity:opening-balances
+
+test print
+2018/04/07 Test 1
+    liabilities:credit-card                -1.00 EUR
+    equity:opening-balances
+
+2018/04/07 Test 2
+    liabilities:credit-card                 1.00 EUR
+    equity:opening-balances
+
+2018/04/07 Test 3
+    liabilities:credit-card                        0 = 0.00 EUR
+    equity:opening-balances
+end test
+
+test reg liabilities
+18-Apr-07 Test 1                liabilitie:credit-card    -1.00 EUR    -1.00 EUR
+18-Apr-07 Test 2                liabilitie:credit-card     1.00 EUR            0
+18-Apr-07 Test 3                liabilitie:credit-card            0            0
+end test
