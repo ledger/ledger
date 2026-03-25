@@ -1,0 +1,11 @@
+; Regression test for issue #554
+; Balance assertions should work correctly across multiple ledger files.
+; The assertion in the second file (A = $2) must see the $1 balance
+; accumulated from the first file.
+
+test -f $sourcepath/test/regress/554a.dat -f $sourcepath/test/regress/554b.dat bal -> 0
+                  $2  A
+                 $-2  B
+--------------------
+                   0
+end test
