@@ -379,6 +379,23 @@ void detail::parse_amount_expr(std::istream& in, scope_t& scope, post_t& post, a
 }
 
 /**
+ * Return the entry date of a posting, ignoring --effective.
+ *
+ * post_t::primary_date() falls through to xact->date() when the posting
+ * has no date of its own, and xact->date() respects use_aux_date.  For
+ * balance assertion date ordering we always want the entry date, not the
+ * effective date, so we go through xact->primary_date() which returns
+ * the transaction's entry date unconditionally.
+ */
+static date_t entry_date(const post_t* p) {
+  if (p->_date)
+    return *p->_date;
+  if (p->xact)
+    return p->xact->primary_date();
+  return CURRENT_DATE();
+}
+
+/**
  * Compute the difference between the assigned/asserted amount and the
  * current account balance, subtracting amounts from previous posts to
  * the same account in the current transaction.
@@ -426,7 +443,22 @@ static balance_t compute_balance_diff(const amount_t& amt, post_t* post, xact_t*
         add_or_set_value(account_total, p->amount);
     }
   } else {
-    account_total = post->account->self_total(real_only);
+    // Filter posts by entry date so that balance assertions and
+    // assignments are independent of file parse order (#1092).  Only
+    // posts whose entry date is on or before the current posting's
+    // entry date contribute to the running total.  entry_date() is
+    // used instead of primary_date() because the latter falls through
+    // to xact->date() which respects --effective (#2966).
+    date_t cutoff = entry_date(post);
+    std::set<const post_t*> seen;
+    for (const post_t* p : post->account->posts) {
+      if (!seen.insert(p).second)
+        continue;
+      if (real_only && p->has_flags(POST_VIRTUAL))
+        continue;
+      if (!p->amount.is_null() && entry_date(p) <= cutoff)
+        add_or_set_value(account_total, p->amount);
+    }
   }
   if (strip_annotations)
     account_total = account_total.strip_annotations(keep_details_t());
