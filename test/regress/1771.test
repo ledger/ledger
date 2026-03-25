@@ -1,0 +1,27 @@
+; Balance assertions on UUID-duplicate transactions should not fail.
+; The duplicate is discarded by add_xact(), but the balance assertion
+; was evaluated against the account total that already included the
+; first occurrence's postings, causing a spurious "off by" error.
+
+2019-03-11 Test 1
+    Assets:Current  $100
+    Income:Salary
+
+2019-03-12 Test 2
+    ; UUID: XYZ
+    Assets:Current  $50 = $150
+    Income:Sidejob
+
+2019-03-12 Test 2
+    ; UUID: XYZ
+    Assets:Current  $50 = $150
+    Income:Sidejob
+
+test bal
+                $150  Assets:Current
+               $-150  Income
+               $-100    Salary
+                $-50    Sidejob
+--------------------
+                   0
+end test
