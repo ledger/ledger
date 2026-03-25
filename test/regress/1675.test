@@ -1,0 +1,29 @@
+; Regression test for issue #1675: assertion fails when account is emptied
+; via balance assignment and a sub-account receives the balancing amount.
+; account("parent").total was returning double the correct value (230
+; instead of 115) because family_details were not properly reset after
+; the balance assignment added a new posting.
+
+2018-08-25
+    source
+    parent               100
+    parent:child1         10
+    parent:child2          5
+
+assert account("parent").total == 115
+
+2018-08-25
+    parent               = 0
+    parent:child3
+
+assert account("parent").total == 115
+
+test bal
+                 115  parent
+                  10    child1
+                   5    child2
+                 100    child3
+                -115  source
+--------------------
+                   0
+end test
