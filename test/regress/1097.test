@@ -2,26 +2,120 @@
 ;
 ; When a commodity name contains spaces or digits (requiring quotes in
 ; journal syntax), assert/check directives and --limit expressions
-; should match using the unquoted base symbol name.
+; should match using the unquoted base symbol name. The commodity()
+; format function should also return the unquoted base symbol.
+;
+; This tests all consumption patterns for fn_commodity() output:
+;   - format expressions: %(commodity(amount))
+;   - --limit comparisons: commodity == 'name', commodity != 'name'
+;   - account assert/check directives
+;   - eval expressions
+;   - CSV output
+;   - string comparison in format expressions
+;   - multi-commodity (balance) returns empty string
+;   - standard commodities still work correctly
 
-account Assets
+; === Account directives with quoted commodities ===
+account Assets:Spaces
 	assert commodity == "abc def"
 
-2024/01/01 Simple posting
-	Expenses    1 "abc def"
-	Assets
+account Assets:Digits
+	check commodity == "ABC3"
 
-2024/01/02 Multiplication
-	Expenses
-	Assets  (2 * 1 "abc def")
+; === Transactions with various quoted commodity types ===
 
-test bal Assets
-           1 abc def  Assets
+2024/01/01 Commodity with spaces
+	Expenses:Food    10 "abc def"
+	Assets:Spaces
+
+2024/01/02 Commodity with mixed alphanumeric
+	Expenses:Supplies    5 "ABC3"
+	Assets:Digits
+
+2024/01/03 Standard commodity
+	Expenses:Travel    $20.00
+	Assets:Cash
+
+2024/01/04 All-digit commodity
+	Expenses:Crypto    3 "12345"
+	Assets:Cash
+
+; === Test: account assert passes (commodity with spaces) ===
+test bal Assets:Spaces
+         -10 abc def  Assets:Spaces
 end test
 
+; === Test: account check passes (commodity with digits) ===
+test bal Assets:Digits
+             -5 ABC3  Assets:Digits
+end test
+
+; === Test: format expression returns unquoted symbol (spaces) ===
+test reg Expenses:Food --format "%(commodity(amount))\n"
+abc def
+end test
+
+; === Test: format expression returns unquoted symbol (alphanumeric) ===
+test reg Expenses:Supplies --format "%(commodity(amount))\n"
+ABC3
+end test
+
+; === Test: format expression returns standard commodity ===
+test reg Expenses:Travel --format "%(commodity(amount))\n"
+$
+end test
+
+; === Test: format expression returns unquoted symbol (all digits) ===
+test reg Expenses:Crypto --format "%(commodity(amount))\n"
+12345
+end test
+
+; === Test: --limit commodity comparison with spaces ===
 test bal -l "commodity == 'abc def'"
-           1 abc def  Assets
-          -1 abc def  Expenses
+         -10 abc def  Assets:Spaces
+          10 abc def  Expenses:Food
 --------------------
                    0
+end test
+
+; === Test: --limit commodity comparison with digits ===
+test bal -l "commodity == 'ABC3'"
+             -5 ABC3  Assets:Digits
+              5 ABC3  Expenses:Supplies
+--------------------
+                   0
+end test
+
+; === Test: eval commodity() returns unquoted symbol ===
+test eval "commodity(10 \"abc def\")"
+abc def
+end test
+
+; === Test: commodity comparison in format expression ===
+test reg Expenses:Food --format "%(commodity(amount) == \"abc def\" ? \"MATCH\" : \"NO\")\n"
+MATCH
+end test
+
+; === Test: CSV output contains unquoted commodity ===
+test csv Expenses:Food
+"2024/01/01","","Commodity with spaces","Expenses:Food","abc def","10","",""
+end test
+
+; === Test: multi-commodity balance returns empty string ===
+test eval "commodity(10 \"abc def\" + 5 \"ABC3\")"
+
+end test
+
+; === Test: --limit not-equal excludes matching commodity ===
+test bal Expenses -l "commodity != 'abc def'"
+              $20.00
+           3 "12345"
+              5 ABC3  Expenses
+           3 "12345"    Crypto
+              5 ABC3    Supplies
+              $20.00    Travel
+--------------------
+              $20.00
+           3 "12345"
+              5 ABC3
 end test
