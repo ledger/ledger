@@ -849,6 +849,32 @@ bool xact_base_t::finalize() {
           goto balanced;
       }
     }
+
+    // Under --permissive, if the imbalance was caused by a balance
+    // assignment that computed the posting amount (= $target with no
+    // explicit amount), revert to auto-balancing by adjusting the
+    // assigned posting so the transaction balances.  This lets users
+    // write `Account = $target` and have --permissive accept the
+    // transaction even when the assigned amount conflicts with the
+    // other postings.  Balance assignments that DO balance (issue
+    // #2944) never reach this point because Phase 7 already cleared
+    // the balance.
+    if (journal && journal->checking_style == journal_t::CHECK_PERMISSIVE) {
+      for (post_t* post : posts) {
+        if (post->has_flags(POST_CALCULATED) && post->assigned_amount &&
+            post->must_balance() && !post->has_flags(POST_VIRTUAL)) {
+          if (balance.is_amount())
+            post->amount -= balance.as_amount();
+          else if (balance.is_long())
+            post->amount -= balance.to_amount();
+          else
+            break; // multi-commodity imbalance; let it error normally
+          balance = NULL_VALUE;
+          goto balanced;
+        }
+      }
+    }
+
     add_error_context(item_context(*this, _("While balancing transaction")));
     add_error_context(_("Unbalanced remainder is:"));
     add_error_context(value_context(balance));
