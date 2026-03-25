@@ -1,0 +1,23 @@
+; Regression test for issue #1092: balance assignments processed in parse
+; order rather than date order.
+;
+; When the $30 transfer (dated July 20) appears in the file BEFORE the
+; balance assignment (dated July 10), the assignment should still evaluate
+; against an empty account balance — not the $30 already parsed — because
+; July 10 precedes July 20 chronologically.
+
+2014/07/20 Transfer
+    Expenses:Misc                            $30.00
+    Liabilities:Test
+
+2014/07/10 Opening Balance
+    Liabilities:Test                    = $-200.00
+    Equity:Opening Balances
+
+test bal
+             $200.00  Equity:Opening Balances
+              $30.00  Expenses:Misc
+            $-230.00  Liabilities:Test
+--------------------
+                   0
+end test

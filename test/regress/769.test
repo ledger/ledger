@@ -1,0 +1,24 @@
+; Balance assertions should respect date ordering, not file ordering.
+; A balance assertion on a posting dated 2010-01-02 should check the
+; balance as of that date, even when placed after a 2010-01-03
+; transaction in the file.
+
+2010-01-01 * Starting Balance
+    Assets:Bank:Checking        1000.00 EUR
+    Equity:Opening-Balances
+
+2010-01-02 * Shopping
+    Expenses:Shopping           10 EUR
+    Assets:Bank:Checking
+
+2010-01-03 * Some more shopping
+    Expenses:Shopping           5 EUR
+    Assets:Bank:Checking
+
+; verify balance as of 2010-01-02
+2010-01-02 * Balance Check
+    Assets:Bank:Checking        0 EUR    = 990.00 EUR
+
+test bal Assets
+          985.00 EUR  Assets:Bank:Checking
+end test
