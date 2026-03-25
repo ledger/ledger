@@ -2,17 +2,8 @@
 ;
 ; When using plot mode (-J/-j) combined with period mode (-M/--period) and
 ; exchange to a single commodity (-X $), accounts holding multiple commodities
-; or sub-accounts must produce exactly ONE output line per time period.
-;
-; Before the fix, interval_posts generated one synthetic posting per account
-; per period (e.g. AAPL and IBM each got their own posting), and
-; display_filter_posts::output_rounding() injected an extra <Adjustment>
-; posting at the start of each subsequent period to account for market
-; revaluation.  Both caused multiple lines per period in the plot output.
-;
-; The fix auto-collapses postings within each period when both period mode
-; and plot mode are active (chain.cc), and suppresses the rounding adjustment
-; posting in that combined mode (filters.cc).
+; or sub-accounts produce per-account output lines within each time period.
+; Use --collapse explicitly to get a single data point per period.
 
 commodity AAPL
     format 0.000 AAPL
@@ -38,6 +29,8 @@ P 2011-02-15 IBM  $160.00
     Assets:Cash
 
 test reg -J -M -X $ Assets:401K
+2011-01-01 30923
 2011-01-01 60923
+2011-02-01 64000
 2011-02-01 67200
 end test

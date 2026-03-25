@@ -19,7 +19,7 @@
     Assets:Checking                     $123
     Income:Payroll
 
-test reg --no-pager --plot-total-format "%(account('Allocation:Cash').total)\n" -J --monthly ^Allocation:
+test reg --no-pager --collapse --plot-total-format "%(account('Allocation:Cash').total)\n" -J --monthly ^Allocation:
 $123
 $246
 $246
