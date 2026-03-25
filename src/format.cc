@@ -576,6 +576,10 @@ string format_t::truncate(const unistring& ustr, const std::size_t width,
   if (width == 0 || len <= width)
     return ustr.extract();
 
+  // Not enough room for a ".." elision marker plus any content.
+  if (width < 3)
+    return ustr.extract_by_width(0, width);
+
   std::ostringstream buf;
 
   elision_style_t style = default_style;
