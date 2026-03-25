@@ -1,0 +1,13 @@
+; Regression test for issue #904
+; Balance assertion with quoted commodity should not throw parsing error
+2012-02-19 Initial
+    Warehouse:Pending:3465464554                     1 "12345"
+    Equity:Opening Balances
+
+2012-02-20 Process product
+    Warehouse:Ready:3465464554                         1 "12345"
+    Warehouse:Pending:3465464554                    -1 "12345" = 0 "12345"
+
+test bal Warehouse
+           1 "12345"  Warehouse:Ready:3465464554
+end test
