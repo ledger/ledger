@@ -798,12 +798,19 @@ void instance_t::eval_directive(char* line) {
 }
 
 void instance_t::assert_directive(char* line) {
+  // Invalidate cached family totals so the assertion evaluates against
+  // the current journal state.  Without this, a repeated expression
+  // such as account("X").total returns a stale cached value (#1679).
+  context.journal->master->clear_display_state();
+
   expr_t expr(line);
   if (!expr.calc(*context.scope).to_boolean())
     throw_(parse_error, _f("Assertion failed: %1%") % line);
 }
 
 void instance_t::check_directive(char* line) {
+  context.journal->master->clear_display_state();
+
   expr_t expr(line);
   if (!expr.calc(*context.scope).to_boolean())
     context.warning(_f("Check failed: %1%") % line);
