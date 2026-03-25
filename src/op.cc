@@ -162,8 +162,12 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth, scope_t*
   if (is_ident()) {
     DEBUG("expr.compile", "Lookup: " << as_ident() << " in " << scope_ptr);
     ptr_op_t def;
-    if (param_scope)
+    bool from_param = false;
+    if (param_scope) {
       def = param_scope->lookup(symbol_t::FUNCTION, as_ident());
+      if (def)
+        from_param = true;
+    }
     if (!def)
       def = scope_ptr->lookup(symbol_t::FUNCTION, as_ident());
     if (def && def->kind != PLUG) {
@@ -176,13 +180,26 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth, scope_t*
       // allows accumulator patterns like biggest=max(amount,biggest);biggest
       // to read the running accumulated value each time rather than
       // always returning NULL (the value of PLUG).
+      //
+      // When compiling inside a lambda/function body (param_scope is
+      // non-null), only inline identifiers found in the parameter scope.
+      // Non-parameter identifiers (like "payee", "amount", etc.) must
+      // remain as unresolved IDENT nodes for runtime lookup, because
+      // the correct definition depends on the calling scope (e.g.,
+      // post_t), not the compilation scope (e.g., report_t).  Without
+      // this guard, identifiers like "payee" are incorrectly resolved
+      // to option handlers at compile time (fixes #953).
+      if (from_param || !param_scope) {
 #if DEBUG_ON
-      if (SHOW_DEBUG("expr.compile")) {
-        DEBUG("expr.compile", "Found definition:");
-        def->dump(*_log_stream, 0);
-      }
+        if (SHOW_DEBUG("expr.compile")) {
+          DEBUG("expr.compile", "Found definition:");
+          def->dump(*_log_stream, 0);
+        }
 #endif // DEBUG_ON
-      result = copy(def);
+        result = copy(def);
+      } else {
+        result = this;
+      }
     } else if (left()) {
       result = copy();
     } else {
@@ -616,7 +633,8 @@ value_t call_lambda(const expr_t::ptr_op_t& func, scope_t& scope, call_scope_t& 
 
     return func->right()->left()->calc(bound_scope, locus, depth + 1);
   } else {
-    return func->right()->calc(args_scope, locus, depth + 1);
+    bind_scope_t bound_scope(scope, args_scope);
+    return func->right()->calc(bound_scope, locus, depth + 1);
   }
 }
 } // namespace
