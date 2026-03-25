@@ -1,0 +1,17 @@
+; Regression test for issue #786:
+; Transaction check doesn't give line number for included file.
+; When a "check" directive fails, the warning should report both the
+; location of the triggering transaction and the account directive
+; where the check expression is defined.
+
+include 786.dat
+
+test bal
+          -10.00 EUR  bar
+           10.00 EUR  foo
+--------------------
+                   0
+__ERROR__
+Warning: "$sourcepath/test/regress/786.dat", line 4: Transaction check failed: has_tag("test")
+  (check expression at "$sourcepath/test/regress/786.dat", line 1)
+end test

@@ -21,5 +21,6 @@ test bal
 --------------------
                    0
 __ERROR__
-Warning: "$FILE", line 16: Transaction check failed: (date <= [2017/03/03])
+Warning: "$FILE", line 14: Transaction check failed: (date <= [2017/03/03])
+  (check expression at "$FILE", line 4)
 end test
