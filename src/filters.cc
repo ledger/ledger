@@ -559,6 +559,11 @@ void handle_value(const value_t& value, account_t* account, xact_t* xact, tempor
 
 /*--- Collapsing ---*/
 
+void collapse_posts::create_accounts() {
+  global_totals_account =
+      &temps.create_account(_("<Total>"), report.session.journal->master);
+}
+
 /**
  * Emit the collapsed representation of the current transaction's postings.
  *
