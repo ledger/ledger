@@ -1,20 +1,27 @@
-; Regression test for issue #2005: balance assignments with --permissive.
+; Regression test for issue #2005: --permissive with balance assignments.
 ;
-; When a posting uses the balance assignment syntax with no explicit amount
-; (e.g., Assets:Checking =$12345), --permissive does not change the balance
-; assignment semantics.  The assignment computes the amount needed to bring
-; the account to the target balance.  If that amount causes the transaction
-; not to balance, the error is reported normally — --permissive only
-; suppresses balance ASSERTION errors, not balance assignment computation.
+; When a posting uses balance assignment syntax with no explicit amount
+; (e.g., Assets:Checking =$12345) and the assigned amount would cause
+; the transaction not to balance, --permissive should accept the
+; transaction by reverting to auto-balancing (computing the amount
+; needed to balance the other postings).
 
 2021/02/14 Test transaction
   Liabilities:Visa  $3141
   Assets:Checking  =$12345
 
-test bal --permissive -> 1
+test bal --permissive
+              $-3141  Assets:Checking
+               $3141  Liabilities:Visa
+--------------------
+                   0
+end test
+
+; Without --permissive, the same transaction should still error.
+test bal -> 1
 __ERROR__
-While parsing file "$FILE", line 12:
-While balancing transaction from "$FILE", lines 10-12:
+While parsing file "$FILE", line 11:
+While balancing transaction from "$FILE", lines 9-11:
 > 2021/02/14 Test transaction
 >   Liabilities:Visa  $3141
 >   Assets:Checking  =$12345
