@@ -1,0 +1,25 @@
+; Regression test for GitHub issue #1603: Balance assertions broken when
+; combined with fixed commodities. A balance assertion/assignment using a
+; lot-priced commodity like "= 0 STOCK {$1}" should work without error,
+; rather than producing "Subtracting amounts with different commodities".
+
+2000/01/01 A
+    Assets  100 STOCK {$1}
+    Income
+
+2000/02/01 B
+    Assets2
+    Assets  = 0 STOCK {$1}
+
+test balance --empty assets
+             0 STOCK  Assets
+           100 STOCK  Assets2
+--------------------
+           100 STOCK
+end test
+
+test reg assets
+00-Jan-01 A                     Assets                    100 STOCK    100 STOCK
+00-Feb-01 B                     Assets2                   100 STOCK    200 STOCK
+                                Assets                   -100 STOCK    100 STOCK
+end test
