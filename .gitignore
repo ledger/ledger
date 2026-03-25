@@ -110,6 +110,9 @@ rules.ninja
 test/Testing
 /MathTests
 /UtilTests
+.ccls-cache
+Testing/Temporary
+ledger.hh
 # Files generated when building / developing via Nix
 /result*
 */build
