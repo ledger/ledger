@@ -1,0 +1,17 @@
+commodity $
+
+define mytest() = payee =~ /FOO/
+
+account Checking
+
+account Expense
+    assert mytest()
+
+2013-01-01 test - FOO
+   Checking   $-100
+   Expense    $100
+
+test reg
+13-Jan-01 test - FOO            Checking                      $-100        $-100
+                                Expense                        $100            0
+end test
