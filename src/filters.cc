@@ -238,7 +238,7 @@ void anonymize_posts::render_commodity(amount_t& amt)
 void anonymize_posts::operator()(post_t& post)
 {
 	boost::uuids::detail::sha1  sha;
-  unsigned int message_digest[5];
+  boost::uuids::detail::sha1::digest_type message_digest;
   bool         copy_xact_details = false;
 
   if (last_xact != post.xact) {

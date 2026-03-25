@@ -578,17 +578,12 @@ inline int peek_next_nonws(std::istream& in) {
     *_p = '\0';                                         \
   }
 
-inline string to_hex(unsigned int * message_digest, const int len = 1)
+inline string to_hex(const boost::uuids::detail::sha1::digest_type& message_digest)
 {
   std::ostringstream buf;
-
-  for(int i = 0; i < 5 ; i++) {
-    buf.width(8);
-    buf.fill('0');
-    buf << std::hex << message_digest[i];
-    if (i + 1 >= len)
-      break;                    // only output the first LEN dwords
-  }
+  buf << std::hex << std::setfill('0');
+  for (const auto& byte : message_digest)
+    buf << std::setw(2) << static_cast<unsigned>(byte);
   return buf.str();
 }
 
@@ -598,9 +593,9 @@ inline string sha1sum(const string& str)
 
   sha.process_bytes(str.c_str(), str.length());
 
-  unsigned int message_digest[5];
+  boost::uuids::detail::sha1::digest_type message_digest;
   sha.get_digest(message_digest);
-  return to_hex(message_digest, 5);
+  return to_hex(message_digest);
 }
 
 extern const string version;
