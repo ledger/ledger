@@ -861,8 +861,8 @@ bool xact_base_t::finalize() {
     // the balance.
     if (journal && journal->checking_style == journal_t::CHECK_PERMISSIVE) {
       for (post_t* post : posts) {
-        if (post->has_flags(POST_CALCULATED) && post->assigned_amount &&
-            post->must_balance() && !post->has_flags(POST_VIRTUAL)) {
+        if (post->has_flags(POST_CALCULATED) && post->assigned_amount && post->must_balance() &&
+            !post->has_flags(POST_VIRTUAL)) {
           if (balance.is_amount())
             post->amount -= balance.as_amount();
           else if (balance.is_long())
