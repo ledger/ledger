@@ -310,13 +310,27 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
       break;
     }
 
+    case lexer_t::token_t::TOK_ACCOUNT: {
+      node = new expr_t::op_t(expr_t::op_t::O_CALL);
+
+      expr_t::ptr_op_t ident = new expr_t::op_t(expr_t::op_t::IDENT);
+      ident->set_ident("match_account");
+      node->set_left(ident);
+
+      expr_t::ptr_op_t arg = new expr_t::op_t(expr_t::op_t::VALUE);
+      DEBUG("query.mask", "Mask from string: " << *tok.value);
+      arg->set_value(mask_t(*tok.value));
+      DEBUG("query.mask", "Mask is: " << arg->as_value().as_mask().str());
+
+      node->set_right(arg);
+      break;
+    }
+
     default: {
       node = new expr_t::op_t(expr_t::op_t::O_MATCH);
 
       expr_t::ptr_op_t ident = new expr_t::op_t(expr_t::op_t::IDENT);
       switch (tok_context) {
-      case lexer_t::token_t::TOK_ACCOUNT:
-        ident->set_ident("account"); break;
       case lexer_t::token_t::TOK_PAYEE:
         ident->set_ident("payee"); break;
       case lexer_t::token_t::TOK_CODE:

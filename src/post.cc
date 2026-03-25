@@ -324,6 +324,13 @@ namespace {
     return string_value(name);
   }
 
+  value_t get_match_account(call_scope_t& args)
+  {
+    post_t&    post(args.context<post_t>());
+    account_t& account(*post.reported_account());
+    return account.match(args.get<mask_t>(0));
+  }
+
   value_t get_display_account(call_scope_t& args)
   {
     value_t acct = get_account(args);
@@ -486,7 +493,9 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
     break;
 
   case 'm':
-    if (name == "magnitude")
+    if (name == "match_account")
+      return WRAP_FUNCTOR(get_match_account);
+    else if (name == "magnitude")
       return WRAP_FUNCTOR(get_wrapper<&get_magnitude>);
     break;
 

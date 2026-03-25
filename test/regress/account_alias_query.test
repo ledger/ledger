@@ -1,0 +1,37 @@
+; Regression test for querying accounts by alias (GitHub issue #1164)
+
+account Actifs:Banque
+  alias banque
+
+account Expenses:Food
+  alias food
+
+2024-01-01 Supermarket
+  Expenses:Food  50 EUR
+  Actifs:Banque
+
+2024-01-02 Bakery
+  food  10 EUR
+  banque
+
+; Query by alias should match the account
+test reg 'banque'
+24-Jan-01 Supermarket           Actifs:Banque               -50 EUR      -50 EUR
+24-Jan-02 Bakery                Actifs:Banque               -10 EUR      -60 EUR
+end test
+
+test reg 'food'
+24-Jan-01 Supermarket           Expenses:Food                50 EUR       50 EUR
+24-Jan-02 Bakery                Expenses:Food                10 EUR       60 EUR
+end test
+
+; Query by real account name should still work
+test reg 'Actifs'
+24-Jan-01 Supermarket           Actifs:Banque               -50 EUR      -50 EUR
+24-Jan-02 Bakery                Actifs:Banque               -10 EUR      -60 EUR
+end test
+
+; Balance report should also work with alias
+test bal 'food'
+              60 EUR  Expenses:Food
+end test

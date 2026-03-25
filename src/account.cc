@@ -125,6 +125,16 @@ account_t * account_t::find_account_re(const string& regexp)
   return find_account_re_(this, mask_t(regexp));
 }
 
+bool account_t::match(const mask_t& m) const
+{
+  if (m.match(fullname()))
+    return true;
+  for (const string& alias : aliases)
+    if (m.match(alias))
+      return true;
+  return false;
+}
+
 void account_t::add_post(post_t * post)
 {
   posts.push_back(post);
@@ -243,6 +253,11 @@ namespace {
     return string_value(args.context<account_t>()
                         .partial_name(args.has<bool>(0) &&
                                       args.get<bool>(0)));
+  }
+
+  value_t get_match_account(call_scope_t& args) {
+    account_t& account(args.context<account_t>());
+    return account.match(args.get<mask_t>(0));
   }
 
   value_t get_account(call_scope_t& args) { // this gets the name
@@ -470,6 +485,11 @@ expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind,
       return WRAP_FUNCTOR(get_wrapper<&get_latest_checkout>);
     else if (fn_name == "latest_checkout_cleared")
       return WRAP_FUNCTOR(get_wrapper<&get_latest_checkout_cleared>);
+    break;
+
+  case 'm':
+    if (fn_name == "match_account")
+      return WRAP_FUNCTOR(&get_match_account);
     break;
 
   case 'n':

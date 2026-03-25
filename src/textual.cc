@@ -1009,6 +1009,7 @@ void instance_t::account_alias_directive(account_t * account, string alias)
       (accounts_map::value_type(alias, account));
   if (! result.second)
     (*result.first).second = account;
+  account->aliases.insert(alias);
 }
 
 void instance_t::alias_directive(char * line)

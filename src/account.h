@@ -42,6 +42,7 @@
 #pragma once
 
 #include "scope.h"
+#include "mask.h"
 
 namespace ledger {
 
@@ -69,6 +70,7 @@ public:
   unsigned short                 depth;
   accounts_map                   accounts;
   posts_list                     posts;
+  std::set<string>               aliases;
   optional<deferred_posts_map_t> deferred_posts;
   optional<expr_t>               value_expr;
 
@@ -113,6 +115,8 @@ public:
   }
   string fullname() const;
   string partial_name(bool flat = false) const;
+
+  bool match(const mask_t& m) const;
 
   void add_account(account_t * acct) {
     accounts.insert(accounts_map::value_type(acct->name, acct));
