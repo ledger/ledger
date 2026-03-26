@@ -189,7 +189,7 @@ void posts_commodities_iterator::reset(journal_t& journal) {
       comm->map_prices([&best_when, &best_price](const datetime_t& when, const amount_t& price) {
         best_when = when;
         best_price = price;
-      });
+      }, datetime_t(), datetime_t(), bidirectional);
 
       if (best_when.is_not_a_date_time())
         continue; // no price history for this commodity
@@ -245,7 +245,8 @@ void posts_commodities_iterator::reset(journal_t& journal) {
   } else {
     for (commodity_t* comm : commodities)
       comm->map_prices(create_price_xact(journal, journal.master->find_account(comm->symbol()),
-                                         temps, xact_temps));
+                                         temps, xact_temps),
+                       datetime_t(), datetime_t(), bidirectional);
   }
 
   // Phase 3: Sort synthetic transactions by date for deterministic output,
