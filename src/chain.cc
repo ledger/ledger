@@ -338,9 +338,22 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
       begin_of_report = begin_interval.begin();
     }
 
+    // When -e is specified and the period string has no explicit range end,
+    // pass the report end date to interval_posts so that flush() can generate
+    // empty trailing periods up to that date when --empty is active.  Skip
+    // this when --average (-A) is the sole reason --empty is active, because
+    // trailing zero-amount periods would incorrectly dilute the running average.
+    optional<date_t> end_of_report;
+    if (report.HANDLED(end_) && !interval.end() && report.HANDLED(empty) &&
+        !report.HANDLED(average)) {
+      date_interval_t end_interval(report.HANDLER(end_).str());
+      end_of_report = end_interval.begin();
+    }
+
     handler = std::make_shared<interval_posts>(handler, expr, interval, report.HANDLED(exact),
                                                report.HANDLED(empty),
-                                               report.HANDLED(align_intervals), begin_of_report);
+                                               report.HANDLED(align_intervals), begin_of_report,
+                                               end_of_report);
   }
 
   /*--- Detail transfer (--date, --account, --payee, --pivot) ---*/
