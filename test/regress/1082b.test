@@ -1,0 +1,24 @@
+; Regression test for issue #1082: balancing failure from precision
+; infection.
+; https://github.com/ledger/ledger/issues/1082
+;
+; A high-precision USD amount in an unrelated transaction caused the
+; commodity's balancing precision to widen, making a subsequent lot-cost
+; transaction fail with "Transaction does not balance" even though it
+; balanced perfectly at the commodity's natural 2-decimal precision.
+
+2012/07/09 Investing 60% of cash in RGAGX
+    Assets:US:Vanguard:RGAGX    3.15 RGAGX {114.28 USD}
+    Assets:US:Vanguard:Cash    -359.98 USD
+
+2012/07/16 Takahachi
+    Liabilities:US:Chase:Slate   -46.833955603895 USD
+    Expenses:Food:Restaurant      46.833955603895 USD
+
+2012/07/23 Investing 40% of cash in VBMPX
+    Assets:US:Vanguard:VBMPX    1.128000000000 VBMPX {70.95 USD}
+    Assets:US:Vanguard:Cash    -80.03 USD
+
+test bal Assets:US:Vanguard:Cash
+         -440.01 USD  Assets:US:Vanguard:Cash
+end test
