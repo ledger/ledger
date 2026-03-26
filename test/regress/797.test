@@ -1,0 +1,27 @@
+; Regression test for issue #797: Setting precision on the command line
+; https://github.com/ledger/ledger/issues/797
+;
+; The --decimal-places option allows limiting the number of decimal
+; places shown in output, providing command-line control over precision.
+
+2024/01/01 Coffee Shop
+    Expenses:Food    $10.1234
+    Assets:Checking
+
+; Test 1: --decimal-places limits display to 2 decimal places
+test reg --decimal-places 2
+24-Jan-01 Coffee Shop           Expenses:Food                $10.12       $10.12
+                                Assets:Checking             $-10.12            0
+end test
+
+; Test 2: --decimal-places with format expression
+test reg --decimal-places 2 --format "%(scrub(display_amount))\n"
+$10.12
+$-10.12
+end test
+
+; Test 3: --decimal-places 0 rounds to whole numbers
+test reg --decimal-places 0 --format "%(scrub(display_amount))\n"
+$10
+$-10
+end test
