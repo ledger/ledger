@@ -1,0 +1,69 @@
+; Regression test for issue #810: Templating for more complicated reports
+;
+; This test demonstrates that ledger's format string system provides
+; templating capabilities for generating complex custom reports,
+; including: expression evaluation, tag access, conditional formatting,
+; grouping with custom headers, and CSV-like output.
+
+2024/01/15 * Client A - Web Design
+    Income:Consulting:WebDesign  $-2000.00
+    ; Project: Alpha
+    Assets:Checking
+
+2024/01/20 * Client B - Database Work
+    Income:Consulting:Database  $-1500.00
+    ; Project: Beta
+    Assets:Checking
+
+2024/02/01 * Client A - Maintenance
+    Income:Consulting:WebDesign  $-500.00
+    ; Project: Alpha
+    Assets:Checking
+
+2024/02/15 * Client B - Migration
+    Income:Consulting:Database  $-3000.00
+    ; Project: Beta
+    Assets:Checking
+
+; Test 1: Custom columnar format with expression evaluation
+test reg Income --format "%(format_date(date, \"%Y-%m-%d\"))  %(payee)  %(scrub(display_amount))\n"
+2024-01-15  Client A - Web Design  $-2000.00
+2024-01-20  Client B - Database Work  $-1500.00
+2024-02-01  Client A - Maintenance  $-500.00
+2024-02-15  Client B - Migration  $-3000.00
+end test
+
+; Test 2: Tag access in format expressions
+test reg Income --format "%(format_date(date, \"%Y-%m-%d\"))  %(payee)  %(tag(\"Project\"))\n"
+2024-01-15  Client A - Web Design  Alpha
+2024-01-20  Client B - Database Work  Beta
+2024-02-01  Client A - Maintenance  Alpha
+2024-02-15  Client B - Migration  Beta
+end test
+
+; Test 3: Group-by with custom group title format (invoice-like report)
+test reg Income --group-by "tag(\"Project\")" --group-title-format "--- Project: %(value) ---\n" --format "  %(format_date(date, \"%Y-%m-%d\"))  %-30(payee)  %12(scrub(display_amount))  %12(scrub(display_total))\n"
+--- Project: Alpha ---
+  2024-01-15  Client A - Web Design              $-2000.00     $-2000.00
+  2024-02-01  Client A - Maintenance              $-500.00     $-2500.00
+
+--- Project: Beta ---
+  2024-01-20  Client B - Database Work           $-1500.00     $-1500.00
+  2024-02-15  Client B - Migration               $-3000.00     $-4500.00
+end test
+
+; Test 4: CSV-like custom output format
+test reg Income --format "%(format_date(date, \"%Y-%m-%d\")),%(quoted(payee)),%(quantity(scrub(display_amount)))\n"
+2024-01-15,"Client A - Web Design",-2000
+2024-01-20,"Client B - Database Work",-1500
+2024-02-01,"Client A - Maintenance",-500
+2024-02-15,"Client B - Migration",-3000
+end test
+
+; Test 5: SQL-like select query
+test select date,payee,display_account,amount from posts where account =~ /Income/
+24-Jan-15 Client A - Web Design                         Income:Consulting:WebDesign    $-2000.00
+24-Jan-20 Client B - Database Work                      Income:Consulting:Database    $-1500.00
+24-Feb-01 Client A - Maintenance                        Income:Consulting:WebDesign     $-500.00
+24-Feb-15 Client B - Migration                          Income:Consulting:Database    $-3000.00
+end test
