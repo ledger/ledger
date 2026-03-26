@@ -224,11 +224,12 @@ account_t* journal_t::register_account(string_view name, post_t* post, account_t
  * @brief Recursively expand account aliases with cycle detection.
  *
  * Checks the account_aliases map for a full-name match first (e.g.,
- * "Foo:Bar" -> some account), then tries matching just the first
- * segment before ':' (e.g., "Foo" in "Foo:Bar:Baz").  When
- * recursive_aliases is true, the loop repeats until no alias matches.
- * An already_seen set tracks which names have been expanded to detect
- * and prevent infinite alias loops.
+ * "Foo:Bar" -> some account), then tries matching each colon-separated
+ * component of the name (e.g., "Foo", "Bar", "Baz" in "Foo:Bar:Baz").
+ * The first matching component is expanded.  When recursive_aliases is
+ * true, the loop repeats until no alias matches.  An already_seen set
+ * tracks which names have been expanded to detect and prevent infinite
+ * alias loops.
  *
  * @return The resolved account, or nullptr if no alias matched.
  */
@@ -243,6 +244,7 @@ account_t* journal_t::expand_aliases(string name) {
   if (no_aliases)
     return result;
 
+  const string original_name = name;
   bool keep_expanding = true;
   std::unordered_set<string> already_seen;
   // loop until no expansion can be found
@@ -257,30 +259,52 @@ account_t* journal_t::expand_aliases(string name) {
         result = (*i).second;
         name = result->fullname();
       } else {
-        // only check the very first account for alias expansion, in case
-        // that can be expanded successfully
-        size_t colon = name.find(':');
-        if (colon != string::npos) {
-          string first_account_name = name.substr(0, colon);
-          if (auto j = account_aliases.find(first_account_name); j != account_aliases.end()) {
-            if (already_seen.count(first_account_name) > 0) {
-              throw_(std::runtime_error,
-                     _f("Infinite recursion on alias expansion for %1%") % first_account_name);
-            }
-            already_seen.insert(first_account_name);
-            result = find_account((*j).second->fullname() + name.substr(colon));
+        // Check each account name component for alias expansion (#836).
+        // For "A:B:C", try "A", then "B", then "C" — expand the first
+        // component that matches an alias.
+        size_t pos = 0;
+        bool found = false;
+        while (pos < name.size()) {
+          size_t colon = name.find(':', pos);
+          string component = (colon != string::npos)
+            ? name.substr(pos, colon - pos)
+            : name.substr(pos);
+
+          if (auto j = account_aliases.find(component);
+              j != account_aliases.end() && already_seen.count(component) == 0) {
+            already_seen.insert(component);
+
+            string new_name;
+            if (pos > 0)
+              new_name = name.substr(0, pos);  // prefix including trailing ':'
+            new_name += (*j).second->fullname();
+            if (colon != string::npos)
+              new_name += name.substr(colon);   // suffix including leading ':'
+            result = find_account(new_name);
             name = result->fullname();
-          } else {
-            keep_expanding = false;
+            found = true;
+            break;
           }
-        } else {
-          keep_expanding = false;
+
+          if (colon == string::npos)
+            break;
+          pos = colon + 1;
         }
+        if (!found)
+          keep_expanding = false;
       }
     } else {
       keep_expanding = false;
     }
   } while (keep_expanding && recursive_aliases);
+
+  // Detect complete cycles: if after expansion the name is back to the
+  // original, the aliases form a cycle (e.g., alias A=B + alias B=A).
+  if (recursive_aliases && !already_seen.empty() && name == original_name) {
+    throw_(std::runtime_error,
+           _f("Infinite recursion on alias expansion for %1%") % name);
+  }
+
   return result;
 }
 
