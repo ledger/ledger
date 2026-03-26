@@ -1,0 +1,46 @@
+; Automated postings with tag("Category") == "food" should only match
+; transactions where the Category tag equals "food", not all transactions
+; that have a Category tag.
+
+= tag("Category") == "food"
+    (Budget:Food)    -1
+
+2024/01/01 Grocery Store
+    ; Category: food
+    Expenses:Groceries    $50.00
+    Assets:Checking
+
+2024/01/02 Restaurant
+    ; Category: dining
+    Expenses:Dining    $30.00
+    Assets:Checking
+
+2024/01/03 Gas Station
+    ; Category: fuel
+    Expenses:Gas    $40.00
+    Assets:Checking
+
+test reg
+24-Jan-01 Grocery Store         Expenses:Groceries           $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+                                (Budget:Food)               $-50.00      $-50.00
+                                (Budget:Food)                $50.00            0
+24-Jan-02 Restaurant            Expenses:Dining              $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+24-Jan-03 Gas Station           Expenses:Gas                 $40.00       $40.00
+                                Assets:Checking             $-40.00            0
+end test
+
+test reg %Category==food
+24-Jan-01 Grocery Store         Expenses:Groceries           $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+                                (Budget:Food)               $-50.00      $-50.00
+                                (Budget:Food)                $50.00            0
+end test
+
+test reg %Category=food
+24-Jan-01 Grocery Store         Expenses:Groceries           $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+                                (Budget:Food)               $-50.00      $-50.00
+                                (Budget:Food)                $50.00            0
+end test
