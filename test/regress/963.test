@@ -1,0 +1,23 @@
+; Regression test for issue #963: find_account_re should find all
+; matching accounts, not just the first one.
+;
+; The old find_account_re returned only the first DFS match.
+; The new find_accounts_re (plural) collects every matching account.
+
+2024/01/01 Opening
+    Expenses:Food:Groceries    $50.00
+    Expenses:Food:Dining       $30.00
+    Expenses:Transport         $20.00
+    Assets:Cash
+
+; Verify that a regex matching multiple accounts returns them all.
+; "Expenses:Food" matches both Expenses:Food:Groceries and
+; Expenses:Food:Dining (and the parent Expenses:Food itself).
+
+test bal Expenses:Food
+              $80.00  Expenses:Food
+              $30.00    Dining
+              $50.00    Groceries
+--------------------
+              $80.00
+end test
