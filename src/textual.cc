@@ -210,11 +210,13 @@ std::streamsize instance_t::read_line(char*& line) {
     // Walk backwards past UTF-8 continuation bytes (10xxxxxx) to find
     // the lead byte of the last character.
     std::streamsize char_start = len - 1;
-    while (char_start > 0 &&
-           (static_cast<unsigned char>(
-                context.linebuf[static_cast<std::size_t>(char_start)]) &
-            0xC0) == 0x80)
+    while (char_start > 0) {
+      unsigned char b = static_cast<unsigned char>(
+          context.linebuf[static_cast<std::size_t>(char_start)]);
+      if ((b & 0xC0) != 0x80)
+        break;
       --char_start;
+    }
 
     const char* p = context.linebuf.c_str() + char_start;
     boost::uint32_t cp = utf8::unchecked::next(p);
