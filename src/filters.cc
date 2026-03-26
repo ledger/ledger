@@ -678,7 +678,7 @@ void collapse_posts::report_subtotal() {
 
   last_xact = nullptr;
   last_post = nullptr;
-  subtotal = 0L;
+  subtotal = value_t();
   count = 0;
 }
 

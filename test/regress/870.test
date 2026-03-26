@@ -1,0 +1,32 @@
+; Regression test for issue #870: Cannot use --dc with --collapse or -X
+; https://github.com/ledger/ledger/issues/870
+; Using --dc with --collapse caused a crash:
+; "Cannot compare an amount to a sequence"
+
+P 2024/01/01 EUR $1.10
+
+2024/01/01 Salary
+    Income:Salary    $-1000.00
+    Assets:Checking   $1000.00
+
+2024/01/15 Groceries
+    Expenses:Food     $200.00
+    Assets:Checking  $-200.00
+
+2024/01/20 Foreign Purchase
+    Expenses:Travel   200 EUR
+    Assets:Checking  $-220.00
+
+test reg --dc --collapse Expenses
+24-Jan-15 Groceries        Expenses:Food       $200.00            0      $200.00
+24-Jan-20 Foreign Purchase Expense:Travel      200 EUR            0      $200.00
+                                                                         200 EUR
+end test
+
+test reg --dc --collapse
+end test
+
+test reg --dc -X '$' Expenses
+24-Jan-15 Groceries        Expenses:Food       $200.00            0      $200.00
+24-Jan-20 Foreign Purchase Expense:Travel      $220.00            0      $420.00
+end test
