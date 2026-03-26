@@ -45,14 +45,14 @@ test reg --format '%(actual_date)\n' Expenses:Food
 2024/01/01
 end test
 
-; Test aux_date (returns null for no aux date)
+; Test aux_date (falls back to actual date when no aux date)
 test reg --format '%(aux_date)X\n' Expenses:Food
-X
+2024/01/01X
 end test
 
 ; Test effective_date (alias for aux_date)
 test reg --format '%(effective_date)X\n' Expenses:Food
-X
+2024/01/01X
 end test
 
 ; Test is_account (always returns false for postings)

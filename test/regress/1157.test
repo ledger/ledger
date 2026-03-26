@@ -1,0 +1,50 @@
+; Regression test for issue #1157: If aux_date is unspecified, actual date
+; should be used.
+; https://github.com/ledger/ledger/issues/1157
+;
+; When aux_date is used in an expression and no auxiliary/effective date is
+; set, it should fall back to the actual date instead of producing an error
+; about comparing an uninitialized value.
+
+2024/01/01=2024/01/15 Payee With Aux Date
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/02/01 Payee Without Aux Date
+    Expenses:Food    $20.00
+    Assets:Cash
+
+; aux_date in format strings should fall back to the actual date
+test reg --format '%(format_date(aux_date, "%Y/%m/%d")) %(payee)\n'
+2024/01/15 Payee With Aux Date
+2024/01/15 Payee With Aux Date
+2024/02/01 Payee Without Aux Date
+2024/02/01 Payee Without Aux Date
+end test
+
+; aux_date in expressions should work without error when unset
+test reg Expenses --limit 'aux_date < [2024/01/20]'
+24-Jan-01 Payee With Aux Date   Expenses:Food                $10.00       $10.00
+end test
+
+; When no aux date is set, the actual date should be used for comparison
+test reg Expenses --limit 'aux_date < [2024/03/01]'
+24-Jan-01 Payee With Aux Date   Expenses:Food                $10.00       $10.00
+24-Feb-01 Payee Without Aux D.. Expenses:Food                $20.00       $30.00
+end test
+
+; has_aux_date should return true only when an explicit aux date is set
+test reg --format '%(has_aux_date) %(payee)\n'
+true Payee With Aux Date
+true Payee With Aux Date
+false Payee Without Aux Date
+false Payee Without Aux Date
+end test
+
+; %d format should show date=aux only when an explicit aux date exists
+test reg --format '%d %P\n'
+24-Jan-01=24-Jan-15 Payee With Aux Date
+24-Jan-01=24-Jan-15 Payee With Aux Date
+24-Feb-01 Payee Without Aux Date
+24-Feb-01 Payee Without Aux Date
+end test
