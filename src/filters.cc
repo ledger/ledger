@@ -1634,7 +1634,7 @@ void transfer_details::operator()(post_t& post) {
             if (!prop_str.empty())
               account_name = prop_name + ":" + prop_str;
           }
-        } catch (...) {
+        } catch (...) { // NOLINT(bugprone-empty-catch)
           // Not a built-in property; leave account_name as-is so the
           // posting passes through unchanged.
         }
