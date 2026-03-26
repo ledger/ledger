@@ -96,6 +96,7 @@ public:
   std::size_t count;                   ///< Count of transactions successfully added to the journal
   std::size_t sequence; ///< Monotonically increasing sequence for ordering items across files
   std::string last;     ///< Text of the most recent error (for reporting after parsing)
+  std::shared_ptr<string> source_content; ///< Buffered stdin content (when pathname is empty)
 
   explicit parse_context_t(const path& cwd)
       : current_directory(cwd), master(nullptr), scope(nullptr), linenum(0), errors(0), count(0),
@@ -110,7 +111,8 @@ public:
         current_directory(context.current_directory), journal(context.journal),
         master(context.master), scope(context.scope), linebuf(context.linebuf),
         line_beg_pos(context.line_beg_pos), curr_pos(context.curr_pos), linenum(context.linenum),
-        errors(context.errors), count(context.count), sequence(context.sequence) {}
+        errors(context.errors), count(context.count), sequence(context.sequence),
+        source_content(context.source_content) {}
   parse_context_t& operator=(const parse_context_t&) = default;
 
   /// @brief Return a human-readable "file:line" string for error messages.
