@@ -133,6 +133,35 @@ void instance_t::parse() {
   TRACE_STOP(instance_parse, 1);
 }
 
+/// Return true if a Unicode codepoint is a whitespace character.
+/// See http://en.wikipedia.org/wiki/Whitespace_character#Unicode
+static bool is_unicode_whitespace(boost::uint32_t cp) {
+  switch (cp) {
+  case 0x0085: // NEXT LINE (NEL)
+  case 0x00A0: // NO-BREAK SPACE
+  case 0x1680: // OGHAM SPACE MARK
+  case 0x2000: // EN QUAD
+  case 0x2001: // EM QUAD
+  case 0x2002: // EN SPACE
+  case 0x2003: // EM SPACE
+  case 0x2004: // THREE-PER-EM SPACE
+  case 0x2005: // FOUR-PER-EM SPACE
+  case 0x2006: // SIX-PER-EM SPACE
+  case 0x2007: // FIGURE SPACE
+  case 0x2008: // PUNCTUATION SPACE
+  case 0x2009: // THIN SPACE
+  case 0x200A: // HAIR SPACE
+  case 0x2028: // LINE SEPARATOR
+  case 0x2029: // PARAGRAPH SEPARATOR
+  case 0x202F: // NARROW NO-BREAK SPACE
+  case 0x205F: // MEDIUM MATHEMATICAL SPACE
+  case 0x3000: // IDEOGRAPHIC SPACE
+    return true;
+  default:
+    return false;
+  }
+}
+
 /*--- Line Reading ---*/
 
 std::streamsize instance_t::read_line(char*& line) {
@@ -170,6 +199,32 @@ std::streamsize instance_t::read_line(char*& line) {
   while (len > 0 && std::isspace(static_cast<unsigned char>(
                         context.linebuf[static_cast<std::size_t>(len - 1)])))
     --len;
+
+  // strip trailing Unicode whitespace (multi-byte sequences missed above)
+  while (len > 0) {
+    unsigned char last =
+        static_cast<unsigned char>(context.linebuf[static_cast<std::size_t>(len - 1)]);
+    if (last < 0x80)
+      break; // ASCII byte; already handled above
+
+    // Walk backwards past UTF-8 continuation bytes (10xxxxxx) to find
+    // the lead byte of the last character.
+    std::streamsize char_start = len - 1;
+    while (char_start > 0) {
+      unsigned char b =
+          static_cast<unsigned char>(context.linebuf[static_cast<std::size_t>(char_start)]);
+      if ((b & 0xC0) != 0x80)
+        break;
+      --char_start;
+    }
+
+    const char* p = context.linebuf.c_str() + char_start;
+    boost::uint32_t cp = utf8::unchecked::next(p);
+    if (!is_unicode_whitespace(cp))
+      break;
+    len = char_start;
+  }
+
   context.linebuf.resize(static_cast<std::size_t>(len));
 
   line = context.linebuf.data();
