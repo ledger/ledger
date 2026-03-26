@@ -1766,6 +1766,7 @@ void budget_posts::report_budget_items(const date_t& date) {
         xact._date = begin;
 
         post_t& temp = temps.copy_post(post, xact);
+        temp.add_flags(ITEM_GENERATED);
         temp.amount.in_place_negate();
 
         if (flags & BUDGET_WRAP_VALUES) {
@@ -1989,6 +1990,7 @@ void forecast_posts::flush() {
       xact.payee = _("Forecast transaction");
       xact._date = earliest_date;
       post_t& temp = temps.copy_post(post, xact);
+      temp.add_flags(ITEM_GENERATED);
 
       DEBUG("filters.forecast", "Forecast transaction: " << temp.date() << " "
                                                          << temp.account->fullname() << " "
