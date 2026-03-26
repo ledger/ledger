@@ -1,0 +1,12 @@
+; Regression test for issue #1128
+; print --raw from stdin should produce output (not silently return nothing)
+
+2024/01/01 Test Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test -f - print --raw -> 0
+2024/01/01 Test Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+end test
