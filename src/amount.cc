@@ -116,18 +116,24 @@ static mpfr_t tempfden;
  *                  objects and must be duplicated before mutation
  *                  (see @c amount_t::_dup).
  *
- * Two flags control special behavior:
+ * Three flags control special behavior:
  *   - @c BIGINT_BULK_ALLOC -- the object lives inside a bulk memory
  *     pool and must not be freed with @c delete.
  *   - @c BIGINT_KEEP_PREC  -- the stored precision should be used for
  *     display rather than the commodity's default precision.  This is
  *     set when an amount is parsed with PARSE_NO_MIGRATE or after an
- *     explicit @c unround() call.
+ *     explicit @c unround() call.  Does NOT propagate through addition.
+ *   - @c BIGINT_USER_PREC  -- like KEEP_PREC for display, but marks a
+ *     user-specified high-precision amount (one whose precision exceeds
+ *     the commodity's established precision).  Unlike KEEP_PREC, this
+ *     flag DOES propagate through addition/subtraction so that sums
+ *     containing a high-precision component display correctly.
  */
 struct amount_t::bigint_t : public flags::supports_flags<> {
 #define BIGINT_BULK_ALLOC 0x01
 #define BIGINT_KEEP_PREC 0x02
 #define BIGINT_COST_PREC 0x04
+#define BIGINT_USER_PREC 0x08
 
   mpq_t val;
   precision_t prec;
@@ -159,9 +165,9 @@ struct amount_t::bigint_t : public flags::supports_flags<> {
       DEBUG("ledger.validate", "amount_t::bigint_t: prec > 1024");
       return false;
     }
-    if (flags() & ~(BIGINT_BULK_ALLOC | BIGINT_KEEP_PREC | BIGINT_COST_PREC)) {
+    if (flags() & ~(BIGINT_BULK_ALLOC | BIGINT_KEEP_PREC | BIGINT_COST_PREC | BIGINT_USER_PREC)) {
       DEBUG("ledger.validate",
-            "amount_t::bigint_t: flags() & ~(BULK_ALLOC | KEEP_PREC | COST_PREC)");
+            "amount_t::bigint_t: flags() & ~(BULK_ALLOC | KEEP_PREC | COST_PREC | USER_PREC)");
       return false;
     }
     return true;
@@ -631,6 +637,15 @@ amount_t& amount_t::operator+=(const amount_t& amt) {
     if (quantity->prec < amt.quantity->prec)
       quantity->prec = amt.quantity->prec;
 
+  // Propagate USER_PREC so that sums containing a user-specified
+  // high-precision component display at the component's precision
+  // rather than being truncated to the commodity's canonical precision
+  // (issue #1082).  KEEP_PREC is NOT propagated because internal
+  // amounts (e.g. from internalAmount()) should have their extra
+  // precision dropped when summed with normal amounts.
+  if (amt.quantity->has_flags(BIGINT_USER_PREC))
+    quantity->add_flags(BIGINT_USER_PREC);
+
   return *this;
 }
 
@@ -663,6 +678,10 @@ amount_t& amount_t::operator-=(const amount_t& amt) {
   if (has_commodity() == amt.has_commodity())
     if (quantity->prec < amt.quantity->prec)
       quantity->prec = amt.quantity->prec;
+
+  // Propagate USER_PREC (same rationale as operator+=).
+  if (amt.quantity->has_flags(BIGINT_USER_PREC))
+    quantity->add_flags(BIGINT_USER_PREC);
 
   return *this;
 }
@@ -853,10 +872,10 @@ void amount_t::set_cost_precision(precision_t prec) {
 /**
  * @brief Return the precision used for display output.
  *
- * If the amount has a commodity and BIGINT_KEEP_PREC is not set, the
- * commodity's display precision is used.  Otherwise the internal
- * precision is used, taking the maximum of the stored precision and
- * the commodity precision when both are available.
+ * If the amount has a commodity and neither BIGINT_KEEP_PREC nor
+ * BIGINT_USER_PREC is set, the commodity's display precision is used.
+ * Otherwise the internal precision is used, taking the maximum of the
+ * stored precision and the commodity precision when both are available.
  */
 amount_t::precision_t amount_t::display_precision() const {
   if (!quantity)
@@ -864,7 +883,7 @@ amount_t::precision_t amount_t::display_precision() const {
 
   commodity_t& comm(commodity());
 
-  if (comm && !keep_precision())
+  if (comm && !keep_precision() && !quantity->has_flags(BIGINT_USER_PREC))
     return comm.precision();
   else
     return comm ? std::max(quantity->prec, comm.precision()) : quantity->prec;
@@ -906,11 +925,12 @@ void amount_t::in_place_invert() {
 void amount_t::in_place_round() {
   if (!quantity)
     throw_(amount_error, _("Cannot set rounding for an uninitialized amount"));
-  else if (!keep_precision())
+  else if (!keep_precision() && !quantity->has_flags(BIGINT_USER_PREC))
     return;
 
   _dup();
   set_keep_precision(false);
+  quantity->drop_flags(BIGINT_USER_PREC);
 }
 
 /**
@@ -1303,7 +1323,8 @@ bool amount_t::is_zero() const {
     throw_(amount_error, _("Cannot determine if an uninitialized amount is zero"));
 
   if (has_commodity()) {
-    if (keep_precision() || quantity->prec <= commodity().precision()) {
+    if (keep_precision() || quantity->has_flags(BIGINT_USER_PREC) ||
+        quantity->prec <= commodity().precision()) {
       return is_realzero();
     } else if (is_realzero()) {
       return true;
@@ -1765,7 +1786,25 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
       commodity().set_precision(new_quantity->prec);
       commodity().drop_flags(COMMODITY_PRECISION_FROM_PRICE);
     } else if (new_quantity->prec > commodity().precision()) {
-      commodity().set_precision(new_quantity->prec);
+      if (commodity().precision() == 0) {
+        // First establishment: a real transaction amount sets the
+        // commodity's display precision for the first time.
+        commodity().set_precision(new_quantity->prec);
+      } else {
+        // The commodity already has an established precision from a
+        // prior transaction amount.  Do not widen it globally—that
+        // would inflate display precision for every amount of this
+        // commodity and, critically, would weaken the rounding
+        // tolerance used by is_zero() during transaction balancing
+        // (issue #1082).  Instead, mark this amount so it keeps its
+        // own higher precision for display while the commodity's
+        // canonical precision stays at the value first established.
+        // USER_PREC (not KEEP_PREC) is used so that this precision
+        // propagates through addition/subtraction for correct display
+        // of sums, while KEEP_PREC amounts (from internalAmount) have
+        // their extra precision dropped when summed.
+        new_quantity->add_flags(BIGINT_USER_PREC);
+      }
     }
   }
 

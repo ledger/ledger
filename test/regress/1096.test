@@ -76,7 +76,7 @@ test generate --seed=54321
     [N0akAH c:Hm3K]                          7801.90 b @@ YtWCP 9552.33
     ; o3 806n33OT1B433762V9:Lpox5Hf75qpT2SZoK2
     (O:fY8KV8738WQ:0YO6:T:JL33S11H:k)       Xwt9820.16 @ XCR2239.25
-    (Bu:o6FUXJ:wzwV:F7xQ05eruC4Rr0nt1AdmG)  -5436.370 k @ BMiDZ 6347.65
+    (Bu:o6FUXJ:wzwV:F7xQ05eruC4Rr0nt1AdmG)  -5436.37 k @ BMiDZ 6347.65
     S2V82JvNYX:369M2B98WFZWrN             mNcg-5755.08
     ; hsJEoi t:lg2rh5:RdpbND 9ickl
     (T65J71d66TR7 cn:R)                   -2816.21 KhzbHK @ hgRm 5599.42
@@ -178,7 +178,7 @@ test generate --seed=54321
     ; CZgXvb5YI2v4m:1Qm499L1Q
     (Z4wi4W6t7O3172q43m7rd153BMF0x)     -807.194 vuj @@ mBv 9549.93
     ; B5q:2bxOTi:j:mHDT7s4g1Rnb i R0QPj3:Z66
-    JI                                    -6031.30 X @@ xbyM4055.1
+    JI                                     -6031.3 X @@ xbyM4055.1
     zAA0YH                               pDhx4985.99
     B5jnkCIWmmOFe:G4f49s
     [T8]
@@ -354,7 +354,7 @@ test generate --seed=54321
     [hpVcKvn9]                              8577.41 M @@ 2867.97 Y
     (brC3:tT:Y46F:Wq:mS1U5JtknQp)           N 2167.88 @@ GFNEDg 5103.93
     ; G834riS703694558EL:f
-    (Pf71r RkDr)                           z 6211.680
+    (Pf71r RkDr)                            z 6211.68
     (sZaLx92 w6n38VfL:aLBGP3)            -1862.65waU [2213/06/20]
     ; r:L9hS
     bq6GxC 0Co6:01t6
@@ -393,9 +393,9 @@ test generate --seed=54321
     ; By8a
     (klr9:P2f)                          Qdo1227.27 {bq2499.26} @ 9125.05 X
     ; e:rB
-    (Q9:J3v3K4Z51Ypg40MjZ13b34GAEy5l44)   6182.960 k @@ ZTD6623.95
+    (Q9:J3v3K4Z51Ypg40MjZ13b34GAEy5l44)    6182.96 k @@ ZTD6623.95
     ; jJ
-    [KA59BqmW]                           -1004.280 k
+    [KA59BqmW]                            -1004.28 k
     ; kItx0T 8:Jy
     d7JDEFO:rfKnGb6:bnKp8hA
     ; jB7M8rsPM8H7Os3djqw125VIoC7nmdzvX
@@ -420,7 +420,7 @@ test generate --seed=54321
     ; AjoD04:fPlgKCK:z
     [k33F5iWR7tm:Xnqk5SN59]                   7155.96 JAqt @@ 9910.61J
     [C89orNj:b]                                -7254.2 kcZ
-    (s vg8GDxXHw5wg61GX)                       S -8263.490 @ 8766.32hdZdH
+    (s vg8GDxXHw5wg61GX)                        S -8263.49 @ 8766.32hdZdH
     [WSU9S:R0bTziK:u5icvA9us5Ih5uZC34gznm5E:L]  -2520.46 u [1954/11/09] (wD)
     [pM8aGTDO:E]
 
@@ -486,7 +486,7 @@ test generate --seed=54321
     ; rWBr:5Y19E9rV0:sLqNBsZfWg
     LlYU:tlku21                         -3656.67OSYH {Lb6453.55}
     t76                                 EWTQ-1764.83
-    [wa:k8 KY9]                          -8823.620 w @ 4524.7 qPgKbf
+    [wa:k8 KY9]                           -8823.62 w @ 4524.7 qPgKbf
     ; T42:0a0 qwch02y299 kj5Qgo f6Y2v Ry1
     hd:r6Y2C10pGdy00Qhf                 9911.32UJuLc @@ 1885.32YpmBxj
     (s6:7Bf J3u3:eGwH1)                 gowkkY -9625.68
@@ -499,7 +499,7 @@ test generate --seed=54321
     (X:wfo)                                   GWhPKV 9487.88
     [y0:zg384T91p313oKyaAvpLt5xD3owm]         izwB 8234.06 @@ 2046.8 tQ
     ; W aVV:277410Q5
-    lr:AVn6eI06FC8809z94rD0:T38 o:wc:5          9915.120 w
+    lr:AVn6eI06FC8809z94rD0:T38 o:wc:5           9915.12 w
     phbxG
     [aUu e]
 
