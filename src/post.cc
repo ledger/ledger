@@ -408,18 +408,27 @@ value_t get_cost(post_t& post) {
 }
 
 /**
- * @brief Return the per-unit price from the amount's annotation.
+ * @brief Return the total value at the lot price from the amount's annotation.
  *
- * If the amount has a lot price annotation, returns that price.
+ * If the amount has a lot price annotation, returns that price times
+ * the quantity.  When the annotation price was computed from a total
+ * cost (@@) and the original total cost is still available on the
+ * posting, uses the original cost directly to avoid rounding artifacts
+ * from multiplying a rounded per-unit price back by the quantity
+ * (issue #3009).
+ *
  * Otherwise falls back to the cost (which equals the amount when
  * there is no currency conversion).
  */
 value_t get_price(post_t& post) {
   if (post.amount.is_null())
     return 0L;
-  if (post.amount.has_annotation() && post.amount.annotation().price)
+  if (post.amount.has_annotation() && post.amount.annotation().price) {
+    if (post.cost &&
+        post.amount.annotation().has_flags(ANNOTATION_PRICE_CALCULATED))
+      return *post.cost;
     return *post.amount.price();
-  else
+  } else
     return get_cost(post);
 }
 
