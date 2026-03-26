@@ -67,6 +67,7 @@
 #include "session.h"
 #include "report.h"
 #include "lookup.h"
+#include "output.h"
 #include "print.h"
 #include "times.h"
 
@@ -631,7 +632,18 @@ value_t xact_command(call_scope_t& args) {
     // Only consider actual postings for the "xact" command
     report.HANDLER(limit_).on("#xact", "actual");
 
-    report.xact_report(post_handler_ptr(new print_xacts(report)), *new_xact.get());
+    post_handler_ptr handler;
+    if (report.HANDLED(format_)) {
+      handler.reset(new format_posts(
+          report, report.HANDLER(format_).str(),
+          report.maybe_format(report.HANDLER(prepend_format_)),
+          report.HANDLED(prepend_width_)
+              ? lexical_cast<std::size_t>(report.HANDLER(prepend_width_).str())
+              : 0));
+    } else {
+      handler.reset(new print_xacts(report));
+    }
+    report.xact_report(handler, *new_xact.get());
   }
 
   return true;
