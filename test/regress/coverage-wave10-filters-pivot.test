@@ -10,8 +10,8 @@
     Assets:Cash
 
 test reg --pivot payee
-24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
-24-Jan-01 Grocery Store         Assets:Cash                 $-50.00            0
-24-Jan-15 Restaurant            Expenses:Food                $25.00       $25.00
-24-Jan-15 Restaurant            Assets:Cash                 $-25.00            0
+24-Jan-01 Grocery Store         pa:Grocer:Expense:Food       $50.00       $50.00
+24-Jan-01 Grocery Store         pa:Grocery:Assets:Cash      $-50.00            0
+24-Jan-15 Restaurant            pa:Restau:Expense:Food       $25.00       $25.00
+24-Jan-15 Restaurant            pa:Restaur:Assets:Cash      $-25.00            0
 end test
