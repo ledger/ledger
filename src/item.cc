@@ -262,9 +262,9 @@ void item_t::parse_tags(const char* p, scope_t& scope, bool overwrite_existing) 
         by_value = true;
         index = 2;
       }
-      string tag = tag_prefix.empty()
-        ? string(q, len - index)
-        : tag_prefix + ' ' + string(q, len - index);
+      string tag(q, len - index);
+      if (!tag_prefix.empty())
+        tag = tag_prefix + ' ' + tag;
 
       string_map::iterator i;
       string field(p + (q - buf.get()) + len); // NOLINT(bugprone-unused-local-non-trivial-variable)
