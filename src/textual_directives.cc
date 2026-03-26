@@ -164,6 +164,20 @@ void instance_t::default_account_directive(char* line) {
 void instance_t::price_conversion_directive(char* line) {
   if (char* p = std::strchr(line + 1, '=')) {
     *p++ = '\0';
+
+    // Parse the larger and smaller amounts to register a price in the
+    // commodity history graph, so that -X (--exchange) can use
+    // C-directive rates.  Only journal-level C directives get this
+    // treatment; built-in unit conversions (e.g. hours/minutes) do not.
+    amount_t larger, smaller;
+    (void)larger.parse(line + 1, PARSE_NO_REDUCE);
+    (void)smaller.parse(p, PARSE_NO_REDUCE);
+    if (larger.commodity() && smaller.commodity()) {
+      amount_t per_unit_price(smaller);
+      per_unit_price /= larger.number();
+      larger.commodity().add_price(datetime_t(date_t(1970, 1, 1)), per_unit_price, true);
+    }
+
     amount_t::parse_conversion(line + 1, p);
   }
 }
