@@ -1,0 +1,18 @@
+; Regression test for bug #1065: the C directive can create cycles in
+; the smaller/larger commodity chains, causing infinite loops in
+; in_place_reduce(), in_place_unreduce(), and value().
+;
+; The built-in conversions establish: 1h = 60m, 1m = 60s.
+; Writing "C 3600s = 1h" creates a cycle: h -> m -> s -> h -> ...
+
+C 3600s = 1h
+
+2024/01/01 Test
+    Expenses:Food    3600s
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 8:
+Error: Commodity conversion would create a cycle
+end test
