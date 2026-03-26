@@ -1,0 +1,42 @@
+; Regression test for issue #771: --explicit not working without pre-declarations
+; https://github.com/ledger/ledger/issues/771
+;
+; --explicit is now a no-op; --strict alone warns about undeclared accounts
+; and commodities regardless of whether any account directives exist.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --strict
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+__ERROR__
+Warning: "$FILE", line 8: Unknown account 'Expenses:Food'
+Warning: "$FILE", line 8: Unknown commodity '$'
+Warning: "$FILE", line 9: Unknown account 'Assets:Cash'
+end test
+
+; --explicit --strict with cleared transaction should still warn
+test bal --explicit --strict
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+__ERROR__
+Warning: "$FILE", line 8: Unknown account 'Expenses:Food'
+Warning: "$FILE", line 8: Unknown commodity '$'
+Warning: "$FILE", line 9: Unknown account 'Assets:Cash'
+end test
+
+; --pedantic should error on the first unknown account
+test bal --pedantic -> 1
+__ERROR__
+While parsing file "$FILE", line 8:
+While parsing posting:
+  Expenses:Food    $10.00
+
+Error: Unknown account 'Expenses:Food'
+end test
