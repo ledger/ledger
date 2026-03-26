@@ -1,0 +1,42 @@
+; Regression test for issue #1115: --empty together with --begin or --end
+; doesn't print beginning/trailing zero-entries
+; https://github.com/ledger/ledger/issues/1115
+;
+; When using --empty with -M (monthly) and --end, trailing zero-period entries
+; (months between the last actual transaction and --end) should be printed.
+; Leading zero-period entries (months between --begin and first transaction)
+; should also be shown correctly.
+
+2024/01/15 January Income
+    Assets:Checking    $100.00
+    Income:Salary
+
+2024/03/15 March Expense
+    Expenses:Food    $50.00
+    Assets:Checking
+
+; Test 1: --empty -M with only --end: trailing zero periods (Apr, May) should be shown
+test reg -M --empty --end 2024/06 Assets:Checking
+24-Jan-01 - 24-Jan-31           Assets:Checking             $100.00      $100.00
+24-Feb-01 - 24-Feb-29           <None>                            0      $100.00
+24-Mar-01 - 24-Mar-31           Assets:Checking             $-50.00       $50.00
+24-Apr-01 - 24-Apr-30           <None>                            0       $50.00
+24-May-01 - 24-May-31           <None>                            0       $50.00
+end test
+
+; Test 2: --empty -M with both --begin and --end: both leading and trailing zeros shown
+test reg -M --empty --begin 2023/11 --end 2024/06 Assets:Checking
+23-Nov-01 - 23-Nov-30           <None>                            0            0
+23-Dec-01 - 23-Dec-31           <None>                            0            0
+24-Jan-01 - 24-Jan-31           Assets:Checking             $100.00      $100.00
+24-Feb-01 - 24-Feb-29           <None>                            0      $100.00
+24-Mar-01 - 24-Mar-31           Assets:Checking             $-50.00       $50.00
+24-Apr-01 - 24-Apr-30           <None>                            0       $50.00
+24-May-01 - 24-May-31           <None>                            0       $50.00
+end test
+
+; Test 3: --empty -M with --end but no --begin: only trailing zeros needed
+test reg -M --empty --end 2024/05 Expenses:Food
+24-Mar-01 - 24-Mar-31           Expenses:Food                $50.00       $50.00
+24-Apr-01 - 24-Apr-30           <None>                            0       $50.00
+end test
