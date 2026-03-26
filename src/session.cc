@@ -233,8 +233,10 @@ std::size_t session_t::read_data(const string& master_account) {
       }
       buffer.flush();
 
-      std::shared_ptr<std::istream> stream(new std::istringstream(buffer.str()));
+      std::shared_ptr<string> content = std::make_shared<string>(buffer.str());
+      std::shared_ptr<std::istream> stream(new std::istringstream(*content));
       parsing_context.push(stream);
+      parsing_context.get_current().source_content = content;
     } else {
       parsing_context.push(pathname);
     }
