@@ -1,0 +1,21 @@
+; Regression test for issue #854: -v should map to --version, not --verbose
+; https://github.com/ledger/ledger/issues/854
+; Before the fix, -v mapped to --verbose, so "ledger -v bal" produced a
+; balance report. After the fix, -v maps to --version and exits immediately.
+
+2024/01/01 Test transaction
+    Expenses:Food    $10.00
+    Assets:Cash
+
+; -v means --version: shows version info and exits with code 0.
+; Redirect stdout to /dev/null since version string is build-dependent.
+test -v >/dev/null
+end test
+
+; --verbose still works correctly with balance report
+test --verbose bal 2>/dev/null
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test
