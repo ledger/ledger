@@ -1,0 +1,16 @@
+; Regression test for issue #1585: --comm-as-payee (-x) is unrecognized (BZ#513)
+; https://github.com/ledger/ledger/issues/1585
+
+2024/01/01 Test Payee
+    Expenses:Food    10 USD
+    Assets:Cash     -10 USD
+
+test reg --comm-as-payee -> 1
+__ERROR__
+Error: Illegal option --comm-as-payee
+end test
+
+test reg -x -> 1
+__ERROR__
+Error: Illegal option -x
+end test

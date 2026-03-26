@@ -1,0 +1,19 @@
+; Regression test for issue #763: Error: Cannot convert a balance with multiple commodities to an amount (BZ#763)
+; https://github.com/ledger/ledger/issues/763
+;
+; This issue reported an error "Cannot convert a balance with multiple commodities
+; to an amount" when reporting on accounts that hold multiple commodities.
+; The basic balance report on a multi-commodity account should work without errors.
+
+2023/01/01 Buy stocks
+    Assets:Portfolio   10 AAPL @ $150.00
+    Assets:Cash
+
+2023/01/02 Buy bonds
+    Assets:Portfolio   5 BOND @ $100.00
+    Assets:Cash
+
+test bal Assets:Portfolio
+             10 AAPL
+              5 BOND  Assets:Portfolio
+end test

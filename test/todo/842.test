@@ -1,0 +1,32 @@
+; Regression test for issue #842: Automated postings with a tag = value match ignore the value (BZ#842)
+; https://github.com/ledger/ledger/issues/842
+;
+; The automated transaction rule uses tag("Category") == "food", which should only
+; fire for transactions where the Category tag has the value "food". However, the
+; bug causes the rule to fire for ALL transactions regardless of the tag value.
+;
+; Correct behavior: only Grocery Store (Category: food) triggers the auto rule.
+;   Expected 2 auto postings (one per posting in that transaction), totaling $2.00
+; Buggy behavior: Gas Station (Category: fuel) also triggers the rule.
+;   Actual 4 auto postings, totaling $4.00
+
+= tag("Category") == "food"
+    Expenses:Food:Auto    $1.00
+    Equity:AutoRules     -$1.00
+
+2024/01/01 Grocery Store
+    ; Category: food
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    ; Category: fuel
+    Expenses:Gas    $30.00
+    Assets:Cash
+
+test reg Expenses:Food:Auto
+24-Jan-01 Grocery Store         Expenses:Food:Auto            $1.00        $1.00
+                                Expenses:Food:Auto            $1.00        $2.00
+24-Jan-02 Gas Station           Expenses:Food:Auto            $1.00        $3.00
+                                Expenses:Food:Auto            $1.00        $4.00
+end test

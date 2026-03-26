@@ -1,0 +1,23 @@
+; Regression test for issue #761: Make uncommoditized amounts behave like commoditized ones (BZ#761)
+; https://github.com/ledger/ledger/issues/761
+;
+; When dividing amounts, commoditized amounts respect the commodity's display
+; precision (e.g., $10/3 = $3.33 rounded to 2 decimal places), while
+; uncommoditized (plain number) amounts show excessive precision (10/3 = 3.333333).
+; The issue requested uncommoditized amounts behave like commoditized ones.
+
+2024/01/01 Commoditized
+    Assets:Commoditized    $10.00
+    Income:Source          $-10.00
+
+2024/01/01 Uncommoditized
+    Assets:Plain    10
+    Income:Other    -10
+
+test reg Assets:Commoditized --amount "amount / 3"
+24-Jan-01 Commoditized          Assets:Commoditized           $3.33        $3.33
+end test
+
+test reg Assets:Plain --amount "amount / 3"
+24-Jan-01 Uncommoditized        Assets:Plain               3.333333     3.333333
+end test

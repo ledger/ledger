@@ -1,0 +1,17 @@
+; Regression test for issue #1625: Budget period entry without interval gives error (BZ#553)
+; https://github.com/ledger/ledger/issues/1625
+
+~
+    Expenses:Food    $500.00
+    Budget:Food
+
+2024/01/15 Grocery
+    Expenses:Food    $100.00
+    Assets:Checking
+
+test --budget reg -> 1
+__ERROR__
+While handling posting from "$FILE", line 9:
+>     Expenses:Food    $100.00
+Error: Invalid date interval: neither start, nor finish, nor duration
+end test

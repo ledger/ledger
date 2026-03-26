@@ -1,0 +1,21 @@
+; Regression test for issue #1066: C directive does not work properly with -X option (BZ#1066)
+; https://github.com/ledger/ledger/issues/1066
+;
+; The C directive defines a commodity conversion rate (C 1.00 EUR = $1.30),
+; but -X (--exchange) fails to use it for currency conversion.
+; By contrast, the P directive works correctly with -X.
+; Expected: both C and P directives should enable -X to convert currencies.
+; Actual: C directive is ignored by -X, amounts remain in original commodity.
+
+C 1.00 EUR = $1.30
+
+2024/01/01 Purchase
+    Expenses:Food    10 EUR
+    Assets:Cash
+
+test bal -X '$'
+          -10.00 EUR  Assets:Cash
+           10.00 EUR  Expenses:Food
+--------------------
+                   0
+end test

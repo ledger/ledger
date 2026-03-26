@@ -1,0 +1,16 @@
+; Regression test for issue #1656: Payee tag on first posting affects entire transaction
+; https://github.com/ledger/ledger/issues/1656
+; When a Payee tag is applied to a specific posting, only that posting should
+; display the tag's payee; other postings should still show the transaction payee.
+
+2018-06-01 Foo
+    Liabilities:Credit Card                            -100.00 USD
+    ; Payee: Bar
+    Expenses:Food                                        50.00 USD
+    Expenses:Drink                                       50.00 USD
+
+test reg
+18-Jun-01 Bar                   Liabilitie:Credit Card  -100.00 USD  -100.00 USD
+          Foo                   Expenses:Food             50.00 USD   -50.00 USD
+                                Expenses:Drink            50.00 USD            0
+end test

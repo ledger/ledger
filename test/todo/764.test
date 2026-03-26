@@ -1,0 +1,35 @@
+; Regression test for issue #764: csv: posted should be renamed to aux_date or aux or auxdate (BZ#764)
+; https://github.com/ledger/ledger/issues/764
+;
+; The convert command recognizes the CSV column name "posted" as the auxiliary
+; date field (FIELD_DATE_AUX). The issue requests that "aux_date", "aux", and
+; "auxdate" also be recognized as aliases for the auxiliary date column.
+;
+; Currently only "posted" works correctly. The "aux_date" column name is
+; accidentally matched by the broader "date" pattern (since "date" appears as
+; a substring of "aux_date"), causing it to overwrite the primary date instead
+; of setting the auxiliary date. This test captures the broken behavior.
+
+account Expenses:Unknown
+account Assets:Checking
+
+; Test 1: "posted" column is correctly recognized as the auxiliary date.
+; Expected: primary date 2024/01/01, aux date 2024/01/15 (shown as =2024/01/15)
+test convert test/staging/764-posted.csv --account Assets:Checking --input-date-format "%Y/%m/%d"
+2024/01/01=2024/01/15 * Grocery Store
+    Expenses:Unknown                              10
+    Assets:Checking
+end test
+
+; Test 2: "aux_date" column is NOT correctly recognized as the auxiliary date.
+; BUG: "aux_date" matches the "date" pattern (substring match), so it is treated
+; as FIELD_DATE instead of FIELD_DATE_AUX. The result is that 2024/01/15 (from
+; aux_date) becomes the primary date, and the actual "date" column value
+; (2024/01/01) is overwritten. The correct output should be:
+;   2024/01/01=2024/01/15 * Grocery Store
+; but currently produces:
+test convert test/staging/764-aux-date.csv --account Assets:Checking --input-date-format "%Y/%m/%d"
+2024/01/15 * Grocery Store
+    Expenses:Unknown                              10
+    Assets:Checking
+end test

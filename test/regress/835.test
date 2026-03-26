@@ -1,0 +1,27 @@
+; Regression test for issue #835: Having trouble with -Y from the command line (BZ#835)
+; https://github.com/ledger/ledger/issues/835
+; Tests that -Y (--yearly) flag correctly groups register output by year when
+; specified on the command line.
+
+2010/01/15 Groceries
+    Expenses:Food    $100.00
+    Assets:Checking
+
+2010/06/20 Gas
+    Expenses:Auto    $50.00
+    Assets:Checking
+
+2011/03/10 Groceries
+    Expenses:Food    $200.00
+    Assets:Checking
+
+2011/09/05 Gas
+    Expenses:Auto    $75.00
+    Assets:Checking
+
+test reg -Y Expenses
+10-Jan-01 - 10-Dec-31           Expenses:Auto                $50.00       $50.00
+                                Expenses:Food               $100.00      $150.00
+11-Jan-01 - 11-Dec-31           Expenses:Auto                $75.00      $225.00
+                                Expenses:Food               $200.00      $425.00
+end test

@@ -1,0 +1,15 @@
+; Regression test for issue #1112: --debug does not work with equal sign (BZ#1112)
+; https://github.com/ledger/ledger/issues/1112
+; The --debug=CATEGORY form (using = instead of space) should be accepted
+; without error and produce normal output.
+
+2024/01/01 Groceries
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test --debug=parser bal
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

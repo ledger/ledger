@@ -1,0 +1,40 @@
+; Regression test for issue #762: --only doesn't work: does the same as --limit (BZ#762)
+; https://github.com/ledger/ledger/issues/762
+;
+; The --only flag is supposed to be a postings predicate that applies *after*
+; certain transforms (e.g. periodic gathering), acting as a display-level filter.
+; Unlike --limit (which filters before accumulation), --only should keep all
+; postings in the running total but only display matching ones.
+;
+; Currently --only behaves identically to --limit: both produce a running total
+; of $30.00 for the second posting, when --only should produce $20.00
+; (matching --display behavior, where Assets:Cash postings offset the total).
+
+2024/01/01 Payee A
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/15 Payee B
+    Expenses:Travel  $20.00
+    Assets:Cash
+
+; BUG: --only currently behaves like --limit (running total $30.00).
+; It should behave like --display (running total $20.00), applying the
+; predicate after accumulation rather than before.
+test reg --only 'account =~ /Expenses/'
+24-Jan-01 Payee A               Expenses:Food                $10.00       $10.00
+24-Jan-15 Payee B               Expenses:Travel              $20.00       $30.00
+end test
+
+; For reference: --limit correctly filters before accumulation
+test reg --limit 'account =~ /Expenses/'
+24-Jan-01 Payee A               Expenses:Food                $10.00       $10.00
+24-Jan-15 Payee B               Expenses:Travel              $20.00       $30.00
+end test
+
+; For reference: --display filters at display time (after accumulation)
+; Running total is $20.00 because Assets:Cash postings are accumulated but not shown
+test reg --display 'account =~ /Expenses/'
+24-Jan-01 Payee A               Expenses:Food                $10.00       $10.00
+24-Jan-15 Payee B               Expenses:Travel              $20.00       $20.00
+end test

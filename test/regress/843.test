@@ -1,0 +1,21 @@
+; Regression test for issue #843: --strict and bucket (BZ#843)
+; https://github.com/ledger/ledger/issues/843
+;
+; The bug was that --strict would warn about the bucket account being unknown
+; even though the bucket directive should implicitly declare it.
+; This test verifies that no warning is produced when using bucket with --strict.
+
+account Expenses:Food
+commodity $
+
+bucket Assets:Checking
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+
+test bal --strict
+             $-10.00  Assets:Checking
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

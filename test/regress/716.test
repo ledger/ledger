@@ -1,0 +1,23 @@
+; Regression test for issue #716: Need a better error for automated transactions with null amounts (BZ#716)
+; https://github.com/ledger/ledger/issues/716
+; An automated transaction posting with no amount should produce a clear error.
+
+= /Expenses/
+    Savings:Auto
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 10:
+While applying automated transaction from "$FILE", lines 5-6:
+> = /Expenses/
+>     Savings:Auto
+While extending transaction from "$FILE", lines 8-10:
+> 2024/01/01 Test
+>     Expenses:Food    $10.00
+>     Assets:Cash
+Error: Automated transaction's posting has no amount
+end test

@@ -1,0 +1,27 @@
+; Regression test for issue #1145: Using 'bucket' bypass lots of checks/features (BZ#1145)
+; https://github.com/ledger/ledger/issues/1145
+;
+; The bug was that using the 'bucket' directive bypasses certain checks that
+; apply to regular postings. One specific manifestation: when using --strict
+; mode with declared accounts, the bucket account is implicitly declared by
+; the bucket directive itself, so no "Unknown account" warning should be
+; produced for the bucket account. The bucket-created posting should still
+; balance the transaction correctly.
+;
+; This test verifies that bucket works correctly with --strict mode:
+; the bucket account is treated as implicitly declared.
+
+account Expenses:Food
+commodity $
+
+bucket Assets:Checking
+
+2024/01/01 Groceries
+    Expenses:Food    $50.00
+
+test bal --strict
+             $-50.00  Assets:Checking
+              $50.00  Expenses:Food
+--------------------
+                   0
+end test

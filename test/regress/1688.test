@@ -1,0 +1,22 @@
+; Regression test for issue #1688: Error converting amount with times
+; https://github.com/ledger/ledger/issues/1688
+;
+; Using -X $ to convert register output including hour-denominated expenses
+; previously caused: "Error: Cannot convert a balance with multiple
+; commodities to an amount" when quantity(scrub(display_total)) was called
+; on a balance still containing unconverted 'h' amounts.
+
+2018/10/03 Training Flight
+    Expenses:Training:Aircraft Rental    1.1h @ $95.00
+    Expenses:Training:Flight Instruction  1.1h @ $55.00
+    Assets:Checking                     $-165.00
+
+test reg -X $ Expenses
+18-Oct-03 Training Flight       Ex:Tra:Aircraft Rental       $60.50       $60.50
+                                ..r:Flight Instruction       $60.50      $121.00
+end test
+
+test reg -J -X $ Expenses
+2018-10-03 60.5
+2018-10-03 121
+end test

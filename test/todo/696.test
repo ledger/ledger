@@ -1,0 +1,22 @@
+; Regression test for issue #696: Change to -F parsing rules (casting to int) (BZ#696)
+; https://github.com/ledger/ledger/issues/696
+;
+; The bug: adding an integer literal to total_width fails with
+; "Cannot add a string to an amount" when the literal is on the left.
+; `4 + total_width` fails, but `total_width + 4` works.
+; Workaround: use int(total_width) to explicitly cast to integer.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg -F "%(justify(scrub(display_total), 4 + total_width, true, color))\n" -> 1
+__ERROR__
+While evaluating value expression:
+  justify(scrub(display_total), (4 + total_width), true, color)
+While adding 12 to 4:
+While calling function 'justify ($10.00, <#EXPR ({4} + total_width)>, <#EXPR true>, 0)':
+While handling posting from "$FILE", line 10:
+>     Expenses:Food    $10.00
+Error: Cannot add a string to an amount
+end test

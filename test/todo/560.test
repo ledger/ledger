@@ -1,0 +1,37 @@
+; Regression test for issue #560: Getting balances of parent and empty/zero accounts
+; https://github.com/ledger/ledger/issues/560
+;
+; When a parent account has only one non-zero child (and one or more zero-balance
+; children), querying `bal <parent>` omits the parent account header in the output.
+; This is inconsistent: when there are two non-zero children, the parent shows correctly.
+;
+; Without --empty:
+;   `bal Assets:Bank` should show Assets:Bank as a parent with all children,
+;   but instead it collapses and shows only the non-zero child directly,
+;   making it look as if the zero-balance child (Checking) never existed.
+;
+; With --empty, the behavior is correct (shows parent + both children).
+
+2024/01/01 Opening Balance
+    Assets:Bank:Checking    $100.00
+    Equity:Opening          $-100.00
+
+2024/01/02 Transfer to Savings
+    Assets:Bank:Savings     $100.00
+    Assets:Bank:Checking    $-100.00
+
+; Bug: querying the parent account omits the parent header when only one child is non-zero.
+; Expected: should show Assets:Bank as parent with Checking ($0) and Savings ($100).
+; Current (broken): shows only Assets:Bank:Savings without the parent header.
+test bal Assets:Bank
+             $100.00  Assets:Bank:Savings
+end test
+
+; With --empty the parent header and zero-balance child are correctly shown.
+test bal Assets:Bank --empty
+             $100.00  Assets:Bank
+               $0.00    Checking
+             $100.00    Savings
+--------------------
+             $100.00
+end test

@@ -1,0 +1,22 @@
+; Regression test for issue #739: prices/pricedb only show pricedb info for commodities listed in transactions (BZ#739)
+; https://github.com/ledger/ledger/issues/739
+;
+; BUG: GOOG has a P price entry but does not appear in any transaction.
+; The `prices` and `pricedb` commands should show all commodities with
+; price entries, but currently only show commodities that appear in transactions.
+; Expected: both AAPL and GOOG appear. Actual: only AAPL appears.
+
+P 2024/01/01 AAPL $150.00
+P 2024/01/01 GOOG $100.00
+
+2024/01/01 Buy stock
+    Assets:Investments     10 AAPL @ $150.00
+    Assets:Cash
+
+test prices
+2024/01/01 AAPL          $150.00
+end test
+
+test pricedb
+P 2024/01/01 00:00:00 AAPL $150.00
+end test

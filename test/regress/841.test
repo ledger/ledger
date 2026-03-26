@@ -1,0 +1,18 @@
+; Regression test for issue #841: Printing notes in register/csv (BZ#841)
+; https://github.com/ledger/ledger/issues/841
+; Tests that transaction notes appear in CSV output and can be formatted in register
+
+2024/01/01 Payee
+    ; Transaction note here
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test csv
+"2024/01/01","","Payee","Expenses:Food","$","10",""," Transaction note here"
+"2024/01/01","","Payee","Assets:Cash","$","-10",""," Transaction note here"
+end test
+
+test reg --format '%(date) %(payee) %(note)\n'
+2024/01/01 Payee  Transaction note here
+2024/01/01 Payee  Transaction note here
+end test

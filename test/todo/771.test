@@ -1,0 +1,24 @@
+; Regression test for issue #771: --explicit not working if there are no pre-declarations (BZ#771)
+; https://github.com/ledger/ledger/issues/771
+;
+; The --explicit flag was intended to require pre-declared accounts, but would silently
+; skip checking when NO account directives existed in the file. The check now works
+; correctly via --strict (warnings) and --pedantic (errors) regardless of whether any
+; accounts are pre-declared.
+;
+; Note: --explicit is now a no-op; --strict is the working replacement.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --strict
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+__ERROR__
+Warning: "$FILE", line 12: Unknown account 'Expenses:Food'
+Warning: "$FILE", line 12: Unknown commodity '$'
+Warning: "$FILE", line 13: Unknown account 'Assets:Cash'
+end test

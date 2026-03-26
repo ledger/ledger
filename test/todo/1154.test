@@ -1,0 +1,60 @@
+; Regression test for issue #1154: Pivot has confusing filtering properties (BZ#1154)
+; https://github.com/ledger/ledger/issues/1154
+;
+; When --pivot is used, account filters are applied to ORIGINAL account names,
+; not to the pivoted account names. This leads to confusing behavior:
+;
+; 1. Filtering by a pivoted account name (e.g., "Project:Alpha") returns empty
+;    even though the pivoted output contains "Project:Alpha:*" accounts.
+;
+; 2. Transactions without the pivot tag appear mixed in with pivoted entries,
+;    which is confusing when the user expects the pivot to organize all entries.
+
+2024/01/01 Payee A
+    ; Project: Alpha
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Payee B
+    ; Project: Beta
+    Expenses:Other   $20.00
+    Assets:Cash
+
+2024/01/03 Payee C
+    Expenses:Travel  $30.00
+    Assets:Cash
+
+; The full pivoted balance shows all transactions: tagged ones under Project:Alpha
+; and Project:Beta, and the untagged one at the top level.
+test bal --pivot Project
+             $-30.00  Assets:Cash
+              $30.00  Expenses:Travel
+                   0  Project
+                   0    Alpha
+             $-10.00      Assets:Cash
+              $10.00      Expenses:Food
+                   0    Beta
+             $-20.00      Assets:Cash
+              $20.00      Expenses:Other
+--------------------
+                   0
+end test
+
+; Confusing behavior: filtering by "Project:Alpha" (the pivoted account prefix)
+; returns empty, because the filter is applied to ORIGINAL account names
+; (Expenses:Food, Assets:Cash) which don't match "Project:Alpha".
+; Users would expect this to show only the Alpha project entries.
+test bal --pivot Project Project:Alpha
+end test
+
+; Also confusing: filtering by "Expenses" works, but includes the untagged
+; Expenses:Travel entry mixed with the pivoted Project:Alpha and Project:Beta
+; entries, so the output structure is inconsistent.
+test bal --pivot Project Expenses
+              $30.00  Expenses:Travel
+              $30.00  Project
+              $10.00    Alpha:Expenses:Food
+              $20.00    Beta:Expenses:Other
+--------------------
+              $60.00
+end test

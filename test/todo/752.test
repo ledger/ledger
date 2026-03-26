@@ -1,0 +1,26 @@
+; Regression test for issue #752: ArithmeticError: Adding amounts with different commodities: EUR != EUR (BZ#752)
+; https://github.com/ledger/ledger/issues/752
+; This issue reported an ArithmeticError when adding EUR amounts from different sources.
+; The bug appears to be fixed in current ledger.
+
+P 2013/01/01 EUR $1.35
+
+2013/01/01 Income
+    Assets:EUR    500.00 EUR
+    Income:Salary
+
+2013/02/01 Income
+    Assets:EUR    500.00 EUR
+    Income:Salary
+
+2013/03/01 Expense
+    Expenses:Rent    300.00 EUR
+    Assets:EUR
+
+test bal
+          700.00 EUR  Assets:EUR
+          300.00 EUR  Expenses:Rent
+        -1000.00 EUR  Income:Salary
+--------------------
+                   0
+end test

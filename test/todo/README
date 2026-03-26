@@ -1,0 +1,10 @@
+This directory contains regression tests for open issues that demonstrate bugs
+which still exist in the current ledger build. These tests are written against
+the CURRENT (incorrect) behavior so they pass, but they document the expected
+behavior in comments.
+
+Once a bug is fixed, the corresponding test should be updated to reflect the
+correct behavior and moved to test/regress/.
+
+These tests are NOT run by default in the test suite (ctest). They serve as a
+tracking mechanism for known issues.
