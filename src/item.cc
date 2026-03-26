@@ -209,10 +209,12 @@ item_t::string_map::iterator item_t::set_tag(const string& tag, const std::optio
  *   multiple bare (valueless) tags in one comment line.
  *
  * **Key/value metadata** `Key: value` or `Key:: expr`:
- *   The first whitespace-delimited token ending with `:` names the key.
- *   Everything after it is the value.  With a single colon the value
- *   is stored as a string; with a double colon (`::`) the value is
- *   parsed and evaluated as an expression in the current scope.
+ *   The first token (or sequence of whitespace-delimited tokens)
+ *   ending with `:` names the key.  Everything after it is the value.
+ *   With a single colon the value is stored as a string; with a
+ *   double colon (`::`) the value is parsed and evaluated as an
+ *   expression in the current scope.  Multi-word tag names such as
+ *   `Due Date: 2024-01-01` are supported.
  *
  * Only the first key/value pair per line is parsed (the function
  * breaks after finding it).  Multiple bare tags on the same line
@@ -244,25 +246,27 @@ void item_t::parse_tags(const char* p, scope_t& scope, bool overwrite_existing) 
 
   std::strcpy(buf.get(), p);
 
-  string tag;
-  bool by_value = false;
-  bool first = true;
+  string tag_prefix;
   for (char* q = std::strtok(buf.get(), " \t"); q; q = std::strtok(nullptr, " \t")) {
     const string::size_type len = std::strlen(q);
-    if (len < 2)
-      continue;
-    if (q[0] == ':' && q[len - 1] == ':') { // a series of tags
+    if (q[0] == ':' && len > 1 && q[len - 1] == ':') { // a series of tags
       for (char* r = std::strtok(q + 1, ":"); r; r = std::strtok(nullptr, ":")) {
         string_map::iterator i = set_tag(r, std::nullopt, overwrite_existing);
         (*i).second.second = true;
       }
-    } else if (first && q[len - 1] == ':') { // a metadata setting
+      tag_prefix.clear();
+    } else if (len >= 2 && q[len - 1] == ':') { // a metadata setting
       std::size_t index = 1;
+      bool by_value = false;
       if (q[len - 2] == ':') {
         by_value = true;
         index = 2;
       }
-      tag = string(q, len - index);
+      string tag(q, len - index);
+      if (!tag_prefix.empty()) {
+        tag.insert(0, 1, ' ');
+        tag.insert(0, tag_prefix);
+      }
 
       string_map::iterator i;
       string field(p + (q - buf.get()) + len); // NOLINT(bugprone-unused-local-non-trivial-variable)
@@ -275,8 +279,11 @@ void item_t::parse_tags(const char* p, scope_t& scope, bool overwrite_existing) 
       }
       (*i).second.second = true;
       break;
+    } else {
+      if (!tag_prefix.empty())
+        tag_prefix += ' ';
+      tag_prefix += q;
     }
-    first = false;
   }
 }
 
