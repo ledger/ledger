@@ -370,6 +370,7 @@ public:
     HANDLER(date_format_).report(out);
     HANDLER(datetime_format_).report(out);
     HANDLER(dc).report(out);
+    HANDLER(decimal_places_).report(out);
     HANDLER(depth_).report(out);
     HANDLER(deviation).report(out);
     HANDLER(display_).report(out);
@@ -689,6 +690,9 @@ public:
   OPTION(report_t, date_);
   OPTION(report_t, date_format_);
   OPTION(report_t, datetime_format_);
+
+  OPTION(report_t, decimal_places_);
+
   OPTION(report_t, lisp_date_format_);
 
   OPTION_(
