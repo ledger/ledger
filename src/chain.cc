@@ -105,6 +105,21 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t
   // only for the future, and does not balance them against anything but the
   // future balance.
 
+  // When --pivot is active, apply the account-name transformation before the
+  // --limit predicate so that command-line account queries (which become
+  // --limit terms) match the pivoted account names rather than the original
+  // ones.  This makes `bal --pivot Tag Value` filter by the pivoted name
+  // "Tag:Value:..." instead of the original account name.  (See #1154.)
+  //
+  // --account and --pivot are mutually exclusive; --account stays in
+  // chain_post_handlers because it does not interact with query filtering.
+  if (report.HANDLED(pivot_) && !report.HANDLED(account_)) {
+    string pivot = report.HANDLER(pivot_).str();
+    pivot = string("\"") + pivot + ":\" + tag(\"" + pivot + "\")";
+    handler = std::make_shared<transfer_details>(handler, transfer_details::SET_ACCOUNT,
+                                                 report.session.journal->master, pivot, report);
+  }
+
   if (report.budget_flags != BUDGET_NO_BUDGET) {
     auto budget_handler =
         std::make_shared<budget_posts>(handler, report.terminus.date(), report.budget_flags);
@@ -354,12 +369,11 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
     handler = std::make_shared<transfer_details>(handler, transfer_details::SET_ACCOUNT,
                                                  report.session.journal->master,
                                                  report.HANDLER(account_).str(), report);
-  } else if (report.HANDLED(pivot_)) {
-    string pivot = report.HANDLER(pivot_).str();
-    pivot = string("\"") + pivot + ":\" + tag(\"" + pivot + "\")";
-    handler = std::make_shared<transfer_details>(handler, transfer_details::SET_ACCOUNT,
-                                                 report.session.journal->master, pivot, report);
   }
+  // Note: --pivot is handled in chain_pre_post_handlers() so that the
+  // account name transformation occurs before the --limit predicate is
+  // evaluated.  This allows command-line account queries to match
+  // pivoted account names (see issue #1154).
 
   if (report.HANDLED(payee_))
     handler = std::make_shared<transfer_details>(handler, transfer_details::SET_PAYEE,
