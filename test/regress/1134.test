@@ -1,0 +1,13 @@
+; Regression test for issue #1134: There is no --format-* option for xact
+; https://github.com/ledger/ledger/issues/1134
+;
+; The xact command should respect --format when specified.
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test xact --format '%(format_date(date, "%Y-%m-%d")) %(account) %(quantity(scrub(display_amount)))\n' 2024/02/01 Payee 20
+2024-02-01 Expenses:Food 20
+2024-02-01 Assets:Cash -20
+end test
