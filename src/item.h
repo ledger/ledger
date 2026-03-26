@@ -80,6 +80,7 @@ struct position_t {
   std::istream::pos_type end_pos; ///< Stream offset just past the item's last byte.
   std::size_t end_line;           ///< Line number where the item ends (inclusive).
   std::size_t sequence;           ///< Global parse-order sequence number.
+  std::shared_ptr<string> source_content; ///< Buffered stdin content (when pathname is empty).
 
   position_t() : beg_pos(0), beg_line(0), end_pos(0), end_line(0), sequence(0) {
     TRACE_CTOR(position_t, "");
@@ -98,6 +99,7 @@ struct position_t {
       end_pos = pos.end_pos;
       end_line = pos.end_line;
       sequence = pos.sequence;
+      source_content = pos.source_content;
     }
     return *this;
   }
