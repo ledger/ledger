@@ -150,8 +150,7 @@ account_t* account_t::find_account_re(const string& regexp) {
 
 namespace {
 /** @brief Depth-first search helper that collects all matching accounts. */
-void find_accounts_re_(account_t* account, const mask_t& regexp,
-                       std::vector<account_t*>& results) {
+void find_accounts_re_(account_t* account, const mask_t& regexp, std::vector<account_t*>& results) {
   if (regexp.match(account->fullname()))
     results.push_back(account);
 
