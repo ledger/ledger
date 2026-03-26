@@ -634,12 +634,12 @@ value_t xact_command(call_scope_t& args) {
 
     post_handler_ptr handler;
     if (report.HANDLED(format_)) {
-      handler.reset(new format_posts(
-          report, report.HANDLER(format_).str(),
-          report.maybe_format(report.HANDLER(prepend_format_)),
-          report.HANDLED(prepend_width_)
-              ? lexical_cast<std::size_t>(report.HANDLER(prepend_width_).str())
-              : 0));
+      handler.reset(
+          new format_posts(report, report.HANDLER(format_).str(),
+                           report.maybe_format(report.HANDLER(prepend_format_)),
+                           report.HANDLED(prepend_width_)
+                               ? lexical_cast<std::size_t>(report.HANDLER(prepend_width_).str())
+                               : 0));
     } else {
       handler.reset(new print_xacts(report));
     }
