@@ -157,7 +157,8 @@ void instance_t::default_commodity_directive(char* line) {
 }
 
 void instance_t::default_account_directive(char* line) {
-  context.journal->bucket = top_account()->find_account(skip_ws(line));
+  context.journal->bucket =
+      context.journal->register_account(skip_ws(line), nullptr, top_account());
   context.journal->bucket->add_flags(ACCOUNT_KNOWN);
 }
 

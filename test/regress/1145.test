@@ -1,0 +1,30 @@
+; Regression test for issue #1145: Using 'bucket' bypasses checks/features
+; https://github.com/ledger/ledger/issues/1145
+;
+; The bucket directive bypassed alias expansion, meaning that
+; `bucket AliasName` would create a new account instead of resolving
+; the alias to the target account.
+;
+; Test 1: bucket + strict mode (implicitly declared)
+; Test 2: bucket resolves account aliases
+
+account Expenses:Food
+account Assets:Bank
+    alias Checking
+commodity $
+
+bucket Checking
+
+2024/01/01 Groceries
+    Expenses:Food    $50.00
+
+test bal --strict
+             $-50.00  Assets:Bank
+              $50.00  Expenses:Food
+--------------------
+                   0
+end test
+
+test bal Assets:Bank
+             $-50.00  Assets:Bank
+end test
