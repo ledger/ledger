@@ -202,8 +202,14 @@ public:
    * Option handlers
    */
 
-  OPTION(session_t, check_payees); ///< Warn on unknown payees (with --strict)
-  OPTION(session_t, day_break);    ///< Insert day-break transactions between dates
+  OPTION_(session_t, check_payees, DO() {
+    if (parent->journal)
+      parent->journal->check_payees = true;
+  });
+  OPTION_(session_t, day_break, DO() {
+    if (parent->journal)
+      parent->journal->day_break = true;
+  });
   OPTION(session_t, download);     ///< Download commodity prices (-Q)
   OPTION(session_t, getquote_);    ///< Path to the price-fetching script
 
@@ -254,13 +260,28 @@ public:
 
   OPTION(session_t, explicit);          ///< Only accept explicitly declared accounts/commodities
   OPTION(session_t, master_account_);   ///< Parent account for all postings
-  OPTION(session_t, pedantic);          ///< Treat warnings as errors (CHECK_ERROR)
-  OPTION(session_t, permissive);        ///< Suppress balance-check warnings (CHECK_PERMISSIVE)
+  OPTION_(session_t, pedantic, DO() {
+    if (parent->journal)
+      parent->journal->checking_style = journal_t::CHECK_ERROR;
+  });
+  OPTION_(session_t, permissive, DO() {
+    if (parent->journal)
+      parent->journal->checking_style = journal_t::CHECK_PERMISSIVE;
+  });
   OPTION(session_t, price_db_);         ///< Path to the price history database file
-  OPTION(session_t, strict);            ///< Warn on undeclared accounts/commodities (CHECK_WARNING)
+  OPTION_(session_t, strict, DO() {
+    if (parent->journal)
+      parent->journal->checking_style = journal_t::CHECK_WARNING;
+  });
   OPTION(session_t, value_expr_);       ///< Expression used to compute posting values
-  OPTION(session_t, recursive_aliases); ///< Allow aliases to reference other aliases
-  OPTION(session_t, no_aliases);        ///< Disable all account alias expansion
+  OPTION_(session_t, recursive_aliases, DO() {
+    if (parent->journal)
+      parent->journal->recursive_aliases = true;
+  });
+  OPTION_(session_t, no_aliases, DO() {
+    if (parent->journal)
+      parent->journal->no_aliases = true;
+  });
 
   /// Lot matching policy for automatic commodity disposal: "fifo", "lifo", or "none".
   OPTION_CTOR(
