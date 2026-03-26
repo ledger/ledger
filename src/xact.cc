@@ -683,9 +683,8 @@ bool xact_base_t::finalize() {
             // preserved while reconstruction artifacts are eliminated
             // (#2975, #3013).
             if (gain_loss.has_commodity())
-              gain_loss.in_place_roundto(
-                  static_cast<int>(gain_loss.commodity().precision()) +
-                  static_cast<int>(post->amount.precision()));
+              gain_loss.in_place_roundto(static_cast<int>(gain_loss.commodity().precision()) +
+                                         static_cast<int>(post->amount.precision()));
             gain_loss.in_place_round();
             DEBUG("xact.finalize", "gain_loss rounds to = " << gain_loss);
             if (post->must_balance())
@@ -734,9 +733,8 @@ bool xact_base_t::finalize() {
               if (amount_t gain_loss = from_cost - to_cost) {
                 DEBUG("xact.finalize", "Commodity swap gain_loss = " << gain_loss);
                 if (gain_loss.has_commodity())
-                  gain_loss.in_place_roundto(
-                      static_cast<int>(gain_loss.commodity().precision()) +
-                      static_cast<int>(post->amount.precision()));
+                  gain_loss.in_place_roundto(static_cast<int>(gain_loss.commodity().precision()) +
+                                             static_cast<int>(post->amount.precision()));
                 gain_loss.in_place_round();
                 DEBUG("xact.finalize", "Commodity swap gain_loss rounds to = " << gain_loss);
 
