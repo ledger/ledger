@@ -328,7 +328,10 @@ value_t get_primary_date(item_t& item) {
 value_t get_aux_date(item_t& item) {
   if (optional<date_t> aux_date = item.aux_date())
     return *aux_date;
-  return NULL_VALUE;
+  return item.date();
+}
+value_t get_has_aux_date(item_t& item) {
+  return item.aux_date() ? true : false;
 }
 value_t get_note(item_t& item) {
   return item.note ? string_value(*item.note) : NULL_VALUE;
@@ -596,7 +599,9 @@ expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind, const string& name)
     break;
 
   case 'h':
-    if (name == "has_tag")
+    if (name == "has_aux_date")
+      return WRAP_FUNCTOR(get_wrapper<&get_has_aux_date>);
+    else if (name == "has_tag")
       return WRAP_FUNCTOR(ledger::has_tag);
     else if (name == "has_meta")
       return WRAP_FUNCTOR(ledger::has_tag);
