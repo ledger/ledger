@@ -316,7 +316,7 @@ value_t get_pending(item_t& item) {
 }
 
 value_t get_actual(item_t& item) {
-  return !item.has_flags(ITEM_GENERATED | ITEM_TEMP);
+  return !item.has_flags(ITEM_GENERATED);
 }
 
 value_t get_date(item_t& item) {
