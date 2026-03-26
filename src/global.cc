@@ -378,10 +378,10 @@ option_t<global_scope_t>* global_scope_t::lookup_option(const char* p) {
     OPT(trace_);
     break;
   case 'v':
-    OPT_(verbose);
+    OPT(verbose);
     else OPT(verify);
     else OPT(verify_memory);
-    else OPT(version);
+    else OPT_(version);
     break;
   default:
     break;
@@ -552,7 +552,7 @@ void global_scope_t::visit_man_page() const {
  *   --args-only      : skip init file and environment (testing aid)
  *   --verify-memory  : enable memory tracing with debug logging
  *   --verify         : enable runtime verification checks
- *   --verbose / -v   : set log level to LOG_INFO
+ *   --verbose        : set log level to LOG_INFO
  *   --init-file PATH : override the default init file location
  *   --debug CATEGORY : enable debug logging for a specific category
  *   --trace LEVEL    : enable trace logging at a numeric verbosity level
@@ -577,7 +577,7 @@ void handle_debug_options(int argc, char* argv[]) {
 #if VERIFY_ON
         verify_enabled = true;
 #endif
-      } else if (std::strcmp(argv[i], "--verbose") == 0 || std::strcmp(argv[i], "-v") == 0) {
+      } else if (std::strcmp(argv[i], "--verbose") == 0) {
         _log_level = LOG_INFO;
       } else if (i + 1 < argc && std::strcmp(argv[i], "--init-file") == 0) {
         _init_file = argv[i + 1];
