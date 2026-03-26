@@ -130,7 +130,7 @@ void expr_t::parse(std::istream& in, const parse_flags_t& flags,
     in.clear();
     in.seekg(start_pos, std::ios::beg);
     scoped_array<char> buf(new char[static_cast<std::size_t>(end_pos - start_pos) + 1]);
-    int len = static_cast<int>(end_pos) - static_cast<int>(start_pos);
+    std::streamoff len = std::streamoff(end_pos) - std::streamoff(start_pos);
     in.read(buf.get(), len);
     buf[len] = '\0';
     set_text(buf.get());

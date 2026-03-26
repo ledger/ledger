@@ -189,7 +189,7 @@ void truncate_xacts::operator()(post_t& post) {
     last_xact = post.xact;
   }
 
-  if (tail_count == 0 && head_count > 0 && static_cast<int>(xacts_seen) >= head_count) {
+  if (tail_count == 0 && head_count > 0 && xacts_seen >= static_cast<std::size_t>(head_count)) {
     flush();
     completed = true;
     return;

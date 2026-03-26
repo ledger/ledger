@@ -1831,7 +1831,7 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
       // per-unit prices despite differing internal precision metadata
       // (fixes #2948, #2975).
       if (details.price->has_commodity() && details.price->keep_precision()) {
-        int round_prec = static_cast<int>(
+        int round_prec = boost::numeric_cast<int>(
             this->precision() + details.price->commodity().precision() + extend_by_digits);
         details.price->in_place_roundto(round_prec);
       }

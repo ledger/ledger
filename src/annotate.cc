@@ -147,7 +147,7 @@ bool annotation_t::operator<(const annotation_t& rhs) const {
 void annotation_t::parse(std::istream& in) {
   do {
     std::istream::pos_type pos = in.tellg();
-    if (static_cast<int>(pos) < 0)
+    if (pos == std::istream::pos_type(std::streamoff(-1)))
       return;
 
     char buf[256];
