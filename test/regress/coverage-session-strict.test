@@ -2,6 +2,7 @@
 
 --strict
 
+commodity $
 account Expenses:Food
 account Assets:Checking
 
