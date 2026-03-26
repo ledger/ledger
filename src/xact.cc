@@ -408,6 +408,14 @@ bool xact_base_t::finalize() {
         if (x->commodity() != top_post->amount.commodity())
           std::swap(x, y);
 
+        // If one commodity is already marked COMMODITY_PRIMARY (e.g. from a
+        // P directive), ensure it ends up as y (the cost commodity).  This
+        // prevents posting order from overriding the primary commodity
+        // established by price directives (issue #1130).
+        if (x->commodity().referent().has_flags(COMMODITY_PRIMARY) &&
+            !y->commodity().referent().has_flags(COMMODITY_PRIMARY))
+          std::swap(x, y);
+
         // Don't auto-convert when the two balance entries share the same base
         // commodity and only one side carries a lot-price annotation whose
         // cost commodity differs from the base.  Example: "Avios {1.00 bmi}"
