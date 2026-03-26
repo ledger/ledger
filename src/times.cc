@@ -1714,8 +1714,7 @@ date_t date_duration_t::find_nearest(const date_t& date, skip_quantum_t skip) {
     break;
   }
 
-  if (day_of_period != 0 && skip != date_duration_t::WEEKS &&
-      skip != date_duration_t::DAYS) {
+  if (day_of_period != 0 && skip != date_duration_t::WEEKS && skip != date_duration_t::DAYS) {
     result += gregorian::days(day_of_period);
     // If the shifted boundary is past the input date, back up one period
     if (result > date) {
