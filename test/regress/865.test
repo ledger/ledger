@@ -1,0 +1,20 @@
+; Regression test for issue #865: uncleared posts should be bold even with
+; '--payee note' option.
+; https://github.com/ledger/ledger/issues/865
+
+2024/01/01 Payee
+    ; note: This is a note
+    Expenses:Food    $10.00
+    Assets:Cash
+
+; Baseline: without --payee note, uncleared payee is bold
+test reg --force-color
+24-Jan-01 [1mPayee                [0m [34mExpenses:Food         [0m       $10.00       $10.00
+                                [34mAssets:Cash           [0m      [31m$-10.00[0m            0
+end test
+
+; Fixed: with --payee note, uncleared transaction retains bold formatting
+test reg --force-color --payee note
+24-Jan-01 [1m note: This is a note[0m [34mExpenses:Food         [0m       $10.00       $10.00
+24-Jan-01 [1m note: This is a note[0m [34mAssets:Cash           [0m      [31m$-10.00[0m            0
+end test
