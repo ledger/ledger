@@ -1,0 +1,29 @@
+; Regression test for issue #1114: cost balance check silently accepted
+; unbalanced transactions when the cost commodity's display precision was 0.
+;
+; Cost amounts after @ are parsed with PARSE_NO_MIGRATE, so their precision
+; is not propagated to the commodity.  When the cost commodity has no other
+; amounts establishing a display precision, is_zero() would render sub-unit
+; remainders (e.g., 0.22 EUR) as "0" at precision 0 and falsely treat the
+; transaction as balanced.
+;
+; This transaction is unbalanced: 200/9 = 22.222... EUR, not 22 EUR.
+; Before the fix, it was silently accepted.
+
+2015/01/01 Unbalanced fractional cost
+    Expenses:Food   (1/9 FOO) @ 200 EUR
+    Assets:Cash     -22 EUR
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 15:
+While balancing transaction from "$FILE", lines 13-15:
+> 2015/01/01 Unbalanced fractional cost
+>     Expenses:Food   (1/9 FOO) @ 200 EUR
+>     Assets:Cash     -22 EUR
+Unbalanced remainder is:
+                   0
+Amount to balance against:
+       22.222222 EUR
+Error: Transaction does not balance
+end test
