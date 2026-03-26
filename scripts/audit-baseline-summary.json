@@ -1,0 +1,160 @@
+{
+  "total_reviewed": 296,
+  "mismatches": 10,
+  "mismatch_files": [
+    {
+      "file": "test/baseline/cmd-xact.test",
+      "summary": "Test block for xact \"Test 3\" (line 28) acknowledges its own output is wrong (bug #737) yet validates that buggy output; tests 3 and 4 produce identical expected output for different queries.",
+      "issues": [
+        {
+          "line": 27,
+          "description_says": "Comment says 'I think this output is wrong, see bug #737' \u2014 implying xact \"Test 3\" should match transaction 2 (which has '; Payee: Test 3' metadata) and return that transaction's data",
+          "actually_tests": "The test accepts and validates that xact \"Test 3\" returns Test 4's transaction (E=30.00 GBP, F), which is identical to what xact \"Test 4\" returns. The test documents and enshrines the buggy behavior rather than the intended behavior.",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.9
+    },
+    {
+      "file": "test/baseline/opt-unrealized-losses.test",
+      "summary": "Comment labels the generated transaction as going to 'Equity:Unrealized Gains' but AAPL dropped in value (10 AAPL: $200 cost \u2192 $100 market), making this an unrealized loss; the test explicitly uses --unrealized-losses and the L account in output confirms it",
+      "issues": [
+        {
+          "line": 8,
+          "description_says": "Equity:Unrealized Gains (generated transaction goes to gains account)",
+          "actually_tests": "The stock dropped from implied $20/share cost basis to $10/share market price, producing a $100 unrealized LOSS \u2014 the test uses --unrealized-losses L and the output shows L = $100.00, not a gains account",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.9
+    },
+    {
+      "file": "test/baseline/opt-forecast_only.test",
+      "summary": "File named opt-forecast_only.test but test command uses --forecast rather than --forecast-only; since no real transactions exist in the journal the distinction is undetectable, so the --forecast-only-specific behavior is never validated.",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "opt-forecast_only.test \u2014 filename implies this tests the --forecast-only option",
+          "actually_tests": "The test command uses --forecast, not --forecast-only. These are distinct options: --forecast interleaves forecast transactions with real ones; --forecast-only suppresses real transactions and shows only forecast entries.",
+          "severity": "medium"
+        },
+        {
+          "line": 3,
+          "description_says": "By filename convention (opt-<option>.test), the test should exercise the --forecast-only option's distinguishing behavior: suppressing real/past transactions from output",
+          "actually_tests": "Because the journal contains only periodic (~) directives and no real transactions, --forecast and --forecast-only produce identical output here. The key differentiating behavior of --forecast-only (suppressing real transactions) is never exercised.",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.87
+    },
+    {
+      "file": "test/baseline/opt-xact-no-payee.test",
+      "summary": "Filename implies --xact-no-payee option testing but test only runs bare 'bal' with empty expected output; no --xact-no-payee option used anywhere, and the TODO comment confirms the test is incomplete",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "filename opt-xact-no-payee.test implies testing the --xact-no-payee option or behavior related to transactions without payees",
+          "actually_tests": "the test runs 'test bal' with no options and expects empty output; no --xact-no-payee or related option appears anywhere in the test",
+          "severity": "high"
+        },
+        {
+          "line": 23,
+          "description_says": "TODO comment mentions '2 pairs, cleared, uncleared' suggesting planned test cases",
+          "actually_tests": "only a single test block (test bal with empty expected output) exists \u2014 the test appears incomplete or placeholder",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.87
+    },
+    {
+      "file": "test/baseline/opt-hashes-sha512_256.test",
+      "summary": "Filename says sha512_256 but the test command uses --hashes=sha512_half; naming mismatch between file and option.",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "filename `opt-hashes-sha512_256.test` implies the test exercises the `sha512_256` hash variant",
+          "actually_tests": "the test block uses `--hashes=sha512_half`, not `sha512_256`; the option name and filename are inconsistent (even if both refer to SHA-512 truncated to 256 bits, the identifiers differ)",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.85
+    },
+    {
+      "file": "test/baseline/func-true.test",
+      "summary": "Payee says 'func-true function' implying `true` is a function, but the test demonstrates it is a boolean value \u2014 calling it as `true()` is an error.",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "Test func-true function (implies `true` is a callable function)",
+          "actually_tests": "`true` is a boolean value/expression (not a function); the second test explicitly shows that calling `true()` as a function raises 'Cannot call a boolean as a function'",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.82
+    },
+    {
+      "file": "test/baseline/opt-budget_only.test",
+      "summary": "File named opt-budget_only.test but test command uses --budget, not --budget-only; the distinction is untested because no actual income transactions exist in the journal before the cutoff date",
+      "issues": [
+        {
+          "line": 15,
+          "description_says": "filename opt-budget_only.test implies this tests the --budget-only option",
+          "actually_tests": "test command uses --budget (not --budget-only); the output happens to show only budget entries because there are no actual income transactions before the --now date, so --budget and --budget-only would produce identical output here \u2014 the --budget-only flag is never exercised",
+          "severity": "high"
+        }
+      ],
+      "confidence": 0.82
+    },
+    {
+      "file": "test/baseline/func-has_meta.test",
+      "summary": "Descriptions say 'posting has metadata' but the test uses transaction-level metadata; both postings match because the tag belongs to the xact, not to any individual posting.",
+      "issues": [
+        {
+          "line": 2,
+          "description_says": "Returns true if a posting has metadata matching the given pattern",
+          "actually_tests": "The test uses transaction-level metadata (the '; Category: Food' comment appears before the first posting, making it an xact-level tag, not a posting-level tag). Both postings (Assets:Test and Equity:Opening) appear in the output, confirming has_meta() is matching against the parent transaction's metadata rather than an individual posting's metadata.",
+          "severity": "medium"
+        },
+        {
+          "line": 11,
+          "description_says": "find posting with Category metadata",
+          "actually_tests": "Finds postings whose parent transaction has Category metadata; the Category tag is on the xact, not on either posting individually, yet both postings are returned by the filter",
+          "severity": "medium"
+        }
+      ],
+      "confidence": 0.75
+    },
+    {
+      "file": "test/baseline/opt-pedantic.test",
+      "summary": "Payees named 'Test GBP' suggest GBP-specific behavior is under test, but the test actually exercises --pedantic's unknown-account detection; the GBP commodity plays no role in the errors shown",
+      "issues": [
+        {
+          "line": 1,
+          "description_says": "'Test GBP' implies the test is specifically about GBP commodity handling",
+          "actually_tests": "The test verifies that --pedantic rejects postings using undeclared accounts ('Unknown account Expenses:Phone'); GBP is incidental \u2014 the same errors would occur with any currency",
+          "severity": "low"
+        }
+      ],
+      "confidence": 0.75
+    },
+    {
+      "file": "test/baseline/opt-getquote.test",
+      "summary": "Test 3's comment 'accepts the default value' is misleading \u2014 it explicitly passes 'getquote' as an argument rather than testing the fallback default; the description inconsistency between tests 3 and 4 also obscures that they are the bare-name counterparts to tests 1 and 2.",
+      "issues": [
+        {
+          "line": 36,
+          "description_says": "Test that --getquote option accepts the default value",
+          "actually_tests": "Test that --getquote option accepts a bare name argument (without a path) using space syntax: `--getquote getquote bal`. This explicitly passes 'getquote' as an argument; it does not test behavior when no argument is given and the option falls back to its default.",
+          "severity": "low"
+        },
+        {
+          "line": 48,
+          "description_says": "Test that --getquote=getquote works",
+          "actually_tests": "Same scenario as test 3 (bare name 'getquote' as argument) but using = syntax. Tests 3 and 4 are parallel to tests 1 and 2 (full path with/without =), but their descriptions are inconsistently framed: test 3 calls it 'default value' while test 4 describes the syntax. Both comments would be clearer as 'accepts a bare name argument (without =)' and 'accepts a bare name argument (with =)'.",
+          "severity": "low"
+        }
+      ],
+      "confidence": 0.72
+    }
+  ]
+}
