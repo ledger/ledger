@@ -1,0 +1,13 @@
+; Regression test for issue #1110: the convert command incorrectly handles the cost field (BZ#1110)
+; https://github.com/ledger/ledger/issues/1110
+;
+; When converting a CSV with a commodity Amount column and a Cost column,
+; the cost annotation (@@ $cost) should appear on the primary posting.
+; Currently it is silently dropped, though the cost IS used for the
+; balancing posting amount.
+
+test -f /dev/null convert $sourcepath/test/input/1110.csv --input-date-format %Y/%m/%d -> 0
+2014/01/01 * Broker
+    Expenses:Unknown                         10 AAPL
+    Equity:Unknown                          $-500.00
+end test

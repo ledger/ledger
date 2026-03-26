@@ -1,0 +1,13 @@
+; Regression test for issue #860: %D used in date_format command returns entire date (BZ#860)
+; https://github.com/ledger/ledger/issues/860
+; %D in strftime means the full date as MM/DD/YY (equivalent to %m/%d/%y)
+; When used with --date-format (or -y), ledger should format dates using strftime semantics
+
+2024/01/15 Test Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg -y '%D'
+01/15/24 Test Payee            Expenses:Food                 $10.00       $10.00
+                               Assets:Cash                  $-10.00            0
+end test

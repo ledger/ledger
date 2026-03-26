@@ -1,0 +1,31 @@
+; Regression test for issue #731: --current does not apply with --end (BZ#731)
+; https://github.com/ledger/ledger/issues/731
+;
+; When --current is combined with --end <future-date>, the --current flag
+; should still restrict output to transactions on or before "today" (set via
+; --now). Currently, --end overrides --current, so future transactions appear.
+;
+; Using --now 2024/06/01 to make the test date-independent.
+
+2024/01/01 Past transaction
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/07/01 Future transaction
+    Expenses:Food    $50.00
+    Assets:Cash
+
+; Without --end, --current correctly hides the July (future) transaction.
+test reg --now 2024/06/01 --current
+24-Jan-01 Past transaction      Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+; BUG: With --current --end 2024/12/31, the July transaction incorrectly appears.
+; The expected correct output should only show the January transaction (same as above).
+test reg --now 2024/06/01 --current --end 2024/12/31
+24-Jan-01 Past transaction      Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Jul-01 Future transaction    Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+end test

@@ -1,0 +1,18 @@
+; Regression test for issue #3009: Rounding error in display when using --price
+; https://github.com/ledger/ledger/issues/3009
+; The commodity format directive should cause rounding to 2 decimal places,
+; but --price ignores the format and displays raw floating-point imprecision.
+
+commodity $
+    format $1,000.00
+
+2026/01/01 * Brokerage  ; Dividend
+    Assets:Brokerage    0.12 FOO @@ $44.44        ; dividend: FOO
+    Income:Dividend
+
+test bal --price
+    $44.439999999996  Assets:Brokerage
+             $-44.44  Income:Dividend
+--------------------
+    $-0.000000000004
+end test

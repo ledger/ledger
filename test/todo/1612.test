@@ -1,0 +1,47 @@
+; Regression test for issue #1612: Adjustment accounts are not collapsed by -n (BZ#540)
+; https://github.com/ledger/ledger/issues/1612
+;
+; When using `bal -n` (--collapse), synthetic <Adjustment> accounts created
+; for display rounding compensation should be collapsed/suppressed.
+; Without -n, these appear in bal output at the <Adjustment> top level.
+; With -n, they should be collapsed (they have no parent to collapse into,
+; so they are synthetic and should not appear).
+
+2012-01-01 * Opening balance
+    Assets:Current                         17.43 EUR
+    Assets:Investments                200 "LU02" @ 24.77 EUR
+    Assets:Investments                 58 "LU02" @ 24.79900855 EUR
+    Equity:Opening balance
+
+2012-01-27 * Test
+    Income:Test                         -2759.50 GBP
+    Income:Test                          -110.76 GBP
+    Assets:Foo                            345.57 GBP
+    Expenses:Test                          16.47 GBP
+    Expenses:Test                           6.33 GBP
+    Expenses:Test                         261.39 GBP
+    Assets:Current
+
+test bal -X EUR -H
+         6415.57 EUR
+         2586.07 GBP  Assets
+           17.43 EUR
+         2240.50 GBP    Current
+          345.57 GBP    Foo
+         6398.14 EUR    Investments
+        -6409.77 EUR  Equity:Opening balance
+          284.19 GBP  Expenses:Test
+        -2870.26 GBP  Income:Test
+--------------------
+            5.80 EUR
+end test
+
+test bal -X EUR -H -n
+         6415.57 EUR
+         2586.07 GBP  Assets
+        -6409.77 EUR  Equity
+          284.19 GBP  Expenses
+        -2870.26 GBP  Income
+--------------------
+            5.80 EUR
+end test

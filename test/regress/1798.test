@@ -1,0 +1,25 @@
+; Regression test for issue #1798: virtual transaction reporting incorrectly
+; https://github.com/ledger/ledger/issues/1798
+;
+; Virtual postings (enclosed in square brackets) should balance independently
+; of real transactions. $1000 + $400 + $-1400 = $0 must balance without error.
+
+2018/01/01 paycheck
+	assets:banking:chequeing	$1900
+	equity:company	$-1900
+
+2018/01/02 paycheck
+	[assets:budget:medical]	$1000
+	[assets:budget:car]		$400
+	[assets:banking:chequeing]	$-1400
+
+test bal
+               $1900  assets
+                $500    banking:chequeing
+               $1400    budget
+                $400      car
+               $1000      medical
+              $-1900  equity:company
+--------------------
+                   0
+end test

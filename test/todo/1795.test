@@ -1,0 +1,38 @@
+; Regression test for issue #1795: Currencies with Many Decimal Places
+; https://github.com/ledger/ledger/issues/1795
+; The balance sheet does not display correctly when commodities have
+; many decimal places (e.g., ETH with 18 decimal places). The column
+; alignment breaks because the long commodity amount overflows the amount
+; column, causing account names to be misaligned or crammed next to amounts.
+
+commodity USD
+    note United States Dollar
+    format USD 1,000.00
+commodity BTC
+    note Bitcoin
+    format BTC 1,000.00000000
+commodity ETH
+    note Ether
+    format ETH 1,000.000000000000000000
+
+2019-01-01 * Opening balance
+    Equity:Adjustment
+    Assets:Bank                                   USD 1,000.00
+
+2019-01-02 * Buy ETH with USD
+    Assets:Crypto                                     ETH 1.23 @ USD 200.00
+    Assets:Bank
+
+2019-01-03 * Buy BTC with ETH
+    Assets:Crypto                                     BTC 0.34 @ ETH 1.98
+    Assets:Crypto
+
+test bal --no-total
+      BTC 0.34000000
+ETH 0.556800000000000000
+          USD 754.00  Assets
+          USD 754.00    Bank
+      BTC 0.34000000
+ETH 0.556800000000000000    Crypto
+       USD -1,000.00  Equity:Adjustment
+end test

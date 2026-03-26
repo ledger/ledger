@@ -1,0 +1,38 @@
+; Regression test for issue #1631: Improve the Ledger 3.0 stats command with ideas from hledger (BZ#559)
+; https://github.com/ledger/ledger/issues/1631
+; Tests that the stats command produces expected output including file listing,
+; time period, unique payees/accounts, posting counts, and recency metrics.
+
+2024/01/01 Opening Balance
+    Assets:Checking    $1000.00
+    Equity:Opening
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/02/01 Rent
+    Expenses:Rent    $800.00
+    Assets:Checking
+
+2024/02/15 Coffee Shop
+    Expenses:Food    $5.00
+    Assets:Checking
+
+test --now 2024/03/01 stats
+Time period: 24-Jan-01 to 24-Feb-15 (45 days)
+
+  Files these postings came from:
+    $FILE
+
+  Unique payees:               4
+  Unique accounts:             4
+
+  Number of postings:          8 (0.18 per day)
+  Uncleared postings:          8
+
+  Days since last post:       15
+  Posts in last 7 days:        0
+  Posts in last 30 days:       4
+  Posts seen this month:       0
+end test

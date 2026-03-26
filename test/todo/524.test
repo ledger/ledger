@@ -1,0 +1,34 @@
+; Regression test for issue #524: --lots do not subtract when price precision is small
+; https://github.com/ledger/ledger/issues/524
+; When a lot price has many decimal places (e.g. 1.026087 EUR), ledger fails to
+; combine buy and sell lots. Instead of showing 8.00 APPL (23 - 15), it shows the
+; lots separately as 23.00 APPL and -15.00 APPL.
+
+commodity APPL
+    note Apple
+    format 1,000.00 APPL
+
+commodity EUR
+    note Euro
+    format 1,000.00 EUR
+
+2017-01-20 Buy Apple
+    Broker:Stock                       23 APPL @@ 23.6 EUR
+    Openning:Balance
+
+2017-11-28 Sell Apple
+    Broker:Stock                        -15 APPL {1.026087 EUR} [2017-01-20] @@ 24.00 EUR
+    Broker:Profits
+
+test bal broker --lots
+23.00 APPL {1.026087 EUR} [2017/01/20]
+-15.00 APPL {1.026087 EUR} [2017/01/20]
+           15.39 EUR  Broker
+           15.39 EUR    Profits
+23.00 APPL {1.026087 EUR} [2017/01/20]
+-15.00 APPL {1.026087 EUR} [2017/01/20]    Stock
+--------------------
+23.00 APPL {1.026087 EUR} [2017/01/20]
+-15.00 APPL {1.026087 EUR} [2017/01/20]
+           15.39 EUR
+end test

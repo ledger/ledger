@@ -1,0 +1,24 @@
+; Regression test for issue #792: Adjustment in ledger register report with -Mn (BZ#792)
+; https://github.com/ledger/ledger/issues/792
+;
+; When using -Mn (--monthly --collapse), the register report should correctly
+; collapse multiple transactions per month into a single line. With a single
+; account, it should show the account name; with multiple accounts collapsed
+; together, it shows <Total>.
+
+2013/01/05 Buy groceries
+    Expenses:Food     $50.00
+    Assets:Cash
+
+2013/01/20 Dining out
+    Expenses:Dining   $30.00
+    Assets:Cash
+
+2013/02/05 Buy groceries
+    Expenses:Food     $40.00
+    Assets:Cash
+
+test reg -Mn Expenses
+13-Jan-01 - 13-Jan-31           <Total>                      $80.00       $80.00
+13-Feb-01 - 13-Feb-28           Expenses:Food                $40.00      $120.00
+end test

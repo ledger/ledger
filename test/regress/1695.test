@@ -1,0 +1,19 @@
+; Regression test for issue #1695: Easiest way to make register report display note (%N)?
+; https://github.com/ledger/ledger/issues/1695
+; The feature request asked for a way to display transaction notes in the register
+; report. This is now supported via --prepend-format '%(note) ' or using %N.
+
+2024/01/01 Grocery Store  ; weekly shopping
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/01/02 Restaurant  ; dining out
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test reg --prepend-format '%(note) '
+ weekly shopping 24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+ weekly shopping                                 Assets:Cash                 $-50.00            0
+ dining out 24-Jan-02 Restaurant            Expenses:Food                $30.00       $30.00
+ dining out                                 Assets:Cash                 $-30.00            0
+end test

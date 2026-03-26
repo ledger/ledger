@@ -1,0 +1,26 @@
+; Regression test for issue #1639: Error parsing auto-xact predicate mith "expr payee" (BZ#567)
+; https://github.com/ledger/ledger/issues/1639
+; Using "expr payee" in an auto-xact predicate should not produce a parse error.
+
+= expr payee == "Grocery Store"
+    Expenses:Tax    $10.00
+    Assets:Wallet   $-10.00
+
+2024/01/01 Grocery Store
+    Expenses:Food    $100.00
+    Assets:Cash
+
+2024/01/02 Other Store
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test bal
+            $-170.00  Assets
+            $-150.00    Cash
+             $-20.00    Wallet
+             $170.00  Expenses
+             $150.00    Food
+              $20.00    Tax
+--------------------
+                   0
+end test

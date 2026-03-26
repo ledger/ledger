@@ -1,0 +1,16 @@
+; Regression test for issue #687: Budgeting bug? (BZ#687)
+; https://github.com/ledger/ledger/issues/687
+;
+; Bug: --add-budget reg produced empty output when only a periodic transaction
+; exists and no real transactions match the account. Adding at least one real
+; transaction caused the budget entries to appear.
+
+~ Monthly from 2009-08-01
+  Cash:NewCar          $-200
+  Income:NewCar
+
+test --add-budget reg Cash:NewCar --begin 2009/08/01 --end 2009/11/01
+09-Aug-01 Budget transaction    Cash:NewCar                    $200         $200
+09-Sep-01 Budget transaction    Cash:NewCar                    $200         $400
+09-Oct-01 Budget transaction    Cash:NewCar                    $200         $600
+end test

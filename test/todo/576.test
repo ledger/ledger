@@ -1,0 +1,23 @@
+; Regression test for issue #576: Strange cleared report formatting (BZ#576)
+; https://github.com/ledger/ledger/issues/576
+;
+; The `cleared` report shows inconsistent formatting in the cleared balance column:
+; accounts with no cleared transactions show bare "0" instead of a formatted
+; amount like "$0.00", while accounts with cleared transactions show "$X.XX".
+
+2024/01/01 * Cleared Transaction
+    Expenses:Food    $10.00
+    Assets:Checking
+
+2024/01/02 Uncleared Transaction
+    Expenses:Gas    $20.00
+    Assets:Checking
+
+test cleared
+         $-30.00             $-10.00    24-Jan-01    Assets:Checking
+          $30.00              $10.00                 Expenses
+          $10.00              $10.00    24-Jan-01      Food
+          $20.00                   0                   Gas
+----------------    ----------------    ---------
+               0                   0             
+end test

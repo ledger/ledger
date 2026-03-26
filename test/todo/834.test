@@ -1,0 +1,36 @@
+; Regression test for issue #834: --pedantic doesn't work if specified in Ledger file (BZ#834)
+; https://github.com/ledger/ledger/issues/834
+;
+; When --pedantic is placed in the journal file itself (rather than on the command line),
+; it should enforce strict checking of accounts, commodities and tags. However, the bug
+; is that --pedantic in the file is silently ignored -- undeclared accounts cause no error.
+
+--pedantic
+
+commodity $
+    format $1,000.00
+
+account Expenses:Food
+account Assets:Cash
+
+2024/01/01 Declared accounts
+    Expenses:Food       $10.00
+    Assets:Cash
+
+2024/01/02 Undeclared account
+    Expenses:Unknown    $5.00
+    Assets:Cash
+
+; BUG: With --pedantic active, this should fail because Expenses:Unknown is not declared.
+; Currently ledger ignores the in-file --pedantic and succeeds (exit 0) instead of
+; erroring on the unknown account. The correct behavior (matching command-line --pedantic)
+; would be to exit 1 with an "Unknown account" error.
+
+test bal
+             $-15.00  Assets:Cash
+              $15.00  Expenses
+              $10.00    Food
+               $5.00    Unknown
+--------------------
+                   0
+end test

@@ -1,0 +1,21 @@
+; Regression test for issue #1593: ledger and currency format in entry command (BZ#521)
+; https://github.com/ledger/ledger/issues/1593
+;
+; When using the xact/entry command with a non-default currency (e.g., EUR),
+; passing the amount and currency as separate arguments causes the currency
+; symbol to be treated as an account name rather than part of the amount.
+; The balancing account from past transactions (Assets:Cash) should be used,
+; but instead the currency name (EUR) appears as the balancing posting.
+
+commodity EUR
+    format 1.000,00 EUR
+
+2024/01/01 Shop
+    Expenses:Food    1.500,00 EUR
+    Assets:Cash
+
+test xact 2024/02/01 Shop 1000 EUR
+2024/02/01 Shop
+    Expenses:Food                       1.000,00 EUR
+    EUR
+end test

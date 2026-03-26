@@ -1,0 +1,31 @@
+; Regression test for issue #1048: --pivot=commodity doesn't work (BZ#1048)
+; https://github.com/ledger/ledger/issues/1048
+;
+; When using --pivot with a tag whose value matches a commodity name (e.g. EUR),
+; and multiple postings share a common parent account, the tag value is
+; incorrectly prepended to the account name (EUR:Assets instead of Assets).
+
+2024/01/01 Groceries
+    ; commodity: USD
+    Expenses:Food   $50.00
+    Assets:Cash
+
+2024/01/02 Exchange
+    ; commodity: EUR
+    Assets:Savings   100 EUR @ $1.10
+    Assets:Cash
+
+test bal --pivot commodity
+            $-110.00
+             100 EUR  commodity
+            $-110.00
+             100 EUR    EUR:Assets
+            $-110.00      Cash
+             100 EUR      Savings
+                   0    USD
+             $-50.00      Assets:Cash
+              $50.00      Expenses:Food
+--------------------
+            $-110.00
+             100 EUR
+end test

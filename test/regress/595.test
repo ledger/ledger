@@ -1,0 +1,13 @@
+; Regression test for issue #595: Add a value expression function to round non-commoditized amounts (BZ#595)
+; https://github.com/ledger/ledger/issues/595
+; The roundto(value, n) function was requested to round non-commoditized amounts.
+; Tests confirm the function is implemented and works correctly.
+
+2024/01/01 Test rounding
+    Expenses:Food    10.333
+    Assets:Cash     -10.333
+
+test reg --format "%(roundto(amount, 2))\n"
+10.33
+-10.33
+end test

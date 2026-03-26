@@ -1,0 +1,24 @@
+; Regression test for issue #598: Cleared report total lines are not aligned correctly (BZ#598)
+; https://github.com/ledger/ledger/issues/598
+
+2024/01/01 * Paycheck
+    Income:Salary        $-1000.00
+    Assets:Checking       $1000.00
+
+2024/01/15 * Rent
+    Expenses:Housing       $500.00
+    Assets:Checking       $-500.00
+
+2024/02/01 Future expense
+    Expenses:Food          $200.00
+    Assets:Checking       $-200.00
+
+test cleared
+         $300.00             $500.00    24-Jan-15    Assets:Checking
+         $700.00             $500.00                 Expenses
+         $200.00                   0                   Food
+         $500.00             $500.00    24-Jan-15      Housing
+       $-1000.00           $-1000.00    24-Jan-01    Income:Salary
+----------------    ----------------    ---------
+               0                   0             
+end test

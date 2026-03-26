@@ -1,0 +1,27 @@
+; Regression test for issue #583: --monthly prices report SUM rather than average or end of month price (BZ#583)
+; https://github.com/ledger/ledger/issues/583
+;
+; When using 'prices' with --monthly (-M), ledger incorrectly sums prices
+; within a month instead of showing the average or end-of-month price.
+; January has two prices ($500.00 and $510.00); the sum $1,010.00 is shown,
+; but the correct behavior would be $510.00 (end-of-month) or $505.00 (average).
+
+commodity $
+    format $1,000.00
+
+2013/01/05 Buy stock
+    Assets:Investments   10 AAPL @ $500.00
+    Assets:Cash
+
+2013/01/12 Buy more
+    Assets:Investments   10 AAPL @ $510.00
+    Assets:Cash
+
+2013/02/05 Buy again
+    Assets:Investments   10 AAPL @ $520.00
+    Assets:Cash
+
+test -M prices
+2013/01/01 AAPL        $1,010.00
+2013/02/01 AAPL          $520.00
+end test

@@ -1,0 +1,14 @@
+; Regression test for issue #737: ledger xact does not honour payee tag (BZ#737)
+; https://github.com/ledger/ledger/issues/737
+; The xact command should recognize the Payee: tag and match by it,
+; but it currently ignores the tag and only matches on the raw payee name.
+
+2024/01/01 Grocery Store
+    ; Payee: Supermarket
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test xact Supermarket -> 1
+__ERROR__
+Error: No accounts, and no past transaction matching 'Supermarket'
+end test

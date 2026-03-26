@@ -1,0 +1,21 @@
+; Regression test for issue #738: pricemap shows commodities not listed in file (BZ#738)
+; https://github.com/ledger/ledger/issues/738
+; The pricemap command should only show commodities referenced in the journal,
+; but currently also shows built-in internal commodities: "", s, %, m, h
+
+2024/01/01 Buy Stock
+    Assets:Investments    10 AAPL @ $150.00
+    Assets:Cash
+
+test pricemap
+graph G {
+0[label=""];
+1[label="s"];
+2[label="%"];
+3[label="m"];
+4[label="h"];
+5[label="AAPL"];
+6[label="$"];
+5--6 ;
+}
+end test

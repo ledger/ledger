@@ -1,0 +1,27 @@
+; Regression test for issue #746: ledger convert --auto-match only matches only one posting (BZ#746)
+; https://github.com/ledger/ledger/issues/746
+;
+; Bug: --auto-match only matched the first CSV posting; subsequent entries got Expenses:Unknown
+; Fix: all postings should be matched against the existing journal using similarity search
+
+2023/01/01 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2023/01/15 Gas Station
+    Expenses:Gas     $30.00
+    Assets:Checking
+
+test --auto-match convert $sourcepath/test/input/746.csv
+2024/01/05 * Grocery Store
+    Expenses:Food                                -60
+    Equity:Unknown
+
+2024/01/10 * Gas Station
+    Expenses:Gas                                 -35
+    Equity:Unknown
+
+2024/01/20 * Grocery Store
+    Expenses:Food                                -55
+    Equity:Unknown
+end test

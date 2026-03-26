@@ -1,0 +1,25 @@
+; Regression test for issue #1789: unbalanced transaction when using `format`
+; https://github.com/ledger/ledger/issues/1789
+; The commodity `format` directive should only affect output display, not balance
+; checking precision. With `format 1000.00 B`, ledger rounds -0.001 B to 0.00 B
+; during balance verification, causing a false "unbalanced transaction" error.
+commodity B
+    format 1000.00 B
+
+2000/01/01 note
+    Account    -0.001 B
+    Account         1 A
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 11:
+While balancing transaction from "$FILE", lines 9-11:
+> 2000/01/01 note
+>     Account    -0.001 B
+>     Account         1 A
+Unbalanced remainder is:
+                 1 A
+Amount to balance against:
+                 1 A
+Error: Transaction does not balance
+end test

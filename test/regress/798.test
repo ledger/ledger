@@ -1,0 +1,311 @@
+; Regression test for issue #798: ledger xml/json doesn't report all xacts (BZ#798)
+; https://github.com/ledger/ledger/issues/798
+; Verify that xml command reports all transactions in the journal
+
+2015/01/01 First
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2015/01/15 Second
+    Expenses:Dining  $25.00
+    Assets:Cash
+
+2015/02/01 Third
+    Expenses:Rent    $500.00
+    Assets:Checking
+
+test xml | sed -E 's/ (id|ref)="[0-9a-f]+"/ \1="XXXX"/g; s/ version="[0-9]+"/ version="VVVVVV"/g'
+<?xml version="1.0" encoding="utf-8"?>
+<ledger version="VVVVVV">
+  <commodities>
+    <commodity flags="P">
+      <symbol>$</symbol>
+    </commodity>
+  </commodities>
+  <accounts>
+    <account id="XXXX">
+      <name/>
+      <fullname/>
+      <account-total>
+        <amount>
+          <commodity flags="P">
+            <symbol>$</symbol>
+          </commodity>
+          <quantity>0</quantity>
+        </amount>
+      </account-total>
+      <account id="XXXX">
+        <name>Assets</name>
+        <fullname>Assets</fullname>
+        <account-total>
+          <amount>
+            <commodity flags="P">
+              <symbol>$</symbol>
+            </commodity>
+            <quantity>-535</quantity>
+          </amount>
+        </account-total>
+        <account id="XXXX">
+          <name>Cash</name>
+          <fullname>Assets:Cash</fullname>
+          <account-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>-35</quantity>
+            </amount>
+          </account-amount>
+          <account-total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>-35</quantity>
+            </amount>
+          </account-total>
+        </account>
+        <account id="XXXX">
+          <name>Checking</name>
+          <fullname>Assets:Checking</fullname>
+          <account-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>-500</quantity>
+            </amount>
+          </account-amount>
+          <account-total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>-500</quantity>
+            </amount>
+          </account-total>
+        </account>
+      </account>
+      <account id="XXXX">
+        <name>Expenses</name>
+        <fullname>Expenses</fullname>
+        <account-total>
+          <amount>
+            <commodity flags="P">
+              <symbol>$</symbol>
+            </commodity>
+            <quantity>535</quantity>
+          </amount>
+        </account-total>
+        <account id="XXXX">
+          <name>Dining</name>
+          <fullname>Expenses:Dining</fullname>
+          <account-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>25</quantity>
+            </amount>
+          </account-amount>
+          <account-total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>25</quantity>
+            </amount>
+          </account-total>
+        </account>
+        <account id="XXXX">
+          <name>Food</name>
+          <fullname>Expenses:Food</fullname>
+          <account-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>10</quantity>
+            </amount>
+          </account-amount>
+          <account-total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>10</quantity>
+            </amount>
+          </account-total>
+        </account>
+        <account id="XXXX">
+          <name>Rent</name>
+          <fullname>Expenses:Rent</fullname>
+          <account-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>500</quantity>
+            </amount>
+          </account-amount>
+          <account-total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>500</quantity>
+            </amount>
+          </account-total>
+        </account>
+      </account>
+    </account>
+  </accounts>
+  <transactions>
+    <transaction>
+      <date>2015/01/01</date>
+      <payee>First</payee>
+      <postings>
+        <posting>
+          <account ref="XXXX">
+            <name>Expenses:Food</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>10</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>10</quantity>
+            </amount>
+          </total>
+        </posting>
+        <posting>
+          <account ref="XXXX">
+            <name>Assets:Cash</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>-10</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>0</quantity>
+            </amount>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+    <transaction>
+      <date>2015/01/15</date>
+      <payee>Second</payee>
+      <postings>
+        <posting>
+          <account ref="XXXX">
+            <name>Expenses:Dining</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>25</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>25</quantity>
+            </amount>
+          </total>
+        </posting>
+        <posting>
+          <account ref="XXXX">
+            <name>Assets:Cash</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>-25</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>0</quantity>
+            </amount>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+    <transaction>
+      <date>2015/02/01</date>
+      <payee>Third</payee>
+      <postings>
+        <posting>
+          <account ref="XXXX">
+            <name>Expenses:Rent</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>500</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>500</quantity>
+            </amount>
+          </total>
+        </posting>
+        <posting>
+          <account ref="XXXX">
+            <name>Assets:Checking</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>-500</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>0</quantity>
+            </amount>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+  </transactions>
+</ledger>
+
+end test

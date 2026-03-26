@@ -1,0 +1,18 @@
+; Regression test for issue #838: account directive not giving warning with --strict (BZ#838)
+; https://github.com/ledger/ledger/issues/838
+account Assets:Cash
+account Expenses:Food
+commodity $
+
+2024/01/01 Test
+    Expenses:Unknown    $5.00
+    Assets:Cash
+
+test bal --strict
+              $-5.00  Assets:Cash
+               $5.00  Expenses:Unknown
+--------------------
+                   0
+__ERROR__
+Warning: "$FILE", line 8: Unknown account 'Expenses:Unknown'
+end test

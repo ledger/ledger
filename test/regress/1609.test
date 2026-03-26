@@ -1,0 +1,25 @@
+; Regression test for issue #1609: Auto-balancing of transactions of no value (BZ#537)
+; https://github.com/ledger/ledger/issues/1609
+;
+; When a balance assertion (= $10.00) results in a zero-value difference,
+; the auto-balancing posting should be treated as $0.00 rather than raising
+; "Only one posting with null amount allowed per transaction".
+
+2011/01/01 Depreciation
+  Assets  $10.00
+  Expenses
+
+2011/02/01 Depreciation
+  Assets  $0.00
+  Expenses
+
+2011/03/01 Depreciation
+  Assets  = $10.00
+  Expenses
+
+test bal
+              $10.00  Assets
+             $-10.00  Expenses
+--------------------
+                   0
+end test

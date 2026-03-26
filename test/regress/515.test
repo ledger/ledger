@@ -1,0 +1,36 @@
+; Regression test for issue #515: --group-by account incompatible with --daily
+; https://github.com/ledger/ledger/issues/515
+; When combining --group-by account with --daily, each account group should only
+; show its own postings. Previously, later groups incorrectly included all
+; postings from preceding groups as well.
+
+2017/06/01 income
+    A   $30
+    I
+
+2017/06/01 buy
+    Ex   $15
+    A
+
+2017/06/02 sell
+    A   $10
+    I
+
+2017/06/03 buy
+    Ex   $3
+    A
+
+test --group-by account --daily reg
+A
+17-Jun-01 - 17-Jun-01           A                               $15          $15
+17-Jun-02 - 17-Jun-02           A                               $10          $25
+17-Jun-03 - 17-Jun-03           A                               $-3          $22
+
+Ex
+17-Jun-01 - 17-Jun-01           Ex                              $15          $15
+17-Jun-03 - 17-Jun-03           Ex                               $3          $18
+
+I
+17-Jun-01 - 17-Jun-01           I                              $-30         $-30
+17-Jun-02 - 17-Jun-02           I                              $-10         $-40
+end test

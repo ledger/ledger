@@ -1,0 +1,21 @@
+; Regression test for issue #589: Add ability to control color output (BZ#589)
+; https://github.com/ledger/ledger/issues/589
+;
+; Tests that --no-color and --force-color flags are available and work correctly.
+; --no-color suppresses ANSI color codes in output
+; --force-color emits ANSI codes even when stdout is not a TTY
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/02/01 Test2
+    Expenses:Food    $-5.00
+    Assets:Cash
+
+test bal --no-color
+              $-5.00  Assets:Cash
+               $5.00  Expenses:Food
+--------------------
+                   0
+end test

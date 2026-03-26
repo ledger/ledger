@@ -1,0 +1,41 @@
+; Regression test for issue #1638: Selinger's multiple currency accounting & ledger (BZ#566)
+; https://github.com/ledger/ledger/issues/1638
+;
+; Peter Selinger's multiple currency accounting method requires that double-entry
+; consistency holds across currency exchanges: buying a foreign currency at one
+; rate and selling it at another should properly track the realized gain/loss.
+;
+; The key test: buying EUR at $1.20, selling some at $1.30, should show:
+; - Correct USD balance reflecting actual cash flows
+; - Correct market value including gain on remaining holdings
+
+P 2010/01/01 EUR $1.20
+P 2010/07/01 EUR $1.30
+
+; Buy 100 EUR at $1.20/EUR (total cost: $120)
+2010/01/01 Buy EUR
+    Assets:EUR           100 EUR @ $1.20
+    Assets:USD          -$120
+
+; Sell 50 EUR at $1.30/EUR (proceeds: $65, realized gain: $5)
+2010/07/01 Sell EUR
+    Assets:USD            $65
+    Assets:EUR           -50 EUR @ $1.30
+
+test bal
+             $-55.00
+              50 EUR  Assets
+              50 EUR    EUR
+             $-55.00    USD
+--------------------
+             $-55.00
+              50 EUR
+end test
+
+test bal -V --now 2010/08/01
+              $10.00  Assets
+              $65.00    EUR
+             $-55.00    USD
+--------------------
+              $10.00
+end test
