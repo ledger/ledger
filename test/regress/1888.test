@@ -19,6 +19,7 @@ test reg
                                 Tax:Amount                 $ 130,08   $ -1465,92
                                 Assets:Bank               $ 1465,92            0
                                 Tax:Amount                 $ -10,60     $ -10,60
+                                <Adjustment>                $ -0,01     $ -10,61
                                 Tax:sometax                  $ 9,76      $ -0,85
                                 Tax:othertax                 $ 0,85            0
 end test
