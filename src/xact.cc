@@ -825,10 +825,8 @@ bool xact_base_t::finalize() {
   // precision for the balance check, then restore (issue #1114).
   std::vector<std::pair<commodity_t*, int>> saved_precisions;
   for (post_t* post : posts) {
-    if (post->cost && !post->has_flags(POST_COST_CALCULATED) &&
-        post->cost->has_commodity() &&
-        post->cost->commodity().precision() == 0 &&
-        post->cost->precision() > 0) {
+    if (post->cost && !post->has_flags(POST_COST_CALCULATED) && post->cost->has_commodity() &&
+        post->cost->commodity().precision() == 0 && post->cost->precision() > 0) {
       commodity_t& comm = post->cost->commodity();
       // Only save once per commodity
       bool already_saved = false;
@@ -1023,10 +1021,8 @@ bool xact_base_t::verify() {
   // cost commodities for the balance check (see finalize, issue #1114).
   std::vector<std::pair<commodity_t*, int>> saved_precisions;
   for (post_t* post : posts) {
-    if (post->cost && !post->has_flags(POST_COST_CALCULATED) &&
-        post->cost->has_commodity() &&
-        post->cost->commodity().precision() == 0 &&
-        post->cost->precision() > 0) {
+    if (post->cost && !post->has_flags(POST_COST_CALCULATED) && post->cost->has_commodity() &&
+        post->cost->commodity().precision() == 0 && post->cost->precision() > 0) {
       commodity_t& comm = post->cost->commodity();
       bool already_saved = false;
       for (auto& sp : saved_precisions)
