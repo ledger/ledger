@@ -1,0 +1,14 @@
+2014/01/01 Payee A
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2014/01/15 Payee B
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test reg --group-by payee --no-group-by
+14-Jan-01 Payee A               Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+14-Jan-15 Payee B               Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test
