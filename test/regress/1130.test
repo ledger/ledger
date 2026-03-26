@@ -1,0 +1,43 @@
+; Regression test for issue #1130: posting order should not affect -V conversion
+; https://github.com/ledger/ledger/issues/1130
+;
+; When a transaction has postings in two different commodities without
+; explicit @ or @@ cost notation, ledger infers an exchange rate.  The
+; order of postings within the transaction must not change which commodity
+; is marked "primary" and thus whether -V converts it.
+
+P 2015-08-07 00:00:00 GBP USD 2
+P 2015-08-07 00:00:00 EUR USD 1.2
+
+; Transaction 1: EUR purchase (EUR first)
+2013-10-24 Default
+    Assets:cash:eur      EUR 400.0
+    Income:All      USD -420.0
+
+; Transaction 2: EUR expense with reversed posting order
+; (the source of the original bug -- swapping these two lines
+; caused EUR to be incorrectly marked as COMMODITY_PRIMARY)
+2013-10-24 Default
+    Expenses:All      USD 210.0
+    Assets:cash:eur      EUR -200.0
+
+; Transaction 3: GBP purchase
+2013-10-24 Default
+    Assets:cash:gbp      GBP 300.0
+    Income:All      USD -600.0
+
+test bal -V assets
+           USD 840.0  Assets:cash
+           USD 240.0    eur
+           USD 600.0    gbp
+--------------------
+           USD 840.0
+end test
+
+test bal -X USD assets
+           USD 840.0  Assets:cash
+           USD 240.0    eur
+           USD 600.0    gbp
+--------------------
+           USD 840.0
+end test
