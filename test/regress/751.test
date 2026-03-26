@@ -22,6 +22,8 @@ test bal
 --------------------
                    0
 __ERROR__
-Warning: "$FILE", line 12: Transaction check failed: (abs(amount) <= {20})
-Warning: "$FILE", line 17: Transaction check failed: (abs(amount) <= {20})
+Warning: "$FILE", line 10: Transaction check failed: (abs(amount) <= {20})
+  (check expression at "$FILE", line 5)
+Warning: "$FILE", line 16: Transaction check failed: (abs(amount) <= {20})
+  (check expression at "$FILE", line 5)
 end test

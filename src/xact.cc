@@ -1397,7 +1397,13 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
                 if (pair.second == expr_t::EXPR_ASSERTION)
                   throw_(parse_error, _f("Transaction assertion failed: %1%") % pair.first);
                 else
-                  context.warning(_f("Transaction check failed: %1%") % pair.first);
+                  warning_func((xact.pos ? file_context(xact.pos->pathname, xact.pos->beg_line)
+                                         : context.location()) +
+                               " " + (_f("Transaction check failed: %1%") % pair.first).str() +
+                               (pos ? "\n  " + (_f("(check expression at \"%1%\", line %2%)") %
+                                                pos->pathname.string() % pos->beg_line)
+                                                   .str()
+                                    : ""));
               }
             }
           }
