@@ -1,0 +1,30 @@
+; Regression test for issue #793
+; Verify that custom streambuf implementations work correctly for expression
+; parsing from strings (ptrinbuf) and formatted output.  The original issue
+; concerned portability of sputc/overflow/xsputn in custom streambuf classes;
+; the affected output streambuf (pyoutbuf) was fixed and later removed.
+; This test confirms that string-based expression parsing — which exercises
+; the remaining ptrinbuf input streambuf — produces correct results.
+
+2024/01/15 Groceries
+    Expenses:Food             $42.50
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport        $35.00
+    Assets:Checking
+
+test reg --format '%(format_date(date, "%Y-%m-%d")) %(payee) %(scrub(display_amount))\n'
+2024-01-15 Groceries $42.50
+2024-01-15 Groceries $-42.50
+2024-01-20 Gas Station $35.00
+2024-01-20 Gas Station $-35.00
+end test
+
+test bal --format '%(account) %(scrub(display_total))\n'
+Assets:Checking $-77.50
+Expenses $77.50
+Expenses:Food $42.50
+Expenses:Transport $35.00
+ 0
+end test
