@@ -1,0 +1,26 @@
+; Regression test for issue #1165: --no-group-by cancels --group-by
+;
+; When --group-by is set (e.g. in a config file), there was no way to
+; cancel it from the command line. The --no-group-by option now clears
+; any --group-by setting, restoring flat ungrouped output.
+
+2014/01/01 Payee A
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2014/01/15 Payee B
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2014/02/05 Payee C
+    Expenses:Food    $15.00
+    Assets:Cash
+
+test reg --group-by payee --no-group-by
+14-Jan-01 Payee A               Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+14-Jan-15 Payee B               Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+14-Feb-05 Payee C               Expenses:Food                $15.00       $15.00
+                                Assets:Cash                 $-15.00            0
+end test
