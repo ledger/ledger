@@ -3,6 +3,7 @@
 
 --pedantic
 
+commodity $
 account Expenses:Food
 account Assets:Cash
 
