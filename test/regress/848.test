@@ -1,0 +1,76 @@
+; Regression test for issue #848: Reporting code uses report-time variants
+; https://github.com/ledger/ledger/issues/848
+; Verifies that the reporting pipeline correctly isolates report-time state
+; (xdata / temporaries) from permanent journal objects. Multiple reports
+; over the same journal must produce identical, independent results.
+
+2024/01/01 Opening Balance
+    Assets:Checking     $1000.00
+    Equity:Opening
+
+2024/01/15 Grocery Store
+    Expenses:Food        $50.00
+    Assets:Checking
+
+2024/02/01 Salary
+    Assets:Checking     $2000.00
+    Income:Salary
+
+2024/02/15 Restaurant
+    Expenses:Food        $30.00
+    Assets:Checking
+
+2024/03/01 Rent
+    Expenses:Rent       $800.00
+    Assets:Checking
+
+; First balance report: verify account totals
+test bal Assets Expenses
+            $2120.00  Assets:Checking
+             $880.00  Expenses
+              $80.00    Food
+             $800.00    Rent
+--------------------
+            $3000.00
+end test
+
+; Register report after balance: must be independent of prior report state
+test reg Expenses
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Feb-15 Restaurant            Expenses:Food                $30.00       $80.00
+24-Mar-01 Rent                  Expenses:Rent               $800.00      $880.00
+end test
+
+; Second balance report: must match the first exactly (xdata properly cleared)
+test bal Assets Expenses
+            $2120.00  Assets:Checking
+             $880.00  Expenses
+              $80.00    Food
+             $800.00    Rent
+--------------------
+            $3000.00
+end test
+
+; Monthly subtotals: temporaries created by interval_posts must not leak
+test reg --monthly Expenses
+24-Jan-01 - 24-Jan-31           Expenses:Food                $50.00       $50.00
+24-Feb-01 - 24-Feb-29           Expenses:Food                $30.00       $80.00
+24-Mar-01 - 24-Mar-31           Expenses:Rent               $800.00      $880.00
+end test
+
+; Balance with --depth: display filtering must be independent
+test bal --depth 1 Assets Expenses
+            $2120.00  Assets
+             $880.00  Expenses
+--------------------
+            $3000.00
+end test
+
+; Final register: verify no accumulated state from prior reports
+test reg Assets
+24-Jan-01 Opening Balance       Assets:Checking            $1000.00     $1000.00
+24-Jan-15 Grocery Store         Assets:Checking             $-50.00      $950.00
+24-Feb-01 Salary                Assets:Checking            $2000.00     $2950.00
+24-Feb-15 Restaurant            Assets:Checking             $-30.00     $2920.00
+24-Mar-01 Rent                  Assets:Checking            $-800.00     $2120.00
+end test
