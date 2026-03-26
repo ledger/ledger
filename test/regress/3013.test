@@ -1,0 +1,15 @@
+commodity $
+    format $1,000.00
+2025/01/01 * 401k Provider                          ; Fee
+    Assets:Brokerage:401k:Pre-Tax             -0.005 FOO {$109} @ $123.45
+    Assets:Brokerage:401k:Roth:2020           -0.001 FOO {$109} @ $123.45
+    Assets:Brokerage:401k:Roth:2021           -0.001 FOO {$109} @ $123.45
+    Assets:Brokerage:401k:Roth:2022           -0.001 FOO {$109} @ $123.45
+    Assets:Brokerage:401k:Roth:2023           -0.000 FOO {$109} @ $123.45
+    Assets:Brokerage:401k:Roth:2024           -0.001 FOO {$109} @ $123.45
+    Assets:Brokerage:401k:Roth:2025           -0.001 FOO {$109} @ $123.45
+    Expenses:Finance:Fees
+
+test bal ^Expenses:
+               $1.09  Expenses:Finance:Fees
+end test
