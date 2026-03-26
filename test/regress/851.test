@@ -1,0 +1,21 @@
+; Regression test for issue #851
+; The error handling infrastructure (throw_ macro using thread-local
+; _desc_buffer) previously caused undefined symbol errors with certain
+; compilers.  This test exercises both normal operation and error paths
+; to verify these symbols are properly linked.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal Expenses
+              $10.00  Expenses:Food
+end test
+
+test bal --limit "!!!" -> 1
+__ERROR__
+While parsing value expression:
+  !!!
+   ^
+Error: ! operator not followed by argument
+end test
