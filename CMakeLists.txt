@@ -220,8 +220,8 @@ endif()
 
 # Set BOOST_ROOT to help CMake to find the right Boost version
 find_package(Boost ${Required_Boost_Version}
-  REQUIRED date_time iostreams regex unit_test_framework
-  ${BOOST_PYTHON} OPTIONAL_COMPONENTS nowide
+  REQUIRED date_time iostreams regex
+  ${BOOST_PYTHON} OPTIONAL_COMPONENTS nowide unit_test_framework
   CONFIG)
 
 # enable Boost::nowide library (for UTF8 command line args on Windows)
@@ -452,7 +452,10 @@ endif()
 ########################################################################
 
 macro(add_ledger_library_dependencies _target)
-  target_link_libraries(${_target} ${Boost_LIBRARIES})
+  target_link_libraries(${_target} Boost::date_time Boost::iostreams Boost::regex)
+  if(HAVE_BOOST_NOWIDE)
+    target_link_libraries(${_target} Boost::nowide)
+  endif()
   target_link_libraries(${_target} ${GMP_LIB})
   target_link_libraries(${_target} ${MPFR_LIB})
   target_link_libraries(${_target} ${PROFILE_LIBS})
@@ -475,6 +478,7 @@ macro(add_ledger_library_dependencies _target)
     target_link_libraries(${_target} ${ICU_LIBRARIES})
   endif()
   if(HAVE_BOOST_PYTHON)
+    target_link_libraries(${_target} Boost::${BOOST_PYTHON})
     if(CMAKE_SYSTEM_NAME STREQUAL Darwin)
       # Don't link directly to a Python framework on macOS, to avoid segfaults
       # when the module is imported from a different interpreter
