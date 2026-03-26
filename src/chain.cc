@@ -350,10 +350,9 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
       end_of_report = end_interval.begin();
     }
 
-    handler = std::make_shared<interval_posts>(handler, expr, interval, report.HANDLED(exact),
-                                               report.HANDLED(empty),
-                                               report.HANDLED(align_intervals), begin_of_report,
-                                               end_of_report);
+    handler = std::make_shared<interval_posts>(
+        handler, expr, interval, report.HANDLED(exact), report.HANDLED(empty),
+        report.HANDLED(align_intervals), begin_of_report, end_of_report);
   }
 
   /*--- Detail transfer (--date, --account, --payee, --pivot) ---*/
