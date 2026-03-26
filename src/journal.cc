@@ -143,6 +143,10 @@ account_t* journal_t::find_account_re(const string& regexp) {
   return master->find_account_re(regexp);
 }
 
+std::vector<account_t*> journal_t::find_accounts_re(const string& regexp) {
+  return master->find_accounts_re(regexp);
+}
+
 /**
  * @brief Resolve aliases, create the account, and enforce --strict/--pedantic.
  *
