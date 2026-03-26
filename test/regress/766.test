@@ -1,0 +1,39 @@
+; Regression test for #766: directives work without deprecated '@' prefix
+;
+; The '@' prefix for directives (e.g., '@ account', '@ bucket', '@ tag')
+; was deprecated.  This test verifies that 'apply account', 'bucket', and
+; 'apply tag' work correctly without any '@' prefix.
+
+bucket Assets:Checking
+
+apply account Expenses
+apply tag project: home
+
+2011/01/15 Hardware Store
+  Repairs                     $45.00
+
+2011/01/20 Garden Center
+  Garden                      $30.00
+
+end tag
+end account
+
+2011/01/25 Grocery Store
+  Expenses:Food               $25.00
+
+test bal
+            $-100.00  Assets:Checking
+             $100.00  Expenses
+              $25.00    Food
+              $30.00    Garden
+              $45.00    Repairs
+--------------------
+                   0
+end test
+
+test reg --limit "has_tag(/project/)"
+11-Jan-15 Hardware Store        Expenses:Repairs             $45.00       $45.00
+                                Assets:Checking             $-45.00            0
+11-Jan-20 Garden Center         Expenses:Garden              $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+end test
