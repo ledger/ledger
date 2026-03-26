@@ -74,12 +74,12 @@ namespace ledger {
  * across all items parsed during a session.
  */
 struct position_t {
-  path pathname;                  ///< Filesystem path of the journal file.
-  std::istream::pos_type beg_pos; ///< Stream offset where the item begins.
-  std::size_t beg_line;           ///< Line number where the item begins (1-based).
-  std::istream::pos_type end_pos; ///< Stream offset just past the item's last byte.
-  std::size_t end_line;           ///< Line number where the item ends (inclusive).
-  std::size_t sequence;           ///< Global parse-order sequence number.
+  path pathname;                          ///< Filesystem path of the journal file.
+  std::istream::pos_type beg_pos;         ///< Stream offset where the item begins.
+  std::size_t beg_line;                   ///< Line number where the item begins (1-based).
+  std::istream::pos_type end_pos;         ///< Stream offset just past the item's last byte.
+  std::size_t end_line;                   ///< Line number where the item ends (inclusive).
+  std::size_t sequence;                   ///< Global parse-order sequence number.
   std::shared_ptr<string> source_content; ///< Buffered stdin content (when pathname is empty).
 
   position_t() : beg_pos(0), beg_line(0), end_pos(0), end_line(0), sequence(0) {
