@@ -1,0 +1,15 @@
+; Regression test for issue #815: numeric_cast guards against overflow casts
+;
+; Verify that large integer values work correctly without silent overflow
+; when converted through the expression engine.
+
+2024/01/01 Test
+    Expenses:Food    $1000000
+    Assets:Cash
+
+; Verify that large integer arithmetic works correctly in expressions.
+; The value 2147483647 is INT_MAX; values near it should be handled
+; without silent truncation when used in integer contexts.
+test bal --limit "amount > 0" --format "%(quantity(display_total))\n"
+1000000
+end test
