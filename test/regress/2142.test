@@ -10,7 +10,7 @@ account Assets:Checking
 
 test convert test/regress/2142-data.csv --input-date-format "%Y-%m-%d" --account Assets:Checking
 2022/10/03 * Expense with conversion
-    Expenses:Unknown                          15 EUR
+    Expenses:Unknown                          15 EUR @@ 14 USD
     Assets:Checking                          -14 USD
 
 2022/10/07 * Expense without cost
