@@ -197,6 +197,7 @@ public:
   [[nodiscard]] bool remove_account(account_t* acct);
   [[nodiscard]] account_t* find_account(string_view name, bool auto_create = true);
   [[nodiscard]] account_t* find_account_re(const string& regexp);
+  [[nodiscard]] std::vector<account_t*> find_accounts_re(const string& regexp);
 
   /**
    * @brief Expand account aliases, returning the resolved account or nullptr.

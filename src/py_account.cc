@@ -118,6 +118,13 @@ value_t py_total_1(const account_t& account, const boost::optional<expr_t&>& exp
   return account.total(expr);
 }
 
+boost::python::list py_find_accounts_re(account_t& account, const string& regexp) {
+  boost::python::list result;
+  for (account_t* a : account.find_accounts_re(regexp))
+    result.append(boost::python::ptr(a));
+  return result;
+}
+
 } // unnamed namespace
 
 void export_account() {
@@ -202,6 +209,7 @@ void export_account() {
 
       .def("find_account", &account_t::find_account, return_internal_reference<>())
       .def("find_account_re", &account_t::find_account_re, return_internal_reference<>())
+      .def("find_accounts_re", py_find_accounts_re)
 
       .def("add_post", &account_t::add_post)
       .def("remove_post", &account_t::remove_post)
