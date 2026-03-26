@@ -1010,9 +1010,8 @@ class interval_posts : public subtotal_posts {
   bool generate_empty_posts; ///< If true, emit zero-amount postings for empty periods (--empty).
   bool align_intervals;      ///< If true, align periods to calendar boundaries (--align-intervals).
   optional<date_t>
-      begin_of_report_; ///< Report begin date (-b) for anchoring empty leading periods.
-  optional<date_t>
-      end_of_report_; ///< Report end date (-e) for generating empty trailing periods.
+      begin_of_report_;            ///< Report begin date (-b) for anchoring empty leading periods.
+  optional<date_t> end_of_report_; ///< Report end date (-e) for generating empty trailing periods.
 
   std::deque<post_t*> all_posts; ///< All postings seen, sorted by date in flush().
 
