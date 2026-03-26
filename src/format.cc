@@ -120,7 +120,7 @@ struct format_mapping_t {
   char letter;      ///< The single letter after `%`.
   const char* expr; ///< The full expression template with `$min`/`$max`/`$left` placeholders.
 } single_letter_mappings[] = {
-    {'d', "aux_date ? format_date(date) + \"=\" + format_date(aux_date) : format_date(date)"},
+    {'d', "has_aux_date ? format_date(date) + \"=\" + format_date(aux_date) : format_date(date)"},
     {'D', "date"},
     {'S', "filename"},
     {'B', "beg_pos"},
