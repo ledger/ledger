@@ -677,10 +677,15 @@ bool xact_base_t::finalize() {
             // times the quantity.  When the per-unit price was rounded
             // during lot creation (e.g. $250 / 101 → $2.475248), the
             // product can differ from the original total cost by a tiny
-            // rounding artifact.  Round the gain/loss to the commodity's
-            // display precision to eliminate this artifact (#2975).
+            // rounding artifact.  Round the gain/loss to a precision
+            // that accounts for the quantity's decimal places, so
+            // genuine gains from fractional-share transactions are
+            // preserved while reconstruction artifacts are eliminated
+            // (#2975, #3013).
             if (gain_loss.has_commodity())
-              gain_loss.in_place_roundto(static_cast<int>(gain_loss.commodity().precision()));
+              gain_loss.in_place_roundto(
+                  static_cast<int>(gain_loss.commodity().precision()) +
+                  static_cast<int>(post->amount.precision()));
             gain_loss.in_place_round();
             DEBUG("xact.finalize", "gain_loss rounds to = " << gain_loss);
             if (post->must_balance())
@@ -729,7 +734,9 @@ bool xact_base_t::finalize() {
               if (amount_t gain_loss = from_cost - to_cost) {
                 DEBUG("xact.finalize", "Commodity swap gain_loss = " << gain_loss);
                 if (gain_loss.has_commodity())
-                  gain_loss.in_place_roundto(static_cast<int>(gain_loss.commodity().precision()));
+                  gain_loss.in_place_roundto(
+                      static_cast<int>(gain_loss.commodity().precision()) +
+                      static_cast<int>(post->amount.precision()));
                 gain_loss.in_place_round();
                 DEBUG("xact.finalize", "Commodity swap gain_loss rounds to = " << gain_loss);
 
