@@ -211,8 +211,8 @@ std::streamsize instance_t::read_line(char*& line) {
     // the lead byte of the last character.
     std::streamsize char_start = len - 1;
     while (char_start > 0) {
-      unsigned char b = static_cast<unsigned char>(
-          context.linebuf[static_cast<std::size_t>(char_start)]);
+      unsigned char b =
+          static_cast<unsigned char>(context.linebuf[static_cast<std::size_t>(char_start)]);
       if ((b & 0xC0) != 0x80)
         break;
       --char_start;
