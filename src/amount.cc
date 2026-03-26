@@ -1871,19 +1871,15 @@ void amount_t::parse_conversion(const string& larger_str, const string& smaller_
   if (larger.commodity_ && smaller.commodity_) {
     // Would setting larger_commodity.smaller = smaller create a cycle?
     // Walk the existing smaller chain from smaller's commodity.
-    for (commodity_t* c = smaller.commodity_; c && c->smaller();
-         c = c->smaller()->commodity_) {
+    for (commodity_t* c = smaller.commodity_; c && c->smaller(); c = c->smaller()->commodity_) {
       if (c->smaller()->commodity_ == larger.commodity_)
-        throw parse_error(
-            _("Commodity conversion would create a cycle"));
+        throw parse_error(_("Commodity conversion would create a cycle"));
     }
     // Would setting smaller_commodity.larger = larger create a cycle?
     // Walk the existing larger chain from larger's commodity.
-    for (commodity_t* c = larger.commodity_; c && c->larger();
-         c = c->larger()->commodity_) {
+    for (commodity_t* c = larger.commodity_; c && c->larger(); c = c->larger()->commodity_) {
       if (c->larger()->commodity_ == smaller.commodity_)
-        throw parse_error(
-            _("Commodity conversion would create a cycle"));
+        throw parse_error(_("Commodity conversion would create a cycle"));
     }
   }
 
