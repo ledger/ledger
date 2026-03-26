@@ -301,9 +301,9 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
               string::size_type klen = static_cast<string::size_type>(ptr - beg);
               string keyword(beg, klen);
               if (keyword == "min")
-                expr << (current->min_width > 0 ? static_cast<int>(current->min_width) : -1);
+                expr << (current->min_width > 0 ? boost::numeric_cast<int>(current->min_width) : -1);
               else if (keyword == "max")
-                expr << (current->max_width > 0 ? static_cast<int>(current->max_width) : -1);
+                expr << (current->max_width > 0 ? boost::numeric_cast<int>(current->max_width) : -1);
               else if (keyword == "left")
                 expr << (current->has_flags(ELEMENT_ALIGN_LEFT) ? "false" : "true");
 #if DEBUG_ON
@@ -525,7 +525,7 @@ string format_t::real_calc(scope_t& scope) {
         DEBUG("format.expr", "value = (" << value << ")");
 
         if (elem->min_width > 0)
-          value.print(out, static_cast<int>(elem->min_width), -1,
+          value.print(out, boost::numeric_cast<int>(elem->min_width), -1,
                       !elem->has_flags(ELEMENT_ALIGN_LEFT));
         else
           out << value.to_string();
