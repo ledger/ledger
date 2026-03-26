@@ -1,0 +1,22 @@
+; Regression test for issue #958: Fixated prices vanish when commodity
+; equivalencies exist.
+;
+; When a commodity equivalency (C directive) exists for a commodity,
+; lot annotations (fixated prices, lot prices, lot notes) must be
+; preserved through reduce/unreduce conversions.
+
+C 1 widget = 2 thingy
+
+2013/05/07 Widgits-R-Us
+    Assets:Widgets         1 widget {=$10}
+    Income:Gifts           $-10
+
+; Fixated lot price must survive C directive in --lots output
+test bal --lots Assets:Widgets
+     1 widget {=$10}  Assets:Widgets
+end test
+
+; Per-unit cost must survive C directive in --lots output
+test bal --lot-prices Assets:Widgets
+     1 widget {=$10}  Assets:Widgets
+end test
