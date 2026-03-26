@@ -88,6 +88,8 @@ optional<int> year_directive_year; // Track year from year directives separately
 
 date_time::weekdays start_of_week = gregorian::Sunday;
 
+int day_of_period = 0;
+
 /*--- Date I/O Infrastructure ---*/
 
 /**
@@ -1711,6 +1713,28 @@ date_t date_duration_t::find_nearest(const date_t& date, skip_quantum_t skip) {
     result = date;
     break;
   }
+
+  if (day_of_period != 0 && skip != date_duration_t::WEEKS &&
+      skip != date_duration_t::DAYS) {
+    result += gregorian::days(day_of_period);
+    // If the shifted boundary is past the input date, back up one period
+    if (result > date) {
+      switch (skip) {
+      case date_duration_t::YEARS:
+        result -= gregorian::years(1);
+        break;
+      case date_duration_t::QUARTERS:
+        result -= gregorian::months(3);
+        break;
+      case date_duration_t::MONTHS:
+        result -= gregorian::months(1);
+        break;
+      default:
+        break;
+      }
+    }
+  }
+
   return result;
 }
 

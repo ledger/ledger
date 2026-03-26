@@ -156,6 +156,10 @@ void report_t::normalize_options(const string& verb) {
       start_of_week = *weekday;
   }
 
+  if (HANDLED(period_shift_)) {
+    day_of_period = std::stoi(HANDLER(period_shift_).str());
+  }
+
   long meta_width = -1;
 
   if (!HANDLED(prepend_format_) && HANDLED(meta_)) {
@@ -1578,6 +1582,7 @@ option_t<report_t>* report_t::lookup_option(const char* p) {
     else OPT(pricedb_format_);
     else OPT(primary_date);
     else OPT(payee_width_);
+    else OPT(period_shift_);
     else OPT(prepend_format_);
     else OPT(prepend_width_);
     break;
