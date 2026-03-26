@@ -61,6 +61,7 @@
 
 #include <limits>
 
+#include "mask.h"
 #include "scope.h"
 #include "types.h"
 
@@ -103,6 +104,7 @@ public:
   unsigned short depth;  ///< Nesting level: root=0, Assets=1, Assets:Bank=2, etc.
   accounts_map accounts; ///< Child accounts keyed by local name.
   posts_list posts;      ///< Postings that affect this account.
+  std::set<string> aliases; ///< Alias names registered via `account` directive's `alias` sub-directive.
   optional<deferred_posts_map_t>
       deferred_posts; ///< Postings waiting for a UUID-matched transaction to arrive.
   std::optional<expr_t>
@@ -155,6 +157,9 @@ public:
    * @param flat  If true, always return the full path (no collapsing).
    */
   string partial_name(bool flat = false) const;
+
+  /// @brief Test whether the account's fullname or any of its aliases match the mask.
+  bool match(const mask_t& m) const;
 
   void add_account(account_t* acct) { accounts.insert(accounts_map::value_type(acct->name, acct)); }
   bool remove_account(account_t* acct) {
