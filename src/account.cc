@@ -148,6 +148,24 @@ account_t* account_t::find_account_re(const string& regexp) {
   return find_account_re_(this, mask_t(regexp));
 }
 
+namespace {
+/** @brief Depth-first search helper that collects all matching accounts. */
+void find_accounts_re_(account_t* account, const mask_t& regexp,
+                       std::vector<account_t*>& results) {
+  if (regexp.match(account->fullname()))
+    results.push_back(account);
+
+  for (accounts_map::value_type& pair : account->accounts)
+    find_accounts_re_(pair.second, regexp, results);
+}
+} // namespace
+
+std::vector<account_t*> account_t::find_accounts_re(const string& regexp) {
+  std::vector<account_t*> results;
+  find_accounts_re_(this, mask_t(regexp), results);
+  return results;
+}
+
 /*--- Post Management ---*/
 
 /**
