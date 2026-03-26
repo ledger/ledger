@@ -19,19 +19,19 @@ test query Expenses | sed -E 's/0x[0-9a-f]+/0xXXXX/g; s/^(0xXXXX) +/\1 /g'
     Liabilities:MasterCard        $-200.00
 
 --- Input expression ---
-(account =~ /Expenses/)
+match_account(/Expenses/)
 
 --- Text as parsed ---
-(account =~ /Expenses/)
+match_account(/Expenses/)
 
 --- Expression tree ---
-0xXXXX O_MATCH (1)
-0xXXXX IDENT: account (1)
+0xXXXX O_CALL (1)
+0xXXXX IDENT: match_account (1)
 0xXXXX VALUE: /Expenses/ (1)
 
 --- Compiled tree ---
-0xXXXX O_MATCH (1)
-0xXXXX IDENT: account (1)
+0xXXXX O_CALL (1)
+0xXXXX IDENT: match_account (1)
 0xXXXX FUNCTION (1)
 0xXXXX VALUE: /Expenses/ (1)
 

@@ -57,7 +57,7 @@ end test
 test reg --limit "has_tag()" Expenses -> 1
 __ERROR__
 While evaluating value expression:
-  (has_tag() & (account =~ /Expenses/))
+  (has_tag() & match_account(/Expenses/))
    ^^^^^^^^^
 While calling function 'has_tag ':
 While handling posting from "$FILE", line 10:
@@ -68,7 +68,7 @@ end test
 test reg --limit "has_tag(\"a\", \"b\", \"c\")" Expenses -> 1
 __ERROR__
 While evaluating value expression:
-  (has_tag("a", "b", "c") & (account =~ /Expenses/))
+  (has_tag("a", "b", "c") & match_account(/Expenses/))
    ^^^^^^^^^^^^^^^^^^^^^^
 While calling function 'has_tag (<#EXPR "a">, <#EXPR "b">, <#EXPR "c">)':
 While handling posting from "$FILE", line 10:
@@ -79,7 +79,7 @@ end test
 test reg --limit "has_tag(5)" Expenses -> 1
 __ERROR__
 While evaluating value expression:
-  (has_tag(5) & (account =~ /Expenses/))
+  (has_tag(5) & match_account(/Expenses/))
    ^^^^^^^^^^
 While calling function 'has_tag 5':
 While handling posting from "$FILE", line 10:
@@ -90,7 +90,7 @@ end test
 test reg --limit "has_tag(\"a\", \"b\")" Expenses -> 1
 __ERROR__
 While evaluating value expression:
-  (has_tag("a", "b") & (account =~ /Expenses/))
+  (has_tag("a", "b") & match_account(/Expenses/))
    ^^^^^^^^^^^^^^^^^
 While calling function 'has_tag (a, b)':
 While handling posting from "$FILE", line 10:
