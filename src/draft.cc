@@ -220,8 +220,23 @@ void draft_t::parse_args(const value_t& args) {
             amount_t amt;
             optional<mask_t> account;
 
-            if (!amt.parse(arg, PARSE_SOFT_FAIL | PARSE_NO_MIGRATE))
+            if (!amt.parse(arg, PARSE_SOFT_FAIL | PARSE_NO_MIGRATE)) {
+              // Before treating as an account, check if this argument
+              // is a known commodity symbol that should attach to the
+              // previous posting's uncommoditized amount (e.g., "1000
+              // EUR" passed as separate arguments). (#1593)
+              if (!tmpl->posts.empty()) {
+                auto& last_post = tmpl->posts.back();
+                if (last_post.amount && !last_post.amount->has_commodity()) {
+                  if (commodity_t* comm =
+                          commodity_pool_t::current_pool->find(arg)) {
+                    last_post.amount->set_commodity(*comm);
+                    continue;
+                  }
+                }
+              }
               account = mask_t(arg);
+            }
 
             if (!post || (account && post->account_mask) || (!account && post->amount)) {
               tmpl->posts.push_back(xact_template_t::post_template_t());
