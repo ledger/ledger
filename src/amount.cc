@@ -1196,7 +1196,9 @@ std::optional<amount_t> amount_t::value(const datetime_t& moment,
     if (in_terms_of)
       DEBUG("commodity.price.find", "amount_t::value: in_terms_of = " << in_terms_of->symbol());
 #endif
-    if (has_commodity() && (in_terms_of || !commodity().has_flags(COMMODITY_PRIMARY))) {
+    if (has_commodity() && (in_terms_of || (!commodity().has_flags(COMMODITY_PRIMARY) &&
+                                            !(commodity().has_flags(COMMODITY_NOMARKET) &&
+                                              !commodity().has_flags(COMMODITY_BUILTIN))))) {
       std::optional<price_point_t> point;
       const commodity_t* comm(in_terms_of);
 

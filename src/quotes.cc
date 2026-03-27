@@ -137,8 +137,7 @@ std::optional<price_point_t> commodity_quote_from_script(commodity_t& commodity,
                                     << (exchange_commodity ? exchange_commodity->symbol() : "''")
                                     << "\")");
 
-    // Don't try to download this commodity again.
-    commodity.add_flags(COMMODITY_NOMARKET);
+    // The caller (check_for_updated_price) throttles retries via last_quote.
   }
 #endif
   return std::nullopt;
