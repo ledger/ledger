@@ -2623,9 +2623,24 @@ void value_t::dump(std::ostream& out, const bool relaxed) const {
     out << '"';
     break;
 
-  case MASK:
-    out << '/' << as_mask() << '/';
+  case MASK: {
+    out << '/';
+    for (char ch : as_mask().str()) {
+      switch (ch) {
+      case '/':
+        out << "\\/";
+        break;
+      case '\\':
+        out << "\\\\";
+        break;
+      default:
+        out << ch;
+        break;
+      }
+    }
+    out << '/';
     break;
+  }
 
   case SCOPE:
     out << as_scope();
