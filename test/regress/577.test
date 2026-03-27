@@ -1,0 +1,54 @@
+; Regression test for issue #577: automated virtual postings with multiple commodities
+; https://github.com/ledger/ledger/issues/577
+;
+; When a transaction has multiple commodities and a null posting (auto-balanced),
+; finalize() creates additional balancing posts with ITEM_GENERATED | POST_CALCULATED.
+; Automated transactions must match these balancing posts so that the virtual
+; postings reflect all commodities, not just the first one.
+
+; Original bug report scenario: single transaction, three commodities,
+; auto-balanced Equity posting matched by automated transaction.
+
+= /^Equity:/
+ (Virtual Account)        1
+
+2011/01/01 Opening Balances
+ Account1                 100 USD
+ Account2                 100 GBP
+ Account3                 100 EUR
+ Equity:Opening Balance
+
+test bal
+             100 USD  Account1
+             100 GBP  Account2
+             100 EUR  Account3
+            -100 EUR
+            -100 GBP
+            -100 USD  Equity:Opening Balance
+            -100 EUR
+            -100 GBP
+            -100 USD  Virtual Account
+--------------------
+            -100 EUR
+            -100 GBP
+            -100 USD
+end test
+
+test reg
+11-Jan-01 Opening Balances      Account1                    100 USD      100 USD
+                                Account2                    100 GBP      100 GBP
+                                                                         100 USD
+                                Account3                    100 EUR      100 EUR
+                                                                         100 GBP
+                                                                         100 USD
+                                Equity:Opening Balance     -100 EUR      100 GBP
+                                                                         100 USD
+                                Equity:Opening Balance     -100 GBP      100 USD
+                                Equity:Opening Balance     -100 USD            0
+                                (Virtual Account)          -100 EUR     -100 EUR
+                                (Virtual Account)          -100 GBP     -100 EUR
+                                                                        -100 GBP
+                                (Virtual Account)          -100 USD     -100 EUR
+                                                                        -100 GBP
+                                                                        -100 USD
+end test
