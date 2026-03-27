@@ -584,7 +584,7 @@ void commodity_pool_t::prefetch_quotes() {
   // exchanges (e.g. "10 AAPL / $-1000" creates a $ -> AAPL edge).
 
   struct candidate_t {
-    commodity_t*       comm;
+    commodity_t* comm;
     const commodity_t* exchange;
   };
   std::vector<candidate_t> candidates;
@@ -635,10 +635,10 @@ void commodity_pool_t::prefetch_quotes() {
   }
 
   for (auto& [exchange, batch] : groups) {
-    DEBUG("commodity.download", "prefetch_quotes: batch of "
-                                    << batch.size() << " commodities"
-                                    << (exchange ? string(" in terms of ") + exchange->symbol()
-                                                 : string()));
+    DEBUG("commodity.download",
+          "prefetch_quotes: batch of "
+              << batch.size() << " commodities"
+              << (exchange ? string(" in terms of ") + exchange->symbol() : string()));
 
     std::vector<std::pair<commodity_t*, price_point_t>> results =
         get_commodity_batch_quote(batch, exchange);

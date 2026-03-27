@@ -63,8 +63,7 @@ std::optional<price_point_t> commodity_quote_from_script(commodity_t& commodity,
  * @return A vector of (commodity, price_point) pairs for successful quotes.
  */
 std::vector<std::pair<commodity_t*, price_point_t>>
-commodity_batch_quote_from_script(
-    std::vector<std::reference_wrapper<commodity_t>>& commodities,
-    const commodity_t* exchange_commodity);
+commodity_batch_quote_from_script(std::vector<std::reference_wrapper<commodity_t>>& commodities,
+                                  const commodity_t* exchange_commodity);
 
 } // namespace ledger
