@@ -165,6 +165,8 @@ public:
 
   datetime_t
       terminus; ///< Valuation date for market prices (defaults to now, adjusted by --end/--now)
+  optional<date_t>
+      origin; ///< Report begin date for budget period initialization (from -p/--begin)
   optional<datetime_t>
       gain_from; ///< Reference date for --gain-since (compute gain from this date's market value)
   uint_least8_t budget_flags; ///< Bitmask of BUDGET_* flags controlling budget report behavior
@@ -591,6 +593,8 @@ public:
           if (!interval.begin_has_year() && *begin > CURRENT_DATE())
             begin = *begin - gregorian::years(1);
           OTHER(limit_).on(whence, "date>=[" + to_iso_extended_string(*begin) + "]");
+          if (!parent->origin || *begin < *parent->origin)
+            parent->origin = begin;
         } else {
           throw_(std::invalid_argument, _f("Could not determine beginning of period '%1%'") % str);
         }
