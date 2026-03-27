@@ -1,0 +1,13 @@
+; Verify that --time-round rounds timelog durations up to N-minute blocks
+i 2024/01/01 09:00:00 Projects:Work
+o 2024/01/01 09:07:00
+
+i 2024/01/01 10:00:00 Projects:Work
+o 2024/01/01 10:15:00
+
+i 2024/01/01 11:00:00 Projects:Work
+o 2024/01/01 11:31:00
+
+test bal --time-round 15
+               1.25h  Projects:Work
+end test
