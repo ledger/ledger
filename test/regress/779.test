@@ -1,0 +1,13 @@
+; Regression test for issue #779: pricedb should emit entries in both directions
+; https://github.com/ledger/ledger/issues/779
+
+P 2024/01/01 EUR 1.20 USD
+
+2024/01/01 Test
+    Assets:EUR   100 EUR @ 1.20 USD
+    Assets:Cash   -120 USD
+
+test pricedb
+P 2024/01/01 00:00:00 EUR 1.20 USD
+P 2024/01/01 00:00:00 USD 0.83333333 EUR
+end test
