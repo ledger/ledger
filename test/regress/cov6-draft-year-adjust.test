@@ -1,4 +1,4 @@
-; Coverage for draft.cc year directive adjusting draft date
+; Coverage for draft.cc: year directive does not affect xact date (#707)
 
 Y 2024
 
@@ -6,8 +6,8 @@ Y 2024
     Expenses:Food    $10.00
     Assets:Cash
 
-test xact 2/15 Payee Expenses:Food 20 Assets:Cash
-2024/02/15 Payee
+test --now 2026/03/01 xact 2/15 Payee Expenses:Food 20 Assets:Cash
+2026/02/15 Payee
     Expenses:Food                             $20.00
     Assets:Cash
 end test

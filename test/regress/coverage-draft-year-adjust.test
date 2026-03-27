@@ -1,7 +1,6 @@
-; Coverage test for draft.cc year directive with year adjustment
-; When a date without an explicit year is parsed, and a Y year directive
-; specifies a different year than what parse_date would default to,
-; the year is adjusted to match the directive
+; Coverage test for draft.cc: year directive does not affect xact date (#707)
+; When a date without an explicit year is parsed, the current date's year
+; is used, not the year from the year directive
 
 Y 2025
 
@@ -9,8 +8,8 @@ Y 2025
     Expenses:Food    $50.00
     Assets:Cash
 
-test xact 3/20 Grocery
-2025/03/20 Grocery Store
+test --now 2026/04/01 xact 3/20 Grocery
+2026/03/20 Grocery Store
     Expenses:Food                             $50.00
     Assets:Cash
 end test
