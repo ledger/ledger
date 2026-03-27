@@ -2,6 +2,11 @@
 
 --strict
 
+commodity $
+
+account Expenses:Food
+account Assets:Checking
+
 2024/01/01 Payee
     Expenses:Food    $10.00
     Assets:Checking
