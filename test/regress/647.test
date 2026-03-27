@@ -1,0 +1,36 @@
+; Regression test for issue #647: date expressions in xact command
+;
+; The xact command should accept date expressions like "yesterday",
+; "today", "tomorrow", "last month", etc. in addition to numeric dates.
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+; Test "yesterday" as a positional date argument
+test xact --now 2024/03/15 yesterday Grocery
+2024/03/14 Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Checking
+end test
+
+; Test "today" as a positional date argument
+test xact --now 2024/03/15 today Grocery
+2024/03/15 Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Checking
+end test
+
+; Test "tomorrow" as a positional date argument
+test xact --now 2024/03/15 tomorrow Grocery
+2024/03/16 Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Checking
+end test
+
+; Test "on yesterday" using the "on" preposition
+test xact --now 2024/03/15 Grocery on yesterday
+2024/03/14 Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Checking
+end test
