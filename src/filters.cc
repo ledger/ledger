@@ -1681,8 +1681,17 @@ void generate_posts::add_period_xacts(period_xacts_list& period_xacts) {
       // Skip auto-transaction-generated posts (ITEM_GENERATED without
       // POST_CALCULATED); they have no xact back-pointer and should not
       // produce independent forecast/budget entries.
-      if (!post->has_flags(ITEM_GENERATED) || post->has_flags(POST_CALCULATED))
-        add_post(xact->period, *post);
+      if (!post->has_flags(ITEM_GENERATED) || post->has_flags(POST_CALCULATED)) {
+        if (xact->period.duration) {
+          add_post(xact->period, *post);
+        } else {
+          // Default to monthly when no duration is specified (#1625).
+          date_interval_t period(xact->period);
+          period.duration =
+              date_duration_t(date_duration_t::MONTHS, 1);
+          add_post(period, *post);
+        }
+      }
 }
 
 /// Add a single periodic posting to the pending list.
