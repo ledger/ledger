@@ -1469,6 +1469,7 @@ option_t<report_t>* report_t::lookup_option(const char* p) {
     else OPT(cleared_format_);
     else OPT(collapse);
     else OPT(collapse_if_zero);
+    else OPT(comm_as_payee);
     else OPT(color);
     else OPT(columns_);
     else OPT_ALT(basis, cost);
@@ -1629,6 +1630,9 @@ option_t<report_t>* report_t::lookup_option(const char* p) {
   case 'w':
     OPT(weekly);
     else OPT_(wide);
+    break;
+  case 'x':
+    OPT_CH(comm_as_payee);
     break;
   case 'y':
     OPT_CH(date_format_);

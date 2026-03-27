@@ -362,6 +362,7 @@ public:
     HANDLER(color).report(out);
     HANDLER(collapse).report(out);
     HANDLER(collapse_if_zero).report(out);
+    HANDLER(comm_as_payee).report(out);
     HANDLER(columns_).report(out);
     HANDLER(csv_format_).report(out);
     HANDLER(current).report(out);
@@ -1023,6 +1024,11 @@ public:
 #endif // HAVE_ISATTY
 
   OPTION_(report_t, no_pager, DO() { OTHER(pager_).off(); });
+
+  OPTION_(
+      report_t, comm_as_payee, DO() { // -x
+        OTHER(payee_).on(whence, "commodity");
+      });
 
   OPTION(report_t, payee_);
   OPTION_(

@@ -1,0 +1,24 @@
+; Regression test for issue #1585: --comm-as-payee and -x should be
+; recognized as aliases for --payee=commodity.
+
+2024/01/01 Test Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Another Payee
+    Expenses:Food    10 EUR
+    Assets:Cash
+
+test reg --comm-as-payee --format '%(payee)\n'
+$
+$
+EUR
+EUR
+end test
+
+test reg -x --format '%(payee)\n'
+$
+$
+EUR
+EUR
+end test
