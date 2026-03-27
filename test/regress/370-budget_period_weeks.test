@@ -10,20 +10,18 @@
 test reg --budget --now=2010/06/13
 10-Feb-23 Budget transaction    Ex:Bills:Housecleaning      $-85.00      $-85.00
 10-Feb-23 Budget transaction    Assets:Bank:Checking         $85.00            0
-10-Feb-28 Budget transaction    Ex:Bills:Housecleaning      $-85.00      $-85.00
-10-Feb-28 Budget transaction    Assets:Bank:Checking         $85.00            0
-10-Mar-14 Budget transaction    Ex:Bills:Housecleaning      $-85.00      $-85.00
-10-Mar-14 Budget transaction    Assets:Bank:Checking         $85.00            0
-10-Mar-28 Budget transaction    Ex:Bills:Housecleaning      $-85.00      $-85.00
-10-Mar-28 Budget transaction    Assets:Bank:Checking         $85.00            0
-10-Apr-11 Budget transaction    Ex:Bills:Housecleaning      $-85.00      $-85.00
-10-Apr-11 Budget transaction    Assets:Bank:Checking         $85.00            0
-10-Apr-25 Budget transaction    Ex:Bills:Housecleaning      $-85.00      $-85.00
-10-Apr-25 Budget transaction    Assets:Bank:Checking         $85.00            0
-10-May-09 Budget transaction    Ex:Bills:Housecleaning      $-85.00      $-85.00
-10-May-09 Budget transaction    Assets:Bank:Checking         $85.00            0
-10-May-23 Budget transaction    Ex:Bills:Housecleaning      $-85.00      $-85.00
-10-May-23 Budget transaction    Assets:Bank:Checking         $85.00            0
-10-Jun-06 Budget transaction    Ex:Bills:Housecleaning      $-85.00      $-85.00
-10-Jun-06 Budget transaction    Assets:Bank:Checking         $85.00            0
+10-Mar-09 Budget transaction    Ex:Bills:Housecleaning      $-85.00      $-85.00
+10-Mar-09 Budget transaction    Assets:Bank:Checking         $85.00            0
+10-Mar-23 Budget transaction    Ex:Bills:Housecleaning      $-85.00      $-85.00
+10-Mar-23 Budget transaction    Assets:Bank:Checking         $85.00            0
+10-Apr-06 Budget transaction    Ex:Bills:Housecleaning      $-85.00      $-85.00
+10-Apr-06 Budget transaction    Assets:Bank:Checking         $85.00            0
+10-Apr-20 Budget transaction    Ex:Bills:Housecleaning      $-85.00      $-85.00
+10-Apr-20 Budget transaction    Assets:Bank:Checking         $85.00            0
+10-May-04 Budget transaction    Ex:Bills:Housecleaning      $-85.00      $-85.00
+10-May-04 Budget transaction    Assets:Bank:Checking         $85.00            0
+10-May-18 Budget transaction    Ex:Bills:Housecleaning      $-85.00      $-85.00
+10-May-18 Budget transaction    Assets:Bank:Checking         $85.00            0
+10-Jun-01 Budget transaction    Ex:Bills:Housecleaning      $-85.00      $-85.00
+10-Jun-01 Budget transaction    Assets:Bank:Checking         $85.00            0
 end test
