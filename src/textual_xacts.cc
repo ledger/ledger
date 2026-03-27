@@ -1132,10 +1132,27 @@ xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* accou
     xact->pos->end_line = context.linenum;
 
     // Phase 7: Apply tags from any active `apply tag` directives.
+    // Tags from `apply tag` must be printed as separate metadata lines
+    // by the `print` command (issue #603).  parse_tags() marks all tags
+    // as "from note" (tag_data_t::second = true), which tells `print`
+    // to skip them.  We snapshot the existing keys so we can reset the
+    // flag on any tags that were actually added by this phase.
     std::vector<string> tags;
     get_applications<string>(tags);
-    for (string& tag : tags)
-      xact->parse_tags(tag.c_str(), *context.scope, false);
+    if (!tags.empty()) {
+      std::set<string> existing_keys;
+      if (xact->metadata)
+        for (const auto& entry : *xact->metadata)
+          existing_keys.insert(entry.first);
+
+      for (string& tag : tags)
+        xact->parse_tags(tag.c_str(), *context.scope, false);
+
+      if (xact->metadata)
+        for (auto& entry : *xact->metadata)
+          if (existing_keys.find(entry.first) == existing_keys.end())
+            entry.second.second = false;
+    }
 
     TRACE_STOP(xact_details, 1);
 
