@@ -144,16 +144,15 @@ std::optional<price_point_t> commodity_quote_from_script(commodity_t& commodity,
 }
 
 std::vector<std::pair<commodity_t*, price_point_t>>
-commodity_batch_quote_from_script(
-    std::vector<std::reference_wrapper<commodity_t>>& commodities,
-    const commodity_t* exchange_commodity) {
+commodity_batch_quote_from_script(std::vector<std::reference_wrapper<commodity_t>>& commodities,
+                                  const commodity_t* exchange_commodity) {
   std::vector<std::pair<commodity_t*, price_point_t>> results;
 
   if (commodities.empty())
     return results;
 
-  DEBUG("commodity.download", "batch downloading quotes for " << commodities.size()
-                                                              << " commodities");
+  DEBUG("commodity.download",
+        "batch downloading quotes for " << commodities.size() << " commodities");
 #if DEBUG_ON
   if (exchange_commodity)
     DEBUG("commodity.download", "  in terms of commodity " << exchange_commodity->symbol());
