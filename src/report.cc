@@ -1167,8 +1167,7 @@ value_t report_t::fn_nail_down(call_scope_t& args) {
       // commodity for the per-unit cost calculation.
       if (stripped.is_balance()) {
         const balance_t& bal = stripped.as_balance();
-        if (optional<amount_t> comm_amt =
-                bal.commodity_amount(tmp.commodity())) {
+        if (optional<amount_t> comm_amt = bal.commodity_amount(tmp.commodity())) {
           arg1 = *comm_amt;
         } else if (bal.amounts.size() == 1) {
           arg1 = bal.amounts.begin()->second;
