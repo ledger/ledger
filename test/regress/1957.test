@@ -17,7 +17,7 @@
 
 test budget --period 'January 2024' --flat --no-color
        $-150
--2 AAPL        $-200
+     -2 AAPL        $-200
                   -3 AAPL          $50
                                 1 AAPL     0  Assets:Checking
         $150         $200         $-50   75%  Expenses:Food
