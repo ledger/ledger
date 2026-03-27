@@ -1,5 +1,6 @@
 ; Coverage for report.cc line 728: fn_get_at index out of bounds on sequence
-; When get_at is called on a sequence with an index >= sequence size
+; When get_at is called on a sequence with an index >= sequence size,
+; it returns void instead of throwing (changed for issue #697).
 
 ~ Monthly
     Expenses:Food    $200.00
@@ -9,11 +10,5 @@
     Expenses:Food    $180.00
     Assets:Checking
 
-test budget --begin 2024/01/01 --end 2024/02/01 --format '%(get_at(amount, 5))\n' Expenses -> 1
-__ERROR__
-While evaluating value expression:
-  get_at(amount, 5)
-  ^^^^^^^^^^^^^^^^^
-While calling function 'get_at (($180.00, $-200.00), 5)':
-Error: Attempting to get index 5 from a sequence with 2 elements
+test budget --begin 2024/01/01 --end 2024/02/01 --format '%(get_at(amount, 5))\n' Expenses
 end test

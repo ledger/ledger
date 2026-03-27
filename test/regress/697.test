@@ -1,0 +1,35 @@
+; Regression test for issue #697: --dc has a problem with -V and -B
+; https://github.com/ledger/ledger/issues/697
+; --dc with -B crashed because -B converts commodity amounts to plain
+; amounts, but the --dc format uses get_at() to index into them as
+; sequences.  Fixed by making get_at() return void for non-sequence
+; values at index > 0, letting the fallback expressions work.
+
+P 2015/01/01 AAPL $100.00
+P 2015/06/01 AAPL $150.00
+
+2015/01/15 Buy stock
+    Assets:Investments    10 AAPL @ $100.00
+    Assets:Cash          $-1000.00
+
+test bal --dc -B
+             0              0              0  Assets
+      $1000.00              0      $-1000.00    Cash
+      $1000.00              0       $1000.00    Investments
+--------------------------------------------
+             0              0              0
+end test
+
+test bal --dc -V --now 2015/07/01
+      $1500.00       $1000.00        $500.00  Assets
+             0       $1000.00      $-1000.00    Cash
+      $1500.00              0       $1500.00    Investments
+--------------------------------------------
+      $1500.00       $1000.00        $500.00
+end test
+
+test reg --dc -V --now 2015/07/01
+15-Jan-15 Buy stock        As:Investments     $1000.00            0     $1000.00
+                           Assets:Cash               0     $1000.00            0
+15-Jul-01 Commodities re.. <Revalued>          $500.00            0      $500.00
+end test
