@@ -1524,22 +1524,36 @@ void posts_as_equity::report_subtotal() {
       if (value.is_balance()) {
         value.as_balance_lval().map_sorted_amounts([&](const amount_t& amt) {
           if (!amt.is_zero())
-            handle_value(/* value=      */ amt,
-                         /* account=    */ pair.second.account,
-                         /* xact=       */ &xact,
-                         /* temps=      */ temps,
-                         /* handler=    */ handler,
-                         /* date=       */ finish,
-                         /* act_date_p= */ false);
+            handle_value(/* value=              */ amt,
+                         /* account=            */ pair.second.account,
+                         /* xact=               */ &xact,
+                         /* temps=              */ temps,
+                         /* handler=            */ handler,
+                         /* date=               */ finish,
+                         /* act_date_p=         */ false,
+                         /* total=              */ value_t(),
+                         /* direct_amount=      */ false,
+                         /* mark_visited=       */ false,
+                         /* bidir_link=         */ true,
+                         /* source_post=        */ nullptr,
+                         /* force_virtual=      */ pair.second.is_virtual,
+                         /* force_must_balance= */ pair.second.must_balance);
         });
       } else {
-        handle_value(/* value=      */ value.to_amount(),
-                     /* account=    */ pair.second.account,
-                     /* xact=       */ &xact,
-                     /* temps=      */ temps,
-                     /* handler=    */ handler,
-                     /* date=       */ finish,
-                     /* act_date_p= */ false);
+        handle_value(/* value=              */ value.to_amount(),
+                     /* account=            */ pair.second.account,
+                     /* xact=               */ &xact,
+                     /* temps=              */ temps,
+                     /* handler=            */ handler,
+                     /* date=               */ finish,
+                     /* act_date_p=         */ false,
+                     /* total=              */ value_t(),
+                     /* direct_amount=      */ false,
+                     /* mark_visited=       */ false,
+                     /* bidir_link=         */ true,
+                     /* source_post=        */ nullptr,
+                     /* force_virtual=      */ pair.second.is_virtual,
+                     /* force_must_balance= */ pair.second.must_balance);
       }
     }
 
