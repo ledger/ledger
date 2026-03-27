@@ -10,5 +10,5 @@ commodity EUR
     Assets:Cash
 
 test bal Expenses -V
-             $110.00  Expenses:Food
+             100 EUR  Expenses:Food
 end test
