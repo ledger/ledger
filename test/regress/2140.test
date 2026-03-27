@@ -33,6 +33,7 @@ end test
 
 ; --latest also works with the pricedb command
 test pricedb --latest
+P 2022/06/01 00:00:00 $ 0.01 BND
 P 2022/06/01 00:00:00 BND $82.00
 P 2022/06/02 00:00:00 VTI $155.00
 end test

@@ -653,8 +653,8 @@ void report_t::commodities_report(post_handler_ptr handler) {
     HANDLER(limit_).on(none, saved_limit);
   }
 
-  posts_commodities_iterator* walker(
-      new posts_commodities_iterator(*session.journal.get(), HANDLED(latest)));
+  posts_commodities_iterator* walker(new posts_commodities_iterator(
+      *session.journal.get(), HANDLED(latest), bidirectional_prices));
   try {
     pass_down_posts<posts_commodities_iterator>(handler, *walker); // NOLINT(bugprone-unused-raii)
   } catch (...) {
@@ -2008,6 +2008,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
       } else if (is_eq(p, "prices")) {
         return FORMATTED_COMMODITIES_REPORTER(prices_format_);
       } else if (is_eq(p, "pricedb") || is_eq(p, "pricesdb")) {
+        bidirectional_prices = true;
         return FORMATTED_COMMODITIES_REPORTER(pricedb_format_);
       } else if (is_eq(p, "pricemap")) {
         return MAKE_FUNCTOR(report_t::pricemap_command);
