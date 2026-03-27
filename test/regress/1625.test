@@ -1,0 +1,30 @@
+; Regression test for issue #1625: Budget period entry without interval gives error (BZ#553)
+; https://github.com/ledger/ledger/issues/1625
+;
+; A periodic transaction (~) without an explicit interval should default
+; to monthly when used with --budget, rather than throwing
+; "Invalid date interval: neither start, nor finish, nor duration".
+
+~
+    Expenses:Food    $500.00
+    Budget:Food
+
+2024/01/15 Grocery
+    Expenses:Food    $100.00
+    Assets:Checking
+
+test --budget reg --now=2024/02/01
+24-Jan-01 Budget transaction    Expenses:Food              $-500.00     $-500.00
+24-Jan-01 Budget transaction    Budget:Food                 $500.00            0
+24-Jan-15 Grocery               Expenses:Food               $100.00      $100.00
+24-Feb-01 Budget transaction    Expenses:Food              $-500.00     $-400.00
+24-Feb-01 Budget transaction    Budget:Food                 $500.00      $100.00
+end test
+
+; Also verify --budget bal works
+test --budget bal --now=2024/02/01
+            $1000.00  Budget:Food
+            $-900.00  Expenses:Food
+--------------------
+             $100.00
+end test
