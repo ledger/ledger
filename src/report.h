@@ -678,8 +678,7 @@ public:
         // Use CURRENT_DATE() to eagerly resolve the date so that a
         // later --end cannot widen --current's restriction by
         // overwriting terminus (which the symbolic "today" reads).
-        OTHER(limit_).on(whence,
-                         "date<=[" + to_iso_extended_string(CURRENT_DATE()) + "]");
+        OTHER(limit_).on(whence, "date<=[" + to_iso_extended_string(CURRENT_DATE()) + "]");
       });
 
   OPTION_(
