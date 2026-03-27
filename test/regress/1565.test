@@ -1,0 +1,30 @@
+; Regression test for issue #1565: Precision specified with D being ignored (BZ#493)
+; https://github.com/ledger/ledger/issues/1565
+;
+; The D directive sets the default commodity and its format (precision, separators).
+; When bare (uncommoditized) amounts are used, the D directive commodity and precision
+; should be applied.  Tests both commodity assignment and precision preservation.
+
+D $1,000.00
+
+2024/01/01 Whole amount
+    Expenses:Food    100
+    Assets:Cash     -100
+
+2024/02/01 Fractional amount
+    Expenses:Drink    50.10
+    Assets:Cash
+
+test bal
+            $-150.10  Assets:Cash
+             $150.10  Expenses
+              $50.10    Drink
+             $100.00    Food
+--------------------
+                   0
+end test
+
+test reg Expenses
+24-Jan-01 Whole amount          Expenses:Food               $100.00      $100.00
+24-Feb-01 Fractional amount     Expenses:Drink               $50.10      $150.10
+end test
