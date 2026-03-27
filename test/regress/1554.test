@@ -2,10 +2,12 @@
 ; https://github.com/ledger/ledger/issues/1554
 ;
 ; When transferring a commodity between accounts without explicit lot notation,
-; the cost basis does NOT follow the commodity to the new account.
-; Using {price} lot notation on both postings correctly transfers the cost basis.
+; the cost basis should follow the commodity to the new account.
+; Previously, only explicit {price} lot notation on both postings correctly
+; transferred the cost basis. Now, unannotated transfers also propagate
+; the cost basis from the source account's lot annotations.
 
-; Scenario 1 (broken): Transfer without lot notation - cost basis does not follow commodity
+; Scenario 1: Transfer without lot notation - cost basis now follows commodity
 2015/01/01 Buy AAPL
     Assets:Brokerage:Stocks   10 AAPL @ $100.00
     Assets:Brokerage:Cash
@@ -14,7 +16,7 @@
     Assets:IRA:Stocks         10 AAPL
     Assets:Brokerage:Stocks  -10 AAPL
 
-; Scenario 2 (workaround): Transfer with explicit lot notation - cost basis transfers correctly
+; Scenario 2: Transfer with explicit lot notation - cost basis transfers correctly
 2015/01/01 Buy MSFT
     Assets:Brokerage:Stocks   10 MSFT @ $100.00
     Assets:Brokerage:Cash
@@ -23,10 +25,7 @@
     Assets:IRA:Stocks         10 MSFT {$100.00}
     Assets:Brokerage:Stocks  -10 MSFT {$100.00}
 
-; Without lot notation on transfer, AAPL appears in IRA with no cost basis (only commodity units)
-; while MSFT with lot notation correctly shows $1000 cost basis.
-; The combined output shows the discrepancy.
+; Both AAPL and MSFT should show $1000 cost basis each = $2000 total
 test balance -B Assets:IRA:Stocks
-               $1000
-             10 AAPL  Assets:IRA:Stocks
+               $2000  Assets:IRA:Stocks
 end test
