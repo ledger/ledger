@@ -1,0 +1,20 @@
+; Regression test for issue #1604: Every N days problem in budgeting (BZ#532)
+; https://github.com/ledger/ledger/issues/1604
+;
+; Bug: 'every N weeks from [date]' did not honor the start date for
+; subsequent occurrences. Instead it aligned to week boundaries, causing
+; the second budget entry to appear too early (e.g. Mar 7 instead of
+; Mar 15 for "every 2 weeks from 2010/03/01").
+
+~ every 2 weeks from 2010/03/01
+    Expenses:Bills        $100.00
+    Assets:Checking
+
+test reg --budget --now=2010/04/01
+10-Mar-01 Budget transaction    Expenses:Bills             $-100.00     $-100.00
+10-Mar-01 Budget transaction    Assets:Checking             $100.00            0
+10-Mar-15 Budget transaction    Expenses:Bills             $-100.00     $-100.00
+10-Mar-15 Budget transaction    Assets:Checking             $100.00            0
+10-Mar-29 Budget transaction    Expenses:Bills             $-100.00     $-100.00
+10-Mar-29 Budget transaction    Assets:Checking             $100.00            0
+end test
