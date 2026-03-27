@@ -1272,8 +1272,9 @@ class budget_posts : public generate_posts {
 #define BUDGET_UNBUDGETED 0x02  ///< Show postings not matching any budget account.
 #define BUDGET_WRAP_VALUES 0x04 ///< Wrap values as (amount, budget) sequences for compound display.
 
-  uint_least8_t flags; ///< Combination of BUDGET_* flags controlling behavior.
-  date_t terminus;     ///< End date for budget generation (typically report terminus).
+  uint_least8_t flags;     ///< Combination of BUDGET_* flags controlling behavior.
+  date_t terminus;         ///< End date for budget generation (typically report terminus).
+  optional<date_t> origin; ///< Report begin date for initializing budget period intervals.
 
   budget_posts();
 
@@ -1284,6 +1285,7 @@ public:
   }
   ~budget_posts() noexcept override { TRACE_DTOR(budget_posts); }
 
+  void set_origin(const date_t& date) { origin = date; }
   void report_budget_items(const date_t& date);
 
   void flush() override;
