@@ -163,7 +163,9 @@ public:
       payees_for_unknown_accounts; ///< Payee-to-account mapping for resolving "Unknown" accounts.
   checksum_map_t checksum_map;     ///< UUID-to-transaction map for duplicate detection.
   tag_check_exprs_map tag_check_exprs; ///< Assertion/check expressions for metadata tag values.
-  std::optional<expr_t> value_expr;    ///< Journal-level valuation expression.
+  std::optional<expr_t> value_expr;              ///< Journal-level valuation expression.
+  std::optional<expr_t> account_value_expr;      ///< Default account-level valuation expression.
+  std::optional<expr_t> commodity_value_expr;    ///< Default commodity-level valuation expression.
   parse_context_t* current_context;    ///< Active parse context during read() (nullptr otherwise).
 
   /**
