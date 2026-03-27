@@ -426,8 +426,7 @@ boost::optional<string> mask_t::match_group(string_view text, std::size_t n) con
 #if HAVE_BOOST_REGEX_UNICODE
   string match_text = ignore_diacritics ? fold_diacritics(text) : string(text);
   boost::smatch what;
-  if (boost::u32regex_search(match_text, what, expr) &&
-      n < what.size() && what[n].matched) {
+  if (boost::u32regex_search(match_text, what, expr) && n < what.size() && what[n].matched) {
     return what[n].str();
   }
   return boost::none;
@@ -435,16 +434,14 @@ boost::optional<string> mask_t::match_group(string_view text, std::size_t n) con
   if (ignore_diacritics) {
     string match_text = fold_diacritics(text);
     boost::smatch what;
-    if (boost::regex_search(match_text, what, expr) &&
-        n < what.size() && what[n].matched) {
+    if (boost::regex_search(match_text, what, expr) && n < what.size() && what[n].matched) {
       return what[n].str();
     }
     return boost::none;
   }
   string match_text(text);
   boost::smatch what;
-  if (boost::regex_search(match_text, what, expr) &&
-      n < what.size() && what[n].matched) {
+  if (boost::regex_search(match_text, what, expr) && n < what.size() && what[n].matched) {
     return what[n].str();
   }
   return boost::none;
