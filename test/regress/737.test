@@ -1,0 +1,21 @@
+; Regression test for bug #737
+; The xact command should honor Payee: metadata tags when searching
+; for matching historical transactions.
+
+2012-03-23 * Store A
+    Expenses:Food              $10.00
+    Assets:Cash
+
+2012-03-24 * Store B
+    ; Payee: Grocery Mart
+    Expenses:Groceries         $25.00
+    Assets:Cash
+
+; xact "Grocery Mart" should match the transaction with the Payee: tag,
+; not fall through to a fuzzy match on a different transaction.
+test --now 2012/03/25 xact "Grocery Mart"
+2012/03/25 Store B
+    ; Payee: Grocery Mart
+    Expenses:Groceries                        $25.00
+    Assets:Cash
+end test
