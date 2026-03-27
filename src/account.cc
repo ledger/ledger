@@ -358,8 +358,7 @@ value_t get_true(account_t&) {
 }
 
 value_t get_addr(account_t& account) {
-  // Note: truncates on LLP64 (Windows x64) where long is 32-bit
-  return static_cast<long>(reinterpret_cast<uintptr_t>(&account));
+  return boost::numeric_cast<long>(reinterpret_cast<uintptr_t>(&account));
 }
 
 value_t get_depth_parent(account_t& account) {

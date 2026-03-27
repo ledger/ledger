@@ -224,7 +224,7 @@ int main(int argc, char* argv[], char* envp[]) {
   } catch (const error_count& errors) {
     // Used for a "quick" exit, and is used only if help text (such as
     // --help or --version) was displayed
-    status = static_cast<int>(errors.count);
+    status = boost::numeric_cast<int>(errors.count);
   }
 
   /*--- Phase 4: Shutdown ---*/

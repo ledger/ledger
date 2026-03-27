@@ -327,7 +327,7 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
         // notation so that the output round-trips faithfully (issue #1033).
         bool preserve_total = post->has_flags(POST_AMOUNT_USER_ANNOTATED);
         value_t(post->amount)
-            .print(amt_str, static_cast<int>(amount_width), -1,
+            .print(amt_str, boost::numeric_cast<int>(amount_width), -1,
                    AMOUNT_PRINT_RIGHT_JUSTIFY |
                        (suppress_computed ? AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS : 0) |
                        (preserve_total ? AMOUNT_PRINT_PRESERVE_TOTAL_COST : 0));
