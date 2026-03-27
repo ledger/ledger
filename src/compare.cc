@@ -49,6 +49,25 @@
 
 namespace ledger {
 
+/*--- Exchange conversion for sort values ---*/
+
+/**
+ * When -X (exchange) is active, convert any amount or balance sort
+ * values to the target commodity so that cross-commodity comparisons
+ * sort by converted value rather than raw quantity.
+ */
+static void convert_sort_values_for_exchange(std::list<sort_value_t>& sort_values,
+                                             report_t& report) {
+  if (report.HANDLED(exchange_)) {
+    string comm = report.HANDLER(exchange_).str();
+    for (auto& sv : sort_values) {
+      if (sv.value.is_amount() || sv.value.is_balance()) {
+        sv.value = sv.value.exchange_commodities(comm, false, datetime_t());
+      }
+    }
+  }
+}
+
 /*--- Sort value evaluation ---*/
 
 void push_sort_value(std::list<sort_value_t>& sort_values, expr_t::ptr_op_t node, scope_t& scope) {
@@ -113,6 +132,7 @@ bool compare_items<post_t>::operator()(post_t* left, post_t* right) {
     } else {
       find_sort_values(lxdata.sort_values, *left);
     }
+    convert_sort_values_for_exchange(lxdata.sort_values, report);
     lxdata.add_flags(POST_EXT_SORT_CALC);
   }
 
@@ -124,6 +144,7 @@ bool compare_items<post_t>::operator()(post_t* left, post_t* right) {
     } else {
       find_sort_values(rxdata.sort_values, *right);
     }
+    convert_sort_values_for_exchange(rxdata.sort_values, report);
     rxdata.add_flags(POST_EXT_SORT_CALC);
   }
 
@@ -147,6 +168,7 @@ bool compare_items<account_t>::operator()(account_t* left, account_t* right) {
     } else {
       find_sort_values(lxdata.sort_values, *left);
     }
+    convert_sort_values_for_exchange(lxdata.sort_values, report);
     lxdata.add_flags(ACCOUNT_EXT_SORT_CALC);
   }
 
@@ -158,6 +180,7 @@ bool compare_items<account_t>::operator()(account_t* left, account_t* right) {
     } else {
       find_sort_values(rxdata.sort_values, *right);
     }
+    convert_sort_values_for_exchange(rxdata.sort_values, report);
     rxdata.add_flags(ACCOUNT_EXT_SORT_CALC);
   }
 
