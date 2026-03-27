@@ -698,9 +698,9 @@ void report_t::commodities_report(post_handler_ptr handler) {
       price_interval = ival;
   }
 
-  posts_commodities_iterator* walker(
-      new posts_commodities_iterator(*session.journal.get(), HANDLED(latest),
-                                     price_interval, bidirectional_prices));
+  posts_commodities_iterator* walker(new posts_commodities_iterator(
+      *session.journal.get(), HANDLED(latest), price_interval,
+      bidirectional_prices));
   try {
     pass_down_posts<posts_commodities_iterator>(handler, *walker); // NOLINT(bugprone-unused-raii)
   } catch (...) {
