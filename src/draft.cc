@@ -340,24 +340,7 @@ xact_t* draft_t::insert(journal_t& journal) {
         c = '/';
     }
 
-    // Check if the date string contains a year (has at least 2 slashes or a 4-digit year)
-    size_t slash_count = std::count(date_str.begin(), date_str.end(), '/');
-    bool has_year = slash_count >= 2 || (date_str.find_first_of("0123456789") != string::npos &&
-                                         date_str.length() > 5); // Rough check for year presence
-
     added->_date = parse_date(date_str);
-
-    // If no explicit year in the date and we have a year directive,
-    // ensure we use the year directive's year
-    if (!has_year && added->_date && year_directive_year) {
-      // Only adjust if the year differs
-      if (added->_date->year() != *year_directive_year) {
-        added->_date = date_t(*year_directive_year, added->_date->month(), added->_date->day());
-        DEBUG("draft.xact",
-              "Adjusted xact date to use year from year directive: " << *added->_date);
-      }
-    }
-
     DEBUG("draft.xact",
           "Setting date to parsed date string: " << *tmpl->date_string << " -> " << added->_date);
   }
@@ -615,7 +598,21 @@ value_t template_command(call_scope_t& args) {
   args.value().dump(out);
   out << '\n' << '\n';
 
+  // Suppress year directive state, same as xact_command.  (#707)
+  optional<int> saved_year_directive = year_directive_year;
+  optional<datetime_t> saved_epoch;
+  year_directive_year = none;
+  if (saved_year_directive && epoch && epoch->date() == date_t(*saved_year_directive, 12, 31)) {
+    saved_epoch = epoch;
+    epoch = none;
+  }
+
   draft_t draft(args.value());
+
+  year_directive_year = saved_year_directive;
+  if (saved_epoch)
+    epoch = saved_epoch;
+
   out << _("--- Transaction template ---") << '\n';
   draft.dump(out);
 
@@ -624,9 +621,28 @@ value_t template_command(call_scope_t& args) {
 
 value_t xact_command(call_scope_t& args) {
   report_t& report(find_scope<report_t>(args));
+
+  // The xact command drafts a new transaction whose date should be
+  // relative to "now" (--now or the wall clock), not to any year
+  // directive in the journal.  Temporarily suppress the year
+  // directive state so that CURRENT_DATE() and parse_date() use the
+  // intended date context.  (#707)
+  optional<int> saved_year_directive = year_directive_year;
+  optional<datetime_t> saved_epoch;
+  year_directive_year = none;
+  if (saved_year_directive && epoch && epoch->date() == date_t(*saved_year_directive, 12, 31)) {
+    saved_epoch = epoch;
+    epoch = none;
+  }
+
   draft_t draft(args.value());
 
   unique_ptr<xact_t> new_xact(draft.insert(*report.session.journal.get()));
+
+  year_directive_year = saved_year_directive;
+  if (saved_epoch)
+    epoch = saved_epoch;
+
   if (new_xact.get()) {
     // Only consider actual postings for the "xact" command
     report.HANDLER(limit_).on("#xact", "actual");
