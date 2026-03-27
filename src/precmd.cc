@@ -101,7 +101,16 @@ post_t* get_sample_xact(report_t& report) {
       parsing_context.get_current().journal = report.session.journal.get();
       parsing_context.get_current().scope = &report.session;
 
+      // Temporarily disable decimal-comma mode while parsing the
+      // hardcoded sample journal, which uses period-decimal amounts
+      // (e.g. $-200.00).  See issue #594.
+      bool saved_decimal_comma = commodity_t::decimal_comma_by_default;
+      commodity_t::decimal_comma_by_default = false;
+
       report.session.journal->read(parsing_context, NO_HASHES);
+
+      commodity_t::decimal_comma_by_default = saved_decimal_comma;
+
       report.session.journal->clear_xdata();
     }
   }
