@@ -1,4 +1,4 @@
-; Regression test for issue #1639: Error parsing auto-xact predicate mith "expr payee" (BZ#567)
+; Regression test for issue #1639: Error parsing auto-xact predicate with "expr payee" (BZ#567)
 ; https://github.com/ledger/ledger/issues/1639
 ; Using "expr payee" in an auto-xact predicate should not produce a parse error.
 
