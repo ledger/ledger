@@ -56,6 +56,7 @@ endif()
 ########################################################################
 
 option(USE_PYTHON "Build support for the Python scripting bridge" OFF)
+set(PYTHON_REQUIRED_VERSION "" CACHE STRING "Specific Python version to find (e.g. 3.11)")
 option(USE_DOXYGEN "Build reference documentation using Doxygen" OFF)
 
 option(DISABLE_ASSERTS "Build without any internal consistency checks" OFF)
@@ -204,9 +205,14 @@ if(USE_PYTHON)
     message(ERROR "Building the python module requires BUILD_LIBRARY=ON.")
   endif()
 
-  find_package(Python
+  if(PYTHON_REQUIRED_VERSION)
+    set(_python_version ${PYTHON_REQUIRED_VERSION})
+  else()
+    set(_python_version ${Required_Python_Version})
+  endif()
+  find_package(Python ${_python_version}
     COMPONENTS Interpreter Development)
-  if(PYTHON_FOUND AND ${Python_VERSION} VERSION_GREATER_EQUAL ${Required_Python_Version})
+  if(PYTHON_FOUND AND ${Python_VERSION} VERSION_GREATER_EQUAL ${_python_version})
     set(BOOST_PYTHON "python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}")
     set(HAVE_BOOST_PYTHON 1)
     include_directories(SYSTEM ${Python_INCLUDE_DIRS})
