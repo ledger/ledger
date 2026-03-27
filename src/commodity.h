@@ -148,8 +148,7 @@ protected:
     /// Maximum entries before the cache is halved to prevent unbounded growth.
     inline static constexpr std::size_t max_price_map_size = 8;
     mutable memoized_price_map price_map;
-    mutable std::optional<datetime_t>
-        last_quote; ///< Time of last successful download (issue #996).
+    mutable std::optional<datetime_t> last_quote; ///< Time of last download attempt (issue #996).
 
   public:
     explicit base_t(const string& _symbol)
