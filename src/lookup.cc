@@ -57,6 +57,7 @@
 #include <system.hh>
 
 #include "lookup.h"
+#include "post.h"
 #include "unistring.h"
 
 namespace ledger {
@@ -117,7 +118,8 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
   /*--- Stage 1: Score each historical payee ---*/
 
   xact_t* xact;
-  while (iter != end && (xact = *iter++) != nullptr) {
+  bool found_exact = false;
+  while (!found_exact && iter != end && (xact = *iter++) != nullptr) {
 #if 0
     // Only consider transactions from the last two years (jww (2010-03-07):
     // make this an option)
@@ -125,150 +127,167 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
       continue;
 #endif
 
-    // An exact match is worth a score of 100 and terminates the search
-    if (ident == xact->payee) {
-      DEBUG("lookup", "  we have an exact match, score = 100");
-      scores.push_back(score_entry_t(xact, 100));
-      break;
+    // Collect all effective payees: the header payee plus any Payee: tags
+    // on postings.
+    std::vector<string> payee_candidates;
+    payee_candidates.push_back(xact->payee);
+    for (post_t* post : xact->posts) {
+      string tag_payee = post->payee_from_tag();
+      if (!tag_payee.empty() && tag_payee != xact->payee)
+        payee_candidates.push_back(tag_payee);
     }
 
+    int best_score = 0;
+
+    for (const string& candidate : payee_candidates) {
+      // An exact match is worth a score of 100 and terminates the search
+      if (ident == candidate) {
+        DEBUG("lookup", "  we have an exact match, score = 100");
+        best_score = 100;
+        found_exact = true;
+        break;
+      }
+
 #if !HAVE_BOOST_REGEX_UNICODE
-    string payee = xact->payee;
-    to_lower(payee);
-    unistring value_key(payee);
+      string payee = candidate;
+      to_lower(payee);
+      unistring value_key(payee);
 #else
-    // jww (2010-03-07): Not yet implemented
-    unistring value_key(xact->payee);
+      // jww (2010-03-07): Not yet implemented
+      unistring value_key(candidate);
 #endif
 
-    DEBUG("lookup", "Considering payee: " << value_key.extract());
+      DEBUG("lookup", "Considering payee: " << value_key.extract());
 
-    std::size_t index = 0;
-    std::size_t last_match_pos = unistring::npos;
-    int bonus = 0;
-    int score = 0;
-    std::size_t pos;
-    char_positions_map positions;
+      std::size_t index = 0;
+      std::size_t last_match_pos = unistring::npos;
+      int bonus = 0;
+      int score = 0;
+      std::size_t pos;
+      char_positions_map positions;
 
-    // Walk each letter in the source identifier, scoring how well it
-    // matches the candidate payee string.
-    for (const uint32_t& ch : lowered_ident.utf32chars) {
-      int addend = 0;
-      bool added_bonus = false;
-      std::size_t value_len = value_key.length();
+      // Walk each letter in the source identifier, scoring how well it
+      // matches the candidate payee string.
+      for (const uint32_t& ch : lowered_ident.utf32chars) {
+        int addend = 0;
+        bool added_bonus = false;
+        std::size_t value_len = value_key.length();
 
-      pos = value_key.find(ch);
+        pos = value_key.find(ch);
 
-      // Ensure that a letter which has been matched is not matched twice, so
-      // that the two x's of Exxon don't both match to the single x in Oxford.
-      // This part of the loop is very expensive, but avoids a lot of bogus
-      // matches.
+        // Ensure that a letter which has been matched is not matched twice, so
+        // that the two x's of Exxon don't both match to the single x in Oxford.
+        // This part of the loop is very expensive, but avoids a lot of bogus
+        // matches.
 
-      char_positions_map::iterator pi = positions.find(ch);
-      while (pi != positions.end() && pos != unistring::npos && pos <= (*pi).second &&
-             (*pi).second + 1 < value_len)
-        pos = value_key.find(ch, (*pi).second + 1);
+        char_positions_map::iterator pi = positions.find(ch);
+        while (pi != positions.end() && pos != unistring::npos && pos <= (*pi).second &&
+               (*pi).second + 1 < value_len)
+          pos = value_key.find(ch, (*pi).second + 1);
 
-      if (pos != unistring::npos) {
-        if (pi != positions.end())
-          (*pi).second = pos;
-        else
-          positions.insert(char_positions_map::value_type(ch, pos));
-
-        // If it occurs in the same order as the source identifier -- that is,
-        // without intervening letters to break the pattern -- it's worth 10
-        // points.  Plus, an extra point is added for every letter in chains
-        // of 3 or more.
-
-        if (last_match_pos == unistring::npos ? index == 0 && pos == 0
-                                              : pos == last_match_pos + 1) {
-          DEBUG("lookup", "  char " << index << " in-sequence match with bonus " << bonus);
-          addend += 10;
-          if (bonus > 2)
-            addend += bonus - 2;
-          bonus++;
-          added_bonus = true;
-
-          last_match_pos = pos;
-        }
-
-        // If it occurs in the same general sequence as the source identifier,
-        // it's worth 5 points, plus an extra point if it's within the next 3
-        // characters, and an extra point if it's preceded by a non-alphabetic
-        // character.
-        //
-        // If the letter occurs at all in the target identifier, it's worth 1
-        // point, plus an extra point if it's within 3 characters, and an
-        // extra point if it's preceded by a non-alphabetic character.
-
-        else {
-          bool in_order_match = (last_match_pos != unistring::npos && pos > last_match_pos);
-          DEBUG("lookup", "  char "
-                              << index << " " << (in_order_match ? "in-order" : "out-of-order")
-                              << " match"
-                              << (in_order_match && pos - index < 3 ? " with proximity bonus of 1"
-                                                                    : ""));
-
-          if (pos < index)
-            addend += 1;
+        if (pos != unistring::npos) {
+          if (pi != positions.end())
+            (*pi).second = pos;
           else
-            addend += 5;
+            positions.insert(char_positions_map::value_type(ch, pos));
 
-          if (in_order_match && pos - index < 3)
-            addend++;
+          // If it occurs in the same order as the source identifier -- that is,
+          // without intervening letters to break the pattern -- it's worth 10
+          // points.  Plus, an extra point is added for every letter in chains
+          // of 3 or more.
+
+          if (last_match_pos == unistring::npos ? index == 0 && pos == 0
+                                                : pos == last_match_pos + 1) {
+            DEBUG("lookup", "  char " << index << " in-sequence match with bonus " << bonus);
+            addend += 10;
+            if (bonus > 2)
+              addend += bonus - 2;
+            bonus++;
+            added_bonus = true;
+
+            last_match_pos = pos;
+          }
+
+          // If it occurs in the same general sequence as the source identifier,
+          // it's worth 5 points, plus an extra point if it's within the next 3
+          // characters, and an extra point if it's preceded by a non-alphabetic
+          // character.
+          //
+          // If the letter occurs at all in the target identifier, it's worth 1
+          // point, plus an extra point if it's within 3 characters, and an
+          // extra point if it's preceded by a non-alphabetic character.
+
+          else {
+            bool in_order_match = (last_match_pos != unistring::npos && pos > last_match_pos);
+            DEBUG("lookup", "  char "
+                                << index << " " << (in_order_match ? "in-order" : "out-of-order")
+                                << " match"
+                                << (in_order_match && pos - index < 3 ? " with proximity bonus of 1"
+                                                                      : ""));
+
+            if (pos < index)
+              addend += 1;
+            else
+              addend += 5;
+
+            if (in_order_match && pos - index < 3)
+              addend++;
 
 #if 0
 #if !HAVE_BOOST_REGEX_UNICODE
-          // Probably doesn't make sense with value_key as unistring,
-          // but this code is under #if 0 anyway, so if anyone is
-          // tempted to use this by changing value_key to string, let's
-          // avoid leaving a rake to step on.
-          if (pos == 0 ||
-              (pos > 0 &&
-               !std::isalnum(static_cast<unsigned char>(value_key[pos - 1]))))
-            addend++;
+            // Probably doesn't make sense with value_key as unistring,
+            // but this code is under #if 0 anyway, so if anyone is
+            // tempted to use this by changing value_key to string, let's
+            // avoid leaving a rake to step on.
+            if (pos == 0 ||
+                (pos > 0 &&
+                 !std::isalnum(static_cast<unsigned char>(value_key[pos - 1]))))
+              addend++;
 #else
-          // jww (2010-03-07): Not yet implemented
+            // jww (2010-03-07): Not yet implemented
 #endif
 #endif
 
-          last_match_pos = pos;
+            last_match_pos = pos;
+          }
+
+          // If the letter does not appear at all, decrease the score by 1
+
+        } else {
+          last_match_pos = unistring::npos;
+
+          DEBUG("lookup", "  char " << index << " does not match");
+          addend--;
         }
 
-        // If the letter does not appear at all, decrease the score by 1
+        // Finally, decay what is to be added to the score based on its position
+        // in the word.  Since credit card payees in particular often share
+        // information at the end (such as the location where the purchase was
+        // made), we want to give much more credence to what occurs at the
+        // beginning.  Every 5 character positions from the beginning becomes a
+        // divisor for the addend.
 
-      } else {
-        last_match_pos = unistring::npos;
+        if ((int(index / 5) + 1) > 1) {
+          DEBUG("lookup", "  discounting the addend by / " << (int(index / 5) + 1));
+          addend = int(double(addend) / (int(index / 5) + 1));
+        }
 
-        DEBUG("lookup", "  char " << index << " does not match");
-        addend--;
+        DEBUG("lookup", "  final addend is " << addend);
+        score += addend;
+        DEBUG("lookup", "  score is " << score);
+
+        if (!added_bonus)
+          bonus = 0;
+
+        index++;
       }
 
-      // Finally, decay what is to be added to the score based on its position
-      // in the word.  Since credit card payees in particular often share
-      // information at the end (such as the location where the purchase was
-      // made), we want to give much more credence to what occurs at the
-      // beginning.  Every 5 character positions from the beginning becomes a
-      // divisor for the addend.
-
-      if ((int(index / 5) + 1) > 1) {
-        DEBUG("lookup", "  discounting the addend by / " << (int(index / 5) + 1));
-        addend = int(double(addend) / (int(index / 5) + 1));
-      }
-
-      DEBUG("lookup", "  final addend is " << addend);
-      score += addend;
-      DEBUG("lookup", "  score is " << score);
-
-      if (!added_bonus)
-        bonus = 0;
-
-      index++;
+      best_score = std::max(best_score, score);
     }
 
     // Only consider payees with a score of 30 or greater
-    if (score >= 30)
-      scores.push_back(score_entry_t(xact, score));
+    if (best_score >= 30)
+      scores.push_back(score_entry_t(xact, best_score));
   }
 
   /*--- Stage 2: Rank accounts by usage among top matches ---*/
