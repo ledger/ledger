@@ -8,8 +8,10 @@
 
 !end
 
-test bal -> 1
+test bal -> 2
 __ERROR__
+While parsing file "$FILE", line 3:
+Error: Unrecognized source line ' Assets:Cash'
 While parsing file "$FILE", line 9:
 Error: 'end' or 'end apply' found, but no enclosing 'apply' directive
 end test
