@@ -266,9 +266,8 @@ account_t* journal_t::expand_aliases(string name) {
         bool found = false;
         while (pos < name.size()) {
           size_t colon = name.find(':', pos);
-          string component = (colon != string::npos)
-            ? name.substr(pos, colon - pos)
-            : name.substr(pos);
+          string component =
+              (colon != string::npos) ? name.substr(pos, colon - pos) : name.substr(pos);
 
           if (auto j = account_aliases.find(component);
               j != account_aliases.end() && already_seen.count(component) == 0) {
@@ -276,10 +275,10 @@ account_t* journal_t::expand_aliases(string name) {
 
             string new_name;
             if (pos > 0)
-              new_name = name.substr(0, pos);  // prefix including trailing ':'
+              new_name = name.substr(0, pos); // prefix including trailing ':'
             new_name += (*j).second->fullname();
             if (colon != string::npos)
-              new_name += name.substr(colon);   // suffix including leading ':'
+              new_name += name.substr(colon); // suffix including leading ':'
             result = find_account(new_name);
             name = result->fullname();
             found = true;
@@ -301,8 +300,7 @@ account_t* journal_t::expand_aliases(string name) {
   // Detect complete cycles: if after expansion the name is back to the
   // original, the aliases form a cycle (e.g., alias A=B + alias B=A).
   if (recursive_aliases && !already_seen.empty() && name == original_name) {
-    throw_(std::runtime_error,
-           _f("Infinite recursion on alias expansion for %1%") % name);
+    throw_(std::runtime_error, _f("Infinite recursion on alias expansion for %1%") % name);
   }
 
   return result;
