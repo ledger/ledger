@@ -147,8 +147,8 @@ void report_t::normalize_options(const string& verb) {
     commodity_pool_t::current_pool->price_db = none;
 
   if (HANDLED(decimal_places_)) {
-    auto places = static_cast<amount_t::precision_t>(
-        lexical_cast<int>(HANDLER(decimal_places_).value));
+    auto places =
+        static_cast<amount_t::precision_t>(lexical_cast<int>(HANDLER(decimal_places_).value));
     for (auto& pair : commodity_pool_t::current_pool->commodities) {
       if (pair.second->precision() > places)
         pair.second->set_precision(places);
