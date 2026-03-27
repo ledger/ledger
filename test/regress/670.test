@@ -1,0 +1,14 @@
+; Regression test for issue #670: include directive handles CSV files
+; When a .csv file is included, the textual parser delegates to csv_reader
+; as a sub-parser, adding transactions directly to the journal.
+
+bucket Assets:Checking
+
+include 670.csv
+
+test bal
+               $2950  Assets:Checking
+              $-2950  Expenses:Unknown
+--------------------
+                   0
+end test
