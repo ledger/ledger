@@ -128,6 +128,14 @@ public:
   function<std::optional<price_point_t>(commodity_t& commodity, const commodity_t* in_terms_of)>
       get_commodity_quote;
 
+  /// Callback used to obtain batch price quotes for multiple commodities
+  /// in a single script invocation.  By default this invokes the external
+  /// getquote script via commodity_batch_quote_from_script().
+  function<std::vector<std::pair<commodity_t*, price_point_t>>(
+      std::vector<std::reference_wrapper<commodity_t>>& commodities,
+      const commodity_t* in_terms_of)>
+      get_commodity_batch_quote;
+
   /// The process-wide singleton pool.  Most code accesses commodities
   /// through this static pointer.
   static std::shared_ptr<commodity_pool_t> current_pool;
@@ -275,6 +283,19 @@ public:
    */
   commodity_t* parse_price_expression(const std::string& str, const bool add_prices = true,
                                       const std::optional<datetime_t>& moment = {});
+
+  /**
+   * @brief Pre-fetch price quotes for all eligible commodities in batch.
+   *
+   * Collects commodities that are candidates for downloading (not builtin,
+   * not flagged NOMARKET, and without a recent last_quote), groups them
+   * by their exchange commodity (inferred from the most recent price in the
+   * history graph), and invokes the batch quote callback once per group.
+   *
+   * This is called before report generation to avoid per-commodity script
+   * invocations during the report (issue #588).
+   */
+  void prefetch_quotes();
 };
 
 } // namespace ledger
