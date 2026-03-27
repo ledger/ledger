@@ -3,7 +3,8 @@
 ;
 ; When --current is combined with --end <future-date>, the --current flag
 ; should still restrict output to transactions on or before "today" (set via
-; --now). Currently, --end overrides --current, so future transactions appear.
+; --now).  Previously, --end overwrote the terminus used to resolve "today",
+; causing --current to be ignored.
 ;
 ; Using --now 2024/06/01 to make the test date-independent.
 
@@ -21,9 +22,15 @@ test reg --now 2024/06/01 --current
                                 Assets:Cash                 $-10.00            0
 end test
 
-; BUG: With --current --end 2024/12/31, the July transaction incorrectly appears.
-; The expected correct output should only show the January transaction (same as above).
+; With --current --end 2024/12/31, --current should still restrict to "today"
+; (2024/06/01), hiding the July transaction.
 test reg --now 2024/06/01 --current --end 2024/12/31
+24-Jan-01 Past transaction      Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+; Verify --end alone (without --current) still shows everything up to --end.
+test reg --end 2024/12/31
 24-Jan-01 Past transaction      Expenses:Food                $10.00       $10.00
                                 Assets:Cash                 $-10.00            0
 24-Jul-01 Future transaction    Expenses:Food                $50.00       $50.00
