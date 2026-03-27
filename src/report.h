@@ -646,7 +646,7 @@ public:
                  "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
                  "%$1  %$2    %$3\n%/"
                  "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
-                 "----------------    ----------------    %(\"-\" * int(date_width))\n");
+                 "----------------  ------------------    %(\"-\" * int(date_width))\n");
       });
 
   OPTION(report_t, color);
