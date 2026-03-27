@@ -1122,8 +1122,7 @@ void amount_t::in_place_reduce() {
     *this *= commodity().smaller()->number();
     commodity_ = commodity().smaller()->commodity_;
   }
-  if (original && original != commodity_ &&
-      commodity_ && original->has_annotation()) {
+  if (original && original != commodity_ && commodity_ && original->has_annotation()) {
     commodity_ = commodity_pool_t::current_pool->find_or_create(
         *commodity_, as_annotated_commodity(*original).details);
   }
