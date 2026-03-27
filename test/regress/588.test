@@ -1,0 +1,27 @@
+; Batch quote fetching: getquote is invoked once with --batch for all
+; commodities rather than once per commodity (issue #588).
+;
+; This test exercises prefetch_quotes() and commodity_batch_quote_from_script()
+; by using a mock getquote script that supports the --batch protocol.  Three
+; different stock commodities are held in the journal; the batch script returns
+; a price for each in a single invocation, and --market converts them all to $.
+
+2024/01/15 Buy Stock A
+    Assets:Brokerage        10 AAPL
+    Assets:Checking        $-1000.00
+
+2024/01/15 Buy Stock B
+    Assets:Brokerage        20 GOOG
+    Assets:Checking        $-2000.00
+
+2024/01/15 Buy Stock C
+    Assets:Brokerage        5 MSFT
+    Assets:Checking        $-500.00
+
+test bal --market --download --getquote $sourcepath/test/scripts/mock-batch-getquote.sh -> 0
+            $3700.00  Assets
+            $7200.00    Brokerage
+           $-3500.00    Checking
+--------------------
+            $3700.00
+end test
