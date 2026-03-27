@@ -1,10 +1,9 @@
 ; Regression test for issue #729: Output of cleared doesn't align (BZ#729)
 ; https://github.com/ledger/ledger/issues/729
 ;
-; The cleared report has a 1-character misalignment: accounts on rows that have
-; a last-cleared date are shifted right by 1 character compared to accounts on
-; rows without a date. The empty date placeholder uses 9 spaces but format_date()
-; produces 10-character dates (e.g., "2000/01/03").
+; The cleared report's separator line had misaligned dashes: the second column
+; used 16 dashes with a 4-space gap, but the data column is 18 chars wide with
+; a 2-space gap. Fixed by changing the separator to match the column widths.
 
 2000/01/01 * Payee One
     Expenses:Food    $100.00
@@ -24,6 +23,6 @@ test cleared
           $25.00                   0                   Books
          $100.00             $100.00    00-Jan-01      Food
           $50.00              $50.00    00-Jan-03      Gas
-----------------    ----------------    ---------
+----------------  ------------------    ---------
                0                   0             
 end test
