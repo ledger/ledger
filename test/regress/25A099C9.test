@@ -1,4 +1,4 @@
-test -f test/regress/25A099C9.dat reg -> 29
+test -f test/regress/25A099C9.dat reg -> 35
 __ERROR__
 While parsing file "$sourcepath/test/regress/25A099C9.dat", line 1:
 Error: Directive '/*' requires an argument
@@ -6,16 +6,26 @@ While parsing file "$sourcepath/test/regress/25A099C9.dat", line 32:
 Error: Directive '/**' requires an argument
 While parsing file "$sourcepath/test/regress/25A099C9.dat", line 36:
 Error: Directive '/**' requires an argument
+While parsing file "$sourcepath/test/regress/25A099C9.dat", line 60:
+Error: Unrecognized source line 'namespace ledger {'
+While parsing file "$sourcepath/test/regress/25A099C9.dat", line 62:
+Error: Unrecognized source line 'class commodity_t;'
+While parsing file "$sourcepath/test/regress/25A099C9.dat", line 63:
+Error: Unrecognized source line 'struct annotation_t;'
+While parsing file "$sourcepath/test/regress/25A099C9.dat", line 64:
+Error: Unrecognized source line 'struct keep_details_t;'
 While parsing file "$sourcepath/test/regress/25A099C9.dat", line 66:
 Error: No quantity specified for amount
-While parsing file "$sourcepath/test/regress/25A099C9.dat", line 69:
-Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/test/regress/25A099C9.dat", line 68:
+Error: Unrecognized source line 'enum parse_flags_enum_t {'
 While parsing file "$sourcepath/test/regress/25A099C9.dat", line 78:
 Error: Directive '};' requires an argument
+While parsing file "$sourcepath/test/regress/25A099C9.dat", line 80:
+Error: Unrecognized source line 'typedef basic_flags_t<parse_flags_enum_t, uint_least8_t> parse_flags_t;'
 While parsing file "$sourcepath/test/regress/25A099C9.dat", line 82:
 Error: Directive '/**' requires an argument
-While parsing file "$sourcepath/test/regress/25A099C9.dat", line 93:
-Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/test/regress/25A099C9.dat", line 92:
+Error: Unrecognized source line 'class amount_t'
 While parsing file "$sourcepath/test/regress/25A099C9.dat", line 97:
 Error: Directive '{' requires an argument
 While parsing file "$sourcepath/test/regress/25A099C9.dat", line 98:
@@ -56,6 +66,8 @@ While parsing file "$sourcepath/test/regress/25A099C9.dat", line 783:
 Error: Invalid date/time: line std::istream& 
 While parsing file "$sourcepath/test/regress/25A099C9.dat", line 786:
 Error: Directive '}' requires an argument
-While parsing file "$sourcepath/test/regress/25A099C9.dat", line 789:
-Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/test/regress/25A099C9.dat", line 788:
+Error: Unrecognized source line 'void put_amount(property_tree::ptree& pt, const amount_t& amt,'
+While parsing file "$sourcepath/test/regress/25A099C9.dat", line 791:
+Error: Unrecognized source line '} // namespace ledger'
 end test
