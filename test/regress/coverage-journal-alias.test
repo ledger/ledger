@@ -16,5 +16,5 @@ While parsing file "$FILE", line 10:
 While parsing posting:
   A:Sub             $50.00
 
-Error: Infinite recursion on alias expansion for A
+Error: Infinite recursion on alias expansion for A:Sub
 end test
