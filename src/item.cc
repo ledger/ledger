@@ -268,6 +268,44 @@ void item_t::parse_tags(const char* p, scope_t& scope, bool overwrite_existing) 
       string field(p + (q - buf.get()) + len); // NOLINT(bugprone-unused-local-non-trivial-variable)
       trim(field);
       if (by_value) {
+        // If the field looks like a bare date (YYYY/MM/DD or YYYY-MM-DD),
+        // optionally followed by time (HH:MM or HH:MM:SS), wrap it in
+        // brackets so the expression parser treats it as a date literal
+        // rather than arithmetic (e.g. 2024/03/15 would be 2024 / 3 / 15).
+        const char* s = field.c_str();
+        if (std::isdigit(static_cast<unsigned char>(s[0])) &&
+            std::isdigit(static_cast<unsigned char>(s[1])) &&
+            std::isdigit(static_cast<unsigned char>(s[2])) &&
+            std::isdigit(static_cast<unsigned char>(s[3])) &&
+            (s[4] == '/' || s[4] == '-') &&
+            std::isdigit(static_cast<unsigned char>(s[5])) &&
+            (std::isdigit(static_cast<unsigned char>(s[6]))
+               ? (s[7] == '/' || s[7] == '-') &&
+                 std::isdigit(static_cast<unsigned char>(s[8]))
+               : (s[6] == '/' || s[6] == '-') &&
+                 std::isdigit(static_cast<unsigned char>(s[7])))) {
+          // Find end of date portion (skip all digits and date separators)
+          const char* t = s + 5;
+          while (std::isdigit(static_cast<unsigned char>(*t)) ||
+                 *t == '/' || *t == '-')
+            ++t;
+          // Allow optional time component: space then HH:MM[:SS]
+          if (*t == ' ' &&
+              std::isdigit(static_cast<unsigned char>(t[1])) &&
+              std::isdigit(static_cast<unsigned char>(t[2])) &&
+              t[3] == ':' &&
+              std::isdigit(static_cast<unsigned char>(t[4])) &&
+              std::isdigit(static_cast<unsigned char>(t[5]))) {
+            t += 6;
+            if (*t == ':' &&
+                std::isdigit(static_cast<unsigned char>(t[1])) &&
+                std::isdigit(static_cast<unsigned char>(t[2])))
+              t += 3;
+          }
+          if (*t == '\0')
+            field = string("[") + field + "]";
+        }
+
         bind_scope_t bound_scope(scope, *this);
         i = set_tag(tag, expr_t(field).calc(bound_scope), overwrite_existing);
       } else {
