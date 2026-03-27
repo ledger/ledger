@@ -75,6 +75,15 @@ void create_timelog_xact(const time_xact_t& in_event, const time_xact_t& out_eve
   curr->add_post(raw_post);
   account->add_post(raw_post);
 
+  if (context.journal->bucket) {
+    auto bp = std::make_unique<post_t>(context.journal->bucket, amt.negated(),
+                                       POST_IS_TIMELOG | ITEM_INFERRED);
+    bp->set_state(out_event.completed ? item_t::CLEARED : item_t::UNCLEARED);
+    post_t* raw_bp = bp.release();
+    curr->add_post(raw_bp);
+    context.journal->bucket->add_post(raw_bp);
+  }
+
   if (!context.journal->add_xact(curr.get()))
     throw parse_error(_("Failed to record 'out' timelog transaction"));
   else
