@@ -1,0 +1,47 @@
+; Regression test for issue #636: Budget report query doesn't generate correct report
+; https://github.com/ledger/ledger/issues/636
+;
+; When querying budget for a specific account, the budgeted amount should
+; reflect the full period regardless of when the first actual posting for
+; that account occurs.  Previously, budget items were only generated from
+; the period containing the first matching posting, causing earlier budget
+; periods to be missed.
+
+~ Monthly
+    Expenses:Food      $500.00
+    Expenses:Vacation  $100.00
+    Assets:Cash
+
+2024/01/10 Store
+    Expenses:Food    $300.00
+    Assets:Cash
+
+2024/02/15 Trip
+    Expenses:Vacation    $80.00
+    Assets:Cash
+
+; Budget for the full year without a query: both accounts show 12 months.
+test budget -p "2024"
+    $-380.00    $-7200.00     $6820.00    5%  Assets:Cash
+     $380.00     $7200.00    $-6820.00    5%  Expenses
+     $300.00     $6000.00    $-5700.00    5%    Food
+      $80.00     $1200.00    $-1120.00    7%    Vacation
+------------ ------------ ------------ -----
+           0            0            0     0
+end test
+
+; Querying only Vacation should show 12 months ($1200) even though the
+; first Vacation posting is in February.
+test budget -p "2024" Vacation
+      $80.00     $1200.00    $-1120.00    7%  Expenses:Vacation
+end test
+
+; Querying only Food should also show 12 months.
+test budget -p "2024" Food
+     $300.00     $6000.00    $-5700.00    5%  Expenses:Food
+end test
+
+; Querying with --begin should also work correctly.
+test budget --begin "2024/01/01" --end "2025/01/01" Vacation
+      $80.00     $1200.00    $-1120.00    7%  Expenses:Vacation
+end test
