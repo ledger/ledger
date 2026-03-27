@@ -1159,7 +1159,24 @@ value_t report_t::fn_nail_down(call_scope_t& args) {
   case value_t::AMOUNT: {
     amount_t tmp(arg0.as_amount());
     if (tmp.has_commodity() && !tmp.is_null() && !tmp.is_realzero()) {
-      arg1 = arg1.strip_annotations(keep_details_t()).to_amount();
+      value_t stripped = arg1.strip_annotations(keep_details_t());
+
+      // When the market value is a balance with multiple commodities
+      // (e.g., because not all commodities could be converted to the
+      // target), extract just the component matching this amount's
+      // commodity for the per-unit cost calculation.
+      if (stripped.is_balance()) {
+        const balance_t& bal = stripped.as_balance();
+        if (optional<amount_t> comm_amt = bal.commodity_amount(tmp.commodity())) {
+          arg1 = *comm_amt;
+        } else if (bal.amounts.size() == 1) {
+          arg1 = bal.amounts.begin()->second;
+        } else {
+          return tmp;
+        }
+      } else {
+        arg1 = stripped.to_amount();
+      }
       expr_t value_expr(is_expr(arg1) ? as_expr(arg1)
                                       : expr_t::op_t::wrap_value(arg1.unrounded() / arg0.number()));
       std::ostringstream buf;

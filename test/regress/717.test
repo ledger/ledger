@@ -1,0 +1,44 @@
+; Regression test for issue #717: Error: Cannot convert a balance with
+; multiple commodities to an amount (BZ#717)
+;
+; When using -H (historical) with mixed commodities and expression-based
+; amounts like (2.83/2 EUR), the nail_down function could receive a
+; balance with multiple commodities as its market value argument, causing
+; a "Cannot convert a balance with multiple commodities to an amount"
+; error.  The fix extracts the relevant commodity component from the
+; balance for the per-unit cost calculation.
+
+2011-01-01 * Opening balance
+    Assets:Investments           1 "BBB" @  2.653329339867 GBP
+    Equity:Opening balance
+
+2011-01-10 * Fee
+    Liabilities:Credit Card                         -2.83 EUR
+    Expenses:Fees                                 (2.83/2 EUR)
+    Assets:Receivable
+
+test reg -X EUR -H
+11-Jan-01 Opening balance       Assets:Investments            1 BBB        1 BBB
+                                Equity:Opening balance GBP-2.653329339867000000000000000000000000000000        1 BBB
+                                GBP-2.653329339867000000000000000000000000000000
+11-Jan-10 Fee                   Liabilitie:Credit Card    -2.83 EUR        1 BBB
+                                                                       -2.83 EUR
+                                GBP-2.653329339867000000000000000000000000000000
+                                <Adjustment>              -0.01 EUR        1 BBB
+                                                                       -2.84 EUR
+                                GBP-3.000000000000000000000000000000000000000000
+                                Expenses:Fees              1.42 EUR        1 BBB
+                                                                       -1.42 EUR
+                                GBP-2.653329339867000000000000000000000000000000
+                                Assets:Receivable          1.42 EUR        1 BBB
+                                GBP-2.653329339867000000000000000000000000000000
+end test
+
+test reg -H
+11-Jan-01 Opening balance       Assets:Investments             GBP3         GBP3
+                                Equity:Opening balance GBP-2.653329339867            0
+11-Jan-10 Fee                   Liabilitie:Credit Card    -2.83 EUR    -2.83 EUR
+                                <Adjustment>              -0.01 EUR    -2.84 EUR
+                                Expenses:Fees              1.42 EUR    -1.42 EUR
+                                Assets:Receivable          1.42 EUR            0
+end test
