@@ -71,7 +71,8 @@ std::shared_ptr<commodity_pool_t> commodity_pool_t::current_pool;
  */
 commodity_pool_t::commodity_pool_t()
     : default_commodity(nullptr), keep_base(false), quote_leeway(86400), get_quotes(false),
-      get_commodity_quote(commodity_quote_from_script) {
+      get_commodity_quote(commodity_quote_from_script),
+      get_commodity_batch_quote(commodity_batch_quote_from_script) {
   null_commodity = create("");
   null_commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
   TRACE_CTOR(commodity_pool_t, "");
@@ -548,6 +549,109 @@ commodity_t* commodity_pool_t::parse_price_expression(const std::string& str, co
     return commodity;
   }
   return nullptr;
+}
+
+/// @}
+
+/// @name Batch quote prefetching
+/// @{
+
+/**
+ * @brief Pre-fetch price quotes for all eligible commodities in batch.
+ *
+ * Collects every commodity that might need a fresh quote (not builtin,
+ * not flagged NOMARKET, and without a last_quote within quote_leeway
+ * seconds of the wall clock).  For each candidate, the exchange commodity
+ * is inferred from the most recent price in the history graph.  Candidates
+ * are grouped by exchange commodity and each group is passed to the batch
+ * quote callback in a single invocation.
+ *
+ * On success, last_quote is set to the wall-clock time so that
+ * per-commodity check_for_updated_price() calls during the report skip
+ * the download.  If batch returns no results for a group, last_quote is
+ * not set, allowing the per-commodity path to try individually.
+ */
+void commodity_pool_t::prefetch_quotes() {
+  if (!get_quotes)
+    return;
+
+  DEBUG("commodity.download", "prefetch_quotes: scanning commodities for batch download");
+
+  // Two-pass grouping: first collect each commodity's candidate exchange,
+  // then exclude commodities that are themselves used as an exchange for
+  // other commodities.  Without this, a currency like "$" would be grouped
+  // for download because the price graph has reverse edges from posting
+  // exchanges (e.g. "10 AAPL / $-1000" creates a $ -> AAPL edge).
+
+  struct candidate_t {
+    commodity_t* comm;
+    const commodity_t* exchange;
+  };
+  std::vector<candidate_t> candidates;
+  std::set<const commodity_t*> exchange_set;
+
+  for (auto& [symbol, comm_ptr] : commodities) {
+    commodity_t& comm = *comm_ptr;
+
+    if (&comm == null_commodity)
+      continue;
+    if (comm.has_flags(COMMODITY_NOMARKET) || comm.has_flags(COMMODITY_BUILTIN))
+      continue;
+
+    // Skip commodities that already have a recent quote this session.
+    if (comm.referent().base->last_quote) {
+      time_duration_t::sec_type secs_since_last =
+          (TRUE_CURRENT_TIME() - *comm.referent().base->last_quote).total_seconds();
+      if (secs_since_last < quote_leeway)
+        continue;
+    }
+
+    // Only consider commodities that have existing price history.
+    if (std::optional<price_point_t> point =
+            commodity_price_history.find_price(comm.referent(), CURRENT_TIME())) {
+      const commodity_t* exchange = nullptr;
+      if (point->price.has_commodity())
+        exchange = point->price.commodity_ptr();
+      candidates.push_back({&comm, exchange});
+      if (exchange)
+        exchange_set.insert(exchange);
+    }
+  }
+
+  // Build groups, skipping any commodity that is itself an exchange
+  // commodity for other commodities (e.g. "$" when stocks are priced
+  // in dollars).
+  std::map<const commodity_t*, std::vector<std::reference_wrapper<commodity_t>>> groups;
+
+  for (auto& [comm, exchange] : candidates) {
+    if (exchange_set.count(&comm->referent()))
+      continue;
+    groups[exchange].push_back(std::ref(*comm));
+  }
+
+  if (groups.empty()) {
+    DEBUG("commodity.download", "prefetch_quotes: no commodities eligible for download");
+    return;
+  }
+
+  for (auto& [exchange, batch] : groups) {
+    DEBUG("commodity.download",
+          "prefetch_quotes: batch of "
+              << batch.size() << " commodities"
+              << (exchange ? string(" in terms of ") + exchange->symbol() : string()));
+
+    std::vector<std::pair<commodity_t*, price_point_t>> results =
+        get_commodity_batch_quote(batch, exchange);
+
+    if (results.empty())
+      continue;
+
+    // Mark every commodity that got a result so per-commodity download
+    // is skipped during the report.
+    for (auto& [comm, pp] : results) {
+      comm->referent().base->last_quote = TRUE_CURRENT_TIME();
+    }
+  }
 }
 
 /// @}
