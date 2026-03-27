@@ -165,8 +165,7 @@ public:
 
   datetime_t
       terminus; ///< Valuation date for market prices (defaults to now, adjusted by --end/--now)
-  optional<date_t>
-      origin; ///< Report begin date for budget period initialization (from -p/--begin)
+  optional<date_t> origin; ///< Report begin date for budget period initialization (from -p/--begin)
   optional<datetime_t>
       gain_from; ///< Reference date for --gain-since (compute gain from this date's market value)
   uint_least8_t budget_flags; ///< Bitmask of BUDGET_* flags controlling budget report behavior
