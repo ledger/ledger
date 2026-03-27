@@ -112,6 +112,7 @@ void journal_t::initialize() {
   was_loaded = false;
   check_payees = false;
   day_break = false;
+  time_round = 0;
   checking_style = CHECK_NORMAL;
   recursive_aliases = false;
   no_aliases = false;
