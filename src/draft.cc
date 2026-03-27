@@ -322,6 +322,19 @@ xact_t* draft_t::insert(journal_t& journal) {
         DEBUG("draft.xact", "Found payee match: transaction on line " << (*j)->pos->beg_line);
         break;
       }
+      bool found_via_tag = false;
+      for (post_t* post : (*j)->posts) {
+        string tag_payee = post->payee_from_tag();
+        if (!tag_payee.empty() && tmpl->payee_mask.match(tag_payee)) {
+          matching = *j;
+          found_via_tag = true;
+          DEBUG("draft.xact",
+                "Found payee match via Payee tag: transaction on line " << (*j)->pos->beg_line);
+          break;
+        }
+      }
+      if (found_via_tag)
+        break;
     }
   }
 
