@@ -1,0 +1,27 @@
+; Regression test for issue #583: --monthly prices should show last price per
+; period, not the sum of all prices within the period.
+; https://github.com/ledger/ledger/issues/583
+;
+; When using 'prices' with --monthly (-M), ledger used to incorrectly sum
+; prices within a month.  January has two prices ($500.00 and $510.00); the
+; correct behavior is to show $510.00 (the last price in January).
+
+commodity $
+    format $1,000.00
+
+2013/01/05 Buy stock
+    Assets:Investments   10 AAPL @ $500.00
+    Assets:Cash
+
+2013/01/12 Buy more
+    Assets:Investments   10 AAPL @ $510.00
+    Assets:Cash
+
+2013/02/05 Buy again
+    Assets:Investments   10 AAPL @ $520.00
+    Assets:Cash
+
+test -M prices
+2013/01/01 AAPL          $510.00
+2013/02/01 AAPL          $520.00
+end test
