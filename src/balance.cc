@@ -609,7 +609,7 @@ void balance_t::print(std::ostream& out, const int first_width, const int latter
                       const uint_least8_t flags) const {
   bool first = true;
   print_amount_from_balance amount_printer(out, first, first_width,
-                                           latter_width == 1 ? first_width : latter_width, flags);
+                                           latter_width < 0 ? first_width : latter_width, flags);
   map_sorted_amounts(amount_printer);
 
   if (first)
