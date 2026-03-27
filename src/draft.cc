@@ -228,8 +228,7 @@ void draft_t::parse_args(const value_t& args) {
               if (!tmpl->posts.empty()) {
                 auto& last_post = tmpl->posts.back();
                 if (last_post.amount && !last_post.amount->has_commodity()) {
-                  if (commodity_t* comm =
-                          commodity_pool_t::current_pool->find(arg)) {
+                  if (commodity_t* comm = commodity_pool_t::current_pool->find(arg)) {
                     last_post.amount->set_commodity(*comm);
                     continue;
                   }
