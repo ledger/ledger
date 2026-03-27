@@ -183,10 +183,12 @@ void posts_commodities_iterator::reset(journal_t& journal) {
       // a std::map<datetime_t, amount_t>), so the last callback gives the
       // most recent price.  We overwrite best_when/best_price on each call
       // so only the final (latest) entry survives.
-      comm->map_prices([&best_when, &best_price](const datetime_t& when, const amount_t& price) {
-        best_when = when;
-        best_price = price;
-      }, datetime_t(), datetime_t(), bidirectional);
+      comm->map_prices(
+          [&best_when, &best_price](const datetime_t& when, const amount_t& price) {
+            best_when = when;
+            best_price = price;
+          },
+          datetime_t(), datetime_t(), bidirectional);
 
       if (best_when.is_not_a_date_time())
         continue; // no price history for this commodity
