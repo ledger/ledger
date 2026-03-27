@@ -8,8 +8,8 @@ commodity EUR
     Assets:Cash
 
 test bal
-                -100  Assets:Cash
-                 100  Expenses:Food
+             EUR-100  Assets:Cash
+              EUR100  Expenses:Food
 --------------------
                    0
 end test
