@@ -69,22 +69,20 @@ namespace {
 
 class account_amount_as_total_scope_t : public child_scope_t {
 public:
-  explicit account_amount_as_total_scope_t(scope_t& account)
-      : child_scope_t(account) {}
+  explicit account_amount_as_total_scope_t(scope_t& account) : child_scope_t(account) {}
 
   string description() override {
     return parent ? parent->description() : _("<account sort scope>");
   }
 
-  expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
-                          const string& name) override {
+  expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override {
     if (kind == symbol_t::FUNCTION && name == "amount")
       return child_scope_t::lookup(kind, "total");
     return child_scope_t::lookup(kind, name);
   }
 };
 
-}  // anonymous namespace
+} // anonymous namespace
 
 /*--- Sort value evaluation ---*/
 
