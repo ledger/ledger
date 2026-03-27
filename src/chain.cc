@@ -201,8 +201,11 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
     // the running total unpredictably.  Placed before filter_posts so
     // it sees all postings and can correctly detect rounding gaps.
     //
-    // Rounding adjustments are safe when the display expressions use
-    // simple additive accumulation (the defaults).  Non-additive
+    // Rounding adjustments are only useful for commands that display
+    // running totals (register), not for print/csv/equity.  The --base
+    // option (auto-set for non-balance/register commands) gates this.
+    // Additionally, rounding is safe only when the display expressions
+    // use simple additive accumulation (the defaults).  Non-additive
     // transforms like --average, --deviation, or user-supplied
     // --display-total/--display-amount break the assumption that
     // total == prev_total + amount, so we disable rounding for those.
@@ -217,7 +220,8 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
 
     auto display_filter_sp = std::make_shared<display_filter_posts>(
         handler, report,
-        !report.HANDLED(no_rounding) && (report.HANDLED(revalued) || default_exprs));
+        !report.HANDLED(no_rounding) &&
+            (report.HANDLED(revalued) || (!report.HANDLED(base) && default_exprs)));
     display_filter = display_filter_sp.get();
     handler = std::move(display_filter_sp);
   }
