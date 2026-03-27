@@ -1,0 +1,36 @@
+; Regression test for issue #594: ExprTests fail if --decimal-comma is specified
+; https://github.com/ledger/ledger/issues/594
+; When --decimal-comma is active, 'ledger expr' must still parse the built-in
+; sample journal whose amounts use '.' as decimal separator.
+
+2024/01/01 Test
+    Expenses:Food    10
+    Assets:Cash      -10
+
+test expr --decimal-comma "amount" | sed -E 's/0x[0-9a-f]+[[:space:]]*/ADDR    /g'
+--- Context is first posting of the following transaction ---
+2004/05/27 Book Store
+    ; This note applies to all postings. :SecondTag:
+    Expenses:Books                 20 BOOK @ $10
+    ; Metadata: Some Value
+    ; Typed:: $100 + $200
+    ; :ExampleTag:
+    ; Here follows a note describing the posting.
+    Liabilities:MasterCard        $-200.00
+
+--- Input expression ---
+amount
+
+--- Text as parsed ---
+amount
+
+--- Expression tree ---
+ADDR    IDENT: amount (1)
+
+--- Compiled tree ---
+ADDR    IDENT: amount (1)
+ADDR    FUNCTION (1)
+
+--- Calculated value ---
+20 BOOK
+end test
