@@ -1,0 +1,16 @@
+; Regression test for issue #663: recursive include detection
+;
+; Self-inclusion should produce a clear "Recursive include" error rather than
+; the misleading "File to include was not found" message.
+
+include 663.test
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 6:
+Error: Recursive include of file detected: $FILE
+end test
