@@ -1,0 +1,8 @@
+
+2015/01/01 Buy stocks
+    Assets:Investments            2 FOO @@ 20.00 EUR
+    Assets:Cash                            -20.00 EUR
+
+test bal assets:investments -V --commodity-value-expr "25.00 EUR"
+           50.00 EUR  Assets:Investments
+end test
