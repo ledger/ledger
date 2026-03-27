@@ -187,6 +187,12 @@ std::size_t session_t::read_data(const string& master_account) {
   if (HANDLED(value_expr_))
     journal->value_expr = HANDLER(value_expr_).str();
 
+  if (HANDLED(account_value_expr_))
+    journal->account_value_expr = HANDLER(account_value_expr_).str();
+
+  if (HANDLED(commodity_value_expr_))
+    journal->commodity_value_expr = HANDLER(commodity_value_expr_).str();
+
   if (HANDLED(lot_matching_))
     journal->lot_matching_policy = HANDLER(lot_matching_).policy;
 
@@ -403,8 +409,12 @@ option_t<session_t>* session_t::lookup_option(const char* p) {
   case 'Z':
     OPT_CH(price_exp_);
     break;
+  case 'a':
+    OPT(account_value_expr_);
+    break;
   case 'c':
     OPT(check_payees);
+    else OPT(commodity_value_expr_);
     break;
   case 'd':
     OPT(download); // -Q
