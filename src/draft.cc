@@ -629,8 +629,7 @@ value_t template_command(call_scope_t& args) {
   optional<int> saved_year_directive = year_directive_year;
   optional<datetime_t> saved_epoch;
   year_directive_year = none;
-  if (saved_year_directive && epoch &&
-      epoch->date() == date_t(*saved_year_directive, 12, 31)) {
+  if (saved_year_directive && epoch && epoch->date() == date_t(*saved_year_directive, 12, 31)) {
     saved_epoch = epoch;
     epoch = none;
   }
@@ -658,8 +657,7 @@ value_t xact_command(call_scope_t& args) {
   optional<int> saved_year_directive = year_directive_year;
   optional<datetime_t> saved_epoch;
   year_directive_year = none;
-  if (saved_year_directive && epoch &&
-      epoch->date() == date_t(*saved_year_directive, 12, 31)) {
+  if (saved_year_directive && epoch && epoch->date() == date_t(*saved_year_directive, 12, 31)) {
     saved_epoch = epoch;
     epoch = none;
   }
