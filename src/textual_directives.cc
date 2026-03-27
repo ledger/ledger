@@ -285,6 +285,7 @@ void instance_t::include_directive(char* line) {
   glob.assign_glob('^' + filename.filename().string() + '$');
 
   bool files_found = false;
+  optional<path> recursive_path;
   if (exists(parent_path)) {
     std::filesystem::directory_iterator end;
 
@@ -304,11 +305,20 @@ void instance_t::include_directive(char* line) {
           DEBUG("textual.include", "Skipping file with invalid UTF-8 name: " << base);
           continue;
         }
-        if (context.pathname == *iter) {
-          DEBUG("textual.include", "Avoiding recursive include of: " << *iter);
-          continue;
-        }
         if (glob.match(base)) {
+          bool is_recursive = false;
+          for (instance_t* p = this; p; p = p->parent) {
+            if (p->context.pathname == *iter) {
+              is_recursive = true;
+              break;
+            }
+          }
+          if (is_recursive) {
+            DEBUG("textual.include", "Skipping recursive include of: " << *iter);
+            if (!recursive_path)
+              recursive_path = *iter;
+            continue;
+          }
           journal_t* journal = context.journal;
           account_t* master = top_account();
           scope_t* scope = context.scope;
@@ -369,8 +379,11 @@ void instance_t::include_directive(char* line) {
     }
   }
 
-  if (!files_found)
+  if (!files_found) {
+    if (recursive_path)
+      throw_(parse_error, _f("Recursive include of file detected: %1%") % recursive_path->string());
     throw_(std::runtime_error, _f("File to include was not found: %1%") % filename.string());
+  }
 }
 
 /*--- Apply / Scope Directives ---*/
