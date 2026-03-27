@@ -73,6 +73,7 @@
  */
 
 #include "textual_internal.h"
+#include "csv.h"
 
 namespace ledger {
 
@@ -310,11 +311,30 @@ void instance_t::include_directive(char* line) {
         }
         if (glob.match(base)) {
           journal_t* journal = context.journal;
-          account_t* master = top_account();
           scope_t* scope = context.scope;
           std::size_t& errors = context.errors;
           std::size_t& count = context.count;
           std::size_t& sequence = context.sequence;
+
+          // Detect CSV files by extension for sub-parser delegation.
+          string ext = path(*iter).extension().string();
+          std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+          bool is_csv = (ext == ".csv");
+
+          account_t* master;
+          if (is_csv) {
+            // For CSV includes, the master account becomes the balancing
+            // posting's account.  Prefer an explicit apply-account scope,
+            // fall back to the journal's bucket directive, then to
+            // Equity:Unknown (matching convert command behavior).
+            master = top_account();
+            if (master == journal->master)
+              master = journal->bucket;
+            if (!master)
+              master = journal->master->find_account(_("Equity:Unknown"));
+          } else {
+            master = top_account();
+          }
 
           DEBUG("textual.include", "Including: " << *iter);
           DEBUG("textual.include", "Master account: " << master->fullname());
@@ -328,37 +348,74 @@ void instance_t::include_directive(char* line) {
           parse_context_t* save_current_context = journal->current_context;
           journal->current_context = &context_stack.get_current();
 
-          // Save year state so that year/Y directives inside the included
-          // file do not bleed back into the parent file after the include
-          // returns.  This mirrors what end_apply_directive does for the
-          // "apply year" / "end apply year" pair.
-          optional<datetime_t> saved_epoch = epoch;
-          optional<int> saved_year_directive_year = year_directive_year;
+          if (is_csv) {
+            // CSV sub-parser: delegate to csv_reader instead of instance_t.
+            // This allows `include bank.csv` in journal files, with the CSV
+            // transactions inheriting the active apply-account and apply-tag
+            // context from the parent parser.
+            account_t* unknown =
+                journal->master->find_account(_("Expenses:Unknown"));
 
-          try {
-            instance_t instance(context_stack, context_stack.get_current(), this, no_assertions,
-                                hash_type);
-            instance.apply_stack.push_front(application_t("account", master));
-            instance.parse();
-          } catch (...) {
-            errors += context_stack.get_current().errors;
-            count += context_stack.get_current().count;
-            sequence += context_stack.get_current().sequence;
+            std::vector<string> apply_tags;
+            get_applications<string>(apply_tags);
+
+            try {
+              csv_reader reader(context_stack.get_current());
+              while (xact_t* xact = reader.read_xact(false)) {
+                for (const string& tag : apply_tags) {
+                  if (!xact->has_tag(tag))
+                    xact->set_tag(tag);
+                }
+
+                if (xact->posts.front()->account == nullptr)
+                  xact->posts.front()->account = unknown;
+
+                if (!journal->add_xact(xact)) {
+                  checked_delete(xact);
+                  throw_(std::runtime_error,
+                         _("Failed to finalize derived CSV transaction"));
+                }
+                count++;
+              }
+            } catch (...) {
+              journal->current_context = save_current_context;
+              context_stack.pop();
+              throw;
+            }
+          } else {
+            // Save year state so that year/Y directives inside the included
+            // file do not bleed back into the parent file after the include
+            // returns.  This mirrors what end_apply_directive does for the
+            // "apply year" / "end apply year" pair.
+            optional<datetime_t> saved_epoch = epoch;
+            optional<int> saved_year_directive_year = year_directive_year;
+
+            try {
+              instance_t instance(context_stack, context_stack.get_current(),
+                                  this, no_assertions, hash_type);
+              instance.apply_stack.push_front(
+                  application_t("account", master));
+              instance.parse();
+            } catch (...) {
+              errors += context_stack.get_current().errors;
+              count += context_stack.get_current().count;
+              sequence += context_stack.get_current().sequence;
+
+              epoch = saved_epoch;
+              year_directive_year = saved_year_directive_year;
+
+              journal->current_context = save_current_context;
+              context_stack.pop();
+              throw;
+            }
 
             epoch = saved_epoch;
             year_directive_year = saved_year_directive_year;
 
-            journal->current_context = save_current_context;
-            context_stack.pop();
-            throw;
+            errors += context_stack.get_current().errors;
+            count += context_stack.get_current().count;
+            sequence += context_stack.get_current().sequence;
           }
-
-          epoch = saved_epoch;
-          year_directive_year = saved_year_directive_year;
-
-          errors += context_stack.get_current().errors;
-          count += context_stack.get_current().count;
-          sequence += context_stack.get_current().sequence;
 
           journal->current_context = save_current_context;
           context_stack.pop();
