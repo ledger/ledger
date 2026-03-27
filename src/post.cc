@@ -1050,7 +1050,13 @@ void extend_post(post_t& post, journal_t& journal) {
       value_expr = post.account->value_expr;
 
     if (!value_expr)
+      value_expr = journal.account_value_expr;
+
+    if (!value_expr)
       value_expr = post.amount.commodity().value_expr();
+
+    if (!value_expr)
+      value_expr = journal.commodity_value_expr;
 
     if (!value_expr)
       value_expr = journal.value_expr;

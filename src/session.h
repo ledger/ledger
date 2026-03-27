@@ -170,7 +170,9 @@ public:
 
   /// Dump all session-level option values to the output stream.
   void report_options(std::ostream& out) {
+    HANDLER(account_value_expr_).report(out);
     HANDLER(check_payees).report(out);
+    HANDLER(commodity_value_expr_).report(out);
     HANDLER(day_break).report(out);
     HANDLER(download).report(out);
     HANDLER(decimal_comma).report(out);
@@ -202,7 +204,9 @@ public:
    * Option handlers
    */
 
+  OPTION(session_t, account_value_expr_);   ///< Default account-level valuation expression
   OPTION(session_t, check_payees); ///< Warn on unknown payees (with --strict)
+  OPTION(session_t, commodity_value_expr_); ///< Default commodity-level valuation expression
   OPTION(session_t, day_break);    ///< Insert day-break transactions between dates
   OPTION(session_t, download);     ///< Download commodity prices (-Q)
   OPTION(session_t, getquote_);    ///< Path to the price-fetching script
