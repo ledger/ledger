@@ -17,9 +17,6 @@
 test bal --sort-all amount --args-only --columns=80 -> 0
             $-267.00  Assets:Checking
              $267.00  Expenses
-             $185.00    Auto
-              $85.00      Gas
-             $100.00      Insurance
               $82.00    Food
               $40.00      Dining
               $15.00        Lunch
@@ -27,23 +24,26 @@ test bal --sort-all amount --args-only --columns=80 -> 0
               $42.00      Groceries
               $20.00        Meat
               $22.00        Produce
+             $185.00    Auto
+              $85.00      Gas
+             $100.00      Insurance
 --------------------
                    0
 end test
 
 test bal --sort-all "-amount" --args-only --columns=80 -> 0
-            $-267.00  Assets:Checking
              $267.00  Expenses
              $185.00    Auto
              $100.00      Insurance
               $85.00      Gas
               $82.00    Food
-              $40.00      Dining
-              $25.00        Dinner
-              $15.00        Lunch
               $42.00      Groceries
               $22.00        Produce
               $20.00        Meat
+              $40.00      Dining
+              $25.00        Dinner
+              $15.00        Lunch
+            $-267.00  Assets:Checking
 --------------------
                    0
 end test
