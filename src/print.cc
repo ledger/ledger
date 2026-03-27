@@ -81,8 +81,7 @@ namespace {
  *   - `[=auxdate]`     — auxiliary date only
  *   - `[date=auxdate]` — both primary and auxiliary dates
  */
-string rewrite_note_dates(const string& note, const item_t& item,
-                          format_type_t format_type,
+string rewrite_note_dates(const string& note, const item_t& item, format_type_t format_type,
                           const optional<const char*>& format) {
   const char* p = note.c_str();
   const char* b = std::strchr(p, '[');
@@ -298,8 +297,7 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
 
   if (xact.note)
     print_note(out, rewrite_note_dates(*xact.note, xact, format_type, format),
-               xact.has_flags(ITEM_NOTE_ON_NEXT_LINE), columns,
-               unistring(leader).length());
+               xact.has_flags(ITEM_NOTE_ON_NEXT_LINE), columns, unistring(leader).length());
   out << '\n';
 
   // Phase 2: Print transaction-level metadata tags.
@@ -439,8 +437,7 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
 
     if (post->note)
       print_note(out, rewrite_note_dates(*post->note, *post, format_type, format),
-                 post->has_flags(ITEM_NOTE_ON_NEXT_LINE), columns,
-                 4 + account_width);
+                 post->has_flags(ITEM_NOTE_ON_NEXT_LINE), columns, 4 + account_width);
     out << '\n';
   }
 }
