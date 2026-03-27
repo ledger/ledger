@@ -22,10 +22,10 @@ test bal --sort amount
 end test
 
 test bal --sort -amount
-            $-200.00  Assets:Cash
              $200.00  Expenses
              $120.00    Food
               $80.00    Gas
+            $-200.00  Assets:Cash
 --------------------
                    0
 end test
