@@ -276,29 +276,23 @@ void item_t::parse_tags(const char* p, scope_t& scope, bool overwrite_existing) 
         if (std::isdigit(static_cast<unsigned char>(s[0])) &&
             std::isdigit(static_cast<unsigned char>(s[1])) &&
             std::isdigit(static_cast<unsigned char>(s[2])) &&
-            std::isdigit(static_cast<unsigned char>(s[3])) &&
-            (s[4] == '/' || s[4] == '-') &&
+            std::isdigit(static_cast<unsigned char>(s[3])) && (s[4] == '/' || s[4] == '-') &&
             std::isdigit(static_cast<unsigned char>(s[5])) &&
             (std::isdigit(static_cast<unsigned char>(s[6]))
-               ? (s[7] == '/' || s[7] == '-') &&
-                 std::isdigit(static_cast<unsigned char>(s[8]))
-               : (s[6] == '/' || s[6] == '-') &&
-                 std::isdigit(static_cast<unsigned char>(s[7])))) {
+                 ? (s[7] == '/' || s[7] == '-') && std::isdigit(static_cast<unsigned char>(s[8]))
+                 : (s[6] == '/' || s[6] == '-') &&
+                       std::isdigit(static_cast<unsigned char>(s[7])))) {
           // Find end of date portion (skip all digits and date separators)
           const char* t = s + 5;
-          while (std::isdigit(static_cast<unsigned char>(*t)) ||
-                 *t == '/' || *t == '-')
+          while (std::isdigit(static_cast<unsigned char>(*t)) || *t == '/' || *t == '-')
             ++t;
           // Allow optional time component: space then HH:MM[:SS]
-          if (*t == ' ' &&
-              std::isdigit(static_cast<unsigned char>(t[1])) &&
-              std::isdigit(static_cast<unsigned char>(t[2])) &&
-              t[3] == ':' &&
+          if (*t == ' ' && std::isdigit(static_cast<unsigned char>(t[1])) &&
+              std::isdigit(static_cast<unsigned char>(t[2])) && t[3] == ':' &&
               std::isdigit(static_cast<unsigned char>(t[4])) &&
               std::isdigit(static_cast<unsigned char>(t[5]))) {
             t += 6;
-            if (*t == ':' &&
-                std::isdigit(static_cast<unsigned char>(t[1])) &&
+            if (*t == ':' && std::isdigit(static_cast<unsigned char>(t[1])) &&
                 std::isdigit(static_cast<unsigned char>(t[2])))
               t += 3;
           }
