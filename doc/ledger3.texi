@@ -8480,6 +8480,30 @@ The script will be called with the commodity symbol as the first argument
 and optionally the target commodity as the second argument.  It should
 return the current price in a format understood by Ledger.
 
+@subsubheading Batch Mode
+
+When multiple commodities need price quotes, Ledger first attempts to
+fetch them all in a single script invocation using batch mode.  The
+script is called with @code{--batch} as the first argument, the target
+(exchange) commodity as the second, and all commodity symbols that need
+quotes as subsequent arguments:
+
+@example
+getquote --batch $ AAPL GOOG MSFT
+@end example
+
+The script should output one price line per commodity, for example:
+
+@example
+2024/06/15 AAPL $150.00
+2024/06/15 GOOG $180.00
+2024/06/15 MSFT $420.00
+@end example
+
+If the script does not support @code{--batch} (exits with non-zero
+status or produces no output), Ledger falls back to calling it once per
+commodity using the original single-commodity protocol.
+
 @end ftable
 
 There are several different ways that ledger can report the totals it
