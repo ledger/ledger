@@ -49,6 +49,43 @@
 
 namespace ledger {
 
+/*--- Scope wrapper for account sort ---*/
+
+/**
+ * A thin scope wrapper that redirects 'amount' lookups to 'total'.
+ *
+ * When sorting accounts (e.g. balance -S t), the sort expression may
+ * evaluate 'amount', which for parent accounts with no direct postings
+ * returns zero.  However the balance report displays the family total
+ * for these accounts, so sorting by 'amount' produces an ordering that
+ * doesn't match the displayed values.
+ *
+ * By wrapping the account scope and intercepting only the 'amount'
+ * lookup, we make the sort see the family total without affecting any
+ * other expression evaluation context (format strings, select queries,
+ * etc.).
+ */
+namespace {
+
+class account_amount_as_total_scope_t : public child_scope_t {
+public:
+  explicit account_amount_as_total_scope_t(scope_t& account)
+      : child_scope_t(account) {}
+
+  string description() override {
+    return parent ? parent->description() : _("<account sort scope>");
+  }
+
+  expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
+                          const string& name) override {
+    if (kind == symbol_t::FUNCTION && name == "amount")
+      return child_scope_t::lookup(kind, "total");
+    return child_scope_t::lookup(kind, name);
+  }
+};
+
+}  // anonymous namespace
+
 /*--- Sort value evaluation ---*/
 
 void push_sort_value(std::list<sort_value_t>& sort_values, expr_t::ptr_op_t node, scope_t& scope) {
@@ -133,37 +170,50 @@ bool compare_items<post_t>::operator()(post_t* left, post_t* right) {
 /**
  * Account comparison with xdata caching.  The ACCOUNT_EXT_SORT_CALC flag
  * prevents redundant evaluation, analogous to POST_EXT_SORT_CALC for postings.
+ *
+ * For parent accounts with no direct postings, 'amount' is redirected to
+ * 'total' during sort evaluation so that -S t sorts by the family total
+ * (which is the value the balance report actually displays).
  */
 template <>
 bool compare_items<account_t>::operator()(account_t* left, account_t* right) {
   assert(left);
   assert(right);
 
-  account_t::xdata_t& lxdata(left->xdata());
-  if (!lxdata.has_flags(ACCOUNT_EXT_SORT_CALC)) {
-    if (sort_order.get_context()) {
-      bind_scope_t bound_scope(*sort_order.get_context(), *left);
-      find_sort_values(lxdata.sort_values, bound_scope);
-    } else {
-      find_sort_values(lxdata.sort_values, *left);
-    }
-    lxdata.add_flags(ACCOUNT_EXT_SORT_CALC);
-  }
+  auto eval_sort_values = [&](account_t& acct) {
+    account_t::xdata_t& xdata(acct.xdata());
+    if (xdata.has_flags(ACCOUNT_EXT_SORT_CALC))
+      return;
 
-  account_t::xdata_t& rxdata(right->xdata());
-  if (!rxdata.has_flags(ACCOUNT_EXT_SORT_CALC)) {
-    if (sort_order.get_context()) {
-      bind_scope_t bound_scope(*sort_order.get_context(), *right);
-      find_sort_values(rxdata.sort_values, bound_scope);
+    // Parent accounts with no direct postings have amount() == NULL_VALUE.
+    // Redirect 'amount' -> 'total' so the sort matches the displayed value.
+    bool redirect = acct.amount().is_null() && !acct.accounts.empty();
+
+    if (redirect) {
+      account_amount_as_total_scope_t wrapped(acct);
+      if (sort_order.get_context()) {
+        bind_scope_t bound_scope(*sort_order.get_context(), wrapped);
+        find_sort_values(xdata.sort_values, bound_scope);
+      } else {
+        find_sort_values(xdata.sort_values, wrapped);
+      }
     } else {
-      find_sort_values(rxdata.sort_values, *right);
+      if (sort_order.get_context()) {
+        bind_scope_t bound_scope(*sort_order.get_context(), acct);
+        find_sort_values(xdata.sort_values, bound_scope);
+      } else {
+        find_sort_values(xdata.sort_values, acct);
+      }
     }
-    rxdata.add_flags(ACCOUNT_EXT_SORT_CALC);
-  }
+    xdata.add_flags(ACCOUNT_EXT_SORT_CALC);
+  };
+
+  eval_sort_values(*left);
+  eval_sort_values(*right);
 
   DEBUG("value.sort", "Comparing accounts " << left->fullname() << " <> " << right->fullname());
 
-  return sort_value_is_less_than(lxdata.sort_values, rxdata.sort_values);
+  return sort_value_is_less_than(left->xdata().sort_values, right->xdata().sort_values);
 }
 
 } // namespace ledger
