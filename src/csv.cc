@@ -90,7 +90,7 @@ string csv_reader::read_field(std::istream& in) {
       } else if (x == c) {
         if (x == '|')
           in.unget();
-        else if (in.peek() == ',')
+        else if (in.peek() == separator)
           in.get(c);
         break;
       }
@@ -102,7 +102,7 @@ string csv_reader::read_field(std::istream& in) {
     while (in.good() && !in.eof()) {
       in.get(c);
       if (in.good()) {
-        if (c == ',')
+        if (c == separator)
           break;
         if (c != '\0')
           field += c;

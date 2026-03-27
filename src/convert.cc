@@ -95,7 +95,16 @@ value_t convert_command(call_scope_t& args) {
     ~current_context_guard() { journal.current_context = saved; }
   } guard(journal, &context);
 
-  csv_reader reader(context);
+  char separator = ',';
+  if (report.HANDLED(csv_separator_)) {
+    const string& sep = report.HANDLER(csv_separator_).str();
+    if (sep == "\\t" || sep == "tab")
+      separator = '\t';
+    else if (!sep.empty())
+      separator = sep[0];
+  }
+
+  csv_reader reader(context, separator);
 
   try {
     while (xact_t* xact = reader.read_xact(report.HANDLED(rich_data))) {
