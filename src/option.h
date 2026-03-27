@@ -493,6 +493,26 @@ inline bool is_eq(const char* p, const char* n) {
   }                                                                                                \
   END(name)
 
+/// @brief Declare a numeric option that returns an integer value to the expression engine.
+/// Like OPTION, but overrides operator() so that querying the option from an expression
+/// yields an INTEGER value_t rather than a STRING.  This allows arithmetic like
+/// `4 + total_width` without requiring an explicit int() cast.
+#define OPTION_INT(type, name)                                                                     \
+  BEGIN(type, name) {                                                                              \
+    CTOR(type, name) {}                                                                            \
+    value_t operator()(call_scope_t& args) override {                                              \
+      if (!args.empty()) {                                                                         \
+        args.push_front(string_value("?expr"));                                                    \
+        return handler(args);                                                                      \
+      } else if (wants_arg) {                                                                      \
+        return value.empty() ? value_t(0L) : value_t(std::stol(value));                            \
+      } else {                                                                                     \
+        return handled;                                                                             \
+      }                                                                                            \
+    }                                                                                              \
+  }                                                                                                \
+  END(name)
+
 /// @brief Declare an option with a custom DO()/DO_() handler body.
 #define OPTION_(type, name, ...) BEGIN(type, name){CTOR(type, name){} __VA_ARGS__} END(name)
 
