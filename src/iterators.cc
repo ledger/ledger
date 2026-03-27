@@ -174,6 +174,9 @@ void posts_commodities_iterator::reset(journal_t& journal) {
   // synthetic transactions with postings representing each price point.
   // When latest_only is set, scan the full history but emit only the
   // most recently-dated price for each commodity.
+  // When interval is set with a duration, keep only the last price per
+  // commodity per period (e.g. monthly), so that interval_posts does not
+  // sum multiple prices within the same period.
   if (latest_only) {
     for (commodity_t* comm : commodities) {
       datetime_t best_when;
@@ -204,6 +207,40 @@ void posts_commodities_iterator::reset(journal_t& journal) {
       post.amount = best_price;
       post._state = item_t::CLEARED;
       post.xdata().datetime = best_when;
+    }
+  } else if (interval && interval->duration) {
+    for (commodity_t* comm : commodities) {
+      // Use a map from period start date to (latest_when, latest_price).
+      // Since map_prices emits in ascending datetime order, the last
+      // assignment per period keeps the latest price in that period.
+      std::map<date_t, std::pair<datetime_t, amount_t>> period_prices;
+      date_interval_t working(*interval);
+
+      comm->map_prices([&](const datetime_t& when, const amount_t& price) {
+        date_t d = when.date();
+        date_interval_t probe(working);
+        if (probe.find_period(d)) {
+          date_t period_start = *probe.start;
+          period_prices[period_start] = {when, price};
+        }
+      });
+
+      // Create one synthetic posting per period with the last price.
+      account_t* account = journal.master->find_account(comm->symbol());
+      for (const auto& pp : period_prices) {
+        xact_t& xact = temps.create_xact();
+        xact_temps.push_back(&xact);
+        xact.payee = pp.second.second.commodity().symbol();
+        xact._date = pp.second.first.date();
+        xact._state = item_t::CLEARED;
+        xact.journal = &journal;
+
+        post_t& post = temps.create_post(xact, account);
+        post._date = pp.second.first.date();
+        post.amount = pp.second.second;
+        post._state = item_t::CLEARED;
+        post.xdata().datetime = pp.second.first;
+      }
     }
   } else {
     for (commodity_t* comm : commodities)
