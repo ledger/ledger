@@ -207,6 +207,7 @@ xact_t* instance_t::read_next_directive(bool& error_flag, xact_t* previous_xact)
 
   case ';': // Line comments (multiple characters accepted)
   case '#':
+  case '%':
   case '*':
   case '|':
     break;

@@ -1701,7 +1701,7 @@ Beneath these top level accounts you can have any level of detail you
 desire.  For example, if you want to keep specific track of how much
 you spend on burgers and fries, you could have the following:
 
-@smallexample @c input:validate
+@smallexample
 Expenses:Food:Hamburgers and Fries
 @end smallexample
 
