@@ -353,8 +353,7 @@ void instance_t::include_directive(char* line) {
             // This allows `include bank.csv` in journal files, with the CSV
             // transactions inheriting the active apply-account and apply-tag
             // context from the parent parser.
-            account_t* unknown =
-                journal->master->find_account(_("Expenses:Unknown"));
+            account_t* unknown = journal->master->find_account(_("Expenses:Unknown"));
 
             std::vector<string> apply_tags;
             get_applications<string>(apply_tags);
@@ -372,8 +371,7 @@ void instance_t::include_directive(char* line) {
 
                 if (!journal->add_xact(xact)) {
                   checked_delete(xact);
-                  throw_(std::runtime_error,
-                         _("Failed to finalize derived CSV transaction"));
+                  throw_(std::runtime_error, _("Failed to finalize derived CSV transaction"));
                 }
                 count++;
               }
@@ -391,10 +389,9 @@ void instance_t::include_directive(char* line) {
             optional<int> saved_year_directive_year = year_directive_year;
 
             try {
-              instance_t instance(context_stack, context_stack.get_current(),
-                                  this, no_assertions, hash_type);
-              instance.apply_stack.push_front(
-                  application_t("account", master));
+              instance_t instance(context_stack, context_stack.get_current(), this, no_assertions,
+                                  hash_type);
+              instance.apply_stack.push_front(application_t("account", master));
               instance.parse();
             } catch (...) {
               errors += context_stack.get_current().errors;
