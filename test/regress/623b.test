@@ -1,0 +1,18 @@
+; Regression test for issue #623: equity preserves virtual flag on mixed accounts
+; https://github.com/ledger/ledger/issues/623
+;
+; When an account has both real and virtual postings, the equity command
+; must emit the virtual entry with parentheses so the output re-imports
+; without a balance error.
+
+2024/01/15 Purchase
+    Expenses:Food       $50.00
+    Assets:Checking    $-50.00
+    (Expenses:Food)     $10.00
+
+test equity
+2024/01/15 Opening Balances
+    Assets:Checking                          $-50.00
+    Expenses:Food                             $50.00
+    (Expenses:Food)                           $10.00
+end test
