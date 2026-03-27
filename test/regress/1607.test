@@ -1,0 +1,23 @@
+; Regression test for issue #1607: Make timeclock transactions balanced (BZ#535)
+; https://github.com/ledger/ledger/issues/1607
+;
+; When a bucket account is configured, timeclock transactions (i/o entries)
+; should create balanced double-entry postings with a second posting against
+; the bucket account.
+
+bucket Equity:Time
+
+i 2013/03/28 10:00:00 Projects:Consulting
+o 2013/03/28 14:00:00
+
+test bal
+              -4.00h  Equity:Time
+               4.00h  Projects:Consulting
+--------------------
+                   0
+end test
+
+test reg
+13-Mar-28                       Projects:Consulting           4.00h        4.00h
+                                Equity:Time                  -4.00h            0
+end test
