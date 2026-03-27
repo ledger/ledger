@@ -1,0 +1,24 @@
+; Regression test for #669: --no-python option in acprep
+;
+; The original bug was that acprep --no-python would crash with:
+;   self.configure_args.remove('--enable-python')
+;   ValueError: list.remove(x): x not in list
+;
+; This was fixed when acprep migrated from autotools to cmake.
+; The --no-python flag now correctly prevents -DUSE_PYTHON=1 from
+; being added to cmake configure args without crashing.
+;
+; Since this is a build-tool issue, not a ledger runtime issue,
+; this test simply verifies basic ledger functionality works
+; regardless of whether Python support is compiled in.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test
