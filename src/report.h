@@ -1087,7 +1087,7 @@ public:
       });
 
   OPTION(report_t, prepend_format_);
-  OPTION(report_t, prepend_width_);
+  OPTION_INT(report_t, prepend_width_);
 
   OPTION_(
       report_t, price, DO() { // -I
@@ -1273,13 +1273,13 @@ public:
 
   /*--- Column Width Options ---*/
 
-  OPTION(report_t, meta_width_);    ///< Width of the meta-tag prepend column
-  OPTION(report_t, date_width_);    ///< Width of the date column in register reports
-  OPTION(report_t, payee_width_);   ///< Width of the payee column in register reports
-  OPTION(report_t, account_width_); ///< Width of the account column in register reports
-  OPTION(report_t, amount_width_);  ///< Width of the amount column in register/balance reports
-  OPTION(report_t, total_width_);   ///< Width of the total column in register reports
-  OPTION(report_t, values);         ///< Show computed expression values (for debugging)
+  OPTION(report_t, meta_width_);        ///< Width of the meta-tag prepend column
+  OPTION_INT(report_t, date_width_);    ///< Width of the date column in register reports
+  OPTION_INT(report_t, payee_width_);   ///< Width of the payee column in register reports
+  OPTION_INT(report_t, account_width_); ///< Width of the account column in register reports
+  OPTION_INT(report_t, amount_width_);  ///< Width of the amount column in register/balance reports
+  OPTION_INT(report_t, total_width_);   ///< Width of the total column in register reports
+  OPTION(report_t, values);             ///< Show computed expression values (for debugging)
 
   ///@}
 };
