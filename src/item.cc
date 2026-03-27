@@ -296,8 +296,10 @@ void item_t::parse_tags(const char* p, scope_t& scope, bool overwrite_existing) 
                 std::isdigit(static_cast<unsigned char>(t[2])))
               t += 3;
           }
-          if (*t == '\0')
-            field = string("[") + field + "]";
+          if (*t == '\0') {
+            field.insert(field.begin(), '[');
+            field.push_back(']');
+          }
         }
 
         bind_scope_t bound_scope(scope, *this);
