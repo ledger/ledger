@@ -1,0 +1,9 @@
+test/regress/1639.test
+  19c41a4d11e76c35 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.20",
+  "base_commit_sha": "283286bee9d466fd72ae7d364c640c84ea4ac92e",
+  "prompts": {}
+}
