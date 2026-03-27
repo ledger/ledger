@@ -1,0 +1,21 @@
+; Regression test for issue #655: -Q/--download should trigger price
+; downloads even when no existing price is available in the history.
+; https://github.com/ledger/ledger/issues/655
+;
+; The bug was that check_for_updated_price() was only called when
+; find_price() returned a non-null result.  When no price existed
+; at all (no P directive, no implicit exchange rate), no download
+; was attempted despite --download being enabled.
+;
+; This test has a commodity (AAPL) with no price history at all --
+; both postings are in AAPL so no exchange rate is established.
+; The mock getquote script returns "2024/06/15 AAPL $150.00".
+; Without the fix, --market would show "10 AAPL" (no conversion).
+
+2024/01/15 Receive Stock Gift
+    Assets:Brokerage        10 AAPL
+    Income:Gifts            -10 AAPL
+
+test bal --market --download --getquote $sourcepath/test/scripts/mock-getquote.sh Assets:Brokerage
+            $1500.00  Assets:Brokerage
+end test
