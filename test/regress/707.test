@@ -22,3 +22,10 @@ test --now 2012/03/25 entry thursday "Test Transaction"
     Expenses:Food                             $10.00
     Assets:Cash
 end test
+
+; Partial date (month/day only) should use --now year, not year directive
+test --now 2012/03/25 xact 03/20 "Test Transaction"
+2012/03/20 Test Transaction
+    Expenses:Food                             $10.00
+    Assets:Cash
+end test
