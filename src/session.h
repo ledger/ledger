@@ -202,16 +202,18 @@ public:
    * Option handlers
    */
 
-  OPTION_(session_t, check_payees, DO() {
-    if (parent->journal)
-      parent->journal->check_payees = true;
-  });
-  OPTION_(session_t, day_break, DO() {
-    if (parent->journal)
-      parent->journal->day_break = true;
-  });
-  OPTION(session_t, download);     ///< Download commodity prices (-Q)
-  OPTION(session_t, getquote_);    ///< Path to the price-fetching script
+  OPTION_(
+      session_t, check_payees, DO() {
+        if (parent->journal)
+          parent->journal->check_payees = true;
+      });
+  OPTION_(
+      session_t, day_break, DO() {
+        if (parent->journal)
+          parent->journal->day_break = true;
+      });
+  OPTION(session_t, download);  ///< Download commodity prices (-Q)
+  OPTION(session_t, getquote_); ///< Path to the price-fetching script
 
   /// Use comma as decimal separator for commodity amounts.
   OPTION_(session_t, decimal_comma, DO() { commodity_t::decimal_comma_by_default = true; });
@@ -276,15 +278,17 @@ public:
         if (parent->journal)
           parent->journal->checking_style = journal_t::CHECK_WARNING;
       });
-  OPTION(session_t, value_expr_);       ///< Expression used to compute posting values
-  OPTION_(session_t, recursive_aliases, DO() {
-    if (parent->journal)
-      parent->journal->recursive_aliases = true;
-  });
-  OPTION_(session_t, no_aliases, DO() {
-    if (parent->journal)
-      parent->journal->no_aliases = true;
-  });
+  OPTION(session_t, value_expr_); ///< Expression used to compute posting values
+  OPTION_(
+      session_t, recursive_aliases, DO() {
+        if (parent->journal)
+          parent->journal->recursive_aliases = true;
+      });
+  OPTION_(
+      session_t, no_aliases, DO() {
+        if (parent->journal)
+          parent->journal->no_aliases = true;
+      });
 
   /// Lot matching policy for automatic commodity disposal: "fifo", "lifo", or "none".
   OPTION_CTOR(
