@@ -507,7 +507,7 @@ inline bool is_eq(const char* p, const char* n) {
       } else if (wants_arg) {                                                                      \
         return value.empty() ? value_t(0L) : value_t(std::stol(value));                            \
       } else {                                                                                     \
-        return handled;                                                                             \
+        return handled;                                                                            \
       }                                                                                            \
     }                                                                                              \
   }                                                                                                \
