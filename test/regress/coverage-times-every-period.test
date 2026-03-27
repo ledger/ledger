@@ -56,7 +56,7 @@ test reg --period "every 2 weeks" --now 2024/06/15
 end test
 
 test reg --period "weekly from 2024/01/01 to 2024/02/01"
-24-Jan-14 - 24-Jan-20           Assets:Checking             $-50.00      $-50.00
+24-Jan-15 - 24-Jan-21           Assets:Checking             $-50.00      $-50.00
                                 Expense:Food:Groceries       $50.00            0
 end test
 
