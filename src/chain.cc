@@ -109,6 +109,10 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t
     auto budget_handler =
         std::make_shared<budget_posts>(handler, report.terminus.date(), report.budget_flags);
     budget_handler->add_period_xacts(report.session.journal->period_xacts);
+
+    if (report.origin)
+      budget_handler->set_origin(*report.origin);
+
     handler = budget_handler;
 
     // budget_posts assumes postings arrive in chronological order because

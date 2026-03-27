@@ -342,8 +342,11 @@ void report_t::normalize_period() {
   optional<date_t> begin = interval.begin();
   optional<date_t> end = interval.end();
 
-  if (!HANDLED(begin_) && begin)
+  if (!HANDLED(begin_) && begin) {
     HANDLER(limit_).on(string("?normalize"), "date>=[" + to_iso_extended_string(*begin) + "]");
+    if (!origin || *begin < *origin)
+      origin = begin;
+  }
   if (!HANDLED(end_) && end)
     HANDLER(limit_).on(string("?normalize"), "date<[" + to_iso_extended_string(*end) + "]");
 
