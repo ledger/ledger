@@ -1,0 +1,28 @@
+; Trace level should control verbosity of trace output.
+; At level 0, no [TRACE] messages should appear.
+; At level 1, only high-level trace messages appear.
+; At level 2, detailed per-transaction breakdowns also appear.
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --trace 0 2>/dev/null
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test
+
+test bal --trace 1 2>/dev/null
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test
+
+test bal --trace 2 2>/dev/null
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

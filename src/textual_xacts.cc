@@ -340,7 +340,7 @@ void instance_t::period_xact_directive(char* line) {
 /*--- Regular Transaction Directive ---*/
 
 xact_t* instance_t::xact_directive(char* line, std::streamsize len, xact_t* previous_xact) {
-  TRACE_START(xacts, 1, "Time spent handling transactions:");
+  TRACE_START(xacts, 2, "Time spent handling transactions:");
 
   if (xact_t* xact = parse_xact(line, len, top_account(), previous_xact)) {
     unique_ptr<xact_t> manager(xact);
@@ -356,7 +356,7 @@ xact_t* instance_t::xact_directive(char* line, std::streamsize len, xact_t* prev
     throw parse_error(_("Failed to parse transaction"));
   }
 
-  TRACE_STOP(xacts, 1);
+  TRACE_STOP(xacts, 2);
 
   return nullptr;
 }
@@ -477,7 +477,7 @@ static balance_t compute_balance_diff(const amount_t& amt, post_t* post, xact_t*
 
 post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* account, xact_t* xact,
                                bool defer_expr) {
-  TRACE_START(post_details, 1, "Time spent parsing postings:");
+  TRACE_START(post_details, 2, "Time spent parsing postings:");
 
   unique_ptr<post_t> post(new post_t);
 
@@ -909,7 +909,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
     if (post_payee != "")
       post->set_payee(context.journal->validate_payee(post_payee));
 
-    TRACE_STOP(post_details, 1);
+    TRACE_STOP(post_details, 2);
 
     return post.release();
 
@@ -924,7 +924,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
 /*--- Posting Collection ---*/
 
 bool instance_t::parse_posts(account_t* account, xact_base_t& xact, const bool defer_expr) {
-  TRACE_START(xact_posts, 1, "Time spent parsing postings:");
+  TRACE_START(xact_posts, 2, "Time spent parsing postings:");
 
   bool added = false;
 
@@ -942,7 +942,7 @@ bool instance_t::parse_posts(account_t* account, xact_base_t& xact, const bool d
     }
   }
 
-  TRACE_STOP(xact_posts, 1);
+  TRACE_STOP(xact_posts, 2);
 
   return added;
 }
@@ -951,7 +951,7 @@ bool instance_t::parse_posts(account_t* account, xact_base_t& xact, const bool d
 
 xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* account,
                                xact_t* previous_xact) {
-  TRACE_START(xact_text, 1, "Time spent parsing transaction text:");
+  TRACE_START(xact_text, 2, "Time spent parsing transaction text:");
 
   unique_ptr<xact_t> xact(new xact_t);
 
@@ -1040,14 +1040,14 @@ xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* accou
     if (next && *next == ';')
       xact->append_note(++next, *context.scope, false);
 
-    TRACE_STOP(xact_text, 1);
+    TRACE_STOP(xact_text, 2);
 
     // Phase 6: Parse all indented continuation lines.
     // These may be metadata notes (`;`), inline assert/check/expr directives,
     // or posting lines.  Notes attach to the most recently parsed posting,
     // or to the transaction itself if no posting has been seen yet.
 
-    TRACE_START(xact_details, 1, "Time spent parsing transaction details:");
+    TRACE_START(xact_details, 2, "Time spent parsing transaction details:");
 
     post_t* last_post = nullptr;
 
@@ -1137,7 +1137,7 @@ xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* accou
     for (string& tag : tags)
       xact->parse_tags(tag.c_str(), *context.scope, false);
 
-    TRACE_STOP(xact_details, 1);
+    TRACE_STOP(xact_details, 2);
 
     // Phase 8: Verify or compute the transaction hash for chain integrity.
     if (hash_type != NO_HASHES) {
