@@ -455,12 +455,20 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t* locus, const int depth) {
       result = expr_value(this);
       break;
 
-    case O_MATCH:
-      result = (right()
-                    ->calc(scope, locus, depth + 1)
-                    .as_mask()
-                    .match(left()->calc(scope, locus, depth + 1).to_string()));
+    case O_MATCH: {
+      value_t mask_val = right()->calc(scope, locus, depth + 1);
+      const mask_t& m = mask_val.as_mask();
+      string text = left()->calc(scope, locus, depth + 1).to_string();
+      if (m.mark_count() > 0) {
+        if (auto captured = m.match_group(text, 1))
+          result = string_value(*captured);
+        else
+          result = false;
+      } else {
+        result = m.match(text);
+      }
       break;
+    }
 
     case O_EQ:
       result = (left()->calc(scope, locus, depth + 1) == right()->calc(scope, locus, depth + 1));
