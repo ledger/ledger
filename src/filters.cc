@@ -1687,8 +1687,7 @@ void generate_posts::add_period_xacts(period_xacts_list& period_xacts) {
         } else {
           // Default to monthly when no duration is specified (#1625).
           date_interval_t period(xact->period);
-          period.duration =
-              date_duration_t(date_duration_t::MONTHS, 1);
+          period.duration = date_duration_t(date_duration_t::MONTHS, 1);
           add_post(period, *post);
         }
       }
