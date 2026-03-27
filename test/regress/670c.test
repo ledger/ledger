@@ -1,0 +1,22 @@
+; Regression test for issue #670: CSV include mixed with journal entries
+; Verifies that CSV-included transactions coexist with regular journal
+; transactions and that the register command shows them in date order.
+
+bucket Assets:Checking
+
+2024/01/01 Opening Balance
+    Assets:Checking          $1000
+    Equity:Opening
+
+include 670.csv
+
+2024/02/01 Rent
+    Expenses:Rent             $800
+    Assets:Checking
+
+test reg Assets:Checking
+24-Jan-01 Opening Balance       Assets:Checking               $1000        $1000
+24-Jan-15 Grocery Store         Assets:Checking                $-50         $950
+24-Jan-20 Salary                Assets:Checking               $3000        $3950
+24-Feb-01 Rent                  Assets:Checking               $-800        $3150
+end test
