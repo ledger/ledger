@@ -166,6 +166,9 @@ std::size_t session_t::read_data(const string& master_account) {
   if (HANDLED(day_break))
     journal->day_break = true;
 
+  if (HANDLED(time_round_))
+    journal->time_round = std::stoi(HANDLER(time_round_).str()) * 60;
+
   if (HANDLED(recursive_aliases))
     journal->recursive_aliases = true;
   if (HANDLED(no_aliases))
@@ -450,6 +453,7 @@ option_t<session_t>* session_t::lookup_option(const char* p) {
     break;
   case 't':
     OPT(time_colon);
+    else OPT(time_round_);
     break;
   case 'v':
     OPT(value_expr_);
