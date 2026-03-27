@@ -1,0 +1,16 @@
+; Regression test for issue #622: print must fully qualify all dates
+; when a Y year directive is in effect, including bracketed dates in
+; posting notes, so that the output round-trips correctly.
+; https://github.com/ledger/ledger/issues/622
+
+Y 2007
+
+01/01 Test
+    Expenses:Other    $10.00 ; [01/05]
+    Assets:Checking
+
+test print
+2007/01/01 Test
+    Expenses:Other                            $10.00  ; [2007/01/05]
+    Assets:Checking
+end test
