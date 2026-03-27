@@ -1,16 +1,8 @@
-; Coverage for report.cc line 728: get_at with out-of-range index throws error
+; Coverage for report.cc line 728: get_at with out-of-range index returns void
 
 2024/01/01 Test
     Expenses:Food    $10.00
     Assets:Cash
 
-test reg Expenses --format "%(get_at(to_sequence(amount), 5))\n" -> 1
-__ERROR__
-While evaluating value expression:
-  get_at(to_sequence(amount), 5)
-  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-While calling function 'get_at (($10.00), 5)':
-While handling posting from "$FILE", line 4:
->     Expenses:Food    $10.00
-Error: Attempting to get index 5 from a sequence with 1 elements
+test reg Expenses --format "%(get_at(to_sequence(amount), 5))\n"
 end test

@@ -690,7 +690,8 @@ public:
 
   OPTION_(
       report_t, dc, DO() {
-        OTHER(amount_).expr.set_base_expr("(amount > 0 ? amount : 0, amount < 0 ? amount : 0)");
+        OTHER(amount_).expr.set_base_expr("is_seq(amount) ? amount :"
+                                          " (amount > 0 ? amount : 0, amount < 0 ? amount : 0)");
 
         OTHER(register_format_)
             .on(none, "%(ansify_if("
