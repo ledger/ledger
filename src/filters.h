@@ -566,14 +566,14 @@ class anonymize_posts : public item_handler<post_t> {
 
   using account_hash_map = std::map<account_t*, string>;
 
-  temporaries_t temps;         ///< Temporary storage for anonymized xacts/posts.
-  commodity_index_map comms;   ///< Maps original commodities to sequential IDs.
+  temporaries_t temps;          ///< Temporary storage for anonymized xacts/posts.
+  commodity_index_map comms;    ///< Maps original commodities to sequential IDs.
   account_hash_map acct_hashes; ///< Maps original accounts to stable hashed names.
-  std::size_t next_comm_id;    ///< Next available commodity ID.
-  xact_t* last_xact;           ///< Previous xact, to avoid re-anonymizing within the same xact.
-  mt19937 rnd_gen;             ///< Mersenne Twister RNG for hash salting.
-  uniform_int<> integer_range; ///< Range for random integer generation.
-  int_generator_t integer_gen; ///< Random integer generator for hash input.
+  std::size_t next_comm_id;     ///< Next available commodity ID.
+  xact_t* last_xact;            ///< Previous xact, to avoid re-anonymizing within the same xact.
+  mt19937 rnd_gen;              ///< Mersenne Twister RNG for hash salting.
+  uniform_int<> integer_range;  ///< Range for random integer generation.
+  int_generator_t integer_gen;  ///< Random integer generator for hash input.
 
   anonymize_posts();
 
