@@ -189,20 +189,41 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
           handler, report.HANDLED(head_) ? lexical_cast<int>(report.HANDLER(head_).value) : 0,
           report.HANDLED(tail_) ? lexical_cast<int>(report.HANDLER(tail_).value) : 0);
 
-    // display_filter_posts adds virtual posts to the list to account
-    // for changes in value of commodities, which otherwise would affect
-    // the running total unpredictably.
-    auto display_filter_sp = std::make_shared<display_filter_posts>(
-        handler, report, report.HANDLED(revalued) && !report.HANDLED(no_rounding));
-    display_filter = display_filter_sp.get();
-    handler = std::move(display_filter_sp);
-
     // filter_posts will only pass through posts matching the
     // `display_predicate'.
     if (report.HANDLED(display_)) {
       display_predicate = predicate_t(report.HANDLER(display_).str(), report.what_to_keep());
       handler = std::make_shared<filter_posts>(handler, display_predicate, report);
     }
+
+    // display_filter_posts adds virtual posts to the list to account
+    // for changes in value of commodities, which otherwise would affect
+    // the running total unpredictably.  Placed before filter_posts so
+    // it sees all postings and can correctly detect rounding gaps.
+    //
+    // Rounding adjustments are only useful for commands that display
+    // running totals (register), not for print/csv/equity.  The --base
+    // option (auto-set for non-balance/register commands) gates this.
+    // Additionally, rounding is safe only when the display expressions
+    // use simple additive accumulation (the defaults).  Non-additive
+    // transforms like --average, --deviation, or user-supplied
+    // --display-total/--display-amount break the assumption that
+    // total == prev_total + amount, so we disable rounding for those.
+    bool default_exprs = report.HANDLER(display_total_).expr.exprs.empty() &&
+                         report.HANDLER(display_total_).expr.base_expr == "total_expr" &&
+                         report.HANDLER(total_).expr.exprs.empty() &&
+                         report.HANDLER(total_).expr.base_expr == "total" &&
+                         report.HANDLER(display_amount_).expr.exprs.empty() &&
+                         report.HANDLER(display_amount_).expr.base_expr == "amount_expr" &&
+                         report.HANDLER(amount_).expr.exprs.empty() &&
+                         report.HANDLER(amount_).expr.base_expr == "amount";
+
+    auto display_filter_sp = std::make_shared<display_filter_posts>(
+        handler, report,
+        !report.HANDLED(no_rounding) &&
+            (report.HANDLED(revalued) || (!report.HANDLED(base) && default_exprs)));
+    display_filter = display_filter_sp.get();
+    handler = std::move(display_filter_sp);
   }
 
   /*--- Revaluation and calculation ---*/
