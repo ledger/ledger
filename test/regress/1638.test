@@ -1,0 +1,63 @@
+; Regression test for issue #1638: Selinger's multiple currency accounting
+; https://github.com/ledger/ledger/issues/1638
+;
+; Tests that double-entry consistency holds across currency exchanges using
+; the {= price} (fixated price) syntax with an Income:Currency account.
+
+P 2011/01/03 USD 1.30 CAD
+P 2011/01/08 USD 1.45 CAD
+
+2011/01/01 Opening balance
+    Assets:Canadian_Cash        200 CAD
+    Equity:Initial_Capital
+
+2011/01/02 Exchange
+    Assets:Canadian_Cash       -120 CAD
+    Assets:US_Cash              100 USD
+    Income:Currency
+
+2011/01/03 Buy food
+    Assets:US_Cash              -40 USD
+    Expenses:Food                40 USD {= 1.3 CAD}
+    Income:Currency
+
+2011/01/05 Exchange
+    Assets:US_Cash              -60 USD
+    Assets:Canadian_Cash         75 CAD
+    Income:Currency
+
+2011/01/07 Buy food
+    Assets:Canadian_Cash        -20 CAD
+    Expenses:Food
+
+; bal should net to zero with fixated prices and Income:Currency
+test bal
+          135.00 CAD  Assets:Canadian_Cash
+         -200.00 CAD  Equity:Initial_Capital
+           20.00 CAD
+              40 USD  Expenses:Food
+           45.00 CAD
+             -40 USD  Income:Currency
+--------------------
+                   0
+end test
+
+; --basis should also net to zero
+test bal --basis
+          135.00 CAD  Assets:Canadian_Cash
+         -200.00 CAD  Equity:Initial_Capital
+           72.00 CAD  Expenses:Food
+           -7.00 CAD  Income:Currency
+--------------------
+                   0
+end test
+
+; -X CAD should also net to zero
+test bal -X CAD
+          135.00 CAD  Assets:Canadian_Cash
+         -200.00 CAD  Equity:Initial_Capital
+           72.00 CAD  Expenses:Food
+           -7.00 CAD  Income:Currency
+--------------------
+                   0
+end test
