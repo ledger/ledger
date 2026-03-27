@@ -166,9 +166,8 @@ void draft_t::parse_args(const value_t& args) {
         tmpl->date = date;
         check_for_date = false;
       } else {
-        if (check_for_date &&
-            arg.find_first_of("abcdefghijklmnopqrstuvwxyz"
-                              "ABCDEFGHIJKLMNOPQRSTUVWXYZ") != string::npos) {
+        if (check_for_date && arg.find_first_of("abcdefghijklmnopqrstuvwxyz"
+                                                "ABCDEFGHIJKLMNOPQRSTUVWXYZ") != string::npos) {
           // Try parsing as a date expression (e.g. "yesterday", "today",
           // "tomorrow", "last month").  Only attempt this when the token
           // contains letters — pure numbers are handled as amounts.
@@ -185,15 +184,14 @@ void draft_t::parse_args(const value_t& args) {
               best_date = *d;
               best_begin = begin;
             }
-          } catch (...) {
-          }
+          } catch (...) {} // NOLINT(bugprone-empty-catch)
 
           // Try accumulating more tokens for multi-word expressions
           while (std::next(begin) != end) {
             string next_arg = (*std::next(begin)).to_string();
-            if (next_arg == "at" || next_arg == "to" || next_arg == "from" ||
-                next_arg == "on" || next_arg == "code" || next_arg == "note" ||
-                next_arg == "rest" || next_arg == "@" || next_arg == "@@")
+            if (next_arg == "at" || next_arg == "to" || next_arg == "from" || next_arg == "on" ||
+                next_arg == "code" || next_arg == "note" || next_arg == "rest" || next_arg == "@" ||
+                next_arg == "@@")
               break;
             amount_t test_amt;
             if (test_amt.parse(next_arg, PARSE_SOFT_FAIL | PARSE_NO_MIGRATE))
@@ -410,8 +408,7 @@ xact_t* draft_t::insert(journal_t& journal) {
         optional<date_t> d = interval.begin();
         if (d)
           added->_date = *d;
-      } catch (...) {
-      }
+      } catch (...) {} // NOLINT(bugprone-empty-catch)
     }
 
     // If no explicit year in the date and we have a year directive,
