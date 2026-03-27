@@ -103,6 +103,7 @@ public:
  */
 class csv_reader {
   parse_context_t context; ///< Parsing context: input stream, journal, master account
+  char separator;          ///< Field separator character (default: ',')
 
   /**
    * @brief Field types that CSV columns can map to.
@@ -143,8 +144,9 @@ public:
    * @param _context  Parse context providing the input stream, journal
    *                  (for payee/account mappings), and master account.
    */
-  csv_reader(parse_context_t& _context)
+  csv_reader(parse_context_t& _context, char _separator = ',')
       : context(_context),
+        separator(_separator),
         masks{std::make_pair(mask_t("date"), FIELD_DATE),
               std::make_pair(mask_t("posted( ?date)?"), FIELD_DATE_AUX),
               std::make_pair(mask_t("code"), FIELD_CODE),
