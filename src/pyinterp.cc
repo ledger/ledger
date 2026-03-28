@@ -164,8 +164,12 @@ void python_interpreter_t::initialize() {
     // the lpy package (e.g. "from ._core import *" in lpy/core/__init__.py)
     // resolve correctly when running embedded in the ledger CLI.
     PyObject* core_mod = PyImport_ImportModule("_core");
+    if (!core_mod) {
+      throw_(std::runtime_error,
+             _("Python failed to initialize (_core module could not be imported)"));
+    }
     PyDict_SetItemString(PyImport_GetModuleDict(), "lpy.core._core", core_mod);
-    Py_XDECREF(core_mod);
+    Py_DECREF(core_mod);
 
     // Programmatically create the lpy and lpy.core module hierarchy in
     // sys.modules so that "from lpy import core" works in the embedded CLI
