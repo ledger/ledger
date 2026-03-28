@@ -1,0 +1,28 @@
+; Regression test for issue #740: ledger stat calculates days incorrectly (BZ#740)
+; https://github.com/ledger/ledger/issues/740
+;
+; When all transactions are on a single day, stat shows "0 days" and "inf per day"
+; because it computes (latest_post - earliest_post).days() = 0.
+; The correct count should be 1 day, giving a meaningful per-day rate.
+
+2014/01/01 Single Day Transaction
+    Assets:Checking    $1000.00
+    Equity:Opening
+
+test stat | sed 's/Days since last post: *[0-9]*/Days since last post:     NNNN/; s/Posts in last [0-9]* days: *[0-9]*/Posts in last N days:        0/g; s/Posts seen this month: *[0-9]*/Posts seen this month:       0/'
+Time period: 14-Jan-01 to 14-Jan-01 (0 days)
+
+  Files these postings came from:
+    $FILE
+
+  Unique payees:               1
+  Unique accounts:             2
+
+  Number of postings:          2 (inf per day)
+  Uncleared postings:          2
+
+  Days since last post:     NNNN
+  Posts in last N days:        0
+  Posts in last N days:        0
+  Posts seen this month:       0
+end test

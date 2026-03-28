@@ -1,0 +1,12 @@
+; Regression test for #735: ledger convert should produce a clear error
+; when the CSV file has no date column, rather than crashing with an
+; assertion failure.
+
+test -f /dev/null convert test/regress/735-no-date.csv -> 1
+__ERROR__
+While parsing file "$sourcepath/test/regress/735-no-date.csv", line 1:
+While parsing CSV line:
+  $10,
+
+Error: CSV line is missing a date field
+end test

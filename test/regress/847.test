@@ -1,0 +1,30 @@
+; Regression test for issue #847: dated balance assertions should respect
+; date ordering, not file ordering.  A balance assertion dated 2010-01-02
+; appearing after a transaction dated 2010-01-03 should only consider
+; postings through 2010-01-02.
+
+2010-01-01 * Starting Balance
+    Assets:Bank:Checking            1000.00 EUR
+    Equity:Opening-Balances
+
+2010-01-02 * Shopping
+    Expenses:Shopping                 10 EUR
+    Assets:Bank:Checking
+
+2010-01-03 * Some more shopping
+    Expenses:Shopping                  5 EUR
+    Assets:Bank:Checking
+
+; Balance assertion dated before the last transaction in the file.
+; The balance of Assets:Bank:Checking as of 2010-01-02 is 990.00 EUR
+; (1000 - 10), regardless of the 2010-01-03 transaction.
+2010-01-02 * Balance Check
+    Assets:Bank:Checking            0 EUR = 990.00 EUR
+
+test balance
+          985.00 EUR  Assets:Bank:Checking
+        -1000.00 EUR  Equity:Opening-Balances
+           15.00 EUR  Expenses:Shopping
+--------------------
+                   0
+end test

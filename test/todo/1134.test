@@ -1,0 +1,15 @@
+; Regression test for issue #1134: There is no --format-* option for xact (BZ#1134)
+; https://github.com/ledger/ledger/issues/1134
+;
+; The xact (entry) command should respect --format like other commands do,
+; but currently --format is silently ignored by xact.
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test xact --format '%D %P\n' 2024/02/01 Payee 20
+2024/02/01 Payee
+    Expenses:Food                             $20.00
+    Assets:Cash
+end test

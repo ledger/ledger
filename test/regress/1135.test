@@ -1,0 +1,22 @@
+; Regression test for issue #1135: Transactions with effective dates not recognised (BZ#1135)
+; https://github.com/ledger/ledger/issues/1135
+;
+; Tests that transactions with effective dates are properly recognised and filtered
+; when using --effective flag. Actual date is Jan 15, effective date is Feb 1.
+
+2014/01/15=2014/02/01 Rent Payment
+    Expenses:Rent    $1000.00
+    Assets:Checking
+
+test reg --effective -b 2014/02/01 -e 2014/03/01
+14-Feb-01 Rent Payment          Expenses:Rent              $1000.00     $1000.00
+                                Assets:Checking           $-1000.00            0
+end test
+
+test reg --effective -b 2014/01/01 -e 2014/02/01
+end test
+
+test reg -b 2014/01/15 -e 2014/01/16
+14-Jan-15 Rent Payment          Expenses:Rent              $1000.00     $1000.00
+                                Assets:Checking           $-1000.00            0
+end test

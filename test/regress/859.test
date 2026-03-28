@@ -1,0 +1,12 @@
+; Regression test for issue #859: %a used in format strings returns error (BZ#859)
+; https://github.com/ledger/ledger/issues/859
+; %a in format strings should return the account name, not an error.
+
+2024/01/01 Test Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format '%a\n'
+Expenses:Food
+Assets:Cash
+end test

@@ -1,0 +1,16 @@
+; Regression test for issue #1126: ledger xact uses --date-format instead of --input-date-format (BZ#1126)
+; https://github.com/ledger/ledger/issues/1126
+;
+; The bug: when --input-date-format is set to a non-default format (e.g. European dd/mm/yyyy),
+; the xact command should use --input-date-format to parse the date argument on the command line.
+; Previously, xact was using --date-format for parsing instead of --input-date-format.
+
+2014/01/01 Groceries
+    Expenses:Food    $100.00
+    Assets:Checking
+
+test --input-date-format '%d/%m/%Y' xact 01/02/2014 Groceries
+2014/02/01 Groceries
+    Expenses:Food                            $100.00
+    Assets:Checking
+end test

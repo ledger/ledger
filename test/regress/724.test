@@ -1,0 +1,20 @@
+; Regression test for issue #724
+; Assertion failed in unistring::extract() with --payee-width=1
+; The truncate function used unsigned (width - 2) which underflows
+; when width < 3.
+
+2007/02/02 RD VMMXX
+    Assets:Investments:Vanguard:VMMXX  0.350 VMMXX @ $1.00
+    Income:Dividends:Vanguard:VMMXX        $-0.35
+
+test reg --payee-width=1
+07-Feb-02 R As:Investm:Vanguar:VMMXX  0.350 VMMXX  0.350 VMMXX
+            In:Dividen:Vanguar:VMMXX       $-0.35       $-0.35
+                                                   0.350 VMMXX
+end test
+
+test reg --payee-width=2
+07-Feb-02 RD As:Investm:Vanguar:VMMXX  0.350 VMMXX  0.350 VMMXX
+             In:Dividen:Vanguar:VMMXX       $-0.35       $-0.35
+                                                    0.350 VMMXX
+end test

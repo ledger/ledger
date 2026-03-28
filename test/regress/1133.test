@@ -1,0 +1,21 @@
+; Regression test for issue #1133: Erroneous double colon in account gives 'Unknown account' error listing only single colon with '--strict'. (BZ#1133)
+; https://github.com/ledger/ledger/issues/1133
+; The original bug: when an account with a double colon (e.g. Assets::Cash) was used
+; with --strict, the error said "Unknown account 'Assets:Cash'" (single colon), making
+; it hard to identify the erroneous entry. Now ledger correctly reports a parse error
+; identifying the empty sub-account name.
+account Assets:Cash
+account Expenses:Food
+
+2024/01/01 Test
+    Assets::Cash    $10.00
+    Expenses:Food
+
+test --strict bal -> 1
+__ERROR__
+While parsing file "$FILE", line 11:
+While parsing posting:
+  Assets::Cash    $10.00
+
+Error: Account name contains an empty sub-account name
+end test

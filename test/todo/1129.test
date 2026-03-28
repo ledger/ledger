@@ -1,0 +1,18 @@
+; Regression test for issue #1129: Ignores meta tags with space (BZ#1129)
+; https://github.com/ledger/ledger/issues/1129
+;
+; Meta tags (metadata comments) with spaces in the tag name are ignored.
+; e.g., "; Some Tag: value" should create tag "Some Tag" with value "value",
+; but ledger currently ignores it entirely.
+
+2024/01/01 Test transaction
+    ; SomeTag: found
+    ; Some Tag: should-also-be-found
+    Expenses:Food    $10.00
+    Assets:Cash
+
+; Bug: tag("Some Tag") should return "should-also-be-found" but returns empty
+test reg --format 'SomeTag:%(tag("SomeTag")) SomeTagWithSpace:%(tag("Some Tag"))\n'
+SomeTag:found SomeTagWithSpace:
+SomeTag:found SomeTagWithSpace:
+end test

@@ -1,0 +1,36 @@
+; Regression test for issue #741: ledger stat doesn't handle future transactions well (BZ#741)
+; https://github.com/ledger/ledger/issues/741
+;
+; When future-dated transactions are present, the stat command incorrectly uses
+; the future transaction date as the reference point for "Days since last post",
+; "Posts in last 7 days", and "Posts in last 30 days" instead of using today's date.
+; With --now 2020/06/01:
+;   - "Days since last post" should be 4 (days since 2020/05/28), not -213
+;   - "Posts in last 7 days" should be 2 (from 2020/05/28), not 4 (which wrongly includes future postings)
+;   - "Posts in last 30 days" should be 2, not 4
+
+2020/05/28 Past transaction
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2020/12/31 Future transaction
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test --now 2020/06/01 stat
+Time period: 20-May-28 to 20-Dec-31 (217 days)
+
+  Files these postings came from:
+    $FILE
+
+  Unique payees:               2
+  Unique accounts:             2
+
+  Number of postings:          4 (0.018 per day)
+  Uncleared postings:          4
+
+  Days since last post:     -213
+  Posts in last 7 days:        4
+  Posts in last 30 days:       4
+  Posts seen this month:       0
+end test

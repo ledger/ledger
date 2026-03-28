@@ -1,0 +1,17 @@
+; Regression test for issue #610: Whole transaction is ignored when there's a specific comment (BZ#610)
+; https://github.com/ledger/ledger/issues/610
+;
+; A comment at column 0 (non-indented) between a transaction header and its
+; postings used to silently ignore the whole transaction. Ledger now
+; produces an error instead of silently dropping the transaction.
+
+2011-12-13 * Test
+; test
+    A                     10.00 GBP
+    B
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 10:
+Error: Unexpected whitespace at beginning of line
+end test

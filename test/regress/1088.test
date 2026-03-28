@@ -1,0 +1,19 @@
+; Regression test for issue #1088: Russian Ruble sign (₽) appears as <U+20BD> in reports (BZ#1088)
+; https://github.com/ledger/ledger/issues/1088
+; The Russian Ruble symbol (₽, U+20BD) should appear as ₽ in reports, not as <U+20BD>
+
+2024/01/01 Test Transaction
+    Expenses:Food    ₽100.00
+    Assets:Cash
+
+test bal
+            ₽-100.00  Assets:Cash
+             ₽100.00  Expenses:Food
+--------------------
+                   0
+end test
+
+test reg
+24-Jan-01 Test Transaction      Expenses:Food               ₽100.00      ₽100.00
+                                Assets:Cash                ₽-100.00            0
+end test

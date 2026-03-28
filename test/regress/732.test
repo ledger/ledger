@@ -1,0 +1,12 @@
+; Regression test for issue #732: csv command required ledger file with -f (BZ#732)
+; https://github.com/ledger/ledger/issues/732
+; The csv command should work with a ledger file specified via -f
+
+2024/01/01 Test Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test csv
+"2024/01/01","","Test Payee","Expenses:Food","$","10","",""
+"2024/01/01","","Test Payee","Assets:Cash","$","-10","",""
+end test

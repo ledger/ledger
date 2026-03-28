@@ -13,6 +13,7 @@ test bal
 --------------------
                    0
 __ERROR__
-Warning: "$sourcepath/test/baseline/feat-check.test", line 6: Transaction check failed: (account =~ /Foo/)
+Warning: "$sourcepath/test/baseline/feat-check.test", line 4: Transaction check failed: (account =~ /Foo/)
+  (check expression at "$sourcepath/test/baseline/feat-check.test", line 1)
 Warning: "$sourcepath/test/baseline/feat-check.test", line 8: Check failed: account("Assets:Checking").all(account =~ /Expense/)
 end test

@@ -1,0 +1,26 @@
+; Regression test for issue #611:
+; --trace must not trigger an assertion failure when journal files use
+; the include directive.  The instance_parse timer was restarted with
+; a different description (containing the new filename) and start_timer()
+; asserted that the description matched the original, causing a crash.
+;
+; This test verifies that included files are parsed correctly.  The
+; underlying fix is in start_timer() which now updates the timer
+; description instead of asserting an exact match.
+
+2024/01/01 Main Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+include 611.dat
+
+2024/02/01 Another Payee
+    Expenses:Food    $15.00
+    Assets:Cash
+
+test bal
+             $-50.00  Assets:Cash
+              $50.00  Expenses:Food
+--------------------
+                   0
+end test

@@ -1,0 +1,33 @@
+; Regression test for issue #717: Error: Cannot convert a balance with multiple commodities to an amount (BZ#717)
+; https://github.com/ledger/ledger/issues/717
+
+2011-01-01 * Opening balance
+    Assets:Investments           1 "BBB" @  2.653329339867 GBP
+    Equity:Opening balance
+
+2011-01-10 * Fee
+    Liabilities:Credit Card                         -2.83 EUR
+    Expenses:Fees                                 (2.83/2 EUR)
+    Assets:Receivable
+
+test reg -X EUR -H -> 1
+11-Jan-01 Opening balance       Assets:Investments            1 BBB        1 BBB
+                                Equity:Opening balance GBP-2.653329339867000000000000000000000000000000        1 BBB
+                                GBP-2.653329339867000000000000000000000000000000
+11-Jan-10 Fee                   Liabilitie:Credit Card    -2.83 EUR        1 BBB
+                                                                       -2.83 EUR
+                                GBP-2.653329339867000000000000000000000000000000
+__ERROR__
+While evaluating value expression:
+  ansify_if(justify(scrub(display_amount), int(amount_width), ((((((3 + int(meta_width)) + int(date_width)) + int(payee_width)) + int(account_width)) + int(amount_width)) + int(prepend_width)), true, color), (should_bold ? (bold : null)))
+While converting -0.01 EUR to an amount:
+While calling function 'nail_down (-0.01 EUR, -0.01 EUR)':
+While calling function 'market (<#EXPR display_amount>, <#EXPR value_date>, <#EXPR exchange>)':
+While calling function 'market (<#EXPR display_amount>, <#EXPR value_date>, <#EXPR exchange>)':
+While calling function 'scrub <#EXPR display_amount>':
+While calling function 'justify (<#EXPR scrub(display_amount)>, <#EXPR int(amount_width)>, <#EXPR (((((({3} + int(meta_width)) + int(date_width)) + int(payee_width)) + int(account_width)) + int(amount_width)) + int(prepend_width))>, 1, 0)':
+While calling function 'ansify_if (<#EXPR justify(scrub(display_amount), int(amount_width), (((((({3} + int(meta_width)) + int(date_width)) + int(payee_width)) + int(account_width)) + int(amount_width)) + int(prepend_width)), true, color)>, )':
+While handling posting from "$FILE", line 10:
+>     Expenses:Fees                                 (2.83/2 EUR)
+Error: Cannot convert a balance with multiple commodities to an amount
+end test

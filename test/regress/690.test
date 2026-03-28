@@ -1,0 +1,21 @@
+; Regression test for issue #690: Add an option to output periodic transactions (BZ#690)
+; https://github.com/ledger/ledger/issues/690
+; The --budget flag (and budget command) outputs periodic transactions alongside
+; actual transactions, which implements the requested feature.
+
+~ Monthly
+    Expenses:Food    $100.00
+    Assets:Checking
+
+2024/01/15 Grocery Store
+    Expenses:Food    $80.00
+    Assets:Checking
+
+test reg --budget -b 2024/01/01 -e 2024/03/01
+24-Jan-01 Budget transaction    Expenses:Food              $-100.00     $-100.00
+24-Jan-01 Budget transaction    Assets:Checking             $100.00            0
+24-Jan-15 Grocery Store         Expenses:Food                $80.00       $80.00
+                                Assets:Checking             $-80.00            0
+24-Feb-01 Budget transaction    Expenses:Food              $-100.00     $-100.00
+24-Feb-01 Budget transaction    Assets:Checking             $100.00            0
+end test

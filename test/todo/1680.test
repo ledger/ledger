@@ -1,0 +1,21 @@
+; Regression test for issue #1680: Account assertions not checked for automated postings
+; https://github.com/ledger/ledger/issues/1680
+;
+; An account assertion (assert amount >= 0.00 EUR) should fire when an automated
+; transaction creates postings that violate it. Currently, the assertion is silently
+; ignored for automated postings, resulting in a negative balance with no error.
+
+account Budget:Food
+    assert amount >= 0.00 EUR
+
+= /Expenses:Food/
+    Budget:Food                       -1.0
+    Budget:Unbudgeted                  1.0
+
+2018-06-13 * Groceries store
+    Assets:Bank:Checking               -700 EUR
+    Expenses:Food                       700 EUR
+
+test bal Budget:Food
+         -700.00 EUR  Budget:Food
+end test

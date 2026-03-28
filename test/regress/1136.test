@@ -1,0 +1,52 @@
+; Regression test for bug #1136
+; The xact command should correctly generate transactions when the journal
+; uses year directives (Y) and effective dates (=), producing the right
+; date for each drafted entry regardless of year context.
+
+Y2014
+1/1 Salary
+    Income
+    Assets  10
+
+5/1 Payment
+    Expenses  2
+    Assets
+
+Y2015
+3/1=3/2 Another one
+    Expenses  1
+    Assets
+
+7/1=7/3 Skint
+    Expenses  7
+    Assets
+
+test xact "2012/2/1" "Pay"
+2012/02/01 Payment
+    Expenses                                       2
+    Assets
+end test
+
+test xact "2014/2/1" "Pay"
+2014/02/01 Payment
+    Expenses                                       2
+    Assets
+end test
+
+test xact "2015/2/1" "Pay"
+2015/02/01 Payment
+    Expenses                                       2
+    Assets
+end test
+
+test xact "2015/6/1" "Pay"
+2015/06/01 Payment
+    Expenses                                       2
+    Assets
+end test
+
+test xact "2015/9/1" "Pay"
+2015/09/01 Payment
+    Expenses                                       2
+    Assets
+end test

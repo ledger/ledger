@@ -1,0 +1,24 @@
+; Regression test for issue #1583: ledger and currency format in entry command (BZ#511)
+; https://github.com/ledger/ledger/issues/1583
+; The entry command should preserve the commodity format defined in the journal
+; (via the D directive or commodity directive) when generating new transactions.
+
+D $1,000.00
+
+2012-03-23 Grocery Store
+    Expenses:Groceries    $50.00
+    Assets:Checking
+
+; Basic entry preserves commodity format
+test --now 2012/03/25 entry "Grocery Store" 100
+2012/03/25 Grocery Store
+    Expenses:Groceries                       $100.00
+    Assets:Checking
+end test
+
+; Entry with amount requiring thousands separator
+test --now 2012/03/25 entry "Grocery Store" 2500
+2012/03/25 Grocery Store
+    Expenses:Groceries                     $2,500.00
+    Assets:Checking
+end test

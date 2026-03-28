@@ -1,0 +1,10 @@
+; Regression test for issue #1037: ledger source hangs when file is valid (BZ#1037)
+; https://github.com/ledger/ledger/issues/1037
+; The 'source' command should exit cleanly (exit code 0) with no output for a valid file.
+
+2024/01/01 Test Transaction
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test source -> 0
+end test

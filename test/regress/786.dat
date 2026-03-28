@@ -1,0 +1,6 @@
+account foo
+    check has_tag("test")
+
+2012-08-15 test
+    foo              10.00 EUR
+    bar

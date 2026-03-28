@@ -17,6 +17,8 @@ test reg Assets
 24-Jan-01 Test One              Assets:Cash                 $-10.00      $-10.00
 24-Jan-15 Test Two              Assets:Cash                 $-20.00      $-30.00
 __ERROR__
-Warning: "$FILE", line 10: Transaction check failed: all((amount < {$0.00}))
-Warning: "$FILE", line 14: Transaction check failed: all((amount < {$0.00}))
+Warning: "$FILE", line 8: Transaction check failed: all((amount < {$0.00}))
+  (check expression at "$FILE", line 5)
+Warning: "$FILE", line 12: Transaction check failed: all((amount < {$0.00}))
+  (check expression at "$FILE", line 5)
 end test

@@ -1,0 +1,27 @@
+; Regression test for issue #2985: account() function fails when
+; collapse_posts creates a <Total> posting with no parent account,
+; preventing get_account() from walking up to the journal master.
+= expr (commodity == '$' and account =~ /^Assets:/)
+    (Allocation:Cash)                  1.000
+= expr (commodity == 'FOO' and account =~ /^Assets:/)
+    (Allocation:Equities)              1.000
+
+2022/01/01 * Test
+    Assets:Checking                     $123
+    Income:Payroll
+2022/02/01 * Test
+    Assets:Checking                     $123
+    Income:Payroll
+2022/03/01 * Test
+    Assets:Brokerage                    10 FOO @ $8
+    Assets:Checking
+2022/04/01 * Test
+    Assets:Checking                     $123
+    Income:Payroll
+
+test reg --no-pager --collapse --plot-total-format "%(account('Allocation:Cash').total)\n" -J --monthly ^Allocation:
+$123
+$246
+$246
+$246
+end test

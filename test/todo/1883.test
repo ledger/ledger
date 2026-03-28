@@ -1,0 +1,27 @@
+; Regression test for issue #1883: print shows empty lot
+; https://github.com/ledger/ledger/issues/1883
+; When all lots of a commodity are sold, eval print() should not show zero-quantity
+; lot entries like "0 BBB {93.00 GBP}".
+
+2020-03-10 foo
+    Assets:Investments     10 BBB {93.00 GBP} @ 93.00 GBP
+    Assets:Investments                           -930 GBP
+
+2020-03-16 bar
+    Assets:Investments                          900.00 GBP
+    Expenses:Capital loss                        30.00 GBP
+    Assets:Investments     -10 BBB {93.00 GBP} @ 90.00 GBP
+
+2020-04-05 * Buy AAA
+    Assets:Investments    10 AAA {100.00 GBP} @ 100.00 GBP
+    Assets:Investments2
+
+2020-04-07 * Sell AAA
+    Assets:Investments   -10 AAA {100.00 GBP} @ 100.00 GBP
+    Assets:Investments2
+
+eval print(account("Assets:Investments").amount)
+
+test source
+-30.00 GBP
+end test

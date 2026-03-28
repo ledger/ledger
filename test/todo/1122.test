@@ -1,0 +1,18 @@
+; Regression test for issue #1122: Explicit conversion from commodity with two fixed costs to primary commodity fails (BZ#1122)
+; https://github.com/ledger/ledger/issues/1122
+;
+; Two postings with different explicit total costs {=amount} in the same
+; transaction should balance correctly when the explicit EUR amount covers
+; the sum of the fixed costs (1 EUR + 2 EUR = 3 EUR).
+
+2015-05-16
+  ACCOUNT1  1 COMMODITY {=1 EUR}
+  ACCOUNT1  1 COMMODITY {=2 EUR}
+  ACCOUNT2  -3 EUR
+
+test bal -X EUR
+               3 EUR  ACCOUNT1
+              -3 EUR  ACCOUNT2
+--------------------
+                   0
+end test

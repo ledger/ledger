@@ -1,0 +1,24 @@
+; Regression test for issue #615: --strict sees auto xacts at beginning of Journal as uncleared (BZ#615)
+; https://github.com/ledger/ledger/issues/615
+;
+; When auto transactions (=) appear at the beginning of a journal, --cleared and --uncleared
+; filters should correctly reflect the cleared status of the parent transaction, not treat
+; the auto-generated postings as uncleared.
+
+= /Expenses/
+    [Budget:Expenses]  (-1)
+    [Budget:Available]  (1)
+
+2024/01/01 * Cleared paycheck
+    Expenses:Food    $10.00
+    Assets:Cash     $-10.00
+
+test reg --cleared
+24-Jan-01 Cleared paycheck      Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+                                [Budget:Expenses]           $-10.00      $-10.00
+                                [Budget:Available]           $10.00            0
+end test
+
+test reg --uncleared
+end test

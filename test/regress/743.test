@@ -1,0 +1,19 @@
+; Regression test for issue #743: ledger source: does it take file from argument or -f? (BZ#743)
+; https://github.com/ledger/ledger/issues/743
+;
+; The 'source' command parses a journal file and checks it for errors.
+; When given a filename argument, it uses that file (not the -f file).
+; When given no argument, it uses the -f file.
+; Both behaviors should work correctly.
+
+2024/01/01 Valid Transaction
+    Expenses:Food    $10.00
+    Assets:Cash
+
+; Test 1: source with no argument uses the -f file (the test file itself)
+test source
+end test
+
+; Test 2: source with $FILE as argument uses the argument file
+test source $FILE
+end test

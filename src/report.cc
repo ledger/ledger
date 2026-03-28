@@ -1123,10 +1123,10 @@ value_t report_t::fn_commodity(call_scope_t& args) {
   if (val.is_balance()) {
     const balance_t& bal(val.as_balance());
     if (bal.single_amount())
-      return string_value(bal.amounts.begin()->first->symbol());
+      return string_value(bal.amounts.begin()->first->base_symbol());
     return string_value(empty_string);
   }
-  return string_value(val.to_amount().commodity().symbol());
+  return string_value(val.to_amount().commodity().base_symbol());
 }
 
 value_t report_t::fn_commodity_price(call_scope_t& args) {

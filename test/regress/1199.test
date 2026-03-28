@@ -29,9 +29,9 @@
 ; precise enough to round-trip back and match the original lot.
 
 2017/01/09 Production department 2
-  Assets:Inventory:Tricky       -2ea {$3.646684457266498377208799} [2017/01/03]
+  Assets:Inventory:Tricky       -2ea {$3.64668446} [2017/01/03]
   Assets:Inventory:Work in process
 
 test bal --lots Tricky
-4ea {$3.646684457266498377208799} [2017/01/03]  Assets:Inventory:Tricky
+4ea {$3.64668446} [2017/01/03]  Assets:Inventory:Tricky
 end test

@@ -389,15 +389,38 @@ void detail::parse_amount_expr(std::istream& in, scope_t& scope, post_t& post, a
  */
 static balance_t compute_balance_diff(const amount_t& amt, post_t* post, xact_t* xact,
                                       bool strip_annotations, parse_context_t& context) {
-  bool real_only = !post->has_flags(POST_VIRTUAL | POST_IS_TIMELOG);
+  // A real posting uses real_only=true so that the real and virtual balances
+  // of an account can be asserted independently (#543).  Exception: if the
+  // account has no prior real postings at all, fall back to the combined
+  // (real + virtual) total so that patterns like setting up an account with
+  // a virtual balance assignment and then settling with a real posting
+  // remain assertable (#1699).
+  bool real_only;
+  if (!post->has_flags(POST_VIRTUAL | POST_IS_TIMELOG)) {
+    real_only = false;
+    for (const post_t* p : post->account->posts) {
+      if (!p->has_flags(POST_VIRTUAL | POST_IS_TIMELOG)) {
+        real_only = true;
+        break;
+      }
+    }
+  } else {
+    real_only = false;
+  }
   value_t account_total;
-  if (item_t::use_aux_date && post->aux_date()) {
-    // When using effective dates and the current posting has an explicit
-    // effective date, only count posts whose effective date is on or before
-    // the current posting's effective date, so that balance assertions
-    // respect --effective ordering rather than file order (fixes #2071).
-    // Only apply this filtering when the posting itself has an aux date;
-    // postings without aux dates use file-order accumulation (fixes #2966).
+  if (item_t::use_aux_date && !post->aux_date()) {
+    // In --effective mode, postings without an explicit effective date
+    // use file-order accumulation so that balance assertions are not
+    // confused by other postings whose effective dates land after the
+    // current posting's primary date (fixes #2966).
+    account_total = post->account->self_total(real_only);
+  } else {
+    // Filter account posts by date so that balance assertions respect
+    // date ordering rather than file order.  In --effective mode with
+    // an explicit effective date this uses effective-date ordering
+    // (fixes #2071); otherwise it uses primary-date ordering so that
+    // an assertion dated before later-dated transactions in the file
+    // is not polluted by those future-dated posts (fixes #847).
     date_t cutoff = post->date();
     std::set<const post_t*> seen;
     for (const post_t* p : post->account->posts) {
@@ -408,8 +431,6 @@ static balance_t compute_balance_diff(const amount_t& amt, post_t* post, xact_t*
       if (!p->amount.is_null() && p->date() <= cutoff)
         add_or_set_value(account_total, p->amount);
     }
-  } else {
-    account_total = post->account->self_total(real_only);
   }
   if (strip_annotations)
     account_total = account_total.strip_annotations(keep_details_t());
@@ -439,8 +460,7 @@ static balance_t compute_balance_diff(const amount_t& amt, post_t* post, xact_t*
   // Subtract amounts from previous posts to this account in the xact.
   for (post_t* p : xact->posts) {
     if (p->account == post->account && !p->amount.is_null() &&
-        (!p->has_flags(POST_VIRTUAL | POST_IS_TIMELOG) ||
-         post->has_flags(POST_VIRTUAL | POST_IS_TIMELOG))) {
+        (!real_only || !p->has_flags(POST_VIRTUAL | POST_IS_TIMELOG))) {
       amount_t p_amt(strip_annotations ? p->amount.strip_annotations(keep_details_t()) : p->amount);
       diff -= p_amt;
       DEBUG("textual.parse", "line " << context.linenum << ": "
@@ -750,6 +770,19 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
 
         const amount_t& amt(*post->assigned_amount);
 
+        // If this transaction is a UUID duplicate (the journal already
+        // has a transaction with the same UUID), skip the balance
+        // assertion or assignment.  The duplicate will be discarded by
+        // add_xact(), so the assertion is meaningless, and the account
+        // balance reflects postings from the first occurrence which
+        // would cause a spurious failure (fixes #1771).
+        bool is_uuid_dup = false;
+        if (context.journal) {
+          if (auto uuid_ref = xact->get_tag(_("UUID"))) {
+            is_uuid_dup = context.journal->checksum_map.count(uuid_ref->to_string()) > 0;
+          }
+        }
+
         // When the assertion/assignment amount has lot annotations,
         // preserve them in the comparison so that annotated balance
         // assertions like "= 1.00 XXX {=1.01 USD}" work correctly
@@ -759,80 +792,82 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
         // (the behavior that bug #1055 depends on).
         bool strip = !amt.has_annotation();
 
-        DEBUG("post.assign", "line " << context.linenum << ": "
-                                     << "post amount = " << post->amount
-                                     << " (is_zero = " << post->amount.is_zero() << ")");
-        DEBUG("post.assign", "line " << context.linenum << ": "
-                                     << "post assertion = " << amt
-                                     << " (is_zero = " << amt.is_zero() << ")");
+        if (!is_uuid_dup) {
+          DEBUG("post.assign", "line " << context.linenum << ": "
+                                       << "post amount = " << post->amount
+                                       << " (is_zero = " << post->amount.is_zero() << ")");
+          DEBUG("post.assign", "line " << context.linenum << ": "
+                                       << "post assertion = " << amt
+                                       << " (is_zero = " << amt.is_zero() << ")");
 
-        balance_t diff = compute_balance_diff(amt, post.get(), xact, strip, context);
-        DEBUG("textual.parse", "line " << context.linenum << ": "
-                                       << "POST assign: diff = " << diff);
-
-        // If amt has a commodity, restrict balancing to that. Otherwise, it's the blanket '0' and
-        // check that all of them are zero.
-        if (amt.has_commodity()) {
+          balance_t diff = compute_balance_diff(amt, post.get(), xact, strip, context);
           DEBUG("textual.parse", "line " << context.linenum << ": "
-                                         << "Finding commodity " << amt.commodity() << " (" << amt
-                                         << ") in balance " << diff);
-          optional<amount_t> wanted_commodity = diff.commodity_amount(amt.commodity());
-          if (!wanted_commodity) {
-            diff = amt - amt; // this is '0' with the correct commodity.
-          } else {
-            diff = *wanted_commodity;
-          }
-          DEBUG("textual.parse", "line " << context.linenum << ": "
-                                         << "Diff is now " << diff);
-        }
+                                         << "POST assign: diff = " << diff);
 
-        if (post->amount.is_null()) {
-          // balance assignment: compute the amount needed to bring the
-          // account to the declared balance target.  This runs regardless
-          // of --permissive; the permissive flag only suppresses balance
-          // ASSERTION errors (checked below), not balance assignments.
-          if (!diff.is_zero()) {
-            if (strip) {
-              // Recompute the diff preserving lot annotations (cost basis
-              // and lot date) so that the assigned amount retains them.
-              balance_t ann_diff = compute_balance_diff(amt, post.get(), xact, false, context);
-              // Use annotated diff if it can be represented as a single
-              // amount; fall back to the stripped diff otherwise (e.g.
-              // when multiple lots with different annotations exist).
-              try {
-                post->amount = ann_diff.to_amount();
-              } catch (...) {
-                post->amount = diff.to_amount();
-              }
+          // If amt has a commodity, restrict balancing to that. Otherwise, it's the blanket '0' and
+          // check that all of them are zero.
+          if (amt.has_commodity()) {
+            DEBUG("textual.parse", "line " << context.linenum << ": "
+                                           << "Finding commodity " << amt.commodity() << " (" << amt
+                                           << ") in balance " << diff);
+            optional<amount_t> wanted_commodity = diff.commodity_amount(amt.commodity());
+            if (!wanted_commodity) {
+              diff = amt - amt; // this is '0' with the correct commodity.
             } else {
-              // Diff already has annotations; use it directly.
-              try {
-                post->amount = diff.to_amount();
-              } catch (...) {
-                post->amount = diff.strip_annotations(keep_details_t()).to_amount();
-              }
+              diff = *wanted_commodity;
             }
             DEBUG("textual.parse", "line " << context.linenum << ": "
-                                           << "Overwrite null posting with " << post->amount);
-          } else {
-            post->amount = amt - amt; // this is '0' with the correct commodity.
-            DEBUG("textual.parse", "line " << context.linenum << ": "
-                                           << "Overwrite null posting with zero diff with "
-                                           << amt - amt);
+                                           << "Diff is now " << diff);
           }
-          post->add_flags(POST_CALCULATED);
-        } else {
-          // balance assertion
-          amount_t post_amt(strip ? post->amount.reduced().strip_annotations(keep_details_t())
-                                  : post->amount.reduced());
-          diff -= post_amt;
-          if (!no_assertions && !diff.is_zero()) {
-            balance_t tot =
-                strip ? (-diff + amt).strip_annotations(keep_details_t()) : (-diff + amt);
-            DEBUG("textual.parse",
-                  "Balance assertion: off by " << diff << " (expected to see " << tot << ")");
-            throw_(parse_error, _f("Balance assertion off by %1% (expected to see %2%)") %
-                                    diff.to_string() % tot.to_string());
+
+          if (post->amount.is_null()) {
+            // balance assignment: compute the amount needed to bring the
+            // account to the declared balance target.  This runs regardless
+            // of --permissive; the permissive flag only suppresses balance
+            // ASSERTION errors (checked below), not balance assignments.
+            if (!diff.is_zero()) {
+              if (strip) {
+                // Recompute the diff preserving lot annotations (cost basis
+                // and lot date) so that the assigned amount retains them.
+                balance_t ann_diff = compute_balance_diff(amt, post.get(), xact, false, context);
+                // Use annotated diff if it can be represented as a single
+                // amount; fall back to the stripped diff otherwise (e.g.
+                // when multiple lots with different annotations exist).
+                try {
+                  post->amount = ann_diff.to_amount();
+                } catch (...) {
+                  post->amount = diff.to_amount();
+                }
+              } else {
+                // Diff already has annotations; use it directly.
+                try {
+                  post->amount = diff.to_amount();
+                } catch (...) {
+                  post->amount = diff.strip_annotations(keep_details_t()).to_amount();
+                }
+              }
+              DEBUG("textual.parse", "line " << context.linenum << ": "
+                                             << "Overwrite null posting with " << post->amount);
+            } else {
+              post->amount = amt - amt; // this is '0' with the correct commodity.
+              DEBUG("textual.parse", "line " << context.linenum << ": "
+                                             << "Overwrite null posting with zero diff with "
+                                             << amt - amt);
+            }
+            post->add_flags(POST_CALCULATED);
+          } else {
+            // balance assertion
+            amount_t post_amt(strip ? post->amount.reduced().strip_annotations(keep_details_t())
+                                    : post->amount.reduced());
+            diff -= post_amt;
+            if (!no_assertions && !diff.is_zero()) {
+              balance_t tot =
+                  strip ? (-diff + amt).strip_annotations(keep_details_t()) : (-diff + amt);
+              DEBUG("textual.parse",
+                    "Balance assertion: off by " << diff << " (expected to see " << tot << ")");
+              throw_(parse_error, _f("Balance assertion off by %1% (expected to see %2%)") %
+                                      diff.to_string() % tot.to_string());
+            }
           }
         }
 

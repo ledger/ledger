@@ -1,0 +1,35 @@
+; Regression test for issue #576: Strange cleared report formatting (BZ#576)
+; https://github.com/ledger/ledger/issues/576
+;
+; The `cleared` report had garbled formatting with unexpected line feeds,
+; particularly when accounts had multi-commodity balances.
+
+2024/01/01 * Buy Fund A
+    Assets:Investments    10 VIFSX @ $20.00
+    Assets:Checking
+
+2024/01/02 * Buy Fund B
+    Assets:Investments    5 VBMFX @ $15.00
+    Assets:Checking
+
+2024/01/03 Uncleared Deposit
+    Assets:Checking    $500.00
+    Income:Salary
+
+test cleared Assets
+         $225.00
+         5 VBMFX
+        10 VIFSX            $-275.00
+                             5 VBMFX
+                            10 VIFSX                 Assets
+         $225.00            $-275.00    24-Jan-02      Checking
+         5 VBMFX
+        10 VIFSX             5 VBMFX
+                            10 VIFSX    24-Jan-02      Investments
+----------------    ----------------    ---------
+         $225.00
+         5 VBMFX
+        10 VIFSX            $-275.00
+                             5 VBMFX
+                            10 VIFSX             
+end test

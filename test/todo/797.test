@@ -1,0 +1,25 @@
+; Regression test for issue #797: Setting precision on the command line (BZ#797)
+; https://github.com/ledger/ledger/issues/797
+;
+; The D directive in the journal sets display precision for amounts.
+; This test verifies that the D directive correctly controls the number of
+; decimal places shown in register output.
+
+D $1,000.00
+
+2024/01/01 Coffee Shop
+    Expenses:Food    $10.1234
+    Assets:Checking
+
+test reg
+24-Jan-01 Coffee Shop           Expenses:Food                $10.12       $10.12
+                                Assets:Checking             $-10.12            0
+end test
+
+; Also verify that higher precision can be set via D directive
+; (amounts with fewer decimal places are padded out)
+
+test reg --format "%(scrub(amount))\n"
+$10.12
+$-10.12
+end test

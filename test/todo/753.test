@@ -1,0 +1,34 @@
+; Regression test for issue #753: prices -A and prices -D doesn't work (BZ#753)
+; https://github.com/ledger/ledger/issues/753
+;
+; The -A (--average) and -D (--daily) flags don't work properly with the
+; prices command. -A shows raw prices instead of a running average.
+; -D sums same-day price entries instead of showing the last/average price.
+
+P 2024/01/01 00:00:00 AAPL $100.00
+P 2024/01/01 12:00:00 AAPL $110.00
+P 2024/01/01 18:00:00 AAPL $120.00
+P 2024/01/02 00:00:00 AAPL $130.00
+
+2024/01/01 Buy
+    Assets:Investments   1 AAPL @ $100.00
+    Assets:Cash
+
+test prices
+2024/01/01 AAPL          $100.00
+2024/01/01 AAPL          $110.00
+2024/01/01 AAPL          $120.00
+2024/01/02 AAPL          $130.00
+end test
+
+test prices -A
+2024/01/01 AAPL          $100.00
+2024/01/01 AAPL          $110.00
+2024/01/01 AAPL          $120.00
+2024/01/02 AAPL          $130.00
+end test
+
+test prices -D
+2024/01/01 AAPL          $330.00
+2024/01/02 AAPL          $130.00
+end test

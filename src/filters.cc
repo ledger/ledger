@@ -371,31 +371,37 @@ void anonymize_posts::operator()(post_t& post) {
 void calc_posts::operator()(post_t& post) {
   post_t::xdata_t& xdata(post.xdata());
 
+  // When --average is active with an interval report (e.g. --monthly),
+  // interval_posts emits one ITEM_GENERATED posting per account per period,
+  // all sharing the same synthetic xact.  Two adjustments are needed:
+  //
+  // 1. Count stability: keep the period counter the same for all accounts
+  //    within the same period group, so --average divides by the number of
+  //    elapsed intervals rather than the number of account rows.
+  //
+  // 2. Per-account total (only when period_average_ is enabled): seed each
+  //    account's running total from its own accumulator rather than from the
+  //    global running total.  Without this, the second and later accounts in
+  //    a period inherit the blended total of all preceding accounts, making
+  //    each account's average wrong.
+  bool same_generated_group = false;
   if (last_post) {
     assert(last_post->has_xdata());
-    // When --average is active with an interval report (e.g. --monthly),
-    // interval_posts emits one ITEM_GENERATED posting per account per period,
-    // all sharing the same synthetic xact.  Two adjustments are needed:
-    //
-    // 1. Count stability: keep the period counter the same for all accounts
-    //    within the same period group, so --average divides by the number of
-    //    elapsed intervals rather than the number of account rows.
-    //
-    // 2. Per-account total (only when period_average_ is enabled): seed each
-    //    account's running total from its own accumulator rather than from the
-    //    global running total.  Without this, the second and later accounts in
-    //    a period inherit the blended total of all preceding accounts, making
-    //    each account's average wrong.
-    bool same_generated_group =
-        (post.has_flags(ITEM_GENERATED) && last_post->has_flags(ITEM_GENERATED) &&
-         post.xact == last_post->xact);
+    same_generated_group = (post.has_flags(ITEM_GENERATED) &&
+                            last_post->has_flags(ITEM_GENERATED) && post.xact == last_post->xact);
     if (same_generated_group)
       xdata.count = last_post->xdata().count;
     else
       xdata.count = last_post->xdata().count + 1;
     if (calc_running_total) {
       if (period_average_ && post.has_flags(ITEM_GENERATED)) {
-        // Seed from this account's own running total, not the global one.
+        // Seed each account's running total from its own per-account
+        // accumulator so that multi-account period groups (from
+        // interval_posts) each show their own independent average.
+        // When the account has no prior history (first appearance), leave
+        // xdata.total unset so add_or_set_value() below initialises it
+        // to just this post's value, giving the account a clean running
+        // total independent of other accounts in the same period.
         auto it = account_period_totals_.find(post.account);
         if (it != account_period_totals_.end())
           xdata.total = it->second;
@@ -552,6 +558,10 @@ void handle_value(const value_t& value, account_t* account, xact_t* xact, tempor
 } // namespace
 
 /*--- Collapsing ---*/
+
+void collapse_posts::create_accounts() {
+  global_totals_account = &temps.create_account(_("<Total>"), report.session.journal->master);
+}
 
 /**
  * Emit the collapsed representation of the current transaction's postings.
@@ -836,30 +846,20 @@ bool display_filter_posts::output_rounding(post_t& post) {
       DEBUG("filters.changed_value.rounding",
             "rounding.last_display_total    = " << last_display_total);
 
-      // In period+plot mode (-M with -j/-J), suppress the revaluation
-      // adjustment posting.  Market value changes between periods are already
-      // reflected in the final posting's display_total via market(), so the
-      // intermediate adjustment would only create an unwanted extra data point
-      // for each period in the plot output (issue #984).
-      bool suppress_period_plot_adjustment =
-          report.HANDLED(period_) && (report.HANDLED(amount_data) || report.HANDLED(total_data));
+      if (value_t diff = precise_display_total - last_display_total) {
+        DEBUG("filters.changed_value.rounding", "rounding.diff                  = " << diff);
 
-      if (!suppress_period_plot_adjustment) {
-        if (value_t diff = precise_display_total - last_display_total) {
-          DEBUG("filters.changed_value.rounding", "rounding.diff                  = " << diff);
-
-          handle_value(/* value=         */ diff,
-                       /* account=       */ rounding_account,
-                       /* xact=          */ post.xact,
-                       /* temps=         */ temps,
-                       /* handler=       */ handler,
-                       /* date=          */ date_t(),
-                       /* act_date_p=    */ true,
-                       /* total=         */ precise_display_total,
-                       /* direct_amount= */ true,
-                       /* mark_visited=  */ false,
-                       /* bidir_link=    */ false);
-        }
+        handle_value(/* value=         */ diff,
+                     /* account=       */ rounding_account,
+                     /* xact=          */ post.xact,
+                     /* temps=         */ temps,
+                     /* handler=       */ handler,
+                     /* date=          */ date_t(),
+                     /* act_date_p=    */ true,
+                     /* total=         */ precise_display_total,
+                     /* direct_amount= */ true,
+                     /* mark_visited=  */ false,
+                     /* bidir_link=    */ false);
       }
     }
     if (show_rounding) {

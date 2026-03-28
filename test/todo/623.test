@@ -1,0 +1,23 @@
+; Regression test for issue #623: Virtual transactions cause unbalanced equity report (BZ#623)
+; https://github.com/ledger/ledger/issues/623
+;
+; The equity command includes virtual postings (e.g., (Budget:Food)) in the
+; "Opening Balances" transaction without adding a corresponding virtual equity
+; entry to balance them. This makes the equity output unbalanced when reimported.
+
+2024/01/01 Opening
+    Assets:Checking    $1000.00
+    Equity:Opening    $-1000.00
+
+2024/01/15 Purchase
+    Expenses:Food       $50.00
+    Assets:Checking    $-50.00
+    (Budget:Food)       $50.00
+
+test equity
+2024/01/15 Opening Balances
+    Assets:Checking                          $950.00
+    (Budget:Food)                             $50.00
+    Equity:Opening                         $-1000.00
+    Expenses:Food                             $50.00
+end test

@@ -1,0 +1,9 @@
+; Regression test for issue #663: Detect recursive inclusion and report an error (BZ#663)
+; https://github.com/ledger/ledger/issues/663
+include 663.test
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 3:
+Error: File to include was not found: $FILE
+end test

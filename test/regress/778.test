@@ -1,0 +1,16 @@
+; Regression test for issue #778: Only one pricedb entry per day (BZ#778)
+; https://github.com/ledger/ledger/issues/778
+; Multiple price entries for the same commodity on the same day should all be retained.
+P 2024/01/01 10:00:00 AAPL $100.00
+P 2024/01/01 14:00:00 AAPL $105.00
+P 2024/01/01 16:00:00 AAPL $110.00
+
+2024/01/01 Buy
+    Assets:Stocks   1 AAPL @ $100.00
+    Assets:Cash
+
+test prices
+2024/01/01 AAPL          $100.00
+2024/01/01 AAPL          $105.00
+2024/01/01 AAPL          $110.00
+end test

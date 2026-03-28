@@ -1,0 +1,29 @@
+; Regression test for issue #836: Account aliases should match account name components (BZ#836)
+; https://github.com/ledger/ledger/issues/836
+;
+; Account aliases currently only expand when the alias matches the FIRST component
+; of an account name. They do NOT expand when the alias matches a middle component.
+;
+; Example: "alias Food=Healthy:Food"
+;   - "Food:Groceries" -> expands to "Healthy:Food:Groceries" (first component, works)
+;   - "Expenses:Food:Groceries" -> does NOT expand "Food" (middle component, broken)
+;
+; Issue requests that aliases should match ANY component of an account name.
+
+alias Food=Healthy:Food
+
+2024/01/01 Test first-component alias expansion
+    Food:Groceries              $50.00
+    Assets:Cash
+
+2024/01/15 Test middle-component alias expansion
+    Expenses:Food:Groceries    $100.00
+    Assets:Cash
+
+test bal
+            $-150.00  Assets:Cash
+             $100.00  Expenses:Food:Groceries
+              $50.00  Healthy:Food:Groceries
+--------------------
+                   0
+end test

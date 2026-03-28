@@ -1,0 +1,21 @@
+; Regression test for issue #1100: pricemap's DOT output has overquoted ""commodity names"" for quoted commodities / commodities with spaces. (BZ#1100)
+; https://github.com/ledger/ledger/issues/1100
+; Bug: quoted commodity "My Coin" appears as ""My Coin"" in DOT label instead of "My Coin"
+P 2024/01/01 "My Coin" $1.00
+
+2024/01/01 Test
+    Assets:Crypto   5 "My Coin" @ $1.00
+    Assets:Cash
+
+test pricemap
+graph G {
+0[label=""];
+1[label="s"];
+2[label="%"];
+3[label="m"];
+4[label="h"];
+5[label="$"];
+6[label=""My Coin""];
+6--5 ;
+}
+end test

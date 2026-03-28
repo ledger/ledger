@@ -1,0 +1,13 @@
+commodity $
+    format $1,000.00
+
+2026/01/01 * Brokerage  ; Dividend
+    Assets:Brokerage    0.12 FOO @@ $44.44        ; dividend: FOO
+    Income:Dividend
+
+test bal --price
+              $44.44  Assets:Brokerage
+             $-44.44  Income:Dividend
+--------------------
+                   0
+end test

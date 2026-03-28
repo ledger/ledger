@@ -1,0 +1,25 @@
+= /^Income/
+      (Liabilities:Tithe)                    0.12
+
+~ Monthly
+      Assets:Checking                     $500.00
+      Income:Salary
+
+2004/01/05 Employer
+      Assets:Checking                   $ 2000.00
+      Income:Salary
+
+2004/01/14 Bank
+      ; Regular monthly savings transfer
+      Assets:Savings                     $ 300.00
+      Assets:Checking
+
+test cleared
+       $ 2000.00                   0                 Assets
+       $ 1700.00                   0                   Checking
+        $ 300.00                   0                   Savings
+      $ -2000.00                   0                 Income:Salary
+       $ -240.00                   0                 Liabilities:Tithe
+----------------    ----------------    ---------
+       $ -240.00                   0             
+end test

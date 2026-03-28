@@ -1,0 +1,26 @@
+; Regression test for issue #1073: Different test results on 32 and 64 bit architecture (BZ#1073)
+; https://github.com/ledger/ledger/issues/1073
+; On 64-bit systems, lot-price ordering in --equity output was non-deterministic
+; (AAA {1.00 GBP} appeared before AAA {0.90 GBP} instead of in price order).
+D 1000.00 GBP
+
+2011-03-04 Buy shares
+    Assets:Broker    2 AAA @  0.90 GBP
+    Assets:Bank
+
+2011-03-05 Buy shares
+    Assets:Broker    2 AAA @  1.00 GBP
+    Assets:Bank
+
+test reg --lot-prices --equity
+11-Mar-05 Opening Balances      Assets:Bank               -3.80 GBP    -3.80 GBP
+                                Assets:Broker          2 AAA {0.90 GBP} 2 AAA {0.90 GBP}
+                                                                       -3.80 GBP
+                                Assets:Broker          2 AAA {1.00 GBP} 2 AAA {0.90 GBP}
+                                                                2 AAA {1.00 GBP}
+                                                                       -3.80 GBP
+                                Equit:Opening Balances -2 AAA {0.90 GBP} 2 AAA {1.00 GBP}
+                                                                       -3.80 GBP
+                                Equit:Opening Balances -2 AAA {1.00 GBP}    -3.80 GBP
+                                Equit:Opening Balances     3.80 GBP            0
+end test

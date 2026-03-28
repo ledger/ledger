@@ -15,5 +15,6 @@ test reg
                                 Assets:Cash                 $-10.00            0
                                 (Budget)                    $-10.00      $-10.00
 __ERROR__
-Warning: "$FILE", line 11: Transaction check failed: (amount < {0})
+Warning: "$FILE", line 9: Transaction check failed: (amount < {0})
+  (check expression at "$FILE", line 5)
 end test

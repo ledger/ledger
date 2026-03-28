@@ -232,8 +232,17 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
                              report.HANDLER(total_).expr.exprs.empty() &&
                              report.HANDLER(total_).expr.base_expr == "total" && !wtk.keep_all();
 
+    // Per-account period averaging (period_average_) tracks independent
+    // running totals for each account across interval periods, so that
+    // multi-account period groups each show their own average.  Disable it
+    // when --collapse or --depth will be in the chain: collapse reduces
+    // multi-account periods to a single post, making per-account seeding
+    // unnecessary and harmful (the changing account identity causes the
+    // accumulator to miss, resetting the running total).
+    bool will_collapse = report.HANDLED(collapse) || report.HANDLED(depth_);
+    bool period_average = report.HANDLED(average) && !will_collapse;
     handler = std::make_shared<calc_posts>(handler, expr, calc_running, maintain_stripped, wtk,
-                                           report.HANDLED(average));
+                                           period_average);
   }
 
   /*--- Only predicate ---*/
@@ -282,16 +291,7 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
 
     // collapse_posts causes xacts with multiple posts to appear as xacts
     // with a subtotaled post for each commodity used.
-    //
-    // When using plot mode (-j/-J) with period mode (-M/--period), automatically
-    // collapse per-account postings within each period into a single total posting.
-    // This ensures that each time period produces exactly one data point for graphing,
-    // even when the account contains multiple commodities or sub-accounts (issue #984).
-    bool auto_collapse_for_plot = !report.HANDLED(collapse) && !report.HANDLED(depth_) &&
-                                  report.HANDLED(period_) &&
-                                  (report.HANDLED(amount_data) || report.HANDLED(total_data));
-
-    if (report.HANDLED(collapse) || report.HANDLED(depth_) || auto_collapse_for_plot) {
+    if (report.HANDLED(collapse) || report.HANDLED(depth_)) {
       unsigned short collapse_depth = 0;
       if (report.HANDLED(depth_))
         collapse_depth = lexical_cast<int>(report.HANDLER(depth_).str());

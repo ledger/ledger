@@ -1,0 +1,40 @@
+; Regression test for issue #792: Adjustment in ledger register report with -Mn
+; https://github.com/ledger/ledger/issues/792
+;
+; With -B -X -Mn on multi-currency transactions, spurious <Adjustment> lines
+; should not appear. Cost basis (-B) should not trigger revaluations.
+; Also, -Mn should collapse correctly: <Total> for multiple accounts,
+; account name when only one account matches in a period.
+
+2013/01/05 Buy groceries
+    Expenses:Food     $50.00
+    Assets:Cash
+
+2013/01/20 Dining out
+    Expenses:Dining   $30.00
+    Assets:Cash
+
+2013/02/05 Buy groceries
+    Expenses:Food     $40.00
+    Assets:Cash
+
+2013/03/15 Foreign Expense
+    Expenses:Travel     200 EUR @ $1.33
+    Assets:Cash
+
+2013/03/20 Another Foreign Expense
+    Expenses:Food     100 EUR @ $1.35
+    Assets:Cash
+
+test reg -Mn Expenses
+13-Jan-01 - 13-Jan-31           <Total>                      $80.00       $80.00
+13-Feb-01 - 13-Feb-28           Expenses:Food                $40.00      $120.00
+13-Mar-01 - 13-Mar-31           <Total>                     300 EUR      $120.00
+                                                                         300 EUR
+end test
+
+test reg -B -X $ -Mn Expenses
+13-Jan-01 - 13-Jan-31           <Total>                      $80.00       $80.00
+13-Feb-01 - 13-Feb-28           Expenses:Food                $40.00      $120.00
+13-Mar-01 - 13-Mar-31           <Total>                     $401.00      $521.00
+end test
