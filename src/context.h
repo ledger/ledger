@@ -81,16 +81,14 @@ class scope_t;
  */
 class parse_context_t {
 public:
-  inline static constexpr std::size_t MAX_LINE = 4096; ///< Hard limit on input line length
-
   std::shared_ptr<std::istream> stream; ///< The input stream (file, string, or decrypted GPG)
 
   path pathname;          ///< Absolute path of the file being parsed (empty for stdin)
   path current_directory; ///< Working directory for resolving relative `include` paths
   journal_t* journal;     ///< The journal accumulating parsed data
-  account_t* master; ///< Root account for this parse scope (may be narrowed by `apply account`)
-  scope_t* scope;    ///< Expression evaluation scope (typically the session)
-  char linebuf[MAX_LINE + 1];          ///< Raw line buffer filled by std::istream::getline
+  account_t* master;   ///< Root account for this parse scope (may be narrowed by `apply account`)
+  scope_t* scope;      ///< Expression evaluation scope (typically the session)
+  std::string linebuf; ///< Line buffer filled by std::getline
   std::istream::pos_type line_beg_pos; ///< Stream position at the start of the current line
   std::istream::pos_type curr_pos;     ///< Stream position after the most recently read line
   std::size_t linenum;                 ///< 1-based line number of the most recently read line
@@ -110,11 +108,9 @@ public:
   parse_context_t(const parse_context_t& context)
       : stream(context.stream), pathname(context.pathname),
         current_directory(context.current_directory), journal(context.journal),
-        master(context.master), scope(context.scope), line_beg_pos(context.line_beg_pos),
-        curr_pos(context.curr_pos), linenum(context.linenum), errors(context.errors),
-        count(context.count), sequence(context.sequence) {
-    std::memcpy(linebuf, context.linebuf, MAX_LINE);
-  }
+        master(context.master), scope(context.scope), linebuf(context.linebuf),
+        line_beg_pos(context.line_beg_pos), curr_pos(context.curr_pos), linenum(context.linenum),
+        errors(context.errors), count(context.count), sequence(context.sequence) {}
   parse_context_t& operator=(const parse_context_t&) = default;
 
   /// @brief Return a human-readable "file:line" string for error messages.

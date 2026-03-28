@@ -1,0 +1,20 @@
+; Regression test for issue #846: Account directive not giving warning with --strict (BZ#846)
+; https://github.com/ledger/ledger/issues/846
+; --strict should warn when a transaction uses an account not declared with an account directive.
+; Bug was that no warning was produced; now correctly produces a warning.
+
+account Assets:Cash
+commodity $
+
+2024/01/01 Test transaction
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --strict
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+__ERROR__
+Warning: "$FILE", line 10: Unknown account 'Expenses:Food'
+end test

@@ -1,0 +1,30 @@
+; Regression test for issue #1556: Sorting problem concerning amounts and -X (BZ#484)
+; https://github.com/ledger/ledger/issues/1556
+;
+; The -S amount sort should order accounts by converted amount after -X conversion.
+; Without -X the sort works: Dining($30) < Travel($75) < Food($120).
+; With -X the sort is broken: Dining($30), Food($120), Travel($75) — not sorted.
+
+P 2015/01/01 EUR $1.20
+P 2015/01/01 GBP $1.50
+
+2015/01/01 Payment A
+    Expenses:Food    100 EUR @ $1.20
+    Assets:Cash
+
+2015/01/02 Payment B
+    Expenses:Travel  50 GBP @ $1.50
+    Assets:Cash
+
+2015/01/03 Payment C
+    Expenses:Dining  $30.00
+    Assets:Cash
+
+test bal -X '$' -S amount Expenses
+             $225.00  Expenses
+              $30.00    Dining
+             $120.00    Food
+              $75.00    Travel
+--------------------
+             $225.00
+end test

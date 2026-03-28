@@ -1,0 +1,12 @@
+; Regression test for issue #1692: Output breaks accounting equation
+; https://github.com/ledger/ledger/issues/1692
+; When a commodity amount is < 0.5 in default precision, it rounds to 0
+; and disappears from balance output, breaking double-entry accounting.
+
+2018-01-01 * Foo
+    Assets:A                    2 X @ 0.2 Y
+    Assets:B
+
+test bal
+                 2 X  Assets:A
+end test

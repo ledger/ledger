@@ -1,0 +1,24 @@
+; Regression test for issue #707: Year directive confuses today for entry command (BZ#707)
+; https://github.com/ledger/ledger/issues/707
+;
+; When a 'year' directive sets a different year in the journal, the 'entry'
+; command should still use the actual current date (--now), not a date from
+; the year directive's year.
+
+year 2010
+
+01/01 Test Transaction
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test --now 2012/03/25 entry "Test Transaction"
+2012/03/25 Test Transaction
+    Expenses:Food                             $10.00
+    Assets:Cash
+end test
+
+test --now 2012/03/25 entry thursday "Test Transaction"
+2012/03/22 Test Transaction
+    Expenses:Food                             $10.00
+    Assets:Cash
+end test

@@ -1,0 +1,21 @@
+2018-08-25
+  source
+  parent:child1   10
+  parent:child2    5
+
+assert account("parent").total == 15
+
+2018-08-25
+  source
+  parent:child3  100
+
+assert account("parent").total == 115
+
+test bal parent
+                 115  parent
+                  10    child1
+                   5    child2
+                 100    child3
+--------------------
+                 115
+end test

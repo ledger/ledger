@@ -1,0 +1,24 @@
+; Regression test for issue #745: ledger budget: Error: Cannot multiply an amount with a balance (BZ#745)
+; https://github.com/ledger/ledger/issues/745
+; The budget report with multiple expense categories previously produced:
+; "Error: Cannot multiply an amount with a balance"
+
+~ Monthly
+    Expenses:Food    $500
+    Expenses:Rent    $1000
+    Assets:Checking
+
+2024/01/01 Groceries
+    Expenses:Food    $300
+    Assets:Checking
+
+2024/01/15 Rent Payment
+    Expenses:Rent    $1000
+    Assets:Checking
+
+test --budget bal -e 2024/02/01
+                $200  Assets:Checking
+               $-200  Expenses:Food
+--------------------
+                   0
+end test

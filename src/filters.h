@@ -705,7 +705,7 @@ public:
     handler.reset();
   }
 
-  void create_accounts() { global_totals_account = &temps.create_account(_("<Total>")); }
+  void create_accounts();
 
   value_t& find_totals(account_t* account);
 

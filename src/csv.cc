@@ -115,14 +115,14 @@ string csv_reader::read_field(std::istream& in) {
 
 char* csv_reader::next_line(std::istream& in) {
   while (in.good() && !in.eof() && in.peek() == '#')
-    in.getline(context.linebuf, parse_context_t::MAX_LINE);
+    std::getline(in, context.linebuf);
 
   if (!in.good() || in.eof() || in.peek() == -1)
     return nullptr;
 
-  in.getline(context.linebuf, parse_context_t::MAX_LINE);
+  std::getline(in, context.linebuf);
 
-  return context.linebuf;
+  return context.linebuf.data();
 }
 
 /*--- Header Index Construction ---*/
@@ -195,7 +195,8 @@ xact_t* csv_reader::read_xact(bool rich_data) {
 
     switch (index[n]) {
     case FIELD_DATE:
-      xact->_date = parse_date(field);
+      if (!field.empty())
+        xact->_date = parse_date(field);
       break;
 
     case FIELD_DATE_AUX:
@@ -272,6 +273,10 @@ xact_t* csv_reader::read_xact(bool rich_data) {
     }
     n++;
   }
+
+  // Validate that required fields were present in this CSV row.
+  if (!xact->_date)
+    throw_(csv_error, _("CSV line is missing a date field"));
 
   // If cost was provided but shares the same commodity as the amount, it is
   // redundant (a 1:1 no-op conversion) and would cause a validation error.

@@ -693,7 +693,7 @@ void start_timer(const char* name, log_level_t lvl) {
   if (auto i = timers.find(name); i == timers.end()) {
     timers.insert(timer_map::value_type(name, timer_t(lvl, _log_buffer.str())));
   } else {
-    assert((*i).second.description == _log_buffer.str());
+    (*i).second.description = _log_buffer.str();
     (*i).second.begin = TRUE_CURRENT_TIME();
     (*i).second.active = true;
   }

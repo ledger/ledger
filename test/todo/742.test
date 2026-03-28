@@ -1,0 +1,39 @@
+; Regression test for issue #742: ledger stats ignores -p until (BZ#742)
+; https://github.com/ledger/ledger/issues/742
+;
+; The stats command should respect the --end (or -p until) date filter,
+; but currently it ignores it and reports statistics for ALL postings
+; regardless of the specified period. The reg command correctly filters.
+
+2014/01/01 Opening Balance
+    Assets:Checking    $1000.00
+    Equity:Opening
+
+2014/06/15 Groceries
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2014/12/31 Year End
+    Expenses:Misc    $25.00
+    Assets:Checking
+
+; With --end 2014/07/01, stats should show only 2 payees, 3 accounts, 4 postings
+; (excluding the 2014/12/31 "Year End" transaction), but it still shows all 3
+; payees, 4 accounts, and 6 postings — demonstrating the bug.
+test stats --end 2014/07/01
+Time period: 14-Jan-01 to 14-Dec-31 (364 days)
+
+  Files these postings came from:
+    $FILE
+
+  Unique payees:               3
+  Unique accounts:             4
+
+  Number of postings:          6 (0.016 per day)
+  Uncleared postings:          6
+
+  Days since last post:     4102
+  Posts in last 7 days:        0
+  Posts in last 30 days:       0
+  Posts seen this month:       0
+end test

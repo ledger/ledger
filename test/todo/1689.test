@@ -1,0 +1,15 @@
+; Regression test for issue #1689: Error: Timelog check-out date less than corresponding check-in
+; https://github.com/ledger/ledger/issues/1689
+;
+; When a timelog has an open PROJ2 check-in at a future time (relative to --now),
+; ledger creates an implicit check-out at "now" which is before the check-in,
+; causing the error: Timelog check-out date less than corresponding check-in
+
+i 2018-11-10 08:16:00 PROJ1
+o 2018-11-10 08:18:00
+i 2018-11-10 08:18:00 PROJ2
+
+test --now 2018/11/10 register --time-colon -p 2018/11/10 -> 1
+__ERROR__
+Error: Timelog check-out date less than corresponding check-in
+end test

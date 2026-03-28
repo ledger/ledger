@@ -1,4 +1,4 @@
-import ledger
+from lpy import core
 
 # Regression test for GitHub issue #2152:
 # Segfault in journal_t::clear_xdata() when the PostCollectorWrapper
@@ -12,7 +12,7 @@ import ledger
 # The fix stores a boost::shared_ptr<journal_t> in collector_wrapper,
 # keeping the journal alive for the full lifetime of the query result.
 
-session = ledger.Session()
+session = core.Session()
 j = session.read_journal_from_string("""
 2017-11-23 example
     acct1  1 USD

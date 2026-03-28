@@ -1,0 +1,33 @@
+; Regression test for issue #694: If posts_list::iterator is stable, use it in ~account_t (BZ#694)
+; https://github.com/ledger/ledger/issues/694
+; This issue is about iterator stability in account_t destructor.
+; A crash or memory error on exit would indicate the bug is present.
+
+2024/01/01 Open accounts
+    Assets:Checking    $1000
+    Assets:Savings     $500
+    Equity:Opening
+
+2024/01/15 Groceries
+    Expenses:Food    $50
+    Assets:Checking
+
+2024/01/20 Rent
+    Expenses:Housing    $800
+    Assets:Checking
+
+2024/01/25 Transfer
+    Assets:Savings    $100
+    Assets:Checking
+
+test bal
+                $650  Assets
+                 $50    Checking
+                $600    Savings
+              $-1500  Equity:Opening
+                $850  Expenses
+                 $50    Food
+                $800    Housing
+--------------------
+                   0
+end test

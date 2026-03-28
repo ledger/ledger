@@ -1970,15 +1970,17 @@ both exist, you ask?  To support things like this:
 
 @smallexample @c input:validate
 2009/01/01 Shell
-    Expenses:Gasoline             11 GAL @{=$2.299@} @@ $2.30
+    Expenses:Gasoline             11 GAL @{=$2.299@} @@ $25.30
     Assets:Checking
 @end smallexample
 
 This transaction says that you bought 11 gallons priced at $2.299 per
-gallon at a @emph{cost to you} of $2.30 per gallon.  Ledger
-auto-generates a balance posting in this case to Equity:Capital Losses
-to reflect the 1.1 cent difference, which is then balanced by
-Assets:Checking because its amount is null.
+gallon at a @emph{cost to you} of $25.30 in total.  Since the fixed lot
+price totals $25.289 (11 x $2.299) while the actual cost
+is $25.30, Ledger adjusts the cost to match the fixed lot price so
+that the transaction balances.  The 1.1 cent difference is absorbed
+into the cost, so Assets:Checking will reflect $25.289 rather than
+$25.30.
 
 @node Complete control over commodity pricing,  , Fixing Lot Prices, Currency and Commodities
 @subsection Complete control over commodity pricing
@@ -2330,6 +2332,20 @@ encountered and an account within its transaction ends in the name
 The @code{check} and @code{assert} directives warn or raise an error
 (respectively) if the given value expression evaluates to false within
 the context of any posting.
+
+While Ledger does not have explicit open/close directives for
+accounts, you can use @code{check} or @code{assert} to enforce date
+ranges, effectively ``closing'' an account after a certain date:
+
+@smallexample @c input:validate
+account Expenses:Food
+    check date >= [2016-02-03]
+    check date <= [2017-03-03]
+@end smallexample
+
+With the above, any posting to @samp{Expenses:Food} outside the given
+date range will produce a warning.  Use @code{assert} instead of
+@code{check} to make it a hard error.
 
 The @code{eval} directive evaluates the value expression in the
 context of the account at the time of definition.  At the moment this
@@ -9485,16 +9501,19 @@ Return the calculated amount of the posting according to the @option{--amount}
 option.
 @end defun
 
-@defun ansify_if value color bool
-Render the given @var{expression} as a string, applying the proper ANSI escape
-codes to display it in the given @var{color} if @var{bool} is true.  It
-typically checks the value of the option @option{--color}.  Since ANSI escape
-codes include non-printable character sequences, such as escape @kbd{^[}
-the following example may not appear as the final result on the command-line.
-@smallexample @c command:4D836EE,with_input:3406FC1
-$ ledger -f expr.dat --format "%(ansify_if(account, blue, options.color))\n" reg
+@defun ansify_if value color
+Render the given @var{value} as a string, applying the proper ANSI escape
+codes to display it in the given @var{color}.  If @var{color} is not
+provided, the value is returned unchanged.  The condition is typically
+embedded in the color argument using an @code{if} expression, e.g.,
+@code{blue if color}, which checks the value of the option
+@option{--color}.  Since ANSI escape codes include non-printable character
+sequences, such as escape @kbd{^[} the following example may not appear
+as the final result on the command-line.
+@smallexample @c command:51FA103,with_input:3406FC1
+$ ledger -f expr.dat --format "%(ansify_if(account, blue))\n" reg
 @end smallexample
-@smallexample @c output:4D836EE
+@smallexample @c output:51FA103
 [34mAssets:Cash[0m
 [34mExpenses:Office Supplies[0m
 @end smallexample
@@ -10524,6 +10543,7 @@ a word must be said about Ledger's data model, so that other things
 make sense later.
 
 @menu
+* The lpy Python Package::
 * Basic data traversal::
 * Raw versus Cooked::
 * Queries::
@@ -10531,7 +10551,41 @@ make sense later.
 * Amounts::
 @end menu
 
-@node Basic data traversal, Raw versus Cooked, Extending with Python, Extending with Python
+@node The lpy Python Package, Basic data traversal, Extending with Python, Extending with Python
+@section The lpy Python Package
+
+Ledger's Python support is exposed through the @code{lpy} package.
+The package is organized into two layers:
+
+@table @code
+@item lpy.core
+The native C++ extension module.  All fundamental types
+(@code{Amount}, @code{Balance}, @code{Journal}, @code{Account},
+@code{Value}, @dots{}) and top-level functions (@code{read_journal},
+@code{read_journal_from_string}, @dots{}) live here.
+
+@item lpy
+The top-level package.  Import @code{core} from it to access the
+native types, or add pure-Python sub-modules alongside @code{core}
+for higher-level tooling.
+@end table
+
+The recommended import idiom is:
+
+@smallexample
+from lpy import core
+
+journal = core.read_journal("sample.dat")
+@end smallexample
+
+A backwards-compatible @code{ledger} module is provided for existing
+scripts.  It re-exports every public name from @code{lpy.core} so
+that @code{import ledger} continues to work unchanged.  New scripts
+should use @code{lpy.core} directly.  See the file
+@file{doc/python-migration.md} for a step-by-step migration guide and
+a discussion of the benefits of the new package structure.
+
+@node Basic data traversal, Raw versus Cooked, The lpy Python Package, Extending with Python
 @section Basic data traversal
 
 Every interaction with Ledger happens in the context of a Session.
@@ -10551,11 +10605,11 @@ and PeriodicTransactions, etc.
 Here is how you would traverse all the postings in your data file:
 
 @smallexample
-import ledger
+from lpy import core
 
-for xact in ledger.read_journal("sample.dat").xacts:
+for xact in core.read_journal("sample.dat").xacts:
     for post in xact.posts:
-        print "Transferring %s to/from %s" % (post.amount, post.account)
+        print("Transferring %s to/from %s" % (post.amount, post.account))
 @end smallexample
 
 @node Raw versus Cooked, Queries, Basic data traversal, Extending with Python
@@ -10599,8 +10653,8 @@ generally looking at raw data.  In order to look at cooked data, you
 must generate a report of some kind by querying the journal:
 
 @smallexample
-for post in ledger.read_journal("sample.dat").query("food"):
-    print "Transferring %s to/from %s" % (post.amount, post.account)
+for post in core.read_journal("sample.dat").query("food"):
+    print("Transferring %s to/from %s" % (post.amount, post.account))
 @end smallexample
 
 The reason why queries iterate over postings instead of transactions is
@@ -10610,11 +10664,11 @@ looking at its @code{xact} member:
 
 @smallexample
 last_xact = None
-for post in ledger.read_journal("sample.dat").query(""):
+for post in core.read_journal("sample.dat").query(""):
     if post.xact != last_xact:
         for post in post.xact.posts:
-            print "Transferring %s to/from %s" % (post.amount,
-            post.account)
+            print("Transferring %s to/from %s" % (post.amount,
+                  post.account))
         last_xact = post.xact
 @end smallexample
 
@@ -10667,10 +10721,10 @@ commodity.  If you need to create sums of multiple commodities, use
 a Balance.  For example:
 
 @smallexample
-total = Balance()
-for post in ledger.read_journal("sample.dat").query(""):
+total = core.Balance()
+for post in core.read_journal("sample.dat").query(""):
     total += post.amount
-print total
+print(total)
 @end smallexample
 
 @node Ledger for Developers, Major Changes from version 2.6, Extending with Python, Top

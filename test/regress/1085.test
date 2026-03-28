@@ -1,0 +1,13 @@
+; Regression test for issue #1085: Floating point exception with -X to a zero-priced currency (BZ#1085)
+; https://github.com/ledger/ledger/issues/1085
+; The original bug caused a SIGFPE crash when using -X to exchange into/from a zero-priced currency.
+; The fix ensures ledger exits cleanly (exit code 0) without crashing.
+
+P 2024/01/01 EUR $0.00
+
+2024/01/01 Test
+    Assets:Checking   100 EUR
+    Income:Salary
+
+test bal -X '$'
+end test

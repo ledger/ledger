@@ -192,13 +192,48 @@ struct add_balancing_post {
   }
   ~add_balancing_post() noexcept { TRACE_DTOR(add_balancing_post); }
 
+  void set_cost_prec_if_needed(amount_t& amt) {
+    commodity_t& comm = amt.commodity();
+    if (comm.precision() > 0)
+      return;
+    // The commodity's display precision is 0 (never saw an explicit
+    // amount for it).  Scan postings for an inline cost that uses
+    // this commodity and recover the per-unit cost precision, then
+    // check whether the auto-balanced amount actually has meaningful
+    // fractional digits at that precision.
+    for (auto& post : xact.posts) {
+      if (post->cost && post->amount) {
+        const amount_t& cost = *post->cost;
+        if (&cost.commodity() == &comm.referent()) {
+          auto cost_prec = cost.precision();
+          auto amt_prec = post->amount.precision();
+          auto price_prec = cost_prec > amt_prec ? cost_prec - amt_prec : cost_prec;
+          if (price_prec > 0) {
+            amount_t rounded(amt);
+            rounded.in_place_roundto(price_prec);
+            if (amt != rounded)
+              continue; // fractional digits extend beyond price_prec
+            // Check that the amount has meaningful fractional digits
+            amount_t truncated(amt);
+            truncated.in_place_truncate();
+            if (amt != truncated)
+              amt.set_cost_precision(price_prec);
+            return;
+          }
+        }
+      }
+    }
+  }
+
   void operator()(const amount_t& amount) {
     if (first) {
       null_post->amount = amount.negated();
+      set_cost_prec_if_needed(null_post->amount);
       null_post->add_flags(POST_CALCULATED);
       first = false;
     } else {
       unique_ptr<post_t> p(new post_t(null_post->account, amount.negated()));
+      set_cost_prec_if_needed(p->amount);
       p->copy_details(*null_post);
       p->set_flags(null_post->flags() | ITEM_GENERATED | POST_CALCULATED);
       xact.add_post(p.release());
@@ -638,6 +673,14 @@ bool xact_base_t::finalize() {
           DEBUG("xact.finalize", "breakdown.final_cost = " << breakdown.final_cost);
           if (amount_t gain_loss = breakdown.basis_cost - breakdown.final_cost) {
             DEBUG("xact.finalize", "gain_loss = " << gain_loss);
+            // The basis cost is reconstructed from the per-unit lot price
+            // times the quantity.  When the per-unit price was rounded
+            // during lot creation (e.g. $250 / 101 → $2.475248), the
+            // product can differ from the original total cost by a tiny
+            // rounding artifact.  Round the gain/loss to the commodity's
+            // display precision to eliminate this artifact (#2975).
+            if (gain_loss.has_commodity())
+              gain_loss.in_place_roundto(static_cast<int>(gain_loss.commodity().precision()));
             gain_loss.in_place_round();
             DEBUG("xact.finalize", "gain_loss rounds to = " << gain_loss);
             if (post->must_balance())
@@ -685,6 +728,8 @@ bool xact_base_t::finalize() {
               // Calculate gain/loss in the base commodity
               if (amount_t gain_loss = from_cost - to_cost) {
                 DEBUG("xact.finalize", "Commodity swap gain_loss = " << gain_loss);
+                if (gain_loss.has_commodity())
+                  gain_loss.in_place_roundto(static_cast<int>(gain_loss.commodity().precision()));
                 gain_loss.in_place_round();
                 DEBUG("xact.finalize", "Commodity swap gain_loss rounds to = " << gain_loss);
 
@@ -804,6 +849,32 @@ bool xact_base_t::finalize() {
           goto balanced;
       }
     }
+
+    // Under --permissive, if the imbalance was caused by a balance
+    // assignment that computed the posting amount (= $target with no
+    // explicit amount), revert to auto-balancing by adjusting the
+    // assigned posting so the transaction balances.  This lets users
+    // write `Account = $target` and have --permissive accept the
+    // transaction even when the assigned amount conflicts with the
+    // other postings.  Balance assignments that DO balance (issue
+    // #2944) never reach this point because Phase 7 already cleared
+    // the balance.
+    if (journal && journal->checking_style == journal_t::CHECK_PERMISSIVE) {
+      for (post_t* post : posts) {
+        if (post->has_flags(POST_CALCULATED) && post->assigned_amount && post->must_balance() &&
+            !post->has_flags(POST_VIRTUAL)) {
+          if (balance.is_amount())
+            post->amount -= balance.as_amount();
+          else if (balance.is_long())
+            post->amount -= balance.to_amount();
+          else
+            break; // multi-commodity imbalance; let it error normally
+          balance = NULL_VALUE;
+          goto balanced;
+        }
+      }
+    }
+
     add_error_context(item_context(*this, _("While balancing transaction")));
     add_error_context(_("Unbalanced remainder is:"));
     add_error_context(value_context(balance));
@@ -1249,69 +1320,97 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
 
     bool needs_further_verification = false;
 
+    bool assertion_only = posts.empty();
+
     for (post_t* initial_post : initial_posts) {
       // Skip posts generated by auto transactions, but not balancing posts
       // generated by finalize() (which have both ITEM_GENERATED and POST_CALCULATED).
       // This ensures auto transactions can match all commodities in multi-commodity
-      // balancing posts.
-      if (initial_post->has_flags(ITEM_GENERATED) && !initial_post->has_flags(POST_CALCULATED))
+      // balancing posts.  Assertion-only auto_xacts (no template postings) cannot
+      // generate new postings, so they safely evaluate against generated posts
+      // (fixes #1680).
+      if (initial_post->has_flags(ITEM_GENERATED) && !initial_post->has_flags(POST_CALCULATED) &&
+          !assertion_only)
         continue;
 
       bind_scope_t bound_scope(*scope_t::default_scope, *initial_post);
 
+      // Temporarily disable use_aux_date during predicate and check
+      // expression evaluation so that date() returns the primary date
+      // and expressions like "aux_date != date" work correctly.  Without
+      // this, --effective makes date() return aux_date, collapsing the
+      // two and breaking predicates that distinguish them (fixes #2945).
       bool matches_predicate = false;
-      if (try_quick_match) {
-        try {
-          bool found_memoized_result = false;
-          if (!memoized_results.empty()) {
-            std::map<string, bool>::iterator i =
-                memoized_results.find(initial_post->account->fullname());
-            if (i != memoized_results.end()) {
-              found_memoized_result = true;
-              matches_predicate = (*i).second;
-            }
-          }
+      {
+        bool saved = item_t::use_aux_date;
+        item_t::use_aux_date = false;
+        struct restore_guard {
+          bool& flag;
+          bool val;
+          ~restore_guard() { flag = val; }
+        } guard{item_t::use_aux_date, saved};
 
-          // Since the majority of people who use automated transactions simply
-          // match against account names, try using a *much* faster version of
-          // the predicate evaluator.
-          if (!found_memoized_result) {
-            matches_predicate = post_pred(predicate.get_op(), *initial_post);
-            memoized_results.insert(
-                std::pair<string, bool>(initial_post->account->fullname(), matches_predicate));
+        if (try_quick_match) {
+          try {
+            bool found_memoized_result = false;
+            if (!memoized_results.empty()) {
+              std::map<string, bool>::iterator i =
+                  memoized_results.find(initial_post->account->fullname());
+              if (i != memoized_results.end()) {
+                found_memoized_result = true;
+                matches_predicate = (*i).second;
+              }
+            }
+
+            // Since the majority of people who use automated transactions simply
+            // match against account names, try using a *much* faster version of
+            // the predicate evaluator.
+            if (!found_memoized_result) {
+              matches_predicate = post_pred(predicate.get_op(), *initial_post);
+              memoized_results.insert(
+                  std::pair<string, bool>(initial_post->account->fullname(), matches_predicate));
+            }
+          } catch (...) {
+            DEBUG("xact.extend.fail", "The quick matcher failed, going back to regular eval");
+            try_quick_match = false;
+            memoized_results.clear(); // Clear any incorrect cached results
+            matches_predicate = predicate(bound_scope);
           }
-        } catch (...) {
-          DEBUG("xact.extend.fail", "The quick matcher failed, going back to regular eval");
-          try_quick_match = false;
-          memoized_results.clear(); // Clear any incorrect cached results
+        } else {
           matches_predicate = predicate(bound_scope);
         }
-      } else {
-        matches_predicate = predicate(bound_scope);
-      }
 
-      if (matches_predicate) {
-        if (deferred_notes) {
-          for (deferred_tag_data_t& data : *deferred_notes) {
-            if (data.apply_to_post == nullptr)
-              initial_post->append_note(apply_format(data.tag_data, bound_scope).c_str(),
-                                        bound_scope, data.overwrite_existing);
+        if (matches_predicate) {
+          if (deferred_notes) {
+            for (deferred_tag_data_t& data : *deferred_notes) {
+              if (data.apply_to_post == nullptr)
+                initial_post->append_note(apply_format(data.tag_data, bound_scope).c_str(),
+                                          bound_scope, data.overwrite_existing);
+            }
           }
-        }
 
-        if (check_exprs) {
-          for (expr_t::check_expr_pair& pair : *check_exprs) {
-            if (pair.second == expr_t::EXPR_GENERAL) {
-              pair.first.calc(bound_scope);
-            } else if (!pair.first.calc(bound_scope).to_boolean()) {
-              if (pair.second == expr_t::EXPR_ASSERTION)
-                throw_(parse_error, _f("Transaction assertion failed: %1%") % pair.first);
-              else
-                context.warning(_f("Transaction check failed: %1%") % pair.first);
+          if (check_exprs) {
+            for (expr_t::check_expr_pair& pair : *check_exprs) {
+              if (pair.second == expr_t::EXPR_GENERAL) {
+                pair.first.calc(bound_scope);
+              } else if (!pair.first.calc(bound_scope).to_boolean()) {
+                if (pair.second == expr_t::EXPR_ASSERTION)
+                  throw_(parse_error, _f("Transaction assertion failed: %1%") % pair.first);
+                else
+                  warning_func((xact.pos ? file_context(xact.pos->pathname, xact.pos->beg_line)
+                                         : context.location()) +
+                               " " + (_f("Transaction check failed: %1%") % pair.first).str() +
+                               (pos ? "\n  " + (_f("(check expression at \"%1%\", line %2%)") %
+                                                pos->pathname.string() % pos->beg_line)
+                                                   .str()
+                                    : ""));
+              }
             }
           }
         }
+      } // use_aux_date restored here by guard destructor
 
+      if (matches_predicate) {
         for (post_t* post : posts) {
           amount_t post_amount;
           if (post->amount.is_null()) {
@@ -1387,6 +1486,15 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
           // the automated xact's one.
           auto new_post = std::make_unique<post_t>(account, amt);
           new_post->copy_details(*post);
+
+          // Propagate the matched posting's date overrides to the
+          // generated posting so that auto-generated postings respect
+          // effective dates and posting-level date overrides.
+          if (!post->_date && initial_post->_date)
+            new_post->_date = initial_post->_date;
+          if (!post->_date_aux && initial_post->_date_aux)
+            new_post->_date_aux = initial_post->_date_aux;
+
           if (post->cost)
             new_post->cost = post->cost;
           else if (initial_post->cost && amt.has_annotation() && amt.annotation().price) {

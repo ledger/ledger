@@ -1,0 +1,27 @@
+; Regression test for issue #987
+; --depth in register should collapse sub-accounts and accumulate amounts
+; into the parent account, not just hide the deeper postings.
+
+2013/08/06 The Shop
+    Expenses:Food                   £10.10
+    Expenses:Food:Gum               £1.10
+    Assets:Cash
+
+2013/08/07 The Shop
+    Expenses:Food                   £0.02
+    Expenses:Food:Gum               £0.01
+    Assets:Cash
+
+test reg --depth 2
+13-Aug-06 The Shop              Expenses:Food                £11.20       £11.20
+                                Assets:Cash                 £-11.20            0
+13-Aug-07 The Shop              Expenses:Food                 £0.03        £0.03
+                                Assets:Cash                  £-0.03            0
+end test
+
+test bal --depth 2
+             £-11.23  Assets:Cash
+              £11.23  Expenses:Food
+--------------------
+                   0
+end test

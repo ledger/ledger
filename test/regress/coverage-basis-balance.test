@@ -12,8 +12,8 @@ P 2024/06/01 AAPL $170.00
 
 test bal --basis --args-only --columns=80 -> 0
                    0  Assets
-             15 AAPL    Brokerage
-            -15 AAPL    Checking
+            $2300.00    Brokerage
+           $-2300.00    Checking
 --------------------
                    0
 end test

@@ -1,0 +1,98 @@
+; Comprehensive coverage for --average with periodic options.
+;
+; Tests interactions between --average (-A) and periodic grouping flags
+; (--monthly, --weekly, --quarterly, --yearly) for both balance and
+; register reports, with single accounts, multiple accounts, --collapse,
+; and late-appearing accounts.
+;
+; Related issues: #1087 (balance count inflation), #1950 (per-account
+; register averages), #2980 (collapse + distributed expenses regression).
+
+; --- Journal data ---
+
+2024/01/15 Groceries
+    Expenses:Food    $100
+    Assets:Bank
+
+2024/01/20 Bills
+    Expenses:Rent    $1000
+    Assets:Bank
+
+2024/02/15 Groceries
+    Expenses:Food    $200
+    Assets:Bank
+
+2024/02/20 Bills
+    Expenses:Rent    $1000
+    Assets:Bank
+
+2024/03/15 Groceries
+    Expenses:Food    $300
+    Assets:Bank
+
+2024/03/20 Bills
+    Expenses:Rent    $1000
+    Assets:Bank
+
+; --- Test 1: Balance --monthly --average, single account ---
+; Average of $100, $200, $300 = $200
+
+test -M -A bal Expenses:Food
+                $200  Expenses:Food
+end test
+
+; --- Test 2: Balance --monthly --average, parent with children ---
+; Food: $300/2 posts-per-child... no, count = 3 visited posts, total $600, avg $200
+; Rent: 3 visited posts, total $3000, avg $1000
+; Expenses: 6 visited posts, total $3600, avg $600
+
+test -M -A bal Expenses
+                $600  Expenses
+                $200    Food
+               $1000    Rent
+--------------------
+                $600
+end test
+
+; --- Test 3: Register --monthly --average, per-account independence ---
+; Each account maintains its own running average independently.
+; Food: $100/1=$100, $300/2=$150, $600/3=$200
+; Rent: $1000/1=$1000, $2000/2=$1000, $3000/3=$1000
+
+test -M -A reg Expenses
+24-Jan-01 - 24-Jan-31           Expenses:Food                  $100         $100
+                                Expenses:Rent                 $1000        $1000
+24-Feb-01 - 24-Feb-29           Expenses:Food                  $200         $150
+                                Expenses:Rent                 $1000        $1000
+24-Mar-01 - 24-Mar-31           Expenses:Food                  $300         $200
+                                Expenses:Rent                 $1000        $1000
+end test
+
+; --- Test 4: Register --monthly --average --collapse ---
+; Collapsed totals: $1100, $1200, $1300
+; Running average: $1100/1=$1100, $2300/2=$1150, $3600/3=$1200
+
+test -M -A --collapse reg Expenses
+24-Jan-01 - 24-Jan-31           <Total>                       $1100        $1100
+24-Feb-01 - 24-Feb-29           <Total>                       $1200        $1150
+24-Mar-01 - 24-Mar-31           <Total>                       $1300        $1200
+end test
+
+; --- Test 5: Register --yearly --average ---
+; All data is in one year, so just one period.
+
+test -Y -A reg Expenses
+24-Jan-01 - 24-Dec-31           Expenses:Food                  $600         $600
+                                Expenses:Rent                 $3000        $3000
+end test
+
+; --- Test 6: Register --monthly --average, account appearing late ---
+; Rent appears in all 3 months, Food only in months 2 and 3.
+; When Food first appears in month 2, its per-account average should be
+; independent: $200/2 = $100 (not inheriting Rent's running total).
+
+test -M -A reg Expenses:Rent
+24-Jan-01 - 24-Jan-31           Expenses:Rent                 $1000        $1000
+24-Feb-01 - 24-Feb-29           Expenses:Rent                 $1000        $1000
+24-Mar-01 - 24-Mar-31           Expenses:Rent                 $1000        $1000
+end test

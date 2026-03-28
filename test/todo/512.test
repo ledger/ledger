@@ -1,0 +1,26 @@
+; Regression test for issue #512: --lots does not work with commodities conversion
+; https://github.com/ledger/ledger/issues/512
+; The C (commodity conversion) directive should cause BTC to be displayed as bits,
+; but --lots shows 1.5 BTC instead of converting to 1,500,000.00 bit.
+
+D 1,000.00 USD
+
+C BTC 1 = 1,000,000.00 bit
+
+2018-01-23 Buy BTC
+    Crypto:BTC                             500000.00 bit @@ 5000 USD
+    Exchange
+
+2018-01-23 Buy BTC
+    Crypto:BTC                             1.5 BTC @@ 15000 USD
+    Exchange
+
+test bal --lots
+             1.5 BTC
+500,000.00 bit {0.01 USD} [2018/01/23]  Crypto:BTC
+      -20,000.00 USD  Exchange
+--------------------
+             1.5 BTC
+      -20,000.00 USD
+500,000.00 bit {0.01 USD} [2018/01/23]
+end test

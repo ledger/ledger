@@ -1,0 +1,21 @@
+; Regression test for issue #1164: aliases won't work in cli (BZ#1164)
+; https://github.com/ledger/ledger/issues/1164
+; Tests that account alias directives in the journal file are properly
+; expanded when ledger is invoked from the command line.
+
+alias Chk = Assets:Checking
+alias Savings = Assets:Savings
+
+2024/01/01 Paycheck
+    Chk         $1000.00
+    Savings      $500.00
+    Income:Salary
+
+test bal
+            $1500.00  Assets
+            $1000.00    Checking
+             $500.00    Savings
+           $-1500.00  Income:Salary
+--------------------
+                   0
+end test

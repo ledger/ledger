@@ -1,0 +1,59 @@
+; Regression test for issue #1794: price syntax/--revalued/--gains mysteries
+; https://github.com/ledger/ledger/issues/1794
+;
+; The issue reports that:
+; 1. @/@@ price syntax records lot dates, but {}/{{}}/{=}/{{=}} does not
+; 2. --revalued-only -V suppresses all register output when no price history exists
+;
+; Commodity prices for ETC (not ETF, so no market price for ETF positions)
+P 2019-01-01 ETC  11 EUR
+P 2019-02-01 ETC  12 EUR
+
+2019-01-11
+    (A)    2 ETF @ 10 EUR
+
+2019-01-12
+    (B)    2 ETF @@ 20 EUR
+
+2019-01-13
+    (C)    2 ETF {10 EUR}
+
+2019-01-14
+    (D)    2 ETF {{20 EUR}}
+
+2019-01-15
+    (F)    2 ETF @= 10 EUR
+
+2019-01-16
+    (G)    2 ETF @@= 20 EUR
+
+2019-01-17
+    (H)    2 ETF {=10 EUR}
+
+2019-01-18
+    (I)    2 ETF {{=20 EUR}}
+
+2019-02-15
+    (J)    2 ETF
+
+; Bug: @/@@ records lot dates but {}/{{}}/{=}/{{=}} does not
+; The @/@@ syntaxes show [2019/01/NN] dates in --lots output,
+; but {}/{{}}/{=}/{{=}} syntaxes only show lot prices without dates.
+test bal --flat --no-total --lots
+2 ETF {EUR10} [2019/01/11]  A
+2 ETF {EUR10} [2019/01/12]  B
+       2 ETF {EUR10}  C
+       2 ETF {EUR10}  D
+2 ETF {=EUR10} [2019/01/15]  F
+2 ETF {=EUR10} [2019/01/16]  G
+      2 ETF {=EUR10}  H
+      2 ETF {=EUR10}  I
+               2 ETF  J
+end test
+
+; Bug: --revalued-only -V suppresses all output even when ETF positions exist.
+; Since ETF has no price history (only ETC does), -V cannot convert ETF to a
+; market value, so --revalued-only -V produces no output at all.
+; Expected: either an error or revalued postings; actual: empty output.
+test reg --revalued-only -V
+end test

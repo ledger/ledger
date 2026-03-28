@@ -1,0 +1,29 @@
+; Balance assignment should be a no-op when the account already has the
+; target balance, and the transaction must still balance correctly.
+2014/01/01  Opening Balances
+  Expenses:Food  1.00
+  Expenses:Rent  2.00
+  Expenses:Auto  0.00
+  Equity:Opening Balances
+
+2014/12/31  Closing Balances
+  Expenses:Food  =2.00
+  Expenses:Rent  =2.00
+  Expenses:Auto  =2.00
+  Equity:Retained Earnings
+
+test bal Expenses
+                   6  Expenses
+                   2    Auto
+                   2    Food
+                   2    Rent
+--------------------
+                   6
+end test
+
+test reg Expenses
+14-Jan-01 Opening Balances      Expenses:Food                     1            1
+                                Expenses:Rent                     2            3
+14-Dec-31 Closing Balances      Expenses:Food                     1            4
+                                Expenses:Auto                     2            6
+end test

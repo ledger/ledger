@@ -1,0 +1,31 @@
+; Regression test for issue #844: Cleared records don't get checked when using --strict or --pedantic (BZ#844)
+; https://github.com/ledger/ledger/issues/844
+;
+; --strict and --pedantic should check ALL transactions including cleared ones.
+; Previously, cleared transactions (marked with *) were skipped during account validation.
+
+account Assets:Cash
+account Expenses:Food
+
+2024/01/01 * Cleared payee
+    Expenses:Unknown    $10.00
+    Assets:Cash
+
+test bal --pedantic -> 1
+__ERROR__
+While parsing file "$FILE", line 11:
+While parsing posting:
+  Expenses:Unknown    $10.00
+
+Error: Unknown account 'Expenses:Unknown'
+end test
+
+test bal --strict
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Unknown
+--------------------
+                   0
+__ERROR__
+Warning: "$FILE", line 11: Unknown account 'Expenses:Unknown'
+Warning: "$FILE", line 11: Unknown commodity '$'
+end test

@@ -1,0 +1,27 @@
+; Regression test for issue #1589: Strange balance reports (BZ#517)
+; https://github.com/ledger/ledger/issues/1589
+;
+; The bug: ledger was displaying zero balances for accounts that used @@ (total
+; price) cost annotations when those positions were fully closed. The zero
+; balances should be elided by default. Additionally, with implicit commodity
+; conversions, only one zero account was shown instead of neither.
+
+2010/01/01 Open positions
+    a   16$ @@ 10€
+    b   -10€
+
+2010/01/02 Close positions
+    a   -16$
+    b   10€ @@ 16$
+
+test bal
+end test
+
+test bal -B
+                -16$
+                 10€  a
+                 16$
+                -10€  b
+--------------------
+                   0
+end test

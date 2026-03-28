@@ -371,31 +371,37 @@ void anonymize_posts::operator()(post_t& post) {
 void calc_posts::operator()(post_t& post) {
   post_t::xdata_t& xdata(post.xdata());
 
+  // When --average is active with an interval report (e.g. --monthly),
+  // interval_posts emits one ITEM_GENERATED posting per account per period,
+  // all sharing the same synthetic xact.  Two adjustments are needed:
+  //
+  // 1. Count stability: keep the period counter the same for all accounts
+  //    within the same period group, so --average divides by the number of
+  //    elapsed intervals rather than the number of account rows.
+  //
+  // 2. Per-account total (only when period_average_ is enabled): seed each
+  //    account's running total from its own accumulator rather than from the
+  //    global running total.  Without this, the second and later accounts in
+  //    a period inherit the blended total of all preceding accounts, making
+  //    each account's average wrong.
+  bool same_generated_group = false;
   if (last_post) {
     assert(last_post->has_xdata());
-    // When --average is active with an interval report (e.g. --monthly),
-    // interval_posts emits one ITEM_GENERATED posting per account per period,
-    // all sharing the same synthetic xact.  Two adjustments are needed:
-    //
-    // 1. Count stability: keep the period counter the same for all accounts
-    //    within the same period group, so --average divides by the number of
-    //    elapsed intervals rather than the number of account rows.
-    //
-    // 2. Per-account total (only when period_average_ is enabled): seed each
-    //    account's running total from its own accumulator rather than from the
-    //    global running total.  Without this, the second and later accounts in
-    //    a period inherit the blended total of all preceding accounts, making
-    //    each account's average wrong.
-    bool same_generated_group =
-        (post.has_flags(ITEM_GENERATED) && last_post->has_flags(ITEM_GENERATED) &&
-         post.xact == last_post->xact);
+    same_generated_group = (post.has_flags(ITEM_GENERATED) &&
+                            last_post->has_flags(ITEM_GENERATED) && post.xact == last_post->xact);
     if (same_generated_group)
       xdata.count = last_post->xdata().count;
     else
       xdata.count = last_post->xdata().count + 1;
     if (calc_running_total) {
       if (period_average_ && post.has_flags(ITEM_GENERATED)) {
-        // Seed from this account's own running total, not the global one.
+        // Seed each account's running total from its own per-account
+        // accumulator so that multi-account period groups (from
+        // interval_posts) each show their own independent average.
+        // When the account has no prior history (first appearance), leave
+        // xdata.total unset so add_or_set_value() below initialises it
+        // to just this post's value, giving the account a clean running
+        // total independent of other accounts in the same period.
         auto it = account_period_totals_.find(post.account);
         if (it != account_period_totals_.end())
           xdata.total = it->second;
@@ -552,6 +558,10 @@ void handle_value(const value_t& value, account_t* account, xact_t* xact, tempor
 } // namespace
 
 /*--- Collapsing ---*/
+
+void collapse_posts::create_accounts() {
+  global_totals_account = &temps.create_account(_("<Total>"), report.session.journal->master);
+}
 
 /**
  * Emit the collapsed representation of the current transaction's postings.
@@ -836,30 +846,20 @@ bool display_filter_posts::output_rounding(post_t& post) {
       DEBUG("filters.changed_value.rounding",
             "rounding.last_display_total    = " << last_display_total);
 
-      // In period+plot mode (-M with -j/-J), suppress the revaluation
-      // adjustment posting.  Market value changes between periods are already
-      // reflected in the final posting's display_total via market(), so the
-      // intermediate adjustment would only create an unwanted extra data point
-      // for each period in the plot output (issue #984).
-      bool suppress_period_plot_adjustment =
-          report.HANDLED(period_) && (report.HANDLED(amount_data) || report.HANDLED(total_data));
+      if (value_t diff = precise_display_total - last_display_total) {
+        DEBUG("filters.changed_value.rounding", "rounding.diff                  = " << diff);
 
-      if (!suppress_period_plot_adjustment) {
-        if (value_t diff = precise_display_total - last_display_total) {
-          DEBUG("filters.changed_value.rounding", "rounding.diff                  = " << diff);
-
-          handle_value(/* value=         */ diff,
-                       /* account=       */ rounding_account,
-                       /* xact=          */ post.xact,
-                       /* temps=         */ temps,
-                       /* handler=       */ handler,
-                       /* date=          */ date_t(),
-                       /* act_date_p=    */ true,
-                       /* total=         */ precise_display_total,
-                       /* direct_amount= */ true,
-                       /* mark_visited=  */ false,
-                       /* bidir_link=    */ false);
-        }
+        handle_value(/* value=         */ diff,
+                     /* account=       */ rounding_account,
+                     /* xact=          */ post.xact,
+                     /* temps=         */ temps,
+                     /* handler=       */ handler,
+                     /* date=          */ date_t(),
+                     /* act_date_p=    */ true,
+                     /* total=         */ precise_display_total,
+                     /* direct_amount= */ true,
+                     /* mark_visited=  */ false,
+                     /* bidir_link=    */ false);
       }
     }
     if (show_rounding) {
@@ -1832,38 +1832,70 @@ void budget_posts::flush() {
 }
 
 /**
- * Add a periodic posting for forecasting, advancing its interval to CURRENT_DATE.
+ * Add a periodic posting for forecasting, initializing its interval.
  *
  * Unlike generate_posts::add_post, this override initializes the interval
- * and advances it past all historical periods so that only future occurrences
- * are generated during flush().
+ * via find_period and advances it past all fully-elapsed historical periods
+ * so that only the current and future periods are generated during flush().
+ *
+ * Handles three cases:
+ *  - Normal: period contains CURRENT_DATE -> advance past elapsed periods
+ *  - Future: period starts after CURRENT_DATE -> keep as-is for flush()
+ *  - Expired: period finished before CURRENT_DATE -> silently drop
  */
 void forecast_posts::add_post(const date_interval_t& period, post_t& post) {
   date_interval_t i(period);
-  if (!i.start && !i.find_period(CURRENT_DATE()))
+
+  // Try to initialize and position the interval at CURRENT_DATE.
+  if (!i.start)
+    i.find_period(CURRENT_DATE());
+
+  // If stabilization failed entirely, nothing to forecast.
+  if (!i.start)
+    return;
+
+  // Drop intervals whose finish date is entirely in the past.
+  if (i.finish && CURRENT_DATE() > *i.finish)
     return;
 
   generate_posts::add_post(i, post);
 
-  // Advance the period's interval until it is at or beyond the current
-  // date.
-  while (*i.start < CURRENT_DATE())
-    ++i;
+  // Advance the stored interval past all fully-elapsed periods, keeping
+  // the period that contains CURRENT_DATE() so the current period's
+  // forecast is included.
+  date_interval_t& stored = pending_posts.back().first;
+  if (!stored.next)
+    stored.stabilize(CURRENT_DATE());
+
+  // For future-start periods (start > CURRENT_DATE), the loop below
+  // is a no-op, which is correct: flush() will emit the first posting
+  // at start (the future from-date).
+  while (stored.next && *stored.next <= CURRENT_DATE())
+    ++stored;
 }
 
 /**
  * Generate all forecast postings into the future.
  *
- * Iterates through pending periodic postings, always selecting the one with
- * the earliest next occurrence.  For each, a synthetic "Forecast transaction"
- * posting is emitted.  A periodic posting is removed from consideration when:
- * - Its next date exceeds forecast_years beyond the last generated date, or
- * - The generated posting matches the report query but fails the continuation
- *   predicate (--forecast-while), or
+ * Iterates through pending periodic postings, generating synthetic postings
+ * in date order.  All postings sharing the same earliest start date are
+ * generated as a group before evaluating the continuation predicate.  This
+ * prevents a same-date posting that temporarily fails the predicate from
+ * permanently removing a periodic transaction.
+ *
+ * The continuation predicate is evaluated after each posting is submitted
+ * downstream, so that calc_posts has updated the running total.  This
+ * supports both date-based predicates (e.g., 'd<[2024/09/01]') and
+ * value-based predicates (e.g., 'T>={0}') that depend on the accumulated
+ * total.  The downstream filter_posts(forecast_while) in chain.cc provides
+ * additional filtering at the output level.
+ *
+ * A periodic posting is removed from consideration when:
+ * - Its start date exceeds forecast_years beyond the last generated date, or
+ * - Its group's last matching posting fails the continuation predicate, or
  * - Its interval has no more occurrences.
  */
 void forecast_posts::flush() {
-  posts_list passed;
   date_t last = CURRENT_DATE();
 
   // If there are period transactions to apply in a continuing series until
@@ -1894,8 +1926,7 @@ void forecast_posts::flush() {
   // forecast and is removed from the set.
 
   while (pending_posts.size() > 0) {
-    // At each step through the loop, we find the first periodic posting whose
-    // period contains the earliest starting date.
+    // Find the earliest start date among all pending postings.
     pending_posts_list::iterator least = pending_posts.begin();
     for (pending_posts_list::iterator i = ++pending_posts.begin(); i != pending_posts.end(); i++) {
       assert((*i).first.start);
@@ -1904,57 +1935,110 @@ void forecast_posts::flush() {
         least = i;
     }
 
-    if ((*least).first.finish)
-      assert(*(*least).first.start < *(*least).first.finish);
+    date_t earliest_date = *(*least).first.start;
 
-    // If the next date in the series for this periodic posting is more than 5
-    // years beyond the last valid post we generated, drop it from further
-    // consideration.
-    date_t& next(*(*least).first.next);
-    assert(next > *(*least).first.start);
+    // Collect all pending postings that share this earliest start date,
+    // so they can be generated and evaluated as a group.
+    std::list<pending_posts_list::iterator> same_date;
+    for (pending_posts_list::iterator i = pending_posts.begin(); i != pending_posts.end(); i++) {
+      if (*(*i).first.start == earliest_date)
+        same_date.push_back(i);
+    }
 
-    if (static_cast<std::size_t>((next - last).days()) >
-        static_cast<std::size_t>(365U) * forecast_years) {
+    // Check the 5-year safety limit.  Only applies when the earliest
+    // date is beyond last (CURRENT_DATE); when including the current
+    // period, start may precede CURRENT_DATE, which is not a concern.
+    if (earliest_date > last && static_cast<std::size_t>((earliest_date - last).days()) >
+                                    static_cast<std::size_t>(365U) * forecast_years) {
       DEBUG("filters.forecast",
             "Forecast transaction exceeds " << forecast_years << " years beyond today");
-      pending_posts.erase(least);
+      for (auto& it : same_date)
+        pending_posts.erase(it);
       continue;
     }
 
-    // `post' refers to the posting defined in the period transaction.  We
-    // make a copy of it within a temporary transaction with the payee
-    // "Forecast transaction".
-    post_t& post = *(*least).second;
-    xact_t& xact = temps.create_xact();
-    xact.payee = _("Forecast transaction");
-    xact._date = next;
-    post_t& temp = temps.copy_post(post, xact);
+    // Generate all postings in this same-date group and submit them to
+    // the downstream pipeline.  The continuation predicate is evaluated
+    // on the LAST generated posting after the entire group has been
+    // processed, so that the cumulative effect of all same-date postings
+    // determines termination.  This prevents a posting that temporarily
+    // causes the running total to fail the predicate from permanently
+    // removing periodic transactions that would otherwise continue (#1155).
+    //
+    // For value-based predicates (e.g. "T>={0}"), the running total is
+    // only meaningful after calc_posts has processed the posting, which
+    // requires submission to the downstream pipeline first.  For
+    // date-based predicates (e.g. "d<[2024/09/01]"), dates are always
+    // available so evaluation is straightforward.
+    //
+    // The downstream filter_posts(forecast_while) in chain.cc provides
+    // additional filtering at the output level, preventing any individual
+    // postings that fail the predicate from reaching the output.
+    std::vector<post_t*> generated;
+    for (auto& it : same_date) {
+      post_t& post = *(*it).second;
+      xact_t& xact = temps.create_xact();
+      xact.payee = _("Forecast transaction");
+      xact._date = earliest_date;
+      post_t& temp = temps.copy_post(post, xact);
 
-    // Submit the generated posting
-    DEBUG("filters.forecast", "Forecast transaction: " << temp.date() << " "
-                                                       << temp.account->fullname() << " "
-                                                       << temp.amount);
-    item_handler<post_t>::operator()(temp);
+      DEBUG("filters.forecast", "Forecast transaction: " << temp.date() << " "
+                                                         << temp.account->fullname() << " "
+                                                         << temp.amount);
 
-    // If the generated posting matches the user's report query, check whether
-    // it also fails to match the continuation condition for the forecast.  If
-    // it does, drop this periodic posting from consideration.
-    if (temp.has_xdata() && temp.xdata().has_flags(POST_EXT_MATCHES)) {
-      DEBUG("filters.forecast", "  matches report query");
-      bind_scope_t bound_scope(context, temp);
+      // Submit the generated posting to the downstream pipeline.
+      item_handler<post_t>::operator()(temp);
+      generated.push_back(&temp);
+    }
+
+    // Evaluate the continuation predicate on the last generated posting
+    // whose running total was actually computed by calc_posts (indicated
+    // by POST_EXT_VISITED).  For register reports with account filters,
+    // only postings matching the filter reach calc_posts, so evaluating
+    // on a non-matching posting would see a void display_total and
+    // incorrectly terminate value-based predicates (#1155).
+    //
+    // If no posting was visited (e.g., all filtered out, or accounts
+    // report), fall back to the last posting — date-based predicates
+    // still work, and value-based predicates without a running total
+    // correctly terminate (no meaningful total to evaluate).
+    bool group_failed = false;
+    if (!generated.empty()) {
+      post_t* check_post = generated.back();
+      for (auto it = generated.rbegin(); it != generated.rend(); ++it) {
+        if ((*it)->has_xdata() && (*it)->xdata().has_flags(POST_EXT_VISITED)) {
+          check_post = *it;
+          break;
+        }
+      }
+      bind_scope_t bound_scope(context, *check_post);
       if (!pred(bound_scope)) {
-        DEBUG("filters.forecast", "  fails to match continuation criteria");
-        pending_posts.erase(least);
-        continue;
+        DEBUG("filters.forecast", "  group fails continuation criteria");
+        group_failed = true;
+        // Remove POST_EXT_VISITED from all generated postings so
+        // accounts reports don't count them in their totals.
+        for (post_t* p : generated) {
+          if (p->has_xdata())
+            p->xdata().drop_flags(POST_EXT_VISITED);
+        }
       }
     }
 
-    // Increment the 'least', but remove it from pending_posts if it
-    // exceeds its own boundaries.
-    ++(*least).first;
-    if (!(*least).first.start) {
-      pending_posts.erase(least);
+    // If the group failed the predicate, remove all postings in the
+    // group from future consideration.
+    if (group_failed) {
+      for (auto& it : same_date)
+        pending_posts.erase(it);
       continue;
+    }
+
+    // Advance all postings in the group to their next period, removing
+    // any that have exhausted their intervals.
+    for (auto& it : same_date) {
+      ++(*it).first;
+      if (!(*it).first.start) {
+        pending_posts.erase(it);
+      }
     }
   }
 

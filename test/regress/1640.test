@@ -1,0 +1,22 @@
+; Regression test for #1640: Forecast fails with "every <X> days from"
+; for several values of X.  Previously, certain values (2, 4, 5, 8)
+; produced no output, and "every 9 days" showed wrong start dates.
+
+~ every 2 days from 2011/08/05
+  A  1
+  B
+
+test reg --now 2011/08/05 --forecast 'd<[2011/08/16]'
+11-Aug-05 Forecast transaction  A                                 1            1
+11-Aug-05 Forecast transaction  B                                -1            0
+11-Aug-07 Forecast transaction  A                                 1            1
+11-Aug-07 Forecast transaction  B                                -1            0
+11-Aug-09 Forecast transaction  A                                 1            1
+11-Aug-09 Forecast transaction  B                                -1            0
+11-Aug-11 Forecast transaction  A                                 1            1
+11-Aug-11 Forecast transaction  B                                -1            0
+11-Aug-13 Forecast transaction  A                                 1            1
+11-Aug-13 Forecast transaction  B                                -1            0
+11-Aug-15 Forecast transaction  A                                 1            1
+11-Aug-15 Forecast transaction  B                                -1            0
+end test

@@ -1,0 +1,21 @@
+; Balance assertions on real postings should include virtual postings
+; when the account has no prior real posting history.
+;
+; When an account's only prior postings are virtual, a real posting's
+; balance assertion must check the combined (real + virtual) total,
+; not just the real total (which would be zero).
+
+2018-08-27 Setting it up
+   (Assets:Wallet)  = BYN 108.40
+
+2018-08-28 Bus to home
+    Expenses:Transportation  BYN 1
+    Assets:Wallet  BYN -1 = BYN 107.40
+
+test balance Wallet
+          BYN 107.40  Assets:Wallet
+end test
+
+test balance Wallet -R
+           BYN -1.00  Assets:Wallet
+end test

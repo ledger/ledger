@@ -1,0 +1,14 @@
+; Regression test for issue #606: Padding formatting commands does not ignore invisible characters (BZ#606)
+; https://github.com/ledger/ledger/issues/606
+;
+; The bug: justify() counts invisible ANSI escape codes toward the padding width,
+; resulting in less padding than expected (visible text not reaching target width).
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format '%(justify(ansify_if(account, "red", true), 25)) %(amount)\n'
+[31mExpenses:Food[0m        $10.00
+[31mAssets:Cash[0m          $-10.00
+end test

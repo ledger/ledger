@@ -1,0 +1,24 @@
+; Forecast with mixed periodic frequencies should not corrupt running totals.
+; When a yearly forecast posting falls outside the forecast window, its amount
+; must not be included in the running total of monthly forecast postings.
+
+~ Yearly
+    Expenses:Auto                              $500.00
+    Assets:Checking
+
+~ Monthly
+    Income:Timberline                        $-2000.00
+    Expenses:Dining                            $100.00
+    Assets:Checking
+
+2016/01/04 TACO BELL
+    Expenses:Dining                             $12.50
+    Assets:Checking
+
+test reg Checking --forecast 'd<[2016/03/02]' --now '2016/01/04' --columns 80
+16-Jan-04 TACO BELL             Assets:Checking             $-12.50      $-12.50
+16-Jan-01 Forecast transaction  Assets:Checking            $-500.00     $-512.50
+16-Jan-01 Forecast transaction  Assets:Checking            $1900.00     $1387.50
+16-Feb-01 Forecast transaction  Assets:Checking            $1900.00     $3287.50
+16-Mar-01 Forecast transaction  Assets:Checking            $1900.00     $5187.50
+end test

@@ -1,0 +1,30 @@
+; Regression test for issue #1083
+; Verify that --pedantic and --strict correctly detect undeclared
+; accounts containing special characters like '&', without needing
+; --explicit (which is now a no-op since its behavior is the default).
+
+account A
+account C
+
+2014-09-30 * Test
+    A&B                  10 USD
+    C
+
+test bal --pedantic -> 1
+__ERROR__
+While parsing file "$FILE", line 10:
+While parsing posting:
+  A&B                  10 USD
+
+Error: Unknown account 'A&B'
+end test
+
+test bal --strict
+              10 USD  A&B
+             -10 USD  C
+--------------------
+                   0
+__ERROR__
+Warning: "$FILE", line 10: Unknown account 'A&B'
+Warning: "$FILE", line 10: Unknown commodity 'USD'
+end test

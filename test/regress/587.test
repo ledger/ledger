@@ -1,0 +1,22 @@
+; Regression test for issue #587: ledger --anon print regex fails (BZ#587)
+; https://github.com/ledger/ledger/issues/587
+;
+; The bug reported that using --anon with the print command and a regex filter
+; would fail (crash or incorrect behavior). This test verifies that --anon print
+; correctly applies regex filtering without crashing.
+;
+; The --anon flag anonymizes payee names and account names using hashed values,
+; so the test uses a non-matching regex which produces deterministic empty output.
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Other Payee
+    Expenses:Books   $20.00
+    Assets:Cash
+
+; Test that --anon print with a non-matching regex produces empty output
+; (this is deterministic regardless of the random hashes used by --anon)
+test --anon print NoSuchAccount
+end test

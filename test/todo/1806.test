@@ -1,0 +1,29 @@
+; Regression test for issue #1806: Lack of granularity in market pricing
+; https://github.com/ledger/ledger/issues/1806
+;
+; When using lot-value notation {{cost}}, --price (and -B) converts options
+; to their lot basis rather than the actual transaction prices. The gain/loss
+; is "swallowed" because both the sell and subsequent buy use the same lot
+; value ($1,294.20), showing net 0 instead of the actual gain of $93.43.
+;
+; The correct behavior would show the actual transaction prices and the net
+; gain/loss from trading (e.g., sold at $1,295.00, bought back at $1,200.00
+; = $95.00 gross gain, or $93.43 net after fees as recorded in Income:Capital:Short).
+
+2019/01/01 SOLD -1 TSLA 100 16 AUG 19 220 PUT @12.95
+    (Expenses:Fees)                            $0.05
+    (Expenses:Commission)                      $0.75
+    Assets:Brokerage:Options         -1 "TSLA 100 16 AUG 19 220 PUT" {{$1,294.20}} @ $1,295.00
+    Assets:Brokerage:Cash                  $1,294.20
+
+2019/01/01 BOT +1 TSLA 100 16 AUG 19 220 PUT @12.00
+    (Expenses:Fees)                            $0.02
+    (Expenses:Commission)                      $0.75
+    Income:Capital:Short                     $-93.43
+    Assets:Brokerage:Options         1 "TSLA 100 16 AUG 19 220 PUT" {{$1,294.20}} @ $1,200.00
+    Assets:Brokerage:Cash                 $-1,200.77
+
+test reg options --price
+19-Jan-01 SOLD -1 TSLA 100 16.. Asse:Brokerage:Options   $-1,294.20   $-1,294.20
+19-Jan-01 BOT +1 TSLA 100 16 .. Asse:Brokerage:Options    $1,294.20            0
+end test

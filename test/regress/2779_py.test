@@ -1,0 +1,3 @@
+test python test/regress/2779.py
+ledger backwards compatibility ok
+end test

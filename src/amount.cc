@@ -127,6 +127,7 @@ static mpfr_t tempfden;
 struct amount_t::bigint_t : public flags::supports_flags<> {
 #define BIGINT_BULK_ALLOC 0x01
 #define BIGINT_KEEP_PREC 0x02
+#define BIGINT_COST_PREC 0x04
 
   mpq_t val;
   precision_t prec;
@@ -158,8 +159,9 @@ struct amount_t::bigint_t : public flags::supports_flags<> {
       DEBUG("ledger.validate", "amount_t::bigint_t: prec > 1024");
       return false;
     }
-    if (flags() & ~(BIGINT_BULK_ALLOC | BIGINT_KEEP_PREC)) {
-      DEBUG("ledger.validate", "amount_t::bigint_t: flags() & ~(BULK_ALLOC | KEEP_PREC)");
+    if (flags() & ~(BIGINT_BULK_ALLOC | BIGINT_KEEP_PREC | BIGINT_COST_PREC)) {
+      DEBUG("ledger.validate",
+            "amount_t::bigint_t: flags() & ~(BULK_ALLOC | KEEP_PREC | COST_PREC)");
       return false;
     }
     return true;
@@ -837,6 +839,15 @@ void amount_t::set_keep_precision(const bool keep) const {
     quantity->add_flags(BIGINT_KEEP_PREC);
   else
     quantity->drop_flags(BIGINT_KEEP_PREC);
+}
+
+void amount_t::set_cost_precision(precision_t prec) {
+  if (!quantity)
+    throw_(amount_error, _("Cannot set cost precision of an uninitialized amount"));
+  _dup();
+  in_place_roundto(prec);
+  quantity->prec = prec;
+  quantity->add_flags(BIGINT_COST_PREC);
 }
 
 /**
@@ -1803,6 +1814,18 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
     if (details.has_flags(ANNOTATION_PRICE_NOT_PER_UNIT)) {
       assert(details.price);
       *details.price /= this->abs();
+      // Normalize per-unit cost to a stable precision, matching the
+      // normalization in pool.cc::exchange().  The rounding precision is
+      // derived from the divisor (quantity) and cost commodity precision,
+      // deliberately excluding the dividend (total cost) precision.
+      // This ensures that {{$250}} and @@ $250.00 produce identical
+      // per-unit prices despite differing internal precision metadata
+      // (fixes #2948, #2975).
+      if (details.price->has_commodity() && details.price->keep_precision()) {
+        int round_prec = static_cast<int>(
+            this->precision() + details.price->commodity().precision() + extend_by_digits);
+        details.price->in_place_roundto(round_prec);
+      }
     }
     set_commodity(*commodity_pool_t::current_pool->find_or_create(*commodity_, details));
   }
@@ -1878,8 +1901,13 @@ void amount_t::print(std::ostream& _out, const uint_least8_t flags) const {
       out << " ";
   }
 
-  stream_out_mpq(out, MP(quantity), display_precision(), comm ? commodity().precision() : 0,
-                 GMP_RNDN, comm);
+  precision_t disp_prec = display_precision();
+  int zeros_prec = comm ? commodity().precision() : 0;
+  if (comm && quantity->has_flags(BIGINT_COST_PREC) && commodity().precision() == 0) {
+    disp_prec = quantity->prec;
+    zeros_prec = quantity->prec;
+  }
+  stream_out_mpq(out, MP(quantity), disp_prec, zeros_prec, GMP_RNDN, comm);
 
   if (comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {
     if (comm.has_flags(COMMODITY_STYLE_SEPARATED))

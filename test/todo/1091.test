@@ -1,0 +1,19 @@
+; Regression test for issue #1091: Unicode white space on empty lines confuses ledger (BZ#1091)
+; https://github.com/ledger/ledger/issues/1091
+;
+; A line containing only a Unicode non-breaking space (U+00A0) should
+; be treated as an empty line, but instead triggers a directive error.
+
+2024/01/01 First
+    Expenses:Food    $10.00
+    Assets:Cash
+ 
+2024/01/02 Second
+    Expenses:Food    $5.00
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 10:
+Error: Directive ' ' requires an argument
+end test

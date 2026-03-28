@@ -1,0 +1,24 @@
+; Regression test for issue #1158
+; Automatic transactions on null-amount postings should fire for all
+; commodities when the posting balances multiple commodities.
+
+= /^Income:Capital/
+    Budget:Income:Capital  -1
+    Budget:Total  1
+
+2016/01/01 Sell
+    Assets:EUR  400 EUR
+    Assets:XBT  -1 XBT
+    Income:Capital
+
+test reg
+16-Jan-01 Sell                  Assets:EUR                  400 EUR      400 EUR
+                                Assets:XBT                   -1 XBT      400 EUR
+                                                                          -1 XBT
+                                Income:Capital             -400 EUR       -1 XBT
+                                Income:Capital                1 XBT            0
+                                Budget:Income:Capital       400 EUR      400 EUR
+                                Budget:Total               -400 EUR            0
+                                Budget:Income:Capital        -1 XBT       -1 XBT
+                                Budget:Total                  1 XBT            0
+end test

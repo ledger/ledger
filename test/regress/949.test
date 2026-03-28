@@ -1,0 +1,16 @@
+; Regression test for issue #949: convert csv to journal and save it to .dat (BZ#949)
+; https://github.com/ledger/ledger/issues/949
+;
+; The issue requested the ability to convert a CSV file to ledger journal format.
+; The `convert` command fulfills this: it reads a CSV file and generates journal entries
+; that can be saved to a .dat file (e.g., via shell redirection or --output flag).
+
+test -f /dev/null convert $sourcepath/test/input/convert-test.csv --input-date-format %Y/%m/%d -> 0
+2024/01/15 * Grocery Store
+    Expenses:Unknown                             -50
+    Equity:Unknown
+
+2024/01/20 * Gas Station
+    Expenses:Unknown                             -30
+    Equity:Unknown
+end test

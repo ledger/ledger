@@ -8,6 +8,8 @@
 ;a Tuesday?
 ;forecasts period start is now first forecast transaction is now + 1 'tomorrow'
 test reg --forecast 'date <[2010/08/01]' --now=2010/06/13
+10-Jun-13 Forecast transaction  Ex:Bills:Housecleaning       $85.00       $85.00
+10-Jun-13 Forecast transaction  Assets:Bank:Checking        $-85.00            0
 10-Jun-27 Forecast transaction  Ex:Bills:Housecleaning       $85.00       $85.00
 10-Jun-27 Forecast transaction  Assets:Bank:Checking        $-85.00            0
 10-Jul-11 Forecast transaction  Ex:Bills:Housecleaning       $85.00       $85.00

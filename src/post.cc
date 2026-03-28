@@ -369,40 +369,65 @@ value_t get_commodity_is_primary(post_t& post) {
 }
 
 value_t get_has_cost(post_t& post) {
-  return post.cost ? true : false;
+  if (post.cost)
+    return true;
+  if (post.amount.has_annotation() && post.amount.annotation().price)
+    return true;
+  return false;
 }
 
 /**
  * @brief Return the cost of the posting, falling back to the amount.
  *
  * If a cost is recorded (currency conversion or lot price), returns it.
+ * When no explicit cost exists but the amount carries a lot price
+ * annotation ({price} or {{price}}), the cost is derived from that
+ * annotation so that -B correctly reports the basis.
  * Otherwise returns the compound value or raw amount, since a posting
  * in a single commodity has cost equal to amount.
  */
 value_t get_cost(post_t& post) {
-  if (post.cost)
+  if (post.cost) {
+    // When cost was auto-calculated between lots of the same base
+    // commodity (e.g., stock splits where Phase 3 computes a lot-to-lot
+    // "exchange rate"), prefer the annotation-derived cost which
+    // represents the true basis in the cost commodity.
+    if (post.has_flags(POST_COST_CALCULATED) && post.amount.has_annotation() &&
+        post.amount.annotation().price &&
+        post.cost->commodity().referent() == post.amount.commodity().referent())
+      return *post.amount.price();
     return *post.cost;
-  else if (post.has_xdata() && post.xdata().has_flags(POST_EXT_COMPOUND))
+  } else if (post.has_xdata() && post.xdata().has_flags(POST_EXT_COMPOUND))
     return post.xdata().compound_value;
   else if (post.amount.is_null())
     return 0L;
+  else if (post.amount.has_annotation() && post.amount.annotation().price)
+    return *post.amount.price();
   else
     return post.amount;
 }
 
 /**
- * @brief Return the per-unit price from the amount's annotation.
+ * @brief Return the total value at the lot price from the amount's annotation.
  *
- * If the amount has a lot price annotation, returns that price.
+ * If the amount has a lot price annotation, returns that price times
+ * the quantity.  When the annotation price was computed from a total
+ * cost (@@) and the original total cost is still available on the
+ * posting, uses the original cost directly to avoid rounding artifacts
+ * from multiplying a rounded per-unit price back by the quantity
+ * (issue #3009).
+ *
  * Otherwise falls back to the cost (which equals the amount when
  * there is no currency conversion).
  */
 value_t get_price(post_t& post) {
   if (post.amount.is_null())
     return 0L;
-  if (post.amount.has_annotation() && post.amount.annotation().price)
+  if (post.amount.has_annotation() && post.amount.annotation().price) {
+    if (post.cost && post.amount.annotation().has_flags(ANNOTATION_PRICE_CALCULATED))
+      return *post.cost;
     return *post.amount.price();
-  else
+  } else
     return get_cost(post);
 }
 

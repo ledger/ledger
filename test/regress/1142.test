@@ -1,0 +1,19 @@
+; Regression test for issue #1142: ledger --base -X 'h=3600s' bal report everything in hours (BZ#1142)
+; https://github.com/ledger/ledger/issues/1142
+; The --base flag combined with -X 'h=3600s' should convert all time amounts (in seconds)
+; to hours in the balance report.
+
+2024/01/01 Work session
+    Time:Work    7200s
+    Income:Time
+
+2024/01/01 Work session
+    Time:Work    3600s
+    Income:Time
+
+test --base -X 'h=3600s' bal
+              -3.00h  Income:Time
+               3.00h  Time:Work
+--------------------
+                   0
+end test

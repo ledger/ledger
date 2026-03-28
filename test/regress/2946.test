@@ -1,0 +1,24 @@
+; Regression test for issue #2946: regex backslash escaping.
+;
+; In ledger regex literals (/pattern/), backslash handling must satisfy:
+;   \/ → /  (escaped delimiter, backslash stripped)
+;   \\ → \  (escaped backslash, collapsed for backward compatibility)
+;   \X → \X (all other escapes pass through to the regex engine)
+;
+; PR #2902 (fix #1781) changed from C-style escape stripping to passthrough,
+; which broke users who wrote \\* to match literal stars.  Adding \\→\
+; collapsing restores backward compatibility while keeping the #1781 fix.
+
+tag rating
+    assert value =~ /^\\*{0,5}$/
+
+2018/12/31 * Test
+    Expenses:Foo     $100           ; rating: ***
+    Assets:Checking
+
+test bal
+               $-100  Assets:Checking
+                $100  Expenses:Foo
+--------------------
+                   0
+end test

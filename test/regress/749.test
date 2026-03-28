@@ -1,0 +1,27 @@
+; Regression test for issue #749: Value expression parser confused by ( ) in commodity name (BZ#749)
+; https://github.com/ledger/ledger/issues/749
+;
+; When a commodity name contains parentheses (e.g. "XYZ (Bond)"), the value
+; expression parser could be confused by the parens, treating them as expression
+; grouping operators rather than part of the commodity name.
+
+2024/01/01 Buy Bonds
+    Assets:Investments    10 "XYZ (Bond)"
+    Equity
+
+test bal
+       10 XYZ (Bond)  Assets:Investments
+      -10 XYZ (Bond)  Equity
+--------------------
+                   0
+end test
+
+test reg
+24-Jan-01 Buy Bonds             Assets:Investments     10 XYZ (Bond) 10 XYZ (Bond)
+                                Equity                 -10 XYZ (Bond)            0
+end test
+
+test reg --format "%(commodity)\n"
+XYZ (Bond)
+XYZ (Bond)
+end test

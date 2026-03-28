@@ -1,0 +1,15 @@
+; Regression test for issue #779: Please add pricrdb entries in both directions (BZ#779)
+; https://github.com/ledger/ledger/issues/779
+; The request is that pricedb command output entries in both forward and reverse directions,
+; so that the generated pricedb file can be used for conversions in either direction.
+; Currently only the forward direction (EUR -> USD) is output, not the reverse (USD -> EUR).
+
+P 2024/01/01 EUR 1.20 USD
+
+2024/01/01 Test
+    Assets:EUR   100 EUR @ 1.20 USD
+    Assets:Cash   -120 USD
+
+test pricedb
+P 2024/01/01 00:00:00 EUR 1.20 USD
+end test

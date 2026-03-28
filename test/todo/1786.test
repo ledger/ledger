@@ -1,0 +1,20 @@
+; Regression test for issue #1786: Parsing of metadata with multiple semicolons
+; https://github.com/ledger/ledger/issues/1786
+; Bug: when a posting comment has multiple leading semicolons (e.g. ;;Tag: Val
+; or ; ;Tag: Val), the second semicolon is incorrectly included in the tag name.
+; Expected: tag names should be "Foo" and "Test", not ";Foo" and ";Test".
+
+2019-04-16 * Metadata with space-separated double semicolon
+    ;  ;Foo: Bar
+    Assets:Test         10.00 EUR
+    Income:Test        -10.00 EUR
+
+2019-04-16 * Metadata with consecutive double semicolons
+    ;;Test: Baz
+    Assets:Test         10.00 EUR
+    Income:Test        -10.00 EUR
+
+test tags
+;Foo
+;Test
+end test

@@ -1,0 +1,18 @@
+; Fixed lot price with different total cost should not generate
+; an Equity:Capital Losses posting.  The gain/loss difference is
+; absorbed into the cost instead.
+
+2009/01/01 Shell
+    Expenses:Gasoline             11 GAL {=$2.299} @@ $25.30
+    Assets:Checking
+
+test bal
+            $-25.300  Assets:Checking
+              11 GAL  Expenses:Gasoline
+--------------------
+            $-25.300
+              11 GAL
+end test
+
+test bal Equity
+end test

@@ -1,0 +1,20 @@
+; Regression test for issue #1130: ledger won't convert commodity to it's street value if transactions are filed in a certain way (BZ#1130)
+; https://github.com/ledger/ledger/issues/1130
+;
+; When the P directive date comes before a transaction's purchase date,
+; the @ price from the transaction is recorded in the price database as more
+; recent than the P directive price. This causes -V to use the transaction's
+; purchase price instead of the intended market/street price.
+;
+; Expected: 10 STOCK * $100.00 (market price) = $1000.00
+; Actual:   10 STOCK * $90.00  (purchase price, overrides market price) = $900.00
+
+P 2015/01/01 STOCK $100.00
+
+2015/06/01 Buy stock at discount
+    Assets:Investments    10 STOCK @ $90.00
+    Assets:Cash          $-900.00
+
+test bal -V Assets:Investments
+             $900.00  Assets:Investments
+end test

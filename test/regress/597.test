@@ -1,0 +1,27 @@
+; Regression test for issue #597: If total transaction in a budgeted account equals zero... (BZ#597)
+; https://github.com/ledger/ledger/issues/597
+;
+; When actual transactions in a budgeted account sum to zero (e.g., a purchase
+; and a return that cancel each other out), the budget percentage calculation
+; must handle the zero numerator without errors. The original bug caused a
+; division error when computing percentage; the fix added quantity() wrappers
+; and a guard against zero denominators.
+
+~ Monthly
+    Expenses:Food    $100
+    Assets:Checking
+
+2024/01/01 Buy food
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/15 Return food
+    Expenses:Food    $-50.00
+    Assets:Checking
+
+test budget --period "2024/01"
+           0     $-100.00      $100.00     0  Assets:Checking
+           0      $100.00     $-100.00     0  Expenses:Food
+------------ ------------ ------------ -----
+           0            0            0     0
+end test

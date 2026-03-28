@@ -1,0 +1,25 @@
+; Regression test for issue #857: -S in a balance report results in filename error (BZ#857)
+; https://github.com/ledger/ledger/issues/857
+;
+; The original bug was that using -S (short form of --sort) in a balance report
+; caused a filename error instead of sorting. This is now fixed.
+
+2024/01/01 Test
+    Expenses:Food        $10.00
+    Expenses:Rent       $500.00
+    Expenses:Gas         $50.00
+    Assets:Checking    $-100.00
+    Assets:Cash
+
+; -S total (short form of --sort) should work without error in a balance report
+test bal -S total
+            $-560.00  Assets
+            $-460.00    Cash
+            $-100.00    Checking
+             $560.00  Expenses
+              $10.00    Food
+              $50.00    Gas
+             $500.00    Rent
+--------------------
+                   0
+end test

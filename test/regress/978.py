@@ -1,14 +1,14 @@
-import ledger
+from lpy import core
 
 # Obtain a commodity reference before close_journal_files().  With the old
 # code, close_journal_files() called amount_t::shutdown() which destroyed
 # commodity_pool_t::current_pool, leaving this pointer dangling and causing
 # a segfault when it was used afterward (issue #978).
-eur = ledger.commodities.find_or_create('EUR')
+eur = core.commodities.find_or_create('EUR')
 
-ledger.session.close_journal_files()
+core.session.close_journal_files()
 
-j = ledger.read_journal_from_string("""
+j = core.read_journal_from_string("""
 P 2015/01/01 GBP 1.25 EUR
 
 ; Establish EUR suffix display style (mirrors file "d" from the original issue)

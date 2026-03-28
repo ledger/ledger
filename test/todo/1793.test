@@ -1,0 +1,31 @@
+; Regression test for issue #1793: Unexpected balance report when tracking food calories
+; https://github.com/ledger/ledger/issues/1793
+; BUG: C commodity conversion directive ignores the quantity on the left side.
+; "C 100 apple = 48 kcal" should mean 1 apple = 0.48 kcal (225 apple → 108 kcal),
+; but ledger treats it as 1 apple = 48 kcal (225 apple → 10800 kcal), off by 100x.
+
+commodity apple
+commodity sugar
+
+C 100 apple = 48 kcal
+C 100 sugar = 400 kcal
+
+payee Food
+
+account Food:Fruits
+account Food:Other
+account Source:Pantry
+
+2019-05-19 Food
+    Food:Fruits  225 apple
+    Food:Other  8 sugar
+    Source:Pantry
+
+test bal
+          14000 kcal  Food
+          10800 kcal    Fruits
+           3200 kcal    Other
+         -14000 kcal  Source:Pantry
+--------------------
+                   0
+end test

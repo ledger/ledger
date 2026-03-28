@@ -1,0 +1,32 @@
+; Regression test for issue #617: bal --anon anonymizes *before* it generates the report (BZ#617)
+; https://github.com/ledger/ledger/issues/617
+;
+; The --anon flag should anonymize account names and amounts in the REPORT OUTPUT,
+; but the bug causes it to anonymize before report generation. The account name
+; hash varies per posting (seeded randomly), so the same account hashes differently
+; across postings, breaking balance accumulation. Each posting becomes its own
+; "account" instead of being rolled up by account name.
+;
+; Using --format to show only amounts (skipping non-deterministic hashed names)
+; and --sort T for deterministic ordering.
+;
+; Current (broken) behavior: 4 separate entries (one per posting, no accumulation)
+;   A-200.00, A-100.00, A100.00, A200.00
+; Correct behavior after fix: 2 entries with accumulated totals
+;   A-300.00, A300.00
+
+2024/01/01 Groceries
+    Expenses:Food    $100.00
+    Assets:Checking    $-100.00
+
+2024/01/15 More Groceries
+    Expenses:Food    $200.00
+    Assets:Checking    $-200.00
+
+test bal --anon --sort T --format "%(display_total)\n"
+A-200.00
+A-100.00
+A100.00
+A200.00
+0
+end test

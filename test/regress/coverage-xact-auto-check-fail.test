@@ -12,5 +12,6 @@
 test reg Budget --columns 80
 24-Jan-15 Store                 (Budget)                      $5.00        $5.00
 __ERROR__
-Warning: "$FILE", line 10: Transaction check failed: (amount < {$10.00})
+Warning: "$FILE", line 8: Transaction check failed: (amount < {$10.00})
+  (check expression at "$FILE", line 4)
 end test

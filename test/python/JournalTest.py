@@ -2,7 +2,7 @@
 
 import unittest
 
-from ledger import *
+from lpy.core import *
 
 class JournalTestCase(unittest.TestCase):
     def tearDown(self):

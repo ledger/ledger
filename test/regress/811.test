@@ -1,0 +1,15 @@
+; Regression test for issue #811: Add options to control how CSV files are parsed (BZ#811)
+; https://github.com/ledger/ledger/issues/811
+; The convert command uses the CSV header row to determine column mapping,
+; allowing CSV files with columns in any order (e.g., amount,payee,date instead
+; of the default date,posted,code,payee,amount,total,note).
+
+test -f /dev/null convert $sourcepath/test/input/811.csv
+2024/01/15 * Grocery Store
+    Expenses:Unknown                             -50
+    Equity:Unknown
+
+2024/01/20 * Gas Station
+    Expenses:Unknown                             -30
+    Equity:Unknown
+end test

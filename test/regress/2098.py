@@ -16,7 +16,7 @@
 # journal.add_xact() to programmatically add transactions and then invoking
 # read_journal_files() afterwards.
 
-import ledger
+from lpy import core
 import os
 import tempfile
 
@@ -31,7 +31,7 @@ with tempfile.NamedTemporaryFile(mode='w', suffix='.ledger', delete=False) as f:
     tmppath = f.name
 
 try:
-    s = ledger.Session()
+    s = core.Session()
 
     # First read via read_journal() -- this resets the journal and reads the
     # file, so the assertion is satisfied: xact_count(1) == xacts.size()(1).

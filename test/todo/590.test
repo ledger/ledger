@@ -1,0 +1,27 @@
+; Regression test for issue #590: Budget entry is applied only once if xacts are in reverse order (BZ#590)
+; https://github.com/ledger/ledger/issues/590
+;
+; When transactions are in reverse chronological order (newer dates first),
+; the budget should still apply one entry per period. Instead, only one
+; budget entry is generated regardless of how many periods are covered.
+;
+; Forward order (correct): two budget entries (Jan + Feb) are produced.
+; Reverse order (broken):  only one budget entry (Feb) is produced.
+
+~ Monthly
+    Expenses:Food    $500.00
+    Assets:Cash
+
+2012/02/10 Groceries
+    Expenses:Food    $200.00
+    Assets:Cash
+
+2012/01/15 Groceries
+    Expenses:Food    $100.00
+    Assets:Cash
+
+test reg --budget -b 2012/01 -e 2012/03 Expenses
+12-Feb-01 Budget transaction    Expenses:Food              $-500.00     $-500.00
+12-Feb-10 Groceries             Expenses:Food               $200.00     $-300.00
+12-Jan-15 Groceries             Expenses:Food               $100.00     $-200.00
+end test

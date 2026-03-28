@@ -1,0 +1,25 @@
+; Regression test for issue #1807: Ledger Using Wrong Price when a Transaction Occurs on the End Date and a Price Database Used
+; https://github.com/ledger/ledger/issues/1807
+;
+; When using --market with -e <date>, a transaction occurring on the end date
+; should be excluded from results. Previously, its commodity price was being
+; used for valuation instead of the price from the price database.
+;
+; Setup: 10 GOLD bought June 15 @ $100. Price DB has $150 as of June 30.
+; July 1 transaction (on the end date) buys 1 GOLD @ $200.
+; With -e 2019/07/01, only June 15 transaction is in scope.
+; Expected: 10 GOLD valued at $150 (price DB) = $1500, not $200 (July 1 price).
+
+P 2019/06/30 GOLD $150.00
+
+2019/06/15 Buy GOLD
+    Assets:Investments   10 GOLD @ $100.00
+    Assets:Cash
+
+2019/07/01 Buy More GOLD
+    Assets:Investments   1 GOLD @ $200.00
+    Assets:Cash
+
+test --market -e 2019/07/01 bal Assets:Investments
+            $1500.00  Assets:Investments
+end test

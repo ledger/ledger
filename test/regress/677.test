@@ -1,0 +1,19 @@
+; Regression test for issue #677: Error building current next branch: no type named 'key_type' in 'class ledger::date_specifier_t' (BZ#677)
+; https://github.com/ledger/ledger/issues/677
+; The bug was a compile-time error in date_specifier_t; this test exercises
+; date specifier / period functionality to confirm it works correctly at runtime.
+
+2024/01/01 Income
+    Income:Salary    $-1000.00
+    Assets:Checking
+
+2024/02/01 Income
+    Income:Salary    $-1000.00
+    Assets:Checking
+
+test bal --period "january 2024"
+            $1000.00  Assets:Checking
+           $-1000.00  Income:Salary
+--------------------
+                   0
+end test
