@@ -197,7 +197,7 @@ if(SKBUILD)
   # Python sources are already included in LEDGER_SOURCES via the
   # HAVE_BOOST_PYTHON block above.
   Python_add_library(_core MODULE ${LEDGER_SOURCES} WITH_SOABI)
-  add_ledger_library_dependencies(_core)
+  add_ledger_library_dependencies(_core PRIVATE)
 
   # Precompiled headers for system.hh reduce build times.
   if(PRECOMPILE_SYSTEM_HH)
@@ -214,7 +214,7 @@ else()
   if(BUILD_LIBRARY)
     set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
     add_library(libledger SHARED ${LEDGER_SOURCES})
-    add_ledger_library_dependencies(libledger)
+    add_ledger_library_dependencies(libledger PUBLIC)
     set_target_properties(libledger PROPERTIES
       OUTPUT_NAME "ledger"
       VERSION ${Ledger_VERSION_MAJOR}
@@ -237,7 +237,7 @@ else()
       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ledger)
   else()
     add_executable(ledger ${LEDGER_SOURCES} main.cc global.cc)
-    add_ledger_library_dependencies(ledger)
+    add_ledger_library_dependencies(ledger PUBLIC)
   endif()
 
   # Precompiled headers for system.hh significantly reduce build times.
