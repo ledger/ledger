@@ -161,7 +161,7 @@ void python_interpreter_t::initialize() {
 
     main_module = import_module("__main__");
     // Load _core and alias it as lpy._core so that relative imports inside
-    // the lpy package (e.g. "from .._core import *" in lpy/core/__init__.py)
+    // the lpy package (e.g. "from ._core import *" in lpy/core/__init__.py)
     // resolve correctly when running embedded in the ledger CLI.
     PyObject* core_mod = PyImport_ImportModule("_core");
     PyDict_SetItemString(PyImport_GetModuleDict(), "lpy.core._core", core_mod);
