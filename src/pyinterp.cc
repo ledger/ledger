@@ -157,12 +157,14 @@ void python_interpreter_t::initialize() {
 
     assert(Py_IsInitialized());
 
-    hack_system_paths();
-
     main_module = import_module("__main__");
-    // Load _core and alias it as lpy._core so that relative imports inside
-    // the lpy package (e.g. "from ._core import *" in lpy/core/__init__.py)
-    // resolve correctly when running embedded in the ledger CLI.
+
+    // Load _core and alias it as lpy.core._core so that relative imports
+    // inside the lpy package (e.g. "from ._core import *" in
+    // lpy/core/__init__.py) resolve correctly when running embedded in the
+    // ledger CLI.  Must happen before hack_system_paths(), which may trigger
+    // import("lpy") → lpy/core/__init__.py → "from ._core import *", and
+    // therefore needs lpy.core._core already present in sys.modules.
     PyObject* core_mod = PyImport_ImportModule("_core");
     if (!core_mod) {
       throw_(std::runtime_error,
@@ -176,6 +178,7 @@ void python_interpreter_t::initialize() {
     // case where no PYTHONPATH is set and the on-disk packages are not
     // available.  The guards ensure this is a no-op when the real packages
     // have already been loaded from disk (e.g. via PYTHONPATH or install).
+    // Must also run before hack_system_paths() for the same reason above.
     int result = PyRun_SimpleString(
         "import sys, types\n"
         "if 'lpy.core' not in sys.modules:\n"
@@ -205,6 +208,8 @@ void python_interpreter_t::initialize() {
       throw_(std::runtime_error,
          _("Python failed to initialize (could not bootstrap lpy package hierarchy)"));
     }
+
+    hack_system_paths();
 
     is_initialized = true;
   } catch (const error_already_set&) {
