@@ -92,19 +92,19 @@ test query Expenses | sed -E 's/0x[0-9a-f]+[[:space:]]*/ADDR    /g'
     Liabilities:MasterCard        $-200.00
 
 --- Input expression ---
-(account =~ /Expenses/)
+match_account(/Expenses/)
 
 --- Text as parsed ---
-(account =~ /Expenses/)
+match_account(/Expenses/)
 
 --- Expression tree ---
-ADDR    O_MATCH (1)
-ADDR    IDENT: account (1)
+ADDR    O_CALL (1)
+ADDR    IDENT: match_account (1)
 ADDR    VALUE: /Expenses/ (1)
 
 --- Compiled tree ---
-ADDR    O_MATCH (1)
-ADDR    IDENT: account (1)
+ADDR    O_CALL (1)
+ADDR    IDENT: match_account (1)
 ADDR    FUNCTION (1)
 ADDR    VALUE: /Expenses/ (1)
 
@@ -128,28 +128,28 @@ test args Expenses and Food | sed -E 's/0x[0-9a-f]+[[:space:]]*/ADDR    /g'
     Liabilities:MasterCard        $-200.00
 
 --- Input expression ---
-((account =~ /Expenses/) & (account =~ /Food/))
+(match_account(/Expenses/) & match_account(/Food/))
 
 --- Text as parsed ---
-((account =~ /Expenses/) & (account =~ /Food/))
+(match_account(/Expenses/) & match_account(/Food/))
 
 --- Expression tree ---
 ADDR    O_AND (1)
-ADDR    O_MATCH (1)
-ADDR    IDENT: account (1)
+ADDR    O_CALL (1)
+ADDR    IDENT: match_account (1)
 ADDR    VALUE: /Expenses/ (1)
-ADDR    O_MATCH (1)
-ADDR    IDENT: account (1)
+ADDR    O_CALL (1)
+ADDR    IDENT: match_account (1)
 ADDR    VALUE: /Food/ (1)
 
 --- Compiled tree ---
 ADDR    O_AND (1)
-ADDR    O_MATCH (1)
-ADDR    IDENT: account (1)
+ADDR    O_CALL (1)
+ADDR    IDENT: match_account (1)
 ADDR    FUNCTION (1)
 ADDR    VALUE: /Expenses/ (1)
-ADDR    O_MATCH (1)
-ADDR    IDENT: account (1)
+ADDR    O_CALL (1)
+ADDR    IDENT: match_account (1)
 ADDR    FUNCTION (1)
 ADDR    VALUE: /Food/ (1)
 

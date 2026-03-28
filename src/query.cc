@@ -473,13 +473,25 @@ query_t::parser_t::try_parse_comparison(const string& term,
  */
 expr_t::ptr_op_t query_t::parser_t::make_match_node(query_t::lexer_t::token_t::kind_t tok_context,
                                                     const string& pattern) {
-  expr_t::ptr_op_t node = new expr_t::op_t(expr_t::op_t::O_MATCH);
+  expr_t::ptr_op_t mask = new expr_t::op_t(expr_t::op_t::VALUE);
+  DEBUG("query.mask", "Mask from string: " << pattern);
+  mask->set_value(mask_t(pattern));
+  DEBUG("query.mask", "Mask is: " << mask->as_value().as_mask().str());
 
+  // Account matching uses an O_CALL to match_account() so that
+  // both the canonical account name and its aliases are tested.
+  if (tok_context == lexer_t::token_t::TOK_ACCOUNT) {
+    expr_t::ptr_op_t node = new expr_t::op_t(expr_t::op_t::O_CALL);
+    expr_t::ptr_op_t ident = new expr_t::op_t(expr_t::op_t::IDENT);
+    ident->set_ident("match_account");
+    node->set_left(ident);
+    node->set_right(mask);
+    return node;
+  }
+
+  expr_t::ptr_op_t node = new expr_t::op_t(expr_t::op_t::O_MATCH);
   expr_t::ptr_op_t ident = new expr_t::op_t(expr_t::op_t::IDENT);
   switch (tok_context) {
-  case lexer_t::token_t::TOK_ACCOUNT:
-    ident->set_ident("account");
-    break;
   case lexer_t::token_t::TOK_PAYEE:
     ident->set_ident("payee");
     break;
@@ -493,11 +505,6 @@ expr_t::ptr_op_t query_t::parser_t::make_match_node(query_t::lexer_t::token_t::k
     assert(false);
     break;
   }
-
-  expr_t::ptr_op_t mask = new expr_t::op_t(expr_t::op_t::VALUE);
-  DEBUG("query.mask", "Mask from string: " << pattern);
-  mask->set_value(mask_t(pattern));
-  DEBUG("query.mask", "Mask is: " << mask->as_value().as_mask().str());
 
   node->set_left(ident);
   node->set_right(mask);

@@ -335,4 +335,35 @@ BOOST_AUTO_TEST_CASE(testOutputStream)
   BOOST_CHECK_EQUAL(string("Assets:Checking"), out.str());
 }
 
+BOOST_AUTO_TEST_CASE(testMatchWithAliases)
+{
+  // Build hierarchy: root -> Expenses -> Food
+  account_t root;
+  account_t* expenses = root.find_account("Expenses");
+  account_t* food = expenses->find_account("Food");
+
+  // No aliases: fullname match works
+  BOOST_CHECK(food->match(mask_t("Expenses:Food")));
+  BOOST_CHECK(food->match(mask_t("Expense")));     // regex substring
+  BOOST_CHECK(!food->match(mask_t("^Assets")));
+
+  // Direct alias on Food
+  food->aliases.insert("nouriture");
+  BOOST_CHECK(food->match(mask_t("nouriture")));
+  BOOST_CHECK(!food->match(mask_t("dépense")));    // not yet
+
+  // Alias on parent Expenses -> should match Food via "dépense:Food"
+  expenses->aliases.insert("dépense");
+  BOOST_CHECK(food->match(mask_t("dépense")));           // via ancestor alias path
+  BOOST_CHECK(food->match(mask_t("^dépense:Food$")));    // exact alternative path
+
+  // Sibling should also match via parent alias
+  account_t* rent = expenses->find_account("Rent");
+  BOOST_CHECK(rent->match(mask_t("dépense")));            // via parent alias -> "dépense:Rent"
+  BOOST_CHECK(!rent->match(mask_t("nouriture")));          // nouriture is alias of Food, not Rent
+
+  // Expenses itself should match its own alias
+  BOOST_CHECK(expenses->match(mask_t("dépense")));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
