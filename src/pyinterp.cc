@@ -172,7 +172,7 @@ void python_interpreter_t::initialize() {
     // case where no PYTHONPATH is set and the on-disk packages are not
     // available.  The guards ensure this is a no-op when the real packages
     // have already been loaded from disk (e.g. via PYTHONPATH or install).
-    PyRun_SimpleString(
+    int result = PyRun_SimpleString(
         "import sys, types\n"
         "if 'lpy.core' not in sys.modules:\n"
         "    _core = sys.modules['_core']\n"
@@ -197,6 +197,10 @@ void python_interpreter_t::initialize() {
         "    for _n in _public:\n"
         "        setattr(_ledger, _n, getattr(_lpy_core, _n))\n"
         "    sys.modules['ledger'] = _ledger\n");
+    if (result == -1) {
+      throw_(std::runtime_error,
+         _("Python failed to initialize (could not bootstrap lpy package hierarchy)"));
+    }
 
     is_initialized = true;
   } catch (const error_already_set&) {
