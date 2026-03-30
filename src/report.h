@@ -761,7 +761,7 @@ public:
                       "             bold if should_bold))\n%/"
                       "%$1 %$2 %$3\n%/"
                       "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
-                      "--------------------------------------------\n");
+                      "-------------- -------------- --------------\n");
 
         OTHER(csv_format_)
             .on(none, "%(quoted(date)),"

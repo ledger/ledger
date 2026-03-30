@@ -7246,7 +7246,7 @@ And with @option{--dc} it becomes this:
           $105            $35            $70  Assets:Cash
            $40            $10            $30  Expenses:Food
              0           $100          $-100  Income:Employer
---------------------------------------------
+-------------- -------------- --------------
           $145           $145              0
 @end smallexample
 
