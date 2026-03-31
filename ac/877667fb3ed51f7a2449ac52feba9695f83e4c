@@ -1,0 +1,9 @@
+src/xact.cc
+  c6af41fd7ebcd498 647-662,664-684,687-730,734-773
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.20",
+  "base_commit_sha": "ac877667fb3ed51f7a2449ac52feba9695f83e4c",
+  "prompts": {}
+}
