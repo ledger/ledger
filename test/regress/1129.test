@@ -1,0 +1,42 @@
+; Regression test for issue #1129: Ignores meta tags with space (BZ#1129)
+; https://github.com/ledger/ledger/issues/1129
+;
+; Meta tags with spaces in the tag name were silently ignored because
+; parse_tags() only recognized the first whitespace-delimited token as
+; a potential tag key.  The fix accumulates words until a colon-ending
+; token is found, allowing multi-word tag names like "Some Tag: value".
+
+2024/01/01 Test transaction
+    ; SomeTag: found
+    ; Some Tag: should-also-be-found
+    ; Foo-Bar: hyphenated
+    Expenses:Food    $10.00
+    Assets:Cash
+
+; Test 1: tag() retrieves both single-word and multi-word tag values
+test reg --format '%(tag("SomeTag"))|%(tag("Some Tag"))|%(tag("Foo-Bar"))\n'
+found|should-also-be-found|hyphenated
+found|should-also-be-found|hyphenated
+end test
+
+; Test 2: has_tag() finds multi-word tags (both postings inherit the tag)
+test reg -l "has_tag('Some Tag')" --format '%(payee)\n'
+Test transaction
+Test transaction
+end test
+
+; Test 3: tags command lists multi-word tag names
+test tags
+Foo-Bar
+Some Tag
+SomeTag
+end test
+
+; Test 4: --pivot works with multi-word tag names
+test bal --pivot "Some Tag"
+                   0  Some Tag:should-also-be-found
+             $-10.00    Assets:Cash
+              $10.00    Expenses:Food
+--------------------
+                   0
+end test
