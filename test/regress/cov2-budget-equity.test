@@ -14,7 +14,7 @@
     Assets:Cash
 
 ; Test budget command (report.cc lines 1741-1748)
-test budget --budget
+test budget --now 2026/03/15 --budget
     $-110.00    $-2700.00     $2590.00    4%  Assets:Cash
       $80.00     $2700.00    $-2620.00    3%  Expenses:Food
 ------------ ------------ ------------ -----
