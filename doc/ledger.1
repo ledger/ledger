@@ -373,6 +373,22 @@ reported in a
 or
 .Ic register
 report.
+.It Fl \-account-value-expr Ar VEXPR
+Set a default valuation expression for all accounts that do not already
+have their own
+.Sy value
+directive.  This is equivalent to adding a
+.Sy value
+directive to every account in the journal, but without modifying the
+journal file.  It takes precedence over
+.Fl \-commodity-value-expr
+and
+.Fl \-value-expr ,
+but is overridden by an account's own
+.Sy value
+directive or a posting's
+.Sy Value
+metadata tag.
 .It Fl \-account-width Ar INT
 Set the width of the account column in the
 .Ic register
@@ -482,6 +498,22 @@ Collapse the account display only if it has a zero balance.
 Use color if the terminal supports it.
 Alias for
 .Fl \-ansi
+.It Fl \-commodity-value-expr Ar VEXPR
+Set a default valuation expression for all commodities that do not
+already have their own
+.Sy value
+directive.  This is equivalent to adding a
+.Sy value
+directive to every commodity in the journal, but without modifying the
+journal file.  It takes precedence over
+.Fl \-value-expr ,
+but is overridden by a commodity's own
+.Sy value
+directive,
+.Fl \-account-value-expr ,
+or a posting's
+.Sy Value
+metadata tag.
 .It Fl \-columns Ar INT
 Make the
 .Ic register
