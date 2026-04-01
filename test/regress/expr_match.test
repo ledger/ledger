@@ -14,6 +14,7 @@
     Assets:Checking
 
 ; Pattern matching in filter expressions
+; Note: "Expenses" is truncated to "Expense" in the output due to column width
 test reg expr "account =~ /Food/"
 24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
 24-Jan-20 Restaurant            Expense:Food:DiningOut       $25.00       $75.00

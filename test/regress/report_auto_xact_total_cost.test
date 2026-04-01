@@ -1,5 +1,5 @@
 ; Test auto xact cost derivation with ANNOTATION_PRICE_NOT_PER_UNIT and negative sign
-; Exercises lines 1125-1127 of xact.cc
+; Exercises auto_xact_t::extend_xact() in xact.cc
 
 = Expenses:Energy
     (Budget:Energy)    1

@@ -1,4 +1,4 @@
-; Test for: No error message if the parser cannot find an included file
+; Test for: Parser produces a clear error message when an included file cannot be found
 
 !include 6188B0EC-does-not-exist.dat
 

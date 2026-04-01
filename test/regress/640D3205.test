@@ -1,4 +1,4 @@
-; Test for: "print" command filters out the "balance assertions"
+; Test for: "print" command preserves balance assertions in its output
 
 2008/12/31 * Interest
     Assets:Brokerage                 $800.00

@@ -1,4 +1,4 @@
-; Test for: ./ledger -f doc/sample.dat -E bal liab' shows the Assets account
+; Test for: -E bal liabilities shows Liabilities accounts including zero-balance ones
 
 = /^Expenses:Books/
   (Liabilities:Taxes)             -0.10
