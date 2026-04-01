@@ -207,6 +207,7 @@ xact_t* instance_t::read_next_directive(bool& error_flag, xact_t* previous_xact)
 
   case ';': // Line comments (multiple characters accepted)
   case '#':
+  case '%':
   case '*':
   case '|':
     break;
@@ -284,6 +285,7 @@ xact_t* instance_t::read_next_directive(bool& error_flag, xact_t* previous_xact)
         apply_year_directive(line + 1);
         break;
       default:
+        throw_(parse_error, _f("Unrecognized source line '%1%'") % line);
         break;
       }
     }
