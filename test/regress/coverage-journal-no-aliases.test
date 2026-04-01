@@ -1,4 +1,4 @@
-; Coverage: journal.cc line 171-172: no_aliases flag
+; Coverage: journal.cc no_aliases flag
 ; When --no-aliases is set, alias expansion is skipped
 
 alias Food=Expenses:Food

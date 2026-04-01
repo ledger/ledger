@@ -1,5 +1,5 @@
-; Test value directive (line 700 of textual_directives.cc)
-; Exercise the journal value_expr setting
+; Test basic balance report
+; Note: no value expression directive is present in the journal
 
 2024/01/01 Test
     Expenses:Food    $10.00

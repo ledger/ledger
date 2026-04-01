@@ -1,4 +1,4 @@
-; Coverage for report.cc lines 626,633,640: averaged_lots/fifo_lots/lifo_lots
+; Coverage for report.cc averaged_lots/fifo_lots/lifo_lots
 ; else branches that return args[0] when the argument is not a balance_t.
 ; A single-commodity amount_t triggers the passthrough path.
 

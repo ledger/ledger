@@ -1,5 +1,6 @@
-; Test --day-break option
-; Covers session.cc line 310 (day_break option)
+; Test --day-break option parsing in session.cc
+; Note: --day-break only affects timeclock entries; with regular
+; transactions it is accepted but has no effect on output
 
 2024/01/15 Test1
     Expenses:Food    $30.00

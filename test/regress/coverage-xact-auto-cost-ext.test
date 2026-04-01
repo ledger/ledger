@@ -1,8 +1,8 @@
-; Coverage test for xact.cc lines 1119-1134: auto xact cost handling
+; Coverage test for xact.cc auto xact cost handling
 ; When an auto transaction matches a posting with total cost (@@),
 ; the auto-generated posting inherits the price annotation.
-; Line 1126: amt.sign() < 0 triggers cost negation (in_place_negate)
-; Line 1127: in_place_negate() on the cost
+; amt.sign < 0 triggers cost negation (in_place_negate)
+; in_place_negate on the cost
 
 = /^Expenses/
     [Assets:Budget:$account]    -1.0

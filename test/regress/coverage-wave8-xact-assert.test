@@ -1,5 +1,5 @@
 ; Coverage tests for textual_xacts.cc xact-level assert failure
-; Targets lines 948-949 (xact assert failure throws error)
+; Targets (xact assert failure throws error)
 
 2024/01/01 Test Payee
     assert 1 == 0

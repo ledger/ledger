@@ -1,5 +1,5 @@
 ; Test boolean < amount comparison triggers error
-; Covers value.cc line 877 (BOOLEAN < non-boolean break path)
+; Covers value.cc (BOOLEAN < non-boolean break path)
 
 2024/01/01 Test
     ; test: yes

@@ -1,4 +1,4 @@
-; Coverage for item.cc line 392: get_addr format function
+; Coverage for item.cc get_addr format function
 ; Note: addr returns a pointer value which varies per run so we can't test output
 ; This test just exercises the code path
 

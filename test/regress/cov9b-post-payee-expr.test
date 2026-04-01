@@ -1,4 +1,4 @@
-; Coverage for post.cc line 170: get_payee accessor function
+; Coverage for post.cc get_payee accessor function
 ; Use payee in a value expression to trigger the post_t lookup
 
 2024/01/01 Grocery Store

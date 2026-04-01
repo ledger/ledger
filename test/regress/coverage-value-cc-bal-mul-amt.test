@@ -1,4 +1,4 @@
-; Test value.cc: operator*= BALANCE * AMOUNT-with-commodity (line 659)
+; Test value.cc: operator*= BALANCE * AMOUNT-with-commodity
 ; When a multi-commodity balance is multiplied by an amount that has a commodity
 
 2024/01/15 Purchase
@@ -7,7 +7,7 @@
     Assets:Checking  $-50.00
     Assets:Savings  -30 EUR
 
-; BALANCE * AMOUNT-with-commodity error (line 659 break)
+; BALANCE * AMOUNT-with-commodity error (break)
 test bal "Expenses:Both" --format "%(display_total * to_amount(\"5 EUR\"))\n" --no-total -> 1
 __ERROR__
 While evaluating value expression:

@@ -1,5 +1,5 @@
-; Coverage for format.cc line 197: default case in format flag parsing
-; Also covers line 116: whitespace backtrack in expr parsing
+; Coverage for format.cc default case in format flag parsing
+; Also covers whitespace backtrack in expr parsing
 
 2024/01/01 Test
     Expenses:Food    $10.00

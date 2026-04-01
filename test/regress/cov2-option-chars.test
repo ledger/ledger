@@ -8,37 +8,37 @@
     Expenses:Gas             $20.00
     Assets:Cash
 
-; Test -j (amount_data) option (line 1311)
+; Test -j (amount_data) option
 test reg Expenses -j
 2024-01-01 10
 2024-02-01 20
 end test
 
-; Test -J (total_data) option (line 1180, 1392)
+; Test -J (total_data) option
 test reg Expenses -J
 2024-01-01 10
 2024-02-01 30
 end test
 
-; Test -F (format) option (line 1167-1169)
+; Test -F (format) option
 test reg Expenses -F "%(payee)\n"
 Payee
 Payee Two
 end test
 
-; Test --no-rounding option (line 1336)
+; Test --no-rounding option
 test reg Expenses --no-rounding
 24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
 24-Feb-01 Payee Two             Expenses:Gas                 $20.00       $30.00
 end test
 
-; Test --deviation option (line 1267) with monthly
+; Test --deviation option with monthly
 test reg Expenses --monthly --deviation
 24-Jan-01 - 24-Jan-31           Expenses:Food                $10.00            0
 24-Feb-01 - 24-Feb-29           Expenses:Gas                 $20.00      $-10.00
 end test
 
-; Test --no-titles option (line 1337)
+; Test --no-titles option
 test bal Expenses --no-titles
               $30.00  Expenses
               $10.00    Food

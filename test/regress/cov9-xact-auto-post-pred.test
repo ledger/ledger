@@ -1,4 +1,4 @@
-; Coverage for xact.cc line 918: post_pred function
+; Coverage for xact.cc post_pred function
 ; Tests the O_MATCH case in post_pred via auto transactions
 
 = /Food/

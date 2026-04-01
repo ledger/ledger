@@ -1,5 +1,5 @@
 ; Test percent * percent keeps % commodity
-; Covers amount.cc lines 489-490 (% commodity propagation in multiply)
+; Covers amount.cc (% commodity propagation in multiply)
 
 2024/01/15 Test
     Expenses:Food    19.00%

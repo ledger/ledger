@@ -1,4 +1,4 @@
-; Coverage for report.cc lines 1058-1076: type conversion functions
+; Coverage for report.cc type conversion functions
 ; fn_to_amount, fn_to_balance, fn_to_string, fn_to_mask, fn_to_sequence
 ; Exercises these functions via format expressions in register reports
 
@@ -6,22 +6,22 @@
     Expenses:Food    $10.00
     Assets:Cash
 
-; fn_to_amount (line 1058-1060)
+; fn_to_amount
 test reg --format '%(to_amount(amount))\n' Expenses
 $10.00
 end test
 
-; fn_to_balance (line 1062-1064)
+; fn_to_balance
 test reg --format '%(to_balance(amount))\n' Expenses
 $10.00
 end test
 
-; fn_to_string (line 1066-1068)
+; fn_to_string
 test reg --format '%(to_string(account))\n' Expenses
 Expenses:Food
 end test
 
-; fn_to_mask (line 1070-1072)
+; fn_to_mask
 test reg --format '%(to_mask("Food"))\n' Expenses
 Food
 end test

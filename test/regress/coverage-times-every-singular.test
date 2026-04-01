@@ -1,5 +1,5 @@
 ; Test "every" with singular unit tokens
-; (exercises handle_every_token else branch in times.cc: lines 1138-1159)
+; (exercises handle_every_token else branch in times.cc: )
 ; Tests TOK_YEAR, TOK_QUARTER, TOK_MONTH, TOK_WEEK, TOK_DAY singular forms
 
 2024/01/15 Payee A

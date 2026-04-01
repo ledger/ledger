@@ -1,4 +1,4 @@
-; Coverage for report.cc line 1105: fn_underline
+; Coverage for report.cc fn_underline
 ; Returns the string "underline" for use in ansify_if coloring
 
 2024/01/01 Test

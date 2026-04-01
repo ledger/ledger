@@ -1,6 +1,6 @@
-; Coverage test for xact.cc lines 1050-1051
+; Coverage test for xact.cc
 ; auto_xact_t posting with null amount and an amount_expr that returns a long
-; Also covers xact.cc line 1053 (amount_error for non-simple amount)
+; Also covers xact.cc (amount_error for non-simple amount)
 
 = Expenses
     (Budget:Expenses)    (2 + 3)

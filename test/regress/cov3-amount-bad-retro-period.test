@@ -1,5 +1,5 @@
 ; Test retroactive decimal comma switch with invalid thousand-mark period
-; Covers amount.cc lines 1202-1205 (retroactive switch, bad period spacing)
+; Covers amount.cc (retroactive switch, bad period spacing)
 
 2024/01/15 Test
     Expenses:Food    1.23,45 EUR

@@ -1,4 +1,4 @@
-; Coverage test for post.cc lines 162-165, 226-228
+; Coverage test for post.cc
 ; Tests get_code (returns xact code) and get_has_cost for postings.
 ; The code field comes from the parent transaction.
 ; has_cost indicates whether a posting has a cost annotation.

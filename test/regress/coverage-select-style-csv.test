@@ -1,4 +1,4 @@
-; Coverage test for select.cc lines 391-393
+; Coverage test for select.cc
 ; Tests select command with style clause (currently no-op styles)
 
 2024/01/01 Test

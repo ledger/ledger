@@ -1,4 +1,4 @@
-; Coverage test for post.cc lines 211-213, 221
+; Coverage test for post.cc
 ; Test get_commodity and get_commodity_is_primary.
 ; The commodity expression returns the commodity of the amount.
 ; The primary expression returns whether the commodity is the primary one.

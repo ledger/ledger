@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 612-613
+; Coverage test for xact.cc
 ; Tests balanced virtual null posting when virtual_balance is a long integer.
 ; When balanced virtual postings use commodityless amounts, the virtual_balance
 ; may be stored as a long, requiring conversion via to_amount().

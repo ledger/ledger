@@ -1,5 +1,5 @@
 ; Test annotation print with value expression
-; Covers annotate.cc lines 250-251 (value_expr printing in annotation_t::print)
+; Covers annotate.cc (value_expr printing in annotation_t::print)
 
 2024/01/15 Buy
     Assets:Stocks    10 AAPL {$150} ((market(amount, date, "AAPL")))

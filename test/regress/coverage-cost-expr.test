@@ -1,4 +1,4 @@
-; Coverage test for textual_xacts.cc lines 571-572
+; Coverage test for textual_xacts.cc
 ; Cost as a value expression using (expr)
 
 2024/01/01 Buy stock with calculated cost

@@ -1,4 +1,4 @@
-; Coverage for textual_directives.cc lines 445-465: account assert/check directive
+; Coverage for textual_directives.cc account assert/check directive
 
 account Expenses:Food
     assert amount > 0

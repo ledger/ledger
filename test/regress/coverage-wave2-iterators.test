@@ -1,6 +1,6 @@
 ; Wave 2 coverage tests for iterators.cc
-; Covers: sorted_accounts_iterator (lines 196-198, 223-225),
-; posts_commodities_iterator (lines 108, 109, 131, 138)
+; Covers: sorted_accounts_iterator
+; posts_commodities_iterator
 
 P 2024/01/01 EUR $1.10
 P 2024/02/01 EUR $1.12

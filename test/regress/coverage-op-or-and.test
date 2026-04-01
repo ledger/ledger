@@ -1,5 +1,5 @@
 ; Test op.cc: O_OR and O_AND calc paths
-; Exercises O_OR (lines 364-368), O_AND (lines 357-358) in calc()
+; Exercises O_OR, O_AND in calc
 ; Also exercises token.cc: or/and/not keywords, && and || operators
 
 test eval "true or false"

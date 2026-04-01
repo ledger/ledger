@@ -1,11 +1,10 @@
 ; Coverage tests for value.cc in_place_cast (type conversions)
-; Exercises lines 1141-1352
 
 2024/01/01 Test
     Expenses:Food    $10.00
     Assets:Cash
 
-; Boolean to integer - exercises line 1178
+; Boolean to integer - exercises
 test eval 'to_int(true)'
 1
 end test
@@ -14,7 +13,7 @@ test eval 'to_int(false)'
 0
 end test
 
-; Boolean to amount - exercises line 1181
+; Boolean to amount - exercises
 test eval 'to_amount(true)'
 1
 end test
@@ -23,7 +22,7 @@ test eval 'to_amount(false)'
 0
 end test
 
-; Boolean to string - exercises line 1184
+; Boolean to string - exercises
 test eval 'to_string(true)'
 true
 end test
@@ -32,27 +31,27 @@ test eval 'to_string(false)'
 false
 end test
 
-; Integer to string - exercises line 1225
+; Integer to string - exercises
 test eval 'to_string(42)'
 42
 end test
 
-; Integer to amount - exercises line 1219
+; Integer to amount - exercises
 test eval 'to_amount(42)'
 42
 end test
 
-; Amount to integer - exercises lines 1236-1240
+; Amount to integer - exercises
 test eval 'to_int($10.00)'
 10
 end test
 
-; Amount to string - exercises line 1251
+; Amount to string - exercises
 test eval 'to_string($10.00)'
 $10.00
 end test
 
-; String to integer - exercises lines 1304-1306
+; String to integer - exercises
 test eval 'to_int("42")'
 42
 end test
@@ -61,32 +60,32 @@ test eval 'to_int("-5")'
 -5
 end test
 
-; String to amount - exercises line 1311
+; String to amount - exercises
 test eval 'to_amount("$25.00")'
 $25.00
 end test
 
-; String to date - exercises line 1320
+; String to date - exercises
 test eval 'to_date("2024/01/15")'
 2024/01/15
 end test
 
-; String to datetime - exercises line 1323
+; String to datetime - exercises
 test eval 'to_datetime("2024/01/15 08:00:00")'
 2024/01/15 08:00:00
 end test
 
-; String to mask - exercises lines 1326-1330
+; String to mask - exercises
 test eval 'to_mask("foo")'
 /foo/
 end test
 
-; Mask to string - exercises line 1340
+; Mask to string - exercises
 test eval 'to_string(to_mask("bar"))'
 bar
 end test
 
-; Date to string - exercises line 1197
+; Date to string - exercises
 test eval 'to_string([2024/01/15])'
 2024/01/15
 end test

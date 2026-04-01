@@ -1,4 +1,4 @@
-; Coverage for report.cc line 1548: case 'j' break in FUNCTION lookup
+; Coverage for report.cc case 'j' break in FUNCTION lookup
 ; 'junk' starts with 'j', not justify/join -> break at 1548
 ; No option starts with 'j', so lookup returns null -> error
 

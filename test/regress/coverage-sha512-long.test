@@ -1,6 +1,6 @@
 ; Tests for sha512.cc: SHA512 buffer handling with long input
-; Covers: lines 334-351 (SHA512_Update partial buffer fill and multi-block transform)
-;         lines 397-400 (SHA512_Final padding when buffer has residual data)
+; Covers: (SHA512_Update partial buffer fill and multi-block transform)
+;         (SHA512_Final padding when buffer has residual data)
 ; The long payee name and deep account hierarchy ensure the hash input
 ; exceeds 128 bytes (one SHA512 block), forcing the transform loop.
 

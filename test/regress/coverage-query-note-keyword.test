@@ -1,6 +1,6 @@
 ; Coverage test for query.cc: note keyword in query
-; Exercises query.cc lines 219-220: 'note' keyword for TOK_NOTE
-; and TOK_NOTE context in parse_query_term lines 332-333
+; Exercises query.cc 'note' keyword for TOK_NOTE
+; TOK_NOTE context in parse_query_term
 
 2024/01/01 Grocery Store
     ; Category: food

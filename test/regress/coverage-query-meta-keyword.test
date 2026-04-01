@@ -1,4 +1,4 @@
-; Test query parser with 'meta' keyword for metadata matching (covers query.cc line 224)
+; Test query parser with 'meta' keyword for metadata matching (covers query.cc )
 ; The 'meta' keyword should work the same as 'tag' keyword
 
 2024/01/15 Grocery Store

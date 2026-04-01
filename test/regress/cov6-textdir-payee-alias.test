@@ -1,4 +1,4 @@
-; Coverage for textual_directives.cc lines 527-556: payee directive with alias and uuid
+; Coverage for textual_directives.cc payee directive with alias and uuid
 
 payee Grocery Store
     alias Grocer

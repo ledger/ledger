@@ -1,5 +1,5 @@
-; Coverage for filters.cc lines 372 (AMOUNT case in handle_value)
-; and line 377 (BALANCE/SEQUENCE compound value assignment)
+; Coverage for filters.cc (AMOUNT case in handle_value)
+; (BALANCE/SEQUENCE compound value assignment)
 ; When subtotaling with multiple commodities, the balance type
 ; triggers the compound_value path.
 

@@ -1,4 +1,4 @@
-; Coverage test for textual_directives.cc line 538-539
+; Coverage test for textual_directives.cc
 ; Payee directive with sub-directive missing argument
 
 payee Test Store

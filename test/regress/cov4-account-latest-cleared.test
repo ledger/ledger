@@ -1,5 +1,5 @@
-; Test account_t::lookup for latest_cleared (line 457-458 of account.cc)
-; and earliest/latest (line 436-437, 459-460 of account.cc)
+; Test account_t::lookup for latest_cleared
+; earliest/latest
 
 2024/01/01 * Test1
     Expenses:Food    $10.00

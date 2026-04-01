@@ -1,4 +1,4 @@
-; Coverage test for times.cc line 1762
+; Coverage test for times.cc
 ; "since" alone causes unexpected end of expression
 
 2024/01/01 Test

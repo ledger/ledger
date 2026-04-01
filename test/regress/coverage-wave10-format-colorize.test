@@ -1,4 +1,4 @@
-; Coverage tests for format.cc lines 361-380 (colorize/ansify_if in format elements)
+; Coverage tests for format.cc (colorize/ansify_if in format elements)
 ; Uses --bold-if to trigger the colorize_op code path in format element construction
 ; Uses --no-color to suppress actual ANSI output so test output matches cleanly
 

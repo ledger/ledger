@@ -1,4 +1,4 @@
-; Coverage for times.cc line 1213: handle_date_token for standalone TOK_A_WDAY
+; Coverage for times.cc handle_date_token for standalone TOK_A_WDAY
 ; A bare weekday name "monday" used as a period filter
 
 2024/01/01 Monday Entry

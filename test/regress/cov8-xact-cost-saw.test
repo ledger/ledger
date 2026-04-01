@@ -1,4 +1,4 @@
-; Coverage for xact.cc lines 241-242: saw_cost flag in finalize
+; Coverage for xact.cc saw_cost flag in finalize
 
 2024/01/01 Buy
     Assets:Stock    10 AAPL @ $100.00

@@ -1,4 +1,4 @@
-; Test get_code with xact code (line 161-165 of post.cc)
+; Test get_code with xact code
 ; Exercise the code accessor path
 
 2024/01/01 (ABC123) Test

@@ -1,6 +1,6 @@
 ; Test session.cc: fn_int and fn_str functions
-; Exercises fn_int (line 261-262), fn_str (line 264-265),
-; and their lookups (lines 372-373, 384-385)
+; Exercises fn_int, fn_str
+; their lookups
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.75

@@ -1,4 +1,4 @@
-; Coverage for textual_directives.cc line 307: apply tag with no argument
+; Coverage for textual_directives.cc apply tag with no argument
 
 apply tag
 

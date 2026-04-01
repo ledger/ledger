@@ -1,5 +1,5 @@
 ; Coverage test for draft.cc template_command
-; Exercises draft.cc lines 47-83: xact_template_t::dump()
+; Exercises draft.cc xact_template_t::dump
 ; Also exercises code, note, and post template dump paths
 
 2024/01/15 * Grocery Store

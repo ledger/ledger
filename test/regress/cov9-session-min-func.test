@@ -1,5 +1,5 @@
 ; Test min() function
-; Covers session.cc line 259 (fn_min)
+; Covers session.cc (fn_min)
 
 2024/01/15 Small
     Expenses:Food    10 APPLES

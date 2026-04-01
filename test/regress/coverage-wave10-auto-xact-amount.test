@@ -1,4 +1,4 @@
-; Test coverage for xact.cc lines 863, 867-870
+; Test coverage for xact.cc
 ; auto_xact_t extend_xact where amount_expr result is_long() path
 
 = /Expenses/

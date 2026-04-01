@@ -1,4 +1,4 @@
-; Coverage tests for report.cc functions (lines 896-976, 1417-1554)
+; Coverage tests for report.cc functions
 ; Tests: lot_date, lot_price, lot_tag, to_* conversion functions
 
 ; Test lot_date, lot_price, lot_tag via expressions
@@ -52,7 +52,7 @@ test reg --format "%(to_date(date))\n" --limit "account =~ /Brokerage/"
 2024/02/01
 end test
 
-; Test get_at with index 0 non-sequence (line 616-618)
+; Test get_at with index 0 non-sequence
 test reg --format "%(get_at(amount, 0))\n" Assets:Brokerage
 10 AAPL {$150.00} [2024/01/01] (lot1)
 5 AAPL {$160.00} [2024/02/01] (lot2)

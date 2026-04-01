@@ -1,7 +1,7 @@
-; Coverage test for times.cc line 1266
+; Coverage test for times.cc
 ; Exercise unexpected token in period parsing (default case)
 ; An unrecognized word that falls through all keyword checks
-; becomes UNKNOWN and triggers unexpected() at line 1266
+; becomes UNKNOWN and triggers unexpected
 
 2024/01/01 Test
     Expenses:Food            $10.00

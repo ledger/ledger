@@ -1,4 +1,4 @@
-; Coverage for iterators.cc lines 110-111: duplicate price in commodities iterator
+; Coverage for iterators.cc duplicate price in commodities iterator
 
 P 2024/01/01 AAPL $150
 P 2024/01/01 AAPL $150

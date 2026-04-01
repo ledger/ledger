@@ -1,4 +1,4 @@
-; Coverage test for textual_xacts.cc lines 470-476
+; Coverage test for textual_xacts.cc
 ; Deferred posting with <account> syntax
 
 2024/01/01 Test deferred

@@ -1,5 +1,5 @@
 ; Test query parser with 'note' and 'code' keywords
-; Covers query.cc lines 220, 214 and parse_query_term code/note/payee token handling
+; Covers query.cc and parse_query_term code/note/payee token handling
 
 2024/01/15 (ABC) Grocery Store
     ; This is a food purchase

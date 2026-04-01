@@ -1,4 +1,4 @@
-; Coverage tests for xact.cc lines 283-307
+; Coverage tests for xact.cc
 ; Fixated per-unit price with >2 commodities triggers the recompute path
 
 2024/01/01 Three Commodity Fixated

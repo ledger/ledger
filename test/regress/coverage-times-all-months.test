@@ -1,5 +1,5 @@
 ; Test all month name parsing (string_to_month_of_year)
-; (exercises lines 225-252 in times.cc)
+; (exercises in times.cc)
 ; Tests every month abbreviation: jan, feb, mar, apr, may, jun,
 ; jul, aug, sep, oct, nov, dec
 

@@ -1,4 +1,4 @@
-; Coverage test for csv.cc lines 189-191:
+; Coverage test for csv.cc
 ; CSV import with debit column (amount negation)
 
 account Expenses:Unknown

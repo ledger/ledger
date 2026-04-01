@@ -1,4 +1,4 @@
-; Coverage test for value.cc lines 1568, 1580-1588
+; Coverage test for value.cc
 ; Exchange/market value with --exchange flag
 
 P 2024/01/01 EUR $1.10

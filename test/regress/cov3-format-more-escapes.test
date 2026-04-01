@@ -1,5 +1,5 @@
 ; Test format with backslash-backslash escape
-; Covers format.cc lines 180-182 (backslash escape producing literal backslash)
+; Covers format.cc (backslash escape producing literal backslash)
 
 2024/01/15 Test
     Expenses:Food    $50.00

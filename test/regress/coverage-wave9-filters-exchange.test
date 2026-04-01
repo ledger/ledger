@@ -1,4 +1,4 @@
-; Test coverage for filters.cc lines 342-376
+; Test coverage for filters.cc
 ; --exchange triggers changed_value_posts paths
 
 P 2024/01/01 EUR $1.10

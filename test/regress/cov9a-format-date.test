@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 885-898
+; Coverage test for report.cc
 ; fn_format_date with custom format, fn_format_datetime with custom format
 
 2024/01/01 Test

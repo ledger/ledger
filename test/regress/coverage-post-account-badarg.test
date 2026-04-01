@@ -1,4 +1,4 @@
-; Coverage test for post.cc lines 291-293
+; Coverage test for post.cc
 ; Tests get_account error when argument is neither string, mask, nor long.
 ; account(30) passes 30 as an amount (not a long), which is rejected.
 

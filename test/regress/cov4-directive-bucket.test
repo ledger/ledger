@@ -1,5 +1,5 @@
-; Test bucket directive (line 812 of textual_directives.cc)
-; and default_account_directive (line 113)
+; Test bucket directive
+; default_account_directive
 
 bucket Assets:Checking
 

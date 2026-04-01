@@ -1,5 +1,5 @@
 ; Coverage tests for report.cc command lookups (accounts, payees, tags, commodities)
-; Targets: report.cc lines 1600-1603, 1634-1637, 1670-1673, 1692-1695
+; Targets: report.cc
 
 2024/01/15 Grocery Store
     ; MyTag: food

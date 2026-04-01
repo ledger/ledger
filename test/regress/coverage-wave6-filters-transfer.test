@@ -1,4 +1,4 @@
-; Tests for filters.cc transfer_details (lines 1193, 1232, 1306-1308)
+; Tests for filters.cc transfer_details
 ; Covers SET_PAYEE, SET_ACCOUNT, SET_DATE paths
 
 2024/01/01 Grocery

@@ -1,9 +1,9 @@
-; Regression test for issue #618: --anon loses all structural information (BZ#618)
+; Regression test for issue #618: --anon with custom format output
 ; https://github.com/ledger/ledger/issues/618
 ;
-; The --anon flag should anonymize account names and payees (replacing them
-; with random hex strings) while preserving structural information: dates,
-; amounts, and account hierarchy (colon separators).
+; Verifies that --anon works correctly with a format that outputs only dates
+; and amounts. (Account name and payee anonymization are not exercised by
+; this format string.)
 
 2024/01/01 Grocery Store
     Expenses:Food    $50.00

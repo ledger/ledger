@@ -1,4 +1,4 @@
-; Test coverage for post.cc lines 169, 189, 196, 235, 242, 253, 262
+; Test coverage for post.cc
 ; Exercises get_payee, get_magnitude, get_amount (null), get_cost (null amount),
 ; get_price, get_total, get_count
 

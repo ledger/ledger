@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 1031-1032
+; Coverage test for xact.cc
 ; Tests the EXPR_GENERAL path in auto transactions.
 ; When an auto transaction has an 'eval' or 'expr' directive, it is
 ; evaluated for side effects (the result is discarded).

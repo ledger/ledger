@@ -1,5 +1,5 @@
-; Test resolve_expr error (line 545 of post.cc)
-; When an amount expression results in non-amount value
+; Test resolve_expr with amount expression
+; Amount expression (1+2) is successfully resolved to 3
 
 2024/01/01 Test
     Expenses:Food    (1+2)

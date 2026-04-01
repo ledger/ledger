@@ -1,5 +1,5 @@
 ; Test auto transaction check expression that fails (warning path)
-; Targets: xact.cc lines 799-801 (check warning path)
+; Targets: xact.cc (check warning path)
 
 = /Expenses/
     check amount < $10

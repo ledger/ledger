@@ -1,4 +1,4 @@
-; Coverage for op.cc lines 519-522: exception re-throw in calc_call
+; Coverage for op.cc exception re-throw in calc_call
 ; When a function call throws, the catch block adds error context
 ; "While calling function..." and re-throws
 

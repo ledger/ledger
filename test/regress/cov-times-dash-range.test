@@ -1,4 +1,4 @@
-; Coverage test for times.cc lines 1217-1220
+; Coverage test for times.cc
 ; Exercise dash operator in period parsing (date range)
 ; Covers handle_dash_operator
 

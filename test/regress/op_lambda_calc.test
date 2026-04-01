@@ -14,7 +14,7 @@ test eval "my_add(a, b) = a + b; my_add(3, 7)"
 10
 end test
 
-; Lambda returning lambda
+; Named function definition and call
 test eval "my_f(x) = x * 3; my_f(4)"
 12
 end test

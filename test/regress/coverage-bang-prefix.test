@@ -1,4 +1,4 @@
-; Coverage test for textual_directives.cc line 778-779
+; Coverage test for textual_directives.cc
 ; ! prefix on directive
 
 !account Expenses:Food

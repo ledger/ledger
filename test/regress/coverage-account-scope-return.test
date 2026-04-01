@@ -1,4 +1,4 @@
-; Coverage: account.cc line 260-261: get_account returning scope_value
+; Coverage: account.cc get_account returning scope_value
 ; Uses a format expression that returns account as scope via parent
 
 2024/01/15 * Grocery

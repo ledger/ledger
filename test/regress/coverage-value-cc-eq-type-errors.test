@@ -1,5 +1,5 @@
 ; Test value.cc: is_equal_to type mismatch break paths
-; Exercises various break+throw paths in is_equal_to (lines 764-850)
+; Exercises various break+throw paths in is_equal_to
 
 2024/01/15 Purchase
     Expenses:Both    $50.00
@@ -7,7 +7,7 @@
     Assets:Checking  $-50.00
     Assets:Savings  -30 EUR
 
-; DATE == INTEGER error (line 769 break)
+; DATE == INTEGER error (break)
 test eval "[2024/01/15] == 5" -> 1
 __ERROR__
 While evaluating value expression:
@@ -17,7 +17,7 @@ While comparing equality of 2024/01/15 and 5:
 Error: Cannot compare a date to an amount
 end test
 
-; BOOLEAN == AMOUNT error (line 759 break)
+; BOOLEAN == AMOUNT error (break)
 test eval "true == 5" -> 1
 __ERROR__
 While evaluating value expression:
@@ -27,7 +27,7 @@ While comparing equality of 1 and 5:
 Error: Cannot compare a boolean to an amount
 end test
 
-; INTEGER == STRING error (line 780-782 break)
+; INTEGER == STRING error (break)
 ; Note: parser may convert literals, so this might be AMOUNT vs STRING
 test eval "5 == \"text\"" -> 1
 __ERROR__
@@ -38,7 +38,7 @@ While comparing equality of 5 and text:
 Error: Cannot compare an amount to a string
 end test
 
-; STRING == INTEGER error (line 835-837 break)
+; STRING == INTEGER error (break)
 test eval "\"text\" == 5" -> 1
 __ERROR__
 While evaluating value expression:
@@ -48,7 +48,7 @@ While comparing equality of text and 5:
 Error: Cannot compare a string to an amount
 end test
 
-; MASK == INTEGER error (line 842 break)
+; MASK == INTEGER error (break)
 test eval "/food/ == 5" -> 1
 __ERROR__
 While evaluating value expression:
@@ -58,7 +58,7 @@ While comparing equality of /food/ and 5:
 Error: Cannot compare a regexp to an amount
 end test
 
-; DATETIME == AMOUNT error (line 764 break)
+; DATETIME == AMOUNT error (break)
 test eval "to_datetime(\"2024/01/15 10:00:00\") == 5" -> 1
 __ERROR__
 While evaluating value expression:
@@ -68,7 +68,7 @@ While comparing equality of 2024/01/15 10:00:00 and 5:
 Error: Cannot compare a date/time to an amount
 end test
 
-; BALANCE == STRING error (lines 806-808 break)
+; BALANCE == STRING error (break)
 ; Need a multi-commodity balance to avoid single-amount optimization
 test bal "Expenses:Both" --format "%(display_total == \"text\")\n" --no-total -> 1
 __ERROR__

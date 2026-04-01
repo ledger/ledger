@@ -1,7 +1,7 @@
 ; Coverage test for op.cc: print() method paths via select column expressions
-; Exercises: print O_ADD (lines 648-653), print O_DIV (lines 669-674),
-;   print O_MATCH (lines 793-798), print IDENT (lines 624-625),
-;   print VALUE (lines 620-621)
+; Exercises: print O_ADD, print O_DIV
+;   print O_MATCH, print IDENT
+;   print VALUE
 ; Each select column calls as_expr(column)->print(formatter) which exercises
 ; the print() method for whatever operator type the column expression represents.
 

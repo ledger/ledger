@@ -1,4 +1,4 @@
-; Coverage test for op.cc lines 519-523: exception handling in calc_call
+; Coverage test for op.cc exception handling in calc_call
 ; A function call with wrong argument type triggers the catch block
 ; which adds error context about the function name and arguments
 

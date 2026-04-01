@@ -1,4 +1,4 @@
-; Test token parsing for QUERY (?) and COLON (:) tokens (lines 331-338 of token.cc)
+; Test token parsing for QUERY (?) and COLON (:) tokens
 ; Exercise the ternary operator ? : path
 
 2024/01/01 Test

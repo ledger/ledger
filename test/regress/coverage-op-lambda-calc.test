@@ -1,5 +1,5 @@
 ; Coverage test for op.cc: O_LAMBDA calc path and additional lambda behaviors
-; Exercises: O_LAMBDA calc, call_lambda (lines 445-479),
+; Exercises: O_LAMBDA calc, call_lambda
 ;   find_definition recursion, multi-parameter lambdas
 
 define double(x) = x * 2

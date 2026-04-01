@@ -1,4 +1,4 @@
-; Coverage test for times.cc lines 854-865
+; Coverage test for times.cc
 ; Exercise month name with year in period parsing
 ; "january 2024" exercises TOK_A_MONTH followed by TOK_INT for year
 

@@ -2,8 +2,8 @@
 ; Lines: 72 91 102 104-106 109
 ;
 ; quotes.cc handles downloading prices via getquote command.
-; Lines 72-91: building the getquote command string
-; Lines 102-109: parsing the result and writing to price_db
+; building the getquote command string
+; parsing the result and writing to price_db
 ;
 ; We cannot actually test the download path in a regression test since
 ; getquote is an external command. Instead we test the commodity
@@ -11,7 +11,7 @@
 ; commodity_quote_from_script) and the price DB read/write path.
 ;
 ; The test here verifies the price lookups work correctly even when
-; no getquote is available (the NOMARKET flag path, line 120).
+; no getquote is available (the NOMARKET flag path, )
 
 commodity $
 commodity AAPL

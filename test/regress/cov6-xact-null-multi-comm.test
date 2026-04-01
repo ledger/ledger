@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 590-591
+; Coverage test for xact.cc
 ; Tests null posting with a multi-commodity balance.
 ; When a transaction has postings in multiple commodities and one null
 ; posting, the null post must be split into multiple balancing posts.

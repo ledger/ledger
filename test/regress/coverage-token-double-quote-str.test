@@ -1,4 +1,4 @@
-; Coverage test for token.cc lines 230-271
+; Coverage test for token.cc
 ; Tests parsing double-quoted string in expression that fails amount parse
 ; and falls through to the string parse path
 

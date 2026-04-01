@@ -1,4 +1,4 @@
-; Test commodity price history with multiple prices (covers commodity.cc lines 38-55)
+; Test commodity price history with multiple prices (covers commodity.cc )
 ; Exercises add_price for non-reflexive commodity pricing
 
 P 2024/01/01 EUR $1.10

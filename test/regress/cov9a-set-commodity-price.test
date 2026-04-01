@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 953-956
+; Coverage test for report.cc
 ; fn_set_commodity_price sets a price for a commodity
 
 2024/01/01 Test

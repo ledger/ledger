@@ -1,4 +1,4 @@
-; Coverage test for annotate.cc lines 223-224, 231-237, 265
+; Coverage test for annotate.cc
 ; Tests printing annotated commodities with total cost
 
 2024/01/01 Buy shares

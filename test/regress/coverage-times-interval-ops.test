@@ -1,9 +1,9 @@
 ; Test date_interval_t operations: stabilize, find_period, operator++
-; Exercises stabilize (lines 1345-1461)
-; find_period (lines 1463-1534)
-; operator++ (lines 1536-1558)
-; resolve_end (lines 1300-1315)
-; find_nearest (lines 1317-1343)
+; Exercises stabilize
+; find_period
+; operator++
+; resolve_end
+; find_nearest
 ; These are triggered by period expressions combining duration with ranges
 
 2024/01/15 Payee A

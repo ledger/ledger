@@ -1,7 +1,7 @@
 ; Test value.h: balance-type value operations
 ; Exercises value_t operators with BALANCE type arguments
-; Targets: value.cc lines 421-435 (BALANCE+=), 564-581 (BALANCE-=),
-;          645-663 (BALANCE*=), 721-739 (BALANCE/=)
+; Targets: value.cc (BALANCE+=), (BALANCE-=)
+;          (BALANCE*=), (BALANCE/=)
 
 P 2024/01/01 EUR $1.10
 

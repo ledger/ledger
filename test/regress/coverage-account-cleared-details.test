@@ -1,4 +1,4 @@
-; Coverage: account.cc lines 676-721: xdata details_t::update
+; Coverage: account.cc xdata details_t::update
 ; Tests cleared/virtual post counting and date tracking
 
 2024/01/15 * Payee1

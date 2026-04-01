@@ -1,5 +1,5 @@
-; Test xact.cc: get_code (line 599) and get_payee (line 551) expressions
-; Also tests get_magnitude (line 603)
+; Test xact.cc: get_code and get_payee expressions
+; Also tests get_magnitude
 
 2024/01/15 (#1234) Grocery Store
     Expenses:Food        $50.00

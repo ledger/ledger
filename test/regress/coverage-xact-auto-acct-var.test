@@ -1,5 +1,5 @@
 ; Test auto transaction with $variable in account name
-; Targets: xact.cc lines 857-866 (regex_search in account name)
+; Targets: xact.cc (regex_search in account name)
 
 = /Expenses/
     (Budget:$account)          0.10

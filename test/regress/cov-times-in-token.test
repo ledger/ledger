@@ -1,4 +1,4 @@
-; Coverage test for times.cc lines 1230-1232
+; Coverage test for times.cc
 ; Exercise "in" token in period parsing
 ; Covers handle_in_token
 

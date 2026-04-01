@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 1039-1076
+; Coverage test for report.cc
 ; Test to_boolean(), to_int(), to_string(), to_amount(), to_sequence()
 ; type conversion functions.
 

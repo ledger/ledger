@@ -1,4 +1,4 @@
-; Test account_t::lookup for depth (line 427-428 of account.cc)
+; Test account_t::lookup for depth
 ; Exercise the depth-related accessors
 
 2024/01/01 Test

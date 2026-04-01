@@ -1,4 +1,4 @@
-; Coverage for item.cc lines 322-335: beg_pos, beg_line, end_pos, end_line
+; Coverage for item.cc beg_pos, beg_line, end_pos, end_line
 
 2024/01/01 Test
     Expenses:Food    $10.00

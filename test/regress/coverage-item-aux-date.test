@@ -1,4 +1,4 @@
-; Coverage for item.cc lines 238-241: get_aux_date function
+; Coverage for item.cc get_aux_date function
 
 2024/01/01=2024/02/15 Test with aux date
     Expenses:Food    $10.00

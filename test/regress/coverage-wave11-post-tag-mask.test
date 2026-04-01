@@ -1,6 +1,6 @@
-; Coverage for post.cc line 71: Post get_tag with mask.
+; Coverage for post.cc Post get_tag with mask
 ; The post inherits tags from the xact when inherit=true.
-; Also covers item.cc has_tag with mask (line 58-65).
+; Also covers item.cc has_tag with mask
 
 2024/01/01 Test
     ; Category: food

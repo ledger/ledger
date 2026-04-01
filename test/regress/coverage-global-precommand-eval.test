@@ -1,5 +1,5 @@
 ; Test global.cc: precommand execution paths
-; Exercises look_for_precommand (line 218-219, 422-427) and precommand execution
+; Exercises look_for_precommand and precommand execution
 
 2024/01/01 Test
     Expenses:Food    $25.00

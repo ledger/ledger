@@ -1,4 +1,4 @@
-; Test account lookup is_index (lines 450-451 of account.cc)
+; Test account lookup is_index
 ; Exercise the is_index accessor on accounts
 
 2024/01/01 Test

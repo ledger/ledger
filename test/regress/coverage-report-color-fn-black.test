@@ -1,4 +1,4 @@
-; Coverage for report.cc line 1081: fn_black
+; Coverage for report.cc fn_black
 ; Returns the string "black" for use in ansify_if coloring
 
 2024/01/01 Test

@@ -1,5 +1,5 @@
-; Coverage for filters.cc lines 1166 (zero return in create_post)
-; and line 1229 (post_creator with to_amount in posts_as_equity)
+; Coverage for filters.cc (zero return in create_post)
+; (post_creator with to_amount in posts_as_equity)
 ; When equity report filters to a subset of accounts, the total is
 ; non-zero so the balancing Equity posting is created.
 

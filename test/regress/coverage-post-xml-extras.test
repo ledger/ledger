@@ -1,6 +1,6 @@
-; Test post_t::has_tag returning false (inherit=false) and
-; get_tag returning value from post (not xact)
-; Targets: post.cc lines 48, 57, 71, 74
+; Test post_t::has_tag with inherit=true falling through to xact,
+; and get_tag returning value from the posting itself
+; Targets: post.cc
 
 2024/01/15 Store
     ; TxnTag: abc

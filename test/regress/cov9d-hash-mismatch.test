@@ -1,5 +1,5 @@
 ; Test hash mismatch detection
-; Covers textual_xacts.cc line 1011 (hash size/value mismatch)
+; Covers textual_xacts.cc (hash size/value mismatch)
 
 2024/01/15 Test
     ; Hash: wronghashvalue

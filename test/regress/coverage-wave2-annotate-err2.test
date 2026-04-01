@@ -1,5 +1,5 @@
 ; Wave 2 coverage tests for annotate.cc error paths - duplicate date
-; Covers: duplicate date (line 147)
+; Covers: duplicate date
 
 2024/01/01 Dup Date
     Assets:Test              1 FOO {$10.00} [2024/01/01] [2024/02/01]

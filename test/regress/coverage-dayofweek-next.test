@@ -1,5 +1,6 @@
-; Test times.cc lines 789-796: day-of-week relative date parsing with "next"
-; "next friday" from --now 2026/03/03 (Tuesday) resolves to 2026/03/13
+; Test times.cc day-of-week relative date parsing with "next"
+; Note: --now appears after --end on the command line, so the epoch
+; for "next friday" may be the system date rather than 2026/03/03
 
 2026/03/02 Monday tx
     Expenses:Food   $20.00

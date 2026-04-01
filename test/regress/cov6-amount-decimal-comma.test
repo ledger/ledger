@@ -1,6 +1,6 @@
 ; Test amount output with decimal comma and period thousands separator
-; Covers amount.cc lines 202 (decimal comma), 213 (period thousands in time),
-; 218 (period thousands in decimal comma mode)
+; Covers amount.cc (decimal comma), (period thousands in time)
+; (period thousands in decimal comma mode)
 
 commodity 1.000,00 EUR
 

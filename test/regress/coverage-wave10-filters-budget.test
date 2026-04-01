@@ -1,4 +1,4 @@
-; Test coverage for filters.cc lines 1306, 1308, 1383, 1436
+; Test coverage for filters.cc
 ; budget_posts and report_budget_items
 
 ~ monthly

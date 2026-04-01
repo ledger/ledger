@@ -1,7 +1,7 @@
 ; Wave 2 coverage tests for annotate.cc error paths
-; Covers: duplicate price (line 111), duplicate date (line 147),
-; unclosed brace (line 137), unclosed bracket (line 154),
-; unclosed tag paren (line 190), double brace mismatch (line 132)
+; Covers: duplicate price, duplicate date
+; unclosed brace, unclosed bracket
+; unclosed tag paren, double brace mismatch
 
 ; Test duplicate price annotation error
 2024/01/01 Dup Price

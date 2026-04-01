@@ -1,5 +1,6 @@
-; Test item_t::define with tag metadata
-; Targets: item.cc lines 390-393 (define via set_tag)
+; Test computed tag evaluation (MyCustom:: 42 + 1 evaluates to 43)
+; Targets: item.cc tag expression evaluation
+; Note: the define directive is parsed but my_tag is never invoked
 
 define my_tag(val) = val
 

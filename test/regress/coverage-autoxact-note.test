@@ -1,4 +1,4 @@
-; Coverage test for textual_xacts.cc lines 189, 193-204
+; Coverage test for textual_xacts.cc
 ; Automated transaction with trailing note and blank sub-line break
 
 = /Food/

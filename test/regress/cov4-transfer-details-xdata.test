@@ -1,5 +1,5 @@
-; Test transfer_details xdata copy (line 1290 of filters.cc)
-; Exercise the SET_ACCOUNT path that copies xdata flags
+; Test --group-by option for grouping output by payee
+; Exercise transfer_details with payee grouping
 
 2024/01/01 Test Payee
     Expenses:Food    $10.00

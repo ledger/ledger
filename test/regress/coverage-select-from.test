@@ -1,11 +1,11 @@
-; Coverage test for select.cc lines 351-369:
+; Coverage test for select.cc
 ; Various 'from' clause targets
 
 2024/01/15 Test
     Expenses:Food    $50.00
     Assets:Cash
 
-; Test from xacts - prints transactions (lines 351-354)
+; Test from xacts - prints transactions
 
 test select date,payee from xacts
 2024/01/15 Test
@@ -13,7 +13,7 @@ test select date,payee from xacts
     Assets:Cash
 end test
 
-; Test from accounts - account report (lines 359-363)
+; Test from accounts - account report
 
 test select account,amount from accounts
 Assets:Cash      $-50.00

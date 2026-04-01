@@ -1,4 +1,4 @@
-; Coverage for balance.cc lines 259, 263, 272, 278: lot sorting in balance
+; Coverage for balance.cc lot sorting in balance
 
 2024/01/01 Buy Lot 1
     Assets:Stock     5 AAPL {$100} [2024/01/01]

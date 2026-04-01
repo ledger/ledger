@@ -1,4 +1,4 @@
-; Test textual_directives.cc line 812: break in case 'b' for unknown
+; Test textual_directives.cc break in case 'b' for unknown
 ; directive starting with 'b' that isn't "bucket"
 bazzle foo
 

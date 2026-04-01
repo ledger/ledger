@@ -1,4 +1,4 @@
-; Coverage test for csv.cc line 83:
+; Coverage test for csv.cc
 ; CSV comment lines (# prefix) are skipped by next_line()
 
 account Expenses:Unknown

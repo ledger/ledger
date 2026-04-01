@@ -1,4 +1,4 @@
-; Coverage test for filters.cc line 1290 (transfer_details SET_ACCOUNT)
+; Coverage test for filters.cc (transfer_details SET_ACCOUNT)
 ; Tests the transfer_details handler with --pivot to remap accounts based
 ; on tag values. Line 1290 copies xdata flags from prev_account to the
 ; new temp account when prev_account has xdata.

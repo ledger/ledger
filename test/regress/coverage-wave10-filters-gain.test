@@ -1,4 +1,4 @@
-; Test coverage for filters.cc lines 865, 930-931
+; Test coverage for filters.cc
 ; changed_value_posts with --gain (changed_values_only path)
 
 P 2024/01/01 AAPL $100.00

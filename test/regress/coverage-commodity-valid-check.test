@@ -1,4 +1,4 @@
-; Coverage test for commodity.cc lines 360-361, 365-366, 370-371
+; Coverage test for commodity.cc
 ; Tests commodity valid() check which is called during journal validation
 
 commodity $

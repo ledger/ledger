@@ -1,4 +1,4 @@
-; Coverage test for format.cc lines 158-187:
+; Coverage test for format.cc
 ; All format string escape sequences including default case
 
 2024/01/15 Test

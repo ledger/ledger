@@ -1,4 +1,4 @@
-; Coverage for xact.cc lines 608-630: xact finalization with multiple
+; Coverage for xact.cc xact finalization with multiple
 ; commodities where a null posting exists. When balance is a balance_t
 ; (multiple commodities) and null_post is set, map_sorted_amounts is called
 ; to generate multiple balancing posts.

@@ -1,6 +1,6 @@
-; Coverage test for xact.cc line 595: post_adder(balance.to_amount())
+; Coverage test for xact.cc post_adder(balance.to_amount)
 ; When postings use bare numbers (no commodity), the balance is long.
-; A null posting triggers the is_long() branch in finalize() at line 594-595.
+; A null posting triggers the is_long branch in finalize
 
 2024/01/01 Long Balance
     Expenses:Misc     5

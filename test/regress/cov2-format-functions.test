@@ -1,6 +1,6 @@
 ; Test various format expression functions for report.cc coverage
-; Covers fn_quantity (line 778), fn_commodity (line 938-940),
-; fn_should_bold (line 615-620), fn_strip (line 738-740)
+; Covers fn_quantity, fn_commodity
+; fn_should_bold, fn_strip
 
 2024/01/01 Payee
     Expenses:Food            $10.50
@@ -10,49 +10,49 @@
     Expenses:Gas             $20.75
     Assets:Cash
 
-; Test quantity function (line 778)
+; Test quantity function
 test reg Expenses --format "%(quantity(amount))\n"
 10.5
 20.75
 end test
 
-; Test commodity function (line 938-940)
+; Test commodity function
 test reg Expenses --format "%(commodity(amount))\n"
 $
 $
 end test
 
-; Test floor function (line 785-787)
+; Test floor function
 test reg Expenses --format "%(floor(amount))\n"
 $10.00
 $20.00
 end test
 
-; Test ceiling function (line 789)
+; Test ceiling function
 test reg Expenses --format "%(ceiling(amount))\n"
 $11.00
 $21.00
 end test
 
-; Test truncated function (line 781-783)
+; Test truncated function
 test reg Expenses --format "%(truncated(amount, 10))\n"
 $10.50
 $20.75
 end test
 
-; Test strip function (line 738-740)
+; Test strip function
 test reg Expenses --format "%(strip(amount))\n"
 $10.50
 $20.75
 end test
 
-; Test bold_if (line 615-620) - no --bold-if set, should return false
+; Test bold_if - no --bold-if set, should return false
 test reg Expenses --format "%(should_bold ? \"BOLD\" : \"normal\") %(display_amount)\n"
 normal $10.50
 normal $20.75
 end test
 
-; Test bold_if when set (line 616-617)
+; Test bold_if when set
 test reg Expenses --bold-if "amount > 15" --format "%(should_bold ? \"BOLD\" : \"normal\") %(display_amount)\n"
 normal $10.50
 BOLD $20.75

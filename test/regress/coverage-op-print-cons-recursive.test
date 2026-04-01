@@ -1,4 +1,4 @@
-; Coverage for op.cc lines 583-589:
+; Coverage for op.cc
 ; Recursive print_cons exercises the O_CONS printing when there are
 ; multiple function arguments. With 4 arguments, print_cons recurses
 ; through nested O_CONS nodes to print "expr1, expr2, expr3, expr4".

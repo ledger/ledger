@@ -1,5 +1,5 @@
 ; Test multi-commodity transaction with null posting
-; Targets: xact.cc lines 424-427 (balance.is_balance() with null_post)
+; Targets: xact.cc (balance.is_balance with null_post)
 ; Exercises the multi-commodity balancing with null post path
 
 2024/01/15 * Multi Currency

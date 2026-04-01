@@ -1,5 +1,5 @@
-; Coverage test for query.cc: query by code using the code keyword
-; Exercises query.cc lines 271-277: code matching in parse_query_term
+; Coverage test for query.cc: query by code using the 'code' keyword
+; Exercises query.cc code matching; does not test the # prefix syntax
 
 2024/01/01 (CHK001) Grocery Store
     Expenses:Food    $25.00

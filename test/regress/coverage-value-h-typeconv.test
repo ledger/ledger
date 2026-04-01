@@ -1,7 +1,7 @@
 ; Test value.h: type conversion and coercion methods
 ; Exercises to_int, to_long, to_amount, to_balance, to_string, to_boolean
 ; Also exercises is_zero, is_nonzero, number() on different types
-; Targets: value.cc lines 125-303, value.h lines 758-769, 496
+; Targets: value.cc , value.h
 
 2024/01/15 Store
     Expenses:Food    $50.75

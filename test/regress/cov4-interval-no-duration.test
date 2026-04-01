@@ -1,4 +1,4 @@
-; Test interval_posts no duration (lines 1070-1071 of filters.cc)
+; Test interval_posts no duration
 ; When interval has no duration but has a period constraint
 
 2024/01/15 Test1

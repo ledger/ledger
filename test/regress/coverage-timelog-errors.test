@@ -1,5 +1,5 @@
 ; Test timelog error: checkout without check-in
-; Exercises timelog.cc line 178: clock_out when time_xacts is empty
+; Exercises timelog.cc clock_out when time_xacts is empty
 
 o 2024/01/15 12:00:00 Project:Work
 

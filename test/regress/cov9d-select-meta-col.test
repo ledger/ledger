@@ -1,6 +1,6 @@
 ; Test select command with custom column (not date/payee/account/amount/total)
-; Covers select.cc lines 96 (meta_width else branch),
-;   lines 331-343 (meta column formatting path)
+; Covers select.cc (meta_width else branch)
+;   (meta column formatting path)
 
 2024/01/15 Groceries
     Expenses:Food    $50.00

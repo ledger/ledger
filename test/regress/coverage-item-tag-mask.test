@@ -1,4 +1,4 @@
-; Coverage for item.cc line 343: has_tag with mask argument
+; Coverage for item.cc has_tag with mask argument
 
 2024/01/01 Test
     ; Category: food

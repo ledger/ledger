@@ -1,4 +1,4 @@
-; Test coverage for textual_xacts.cc lines 206-221
+; Test coverage for textual_xacts.cc
 ; Automated transaction with assert/check/expr sub-directives
 
 = /Food/

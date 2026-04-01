@@ -1,4 +1,4 @@
-; Test coverage for filters.cc lines 89-170
+; Test coverage for filters.cc
 ; --invert and --tail/-n options exercise truncate and invert filters
 
 2024/01/01 First

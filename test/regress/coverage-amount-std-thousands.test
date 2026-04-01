@@ -1,8 +1,8 @@
-; Coverage for amount.cc lines 204, 220:
+; Coverage for amount.cc
 ; Standard US-style output with comma thousands separator and period decimal.
-; Line 204: outputs '.' for decimal point when commodity has THOUSANDS style
+; outputs '.' for decimal point when commodity has THOUSANDS style
 ;           but NOT decimal-comma or time-colon.
-; Line 220: outputs ',' as thousands separator in the same context.
+; outputs ',' as thousands separator in the same context
 
 commodity $
     format $1,000.00

@@ -1,5 +1,5 @@
 ; Test session.cc: --getquote option path
-; Exercises lookup_option case 'g' -> getquote_ (line 313)
+; Exercises lookup_option case 'g' -> getquote_
 
 2024/01/15 Buy Stock
     Assets:Brokerage    10 AAPL

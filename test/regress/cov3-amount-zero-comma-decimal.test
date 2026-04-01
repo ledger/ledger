@@ -1,5 +1,5 @@
 ; Test zero integer part with comma as decimal separator (e.g. 0,075 = 0.075)
-; Covers amount.cc lines 1235-1255 (integer_part_is_zero triggers decimal_comma)
+; Covers amount.cc (integer_part_is_zero triggers decimal_comma)
 
 2024/01/01 Test
     Expenses:Food    EUR 0,075

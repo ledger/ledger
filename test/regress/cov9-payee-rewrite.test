@@ -1,4 +1,4 @@
-; Coverage test for filters.cc SET_PAYEE in transfer_details:
+; Coverage test for filters.cc --payee-rewrite via rewrite_posts handler.
 ; Exercise --payee-rewrite to change payee names.
 
 2024/01/01 McDonalds

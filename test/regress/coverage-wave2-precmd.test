@@ -1,5 +1,5 @@
 ; Wave 2 coverage tests for precmd.cc
-; Covers: eval_command (line 133), query_command with display predicate (lines 159, 190, 192-196)
+; Covers: eval_command, query_command with display predicate
 
 2024/01/01 Grocery Store
     Expenses:Food              $25.00
@@ -9,7 +9,7 @@
     Expenses:Utilities         $75.00
     Assets:Checking
 
-; eval command - covers lines 133 (eval_command)
+; eval command - covers (eval_command)
 test eval 2+3
 5
 end test

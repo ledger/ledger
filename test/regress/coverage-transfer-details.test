@@ -1,4 +1,4 @@
-; Coverage for filters.cc lines 1288-1290 (transfer_details SET_ACCOUNT)
+; Coverage for filters.cc (transfer_details SET_ACCOUNT)
 ; The --pivot option uses transfer_details to prepend tag values
 ; to account names, exercising the SET_ACCOUNT path.
 

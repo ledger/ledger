@@ -1,4 +1,4 @@
-; Test get_use_direct_amount (line 202-204 of post.cc)
+; Test get_use_direct_amount
 ; Exercise the direct amount flag check
 
 2024/01/01 Test

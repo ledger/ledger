@@ -1,4 +1,4 @@
-; Coverage for csv.cc lines 53,55,58: CSV output with various field types
+; Coverage for csv.cc CSV output with various field types
 
 2024/01/01 (1234) Test  ;my note
     Expenses:Food    $10.00

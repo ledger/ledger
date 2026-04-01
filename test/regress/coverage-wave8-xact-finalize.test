@@ -1,5 +1,5 @@
 ; Coverage tests for xact.cc finalize() - two commodities with no explicit cost
-; Targets lines 234-236 (saw_cost with POST_COST_CALCULATED)
+; Targets (saw_cost with POST_COST_CALCULATED)
 
 2024/01/01 Currency Exchange
     Assets:EUR            100 EUR

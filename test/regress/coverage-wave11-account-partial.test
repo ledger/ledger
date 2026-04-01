@@ -1,5 +1,5 @@
-; Coverage for account.cc line 394: account xdata.
-; Also account.cc lines 626,683: account balance and total calculation.
+; Coverage for account.cc account xdata
+; Also account.cc account balance and total calculation
 
 2024/01/01 Test
     Expenses:Food:Groceries       $10.00

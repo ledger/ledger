@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 615-620: fn_should_bold
+; Coverage test for report.cc fn_should_bold
 ; Test --bold-if option which conditionally bolds output lines.
 
 2024/01/01 Test

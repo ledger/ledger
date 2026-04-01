@@ -1,4 +1,4 @@
-; Coverage for textual_xacts.cc line 456: posting has no account (empty line after amount indicator)
+; Coverage for textual_xacts.cc posting has no account (empty line after amount indicator)
 
 2024/01/01 Test
        $10.00

@@ -1,6 +1,6 @@
 ; Test US-style thousands separator with decimal point in display
-; Covers amount.cc lines 204 (normal period output with THOUSANDS flag)
-; and line 220 (comma thousands separator output)
+; Covers amount.cc (normal period output with THOUSANDS flag)
+; (comma thousands separator output)
 
 commodity $1,000.00
 

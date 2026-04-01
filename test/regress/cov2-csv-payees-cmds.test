@@ -1,5 +1,5 @@
 ; Test csv, payees, commodities, accounts, tags commands
-; Covers report.cc lines 1120-1123 (csv_format), 1753, 1760, 1796, etc.
+; Covers report.cc (csv_format), 1753, 1760, 1796, etc
 
 2024/01/01 Grocery Store
     ; :food:
@@ -11,31 +11,31 @@
     Expenses:Gas             $20.00
     Assets:Cash
 
-; Test csv command (report.cc line 1753)
+; Test csv command
 test csv Expenses
 "2024/01/01","","Grocery Store","Expenses:Food","$","10",""," :food:"
 "2024/01/02","","Gas Station","Expenses:Gas","$","20",""," :transport:"
 end test
 
-; Test payees command (report.cc line 1797)
+; Test payees command
 test payees
 Gas Station
 Grocery Store
 end test
 
-; Test accounts command (report.cc line 1727)
+; Test accounts command
 test accounts
 Assets:Cash
 Expenses:Food
 Expenses:Gas
 end test
 
-; Test commodities command (report.cc line 1760-1761)
+; Test commodities command
 test commodities
 $
 end test
 
-; Test tags command (report.cc line 1817-1818)
+; Test tags command
 test tags
 food
 transport

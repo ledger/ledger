@@ -1,4 +1,4 @@
-; Coverage test for xact.cc line 758-759 (xact_t copy constructor)
+; Coverage test for xact.cc (xact_t copy constructor)
 ; Tests the copy constructor via --related which uses copy_xact()
 ; in the related_posts filter to create temporary transaction copies.
 

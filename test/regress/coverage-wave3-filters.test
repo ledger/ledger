@@ -1,7 +1,7 @@
 ; Coverage tests for filters.cc
-; Tests: changed_value_posts (lines 705-759, 774-835),
-;        interval_posts (lines 1006-1037), forecast (lines 1420-1490),
-;        output.h clear() methods (lines 117-213)
+; Tests: changed_value_posts
+;        interval_posts, forecast
+;        output.h clear methods
 
 ; Test interval report (covers interval_posts operator() and flush())
 2024/01/05 Payee A
@@ -16,7 +16,7 @@
     Expenses:Food    $200.00
     Assets:Cash
 
-; Monthly interval (covers interval_posts lines 1006-1037)
+; Monthly interval (covers interval_posts )
 test reg --monthly Expenses:Food
 24-Jan-01 - 24-Jan-31           Expenses:Food               $250.00      $250.00
 24-Feb-01 - 24-Feb-29           Expenses:Food               $200.00      $450.00
@@ -29,12 +29,12 @@ test reg --weekly Expenses:Food
 24-Feb-04 - 24-Feb-10           Expenses:Food               $200.00      $450.00
 end test
 
-; Test subtotal (covers subtotal_posts report_subtotal lines 880-948)
+; Test subtotal (covers subtotal_posts report_subtotal )
 test reg --subtotal Expenses:Food
 24-Jan-05 - 24-Feb-10           Expenses:Food               $450.00      $450.00
 end test
 
-; Test market revaluation (covers changed_value_posts lines 705-759)
+; Test market revaluation (covers changed_value_posts )
 P 2024/01/01 EUR $1.10
 P 2024/02/01 EUR $1.20
 

@@ -1,4 +1,4 @@
-; Coverage test for xact.cc line 1053
+; Coverage test for xact.cc
 ; auto_xact expression that returns non-amount throws error
 
 = Expenses

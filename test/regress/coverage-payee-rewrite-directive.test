@@ -1,4 +1,4 @@
-; Test textual_directives.cc lines 858-860: payee-rewrite directive
+; Test textual_directives.cc payee-rewrite directive
 ; in general_directive case p
 
 payee-rewrite /Gro.*/  Grocery Store

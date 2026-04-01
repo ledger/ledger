@@ -1,4 +1,4 @@
-; Coverage test for format.cc line 265
+; Coverage test for format.cc
 ; Test %$ field reference without a template (%/ separator).
 ; Using %$ outside of a secondary format (after %/) triggers an error
 ; because there is no prior template to reference.

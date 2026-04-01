@@ -1,4 +1,4 @@
-; Coverage test for op.cc lines 519-520
+; Coverage test for op.cc
 ; Tests the error context added when a function call throws an error.
 ; The calc_call method catches exceptions and adds context about which
 ; function was being called.

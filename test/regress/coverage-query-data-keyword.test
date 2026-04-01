@@ -1,4 +1,4 @@
-; Test query parser with 'data' keyword for metadata matching (covers query.cc line 226)
+; Test query parser with 'data' keyword for metadata matching (covers query.cc )
 ; The 'data' keyword should work the same as 'tag' and 'meta' keywords
 
 2024/01/15 Grocery Store

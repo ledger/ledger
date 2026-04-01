@@ -1,4 +1,4 @@
-; Coverage test for post.cc lines 145-151
+; Coverage test for post.cc
 ; Tests get_virtual and get_real accessors for postings.
 ; Virtual postings have the POST_VIRTUAL flag set.
 ; Real postings do not.

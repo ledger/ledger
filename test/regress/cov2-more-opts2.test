@@ -1,7 +1,7 @@
 ; Test more option handlers for report.cc coverage
 ; Covers actual, dow, related-all, exact, primary-date,
 ; collapse-if-zero, revalued, no-revalued, date-format,
-; count, color, no-color, raw
+; count, color, no-color
 
 2024/01/01 Payee
     Expenses:Food            $10.00
@@ -11,20 +11,20 @@
     Expenses:Gas             $20.00
     Assets:Cash
 
-; Test --actual option (line 1183, OPT_CH(actual))
+; Test --actual option (OPT_CH(actual))
 test reg Expenses --actual
 24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
 24-Jan-15 Payee Two             Expenses:Gas                 $20.00       $30.00
 end test
 
-; Test --dow option (line 1272, OPT_ALT(dow, days_of_week))
+; Test --dow option (OPT_ALT(dow, days_of_week))
 test reg --dow
 24-Jan-01 Mondays               Assets:Cash                 $-30.00      $-30.00
                                 Expenses:Food                $10.00      $-20.00
                                 Expenses:Gas                 $20.00            0
 end test
 
-; Test --related-all option (line 1373)
+; Test --related-all option
 test reg Expenses --related-all
 24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
                                 Assets:Cash                 $-10.00            0
@@ -32,7 +32,7 @@ test reg Expenses --related-all
                                 Assets:Cash                 $-20.00            0
 end test
 
-; Test --exact option (line 1279)
+; Test --exact option
 test bal Expenses --exact
               $30.00  Expenses
               $10.00    Food
@@ -41,49 +41,49 @@ test bal Expenses --exact
               $30.00
 end test
 
-; Test --primary-date option (line 1226, 1359)
+; Test --primary-date option
 test reg Expenses --primary-date
 24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
 24-Jan-15 Payee Two             Expenses:Gas                 $20.00       $30.00
 end test
 
-; Test --collapse-if-zero option (line 1253)
+; Test --collapse-if-zero option
 test reg Expenses --collapse-if-zero
 24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
 24-Jan-15 Payee Two             Expenses:Gas                 $20.00       $30.00
 end test
 
-; Test --revalued option (line 1374)
+; Test --revalued option
 test reg Expenses --revalued
 24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
 24-Jan-15 Payee Two             Expenses:Gas                 $20.00       $30.00
 end test
 
-; Test --no-revalued option (line 1335)
+; Test --no-revalued option
 test reg Expenses --no-revalued
 24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
 24-Jan-15 Payee Two             Expenses:Gas                 $20.00       $30.00
 end test
 
-; Test --date-format option (line 1263, 1414)
+; Test --date-format option
 test reg Expenses --date-format "%Y/%m/%d"
 2024/01/01 Payee                Expenses:Food                $10.00       $10.00
 2024/01/15 Payee Two            Expenses:Gas                 $20.00       $30.00
 end test
 
-; Test --count option (line 1258)
+; Test --count option
 test reg Expenses --count
 24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
 24-Jan-15 Payee Two             Expenses:Gas                 $20.00       $30.00
 end test
 
-; Test --color option (line 1254, 1229)
+; Test --color option
 test reg Expenses --color
 24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
 24-Jan-15 Payee Two             Expenses:Gas                 $20.00       $30.00
 end test
 
-; Test --no-color option (line 1333)
+; Test --no-color option
 test reg Expenses --no-color
 24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
 24-Jan-15 Payee Two             Expenses:Gas                 $20.00       $30.00

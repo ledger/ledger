@@ -1,4 +1,4 @@
-; Coverage for report.cc lines 942-951: fn_commodity_price
+; Coverage for report.cc fn_commodity_price
 ; Looks up the price of a commodity at a given date
 
 P 2024/01/01 AAPL $150.00

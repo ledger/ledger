@@ -1,4 +1,4 @@
-; Coverage test for commodity.cc lines 348-355
+; Coverage test for commodity.cc
 ; Tests commodity_t::print with quoted commodity symbols.
 ; The "elide_quotes" path in print() removes quotes when the symbol
 ; contains non-digit characters and COMMODITY_STYLE_SEPARATED is set.

@@ -1,4 +1,4 @@
-; Coverage for value.cc lines 886-888, 1027-1029:
+; Coverage for value.cc
 ; Sorting by date exercises the DATE comparison in is_less_than and
 ; is_greater_than. Transactions are sorted chronologically even when
 ; entered out of order in the journal.

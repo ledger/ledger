@@ -1,4 +1,4 @@
-; Coverage test for textual_directives.cc lines 346-357
+; Coverage test for textual_directives.cc
 ; apply fixed / apply rate directive
 
 commodity $

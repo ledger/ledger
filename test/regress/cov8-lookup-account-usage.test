@@ -1,4 +1,4 @@
-; Coverage for lookup.cc line 266: account usage iteration
+; Coverage for lookup.cc account usage iteration
 
 2024/01/01 Test
     Expenses:Food    $10.00

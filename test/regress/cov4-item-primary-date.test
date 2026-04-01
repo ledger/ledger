@@ -1,4 +1,4 @@
-; Test primary_date accessor (lines 489-490 of item.cc)
+; Test primary_date accessor
 ; Exercise the primary_date lookup
 
 2024/01/01 Test

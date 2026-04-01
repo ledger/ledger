@@ -1,4 +1,4 @@
-; Coverage test for select.cc lines 351-354:
+; Coverage test for select.cc
 ; Exercise select from xacts (transactions format).
 
 2024/01/01 Grocery Store

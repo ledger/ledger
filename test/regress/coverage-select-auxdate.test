@@ -1,4 +1,4 @@
-; Coverage test for select.cc lines 54, 184, 256-268: aux_date column handling
+; Coverage test for select.cc aux_date column handling
 ; The aux_date column is recognized alongside date as a date-type column.
 ; This exercises the same code paths as date but uses the auxiliary date.
 ; When placed after another column, it triggers:

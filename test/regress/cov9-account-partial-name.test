@@ -1,4 +1,4 @@
-; Coverage for account.cc line 242: get_partial_name function
+; Coverage for account.cc get_partial_name function
 
 2024/01/01 Test
     Expenses:Food:Grocery    $10.00

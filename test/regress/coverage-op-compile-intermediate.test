@@ -1,6 +1,6 @@
 ; Coverage test for op.cc: compile intermediate path and non-constant reduction
-; Exercises: compile line 204 (intermediate non-constant result),
-;   compile line 192 (O_LOOKUP right() not compiled),
+; Exercises: compile (intermediate non-constant result)
+;   compile (O_LOOKUP right not compiled)
 ;   various runtime expression evaluation paths
 
 2024/01/15 Grocery Store

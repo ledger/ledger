@@ -1,4 +1,4 @@
-; Coverage for textual_directives.cc lines 839,843-847 (comment directive)
+; Coverage for textual_directives.cc (comment directive)
 ; Tests 'comment' and 'end comment' blocks
 
 comment

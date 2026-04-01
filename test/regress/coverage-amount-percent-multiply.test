@@ -1,4 +1,4 @@
-; Coverage for amount.cc line 490:
+; Coverage for amount.cc
 ; When multiplying a bare amount (no commodity) by a percentage amount,
 ; the result inherits the "%" commodity. quantity(amount) strips the
 ; commodity, so the multiplication result takes "%" from the multiplier.

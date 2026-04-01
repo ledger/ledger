@@ -1,4 +1,4 @@
-; Coverage for report.cc lines 1021-1028: fn_lot_price
+; Coverage for report.cc fn_lot_price
 ; Tests the lot_price function which returns the price annotation from a lot
 ; Uses lot with price annotation to exercise the details.price branch
 

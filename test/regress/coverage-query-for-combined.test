@@ -1,5 +1,5 @@
 ; Test query with for keyword followed by show and since
-; Covers query.cc lines 510-516 (for/since/until termination on show keyword)
+; Covers query.cc (for/since/until termination on show keyword)
 
 2024/01/15 Grocery Store
     Expenses:Food              $50.00

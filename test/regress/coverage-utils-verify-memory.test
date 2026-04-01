@@ -2,7 +2,7 @@
 ; Exercises: report_memory (all branches), stream_commified_number,
 ;   stream_memory_size, report_count_map, shutdown_memory_tracing
 ;   with debug("memory.counts") enabled
-; Targets: utils.cc lines 263-330, 399-453, 103-129
+; Targets: utils.cc
 
 2024/01/01 Opening Balance
     Assets:Checking         $1000.00

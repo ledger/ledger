@@ -1,4 +1,4 @@
-; Test account lookup any (lines 413-414 of account.cc)
+; Test account lookup any
 ; Exercise the any() function on accounts
 
 2024/01/01 Test

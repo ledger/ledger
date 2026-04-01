@@ -1,4 +1,4 @@
-; Test coverage for textual_directives.cc lines 407-470
+; Test coverage for textual_directives.cc
 ; account directive with alias, assert, check, eval, note, default, payee, value
 
 account Expenses:Food

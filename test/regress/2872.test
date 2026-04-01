@@ -7,11 +7,8 @@
 ; "CTG25" is silently parsed as "CTG". The 1948.test was updated to use
 ; "CTGBAR" to avoid this ambiguity.
 ;
-; This file tests:
-; 1. That a quoted commodity name with digits ("CTG25") works correctly in
-;    a format directive when it matches the commodity name.
-; 2. That a mismatched quoted commodity name with digits produces a clear,
-;    accurate error message (naming the full symbol, including digits).
+; This file tests that an unquoted commodity name containing digits in a
+; format directive produces a clear parse error naming the unexpected characters.
 
 ; Invalid: unquoted "CTG25" in a format directive — the parser reads "CTG"
 ; and stops at the digit, leaving "25" unconsumed.  This should be a clear
@@ -26,6 +23,6 @@ commodity CTG
 
 test source -> 1
 __ERROR__
-While parsing file "$FILE", line 21:
+While parsing file "$FILE", line 18:
 Error: unexpected characters '25' after commodity symbol in format directive
 end test

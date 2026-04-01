@@ -1,4 +1,4 @@
-; Coverage test for select.cc lines 285-288, 359-363: from accounts report
+; Coverage test for select.cc from accounts report
 ; When select uses "from accounts", the account column formatter
 ; uses partial_account instead of truncated/justify.
 ; Exercises:

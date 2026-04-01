@@ -1,5 +1,5 @@
-; Test FIFO lot matching for xact.cc coverage
-; Covers lines 319-470 in xact.cc
+; Test explicit lot selection for xact.cc coverage
+; Sell posting specifies the exact lot annotation, bypassing automatic matching
 
 2024/01/01 Buy Lot 1
     Assets:Broker          10 AAPL {$100.00} [2024/01/01]
@@ -13,7 +13,7 @@
     Assets:Broker          -5 AAPL {$100.00} [2024/01/01] @ $200.00
     Assets:Cash
 
-; FIFO lot matching shows correct remaining lots
+; Explicit lot selection shows correct remaining lots
 test bal Assets:Broker --lot-matching fifo --lot-prices --lot-dates
 5 AAPL {$100} [2024/01/01]
 10 AAPL {$150} [2024/02/01]  Assets:Broker

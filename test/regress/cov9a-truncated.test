@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 809-823
+; Coverage test for report.cc
 ; fn_truncated truncates string display to a given width
 
 2024/01/01 Test

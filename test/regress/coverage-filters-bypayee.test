@@ -1,4 +1,4 @@
-; Coverage test for filters.cc line 1251 (by_payee_posts::operator())
+; Coverage test for filters.cc (by_payee_posts::operator)
 ; Tests the by_payee_posts handler where payees are inserted into the map.
 ; The --by-payee option sets up the by_payee_posts filter handler.
 ; Multiple payees exercise the map insertion and lookup paths.

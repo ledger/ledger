@@ -1,4 +1,4 @@
-; Test sha512 processing with larger input (lines 325-351 of sha512.cc)
+; Test sha512 processing with larger input
 ; Exercise the SHA512 update with data spanning multiple blocks
 ; by using --hashes with sha512_half option
 

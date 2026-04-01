@@ -1,4 +1,4 @@
-; Coverage for xact.cc line 192 (multiple null postings error)
+; Coverage for xact.cc (multiple null postings error)
 ; Only one posting with null amount is allowed per transaction.
 
 2024/01/01 Test

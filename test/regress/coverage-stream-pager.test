@@ -1,4 +1,4 @@
-; Test stream.cc: do_fork() pager subprocess (lines 64-115)
+; Test stream.cc: do_fork pager subprocess
 
 2024/01/01 Test
     Expenses:Food   $10.00

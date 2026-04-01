@@ -1,4 +1,4 @@
-; Tests for filters.cc forecast_posts (lines 1383, 1436, 1484-1485)
+; Tests for filters.cc forecast_posts
 ; Covers: forecast_posts::add_post, flush, period iteration
 
 ~ Monthly

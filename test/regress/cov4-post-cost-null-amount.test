@@ -1,7 +1,5 @@
-; Test get_cost with null amount (line 236 of post.cc)
-; and get_price with null amount (line 243)
-; and get_total with null amount (line 254)
-; and get_count without xdata (line 263)
+; Test get_cost, get_price, get_total, and get_count accessors
+; Postings have real amounts; exercises the accessor format output
 
 2024/01/01 Test
     Expenses:Food    $10.00

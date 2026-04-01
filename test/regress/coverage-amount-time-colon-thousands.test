@@ -1,4 +1,4 @@
-; Coverage for amount.cc line 213:
+; Coverage for amount.cc
 ; When a time-colon amount (h or m commodity) with COMMODITY_STYLE_THOUSANDS
 ; has more than 3 integer digits, the thousands separator should be a colon
 ; instead of a comma. Input uses comma-thousands to set the style flag.

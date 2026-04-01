@@ -1,4 +1,4 @@
-; Coverage test for post.cc lines 226-248:
+; Coverage test for post.cc
 ; get_has_cost(), get_cost(), get_price() return values
 
 2024/01/15 With Cost

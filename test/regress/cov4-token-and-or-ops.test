@@ -1,4 +1,4 @@
-; Test token parsing for && and || operators (lines 164-184 of token.cc)
+; Test token parsing for && and || operators
 ; Exercise the double-character AND/OR token paths
 
 2024/01/01 Test1

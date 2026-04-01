@@ -1,4 +1,4 @@
-; Coverage for times.cc lines 1099-1146: handle_every_token
+; Coverage for times.cc handle_every_token
 ; Tests "every N quarters", "every N days", "every N years" to exercise
 ; the TOK_INT + period-unit branches
 

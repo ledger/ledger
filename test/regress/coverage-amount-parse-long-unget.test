@@ -1,8 +1,8 @@
-; Coverage for amount.cc line 1058:
+; Coverage for amount.cc
 ; parse_quantity trailing period followed by digit (unget path).
 ; A number so long it fills the 255-char parse buffer, leaving .50 unread.
 ; After stripping the trailing period and putting it back, the peek
-; finds the period followed by digit 5, triggering the unget on line 1058.
+; finds the period followed by digit 5, triggering the unget on
 
 2024/01/01 Test
     Expenses:Food    -1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111.50

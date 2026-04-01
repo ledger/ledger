@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 1125-1128
+; Coverage test for xact.cc
 ; Tests auto transaction cost derivation when the original posting uses
 ; total price annotation (@@). When the auto-generated amount has a price
 ; annotation with ANNOTATION_PRICE_NOT_PER_UNIT, the cost should be derived

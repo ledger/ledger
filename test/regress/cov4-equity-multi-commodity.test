@@ -1,4 +1,4 @@
-; Test equity with multiple commodities (line 1166, 1226-1229 of filters.cc)
+; Test equity with multiple commodities
 ; Exercise the equity balance map_sorted_amounts path
 
 P 2024/01/01 EUR $1.10

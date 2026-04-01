@@ -1,4 +1,4 @@
-; Coverage: journal.cc lines 144-161: register_account with CHECK_WARNING
+; Coverage: journal.cc register_account with CHECK_WARNING
 ; Using --strict to trigger warning for unknown accounts
 
 commodity $

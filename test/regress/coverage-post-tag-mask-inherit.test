@@ -1,5 +1,5 @@
 ; Test post_t::get_tag with mask that inherits from xact
-; Targets: post.cc lines 68-75 (get_tag mask with inherit)
+; Targets: post.cc (get_tag mask with inherit)
 
 2024/01/15 Store
     ; Category: food

@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 612-613
+; Coverage test for xact.cc
 ; Tests the virtual_null_post path where virtual_balance is a long (integer).
 ; When balanced virtual postings use bare numbers (no commodity),
 ; the balance is stored as a long. The null posting gets the inverse.

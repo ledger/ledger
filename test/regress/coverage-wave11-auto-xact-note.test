@@ -1,4 +1,4 @@
-; Coverage for textual_xacts.cc lines 190, 198-199 (auto xact note on next line)
+; Coverage for textual_xacts.cc (auto xact note on next line)
 
 = Expenses
     ; This is a note for the automated xact

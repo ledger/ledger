@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 840-854, 856-868
+; Coverage test for report.cc
 ; fn_quoted adds double quotes around a string value
 ; fn_quoted_rfc uses RFC-style double quoting
 

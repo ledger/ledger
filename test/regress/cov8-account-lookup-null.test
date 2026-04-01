@@ -1,4 +1,4 @@
-; Coverage test for account.cc lines 239-242, 263-264:
+; Coverage test for account.cc
 ; Exercise get_partial_name and get_account_base for accounts.
 
 2024/01/01 Test

@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 797-798
+; Coverage test for report.cc
 ; fn_roundto rounds a value to a specific number of decimal places
 
 2024/01/01 Test

@@ -1,5 +1,5 @@
-; Coverage tests for format.cc lines 434-438 (EXPR is_function branch)
-; Also covers format.cc line 424 (STRING min_width)
+; Coverage tests for format.cc (EXPR is_function branch)
+; Also covers format.cc (STRING min_width)
 ; format functions that return values use the is_function() path
 
 2024/01/01 Payee

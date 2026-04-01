@@ -1,4 +1,4 @@
-; Coverage for xact.cc lines 789-799 (fn_any) and 801-811 (fn_all)
+; Coverage for xact.cc (fn_any) and (fn_all)
 ; These are the xact_t::lookup versions of any() and all()
 ; which differ from the post_t versions in post.cc
 

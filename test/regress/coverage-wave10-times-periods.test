@@ -1,7 +1,7 @@
-; Coverage tests for times.cc lines 789-795 (TOK_A_WDAY handling in date parsing)
-; Also covers times.cc line 1215 (handle_date_token for TOK_A_MONTH)
-; Also covers times.cc line 1240 (handle_relative_token for this/next/last)
-; Also covers times.cc line 1247 (handle_simple_period_token for tomorrow/yesterday)
+; Coverage tests for times.cc (TOK_A_WDAY handling in date parsing)
+; Also covers times.cc (handle_date_token for TOK_A_MONTH)
+; Also covers times.cc (handle_relative_token for this/next/last)
+; Also covers times.cc (handle_simple_period_token for tomorrow/yesterday)
 
 2024/01/01 Monday Xact
     Expenses:Food    $10.00

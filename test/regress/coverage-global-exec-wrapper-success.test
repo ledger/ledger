@@ -1,5 +1,5 @@
 ; Test global.cc: execute_command_wrapper success path
-; Exercises execute_command_wrapper returning status 0 (line 277)
+; Exercises execute_command_wrapper returning status 0
 
 2024/01/01 Test
     Expenses:Food    $25.00

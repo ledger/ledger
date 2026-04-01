@@ -1,4 +1,4 @@
-; Coverage test for xact.cc line 595
+; Coverage test for xact.cc
 ; Tests null posting balance when the balance is a long integer type.
 ; When all postings use commodityless amounts (bare numbers), the balance
 ; may be stored as a long/integer internally. The null posting path must

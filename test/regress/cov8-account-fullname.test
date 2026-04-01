@@ -1,4 +1,4 @@
-; Coverage test for account.cc lines 233-236:
+; Coverage test for account.cc
 ; Exercise account fullname and operator<< via balance with default format.
 
 2024/01/01 Test

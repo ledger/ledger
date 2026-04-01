@@ -1,9 +1,9 @@
-; Coverage test for filters.cc lines 1364, 1390-1396, 1427-1438
+; Coverage test for filters.cc
 ; Tests budget_posts with various flags including BUDGET_WRAP_VALUES
 ; and BUDGET_UNBUDGETED for items not in the budget.
-; Line 1364: skip budget items when find_period fails
-; Lines 1390-1396: BUDGET_WRAP_VALUES sequence creation
-; Lines 1427-1438: unbudgeted posts with BUDGET_WRAP_VALUES
+; skip budget items when find_period fails
+; BUDGET_WRAP_VALUES sequence creation
+; unbudgeted posts with BUDGET_WRAP_VALUES
 
 ~ monthly
     Expenses:Food             $200.00

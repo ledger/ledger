@@ -1,4 +1,4 @@
-; Test has_xdata check in fn_any (line 364 of post.cc)
+; Test has_xdata check in fn_any
 ; Uses the any() function on a posting
 
 2024/01/01 Test

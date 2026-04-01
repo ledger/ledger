@@ -1,4 +1,4 @@
-; Coverage test for op.cc calc_cons (lines 526-547)
+; Coverage test for op.cc calc_cons
 ; Tests the O_CONS list construction operator.
 ; When a function is called with multiple arguments separated by commas,
 ; the arguments form a cons list that must be evaluated.

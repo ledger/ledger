@@ -1,5 +1,5 @@
 ; Test value.cc: exchange_commodities with source-specific conversion
-; Exercises lines 1553-1555, 1567-1569, 1613 (A:B syntax)
+; Exercises (A:B syntax)
 
 P 2024/01/15 EUR $1.10
 P 2024/01/15 GBP $1.30
@@ -26,7 +26,7 @@ test bal --exchange "EUR:$" --columns 80
 end test
 
 ; Exercise AMOUNT path with --flat (each account balance is a single amount)
-; For Transport (30 GBP), sources[index]=EUR but amount is GBP, so line 1585-1586 reached
+; For Transport (30 GBP), sources[index]=EUR but amount is GBP, so reached
 test bal --exchange "EUR:$" --flat --columns 80
              $-55.00
              -30 GBP  Assets:Checking

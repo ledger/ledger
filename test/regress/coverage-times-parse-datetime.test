@@ -1,6 +1,6 @@
 ; Test parse_datetime via timeclock entries
-; Exercises parse_datetime (lines 254-274)
-; Also exercises temporal_io_t::parse for datetime_t (lines 82-90)
+; Exercises parse_datetime
+; Also exercises temporal_io_t::parse for datetime_t
 
 i 2024/01/15 08:30:00 Income:Work
 o 2024/01/15 17:00:00

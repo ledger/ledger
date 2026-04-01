@@ -1,4 +1,4 @@
-; Test account lookup latest (lines 459-460 of account.cc)
+; Test account lookup latest
 ; Exercise the latest accessor on accounts
 
 2024/01/01 Test

@@ -1,4 +1,4 @@
-; Coverage for textual_xacts.cc lines 45-48, 67-68, 77-79
+; Coverage for textual_xacts.cc
 ; Tests xact with state markers (*, !) and code parsing
 
 2024/01/01 * (1001) Payee One

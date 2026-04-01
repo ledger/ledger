@@ -1,5 +1,5 @@
 ; Test error for duplicate valuation expression
-; Covers annotate.cc lines 165-166 (duplicate valuation expression)
+; Covers annotate.cc (duplicate valuation expression)
 
 2024/01/01 Test
     Assets:Brokerage    10 AAPL ((9)) ((10))

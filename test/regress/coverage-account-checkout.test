@@ -1,4 +1,4 @@
-; Coverage: account.cc line 273: get_latest_checkout function
+; Coverage: account.cc get_latest_checkout function
 ; Tests format expression with latest_checkout for timelog entries
 
 i 2024/01/15 09:00:00 Project:Work  Morning task

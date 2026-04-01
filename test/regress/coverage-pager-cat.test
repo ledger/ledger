@@ -1,5 +1,5 @@
 ; Test stream.cc: pager subprocess handling
-; Exercises do_fork and pager cleanup (lines 64-156)
+; Exercises do_fork and pager cleanup
 
 2024/01/10 Test
     Expenses:Food    $100.00

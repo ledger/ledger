@@ -1,5 +1,5 @@
 ; Test session.cc: --price-exp option
-; Exercises lookup_option case 'p' -> price_exp_ (line 332)
+; Exercises lookup_option case 'p' -> price_exp_
 
 P 2024/01/01 AAPL $150.00
 

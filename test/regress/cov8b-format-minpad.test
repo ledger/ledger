@@ -1,4 +1,4 @@
-; Coverage test for format.cc lines 471-473
+; Coverage test for format.cc
 ; Test min_width padding with unicode characters.
 
 2024/01/01 Café

@@ -1,5 +1,5 @@
 ; Regression test for issue #1113
-; 'from' and 'until' not handled correctly by --forecast
+; 'from' and 'until' not handled correctly by --forecast-while
 ;
 ; 1. A periodic transaction with 'from' set to a future date should
 ;    appear in --forecast output starting at the from-date.

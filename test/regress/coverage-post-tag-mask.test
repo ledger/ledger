@@ -1,6 +1,6 @@
-; Coverage test for post.cc line 72: get_tag with mask_t returning value
+; Coverage test for post.cc get_tag with mask_t returning value
 ; from the posting itself (not inherited from xact)
-; Also covers line 170 (get_payee reaching end of function)
+; Also covers (get_payee reaching end of function)
 
 2024/01/01 Test Payee
     ; PostTag: hello

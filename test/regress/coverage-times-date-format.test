@@ -1,7 +1,7 @@
 ; Test date formatting options
-; Exercises format_date with FMT_CUSTOM (lines 1811-1817)
-; and FMT_WRITTEN via print command (line 1809)
-; Also exercises set_input_date_format (lines 1841-1843)
+; Exercises format_date with FMT_CUSTOM
+; FMT_WRITTEN via print command
+; Also exercises set_input_date_format
 
 2024/01/15 Payee A
     Expenses:Food    $50.00

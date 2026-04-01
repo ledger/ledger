@@ -1,5 +1,5 @@
-; Wave 3 coverage tests for mask.cc assign_glob (lines 184-213)
-; Tests ? glob (line 189-190) and [...] glob (lines 195-199)
+; Wave 3 coverage tests for mask.cc assign_glob
+; Tests ? glob and [...] glob
 
 ; Include using ? glob pattern (matches data_a, data_b, data_c)
 include glob_includes/data_?.dat

@@ -1,4 +1,4 @@
-; Coverage for xact.cc lines 447-449: null posting with a long (integer)
+; Coverage for xact.cc null posting with a long (integer)
 ; balance value. When balance.is_long(), post_adder(balance.to_amount())
 ; is called.
 

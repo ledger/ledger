@@ -1,4 +1,4 @@
-; Coverage test for xact.cc line 1117-1118
+; Coverage test for xact.cc
 ; Tests auto-xact where the auto posting itself has an explicit cost.
 ; When post->cost is set, it is copied directly to new_post->cost
 ; without deriving from annotations.

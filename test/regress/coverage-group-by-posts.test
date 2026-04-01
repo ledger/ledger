@@ -1,4 +1,4 @@
-; Test report.cc: posts_report group_by path (lines 363-379)
+; Test report.cc: posts_report group_by path
 ; Exercises the group_by handler with post_splitter
 
 2024/01/10 Grocery Store

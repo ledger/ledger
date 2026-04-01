@@ -1,4 +1,4 @@
-; Coverage for report.cc lines 740,1548,1603: fn_strip, fn_join, fn_roundto
+; Coverage for report.cc fn_strip, fn_join, fn_roundto
 ; Also covers lookup lines for join and roundto
 
 2024/01/01 Test

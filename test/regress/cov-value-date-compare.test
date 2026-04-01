@@ -1,6 +1,6 @@
-; Coverage test for value.cc lines 1021-1029
+; Coverage test for value.cc
 ; Exercise date comparison in is_greater_than
-; Also covers is_less_than date comparison (lines 885-888)
+; Also covers is_less_than date comparison
 
 2024/01/15 First
     Expenses:Food            $10.00

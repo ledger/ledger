@@ -1,5 +1,5 @@
 ; Test compare_by_commodity with prices in different currencies
-; Covers commodity.cc lines 430-431 (recursion found disparity in price
+; Covers commodity.cc (recursion found disparity in price
 ; comparison with different commodity)
 
 2024/01/01 Buy AAPL in USD

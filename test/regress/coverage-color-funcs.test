@@ -1,5 +1,5 @@
 ; Test report.cc: color name functions (fn_black, fn_red, fn_green, etc.)
-; Exercises color function lookups and execution (lines 1079-1111)
+; Exercises color function lookups and execution
 
 2024/01/10 Test
     Expenses:Food    $100.00

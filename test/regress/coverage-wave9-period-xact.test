@@ -1,4 +1,4 @@
-; Test coverage for textual_xacts.cc lines 248-290
+; Test coverage for textual_xacts.cc
 ; Period transaction directive and budget filtering
 
 ~ Monthly

@@ -1,4 +1,4 @@
-; Coverage tests for report.cc command dispatch (lines 1600-1737)
+; Coverage tests for report.cc command dispatch
 ; Tests: accounts, budget, cleared, commodities, csv, equity, emacs,
 ;        lisp, payees, tags, xml, select, pricemap, echo commands
 

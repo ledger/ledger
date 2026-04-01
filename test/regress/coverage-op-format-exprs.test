@@ -1,7 +1,7 @@
 ; Test op.cc: various operations through format expressions
 ; Exercises: O_MUL, O_DIV, O_SUB in calc,
 ;   O_EQ, O_LT, O_LTE, O_GT, O_GTE comparisons,
-;   O_NEG via ternary negation
+;   O_NEG via ternary conditional with negation
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00

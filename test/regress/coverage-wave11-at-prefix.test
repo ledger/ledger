@@ -1,4 +1,4 @@
-; Coverage for textual.cc lines 200-203 and textual_directives.cc line 734
+; Coverage for textual.cc and textual_directives.cc
 ; Tests @ and ! prefix on directives
 
 @account Expenses:Travel

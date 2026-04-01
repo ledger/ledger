@@ -1,4 +1,4 @@
-; Coverage for post.cc lines 363,383: post fn_any and fn_all.
+; Coverage for post.cc post fn_any and fn_all
 ; These use the post_t lookup for "any" and "all" functions.
 
 2024/01/01 Test

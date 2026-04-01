@@ -1,4 +1,4 @@
-; Coverage: account.cc lines 679-680: posts_virtuals_count in details_t::update
+; Coverage: account.cc posts_virtuals_count in details_t::update
 ; Tests virtual postings in account details
 
 2024/01/15 * Payee

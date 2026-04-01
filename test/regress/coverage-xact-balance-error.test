@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 656-661
+; Coverage test for xact.cc
 ; Tests the balance assertion error when a transaction doesn't balance.
 ; When real postings don't sum to zero and there's no null posting,
 ; finalize() throws a balance error.

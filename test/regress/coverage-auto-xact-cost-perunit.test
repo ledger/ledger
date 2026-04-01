@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 1128-1132
+; Coverage test for xact.cc
 ; Tests auto-xact cost derivation with per-unit price (@).
 ; When the initial post uses per-unit price notation, the auto-generated
 ; amount derives its cost by multiplying price * amount.

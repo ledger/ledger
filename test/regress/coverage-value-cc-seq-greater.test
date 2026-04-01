@@ -1,5 +1,5 @@
 ; Test value.cc: is_greater_than and is_less_than SEQUENCE paths
-; Exercises SEQUENCE comparison (lines 1107-1133 for >, 966-992 for <)
+; Exercises SEQUENCE comparison (for >, 966-992 for <)
 ; Multiple sort keys create sort_value lists compared element by element
 
 2024/01/15 Store

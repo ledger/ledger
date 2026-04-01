@@ -1,4 +1,4 @@
-; Coverage for commodity.cc lines 436-442: price comparison with same price commodity
+; Coverage for commodity.cc price comparison with same price commodity
 ; Two lots with the same price commodity ($) but different values ($100 vs $200)
 ; Exercises the less-than and greater-than price comparison paths
 

@@ -1,4 +1,4 @@
-; Coverage test for select.cc lines 146-153, 323
+; Coverage test for select.cc
 ; Tests select with where clause
 
 2024/01/01 Test

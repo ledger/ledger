@@ -1,4 +1,4 @@
-; Coverage for report.cc line 1666-1668: value_date function lookup
+; Coverage for report.cc value_date function lookup
 ; value_date maps to fn_now in the function lookup table
 
 2024/01/01 Test

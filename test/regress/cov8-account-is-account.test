@@ -1,4 +1,4 @@
-; Coverage test for account.cc lines 448-449:
+; Coverage test for account.cc
 ; Exercise is_account function that returns true.
 
 2024/01/01 Test

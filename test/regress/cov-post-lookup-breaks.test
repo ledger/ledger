@@ -1,4 +1,4 @@
-; Coverage test for post.cc lines 521, 526, 531
+; Coverage test for post.cc
 ; Switch breaks for N/O/R lookups when name is longer than 1 char
 
 2024/01/01 Test

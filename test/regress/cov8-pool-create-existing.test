@@ -1,4 +1,4 @@
-; Coverage for pool.cc line 128: find_or_create existing commodity
+; Coverage for pool.cc find_or_create existing commodity
 
 commodity $1,000.00
 

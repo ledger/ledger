@@ -1,4 +1,4 @@
-; Coverage: journal.cc lines 296-311: tag check expressions
+; Coverage: journal.cc tag check expressions
 ; Tests tag assertions that validate tag values
 
 commodity $

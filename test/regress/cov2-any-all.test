@@ -1,5 +1,5 @@
 ; Test fn_any auto transaction predicate for xact.cc coverage
-; Covers fn_any (line 789-798)
+; Covers fn_any only (fn_all is not exercised)
 
 = expr 'any(account =~ /Expenses/)'
     Budget:AnyExpenses                 1

@@ -1,4 +1,4 @@
-; Test account-rewrite directive (line 573 of textual_directives.cc)
+; Test account-rewrite directive
 ; Exercise the account_rewrite_mappings flow
 ; The account is replaced with the substitution pattern
 

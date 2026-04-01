@@ -1,4 +1,4 @@
-; Coverage test for filters.cc line 350:
+; Coverage test for filters.cc
 ; Exercise force_virtual and force_must_balance in handle_value
 ; via subtotal reporting with balanced virtual postings.
 ; [Account] notation marks postings as virtual must-balance.

@@ -1,7 +1,7 @@
 ; Test weekday name tokens in period expressions
-; Exercises string_to_day_of_week (lines 206-223)
-; determine_when TOK_A_WDAY (lines 879-882)
-; handle_relative_token TOK_A_WDAY (lines 1026-1035)
+; Exercises string_to_day_of_week
+; determine_when TOK_A_WDAY
+; handle_relative_token TOK_A_WDAY
 
 2024/01/07 Sunday Payee
     Expenses:Food    $50.00

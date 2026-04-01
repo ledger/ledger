@@ -1,6 +1,6 @@
 ; Test balance.h: zero balance operations and is_empty/is_realzero
-; Coverage target: balance.h - is_realzero (lines 415-423),
-;   is_empty (line 425), balance simplification for zero amounts
+; Coverage target: balance.h - is_realzero
+;   is_empty, balance simplification for zero amounts
 
 2024/01/15 Purchase
     Expenses:Food       $0.00

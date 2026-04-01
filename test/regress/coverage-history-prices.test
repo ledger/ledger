@@ -1,6 +1,6 @@
-; Coverage test for history.cc lines 182-183, 319
+; Coverage test for history.cc
 ; Tests price history operations including map_prices.
-; Line 319: bidirectional inverted price in map_prices
+; bidirectional inverted price in map_prices
 
 P 2024/01/01 EUR 1.10 $
 P 2024/01/15 EUR 0.85 GBP

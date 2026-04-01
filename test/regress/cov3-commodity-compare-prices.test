@@ -1,5 +1,5 @@
 ; Test commodity comparison with different price currencies
-; Covers commodity.cc lines 418-431 (compare_by_commodity with price disparity)
+; Covers commodity.cc (compare_by_commodity with price disparity)
 
 2024/01/01 Buy Stock A
     Assets:Brokerage    10 AAPL {$150}

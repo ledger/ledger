@@ -1,4 +1,4 @@
-; Coverage for times.cc lines 781-786: TOK_A_MONTH case in handle_relative_token
+; Coverage for times.cc TOK_A_MONTH case in handle_relative_token
 ; Tests "last january" and "next march" with month names after relative tokens
 
 2024/01/15 January

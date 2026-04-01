@@ -1,4 +1,4 @@
-; Test textual_directives.cc: apply tag with no argument error (line 307)
+; Test textual_directives.cc: apply tag with no argument error
 
 apply tag
 

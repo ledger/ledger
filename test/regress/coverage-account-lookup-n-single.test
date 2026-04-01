@@ -1,4 +1,4 @@
-; Coverage: account.cc line 461-462: 'n' shortcut for get_subcount
+; Coverage: account.cc 'n' shortcut for get_subcount
 ; Tests single-char 'n' function name (self posts count)
 
 2024/01/15 * Grocery

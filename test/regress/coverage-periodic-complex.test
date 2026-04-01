@@ -1,4 +1,6 @@
-; Test periodic transaction with complex interval
+; Test bal with a periodic transaction defined but not activated
+; Note: without --budget, the periodic transaction is ignored; only the
+; real transaction is reflected in the output
 
 ~ Monthly
     Expenses:Food    $300.00

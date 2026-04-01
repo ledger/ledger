@@ -1,6 +1,6 @@
-; Coverage for times.cc lines 1561-1612: date_interval_t::dump
+; Coverage for times.cc date_interval_t::dump
 ; The "period" command exercises interval stabilization and sample date output
-; "today" hits the no-duration path (line 1608)
+; "today" hits the no-duration path
 
 2024/01/15 Test
     Expenses:Food    $10.00

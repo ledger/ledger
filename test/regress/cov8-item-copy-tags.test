@@ -1,4 +1,4 @@
-; Coverage for item.cc line 66, 107: copy_details with tags
+; Coverage for item.cc copy_details with tags
 
 = Expenses
     ; AutoTag: AutoValue

@@ -1,4 +1,4 @@
-; Coverage test for select.cc lines 383-386:
+; Coverage test for select.cc
 ; collect and group by clauses
 
 2024/01/15 Test
@@ -9,7 +9,7 @@
     Expenses:Gas     $30.00
     Assets:Cash
 
-; Test group by clause (line 386)
+; Test group by clause
 
 test select account,amount group by account
 Assets:Cash
@@ -23,7 +23,7 @@ Expenses:Gas
 Expenses:Gas                                                             $30.00
 end test
 
-; Test collect clause (line 384)
+; Test collect clause
 
 test select date,payee,amount collect total
 24-Jan-15 Test                                                           $50.00

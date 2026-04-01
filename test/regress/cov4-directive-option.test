@@ -1,4 +1,4 @@
-; Test directive option handling (lines 849-865 of textual_directives.cc)
+; Test directive option handling
 ; Exercise the option_directive path through general_directive
 
 --pedantic

@@ -1,4 +1,4 @@
-; Coverage for journal.cc lines 503-509: has_xdata with period xacts
+; Coverage for journal.cc has_xdata with period xacts
 
 ~ Monthly
     Expenses:Rent    $1000.00

@@ -1,6 +1,6 @@
 ; Test print with fixated price annotations
-; Covers annotate.cc lines 121-124, 196 (ANNOTATION_PRICE_FIXATED flag)
-; and annotate.cc print path lines 239 (fixated output)
+; Covers annotate.cc (ANNOTATION_PRICE_FIXATED flag)
+; annotate.cc print path (fixated output)
 
 2024/01/01 Buy Stock
     Assets:Brokerage    10 AAPL {=$150.00}

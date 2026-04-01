@@ -1,4 +1,4 @@
-; Test textual_directives.cc lines 879-880: value directive
+; Test textual_directives.cc value directive
 ; in general_directive case v
 
 value total_expr

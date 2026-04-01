@@ -1,4 +1,4 @@
-; Coverage for print.cc lines 208, 211-222: print with balance assignment and amount_width
+; Coverage for print.cc print with balance assignment and amount_width
 
 2024/01/01 Opening
     Assets:Cash    = $100.00

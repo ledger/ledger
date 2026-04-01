@@ -1,4 +1,4 @@
-; Coverage for history.cc lines 195-196: edge out of range due to oldest constraint
+; Coverage for history.cc edge out of range due to oldest constraint
 ; The --begin flag sets the oldest parameter for price filtering
 ; Price from 2023 is out of range, only 2024 price is used
 

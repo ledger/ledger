@@ -1,4 +1,4 @@
-; Test coverage for textual_xacts.cc lines 698-703
+; Test coverage for textual_xacts.cc
 ; --permissive skips balance assertion check, allowing wrong assertions
 
 2024/01/01 Opening

@@ -1,4 +1,4 @@
-; Coverage test for filters.cc line 1296: SET_PAYEE in transfer_details
+; Coverage test for filters.cc SET_PAYEE in transfer_details
 ; Tests --payee option which replaces the payee in output with
 ; the result of an expression evaluation.
 

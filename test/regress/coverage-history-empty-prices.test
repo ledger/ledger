@@ -1,4 +1,4 @@
-; Coverage for history.cc lines 182-183: empty prices map for given time window
+; Coverage for history.cc empty prices map for given time window
 ; Price exists only in the future, so edge filter returns false
 ; and conversion cannot happen at the requested time
 

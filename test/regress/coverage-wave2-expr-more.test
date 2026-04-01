@@ -10,13 +10,13 @@
     Expenses:Transport         $20.00
     Assets:Cash
 
-; Test amount fast path detection (line 127-128) - default amount expression
+; Test amount fast path detection - default amount expression
 test reg Expenses
 24-Jan-01 Test A                Expenses:Food                $10.00       $10.00
 24-Jan-02 Test B                Expenses:Transport           $20.00       $30.00
 end test
 
-; Test expression error path - bad expression (lines 143-154)
+; Test expression error path - bad expression
 test reg --limit "xyzzy()" -> 1
 __ERROR__
 While evaluating value expression:
@@ -27,7 +27,7 @@ While handling posting from "$FILE", line 6:
 Error: Unknown identifier 'xyzzy'
 end test
 
-; Test merged expression path with multiple --display (line 250-260)
+; Test merged expression path with multiple --display
 test reg --display "account =~ /Food/" --display "amount > 0" Expenses
 24-Jan-01 Test A                Expenses:Food                $10.00       $10.00
 end test

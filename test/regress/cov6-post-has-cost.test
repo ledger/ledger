@@ -1,5 +1,5 @@
 ; Test has_cost accessor for postings with and without cost
-; Covers post.cc lines 227-228 (has_cost true/false)
+; Covers post.cc (has_cost true/false)
 
 2024/01/01 Purchase
     Expenses:Food    10 EUR @ $1.10

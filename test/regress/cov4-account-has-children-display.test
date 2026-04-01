@@ -1,4 +1,4 @@
-; Test account has_children_to_display (lines 443-444 of account.cc)
+; Test account has_children_to_display
 ; Exercise the has_children_to_display accessor
 
 2024/01/01 Test

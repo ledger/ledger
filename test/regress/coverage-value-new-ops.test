@@ -6,7 +6,7 @@
     Expenses:Drink   5.00 EUR
     Assets:Cash
 
-; Negate boolean - exercises in_place_negate lines 1359-1361
+; Negate boolean - exercises in_place_negate
 test eval -- '-true'
 0
 end test
@@ -15,7 +15,7 @@ test eval -- '-false'
 1
 end test
 
-; Negate integer - exercises in_place_negate line 1364
+; Negate integer - exercises in_place_negate
 test eval -- '-42'
 -42
 end test
@@ -30,12 +30,12 @@ test eval '$10.00 / $5.00'
 $2.00
 end test
 
-; Integer greater than amount - exercises is_greater_than line 1035
+; Integer greater than amount - exercises is_greater_than
 test eval '10 > $5'
 1
 end test
 
-; Amount greater than integer - exercises is_greater_than line 1048
+; Amount greater than integer - exercises is_greater_than
 test eval '$10 > 5'
 1
 end test

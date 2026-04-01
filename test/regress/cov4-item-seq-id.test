@@ -1,4 +1,4 @@
-; Test get_seq and get_id (lines 338-343 of item.cc)
+; Test get_seq and get_id
 ; Exercise the seq and id accessors (case 'i' and 's' in lookup)
 
 2024/01/01 Test

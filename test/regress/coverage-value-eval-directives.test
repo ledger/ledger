@@ -1,6 +1,6 @@
 ; Coverage test for textual_directives.cc
-; Test 'value' directive (line 878-882), 'eval'/'expr' (line 838-842)
-; Test comment directive (line 818-820)
+; Test 'value' directive, 'eval'/'expr'
+; Test comment directive
 
 eval 1 + 1
 

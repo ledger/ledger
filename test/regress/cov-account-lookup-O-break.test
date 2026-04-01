@@ -1,4 +1,4 @@
-; Coverage test for account.cc line 504
+; Coverage test for account.cc
 ; Account lookup 'O' break when fn_name starts with O but isn't just 'O'
 
 2024/01/01 Test

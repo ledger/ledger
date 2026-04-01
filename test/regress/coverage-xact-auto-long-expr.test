@@ -1,7 +1,7 @@
-; Coverage test for xact.cc line 1050: auto xact amount_expr returning long
+; Coverage test for xact.cc auto xact amount_expr returning long
 ; When an automated transaction posting has an expression like (1 * 2)
-; that evaluates to a long integer, line 1050 converts it via to_amount().
-; The result is then multiplied by the initial post amount at line 1062.
+; that evaluates to a long integer, converts it via to_amount
+; The result is then multiplied by the initial post amount
 
 = /^Expenses/
     (Tracking)    (1 * 2)

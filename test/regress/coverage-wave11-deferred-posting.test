@@ -1,4 +1,4 @@
-; Coverage for xact.cc lines 313-315: auto_xact recomputation after fixated
+; Coverage for xact.cc auto_xact recomputation after fixated
 ; price assignment; also covers the balanced-virtual skip logic in the
 ; recompute loop.
 

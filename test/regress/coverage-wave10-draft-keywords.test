@@ -1,6 +1,6 @@
-; Coverage tests for draft.cc lines 120, 133, 138, 142 (xact keyword args)
-; Also covers draft.cc line 59 (empty payee_mask)
-; Also covers draft.cc lines 150, 153 (cost operator)
+; Coverage tests for draft.cc (xact keyword args)
+; Also covers draft.cc (empty payee_mask)
+; Also covers draft.cc (cost operator)
 
 2024/01/01 Grocery Store
     Expenses:Food    $10.00

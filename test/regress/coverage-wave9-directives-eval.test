@@ -1,4 +1,4 @@
-; Test coverage for textual_directives.cc lines 638-657, 780-837
+; Test coverage for textual_directives.cc
 ; eval, define, value, check, assert directives and bucket/year via general_directive
 
 define vat_rate=0.20

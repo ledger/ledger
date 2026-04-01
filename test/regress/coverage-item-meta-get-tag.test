@@ -1,5 +1,5 @@
 ; Test item_t::lookup for meta keyword
-; Targets: item.cc lines 465-466 (meta -> get_tag)
+; Targets: item.cc (meta -> get_tag)
 
 2024/01/15 * Store
     ; Category: food

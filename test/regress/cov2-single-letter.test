@@ -1,5 +1,5 @@
 ; Test single-letter value expression names for report.cc coverage
-; Covers lines 1437-1469 in lookup()
+; Covers in lookup
 
 P 2024/01/01 AAPL $100.00
 
@@ -7,22 +7,22 @@ P 2024/01/01 AAPL $100.00
     Assets:Broker          10 AAPL @ $100.00
     Assets:Cash
 
-; Test S (strip) function (line 1450-1451)
+; Test S (strip) function
 test reg Assets:Broker --format "%(S(amount))\n"
 10 AAPL
 end test
 
-; Test U (abs) function (line 1448-1449)
+; Test U (abs) function
 test reg Assets:Cash --format "%(U(amount))\n"
 $1000.00
 end test
 
-; Test now function via --format (line 1565-1566)
+; Test now function via --format
 test reg Assets:Broker --format "%(now)\n" --now 2024/06/01
 2024/06/01 00:00:00
 end test
 
-; Test market function with target commodity (line 643-720, 1556-1557)
+; Test market function with 2 arguments (amount and date, no target commodity)
 test reg Assets:Broker --format "%(market(amount, now))\n"
 $1000.00
 end test

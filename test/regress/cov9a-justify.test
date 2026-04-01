@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 826-838
+; Coverage test for report.cc
 ; fn_justify right-justifies and pads a value within a given width
 
 2024/01/01 Test

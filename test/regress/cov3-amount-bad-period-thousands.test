@@ -1,5 +1,5 @@
 ; Test error for incorrect use of thousand-mark period
-; Covers amount.cc lines 1193-1194, 1204-1205 (incorrect thousand-mark period)
+; Covers amount.cc (incorrect thousand-mark period)
 
 commodity 1.000,00 EUR
 

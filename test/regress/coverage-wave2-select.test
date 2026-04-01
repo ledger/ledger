@@ -14,7 +14,7 @@
     Expenses:Utilities         $75.00
     Assets:Checking
 
-; Test select with all standard column types - covers lines 55-84, 145-173, 266, 322
+; Test select with all standard column types - covers
 test select date,payee,account,amount,total
 24-Jan-01 Grocery Store        Expenses:Food                $25.00       $25.00
 24-Jan-01 Grocery Store        Assets:Checking             $-25.00            0

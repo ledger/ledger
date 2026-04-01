@@ -1,4 +1,4 @@
-; Coverage for times.cc lines 894-912, 914-923, 925-935: date range operators
+; Coverage for times.cc date range operators
 ; Tests the dash operator, from/since, and until/to date range parsing
 
 2024/01/15 January

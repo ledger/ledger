@@ -1,4 +1,4 @@
-; Coverage: account.cc line 626: amount(real_only=true)
+; Coverage: account.cc amount(real_only=true)
 ; Tests --real flag which filters virtual postings from account amounts
 
 2024/01/15 * Payee

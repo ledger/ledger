@@ -1,5 +1,5 @@
 ; Test include directive with file that has parse error
-; Covers textual_directives.cc lines 248-258 (catch block in include)
+; Covers textual_directives.cc (catch block in include)
 
 include cov9d-include-bad-file.dat
 

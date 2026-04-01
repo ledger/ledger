@@ -1,5 +1,5 @@
 ; Test session int() and str() functions
-; Covers session.cc lines 266-271 (fn_int, fn_str)
+; Covers session.cc (fn_int, fn_str)
 
 2024/01/01 Test
     Expenses:Food    $50.00

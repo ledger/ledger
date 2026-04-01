@@ -1,5 +1,5 @@
-; Test times.cc lines 854-865: month name period without year
-; Also tests handle_date_token (line 1213)
+; Test times.cc month name period without year
+; Also tests handle_date_token
 
 2026/01/15 January tx
     Expenses:Food   $5.00

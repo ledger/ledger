@@ -1,4 +1,4 @@
-; Coverage for textual_xacts.cc line 79: empty match pattern
+; Coverage for textual_xacts.cc empty match pattern
 
 = //
     Expenses:Tax    10%

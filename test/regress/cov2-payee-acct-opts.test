@@ -9,31 +9,31 @@
     Expenses:Gas             $20.00
     Assets:Cash
 
-; Test --payee option (line 1347)
+; Test --payee option
 test reg Expenses --payee "account"
 24-Jan-01 Expenses:Food         Expenses:Food                $10.00       $10.00
 24-Feb-01 Expenses:Gas          Expenses:Gas                 $20.00       $30.00
 end test
 
-; Test --account option (line 1220)
+; Test --account option
 test reg Expenses --account "payee"
 24-Jan-01 Grocery Store         Grocery:Expenses:Food        $10.00       $10.00
 24-Feb-01 Gas Station           Gas Stati:Expenses:Gas       $20.00       $30.00
 end test
 
-; Test --unbudgeted option (line 1398)
+; Test --unbudgeted option
 test reg Expenses --unbudgeted
 24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
 24-Feb-01 Gas Station           Expenses:Gas                 $20.00       $30.00
 end test
 
-; Test --period option (line 1351)
+; Test --period option
 test reg Expenses --period "monthly"
 24-Jan-01 - 24-Jan-31           Expenses:Food                $10.00       $10.00
 24-Feb-01 - 24-Feb-29           Expenses:Gas                 $20.00       $30.00
 end test
 
-; Test eval precommand (line 1839-1840)
+; Test eval precommand
 test eval "2+3"
 5
 end test

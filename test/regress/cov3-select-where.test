@@ -1,5 +1,5 @@
 ; Test select command with where clause
-; Covers select.cc lines 371-379 (where clause handling)
+; Covers select.cc (where clause handling)
 
 2024/01/15 (CHK001) Grocery Store
     Expenses:Food    $50.00

@@ -1,8 +1,8 @@
-; Coverage test for account.cc lines 382 and 400
-; Line 382: fn_any returns false when no posting matches the expression
-; Line 400: account_t::lookup returns nullptr for non-FUNCTION kind
-; Line 445: 'h' case break in switch (has_children_to_display)
-; Line 472: 'n' case break in switch (note)
+; Coverage test for account.cc
+; fn_any returns false when no posting matches the expression
+; account_t::lookup returns nullptr for non-FUNCTION kind
+; 'h' case break in switch (has_children_to_display)
+; 'n' case break in switch (note)
 
 2024/01/01 Test
     ; Note: some info
@@ -21,10 +21,10 @@ test bal --limit='any(amount > 0)'
                    0
 end test
 
-; Test any() returning false for all (line 382 - return false)
+; Test any returning false for all (return false)
 test bal --limit='any(amount > 9999)'
 end test
 
-; Test all() returning false (line 393 account.cc) - not all posts > 0
+; Test all returning false (account.cc) - not all posts > 0
 test bal --limit='all(amount > 0)'
 end test

@@ -1,4 +1,4 @@
-; Coverage test for report.cc line 778-779
+; Coverage test for report.cc
 ; fn_quantity returns the number component of an amount (without commodity)
 
 2024/01/01 Test

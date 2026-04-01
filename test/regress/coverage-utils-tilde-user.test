@@ -1,7 +1,7 @@
 ; Coverage test for utils.cc expand_path/resolve_path
 ; Exercises tilde expansion with ~user/path syntax (getpwnam path)
 ; Uses a non-existent user to exercise the pfx==NULL return path
-; Targets: utils.cc lines 775-778, 783-784 (getpwnam branch)
+; Targets: utils.cc (getpwnam branch)
 include ~nonexistentuser99999/nonexistent_file.dat
 
 2024/01/01 Test

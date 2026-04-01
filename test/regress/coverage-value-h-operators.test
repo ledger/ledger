@@ -1,6 +1,6 @@
 ; Test value.h: operator overloads for mixed-type arithmetic
 ; Exercises value_t::operator+=, -=, *=, /= with different type combinations
-; Targets: value.cc lines 305-749, value.h operator templates
+; Targets: value.cc , value.h operator templates
 
 2024/01/15 Store
     Expenses:Food    $50.00

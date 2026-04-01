@@ -1,5 +1,5 @@
 ; Test session.cc: --check-payees with --pedantic
-; Exercises check_payees (line 114-115) together with pedantic mode (line 119-120)
+; Exercises check_payees together with pedantic mode
 
 payee Grocery Store
 account Expenses:Food

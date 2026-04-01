@@ -1,5 +1,5 @@
 ; Test format abbreviation truncation
-; Covers format.cc lines 511-640 (ABBREVIATE truncation style)
+; Covers format.cc (ABBREVIATE truncation style)
 
 2024/01/15 Test
     Expenses:Groceries:Fresh:Produce:Organic    $50.00

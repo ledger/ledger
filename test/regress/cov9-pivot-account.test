@@ -1,4 +1,4 @@
-; Coverage test for filters.cc line 1290:
+; Coverage test for filters.cc
 ; Exercise transfer_details SET_ACCOUNT path via --pivot.
 
 2024/01/01 Groceries

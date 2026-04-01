@@ -1,12 +1,10 @@
 ; Regression test for issue #611:
-; --trace must not trigger an assertion failure when journal files use
-; the include directive.  The instance_parse timer was restarted with
-; a different description (containing the new filename) and start_timer()
-; asserted that the description matched the original, causing a crash.
+; Verify that journals using the include directive are parsed correctly,
+; with all transactions from included files reflected in the balance.
 ;
-; This test verifies that included files are parsed correctly.  The
-; underlying fix is in start_timer() which now updates the timer
-; description instead of asserting an exact match.
+; (The original bug was that --trace triggered an assertion failure in
+; start_timer() when the included filename caused a description mismatch.
+; The fix updated start_timer() to replace the description instead of asserting.)
 
 2024/01/01 Main Payee
     Expenses:Food    $10.00

@@ -1,6 +1,6 @@
 ; Coverage test for expr.cc: merged_expr_t compile with multiple expressions
-; Exercises: merged_expr_t::compile with exprs list (lines 236-249),
-;   semicolon merge operator (line 240-241)
+; Exercises: merged_expr_t::compile with exprs list
+;   semicolon merge operator
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00

@@ -1,4 +1,4 @@
-; Test item_t::define reentrant guard (line 392 of item.cc)
+; Test item_t::define reentrant guard
 ; Exercise define() through tag evaluation
 
 2024/01/01 Test

@@ -1,5 +1,5 @@
-; Coverage for account.cc lines 519-525: children_with_xdata.
-; Also account.cc line 538: total() for nested accounts.
+; Coverage for account.cc children_with_xdata
+; Also account.cc total for nested accounts
 
 2024/01/01 Test
     Expenses:Food:Groceries       $10.00

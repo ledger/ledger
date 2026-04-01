@@ -1,5 +1,5 @@
 ; Test session.cc: fn_account with mask argument
-; Exercises fn_account mask path (lines 248-249) via account(/regex/) call
+; Exercises fn_account mask path via account(/regex/) call
 
 account Expenses:Food
 account Expenses:Rent

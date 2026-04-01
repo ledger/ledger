@@ -1,5 +1,5 @@
 ; Test DATE value in boolean context
-; Covers value.cc line 94 (DATE operator bool)
+; Covers value.cc (DATE operator bool)
 
 2024/01/15 Test
     Expenses:Food    $50.00

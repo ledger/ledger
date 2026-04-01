@@ -1,4 +1,4 @@
-; Coverage test for times.cc line 725
+; Coverage test for times.cc
 ; "N months today" triggers unexpected in determine_when's ago/hence switch
 
 2024/01/01 Test

@@ -1,7 +1,7 @@
 ; Test value.h: sequence and collection operations
 ; Exercises value_t push_back, push_front, pop_back, size, empty
 ; Also exercises sequence iteration and sort with multiple sort keys
-; Targets: value.h lines 840-901, value.cc sequence operator paths
+; Targets: value.h , value.cc sequence operator paths
 
 2024/01/15 Store A
     Expenses:Food    $50.00

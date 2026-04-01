@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 1140-1144
+; Coverage test for report.cc
 ; pricemap command prints the commodity price map
 
 P 2024/01/01 AAPL $150.00

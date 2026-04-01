@@ -1,4 +1,4 @@
-; Coverage for history.cc lines 281, 291: remove_price and empty price map
+; Coverage for history.cc price lookup with multiple price entries
 
 P 2024/01/01 AAPL $100.00
 P 2024/02/01 AAPL $110.00

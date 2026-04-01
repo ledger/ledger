@@ -1,4 +1,4 @@
-; Coverage test for value.cc lines 867-877
+; Coverage test for value.cc
 ; Exercise boolean comparison in is_less_than
 ; Boolean < Boolean comparison
 

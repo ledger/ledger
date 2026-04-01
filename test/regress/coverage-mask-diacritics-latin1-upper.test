@@ -1,5 +1,5 @@
 ; Coverage tests for mask.cc fold_codepoint: Latin-1 Supplement uppercase
-; Covers lines 51-66: À-Þ uppercase mappings
+; Covers À-Þ uppercase mappings
 
 ; Characters: À(0xC0)→A, Æ(0xC6)→A, Ç(0xC7)→C, È(0xC8)→E
 ;   Ì(0xCC)→I, Ð(0xD0)→D, Ñ(0xD1)→N, Ö(0xD6)→O, Ù(0xD9)→U

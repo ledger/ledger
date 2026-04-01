@@ -1,7 +1,7 @@
 ; Test expr.cc/op.cc: expression error paths
-; Exercises: unknown identifier error (op.cc line 230),
-;   real_calc error handling (expr.cc lines 137-171),
-;   op_context generation (op.cc lines 951-966)
+; Exercises: unknown identifier error
+;   real_calc error handling
+;   op_context generation
 
 2024/01/15 Test
     Expenses:Food    $50.00

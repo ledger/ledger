@@ -1,5 +1,5 @@
 ; Additional tests for amount.cc uncovered lines
-; Covers: decimal comma parsing (lines 1106-1202), time colon output (170-197),
+; Covers: decimal comma parsing, time colon output (170-197)
 ;   reduce/unreduce (705-736), annotate/strip_annotations (889-947),
 ;   invert (569-577), unround (692-703)
 
@@ -39,8 +39,8 @@ test reg Billable --begin 2024/01/03 --end 2024/01/04
 end test
 
 ; --- Annotated amounts with lot price and date ---
-; Covers: lines 889-914 (annotate), 916-935 (has_annotation/annotation),
-;         937-947 (strip_annotations), 751-758 (value with annotation price)
+; Covers: (annotate), (has_annotation/annotation)
+;         (strip_annotations), (value with annotation price)
 2024/01/04 Buy Stock
     Assets:Brokerage      10 AAPL {$150.00} [2024/01/01]
     Assets:Cash           $-1500.00
@@ -50,7 +50,7 @@ test bal --lot-prices Assets:Brokerage
 end test
 
 ; --- Market value with price lookup ---
-; Covers: lines 738-811 (value function), 764-805 (price lookup chain)
+; Covers: (value function), (price lookup chain)
 P 2024/01/04 AAPL $160.00
 
 test bal --market Assets:Brokerage
@@ -58,7 +58,7 @@ test bal --market Assets:Brokerage
 end test
 
 ; --- Invert function ---
-; Covers: lines 569-577 (in_place_invert)
+; Covers: (in_place_invert)
 2024/01/05 Divisible
     Expenses:Test         $5.00
     Assets:Cash
@@ -68,7 +68,7 @@ test reg --amount "1 / amount" Expenses:Test --begin 2024/01/05 --end 2024/01/06
 end test
 
 ; --- Unrounded amounts (GBP avoids $ precision contamination) ---
-; Covers: lines 692-703 (in_place_unround)
+; Covers: (in_place_unround)
 2024/01/06 Unround Test
     Expenses:Unround      GBP 10.125
     Assets:Cash

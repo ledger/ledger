@@ -1,23 +1,23 @@
 ; Wave 2 coverage tests for textual.cc
-; Covers: BOM handling (lines 130-133), directive parsing (lines 163, 164, 224, 244),
+; Covers: BOM handling, directive parsing
 ; Y directive, N directive, D directive, C directive
 
-; Year directive - covers line 244
+; Year directive - covers
 Y 2024
 
-; Default commodity - covers line 234
+; Default commodity - covers
 D $1000.00
 
-; Nomarket directive - covers line 237
+; Nomarket directive - covers
 N $
 
-; Price conversion - covers line 231
+; Price conversion - covers
 C 1.00 Mb = 1000 Kb
 
-; Price directive - covers line 240
+; Price directive - covers
 P 01/01 EUR $1.10
 
-; Option in journal - covers line 179
+; Option in journal - covers
 --input-date-format %m/%d
 
 01/01 Opening Balance

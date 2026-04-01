@@ -5,7 +5,7 @@
     Expenses:Food    $10.00
     Assets:Cash
 
-; operator bool() for different types - exercises lines 82-126
+; operator bool for different types - exercises
 ; Boolean to boolean
 test eval 'to_boolean(true)'
 1
@@ -15,7 +15,7 @@ test eval 'to_boolean(false)'
 0
 end test
 
-; Integer to boolean - exercises line 93
+; Integer to boolean - exercises
 test eval 'to_boolean(42)'
 1
 end test
@@ -24,7 +24,7 @@ test eval 'to_boolean(0)'
 0
 end test
 
-; Amount to boolean - exercises line 95
+; Amount to boolean - exercises
 test eval 'to_boolean($10.00)'
 1
 end test
@@ -33,7 +33,7 @@ test eval 'to_boolean($0.00)'
 0
 end test
 
-; String to boolean - exercises lines 100-101
+; String to boolean - exercises
 test eval 'to_boolean("hello")'
 1
 end test
@@ -42,7 +42,7 @@ test eval 'to_boolean("")'
 0
 end test
 
-; Date to boolean - exercises line 91
+; Date to boolean - exercises
 test eval 'to_boolean([2024/01/01])'
 1
 end test

@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 1104-1111
+; Coverage test for xact.cc
 ; Tests auto-xact account name %(format) substitution.
 ; The %(account) format directive in the auto-xact's posting account
 ; name is evaluated and replaced with the formatted result at runtime.

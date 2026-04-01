@@ -1,4 +1,4 @@
-; Test coverage for filters.cc lines 713-715
+; Test coverage for filters.cc
 ; --unbudgeted shows transactions not matched by any budget
 
 ~ Monthly

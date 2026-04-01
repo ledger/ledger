@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 1048-1050
+; Coverage test for xact.cc
 ; Tests auto-xact when the amount expression returns a long (integer).
 ; The expression (2 * 5) returns 10 as a long, which is then converted
 ; to an amount. Since it has no commodity, it acts as a multiplier

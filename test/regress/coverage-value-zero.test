@@ -1,6 +1,6 @@
 ; Test value.cc: zero value operations and simplification
-; Coverage target: value.cc - in_place_simplify is_realzero path (line 261-264),
-;   operator bool() for various types, is_realzero() paths (lines 1427-1458),
+; Coverage target: value.cc - in_place_simplify is_realzero path
+;   operator bool for various types, is_realzero paths
 ;   balance.h - is_realzero, is_empty
 
 2024/01/15 Transfer

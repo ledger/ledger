@@ -1,4 +1,4 @@
-; Test textual_directives.cc line 670: break on blank whitespace line
+; Test textual_directives.cc break on blank whitespace line
 ; inside tag directive block
 tag MyTag
     check value =~ /./

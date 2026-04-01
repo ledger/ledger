@@ -1,4 +1,4 @@
-; Coverage test for report.cc line 1067
+; Coverage test for report.cc
 ; fn_to_string converts a value to a string
 
 2024/01/01 Test

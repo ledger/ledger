@@ -1,4 +1,4 @@
-; Wave 3 coverage tests for value.cc is_greater_than (lines 1001-1133)
+; Wave 3 coverage tests for value.cc is_greater_than
 ; Tests comparison paths for various value types
 
 2024/01/01 First
@@ -13,7 +13,7 @@
     Expenses:Rent    $50.00
     Assets:Cash
 
-; BOOLEAN comparisons (lines 1006-1019)
+; BOOLEAN comparisons
 test eval "true > false"
 1
 end test
@@ -30,7 +30,7 @@ test eval "false > false"
 0
 end test
 
-; INTEGER comparisons (lines 1032-1043)
+; INTEGER comparisons
 test eval "5 > 3"
 1
 end test
@@ -39,22 +39,22 @@ test eval "3 > 5"
 0
 end test
 
-; INTEGER > AMOUNT (line 1036-1037)
+; INTEGER > AMOUNT
 test eval "20 > {10 EUR}"
 1
 end test
 
-; AMOUNT > INTEGER (line 1047-1048)
+; AMOUNT > INTEGER
 test eval "{20 EUR} > 10"
 1
 end test
 
-; AMOUNT > AMOUNT (lines 1049-1050)
+; AMOUNT > AMOUNT
 test eval "{20 EUR} > {10 EUR}"
 1
 end test
 
-; STRING comparisons (lines 1091-1100)
+; STRING comparisons
 test eval '"xyz" > "abc"'
 1
 end test
@@ -63,7 +63,7 @@ test eval '"abc" > "xyz"'
 0
 end test
 
-; DATE comparisons via --sort "date" (lines 1027-1029)
+; DATE comparisons via --sort "date"
 test reg --sort "date" --date-format "%Y/%m/%d"
 2024/01/01 First                Expenses:Food                $10.00       $10.00
                                 Assets:Cash                 $-10.00            0
@@ -73,7 +73,7 @@ test reg --sort "date" --date-format "%Y/%m/%d"
                                 Assets:Cash                 $-50.00            0
 end test
 
-; AMOUNT comparisons via --sort "amount" (lines 1045-1056)
+; AMOUNT comparisons via --sort "amount"
 test reg --sort "amount" --date-format "%Y/%m/%d"
 2024/01/03 Third                Assets:Cash                 $-50.00      $-50.00
 2024/01/02 Second               Assets:Cash                 $-20.00      $-70.00
@@ -83,7 +83,7 @@ test reg --sort "amount" --date-format "%Y/%m/%d"
 2024/01/03 Third                Expenses:Rent                $50.00            0
 end test
 
-; STRING comparisons via --sort "account" (lines 1091-1100)
+; STRING comparisons via --sort "account"
 test bal --sort "account"
              $-80.00  Assets:Cash
               $80.00  Expenses
@@ -94,7 +94,7 @@ test bal --sort "account"
                    0
 end test
 
-; STRING comparisons via --sort "payee" (lines 1091-1100)
+; STRING comparisons via --sort "payee"
 test reg --sort "payee" --date-format "%Y/%m/%d"
 2024/01/01 First                Expenses:Food                $10.00       $10.00
                                 Assets:Cash                 $-10.00            0

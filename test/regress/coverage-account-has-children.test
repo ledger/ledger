@@ -1,4 +1,4 @@
-; Coverage: account.cc line 445 - has_children_to_display lookup
+; Coverage: account.cc - has_children_to_display lookup
 
 2024/01/01 Test
     Expenses:Food:Groceries    $10.00

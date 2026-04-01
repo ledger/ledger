@@ -1,4 +1,4 @@
-; Test tag directive with assert value check (line 670 of textual_directives.cc)
+; Test tag directive with assert value check
 ; Exercise the tag_directive path with assert sub-directive
 
 tag Priority

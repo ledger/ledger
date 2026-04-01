@@ -1,4 +1,4 @@
-; Coverage for xact.cc line 641 (continue for POST_COST_IN_FULL)
+; Coverage for xact.cc (continue for POST_COST_IN_FULL)
 ; In the rounding adjustment loop, total cost (@@) postings are
 ; skipped because their cost precision doesn't follow the per-unit
 ; rounding logic.

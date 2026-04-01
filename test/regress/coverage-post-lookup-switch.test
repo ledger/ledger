@@ -1,4 +1,4 @@
-; Coverage test for post.cc lines 521, 526, 531
+; Coverage test for post.cc
 ; Tests the switch/break paths in post_t::lookup for single-char
 ; function names N (count), O (total), and R (real).
 ; These break statements are hit when the function name matches.

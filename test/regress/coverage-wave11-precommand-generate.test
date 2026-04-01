@@ -1,5 +1,5 @@
 ; Test script precommand for report.cc coverage
-; Targets report.cc lines 1736-1737 (script precommand lookup)
+; Targets report.cc (script precommand lookup)
 ; The script precommand is an alias for source
 
 2024/01/15 Grocery Store

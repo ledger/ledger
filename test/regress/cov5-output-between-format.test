@@ -1,4 +1,4 @@
-; Coverage for output.cc lines 54-57: three-part format string with between_format
+; Coverage for output.cc three-part format string with between_format
 
 2024/01/01 Test1
     Expenses:Food    $10.00

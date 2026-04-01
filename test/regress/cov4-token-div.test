@@ -1,4 +1,4 @@
-; Test token parsing for 'div' keyword (lines 59-66 of token.cc)
+; Test token parsing for 'div' keyword
 ; Exercise the division operator keyword
 
 2024/01/01 Test

@@ -1,4 +1,6 @@
-; Test print command with auto and periodic transactions (exercises print.cc)
+; Test print command which outputs only regular transactions
+; Note: auto (=) and periodic (~) transactions are defined but absent
+; from expected output; print only emits the regular transaction
 
 2024/01/15 * (1001) Grocery Store
     ; Location: Downtown

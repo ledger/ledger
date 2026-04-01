@@ -1,4 +1,4 @@
-; Test account_t amount() with last_reported_post (line 630 of account.cc)
+; Test account_t amount with last_reported_post
 ; Exercise the reported_posts iteration in account_t::amount()
 
 2024/01/01 Test1

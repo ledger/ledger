@@ -1,5 +1,5 @@
 ; Session.cc coverage - fn_account function
-; Covers: fn_account (lines 249-256) - string and mask lookup paths
+; Covers: fn_account - string and mask lookup paths
 
 2024/01/01 Test A
     Expenses:Food              $10.00
@@ -9,12 +9,12 @@
     Expenses:Transport         $20.00
     Assets:Cash
 
-; Test account() function with string arg - covers line 251
+; Test account function with string arg - covers
 test eval "account(\"Expenses:Food\")"
 <#SCOPE>
 end test
 
-; Test account() function with regex arg - covers line 253
+; Test account function with regex arg - covers
 test eval "account(/Transport/)"
 <#SCOPE>
 end test

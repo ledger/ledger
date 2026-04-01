@@ -1,4 +1,4 @@
-; Test account lookup latest_checkout (lines 461-462 of account.cc)
+; Test account lookup latest_checkout
 ; Exercise the latest_checkout accessor
 
 2024/01/01 Test

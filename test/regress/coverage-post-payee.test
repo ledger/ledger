@@ -1,4 +1,4 @@
-; Coverage: post.cc line 170 - get_payee in register format
+; Coverage: post.cc - get_payee in register format
 
 2024/01/01 Grocery Store
     Expenses:Food    $10.00

@@ -1,5 +1,5 @@
 ; Test balance exchange with source:target syntax
-; Covers value.cc lines 1598-1634 (BALANCE path in exchange)
+; Covers value.cc (BALANCE path in exchange)
 
 P 2024/01/15 EUR $1.10
 P 2024/01/15 GBP $1.30

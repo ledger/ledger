@@ -1,9 +1,9 @@
 ; Test "next year", "last 2 years", and "this quarter" as standalone periods
-; Exercises handle_relative_token TOK_YEAR (lines 1038-1042)
-; handle_relative_token TOK_QUARTER (lines 1045-1058)
-; handle_relative_token TOK_WEEK (lines 1061-1074)
-; handle_relative_token TOK_DAY (lines 1077-1081)
-; handle_relative_token TOK_MONTH (lines 1085-1090)
+; Exercises handle_relative_token TOK_YEAR
+; handle_relative_token TOK_QUARTER
+; handle_relative_token TOK_WEEK
+; handle_relative_token TOK_DAY
+; handle_relative_token TOK_MONTH
 
 2023/06/15 Payee A
     Expenses:Food    $50.00

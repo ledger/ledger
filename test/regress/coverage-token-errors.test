@@ -21,7 +21,7 @@ While parsing value expression:
 Error: Invalid token '<end of input>' (wanted ':')
 end test
 
-; Unterminated single-quoted string (token.cc line 220)
+; Unterminated single-quoted string
 test eval "'" -> 1
 __ERROR__
 While parsing value expression:
@@ -30,7 +30,7 @@ While parsing value expression:
 Error: Missing '''
 end test
 
-; Unterminated double-quoted string (token.cc line 264)
+; Unterminated double-quoted string
 test eval '"unterminated' -> 1
 __ERROR__
 While parsing value expression:
@@ -39,7 +39,7 @@ While parsing value expression:
 Error: Missing '"'
 end test
 
-; Unterminated regex (token.cc line 347)
+; Unterminated regex
 test eval '/unterminated' -> 1
 __ERROR__
 While parsing value expression:
@@ -48,7 +48,7 @@ While parsing value expression:
 Error: Missing '/'
 end test
 
-; Unterminated braced amount (token.cc line 278)
+; Unterminated braced amount
 test eval '{$10' -> 1
 __ERROR__
 While parsing value expression:
@@ -57,7 +57,7 @@ While parsing value expression:
 Error: Missing '}'
 end test
 
-; Invalid date in brackets (token.cc line 208)
+; Invalid date in brackets
 test eval '[invalid_date]' -> 1
 __ERROR__
 While parsing value expression:

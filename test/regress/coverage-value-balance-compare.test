@@ -1,8 +1,8 @@
 ; Test value.cc: balance/amount comparison operators
-; Coverage target: value.cc - is_less_than AMOUNT vs AMOUNT (lines 904-909),
-;   is_less_than BALANCE vs INTEGER/AMOUNT (lines 921-927),
-;   is_greater_than INTEGER vs AMOUNT (line 1037),
-;   is_equal_to AMOUNT vs AMOUNT (line 789)
+; Coverage target: value.cc - is_less_than AMOUNT vs AMOUNT
+;   is_less_than BALANCE vs INTEGER/AMOUNT
+;   is_greater_than INTEGER vs AMOUNT
+;   is_equal_to AMOUNT vs AMOUNT
 
 2024/01/15 Purchase
     Expenses:Food       $100.00

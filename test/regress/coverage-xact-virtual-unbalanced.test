@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 614-615
+; Coverage test for xact.cc
 ; Tests the error path when balanced virtual postings don't balance.
 
 2024/01/01 Test

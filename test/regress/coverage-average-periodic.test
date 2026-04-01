@@ -6,7 +6,7 @@
 ; and late-appearing accounts.
 ;
 ; Related issues: #1087 (balance count inflation), #1950 (per-account
-; register averages), #2980 (collapse + distributed expenses regression).
+; register averages), #2980 (collapse + distributed expenses regression)
 
 ; --- Journal data ---
 
@@ -86,10 +86,8 @@ test -Y -A reg Expenses
                                 Expenses:Rent                 $3000        $3000
 end test
 
-; --- Test 6: Register --monthly --average, account appearing late ---
-; Rent appears in all 3 months, Food only in months 2 and 3.
-; When Food first appears in month 2, its per-account average should be
-; independent: $200/2 = $100 (not inheriting Rent's running total).
+; --- Test 6: Register --monthly --average, single account (Rent) ---
+; Rent appears in all 3 months at $1000 each, so average is $1000 throughout.
 
 test -M -A reg Expenses:Rent
 24-Jan-01 - 24-Jan-31           Expenses:Rent                 $1000        $1000

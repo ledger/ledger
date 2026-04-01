@@ -1,4 +1,4 @@
-; Coverage for textual_directives.cc line 124 (price_xact_directive)
+; Coverage for textual_directives.cc (price_xact_directive)
 ; Also covers history.cc lines for price conversion
 
 P 2024/01/01 AAPL $150.00

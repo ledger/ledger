@@ -1,4 +1,4 @@
-; Coverage test for times.cc line 158, 160-161
+; Coverage test for times.cc
 ; Exercise invalid date parsing (date that parses but reformats differently)
 ; Feb 30 gets caught at Boost.Date level. Let's try a date that
 ; passes parsing but fails the reformat check.

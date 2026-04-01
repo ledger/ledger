@@ -1,4 +1,4 @@
-; Coverage for xact.cc lines 1021-1027 (deferred_notes in auto_xact)
+; Coverage for xact.cc (deferred_notes in auto_xact)
 ; Notes/tags defined in auto transactions are applied to matching posts.
 
 = Expenses

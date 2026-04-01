@@ -1,5 +1,5 @@
 ; Coverage test for compare.h/cc: compare_items for post sorting
-; Exercises compare.cc lines 82-107: compare_items<post_t>::operator()
+; Exercises compare.cc compare_items<post_t>::operator
 ; with multi-field sort expressions
 
 2024/01/01 Grocery Store

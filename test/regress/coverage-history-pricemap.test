@@ -1,11 +1,11 @@
-; Coverage test for history.cc lines 291, 319, 337, 377, 397, 405, 407,
+; Coverage test for history.cc
 ; 443, 454, 488, 523-526
 ; Tests price history graph operations including:
-; Line 291: map_prices early return for missing graph_index
-; Lines 319, 377: inverted price handling in map_prices/find_price
-; Lines 337, 405, 407: find_price source/target guards
-; Lines 443, 454, 488: multi-hop price path resolution
-; Lines 523-526: print_map with and without moment
+; map_prices early return for missing graph_index
+; inverted price handling in map_prices/find_price
+; find_price source/target guards
+; multi-hop price path resolution
+; print_map with and without moment
 
 P 2024/01/01 EUR 1.10 $
 P 2024/01/15 GBP 1.30 $

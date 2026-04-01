@@ -1,5 +1,5 @@
 ; Test fn_commodity for report.cc coverage
-; Targets report.cc lines 838-840 (fn_commodity)
+; Targets report.cc (fn_commodity)
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00

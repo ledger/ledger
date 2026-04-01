@@ -1,5 +1,4 @@
 ; Coverage wave 11: amount.cc apostrophe thousands separator
-; Targets lines 1191
 
 commodity CHF 1'000.00
 

@@ -1,4 +1,4 @@
-; Coverage: commodity.cc line 79 (map_prices with CURRENT_TIME fallback)
+; Coverage: commodity.cc (map_prices with CURRENT_TIME fallback)
 ; The prices command calls map_prices without a specific moment,
 ; triggering the CURRENT_TIME() fallback when epoch is not set.
 

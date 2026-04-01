@@ -1,5 +1,5 @@
 ; Coverage tests for mask.cc fold_codepoint: Latin Extended-A part 1
-; Covers lines 90-109: Ā-ĺ mappings
+; Covers Ā-ĺ mappings
 
 ; Ā(0x100)→A, ā(0x101)→a, Ć(0x106)→C, ć(0x107)→c
 ; Ď(0x10E)→D, ď(0x10F)→d, Ē(0x112)→E, ē(0x113)→e

@@ -1,4 +1,4 @@
-; Test coverage for textual_xacts.cc lines 60-80
+; Test coverage for textual_xacts.cc
 ; Automated xact directive with single-quoted pattern
 
 = 'Food'

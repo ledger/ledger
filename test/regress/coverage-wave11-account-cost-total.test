@@ -1,4 +1,4 @@
-; Coverage for account.cc lines 453,460: Account 'total' and 'amount' lookups.
+; Coverage for account.cc Account 'total' and 'amount' lookups
 ; Also covers 'subcount' path.
 
 2024/01/01 Test

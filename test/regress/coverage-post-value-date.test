@@ -1,4 +1,4 @@
-; Coverage test for post.cc lines 335-341, 343-345
+; Coverage test for post.cc
 ; Tests get_value_date and get_datetime accessors.
 ; When no special xdata date is set, value_date returns the posting date
 ; and datetime returns a datetime from the posting date.

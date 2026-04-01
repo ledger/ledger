@@ -1,4 +1,4 @@
-; Regression test for issue #615: --strict sees auto xacts at beginning of Journal as uncleared (BZ#615)
+; Regression test for issue #615: auto xacts at beginning of journal seen as uncleared (BZ#615)
 ; https://github.com/ledger/ledger/issues/615
 ;
 ; When auto transactions (=) appear at the beginning of a journal, --cleared and --uncleared

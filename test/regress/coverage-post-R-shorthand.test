@@ -1,5 +1,5 @@
 ; Test post_t::lookup for R shorthand
-; Targets: post.cc lines 514-515 (R -> get_real)
+; Targets: post.cc (R -> get_real)
 
 2024/01/15 * Store
     Expenses:Food              $50.00

@@ -1,4 +1,4 @@
-; Coverage test for account.cc lines 629-630:
+; Coverage test for account.cc
 ; Exercise reported_posts via automated transactions.
 
 = Expenses

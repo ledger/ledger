@@ -1,4 +1,4 @@
-; Test define directive (line 828-832 of textual_directives.cc)
+; Test define directive
 ; Exercise the 'def' / 'define' path through general_directive
 
 define myfunc(x) = x * 2

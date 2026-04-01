@@ -1,4 +1,4 @@
-; Coverage test for xact.cc line 192
+; Coverage test for xact.cc
 ; Tests the error when a transaction has two postings with null amounts.
 ; Only one posting with null amount is allowed per transaction.
 

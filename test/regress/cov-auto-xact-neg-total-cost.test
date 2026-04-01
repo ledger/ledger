@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 1126-1128
+; Coverage test for xact.cc
 ; auto_xact with negative amount and total cost annotation (@@)
 
 = Expenses

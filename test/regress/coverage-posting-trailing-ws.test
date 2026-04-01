@@ -1,4 +1,4 @@
-; Test trailing whitespace trimming in posting (textual_xacts.cc line 456)
+; Test trailing whitespace trimming in posting
 2024/01/01 Test
     Expenses:Food 
     Assets:Cash    $-10.00

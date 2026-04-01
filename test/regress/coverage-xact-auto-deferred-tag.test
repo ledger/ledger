@@ -1,5 +1,5 @@
 ; Test auto transaction deferred tag applied to specific post
-; Targets: xact.cc lines 784-789, 911-916 (deferred_notes handling)
+; Targets: xact.cc (deferred_notes handling)
 
 = /Expenses/
     ; MyTag: hello

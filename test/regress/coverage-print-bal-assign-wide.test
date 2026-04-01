@@ -1,4 +1,4 @@
-; Coverage for print.cc line 222: balance assignment wider than amount width
+; Coverage for print.cc balance assignment wider than amount width
 
 2024/01/01 Test
     Assets:Cash    = $1000000000.00

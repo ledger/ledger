@@ -1,5 +1,5 @@
 ; Wave 2 coverage tests for annotate.cc error paths - double brace mismatch
-; Covers: double brace closing mismatch (line 132)
+; Covers: double brace closing mismatch
 
 2024/01/01 Double Brace Mismatch
     Assets:Test              1 FOO {{$100.00}

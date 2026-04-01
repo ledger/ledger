@@ -1,5 +1,4 @@
 ; Coverage tests for xact.cc fn_any and fn_all
-; Targets lines 608-630
 
 2024/01/01 Test Payee
     Expenses:Food            $10.00

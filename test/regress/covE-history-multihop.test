@@ -1,4 +1,4 @@
-; Coverage for history.cc lines 443, 454, 472-488: multi-hop price conversion
+; Coverage for history.cc multi-hop price conversion
 ; Tests conversion through an intermediate commodity
 
 P 2024/01/01 AAPL $150.00

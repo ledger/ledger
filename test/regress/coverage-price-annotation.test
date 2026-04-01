@@ -1,5 +1,5 @@
-; Coverage for post.cc lines 244-245 (get_price with annotation)
-; and lines 226-228 (get_has_cost, get_cost with cost)
+; Coverage for post.cc (get_price with annotation)
+; (get_has_cost, get_cost with cost)
 ; Tests price extraction from annotated amounts.
 
 2024/01/01 Buy

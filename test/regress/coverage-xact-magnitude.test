@@ -1,6 +1,6 @@
 ; Coverage test for xact.cc: magnitude() and code accessor
-; Exercises xact.cc line 603: magnitude lookup
-; and xact.h lines 84, 92-100: code and description accessors
+; Exercises xact.cc magnitude lookup
+; xact.h code and description accessors
 
 2024/01/01 (CHK001) Grocery Store
     Expenses:Food    $25.00

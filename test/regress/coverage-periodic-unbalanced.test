@@ -1,4 +1,4 @@
-; Coverage test for textual_xacts.cc lines 276-278
+; Coverage test for textual_xacts.cc
 ; Periodic transaction that fails to balance
 
 ~ Monthly

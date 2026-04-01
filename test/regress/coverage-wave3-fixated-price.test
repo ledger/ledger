@@ -1,4 +1,4 @@
-; Coverage tests for xact.cc fixated price handling (lines 280-319)
+; Coverage tests for xact.cc fixated price handling
 ; Tests the code path where more than 2 commodities exist with fixated prices
 
 2024/01/01 Multi-commodity with fixated prices

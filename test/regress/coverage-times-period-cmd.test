@@ -1,13 +1,13 @@
 ; Test the "period" command which exercises show_period_tokens and dump
-; Exercises: show_period_tokens (lines 1890-1901)
-; token_t::dump (lines 515-632)
-; token_t::to_string (lines 426-513)
-; date_interval_t::dump (lines 1560-1612)
-; date_interval_t::stabilize (lines 1345-1461)
-; date_interval_t::resolve_end (lines 1300-1315)
-; date_interval_t::operator++ (lines 1536-1558)
-; date_duration_t::find_nearest (lines 1317-1343)
-; date_duration_t operator<< (lines 323-337)
+; Exercises: show_period_tokens
+; token_t::dump
+; token_t::to_string
+; date_interval_t::dump
+; date_interval_t::stabilize
+; date_interval_t::resolve_end
+; date_interval_t::operator++
+; date_duration_t::find_nearest
+; date_duration_t operator<<
 
 2024/01/15 Payee A
     Expenses:Food    $50.00

@@ -1,4 +1,4 @@
-; Coverage for report.cc line 1076: fn_to_sequence
+; Coverage for report.cc fn_to_sequence
 ; Converts a value to a sequence type
 
 2024/01/01 Test

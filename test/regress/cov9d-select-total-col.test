@@ -1,6 +1,6 @@
 ; Test select command with total column
-; Covers select.cc line 72 (total ident in get_principal_identifiers),
-;   line 66 (amount ident), lines 301-329 (amount/total column formatting)
+; Covers select.cc (total ident in get_principal_identifiers)
+;   (amount ident), (amount/total column formatting)
 
 2024/01/15 Groceries
     Expenses:Food    $50.00

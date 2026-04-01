@@ -1,4 +1,4 @@
-; Coverage test for select.cc lines 54-56, 184, 256:
+; Coverage test for select.cc
 ; Exercise select with aux_date field.
 
 2024/01/01=2024/02/01 Test

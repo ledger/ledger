@@ -1,7 +1,7 @@
 ; Coverage test for filters.cc changed_value_posts with --gain
 ; Tests the revaluation output path in output_intermediate_prices.
 ; When market prices change between posts, revaluations are generated.
-; This exercises the AMOUNT type case (lines 840-841) when the
+; This exercises the AMOUNT type case when the
 ; last_total is a simple amount.
 
 P 2024/01/01 AAPL $150.00

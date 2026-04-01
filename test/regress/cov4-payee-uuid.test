@@ -1,4 +1,4 @@
-; Test payee directive uuid sub-directive (lines 543-544, 553-555 of textual_directives.cc)
+; Test payee directive uuid sub-directive
 ; Exercise the uuid keyword within a payee directive
 
 payee Grocery Store

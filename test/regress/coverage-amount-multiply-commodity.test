@@ -1,4 +1,4 @@
-; Coverage for amount.cc lines 494-495:
+; Coverage for amount.cc
 ; When multiplying a bare amount (no commodity) by a commoditized amount,
 ; the result inherits the commodity from the multiplier. Here 2.0 has
 ; no commodity, and amount has $, so the result gets $.

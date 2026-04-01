@@ -1,4 +1,4 @@
-; Test coverage for filters.cc lines 705-760
+; Test coverage for filters.cc
 ; --gain report with price changes (changed_value_posts)
 
 P 2024/01/01 AAPL $150.00

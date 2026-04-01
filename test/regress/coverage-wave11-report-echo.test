@@ -1,5 +1,5 @@
 ; Test echo command for report.cc coverage
-; Targets report.cc lines 1026-1029 (echo_command) and line 1652
+; Targets report.cc (echo_command)
 
 2024/01/15 Test
     Expenses:Food    $50.00

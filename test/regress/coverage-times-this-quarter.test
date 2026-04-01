@@ -1,5 +1,5 @@
 ; Test this/next/last with quarter and week in handle_relative_token
-; (exercises handle_relative_token in times.cc: lines 961-1093)
+; (exercises handle_relative_token in times.cc: )
 ; Specifically targets TOK_QUARTER and TOK_WEEK branches
 
 2024/01/15 Payee A

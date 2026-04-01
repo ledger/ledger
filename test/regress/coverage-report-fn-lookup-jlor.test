@@ -1,9 +1,9 @@
 ; Coverage for report.cc break statements in FUNCTION lookup:
-; Line 1548 (case 'j'), 1553 (case 'l'), 1574 (case 'o'),
-; Line 1592 (case 'q'), 1603 (case 'r'), 1614 (case 's')
+; Line (case 'j'), (case 'l'), (case 'o')
+; Line (case 'q'), (case 'r'), (case 's')
 ; When a function name starts with the right letter but does not match
 ; any known function, the break fires and control falls through to the
-; option lookup at line 1684.
+; option lookup
 
 2024/01/01 Test
     Expenses:Food  $10.00

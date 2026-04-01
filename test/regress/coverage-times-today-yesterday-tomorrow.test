@@ -1,4 +1,4 @@
-; Coverage for times.cc lines 1085-1096: handle_simple_period_token
+; Coverage for times.cc handle_simple_period_token
 ; Tests "today", "yesterday", and "tomorrow" as period expressions
 
 2024/01/01 New Year

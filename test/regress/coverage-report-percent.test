@@ -1,4 +1,4 @@
-; Coverage for report.cc lines 933-936: fn_percent
+; Coverage for report.cc fn_percent
 ; Calculates the percentage of one amount relative to another
 
 2024/01/01 Test

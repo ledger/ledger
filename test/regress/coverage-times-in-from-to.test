@@ -1,5 +1,5 @@
 ; Test "in" token and "from X to Y" period expressions
-; (exercises handle_in_token in times.cc: lines 950-958)
+; (exercises handle_in_token in times.cc: )
 ; Also tests combined since+until with today/tomorrow tokens
 
 2024/01/15 Payee A

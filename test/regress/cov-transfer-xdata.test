@@ -1,4 +1,4 @@
-; Coverage test for filters.cc line 1290
+; Coverage test for filters.cc
 ; transfer_details SET_ACCOUNT copies xdata flags from previous account
 ; Auto_xact sets xdata on accounts, then --account renames them
 

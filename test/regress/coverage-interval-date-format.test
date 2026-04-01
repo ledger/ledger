@@ -1,5 +1,5 @@
-; Coverage for filters.cc lines 966-967 (range date format)
-; and lines 1070-1071 (interval_posts operator)
+; Coverage for filters.cc (range date format)
+; (interval_posts operator)
 ; When using --period with --date-format, the range date format code
 ; is exercised to format the period payee string.
 

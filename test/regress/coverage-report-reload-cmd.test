@@ -1,4 +1,4 @@
-; Test report.cc: reload_command (lines 1120-1123)
+; Test report.cc: reload_command
 ; The reload command re-reads journal files
 
 2024/01/01 Test

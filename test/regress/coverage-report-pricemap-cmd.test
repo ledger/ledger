@@ -1,4 +1,4 @@
-; Test report.cc: pricemap_command (lines 1140-1144)
+; Test report.cc: pricemap_command
 
 P 2024/01/01 AAPL $150.00
 

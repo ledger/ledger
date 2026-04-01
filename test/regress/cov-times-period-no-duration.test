@@ -1,4 +1,4 @@
-; Coverage test for times.cc line 1608-1609
+; Coverage test for times.cc
 ; Exercise period dump with no duration (just a date range)
 ; This hits the "if (!duration) break" path in dump()
 

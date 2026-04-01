@@ -1,4 +1,4 @@
-; Test format with only max_width (no min_width) (exercises format.cc line 216: min=max when min==0)
+; Test format with only max_width (no min_width) (exercises format.cc min=max when min==0)
 
 2024/01/15 * Test
     Expenses:Food:Groceries:VeryLongSubcategory:MoreDetails    $50.00

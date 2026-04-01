@@ -1,7 +1,7 @@
-; Coverage test for filters.cc lines 966-967, 1070-1071
+; Coverage test for filters.cc
 ; Tests interval_posts with --date-format and posts without duration period
-; Line 966-967: date_format branch in report_subtotal
-; Line 1070-1071: interval_posts::operator() without duration, using find_period
+; date_format branch in report_subtotal
+; interval_posts::operator without duration, using find_period
 
 2024/01/15 Groceries
     Expenses:Food             $50.00

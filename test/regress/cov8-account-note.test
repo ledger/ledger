@@ -1,4 +1,4 @@
-; Coverage test for account.cc line 470-472:
+; Coverage test for account.cc
 ; Exercise account 'note' lookup and 'n' (subcount) function.
 
 account Expenses:Food

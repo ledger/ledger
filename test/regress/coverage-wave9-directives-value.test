@@ -1,4 +1,4 @@
-; Test coverage for textual_directives.cc lines 655-657
+; Test coverage for textual_directives.cc
 ; value directive sets journal-wide value expression
 
 value amount

@@ -1,4 +1,4 @@
-; Coverage test for post.cc lines 195, 212-213, 221
+; Coverage test for post.cc
 ; Tests compound_value paths in get_amount, get_commodity, and
 ; get_commodity_is_primary when POST_EXT_COMPOUND is set.
 ; The --subtotal flag causes subtotal_posts to set compound_value.

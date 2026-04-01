@@ -1,5 +1,5 @@
 ; Test value_t annotate for AMOUNT type
-; Exercises annotate path (line 1844)
+; Exercises annotate path
 ; Annotations are triggered by lot prices
 
 2024/01/15 Buy Stock

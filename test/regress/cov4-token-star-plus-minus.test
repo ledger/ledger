@@ -1,4 +1,4 @@
-; Test token parsing for STAR, PLUS, MINUS tokens (lines 321-329 of token.cc)
+; Test token parsing for STAR, PLUS, MINUS tokens
 ; Exercise arithmetic operator tokens
 
 2024/01/01 Test

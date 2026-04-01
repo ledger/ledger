@@ -1,6 +1,6 @@
 ; Test format option handlers for report.cc coverage
 ; Covers balance_format_, register_format_, csv_format_,
-; rich_data, base, forecast_while_, now_
+; rich_data, base, now_
 
 2024/01/01 Payee
     Expenses:Food            $10.00
@@ -10,7 +10,7 @@
     Expenses:Gas             $20.00
     Assets:Cash
 
-; Test --balance-format option (line 1238)
+; Test --balance-format option
 test bal Expenses --balance-format "%(account) %(total)\n"
 Expenses $30.00
 Expenses:Food $10.00
@@ -18,31 +18,31 @@ Expenses:Gas $20.00
  $30.00
 end test
 
-; Test --register-format option (line 1371)
+; Test --register-format option
 test reg Expenses --register-format "%(payee) %(amount)\n"
 Payee $10.00
 Payee Two $20.00
 end test
 
-; Test --csv-format option (line 1248)
+; Test --csv-format option
 test csv Expenses --csv-format "%(quoted(payee)),%(quoted(amount))\n"
 "Payee","$10.00"
 "Payee Two","$20.00"
 end test
 
-; Test --rich-data option (line 1377, 1268)
+; Test --rich-data option
 test reg Expenses --rich-data
 24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
 24-Feb-01 Payee Two             Expenses:Gas                 $20.00       $30.00
 end test
 
-; Test --base option (line 1239)
+; Test --base option
 test reg Expenses --base
 24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
 24-Feb-01 Payee Two             Expenses:Gas                 $20.00       $30.00
 end test
 
-; Test --now option (line 1339)
+; Test --now option
 test reg Expenses --now 2024/03/01
 24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
 24-Feb-01 Payee Two             Expenses:Gas                 $20.00       $30.00

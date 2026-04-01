@@ -1,4 +1,4 @@
-; Coverage test for select.cc lines 349-395:
+; Coverage test for select.cc
 ; Various select clauses: from, where, display, collect
 
 2024/01/15 Test
@@ -9,13 +9,13 @@
     Expenses:Gas     $30.00
     Assets:Cash
 
-; Test from posts with where clause (lines 355-358, 371-380)
+; Test from posts with where clause
 
 test select date,payee,account,amount from posts where 'account =~ /Food/'
 24-Jan-15 Test                     Expenses:Food                         $50.00
 end test
 
-; Test select with display clause (line 382)
+; Test select with display clause
 
 test select date,payee,amount display 'amount > 0'
 24-Jan-15 Test                                                           $50.00

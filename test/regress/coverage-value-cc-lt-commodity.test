@@ -1,6 +1,6 @@
 ; Test value.cc: is_less_than various paths
-; Exercises is_less_than for SEQUENCE < AMOUNT (lines 969-975)
-; and SEQUENCE < SEQUENCE (lines 977-987)
+; Exercises is_less_than for SEQUENCE < AMOUNT
+; SEQUENCE < SEQUENCE
 
 2024/01/15 Store
     Expenses:Food    $50.00

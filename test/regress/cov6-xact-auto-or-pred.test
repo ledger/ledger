@@ -1,5 +1,5 @@
-; Coverage test for xact.cc lines 940-941
-; Tests the post_pred function with O_OR operator in auto transactions.
+; Coverage test for xact.cc
+; Tests auto transaction matching with an 'or' predicate.
 ; The quick matcher handles OR predicates for auto transaction matching.
 
 = /Food/ or /Rent/

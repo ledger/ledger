@@ -1,7 +1,7 @@
-; Coverage test for times.cc lines 1105-1106
+; Coverage test for times.cc
 ; Exercise "every N years" period parsing
 ; Also covers TOK_YEARS in handle_every_token
-; and yearly duration output (line 323-324)
+; yearly duration output
 
 2020/01/01 Year 2020
     Expenses:Food            $10.00

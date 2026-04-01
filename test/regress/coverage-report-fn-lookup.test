@@ -5,36 +5,36 @@
     Expenses:Food    $10.00
     Assets:Cash
 
-; case 'l': lifo_lots (line 1551-1552)
+; case 'l': lifo_lots
 test eval 'lifo_lots($10)'
 $10
 end test
 
-; case 'n': null (line 1563-1564)
+; case 'n': null
 test eval 'null'
 end test
 
-; case 'n': now (line 1565-1566)
+; case 'n': now
 test eval --now 2024/06/15 'now'
 2024/06/15 00:00:00
 end test
 
-; case 'o': options (line 1572-1573)
+; case 'o': options
 test eval 'options'
 <#SCOPE>
 end test
 
-; case 'u': unround (line 1659-1660)
+; case 'u': unround
 test eval 'unround($10.00)'
 $10.00
 end test
 
-; case 'w': white (line 1671-1672)
+; case 'w': white
 test eval 'white'
 white
 end test
 
-; case 'y': yellow (line 1676-1677)
+; case 'y': yellow
 test eval 'yellow'
 yellow
 end test

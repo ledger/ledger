@@ -1,5 +1,5 @@
-; Test post_t real/virtual accessor (post.cc lines around 263-292)
-; Exercise the 'real' and 'virtual_' post lookups
+; Test post_t %(real) and %(R) accessors (post.cc)
+; Exercise the 'real' and 'R' post lookups (%(virtual) is not tested)
 
 2024/01/01 Test
     Expenses:Food    $10.00

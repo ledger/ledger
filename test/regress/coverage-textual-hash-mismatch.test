@@ -1,4 +1,4 @@
-; Coverage for textual_xacts.cc line 1011: hash comparison mismatch
+; Coverage for textual_xacts.cc hash comparison mismatch
 
 2024/01/01 Test
     ; Hash: wrong_hash_value

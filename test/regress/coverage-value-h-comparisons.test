@@ -1,6 +1,6 @@
 ; Test value.h: comparison operators for various type combinations
 ; Exercises is_equal_to, is_less_than, is_greater_than paths
-; Targets: value.cc lines 751-1069, value.h comparison templates
+; Targets: value.cc , value.h comparison templates
 
 2024/01/15 Store
     Expenses:Food    $50.00

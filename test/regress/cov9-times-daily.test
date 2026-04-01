@@ -1,4 +1,4 @@
-; Coverage for times.cc line 1173: TOK_DAILY in handle_every_token
+; Coverage for times.cc TOK_DAILY in handle_every_token
 
 2024/01/01 Test1
     Expenses:Food    $10.00

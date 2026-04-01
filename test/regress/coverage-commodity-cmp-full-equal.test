@@ -1,4 +1,4 @@
-; Coverage for commodity.cc lines 514-515: comparison returns equal (0)
+; Coverage for commodity.cc comparison returns equal (0)
 ; Two lots with identical price, date, and tag annotations
 ; The comparison function returns 0, causing them to merge
 

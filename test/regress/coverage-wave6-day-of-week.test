@@ -1,4 +1,4 @@
-; Tests for filters.cc day_of_week_posts (filters.h lines 1014-1019)
+; Tests for filters.cc day_of_week_posts
 ; Covers: day_of_week_posts::operator(), flush(), clear()
 
 2024/01/01 Monday Grocery

@@ -1,5 +1,5 @@
 ; Test post get_account with nonexistent string argument
-; Covers post.cc line 297 (account not found error)
+; Covers post.cc (account not found error)
 
 2024/01/01 Test
     Expenses:Food    $10.00

@@ -1,4 +1,4 @@
-; Coverage test for post.cc line 254 (get_commodity_is_primary):
+; Coverage test for post.cc (get_commodity_is_primary):
 ; Exercise the primary commodity flag via the primary expression.
 
 commodity $

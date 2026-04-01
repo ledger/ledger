@@ -1,4 +1,4 @@
-; Coverage test for account.cc line 382
+; Coverage test for account.cc
 ; fn_any returns false when no posts in the account satisfy the predicate
 
 2024/01/01 Test

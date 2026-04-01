@@ -1,5 +1,5 @@
 ; Wave 2 coverage tests for commodity.cc compare_by_commodity
-; Covers: lines 383-493 - price comparison, date comparison, tag comparison
+; Covers: - price comparison, date comparison, tag comparison
 
 ; Buy lots with different prices, dates, and tags
 2024/01/01 Buy A
@@ -30,13 +30,13 @@ end test
     Assets:Other     5 GOOG {$100.00} [2024/01/05] (tagged)
     Assets:Cash
 
-; Lots with and without tags - exercises tag comparison paths (lines 448-463)
+; Lots with and without tags - exercises tag comparison paths
 test bal --lots --flat Assets:Other
 5 GOOG {$100.00} [2024/01/04]
 5 GOOG {$100.00} [2024/01/05] (tagged)  Assets:Other
 end test
 
-; Test lots with no price annotation - exercises lines 383-389
+; Test lots with no price annotation - exercises
 2024/01/06 Buy No Price
     Assets:Stock     10 MSFT
     Assets:Cash      $-1000.00

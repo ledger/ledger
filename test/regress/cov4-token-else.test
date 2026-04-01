@@ -1,6 +1,5 @@
-; Test token parsing for 'else' keyword (lines 68-74 of token.cc)
-; and 'if' keyword (lines 85-93)
-; Exercise the if/else in expressions with ternary style
+; Test token parsing for ternary operator (?:)
+; Exercise the ternary conditional expression path
 
 2024/01/01 Test
     Expenses:Food    $10.00

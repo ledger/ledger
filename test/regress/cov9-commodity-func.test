@@ -1,4 +1,4 @@
-; Coverage test for post.cc lines 212-213:
+; Coverage test for post.cc
 ; Exercise commodity() function with an amount argument.
 
 2024/01/01 Test

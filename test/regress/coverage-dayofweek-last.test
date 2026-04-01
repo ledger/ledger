@@ -1,5 +1,5 @@
-; Test times.cc lines 789-796: day-of-week relative date parsing
-; "last wednesday" from --now 2026/03/03 (Tuesday) resolves to 2026/02/25
+; Test times.cc day-of-week relative date parsing
+; "last wednesday" from --now 2026/03/(Tuesday) resolves to 2026/02/25
 
 2026/02/23 Sunday tx
     Expenses:Food   $5.00

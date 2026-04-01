@@ -1,4 +1,4 @@
-; Test sha512 processing (lines 236, 325-351, 397, 400 of sha512.cc)
+; Test sha512 processing
 ; Exercise the SHA512 hash computation through --hashes option
 
 2024/01/01 Test

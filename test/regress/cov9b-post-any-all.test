@@ -1,4 +1,4 @@
-; Coverage for post.cc lines 364, 384: fn_any and fn_all functions
+; Coverage for post.cc fn_any and fn_all functions
 ; any() evaluates an expression across all postings in a transaction
 ; all() checks that all postings match
 

@@ -1,5 +1,5 @@
 ; Test draft.cc with multiple postings where last account is 'from'
-; Covers draft.cc lines 193-194, 203-208
+; Covers draft.cc
 
 2024/01/15 * Grocery Store
     Expenses:Food              $30.00

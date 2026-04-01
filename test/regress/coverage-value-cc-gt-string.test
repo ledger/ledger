@@ -1,7 +1,7 @@
-; Test value.cc: is_greater_than STRING paths (lines 1095-1104)
-; Also exercises STRING > COMMODITY paths (line 1098)
+; Test value.cc: is_greater_than STRING paths
+; Also exercises STRING > COMMODITY paths
 
-; STRING > STRING (lines 1100)
+; STRING > STRING
 test eval "\"xyz\" > \"abc\""
 1
 end test

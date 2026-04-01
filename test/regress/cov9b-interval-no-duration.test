@@ -1,4 +1,4 @@
-; Coverage for filters.cc lines 1070-1071: interval_posts with no duration
+; Coverage for filters.cc interval_posts with no duration
 ; (find_period path where there's no interval.duration)
 
 2024/01/01 Test A

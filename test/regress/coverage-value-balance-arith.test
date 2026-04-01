@@ -1,8 +1,8 @@
 ; Test value.cc: balance arithmetic operations
-; Coverage target: value.cc - BALANCE += INTEGER (line 424), BALANCE *= INTEGER (line 648),
-;   BALANCE /= INTEGER (line 724), BALANCE -= INTEGER (line 567),
-;   INTEGER += BALANCE (line 383), INTEGER -= BALANCE (line 518),
-;   AMOUNT += BALANCE (line 412), AMOUNT -= BALANCE (line 554)
+; Coverage target: value.cc - BALANCE += INTEGER, BALANCE *= INTEGER
+;   BALANCE /= INTEGER, BALANCE -= INTEGER
+;   INTEGER += BALANCE, INTEGER -= BALANCE
+;   AMOUNT += BALANCE, AMOUNT -= BALANCE
 
 2024/01/15 Purchase
     Expenses:Food       $300.00

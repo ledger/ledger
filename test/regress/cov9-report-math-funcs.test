@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 785-803
+; Coverage test for report.cc
 ; Test floor(), ceiling(), roundto(), abs() mathematical functions.
 
 2024/01/01 Test

@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 319-321
+; Coverage test for xact.cc
 ; Tests the fixated price annotation path ({=price}) with both plain virtual
 ; postings (that don't must_balance) and balanced virtual postings.
 ; When fixated prices trigger balance recomputation, non-must-balance and

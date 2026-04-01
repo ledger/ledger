@@ -1,4 +1,4 @@
-; Test coverage for textual_xacts.cc lines 459-465
+; Test coverage for textual_xacts.cc
 ; Lot date annotation syntax: {$150.00} [2024/01/01]
 
 2024/01/01 Buy Stock with Lot Date

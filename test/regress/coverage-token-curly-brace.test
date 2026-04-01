@@ -1,4 +1,4 @@
-; Coverage test for token.cc lines 274-285
+; Coverage test for token.cc
 ; Tests parsing curly-brace amount in expression
 
 2024/01/01 Test

@@ -1,4 +1,4 @@
-; Coverage test for textual_directives.cc lines 534, 553-555
+; Coverage test for textual_directives.cc
 ; Payee directive with uuid sub-directive and payee alias
 
 payee Grocery Store

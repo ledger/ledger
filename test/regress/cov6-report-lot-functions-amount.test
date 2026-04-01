@@ -1,4 +1,4 @@
-; Coverage for report.cc lines 626,633,640: fn_averaged_lots, fn_fifo_lots,
+; Coverage for report.cc fn_averaged_lots, fn_fifo_lots
 ; fn_lifo_lots with simple amounts (non-balance path)
 
 2024/01/01 Test

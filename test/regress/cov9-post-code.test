@@ -1,4 +1,4 @@
-; Coverage test for post.cc line 170:
+; Coverage test for post.cc
 ; Exercise get_code() to return a transaction code.
 
 2024/01/01 (ABC123) Grocery Store

@@ -1,5 +1,5 @@
-; Test post_t::get_tag with mask - covers post.cc line 72
-; When a posting has its own tag matching a mask pattern
+; Test has_tag() with a regex mask pattern
+; The tag is defined at the transaction level (metadata before any posting)
 
 2024/01/01 Test
     ; SomeTag: world

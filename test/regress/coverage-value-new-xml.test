@@ -1,5 +1,5 @@
 ; Coverage tests for value.cc put_value() XML output
-; Exercises lines 2195-2235 (put_value for various types)
+; Exercises (put_value for various types)
 
 2024/01/01 Test
     Expenses:Food    $10.00
@@ -7,7 +7,7 @@
     Assets:Cash
 
 ; XML output with balance (multiple commodities) exercises put_value
-; for AMOUNT and BALANCE types (lines 2201-2208)
+; for AMOUNT and BALANCE types
 test xml bal Expenses | sed -E 's/ (id|ref)="[0-9a-f]+"/ \1="XXXX"/g; s/ version="[0-9]+"/ version="VVVVVV"/g'
 <?xml version="1.0" encoding="utf-8"?>
 <ledger version="VVVVVV">

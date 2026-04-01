@@ -1,4 +1,4 @@
-; Test coverage for filters.cc lines 227-277
+; Test coverage for filters.cc
 ; --anon option exercises anonymize_posts filter
 ; Note: hashes change per run, so test the structure with --format
 

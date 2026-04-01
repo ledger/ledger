@@ -1,4 +1,4 @@
-; Coverage for report.cc line 1108: fn_white
+; Coverage for report.cc fn_white
 ; Returns the string "white" for use in ansify_if coloring
 
 2024/01/01 Test

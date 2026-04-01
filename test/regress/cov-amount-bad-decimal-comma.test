@@ -1,4 +1,4 @@
-; Coverage test for amount.cc line 1223
+; Coverage test for amount.cc
 ; "Incorrect use of decimal comma" error
 ; When using decimal comma style, a comma after a period is invalid
 ; because the period is treated as thousands separator and only one

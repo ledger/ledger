@@ -1,5 +1,5 @@
 ; Test session with --lot-matching option
-; Covers session.cc lines 127-128 (lot_matching handling)
+; Covers session.cc (lot_matching handling)
 
 2024/01/15 Buy lot1
     Assets:Stocks    10 AAPL {$150}

@@ -1,4 +1,4 @@
-; Coverage test for op.cc SCOPE evaluation (lines 281-290)
+; Coverage test for op.cc SCOPE evaluation
 ; Uses local variable assignment which creates SCOPE nodes in the AST
 
 2024/01/15 Test Payee

@@ -1,5 +1,5 @@
 ; Coverage tests for xact.cc - fixated prices with >2 commodities
-; Covers lines 283-319 (fixated price multi-commodity balancing)
+; Covers (fixated price multi-commodity balancing)
 
 ; Test fixated prices with multiple commodities to trigger recompute
 2024/01/01 Multi Currency

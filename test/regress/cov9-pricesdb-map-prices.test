@@ -1,5 +1,5 @@
 ; Test pricesdb command to trigger map_prices with default moment
-; Covers commodity.cc line 79 (CURRENT_TIME() fallback in map_prices)
+; Covers commodity.cc (CURRENT_TIME fallback in map_prices)
 
 P 2024/01/01 AAPL $150.00
 P 2024/06/15 AAPL $155.00

@@ -1,4 +1,4 @@
-; Coverage for commodity.cc lines 446-453: date presence comparison
+; Coverage for commodity.cc date presence comparison
 ; One lot with date, other without - tests the asymmetric date paths
 ; The lot without date sorts first (left no date, right has date)
 

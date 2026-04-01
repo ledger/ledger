@@ -13,12 +13,12 @@ P 2024/06/01 AAPL $150.00
     Expenses:Fees            $5.00
     Assets:Cash
 
-; Test --revalued-only option (line 1375)
+; Test --revalued-only option
 test reg Assets:Broker -V --revalued-only
 24-Jun-01 Commodities revalued  <Revalued>                  $500.00     $1500.00
 end test
 
-; Test --unrealized option (line 1400)
+; Test --unrealized option
 test bal Assets:Broker --unrealized --market
             $1500.00  Assets:Broker
             $-500.00  Equity:Unrealized Gains
@@ -26,7 +26,7 @@ test bal Assets:Broker --unrealized --market
             $1000.00
 end test
 
-; Test --unrealized-gains and --unrealized-losses (line 1401-1402)
+; Test --unrealized-gains and --unrealized-losses
 test bal Assets:Broker --unrealized --market --unrealized-gains "Income:Gains" --unrealized-losses "Expenses:Losses"
             $1500.00  Assets:Broker
             $-500.00  Income:Gains
@@ -34,17 +34,17 @@ test bal Assets:Broker --unrealized --market --unrealized-gains "Income:Gains" -
             $1000.00
 end test
 
-; Test --generated option (line 1298)
+; Test --generated option
 test reg Expenses --generated
 24-Jun-01 Hold                  Expenses:Fees                 $5.00        $5.00
 end test
 
-; Test --immediate option (line 1308)
+; Test --immediate option
 test reg Expenses --immediate
 24-Jun-01 Hold                  Expenses:Fees                 $5.00        $5.00
 end test
 
-; Test --values option (line 1407)
+; Test --values option
 test reg --values
 24-Jan-01 Buy                   Assets:Broker               10 AAPL      10 AAPL
                                 Assets:Cash               $-1000.00    $-1000.00

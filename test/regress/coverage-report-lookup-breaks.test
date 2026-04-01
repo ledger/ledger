@@ -1,5 +1,5 @@
 ; Coverage for report.cc lookup break statements
-; Lines 1536 (case 'g'), 1548 (case 'j'): function lookup falls through
+; Lines (case 'g'), (case 'j'): function lookup falls through
 ; to option lookup when the function name does not match known functions
 ; but matches an option name
 

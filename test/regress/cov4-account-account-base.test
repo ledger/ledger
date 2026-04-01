@@ -1,4 +1,4 @@
-; Test account lookup account_base (lines 409-410 of account.cc)
+; Test account lookup account_base
 ; Exercise the account_base accessor
 
 2024/01/01 Test

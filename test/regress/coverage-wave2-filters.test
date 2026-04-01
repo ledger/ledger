@@ -1,8 +1,8 @@
 ; Tests for filters.cc uncovered lines
-; Covers: handle_value (lines 342-376),
-;   changed_value_posts (lines 713-715), subtotal_posts (lines 805-817),
-;   interval_posts (lines 930-931, 975, 1014-1032),
-;   equity filter (line 1108), display filter (lines 1171, 1193)
+; Covers: handle_value
+;   changed_value_posts, subtotal_posts
+;   interval_posts
+;   equity filter, display filter
 
 ; Setup data
 2024/01/01 Grocery Store
@@ -21,7 +21,7 @@
     Expenses:Auto:Gas     $40.00
     Assets:Cash
 
-; Test subtotal with interval - covers interval_posts lines 930-931, 1014-1032
+; Test subtotal with interval - covers interval_posts
 test reg --monthly Expenses
 24-Jan-01 - 24-Jan-31           Expenses:Auto:Gas            $35.00       $35.00
                                 Expenses:Food                $50.00       $85.00
@@ -35,13 +35,13 @@ test reg --weekly Expenses:Food
 24-Jan-28 - 24-Feb-03           Expenses:Food                $55.00      $105.00
 end test
 
-; Test --display filter - covers lines 1171, 1193
+; Test --display filter - covers
 test reg --display "amount > 40" Expenses
 24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
 24-Feb-01 Grocery Store         Expenses:Food                $55.00      $140.00
 end test
 
-; Test equity command which exercises equity filter - covers line 1108
+; Test equity command which exercises equity filter - covers
 test equity
 2024/02/15 Opening Balances
     Assets:Brokerage                         10 AAPL
@@ -52,7 +52,7 @@ test equity
     Equity:Opening Balances                 -10 AAPL
 end test
 
-; Test changed_value_posts with market values - covers lines 713-715, 805-817
+; Test changed_value_posts with market values - covers
 P 2024/01/01 AAPL $150.00
 P 2024/02/01 AAPL $160.00
 P 2024/03/01 AAPL $170.00

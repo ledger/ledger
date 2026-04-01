@@ -1,5 +1,5 @@
 ; Test select with group by clause
-; Covers select.cc lines 385-386 (group by keyword handling)
+; Covers select.cc (group by keyword handling)
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00

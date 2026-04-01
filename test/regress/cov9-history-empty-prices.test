@@ -1,4 +1,4 @@
-; Coverage for history.cc lines 182-183: prices map is empty for edge
+; Coverage for history.cc prices map is empty for edge
 
 2024/01/01 Buy
     Assets:Stock    10 AAPL

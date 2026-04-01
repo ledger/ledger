@@ -1,4 +1,4 @@
-; Coverage for draft.cc lines 273-276: year directive adjusts xact date
+; Coverage for draft.cc year directive adjusts xact date
 year 2023
 
 2024/06/15 Grocery Store

@@ -1,4 +1,4 @@
-; Test query parser with '=' token for note matching (covers query.cc lines 152-157)
+; Test query parser with '=' token for note matching (covers query.cc )
 ; The '=' at the start of an argument should filter by note
 
 2024/01/15 Grocery Store

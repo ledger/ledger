@@ -1,4 +1,4 @@
-; Test token parsing for not-match operator !~ (lines 297-303 of token.cc)
+; Test token parsing for not-match operator !~
 ; Exercise the NMATCH token path
 
 2024/01/01 Test One

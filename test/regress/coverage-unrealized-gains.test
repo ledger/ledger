@@ -1,4 +1,4 @@
-; Coverage for filters.cc lines 777-791 (show_unrealized path)
+; Coverage for filters.cc (show_unrealized path)
 ; Tests the --unrealized flag to show unrealized gains/losses.
 
 P 2024/01/01 AAPL $150.00

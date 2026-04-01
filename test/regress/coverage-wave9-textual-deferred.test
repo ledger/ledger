@@ -1,4 +1,4 @@
-; Test coverage for textual_xacts.cc lines 473-479
+; Test coverage for textual_xacts.cc
 ; Deferred posting with <Account> syntax
 
 2024/01/01 Test Payee

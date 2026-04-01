@@ -1,4 +1,4 @@
-; Test query.cc: NOT operator not followed by argument (line 298)
+; Test query.cc: NOT operator not followed by argument
 
 2024/01/01 Test
     Expenses:Food   $10.00

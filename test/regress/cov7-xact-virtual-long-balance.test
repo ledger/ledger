@@ -1,4 +1,4 @@
-; Coverage for xact.cc lines 612-613: virtual balance with long type
+; Coverage for xact.cc virtual balance with long type
 
 2024/01/01 Test
     [Budget:Food]    1

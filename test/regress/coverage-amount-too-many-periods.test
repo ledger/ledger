@@ -1,4 +1,4 @@
-; Coverage for amount.cc line 1190:
+; Coverage for amount.cc
 ; "Too many periods" error is thrown when a second period is encountered
 ; after the first has been established as the decimal point.
 

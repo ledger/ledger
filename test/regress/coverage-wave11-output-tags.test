@@ -1,6 +1,6 @@
 ; Test tags command for output.h coverage
-; Targets report.cc line 1693 (tags command) and
-; output.h lines 186-189 (report_tags::clear)
+; Targets report.cc (tags command)
+; output.h (report_tags::clear)
 
 2024/01/15 Grocery Store
     ; Project: HomeFood

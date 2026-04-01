@@ -1,4 +1,4 @@
-; Test C directive (price_conversion_directive) (lines 117-122 of textual_directives.cc)
+; Test C directive (price_conversion_directive)
 ; Exercise the C line for price conversion
 
 C 1.00 EUR = $1.10

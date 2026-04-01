@@ -1,5 +1,5 @@
 ; Test --lot-dates partial annotation keeping
-; Covers annotate.cc lines 268-273 (keep_details_t keep_any/keep_all)
+; Covers annotate.cc (keep_details_t keep_any/keep_all)
 ; and value.cc strip_annotations path for partial keeping
 
 2024/01/15 Buy

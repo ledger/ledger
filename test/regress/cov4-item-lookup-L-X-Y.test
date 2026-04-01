@@ -1,4 +1,4 @@
-; Test item_t::lookup for L, X, Y symbols (lines 517-530 of item.cc)
+; Test item_t::lookup for L, X, Y symbols
 ; L = actual (not virtual), X = cleared, Y = pending
 
 2024/01/01 ! Test1

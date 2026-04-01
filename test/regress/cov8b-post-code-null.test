@@ -1,4 +1,4 @@
-; Coverage test for post.cc line 165
+; Coverage test for post.cc
 ; Test that transactions without a code return empty for the code field.
 ; Also tests get_code returning NULL_VALUE when no code is present.
 

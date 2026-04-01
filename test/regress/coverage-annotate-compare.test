@@ -1,6 +1,6 @@
 ; Coverage test for annotate.cc: annotation_t::operator< comparison
-; Exercises annotate.cc lines 42-98: --lots causes lot annotations to be
-; compared via operator<, covering price, date, tag, and flag ordering
+; Exercises annotate.cc --lots with --sort 'd', which sorts by lot price
+; (output order is by ascending price: $145, $150, $155)
 
 2024/01/01 Buy Lot A
     Assets:Brokerage    10 AAPL {$150.00} [2024/01/01] (lotA)

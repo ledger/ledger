@@ -5,29 +5,29 @@
 ;         tag directive with blank sub-line,
 ;         account directive with blank sub-line
 
-; Test 'bucket' directive (case 'b' in general_directive, line 808-812)
+; Test 'bucket' directive (case 'b' in general_directive, )
 bucket Assets:Checking
 
-; Test 'define' directive (case 'd' in general_directive, line 828-832)
+; Test 'define' directive (case 'd' in general_directive, )
 define my_var=100
 
-; Test 'year' directive (case 'y', line 884-889)
+; Test 'year' directive (case 'y', )
 year 2024
 
-; Test '@' prefix on directive (line 778-779)
+; Test '@' prefix on directive
 @commodity $
     format $1,000.00
 
-; A payee directive with a blank sub-line (line 534)
+; A payee directive with a blank sub-line
 payee Grocery Store
     alias Groceries
 
 payee Restaurant
 
-; A tag directive with a blank sub-line (line 670)
+; A tag directive with a blank sub-line
 tag MyTag
 
-; An account directive with a blank sub-line (line 429)
+; An account directive with a blank sub-line
 account Expenses:Food
 
 account Assets:Checking

@@ -1,14 +1,14 @@
 ; Tests for session.cc: close_journal and cleanup paths
-; Covers: session.cc line 182 (data_files.clear() after populated_data_files)
-;         session.cc line 217 (read_journal return)
+; Covers: session.cc (data_files.clear after populated_data_files)
+;         session.cc (read_journal return)
 
 2024/01/01 Test
     Expenses  $10
     Assets
 
 ; Simple balance to exercise the read_journal -> read_data path
-; which hits line 182 (clearing populated data files) and
-; line 217 (read_journal completing successfully)
+; which hits (clearing populated data files)
+; (read_journal completing successfully)
 test bal
                 $-10  Assets
                  $10  Expenses

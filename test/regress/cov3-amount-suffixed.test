@@ -1,6 +1,6 @@
 ; Test amount with suffixed commodity
-; Covers amount.cc lines 1091-1103 (suffixed commodity parsing)
-; and lines 1401-1404 (suffixed commodity printing)
+; Covers amount.cc (suffixed commodity parsing)
+; (suffixed commodity printing)
 
 2024/01/01 Test
     Expenses:Food    100.50 EUR

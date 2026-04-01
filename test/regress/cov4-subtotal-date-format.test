@@ -1,4 +1,4 @@
-; Test subtotal_posts with date_format (lines 966-967 of filters.cc)
+; Test subtotal_posts with date_format
 ; When using --monthly with a date format
 
 2024/01/15 Test1

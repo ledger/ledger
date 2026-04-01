@@ -1,5 +1,5 @@
 ; Test error when code keyword has no argument
-; Exercises parse_query_term line 359: operator not followed by argument
+; Exercises parse_query_term operator not followed by argument
 
 2024/01/01 Test
     Expenses  $10

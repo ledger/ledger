@@ -1,9 +1,9 @@
 ; Tests for account.cc uncovered lines
-; Covers: find_account_re (line 119), add_post (line 162),
-;   partial_name (line 235), get_account (lines 241-260),
-;   account lookups (lines 250-272), valid() (lines 498-525),
-;   children_with_xdata (lines 519-524), children_with_flags (line 538),
-;   account_amount (lines 394-460), various lookup functions (lines 453-496)
+; Covers: find_account_re, add_post
+;   partial_name, get_account
+;   account lookups, valid
+;   children_with_xdata, children_with_flags
+;   account_amount, various lookup functions
 
 ; Setup transactions to exercise account operations
 2024/01/01 Test
@@ -12,14 +12,14 @@
     Expenses:Auto:Gas           $35.00
     Assets:Cash
 
-; Test account regex matching - covers account.cc line 119
+; Test account regex matching
 test reg Expenses:Food
 24-Jan-01 Test                  Expense:Food:Groceries       $50.00       $50.00
                                 Expens:Food:Restaurant       $25.00       $75.00
 24-Jan-02 Virtual               Expense:Food:Groceries       $10.00       $85.00
 end test
 
-; Test partial account name - covers account.cc line 235
+; Test partial account name
 test bal --flat Expenses
               $35.00  Expenses:Auto:Gas
               $60.00  Expenses:Food:Groceries
@@ -47,7 +47,7 @@ test bal --depth 2
               $10.00
 end test
 
-; Test count/subcount of accounts - covers lines 274-280
+; Test count/subcount of accounts - covers
 test reg --group-by account --subtotal --display "count > 0"
 Assets:Cash
 24-Jan-01 - 24-Jan-02           Assets:Cash                $-120.00     $-120.00
@@ -65,7 +65,7 @@ Tracking:Total
 24-Jan-02 - 24-Jan-02           (Tracking:Total)             $10.00       $10.00
 end test
 
-; Test account as scope value - covers line 255-256
+; Test account as scope value - covers
 test reg --amount "amount" --display "account =~ /Groceries/" Expenses
 24-Jan-01 Test                  Expense:Food:Groceries       $50.00       $50.00
 24-Jan-02 Virtual               Expense:Food:Groceries       $10.00      $120.00

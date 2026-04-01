@@ -1,5 +1,5 @@
 ; Test min() and max() functions
-; Covers session.cc lines 259, 262 (fn_min, fn_max)
+; Covers session.cc (fn_min, fn_max)
 
 2024/01/15 Small
     Expenses:Food    10 APPLES

@@ -1,4 +1,4 @@
-; Coverage test for format.cc lines 80-97, 224-252
+; Coverage test for format.cc
 ; Test single-letter format mappings: %P (payee), %N (note),
 ; %X (cleared marker), %C (code), %a (account).
 ; These exercise the single_letter_mappings lookup and the expression

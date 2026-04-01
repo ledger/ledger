@@ -1,6 +1,6 @@
-; Coverage tests for commodity.cc lines 177-178, 183, 192 (exceeds_leeway/download)
-; Also covers commodity.cc line 78 (map_prices with current time)
-; Also covers commodity.cc lines 88-91 (find_price_from_expr debug)
+; Coverage tests for commodity.cc (exceeds_leeway/download)
+; Also covers commodity.cc (map_prices with current time)
+; Also covers commodity.cc (find_price_from_expr debug)
 
 P 2024/01/01 AAPL $150.00
 P 2024/06/01 AAPL $175.00

@@ -1,5 +1,5 @@
 ; Test auto xact with %(format) in account name via format_t
-; Targets: xact.cc lines 867-874 (%(expr) format in account name)
+; Targets: xact.cc (%(expr) format in account name)
 
 = /Expenses/
     (Budget:%(payee))         0.10

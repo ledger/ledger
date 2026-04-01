@@ -1,6 +1,6 @@
 ; Coverage test for compare.h/cc: compare_items for account sorting
-; Exercises compare.cc lines 120-139: compare_items<account_t>::operator()
-; and compare.h lines 71-73: find_sort_values
+; Exercises compare.cc compare_items<account_t>::operator
+; compare.h find_sort_values
 
 2024/01/01 Grocery Store
     Expenses:Food    $25.00

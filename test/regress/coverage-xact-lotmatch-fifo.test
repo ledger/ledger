@@ -1,12 +1,12 @@
-; Coverage test for xact.cc lines 319-470
+; Coverage test for xact.cc
 ; Tests FIFO lot matching in finalize().  Exercises:
-;   - lot_matching_policy == fifo (line 406)
-;   - lot_holdings accumulation from prior postings (lines 348-356)
-;   - lot_holdings accumulation from same lot (line 354 - try_emplace not inserted)
-;   - building sorted lots vector (lines 379-400)
-;   - consuming lots in order (lines 421-450)
-;   - splitting a sale across multiple lots (lines 436-447)
-;   - adjusting first posting cost (lines 453-455)
+;   - lot_matching_policy == fifo
+;   - lot_holdings accumulation from prior postings
+;   - lot_holdings accumulation from same lot (try_emplace not inserted)
+;   - building sorted lots vector
+;   - consuming lots in order
+;   - splitting a sale across multiple lots
+;   - adjusting first posting cost
 
 2024/01/01 Buy Lot 1a
     Assets:Brokerage    5 AAPL {$150.00} [2024/01/01]

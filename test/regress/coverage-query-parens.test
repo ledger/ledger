@@ -1,5 +1,5 @@
 ; Coverage test for query.cc: parenthesized query expressions
-; Exercises query.cc lines 350-355: LPAREN/RPAREN handling
+; Exercises query.cc LPAREN/RPAREN handling
 ; in parse_query_term for grouped subexpressions via --limit
 
 2024/01/01 Grocery Store

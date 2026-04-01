@@ -1,4 +1,4 @@
-; Coverage for value.cc lines 1809, 1812-1813:
+; Coverage for value.cc
 ; Calling rounded() on a string value triggers the default case in
 ; in_place_round_to_commodity_precision, which throws an error since
 ; only INTEGER, AMOUNT, BALANCE, and SEQUENCE types can be rounded.

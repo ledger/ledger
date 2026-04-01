@@ -1,4 +1,4 @@
-; Coverage test for filters.cc line 1652:
+; Coverage test for filters.cc
 ; Exercise rewrite_posts account rewriting path via --account-rewrite.
 
 2024/01/01 Groceries

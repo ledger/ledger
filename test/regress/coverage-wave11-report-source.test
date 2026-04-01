@@ -1,5 +1,5 @@
 ; Test source command for report.cc coverage
-; Targets report.cc line 1687 (source command lookup)
+; Targets report.cc (source command lookup)
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00

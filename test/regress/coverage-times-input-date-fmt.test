@@ -1,5 +1,5 @@
 ; Test --input-date-format option
-; Exercises set_input_date_format (lines 1841-1843)
+; Exercises set_input_date_format
 ; and date parsing with custom format via parse_date_mask_routine
 
 15.01.2024 Payee A

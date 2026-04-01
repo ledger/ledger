@@ -1,4 +1,4 @@
-; Coverage for filters.cc line 1652: rewrite_posts with account rewrite
+; Coverage for filters.cc rewrite_posts with account rewrite
 
 2024/01/01 Test
     Expenses:Food    $10.00

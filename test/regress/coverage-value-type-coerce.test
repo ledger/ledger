@@ -1,7 +1,7 @@
 ; Test value.cc: type coercion and conversion operations
-; Coverage target: value.cc - in_place_cast paths (lines 1162-1353),
-;   in_place_negate (lines 1359-1389), in_place_not (lines 1391-1425),
-;   number() / quantity() (line 284-286)
+; Coverage target: value.cc - in_place_cast paths
+;   in_place_negate, in_place_not
+;   number / quantity
 
 2024/01/15 Purchase
     Expenses:Food       $100.00

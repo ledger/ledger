@@ -1,4 +1,4 @@
-; Coverage for textual.cc line 224: 'h' and 'b' directives (timelog comment directives)
+; Coverage for textual.cc 'h' and 'b' directives (timelog comment directives)
 
 h This is a header comment
 b This is a body comment

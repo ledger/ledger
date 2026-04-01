@@ -1,9 +1,8 @@
 ; Regression test for GitHub issue #1682
 ; The 'source' command should:
-; 1. Accept a journal file as its argument and parse it for errors
+; 1. Accept a journal file as its argument and parse it
 ; 2. Not require a separate -f flag (the argument IS the file to check)
 ; 3. Return exit code 0 for a valid file
-; 4. Return a non-zero exit code and report errors for an invalid file
 
 ; Valid journal data used for the test
 2018/02/02 * Valid transaction

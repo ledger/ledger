@@ -1,4 +1,4 @@
-; Coverage test for format.cc line 270
+; Coverage test for format.cc
 ; Test that %$0 in a format string triggers the error for invalid field
 ; reference. The %$ syntax references a prior template field by number.
 ; Using %/ to create a template relationship where %$0 is invalid.

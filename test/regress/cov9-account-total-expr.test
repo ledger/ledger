@@ -1,4 +1,4 @@
-; Coverage for account.cc line 690: total with non-null temp
+; Coverage for account.cc total with non-null temp
 
 2024/01/01 Test
     Expenses:Food:Grocery    $10.00

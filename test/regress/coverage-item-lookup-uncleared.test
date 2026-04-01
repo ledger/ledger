@@ -1,4 +1,4 @@
-; Coverage for item.cc line 507: uncleared lookup branch
+; Coverage for item.cc uncleared lookup branch
 
 2024/01/01 * Cleared
     Expenses:Food    $10.00

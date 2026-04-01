@@ -1,4 +1,4 @@
-; Coverage for value.cc lines 706-714: amount divided by single-amount balance
+; Coverage for value.cc amount divided by single-amount balance
 ; When display_total is a balance with a single commodity, dividing an amount
 ; by it triggers the balance simplification path in operator/=
 

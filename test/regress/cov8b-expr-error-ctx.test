@@ -1,4 +1,4 @@
-; Coverage test for expr.cc lines 155-179
+; Coverage test for expr.cc
 ; Test expression evaluation error context dumping.
 ; When an expression fails to evaluate, the error context includes
 ; the expression text and location information.

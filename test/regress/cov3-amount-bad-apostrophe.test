@@ -1,5 +1,5 @@
 ; Test error when apostrophe is incorrectly placed
-; Covers amount.cc line 1279 (incorrect use of thousand-mark apostrophe)
+; Covers amount.cc (incorrect use of thousand-mark apostrophe)
 
 2024/01/01 Test
     Expenses:Food    CHF 1'23.45

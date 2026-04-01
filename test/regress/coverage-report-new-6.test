@@ -1,7 +1,7 @@
 ; Coverage tests for remaining report.cc command and precommand lookups
-; Targets: report.cc lines 1637 (commodities), 1642 (draft), 1654 (lisp),
-;          1659 (entry), 1681 (reload), 1690 (select), 1701 (xml),
-;          1715 (eval/expr), 1720 (format), 1724 (generate)
+; Targets: report.cc (commodities), (draft), (lisp)
+;          (entry), (reload), (select), (xml)
+;          (eval/expr), (format), (generate)
 
 2024/01/15 Grocery Store
     ; MyTag: food
@@ -13,7 +13,7 @@
     Expenses:Utilities    $120.00
     Assets:Checking
 
-; Test draft command with fixed date (report.cc draft_command, line 1642)
+; Test draft command with fixed date (report.cc draft_command, )
 test draft --now=2024/03/01 Groceries Expenses:Food '$10' Assets:Checking
 2024/03/01 Grocery Store
     ; MyTag: food
@@ -21,7 +21,7 @@ test draft --now=2024/03/01 Groceries Expenses:Food '$10' Assets:Checking
     Assets:Checking
 end test
 
-; Test entry command (alias for draft, report.cc line 1659)
+; Test entry command (alias for draft, report.cc )
 test entry --now=2024/03/01 Groceries Expenses:Food '$10' Assets:Checking
 2024/03/01 Grocery Store
     ; MyTag: food
@@ -37,12 +37,12 @@ test print Expenses:Food
     Assets:Checking
 end test
 
-; Test eval precommand (report.cc eval_command, line 1715)
+; Test eval precommand (report.cc eval_command, )
 test eval 2+3
 5
 end test
 
-; Test format precommand with simple format (report.cc format_command, line 1720)
+; Test format precommand with simple format (report.cc format_command, )
 ; format precommand shows parsing details - output includes context from sample transaction
 test format '%P\n' -> 0
 end test

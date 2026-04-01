@@ -1,5 +1,5 @@
 ; Test commodity comparison with different semantic flags
-; Covers commodity.cc lines 501-511 (ANNOTATION_SEMANTIC_FLAGS comparison)
+; Covers commodity.cc (ANNOTATION_SEMANTIC_FLAGS comparison)
 
 2024/01/15 Buy lot 1
     Assets:Stocks    10 AAPL {$150}

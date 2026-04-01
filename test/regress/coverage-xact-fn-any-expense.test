@@ -1,4 +1,4 @@
-; Test xact.cc: fn_any returns false (line 798) when no match found
+; Test xact.cc: fn_any returns false when no match found
 
 2024/01/10 Salary
     Assets:Checking   $3000.00

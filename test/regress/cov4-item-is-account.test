@@ -1,4 +1,4 @@
-; Test is_account accessor (lines 468-469 of item.cc)
+; Test is_account accessor
 ; Exercise the is_account lookup path
 
 2024/01/01 Test

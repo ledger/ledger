@@ -1,4 +1,4 @@
-; Coverage for account.cc line 459: Account 'note' lookup.
+; Coverage for account.cc Account 'note' lookup
 
 account Expenses:Food
     note This is the food account

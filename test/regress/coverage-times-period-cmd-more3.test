@@ -1,8 +1,8 @@
 ; Test period command with biweekly, bimonthly, quarterly
-; Exercises: handle_period_token (lines 1150-1177)
-;   TOK_BIWEEKLY dump/to_string (lines 481, 593-594)
-;   TOK_BIMONTHLY dump/to_string (lines 477, 587-588)
-;   TOK_QUARTERLY dump/to_string (lines 475, 584-585)
+; Exercises: handle_period_token
+;   TOK_BIWEEKLY dump/to_string
+;   TOK_BIMONTHLY dump/to_string
+;   TOK_QUARTERLY dump/to_string
 
 2024/01/15 Payee A
     Expenses:Food    $50.00

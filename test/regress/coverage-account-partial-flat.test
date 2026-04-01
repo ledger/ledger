@@ -1,4 +1,4 @@
-; Coverage: account.cc line 242 - get_partial_name with flat argument
+; Coverage: account.cc - get_partial_name with flat argument
 ; partial_account(true) calls partial_name(flat=true)
 
 2024/01/01 Test

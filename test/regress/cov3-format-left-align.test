@@ -1,5 +1,5 @@
 ; Test format left alignment with %-
-; Covers format.cc lines 191-194, 417-418 (left align flag in format)
+; Covers format.cc (left align flag in format)
 
 2024/01/15 Test
     Expenses:Food    $50.00

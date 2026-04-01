@@ -1,5 +1,5 @@
-; Coverage tests for filters.cc inject_posts (line 1510-1534)
-; Covers: inject_posts xact-level tag fallback (lines 1515-1517)
+; Coverage tests for filters.cc inject_posts
+; Covers: inject_posts xact-level tag fallback
 ; The existing coverage-filter-inject.test covers post-level tag injection.
 ; This test covers xact-level tag injection and the "inject once per xact" set.
 

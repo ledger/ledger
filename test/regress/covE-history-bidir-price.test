@@ -1,4 +1,4 @@
-; Coverage for history.cc lines 319, 337, 377, 397, 405, 407: bidirectional price lookup
+; Coverage for history.cc bidirectional price lookup
 ; Price is only defined in one direction
 
 P 2024/01/01 $ 0.85 GBP

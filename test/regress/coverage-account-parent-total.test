@@ -1,4 +1,4 @@
-; Coverage: account.cc line 257 - get_account returns scope_value
+; Coverage: account.cc - get_account returns scope_value
 ; parent.total chains account scope into total lookup
 
 2024/01/01 Test

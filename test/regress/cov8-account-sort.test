@@ -1,4 +1,4 @@
-; Coverage test for compare.cc lines 110-131:
+; Coverage test for compare.cc
 ; Exercise account sorting comparison via --sort.
 
 2024/01/01 Test

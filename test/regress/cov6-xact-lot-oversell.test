@@ -1,8 +1,7 @@
-; Coverage test for xact.cc lines 354, 387-398, 403, 460-470
+; Coverage test for xact.cc
 ; Tests lot matching oversell path: when selling more shares than held
 ; in lots, the remainder is left as an unannotated posting.
-; Also tests the fallback date path for lots without explicit dates,
-; and the accumulate-prior-amounts path.
+; Also tests the accumulate-prior-amounts path.
 
 ; Buy some stock with lot dates
 2020/01/15 Buy Lot A

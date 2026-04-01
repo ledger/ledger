@@ -1,4 +1,4 @@
-; Coverage test for select.cc lines 52-76:
+; Coverage test for select.cc
 ; get_principal_identifiers for various column types
 
 2024/01/15=2024/01/16 Test

@@ -1,4 +1,4 @@
-; Coverage test for times.cc lines 1121, 1142
+; Coverage test for times.cc
 ; handle_every_token unexpected for non-duration tokens
 
 2024/01/01 Test

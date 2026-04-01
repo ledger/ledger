@@ -1,4 +1,4 @@
-; Coverage test for report.cc line 936: fn_percent
+; Coverage test for report.cc fn_percent
 ; Test percent() function which computes percentage ratio of two amounts.
 
 2024/01/01 Test

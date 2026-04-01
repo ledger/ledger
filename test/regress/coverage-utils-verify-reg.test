@@ -1,7 +1,7 @@
 ; Coverage test for utils.cc memory tracing with more complex operations
 ; Exercises: trace_ctor_func/trace_dtor_func through multiple transaction
 ;   types, posting operations, account hierarchy operations
-; Targets: utils.cc lines 342-397
+; Targets: utils.cc
 
 2024/01/01 Opening Balance
     Assets:Checking         $1000.00

@@ -1,4 +1,4 @@
-; Test textual_directives.cc line 600: break on blank whitespace line
+; Test textual_directives.cc break on blank whitespace line
 ; inside commodity directive block
 commodity $
     format $1,000.00

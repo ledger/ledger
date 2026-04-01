@@ -1,4 +1,4 @@
-; Coverage for textual_directives.cc lines 558-571: payee_rewrite_directive
+; Coverage for textual_directives.cc payee_rewrite_directive
 
 payee-rewrite Grocer  GROCERY STORE
 

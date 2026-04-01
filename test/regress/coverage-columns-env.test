@@ -1,5 +1,5 @@
-; Test report.cc: COLUMNS environment variable (line 211-212)
-; and fallback to 80 columns (line 218)
+; Test report.cc: COLUMNS environment variable
+; fallback to 80 columns
 
 2024/01/10 Test
     Expenses:Food    $100.00

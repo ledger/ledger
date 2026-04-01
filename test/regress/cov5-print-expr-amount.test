@@ -1,5 +1,5 @@
-; Coverage for print.cc line 58: amount_expr check in post_has_simple_amount
-; Also covers print.cc line 53: POST_CALCULATED check
+; Coverage for print.cc amount_expr check in post_has_simple_amount
+; Also covers print.cc POST_CALCULATED check
 
 2024/01/01 Test
     Expenses:Food    (5 * 2)

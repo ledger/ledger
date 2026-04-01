@@ -1,4 +1,4 @@
-; Coverage test for filters.cc lines 840-841:
+; Coverage test for filters.cc
 ; Exercise changed_value_posts revaluation with market value changes.
 ; The --gain report triggers revaluation logic.
 

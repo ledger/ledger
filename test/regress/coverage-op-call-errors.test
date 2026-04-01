@@ -1,7 +1,7 @@
 ; Coverage test for op.cc: function call error paths
-; Exercises: find_definition VALUE error (lines 432-437),
-;   calc_call exception context (lines 511-514),
-;   call_lambda too-few-args (lines 467-469)
+; Exercises: find_definition VALUE error
+;   calc_call exception context
+;   call_lambda too-few-args
 
 ; Calling a non-function variable: exercises VALUE branch in find_definition
 test eval "x = 5; x(3)" -> 1

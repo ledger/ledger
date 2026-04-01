@@ -3,54 +3,54 @@
 ;   288, 293, 298, 339, 346, 395, 420, 485, 520, 556,
 ;   626, 735, 758, 765, 785, 803, 813, 815, 839, 843-847
 
-; --- year directive (line 839) ---
+; --- year directive ---
 year 2024
 
-; --- bucket directive (line 765) ---
+; --- bucket directive ---
 bucket Assets:Cash
 
-; --- define directive (line 785) ---
+; --- define directive ---
 define myfunc(x) = x * 2
 
-; --- tag directive (line 626) ---
+; --- tag directive ---
 tag MyTag
 
-; --- tag directive with assert (line 626, 631-633) ---
+; --- tag directive with assert ---
 tag PositiveTag
     assert value =~ /./
 
-; --- commodity directive with format, nomarket, default (lines 485, 556) ---
+; --- commodity directive with format, nomarket, default ---
 commodity $
     format $1,000.00
     nomarket
     default
 
-; --- commodity directive with alias and value (lines 520) ---
+; --- commodity directive with alias and value ---
 commodity EUR
     alias Euro
     value 1 EUR
     note European currency
 
-; --- payee directive with alias and uuid (lines 485, 520) ---
+; --- payee directive with alias and uuid ---
 payee Grocery Store
     alias grocery
     uuid abc-123-def
 
-; --- account directive with alias, value, default (lines 395, 420) ---
+; --- account directive with alias, value, default ---
 account Expenses:Food
     alias food
     value amount
     note Food expenses
 
-; --- account directive with assert and check (lines 395, 420) ---
+; --- account directive with assert and check ---
 account Expenses:Strict
     assert account =~ /Strict/
     check account =~ /Strict/
 
-; --- apply tag (lines 239-249) ---
+; --- apply tag ---
 apply tag Tracked
 
-; --- apply account (line 288) ---
+; --- apply account ---
 apply account Personal
 
 2024/01/01 Test Transaction
@@ -64,13 +64,13 @@ end apply account
 
 end apply tag
 
-; --- eval directive (lines 813, 815) ---
+; --- eval directive ---
 eval 1 + 1
 
-; --- check directive (line 803) ---
+; --- check directive ---
 check 1 == 1
 
-; --- apply tag with colon-style tags (lines 243-244, 246-249) ---
+; --- apply tag with colon-style tags ---
 apply tag :Category:Priority:
 
 2024/01/03 Tagged Transaction
@@ -79,7 +79,7 @@ apply tag :Category:Priority:
 
 end apply tag
 
-; --- apply tag with value expression (lines 246-249) ---
+; --- apply tag with value expression ---
 apply tag Source: manual
 
 2024/01/04 Source Tagged

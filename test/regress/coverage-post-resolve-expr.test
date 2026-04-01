@@ -1,4 +1,4 @@
-; Coverage test for post.cc line 542: resolve_expr with result.is_long()
+; Coverage test for post.cc resolve_expr with result.is_long
 ; When an amount expression evaluates to a long integer (not an amount),
 ; resolve_expr converts it via result.to_amount().
 ; Using (2 * 5) yields a long; using ($5 * 2) would yield an amount.

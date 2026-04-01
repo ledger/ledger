@@ -1,4 +1,4 @@
-; Coverage for output.cc line 386: annotated commodity in output
+; Coverage for output.cc annotated commodity in output
 
 2024/01/01 Buy
     Assets:Brokerage    10 AAPL {$150.00} [2024/01/01]

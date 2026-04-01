@@ -1,4 +1,4 @@
-; Coverage test for filters.cc lines 966-967:
+; Coverage test for filters.cc
 ; Exercise date_format path in subtotal_posts::report_subtotal.
 ; Using --date-format with a monthly report subtotal.
 

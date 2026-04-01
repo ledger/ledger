@@ -1,5 +1,5 @@
 ; Coverage tests for post.cc get_price, get_cost paths
-; Targets lines 240-246 (get_price with annotation price)
+; Targets (get_price with annotation price)
 
 2024/01/01 Stock Purchase
     Assets:Stocks       10 AAPL @ $150.00

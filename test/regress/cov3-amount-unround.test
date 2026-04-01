@@ -1,5 +1,5 @@
 ; Test amount unround function
-; Covers value.cc lines 1858-1879 (in_place_unround)
+; Covers value.cc (in_place_unround)
 
 2024/01/01 Test
     Expenses:Food    $10.999

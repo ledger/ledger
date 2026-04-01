@@ -1,5 +1,5 @@
 ; Test commodity comparison ordering by tag
-; Covers commodity.cc lines 479-484 (tag comparison in compare_by_commodity)
+; Covers commodity.cc (tag comparison in compare_by_commodity)
 
 2024/01/15 Buy lot A
     Assets:Stocks    10 AAPL {$150} (alpha)

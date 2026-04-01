@@ -1,4 +1,4 @@
-; Coverage for times.cc lines 1264-1266: default case in main parse loop
+; Coverage for times.cc default case in main parse loop
 ; A valid token used in the wrong context triggers unexpected()
 
 2024/01/01 Test

@@ -1,4 +1,4 @@
-; Coverage for report.cc lines 1169,1199,1202,1214: short option lookup
+; Coverage for report.cc short option lookup
 ; -F (format), -S (sort), -T (total), -X (exchange)
 
 P 2024/01/01 EUR '$1.10'

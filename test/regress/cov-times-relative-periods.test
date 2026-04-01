@@ -1,8 +1,8 @@
-; Coverage test for times.cc lines 1235-1245
+; Coverage test for times.cc
 ; Exercise relative time period tokens (this/next/last) and
 ; simple period tokens (today/tomorrow/yesterday)
-; Also covers handle_relative_token (line 1238)
-; and handle_simple_period_token (line 1245)
+; Also covers handle_relative_token
+; handle_simple_period_token
 
 2024/01/01 Test
     Expenses:Food            $10.00

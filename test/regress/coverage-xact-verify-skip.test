@@ -1,4 +1,4 @@
-; Coverage test for xact.cc line 718-719
+; Coverage test for xact.cc
 ; Tests verify() skipping postings that don't must_balance().
 ; Unbalanced virtual postings ((Account)) have must_balance() = false,
 ; so verify() skips them when checking the transaction balance.

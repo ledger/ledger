@@ -1,4 +1,4 @@
-; Tests for session.cc lookup functions (lines 258-292, 355-410)
+; Tests for session.cc lookup functions
 ; Covers: fn_min, fn_max, fn_int, fn_str, fn_lot_price, fn_lot_date,
 ;   fn_lot_tag session_t::lookup paths
 
@@ -17,45 +17,45 @@ P 2024/01/01 AAPL $150.00
     Expenses:Auto:Gas           $35.00
     Assets:Cash
 
-; Test min function - covers session.cc line 258-260
+; Test min function
 test reg --format '%(min(amount, 0))\n' Expenses
 0
 0
 0
 end test
 
-; Test max function - covers session.cc line 261-263
+; Test max function
 test reg --format '%(max(amount, 0))\n' Expenses
 $50.00
 $25.00
 $35.00
 end test
 
-; Test int function - covers session.cc line 265-267
+; Test int function
 test reg --format '%(int(quantity(amount)))\n' Expenses
 50
 25
 35
 end test
 
-; Test str function - covers session.cc line 268-270
+; Test str function
 test reg --format '%(str(amount))\n' Expenses
 $50.00
 $25.00
 $35.00
 end test
 
-; Test lot_date function via session - covers session.cc line 279-285
+; Test lot_date function via session
 test reg --format '%(lot_date(amount))\n' Assets:Brokerage
 2024/01/01
 end test
 
-; Test lot_price function via session - covers session.cc line 272-278
+; Test lot_price function via session
 test reg --format '%(lot_price(amount))\n' Assets:Brokerage
 $150.00
 end test
 
-; Test lot_tag function via session - covers session.cc line 286-292
+; Test lot_tag function via session
 test reg --format '%(lot_tag(amount))\n' Assets:Brokerage
 tag1
 end test

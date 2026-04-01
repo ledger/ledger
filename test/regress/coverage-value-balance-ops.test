@@ -1,6 +1,6 @@
 ; Test value.cc and balance.h: multi-commodity balance operations
-; Coverage target: value.cc - in_place_negate BALANCE (line 1377),
-;   BALANCE *= AMOUNT-no-commodity (line 656), BALANCE /= AMOUNT-no-commodity (line 732),
+; Coverage target: value.cc - in_place_negate BALANCE
+;   BALANCE *= AMOUNT-no-commodity, BALANCE /= AMOUNT-no-commodity
 ;   balance.h - in_place_negate, operator*=, operator/= for multi-commodity
 
 2024/01/15 Purchase

@@ -1,4 +1,4 @@
-; Test coverage for textual_directives.cc lines 618-636
+; Test coverage for textual_directives.cc
 ; tag directive with assert/check sub-directives, and year/bucket
 
 tag Receipt

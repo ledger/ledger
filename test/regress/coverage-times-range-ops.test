@@ -1,8 +1,8 @@
 ; Test range operators: "from X to Y", "since X until Y", and "X - Y" dash range
-; Exercises handle_since_token (lines 928-937)
-; handle_until_token (lines 939-948)
-; handle_dash_operator (lines 908-926)
-; finalize_period with since/until specifiers (lines 1196-1201)
+; Exercises handle_since_token
+; handle_until_token
+; handle_dash_operator
+; finalize_period with since/until specifiers
 
 2024/01/15 Payee A
     Expenses:Food    $50.00

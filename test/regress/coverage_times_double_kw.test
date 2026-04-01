@@ -1,4 +1,4 @@
-; Coverage test for times.cc lines 917, 928, 939
+; Coverage test for times.cc
 ; Duplicate keywords trigger unexpected in handle_since/until/in_token
 
 2024/01/01 Test

@@ -1,4 +1,4 @@
-; Coverage test for times.cc lines 1159-1171
+; Coverage test for times.cc
 ; Exercise period shortcut tokens: bimonthly, biweekly, daily
 ; Covers handle_period_token for various TOK_ kinds
 
@@ -14,7 +14,7 @@
     Expenses:Food            $30.00
     Assets:Cash
 
-; "daily" exercises TOK_DAILY path (lines 1169-1170)
+; "daily" exercises TOK_DAILY path
 test reg Expenses --period daily
 24-Jan-01 - 24-Jan-01           Expenses:Food                $10.00       $10.00
 24-Jan-02 - 24-Jan-02           Expenses:Food                $20.00       $30.00

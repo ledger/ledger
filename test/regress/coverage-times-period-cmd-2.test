@@ -1,8 +1,8 @@
 ; Test the "period" command with various period types
 ; Exercises: token_t::dump with various token kinds
-; date_duration_t operator<< (lines 323-337)
+; date_duration_t operator<<
 ; date_interval_t::dump with different durations
-; date_specifier_t::begin/end (lines 287-321)
+; date_specifier_t::begin/end
 
 2024/01/15 Payee A
     Expenses:Food    $50.00

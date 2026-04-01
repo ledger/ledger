@@ -1,4 +1,5 @@
-; Coverage for textual_directives.cc line 615: commodity nomarket sub-directive
+; Coverage for textual_directives.cc commodity nomarket sub-directive parsing
+; Note: nomarket does not prevent -V conversion using explicit P prices
 
 P 2024/01/01 EUR $1.10
 

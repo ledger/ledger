@@ -1,4 +1,4 @@
-; Coverage for textual_directives.cc lines 682-684: eval directive
+; Coverage for textual_directives.cc eval directive
 
 define myfunc(x) = x * 2
 

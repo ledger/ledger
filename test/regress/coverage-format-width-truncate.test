@@ -1,4 +1,4 @@
-; Test format width with truncation (exercises format.cc trailing truncation with .. line 681)
+; Test format width with truncation (exercises format.cc trailing truncation with .. )
 
 2024/01/15 * Test
     Expenses:Food:Groceries:VeryLongSubcategory:MoreDetails    $50.00

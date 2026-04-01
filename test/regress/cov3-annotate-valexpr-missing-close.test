@@ -1,5 +1,5 @@
 ; Test error for valuation expression missing closing parentheses
-; Covers annotate.cc lines 195-196, 198 (missing val expr closing parens)
+; Covers annotate.cc (missing val expr closing parens)
 
 2024/01/01 Test
     Assets:Brokerage    10 AAPL ((9)

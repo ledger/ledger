@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 241-242
+; Coverage test for xact.cc
 ; Tests the saw_cost = true; break; path in finalize() when a posting
 ; has an explicit cost using @ syntax.  When the balance has exactly two
 ; commodities and one posting already has a cost, the code sets saw_cost

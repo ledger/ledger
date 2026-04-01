@@ -1,5 +1,5 @@
 ; Test today/tomorrow/yesterday as standalone period tokens
-; (exercises handle_simple_period_token in times.cc: lines 1095-1111)
+; (exercises handle_simple_period_token in times.cc: )
 ; These are handled differently from "since today" etc.
 
 2024/01/15 Payee A

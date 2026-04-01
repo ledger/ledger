@@ -1,6 +1,6 @@
-; Coverage test for format.cc line 194
+; Coverage test for format.cc
 ; Tests left-aligned format with %-width specifier.
-; Line 194: ELEMENT_ALIGN_LEFT flag set when '-' is used in format spec.
+; ELEMENT_ALIGN_LEFT flag set when '-' is used in format spec
 
 2024/01/15 Test
     Expenses:Food             $50.00

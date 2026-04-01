@@ -1,5 +1,5 @@
 ; Test global.cc: unrecognized command error path
-; Exercises execute_command line 232: "Unrecognized command"
+; Exercises execute_command "Unrecognized command"
 
 2024/01/01 Test
     Expenses:Food    $25.00

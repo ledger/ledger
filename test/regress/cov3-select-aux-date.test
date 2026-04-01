@@ -1,5 +1,5 @@
 ; Test select with aux_date column
-; Covers select.cc line 256 (aux_date identifier handling)
+; Covers select.cc (aux_date identifier handling)
 
 2024/01/15=2024/01/20 Test
     Expenses:Food    $50.00

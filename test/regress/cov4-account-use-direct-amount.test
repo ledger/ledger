@@ -1,5 +1,5 @@
-; Test account_t::lookup for use_direct_amount (line 492-493 of account.cc)
-; and 't' for total (line 487-488)
+; Test account_t::lookup for use_direct_amount
+; 't' for total
 
 2024/01/01 Test
     Expenses:Food    $10.00

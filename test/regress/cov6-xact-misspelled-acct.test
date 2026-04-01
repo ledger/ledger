@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 114-117, 182-190
+; Coverage test for xact.cc
 ; Tests the error when two null postings exist and one account name ends
 ; with a special character (digit, ), }, ]), suggesting a misspelling.
 ; account_ends_with_special_char checks for these patterns.

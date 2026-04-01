@@ -1,4 +1,4 @@
-; Test that \! prefix on directives is rejected as unrecognized
+; Test textual_directives.cc \! prefix on directives
 
 \!include /dev/null
 

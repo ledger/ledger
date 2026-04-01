@@ -1,4 +1,4 @@
-; Coverage test for xact.cc line 402-403
+; Coverage test for xact.cc
 ; Tests the lots.empty() continue path in lot matching.
 ; AAPL has COMMODITY_SAW_ANNOTATED from an annotated buy in a different
 ; account, but Assets:Brokerage only holds unannotated AAPL, so no

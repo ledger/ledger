@@ -1,5 +1,5 @@
 ; Wave 2 coverage tests for annotate.cc error paths - unclosed tag paren
-; Covers: unclosed tag parenthesis (line 190)
+; Covers: unclosed tag parenthesis
 
 2024/01/01 Unclosed Tag
     Assets:Test              1 FOO (mytag

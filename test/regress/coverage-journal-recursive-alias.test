@@ -1,4 +1,4 @@
-; Coverage: journal.cc lines 163-216: expand_aliases with recursive_aliases
+; Coverage: journal.cc expand_aliases with recursive_aliases
 ; Tests recursive alias expansion where alias A->B and B->C
 
 alias Food=Groceries

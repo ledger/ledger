@@ -1,4 +1,4 @@
-; Test apply tag directive (lines 305-343 of textual_directives.cc)
+; Test apply tag directive
 ; Exercise the tag application with apply/end apply
 
 apply tag :project:

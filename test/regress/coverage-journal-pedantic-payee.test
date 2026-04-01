@@ -1,4 +1,4 @@
-; Coverage: journal.cc lines 229-235: validate_payee with CHECK_ERROR
+; Coverage: journal.cc validate_payee with CHECK_ERROR
 ; Using --pedantic --check-payees to trigger error for unknown payees
 
 commodity $

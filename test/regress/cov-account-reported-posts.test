@@ -1,4 +1,4 @@
-; Coverage test for account.cc line 630
+; Coverage test for account.cc
 ; Triggers last_reported_post path in account_t::amount()
 ; Auto-xact posts go to reported_posts list
 

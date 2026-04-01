@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 387-398
+; Coverage test for xact.cc
 ; Tests the date fallback path in lot matching.  When lots are created
 ; without explicit date annotations (no [date] in {price}), the code
 ; falls back to finding the earliest transaction date for that lot

@@ -1,5 +1,5 @@
 ; Test op.cc O_QUERY/O_COLON evaluation paths
-; Exercises calc for ternary expressions (lines 338-360)
+; Exercises calc for ternary expressions
 
 2024/01/15 Test
     Expenses:Food  $50.00

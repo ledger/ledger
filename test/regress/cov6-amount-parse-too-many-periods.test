@@ -1,5 +1,5 @@
 ; Test parse error for too many periods in amount
-; Covers amount.cc line 1190 (no_more_periods error)
+; Covers amount.cc (no_more_periods error)
 
 2024/01/01 Test
     Expenses:Food    1,234.56.78 USD

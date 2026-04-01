@@ -5,17 +5,17 @@
     Expenses:Food    $10.567
     Assets:Cash
 
-; Floor amount - exercises in_place_floor (line 581+)
+; Floor amount - exercises in_place_floor (+)
 test eval 'floor($10.567)'
 $10.000
 end test
 
-; Ceiling amount - exercises in_place_ceiling (line 653+)
+; Ceiling amount - exercises in_place_ceiling (+)
 test eval 'ceiling($10.567)'
 $11.000
 end test
 
-; Unround amount - exercises in_place_unround (lines 693-702)
+; Unround amount - exercises in_place_unround
 test eval 'unround($10.567)'
 $10.567
 end test
@@ -29,7 +29,7 @@ test eval '$10 / 3'
 $3
 end test
 
-; Negate amount - exercises in_place_negate (lines 560-566)
+; Negate amount - exercises in_place_negate
 test eval -- '-$10.00'
 $-10.00
 end test

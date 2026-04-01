@@ -1,4 +1,4 @@
-; Coverage test for format.cc lines 610-618
+; Coverage test for format.cc
 ; Test account abbreviation with hierarchical account names.
 ; The default register format abbreviates long account names to fit
 ; the column width. This exercises the abbreviation algorithm including

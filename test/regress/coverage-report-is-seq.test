@@ -1,4 +1,4 @@
-; Coverage for report.cc line 734-736: fn_is_seq
+; Coverage for report.cc fn_is_seq
 ; Tests the is_seq function which checks if a value is a sequence
 
 2024/01/01 Test

@@ -11,40 +11,40 @@
     Expenses:Misc    $25.00
     Assets:Cash
 
-; Test 1: Pathname function (line 302-306)
+; Test 1: Pathname function
 test reg Expenses:Food --format "%(filename)\n"
 $FILE
 end test
 
-; Test 2: Filebase function (line 309-313)
+; Test 2: Filebase function
 test reg Expenses:Food --format "%(filebase == '' ? 'empty' : 'has')\n"
 has
 end test
 
-; Test 3: Seq function (line 339-340)
+; Test 3: Seq function
 test reg Expenses --format "%(seq)\n"
 2
 5
 end test
 
-; Test 4: Addr function (line 346-348)
+; Test 4: Addr function
 test reg Expenses:Food --format "%(addr > 0 ? 'valid' : 'invalid')\n"
 valid
 end test
 
-; Test 5: Cleared status X on Expenses only (line 523-524)
+; Test 5: Cleared status X on Expenses only
 test reg Expenses --format "%(X ? 'C' : '-') %(payee)\n"
 C Grocery
 - Pending
 end test
 
-; Test 6: Pending status Y on Expenses only (line 528-529)
+; Test 6: Pending status Y on Expenses only
 test reg Expenses --format "%(Y ? 'P' : '-') %(payee)\n"
 - Grocery
 P Pending
 end test
 
-; Test 7: Actual L on Expenses only (line 518-519)
+; Test 7: Actual L on Expenses only
 test reg Expenses --format "%(L ? 'A' : 'G') %(payee)\n"
 A Grocery
 A Pending

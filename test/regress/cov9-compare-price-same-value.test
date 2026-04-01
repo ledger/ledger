@@ -1,5 +1,5 @@
 ; Test compare_by_commodity with same numeric price but different currencies
-; Covers commodity.cc lines 433-434 (recursion found no difference, comparing
+; Covers commodity.cc (recursion found no difference, comparing
 ; prices with commodity for ordering by commodity name)
 
 2024/01/01 Buy in USD

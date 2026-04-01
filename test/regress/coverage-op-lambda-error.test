@@ -1,8 +1,8 @@
-; Coverage for op.cc lines 775-798:
+; Coverage for op.cc
 ; Expression error context printing for O_LAMBDA and O_CALL nodes.
 ; A lambda that divides by zero triggers error context printing that
 ; exercises the print function for these operator types.
-; Also covers op.cc line 520-522 (function call error rethrow).
+; Also covers op.cc (function call error rethrow)
 
 2024/01/01 Test
     Expenses:Food    $100.00

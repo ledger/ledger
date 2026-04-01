@@ -1,4 +1,4 @@
-; Coverage for xact.cc lines 595-597: fixated price balance resolution
+; Coverage for xact.cc fixated price balance resolution
 ; Multiple commodities with fixated cost that must balance
 
 2024/01/01 Exchange

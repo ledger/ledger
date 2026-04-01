@@ -1,5 +1,5 @@
 ; Test session with check-payees option
-; Covers session.cc lines 114-115 (check_payees handling)
+; Covers session.cc (check_payees handling)
 
 payee Grocery Store
 payee Gas Station

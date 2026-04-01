@@ -1,4 +1,4 @@
-; Coverage test for textual_directives.cc lines 801-805
+; Coverage test for textual_directives.cc
 ; Test 'assert' and 'check' directives via general_directive switch case 'a'
 
 assert 1 == 1

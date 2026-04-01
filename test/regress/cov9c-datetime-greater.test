@@ -1,4 +1,4 @@
-; Coverage: value.cc lines 1023-1024 (is_greater_than datetime comparison)
+; Coverage: value.cc (is_greater_than datetime comparison)
 ; Sorting by datetime in descending order exercises the datetime > path
 
 2024/01/01 First

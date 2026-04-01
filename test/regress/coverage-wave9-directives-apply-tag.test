@@ -1,4 +1,4 @@
-; Test coverage for textual_directives.cc lines 296-335
+; Test coverage for textual_directives.cc
 ; apply tag directive with various formats
 
 apply tag :Project:

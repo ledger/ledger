@@ -1,4 +1,4 @@
-; Coverage test for post.cc lines 347-352
+; Coverage test for post.cc
 ; Tests get_checkin and get_checkout accessors for timeclock postings.
 ; Timeclock entries (i/o) generate postings with checkin/checkout times.
 

@@ -1,5 +1,5 @@
 ; Coverage test for query.cc: quoted and slash-delimited patterns
-; Exercises query.cc lines 76-97: parsing of '/pattern/', 'pattern',
+; Exercises query.cc parsing of '/pattern/', 'pattern'
 ; and "pattern" delimited query terms
 
 2024/01/01 Grocery Store

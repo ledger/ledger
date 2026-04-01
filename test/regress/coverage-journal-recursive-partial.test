@@ -1,4 +1,4 @@
-; Coverage: journal.cc lines 196-203: recursive alias with partial expansion
+; Coverage: journal.cc recursive alias with partial expansion
 ; Tests recursive alias expansion on first component of colon-separated name
 
 alias Exp=Spending

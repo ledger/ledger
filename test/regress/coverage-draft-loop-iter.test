@@ -1,8 +1,7 @@
-; Coverage test for draft.cc lines 445-462:
-; Draft xact creation iterates through matching postings, using
-; must_balance() to skip unbalanced virtual postings.
-; The forward loop (non-from, line 454) picks the first real posting;
-; the reverse loop (from, line 445) picks the last real posting.
+; Coverage test for draft.cc
+; Draft xact creation iterates through matching postings.
+; The forward loop (non-from) includes all postings (including virtual).
+; The reverse loop (from) picks the last must_balance() posting.
 
 2024/01/15 Grocery Store
     (Memo:Food)      $100.00

@@ -1,4 +1,4 @@
-; Coverage for history.cc lines 397-407: find_price with direct conversion
+; Coverage for history.cc find_price with direct conversion
 ; Multiple commodities with direct dollar prices
 ; Each commodity has a direct path to $ in the price graph
 

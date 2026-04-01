@@ -23,7 +23,7 @@ test reg
                                 Assets:Cash                 $-10.00            0
 end test
 
-; Verify that the tag was applied
+; Verify that balances are correct after applying the tag
 test bal --no-total
              $-10.00  Assets:Cash
               $10.00  Expenses:Food

@@ -1,4 +1,4 @@
-; Coverage for balance.cc lines 259,263,270,272,278: lot sorting FIFO order
+; Coverage for balance.cc lot sorting FIFO order
 
 2024/01/01 Buy shares lot A
     Assets:Brokerage    10 AAPL {$150.00} [2024/01/01]

@@ -1,6 +1,6 @@
-; Coverage for post.cc line 364: fn_any with second arg (false)
+; Coverage for post.cc fn_any with second arg (false)
 ; When any(EXPR, false) is used, the current posting is excluded from testing
-; Also exercises op.cc line 588: print_cons for multi-arg function call
+; Also exercises op.cc print_cons for multi-arg function call
 
 2024/01/01 Mixed
     Expenses:Food    $10.00

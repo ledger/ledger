@@ -1,4 +1,4 @@
-; Test get_payee accessor (line 170 of post.cc)
+; Test get_payee accessor
 ; Exercise payee lookup through the post_t symbol table
 
 2024/01/01 Test Payee Name

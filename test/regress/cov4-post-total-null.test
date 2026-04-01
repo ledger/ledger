@@ -1,4 +1,4 @@
-; Test get_total when amount is not null (lines 250-257 of post.cc)
+; Test get_total when amount is not null
 ; Exercise the total path that returns the post amount
 
 2024/01/01 Test

@@ -1,4 +1,4 @@
-; Test account lookup N and O (lines 496-504 of account.cc)
+; Test account lookup N and O
 ; Exercise the N (count) and O (total) accessors on accounts
 
 2024/01/01 Test

@@ -1,9 +1,9 @@
 ; Wave 2 coverage tests for print.cc
-; Covers: print with balance assignment (lines 53, 58, 210, 224),
-; post_has_simple_amount, metadata printing (line 165),
-; amount_expr (line 175)
+; Covers: print with balance assignment
+; post_has_simple_amount, metadata printing
+; amount_expr
 
-; Balance assignment test - covers lines 53, 58, 210, 224
+; Balance assignment test - covers
 2024/01/01 Opening Balance
     Assets:Checking             = $500.00
     Equity:Opening

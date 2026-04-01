@@ -1,5 +1,4 @@
 ; Coverage tests for post.cc lookup functions
-; Targets lines 169, 189, 211-212, 220, 235, 242, 253, 262,
 ;   272-274, 277-278, 288-291, 363, 383, 519, 524, 529, 539, 542, 554, 563, 565
 
 ; Transaction with cost for cost/price lookups
@@ -21,36 +20,36 @@
     [Balanced:Virtual]        $2.00
     [Balanced:Offset]        -$2.00
 
-; Test cost lookup (line 229-237)
+; Test cost lookup
 test reg --format '%(payee) %(has_cost ? "COST" : "NOCOST") %(cost)\n' Assets:Stocks
 Stock Purchase COST $1500.00
 end test
 
-; Test payee from tag (lines 115-129, 167-169)
+; Test payee from tag
 test reg --format '%(payee)\n' Expenses:Food
 Override Payee
 Virtual Test
 end test
 
-; Test note lookup (lines 171-183)
+; Test note lookup
 test reg --format '%(note)\n' Expenses:Food
  Payee: Override Payee
 
 end test
 
-; Test display_account for virtual and balanced-virtual (lines 308-320)
+; Test display_account for virtual and balanced-virtual
 test reg --format '%(display_account)\n' Virtual
 (Virtual:Account)
 [Balanced:Virtual]
 end test
 
-; Test magnitude lookup (line 185-189)
+; Test magnitude lookup
 test reg --format '%(magnitude)\n' Expenses:Food
 $10.00
 $8.00
 end test
 
-; Test real/virtual lookup (lines 144-150, 487-507)
+; Test real/virtual lookup
 test reg --format '%(real)\n' Virtual:Account
 false
 end test
@@ -59,27 +58,27 @@ test reg --format '%(virtual)\n' Virtual:Account
 true
 end test
 
-; Test xact_id lookup (line 512-513)
+; Test xact_id lookup
 test reg --format '%(xact_id)\n' Assets:Stocks
 1
 end test
 
-; Test account_base lookup (line 326-328)
+; Test account_base lookup
 test reg --format '%(account_base)\n' Assets:Stocks
 Stocks
 end test
 
-; Test depth lookup (line 330-332, 446-447)
+; Test depth lookup
 test reg --format '%(depth)\n' Assets:Stocks
 2
 end test
 
-; Test b (cost alias) lookup (line 419-421)
+; Test b (cost alias) lookup
 test reg --format '%(b)\n' Assets:Stocks
 $1500.00
 end test
 
-; Test O (total), N (count) single-letter aliases (lines 519-529)
+; Test O (total), N (count) single-letter aliases
 test reg --format '%(O)\n%(N)\n' Assets:Cash
 $-1500.00
 1
@@ -89,7 +88,7 @@ $-1515.00
 3
 end test
 
-; Test R (real) single-letter alias (line 527-529)
+; Test R (real) single-letter alias
 test reg --format '%(R)\n' Virtual:Account
 false
 end test

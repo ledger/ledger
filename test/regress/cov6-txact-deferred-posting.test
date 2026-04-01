@@ -1,4 +1,4 @@
-; Coverage for textual_xacts.cc line 471: deferred posting with <> brackets
+; Coverage for textual_xacts.cc deferred posting with <> brackets
 
 2024/01/01 Test
     <Deferred:Income>    $10.00

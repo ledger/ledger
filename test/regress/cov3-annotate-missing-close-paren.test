@@ -1,5 +1,5 @@
 ; Test error for missing closing parenthesis in tag annotation
-; Covers annotate.cc lines 209-210 (missing closing parenthesis)
+; Covers annotate.cc (missing closing parenthesis)
 
 2024/01/01 Test
     Assets:Brokerage    10 AAPL (lot-x

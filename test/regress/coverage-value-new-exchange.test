@@ -9,13 +9,13 @@ P 2024/01/01 GBP $1.30
     Expenses:Drink   5.00 GBP
     Assets:Cash
 
-; Exchange commodities with --exchange exercises lines 1524-1640
+; Exchange commodities with --exchange exercises
 test reg --exchange '$' Expenses
 24-Jan-01 Test                  Expenses:Food                $11.00       $11.00
                                 Expenses:Drink                $6.50       $17.50
 end test
 
-; Display round for balances exercises in_place_display_round (lines 1776-1795)
+; Display round for balances exercises in_place_display_round
 test bal Expenses --exchange '$'
               $17.50  Expenses
                $6.50    Drink

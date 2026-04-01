@@ -1,4 +1,4 @@
-; Test for: 'ledger -f doc/sample.dat reg -s -n liab' elides too much
+; Test for: 'ledger -f doc/sample.dat reg -s liab' elides too much
 ; It collapses the account down to "<Total>", even though there was
 ; only one account!
 

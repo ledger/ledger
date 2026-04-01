@@ -1,4 +1,4 @@
-; Test %$ field reference error (exercises format.cc line 263 error path)
+; Test %$ field reference error (exercises format.cc error path)
 
 2024/01/15 * Test
     Expenses:Food              $50.00

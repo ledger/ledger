@@ -1,4 +1,4 @@
-; Coverage for textual_directives.cc lines 485,520,556 (commodity directive fields)
+; Coverage for textual_directives.cc (commodity directive fields)
 ; Tests commodity directive with alias, value, format, nomarket, default, and note
 
 commodity $

@@ -1,8 +1,8 @@
 ; Coverage tests for post.cc add_to_value paths
-; Targets line 71 (get_tag with mask from xact), line 189 (get_magnitude null xact)
+; Targets (get_tag with mask from xact), (get_magnitude null xact)
 
 ; Transaction where the tag is only on the xact, not on the post
-; This triggers the inherit path in get_tag (lines 63-64, 72-73)
+; This triggers the inherit path in get_tag
 2024/01/01 Test
     ; XactTag: from-xact
     Expenses:Food             $10.00
@@ -12,12 +12,12 @@ test reg --format '%(tag("XactTag"))\n' Expenses
 from-xact
 end test
 
-; Test has_tag with mask on inherited tag (line 72-73)
+; Test has_tag with mask on inherited tag
 test reg --format '%(has_tag(/XactTag/) ? "YES" : "NO")\n' Expenses
 YES
 end test
 
-; Test has_tag with two masks on inherited tag (line 73)
+; Test has_tag with two masks on inherited tag
 test reg --format '%(has_tag(/XactTag/, /from/) ? "YES" : "NO")\n' Expenses
 YES
 end test

@@ -1,4 +1,4 @@
-; Coverage: session.cc - fn_str (line 270) and fn_lot_tag (line 373)
+; Coverage: session.cc - fn_str and fn_lot_tag
 
 2024/01/01 Grocery Store
     Expenses:Food    $10.00

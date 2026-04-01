@@ -1,4 +1,4 @@
-; Coverage test for format.cc lines 258-261
+; Coverage test for format.cc
 ; Test %% literal percent in format strings. The %% sequence produces
 ; a single % character in the output.
 

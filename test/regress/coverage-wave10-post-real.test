@@ -1,4 +1,4 @@
-; Test coverage for post.cc lines 529 (R single-char lookup for real posts)
+; Test coverage for post.cc (R single-char lookup for real posts)
 
 2024/01/01 Test
     Expenses:Food                           $50.00

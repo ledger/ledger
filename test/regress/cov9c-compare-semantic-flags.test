@@ -1,5 +1,5 @@
-; Coverage: commodity.cc lines 514-515 (compare_by_commodity semantic flags)
-; and line 485 (equal tag comparison falls through)
+; Coverage: commodity.cc (compare_by_commodity semantic flags)
+; (equal tag comparison falls through)
 ; Two lots of same commodity with same price, date, tag but different
 ; fixated status ({=$100} vs {$100}) to trigger semantic flag comparison.
 ; Also, lots with matching tags that fall through to the next comparison.

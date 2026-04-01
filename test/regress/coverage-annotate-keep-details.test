@@ -1,4 +1,4 @@
-; Coverage test for annotate.cc lines 268-269, 272-273
+; Coverage test for annotate.cc
 ; Tests keep_details_t::keep_all and keep_any for annotated commodities
 
 2024/01/01 Buy shares

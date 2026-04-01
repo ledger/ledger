@@ -1,4 +1,4 @@
-; Test coverage for filters.cc lines 1246-1260
+; Test coverage for filters.cc
 ; day_of_week_posts filter via --dow option
 
 2024/01/01 Monday Grocery

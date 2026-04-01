@@ -1,4 +1,4 @@
-; Test sort_posts filter flush/operator (covers filters.h lines 218-230)
+; Test sort_posts filter flush/operator (covers filters.h )
 ; Exercises sort_posts::flush() and operator() directly
 
 2024/01/20 Payee B

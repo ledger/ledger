@@ -1,4 +1,4 @@
-; Coverage test for report.cc line 956: fn_set_commodity_price
+; Coverage test for report.cc fn_set_commodity_price
 ; Test set_commodity_price() which programmatically sets a price for a
 ; commodity. The function takes (amount, datetime, price) and returns
 ; NULL_VALUE. We then use market() to verify the price was set.

@@ -1,5 +1,5 @@
 ; Test pricesdb command with multiple commodities and price history
-; Covers commodity.cc line 79 (CURRENT_TIME() in map_prices)
+; Covers commodity.cc (CURRENT_TIME in map_prices)
 ; and history.cc price mapping paths
 
 P 2024/01/01 EUR $1.10

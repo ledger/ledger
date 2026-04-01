@@ -1,5 +1,5 @@
-; Test function call expressions
-; These exercise op.cc O_CALL paths
+; Test function call and conditional expressions
+; These exercise op.cc O_CALL and O_QUERY paths
 
 2024/01/01 Test Transaction
     Expenses:Food              $50.00

@@ -1,4 +1,4 @@
-; Coverage for filters.cc line 1166: equity filter zero amount in balance
+; Coverage for filters.cc equity filter zero amount in balance
 ; When equity report has a multi-commodity balance with a zero component
 ; the create_post_from_amount skips zero amounts
 

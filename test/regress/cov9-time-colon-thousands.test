@@ -1,5 +1,5 @@
 ; Test time colon display with thousands separator
-; Exercises amount.cc line 213 (time_colon thousands separator using colon)
+; Exercises amount.cc (time_colon thousands separator using colon)
 
 commodity 1,000.00h
 

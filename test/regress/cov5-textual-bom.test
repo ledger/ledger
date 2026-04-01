@@ -1,4 +1,4 @@
-; Coverage for textual.cc lines 131-133: BOM handling
+; Coverage for textual.cc BOM handling
 ; Note: This test only covers the non-BOM path since we can't include a BOM in the test file format
 
 2024/01/01 Test

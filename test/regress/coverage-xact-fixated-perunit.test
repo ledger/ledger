@@ -1,5 +1,5 @@
 ; Test fixated price per-unit path
-; Targets: xact.cc lines 273-288 (fixated per-unit cost computation)
+; Targets: xact.cc (fixated per-unit cost computation)
 
 2024/01/15 Buy Mixed Lots
     Assets:Stocks              5 AAPL {=$150.00}

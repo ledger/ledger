@@ -1,4 +1,4 @@
-; Coverage test for compare.cc lines 87-100, 109-138:
+; Coverage test for compare.cc
 ; Sort value computation for accounts via compare_items<account_t>
 ; Exercises the account sorting path in the balance report
 

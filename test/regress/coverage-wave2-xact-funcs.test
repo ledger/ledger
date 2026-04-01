@@ -1,6 +1,6 @@
 ; Wave 2 coverage tests for xact.cc fn_any and fn_all
-; Covers: fn_any (lines 608-618), fn_all (lines 620-630),
-;   xact_t::lookup (lines 633-643)
+; Covers: fn_any, fn_all
+;   xact_t::lookup
 
 2024/01/01 Test1
     Expenses:Food     $10.00
@@ -22,7 +22,7 @@ test reg --limit "all(amount != 0)" --end 2024/01/03 Expenses
 24-Jan-02 Test2                 Expenses:Food                $20.00       $30.00
 end test
 
-; Test xact code lookup - covers line 646-647
+; Test xact code lookup - covers
 2024/01/03 (CHK-100) Payment
     Expenses:Rent     $500.00
     Assets:Cash
@@ -32,7 +32,7 @@ CHK-100
 CHK-100
 end test
 
-; Test xact magnitude - covers line 651-652
+; Test xact magnitude - covers
 test reg --amount "magnitude" --begin 2024/01/03 --end 2024/01/04 Expenses
 24-Jan-03 Payment               Expenses:Rent               $500.00      $500.00
 end test

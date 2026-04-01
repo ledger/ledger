@@ -1,7 +1,7 @@
-; Coverage for amount.cc lines 204, 220:
+; Coverage for amount.cc
 ; Standard comma thousands separator with period decimal in register output.
 ; The register command forces amount formatting through stream_out_mpq with
-; the commodity parameter, hitting line 204 (decimal point) and line 220
+; the commodity parameter, hitting (decimal point)
 ; (thousands comma separator) for amounts with >3 integer digits.
 
 commodity $
