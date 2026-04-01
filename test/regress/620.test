@@ -1,0 +1,19 @@
+; Regression test for #620: -j should output values in a consistent base
+; unit for plotting.  Without this fix, quantity() would return values in
+; different unreduced units (e.g. hours vs minutes), making them
+; incomparable for graphing tools.
+
+i 2023/01/01 08:00:00 Project:A
+o 2023/01/01 10:00:00
+i 2023/01/01 14:00:00 Project:B
+o 2023/01/01 14:30:00
+
+test reg -j
+2023-01-01 7200
+2023-01-01 1800
+end test
+
+test reg -J
+2023-01-01 7200
+2023-01-01 9000
+end test

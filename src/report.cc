@@ -197,11 +197,16 @@ void report_t::normalize_options(const string& verb) {
 
   // If -j or -J were specified, set the appropriate format string now so as
   // to avoid option ordering issues were we to have done it during the
-  // initial parsing of the options.
+  // initial parsing of the options.  Also force --base so that quantity()
+  // always returns values in a consistent base unit (e.g. seconds for time),
+  // since the output is intended for plotting tools that need comparable
+  // numeric values (#620).
   if (HANDLED(amount_data)) { // NOLINT(bugprone-branch-clone)
     HANDLER(format_).on("?normalize", HANDLER(plot_amount_format_).value);
+    HANDLER(base).on("?normalize");
   } else if (HANDLED(total_data)) {
     HANDLER(format_).on("?normalize", HANDLER(plot_total_format_).value);
+    HANDLER(base).on("?normalize");
   }
 
   // If the --exchange (-X) option was used, parse out any final price
