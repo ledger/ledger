@@ -329,10 +329,10 @@ std::size_t journal_t::read_textual(parse_context_stack_t& context_stack, hash_t
   master->apply_deferred_posts();
 
   // These tracers were started in textual.cc
-  TRACE_FINISH(xact_text, 1);
-  TRACE_FINISH(xact_details, 1);
-  TRACE_FINISH(xact_posts, 1);
-  TRACE_FINISH(xacts, 1);
+  TRACE_FINISH(xact_text, 2);
+  TRACE_FINISH(xact_details, 2);
+  TRACE_FINISH(xact_posts, 2);
+  TRACE_FINISH(xacts, 2);
   TRACE_FINISH(instance_parse, 1); // report per-instance timers
   TRACE_FINISH(parsing_total, 1);
 
