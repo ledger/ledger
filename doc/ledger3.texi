@@ -1999,7 +1999,9 @@ method:
 @item on an xact, which then applies to all postings in that xact,
 @item on any posting via an automated transaction,
 @item on a per-account basis,
+@item via @option{--account-value-expr} (default for all accounts),
 @item on a per-commodity basis,
+@item via @option{--commodity-value-expr} (default for all commodities),
 @item by changing the journal default of @code{market}.
 @end enumerate
 
@@ -6827,10 +6829,47 @@ sessions with multiple reports per session.
 
 @ftable @option
 
+@item --account-value-expr @var{VEXPR}
+Set a default valuation expression for all accounts that do not already
+have their own @code{value} directive.  This is equivalent to adding a
+@code{value} directive to every account in the journal, but without
+modifying the journal file.  It takes precedence over
+@option{--commodity-value-expr} and @option{--value-expr}, but is
+overridden by an account's own @code{value} directive or a posting's
+@code{Value} metadata tag.
+
+For example, to value all postings at a fixed rate of 1.2 EUR per unit:
+
+@smallexample
+$ ledger -f journal.dat bal --account-value-expr "s, d, t -> market(1.2 EUR, d, t)"
+@end smallexample
+
+@xref{Valuation}, for a full description of valuation functions and
+the resolution order.
+
 @item --check-payees
 Enable strict and pedantic checking for payees as well as accounts,
 commodities and tags.  This only works in conjunction with
 @option{--strict} or @option{--pedantic}.
+
+@item --commodity-value-expr @var{VEXPR}
+Set a default valuation expression for all commodities that do not
+already have their own @code{value} directive.  This is equivalent to
+adding a @code{value} directive to every commodity in the journal, but
+without modifying the journal file.  It takes precedence over
+@option{--value-expr}, but is overridden by a commodity's own
+@code{value} directive, @option{--account-value-expr}, or a posting's
+@code{Value} metadata tag.
+
+For example, to value all commodity amounts at a fixed rate of 10 USD
+per unit:
+
+@smallexample
+$ ledger -f journal.dat bal --commodity-value-expr "s, d, t -> market(10 USD, d, t)"
+@end smallexample
+
+@xref{Valuation}, for a full description of valuation functions and
+the resolution order.
 
 @item --day-break
 Break up @command{register} report of @ref{timelog} entries that span multiple
@@ -6955,8 +6994,11 @@ For example 8100 seconds by default will be displayed as 2.25 whereas
 with the @option{--time-colon} option they will be displayed as 2:15.
 
 @item --value-expr @var{VEXPR}
-Set a global value expression annotation.
-@c needs example
+Set a global value expression annotation.  This is the lowest-priority
+valuation default: it applies only when no more specific valuation is
+defined via account or commodity @code{value} directives, posting
+@code{Value} metadata, @option{--account-value-expr}, or
+@option{--commodity-value-expr}.
 
 @end ftable
 
