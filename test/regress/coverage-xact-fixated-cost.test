@@ -1,5 +1,5 @@
 ; Test xact.cc: fixated cost annotation {=$PRICE} with multiple commodities
-; Exercises lines 272-287: when balance has >2 commodities and fixated prices,
+; Exercises when balance has >2 commodities and fixated prices
 ; costs are computed from the fixated price annotations.
 
 2024/01/15 * Exchange

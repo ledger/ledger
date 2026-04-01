@@ -1,5 +1,5 @@
 ; Test session.cc: price-db file not found error
-; Exercises read_data error path (lines 92-93)
+; Exercises read_data error path
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00

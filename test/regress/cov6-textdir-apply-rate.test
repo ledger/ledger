@@ -1,4 +1,4 @@
-; Coverage for textual_directives.cc lines 289-290: apply rate directive
+; Coverage for textual_directives.cc apply fixed directive
 
 apply fixed EUR $1.10
 

@@ -10,17 +10,17 @@ commodity $
     Assets:Brokerage           10 AAPL {$15.00} [2024/01/01] (lot-tag)
     Assets:Cash
 
-; Fixated price - covers lines 282-288 (find_price with fixated annotation)
+; Fixated price - covers (find_price with fixated annotation)
 2024/01/02 Fixated
     Assets:Brokerage           5 GOOG {=$500.00}
     Assets:Cash
 
-; Total price (double brace) - covers lines 131-132
+; Total price (double brace) - covers
 2024/01/03 Total Price
     Assets:Brokerage           5 MSFT {{$1000.00}}
     Assets:Cash
 
-; Different price commodities for ordering - covers operator< lines 57, 59
+; Different price commodities for ordering - covers operator<
 P 2024/01/01 EUR $1.10
 P 2024/01/01 GBP $1.30
 

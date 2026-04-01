@@ -1,4 +1,4 @@
-; Coverage: account.cc line 320: get_earliest_checkin function
+; Coverage: account.cc get_earliest_checkin function
 ; Tests format expression with earliest_checkin for timelog entries
 
 i 2024/01/15 09:00:00 Project:Work  Morning task

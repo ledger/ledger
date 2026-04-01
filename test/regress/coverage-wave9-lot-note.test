@@ -1,4 +1,4 @@
-; Test coverage for textual_xacts.cc lines 459-465
+; Test coverage for textual_xacts.cc
 ; Lot note/tag annotation syntax: {$150.00} (lot note)
 
 2024/01/01 Buy Stock with Lot Note

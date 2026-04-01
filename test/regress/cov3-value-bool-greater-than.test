@@ -1,5 +1,5 @@
 ; Test boolean greater-than comparison
-; Covers value.cc lines 1007-1018 (boolean is_greater_than)
+; Covers value.cc (boolean is_greater_than)
 
 2024/01/15 * Test
     Expenses:Food    $50.00

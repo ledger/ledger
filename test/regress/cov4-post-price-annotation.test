@@ -1,4 +1,4 @@
-; Test get_price with annotation price (lines 244-245 of post.cc)
+; Test get_price with annotation price
 ; Exercise the price accessor when annotation price exists
 
 2024/01/01 Test

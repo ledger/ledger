@@ -1,4 +1,4 @@
-; Coverage: journal.cc lines 191-208: expand_aliases partial account name
+; Coverage: journal.cc expand_aliases partial account name
 ; Tests alias expansion where only the first component of a multi-component
 ; account name matches an alias
 

@@ -1,4 +1,4 @@
-; Coverage test for filters.cc lines 345-351
+; Coverage test for filters.cc
 ; Test POST_MUST_BALANCE flag with virtual postings.
 ; Balanced virtual posts use square brackets and set POST_MUST_BALANCE.
 ; This exercises the auto_virtualize check in handle_value.

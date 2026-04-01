@@ -1,4 +1,4 @@
-; Test coverage for textual_directives.cc lines 454-458, 509-511
+; Test coverage for textual_directives.cc
 ; account directive with eval and value sub-directives
 
 account Expenses:Food

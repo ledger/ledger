@@ -1,25 +1,25 @@
 ; Tests for precmd.cc uncovered lines
-; Covers: lines 88 133 159 190 192-193 195-196
+; Covers: 133 159 190 192-193 195-196
 
-; --- Test 1: parse with no args (line 88) ---
+; --- Test 1: parse with no args ---
 test parse -> 1
 __ERROR__
 Error: Usage: parse TEXT
 end test
 
-; --- Test 2: format with no args (line 133) ---
+; --- Test 2: format with no args ---
 test format -> 1
 __ERROR__
 Error: Usage: format TEXT
 end test
 
-; --- Test 3: period with no args (line 159) ---
+; --- Test 3: period with no args ---
 test period -> 1
 __ERROR__
 Error: Usage: period TEXT
 end test
 
-; --- Test 4: period with valid args (line 159 - normal path) ---
+; --- Test 4: period with valid args (normal path) ---
 test period "monthly from 2024/01/01 to 2024/04/01"
 --- Period expression tokens ---
 TOK_MONTHLY: monthly
@@ -45,7 +45,7 @@ duration: 1 month
  3: 24-Mar-01 -- 24-Mar-31
 end test
 
-; --- Test 5: format with valid args (line 133 - normal path) ---
+; --- Test 5: format with valid args (normal path) ---
 test format "%(payee)\n"
 --- Context is first posting of the following transaction ---
 2004/05/27 Book Store

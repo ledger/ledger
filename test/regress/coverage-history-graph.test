@@ -1,5 +1,5 @@
 ; Tests for history.cc: graph visualization via pricemap command
-; Covers: lines 519-527 (print_map/pricemap with and without moment)
+; Covers: (print_map/pricemap with and without moment)
 
 ; Set up price history with multiple commodities for graph paths
 P 2024/01/01 EUR $1.10
@@ -9,7 +9,7 @@ P 2024/06/01 EUR $1.15
     Expenses  10 EUR
     Assets
 
-; pricemap without moment triggers line 520-521
+; pricemap without moment triggers
 test pricemap
 graph G {
 0[label=""];
@@ -23,7 +23,7 @@ graph G {
 }
 end test
 
-; pricemap with --now triggers line 523-526 (filtered graph)
+; pricemap with --now triggers (filtered graph)
 test pricemap --now 2024/03/01
 graph G {
 0[label=""];

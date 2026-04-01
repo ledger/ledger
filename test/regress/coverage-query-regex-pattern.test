@@ -1,4 +1,4 @@
-; Test query parser with /regex/ pattern syntax (covers query.cc lines 78-98)
+; Test query parser with /regex/ pattern syntax (covers query.cc )
 ; Forward slash delimited patterns in queries
 
 2024/01/15 Grocery Store

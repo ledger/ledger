@@ -1,5 +1,5 @@
 ; Test xact_t::lookup for payee, magnitude, code functions
-; Targets: xact.cc lines 540-614 (get_magnitude, get_code, get_payee via xact scope)
+; Targets: xact.cc (get_magnitude, get_code, get_payee via xact scope)
 
 2024/01/15 (CHK-100) Grocery Store
     Expenses:Food              $50.00

@@ -1,4 +1,4 @@
-; Coverage test for select.cc lines 322-323:
+; Coverage test for select.cc
 ; Exercise select with amount as the first (and only) column,
 ; triggering the thus_far.empty() -> "-1" code path.
 

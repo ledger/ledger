@@ -1,7 +1,7 @@
 ; Tests for item.cc: get_comment paths
-; Covers: line 343 (return from get_comment)
-;         lines 365-366 (no note returns empty string)
-;         lines 369-386 (note formatting with newlines)
+; Covers: (return from get_comment)
+;         (no note returns empty string)
+;         (note formatting with newlines)
 
 2024/01/01 No Note
     Expenses:Food  $10
@@ -12,7 +12,7 @@
     Assets
 
 ; get_comment returns both empty and non-empty for different postings
-; Exercises lines 365-366 (no note) and 372 (short note)
+; Exercises (no note) and (short note)
 test reg Expenses --format '%(comment)\n'
 
   ; tiny

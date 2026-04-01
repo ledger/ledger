@@ -1,4 +1,4 @@
-; Coverage test for post.cc lines 168-170, 202-204:
+; Coverage test for post.cc
 ; get_payee() and get_use_direct_amount()
 
 2024/01/15 Test Payee Name

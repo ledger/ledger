@@ -1,4 +1,4 @@
-; Coverage test for filters.cc line 350
+; Coverage test for filters.cc
 ; handle_value sets POST_MUST_BALANCE for auto-virtualized accounts
 ; that contain only balanced-virtual postings
 

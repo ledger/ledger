@@ -1,4 +1,4 @@
-; Coverage test for history.cc line 488
+; Coverage test for history.cc
 ; Multi-hop commodity conversion via price chain A -> B -> C
 
 P 2024/01/01 A 10 B

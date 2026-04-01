@@ -1,4 +1,4 @@
-; Coverage for times.cc lines 1801-1802, 1821-1822: assert(false) in format_date
+; Coverage for times.cc assert(false) in format_date
 ; These are dead code (assert(false) paths) but we can exercise the FMT_CUSTOM path
 
 2024/01/01 Test

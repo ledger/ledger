@@ -1,4 +1,4 @@
-; Test account lookup is_account (lines 448-449 of account.cc)
+; Test account lookup is_account
 ; Exercise the is_account accessor on accounts
 
 2024/01/01 Test

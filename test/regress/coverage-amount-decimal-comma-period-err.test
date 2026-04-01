@@ -1,4 +1,4 @@
-; Coverage for amount.cc line 1194:
+; Coverage for amount.cc
 ; When a commodity already has COMMODITY_STYLE_DECIMAL_COMMA (established
 ; by a commodity directive), encountering a period with digit grouping
 ; that is not a multiple of 3 throws "Incorrect use of thousand-mark

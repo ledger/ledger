@@ -1,4 +1,4 @@
-; Test textual_directives.cc line 779: @ prefix on directives
+; Test textual_directives.cc @ prefix on directives
 
 @account Expenses:Food
     alias food

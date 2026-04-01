@@ -1,4 +1,4 @@
-; Test get_comment with short note (lines 364-386 of item.cc)
+; Test get_comment with short note
 ; Exercise the comment formatter with a note shorter than 15 chars
 
 2024/01/01 Test

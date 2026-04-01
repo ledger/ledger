@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 74-78
+; Coverage test for report.cc
 ; When --output is set, color and pager are turned off.
 ; Using --output /dev/stdout still goes to stdout for test capture.
 

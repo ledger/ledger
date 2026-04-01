@@ -1,4 +1,4 @@
-; Coverage test for times.cc lines 1748-1749
+; Coverage test for times.cc
 ; Non-alpha non-digit character in period expression triggers expected()
 
 2024/01/01 Test

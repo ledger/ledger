@@ -1,4 +1,4 @@
-; Coverage test for post.cc lines 388-391
+; Coverage test for post.cc
 ; Tests fn_all with second argument false to skip the current posting.
 ; all(expr, false) evaluates expr against all OTHER postings in the
 ; transaction. For Transfer: both postings see the other is Assets, so

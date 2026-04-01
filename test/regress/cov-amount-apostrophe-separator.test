@@ -1,4 +1,4 @@
-; Coverage test for amount.cc line 214-215
+; Coverage test for amount.cc
 ; Exercise apostrophe as thousands separator
 ; Covers COMMODITY_STYLE_THOUSANDS_APOSTROPHE
 

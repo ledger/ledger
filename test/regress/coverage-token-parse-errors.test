@@ -1,12 +1,12 @@
 ; Test token.cc parse error paths
-; Exercises unexpected(char) (lines 460-488)
-; expected(kind_t) (lines 505-515)
-; operator<<(ostream, kind_t) various branches (lines 517-637)
-; operator<<(ostream, token_t) (lines 640-657)
+; Exercises unexpected(char)
+; expected(kind_t)
+; operator<<(ostream, kind_t) various branches
+; operator<<(ostream, token_t)
 
 ; Unclosed parenthesis triggers expected(RPAREN)
-; which uses operator<<(ostream, kind_t) for RPAREN (line 536)
-; and operator<<(ostream, token_t) default branch -> TOK_EOF (line 630)
+; which uses operator<<(ostream, kind_t) for RPAREN
+; operator<<(ostream, token_t) default branch -> TOK_EOF
 test eval "(5" -> 1
 __ERROR__
 While parsing value expression:

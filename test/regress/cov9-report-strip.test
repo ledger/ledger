@@ -1,4 +1,4 @@
-; Coverage test for report.cc line 740: fn_strip
+; Coverage test for report.cc fn_strip
 ; Test strip() function which removes annotations from amounts.
 
 2024/01/01 Buy Stock

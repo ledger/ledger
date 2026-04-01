@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 1049-1053
+; Coverage test for xact.cc
 ; Tests auto transaction posting where amount_expr evaluates to a long
 ; integer or a non-amount type. When amount_expr returns is_long(), it
 ; must be converted via to_amount().

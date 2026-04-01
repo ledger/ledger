@@ -1,4 +1,4 @@
-; Coverage test for times.cc lines 647, 1213
+; Coverage test for times.cc
 ; Exercise peek_token via bare integer in period expressions
 
 2020/01/15 Transaction A

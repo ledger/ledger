@@ -1,4 +1,4 @@
-; Coverage test for format.cc line 282
+; Coverage test for format.cc
 ; Test %$ with a field index that exceeds the number of expression fields
 ; in the primary template. Referencing %$9 when the template only has one
 ; expression field triggers an error.

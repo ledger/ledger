@@ -1,4 +1,4 @@
-; Coverage: value.cc line 912 (compare_by_commodity for different commodities
+; Coverage: value.cc (compare_by_commodity for different commodities
 ; in is_less_than) and the commodity comparison recursion paths.
 ; Sorting amounts with different commodities triggers the commodity comparison.
 

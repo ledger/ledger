@@ -19,7 +19,7 @@
     Expenses:Dining          $30.00
     Assets:Cash
 
-; Test % (meta/tag) query operator (query.cc line 148-150)
+; Test % (meta/tag) query operator
 test reg %Category
 24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
                                 Assets:Cash                 $-10.00            0
@@ -29,7 +29,7 @@ test reg %Category
                                 Assets:Cash                 $-30.00            0
 end test
 
-; Test tag keyword with equality (query.cc lines 319-332)
+; Test tag keyword with equality
 test reg tag Category=fuel
 24-Feb-01 Gas Station           Expenses:Gas                 $20.00       $20.00
                                 Assets:Cash                 $-20.00            0
@@ -41,19 +41,19 @@ test reg meta Category=groceries
                                 Assets:Cash                 $-10.00            0
 end test
 
-; Test expr keyword in query (query.cc lines 217-221, 304-305)
+; Test expr keyword in query
 test reg expr "amount > 15"
 24-Feb-01 Gas Station           Expenses:Gas                 $20.00       $20.00
 24-Mar-01 Restaurant            Expenses:Dining              $30.00       $50.00
 end test
 
-; Test 'desc' keyword (alias for payee, query.cc lines 232-233)
+; Test 'desc' keyword (alias for payee, query.cc )
 test reg desc "Grocery"
 24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
                                 Assets:Cash                 $-10.00            0
 end test
 
-; Test 'data' keyword (alias for meta, query.cc lines 242-243)
+; Test 'data' keyword (alias for meta, query.cc )
 test reg data Category=restaurant
 24-Mar-01 Restaurant            Expenses:Dining              $30.00       $30.00
                                 Assets:Cash                 $-30.00            0

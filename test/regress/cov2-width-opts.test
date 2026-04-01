@@ -11,19 +11,19 @@
     Expenses:Gas             $20.00
     Assets:Cash
 
-; Test --prepend-format option (line 1361)
+; Test --prepend-format option
 test reg Expenses --prepend-format ">> "
 >> 24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
 >> 24-Feb-01 Payee Two             Expenses:Gas                 $20.00       $30.00
 end test
 
-; Test --align-intervals option (line 1227)
+; Test --align-intervals option
 test reg Expenses --align-intervals --monthly
 24-Jan-01 - 24-Jan-31           Expenses:Food                $10.00       $10.00
 24-Feb-01 - 24-Feb-29           Expenses:Gas                 $20.00       $30.00
 end test
 
-; Test --abbrev-len option (line 1219)
+; Test --abbrev-len option
 test bal Expenses --abbrev-len 10
               $30.00  Expenses
               $10.00    Food
@@ -32,31 +32,31 @@ test bal Expenses --abbrev-len 10
               $30.00
 end test
 
-; Test --account-width option (line 1233)
+; Test --account-width option
 test reg Expenses --account-width 30
 24-Jan-01 Payee                 Expenses:Food                        $10.00       $10.00
 24-Feb-01 Payee Two             Expenses:Gas                         $20.00       $30.00
 end test
 
-; Test --total-width option (line 1394)
+; Test --total-width option
 test reg Expenses --total-width 15
 24-Jan-01 Payee                 Expenses:Food                  $10.00          $10.00
 24-Feb-01 Payee Two             Expenses:Gas                   $20.00          $30.00
 end test
 
-; Test --truncate option (line 1393)
+; Test --truncate option
 test reg Expenses --truncate trailing
 24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
 24-Feb-01 Payee Two             Expenses:Gas                 $20.00       $30.00
 end test
 
-; Test --start-of-week option (line 1385)
+; Test --start-of-week option
 test reg Expenses --start-of-week monday
 24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
 24-Feb-01 Payee Two             Expenses:Gas                 $20.00       $30.00
 end test
 
-; Test --seed option (line 1386)
+; Test --seed option
 test reg Expenses --seed 42
 24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
 24-Feb-01 Payee Two             Expenses:Gas                 $20.00       $30.00

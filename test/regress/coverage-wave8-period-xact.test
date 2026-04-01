@@ -1,5 +1,5 @@
 ; Coverage tests for textual_xacts.cc period_xact_directive
-; Targets xact.cc line 735 (period_xact_t), textual_xacts.cc lines 248-290
+; Targets xact.cc (period_xact_t), textual_xacts.cc
 
 ~ Monthly
     Expenses:Rent            $1000.00

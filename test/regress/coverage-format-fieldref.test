@@ -1,6 +1,6 @@
-; Coverage test for format.cc lines 270
+; Coverage test for format.cc
 ; Tests format field references (%$N) in multi-line formats.
-; Line 270: %$0 triggers "must be a digit from 1-9" error
+; %$0 triggers "must be a digit from 1-9" error
 
 2024/01/15 Test
     Expenses:Food             $50.00

@@ -1,4 +1,4 @@
-; Coverage for format.cc line 618: abbreviation adjustment calculation
+; Coverage for format.cc abbreviation adjustment calculation
 
 2024/01/01 Test
     Expenses:Food:Dining:Restaurant:Fancy    $10.00

@@ -1,5 +1,5 @@
 ; Test commodity comparison with mixed annotated/non-annotated commodities
-; Covers commodity.cc compare_by_commodity paths (lines 370-499)
+; Covers commodity.cc compare_by_commodity paths
 
 2024/01/15 Buy Stock Lots
     Assets:Brokerage         10 AAPL {$150.00}

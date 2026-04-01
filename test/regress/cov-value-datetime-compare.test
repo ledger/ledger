@@ -1,5 +1,5 @@
-; Coverage test for value.cc lines 1022-1024
-; Exercise datetime comparison in is_greater_than
+; Coverage test for value.cc
+; Exercise date comparison in is_less_than
 ; Sorting by date exercises the date comparison operators
 
 2024/01/15 First

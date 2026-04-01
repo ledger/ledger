@@ -1,4 +1,4 @@
-; Coverage for filters.cc lines 1364, 1366: budget report_budget_items
+; Coverage for filters.cc budget report_budget_items
 ; Budget report with periodic transactions to exercise period finding
 
 ~ monthly from 2024/01/01 to 2024/03/01

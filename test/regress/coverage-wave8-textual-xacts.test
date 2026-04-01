@@ -1,17 +1,16 @@
 ; Coverage tests for textual_xacts.cc
-; Targets lines 277-279, 306, 459, 722-725, 948-953
 
-; Test inline math in postings (parenthesized expressions) - line 277-279, 459
+; Test inline math in postings (parenthesized expressions)
 2024/01/01 Inline Math
     Expenses:Food          ($5.00 * 3)
     Assets:Cash
 
-; Test balance assertion - line 722-725
+; Test balance assertion
 2024/01/02 Balance Assert
     Assets:Cash             $10.00 = $-5.00
     Expenses:Misc
 
-; Test virtual posting (parens) - line 306
+; Test virtual posting (parens)
 2024/01/03 Virtual Posting
     Expenses:Food             $5.00
     Assets:Cash              -$5.00
@@ -26,13 +25,13 @@
     Expenses:Food             $5.00
     Assets:Cash
 
-; Test transaction-level check failure (warning) - lines 948-953
+; Test transaction-level check failure (warning)
 2024/01/06 Check Fail
     check 1 == 2
     Expenses:Food             $5.00
     Assets:Cash
 
-; Test transaction-level expr - lines 944-946
+; Test transaction-level expr
 2024/01/07 Expr Eval
     expr 2 + 3
     Expenses:Food             $5.00
@@ -53,5 +52,5 @@ test reg Expenses
 24-Jan-07 Expr Eval             Expenses:Food                 $5.00       $30.00
 24-Jan-08 Deferred Post         Expenses:Food                 $5.00       $35.00
 __ERROR__
-Warning: "$FILE", line 31: Transaction check failed: 1 == 2
+Warning: "$FILE", line 30: Transaction check failed: 1 == 2
 end test

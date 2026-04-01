@@ -1,4 +1,4 @@
-; Coverage for textual_xacts.cc line 575: negative cost
+; Coverage for textual_xacts.cc negative cost
 
 2024/01/01 Test
     Expenses:Food    100 EUR @ -$1.10

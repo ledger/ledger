@@ -1,4 +1,4 @@
-; Test --head and --tail options for report.cc lines 549-555 area
+; Test --head and --tail options for report.cc area
 ; Also tests the head/tail option handlers
 
 2024/01/01 Payee One

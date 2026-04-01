@@ -18,7 +18,7 @@
     Expenses:Utilities         $75.00
     Assets:Checking
 
-; Test with format expression that exercises format.h lines 131-138
+; Test with format expression that exercises format.h
 test reg --format "%(format_date(date, \"%Y-%m-%d\")) %(payee) %(display_amount)\n" Expenses
 2024-01-01 Grocery Store $25.00
 2024-01-15 Gas Station $40.00
@@ -36,7 +36,7 @@ test reg --limit "payee !~ /Store/" Expenses
 24-Feb-01 Electric Company      Expenses:Utilities           $75.00      $115.00
 end test
 
-; Test post with metadata tag query - covers post.h lines 99-105, 107
+; Test post with metadata tag query
 test reg --limit "has_tag(/Category/)" Expenses
 24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
 end test

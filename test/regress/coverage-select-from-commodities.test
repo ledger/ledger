@@ -1,5 +1,5 @@
 ; Coverage test for select.cc: FROM commodities path
-; Exercises: select_command FROM commodities (lines 362-366)
+; Exercises: select_command FROM commodities
 
 2024/01/15 Purchase
     Assets:Stocks    10 AAPL @ $150.00

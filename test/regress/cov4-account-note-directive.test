@@ -1,4 +1,4 @@
-; Test account directive note sub-directive (lines 471-472 of textual_directives.cc)
+; Test account directive note sub-directive
 ; Exercise the note keyword within an account directive
 
 account Expenses:Food

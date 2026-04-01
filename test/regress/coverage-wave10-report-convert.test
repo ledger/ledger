@@ -1,27 +1,27 @@
 ; Tests for type conversion functions
-; Covers report.cc lines 960, 964, 968, 972, 976
+; Covers report.cc
 
 2024/01/15 Test
     Expenses:Food    $50.00
     Assets:Cash
 
-; Test to_amount - covers line 960
+; Test to_amount - covers
 test reg --format '%(to_amount(amount))\n' --head 1 Expenses
 $50.00
 end test
 
-; Test to_balance - covers line 964
+; Test to_balance - covers
 test reg --format '%(to_balance(amount))\n' --head 1 Expenses
 $50.00
 end test
 
-; Test to_string - covers line 968
+; Test to_string - covers
 test reg --format '%(to_string(payee))\n' --head 1
 Test
 Test
 end test
 
-; Test to_mask - covers line 972
+; Test to_mask - covers
 test reg --format '%(to_mask("Food"))\n' --head 1
 Food
 Food

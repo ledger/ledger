@@ -1,6 +1,6 @@
-; Coverage for amount.cc lines 204, 209, 211, 220:
+; Coverage for amount.cc
 ; Very large amounts exercise the thousands separator loop multiple times,
-; ensuring the comma separator (line 220) and decimal point (line 204)
+; ensuring the comma separator and decimal point
 ; are both covered. Multiple digit groups force multiple separator insertions.
 
 commodity $

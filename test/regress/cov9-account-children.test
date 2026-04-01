@@ -1,4 +1,4 @@
-; Coverage for account.cc lines 513-525, 532-538: valid(), children_with_xdata
+; Coverage for account.cc valid, children_with_xdata
 
 2024/01/01 Test
     Expenses:Food:Grocery    $10.00

@@ -1,5 +1,5 @@
 ; Test session with strict checking mode
-; Covers session.cc lines 121-122 (strict checking mode)
+; Covers session.cc (strict checking mode)
 
 account Expenses:Food
 account Assets:Cash

@@ -1,5 +1,5 @@
 ; Test post_t::lookup for index keyword
-; Targets: post.cc line 446 (index -> get_count)
+; Targets: post.cc (index -> get_count)
 
 2024/01/15 * Store
     Expenses:Food              $50.00

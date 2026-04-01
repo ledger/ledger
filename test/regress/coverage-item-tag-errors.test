@@ -1,10 +1,10 @@
 ; Test item.cc: tag() and has_tag() error paths
-; Exercises tag() with 0 args (line 293-294), too many args (line 295-296)
-; Exercises tag() with bad arg type (line 283-285)
-; Exercises tag() with 2 string args (line 289-292)
-; Exercises has_tag() with 0 args (line 266-267), too many args (line 268-269)
-; Exercises has_tag() with bad arg type (line 256-258)
-; Exercises has_tag() with 2 string args (line 262-265)
+; Exercises tag with 0 args, too many args
+; Exercises tag with bad arg type
+; Exercises tag with 2 string args
+; Exercises has_tag with 0 args, too many args
+; Exercises has_tag with bad arg type
+; Exercises has_tag with 2 string args
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00

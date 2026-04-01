@@ -1,5 +1,5 @@
 ; Test str() function
-; Covers session.cc line 269 (fn_str)
+; Covers session.cc (fn_str)
 
 2024/01/15 Test
     Expenses:Food    $50.00

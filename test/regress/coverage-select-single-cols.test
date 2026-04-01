@@ -1,5 +1,5 @@
 ; Coverage test for select.cc: single-column select to exercise edge cases
-; Exercises: total as first column (thus_far empty, line 321-322),
+; Exercises: total as first column (thus_far empty, )
 ;   amount as first column, payee as first column, account as first column
 
 2024/01/15 Grocery Store
@@ -10,7 +10,7 @@
     Expenses:Transport    $30.00
     Assets:Checking
 
-; total as first column exercises thus_far.empty() at line 321
+; total as first column exercises thus_far.empty
 test select total from posts --columns=80
       $50.00
            0

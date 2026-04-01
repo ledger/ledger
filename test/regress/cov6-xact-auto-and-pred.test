@@ -1,4 +1,4 @@
-; Coverage test for xact.cc line 918
+; Coverage test for xact.cc
 ; Tests the post_pred function with O_AND operator in auto transactions.
 ; The quick matcher handles AND predicates for auto transaction matching.
 

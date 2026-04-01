@@ -1,5 +1,5 @@
 ; Coverage tests for textual_directives.cc commodity directives
-; Targets lines 544-616 (commodity directive with sub-directives)
+; Targets (commodity directive with sub-directives)
 
 commodity EUR
   alias EURO

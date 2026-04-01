@@ -6,12 +6,12 @@
     Expenses:Food    $10.00
     Assets:Cash
 
-; Test use_direct_amount (lines 201-203)
+; Test use_direct_amount
 test reg --format "%(use_direct_amount ? 'direct' : 'indirect')\n" Expenses
 indirect
 end test
 
-; Test account function (lines 265-298)
+; Test account function
 test reg --format "%(account)\n" --limit "account =~ /Expenses/"
 Expenses:Food
 end test

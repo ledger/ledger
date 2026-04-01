@@ -1,5 +1,5 @@
 ; Wave 2 coverage tests for annotate.cc error paths - duplicate tag
-; Covers: duplicate tag (line 184)
+; Covers: duplicate tag
 
 2024/01/01 Dup Tag
     Assets:Test              1 FOO {$10.00} (tag1) (tag2)

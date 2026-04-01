@@ -1,4 +1,4 @@
-; Coverage test for times.cc lines 1242-1245
+; Coverage test for times.cc
 ; Test TOK_TODAY/TOK_TOMORROW/TOK_YESTERDAY dispatching to
 ; handle_simple_period_token
 

@@ -1,5 +1,5 @@
 ; Test get_partial_name with flat=true argument
-; Covers account.cc line 242 (get_partial_name with bool arg)
+; Covers account.cc (get_partial_name with bool arg)
 
 2024/01/15 Test
     Expenses:Food:Groceries    $50.00

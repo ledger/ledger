@@ -1,4 +1,4 @@
-; Coverage test for xact.cc line 320
+; Coverage test for xact.cc
 ; Tests the recompute path after fixated cost resolution where
 ; balanced virtual postings ([Account]) are skipped.
 ; The fixated price {=$1.10} triggers the recompute, and the

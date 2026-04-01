@@ -1,5 +1,5 @@
 ; Coverage tests for draft.cc template dump with more complex args
-; Targets lines 363, 369 (date, code, note in template dump)
+; Targets (date, code, note in template dump)
 
 2024/01/01 (CHK001) Grocery Store  ;a note
     Expenses:Food            $50.00

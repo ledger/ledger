@@ -1,5 +1,5 @@
 ; Test stream.cc: output to a real file
-; Exercises initialize with output_file (line 100-101) and close (lines 110-113)
+; Exercises initialize with output_file and close
 ; Using /dev/stdout as a real file descriptor target
 
 2024/01/15 Grocery Store

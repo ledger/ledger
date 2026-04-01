@@ -1,4 +1,4 @@
-; Test times.cc lines 960-998: "last N months" relative time
+; Test times.cc "last N months" relative time
 ; in handle_relative_token
 
 2025/12/01 Old tx

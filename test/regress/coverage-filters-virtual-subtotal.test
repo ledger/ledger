@@ -1,8 +1,8 @@
-; Coverage test for filters.cc line 350: POST_MUST_BALANCE flag
+; Coverage test for filters.cc POST_MUST_BALANCE flag
 ; Tests handle_value with force_virtual and force_must_balance.
 ; When subtotal_posts accumulates virtual balanced postings (square brackets),
 ; it tracks is_virtual and must_balance flags, passing them to handle_value.
-; Also covers lines 372, 377 (amount/compound_value assignment).
+; Also covers (amount/compound_value assignment)
 
 2024/01/01 Test
     Expenses:Food    $10.00

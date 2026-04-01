@@ -1,4 +1,4 @@
-; Test coverage for filters.cc lines 1200-1243
+; Test coverage for filters.cc
 ; --pivot/--inject triggers transfer_details filter
 
 2024/01/01 Grocery Store

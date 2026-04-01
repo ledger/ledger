@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 758-763
+; Coverage test for report.cc
 ; fn_print writes values to output_stream followed by newline
 
 2024/01/01 Test

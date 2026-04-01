@@ -1,4 +1,4 @@
-; Coverage test for filters.cc day_of_week_posts (lines 1304-1313)
+; Coverage test for filters.cc day_of_week_posts
 ; Tests the --dow option which groups transactions by day of week.
 ; The day_of_week_posts handler collects posts into 7 buckets
 ; and reports subtotals for each day.

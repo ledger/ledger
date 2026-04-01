@@ -1,5 +1,5 @@
 ; Test balance assignment in a simple case
-; Targets: post.cc lines 710-715 (assigned_amount in put_post)
+; Targets: post.cc (assigned_amount in put_post)
 
 2024/01/01 * Opening Balance
     Assets:Checking            $1000.00

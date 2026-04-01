@@ -1,4 +1,4 @@
-; Test account_t::lookup for has_children_to_display (line 443-444 of account.cc)
+; Test account_t::lookup for has_children_to_display
 
 2024/01/01 Test
     Expenses:Food:Groceries    $5.00

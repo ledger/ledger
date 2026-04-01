@@ -1,4 +1,4 @@
-; Coverage test for times.cc lines 789-796
+; Coverage test for times.cc
 ; Exercise weekday specifier (TOK_A_WDAY) in date parsing
 ; "this monday" should exercise the weekday code path
 
@@ -6,7 +6,7 @@
     Expenses:Food            $10.00
     Assets:Cash
 
-; "this monday" - exercises TOK_THIS + TOK_A_WDAY path (line 789-796)
+; "this monday" - exercises TOK_THIS + TOK_A_WDAY path
 test reg Expenses --begin "this monday"
 end test
 

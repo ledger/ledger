@@ -1,4 +1,4 @@
-; Coverage: item.cc lines 520, 525, 530 - L, X, Y single-char lookups
+; Coverage: item.cc - L, X, Y single-char lookups
 ; L = actual (not generated/temp), X = cleared, Y = pending
 
 2024/01/01 * Cleared

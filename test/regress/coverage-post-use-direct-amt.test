@@ -1,5 +1,5 @@
 ; Test use_direct_amount expression
-; Targets: post.cc lines 194-195 (get_use_direct_amount)
+; Targets: post.cc (get_use_direct_amount)
 
 2024/01/15 * Store
     Expenses:Food              $50.00

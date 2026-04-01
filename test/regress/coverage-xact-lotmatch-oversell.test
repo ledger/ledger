@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 459-470
+; Coverage test for xact.cc
 ; Tests the oversell path in FIFO lot matching.  When the total sale
 ; amount exceeds all available lot holdings, the unmatched remainder
 ; is split into a separate unannotated posting.

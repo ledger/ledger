@@ -1,4 +1,4 @@
-; Coverage for report.cc lines 1050-1053: fn_to_datetime
+; Coverage for report.cc fn_to_datetime
 
 2024/01/01 Test
     Expenses:Food    $10.00

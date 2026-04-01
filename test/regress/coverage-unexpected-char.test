@@ -1,4 +1,4 @@
-; Coverage test for textual_xacts.cc line 769
+; Coverage test for textual_xacts.cc
 ; Unexpected character after posting amount triggers error
 
 2024/01/01 Test

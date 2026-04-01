@@ -1,6 +1,5 @@
-; Test multiplication and division with percentage amounts
-; Covers amount.cc lines 480-496 (percentage multiplication)
-; and lines 531-548 (percentage division)
+; Test multiplication with percentage amounts
+; Covers amount.cc (percentage multiplication)
 
 2024/01/01 Test
     Expenses:Tax    $100.00

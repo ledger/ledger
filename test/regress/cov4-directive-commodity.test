@@ -1,4 +1,4 @@
-; Test commodity directive with sub-directives (line 534 of textual_directives.cc)
+; Test commodity directive with sub-directives
 ; Exercise commodity format, nomarket, note, default, and alias sub-directives
 
 commodity EUR

@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 626, 633, 640
+; Coverage test for report.cc
 ; Test averaged_lots(), fifo_lots(), lifo_lots() with non-balance arguments.
 ; When the argument is a plain amount (not a balance_t), these functions
 ; return the argument unchanged (the else branch).

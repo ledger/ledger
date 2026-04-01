@@ -1,4 +1,4 @@
-; Test account sub-directive 'payee' (line 439-440 of textual_directives.cc)
+; Test account sub-directive 'payee'
 ; Exercise the account payee mapping
 
 account Expenses:Food

@@ -1,4 +1,4 @@
-; Coverage test for format.cc lines 272-284
+; Coverage test for format.cc
 ; Test %$ field reference in secondary format (after %/).
 ; The %/ separator defines a secondary format for the 2nd+ postings in
 ; a transaction. %$N references the Nth expression field from the primary

@@ -1,5 +1,5 @@
 ; Test session.cc: -Z short option for price-exp
-; Exercises lookup_option case 'Z' -> OPT_CH(price_exp_) (line 296)
+; Exercises lookup_option case 'Z' -> OPT_CH(price_exp_)
 
 P 2024/01/01 AAPL $150.00
 

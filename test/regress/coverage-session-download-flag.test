@@ -1,6 +1,6 @@
 ; Test session.cc: -Q and --download flags
-; Exercises lookup_option case 'Q' -> download (line 293) and
-; case 'd' -> download (line 302)
+; Exercises lookup_option case 'Q' -> download
+; case 'd' -> download
 
 P 2024/01/01 AAPL $150.00
 

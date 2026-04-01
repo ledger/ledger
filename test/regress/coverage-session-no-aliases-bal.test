@@ -1,5 +1,5 @@
 ; Test session.cc: --no-aliases option
-; Exercises no_aliases setting (lines 108-109)
+; Exercises no_aliases setting
 
 alias food=Expenses:Food
 

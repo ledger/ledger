@@ -1,4 +1,4 @@
-; Coverage for timelog.cc lines 79, 92, 94: basic timelog check-in/out
+; Coverage for timelog.cc basic timelog check-in/out
 
 i 2024/01/01 09:00:00 Work:Project
 o 2024/01/01 17:00:00

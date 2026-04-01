@@ -1,4 +1,4 @@
-; Coverage for account.cc line 119: find_account_re
+; Coverage for account regex matching via --limit "account =~ /regex/"
 
 2024/01/01 Test
     Expenses:Food:Grocery    $10.00

@@ -1,4 +1,4 @@
-; Coverage for textual_directives.cc line 298 (apply tag without arg)
+; Coverage for textual_directives.cc (apply tag without arg)
 
 apply tag
 

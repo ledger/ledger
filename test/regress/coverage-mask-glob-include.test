@@ -1,5 +1,5 @@
 ; Test mask_t::assign_glob with '?' pattern via include directive
-; Covers mask.cc lines 59-60 (? glob character)
+; Covers mask.cc (? glob character)
 
 include glob_test_dir/data_?.dat
 

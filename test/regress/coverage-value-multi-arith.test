@@ -1,6 +1,6 @@
 ; Test value.cc: multi-commodity balance arithmetic
-; Coverage target: value.cc - BALANCE *= INTEGER (line 648), BALANCE /= INTEGER (line 724),
-;   BALANCE *= AMOUNT-no-commodity (line 656), BALANCE /= AMOUNT-no-commodity (line 732)
+; Coverage target: value.cc - BALANCE *= INTEGER, BALANCE /= INTEGER
+;   BALANCE *= AMOUNT-no-commodity, BALANCE /= AMOUNT-no-commodity
 
 2024/01/15 Purchase
     Expenses:Food       $300.00

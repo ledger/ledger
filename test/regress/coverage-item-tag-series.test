@@ -1,5 +1,5 @@
 ; Test parse_tags with series of tags (colon-delimited)
-; Targets: item.cc lines 175-179 (series of tags parsing)
+; Targets: item.cc (series of tags parsing)
 
 2024/01/15 * Store
     ; :food:organic:fresh:

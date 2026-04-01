@@ -1,4 +1,4 @@
-; Coverage test for amount.cc lines 204, 211, 220
+; Coverage test for amount.cc
 ; Standard comma as thousands separator and period as decimal
 
 commodity $

@@ -1,8 +1,8 @@
 ; Test value.cc: boolean value operations and type casting
-; Coverage target: value.cc - operator bool() BOOLEAN (line 85),
-;   in_place_cast BOOLEAN to INTEGER (line 1182),
-;   in_place_cast BOOLEAN to STRING (line 1188),
-;   in_place_not for BOOLEAN (line 1394)
+; Coverage target: value.cc - operator bool BOOLEAN
+;   in_place_cast BOOLEAN to INTEGER
+;   in_place_cast BOOLEAN to STRING
+;   in_place_not for BOOLEAN
 
 2024/01/15 * Purchase
     Expenses:Food       $100.00

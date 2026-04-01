@@ -1,4 +1,4 @@
-; Coverage test for csv.cc line 96:
+; Coverage test for csv.cc
 ; Empty CSV file causes early return from read_index()
 
 account Expenses:Unknown

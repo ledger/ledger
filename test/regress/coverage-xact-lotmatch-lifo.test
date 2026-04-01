@@ -1,6 +1,6 @@
-; Coverage test for xact.cc lines 319-470
+; Coverage test for xact.cc
 ; Tests LIFO lot matching in finalize().  Exercises:
-;   - lot_matching_policy == lifo (line 409-411)
+;   - lot_matching_policy == lifo
 ;   - LIFO sort order (newest lot consumed first)
 ;   - splitting a sale across two lots
 

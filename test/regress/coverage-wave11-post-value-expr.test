@@ -1,4 +1,4 @@
-; Coverage for textual_xacts.cc line 565 (post value_expr)
+; Coverage for textual_xacts.cc (post value_expr)
 ; Tests posting with value expression amount using parentheses
 
 2024/01/01 Test Expression Amount

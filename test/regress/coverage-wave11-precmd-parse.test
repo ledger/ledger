@@ -1,4 +1,4 @@
-; Coverage for precmd.cc lines 190-196 (parse command)
+; Coverage for precmd.cc (parse command)
 ; Tests the 'eval' pre-command
 
 2024/01/01 Test

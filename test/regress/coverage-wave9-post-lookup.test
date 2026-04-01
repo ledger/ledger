@@ -1,4 +1,4 @@
-; Test coverage for post.cc lines 519-530
+; Test coverage for post.cc
 ; Test various post_t::lookup field names via --format
 ; Covers N, O, R single-char lookups and index, magnitude, etc.
 

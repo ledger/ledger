@@ -1,5 +1,5 @@
 ; Test annotation with date only (no price)
-; Covers annotate.cc lines 145-156 (date annotation parsing)
+; Covers annotate.cc (date annotation parsing)
 
 2024/01/01 Buy Stock
     Assets:Brokerage    10 AAPL [2024/01/01]

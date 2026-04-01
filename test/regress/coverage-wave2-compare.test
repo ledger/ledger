@@ -1,6 +1,6 @@
 ; Wave 2 coverage tests for compare.cc
 ; Covers: compare_items<post_t>, compare_items<account_t>, sort_values,
-; push_sort_value with context, account sort without context (lines 62, 87-89, 98-100, 120, 131)
+; push_sort_value with context, account sort without context
 
 2024/01/01 Grocery Store
     Expenses:Food              $25.00
@@ -18,7 +18,7 @@
     Expenses:Utilities         $75.00
     Assets:Checking
 
-; Sort posts by amount - covers compare_items<post_t>::operator() lines 87-89
+; Sort posts by amount - covers compare_items<post_t>::operator
 test reg --sort amount Expenses
 24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
 24-Jan-10 Gas Station           Expenses:Transport           $40.00       $65.00
@@ -32,7 +32,7 @@ test reg --sort -date Expenses
 24-Jan-01 Grocery Store         Expenses:Food                $25.00      $140.00
 end test
 
-; Sort accounts by total - covers compare_items<account_t>::operator() lines 120, 131
+; Sort accounts by total - covers compare_items<account_t>::operator
 test bal --sort -amount Expenses
              $140.00  Expenses
               $75.00    Utilities

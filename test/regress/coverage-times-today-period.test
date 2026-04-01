@@ -1,5 +1,5 @@
 ; Test today/tomorrow/yesterday as standalone period expressions
-; Exercises handle_simple_period_token (lines 1095-1111)
+; Exercises handle_simple_period_token
 ; These are different from the determine_when TOK_TODAY/etc cases
 
 2024/01/14 Payee A

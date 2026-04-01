@@ -1,5 +1,5 @@
 ; Test value_date (fn_now alias) for report.cc coverage
-; Targets report.cc line 1543 (value_date lookup -> fn_now)
+; Targets report.cc (value_date lookup -> fn_now)
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00

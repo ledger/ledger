@@ -1,5 +1,5 @@
 ; Test --recursive-aliases option
-; Covers session.cc line 107 (recursive_aliases)
+; Covers session.cc (recursive_aliases)
 
 alias food=Expenses:Food
 alias groc=food

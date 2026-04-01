@@ -1,5 +1,5 @@
 ; Test post get_account with long argument for truncation
-; Covers post.cc lines 273-278 (account truncation with int argument)
+; Covers post.cc (account truncation with int argument)
 
 2024/01/01 Test
     Expenses:Very:Long:Account:Name    $10.00

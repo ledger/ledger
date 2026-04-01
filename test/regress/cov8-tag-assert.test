@@ -1,4 +1,4 @@
-; Coverage test for textual_directives.cc lines 674-678:
+; Coverage test for textual_directives.cc
 ; tag directive with assert sub-directive.
 
 tag MyTag

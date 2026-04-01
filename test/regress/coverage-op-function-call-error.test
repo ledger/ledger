@@ -1,6 +1,6 @@
-; Coverage for op.cc lines 520-522:
+; Coverage for op.cc
 ; When a function call throws a non-recursion exception, the catch
-; handler at line 520 adds context about which function was called
+; handler adds context about which function was called
 ; and rethrows. Here justify() receives amount/0 which throws
 ; "Divide by zero" inside the function call.
 

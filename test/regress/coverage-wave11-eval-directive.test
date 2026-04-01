@@ -1,5 +1,5 @@
-; Coverage for textual_directives.cc lines 638-641 (eval directive)
-; And line 782-784 (define in general_directive)
+; Coverage for textual_directives.cc (eval directive)
+; And (define in general_directive)
 ; Tests eval, expr, and define directives
 
 eval 1 + 1

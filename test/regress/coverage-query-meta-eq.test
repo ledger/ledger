@@ -1,6 +1,6 @@
 ; Coverage test for query.cc: metadata equality query using %tag=value
-; Exercises query.cc lines 150-151: '%' prefix for TOK_META
-; and lines 300-310: metadata equality with TOK_EQ
+; Exercises query.cc '%' prefix for TOK_META
+; metadata equality with TOK_EQ
 
 2024/01/01 Grocery Store
     ; Category: food

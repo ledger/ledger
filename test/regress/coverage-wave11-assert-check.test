@@ -1,4 +1,4 @@
-; Coverage for textual_directives.cc lines 785,803,813-815 (assert/check/define)
+; Coverage for textual_directives.cc (assert/check/define)
 ; Also covers general_directive switch cases for 'a' (assert), 'c' (check), 'd' (define)
 
 define vat_rate=0.20

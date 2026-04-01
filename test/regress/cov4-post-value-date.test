@@ -1,4 +1,4 @@
-; Test post_t::value_date (lines 78-82 of post.cc)
+; Test post_t::value_date
 ; Exercise the value_date path when using --effective
 
 2024/01/01=2024/02/15 Test

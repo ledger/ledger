@@ -1,5 +1,5 @@
-; Coverage: journal.cc lines 218-221: register_payee() inserts to known_payees
-; Coverage: journal.cc lines 244-245: payee_not_registered() checks set
+; Coverage: journal.cc register_payee inserts to known_payees
+; Coverage: journal.cc payee_not_registered checks set
 
 commodity $
     format $1,000.00

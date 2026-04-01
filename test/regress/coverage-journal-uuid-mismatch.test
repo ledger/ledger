@@ -1,4 +1,4 @@
-; Coverage: journal.cc lines 393-408: UUID with non-equivalent postings error
+; Coverage: journal.cc UUID with non-equivalent postings error
 ; Two transactions with the same UUID but different amounts should error
 
 2024/01/15 Store

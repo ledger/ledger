@@ -1,7 +1,7 @@
 ; Test balance.h: multi-commodity balance operations
 ; Exercises balance_t += -= *= /= with different types
 ; Also exercises is_zero, is_nonzero, is_realzero, is_empty, single_amount
-; Targets: balance.h lines 209-229, 265-281, 395-427
+; Targets: balance.h
 
 P 2024/01/01 EUR $1.10
 P 2024/01/01 GBP $1.30

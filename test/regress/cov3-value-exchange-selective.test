@@ -1,5 +1,5 @@
 ; Test selective value exchange with A:B syntax
-; Covers value.cc lines 1564-1567, 1580-1583 (A:B exchange syntax)
+; Covers value.cc (A:B exchange syntax)
 
 P 2024/01/01 EUR $1.10
 P 2024/01/01 GBP $1.30

@@ -1,4 +1,4 @@
-; Test price directive with datetime but no symbol (pool.cc line 332)
+; Test price directive with datetime but no symbol
 P 2024/01/01 12:00:00
 
 2024/01/01 Test

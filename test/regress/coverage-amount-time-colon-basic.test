@@ -1,4 +1,4 @@
-; Coverage for amount.cc lines 179-199:
+; Coverage for amount.cc
 ; Time colon display converts decimal fractions of hours to minutes.
 ; 1.50h becomes 1:30h (0.50 * 60 = 30 minutes).
 ; 2.75h becomes 2:45h (0.75 * 60 = 45 minutes).

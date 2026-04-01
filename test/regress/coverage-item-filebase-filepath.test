@@ -1,5 +1,5 @@
-; Coverage for item.cc lines 454-457: filebase and filepath functions
-; Also covers has_meta (line 463)
+; Coverage for item.cc filebase and filepath functions
+; Also covers has_meta
 
 2024/01/01 Test
     ; MyTag: myvalue

@@ -1,4 +1,4 @@
-; Coverage test for filters.cc line 377
+; Coverage test for filters.cc
 ; collapse_posts with multiple commodities triggers handle_value BALANCE path
 
 2024/01/01 Test

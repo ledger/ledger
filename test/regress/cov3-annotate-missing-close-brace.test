@@ -1,5 +1,5 @@
 ; Test error for missing closing brace in annotation
-; Covers annotate.cc lines 136-137 (missing closing brace)
+; Covers annotate.cc (missing closing brace)
 
 2024/01/01 Test
     Assets:Brokerage    10 AAPL {$150

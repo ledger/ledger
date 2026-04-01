@@ -1,5 +1,5 @@
-; Test session with day-break option
-; Covers session.cc lines 103-104 (day_break handling)
+; Test --day-break option with regular transactions
+; Covers session.cc (day_break handling)
 
 2024/01/15 Test1
     Expenses:Food    $50.00

@@ -1,19 +1,18 @@
 ; Coverage tests for textual_directives.cc
-; Targets lines 124, 199-200, 239-249, 288, 293, 298, 339, 346,
 ;   395, 420, 485, 520, 556, 626, 735, 758, 765, 785, 803, 813, 815, 839, 843-847
 
-; Test year directive - triggers line 835-838
+; Test year directive - triggers
 year 2024
 
-; Test bucket directive - triggers line 760-764
+; Test bucket directive - triggers
 bucket Assets:Cash
 
-; Test account directive with alias - triggers lines 199-200, 428-486
+; Test account directive with alias - triggers
 account Expenses:Food
   alias food
   note This is for food expenses
 
-; Test tag directive with assert - triggers line 630-634
+; Test tag directive with assert - triggers
 tag Receipt
   assert value =~ /[0-9]+/
 
@@ -28,19 +27,19 @@ payee Grocery Store
   alias groceries
   uuid abc-123-def
 
-; Test define directive - triggers line 781-784
+; Test define directive - triggers
 define vat_rate=0.20
 
-; Test assert directive - triggers line 754-756
+; Test assert directive - triggers
 assert 1 == 1
 
-; Test check directive - triggers line 768-770
+; Test check directive - triggers
 check 2 == 2
 
-; Test eval/expr directive - triggers line 791-793
+; Test eval/expr directive - triggers
 eval 3 + 4
 
-; Test apply account - triggers lines 286-294
+; Test apply account - triggers
 apply account Personal
 
 2024/01/01 Grocery Store
@@ -49,7 +48,7 @@ apply account Personal
 
 end apply account
 
-; Test apply tag with multiple colons - triggers lines 296-332
+; Test apply tag with multiple colons - triggers
 apply tag :project:billable:
 
 2024/01/02 Client Work
@@ -58,7 +57,7 @@ apply tag :project:billable:
 
 end apply tag
 
-; Test apply year / end apply year - triggers lines 350-405
+; Test apply year / end apply year - triggers
 apply year 2024
 
 01/15 Regular Payment

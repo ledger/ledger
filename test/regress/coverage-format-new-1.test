@@ -1,7 +1,7 @@
 ; Coverage tests for format.cc parsing and output
-; Targets: format.cc lines 158-187 (escapes), 200-217 (width parsing),
-;          256-258 (%% literal), 286-291 (expression format), 394-406 (trailing text),
-;          416-477 (real_calc with widths/padding/truncation), 483-686 (truncate)
+; Targets: format.cc (escapes), (width parsing)
+;          (%% literal), (expression format), (trailing text)
+;          (real_calc with widths/padding/truncation), (truncate)
 
 2024/01/15 Grocery Store
     Expenses:Food:Groceries:Weekly    $50.00
@@ -11,37 +11,37 @@
     Expenses:Utilities:Electric:Monthly    $120.00
     Assets:Checking
 
-; Test escape sequences: \t (format.cc lines 158-187)
+; Test escape sequences: \t
 test reg --format '%(payee)\t%(display_amount)\n' Expenses
 Grocery Store	$50.00
 Electric Company	$120.00
 end test
 
-; Test %% literal percent (format.cc lines 256-258)
+; Test %% literal percent
 test reg --format '%%(payee)\n' Expenses
 %(payee)
 %(payee)
 end test
 
-; Test width with expression: %30(account) (format.cc lines 200-205)
+; Test width with expression: %30(account)
 test reg --format '%30(account)\n' Expenses
 Expenses:Food:Groceries:Weekly
 Expenses:Utilities:Electric:Monthly
 end test
 
-; Test left-alignment: %-30(account)| (format.cc lines 191-198)
+; Test left-alignment: %-30(account)|
 test reg --format '%-30(account)|\n' Expenses
 Expenses:Food:Groceries:Weekly|
 Expenses:Utilities:Electric:Monthly|
 end test
 
-; Test min.max width: %10.10(account) with truncation (format.cc lines 207-217, 466-467)
+; Test min.max width: %10.10(account) with truncation
 test reg --format '%10.10(account) %t\n' Expenses
 Expenses.. $50.00
 Expenses.. $120.00
 end test
 
-; Test padding: min_width > content width (format.cc lines 470-472)
+; Test padding: min_width > content width
 test reg --format '%40(payee)\n' Expenses
                            Grocery Store
                         Electric Company
@@ -61,25 +61,25 @@ Grocery Store: $50.00
 Electric Company: $120.00
 end test
 
-; Test format with expression that evaluates to string (format.cc lines 446-447)
+; Test format with expression that evaluates to string
 test reg --format '%(payee) %(account) %(display_amount)\n' Expenses
 Grocery Store Expenses:Food:Groceries:Weekly $50.00
 Electric Company Expenses:Utilities:Electric:Monthly $120.00
 end test
 
-; Test truncation with min.max width (format.cc lines 462-477)
+; Test truncation with min.max width
 test reg --format '%20.20(account) %t\n' Expenses
 Expenses:Food:Groc.. $50.00
 Expenses:Utilities.. $120.00
 end test
 
-; Test format with trailing text after format elements (format.cc lines 394-406)
+; Test format with trailing text after format elements
 test reg --format '%(payee) - end\n' Expenses
 Grocery Store - end
 Electric Company - end
 end test
 
-; Test simple string format (format.cc line 136-139 string accumulation)
+; Test simple string format (format.cc string accumulation)
 test reg --format 'ok\n' Expenses
 ok
 ok

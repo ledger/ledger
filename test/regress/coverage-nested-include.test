@@ -1,4 +1,4 @@
-; Test nested include depth counting (textual_directives.cc line 162)
+; Test nested include depth counting
 include coverage-nested-include-outer.dat
 
 test reg

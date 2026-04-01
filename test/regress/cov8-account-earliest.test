@@ -1,4 +1,4 @@
-; Coverage test for account.cc lines 343-344:
+; Coverage test for account.cc
 ; Exercise get_earliest function for accounts.
 
 2024/01/01 Test One

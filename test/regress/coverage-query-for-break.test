@@ -1,7 +1,7 @@
 ; Tests for query.cc: for clause with since initialization and show break
-; Covers: lines 650-651 (since after for initializes for_string)
-;         lines 662-667 (show keyword triggers break in for clause)
-;         lines 670-672 (for_string accumulation)
+; Covers: (since after for initializes for_string)
+;         (show keyword triggers break in for clause)
+;         (for_string accumulation)
 
 2024/01/01 Test
     Expenses  $10

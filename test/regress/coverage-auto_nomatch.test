@@ -1,4 +1,4 @@
-; Coverage test for xact.cc line 918: auto-xact match returning false
+; Coverage test for xact.cc auto-xact match returning false
 ; Auto-xact with predicate that doesn't match any postings
 
 = /Nonexistent/

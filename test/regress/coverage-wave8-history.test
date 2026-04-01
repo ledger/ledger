@@ -6,7 +6,7 @@ commodity EUR
 commodity GBP
 commodity CHF
 
-; Setup price history for multi-hop conversion (lines 383, 460)
+; Setup price history for multi-hop conversion
 P 2024/01/01 EUR $1.10
 P 2024/01/15 EUR $1.12
 P 2024/02/01 EUR $1.15
@@ -14,7 +14,7 @@ P 2024/01/01 GBP $1.30
 P 2024/01/15 GBP $1.32
 P 2024/02/01 GBP $1.35
 
-; Additional prices for CHF to exercise multi-hop through EUR (line 460)
+; Additional prices for CHF to exercise multi-hop through EUR
 P 2024/01/01 CHF 0.95 EUR
 P 2024/02/01 CHF 0.97 EUR
 
@@ -31,18 +31,18 @@ P 2024/02/01 CHF 0.97 EUR
     Expenses:Travel       200 CHF
     Assets:Cash
 
-; Test find_price with target (multi-hop dijkstra, lines 383-460)
+; Test find_price with target (multi-hop dijkstra, )
 test balance Expenses --market --now 2024/02/01
               $67.50
              294 EUR  Expenses:Travel
 end test
 
-; Test exchange (exercises find_price with target, lines 335, 359-361, 363-364)
+; Test exchange (exercises find_price with target, )
 test balance Expenses --exchange $ --now 2024/02/01
              $405.60  Expenses:Travel
 end test
 
-; Test commodities listing (exercises print_map, lines 495-498)
+; Test commodities listing (exercises print_map, )
 test commodities
 CHF
 EUR

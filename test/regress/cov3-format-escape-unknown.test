@@ -1,5 +1,5 @@
 ; Test format with unknown escape character (becomes literal)
-; Covers format.cc lines 183-184 (default case in escape switch)
+; Covers format.cc (default case in escape switch)
 
 2024/01/15 Test
     Expenses:Food    $50.00

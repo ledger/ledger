@@ -1,4 +1,4 @@
-; Coverage test for post.cc line 542:
+; Coverage test for post.cc
 ; Exercise resolve_expr returning a long integer result.
 ; Using an amount expression that evaluates to an integer.
 

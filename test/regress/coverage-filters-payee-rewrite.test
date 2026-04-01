@@ -1,4 +1,4 @@
-; Coverage test for filters.cc rewrite_posts (lines 1606-1656)
+; Coverage test for filters.cc rewrite_posts
 ; Tests --payee-rewrite which creates temp postings with rewritten payees.
 ; Also exercises the payee_rewrite_mappings path in rewrite_posts.
 

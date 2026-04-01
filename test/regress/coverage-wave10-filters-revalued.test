@@ -1,4 +1,4 @@
-; Test coverage for filters.cc lines 713-715, 805-817
+; Test coverage for filters.cc
 ; changed_value_posts output_revaluation and output_intermediate_prices
 
 P 2024/01/01 AAPL $100.00

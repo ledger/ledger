@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 1058-1059
+; Coverage test for report.cc
 ; fn_to_amount converts a value to amount_t
 
 2024/01/01 Test

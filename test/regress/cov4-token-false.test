@@ -1,5 +1,5 @@
-; Test token parsing for 'false' keyword (lines 76-83 of token.cc)
-; and 'true' keyword (lines 113-119)
+; Test token parsing for 'false' keyword
+; 'true' keyword
 ; Exercise boolean literal values
 
 2024/01/01 Test

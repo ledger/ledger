@@ -1,4 +1,4 @@
-; Coverage test for filters.cc line 1652
+; Coverage test for filters.cc
 ; rewrite_posts copies xdata flags from old account to rewritten account
 ; Auto_xact sets ACCOUNT_EXT_VISITED on the account during finalization
 

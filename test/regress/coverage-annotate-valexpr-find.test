@@ -1,6 +1,6 @@
-; Coverage test for annotate.cc lines 302, 314-315, 327-328
+; Coverage test for annotate.cc
 ; Tests annotated commodity find_price with fixated price
-; Line 314-315: fixated price returns immediately
+; fixated price returns immediately
 
 2024/01/01 Buy shares
     Assets:Brokerage    10 AAPL {=$150.00}

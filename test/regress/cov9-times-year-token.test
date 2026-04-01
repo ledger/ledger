@@ -1,4 +1,4 @@
-; Coverage for times.cc lines 1749, 1752: TOK_YEAR and unexpected token
+; Coverage for times.cc TOK_YEARLY via --yearly flag
 
 2023/01/01 Test1
     Expenses:Food    $10.00

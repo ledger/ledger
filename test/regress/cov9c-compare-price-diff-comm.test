@@ -1,4 +1,4 @@
-; Coverage: commodity.cc lines 430-431 (compare_by_commodity price comparison
+; Coverage: commodity.cc (compare_by_commodity price comparison
 ; with different price commodities -- recursion finds disparity)
 ; Two lots of the same commodity with prices in different currencies
 

@@ -1,4 +1,4 @@
-; Coverage test for format.cc lines 444-446
+; Coverage test for format.cc
 ; Test expression element with min_width set. Using %N(expr) sets a minimum
 ; width for the expression output, triggering value.print() with width
 ; justification instead of simple to_string().

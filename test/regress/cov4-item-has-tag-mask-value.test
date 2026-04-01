@@ -1,6 +1,6 @@
-; Test item_t::has_tag with mask and value_mask (line 65 of item.cc)
-; and get_tag with mask (lines 88-92)
-; Uses has_tag with two mask arguments (line 260 of item.cc)
+; Test item_t::has_tag with mask and value_mask
+; get_tag with mask
+; Uses has_tag with two mask arguments
 
 2024/01/01 Test
     ; Category: food

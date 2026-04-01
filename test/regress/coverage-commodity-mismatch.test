@@ -1,5 +1,5 @@
 ; Tests for commodity.cc: downloaded quote commodity mismatch
-; Covers: line 212 (quote returned but commodity doesn't match in_terms_of)
+; Covers: (quote returned but commodity doesn't match in_terms_of)
 ; The getquote script returns a GBP-denominated price when $ is expected,
 ; so the quote is rejected and the old cached price ($1.05) is used instead.
 

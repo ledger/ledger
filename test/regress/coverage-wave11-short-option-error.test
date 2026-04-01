@@ -1,4 +1,4 @@
-; Coverage for textual_directives.cc lines 138-143 (short option error)
+; Coverage for textual_directives.cc (short option error)
 
 -S date
 

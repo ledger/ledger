@@ -1,4 +1,4 @@
-; Coverage for report.cc line 528: compound limit rebuild in commodities_report
+; Coverage for report.cc compound limit rebuild in commodities_report
 ; When prices command has both state predicates (--cleared) and multiple
 ; non-state limit terms, the limit is decomposed and rebuilt
 

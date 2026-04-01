@@ -1,4 +1,4 @@
-; Coverage test for format.cc lines 162-186
+; Coverage test for format.cc
 ; Test escape sequences in format strings: \t (tab), \\ (backslash),
 ; and other backslash escapes in the format parser.
 

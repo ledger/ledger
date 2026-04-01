@@ -1,19 +1,18 @@
-; Coverage test for amount.cc lines 1043-1058
+; Coverage test for amount.cc
 ; Exercise the period-followed-by-digit path in amount parsing
 ; When an amount ends with a period followed by a digit in an expression,
-; the period is put back (line 1058)
+; the period is put back
 
 2024/01/01 Test
     Expenses:Food            $10.00
     Assets:Cash
 
-; Use format with expression that puts a period then digit context
-; The "1." should be parsed as "1" with trailing period stripped
+; Evaluate a simple addition expression
 test eval "1+2"
 3
 end test
 
-; Exercise amount with trailing period in expression context
+; Evaluate an addition expression with spaces around the operator
 test eval "10 + 5"
 15
 end test

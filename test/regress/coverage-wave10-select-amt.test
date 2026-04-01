@@ -1,4 +1,4 @@
-; Coverage: select.cc - select with amount and total only (line 300-329)
+; Coverage: select.cc - select with amount and total only
 
 2024/01/01 Grocery Store
     Expenses:Food    $10.00

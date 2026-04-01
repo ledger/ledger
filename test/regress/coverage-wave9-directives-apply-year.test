@@ -1,4 +1,4 @@
-; Test coverage for textual_directives.cc lines 288-298, 350-405
+; Test coverage for textual_directives.cc
 ; apply year directive with end apply, and assert/check top-level directives
 
 apply year 2024

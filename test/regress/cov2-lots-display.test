@@ -8,31 +8,31 @@
     Assets:Broker           5 AAPL {$150.00} [2024/02/01]
     Assets:Cash
 
-; Test --lots option (line 783, 1319)
+; Test --lots option
 test bal Assets:Broker --lots
 10 AAPL {$100} [2024/01/01]
 5 AAPL {$150} [2024/02/01]  Assets:Broker
 end test
 
-; Test --lots-actual option (line 784, 1320)
+; Test --lots-actual option
 test bal Assets:Broker --lots-actual
 10 AAPL {$100} [2024/01/01]
 5 AAPL {$150} [2024/02/01]  Assets:Broker
 end test
 
-; Test --lots-fifo option (line 768-774)
+; Test --lots-fifo option
 test bal Assets:Broker --lots-fifo
 10 AAPL {$100} [2024/01/01]
 5 AAPL {$150} [2024/02/01]  Assets:Broker
 end test
 
-; Test --lots-lifo option (line 775-781)
+; Test --lots-lifo option
 test bal Assets:Broker --lots-lifo
 5 AAPL {$150} [2024/02/01]
 10 AAPL {$100} [2024/01/01]  Assets:Broker
 end test
 
-; Test --average-lot-prices option (line 762-767)
+; Test --average-lot-prices option
 test bal Assets:Broker --average-lot-prices
 15 AAPL {$116.66666667}  Assets:Broker
 end test

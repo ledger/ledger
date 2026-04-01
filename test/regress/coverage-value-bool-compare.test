@@ -1,14 +1,14 @@
 ; Coverage for value.cc: boolean/datetime/date comparison error paths
-; Lines 877-878 (is_less_than boolean vs non-boolean)
-; Lines 1018-1019 (is_greater_than boolean vs non-boolean)
-; Lines 1024 (is_greater_than datetime vs non-datetime)
-; Lines 1029 (is_greater_than date vs non-date)
+; Lines (is_less_than boolean vs non-boolean)
+; Lines (is_greater_than boolean vs non-boolean)
+; Lines (is_greater_than datetime vs non-datetime)
+; Lines (is_greater_than date vs non-date)
 
 2024/01/15 Test
     Expenses:Food    $50.00
     Assets:Checking
 
-; Test 1: boolean < integer triggers error path (line 877-878)
+; Test 1: boolean < integer triggers error path
 test reg --format '%(cleared < 5)\n' -> 1
 __ERROR__
 While evaluating value expression:
@@ -20,7 +20,7 @@ While handling posting from "$FILE", line 8:
 Error: Cannot compare a boolean to an amount
 end test
 
-; Test 2: boolean > integer triggers error path (lines 1018-1019)
+; Test 2: boolean > integer triggers error path
 test reg --format '%(cleared > 5)\n' -> 1
 __ERROR__
 While evaluating value expression:
@@ -32,7 +32,7 @@ While handling posting from "$FILE", line 8:
 Error: Cannot compare an amount to a boolean
 end test
 
-; Test 3: datetime > string triggers error path (line 1024)
+; Test 3: datetime > string triggers error path
 test reg --format '%(datetime > "hello")\n' -> 1
 __ERROR__
 While evaluating value expression:
@@ -44,7 +44,7 @@ While handling posting from "$FILE", line 8:
 Error: Cannot compare a string to a date/time
 end test
 
-; Test 4: date > string triggers error path (line 1029)
+; Test 4: date > string triggers error path
 test reg --format '%(date > "hello")\n' -> 1
 __ERROR__
 While evaluating value expression:

@@ -1,4 +1,4 @@
-; Coverage for filters.cc lines 966-967:
+; Coverage for filters.cc
 ; subtotal_posts::report_subtotal when date_format is set.
 ; Using --subtotal with --date-format exercises the branch where
 ; spec_fmt is null but date_format is set, producing "- <formatted_date>"

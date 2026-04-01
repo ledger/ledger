@@ -1,4 +1,4 @@
-; Test item_t::lookup break for 'L' prefix (item.cc line 520)
+; Test item_t::lookup break for 'L' prefix
 2024/01/01 Test
     Expenses:Food    $10.00
     Assets:Cash

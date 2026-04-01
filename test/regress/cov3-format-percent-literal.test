@@ -1,5 +1,5 @@
 ; Test format %% literal percent
-; Covers format.cc lines 258-260 (percent literal in format string)
+; Covers format.cc (percent literal in format string)
 
 2024/01/15 Test
     Expenses:Food    $50.00

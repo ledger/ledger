@@ -1,4 +1,4 @@
-; Coverage test for expr.cc lines 159-179, 217
+; Coverage test for expr.cc
 ; Expression evaluation error produces context info
 
 2024/01/01 Test

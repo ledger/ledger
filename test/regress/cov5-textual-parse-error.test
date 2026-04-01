@@ -1,4 +1,4 @@
-; Coverage for textual.cc line 75: error_flag path in parse
+; Coverage for textual.cc error_flag path in parse
 ; Triggers error continuation with subsequent valid lines
 
 2024/01/01 Test

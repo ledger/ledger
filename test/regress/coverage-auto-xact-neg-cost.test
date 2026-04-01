@@ -1,4 +1,4 @@
-; Coverage for xact.cc lines 1126-1128 (neg sign cost adjustment)
+; Coverage for xact.cc (neg sign cost adjustment)
 ; When an auto transaction copies a posting with a total cost (@@) and
 ; the amount is negative, the cost must be negated.
 

@@ -1,4 +1,4 @@
-; Coverage for account.cc line 630: account depth function
+; Coverage for account.cc account depth function
 
 2024/01/01 Test
     Expenses:Food:Snacks    $10.00

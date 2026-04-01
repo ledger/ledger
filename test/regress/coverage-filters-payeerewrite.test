@@ -1,7 +1,7 @@
-; Coverage test for filters.cc lines 1611-1616, 1638
+; Coverage test for filters.cc
 ; Tests payee_rewrite directive which triggers rewrite_posts filter.
-; Line 1611: payee_rewrite_mappings iteration
-; Line 1638: new payee assignment
+; payee_rewrite_mappings iteration
+; new payee assignment
 ; Each rewritten posting gets the new payee repeated since each creates
 ; a new temporary xact.
 

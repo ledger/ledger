@@ -1,4 +1,4 @@
-; Test coverage for textual_directives.cc lines 395, 420, 785, 803, 813, 839
+; Test coverage for textual_directives.cc
 ; apply year, end apply, general_directive switches for bucket, define, import, payee, tag, year
 
 apply year 2023

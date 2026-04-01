@@ -1,4 +1,4 @@
-; Coverage for times.cc lines 1747-1749: invalid non-alnum char in period
+; Coverage for times.cc invalid non-alnum char in period
 ; A non-alphanumeric character triggers the expected() error with '\0'
 
 2024/01/01 Test

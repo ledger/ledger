@@ -1,4 +1,4 @@
-; Coverage test for times.cc line 910
+; Coverage test for times.cc
 ; Dash operator with no preceding date triggers unexpected
 
 2024/01/01 Test

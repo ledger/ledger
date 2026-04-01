@@ -1,4 +1,4 @@
-; Coverage test for post.cc lines 364, 384:
+; Coverage test for post.cc
 ; Exercise fn_any returning false and fn_all returning true.
 ;
 ; any(account =~ /NoSuchAccount/) should return false for all postings.

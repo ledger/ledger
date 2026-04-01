@@ -1,6 +1,6 @@
 ; Test amount floor and ceiling operations
-; Covers amount.cc lines 691-699 (in_place_floor)
-; and value.cc lines 1816-1835 (value_t::in_place_floor)
+; Covers amount.cc (in_place_floor)
+; value.cc (value_t::in_place_floor)
 
 2024/01/01 Test
     Expenses:Food    $10.75

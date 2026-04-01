@@ -1,4 +1,4 @@
-; Coverage test for journal.cc line 213
+; Coverage test for journal.cc
 ; Tests infinite alias recursion detection for partial (first-account) aliases.
 ; When --recursive-aliases is enabled and alias A->B and B->A exist,
 ; expanding "A:Sub" finds A->B, then B->A, detecting the cycle.

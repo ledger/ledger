@@ -1,4 +1,4 @@
-; Coverage test for textual_xacts.cc lines 633-636, 718-721
+; Coverage test for textual_xacts.cc
 ; Balance assignment with a null-amount posting
 
 2024/01/01 Opening balance

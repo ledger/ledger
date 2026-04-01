@@ -1,4 +1,4 @@
-; Test account sub-directive 'default' (line 443-444 of textual_directives.cc)
+; Test account sub-directive 'default'
 ; Exercise the account default sub-directive path
 
 account Assets:Checking

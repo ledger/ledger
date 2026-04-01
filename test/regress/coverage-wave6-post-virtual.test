@@ -1,4 +1,4 @@
-; Tests for post.cc virtual and real posting lookups (lines 488, 503-504)
+; Tests for post.cc virtual and real posting lookups
 ; Also covers xact.cc virtual balance paths (447-449, 464-467)
 
 2024/01/01 Budget Transaction

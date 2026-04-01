@@ -1,5 +1,4 @@
 ; Coverage tests for item.cc lookup functions
-; Targets lines 49-50, 52-53, 66, 107, 306, 313, 320, 344, 350-351,
 ;   392, 439, 465, 488, 514, 520, 525, 530
 
 2024/01/01 * Cleared Test
@@ -23,11 +22,11 @@ coverage-wave8-item-lookup.test
 end test
 
 test reg --format '%(beg_line) %(end_line)\n' Expenses:Food
-6 6
+5 5
 end test
 
 test reg --format '%(beg_pos) %(end_pos)\n' Expenses:Food
-184 221
+116 153
 end test
 
 test reg --format '%(seq)\n' Expenses:Food

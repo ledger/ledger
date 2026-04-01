@@ -1,5 +1,5 @@
 ; Test error for missing closing bracket in annotation
-; Covers annotate.cc lines 153-154 (missing closing bracket)
+; Covers annotate.cc (missing closing bracket)
 
 2024/01/01 Test
     Assets:Brokerage    10 AAPL [2024/01/01

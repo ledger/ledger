@@ -7,12 +7,12 @@
     Expenses:Food    $10.00
     Assets:Cash
 
-; Test eval precommand (line 1712-1713)
+; Test eval precommand
 test eval 2+2
 4
 end test
 
-; Test expr/parse precommand (line 1714-1715)
+; Test expr/parse precommand
 test expr 3*4 | sed -E 's/0x[0-9a-f]+[[:space:]]*/ADDR    /g'
 --- Context is first posting of the following transaction ---
 2004/05/27 Book Store
@@ -76,7 +76,7 @@ ADDR    VALUE: 5 (1)
 10
 end test
 
-; Test query precommand (line 1732-1734)
+; Test query precommand
 test query Expenses | sed -E 's/0x[0-9a-f]+[[:space:]]*/ADDR    /g'
 --- Input arguments ---
 ("Expenses")
@@ -112,7 +112,7 @@ ADDR    VALUE: /Expenses/ (1)
 true
 end test
 
-; Test args precommand (line 1708-1709)
+; Test args precommand
 test args Expenses and Food | sed -E 's/0x[0-9a-f]+[[:space:]]*/ADDR    /g'
 --- Input arguments ---
 ("Expenses", "and", "Food")
@@ -157,7 +157,7 @@ ADDR    VALUE: /Food/ (1)
 false
 end test
 
-; Test period precommand (line 1728-1729)
+; Test period precommand
 test period monthly from 2024/01/01
 --- Period expression tokens ---
 TOK_MONTHLY: monthly
@@ -197,7 +197,7 @@ duration: 1 month
 20: 25-Aug-01 -- 25-Aug-31
 end test
 
-; Test template precommand (line 1740-1741)
+; Test template precommand
 test template Grocery $50 | sed -E 's/[0-9]{4}-[A-Z][a-z]{2}-[0-9]{2}/DATE/g'
 --- Input arguments ---
 ("Grocery", "0")

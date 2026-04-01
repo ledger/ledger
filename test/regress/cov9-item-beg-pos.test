@@ -1,10 +1,10 @@
-; Coverage for item.cc line 343: get_addr, line 392: define
+; Coverage for item.cc get_addr, define
 
 2024/01/01 Test
     Expenses:Food    $10.00
     Assets:Cash
 
 test reg --format "%(beg_pos) %(end_pos) %(beg_line) %(end_line)\n"
-77 105 4 4
-105 121 5 5
+57 85 4 4
+85 101 5 5
 end test

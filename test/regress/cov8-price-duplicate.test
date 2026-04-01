@@ -1,4 +1,4 @@
-; Coverage test for iterators.cc lines 106-112:
+; Coverage test for iterators.cc
 ; Exercise post_already_exists check by having duplicate price entries
 ; for the same commodity on the same date.
 

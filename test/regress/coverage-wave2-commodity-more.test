@@ -1,10 +1,10 @@
 ; Additional coverage tests for commodity.cc
-; Covers: compare_by_commodity with dates (lines 424-446),
-;   compare_by_commodity with tags (lines 448-463),
-;   parse_symbol quoted (lines 273-279, 306-311),
-;   map_prices (lines 69-81), symbol_needs_quotes (lines 260-266)
+; Covers: compare_by_commodity with dates
+;   compare_by_commodity with tags
+;   parse_symbol quoted
+;   map_prices, symbol_needs_quotes
 
-; Quoted commodity symbol - covers parse_symbol quoted paths (lines 273-279)
+; Quoted commodity symbol - covers parse_symbol quoted paths
 2024/01/01 Buy Quoted
     Assets:Special          10 "AA BB"
     Assets:Cash
@@ -13,7 +13,7 @@ test bal Assets:Special
             10 AA BB  Assets:Special
 end test
 
-; Annotated commodities with different dates for compare_by_commodity (lines 424-446)
+; Annotated commodities with different dates for compare_by_commodity
 2024/01/02 Buy Date1
     Assets:Dated            5 FOO {$10.00} [2024/01/01]
     Assets:Cash
@@ -27,7 +27,7 @@ test bal --flat --lots Assets:Dated
 3 FOO {$10.00} [2024/02/01]  Assets:Dated
 end test
 
-; Annotated commodities with different tags for compare_by_commodity (lines 448-463)
+; Annotated commodities with different tags for compare_by_commodity
 2024/01/04 Buy Tag1
     Assets:Tagged           4 BAR {$20.00} (alpha)
     Assets:Cash
@@ -41,7 +41,7 @@ test bal --flat --lots Assets:Tagged
 6 BAR {$20.00} (beta)  Assets:Tagged
 end test
 
-; Test pricesdb - exercises map_prices (lines 69-81)
+; Test pricesdb - exercises map_prices
 P 2024/01/01 FOO $10.00
 P 2024/02/01 FOO $12.00
 

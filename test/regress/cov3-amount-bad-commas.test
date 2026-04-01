@@ -1,5 +1,5 @@
 ; Test error for too many commas in decimal comma style
-; Covers amount.cc lines 1218-1219 (no_more_commas check)
+; Covers amount.cc (no_more_commas check)
 
 commodity 1.000,00 EUR
 

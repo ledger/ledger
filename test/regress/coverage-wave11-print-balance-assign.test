@@ -1,4 +1,4 @@
-; Coverage for print.cc lines 210,224 (print post with balance assignment)
+; Coverage for print.cc (print post with balance assignment)
 
 2024/01/01 Opening
     Assets:Cash    $500.00

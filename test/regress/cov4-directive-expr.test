@@ -1,4 +1,4 @@
-; Test expr directive via general_directive (lines 838-841 of textual_directives.cc)
+; Test expr directive via general_directive
 ; Exercise the expr keyword (alias for eval) through the switch
 
 expr 1 + 1

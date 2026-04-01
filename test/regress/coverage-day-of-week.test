@@ -1,4 +1,4 @@
-; Coverage for filters.cc day_of_week_posts (lines 1304-1313)
+; Coverage for filters.cc day_of_week_posts
 ; Tests the --dow flag to subtotal by day of week.
 
 2024/01/01 Monday Test

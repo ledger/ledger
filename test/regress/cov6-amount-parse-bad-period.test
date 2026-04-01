@@ -1,5 +1,5 @@
 ; Test parse error for incorrect thousand-mark period after retroactive decimal-comma
-; Covers amount.cc line 1205
+; Covers amount.cc
 
 2024/01/01 Test
     Expenses:Food    1.24,567 USD

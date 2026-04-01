@@ -1,4 +1,4 @@
-; Coverage test for times.cc lines 780-796
+; Coverage test for times.cc
 ; Exercise "next month" and "last month" period tokens
 ; Covers TOK_A_MONTH and TOK_A_WDAY handling in handle_date_specifier
 

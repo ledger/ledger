@@ -1,4 +1,4 @@
-; Coverage for textual_xacts.cc line 634: balance assignment evaluates to null
+; Coverage for textual_xacts.cc balance assignment evaluates to null
 
 2024/01/01 Opening
     Assets:Checking    $1000

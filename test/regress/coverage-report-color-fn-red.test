@@ -1,4 +1,4 @@
-; Coverage for report.cc line 1102: fn_red
+; Coverage for report.cc fn_red
 ; Returns the string "red" for use in ansify_if coloring
 
 2024/01/01 Test

@@ -1,4 +1,4 @@
-; Test rewrite_posts xdata copy (line 1652 of filters.cc)
+; Test rewrite_posts xdata copy
 ; Exercise the account rewrite with xdata flag copy path
 
 account-rewrite Expenses:Food  Expenses:Dining

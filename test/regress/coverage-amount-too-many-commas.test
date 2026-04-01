@@ -1,4 +1,4 @@
-; Coverage for amount.cc line 1219:
+; Coverage for amount.cc
 ; "Too many commas" error is thrown when a comma appears after
 ; no_more_commas has been set, which happens when the first comma
 ; was interpreted as a decimal separator in European style.

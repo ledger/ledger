@@ -1,4 +1,4 @@
-; Coverage for annotate.cc lines 247-248: print annotation with lot tag
+; Coverage for annotate.cc print annotation with lot tag
 
 2024/01/01 Buy Stock
     Assets:Brokerage    10 AAPL {$150.00} (lot-alpha)

@@ -1,4 +1,4 @@
-; Coverage test for textual_directives.cc line 782-784
+; Coverage test for textual_directives.cc
 ; Directive without required argument
 
 include

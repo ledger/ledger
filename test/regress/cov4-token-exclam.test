@@ -1,4 +1,4 @@
-; Test token parsing for EXCLAM (!) token (lines 305 of token.cc)
+; Test token parsing for EXCLAM (!) token
 ; Exercise the negation operator standalone
 
 2024/01/01 Test

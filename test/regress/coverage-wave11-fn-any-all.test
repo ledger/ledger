@@ -1,4 +1,4 @@
-; Coverage for xact.cc lines 608-630: fn_any and fn_all functions
+; Coverage for xact.cc fn_any and fn_all functions
 ; exercised through the xact_t lookup paths.
 
 2024/01/01 Groceries

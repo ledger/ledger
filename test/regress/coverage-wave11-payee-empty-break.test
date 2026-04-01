@@ -1,4 +1,4 @@
-; Coverage for textual_directives.cc line 520 (payee directive empty line break)
+; Coverage for textual_directives.cc (payee directive empty line break)
 
 payee Test Payee
     alias TestP

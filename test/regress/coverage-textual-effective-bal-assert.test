@@ -1,4 +1,4 @@
-; Coverage for textual_xacts.cc lines 341-354: effective date balance assertion
+; Coverage for textual_xacts.cc effective date balance assertion
 ; Tests the use_aux_date path in compute_balance_diff
 
 2024/01/01=2024/01/15 Opening

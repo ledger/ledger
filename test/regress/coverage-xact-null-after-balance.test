@@ -1,4 +1,4 @@
-; Coverage test for xact.cc line 703-704
+; Coverage test for xact.cc
 ; Tests the error when some postings have null amounts after balancing.
 ; An unbalanced virtual posting with no amount cannot be filled in
 ; by finalize(), causing the "null amounts after balancing" error.

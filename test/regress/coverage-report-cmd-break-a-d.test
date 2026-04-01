@@ -1,5 +1,5 @@
 ; Coverage for report.cc COMMAND break statements:
-; Lines 1729 (a), 1750 (b), 1763 (c), 1768 (d)
+; Lines (a), (b), (c), (d)
 ; Unknown commands whose first letter matches a COMMAND case but whose
 ; name does not match any known command hit the break statement.
 

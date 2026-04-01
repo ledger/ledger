@@ -1,4 +1,4 @@
-; Coverage for error.cc lines 66-69: error range caret (end_pos != 0)
+; Coverage for error.cc error range caret (end_pos != 0)
 ; Posting amount parse errors show a range of ^^^^^ markers
 
 2024/01/01 Test

@@ -1,4 +1,4 @@
-; Coverage test for format.cc lines 449-457:
+; Coverage test for format.cc
 ; calc_error during format expression evaluation
 
 2024/01/15 Test

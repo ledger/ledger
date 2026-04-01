@@ -1,4 +1,4 @@
-; Coverage for value.cc lines 1805-1807: in_place_round for SEQUENCE type
+; Coverage for value.cc in_place_round for SEQUENCE type
 ; Budget register with --add-budget creates compound sequence values
 ; that undergo display rounding during formatting
 

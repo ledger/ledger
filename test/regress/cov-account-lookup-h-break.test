@@ -1,4 +1,4 @@
-; Coverage test for account.cc line 445
+; Coverage test for account.cc
 ; Account lookup 'h' break when fn_name != has_children_to_display
 
 2024/01/01 Test

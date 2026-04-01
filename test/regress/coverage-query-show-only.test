@@ -1,5 +1,5 @@
 ; Test query parser with 'show' and 'only' keywords
-; Covers query.cc lines 462-466, 486-488
+; Covers query.cc
 
 2024/01/15 Grocery Store
     Expenses:Food              $50.00

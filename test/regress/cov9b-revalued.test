@@ -1,4 +1,4 @@
-; Coverage for filters.cc lines 372, 840: changed_value_posts revaluation
+; Coverage for filters.cc changed_value_posts revaluation
 ; Use --revalued --market with commodity prices to trigger revaluation output
 
 P 2024/01/01 AAPL $150.00

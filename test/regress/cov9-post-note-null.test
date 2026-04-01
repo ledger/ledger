@@ -1,4 +1,4 @@
-; Coverage test for post.cc line 190:
+; Coverage test for post.cc
 ; Exercise get_note() returning NULL_VALUE when no note exists.
 ; The posting and transaction have no notes.
 

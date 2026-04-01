@@ -1,4 +1,4 @@
-; Coverage for textual_xacts.cc line 1011: hash comparison with same-length mismatch
+; Coverage for textual_xacts.cc hash comparison with same-length mismatch
 ; Tests the std::equal branch when hash sizes are equal but contents differ
 
 2024/01/01 Test

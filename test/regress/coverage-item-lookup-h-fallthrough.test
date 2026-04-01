@@ -1,4 +1,4 @@
-; Coverage for item.cc line 465: break in 'h' case of lookup
+; Coverage for item.cc break in 'h' case of lookup
 ; When an unknown function starting with 'h' is requested, the break falls through
 
 2024/01/01 Test

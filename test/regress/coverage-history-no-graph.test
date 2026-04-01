@@ -1,4 +1,4 @@
-; Coverage for history.cc line 291: early return in map_prices when no graph_index
+; Coverage for history.cc early return in map_prices when no graph_index
 ; A commodity without price history has no graph index, so map_prices returns early
 
 2024/01/15 Test

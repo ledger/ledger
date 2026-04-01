@@ -1,4 +1,4 @@
-; Coverage test for format.cc lines 105-107, 114-116
+; Coverage test for format.cc
 ; Test format element parsing:
 ; - Lines 105-107: expression that consumes the entire remaining format string
 ;   (str.eof() is true). This happens when the format ends with an expression.

@@ -1,6 +1,6 @@
-; Coverage tests for commodity.cc lines 408-409, 463 (compare by commodity with price/tag)
-; Also covers commodity.cc lines 492-493, 505 (put_commodity flags)
-; Also covers commodity.cc lines 321, 338-339, 343-344, 348-349 (valid/print)
+; Coverage tests for commodity.cc (compare by commodity with price/tag)
+; Also covers commodity.cc (put_commodity flags)
+; Also covers commodity.cc (valid/print)
 
 2024/01/01 Buy Stock A
     Assets:Stock    10 AAPL {$150.00} [2024/01/01] (note1)

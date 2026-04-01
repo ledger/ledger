@@ -1,5 +1,5 @@
-; Coverage for item.cc lines 364-388: get_comment function
-; Tests short note (line 372) and long note (line 370) formatting
+; Coverage for item.cc get_comment function
+; Tests short note and long note formatting
 
 2024/01/01 Test Short
     Expenses:Food    $10.00  ; Short

@@ -1,7 +1,7 @@
 ; Test value.cc: arithmetic operations between different value types
-; Coverage target: value.cc - AMOUNT *= AMOUNT (line 632), AMOUNT /= AMOUNT (line 697),
-;   INTEGER *= AMOUNT (line 619), INTEGER /= AMOUNT (line 683),
-;   AMOUNT *= INTEGER (line 629), AMOUNT /= INTEGER (line 693)
+; Coverage target: value.cc - AMOUNT *= AMOUNT, AMOUNT /= AMOUNT
+;   INTEGER *= AMOUNT, INTEGER /= AMOUNT
+;   AMOUNT *= INTEGER, AMOUNT /= INTEGER
 
 2024/01/15 Purchase
     Expenses:Food       $10.00

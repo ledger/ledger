@@ -1,4 +1,4 @@
-; Coverage for amount.cc line 1257:
+; Coverage for amount.cc
 ; Incorrect use of thousand-mark comma when the digit grouping is
 ; inconsistent (1,23,456 has 2-digit then 3-digit groups from the left,
 ; which scanning right-to-left detects as invalid).

@@ -1,6 +1,5 @@
 ; Test color name functions for report.cc coverage
-; Targets report.cc lines 978-1017 (fn_black through fn_null)
-; Also targets lines 1416,1434-1435,1473-1474,1533-1534,1547-1548,1552-1553
+; Targets report.cc (fn_black through fn_null)
 
 2024/01/15 Test
     Expenses:Food    $50.00

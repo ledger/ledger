@@ -1,4 +1,4 @@
-; Coverage for commodity.cc lines 485, 514-515: tag comparison returns equal
+; Coverage for commodity.cc tag comparison returns equal
 ; Two lots with same price, same tag, but different dates
 ; Forces the comparison to pass through the equal-tag branch
 

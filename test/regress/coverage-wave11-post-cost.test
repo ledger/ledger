@@ -1,4 +1,4 @@
-; Coverage for textual_xacts.cc line 306 (post cost parsing)
+; Coverage for textual_xacts.cc (post cost parsing)
 ; Tests @ per-unit cost and @@ total cost, also virtual cost (@ )
 
 2024/01/01 Buy Stock

@@ -1,4 +1,4 @@
-; Coverage test for post.cc lines 172-184:
+; Coverage test for post.cc
 ; get_note() combines post note and xact note with newline separator
 
 2024/01/15 Test
@@ -7,8 +7,8 @@
     ; post note
     Assets:Cash
 
-; Test 1: Post has own note AND xact has note - combines with newline (lines 174-179)
-; Post also has no note but xact does (line 178 only)
+; Test 1: Post has own note AND xact has note - combines with newline
+; Post also has no note but xact does (only)
 
 test reg --format 'NOTE=[%(note)]\n'
 NOTE=[ post note

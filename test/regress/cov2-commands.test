@@ -9,7 +9,7 @@
     Expenses:Gas             $20.00
     Assets:Cash
 
-; Test print command (report.cc line 1788-1789)
+; Test print command
 test print
 2024/01/01 Grocery Store
     Expenses:Food                             $10.00
@@ -20,12 +20,12 @@ test print
     Assets:Cash
 end test
 
-; Test echo command (report.cc line 1777-1778, 1134-1138)
+; Test echo command
 test echo "Hello World"
 Hello World
 end test
 
-; Test select command (report.cc line 1813-1814)
+; Test select command
 test select date, payee, account, amount
 24-Jan-01 Grocery Store            Expenses:Food                         $10.00
 24-Jan-01 Grocery Store            Assets:Cash                          $-10.00

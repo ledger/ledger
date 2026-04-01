@@ -1,4 +1,4 @@
-; Coverage test for textual_xacts.cc line 78-79
+; Coverage test for textual_xacts.cc
 ; Automated transaction with empty match pattern
 
 = ""

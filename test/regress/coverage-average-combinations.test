@@ -163,7 +163,7 @@ end test
 ; Balance average divides total by number of quarters with postings.
 ; Food: (620+650+115)/3 = 462 -- but balance average uses visited post
 ; count, not period count. With 14 Food postings across 3 quarters:
-; total=$1385, avg=$1385/14 (rounding) -- shown as per-post average.
+; total=$1385, avg=$1385/(rounding) -- shown as per-post average
 ; The balance report shows the average per visited posting.
 
 test -Q -A bal Expenses
@@ -250,7 +250,7 @@ end test
 ;
 ; --invert negates every amount.  Combined with --average, the running
 ; average is also negated.  Restricted to Jan-Mar for brevity.
-; Jan Food: -$340 (inverted from $340), Transport: -$150, Utilities: -$120.
+; Jan Food: -$(inverted from $340), Transport: -$150, Utilities: -$120
 
 test -M -A --invert --columns 80 --begin 2024/01/01 --end 2024/04/01 reg Expenses
 24-Jan-01 - 24-Jan-31           Expenses:Food                 $-340        $-340
@@ -270,8 +270,8 @@ end test
 ; included period.
 ; Feb Food=$185, Transport=$55.  Mar Food=$95, Transport=$60, Util=$130.
 ; Running avg Food: Feb=$185, Mar=(185+95)/2=$140.
-; Running avg Transport: Feb=$55, Mar=(55+60)/2=$58 (rounded).
-; Utilities: only Mar, so avg=$130/2=$65 (count=2 due to 2 periods).
+; Running avg Transport: Feb=$55, Mar=(55+60)/2=$(rounded)
+; Utilities: only Mar, so avg=$130/2=$(count=2 due to 2 periods)
 
 test -M -A --begin 2024/02/01 --end 2024/04/01 --columns 80 reg Expenses
 24-Feb-01 - 24-Feb-29           Expenses:Food                  $185         $185
@@ -363,7 +363,7 @@ end test
 ; Test 13: Monthly average deviation register (-M -A --deviation)
 ;
 ; --deviation shows (period_amount - running_average) per account.
-; In period 1, deviation is always 0 (amount equals average so far).
+; In period 1, deviation is always (amount equals average so far)
 ; Period 2 Food: amount=$185, new_avg=$262, dev=$185-$262=-$78.
 ; Period 3 Food: amount=$95, new_avg=$207, dev=$95-$207=-$112.
 ; Utilities appears in periods 1 and 3: dev(1)=0, dev(3)=$130-$83=$47.
@@ -384,7 +384,7 @@ end test
 ;
 ; --begin 2023/11/01 creates empty periods (Nov, Dec) before any data.
 ; These empty periods increment the period count, so the average is
-; diluted.  Jan Food: total=$340 but count=3 (Nov,Dec,Jan) => avg=$113.
+; diluted. Jan Food: total=$340 but count=(Nov,Dec,Jan) => avg=$113
 ; Feb Food: total=$525, count=4 => avg=$131.
 ; This tests that empty periods correctly contribute to the divisor.
 
@@ -407,9 +407,9 @@ end test
 ; --flat suppresses the hierarchical display and shows each leaf
 ; account with its full path.  The average is computed per account
 ; across visited months.  Expenses:Food has postings in all 7 months,
-; Expenses:Transport in all 7, Expenses:Utilities in 4 (Jan,Mar,May,Jul).
-; Food total=$1385/7=$198 (rounded).
-; Transport total=$480/7~$69 (rounded).
+; Expenses:Transport in all 7, Expenses:Utilities in (Jan,Mar,May,Jul)
+; Food total=$1385/7=$(rounded)
+; Transport total=$480/7~$(rounded)
 ; Utilities total=$485/4=$121.
 
 test -M -A --flat bal Expenses

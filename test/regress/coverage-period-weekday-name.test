@@ -1,4 +1,4 @@
-; Test times.cc lines 866-868: weekday name as period specifier
+; Test times.cc weekday name as period specifier
 ; via determine_when TOK_A_WDAY case
 
 2026/03/01 Sun tx

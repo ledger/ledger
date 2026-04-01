@@ -10,7 +10,7 @@ commodity EUR
     Assets:Cash             $-10.00
     Assets:Bank            -10.00 EUR
 
-; Sort by account (string comparison, lines 953-962)
+; Sort by account (string comparison, )
 test bal --sort account
              $-10.00
           -10.00 EUR  Assets

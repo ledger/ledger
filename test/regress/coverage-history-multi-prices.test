@@ -1,5 +1,5 @@
 ; Coverage for history.cc: price map lookup with multiple price points
-; Tests upper_bound selection (line 186) and time-based price filtering
+; Tests upper_bound selection and time-based price filtering
 ; The most recent price at evaluation time ($1.20 from 2024/04/01) is used
 
 P 2024/01/01 EUR $1.10

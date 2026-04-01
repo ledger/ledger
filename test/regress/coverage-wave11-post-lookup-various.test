@@ -1,4 +1,4 @@
-; Coverage for post.cc lines 539,542,554,563-565: post_t resolve_expr,
+; Coverage for post.cc post_t resolve_expr
 ; xact_id, and account_id lookups.
 
 2024/01/01 Test

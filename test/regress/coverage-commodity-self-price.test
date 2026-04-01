@@ -1,4 +1,4 @@
-; Test commodity price lookup when commodity equals target (covers commodity.cc line 120-121)
+; Test commodity price lookup when commodity equals target (covers commodity.cc )
 ; Requesting market value of $ in terms of $ should return the amount as-is
 
 2024/01/15 Purchase

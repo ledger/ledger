@@ -1,4 +1,4 @@
-; Coverage test for filters.cc line 372
+; Coverage test for filters.cc
 ; collapse_posts with single commodity triggers handle_value AMOUNT path
 
 2024/01/01 Test

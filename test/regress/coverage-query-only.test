@@ -1,5 +1,5 @@
 ; Tests for query.cc: only keyword
-; Covers: lines 484-486 (QUERY_ONLY kind setting)
+; Covers: (QUERY_ONLY kind setting)
 
 2024/01/01 Jan
     Expenses:Food  $10
@@ -9,7 +9,7 @@
     Expenses:Gas  $20
     Assets
 
-; only keyword filters display after initial limit (line 484-486)
+; only keyword filters display after initial limit
 test reg Expenses only Food
 24-Jan-01 Jan                   Expenses:Food                   $10          $10
 end test

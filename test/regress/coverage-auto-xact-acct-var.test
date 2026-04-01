@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 1092-1103
+; Coverage test for xact.cc
 ; Tests auto-xact account name $variable substitution.
 ; The $account variable in the auto-xact's posting account name is
 ; replaced with the full name of the matching account at runtime.

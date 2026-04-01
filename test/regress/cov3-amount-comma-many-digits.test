@@ -1,5 +1,5 @@
 ; Test comma with more than 3 digits after treated as decimal separator
-; Covers amount.cc lines 1248-1263 (decimal_offset > 3 triggers decimal_comma)
+; Covers amount.cc (decimal_offset > 3 triggers decimal_comma)
 
 2024/01/01 Test
     Expenses:Food    EUR 1,2345

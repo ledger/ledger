@@ -1,8 +1,8 @@
 ; Coverage tests for post.cc additional paths
-; Tests: post value_date (line 77-80), post date with aux_date (87-89),
+; Tests: post value_date, post date with aux_date (87-89)
 ;        post lookup functions, post valid(), extend_post (647-691)
 
-; Test value_date and aux_date (lines 77-89)
+; Test value_date and aux_date
 2024/01/01=2024/01/15 Aux Date Test
     Expenses:Food    $10.00
     Assets:Cash
@@ -11,7 +11,7 @@ test reg --effective --limit "account =~ /Expenses:Food/"
 24-Jan-15 Aux Date Test         Expenses:Food                $10.00       $10.00
 end test
 
-; Test post lookup for 'R' (real) shorthand (line 527-528)
+; Test post lookup for 'R' (real) shorthand
 2024/03/01 Real Post Test
     Expenses:Misc    $10.00
     Assets:Cash    $-10.00
@@ -23,12 +23,12 @@ real
 virtual
 end test
 
-; Test post lookup for 'N' (count) shorthand (line 517-518)
+; Test post lookup for 'N' (count) shorthand
 test reg --format "%(N)\n" --limit "account =~ /Expenses:Food/"
 1
 end test
 
-; Test post lookup for 'O' (total) shorthand (line 521-523)
+; Test post lookup for 'O' (total) shorthand
 test reg --format "%(O)\n" --limit "account =~ /Expenses:Food/"
 $10.00
 end test

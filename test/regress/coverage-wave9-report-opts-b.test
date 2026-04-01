@@ -148,7 +148,7 @@ graph G {
 }
 end test
 
-; Test echo command - covers line 1026-1029
+; Test echo command - covers
 test echo Hello
 Hello
 end test

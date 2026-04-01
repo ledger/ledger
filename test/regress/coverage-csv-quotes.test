@@ -1,4 +1,4 @@
-; Coverage test for csv.cc lines 52-58:
+; Coverage test for csv.cc
 ; CSV field parsing with escaped quotes and backslash escape
 
 account Expenses:Unknown

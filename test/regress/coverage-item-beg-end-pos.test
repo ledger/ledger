@@ -1,5 +1,5 @@
 ; Test beg_pos, end_pos, beg_line, end_line lookups
-; Targets: item.cc lines 323-337 (position getters)
+; Targets: item.cc (position getters)
 
 2024/01/15 * Store
     Expenses:Food              $50.00

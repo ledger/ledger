@@ -1,4 +1,4 @@
-; Coverage for value.cc line 704:
+; Coverage for value.cc
 ; Division of an AMOUNT by another AMOUNT goes through the
 ; AMOUNT/AMOUNT case in value_t::operator/=.
 

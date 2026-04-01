@@ -1,4 +1,4 @@
-; Test account_t::operator<< (line 233-236 of account.cc)
+; Test account_t::operator<<
 ; Exercise the stream operator through account display
 
 2024/01/01 Test

@@ -1,4 +1,4 @@
-; Test draft.cc parse_args and template output (lines 49-155)
+; Test draft.cc parse_args and template output
 2024/01/15 * (1001) Grocery Store
     Expenses:Food              $25.00
     Assets:Cash

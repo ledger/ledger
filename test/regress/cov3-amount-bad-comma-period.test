@@ -1,5 +1,5 @@
 ; Test error for incorrect use of comma (non-aligned with thousands)
-; Covers amount.cc lines 1248, 1256-1257 (incorrect thousands mark comma)
+; Covers amount.cc (incorrect thousands mark comma)
 
 commodity 1.000,00 EUR
 

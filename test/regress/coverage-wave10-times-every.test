@@ -1,6 +1,6 @@
-; Coverage tests for times.cc lines 506-507, 515-516, 521-522 (token dump)
-; Also covers times.cc line 646 (peek_token caching)
-; Also covers times.cc line 325 (date_duration_t operator<< years)
+; Coverage tests for times.cc (token dump)
+; Also covers times.cc (peek_token caching)
+; Also covers times.cc (date_duration_t operator<< years)
 
 2024/01/01 January
     Expenses:Food    $10.00

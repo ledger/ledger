@@ -1,5 +1,5 @@
 ; Test report_commodities::clear() via --group-by for output.h coverage
-; Targets output.h lines 210-213 (report_commodities::clear)
+; Targets output.h (report_commodities::clear)
 ; The clear() method is called between groups by post_splitter
 
 P 2024/01/01 AAPL $150.00

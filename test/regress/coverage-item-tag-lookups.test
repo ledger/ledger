@@ -1,4 +1,4 @@
-; Coverage for item.cc lines 305,312,319: tag lookup functions
+; Coverage for item.cc tag lookup functions
 
 2024/01/01 Test
     ; MyTag: myvalue

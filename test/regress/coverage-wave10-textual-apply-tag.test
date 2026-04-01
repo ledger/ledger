@@ -1,4 +1,4 @@
-; Test coverage for textual_directives.cc lines 288, 293, 298
+; Test coverage for textual_directives.cc
 ; apply_tag_directive with colon format and simple format
 
 apply tag :proj:

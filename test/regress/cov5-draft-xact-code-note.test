@@ -1,5 +1,5 @@
-; Coverage for draft.cc lines 123, 136, 141, 145: xact command with code and note
-; Also covers draft.cc line 59: empty payee_mask in template dump
+; Coverage for draft.cc xact command with code and note
+; Also covers draft.cc empty payee_mask in template dump
 
 2024/01/01 Grocery
     Expenses:Food    $10.00

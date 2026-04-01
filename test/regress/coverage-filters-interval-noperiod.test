@@ -1,7 +1,7 @@
-; Coverage test for filters.cc lines 1070-1071
+; Coverage test for filters.cc
 ; Tests interval_posts::operator() without a duration (no --weekly/--monthly)
 ; but with a period range that uses find_period to filter posts.
-; Lines 1070-1071: the else-if branch when interval has no duration
+; the else-if branch when interval has no duration
 ; but find_period succeeds, forwarding the post directly.
 
 2024/01/15 Groceries

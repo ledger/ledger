@@ -1,6 +1,6 @@
 ; Test mask.h: mask pattern matching and comparison operators
 ; Exercises mask_t copy constructor, assignment, destructor, match, str
-; Targets: mask.h lines 64-66, 74-84, 88-102
+; Targets: mask.h
 
 2024/01/15 Grocery Store
     Expenses:Food:Groceries  $50.00

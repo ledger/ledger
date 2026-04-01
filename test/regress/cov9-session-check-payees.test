@@ -1,4 +1,4 @@
-; Coverage for session.cc line 303: check_payees option
+; Coverage for session.cc check_payees option
 
 payee Store
 payee Restaurant

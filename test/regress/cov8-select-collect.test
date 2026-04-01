@@ -1,4 +1,4 @@
-; Coverage test for select.cc lines 383-384:
+; Coverage test for select.cc
 ; Exercise select with collect clause.
 
 2024/01/01 Test

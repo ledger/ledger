@@ -1,4 +1,4 @@
-; Coverage for post.cc line 190: fn_commodity returns NULL_VALUE for commodityless amount
+; Coverage for post.cc fn_commodity returns NULL_VALUE for commodityless amount
 
 2024/01/01 Test
     Expenses:Food    10

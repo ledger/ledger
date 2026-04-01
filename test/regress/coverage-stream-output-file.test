@@ -1,4 +1,4 @@
-; Test stream.cc: output to file path (line 125)
+; Test stream.cc: output to file path
 ; Using --output to write to a file exercises the ofstream path
 
 2024/01/01 Test

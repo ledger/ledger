@@ -12,7 +12,7 @@ test eval "100 / 4"
 25
 end test
 
-; Amount division by integer (line 700)
+; Amount division by integer
 ; Use an expression that creates an amount context
 test eval "100 * 5"
 500

@@ -1,4 +1,4 @@
-; Test coverage for xact.cc lines 454-467
+; Test coverage for xact.cc
 ; Virtual balanced posting with null amount (balanced-virtual finalize path)
 
 2024/01/01 Test Transaction

@@ -1,4 +1,4 @@
-; Coverage: journal.cc lines 262-273: register_commodity with CHECK_ERROR
+; Coverage: journal.cc register_commodity with CHECK_ERROR
 ; Using --pedantic to trigger error for unknown commodity
 
 commodity $

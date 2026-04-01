@@ -1,5 +1,5 @@
 ; Test date_duration_t::find_nearest and date_interval_t::resolve_end
-; (exercises lines 1300-1343 and 1345+ in times.cc)
+; (exercises + in times.cc)
 ; Tests find_nearest with QUARTERS, YEARS, DAYS, WEEKS quantums
 
 2024/01/15 Payee A

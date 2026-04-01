@@ -1,5 +1,5 @@
 ; Coverage tests for filters.cc
-; Tests: --by-payee, --budget, --unbudgeted
+; Tests: --by-payee, --budget, --unbudgeted filters
 
 ~ monthly
     Expenses:Food                   $400.00

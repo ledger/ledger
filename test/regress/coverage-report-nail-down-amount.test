@@ -1,4 +1,4 @@
-; Coverage for report.cc lines 968-982: fn_nail_down with amount type
+; Coverage for report.cc fn_nail_down with amount type
 ; When --historical is used, amounts are nailed down to market value
 
 P 2024/01/01 AAPL $150.00

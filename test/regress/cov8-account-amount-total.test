@@ -1,4 +1,4 @@
-; Coverage test for account.cc lines 268, 272:
+; Coverage test for account.cc
 ; Exercise get_amount and get_total for accounts via balance report.
 
 2024/01/01 Test One

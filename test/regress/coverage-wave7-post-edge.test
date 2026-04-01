@@ -11,18 +11,18 @@
     ; PostNote: pval
     Assets:Cash
 
-; --- Virtual posting for display_account (line 707) ---
+; --- Virtual posting for display_account ---
 2024/01/02 Virtual Test
     Expenses:Food         $5.00
     Assets:Cash           $-5.00
     (Budget:Food)         $-5.00
 
-; --- Posting with cost for has_cost, cost, price (lines 235, 587-598) ---
+; --- Posting with cost for has_cost, cost, price ---
 2024/01/03 Foreign Purchase
     Expenses:Travel       100 EUR @ $1.10
     Assets:Cash
 
-; --- Posting with balance assertion for put_post (lines 736-740) ---
+; --- Posting with balance assertion for put_post ---
 2024/01/04 With Assertion
     Assets:Checking       $500.00
     Income:Salary
@@ -31,7 +31,7 @@
     Assets:Checking       $100.00 = $600.00
     Income:Bonus
 
-; --- post with Payee tag for payee_from_tag (line 169, 702, 705) ---
+; --- post with Payee tag for payee_from_tag ---
 2024/01/06 Default Payee
     Expenses:Food         $7.00
     ; Payee: Override Payee
@@ -43,35 +43,35 @@ test reg Expenses:Food -y "%y-%b-%d"
 24-Jan-06 Override Payee        Expenses:Food                 $7.00       $22.00
 end test
 
-; Test N (count) accessor (post.cc line 519)
+; Test N (count) accessor
 test reg --format "%(N)\n" Expenses:Food -y "%y-%b-%d"
 1
 2
 3
 end test
 
-; Test O (total) accessor (post.cc line 524)
+; Test O (total) accessor
 test reg --format "%(O)\n" Expenses:Food -y "%y-%b-%d"
 $10.00
 $15.00
 $22.00
 end test
 
-; Test R (real) accessor (post.cc line 529)
+; Test R (real) accessor
 test reg --format "%(R)\n" Expenses:Food -y "%y-%b-%d"
 true
 true
 true
 end test
 
-; Test payee accessor (post.cc line 169)
+; Test payee accessor
 test reg --format "%(payee)\n" Expenses:Food -y "%y-%b-%d"
 Test Payee
 Virtual Test
 Override Payee
 end test
 
-; Test code accessor (post.cc line 161)
+; Test code accessor
 test reg --format "%(code)\n" Expenses -y "%y-%b-%d"
 CODE1
 
@@ -79,17 +79,17 @@ CODE1
 
 end test
 
-; Test has_cost (post.cc line 226)
+; Test has_cost
 test reg --format "%(has_cost)\n" Expenses:Travel -y "%y-%b-%d"
 true
 end test
 
-; Test cost accessor (post.cc line 229-237)
+; Test cost accessor
 test reg --format "%(cost)\n" Expenses:Travel -y "%y-%b-%d"
 $110.00
 end test
 
-; Test display_account with virtual (post.cc lines 312-316)
+; Test display_account with virtual
 test reg --format "%(display_account)\n" Budget -y "%y-%b-%d"
 (Budget:Food)
 end test

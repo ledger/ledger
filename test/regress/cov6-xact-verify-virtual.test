@@ -1,4 +1,4 @@
-; Coverage test for xact.cc line 719
+; Coverage test for xact.cc
 ; Tests the verify() function with virtual postings that don't must_balance.
 ; An auto transaction adds a virtual posting (Memo:Taxed) plus two balancing
 ; real postings (Assets:Tax debit and Expenses:Tax credit).

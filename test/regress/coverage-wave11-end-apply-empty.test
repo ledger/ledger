@@ -1,4 +1,4 @@
-; Coverage for textual_directives.cc line 384-391
+; Coverage for textual_directives.cc
 ; Tests 'end apply' without enclosing 'apply' directive
 
 2024/01/01 Test

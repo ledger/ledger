@@ -1,4 +1,4 @@
-; Test budget period find (lines 1363-1366 of filters.cc)
+; Test budget period find
 ; Exercise the budget_posts report_budget_items find_period path
 
 ~ monthly

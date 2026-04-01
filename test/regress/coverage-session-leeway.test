@@ -1,5 +1,5 @@
 ; Test session.cc: --leeway option (alias for --price-exp)
-; Exercises lookup_option case 'l' -> OPT_ALT(price_exp_, leeway_) (line 322)
+; Exercises lookup_option case 'l' -> OPT_ALT(price_exp_, leeway_)
 
 P 2024/01/01 AAPL $150.00
 P 2024/01/15 AAPL $160.00

@@ -1,5 +1,4 @@
-; Coverage for convert.cc lines 55-69: convert command initialization
-; Note: convert requires a CSV file as input
+; Coverage for the 'accounts' command listing account names
 
 2024/01/01 Test
     Expenses:Food    $10.00

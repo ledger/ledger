@@ -1,4 +1,4 @@
-; Test coverage for textual_xacts.cc lines 629-633
+; Test coverage for textual_xacts.cc
 ; Balance assertion with value expression in amount
 
 2024/01/01 Opening

@@ -1,5 +1,5 @@
 ; Test post note concatenation with xact note
-; Targets: post.cc lines 171-179 (get_note with post and xact notes)
+; Targets: post.cc (get_note with post and xact notes)
 
 2024/01/15 * Store
     ; TxnNote: important

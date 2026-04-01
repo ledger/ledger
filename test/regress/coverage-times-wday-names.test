@@ -1,5 +1,5 @@
 ; Test day-of-week name parsing in period expressions
-; (exercises string_to_day_of_week in times.cc: lines 206-223)
+; (exercises string_to_day_of_week in times.cc: )
 ; Tests TOK_A_WDAY with this/last, covering sunday, wednesday, friday, saturday
 
 2024/01/14 Sunday Xact

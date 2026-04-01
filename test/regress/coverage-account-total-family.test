@@ -1,4 +1,4 @@
-; Coverage: account.cc line 690 - total() returning family_details.total
+; Coverage: account.cc - total returning family_details.total
 ; Exercises the total() function with a hierarchy of accounts
 
 2024/01/01 Test

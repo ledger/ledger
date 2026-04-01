@@ -1,4 +1,4 @@
-; Test coverage for textual_xacts.cc lines 571-575
+; Test coverage for textual_xacts.cc
 ; Posting with value expression in cost field (cost using parenthesized expr)
 
 2024/01/01 Stock Purchase

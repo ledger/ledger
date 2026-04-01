@@ -1,4 +1,4 @@
-; Test query parser with '#' token for code matching (covers query.cc lines 146-147)
+; Test query parser with '#' token for code matching (covers query.cc )
 ; The '#' character in a query should filter by transaction code
 
 2024/01/15 (1001) Grocery Store

@@ -1,4 +1,4 @@
-; Test report.cc: fn_percent (line 933-936), fn_commodity (line 938-940)
+; Test report.cc: fn_percent, fn_commodity
 
 2024/01/01 Test
     Expenses:Food   $10.00

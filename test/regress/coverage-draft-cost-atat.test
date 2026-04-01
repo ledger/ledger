@@ -1,4 +1,4 @@
-; Coverage test for draft.cc lines 457-476: @@ total cost handling
+; Coverage test for draft.cc @@ total cost handling
 ; When a draft template posting has a cost with the @@ operator,
 ; the code takes a different branch than @ (not per-unit).
 ; Exercises:

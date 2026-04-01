@@ -1,4 +1,4 @@
-; Coverage test for select.cc line 267: thus_far += " + " for date column
+; Coverage test for select.cc thus_far += " + " for date column
 ; When a date column is NOT the first column in a select query,
 ; the thus_far accumulator needs to prepend " + " before adding
 ; "int(date_width) + 1". This exercises the true branch of:

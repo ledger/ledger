@@ -1,4 +1,4 @@
-; Test xact.cc: fn_any and fn_all functions (lines 789-811)
+; Test xact.cc: fn_any and fn_all functions
 ; Tests transaction-level predicates
 
 2024/01/10 Groceries

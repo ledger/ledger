@@ -1,4 +1,4 @@
-; Test coverage for textual_xacts.cc lines 113-130
+; Test coverage for textual_xacts.cc
 ; Automated xact delete command
 
 = taxes :: /Food/

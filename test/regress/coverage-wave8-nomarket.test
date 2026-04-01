@@ -1,5 +1,5 @@
 ; Coverage tests for textual_directives.cc nomarket directive
-; Targets line 127-134 (nomarket_directive)
+; Targets (nomarket_directive)
 
 N EUR
 

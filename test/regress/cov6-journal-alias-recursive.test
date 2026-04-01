@@ -1,4 +1,4 @@
-; Coverage for journal.cc line 213: infinite recursion on alias expansion
+; Coverage for journal.cc infinite recursion on alias expansion
 
 alias Exp=Expenses
 alias Expenses=Exp:Food

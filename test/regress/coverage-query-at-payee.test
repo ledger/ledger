@@ -1,4 +1,4 @@
-; Test query parser with '@' token for payee matching (covers query.cc lines 143-144)
+; Test query parser with '@' token for payee matching (covers query.cc )
 ; The '@' character in a query should filter by payee
 
 2024/01/15 Grocery Store

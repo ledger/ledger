@@ -1,4 +1,4 @@
-; Coverage for history.cc lines 493-495: find_price returning nullopt
+; Coverage for history.cc find_price returning nullopt
 ; No price path exists between GBP and $ (only EUR->$ is defined)
 ; So the conversion cannot happen and the original commodity is shown
 

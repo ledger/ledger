@@ -1,7 +1,7 @@
 ; Tests for amount.cc uncovered lines - apostrophe thousands, decimal comma,
 ; floor, ceiling, roundto, truncate, annotated amounts
 
-; Test apostrophe as thousands separator (CHF style) - covers lines 1191-1193
+; Test apostrophe as thousands separator (CHF style) - covers
 commodity CHF 1'234'567.89
 2024/01/01 Swiss Purchase
     Expenses:Food            CHF 1'234.56

@@ -1,4 +1,4 @@
-; Coverage test for times.cc lines 1038-1040, 1054-1056
+; Coverage test for times.cc
 ; Exercise "next quarter" and "next week" specifiers
 ; These exercise adjust > 0 paths
 
@@ -6,14 +6,14 @@
     Expenses:Food            $10.00
     Assets:Cash
 
-; "next quarter" exercises TOK_QUARTER with adjust=1 (lines 1038-1040)
+; "next quarter" exercises TOK_QUARTER with adjust=1
 test reg Expenses --begin "next quarter"
 end test
 
-; "next week" exercises TOK_WEEK with adjust=1 (lines 1054-1056)
+; "next week" exercises TOK_WEEK with adjust=1
 test reg Expenses --begin "next week"
 end test
 
-; "next day" exercises TOK_DAY with adjust=1 (line 1063-1066)
+; "next day" exercises TOK_DAY with adjust=1
 test reg Expenses --begin "next day"
 end test

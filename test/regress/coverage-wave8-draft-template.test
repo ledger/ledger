@@ -1,5 +1,5 @@
 ; Coverage tests for draft.cc template command
-; Targets lines 363, 369 (xact_template_t::dump)
+; Targets (xact_template_t::dump)
 
 2024/01/01 Grocery Store
     Expenses:Food            $50.00

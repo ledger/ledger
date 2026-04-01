@@ -1,6 +1,6 @@
 ; Coverage test for post.cc lines related to commodityless amounts
 ; Tests get_commodity returning empty commodity for amounts without commodity.
-; Also tests get_has_cost returning false (line 227) and
+; Also tests get_has_cost returning false
 ; has_cost format expression.
 
 2024/01/01 Test

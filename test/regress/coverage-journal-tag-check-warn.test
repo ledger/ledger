@@ -1,4 +1,4 @@
-; Coverage: journal.cc lines 308-309: tag check expression with warning
+; Coverage: journal.cc tag check expression with warning
 ; Tests tag check (not assert) that produces warning instead of error
 
 commodity $

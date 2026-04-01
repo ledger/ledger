@@ -1,4 +1,4 @@
-; Coverage test for filters.cc lines 1114-1127
+; Coverage test for filters.cc
 ; Tests interval_posts with --empty to generate null postings for gaps
 ; between intervals. Line 1114: generate_empty_posts path when saw_posts
 ; is false. Lines 1118-1126: creates null xact and posting for empty periods.

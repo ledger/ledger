@@ -1,6 +1,6 @@
 ; Test this/next/last year and quarter period expressions
-; Exercises determine_when TOK_THIS/TOK_NEXT/TOK_LAST with TOK_YEAR (lines 809-813)
-; and TOK_QUARTER (lines 816-828), TOK_DAY (lines 846-850)
+; Exercises determine_when TOK_THIS/TOK_NEXT/TOK_LAST with TOK_YEAR
+; TOK_QUARTER, TOK_DAY
 ; Also exercises handle_relative_token year/quarter/day cases
 
 2023/06/15 Payee A

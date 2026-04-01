@@ -1,4 +1,4 @@
-; Test by_payee_posts (lines 1233-1256 of filters.cc)
+; Test by_payee_posts
 ; Exercise the payee subtotal path
 
 2024/01/01 Grocery

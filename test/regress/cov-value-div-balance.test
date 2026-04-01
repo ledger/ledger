@@ -1,4 +1,4 @@
-; Coverage test for value.cc lines 711-712
+; Coverage test for value.cc
 ; Amount divided by a balance that simplifies to a single integer amount
 ; This tests the path: amount /= balance.simplified().as_long()
 

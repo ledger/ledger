@@ -1,4 +1,4 @@
-; Coverage test for filters.cc lines 840-841, 845
+; Coverage test for filters.cc
 ; Tests changed_value_posts::output_intermediate_prices with price changes
 ; between postings. The --market --revalued options trigger revaluation
 ; generation. Lines 840-841: AMOUNT type path in output_intermediate_prices.

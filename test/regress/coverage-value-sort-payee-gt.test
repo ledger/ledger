@@ -1,6 +1,6 @@
 ; Test value_t::is_greater_than for STRING type via payee sort
 ; Exercises is_greater_than STRING path and is_less_than STRING path
-; Also exercises sort_value_is_less_than (line 2155)
+; Also exercises sort_value_is_less_than
 
 2024/01/15 Zebra Corp
     Expenses:Food  $50.00

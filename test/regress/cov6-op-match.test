@@ -1,4 +1,4 @@
-; Coverage test for op.cc O_MATCH evaluation path (lines 316-321)
+; Coverage test for op.cc O_MATCH evaluation path
 ; Tests the =~ match operator in expressions.
 ; This exercises both the calc and print paths for O_MATCH.
 

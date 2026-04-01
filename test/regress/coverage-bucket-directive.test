@@ -1,4 +1,4 @@
-; Test textual_directives.cc lines 808-811: bucket directive
+; Test textual_directives.cc bucket directive
 ; in general_directive case b
 
 bucket Assets:Cash

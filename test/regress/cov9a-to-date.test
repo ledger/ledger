@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 1054-1055
+; Coverage test for report.cc
 ; fn_to_date converts a datetime to a date
 
 2024/01/01 Test

@@ -1,5 +1,5 @@
 ; Test global.cc: report_error with error context
-; Exercises report_error (lines 172-185) including context display
+; Exercises report_error including context display
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00

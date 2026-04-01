@@ -1,5 +1,5 @@
 ; Coverage tests for textual_xacts.cc automated_xact_directive delete
-; Targets lines 113-131 (delete command path)
+; Targets (delete command path)
 
 ; Define a named automated transaction
 = "deleteme" :: /Expenses/

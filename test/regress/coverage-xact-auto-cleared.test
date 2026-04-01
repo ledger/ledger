@@ -1,5 +1,5 @@
 ; Test auto transaction with cleared state propagation
-; Targets: xact.cc lines 902-905 (cleared state propagation)
+; Targets: xact.cc (cleared state propagation)
 
 = /Expenses/
     (Budget)                  0.10

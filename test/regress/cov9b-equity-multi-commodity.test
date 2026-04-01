@@ -1,4 +1,4 @@
-; Coverage for filters.cc line 377: handle_value with BALANCE value type
+; Coverage for filters.cc handle_value with BALANCE value type
 ; When multiple commodities are involved, the value is a balance
 
 2024/01/01 Opening

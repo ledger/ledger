@@ -1,7 +1,7 @@
 ; Coverage test for op.cc: negation and NOT in format expressions
-; Exercises: O_NEG calc (lines 332-334) via format,
-;   O_NOT calc (lines 337-340) via format,
-;   intermediate non-constant compile (line 204)
+; Exercises: O_NEG calc via format
+;   O_NOT calc via format
+;   intermediate non-constant compile
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00

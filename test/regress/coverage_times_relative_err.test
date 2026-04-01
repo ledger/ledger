@@ -1,4 +1,4 @@
-; Coverage test for times.cc line 986
+; Coverage test for times.cc
 ; "last 3 today" triggers unexpected in handle_relative_token's INT path
 
 2024/01/01 Test

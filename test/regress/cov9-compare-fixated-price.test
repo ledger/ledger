@@ -1,5 +1,5 @@
 ; Test commodity comparison with fixated vs non-fixated prices
-; Covers commodity.cc lines 504-510 (semantic flags comparison in
+; Covers commodity.cc (semantic flags comparison in
 ; compare_by_commodity)
 
 2024/01/01 Buy regular

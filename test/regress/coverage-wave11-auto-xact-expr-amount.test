@@ -1,4 +1,4 @@
-; Coverage for xact.cc lines 869-871: auto_xact posting with an amount
+; Coverage for xact.cc auto_xact posting with an amount
 ; expression that evaluates to an amount_t (not long), hitting the
 ; result.is_amount() -> result.as_amount() path.
 

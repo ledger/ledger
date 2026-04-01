@@ -1,5 +1,5 @@
 ; Test --output option for report.cc coverage
-; Targets report.cc lines 73-77 (color/pager handling when --output is set)
+; Targets report.cc (color/pager handling when --output is set)
 ; Note: when --output is set, color and pager should be turned off
 ; This test verifies that --output produces correct file output
 

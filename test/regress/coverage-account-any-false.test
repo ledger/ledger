@@ -1,4 +1,4 @@
-; Coverage: account.cc line 382 - fn_any returning false
+; Coverage: account.cc - fn_any returning false
 ; When no posting in the account matches the expression, fn_any returns false
 
 2024/01/01 Grocery

@@ -1,8 +1,8 @@
-; Coverage test for op.cc lines 284-286, 519-520, 588
+; Coverage test for op.cc
 ; Tests expression evaluation paths in op_t::calc and print functions.
-; Lines 284-286: SCOPE node evaluation (bind_scope path)
-; Line 519-520: exception handling during function calls
-; Line 588: print_cons helper for O_CONS nodes
+; SCOPE node evaluation (bind_scope path)
+; exception handling during function calls
+; print_cons helper for O_CONS nodes
 
 2024/01/15 Test
     Expenses:Food             $50.00

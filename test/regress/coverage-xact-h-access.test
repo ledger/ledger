@@ -1,6 +1,6 @@
 ; Test xact.h: transaction accessor methods
 ; Exercises xact_t::code, payee, has_xdata, clear_xdata, description
-; Targets: xact.h lines 84-100, 76-77
+; Targets: xact.h
 
 2024/01/15 (INV-001) Grocery Store
     ; Payee: Grocery Store

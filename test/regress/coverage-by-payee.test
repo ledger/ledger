@@ -1,4 +1,4 @@
-; Coverage for filters.cc by_payee_posts (lines 1233-1256)
+; Coverage for filters.cc by_payee_posts
 ; Tests subtotaling by payee name.
 
 2024/01/01 Store A

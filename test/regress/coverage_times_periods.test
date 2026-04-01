@@ -1,4 +1,4 @@
-; Coverage test for times.cc lines 1238, 1245
+; Coverage test for times.cc
 ; Exercise handle_relative_token and handle_simple_period_token
 ; with various period expressions
 

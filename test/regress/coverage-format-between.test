@@ -1,4 +1,4 @@
-; Coverage test for format.cc lines 54-57 (output.cc)
+; Coverage test for format.cc (output.cc)
 ; Tests three-part format (first_line%/next_lines%/between) parsing.
 ; The third %/ section is the between-format shown between transactions.
 

@@ -1,33 +1,33 @@
 ; Tests for query.cc error paths
-; Covers: line 298 (operator not followed by argument)
-;         line 373 (expected ')' error)
-;         line 393 (NOT operator not followed by argument)
-;         line 419 (AND operator not followed by argument)
-;         line 440 (OR operator not followed by argument)
+; Covers: (operator not followed by argument)
+;         (expected ')' error)
+;         (NOT operator not followed by argument)
+;         (AND operator not followed by argument)
+;         (OR operator not followed by argument)
 
 2024/01/01 Test
     Expenses  $10
     Assets
 
-; payee operator not followed by argument (line 298)
+; payee operator not followed by argument
 test reg @  -> 1
 __ERROR__
 Error: payee operator not followed by argument
 end test
 
-; note operator not followed by argument (line 298)
+; note operator not followed by argument
 test reg =  -> 1
 __ERROR__
 Error: note operator not followed by argument
 end test
 
-; meta operator not followed by argument (line 298)
+; meta operator not followed by argument
 test reg %  -> 1
 __ERROR__
 Error: meta operator not followed by argument
 end test
 
-; NOT operator not followed by argument (line 393)
+; NOT operator not followed by argument
 test reg not  -> 1
 __ERROR__
 Error: not operator not followed by argument

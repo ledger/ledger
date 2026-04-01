@@ -1,4 +1,4 @@
-; Coverage tests for filters.cc anonymize_posts (lines 266-274)
+; Coverage tests for filters.cc anonymize_posts
 ; Covers: annotation price rendering, cost rendering
 ; Anonymized output is non-deterministic, so test with count
 

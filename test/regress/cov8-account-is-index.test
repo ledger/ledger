@@ -1,4 +1,4 @@
-; Coverage test for account.cc lines 450-451:
+; Coverage test for account.cc
 ; Exercise is_index function (alias for subcount).
 
 2024/01/01 Test

@@ -1,4 +1,4 @@
-; Test coverage for post.cc lines 605-640
+; Test coverage for post.cc
 ; Test add_to_value paths: compound value, visited value, and amount expression
 
 2024/01/01 Test1

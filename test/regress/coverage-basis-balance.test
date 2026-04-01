@@ -1,4 +1,4 @@
-; Test --basis strips lot prices for cost basis (exercises annotate.cc, commodity.cc)
+; Test --basis reports cost basis in dollars (exercises annotate.cc, commodity.cc)
 
 P 2024/06/01 AAPL $170.00
 

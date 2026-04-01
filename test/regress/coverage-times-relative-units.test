@@ -1,5 +1,5 @@
 ; Test next/last with month, day, year in handle_relative_token
-; (exercises handle_relative_token in times.cc: lines 1038-1093)
+; (exercises handle_relative_token in times.cc: )
 ; Targets TOK_MONTH, TOK_DAY, TOK_YEAR branches and TOK_A_WDAY branch
 
 2024/01/15 Payee A

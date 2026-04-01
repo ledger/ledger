@@ -1,5 +1,5 @@
 ; Test parse error for incorrect thousand-mark comma after period
-; Covers amount.cc line 1257 (thousand-mark comma error)
+; Covers amount.cc (thousand-mark comma error)
 
 2024/01/01 Test
     Expenses:Food    1,23.456 USD

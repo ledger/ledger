@@ -1,4 +1,4 @@
-; Coverage test for op.cc line 159
+; Coverage test for op.cc
 ; Tests the invalid function definition error path.
 ; When the left side of O_DEFINE is not an IDENT or O_CALL,
 ; a compile_error is thrown.

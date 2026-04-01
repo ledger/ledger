@@ -1,4 +1,4 @@
-; Test fn_any (lines 359-378 of post.cc)
+; Test fn_any
 ; Exercise the any() function on postings
 
 2024/01/01 Test

@@ -1,4 +1,4 @@
-; Coverage for post.cc lines 308-320: get_display_account when a post
+; Coverage for post.cc get_display_account when a post
 ; is virtual (balanced or unbalanced).
 
 2024/01/01 Test

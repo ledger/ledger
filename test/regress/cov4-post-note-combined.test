@@ -1,5 +1,5 @@
-; Test get_note combining xact and post notes (lines 172-184 of post.cc)
-; Exercise the note accessor with post note
+; Test get_note with a single post note
+; Exercise the note accessor (only a post-level note is present)
 
 2024/01/01 Test
     ; Post note here

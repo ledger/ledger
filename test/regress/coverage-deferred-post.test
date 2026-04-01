@@ -1,4 +1,4 @@
-; Coverage for xact.cc lines 690-692 (POST_DEFERRED path in finalize)
+; Coverage for xact.cc (POST_DEFERRED path in finalize)
 ; Posts with <angle bracket> accounts are deferred.
 
 2024/01/01 Test

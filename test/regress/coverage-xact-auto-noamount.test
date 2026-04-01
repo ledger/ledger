@@ -1,4 +1,4 @@
-; Coverage test for xact.cc line 1046
+; Coverage test for xact.cc
 ; Tests the error when an automated transaction's posting has no amount
 ; and no amount expression.
 

@@ -1,4 +1,4 @@
-; Coverage: journal.cc line 340: is_equivalent_posting with different accounts
+; Coverage: journal.cc is_equivalent_posting with different accounts
 ; Two transactions with the same UUID but different accounts should error
 
 2024/01/15 Store

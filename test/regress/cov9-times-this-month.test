@@ -1,4 +1,4 @@
-; Coverage for times.cc line 1245: handle_simple_period_token for "today"
+; Coverage for times.cc handle_simple_period_token for "today" (not "this month")
 
 2024/01/15 Test1
     Expenses:Food    $10.00

@@ -1,5 +1,5 @@
 ; Coverage for report.cc: posts_report with --group-by and --limit combined
-; Exercises the group_by_ branch in posts_report (lines 349-353) with a
+; Exercises the group_by_ branch in posts_report with a
 ; limit predicate to filter postings before grouping.
 
 2024/01/01 Grocery Store

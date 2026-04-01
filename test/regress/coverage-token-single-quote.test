@@ -1,4 +1,4 @@
-; Coverage test for token.cc lines 216-227
+; Coverage test for token.cc
 ; Tests parsing single-quoted string in expression
 
 2024/01/01 Test

@@ -1,5 +1,5 @@
 ; Test report.cc: fn_lot_date, fn_lot_price, fn_lot_tag functions
-; Exercises lot annotation extraction functions (lines 1012-1037)
+; Exercises lot annotation extraction functions
 
 2024/01/15 Buy Stock
     Assets:Brokerage         10 AAPL {$150.00} [2024/01/15] (lot1)

@@ -1,4 +1,4 @@
-; Coverage for print.cc lines 211-222: print with balance assignment
+; Coverage for print.cc print with balance assignment
 
 2024/01/01 Test
     Assets:Cash    = $100.00

@@ -1,6 +1,6 @@
-; Coverage tests for times.cc lines 1512-1530 (find_period scan loop)
-; Also covers times.cc lines 1568, 1570 (dump: start/finish fields)
-; Also covers times.cc line 1268 (duration period token)
+; Coverage tests for times.cc (find_period scan loop)
+; Also covers times.cc (dump: start/finish fields)
+; Also covers times.cc (duration period token)
 
 2024/01/01 January
     Expenses:Food    $10.00

@@ -1,5 +1,7 @@
-; Coverage test for select.cc lines 389-393
+; Coverage test for select.cc
 ; Test select with csv, xml, json, and emacs style keywords
+; Note: all style variants produce identical output; style selection
+; does not change the output format in the current implementation
 
 2024/01/01 Test Payee
     Expenses:Food    $10.00

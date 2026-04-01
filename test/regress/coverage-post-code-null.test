@@ -1,4 +1,4 @@
-; Coverage test for post.cc lines 161-166:
+; Coverage test for post.cc
 ; get_code() returns code string or NULL_VALUE
 
 2024/01/15 (ABC) Test With Code

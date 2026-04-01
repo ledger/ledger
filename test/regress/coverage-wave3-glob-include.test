@@ -1,4 +1,4 @@
-; Wave 3 coverage tests for mask.cc assign_glob (lines 184-213)
+; Wave 3 coverage tests for mask.cc assign_glob
 ; Tests glob pattern conversion: ?, *, [...]
 ; Uses include directive with glob patterns
 

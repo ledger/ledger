@@ -1,6 +1,6 @@
 ; Test item.cc: get_tag with two mask arguments
-; Exercises get_tag(mask_t, mask_t) dispatch (lines 287-288)
-; and item_t::get_tag(mask_t, optional<mask_t>) (lines 85-97)
+; Exercises get_tag(mask_t, mask_t) dispatch
+; item_t::get_tag(mask_t, optional<mask_t>)
 
 2024/01/15 Grocery Store
     ; Location: Downtown

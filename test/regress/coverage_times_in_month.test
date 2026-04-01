@@ -1,5 +1,5 @@
-; Coverage test for times.cc peek_token (line 647) via TOK_A_MONTH
-; Month name in determine_when causes peek_token call at line 856
+; Coverage test for times.cc peek_token via TOK_A_MONTH
+; Month name in determine_when causes peek_token call
 
 2024/06/15 June Transaction
     Expenses:Food    $10.00

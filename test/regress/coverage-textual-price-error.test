@@ -1,4 +1,4 @@
-; Test textual_directives.cc: pricing entry parse error (line 128)
+; Test textual_directives.cc: pricing entry parse error
 
 P 2024/01/01
 

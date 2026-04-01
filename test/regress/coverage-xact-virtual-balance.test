@@ -1,8 +1,8 @@
-; Coverage test for xact.cc lines 602-618
+; Coverage test for xact.cc
 ; Tests the virtual_null_post balancing path in finalize().
-; Line 612: virtual_balance.is_long() path when commodity-less amounts
-; Line 613: post_adder(balance.to_amount()) for long balance
-; Also covers line 719: verify() continue for unbalanced virtual posting.
+; virtual_balance.is_long path when commodity-less amounts
+; post_adder(balance.to_amount) for long balance
+; Also covers verify continue for unbalanced virtual posting
 
 2024/01/01 Test Virtual Long
     Expenses:Food    $10.00
@@ -21,7 +21,7 @@ test bal
 end test
 
 ; Also test with virtual unbalanced posting (parentheses)
-; which triggers line 719 continue in verify()
+; which triggers continue in verify
 test reg '(Budget)'
 24-Jan-01 Test Virtual Long     [Budget:Savings]                 20           20
                                 [Budget:Checking]               -20            0

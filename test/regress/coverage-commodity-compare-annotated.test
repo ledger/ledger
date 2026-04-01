@@ -1,5 +1,5 @@
 ; Test commodity_t::compare_by_commodity with annotated commodities
-; Covers commodity.cc annotated comparison paths (lines 384-498)
+; Covers commodity.cc annotated comparison paths
 
 P 2024/01/01 AAPL $150.00
 P 2024/01/01 GOOG $140.00

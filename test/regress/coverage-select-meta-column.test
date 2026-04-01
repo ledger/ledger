@@ -1,4 +1,4 @@
-; Coverage test for select.cc lines 331-342: meta/unknown column handling
+; Coverage test for select.cc meta/unknown column handling
 ; When a column name is not one of the recognized names (date, aux_date,
 ; payee, account, amount, total), it falls through to the "else" branch
 ; which uses meta_width for formatting. This exercises:

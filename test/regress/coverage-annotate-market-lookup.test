@@ -1,5 +1,5 @@
 ; Coverage test for annotate.cc: non-fixated annotated commodity price lookup
-; Exercises annotate.cc lines 286-288: setting target commodity from
+; Exercises annotate.cc setting target commodity from
 ; non-fixated annotation price when doing market value lookup
 
 2024/01/01 Buy Stock

@@ -1,4 +1,4 @@
-; Test coverage for filters.cc lines 1014-1015, 1032
+; Test coverage for filters.cc
 ; interval_posts without duration (find_period path) and with duration
 
 2024/01/01 Test1

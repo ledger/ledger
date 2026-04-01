@@ -1,4 +1,5 @@
-; Test that unknown directive starting with 'a' produces an error
+; Test textual_directives.cc break in case 'a' for unknown
+; directive starting with 'a' that isn't account/alias/apply/assert
 auxiliary foo
 
 2024/01/01 Test
@@ -7,6 +8,6 @@ auxiliary foo
 
 test bal -> 1
 __ERROR__
-While parsing file "$FILE", line 2:
+While parsing file "$FILE", line 3:
 Error: Unrecognized source line 'auxiliary foo'
 end test

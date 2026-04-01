@@ -1,5 +1,5 @@
 ; Test division by percentage amount
-; Covers amount.cc lines 531-548 (divide by percentage)
+; Covers amount.cc (divide by percentage)
 
 2024/01/01 Test
     Expenses:Tax    $19.00

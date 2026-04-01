@@ -1,4 +1,4 @@
-; Coverage for value.cc lines 1805-1807: round_to_commodity_precision for sequence
+; Coverage for value.cc round_to_commodity_precision for sequence
 ; Triggered by rounding a sequence value
 
 2024/01/15 Test
@@ -6,7 +6,7 @@
     Assets:Checking
 
 ; Test: rounded(to_sequence(amount)) creates sequence, rounds it, then errors on display
-; The rounding of the sequence elements covers lines 1805-1807
+; The rounding of the sequence elements covers
 test reg --format '%(rounded(to_sequence(amount)))\n' Expenses -> 1
 __ERROR__
 While converting ($50.123):

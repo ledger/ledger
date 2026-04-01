@@ -1,8 +1,8 @@
 ; Tests for wcwidth.cc uncovered lines
-; Covers: mk_wcwidth (lines 172-270), mk_wcswidth, mk_wcwidth_cjk, mk_wcswidth_cjk
+; Covers: mk_wcwidth, mk_wcswidth, mk_wcwidth_cjk, mk_wcswidth_cjk
 ; These functions handle wide character width computation for CJK and other wide chars
 
-; Test CJK characters in payee (full-width) - covers mk_wcwidth lines 182-192
+; Test CJK characters in payee (full-width) - covers mk_wcwidth
 2024/01/01 日本語テスト
     Expenses:Food         ¥1000
     Assets:Cash
@@ -29,7 +29,7 @@ test reg Expenses:Misc
 24-Jan-03 Mixed テスト Test     Expenses:Misc                $10.00       $10.00
 end test
 
-; Test Hangul characters - covers mk_wcwidth lines 183 (0x1100-0x115f) and 186 (0xac00-0xd7a3)
+; Test Hangul characters - covers mk_wcwidth (0x1100-0x115f) and (0xac00-0xd7a3)
 2024/01/04 한국어
     Expenses:Food         $20.00
     Assets:Cash

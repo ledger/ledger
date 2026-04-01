@@ -1,4 +1,4 @@
-; Coverage test for textual_directives.cc lines 564, 579
+; Coverage test for textual_directives.cc
 ; payee-rewrite and account-rewrite without replacement argument
 
 payee-rewrite NoReplacement

@@ -9,49 +9,49 @@
     Expenses:Dining    $30.00
     Assets:Checking
 
-; Test 'draft' command with date (lines 131-135)
+; Test 'draft' command with date
 test draft on 2024/03/01 Grocery
 2024/03/01 Grocery Store
     Expenses:Food                             $50.00
     Assets:Cash
 end test
 
-; Test 'draft' with code (lines 136-139)
+; Test 'draft' with code
 test xact on 2024/03/01 Grocery code 1234
 2024/03/01 (1234) Grocery Store
     Expenses:Food                             $50.00
     Assets:Cash
 end test
 
-; Test 'draft' with note (lines 140-143)
+; Test 'draft' with note
 test xact on 2024/03/01 Grocery note memo
 2024/03/01 Grocery Store  ;memo
     Expenses:Food                             $50.00
     Assets:Cash
 end test
 
-; Test 'draft' with 'at' keyword (lines 118-121)
+; Test 'draft' with 'at' keyword
 test xact on 2024/03/01 at Grocery
 2024/03/01 Grocery Store
     Expenses:Food                             $50.00
     Assets:Cash
 end test
 
-; Test 'draft' with 'rest' keyword (line 144-145)
+; Test 'draft' with 'rest' keyword
 test xact on 2024/03/01 Grocery 100 rest
 2024/03/01 Grocery Store
     Expenses:Food                            $100.00
     Assets:Cash
 end test
 
-; Test 'draft' with to/from keywords (lines 122-130)
+; Test 'draft' with to/from keywords
 test xact on 2024/03/01 Grocery 25 from Checking
 2024/03/01 Grocery Store
     Expenses:Food                             $25.00
     Assets:Checking
 end test
 
-; Test 'template' precommand (lines 47-82 template dump)
+; Test 'template' precommand (template dump)
 test template Grocery 100
 --- Input arguments ---
 ("Grocery", "100")

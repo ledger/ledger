@@ -1,4 +1,4 @@
-; Test get_cost when amount is null (lines 235-236 of post.cc)
+; Test get_cost when amount is null
 ; Exercise the null amount path for cost
 
 2024/01/01 Test

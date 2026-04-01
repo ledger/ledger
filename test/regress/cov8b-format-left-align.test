@@ -1,7 +1,7 @@
-; Coverage test for format.cc lines 191-200
+; Coverage test for format.cc
 ; Test left-alignment flag in format strings.
 ; The %-N format prefix triggers ELEMENT_ALIGN_LEFT.
-; Also exercises the default break at line 197 (unreachable in practice).
+; Also exercises the default break (unreachable in practice)
 
 2024/01/01 Test
     Expenses:Food    $10.00

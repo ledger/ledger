@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 942-951: fn_commodity_price
+; Coverage test for report.cc fn_commodity_price
 ; Test commodity_price() which looks up a commodity's price at a given date.
 
 P 2024/01/01 AAPL $100.00

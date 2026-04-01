@@ -1,4 +1,4 @@
-; Test account lookup use_direct_amount (lines 492-493 of account.cc)
+; Test account lookup use_direct_amount
 ; Exercise the use_direct_amount accessor on accounts
 
 2024/01/01 Test

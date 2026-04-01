@@ -1,7 +1,7 @@
-; Test value.cc: is_greater_than DATE paths (lines 1028-1030)
+; Test value.cc: is_greater_than DATE paths
 ; Exercises date > date comparison via direct expression
 
-; DATE > DATE (lines 1028-1029)
+; DATE > DATE
 test eval "[2024/01/20] > [2024/01/10]"
 1
 end test

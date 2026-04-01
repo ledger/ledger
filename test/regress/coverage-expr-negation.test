@@ -1,5 +1,5 @@
 ; Test op.cc: O_NEG (negation) and O_NOT operators
-; Exercises: O_NEG calc (line 349), O_NOT calc (line 353),
+; Exercises: O_NEG calc, O_NOT calc
 ;   negation in expressions, format expressions with negation
 
 test eval "!0"

@@ -1,4 +1,4 @@
-; Coverage for filters.cc line 1652: rewrite_posts account rewrite
+; Coverage for filters.cc rewrite_posts account rewrite
 ; Tests account-rewrite directive to trigger rewriting account paths
 
 account-rewrite Expenses:Food  Expenses:Dining

@@ -1,4 +1,4 @@
-; Test coverage for textual_xacts.cc lines 535-610
+; Test coverage for textual_xacts.cc
 ; Posting with cost expression and fixed cost
 
 2024/01/01 Stock Buy with Expression Cost

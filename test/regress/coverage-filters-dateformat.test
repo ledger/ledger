@@ -1,4 +1,4 @@
-; Coverage test for filters.cc lines 966-967
+; Coverage test for filters.cc
 ; Tests subtotal_posts::report_subtotal date_format branch with --monthly
 ; When date_format is set and there's a duration interval, the subtotal
 ; reporting path should use the date_format to format period dates

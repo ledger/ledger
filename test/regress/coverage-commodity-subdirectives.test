@@ -1,4 +1,4 @@
-; Coverage test for textual_directives.cc lines 600, 605, 614-619
+; Coverage test for textual_directives.cc
 ; Commodity directive with nomarket, default, note, alias sub-directives
 
 commodity BTC

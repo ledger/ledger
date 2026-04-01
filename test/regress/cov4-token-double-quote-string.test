@@ -1,4 +1,4 @@
-; Test token parsing with double-quoted strings (lines 230-272 of token.cc)
+; Test token parsing with double-quoted strings
 ; Exercise the double-quote string literal path (non-amount)
 
 2024/01/01 Test

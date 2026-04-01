@@ -1,4 +1,4 @@
-; Test draft template command with account masks (covers draft.cc lines 67-77)
+; Test draft template command with account masks (covers draft.cc )
 ; Exercises the template dump function with account masks in postings
 
 2024/01/15 * Grocery Store

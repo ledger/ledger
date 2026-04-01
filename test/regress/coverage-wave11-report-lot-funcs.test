@@ -1,5 +1,5 @@
 ; Test lot_date, lot_price, lot_tag functions for report.cc coverage
-; Targets report.cc lines 912-937
+; Targets report.cc
 
 2024/01/15 Buy Stocks
     Assets:Brokerage    10 AAPL {$150.00} [2024/01/15] (mytag)

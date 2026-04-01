@@ -1,4 +1,4 @@
-; Coverage test for post.cc line 545
+; Coverage test for post.cc
 ; resolve_expr throws amount_error for non-simple amount result
 
 2024/01/01 Test

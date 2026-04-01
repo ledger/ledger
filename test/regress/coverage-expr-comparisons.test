@@ -1,6 +1,6 @@
 ; Coverage tests for value.cc comparison operators
-; Boolean less_than (line 877), boolean greater_than (line 1018)
-; Date/datetime comparisons (lines 1024, 1029)
+; Boolean less_than, boolean greater_than
+; Date/datetime comparisons
 
 2024/01/01 First
     Expenses:Food            $10.00

@@ -1,5 +1,5 @@
 ; Test auto transaction assertion failure
-; Targets: xact.cc lines 797-798 (assertion failure path)
+; Targets: xact.cc (assertion failure path)
 
 = /Expenses/
     assert amount < $10

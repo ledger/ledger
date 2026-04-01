@@ -1,4 +1,4 @@
-; Test assert directive (line 801-803 of textual_directives.cc)
+; Test assert directive
 ; Exercise the assert directive that throws if false
 
 assert 1 == 1

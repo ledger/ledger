@@ -1,4 +1,4 @@
-; Coverage for post.cc lines 229-237: get_cost and get_has_cost paths.
+; Coverage for post.cc get_cost and get_has_cost paths
 
 2024/01/01 Buy stock
     Assets:Brokerage              10 AAPL @ $15.00

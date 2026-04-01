@@ -1,5 +1,5 @@
 ; Test auto transaction with multiple auto posts and different amounts
-; Targets: xact.cc lines 820-827 (post_amount with commodity)
+; Targets: xact.cc (post_amount with commodity)
 
 = /Expenses/
     (Tax:Federal)              $-5.00

@@ -1,5 +1,5 @@
 ; Coverage test for op.cc: calc_cons else branch (non-O_CONS right)
-; Exercises: calc_cons else branch (lines 529-531) when right node
+; Exercises: calc_cons else branch when right node
 ;   is not O_CONS (final element of cons chain)
 
 ; Two-element cons expression: right is VALUE, not O_CONS

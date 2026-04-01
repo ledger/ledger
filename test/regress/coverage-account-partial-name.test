@@ -1,4 +1,4 @@
-; Coverage: account.cc lines 243-246: get_partial_name function
+; Coverage: account.cc get_partial_name function
 ; Tests the partial_account format function
 
 2024/01/15 * Payee

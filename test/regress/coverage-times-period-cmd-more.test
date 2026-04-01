@@ -1,19 +1,19 @@
 ; Test period command with tokens not yet covered in dump/to_string
 ; Exercises: token_t::dump and token_t::to_string for:
-;   TOK_NEXT (lines 451, 548-549, 551-552)
-;   TOK_LAST (lines 453, 557-558)
-;   TOK_TODAY (lines 457, 560-561, 563-564)
-;   TOK_TOMORROW (line 459)
-;   TOK_YESTERDAY (line 461)
-;   TOK_AGO (lines 439, 527-528)
-;   TOK_HENCE (lines 441, 530-531)
-;   TOK_IN (lines 447, 542-543)
-;   TOK_BIWEEKLY (lines 481, 593-594)
-;   TOK_BIMONTHLY (lines 477, 587-588)
-;   TOK_QUARTERLY (lines 475, 584-585)
-;   TOK_DASH (lines 429, 518-519)
-;   TOK_A_WDAY (lines 436-437, 506-507)
-;   TOK_WEEKS (lines 491, 608-609)
+;   TOK_NEXT
+;   TOK_LAST
+;   TOK_TODAY
+;   TOK_TOMORROW
+;   TOK_YESTERDAY
+;   TOK_AGO
+;   TOK_HENCE
+;   TOK_IN
+;   TOK_BIWEEKLY
+;   TOK_BIMONTHLY
+;   TOK_QUARTERLY
+;   TOK_DASH
+;   TOK_A_WDAY
+;   TOK_WEEKS
 
 2024/01/15 Payee A
     Expenses:Food    $50.00

@@ -1,5 +1,5 @@
 ; Coverage tests for textual_xacts.cc automated_xact_directive quote patterns
-; Targets lines 60-80 (quote/double-quote/slash patterns in auto-xact)
+; Targets (quote/double-quote/slash patterns in auto-xact)
 
 ; Auto-xact with single-quote pattern
 = 'Expenses'

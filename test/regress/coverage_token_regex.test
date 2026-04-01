@@ -1,4 +1,4 @@
-; Coverage test for token.cc line 349
+; Coverage test for token.cc
 ; Unclosed regex delimiter triggers expected('/', c)
 
 2024/01/01 Test

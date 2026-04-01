@@ -1,4 +1,4 @@
-; Coverage test for report.cc line 1071
+; Coverage test for report.cc
 ; fn_to_mask converts a string to a mask (regex pattern)
 
 2024/01/01 Test

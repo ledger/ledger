@@ -1,4 +1,4 @@
-; Coverage test for select.cc lines 66, 72, 82, 85, 96
+; Coverage test for select.cc
 ; Tests select command with total column to cover the "total" identifier path
 
 2024/01/01 Test

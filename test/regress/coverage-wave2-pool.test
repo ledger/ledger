@@ -1,7 +1,7 @@
 ; Wave 2 coverage tests for pool.cc
-; Covers: find (line 114), find_or_create (line 145),
-; exchange (lines 223, 274, 288, 298),
-; parse_price_directive (line 342), parse_price_expression (line 363)
+; Covers: find, find_or_create
+; exchange
+; parse_price_directive, parse_price_expression
 
 ; Price directives - covers parse_price_directive lines
 P 2024/01/01 EUR $1.10

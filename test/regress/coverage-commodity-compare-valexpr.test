@@ -1,4 +1,4 @@
-; Coverage test for commodity.cc lines 485, 496-498, 514-515
+; Coverage test for commodity.cc
 ; Tests compare_by_commodity with tag annotations to cover tag comparison
 ; and the "all attributes match" path.
 

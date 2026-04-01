@@ -1,5 +1,5 @@
 ; Test fixated price annotations with multiple commodities
-; Targets: xact.cc lines 271-302 (fixated price cost computation)
+; Targets: xact.cc (fixated price cost computation)
 
 2024/01/15 Buy Shares
     Assets:Investments         10 AAPL {=$150.00}

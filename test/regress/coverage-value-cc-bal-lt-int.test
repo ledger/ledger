@@ -1,6 +1,6 @@
-; Test value.cc: is_less_than BALANCE vs INTEGER/AMOUNT paths (lines 921-927)
+; Test value.cc: is_less_than BALANCE vs INTEGER/AMOUNT paths
 ; Exercises the case where balance amounts are compared element-by-element
-; Line 924: when pair.second >= val returns false (no amount >= threshold)
+; when pair.second >= val returns false (no amount >= threshold)
 
 2024/01/15 Purchase A
     Expenses:Food    $5.00
@@ -10,15 +10,15 @@
 
 ; Balance of Expenses (without --flat) is $5 + 3 EUR
 ; Compare balance < 10: both $5 < 10 and 3 EUR < 10, so should be true
-; This exercises the foreach loop at line 922-926 going through ALL amounts
-; without hitting the pair.second >= val return-false path at line 924
+; This exercises the foreach loop going through ALL amounts
+; without hitting the pair.second >= val return-false path
 test bal Expenses --format "%(display_total < 10 ? \"lt\" : \"gte\")\n" --no-total
 lt
 lt
 lt
 end test
 
-; Now compare balance < 4: $5 >= 4 so should return false at line 924
+; Now compare balance < 4: $5 >= 4 so should return false
 test bal Expenses --format "%(display_total < 4 ? \"lt\" : \"gte\")\n" --no-total
 gte
 gte

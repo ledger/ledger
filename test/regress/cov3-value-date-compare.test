@@ -1,5 +1,5 @@
 ; Test value date comparison
-; Covers value.cc lines 1022-1024, 1027-1029 (date > and date < comparison)
+; Covers value.cc (date > and date < comparison)
 
 2024/01/15 Test
     Expenses:Food    $50.00

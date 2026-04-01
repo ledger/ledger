@@ -1,5 +1,5 @@
 ; Test --check-payees with --strict option
-; Covers session.cc line 115 (check_payees)
+; Covers session.cc (check_payees)
 
 commodity $
 

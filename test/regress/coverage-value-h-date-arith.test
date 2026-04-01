@@ -1,6 +1,6 @@
 ; Test value.h: date and datetime arithmetic operations
 ; Exercises value_t::operator+= and -= with DATE/DATETIME + INTEGER/AMOUNT
-; Targets: value.cc lines 340-367 (date+=), 480-505 (date-=)
+; Targets: value.cc (date+=), (date-=)
 
 2024/01/15 Store
     Expenses:Food    $50.00
@@ -22,7 +22,7 @@ test reg --format "%(date - 3)\n" Expenses
 2024/01/22
 end test
 
-; Test date + 0 (boundary case)
+; Test date + (boundary case)
 test reg --format "%(date + 0)\n" Expenses
 2024/01/15
 2024/01/25

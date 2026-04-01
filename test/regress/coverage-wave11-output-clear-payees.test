@@ -1,5 +1,5 @@
 ; Test report_payees::clear() via --group-by for output.h coverage
-; Targets output.h lines 164-167 (report_payees::clear)
+; Targets output.h (report_payees::clear)
 ; The clear() method is called between groups by post_splitter
 
 2024/01/15 Alpha Store

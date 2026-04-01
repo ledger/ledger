@@ -1,4 +1,4 @@
-; Coverage test for report.cc line 779: fn_quantity
+; Coverage test for report.cc fn_quantity
 ; Test quantity() function which returns the numeric value without commodity.
 
 2024/01/01 Test

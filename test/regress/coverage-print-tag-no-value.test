@@ -1,4 +1,4 @@
-; Coverage for print.cc line 165: tag without value (colon-wrapped)
+; Coverage for print.cc tag without value (colon-wrapped)
 
 2024/01/01 Test
     ; :MyTag:

@@ -1,7 +1,7 @@
 ; Coverage tests for amount.cc and value.cc annotation paths
 ; Tests annotate, has_annotation, strip_annotations, price calculations
 
-; Lot price annotation - exercises amount.cc annotate (lines 889-913)
+; Lot price annotation - exercises amount.cc annotate
 2024/01/01 Buy Stock
     Assets:Brokerage    10 AAPL @ $150.00
     Assets:Cash
@@ -34,12 +34,12 @@ test bal --lots Assets:Brokerage
 5 AAPL {$155} [2024/01/02]  Assets:Brokerage
 end test
 
-; Stripping annotations exercises strip_annotations (lines 937-944)
+; Stripping annotations exercises strip_annotations
 test bal Assets:Brokerage
              15 AAPL  Assets:Brokerage
 end test
 
-; Cost basis exercises amount price() path (lines 813-821)
+; Cost basis exercises amount price path
 test bal --cost Assets:Brokerage
                $2275  Assets:Brokerage
 end test

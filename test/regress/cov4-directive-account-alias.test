@@ -1,4 +1,4 @@
-; Test account sub-directive 'alias' (line 437-438 of textual_directives.cc)
+; Test account sub-directive 'alias'
 ; Exercise the alias sub-directive for account
 
 account Expenses:Food

@@ -1,4 +1,4 @@
-; Coverage test for account.cc lines 339-341, 352-354, 457-464:
+; Coverage test for account.cc
 ; Exercise latest and latest_cleared functions.
 
 2024/01/01 * Test Cleared

@@ -1,5 +1,5 @@
-; Coverage for compare.cc lines 87-101: post sort with context scope
-; Also targets lines 97-101: right side context path
+; Coverage for compare.cc post sort with context scope
+; Also targets right side context path
 
 2024/01/01 Store
     Expenses:Food    $30.00

@@ -1,4 +1,4 @@
-; Coverage test for report.cc line 940: fn_commodity
+; Coverage test for report.cc fn_commodity
 ; Test commodity() function which returns the commodity symbol of an amount.
 
 2024/01/01 Test

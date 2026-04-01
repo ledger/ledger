@@ -1,5 +1,5 @@
 ; Coverage test for draft.cc xact_command with complex transactions
-; Exercises draft.cc: 'at' keyword (line 118), matching multi-post xacts
+; Exercises draft.cc: 'at' keyword, matching multi-post xacts
 ; and account mask lookup in matching transaction posts
 
 2024/01/15 * Stock Purchase

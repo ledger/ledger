@@ -1,4 +1,4 @@
-; Coverage for report.cc lines 1006-1008: fn_nail_down error path
+; Coverage for report.cc fn_nail_down error path
 ; When nail_down receives a value that is not AMOUNT, BALANCE, or SEQUENCE
 
 2024/01/01 Test

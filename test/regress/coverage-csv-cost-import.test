@@ -1,4 +1,4 @@
-; Coverage test for csv.cc lines 198-205:
+; Coverage test for csv.cc
 ; CSV import with cost column using different commodities
 
 account Expenses:Unknown

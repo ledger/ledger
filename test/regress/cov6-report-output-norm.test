@@ -1,4 +1,4 @@
-; Coverage for report.cc lines 76,78: color and pager turned off when
+; Coverage for report.cc color and pager turned off when
 ; --output is set (normalize_options)
 
 2024/01/01 Test

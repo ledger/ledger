@@ -1,4 +1,4 @@
-; Coverage for account.cc line 472: note lookup in account
+; Coverage for account.cc note lookup in account
 
 account Expenses:Food
     note Food purchases

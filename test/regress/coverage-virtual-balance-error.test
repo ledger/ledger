@@ -1,4 +1,4 @@
-; Test xact.cc: virtual posting balance error (lines 612-615)
+; Test xact.cc: virtual posting balance error
 
 2024/01/01 Test
     [Budget:Food]     $100.00

@@ -1,4 +1,4 @@
-; Test meta accessor (lines 475-476 of item.cc)
+; Test meta accessor
 ; Exercise the meta lookup (aliases to get_tag)
 
 2024/01/01 Test

@@ -1,4 +1,4 @@
-; Coverage: timelog.cc lines 109-115: desc and note transfer from checkout to checkin
+; Coverage: timelog.cc desc and note transfer from checkout to checkin
 ; When the check-in has no description, the checkout description is used as
 ; the payee. When the check-in has no note, the checkout note is used.
 

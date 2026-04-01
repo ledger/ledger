@@ -1,5 +1,5 @@
 ; Coverage test for op.cc: error paths in expression evaluation
-; Exercises: calc_call exception context (lines 511-514),
+; Exercises: calc_call exception context
 ;   error context generation in real_calc
 
 2024/01/15 Grocery Store
@@ -7,7 +7,7 @@
     Assets:Checking
 
 ; Test error in function call to trigger calc_call error context
-; This exercises the "While calling function" error path at lines 511-513
+; This exercises the "While calling function" error path
 test reg --format '%(quantity("not_a_number"))\n' -> 1
 __ERROR__
 While evaluating value expression:

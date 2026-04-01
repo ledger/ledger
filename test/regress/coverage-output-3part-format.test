@@ -1,4 +1,4 @@
-; Coverage for output.cc lines 55-58: three-part format (first%/next%/between)
+; Coverage for output.cc three-part format (first%/next%/between)
 
 2024/01/01 Test
     Expenses:Food    $10.00

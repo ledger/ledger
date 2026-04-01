@@ -1,4 +1,4 @@
-; Coverage test for post.cc lines 313-318
+; Coverage test for post.cc
 ; Tests display_account with virtual postings.
 ; Unbalanced virtual postings get () wrapping, balanced virtual get [].
 

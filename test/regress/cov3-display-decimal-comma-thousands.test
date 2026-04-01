@@ -1,5 +1,5 @@
 ; Test display with decimal comma AND thousands separator (European style)
-; Covers amount.cc lines 200-204, 216-220 (stream_out_mpq with thousands and decimal_comma)
+; Covers amount.cc (stream_out_mpq with thousands and decimal_comma)
 
 commodity 1.000,00 EUR
 

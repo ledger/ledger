@@ -1,4 +1,4 @@
-; Test query parser with '%' token for metadata matching (covers query.cc lines 149-150)
+; Test query parser with '%' token for metadata matching (covers query.cc )
 ; The '%' character in a query should filter by metadata tag
 
 2024/01/15 Grocery Store

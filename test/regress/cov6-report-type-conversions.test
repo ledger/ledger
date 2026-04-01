@@ -1,4 +1,4 @@
-; Coverage for report.cc lines 1062-1076: to_balance, to_string, to_mask,
+; Coverage for report.cc to_balance, to_string, to_mask
 ; to_sequence type conversion functions
 
 2024/01/01 Test

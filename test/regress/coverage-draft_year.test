@@ -1,4 +1,4 @@
-; Coverage test for draft.cc lines 273-276: year directive in draft
+; Coverage test for draft.cc year directive in draft
 ; When the xact command is used with a date without an explicit year,
 ; and a Y year directive is present, the year from the directive is used
 

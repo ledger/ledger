@@ -1,5 +1,5 @@
 ; Coverage test for context.h: parse_context_t warning and location methods
-; Exercises context.h lines 94-99: location() and warning() methods
+; Exercises context.h location and warning methods
 ; Also exercises parse_context_stack_t push/pop via normal file parsing
 
 account Expenses:Food

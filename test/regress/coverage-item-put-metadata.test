@@ -1,5 +1,5 @@
-; Test posting with tag and metadata value via plain balance report
-; Targets: item.cc metadata handling
+; Test balance report on a posting with boolean tags and a value tag
+; Targets: item.cc metadata parsing (not XML output)
 
 2024/01/15 * Store
     ; :food:organic:

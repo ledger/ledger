@@ -1,4 +1,4 @@
-; Test handle_value with POST_MUST_BALANCE for virtual posts (line 350 of filters.cc)
+; Test handle_value with POST_MUST_BALANCE for virtual posts
 ; Exercise the auto_virtualize path with balanced virtuals
 
 2024/01/01 Test

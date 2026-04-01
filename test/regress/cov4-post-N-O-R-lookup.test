@@ -1,4 +1,4 @@
-; Test post_t::lookup for N, O, R symbols (lines 519-531 of post.cc)
+; Test post_t::lookup for N, O, R symbols
 ; N maps to count, O maps to total, R maps to real
 
 2024/01/01 Test

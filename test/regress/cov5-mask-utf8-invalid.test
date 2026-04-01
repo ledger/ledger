@@ -1,4 +1,5 @@
-; Coverage for mask.cc line 318: fold_diacritics with valid UTF-8 accents
+; Coverage for mask.cc with UTF-8 accented characters
+; Note: fold_diacritics is not exercised (no --ignore-diacritics flag)
 
 2024/01/01 Café
     Expenses:Food    $10.00

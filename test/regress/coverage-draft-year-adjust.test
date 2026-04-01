@@ -1,4 +1,4 @@
-; Coverage test for draft.cc lines 273-276: year directive with year adjustment
+; Coverage test for draft.cc year directive with year adjustment
 ; When a date without an explicit year is parsed, and a Y year directive
 ; specifies a different year than what parse_date would default to,
 ; the year is adjusted to match the directive

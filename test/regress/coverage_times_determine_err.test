@@ -1,4 +1,4 @@
-; Coverage test for times.cc line 881
+; Coverage test for times.cc
 ; "since every" triggers unexpected in determine_when's default case
 
 2024/01/01 Test

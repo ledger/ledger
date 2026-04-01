@@ -1,4 +1,4 @@
-; Coverage for pool.cc line 332: price directive missing commodity/price
+; Coverage for pool.cc price directive missing commodity/price
 
 P 2024/01/01 12:00:00
 

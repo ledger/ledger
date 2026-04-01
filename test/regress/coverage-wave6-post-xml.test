@@ -1,4 +1,4 @@
-; Tests for post.cc put_post XML output (lines 702-740)
+; Tests for post.cc put_post XML output
 ; Covers: state (cleared/pending), virtual flag, _date,
 ; payee_from_tag, account ref, post-amount, cost, note, metadata, total
 

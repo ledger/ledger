@@ -1,5 +1,5 @@
 ; Test value.cc: market value and gain calculations
-; Coverage target: value.cc - value() method (lines 1495-1513),
+; Coverage target: value.cc - value method
 ;   annotate/annotation paths, balance arithmetic during valuation,
 ;   balance.h - number(), in_place_negate, operator+= for balance operations
 

@@ -1,4 +1,4 @@
-; Coverage test for select.cc lines 381-394: display and style clauses
+; Coverage test for select.cc display and style clauses
 ; Exercises the parsing of additional SQL-like clauses:
 ;   L381-382: display clause parsing
 ;   L387-394: style clause parsing (csv, xml, json, emacs branches)

@@ -1,4 +1,4 @@
-; Test coverage for textual_directives.cc lines 156-269
+; Test coverage for textual_directives.cc
 ; include directive with relative path
 
 include coverage-wave9-include-data.dat

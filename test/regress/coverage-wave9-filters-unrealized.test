@@ -1,4 +1,4 @@
-; Test coverage for filters.cc lines 743-757
+; Test coverage for filters.cc
 ; --unrealized-gains/--unrealized-losses for accounts report
 
 P 2024/01/01 AAPL $150.00

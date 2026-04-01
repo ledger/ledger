@@ -1,7 +1,7 @@
-; Coverage test for filters.cc line 1166
+; Coverage test for filters.cc
 ; Test posts_as_equity filter where some amounts are zero.
 ; When amount.is_zero() returns true, the create_post_from_amount
-; functor returns early (line 1165-1166).
+; functor returns early
 ; Assets:Cash has a zero balance so its equity post is skipped.
 
 2024/01/01 Opening

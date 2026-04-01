@@ -1,4 +1,4 @@
-; Coverage for expr.cc line 215-217: context_to_str
+; Coverage for expr.cc context_to_str
 ; A format expression that triggers a calc_error exercises the error
 ; context path in format.cc which calls expr_t::context_to_str()
 

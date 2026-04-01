@@ -1,6 +1,6 @@
-; Coverage test for op.cc O_LOOKUP evaluation path (line 292-304)
+; Coverage test for op.cc O_LOOKUP evaluation path
 ; Tests the dot (.) lookup operator which accesses object members.
-; Also exercises the O_LOOKUP print path (line 764).
+; Also exercises the O_LOOKUP print path
 
 2024/01/01 Groceries
     Expenses:Food              $50.00

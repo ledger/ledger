@@ -1,4 +1,4 @@
-; Coverage test for times.cc lines 1580-1612
+; Coverage test for times.cc
 ; Exercise date_interval_t::dump() via the period command
 ; Also covers the date_duration output operator for various types
 

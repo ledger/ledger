@@ -1,6 +1,6 @@
-; Coverage test for filters.cc line 1652: account rewrite xdata
+; Coverage test for filters.cc account rewrite xdata
 ; Tests rewrite_posts::operator() which rewrites account names.
-; Line 1652: when prev_account has xdata, flags are copied to new account.
+; when prev_account has xdata, flags are copied to new account
 
 2024/01/01 Test
     Expenses:Food    $10.00

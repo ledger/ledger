@@ -1,4 +1,4 @@
-; Coverage test for post.cc lines 244-247
+; Coverage test for post.cc
 ; Tests get_price when a posting has an annotation with a price.
 ; When amount has annotation with price, get_price returns the price.
 ; When no annotation, get_price falls back to get_cost.

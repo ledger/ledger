@@ -1,5 +1,5 @@
-; Coverage for xact.cc lines 594-595 (balance.is_long with null post)
-; and lines 612-613 (virtual_balance.is_long with virtual null post)
+; Coverage for xact.cc (balance.is_long with null post)
+; (virtual_balance.is_long with virtual null post)
 ; When amounts are pure integers (no commodity), balance is stored as
 ; a long integer value; this tests that the null post fill-in handles it.
 

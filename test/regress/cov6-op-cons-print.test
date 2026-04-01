@@ -1,4 +1,4 @@
-; Coverage test for op.cc line 588
+; Coverage test for op.cc
 ; Tests the print_cons function with nested O_CONS nodes.
 ; This exercises the recursive case where right() is also O_CONS.
 ; Using format with multiple comma-separated arguments triggers O_CONS.

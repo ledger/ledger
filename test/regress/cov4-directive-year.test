@@ -1,4 +1,4 @@
-; Test year directive (line 884-888 of textual_directives.cc)
+; Test year directive
 ; Exercise the 'year' directive through general_directive
 
 year 2023

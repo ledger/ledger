@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 958-962: fn_clear_commodity
+; Coverage test for report.cc fn_clear_commodity
 ; Test clear_commodity() which removes the commodity from an amount,
 ; returning just the numeric value.
 

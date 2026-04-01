@@ -1,8 +1,8 @@
-; Coverage tests for output.h lines 117-124 (accounts_report clear method)
-; Also covers output.h lines 143-146 (report_accounts clear)
-; Also covers output.h lines 164-167 (report_payees clear)
-; Also covers output.h lines 186-189 (report_tags clear)
-; Also covers output.h lines 210-213 (report_commodities clear)
+; Coverage tests for output.h (accounts_report clear method)
+; Also covers output.h (report_accounts clear)
+; Also covers output.h (report_payees clear)
+; Also covers output.h (report_tags clear)
+; Also covers output.h (report_commodities clear)
 
 2024/01/01 Payee One
     ; :travel:

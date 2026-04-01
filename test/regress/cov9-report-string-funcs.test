@@ -1,7 +1,7 @@
 ; Coverage test for report.cc:
-; Lines 840-854: fn_quoted - quote a string escaping embedded quotes
-; Lines 856-870: fn_quoted_rfc - quote using RFC-style double-quote escaping
-; Lines 872-883: fn_join - join multi-line text replacing newlines with \n
+; fn_quoted - quote a string escaping embedded quotes
+; fn_quoted_rfc - quote using RFC-style double-quote escaping
+; fn_join - join multi-line text replacing newlines with \n
 
 2024/01/01 He said "hello"
     ; Line 1

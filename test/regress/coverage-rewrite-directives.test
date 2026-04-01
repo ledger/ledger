@@ -1,6 +1,6 @@
 ; Coverage tests for textual_directives.cc
-; payee-rewrite directive (line 558-570)
-; account-rewrite directive (line 573-585)
+; payee-rewrite directive
+; account-rewrite directive
 
 payee-rewrite  Groce.*  Grocery Store
 account-rewrite  Food  Expenses:Food

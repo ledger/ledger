@@ -1,6 +1,6 @@
 ; Test apply_format in auto xact deferred tag notes
-; Targets: xact.cc lines 722-727 (apply_format with %( in tag value)
-; Also tests lines 784-789, 911-916 (deferred_notes applied to posts)
+; Targets: xact.cc (apply_format with %( in tag value)
+; Also tests (deferred_notes applied to posts)
 
 = /Expenses/
     ; Category:: payee

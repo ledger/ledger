@@ -1,4 +1,4 @@
-; Coverage: account.cc lines 237-240: operator<< for account_t
+; Coverage: account.cc operator<< for account_t
 ; Tests the debug/output stream operator by using the accounts command
 
 2024/01/15 * Payee

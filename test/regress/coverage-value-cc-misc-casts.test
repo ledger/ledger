@@ -1,12 +1,12 @@
 ; Test value.cc: misc cast and conversion paths
 ; Exercises various in_place_cast and type conversion paths
 
-; INTEGER -> STRING via to_string (in_place_cast line 1229)
+; INTEGER -> STRING via to_string (in_place_cast )
 test eval "to_string(42)"
 42
 end test
 
-; BOOLEAN -> STRING via to_string (in_place_cast line 1188)
+; BOOLEAN -> STRING via to_string (in_place_cast )
 test eval "to_string(true)"
 true
 end test
@@ -15,7 +15,7 @@ test eval "to_string(false)"
 false
 end test
 
-; BOOLEAN -> INTEGER via to_int (in_place_cast line 1182)
+; BOOLEAN -> INTEGER via to_int (in_place_cast )
 test eval "to_int(true)"
 1
 end test
@@ -24,7 +24,7 @@ test eval "to_int(false)"
 0
 end test
 
-; BOOLEAN -> AMOUNT via to_amount (in_place_cast line 1185)
+; BOOLEAN -> AMOUNT via to_amount (in_place_cast )
 test eval "to_amount(true)"
 1
 end test
@@ -33,22 +33,22 @@ test eval "to_amount(false)"
 0
 end test
 
-; STRING -> AMOUNT via to_amount (in_place_cast line 1315)
+; STRING -> AMOUNT via to_amount (in_place_cast )
 test eval "to_amount(\"42\")"
 42
 end test
 
-; STRING -> DATE via to_date (in_place_cast line 1324)
+; STRING -> DATE via to_date (in_place_cast )
 test eval "to_date(\"2024/01/15\")"
 2024/01/15
 end test
 
-; STRING -> MASK via to_mask (in_place_cast line 1332-1334)
+; STRING -> MASK via to_mask (in_place_cast )
 test eval "to_mask(\"food\")"
 /food/
 end test
 
-; MASK -> STRING (in_place_cast line 1344)
+; MASK -> STRING (in_place_cast )
 test eval "to_string(/food/)"
 food
 end test

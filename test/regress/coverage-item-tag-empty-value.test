@@ -1,5 +1,5 @@
 ; Test item.cc: set_tag with empty string value
-; Exercises the data = none path when tag value is empty (line 122-123)
+; Exercises the data = none path when tag value is empty
 ; A tag with an empty value should be stored as no value (none)
 
 2024/01/15 Grocery Store

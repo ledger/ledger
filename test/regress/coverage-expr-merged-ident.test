@@ -1,6 +1,6 @@
 ; Coverage test for expr.cc: merged_expr_t check_for_single_identifier success
-; Exercises: check_for_single_identifier success path (lines 223-226),
-;   merged_expr_t compile with exprs (lines 236-249)
+; Exercises: check_for_single_identifier success path
+;   merged_expr_t compile with exprs
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00

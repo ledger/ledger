@@ -1,4 +1,4 @@
-; Coverage for post.cc line 499: use_direct_amount lookup.
+; Coverage for post.cc use_direct_amount lookup
 
 2024/01/01 Test
     Expenses:Food                 $10.00

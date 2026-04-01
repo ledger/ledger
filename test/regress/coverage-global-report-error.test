@@ -1,5 +1,5 @@
 ; Test global.cc: report_error path with expression error
-; Exercises report_error (lines 172-185) and execute_command_wrapper error path
+; Exercises report_error and execute_command_wrapper error path
 
 2024/01/01 Test
     Expenses:Food    $25.00

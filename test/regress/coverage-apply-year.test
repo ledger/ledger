@@ -1,4 +1,4 @@
-; Coverage test for textual_directives.cc lines 291-292, 886-889
+; Coverage test for textual_directives.cc
 ; apply year directive and top-level year directive
 
 apply year 2023

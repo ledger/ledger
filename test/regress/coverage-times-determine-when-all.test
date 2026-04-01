@@ -1,5 +1,5 @@
 ; Test all remaining determine_when branches for THIS/NEXT/LAST
-; Exercises determine_when lines 772-851 with all adjust values (-1, 0, +1)
+; Exercises determine_when with all adjust values (-1, 0, +1)
 ; for each unit type (TOK_YEAR, TOK_QUARTER, TOK_WEEK, TOK_DAY, TOK_MONTH,
 ; TOK_A_MONTH) via since/until/from/in expressions.
 
@@ -7,7 +7,7 @@
     Expenses:Food    $50.00
     Assets:Checking
 
-; TOK_NEXT + TOK_QUARTER (adjust=1): lines 811-813
+; TOK_NEXT + TOK_QUARTER (adjust=1):
 test period --now 2024/06/15 "until next quarter"
 --- Period expression tokens ---
 TOK_UNTIL: until
@@ -25,7 +25,7 @@ END_REACHED: <EOF>
 --- Sample dates in range (max. 20) ---
 end test
 
-; TOK_NEXT + TOK_WEEK (adjust=1): lines 826-828
+; TOK_NEXT + TOK_WEEK (adjust=1):
 test period --now 2024/06/15 "from next week"
 --- Period expression tokens ---
 TOK_SINCE: since
@@ -44,7 +44,7 @@ END_REACHED: <EOF>
  1: 24-Jun-16
 end test
 
-; TOK_LAST + TOK_WEEK (adjust=-1): lines 822-823
+; TOK_LAST + TOK_WEEK (adjust=-1):
 test period --now 2024/06/15 "since last week"
 --- Period expression tokens ---
 TOK_SINCE: since
@@ -63,7 +63,7 @@ END_REACHED: <EOF>
  1: 24-Jun-02
 end test
 
-; TOK_NEXT + TOK_YEAR (adjust=1): lines 798-800
+; TOK_NEXT + TOK_YEAR (adjust=1):
 test period --now 2024/06/15 "since next year"
 --- Period expression tokens ---
 TOK_SINCE: since
@@ -82,7 +82,7 @@ END_REACHED: <EOF>
  1: 25-Jan-01
 end test
 
-; TOK_LAST + TOK_YEAR (adjust=-1): lines 798-800
+; TOK_LAST + TOK_YEAR (adjust=-1):
 test period --now 2024/06/15 "until last year"
 --- Period expression tokens ---
 TOK_UNTIL: until
@@ -100,7 +100,7 @@ END_REACHED: <EOF>
 --- Sample dates in range (max. 20) ---
 end test
 
-; TOK_THIS + TOK_A_MONTH (adjust=0): lines 781-784
+; TOK_THIS + TOK_A_MONTH (adjust=0):
 test period --now 2024/06/15 "until this january"
 --- Period expression tokens ---
 TOK_UNTIL: until
@@ -118,7 +118,7 @@ END_REACHED: <EOF>
 --- Sample dates in range (max. 20) ---
 end test
 
-; TOK_LAST + TOK_A_MONTH (adjust=-1): lines 781-784
+; TOK_LAST + TOK_A_MONTH (adjust=-1):
 test period --now 2024/06/15 "until last january"
 --- Period expression tokens ---
 TOK_UNTIL: until

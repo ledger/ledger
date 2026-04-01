@@ -1,6 +1,6 @@
 ; Test op.cc: O_CONS (comma expressions) and O_MATCH (regex matching)
-; Exercises: calc_cons (lines 517-538), O_MATCH calc (lines 312-317),
-;   print_cons (lines 566-582), split_cons_expr
+; Exercises: calc_cons, O_MATCH calc
+;   print_cons, split_cons_expr
 
 test eval "1, 2, 3"
 (1, 2, 3)

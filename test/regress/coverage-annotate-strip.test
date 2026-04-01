@@ -1,6 +1,6 @@
 ; Coverage test for annotate.cc: strip_annotations with keep_details_t
-; Exercises annotate.cc lines 237-245: keep_all and keep_any methods
-; and lines 302-345: strip_annotations with selective detail keeping
+; Exercises annotate.cc keep_all and keep_any methods
+; strip_annotations with selective detail keeping
 
 2024/01/01 Buy Stock
     Assets:Brokerage    10 AAPL {$150.00} [2024/01/01] (lot1)

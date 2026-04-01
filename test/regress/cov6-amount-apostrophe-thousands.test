@@ -1,5 +1,5 @@
 ; Test amount output with apostrophe thousands separator
-; Covers amount.cc line 215 (apostrophe thousands output)
+; Covers amount.cc (apostrophe thousands output)
 
 commodity 1'000.00 CHF
 

@@ -1,4 +1,4 @@
-; Coverage for timelog.cc line 92: check-out without check-in
+; Coverage for timelog.cc check-out without check-in
 o 2024/01/01 10:00:00 Work
 
 test reg -> 1

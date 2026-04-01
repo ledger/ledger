@@ -1,5 +1,5 @@
 ; Test value and year directives through general_directive
-; Covers textual_directives.cc lines 896-900
+; Covers textual_directives.cc
 
 value market(amount, date, "$")
 

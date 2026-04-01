@@ -1,5 +1,6 @@
 ; Test select with style clause
-; Covers select.cc lines 387-394 (style keyword handling)
+; Covers select.cc (style keyword handling)
+; Note: despite "style csv", output is columnar (not CSV-formatted)
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00

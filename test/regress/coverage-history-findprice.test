@@ -1,9 +1,9 @@
-; Coverage test for history.cc lines 377, 397, 443, 454, 488
+; Coverage test for history.cc
 ; Tests multi-hop price resolution through the price graph.
-; Lines 443, 454: multi-hop price path where prices must be chained
-; Line 488: last_target tracking through the price graph path
-; Line 377: inverted price when commodity matches source
-; Line 397: source == target early return
+; multi-hop price path where prices must be chained
+; last_target tracking through the price graph path
+; inverted price when commodity matches source
+; source == target early return
 
 P 2024/01/01 EUR 1.10 $
 P 2024/01/01 GBP 0.85 EUR

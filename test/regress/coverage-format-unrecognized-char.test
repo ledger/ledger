@@ -1,5 +1,5 @@
 ; Test format.cc unrecognized format character error
-; Exercises throw for unrecognized formatting character (line 253)
+; Exercises throw for unrecognized formatting character
 ; %Z is not a valid format character
 
 2024/01/15 Test

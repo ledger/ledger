@@ -1,4 +1,4 @@
-; Coverage for filters.cc budget_posts cleanup path (lines 1329-1342)
+; Coverage for filters.cc budget_posts cleanup path
 ; and budget_posts::report_budget_items with period expiry
 ; Tests a budget with a fixed date range that ends.
 

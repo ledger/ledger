@@ -1,4 +1,4 @@
-; Coverage for format.cc lines 242,270: format width with min.max notation
+; Coverage for format.cc format width with min.max notation
 
 2024/01/01 Test
     Expenses:Food:Groceries:Weekly    $10.00

@@ -1,6 +1,6 @@
 ; Coverage test for query.cc: payee query with OR using | operator
-; Exercises query.cc lines 136-138: '|' for TOK_OR
-; and parse_or_expr lines 410-428 for OR expression handling
+; Exercises query.cc '|' for TOK_OR
+; parse_or_expr for OR expression handling
 
 2024/01/01 Grocery Store
     Expenses:Food    $25.00

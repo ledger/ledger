@@ -1,6 +1,6 @@
 ; Coverage test for query.cc: meta/tag/data keyword variations
-; Exercises query.cc lines 222-226: 'meta', 'tag', 'data' keywords for TOK_META
-; Also exercises lines 289-313: metadata key=value matching in parse_query_term
+; Exercises query.cc 'meta', 'tag', 'data' keywords for TOK_META
+; Also exercises metadata key=value matching in parse_query_term
 
 2024/01/01 Grocery Store
     ; Project: Alpha

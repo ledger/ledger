@@ -1,5 +1,5 @@
 ; Wave 2 coverage tests for filters.cc and filters.h
-; Covers: anonymize_posts (lines 260-277), changed_value_posts,
+; Covers: anonymize_posts, changed_value_posts
 ;   display_filter_posts, calc_posts
 
 2024/01/01 Test Store

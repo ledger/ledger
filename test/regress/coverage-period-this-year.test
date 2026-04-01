@@ -1,4 +1,4 @@
-; Test times.cc lines 798-803: handle TOK_YEAR in determine_when
+; Test times.cc handle TOK_YEAR in determine_when
 
 2025/12/31 Last year tx
     Expenses:Food   $5.00

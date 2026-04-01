@@ -1,5 +1,5 @@
 ; Test format string with invalid %$0 field reference
-; Covers format.cc line 270 (%$0 field reference error)
+; Covers format.cc (%$0 field reference error)
 
 2024/01/15 Test
     Expenses:Food    $50.00

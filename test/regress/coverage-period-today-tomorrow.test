@@ -1,4 +1,4 @@
-; Test times.cc lines 1245, 1086-1096: today/yesterday/tomorrow
+; Test times.cc today/yesterday/tomorrow
 ; as period tokens in handle_simple_period_token
 
 2026/03/02 Monday tx

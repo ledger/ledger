@@ -1,6 +1,6 @@
-; Coverage test for filters.cc line 350
+; Coverage test for filters.cc
 ; Tests handle_value with virtual postings in subtotal mode.
-; Line 350: POST_MUST_BALANCE flag set when account has
+; POST_MUST_BALANCE flag set when account has
 ; ACCOUNT_EXT_AUTO_VIRTUALIZE without ACCOUNT_EXT_HAS_UNB_VIRTUALS.
 ; Virtual postings [in brackets] trigger the auto-virtualize path.
 

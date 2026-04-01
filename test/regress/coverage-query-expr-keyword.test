@@ -1,7 +1,7 @@
 ; Coverage test for query.cc: expr keyword for expression queries
-; Exercises query.cc lines 239-243: 'expr' keyword triggering TOK_EXPR
-; and line 160-162: consume_next flag handling
-; Also exercises lines 285-287: TOK_EXPR context in parse_query_term
+; Exercises query.cc 'expr' keyword triggering TOK_EXPR
+; consume_next flag handling
+; Also exercises TOK_EXPR context in parse_query_term
 
 2024/01/01 Grocery Store
     Expenses:Food    $25.00

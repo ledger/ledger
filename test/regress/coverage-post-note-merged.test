@@ -1,6 +1,7 @@
-; Coverage test for post.cc lines 172-183
-; Tests get_note which merges post note and xact note.
-; When both post and xact have notes, they are joined with newline.
+; Coverage test for post.cc
+; Tests get_note with a transaction-level note.
+; Note: the comment appears before the first posting, so ledger parses
+; it as a transaction note, not a posting note; note merging is not tested.
 
 2024/03/01 Groceries
     ; Post note here

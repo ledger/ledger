@@ -1,7 +1,7 @@
 ; Tests for session.cc: lot functions with annotations
-; Covers: session.cc line 276 (lot_price success), 278 (NULL_VALUE)
-;         session.cc line 283 (lot_date success), 285 (NULL_VALUE)
-;         session.cc line 290 (lot_tag success), 292 (NULL_VALUE)
+; Covers: session.cc (lot_price success), (NULL_VALUE)
+;         session.cc (lot_date success), (NULL_VALUE)
+;         session.cc (lot_tag success), (NULL_VALUE)
 
 2024/01/01 Buy Stock
     Assets:Brokerage  10 AAPL {$150} [2024/01/01] (lot1)

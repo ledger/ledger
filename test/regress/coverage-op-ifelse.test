@@ -1,6 +1,6 @@
 ; Test op.cc/token.cc: if/else keyword syntax and ternary operator
-; Exercises: KW_ELSE token (token.cc lines 69-72),
-;   O_QUERY/O_COLON calc paths (op.cc lines 370-377),
+; Exercises: KW_ELSE token
+;   O_QUERY/O_COLON calc paths
 ;   ternary operator (? :), if/else keyword form
 
 test eval "5 ? 10 : 20"

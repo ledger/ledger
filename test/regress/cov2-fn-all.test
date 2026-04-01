@@ -1,5 +1,5 @@
 ; Test fn_all auto transaction predicate for xact.cc coverage
-; Covers fn_all (line 801-811)
+; Covers fn_all
 
 = expr 'all(account =~ /Assets/ or account =~ /Expenses/)'
     Budget:AllMatch                    1

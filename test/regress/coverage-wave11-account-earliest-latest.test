@@ -1,4 +1,4 @@
-; Coverage for account.cc lines 429-452: earliest, latest, earliest_checkin,
+; Coverage for account.cc earliest, latest, earliest_checkin
 ; latest_checkout, latest_cleared lookups.
 
 2024/01/01 * First

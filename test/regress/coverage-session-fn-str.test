@@ -1,4 +1,4 @@
-; Coverage test for session.cc line 271
+; Coverage test for session.cc
 ; Tests fn_str function - converting values to strings
 
 2024/01/01 Test

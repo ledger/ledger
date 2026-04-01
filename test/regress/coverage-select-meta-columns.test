@@ -1,4 +1,4 @@
-; Coverage test for select.cc lines 56-85:
+; Coverage test for select.cc
 ; Various column type matching in get_principal_identifiers
 ; Tests non-standard columns (note, custom metadata) that return
 ; false from the column identifier matching

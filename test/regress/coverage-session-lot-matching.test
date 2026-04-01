@@ -1,4 +1,4 @@
-; Coverage for session.cc lines 127-128: lot_matching option
+; Coverage for session.cc lot_matching option
 ; --lot-matching fifo sets the lot matching policy to FIFO
 
 P 2024/01/01 AAPL $150.00

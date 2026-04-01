@@ -1,10 +1,10 @@
 ; Test month name and weekday name tokens in period expressions
-; Exercises next_token month/weekday parsing (lines 1684-1687)
-; string_to_month_of_year (lines 225-252)
-; string_to_day_of_week (lines 206-223)
-; handle_relative_token with TOK_A_MONTH (lines 1015-1023)
-; handle_in_token (lines 950-959)
-; determine_when TOK_A_MONTH (lines 865-878)
+; Exercises next_token month/weekday parsing
+; string_to_month_of_year
+; string_to_day_of_week
+; handle_relative_token with TOK_A_MONTH
+; handle_in_token
+; determine_when TOK_A_MONTH
 
 2024/01/15 Payee A
     Expenses:Food    $50.00

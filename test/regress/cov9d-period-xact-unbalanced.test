@@ -1,5 +1,5 @@
 ; Test period transaction that fails to balance
-; Covers textual_xacts.cc lines 276-278 (period xact balance failure)
+; Covers textual_xacts.cc (period xact balance failure)
 
 ~ Monthly
     Expenses:Food    $100.00

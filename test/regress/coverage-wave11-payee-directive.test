@@ -1,4 +1,4 @@
-; Coverage for textual_directives.cc lines 395,420 (payee directive)
+; Coverage for textual_directives.cc (payee directive)
 ; Tests payee directive with alias and uuid sub-directives
 
 payee Grocery Store

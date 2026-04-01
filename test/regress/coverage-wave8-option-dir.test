@@ -1,5 +1,5 @@
 ; Coverage tests for textual_directives.cc option_directive
-; Targets lines 136-154 (option_directive) and lines 842-847 (general_directive fallthrough)
+; Targets (option_directive) and (general_directive fallthrough)
 
 ; Option directive with value (long option)
 --date-format %Y-%m-%d

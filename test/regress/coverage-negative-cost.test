@@ -1,4 +1,4 @@
-; Coverage test for textual_xacts.cc line 574-575
+; Coverage test for textual_xacts.cc
 ; Posting with a negative cost should produce an error
 
 2024/01/01 Test

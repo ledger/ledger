@@ -1,4 +1,4 @@
-; Test coverage for post.cc lines 71-75
+; Test coverage for post.cc
 ; print command with cost (exercises post_t::print and cost handling)
 
 2024/01/01 Stock Buy

@@ -1,5 +1,5 @@
 ; Test op.cc: O_AND/O_OR in limit and display expressions
-; Exercises: O_AND calc (lines 357-361), O_OR calc (lines 363-368),
+; Exercises: O_AND calc, O_OR calc
 ;   O_NOT in expressions, regex matching in limit
 
 2024/01/15 Grocery Store

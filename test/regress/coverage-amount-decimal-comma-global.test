@@ -1,4 +1,4 @@
-; Coverage for amount.cc lines 200-202, 216-218:
+; Coverage for amount.cc
 ; The --decimal-comma flag sets commodity_t::decimal_comma_by_default,
 ; which causes all output to use comma as decimal separator and period
 ; as thousands separator, even for $ amounts.

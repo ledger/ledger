@@ -1,5 +1,5 @@
 ; Test illegal option directive in journal file
-; Covers textual_directives.cc line 164
+; Covers textual_directives.cc
 
 --nonexistent-option
 

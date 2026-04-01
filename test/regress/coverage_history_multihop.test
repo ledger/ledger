@@ -1,4 +1,4 @@
-; Coverage test for history.cc lines 454, 488
+; Coverage test for history.cc
 ; Multi-hop price conversion: A -> B -> C
 
 P 2024/01/01 A 2 B

@@ -1,5 +1,5 @@
 ; Test session.cc: fn_max function
-; Exercises fn_max (line 257-258) and lookup for "max" (line 379-380)
+; Exercises fn_max and lookup for "max"
 
 2024/01/15 Grocery Store
     Expenses:Food    50 USD

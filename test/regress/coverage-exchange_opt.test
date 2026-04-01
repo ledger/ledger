@@ -1,4 +1,4 @@
-; Coverage test for report.cc line 1214: -X (exchange) short option
+; Coverage test for report.cc -X (exchange) short option
 ; Tests currency conversion with -X option
 
 P 2024/01/15 EUR $1.10

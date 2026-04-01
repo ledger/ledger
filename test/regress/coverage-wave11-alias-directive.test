@@ -1,5 +1,5 @@
-; Coverage for textual_directives.cc lines 339,346 (alias directive)
-; Also covers line 485 (account_alias_directive duplicate alias)
+; Coverage for textual_directives.cc (alias directive)
+; Also covers (account_alias_directive duplicate alias)
 
 alias food=Expenses:Food
 alias cash=Assets:Cash

@@ -3,33 +3,33 @@
 ;   277-279, 306, 353, 355, 459, 565, 578, 608,
 ;   636-637, 639, 722-725, 756, 772, 882, 948-949, 951, 953
 
-; --- Auto xact with eval in body (lines 213-214) ---
+; --- Auto xact with eval in body ---
 = Expenses:Auto
     eval 1 + 1
     (Budget:Auto)         (amount * -1)
 
-; --- Transaction with inline math expression (lines 565, 578) ---
+; --- Transaction with inline math expression ---
 2024/01/01 Math Expression
     Expenses:Food         ($5.00 * 3)
     Assets:Cash
 
-; --- Transaction with per-unit cost (line 565, 578, 608) ---
+; --- Transaction with per-unit cost ---
 2024/01/02 Per Unit Cost
     Expenses:Travel       10 EUR @ $1.10
     Assets:Cash
 
-; --- Transaction with total cost (lines 589-591) ---
+; --- Transaction with total cost ---
 2024/01/03 Total Cost
     Expenses:Travel       10 EUR @@ $11.00
     Assets:Cash
 
-; --- Virtual posting (lines 353, 355) ---
+; --- Virtual posting ---
 2024/01/04 Virtual Posting
     Expenses:Food         $20.00
     Assets:Cash           $-20.00
     (Budget:Food)         $-20.00
 
-; --- Balance assignment (lines 636-637, 639, 722-725) ---
+; --- Balance assignment ---
 2024/01/05 Setup Account
     Assets:Checking       $1000.00
     Income:Salary
@@ -38,26 +38,26 @@
     Assets:Checking       = $900.00
     Expenses:Misc
 
-; --- Transaction with assert (lines 948-949) ---
+; --- Transaction with assert ---
 2024/01/07 Assert Test
     Expenses:Food         $10.00
     ; Validated: yes
     assert has_tag("Validated")
     Assets:Cash
 
-; --- Transaction with check (lines 951, 953) ---
+; --- Transaction with check ---
 2024/01/08 Check Test
     Expenses:Food         $5.00
     check 1 == 1
     Assets:Cash
 
-; --- Transaction with expr in body (line 945-946) ---
+; --- Transaction with expr in body ---
 2024/01/09 Expr Test
     Expenses:Food         $3.00
     expr 1 + 1
     Assets:Cash
 
-; --- Transaction with note ending in tab+semicolon (line 882) ---
+; --- Transaction with note ending in tab+semicolon ---
 2024/01/10 Payee With Note	; inline note
     Expenses:Food         $2.00
     Assets:Cash
@@ -67,12 +67,12 @@
     Expenses:Auto         $15.00
     Assets:Cash
 
-; --- Fixated cost (lines 593-594) ---
+; --- Fixated cost ---
 2024/01/13 Fixated Cost
     Expenses:Investment   10 SHR @= $5.00
     Assets:Cash
 
-; --- Virtual cost posting (line 539, 542) ---
+; --- Virtual cost posting ---
 2024/01/14 Virtual Cost
     Expenses:Travel       5 EUR (@) $1.10
     Assets:Cash

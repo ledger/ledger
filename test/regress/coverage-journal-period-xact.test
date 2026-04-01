@@ -1,4 +1,4 @@
-; Coverage: journal.cc lines 511-513: clear_xdata for period_xacts
+; Coverage: journal.cc clear_xdata for period_xacts
 ; Tests periodic transactions which populate the period_xacts list
 
 ~ Monthly

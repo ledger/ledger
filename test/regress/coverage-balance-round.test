@@ -1,4 +1,4 @@
-; Coverage test for value.cc lines 1802-1803
+; Coverage test for value.cc
 ; Balance rounding to commodity precision with multiple commodities
 
 commodity $

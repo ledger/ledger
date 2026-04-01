@@ -1,4 +1,4 @@
-; Test post.cc: get_tag with inheritance (lines 68-74)
+; Test post.cc: get_tag with inheritance
 ; Tags on the transaction are inherited by postings when queried
 
 2024/01/15 Grocery

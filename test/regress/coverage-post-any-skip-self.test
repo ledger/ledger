@@ -1,4 +1,4 @@
-; Coverage test for post.cc lines 368-371
+; Coverage test for post.cc
 ; Tests fn_any with second argument false to skip the current posting.
 ; any(expr, false) evaluates expr against all OTHER postings in the
 ; transaction, not including the current one. Here, the Expenses:Food

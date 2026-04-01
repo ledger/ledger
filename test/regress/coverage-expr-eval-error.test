@@ -1,4 +1,4 @@
-; Coverage test for expr.cc lines 152-156, 181-182
+; Coverage test for expr.cc
 ; Tests the expression error handler path in real_calc()
 
 2024/01/01 Test

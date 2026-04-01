@@ -1,5 +1,5 @@
 ; Test filename, filebase, filepath lookups
-; Targets: item.cc lines 302-321 (pathname getters)
+; Targets: item.cc (pathname getters)
 
 2024/01/15 * Store
     Expenses:Food              $50.00

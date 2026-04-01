@@ -1,4 +1,4 @@
-; Test value.cc: is_greater_than DATETIME paths (lines 1022-1025)
+; Test value.cc: is_greater_than DATETIME paths
 ; Also exercises is_greater_than with STRING (sort by payee descending)
 
 2024/01/15 Store

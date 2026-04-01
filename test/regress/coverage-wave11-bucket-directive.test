@@ -1,4 +1,4 @@
-; Coverage for textual_directives.cc line 626 (bucket directive)
+; Coverage for textual_directives.cc (bucket directive)
 ; Uses 'bucket' keyword (general_directive case 'b')
 
 bucket Assets:Cash

@@ -6,8 +6,8 @@
     Expenses:Drink   5.00 EUR
     Assets:Cash
 
-; Boolean comparisons - exercises is_greater_than lines 1007-1020
-; and is_less_than lines 862-875
+; Boolean comparisons - exercises is_greater_than
+; is_less_than
 test eval 'true > false'
 1
 end test
@@ -40,7 +40,7 @@ test eval 'false < false'
 0
 end test
 
-; Integer comparisons with amounts - exercises is_greater_than lines 1035-1043
+; Integer comparisons with amounts - exercises is_greater_than
 test eval '5 > $3'
 1
 end test
@@ -53,7 +53,7 @@ test eval '5 < $10'
 1
 end test
 
-; Amount comparisons with integers - exercises is_greater_than lines 1048-1056
+; Amount comparisons with integers - exercises is_greater_than
 test eval '$5 > 3'
 1
 end test
@@ -66,7 +66,7 @@ test eval '$3 < 10'
 1
 end test
 
-; Amount vs amount comparisons - exercises is_greater_than lines 1048-1050
+; Amount vs amount comparisons - exercises is_greater_than
 test eval '$5 > $3'
 1
 end test
@@ -75,8 +75,8 @@ test eval '$3 > $5'
 0
 end test
 
-; Date comparisons - exercises is_greater_than lines 1023-1030
-; and is_less_than lines 883-886
+; Date comparisons - exercises is_greater_than
+; is_less_than
 test eval '[2024/01/01] > [2023/12/31]'
 1
 end test
@@ -93,7 +93,7 @@ test eval '[2024/01/01] < [2023/12/31]'
 0
 end test
 
-; String comparisons - exercises is_greater_than lines 1092-1100
+; String comparisons - exercises is_greater_than
 ; and is_less_than for strings
 test eval '"abc" < "abd"'
 1

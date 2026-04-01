@@ -1,4 +1,4 @@
-; Test nomarket directive (line 131-138 of textual_directives.cc)
+; Test nomarket directive
 ; Exercise the N directive (nomarket)
 ; With nomarket flag, the commodity is marked COMMODITY_NOMARKET
 

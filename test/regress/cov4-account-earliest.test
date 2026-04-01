@@ -1,5 +1,5 @@
-; Test account_t::lookup for earliest (line 436-437 of account.cc)
-; and earliest_checkin (line 438-439)
+; Test account_t::lookup for earliest
+; earliest_checkin
 
 2024/01/05 Test1
     Expenses:Food    $10.00

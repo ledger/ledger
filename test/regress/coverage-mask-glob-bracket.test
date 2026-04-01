@@ -1,5 +1,5 @@
 ; Test mask_t::assign_glob with '[ab]' bracket pattern via include directive
-; Covers mask.cc lines 65-68 ([] glob character)
+; Covers mask.cc ([] glob character)
 
 include glob_test_dir/data_[ab].dat
 

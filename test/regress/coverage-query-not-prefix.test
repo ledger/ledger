@@ -1,6 +1,6 @@
 ; Coverage test for query.cc: NOT query using ! prefix
-; Exercises query.cc lines 140-141: the '!' prefix for TOK_NOT
-; and parse_unary_expr lines 370-377 for NOT handling
+; Exercises query.cc the '!' prefix for TOK_NOT
+; parse_unary_expr for NOT handling
 
 2024/01/01 (CHK001) Grocery Store
     ; Category: food

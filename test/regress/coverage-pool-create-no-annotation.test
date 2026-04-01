@@ -1,4 +1,4 @@
-; Coverage for pool.cc line 128: create commodity with no annotation
+; Coverage for pool.cc create commodity with no annotation
 
 commodity AAPL
 

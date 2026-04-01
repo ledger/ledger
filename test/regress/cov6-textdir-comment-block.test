@@ -1,4 +1,4 @@
-; Coverage for textual_directives.cc lines 704-710: comment block directive
+; Coverage for textual_directives.cc comment block directive
 
 comment
 This is a multi-line comment

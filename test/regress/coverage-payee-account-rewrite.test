@@ -1,4 +1,4 @@
-; Coverage for filters.cc rewrite_posts (lines 1606-1656)
+; Coverage for filters.cc rewrite_posts
 ; Tests both payee-rewrite and account-rewrite directives together.
 
 payee-rewrite  Grocery  Whole Foods

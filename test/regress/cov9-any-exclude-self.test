@@ -1,4 +1,4 @@
-; Coverage test for post.cc line 364:
+; Coverage test for post.cc
 ; Exercise any(EXPR, false) to exclude self from the test.
 ; When false is passed as second arg, the current posting is excluded.
 

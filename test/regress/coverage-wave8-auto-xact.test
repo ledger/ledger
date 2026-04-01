@@ -1,23 +1,22 @@
 ; Coverage tests for xact.cc auto_xact_t paths
-; Targets lines 447, 449, 523, 538, 608-630, 838-902
 
-; Auto-transaction with deferred tag - triggers lines 838-843
+; Auto-transaction with deferred tag - triggers
 ; The note on the auto-xact itself is a deferred tag applied to matching posts
 = /Expenses/
     ; Category: auto-tagged
     (Budget:Expenses)             1
 
-; Auto-transaction with check expr - triggers lines 846-857 (check_exprs)
+; Auto-transaction with check expr - triggers (check_exprs)
 = /Food/
     check amount > 0
     (Budget:Food)                 1
 
-; Auto-transaction with assertion expr - triggers lines 846-857
+; Auto-transaction with assertion expr - triggers
 = /Expenses:Drink/
     assert amount > 0
     (Budget:Drink)                1
 
-; Auto-transaction with general expr - triggers lines 848-849
+; Auto-transaction with general expr - triggers
 = /Expenses:Misc/
     expr 2 + 3
     (Budget:Misc)                 1

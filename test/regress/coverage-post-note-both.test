@@ -1,4 +1,4 @@
-; Coverage test for post.cc lines 174-179
+; Coverage test for post.cc
 ; Tests get_note when both the posting AND the transaction have notes.
 ; The notes are concatenated with a newline between them.
 

@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 885-898
+; Coverage test for report.cc
 ; Test format_date() with custom format and default format,
 ; and format_datetime().
 

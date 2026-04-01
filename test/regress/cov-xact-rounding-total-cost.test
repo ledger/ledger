@@ -1,4 +1,4 @@
-; Coverage test for xact.cc line 641
+; Coverage test for xact.cc
 ; The rounding adjustment loop skips @@ (total) cost postings
 ; 0.50 bread @ $3.99 = $1.995 exact, rounds to $2.00
 ; The @@ total cost posting should be skipped in the rounding loop

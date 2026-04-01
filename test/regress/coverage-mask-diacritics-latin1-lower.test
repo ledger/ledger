@@ -1,5 +1,7 @@
-; Coverage tests for mask.cc fold_codepoint: Latin-1 Supplement lowercase
-; Covers lines 69-87: ß-þ lowercase mappings
+; Coverage tests for mask.cc: Latin-1 diacritics in account names and payees
+; Note: bal Expenses filter is plain ASCII, so --ignore-diacritics does not
+; affect matching; the diacritics appear in account/payee names but are not
+; matched against
 
 ; Characters: ß(0xDF)→s, à(0xE0)→a, æ(0xE6)→a, ç(0xE7)→c
 ;   è(0xE8)→e, ì(0xEC)→i, ð(0xF0)→d, ñ(0xF1)→n

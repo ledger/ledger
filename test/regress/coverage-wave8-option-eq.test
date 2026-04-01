@@ -1,5 +1,5 @@
 ; Coverage tests for textual_directives.cc option_directive with = syntax
-; Targets lines 146-149 (option with = separator)
+; Targets (option with = separator)
 
 --date-format=%Y/%m/%d
 

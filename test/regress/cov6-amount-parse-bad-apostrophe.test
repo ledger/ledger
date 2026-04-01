@@ -1,5 +1,5 @@
 ; Test parse error for incorrect apostrophe thousands separator
-; Covers amount.cc line 1279
+; Covers amount.cc
 
 2024/01/01 Test
     Expenses:Food    12'34.56 USD

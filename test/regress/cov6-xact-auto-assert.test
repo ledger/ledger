@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 1033-1035
+; Coverage test for xact.cc
 ; Tests the assertion check inside auto transactions.
 ; When an auto transaction has an 'assert' directive that evaluates to false,
 ; a parse_error should be thrown.

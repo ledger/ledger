@@ -1,4 +1,4 @@
-; Coverage for post.cc lines 529: post_t lookup for 'R' shorthand.
+; Coverage for post.cc post_t lookup for 'R' shorthand
 ; Also exercises get_real and get_virtual.
 
 2024/01/01 Test

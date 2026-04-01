@@ -1,4 +1,4 @@
-; Coverage for filters.cc line 1089: day_of_week filter
+; Coverage for filters.cc day_of_week filter
 
 2024/01/01 Monday
     Expenses:Food    $10.00

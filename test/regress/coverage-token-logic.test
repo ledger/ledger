@@ -1,6 +1,6 @@
 ; Test token.cc: && and || operator tokens, !~ NMATCH operator
-; Exercises: && token (lines 163-169), || token (lines 174-183),
-;   !~ NMATCH (lines 253-258), -> ARROW (lines 267-272)
+; Exercises: && token, || token
+;   !~ NMATCH, -> ARROW
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00

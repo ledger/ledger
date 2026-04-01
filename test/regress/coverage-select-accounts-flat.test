@@ -1,6 +1,6 @@
 ; Coverage test for select.cc: select from accounts with flat option
-; Exercises: accounts_report path (lines 357-361), account identifier with
-;   accounts_report (lines 284-286), partial_account display
+; Exercises: accounts_report path, account identifier with
+;   accounts_report, partial_account display
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00

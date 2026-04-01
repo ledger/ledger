@@ -1,4 +1,4 @@
-; Coverage test for textual_xacts.cc lines 341-358
+; Coverage test for textual_xacts.cc
 ; Balance assertion with --effective flag (use_aux_date path)
 
 2024/01/01=2024/01/15 First deposit

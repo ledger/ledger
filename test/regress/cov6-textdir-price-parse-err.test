@@ -1,4 +1,4 @@
-; Coverage for textual_directives.cc line 128: price_xact_directive parse error
+; Coverage for textual_directives.cc price_xact_directive parse error
 
 P 2024/01/01 BADFORMAT
 

@@ -1,7 +1,7 @@
 ; Test value.cc: subtraction and negation operations
-; Coverage target: value.cc - operator-= AMOUNT-BALANCE (line 553-557),
-;   AMOUNT-AMOUNT same commodity (line 548), AMOUNT+BALANCE (line 412),
-;   in_place_negate for BALANCE (line 1377), VOID subtraction (line 474-477)
+; Coverage target: value.cc - operator-= AMOUNT-BALANCE
+;   AMOUNT-AMOUNT same commodity, AMOUNT+BALANCE
+;   in_place_negate for BALANCE, VOID subtraction
 
 2024/01/15 Purchase
     Expenses:Food       $100.00

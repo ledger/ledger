@@ -1,9 +1,8 @@
 ; Coverage test for post.cc lookup switch branches.
-; Exercises multiple lookup paths: 'i' case for index (L460-462),
-; 'm' case for magnitude (L464-467), 'u' case for use_direct_amount
-; (L499-502), 'v' case for virtual and value_date (L504-509),
-; 'x' case for xact and xact_id (L511-516).
-; Also covers checkin/checkout NULL returns (L348-352).
+; Exercises multiple lookup paths: 'i' case for index,
+; 'm' case for magnitude, 'v' case for value_date,
+; 'x' case for xact_id.
+; Note: no timeclock entries, so checkin/checkout paths are not exercised.
 
 2024/01/01 (CODE1) * Grocery
     Expenses:Food    $10.00

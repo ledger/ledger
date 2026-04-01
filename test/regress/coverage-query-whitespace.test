@@ -1,5 +1,5 @@
 ; Tests for query.cc: trailing whitespace in query argument
-; Covers: line 120 (recursive next_token call when arg_i == arg_end
+; Covers: (recursive next_token call when arg_i == arg_end
 ;                   after whitespace skip)
 
 2024/01/01 Test
@@ -7,7 +7,7 @@
     Assets
 
 ; Query with trailing whitespace - when the lexer encounters the trailing
-; space and arg_i reaches arg_end, it recursively calls next_token (line 120)
+; space and arg_i reaches arg_end, it recursively calls next_token
 test reg 'Expenses '
 24-Jan-01 Test                  Expenses                        $10          $10
 end test

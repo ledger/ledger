@@ -1,4 +1,4 @@
-; Test xact.cc: lot matching FIFO policy (lines 333-470)
+; Test xact.cc: lot matching FIFO policy
 ; Exercises automatic lot matching for sales
 
 2024/01/15 Buy First Lot

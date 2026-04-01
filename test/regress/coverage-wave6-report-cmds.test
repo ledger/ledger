@@ -16,7 +16,7 @@
     Expenses:Transport    $40.00
     Assets:Cash
 
-; Test 'accounts' command (line 1601)
+; Test 'accounts' command
 test accounts
 Assets:Cash
 Assets:Checking
@@ -25,24 +25,24 @@ Expenses:Food
 Expenses:Transport
 end test
 
-; Test 'commodities' command (line 1635)
+; Test 'commodities' command
 test commodities
 $
 end test
 
-; Test 'payees' command (line 1671)
+; Test 'payees' command
 test payees
 Gas Station
 Grocery Store
 Restaurant
 end test
 
-; Test 'tags' command (line 1693)
+; Test 'tags' command
 test tags
 Memo
 end test
 
-; Test 'cleared' command (line 1629-1631)
+; Test 'cleared' command
 test cleared
         $-120.00             $-90.00                 Assets
          $-90.00             $-90.00    24-Feb-01      Cash
@@ -55,7 +55,7 @@ test cleared
                0                   0             
 end test
 
-; Test 'equity' command (line 1644-1646)
+; Test 'equity' command
 test equity
 2024/02/01 Opening Balances
     Assets:Cash                              $-90.00
@@ -65,7 +65,7 @@ test equity
     Expenses:Transport                        $40.00
 end test
 
-; Test 'echo' command (line 1652)
+; Test 'echo' command
 test echo hello
 hello
 end test

@@ -1,11 +1,11 @@
 ; Test since/until with this/next/last quarter and week in determine_when
-; Exercises determine_when lines 805-832:
-;   TOK_THIS + TOK_QUARTER (lines 805-817, adjust == 0)
-;   TOK_LAST + TOK_QUARTER (lines 805-817, adjust == -1)
-;   TOK_NEXT + TOK_QUARTER (lines 805-817, adjust == 1)
-;   TOK_THIS + TOK_WEEK (lines 820-832, adjust == 0)
-;   TOK_LAST + TOK_WEEK (lines 820-832, adjust == -1)
-;   TOK_NEXT + TOK_WEEK (lines 820-832, adjust == 1)
+; Exercises determine_when
+;   TOK_THIS + TOK_QUARTER (adjust == 0)
+;   TOK_LAST + TOK_QUARTER (adjust == -1)
+;   TOK_NEXT + TOK_QUARTER (adjust == 1)
+;   TOK_THIS + TOK_WEEK (adjust == 0)
+;   TOK_LAST + TOK_WEEK (adjust == -1)
+;   TOK_NEXT + TOK_WEEK (adjust == 1)
 
 2024/01/15 Payee A
     Expenses:Food    $50.00

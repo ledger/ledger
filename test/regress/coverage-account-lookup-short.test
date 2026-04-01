@@ -1,4 +1,4 @@
-; Coverage: account.cc lines 443-497: short function name lookups
+; Coverage: account.cc short function name lookups
 ; Tests N (family posts count), O (family total), l (depth), n (self posts count)
 
 2024/01/15 * Grocery

@@ -1,5 +1,5 @@
 ; Test error for duplicate date annotation
-; Covers annotate.cc lines 146-147 (duplicate date check)
+; Covers annotate.cc (duplicate date check)
 
 2024/01/01 Test
     Assets:Brokerage    10 AAPL [2024/01/01] [2024/02/01]

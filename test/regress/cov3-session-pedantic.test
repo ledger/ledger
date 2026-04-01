@@ -1,5 +1,5 @@
 ; Test session with pedantic checking mode
-; Covers session.cc lines 119-120 (pedantic checking mode)
+; Covers session.cc (pedantic checking mode)
 
 account Expenses:Food
 account Assets:Cash

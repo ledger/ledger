@@ -1,4 +1,4 @@
-; Coverage test for draft.cc lines 59, 123, 131, 136, 141, 145, 153, 156:
+; Coverage test for draft.cc
 ; Empty payee mask output and various "Invalid xact command arguments" errors
 
 2024/01/15 Grocery Store

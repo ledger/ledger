@@ -1,4 +1,4 @@
-; Coverage for report.cc lines 1030-1037: fn_lot_tag
+; Coverage for report.cc fn_lot_tag
 ; Tests the lot_tag function which returns the tag annotation from a lot
 ; Uses lot with tag annotation to exercise the details.tag branch
 

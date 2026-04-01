@@ -1,5 +1,5 @@
 ; Coverage tests for textual_directives.cc include directive
-; Targets lines 156-268 (include_directive)
+; Targets (include_directive)
 
 include coverage-wave8-include-data.test
 

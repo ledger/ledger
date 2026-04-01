@@ -1,6 +1,6 @@
-; Coverage test for filters.cc lines 1070-1071:
-; Exercise interval_posts with a date range but no duration.
-; Using --begin/--end without --monthly or --weekly.
+; Coverage test for filters.cc
+; Exercise date range filtering with --begin/--end (no period grouping).
+; Without --monthly or --weekly, interval_posts is not invoked.
 
 2024/01/01 Before Range
     Expenses:Food    $10.00

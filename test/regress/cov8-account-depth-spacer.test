@@ -1,4 +1,4 @@
-; Coverage test for account.cc lines 319-333:
+; Coverage test for account.cc
 ; Exercise get_depth_spacer function.
 
 2024/01/01 Test

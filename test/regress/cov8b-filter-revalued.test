@@ -1,4 +1,4 @@
-; Coverage test for filters.cc lines 840-841, 845
+; Coverage test for filters.cc
 ; Test revalued filter with market values.
 ; The revalued filter creates temporary posts with the revalued total,
 ; exercising the as_amount path in handle_value.

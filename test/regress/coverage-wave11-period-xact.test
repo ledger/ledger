@@ -1,4 +1,4 @@
-; Coverage for textual_xacts.cc lines 756,772 (period xact)
+; Coverage for textual_xacts.cc (period xact)
 ; Tests periodic transactions with --budget
 
 ~ Monthly

@@ -26,7 +26,7 @@ test select date, amount from commodities
 24-Jan-15        $5.00
 end test
 
-; no from clause -- exercises L400-403 (default reporter)
+; no from clause -- exercises L400-(default reporter)
 test select date, amount
 24-Jan-15      10 AAPL
 24-Jan-15      $-50.00

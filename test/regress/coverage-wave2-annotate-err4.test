@@ -1,5 +1,5 @@
 ; Wave 2 coverage tests for annotate.cc error paths - unclosed brace
-; Covers: unclosed lot price brace (line 137)
+; Covers: unclosed lot price brace
 
 2024/01/01 Unclosed Brace
     Assets:Test              1 FOO {$10.00

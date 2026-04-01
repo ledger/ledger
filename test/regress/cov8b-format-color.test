@@ -1,4 +1,4 @@
-; Coverage test for format.cc lines 363-382
+; Coverage test for format.cc
 ; Test --force-color output path triggering ansify_if colorization.
 ; The register format with --force-color wraps account names and amounts
 ; in ANSI color codes, exercising the colorize path in parse_elements.

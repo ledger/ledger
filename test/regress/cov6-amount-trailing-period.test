@@ -1,5 +1,5 @@
 ; Test trailing period in amount (hledger-style disambiguation)
-; Covers amount.cc lines 1054-1055 in parse_quantity (trailing period kept)
+; Covers amount.cc in parse_quantity (trailing period kept)
 
 2024/01/01 Test
     Expenses:Food    1,234. USD

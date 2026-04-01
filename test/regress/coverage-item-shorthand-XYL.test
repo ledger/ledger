@@ -1,4 +1,5 @@
-; Test X shorthand expression for cleared postings (exercises item.cc lookup X path)
+; Test X (cleared) shorthand expression only (exercises item.cc lookup X path)
+; Note: Y (pending) and L (uncleared) shorthand paths are not tested
 
 2024/01/15 * Cleared Store
     Expenses:Food              $50.00

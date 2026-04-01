@@ -1,4 +1,4 @@
-; Coverage for value.cc lines 1891-1909: has_annotation() and annotation()
+; Coverage for value.cc has_annotation and annotation
 ; Using lot_price, lot_date, lot_tag which call value_t::has_annotation/annotation
 ; Tests both the annotated case (returning values) and the path exercising these functions
 

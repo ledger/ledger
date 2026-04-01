@@ -1,4 +1,4 @@
-; Test draft.cc with from keyword and explicit amount (covers draft.cc lines 437-439)
+; Test draft.cc with from keyword and explicit amount (covers draft.cc )
 ; When 'from' is used with an amount, the amount should be negated
 
 2024/01/15 * Grocery Store

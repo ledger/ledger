@@ -1,4 +1,4 @@
-; Test coverage for xact.cc lines 608-630
+; Test coverage for xact.cc
 ; Auto xact using any() and all() functions
 
 = /Expenses/

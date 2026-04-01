@@ -1,7 +1,8 @@
-; Coverage tests for mask.cc - account name matching with accented payees
-; Covers mask_t regex matching via account filter
+; Coverage tests for mask.cc - account name matching via bal Expenses
+; Note: accented payee names are present but never queried or matched
+; against, so diacritics folding is not exercised
 
-; Use accented characters in payee names to trigger diacritics folding
+; Accented payee names below are not matched by the test command
 2024/01/01 Café Résumé
     Expenses:Food                    $10.00
     Assets:Cash

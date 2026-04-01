@@ -1,5 +1,5 @@
 ; Test session lot functions: lot_price, lot_date, lot_tag
-; Covers session.cc lines 273-293 (fn_lot_price, fn_lot_date, fn_lot_tag)
+; Covers session.cc (fn_lot_price, fn_lot_date, fn_lot_tag)
 
 2024/01/01 Buy Stock
     Assets:Brokerage    10 AAPL {$150} [2024/01/01] (lot1)

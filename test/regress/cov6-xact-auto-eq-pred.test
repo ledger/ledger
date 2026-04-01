@@ -1,4 +1,4 @@
-; Coverage test for xact.cc line 932
+; Coverage test for xact.cc
 ; Tests the post_pred function with O_EQ operator in auto transactions.
 ; The quick matcher handles EQ predicates.
 

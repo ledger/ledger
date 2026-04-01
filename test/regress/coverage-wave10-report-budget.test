@@ -1,5 +1,5 @@
 ; Tests for budget command
-; Covers report.cc lines 1615-1624
+; Covers report.cc
 
 ~ Monthly
     Expenses:Food    $300.00
@@ -9,7 +9,7 @@
     Expenses:Food    $50.00
     Assets:Cash
 
-; Test budget command - covers line 1622
+; Test budget command - covers
 test budget --end 2026/03/01
      $-50.00    $-7800.00     $7750.00    1%  Assets:Cash
       $50.00     $7800.00    $-7750.00    1%  Expenses:Food

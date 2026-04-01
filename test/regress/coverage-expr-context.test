@@ -1,5 +1,5 @@
 ; Coverage test for expr.cc: context_to_str and error handling paths
-; Exercises: context_to_str (line 201-203), format error context (format.cc line 452)
+; Exercises: context_to_str, format error context
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00

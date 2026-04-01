@@ -1,4 +1,4 @@
-; Coverage: account.cc lines 303-305, 400, 412 - get_addr and addr lookup
+; Coverage: account.cc - get_addr and addr lookup
 ; Uses addr in a balance format expression to trigger get_addr
 ; addr returns a nonzero value for real accounts
 

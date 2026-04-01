@@ -1,4 +1,4 @@
-; Coverage for report.cc line 1140-1144: pricemap command
+; Coverage for report.cc pricemap command
 
 P 2024/01/01 AAPL $100.00
 P 2024/02/01 AAPL $110.00

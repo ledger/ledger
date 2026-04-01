@@ -1,4 +1,4 @@
-; Test coverage for textual_directives.cc lines 98-106
+; Test coverage for textual_directives.cc
 ; D directive (default commodity)
 
 D $1,000.00

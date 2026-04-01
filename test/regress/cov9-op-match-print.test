@@ -1,4 +1,4 @@
-; Coverage test for op.cc line 764:
+; Coverage test for op.cc
 ; Exercise printing an expression with =~ (match) operator.
 ; The --limit expression with =~ triggers O_MATCH printing in error messages.
 

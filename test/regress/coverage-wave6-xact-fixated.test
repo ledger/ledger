@@ -1,5 +1,5 @@
-; Tests for xact.cc fixated price handling (lines 285-321)
-; and two-commodity auto-cost inference (lines 235-236)
+; Tests for xact.cc fixated price handling
+; two-commodity auto-cost inference
 
 ; Transaction with fixated price annotation
 2024/01/01 Currency Exchange

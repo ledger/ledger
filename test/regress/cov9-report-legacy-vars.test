@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 1452-1467
+; Coverage test for report.cc
 ; Test legacy single-letter value expression variables that are no longer
 ; supported. These old 2.x variables throw errors with helpful messages.
 

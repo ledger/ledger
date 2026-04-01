@@ -1,4 +1,4 @@
-; Coverage for textual_directives.cc lines 636-639: commodity format sub-directive
+; Coverage for textual_directives.cc commodity format sub-directive
 
 commodity EUR
     format 1.000,00 EUR

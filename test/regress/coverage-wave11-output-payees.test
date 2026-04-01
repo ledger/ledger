@@ -1,6 +1,6 @@
 ; Test payees command for output.h coverage
-; Targets report.cc line 1671 (payees command) and
-; output.h lines 164-167 (report_payees::clear)
+; Targets report.cc (payees command)
+; output.h (report_payees::clear)
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00

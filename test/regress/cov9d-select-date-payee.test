@@ -1,5 +1,5 @@
 ; Test select command with date and payee columns
-; Covers select.cc lines 56, 60, 82, 85, 146-147, 149-150, 153
+; Covers select.cc
 
 2024/01/15 Groceries
     Expenses:Food    $50.00

@@ -1,5 +1,5 @@
 ; Coverage test for query.cc: bold keyword with multiple terms
-; Exercises query.cc lines 474-488: QUERY_BOLD with multiple terms
+; Exercises query.cc QUERY_BOLD with multiple terms
 
 2024/01/01 Grocery Store
     Expenses:Food    $25.00

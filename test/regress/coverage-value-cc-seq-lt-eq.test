@@ -1,4 +1,4 @@
-; Test value.cc: is_less_than SEQUENCE < SEQUENCE equal-key path (line 982)
+; Test value.cc: is_less_than SEQUENCE < SEQUENCE equal-key path
 ; When sorting by multiple keys, entries with equal first keys exercise
 ; the sequence comparison path where !((*i) < (*j)) returns false
 

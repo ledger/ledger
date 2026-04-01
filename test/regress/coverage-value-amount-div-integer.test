@@ -1,4 +1,4 @@
-; Coverage for value.cc line 700:
+; Coverage for value.cc
 ; Division of an AMOUNT value by an INTEGER value (amount / long).
 
 2024/01/01 Test

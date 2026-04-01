@@ -1,4 +1,4 @@
-; Coverage test for times.cc lines 320-324
+; Coverage test for times.cc
 ; Exercise date_duration output for quarterly and yearly periods
 ; via the period command dump
 

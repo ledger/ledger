@@ -1,5 +1,5 @@
 ; Coverage test for textual_xacts.cc
-; Fixed per-unit cost (line 558-560) and total cost (line 542-548)
+; Fixed per-unit cost and total cost
 
 2024/01/01 Buy stock with fixed price
     Assets:Stocks     10 AAPL @= $150.00

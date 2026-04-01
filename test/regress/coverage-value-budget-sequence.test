@@ -1,6 +1,6 @@
 ; Coverage for value.cc: sequence handling in budget reports
 ; Budget reports create SEQUENCE values (budget amount paired with actual)
-; Display rounding on sequences exercises lines 1782-1784, 1805-1807
+; Display rounding on sequences exercises
 
 ~ Monthly
     Expenses:Food    $300.00

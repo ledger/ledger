@@ -1,4 +1,4 @@
-; Coverage test for textual_xacts.cc line 561-562
+; Coverage test for textual_xacts.cc
 ; Fixed cost with @= but no amount after the =
 
 2024/01/01 Test

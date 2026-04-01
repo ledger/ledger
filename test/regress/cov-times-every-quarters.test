@@ -1,4 +1,4 @@
-; Coverage test for times.cc lines 1108-1109
+; Coverage test for times.cc
 ; Exercise "every N quarters" period parsing
 ; Also covers TOK_QUARTERS in handle_every_token
 

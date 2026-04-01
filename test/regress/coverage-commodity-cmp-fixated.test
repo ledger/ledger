@@ -1,4 +1,4 @@
-; Coverage for commodity.cc lines 502-511: semantic flag comparison
+; Coverage for commodity.cc semantic flag comparison
 ; Fixated price {=$150.00} vs non-fixated {$150.00} have different semantic flags
 ; ANNOTATION_PRICE_FIXATED flag causes different sorting
 

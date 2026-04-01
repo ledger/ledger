@@ -1,4 +1,4 @@
-; Coverage test for xact.cc line 918 and auto_xact_t::extend_xact
+; Coverage test for xact.cc and auto_xact_t::extend_xact
 ; Tests that an automatic transaction predicate correctly returns false
 ; for non-matching transactions.  The Transfer transaction does not match
 ; /Expenses:Food/, so the auto-xact is not applied to it.  The Groceries

@@ -1,5 +1,5 @@
 ; Test amount output with thousands comma separator and decimal point
-; Covers amount.cc lines 204 (decimal point output), 220 (comma thousands)
+; Covers amount.cc (decimal point output), (comma thousands)
 
 commodity 1,000.00 USD
 

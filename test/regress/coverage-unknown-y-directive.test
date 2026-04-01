@@ -1,4 +1,5 @@
-; Test that unknown directive starting with 'y' produces an error
+; Test textual_directives.cc break in case 'y' for unknown
+; directive starting with 'y' that isn't "year"
 yell foo
 
 2024/01/01 Test
@@ -7,6 +8,6 @@ yell foo
 
 test bal -> 1
 __ERROR__
-While parsing file "$FILE", line 2:
+While parsing file "$FILE", line 3:
 Error: Unrecognized source line 'yell foo'
 end test

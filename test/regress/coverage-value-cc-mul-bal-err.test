@@ -1,5 +1,5 @@
-; Test value.cc: operator*= AMOUNT * non-single BALANCE (line 639)
-; and operator/= AMOUNT / non-single BALANCE (line 715)
+; Test value.cc: operator*= AMOUNT * non-single BALANCE
+; operator/= AMOUNT / non-single BALANCE
 
 2024/01/15 Purchase
     Expenses:Both    $50.00
@@ -7,7 +7,7 @@
     Assets:Checking  $-50.00
     Assets:Savings  -30 EUR
 
-; AMOUNT * multi-commodity BALANCE error (line 639)
+; AMOUNT * multi-commodity BALANCE error
 ; First posting succeeds ($50 * $50), second fails (30 EUR * ($50+30EUR))
 test reg "Expenses:Both" --format "%(amount * display_total)\n" -> 1
 $2500.00
@@ -22,7 +22,7 @@ While handling posting from "$FILE", line 6:
 Error: Cannot multiply an amount with a balance
 end test
 
-; AMOUNT / multi-commodity BALANCE error (line 715)
+; AMOUNT / multi-commodity BALANCE error
 ; First posting succeeds ($50 / $50 = 1), second fails
 test reg "Expenses:Both" --format "%(amount / display_total)\n" -> 1
 $1.00

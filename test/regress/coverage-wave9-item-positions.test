@@ -1,4 +1,4 @@
-; Test coverage for item.cc lines 306-351
+; Test coverage for item.cc
 ; Test item_t::lookup position-related fields: pathname, filepath, beg_pos/line, end_pos/line
 
 2024/01/01 Test Payee

@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 1043-1047
+; Coverage test for report.cc
 ; fn_to_int converts a value to integer (long)
 
 2024/01/01 Test

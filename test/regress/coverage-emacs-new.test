@@ -1,5 +1,5 @@
 ; Basic balance report filtering by account name
-; Tests: bal command with account name argument
+; Tests: bal command with account name filter
 
 2024/01/01 Grocery Store
     Expenses:Food                    $50.00

@@ -1,5 +1,4 @@
 ; Test commodity compare with recursive disparity
-; (commodity.cc lines 430-431)
 2024/01/01 Buy A
     Assets:Stocks    10 AAPL {$100.00}
     Assets:Cash

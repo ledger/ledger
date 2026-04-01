@@ -1,5 +1,5 @@
 ; Test select with payee column
-; Covers select.cc lines 56 (payee identifier), 146-153 (payee_width sizing)
+; Covers select.cc (payee identifier), (payee_width sizing)
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00

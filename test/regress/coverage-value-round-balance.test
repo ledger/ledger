@@ -1,4 +1,4 @@
-; Coverage for value.cc line 1802:
+; Coverage for value.cc
 ; Calling rounded() on a multi-commodity balance goes through the BALANCE
 ; case in value_t::in_place_round_to_commodity_precision, which dispatches
 ; to balance_t::in_place_round_to_commodity_precision.

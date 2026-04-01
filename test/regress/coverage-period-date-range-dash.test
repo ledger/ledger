@@ -1,4 +1,4 @@
-; Test times.cc lines 1217-1220: date range with dash operator
+; Test times.cc date range with dash operator
 ; via handle_dash_operator in parse()
 
 2026/01/15 Jan tx

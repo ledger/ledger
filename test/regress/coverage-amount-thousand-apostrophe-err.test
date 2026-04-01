@@ -1,4 +1,4 @@
-; Coverage for amount.cc line 1279:
+; Coverage for amount.cc
 ; Incorrect use of thousand-mark apostrophe when the digit grouping
 ; is not a multiple of 3 (e.g., CHF 1'23.45 has only 2 digits before
 ; the decimal, not 3).

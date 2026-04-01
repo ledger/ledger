@@ -1,4 +1,4 @@
-; Test times.cc lines 1099-1120: "every 2 weeks" period expression
+; Test times.cc "every 2 weeks" period expression
 ; in handle_every_token
 
 2026/01/05 Week 1

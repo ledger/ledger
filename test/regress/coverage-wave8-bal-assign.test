@@ -1,17 +1,17 @@
 ; Coverage tests for textual_xacts.cc balance assignment/assertion paths
-; Targets lines 616-756 (balance assignment with expressions, zero diff, etc.)
+; Targets (balance assignment with expressions, zero diff, etc.)
 
 ; Initial balance setup
 2024/01/01 Opening Balance
     Assets:Cash              $100.00
     Equity:Opening
 
-; Balance assignment with non-zero diff (lines 696-735)
+; Balance assignment with non-zero diff
 2024/01/02 Balance Assignment
     Assets:Cash                = $80.00
     Expenses:Food
 
-; Balance assertion (lines 738-748)
+; Balance assertion
 2024/01/03 Balance Assert After
     Assets:Cash             $10.00 = $90.00
     Expenses:Food

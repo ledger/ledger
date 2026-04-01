@@ -1,4 +1,4 @@
-; Test textual_directives.cc line 852: break in case 'i' for unknown
+; Test textual_directives.cc break in case 'i' for unknown
 ; directive starting with 'i' that isn't "include" or "import".
 ; After general_directive returns false, the outer parser treats 'i'
 ; as a clock-in directive which fails with an error.

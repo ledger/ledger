@@ -1,4 +1,4 @@
-; Coverage for textual_xacts.cc lines 633-634: balance assignment null amount
+; Coverage for textual_xacts.cc balance assignment null amount
 
 2024/01/01 Test
     Assets:Cash    = $100.00

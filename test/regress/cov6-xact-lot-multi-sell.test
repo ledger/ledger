@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 361-369
+; Coverage test for xact.cc
 ; Tests lot matching when a single transaction has multiple sale postings
 ; for the same commodity. Earlier postings in the same transaction modify
 ; the effective lot balance for later postings.

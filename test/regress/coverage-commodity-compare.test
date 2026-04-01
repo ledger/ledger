@@ -1,9 +1,9 @@
-; Coverage test for commodity.cc lines 430-431, 485, 514-515, 527
+; Coverage test for commodity.cc
 ; Tests commodity_t::compare_by_commodity with annotated commodities.
-; Lines 430-431: recursive price comparison when commodity symbols match
-; Line 485: tag comparison between annotated commodities
-; Lines 514-515: final return 0 when all attributes match
-; Line 527: put_commodity XML output path
+; recursive price comparison when commodity symbols match
+; tag comparison between annotated commodities
+; final return 0 when all attributes match
+; put_commodity XML output path
 ; Using --lots forces comparison of full commodity annotations including
 ; lot prices, dates, and tags.
 

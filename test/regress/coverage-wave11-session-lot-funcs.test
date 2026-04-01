@@ -1,6 +1,6 @@
 ; Test session lot_price, lot_date, lot_tag for session.cc coverage
-; Targets session.cc lines 272-292 (fn_lot_price, fn_lot_date, fn_lot_tag)
-; Also targets session.cc lines 366-372 (lookup dispatchers)
+; Targets session.cc (fn_lot_price, fn_lot_date, fn_lot_tag)
+; Also targets session.cc (lookup dispatchers)
 ; These functions take amount_t and extract annotation details
 
 2024/01/15 Buy

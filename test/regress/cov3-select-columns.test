@@ -1,5 +1,5 @@
 ; Test select with --columns option
-; Covers select.cc lines 144-145 (columns_ option handling)
+; Covers select.cc (columns_ option handling)
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00

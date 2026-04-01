@@ -1,4 +1,4 @@
-; Test coverage for item.cc lines 439-530
+; Test coverage for item.cc
 ; Test item_t::lookup fields: L, X, Y, filebase, filepath, id, uuid, seq, addr
 
 2024/01/01 * Test Payee

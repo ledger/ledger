@@ -1,6 +1,8 @@
 ; Coverage test for query.cc: for/since/until combined with show keyword
-; Exercises query.cc lines 492-533: for/since/until token processing
-; and lines 511-516: keyword break logic when encountering show/bold/for
+; Exercises query.cc for/since/until token processing and
+; keyword break logic when encountering show
+; Note: the 'since 2024/01/02 until 2024/01/04' test does not filter to
+; a 2-day window; the expected output includes dates well beyond that range
 
 2023/11/01 November Purchase
     Expenses:Food    $10.00

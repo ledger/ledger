@@ -1,5 +1,5 @@
 ; Tests for commodity.cc: map_prices with CURRENT_TIME() fallback
-; Covers: line 79 (when = CURRENT_TIME() when no moment and no epoch)
+; Covers: (when = CURRENT_TIME when no moment and no epoch)
 ;         Also exercises prices command which calls map_prices
 
 P 2024/01/01 EUR $1.10
@@ -11,7 +11,7 @@ P 2024/12/01 EUR $1.20
     Assets
 
 ; The prices command calls map_prices with no explicit moment
-; which triggers the CURRENT_TIME() fallback at line 79
+; which triggers the CURRENT_TIME fallback
 test prices EUR
 2024/01/01 EUR             $1.10
 2024/06/01 EUR             $1.15

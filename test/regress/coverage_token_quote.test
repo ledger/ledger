@@ -1,4 +1,4 @@
-; Coverage test for token.cc line 222
+; Coverage test for token.cc
 ; Unclosed single-quote string triggers expected(delim, c)
 
 2024/01/01 Test

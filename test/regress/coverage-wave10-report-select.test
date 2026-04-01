@@ -1,5 +1,5 @@
 ; Tests for select command
-; Covers report.cc lines 1690
+; Covers report.cc
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00
@@ -9,7 +9,7 @@
     Expenses:Auto    $30.00
     Assets:Cash
 
-; Test select command - covers line 1690
+; Test select command - covers
 test select amount from reg Expenses
       $50.00
      $-50.00

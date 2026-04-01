@@ -1,5 +1,5 @@
-; Coverage for filters.cc lines 1426-1440 (unbudgeted budget path)
-; and line 1427 (BUDGET_WRAP_VALUES flag for unbudgeted posts)
+; Coverage for filters.cc (unbudgeted budget path)
+; (BUDGET_WRAP_VALUES flag for unbudgeted posts)
 ; The --unbudgeted flag shows only posts not matching any budget.
 
 ~ Monthly

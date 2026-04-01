@@ -1,4 +1,4 @@
-; Test report.cc: fn_commodity_price (lines 942-951)
+; Test report.cc: fn_commodity_price
 
 P 2024/01/01 AAPL $150.00
 

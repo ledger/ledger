@@ -1,5 +1,5 @@
 ; Test error for duplicate tag annotation
-; Covers annotate.cc lines 203-204 (duplicate tag check)
+; Covers annotate.cc (duplicate tag check)
 
 2024/01/01 Test
     Assets:Brokerage    10 AAPL (lot-A) (lot-B)

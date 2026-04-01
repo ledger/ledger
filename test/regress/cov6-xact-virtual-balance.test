@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 595,597,612-615
+; Coverage test for xact.cc
 ; Tests balanced virtual postings with null amounts.
 ; The virtual_null_post path handles balancing [bracketed] virtual postings
 ; separately from regular postings. This tests the is_amount() path for
