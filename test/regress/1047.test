@@ -1,4 +1,4 @@
-; Commodity with annotation should not crash with --debug flags
+; Commodity with lot-value annotation ({{total}}) should not crash with bal
 2014-01-01 * Test
     A           1 AA {{10.00 GBP}} @@ 10.00 GBP
     B                                -10.00 GBP
