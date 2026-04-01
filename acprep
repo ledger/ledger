@@ -277,7 +277,7 @@ class PrepareBuild(CommandLineApp):
                       help='Set Boost library root (ex: "--boost=/usr/local")')
         op.add_option('', '--boost-suffix', metavar='BOOST_SUFFIX',
                       action="store", dest="boost_suffix",
-                      help='Set Boost library suffix (ex: "--boost-suffix=-mt")')
+                      help='Set Boost compiler suffix (ex: "--boost-suffix=-gcc48")')
         op.add_option('', '--boost-include', metavar='BOOST_INCLUDE',
                       action="store", dest="boost_include",
                       help='Set Boost include path (ex: "--boost-include=DIR")')
