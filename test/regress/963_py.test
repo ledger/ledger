@@ -1,0 +1,5 @@
+test python test/regress/963.py
+Expenses:Food
+Expenses:Food:Dining
+Expenses:Food:Groceries
+end test
