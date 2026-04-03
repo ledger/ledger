@@ -11,9 +11,11 @@
 ;      used during transaction balancing, causing previously-balanced
 ;      transactions to fail with "Transaction does not balance".
 ;
+
 ; The fix prevents precision migration once a commodity's precision has
 ; been established: high-precision amounts keep their own precision
-; (BIGINT_KEEP_PREC) without infecting the commodity.
+; (BIGINT_USER_PREC) without infecting the commodity.
+
 
 2024/01/01 Normal precision
     Expenses:Food    $10.00
