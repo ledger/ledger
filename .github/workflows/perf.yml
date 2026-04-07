@@ -2,6 +2,7 @@ name: Performance
 
 on:
   pull_request:
+  merge_group:
     branches: main
 
 env:
