@@ -1,34 +1,40 @@
-; Regression test for issue #664: Value expression regexp matching
-; should return capture group text instead of just true/false when
-; the regex contains capture groups.
+; Regression test for issue #664: The ==~ operator extracts regex
+; match text instead of returning a boolean.
 ; https://github.com/ledger/ledger/issues/664
 
 2024/01/01 Test Payee
     Expenses:Food:Groceries    $10.00
     Assets:Cash
 
-; When the regex has capture groups, =~ returns the first captured
-; group as a string instead of a boolean.
-test reg --format '%(account =~ /(.+):(.+)/)\n'
+; The ==~ operator with capture groups returns the first captured
+; group as a string.
+test reg --format '%(account ==~ /(.+):(.+)/)\n'
 Expenses:Food
 Assets
 end test
 
-; Without capture groups, =~ still returns a boolean for backward
-; compatibility.
-test reg --format '%(account =~ /.+:.+/)\n'
-true
-true
+; The ==~ operator without capture groups returns the entire match
+; as a string.
+test reg --format '%(account ==~ /.+:.+/)\n'
+Expenses:Food:Groceries
+Assets:Cash
 end test
 
-; Non-matching with capture groups returns false.
-test reg --format '%(account =~ /(xyz)/)\n'
+; The ==~ operator returns false when the pattern does not match.
+test reg --format '%(account ==~ /(xyz)/)\n'
 false
 false
 end test
 
-; Capture groups work correctly in boolean context (--limit).
-test reg --limit 'account =~ /(.+):(.+)/' --format '%(account)\n'
+; The =~ operator always returns a boolean, even with capture groups.
+test reg --format '%(account =~ /(.+):(.+)/)\n'
+true
+true
+end test
+
+; The ==~ operator works correctly in boolean context (--limit),
+; since non-empty strings are truthy.
+test reg --limit 'account ==~ /(.+):(.+)/' --format '%(account)\n'
 Expenses:Food:Groceries
 Assets:Cash
 end test
