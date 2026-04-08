@@ -274,6 +274,10 @@ Group postings by week (starting on Sundays).
 .It Fl \-start-of-week Ar day
 Set the start of each report grouped by week to the given
 .Ar day .
+.It Fl \-period-shift Ar INT
+Shift the start of monthly, quarterly, and yearly periods by
+.Ar INT
+days.
 .It Fl \-monthly Pq Fl M
 Group postings by month.
 .It Fl \-quarterly
@@ -1053,6 +1057,17 @@ Sort the register report based on the value expression
 .\".It Fl \-sort-all Ar EXPR
 .It Fl \-sort-xacts
 Sort the posting within transactions using the given value expression.
+.It Fl \-period-shift Ar INT
+Shift the starting day of monthly, quarterly, and yearly report periods
+by
+.Ar INT
+days.  For example,
+.Fl \-monthly
+.Fl \-period-shift
+.Ar 15
+makes monthly periods run from the 16th of one month to the 15th of the
+next.  Does not affect weekly or daily periods.  See also
+.Fl \-start-of-week .
 .It Fl \-start-of-week Ar STR
 Use
 .Ar STR

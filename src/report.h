@@ -424,6 +424,7 @@ public:
     HANDLER(pending).report(out);
     HANDLER(percent).report(out);
     HANDLER(period_).report(out);
+    HANDLER(period_shift_).report(out);
     HANDLER(pivot_).report(out);
     HANDLER(plot_amount_format_).report(out);
     HANDLER(plot_total_format_).report(out);
@@ -1052,6 +1053,8 @@ public:
         if (handled)
           value += string(" ") + str;
       });
+
+  OPTION(report_t, period_shift_);
 
   OPTION(report_t, pivot_);
 

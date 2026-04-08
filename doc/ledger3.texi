@@ -7847,6 +7847,13 @@ Sort all accounts and commodities.
 @itemx --period-sort @var{VEXPR}
 Sort the postings within transactions using the given value expression.
 
+@item --period-shift @var{INT}
+Shift the starting day of monthly, quarterly, and yearly report periods
+by @var{INT} days.  For example, @samp{--monthly --period-shift 15}
+makes monthly periods run from the 16th of one month to the 15th of the
+next.  Does not affect weekly or daily periods.  See also
+@samp{--start-of-week}.
+
 @item --start-of-week @var{INT}
 @findex --align-intervals
 Tell ledger to use a particular day of the week to start its ``weekly''

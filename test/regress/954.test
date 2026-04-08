@@ -1,0 +1,30 @@
+; Regression test for issue #954: --period-shift shifts the starting day
+; for monthly/quarterly/yearly periods.
+
+2024/01/15 Q1-Jan
+    Expenses:Rent    $1000.00
+    Assets:Cash
+
+2024/02/15 Q1-Feb
+    Expenses:Rent    $1000.00
+    Assets:Cash
+
+2024/03/15 Q1-Mar
+    Expenses:Rent    $1000.00
+    Assets:Cash
+
+2024/04/15 Q2-Apr
+    Expenses:Rent    $1000.00
+    Assets:Cash
+
+test reg --monthly --period-shift 14 Expenses
+24-Jan-15 - 24-Feb-14           Expenses:Rent              $1000.00     $1000.00
+24-Feb-15 - 24-Mar-14           Expenses:Rent              $1000.00     $2000.00
+24-Mar-15 - 24-Apr-14           Expenses:Rent              $1000.00     $3000.00
+24-Apr-15 - 24-May-14           Expenses:Rent              $1000.00     $4000.00
+end test
+
+test reg --quarterly --period-shift 14 Expenses
+24-Jan-15 - 24-Apr-14           Expenses:Rent              $3000.00     $3000.00
+24-Apr-15 - 24-Jul-14           Expenses:Rent              $1000.00     $4000.00
+end test
