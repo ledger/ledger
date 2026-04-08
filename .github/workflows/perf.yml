@@ -49,7 +49,7 @@ jobs:
       # --- Build base branch ---
 
       - name: Check out base branch
-        run: git checkout ${{ github.event.pull_request.base.sha }}
+        run: git checkout ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
 
       - name: Restore PR support files
         run: |
