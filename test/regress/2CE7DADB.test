@@ -9,5 +9,7 @@
 test --anon pricedb --format "%(date) %(amount)\n"
 2012/01/01 1.00 A
 2012/02/01 2.00 A
+2012/01/01 1 B
+2012/02/01 0.5 B
 end test
 

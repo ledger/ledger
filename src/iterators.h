@@ -258,18 +258,22 @@ protected:
   xacts_list xact_temps;                ///< Owns the synthetic transaction objects.
   temporaries_t temps;                  ///< Arena allocator for temporary xacts and posts.
   bool latest_only;                     ///< If true, emit only the most recent price per commodity.
+  bool bidirectional;                   ///< If true, emit prices in both directions.
 
 public:
-  posts_commodities_iterator() : latest_only(false) { TRACE_CTOR(posts_commodities_iterator, ""); }
-  posts_commodities_iterator(journal_t& journal, bool _latest_only = false)
-      : latest_only(_latest_only) {
+  posts_commodities_iterator() : latest_only(false), bidirectional(false) {
+    TRACE_CTOR(posts_commodities_iterator, "");
+  }
+  posts_commodities_iterator(journal_t& journal, bool _latest_only = false,
+                             bool _bidirectional = false)
+      : latest_only(_latest_only), bidirectional(_bidirectional) {
     reset(journal);
     TRACE_CTOR(posts_commodities_iterator, "journal_t&");
   }
   posts_commodities_iterator(const posts_commodities_iterator& i)
       : iterator_facade_base<posts_commodities_iterator, post_t*, boost::forward_traversal_tag>(i),
         journal_posts(i.journal_posts), xacts(i.xacts), posts(i.posts), xact_temps(i.xact_temps),
-        temps(i.temps), latest_only(i.latest_only) {
+        temps(i.temps), latest_only(i.latest_only), bidirectional(i.bidirectional) {
     TRACE_CTOR(posts_commodities_iterator, "copy");
   }
   posts_commodities_iterator& operator=(const posts_commodities_iterator&) = default;

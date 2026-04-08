@@ -168,9 +168,11 @@ public:
   optional<datetime_t>
       gain_from; ///< Reference date for --gain-since (compute gain from this date's market value)
   uint_least8_t budget_flags; ///< Bitmask of BUDGET_* flags controlling budget report behavior
+  bool bidirectional_prices;  ///< When true, pricedb emits prices in both directions
 
   explicit report_t(session_t& _session)
-      : session(_session), terminus(CURRENT_TIME()), budget_flags(BUDGET_NO_BUDGET) {
+      : session(_session), terminus(CURRENT_TIME()), budget_flags(BUDGET_NO_BUDGET),
+        bidirectional_prices(false) {
     TRACE_CTOR(report_t, "session_t&");
   }
   ~report_t() override {
