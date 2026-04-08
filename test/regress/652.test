@@ -1,0 +1,15 @@
+; Regression test for issue #652: download should be triggered even when no
+; prior price exists for a commodity.
+;
+; When --download is used and a commodity has no price history at all,
+; check_for_updated_price must still be called so that getquote can fetch
+; a price.  Previously, the download was gated behind an if (point) check
+; that prevented it from firing when find_price returned nullopt.
+
+2024/01/15 Buy Stock
+    Assets:Brokerage        10 AAPL
+    Equity:Opening          -10 AAPL
+
+test bal --market --download --getquote $sourcepath/test/scripts/mock-getquote.sh Assets:Brokerage -> 0
+            $1500.00  Assets:Brokerage
+end test
