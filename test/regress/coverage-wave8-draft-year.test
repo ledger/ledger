@@ -1,5 +1,4 @@
-; Coverage tests for draft.cc year directive adjustment
-; Targets (year directive adjustment in xact command)
+; Coverage tests for draft.cc: year directive does not affect xact date (#707)
 
 year 2024
 
@@ -7,10 +6,10 @@ year 2024
     Expenses:Food            $50.00
     Assets:Cash
 
-; Using xact with a month/day date (no year) and year directive
-; Triggers (year adjustment)
-test xact 03/01 Grocery
-2024/03/01 (CHK001) Grocery Store  ;a purchase
+; Using xact with a month/day date (no year) — the year comes from --now,
+; not the year directive
+test --now 2026/04/01 xact 03/01 Grocery
+2026/03/01 (CHK001) Grocery Store  ;a purchase
     Expenses:Food                             $50.00
     Assets:Cash
 end test
