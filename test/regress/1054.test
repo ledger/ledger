@@ -1,0 +1,45 @@
+; Regression test for issue #1054: Rounding <Adjustment> entries should appear
+; even without -V or -X, when display precision causes running total
+; discrepancies.
+; https://github.com/ledger/ledger/issues/1054
+
+D $1,000.00
+
+2014/06/15 Test 1
+    Expenses    $9.184
+    Assets:Checking
+
+2014/06/16 Test 2
+    Expenses    $9.184
+    Assets:Checking
+
+2014/06/17 Test 3
+    Expenses    $9.184
+    Assets:Checking
+
+; Without the fix, the running total showed $55.09 without any <Adjustment>
+; entry to explain why $9.18 + $9.18 + $9.18 != $27.55.
+
+test reg Expenses
+14-Jun-15 Test 1                Expenses                      $9.18        $9.18
+14-Jun-16 Test 2                <Adjustment>                  $0.01        $9.19
+                                Expenses                      $9.18       $18.37
+14-Jun-17 Test 3                Expenses                      $9.18       $27.55
+end test
+
+; With -V, behavior is unchanged (adjustments were already shown).
+
+test reg -V Expenses
+14-Jun-15 Test 1                Expenses                      $9.18        $9.18
+14-Jun-16 Test 2                <Adjustment>                  $0.01        $9.19
+                                Expenses                      $9.18       $18.37
+14-Jun-17 Test 3                Expenses                      $9.18       $27.55
+end test
+
+; --no-rounding suppresses adjustment entries.
+
+test reg --no-rounding Expenses
+14-Jun-15 Test 1                Expenses                      $9.18        $9.18
+14-Jun-16 Test 2                Expenses                      $9.18       $18.37
+14-Jun-17 Test 3                Expenses                      $9.18       $27.55
+end test
