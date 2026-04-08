@@ -1,0 +1,27 @@
+; Regression test for issue #628: round(value) should take an optional precision amount
+; round(amount, N) should round to N decimal places, just like roundto(amount, N)
+
+commodity $
+    format $10.00
+
+2024/01/01 Test
+    Expenses:Food    $10.567
+    Assets:Cash
+
+; round(amount, 1) should round to 1 decimal place
+test reg --format '%(round(amount, 1))\n'
+$10.60
+$-10.60
+end test
+
+; roundto(amount, 1) should produce the same result
+test reg --format '%(roundto(amount, 1))\n'
+$10.60
+$-10.60
+end test
+
+; round(amount) with no precision argument should round to commodity precision (2 places)
+test reg --format '%(round(amount))\n'
+$10.57
+$-10.57
+end test
