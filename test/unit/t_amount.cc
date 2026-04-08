@@ -94,7 +94,9 @@ BOOST_AUTO_TEST_CASE(testParser)
   BOOST_CHECK_EQUAL(x1, x12);
 
   (void)x0.parse("$100.0000");
-  BOOST_CHECK_EQUAL(amount_t::precision_t(4), x12.commodity().precision());
+  // Commodity precision no longer widens beyond first establishment (issue #1082).
+  // The amount gets BIGINT_USER_PREC instead of inflating the commodity.
+  BOOST_CHECK_EQUAL(amount_t::precision_t(2), x12.commodity().precision());
   BOOST_CHECK_EQUAL(x0.commodity(), x12.commodity());
   BOOST_CHECK_EQUAL(x0, x12);
 

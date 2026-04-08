@@ -41,7 +41,7 @@ end test
     Dummy2
 
 test reg Income
-16-Jan-01 first                 Income                  0,0750 rate  0,0750 rate
+16-Jan-01 first                 Income                   0,075 rate   0,075 rate
 16-Jan-02 second                Income                  0,0812 rate  0,1562 rate
 end test
 

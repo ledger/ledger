@@ -1,0 +1,48 @@
+; Regression test for issue #1082: A change in precision used on an
+; amount in-stream affects the balancing precision of following
+; transactions.
+; https://github.com/ledger/ledger/issues/1082
+;
+; When a high-precision amount appeared in the journal, the commodity's
+; global display precision was widened to match, causing two problems:
+;   1. All amounts of that commodity were displayed at the inflated
+;      precision (e.g. $10.00 displayed as $10.0000).
+;   2. The widened precision tightened the is_zero() rounding tolerance
+;      used during transaction balancing, causing previously-balanced
+;      transactions to fail with "Transaction does not balance".
+;
+
+; The fix prevents precision migration once a commodity's precision has
+; been established: high-precision amounts keep their own precision
+; (BIGINT_USER_PREC) without infecting the commodity.
+
+
+2024/01/01 Normal precision
+    Expenses:Food    $10.00
+    Assets:Cash      -$10.00
+
+2024/01/02 High precision
+    Expenses:Bar     $5.5555
+    Assets:Cash      -$5.5555
+
+2024/01/03 After precision change
+    Expenses:Food    $3.00
+    Assets:Cash      -$3.00
+
+test bal
+           $-18.5555  Assets:Cash
+            $18.5555  Expenses
+             $5.5555    Bar
+              $13.00    Food
+--------------------
+                   0
+end test
+
+test reg
+24-Jan-01 Normal precision      Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Jan-02 High precision        Expenses:Bar                $5.5555      $5.5555
+                                Assets:Cash                $-5.5555            0
+24-Jan-03 After precision cha.. Expenses:Food                 $3.00        $3.00
+                                Assets:Cash                  $-3.00            0
+end test
