@@ -9340,6 +9340,14 @@ be a regex delimited by forward slashes.  For example,
 @samp{account =~ /Assets/} matches postings whose account name
 contains @samp{Assets}, and @samp{commodity !~ /€/} matches postings
 whose commodity isn't the euro.
+@item ==~
+Regular expression extract.  Like @code{=~}, but instead of returning
+a boolean it returns the matched text as a string.  If the regex
+contains capture groups, the first group is returned; otherwise the
+entire match is returned.  Returns false when the regex does not match.
+For example, @samp{account ==~ /(.+):(.+)/} returns the text matched
+by the first group (everything before the last colon), and
+@samp{account ==~ /Expenses.*/} returns the full matched substring.
 @item and
 @itemx &
 Logical AND -- both sides must be true.
