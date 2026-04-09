@@ -1118,11 +1118,16 @@ void amount_t::in_place_reduce() {
     throw_(amount_error, _("Cannot reduce an uninitialized amount"));
 
   int depth = 0;
+  commodity_t* original = commodity_;
   while (commodity_ && commodity().smaller()) {
     if (++depth > 100) // safety net: break out of cyclic smaller chains
       break;
     *this *= commodity().smaller()->number();
     commodity_ = commodity().smaller()->commodity_;
+  }
+  if (original && original != commodity_ && commodity_ && original->has_annotation()) {
+    commodity_ = commodity_pool_t::current_pool->find_or_create(
+        *commodity_, as_annotated_commodity(*original).details);
   }
 }
 
@@ -1156,7 +1161,12 @@ void amount_t::in_place_unreduce() {
 
   if (shifted) {
     *this = tmp;
-    commodity_ = comm;
+    if (commodity_ && commodity_->has_annotation()) {
+      commodity_ = commodity_pool_t::current_pool->find_or_create(
+          *comm, as_annotated_commodity(*commodity_).details);
+    } else {
+      commodity_ = comm;
+    }
   }
 }
 
