@@ -706,20 +706,25 @@ void print_item(std::ostream& out, const item_t& item, const string& prefix) {
   }
 
   // Raw printing: stream source directly without any size limit.
-  if (!item.pos || item.pos->pathname.empty())
+  if (!item.pos)
+    return;
+  if (item.pos->pathname.empty() && !item.pos->source_content)
     return;
 
   const std::streamoff len = item.pos->end_pos - item.pos->beg_pos;
   if (!(len > 0))
     return;
 
-  std::unique_ptr<std::istream> in(
+  std::unique_ptr<std::istream> in;
+  if (item.pos->source_content) {
+    in.reset(new std::istringstream(*item.pos->source_content));
+  } else {
 #if HAVE_GPGME
-      decrypted_stream_t::open_stream(item.pos->pathname)
+    in.reset(decrypted_stream_t::open_stream(item.pos->pathname));
 #else
-      new ifstream(item.pos->pathname, std::ios::binary)
+    in.reset(new ifstream(item.pos->pathname, std::ios::binary));
 #endif
-  );
+  }
 
   // Determine the effective end position by scanning backwards to strip
   // trailing CR/LF, matching source_context()'s line-splitting behaviour which

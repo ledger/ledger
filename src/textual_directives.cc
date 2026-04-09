@@ -555,6 +555,7 @@ void instance_t::account_directive(char* line) {
 
         ae->pos = position_t();
         ae->pos->pathname = context.pathname;
+        ae->pos->source_content = context.source_content;
         ae->pos->beg_pos = beg_pos;
         ae->pos->beg_line = beg_linenum;
         ae->pos->sequence = context.sequence++;
