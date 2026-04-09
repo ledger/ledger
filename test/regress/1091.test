@@ -2,7 +2,7 @@
 ; https://github.com/ledger/ledger/issues/1091
 ;
 ; A line containing only a Unicode non-breaking space (U+00A0) should
-; be treated as an empty line, but instead triggers a directive error.
+; be treated as an empty line, not trigger a directive error.
 
 2024/01/01 First
     Expenses:Food    $10.00
@@ -12,8 +12,9 @@
     Expenses:Food    $5.00
     Assets:Cash
 
-test bal -> 1
-__ERROR__
-While parsing file "$FILE", line 10:
-Error: Directive ' ' requires an argument
+test bal
+             $-15.00  Assets:Cash
+              $15.00  Expenses:Food
+--------------------
+                   0
 end test
