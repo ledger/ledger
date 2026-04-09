@@ -240,32 +240,48 @@ void item_t::parse_tags(const char* p, scope_t& scope, bool overwrite_existing) 
   if (!std::strchr(p, ':'))
     return;
 
-  scoped_array<char> buf(new char[std::strlen(p) + 1]);
-
-  std::strcpy(buf.get(), p);
+  string str(p);
+  string::size_type pos = 0;
 
   string tag;
   bool by_value = false;
   bool first = true;
-  for (char* q = std::strtok(buf.get(), " \t"); q; q = std::strtok(nullptr, " \t")) {
-    const string::size_type len = std::strlen(q);
-    if (len < 2)
+
+  while (pos < str.length()) {
+    pos = str.find_first_not_of(" \t", pos);
+    if (pos == string::npos)
+      break;
+
+    string::size_type end = str.find_first_of(" \t", pos);
+    if (end == string::npos)
+      end = str.length();
+
+    string token = str.substr(pos, end - pos);
+    if (token.length() < 2) {
+      pos = end;
       continue;
-    if (q[0] == ':' && q[len - 1] == ':') { // a series of tags
-      for (char* r = std::strtok(q + 1, ":"); r; r = std::strtok(nullptr, ":")) {
-        string_map::iterator i = set_tag(r, std::nullopt, overwrite_existing);
-        (*i).second.second = true;
+    }
+
+    if (token[0] == ':' && token[token.length() - 1] == ':') { // a series of tags
+      string tag_str(token, 1, token.length() - 2);
+      std::vector<string> tag_names;
+      boost::split(tag_names, tag_str, boost::is_any_of(":"));
+      for (const string& tag_name : tag_names) {
+        if (!tag_name.empty()) {
+          string_map::iterator i = set_tag(tag_name, std::nullopt, overwrite_existing);
+          (*i).second.second = true;
+        }
       }
-    } else if (first && q[len - 1] == ':') { // a metadata setting
+    } else if (first && token[token.length() - 1] == ':') { // a metadata setting
       std::size_t index = 1;
-      if (q[len - 2] == ':') {
+      if (token[token.length() - 2] == ':') {
         by_value = true;
         index = 2;
       }
-      tag = string(q, len - index);
+      tag = token.substr(0, token.length() - index);
 
       string_map::iterator i;
-      string field(p + (q - buf.get()) + len); // NOLINT(bugprone-unused-local-non-trivial-variable)
+      string field(p + end); // NOLINT(bugprone-unused-local-non-trivial-variable)
       trim(field);
       if (by_value) {
         bind_scope_t bound_scope(scope, *this);
@@ -277,6 +293,7 @@ void item_t::parse_tags(const char* p, scope_t& scope, bool overwrite_existing) 
       break;
     }
     first = false;
+    pos = end;
   }
 }
 
@@ -705,7 +722,7 @@ void print_item(std::ostream& out, const item_t& item, const string& prefix) {
   );
 
   // Determine the effective end position by scanning backwards to strip
-  // trailing CR/LF, matching source_context()'s strtok-based behaviour which
+  // trailing CR/LF, matching source_context()'s line-splitting behaviour which
   // never emits trailing newlines.  (print_xacts::flush() appends one.)
   std::streamoff effective_off = static_cast<std::streamoff>(item.pos->end_pos);
   const std::streamoff beg_off = static_cast<std::streamoff>(item.pos->beg_pos);

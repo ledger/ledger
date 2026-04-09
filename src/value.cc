@@ -72,8 +72,6 @@
 
 #include <system.hh>
 
-#include <boost/tokenizer.hpp>
-
 #include "value.h"
 #include "commodity.h"
 #include "annotate.h"
@@ -1912,8 +1910,8 @@ value_t value_t::exchange_commodities(const std::string& commodities, const bool
   std::vector<commodity_t*> sources;
   std::vector<bool> force;
 
-  typedef tokenizer<char_separator<char>> tokenizer;
-  tokenizer tokens(commodities, char_separator<char>(","));
+  std::vector<string> tokens;
+  boost::split(tokens, commodities, boost::is_any_of(","));
 
   for (const string& name : tokens) {
     string target_name = name;
