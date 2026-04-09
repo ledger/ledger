@@ -1,0 +1,21 @@
+; Regression test for issue #725: Output of cleared not aligned with --date-format
+; https://github.com/ledger/ledger/issues/725
+; When --date-format produces dates wider than the default, the cleared
+; command's separator dashes and blank-date placeholders must match.
+
+2024/01/01 * Grocery Store
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Hardware Store
+    Expenses:Tools    $25.00
+    Assets:Cash
+
+test cleared --date-format '%Y-%m-%d'
+         $-35.00             $-10.00    2024-01-01    Assets:Cash
+          $35.00              $10.00                  Expenses
+          $10.00              $10.00    2024-01-01      Food
+          $25.00                   0                    Tools
+----------------    ----------------    ----------
+               0                   0              
+end test

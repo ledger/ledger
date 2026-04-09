@@ -640,12 +640,13 @@ public:
         on(none, "%(justify(scrub(get_at(display_total, 0)), 16, 16 + int(prepend_width), "
                  " true, color))  %(justify(scrub(get_at(display_total, 1)), 18, "
                  " 36 + int(prepend_width), true, color))"
-                 "    %(latest_cleared ? format_date(latest_cleared) : \"         \")"
+                 "    %(justify(latest_cleared ? format_date(latest_cleared) : \"\","
+                 " int(date_width)))"
                  "    %(!options.flat ? depth_spacer : \"\")"
                  "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
                  "%$1  %$2    %$3\n%/"
                  "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
-                 "----------------    ----------------    ---------\n");
+                 "----------------    ----------------    %(\"-\" * int(date_width))\n");
       });
 
   OPTION(report_t, color);
