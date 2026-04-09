@@ -1,8 +1,8 @@
 ; Tests for sha512.cc: SHA512 hash computation
-; Covers: lines 234-241 (SHA512_Init)
-;         lines 319-366 (SHA512_Update with data)
-;         lines 411-438 (SHA512_Final)
-;         lines 440-446 (SHA512 convenience function)
+; Covers: (SHA512_Init)
+;         (SHA512_Update with data)
+;         (SHA512_Final)
+;         (SHA512 convenience function)
 
 2024/01/01 Test
     Expenses  $10

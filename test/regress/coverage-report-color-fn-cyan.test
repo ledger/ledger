@@ -1,4 +1,4 @@
-; Coverage for report.cc line 1093: fn_cyan
+; Coverage for report.cc fn_cyan
 ; Returns the string "cyan" for use in ansify_if coloring
 
 2024/01/01 Test

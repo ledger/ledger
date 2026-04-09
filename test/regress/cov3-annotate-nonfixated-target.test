@@ -1,5 +1,5 @@
 ; Test non-fixated price annotation sets target commodity in find_price
-; Covers annotate.cc lines 316-319 (target from price commodity)
+; Covers annotate.cc (target from price commodity)
 
 P 2024/02/01 AAPL $155.00
 

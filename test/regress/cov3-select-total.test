@@ -1,5 +1,5 @@
 ; Test select command with total column
-; Covers select.cc line 72 (total column handling)
+; Covers select.cc (total column handling)
 
 2024/01/15 Test
     Expenses:Food    $50.00

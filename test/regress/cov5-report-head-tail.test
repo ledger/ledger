@@ -1,4 +1,4 @@
-; Coverage for report.cc lines 549-555: --head and --tail options
+; Coverage for report.cc --head and --tail options
 
 2024/01/01 Test1
     Expenses:Food    $10.00

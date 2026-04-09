@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 615-620
+; Coverage test for report.cc
 ; fn_should_bold returns true/false based on --bold-if expression
 ; Testing the else branch (no --bold-if) returns false
 

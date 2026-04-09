@@ -2,7 +2,7 @@
 ; Tests: auto transactions (fn_any/fn_all), verify, fixated prices,
 ;        virtual balance postings, cost calculation, hash, code
 
-; Test auto-transactions with fn_any/fn_all (covers lines 608-630)
+; Test auto-transactions with fn_any/fn_all (covers )
 = /Food/
     (Budget:Food)                    -1
 
@@ -14,12 +14,12 @@
     Expenses:Gas                     $30.00
     Assets:Cash
 
-; Test two commodities without explicit cost (covers lines 235-236)
+; Test two commodities without explicit cost (covers )
 2024/01/03 Currency Exchange
     Assets:EUR                       100 EUR
     Assets:USD                      -$130.00
 
-; Test virtual postings with balanced amounts (covers lines 447-467)
+; Test virtual postings with balanced amounts (covers )
 2024/01/04 Budget Entry
     Expenses:Rent                  $1000.00
     Assets:Checking               $-1000.00

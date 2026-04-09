@@ -6,7 +6,7 @@
     Assets:Cash
 
 ; Error: comparing incompatible types exercises is_greater_than default path
-; (lines 1131-1136) and is_less_than error path (lines 995-996)
+; is_less_than error path
 test eval '"hello" > 42' -> 1
 __ERROR__
 While evaluating value expression:

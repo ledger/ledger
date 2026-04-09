@@ -1,4 +1,4 @@
-; Coverage: account.cc line 472 - note lookup for accounts
+; Coverage: account.cc - note lookup for accounts
 ; Uses the account directive with a note
 
 account Expenses:Food

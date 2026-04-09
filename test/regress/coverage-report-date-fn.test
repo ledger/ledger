@@ -1,4 +1,4 @@
-; Coverage for report.cc line 1514-1515: 'date' function lookup
+; Coverage for report.cc 'date' function lookup
 ; The 'date' identifier maps to fn_today in the function lookup table
 
 2024/01/01 Test

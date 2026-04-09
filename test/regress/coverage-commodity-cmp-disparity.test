@@ -1,4 +1,4 @@
-; Coverage for commodity.cc lines 430-431: recursion found disparity in comparison
+; Coverage for commodity.cc recursion found disparity in comparison
 ; Two lots of the same commodity with different price commodities and numeric values
 ; The comparison function recurses to compare numeric values, finds a disparity
 

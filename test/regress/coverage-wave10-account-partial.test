@@ -1,4 +1,4 @@
-; Test coverage for account.cc lines 119, 394, 453, 460, 500-525
+; Test coverage for account.cc
 ; Exercises partial_name (flat mode), account any/all functions,
 ; account valid() and children_with_xdata()
 

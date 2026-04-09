@@ -1,4 +1,4 @@
-; Coverage for filters.cc line 1652:
+; Coverage for filters.cc
 ; rewrite_posts::operator() with account-rewrite directive.
 ; When the account rewrite matches, it creates a temp post and copies
 ; account xdata flags from the previous account.

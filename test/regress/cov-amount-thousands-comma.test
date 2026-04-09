@@ -1,4 +1,4 @@
-; Coverage test for amount.cc lines 211, 220
+; Coverage test for amount.cc
 ; Exercise comma as thousands separator in amount output
 ; Needs integer_digits > 3 to trigger the thousands separator logic
 

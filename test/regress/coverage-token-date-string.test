@@ -1,8 +1,8 @@
 ; Test token.cc: date literal, string literal, and misc token parsing
-; Exercises: date literal [YYYY/MM/DD] parsing (lines 194-212),
-;   string literals in single/double quotes (lines 214-227),
-;   dot operator DOT (lines 359-362), comma COMMA (lines 364-367),
-;   semicolon SEMI (lines 369-372)
+; Exercises: date literal [YYYY/MM/DD] parsing
+;   string literals in single/double quotes
+;   dot operator DOT, comma COMMA
+;   semicolon SEMI
 
 test eval "[2024/01/15]"
 2024/01/15

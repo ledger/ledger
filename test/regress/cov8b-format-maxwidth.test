@@ -1,4 +1,4 @@
-; Coverage test for format.cc lines 436-439
+; Coverage test for format.cc
 ; Test format expression with max_width set via %N.M{expr} syntax.
 ; This triggers the is_function() path where max_width is passed as an arg.
 

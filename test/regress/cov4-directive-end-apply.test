@@ -1,4 +1,4 @@
-; Test end apply directive (line 835-837 of textual_directives.cc)
+; Test end apply directive
 ; Exercise the 'end' directive through general_directive
 
 apply account Expenses

@@ -1,5 +1,4 @@
 ; Test virtual posting skip in balance assertion with --effective
-; (textual_xacts.cc line 352)
 2024/01/01=2024/01/02 Test
     Assets:Checking    $100.00
     Income:Salary

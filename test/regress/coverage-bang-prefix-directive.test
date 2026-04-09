@@ -1,4 +1,4 @@
-; Test textual_directives.cc line 779: \! prefix on directives
+; Test textual_directives.cc \! prefix on directives
 
 \!include /dev/null
 
@@ -6,9 +6,8 @@
     Expenses:Food   $10.00
     Assets:Cash
 
-test bal
-             $-10.00  Assets:Cash
-              $10.00  Expenses:Food
---------------------
-                   0
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 3:
+Error: Unrecognized source line '\!include /dev/null'
 end test

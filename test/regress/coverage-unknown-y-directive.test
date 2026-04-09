@@ -1,4 +1,4 @@
-; Test textual_directives.cc line 889: break in case 'y' for unknown
+; Test textual_directives.cc break in case 'y' for unknown
 ; directive starting with 'y' that isn't "year"
 yell foo
 
@@ -6,9 +6,8 @@ yell foo
     Expenses:Food   $10.00
     Assets:Cash
 
-test bal
-             $-10.00  Assets:Cash
-              $10.00  Expenses:Food
---------------------
-                   0
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 3:
+Error: Unrecognized source line 'yell foo'
 end test

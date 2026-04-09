@@ -1,4 +1,4 @@
-; Coverage for format.cc lines 472-473: min_width right padding
+; Coverage for format.cc min_width right padding
 
 2024/01/01 Test
     Expenses:Food    $10.00

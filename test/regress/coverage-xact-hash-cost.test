@@ -1,5 +1,5 @@
 ; Test hash function with cost on posting
-; Targets: xact.cc line 660-661 (hash with post->cost)
+; Targets: xact.cc (hash with post->cost)
 
 2024/01/15 * Foreign Purchase
     Expenses:Travel            100 EUR @ $1.10

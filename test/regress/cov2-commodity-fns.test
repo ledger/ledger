@@ -1,7 +1,7 @@
 ; Test commodity-related functions for report.cc coverage
-; Covers fn_commodity_price (line 942-951, 1501-1502),
-; fn_nail_down (line 964-1010, 1567-1568),
-; fn_market with target commodity (line 658-660)
+; Covers fn_commodity_price
+; fn_nail_down
+; fn_market with target commodity
 
 P 2024/01/01 AAPL $100.00
 P 2024/06/01 AAPL $150.00
@@ -10,17 +10,17 @@ P 2024/06/01 AAPL $150.00
     Assets:Broker          10 AAPL @ $100.00
     Assets:Cash
 
-; Test commodity_price function (line 942-951, 1501-1502)
+; Test commodity_price function
 test reg Assets:Broker --format "%(commodity_price(amount, now))\n" --now "2024/06/01"
 $150.00
 end test
 
-; Test nail_down function (line 964-1010, 1567-1568)
+; Test nail_down function
 test reg Assets:Broker --format "%(nail_down(amount, market(amount)))\n"
 10 AAPL
 end test
 
-; Test market function (line 643-720, 1556-1557)
+; Test market function
 test reg Assets:Broker --format "%(market(amount))\n"
 $1500.00
 end test

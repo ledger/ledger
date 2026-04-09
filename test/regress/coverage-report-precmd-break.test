@@ -1,5 +1,5 @@
 ; Coverage for report.cc PRECOMMAND break statements:
-; Line 1847 (case 'f'), 1851 (case 'g'), 1861 (case 'q')
+; Line (case 'f'), (case 'g'), (case 'q')
 ; Unknown commands whose first letter matches a PRECOMMAND case but whose
 ; name does not match fire the break, then fall through to COMMAND lookup
 ; which also fails, producing an error.

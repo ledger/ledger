@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 1626, 1653
+; Coverage test for report.cc
 ; %(t) maps to fn_display_amount, %(T) maps to fn_display_total
 
 2024/01/01 Test

@@ -1,5 +1,5 @@
 ; Test session.cc: --explicit option
-; Exercises the explicit flag handling (lines 111-113)
+; Exercises the explicit flag handling
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00

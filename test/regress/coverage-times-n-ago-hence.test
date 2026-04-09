@@ -1,6 +1,6 @@
 ; Test "N units ago" and "N units hence" with all unit types
 ; Exercises determine_when TOK_INT + TOK_YEAR/MONTH/WEEK/DAY/QUARTER
-; with TOK_AGO and TOK_HENCE (lines 709-778)
+; with TOK_AGO and TOK_HENCE
 
 2024/01/07 Payee A
     Expenses:Food    $50.00

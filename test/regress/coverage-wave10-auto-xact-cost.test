@@ -1,4 +1,4 @@
-; Test coverage for xact.cc lines 944-946
+; Test coverage for xact.cc
 ; auto_xact_t extend_xact cost derivation from price annotation
 
 = /Expenses/

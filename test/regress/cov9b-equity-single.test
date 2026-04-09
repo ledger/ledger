@@ -1,4 +1,4 @@
-; Coverage for filters.cc line 1229: posts_as_equity single amount
+; Coverage for filters.cc posts_as_equity single amount
 ; This exercises the post_creator path with a single amount total
 
 2024/01/01 Opening

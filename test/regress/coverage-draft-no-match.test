@@ -1,4 +1,4 @@
-; Test draft.cc when no matching payee is found (covers draft.cc lines 289-292)
+; Test draft.cc when no matching payee is found (covers draft.cc )
 ; When payee is not found, the payee mask is used directly as the payee string
 
 2024/01/15 * Grocery Store

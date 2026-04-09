@@ -1,4 +1,4 @@
-; Test times.cc lines 1001-1009: "this January" relative month name
+; Test times.cc "this January" relative month name
 ; in handle_relative_token with TOK_A_MONTH
 
 2025/12/01 Dec tx

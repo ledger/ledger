@@ -1,4 +1,4 @@
-; Coverage test for amount.cc lines 1043-1055
+; Coverage test for amount.cc
 ; Exercise trailing period in amount parsing (hledger compatibility)
 ; A trailing decimal point with no following digits indicates zero decimal
 ; places, used by hledger to disambiguate decimal marks from digit group marks

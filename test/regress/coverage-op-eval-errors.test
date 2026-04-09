@@ -1,4 +1,4 @@
-; Coverage for op.cc lines 229-230, 236-237, 303: expression evaluation errors
+; Coverage for op.cc expression evaluation errors
 ; Tests unknown identifier and self-referential variable definition
 
 2024/01/01 Test

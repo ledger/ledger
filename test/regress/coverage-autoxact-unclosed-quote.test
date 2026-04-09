@@ -1,4 +1,4 @@
-; Coverage test for textual_xacts.cc line 76-77
+; Coverage test for textual_xacts.cc
 ; Automated transaction with unclosed quote in pattern
 
 = "Food

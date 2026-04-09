@@ -20,7 +20,7 @@
 P 2024/01/01 $ 0.80 EUR
 P 2024/02/01 $ 0.82 EUR
 
-; Test equity command (report.cc equity_command, line 1644-1646)
+; Test equity command (report.cc equity_command, )
 test equity
 2024/02/15 Opening Balances
     Assets:Checking                         $-215.00
@@ -67,7 +67,7 @@ test reg --only 'amount>$50' Expenses
 24-Jan-20 Electric Company      Expenses:Utilities          $120.00      $120.00
 end test
 
-; Test pricemap command (report.cc pricemap_command, line 1042-1043)
+; Test pricemap command (report.cc pricemap_command, )
 test pricemap
 graph G {
 0[label=""];

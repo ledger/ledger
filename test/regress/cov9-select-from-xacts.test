@@ -1,5 +1,5 @@
 ; Test select from xacts (transactions format)
-; Covers select.cc from xacts/transactions path (line 351-354)
+; Covers select.cc from xacts/transactions path
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00

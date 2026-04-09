@@ -1,4 +1,4 @@
-; Coverage for item.cc lines 520,525,530: break in L/X/Y cases of lookup
+; Coverage for item.cc break in L/X/Y cases of lookup
 ; When an unknown function starting with L, X, or Y is requested
 
 2024/01/01 Test

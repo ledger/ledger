@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 958-962
+; Coverage test for report.cc
 ; fn_clear_commodity removes the commodity from an amount
 
 2024/01/01 Test

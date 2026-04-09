@@ -1,5 +1,5 @@
 ; Test decimal comma error in amount parsing
-; Covers amount.cc line 1223 (incorrect use of decimal comma)
+; Covers amount.cc (incorrect use of decimal comma)
 commodity 1.000,00 EUR
 
 2024/01/01 Test

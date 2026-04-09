@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 1036-1037
+; Coverage test for xact.cc
 ; Tests the check directive inside auto transactions.
 ; When an auto transaction has a 'check' directive that evaluates to false,
 ; a warning is issued but processing continues.

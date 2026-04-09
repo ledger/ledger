@@ -1,5 +1,5 @@
 ; Coverage for textual_directives.cc apply_year_directive
-; Also covers the 'y' and 'Y' year directives at lines 834-839
+; Also covers the 'y' and 'Y' year directives
 
 apply year 2020
 

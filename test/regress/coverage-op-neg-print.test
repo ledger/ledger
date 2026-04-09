@@ -1,5 +1,5 @@
 ; Test op.cc print() for O_NEG operator
-; Exercises print() O_NEG case (lines 641-644)
+; Exercises print O_NEG case
 ; Expression with negation that gets printed in error context
 
 2024/01/15 Test

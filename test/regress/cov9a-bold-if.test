@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 616-617
+; Coverage test for report.cc
 ; fn_should_bold returns true when --bold-if expression matches
 
 2024/01/01 Test

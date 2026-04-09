@@ -1,5 +1,5 @@
 ; Test format backspace escape character
-; Covers format.cc line 163 (\b backspace escape)
+; Covers format.cc (\b backspace escape)
 
 2024/01/15 Test
     Expenses:Food    $50.00

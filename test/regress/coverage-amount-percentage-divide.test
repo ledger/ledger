@@ -1,4 +1,4 @@
-; Coverage for amount.cc lines 531-540:
+; Coverage for amount.cc
 ; Dividing an amount by a percentage treats the percentage as a fraction:
 ; $1190 / 19% = $1190 / 0.19 = $6263.16. The "%" commodity triggers
 ; the special multiply-by-100 logic in the division operator.

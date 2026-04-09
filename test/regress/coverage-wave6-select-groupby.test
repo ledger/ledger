@@ -1,5 +1,5 @@
 ; Coverage tests for select.cc
-; Tests: group by clause to cover line 383
+; Tests: group by clause to cover
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00
@@ -9,7 +9,7 @@
     Expenses:Transport    $30.00
     Assets:Checking
 
-; Test select with group by - covers line 383
+; Test select with group by - covers
 test select account, total from posts group by account --columns 80
 Assets:Checking
 Assets:Checking                                                         $-50.00

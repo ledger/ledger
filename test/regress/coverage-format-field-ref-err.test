@@ -1,4 +1,4 @@
-; Coverage for format.cc line 270: %$ field reference error
+; Coverage for format.cc %$ field reference error
 ; Triggered by %$0 or %$X (invalid field reference digit)
 
 2024/01/15 Test

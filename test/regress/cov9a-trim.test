@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 742-749
+; Coverage test for report.cc
 ; fn_trim removes leading and trailing whitespace from a string
 
 2024/01/01 Test

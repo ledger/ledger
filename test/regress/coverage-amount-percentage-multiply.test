@@ -1,4 +1,4 @@
-; Coverage for amount.cc lines 479-495:
+; Coverage for amount.cc
 ; Multiplying an amount by a percentage divides by 100 internally.
 ; $100 * 19% = $19.00 (the "%" commodity triggers the special
 ; division-by-100 logic). The result keeps the original commodity ($).

@@ -1,4 +1,4 @@
-; Test times.cc lines 820-832: handle_relative_token for "this week" / "last week"
+; Test times.cc handle_relative_token for "this week" / "last week"
 
 2026/02/23 Last week tx
     Expenses:Food   $5.00

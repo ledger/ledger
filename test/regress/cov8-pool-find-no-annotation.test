@@ -1,4 +1,4 @@
-; Coverage for pool.cc line 378: find with no annotation match
+; Coverage for pool.cc find with no annotation match
 
 P 2024/01/01 AAPL $100.00
 

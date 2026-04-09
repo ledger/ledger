@@ -122,18 +122,24 @@ string source_context(const path& file, const std::istream::pos_type pos,
   );
   in->seekg(pos, std::ios::beg);
 
-  scoped_array<char> buf(new char[static_cast<std::size_t>(read_len) + 1]);
-  in->read(buf.get(), static_cast<std::streamsize>(read_len));
+  std::vector<char> buf(static_cast<std::size_t>(read_len) + 1);
+  in->read(buf.data(), static_cast<std::streamsize>(read_len));
   const std::streamsize got = in->gcount();
   buf[static_cast<std::ptrdiff_t>(got)] = '\0';
 
+  string content(buf.data(), static_cast<std::size_t>(got));
+  std::vector<string> lines;
+  boost::split(lines, content, boost::is_any_of("\r\n"), boost::token_compress_on);
+
   bool first = true;
-  for (char* p = std::strtok(buf.get(), "\r\n"); p; p = std::strtok(nullptr, "\r\n")) {
+  for (const string& line : lines) {
+    if (line.empty())
+      continue;
     if (first)
       first = false;
     else
       out << '\n';
-    out << prefix << p;
+    out << prefix << line;
   }
 
   if (truncated)

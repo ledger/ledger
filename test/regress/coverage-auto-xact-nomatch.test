@@ -1,4 +1,4 @@
-; Coverage test for xact.cc line 989 (matches_predicate = false)
+; Coverage test for xact.cc (matches_predicate = false)
 ; Tests auto-xact where the predicate matches nothing.
 ; The auto-xact body is not applied to any posting.
 

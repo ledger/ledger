@@ -1,4 +1,4 @@
-; Test day_of_week_posts (lines 1304-1313 of filters.cc)
+; Test day_of_week_posts
 ; Exercise the day-of-week report subtotal path
 
 2024/01/01 Test1

@@ -1,4 +1,4 @@
-; Test balance assignment with null expression (textual_xacts.cc line 633-634)
+; Test balance assignment with null expression
 2024/01/01 Test
     Expenses:Food    = ()
     Assets:Cash    $-10.00

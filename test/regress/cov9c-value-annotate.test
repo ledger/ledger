@@ -1,4 +1,4 @@
-; Coverage: value.cc lines 1884-1885 (value_t::annotate for amount values)
+; Coverage: value.cc (value_t::annotate for amount values)
 ; Amount annotations with price, date, and tag trigger the annotate path
 
 2024/01/01 Buy Stock

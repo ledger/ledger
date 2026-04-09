@@ -1,4 +1,4 @@
-; Coverage test for account.cc line 242
+; Coverage test for account.cc
 ; get_partial_name triggered by partial_account in balance format
 
 2024/01/01 Test

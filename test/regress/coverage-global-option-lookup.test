@@ -1,5 +1,5 @@
-; Test global.cc: option lookup and --options display
-; Exercises lookup_option case 'o' (options)
+; Test global.cc: --options display (exercises lookup_option 'o' case)
+; Only the 'o' (options) branch is exercised
 
 2024/01/01 Test
     Expenses:Food    $25.00

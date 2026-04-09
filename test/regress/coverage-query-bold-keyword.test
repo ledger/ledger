@@ -1,6 +1,6 @@
 ; Coverage test for query.cc: bold query keyword
-; Exercises query.cc lines 232 (TOK_BOLD token) and
-; lines 456-469: QUERY_BOLD kind in parse_query_expr
+; Exercises query.cc (TOK_BOLD token)
+; QUERY_BOLD kind in parse_query_expr
 
 2024/01/01 Grocery Store
     Expenses:Food    $25.00

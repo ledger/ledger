@@ -1,5 +1,5 @@
-; Coverage: journal.cc lines 251-256: payee_alias_mappings matching loop
-; Also exercises register_payee() at line 218
+; Coverage: journal.cc payee_alias_mappings matching loop
+; Also exercises register_payee
 
 commodity $
     format $1,000.00

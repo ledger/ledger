@@ -1,5 +1,5 @@
 ; Test "last/next/this N units" in handle_relative_token
-; (exercises handle_relative_token with TOK_INT in times.cc: lines 974-1012)
+; (exercises handle_relative_token with TOK_INT in times.cc: )
 ; Tests TOK_MONTHS, TOK_WEEKS, TOK_QUARTERS, TOK_YEARS, TOK_DAYS branches
 
 2024/01/15 Payee A

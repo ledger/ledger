@@ -1,4 +1,4 @@
-; Coverage test for amount.cc line 1204-1205
+; Coverage test for amount.cc
 ; Incorrect use of thousand-mark period triggers error
 ; In European style (decimal comma), period acts as thousands separator
 ; but must be at 3-digit boundaries

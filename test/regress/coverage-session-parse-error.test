@@ -1,4 +1,4 @@
-; Coverage for session.cc lines 170-172: exception handling during journal parsing
+; Coverage for session.cc exception handling during journal parsing
 ; Including a non-existent file triggers the catch/rethrow in read_data
 
 include /nonexistent/file.dat

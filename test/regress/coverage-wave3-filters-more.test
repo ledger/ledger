@@ -1,8 +1,8 @@
 ; Coverage tests for filters.cc and filters.h
-; Tests: anonymize_posts (lines 227-277), handle_value (lines 338-378),
-;        subtotal_posts (lines 951-991), by_payee_posts (lines 1175-1198),
-;        transfer_details (lines 1200-1244), posts_as_equity (lines 1130-1173),
-;        interval_posts (lines 1006-1037), day_of_week_posts
+; Tests: anonymize_posts, handle_value
+;        subtotal_posts, by_payee_posts
+;        transfer_details, posts_as_equity
+;        interval_posts, day_of_week_posts
 
 ; Test anonymize (covers anonymize_posts operator(), render_commodity)
 2024/01/01 Store Name
@@ -27,7 +27,7 @@ test print --anon | sed -E 's/[0-9a-f]{8}/XXXXXXXX/g'
     XXXXXXXX:XXXXXXXX:XXXXXXXX
 end test
 
-; Test by_payee subtotals (covers by_payee_posts lines 1175-1198)
+; Test by_payee subtotals (covers by_payee_posts )
 2024/02/01 Grocery A
     Expenses:Food    $30.00
     Assets:Cash
@@ -45,14 +45,14 @@ test reg --by-payee Expenses:Food
 24-Mar-01 Grocery B             Expenses:Food                $40.00       $90.00
 24-Jan-01 Store Name            Expenses:Food                $50.00      $140.00
 end test
-; Test day-of-week subtotals (covers day_of_week_posts lines 1010-1011)
+; Test day-of-week subtotals (covers day_of_week_posts )
 test reg --dow Expenses:Food
 24-Jan-01 Mondays               Expenses:Food                $50.00       $50.00
 24-Feb-01 Thursdays             Expenses:Food                $50.00      $100.00
 24-Mar-01 Fridays               Expenses:Food                $40.00      $140.00
 end test
 
-; Test equity output (covers posts_as_equity lines 1130-1173)
+; Test equity output (covers posts_as_equity )
 test equity Expenses
 2024/03/01 Opening Balances
     Expenses:Food                            $140.00

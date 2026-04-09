@@ -1,6 +1,6 @@
-; Coverage for item.cc lines 306,313,320: get_pathname, get_filebase,
+; Coverage for item.cc get_pathname, get_filebase
 ; get_filepath when item has no pos.
-; Also lines 344,350-351: has_tag with mask and value_mask.
+; Also has_tag with mask and value_mask
 ; Note: tags on a transaction note apply to all postings via inheritance.
 
 2024/01/01 Test

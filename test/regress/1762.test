@@ -51,9 +51,10 @@ test bal -e 2019-02-01 --now 2019-01-31 -V Brokerage
 end test
 
 ; With --now 2019-02-01 the user explicitly requests Feb-01 prices, so the
-; Feb-01 prices at midnight ARE included (GADGET, GIZMO, WHATSIT at $110),
-; but the P directive at 00:00:01 for WIDGET remains excluded because
-; terminus is at 00:00:00 and the P entry is at 00:00:01.
+; Feb-01 prices ARE included (GADGET, WHATSIT at $110). GIZMO's transaction
+; at 00:00:01 (one second after midnight) is also included at $110, but the
+; P directive at 00:00:01 for WIDGET remains excluded because terminus is
+; at 00:00:00 and the P entry is at 00:00:01.
 test bal -e 2019-02-01 --now 2019-02-01 -V Brokerage
                 430$  Brokerage
                 110$    Gadgets

@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 1125-1127
+; Coverage test for xact.cc
 ; Tests auto-xact cost derivation when the auto-generated amount is
 ; negative and has ANNOTATION_PRICE_NOT_PER_UNIT (from @@ syntax).
 ; The (-amount) expression produces a negative kWh amount with @@ cost

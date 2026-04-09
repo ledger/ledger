@@ -17,7 +17,7 @@
 P 2024/01/01 $ 0.80 EUR
 P 2024/02/01 $ 0.82 EUR
 
-; Test budget command (report.cc budget_command, line 1624)
+; Test budget command (report.cc budget_command, )
 test budget --begin 2024/01/01 --end 2024/03/01
     $-400.00     $-400.00            0  100%  Assets:Checking
      $400.00      $400.00            0  100%  Expenses:Food
@@ -44,7 +44,7 @@ test equity Expenses
     Equity:Opening Balances
 end test
 
-; Test register with --historical (report.cc line 1192-1193)
+; Test register with --historical
 test reg --historical Expenses
 24-Jan-15 Grocery Store         Expenses:Food             EUR144.00    EUR144.00
 24-Feb-10 Grocery Store         Expenses:Food             EUR180.40    EUR324.40

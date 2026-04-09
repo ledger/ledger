@@ -1,4 +1,4 @@
-; Coverage for xact.cc lines 656-661 (unbalanced transaction error)
+; Coverage for xact.cc (unbalanced transaction error)
 ; When a transaction doesn't balance and no null post exists, an error.
 
 2024/01/01 Test

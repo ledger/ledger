@@ -1,7 +1,7 @@
-; Test forecast_posts with period that expires (lines 1453, 1553-1555 of filters.cc)
+; Test forecast_posts with period that expires
 ; A periodic transaction with a limited range used for forecasting.
 ; After 2024/04/01 the period has no more start, exercising the
-; pending_posts erase path at line 1554.
+; pending_posts erase path
 
 ~ monthly from 2024/01/01 to 2024/04/01
     Expenses:Food    $100.00

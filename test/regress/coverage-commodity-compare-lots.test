@@ -1,4 +1,4 @@
-; Coverage for commodity.cc lines 430,485,514: commodity comparison with lots
+; Coverage for commodity.cc commodity comparison with lots
 
 2024/01/01 Buy1
     Assets:Brokerage    10 AAPL {$150}

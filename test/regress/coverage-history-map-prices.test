@@ -1,4 +1,4 @@
-; Coverage for history.cc lines 300-330: map_prices function
+; Coverage for history.cc map_prices function
 ; The pricedb command calls map_prices to enumerate all price entries
 ; This exercises the price map iteration and time-based filtering
 

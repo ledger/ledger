@@ -1,4 +1,4 @@
-; Coverage for report.cc lines 956,1614: fn_set_commodity_price and its lookup
+; Coverage for report.cc fn_set_commodity_price and its lookup
 
 P 2024/01/01 EUR 1.10 GBP
 

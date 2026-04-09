@@ -1,4 +1,4 @@
-; Test apply year / end apply year directive (lines 359-387, 389-414 of textual_directives.cc)
+; Test apply year / end apply year directive
 ; Exercise the year_directive_year and apply_stack flow
 
 apply year 2023

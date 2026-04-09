@@ -25,7 +25,7 @@ test reg --ignore-diacritics Cafe --columns=80 -> 0
 24-Jan-01 Boulangerie spécial.. Expenses:Café                10 EUR       10 EUR
 end test
 
-; Test 3: Payee search with accented pattern matching accented payee
+; Test 3: Payee search with ASCII pattern matching accented payee
 test reg --ignore-diacritics @Resume --columns=80 -> 0
 24-Feb-01 Résumé Services       Expenses:Office              50 EUR       50 EUR
                                 Assets:Checking             -50 EUR            0

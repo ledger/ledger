@@ -1,5 +1,5 @@
 ; Test period command with "every" expressions
-; Exercises: handle_every_token (lines 1113-1160)
+; Exercises: handle_every_token
 ; token_t::dump for TOK_EVERY, TOK_INT, plural tokens
 ; date_duration_t operator<< for various durations
 

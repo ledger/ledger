@@ -1,5 +1,5 @@
 ; Test posting with state flag but no account name
-; Covers textual_xacts.cc line 456 (Posting has no account)
+; Covers textual_xacts.cc (Posting has no account)
 
 2024/01/15 Test
     * ; comment with state but no account

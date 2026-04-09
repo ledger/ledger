@@ -1,4 +1,4 @@
-; Coverage test for select.cc lines 381-382:
+; Coverage test for select.cc
 ; Exercise select with display clause.
 
 2024/01/01 Test

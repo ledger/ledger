@@ -1,4 +1,4 @@
-; Test apply_tag_directive missing argument (line 307 of textual_directives.cc)
+; Test apply_tag_directive missing argument
 ; Exercise the error path when apply tag has no argument
 
 apply tag

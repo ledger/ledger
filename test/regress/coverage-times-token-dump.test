@@ -1,4 +1,4 @@
-; Coverage for times.cc lines 515-523: TOK_SLASH and TOK_DOT in token dump
+; Coverage for times.cc TOK_SLASH and TOK_DOT in token dump
 ; The "period" command outputs token types, exercising the dump() method
 
 2024/01/01 Test

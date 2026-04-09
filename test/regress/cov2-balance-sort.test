@@ -1,6 +1,6 @@
 ; Test balance command with sorting for compare.cc coverage
-; Covers compare_items<account_t>::operator() (lines 110-134)
-; and sorted_accounts_iterator (lines 200-231)
+; Covers compare_items<account_t>::operator
+; sorted_accounts_iterator
 
 2024/01/01 Payee
     Expenses:Zeta            $10.00
@@ -8,7 +8,7 @@
     Expenses:Middle          $30.00
     Assets:Cash
 
-; Test balance with --sort (exercises account sorting, compare.cc lines 110-134)
+; Test balance with --sort (exercises account sorting, compare.cc )
 test bal Expenses --sort amount
               $60.00  Expenses
               $10.00    Zeta

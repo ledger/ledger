@@ -1,6 +1,6 @@
 ; Test token.cc: DOT and ARROW operators
-; Exercises: DOT '.' token (lines 360-362),
-;            ARROW '->' lambda token (lines 267-272)
+; Exercises: DOT '.' token
+;            ARROW '->' lambda token
 
 2024/01/15 Payee
     Expenses:Food    $50.00

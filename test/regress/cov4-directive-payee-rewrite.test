@@ -1,4 +1,4 @@
-; Test payee-rewrite directive (line 558 of textual_directives.cc)
+; Test payee-rewrite directive
 ; Exercise the payee_rewrite_mappings flow
 ; The rewrite applies at report time; each posting is in a separate xact
 

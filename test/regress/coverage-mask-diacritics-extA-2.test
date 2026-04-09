@@ -1,5 +1,5 @@
 ; Coverage tests for mask.cc fold_codepoint: Latin Extended-A part 2
-; Covers lines 110-131: Ń-ž mappings
+; Covers Ń-ž mappings
 
 ; Ń(0x143)→N, ń(0x144)→n, Ō(0x14C)→O, ō(0x14D)→o
 ; Œ(0x152)→O, œ(0x153)→o, Ŕ(0x154)→R, ŕ(0x155)→r

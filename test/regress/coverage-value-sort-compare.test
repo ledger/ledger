@@ -1,6 +1,6 @@
 ; Test value.cc: sort comparisons across different value types
-; Coverage target: value.cc - is_less_than AMOUNT vs AMOUNT (line 904-909),
-;   sort_value_is_less_than (line 2143+), commodity comparison in sort
+; Coverage target: value.cc - is_less_than AMOUNT vs AMOUNT
+;   sort_value_is_less_than (+), commodity comparison in sort
 
 2024/01/15 First
     Expenses:Food       $300.00

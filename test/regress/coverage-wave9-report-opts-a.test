@@ -1,5 +1,5 @@
 ; Tests for report.cc option handlers
-; Covers various option handler bodies in lookup_option (lines 1039-1305)
+; Covers various option handler bodies in lookup_option
 ; Targets: --dc, --deviation, --amount-data, --total-data, --count,
 ;   --no-total, --no-titles, --average, --immediate, --collapse,
 ;   --related, --invert, --subtotal, --sort, --percent, --by-payee,

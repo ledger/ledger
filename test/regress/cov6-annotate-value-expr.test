@@ -1,4 +1,4 @@
-; Coverage for annotate.cc line 265: value_expr in annotation
+; Coverage for annotate.cc value_expr in annotation
 
 2024/01/01 Buy
     Assets:Stock    10 AAPL ((market(amount)))

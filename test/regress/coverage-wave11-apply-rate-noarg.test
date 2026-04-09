@@ -1,4 +1,4 @@
-; Coverage for textual_directives.cc line 339 (apply fixed/rate without arg)
+; Coverage for textual_directives.cc (apply fixed/rate without arg)
 
 apply fixed
 

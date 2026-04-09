@@ -1,4 +1,4 @@
-; Coverage: account.cc line 504 - 'O' function lookup (total)
+; Coverage: account.cc - 'O' function lookup (total)
 ; O is equivalent to total in account context
 
 2024/01/01 Test

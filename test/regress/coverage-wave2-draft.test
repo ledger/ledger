@@ -1,5 +1,5 @@
 ; Tests for draft.cc uncovered lines
-; Covers: parse_args (lines 85-209), insert (lines 212-491)
+; Covers: parse_args, insert
 
 2024/01/01 Grocery Store
     Expenses:Food          $50.00

@@ -1,4 +1,4 @@
-; Coverage for xact.cc lines 523,538: finalization balance check paths.
+; Coverage for xact.cc finalization balance check paths
 ; Line 538 is the verify() must_balance skip for virtual.
 
 2024/01/01 Test

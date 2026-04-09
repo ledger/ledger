@@ -1,5 +1,5 @@
 ; Test hash mismatch detection
-; Covers textual_xacts.cc line 1011 (hash verification failure)
+; Covers textual_xacts.cc (hash verification failure)
 
 2024/01/15 Test
     ; Hash: 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000

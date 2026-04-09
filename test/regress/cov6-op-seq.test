@@ -1,4 +1,4 @@
-; Coverage test for op.cc calc_seq (lines 549-571)
+; Coverage test for op.cc calc_seq
 ; Tests the O_SEQ operator (semicolon) which evaluates multiple expressions
 ; in sequence, keeping only the last result.
 

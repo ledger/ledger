@@ -1,5 +1,5 @@
 ; Test value_t::is_greater_than for DATE type
-; Exercises is_greater_than DATE path (lines 1027-1030)
+; Exercises is_greater_than DATE path
 ; Sorting in reverse order triggers the > comparison
 
 2024/03/20 Later

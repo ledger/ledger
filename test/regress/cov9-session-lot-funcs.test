@@ -1,5 +1,5 @@
 ; Test lot_price, lot_date, lot_tag functions
-; Covers session.cc lines 273-291
+; Covers session.cc
 
 2024/01/15 Buy Stock
     Assets:Brokerage    10 AAPL {$150.00} [2024/01/10] (lot1)

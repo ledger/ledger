@@ -1,4 +1,4 @@
-; Coverage for filters.cc line 1290: transfer_details SET_ACCOUNT
+; Coverage for filters.cc transfer_details SET_ACCOUNT
 ; with xdata flags from previous account
 ; The --account option with a non-colon-ending string triggers prepending
 

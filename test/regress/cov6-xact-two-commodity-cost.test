@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 240-242
+; Coverage test for xact.cc
 ; When two commodities exist and a posting already has a user-specified cost,
 ; saw_cost should be set true and cost auto-calculation should be skipped.
 

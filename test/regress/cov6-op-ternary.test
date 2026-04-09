@@ -1,4 +1,4 @@
-; Coverage test for op.cc O_QUERY (ternary) calc path (lines 374-381)
+; Coverage test for op.cc O_QUERY (ternary) calc path
 ; Tests the ternary ? : operator in expressions.
 ; Exercises both the true and false paths of the ternary.
 

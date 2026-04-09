@@ -1,6 +1,6 @@
 ; Coverage test for op.cc: O_LOOKUP (dot operator) calc and print paths
-; Exercises: O_LOOKUP calc (lines 288-301), O_LOOKUP compile (line 192),
-;   O_LOOKUP print (lines 758-764)
+; Exercises: O_LOOKUP calc, O_LOOKUP compile
+;   O_LOOKUP print
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00

@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 1119-1133
+; Coverage test for xact.cc
 ; Tests auto-xact cost derivation when the initial post has a cost
 ; and the auto-generated amount has a price annotation (from @@).
 ; The auto-xact copies the amount and derives cost from the annotation.

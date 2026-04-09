@@ -1,4 +1,4 @@
-; Coverage test for post.cc line 384:
+; Coverage test for post.cc
 ; Exercise all(EXPR, false) to exclude self and test all other postings.
 
 2024/01/01 All Expenses

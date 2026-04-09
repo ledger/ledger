@@ -1,4 +1,4 @@
-; Test token parsing with braced amounts (lines 274-285 of token.cc)
+; Test token parsing with braced amounts
 ; Exercise the brace-delimited amount parsing
 
 2024/01/01 Test

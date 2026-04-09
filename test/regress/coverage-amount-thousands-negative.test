@@ -1,8 +1,8 @@
-; Coverage for amount.cc lines 204, 206-207, 220:
+; Coverage for amount.cc
 ; Negative amounts with standard comma thousands separator and period decimal.
-; The negative sign goes through line 206-207 (out << *p for '-').
-; The thousands separator goes through line 220 (out << ',').
-; The decimal point goes through line 204 (out << *p for '.').
+; The negative sign goes through (out << *p for '-')
+; The thousands separator goes through (out << ',')
+; The decimal point goes through (out << *p for '.')
 
 commodity $
     format $1,000.00

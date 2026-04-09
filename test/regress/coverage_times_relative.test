@@ -1,4 +1,4 @@
-; Coverage test for times.cc lines 1213, 1238
+; Coverage test for times.cc
 ; Test TOK_A_WDAY via handle_date_token and TOK_LAST via handle_relative_token
 
 2020/01/01 Old Transaction

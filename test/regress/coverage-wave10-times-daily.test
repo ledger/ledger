@@ -1,5 +1,5 @@
-; Coverage tests for times.cc line 1175 (TOK_DAILY duration)
-; Also covers times.cc line 1268 (handle_period_token)
+; Coverage tests for times.cc (TOK_DAILY duration)
+; Also covers times.cc (handle_period_token)
 
 2024/01/01 Day One
     Expenses:Food    $10.00

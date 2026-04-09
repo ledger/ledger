@@ -1,4 +1,4 @@
-; Coverage for post.cc lines 430-434: cost_calculated lookup.
+; Coverage for post.cc cost_calculated lookup
 
 2024/01/01 Buy stock
     Assets:Brokerage              10 AAPL @ $15.00

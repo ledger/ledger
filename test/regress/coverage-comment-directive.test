@@ -1,4 +1,4 @@
-; Test textual_directives.cc lines 818-820: comment directive
+; Test textual_directives.cc comment directive
 ; in general_directive case c
 
 comment

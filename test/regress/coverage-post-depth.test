@@ -1,6 +1,6 @@
-; Coverage test for post.cc line 331-332
+; Coverage test for post.cc
 ; Tests get_account_depth accessor.
-; The depth of Expenses:Food:Groceries is 3 (three levels deep).
+; The depth of Expenses:Food:Groceries is (three levels deep)
 
 2024/03/01 Groceries
     Expenses:Food:Groceries     $10.00

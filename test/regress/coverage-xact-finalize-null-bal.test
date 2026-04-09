@@ -1,5 +1,5 @@
 ; Test finalize with null balance (balance.is_balance() path)
-; Targets: xact.cc lines 218-230 (balance paths during finalize)
+; Targets: xact.cc (balance paths during finalize)
 
 2024/01/15 * Multi
     Expenses:Food              $50.00

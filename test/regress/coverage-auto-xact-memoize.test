@@ -1,4 +1,4 @@
-; Coverage for xact.cc lines 993-998 (memoized_results in auto_xact)
+; Coverage for xact.cc (memoized_results in auto_xact)
 ; When the same account appears in multiple transactions, the
 ; memoized results are reused for faster evaluation.
 

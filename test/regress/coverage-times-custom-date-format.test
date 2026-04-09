@@ -1,5 +1,5 @@
 ; Test custom date format for format_date FMT_CUSTOM cache path
-; Exercises format_date (line 1793) - cached custom format lookup
+; Exercises format_date - cached custom format lookup
 ; When --date-format is used, format_date is called with FMT_CUSTOM.
 ; The first call creates the formatter; subsequent calls use the cache.
 

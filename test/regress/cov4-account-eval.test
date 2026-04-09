@@ -1,4 +1,4 @@
-; Test account directive eval sub-directive (lines 466-470 of textual_directives.cc)
+; Test account directive eval sub-directive
 ; Exercise the eval keyword within an account directive
 
 account Expenses:Food

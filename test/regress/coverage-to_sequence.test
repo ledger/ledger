@@ -1,4 +1,4 @@
-; Coverage test for report.cc fn_to_sequence (line 1075)
+; Coverage test for report.cc fn_to_sequence
 ; Tests to_sequence() function in format expressions
 
 2024/01/15 Test Payee

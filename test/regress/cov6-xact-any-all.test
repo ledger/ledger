@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 789-811
+; Coverage test for xact.cc
 ; Tests the fn_any() and fn_all() functions used in expressions.
 ; fn_any returns true if any posting in the xact matches the expression.
 ; fn_all returns true if all postings in the xact match the expression.

@@ -1,5 +1,5 @@
 ; Test disabled auto transactions (enabled=false path)
-; Targets: xact.cc lines 735-736 (early return when !enabled)
+; Targets: xact.cc (early return when !enabled)
 
 = /Expenses/
     (Budget)                  0.10

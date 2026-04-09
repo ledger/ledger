@@ -1,5 +1,4 @@
 ; Coverage tests for xact.cc - fn_any and fn_all expressions
-; Covers lines 608-630
 
 2024/01/01 Grocery Store
     Expenses:Food                    $50.00

@@ -1,4 +1,4 @@
-; Coverage test for filters.cc line 1453
+; Coverage test for filters.cc
 ; forecast_posts::add_post returns early for expired periodic transaction
 
 ~ monthly from 2020/01/01 to 2020/06/01

@@ -1,5 +1,5 @@
 ; Coverage test for query.cc: since followed by for keyword break
-; Exercises query.cc lines 511-516: keyword break logic where
+; Exercises query.cc keyword break logic where
 ; encountering "for" during "since" token processing causes
 ; the lexer to back up and reparse
 

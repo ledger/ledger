@@ -1,4 +1,4 @@
-; Coverage test for csv.cc line 262:
+; Coverage test for csv.cc
 ; CSV import with default commodity from D directive and Total column
 
 D $1,000.00

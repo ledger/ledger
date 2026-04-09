@@ -1,4 +1,4 @@
-; Coverage test for draft.cc lines 457-469: @ per-unit cost handling
+; Coverage test for draft.cc @ per-unit cost handling
 ; When a draft template posting has a cost with the @ operator,
 ; the code unrounds the cost, multiplies it by the amount, and
 ; preserves the commodity. Exercises:

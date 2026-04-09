@@ -1,4 +1,4 @@
-; Test query parser with 'desc' keyword for payee matching (covers query.cc line 216)
+; Test query parser with 'desc' keyword for payee matching (covers query.cc )
 ; The 'desc' keyword should work the same as 'payee' keyword
 
 2024/01/15 Grocery Store

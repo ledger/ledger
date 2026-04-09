@@ -1,7 +1,7 @@
-; Test token parsing for match operator =~ (lines 362-368 of token.cc)
-; and not-equal operator != (lines 290-296 of token.cc)
-; and less-equal operator <= (lines 382-387 of token.cc)
-; and greater-equal operator >= (lines 394-398 of token.cc)
+; Test token parsing for match operator =~
+; not-equal operator !=
+; less-equal operator <=
+; greater-equal operator >=
 
 2024/01/01 Test
     Expenses:Food    $10.00

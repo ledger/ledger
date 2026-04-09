@@ -1,5 +1,5 @@
 ; Test query show/only/for/since/until clauses for query.cc coverage
-; Covers lines 474-558 in query.cc
+; Covers in query.cc
 
 2024/01/01 Grocery Store
     Expenses:Food            $10.00
@@ -13,31 +13,31 @@
     Expenses:Dining          $30.00
     Assets:Cash
 
-; Test 'show' clause (query.cc lines 474-509, TOK_SHOW)
+; Test 'show' clause (query.cc , TOK_SHOW)
 ; Show filters display, running total still accumulates
 test reg Expenses show Dining
 24-Mar-01 Restaurant            Expenses:Dining              $30.00       $60.00
 end test
 
-; Test 'only' clause (query.cc lines 474-509, TOK_ONLY)
+; Test 'only' clause (query.cc , TOK_ONLY)
 test reg only Expenses
 24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
 24-Feb-01 Gas Station           Expenses:Gas                 $20.00       $30.00
 24-Mar-01 Restaurant            Expenses:Dining              $30.00       $60.00
 end test
 
-; Test 'for' clause (query.cc lines 512-549, TOK_FOR)
+; Test 'for' clause (query.cc , TOK_FOR)
 test reg Expenses for 2024/02
 24-Feb-01 Gas Station           Expenses:Gas                 $20.00       $20.00
 end test
 
-; Test 'since' clause (query.cc lines 519-520, TOK_SINCE)
+; Test 'since' clause (query.cc , TOK_SINCE)
 test reg Expenses since 2024/02/01
 24-Feb-01 Gas Station           Expenses:Gas                 $20.00       $20.00
 24-Mar-01 Restaurant            Expenses:Dining              $30.00       $50.00
 end test
 
-; Test 'until' clause (query.cc lines 521-522, TOK_UNTIL)
+; Test 'until' clause (query.cc , TOK_UNTIL)
 test reg Expenses until 2024/02/01
 24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
 end test

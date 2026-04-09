@@ -1,4 +1,4 @@
-; Test coverage for textual_xacts.cc line 126
+; Test coverage for textual_xacts.cc
 ; 2-digit year in transaction date
 
 year 2024

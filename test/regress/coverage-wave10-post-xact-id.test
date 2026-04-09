@@ -1,4 +1,4 @@
-; Test coverage for post.cc lines 519, 524, 529, 539, 542, 554, 563, 565
+; Test coverage for post.cc
 ; Exercises xact_id lookup and the O, N, R single-char lookups
 
 2024/01/01 Test

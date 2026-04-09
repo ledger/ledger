@@ -1,6 +1,5 @@
-; Test get_commodity with compound value (lines 211-213 of post.cc)
-; Exercise the POST_EXT_COMPOUND path in get_commodity
-; Also tests get_commodity_is_primary (line 220-221)
+; Test get_commodity and get_commodity_is_primary accessors
+; Uses a single commodity ($) with --monthly aggregation
 
 2024/01/01 Test
     Expenses:Food    $10.00

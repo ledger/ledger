@@ -1,4 +1,4 @@
-; Coverage for xact.cc lines 641: rounding adjustment for per-unit costs
+; Coverage for xact.cc rounding adjustment for per-unit costs
 
 2024/01/01 Buy
     Assets:Stock    3 AAPL @ $33.33

@@ -1,4 +1,4 @@
-; Coverage for item.cc lines 253-254,259-260,280-281,286-287: tag/has_tag mask args
+; Coverage for item.cc tag/has_tag mask args
 
 2024/01/01 Test
     ; MyTag: myvalue

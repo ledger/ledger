@@ -1,4 +1,4 @@
-; Coverage for post.cc lines 273-278: account(n) with long depth argument
+; Coverage for post.cc account(n) with long depth argument
 ; When n > 2, truncates account name; when n <= 2, returns full name
 
 2024/01/01 Test

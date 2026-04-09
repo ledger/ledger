@@ -1,7 +1,7 @@
-; Coverage test for times.cc line 327
+; Coverage test for times.cc
 ; Exercise date_duration output for yearly periods
-; Also covers lines 1238 (handle_relative_token), 1245 (handle_simple_period_token)
-; and line 1173 (default break in handle_period_token)
+; Also covers (handle_relative_token), (handle_simple_period_token)
+; (default break in handle_period_token)
 
 2024/01/01 Test
     Expenses:Food            $10.00
@@ -16,7 +16,7 @@
     Assets:Cash
 
 ; Test yearly period - covers TOK_YEARLY -> date_duration_t(YEARS, 1)
-; and the operator<< for YEARS on line 323-324
+; the operator<< for YEARS on
 test reg Expenses --period yearly
 24-Jan-01 - 24-Dec-31           Expenses:Food                $30.00       $30.00
 25-Jan-01 - 25-Dec-31           Expenses:Food                $30.00       $60.00

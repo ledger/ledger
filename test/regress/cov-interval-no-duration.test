@@ -1,4 +1,4 @@
-; Coverage test for filters.cc lines 1070-1071
+; Coverage test for filters.cc
 ; interval_posts with period range but no duration
 
 2024/01/01 Test A

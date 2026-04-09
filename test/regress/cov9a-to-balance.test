@@ -1,4 +1,4 @@
-; Coverage test for report.cc line 1063
+; Coverage test for report.cc
 ; fn_to_balance converts a value to a balance_t
 
 2024/01/01 Test

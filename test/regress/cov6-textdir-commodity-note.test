@@ -1,4 +1,4 @@
-; Coverage for textual_directives.cc line 619: commodity note sub-directive
+; Coverage for textual_directives.cc commodity note sub-directive
 
 commodity EUR
     note European currency

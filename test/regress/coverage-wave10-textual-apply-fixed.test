@@ -1,4 +1,4 @@
-; Test coverage for textual_directives.cc lines 339, 346
+; Test coverage for textual_directives.cc
 ; apply_rate_directive (apply fixed)
 
 apply fixed EUR $1.10

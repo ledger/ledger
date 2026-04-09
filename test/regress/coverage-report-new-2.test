@@ -1,11 +1,11 @@
 ; Coverage tests for report.cc expression functions and color functions
-; Targets: report.cc lines 960-1011 (color/conversion fns), 1326-1352, 1417-1554
+; Targets: report.cc (color/conversion fns), 1326-1352, 1417-1554
 
 2024/01/15 Test Payee
     Expenses:Food    $50.00
     Assets:Checking
 
-; Test color functions (report.cc fn_red/green/blue/etc, lines 981-1011)
+; Test color functions (report.cc fn_red/green/blue/etc, )
 test eval red
 red
 end test
@@ -132,7 +132,7 @@ test eval 'to_mask("food")'
 /food/
 end test
 
-; Test to_balance function (report.cc fn_to_balance, line 964)
+; Test to_balance function (report.cc fn_to_balance, )
 test eval 'to_balance($50)'
 $50
 end test

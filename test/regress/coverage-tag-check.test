@@ -1,6 +1,6 @@
-; Coverage test for textual_directives.cc lines 662-679
+; Coverage test for textual_directives.cc
 ; Tag directive with assert/check sub-directives
-; Also tests the blank-line break inside tag directive (line 670)
+; Also tests the blank-line break inside tag directive
 
 tag MyTag
     check value =~ /./

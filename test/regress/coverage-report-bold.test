@@ -1,4 +1,4 @@
-; Test report.cc: --bold-if option (lines 296-297)
+; Test report.cc: --bold-if option
 ; Bold uses ANSI escape codes ESC[1m for bold on, ESC[0m for bold off
 
 2024/01/15 Test

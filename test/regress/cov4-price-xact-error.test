@@ -1,4 +1,4 @@
-; Test price_xact_directive error path (line 128 of textual_directives.cc)
+; Test price_xact_directive error path
 ; Exercise the parsing failure when a P line has incomplete data
 
 P 2024/01/01

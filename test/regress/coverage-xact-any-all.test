@@ -1,6 +1,6 @@
 ; Coverage test for xact.cc: any() and all() functions
-; Exercises xact.cc lines 560-582: fn_any and fn_all functions
-; and lines 591-594: lookup of "any" and "all" identifiers
+; Exercises xact.cc fn_any and fn_all functions
+; lookup of "any" and "all" identifiers
 
 2024/01/01 Small Purchase
     Expenses:Food    $15.00

@@ -1,4 +1,4 @@
-; Coverage test for op.cc O_AND (lines 360-365) and O_OR (lines 367-372)
+; Coverage test for op.cc O_AND and O_OR
 ; Tests the logical AND and OR operators in expressions.
 ; AND returns the right value if left is true, false otherwise.
 ; OR returns the left value if true, otherwise the right value.

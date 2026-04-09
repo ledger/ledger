@@ -1,4 +1,4 @@
-; Test exception during include parsing (textual_directives.cc lines 248-258)
+; Test exception during include parsing
 include coverage-include-error-data.dat
 
 test reg -> 1

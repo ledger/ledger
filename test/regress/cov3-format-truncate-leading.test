@@ -1,5 +1,5 @@
 ; Test leading truncation style
-; Covers format.cc lines 499-501 (TRUNCATE_LEADING style)
+; Covers format.cc (TRUNCATE_LEADING style)
 
 2024/01/15 Test
     Expenses:Groceries:Fresh:Produce:Organic    $50.00

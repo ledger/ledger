@@ -1,4 +1,4 @@
-; Test times.cc lines 835-840: "this day" / "last day" in determine_when
+; Test times.cc "this day" / "last day" in determine_when
 
 2026/03/02 Yesterday tx
     Expenses:Food   $20.00

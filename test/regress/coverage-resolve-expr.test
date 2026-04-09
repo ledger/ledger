@@ -1,5 +1,5 @@
-; Coverage for post.cc lines 541-542 (resolve_expr is_long)
-; and lines 544-546 (resolve_expr is_amount)
+; Coverage for post.cc (resolve_expr is_long)
+; (resolve_expr is_amount)
 ; Amount expressions in postings may return either a long integer
 ; or an amount value.
 

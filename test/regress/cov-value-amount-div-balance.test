@@ -1,7 +1,6 @@
-; Coverage test for value.cc lines 706-721
-; Exercise amount /= balance path where balance simplifies to single amount
-; This happens when dividing a commodity amount by a total amount
-; that is represented as a balance but has only one commodity
+; Coverage test for value.cc
+; Exercise market value conversion with -V flag
+; When using -V, AAPL holdings are converted to $ using price data
 
 commodity $
 commodity AAPL

@@ -1,4 +1,4 @@
-; Coverage test for textual_directives.cc line 605-606
+; Coverage test for textual_directives.cc
 ; Commodity directive with sub-directive missing argument
 
 commodity $

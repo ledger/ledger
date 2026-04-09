@@ -1,5 +1,5 @@
 ; Test 'true' keyword in expression
-; Covers token.cc line 122 (true keyword parsing)
+; Covers token.cc (true keyword parsing)
 
 2024/01/15 Test
     Expenses:Food    $50.00

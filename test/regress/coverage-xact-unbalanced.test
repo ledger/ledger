@@ -1,4 +1,4 @@
-; Coverage test for xact.cc line 597: throw balance_error
+; Coverage test for xact.cc throw balance_error
 ; An unbalanced transaction triggers "Transaction does not balance"
 2024/01/01 Test
     Expenses:Food    $10.00

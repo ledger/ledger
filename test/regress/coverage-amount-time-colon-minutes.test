@@ -1,4 +1,4 @@
-; Coverage for amount.cc lines 173-199:
+; Coverage for amount.cc
 ; Time colon display also works with the "m" (minutes) commodity.
 ; Fractional minutes are converted to seconds in the display.
 ; 90m with --time-colon converts to 1:30h (minutes to hours).

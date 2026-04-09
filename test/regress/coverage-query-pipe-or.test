@@ -1,4 +1,4 @@
-; Test query parser with '|' OR operator (covers query.cc lines 137-138)
+; Test query parser with '|' OR operator (covers query.cc )
 ; The '|' character in a query should combine terms with OR logic
 
 2024/01/15 Grocery Store

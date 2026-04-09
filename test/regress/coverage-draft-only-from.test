@@ -1,4 +1,4 @@
-; Test draft.cc with all postings marked as 'from' (covers draft.cc lines 203-204)
+; Test draft.cc with all postings marked as 'from' (covers draft.cc )
 ; When all postings are 'from', a blank 'to' posting is prepended
 
 2024/01/15 * Transfer

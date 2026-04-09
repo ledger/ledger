@@ -1,5 +1,5 @@
 ; Test error for unrecognized format character
-; Covers format.cc lines 254-255 or 390-391 (unrecognized format char)
+; Covers format.cc or (unrecognized format char)
 
 2024/01/01 Test
     Expenses:Food    $50.00

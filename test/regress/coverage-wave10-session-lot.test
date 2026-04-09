@@ -1,5 +1,5 @@
-; Coverage: session.cc - fn_lot_tag (line 373), fn_lot_price (line 272),
-;                        fn_lot_date (line 279)
+; Coverage: session.cc - fn_lot_tag, fn_lot_price
+;                        fn_lot_date
 
 2024/01/01 Buy Stock
     Assets:Brokerage    10 AAPL {$150.00} [2024/01/01] (mytag)

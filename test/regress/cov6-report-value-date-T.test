@@ -1,4 +1,4 @@
-; Coverage for report.cc lines 1652-1654,1668: T (display_total) and
+; Coverage for report.cc T (display_total)
 ; value_date function lookups
 
 2024/01/01 Test

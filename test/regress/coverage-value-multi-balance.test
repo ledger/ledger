@@ -1,5 +1,5 @@
 ; Test value.cc and balance.h: multi-commodity balance formatting and accumulation
-; Coverage target: value.cc - BALANCE += AMOUNT (line 427), BALANCE += BALANCE (line 430),
+; Coverage target: value.cc - BALANCE += AMOUNT, BALANCE += BALANCE
 ;   balance.h - operator+=, to_string, print for multi-commodity balances
 
 2024/01/15 Purchase

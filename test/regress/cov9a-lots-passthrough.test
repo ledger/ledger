@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 626, 633, 640
+; Coverage test for report.cc
 ; fn_averaged_lots, fn_fifo_lots, fn_lifo_lots else branches:
 ; When the argument is not a balance_t (just a simple amount),
 ; they return the argument unchanged.

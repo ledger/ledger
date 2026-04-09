@@ -1,5 +1,5 @@
 ; Test yearly period token
-; (exercises handle_period_token with TOK_YEARLY in times.cc: lines 1162-1189)
+; (exercises handle_period_token with TOK_YEARLY in times.cc: )
 
 2024/01/15 Payee A
     Expenses:Food    $50.00

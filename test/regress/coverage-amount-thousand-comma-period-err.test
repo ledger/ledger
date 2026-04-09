@@ -1,4 +1,4 @@
-; Coverage for amount.cc lines 1256-1257:
+; Coverage for amount.cc
 ; "Incorrect use of thousand-mark comma" when a comma is detected as a
 ; decimal separator (because more than 3 digits follow it with no prior
 ; comma), but a period has already been seen. The period and comma

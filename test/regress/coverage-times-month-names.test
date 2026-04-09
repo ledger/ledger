@@ -1,5 +1,5 @@
 ; Test month name parsing in period expressions
-; (exercises string_to_month_of_year in times.cc: lines 225-252)
+; (exercises string_to_month_of_year in times.cc: )
 ; Tests TOK_A_MONTH, TOK_IN, and month-specific parsing for aug, nov, mar, jan
 
 2024/01/15 Payee A

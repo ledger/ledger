@@ -1,5 +1,5 @@
-; Coverage for textual_xacts.cc line 608 (balance assignment)
-; Also covers lines 636-639 (post finalization with balance assignment)
+; Coverage for textual_xacts.cc (balance assignment)
+; Also covers (post finalization with balance assignment)
 
 2024/01/01 Opening
     Assets:Cash    $1000.00

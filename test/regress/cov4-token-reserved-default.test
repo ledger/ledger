@@ -1,4 +1,4 @@
-; Test token default break in parse_reserved_word (line 122 of token.cc)
+; Test token default break in parse_reserved_word
 ; Exercise parsing of identifiers that start with reserved-word letters
 ; but aren't reserved words (e.g., 'total' starts with 't' but is not 'true')
 

@@ -1,5 +1,5 @@
-; Coverage for xact.cc line 719 (continue in verify for non-must-balance)
-; and line 161-162 (continue in finalize for non-must-balance)
+; Coverage for xact.cc (continue in verify for non-must-balance)
+; (continue in finalize for non-must-balance)
 ; Unbalanced virtual postings (parenthesized) skip the balance check
 
 2024/01/01 Test

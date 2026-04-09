@@ -1,4 +1,4 @@
-; Test def directive via general_directive (lines 828-831 of textual_directives.cc)
+; Test def directive via general_directive
 ; Exercise the def keyword (alias for define) through the switch
 
 def myfunc(x) = x * 2

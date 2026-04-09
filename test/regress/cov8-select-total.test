@@ -1,4 +1,4 @@
-; Coverage test for select.cc lines 309-320:
+; Coverage test for select.cc
 ; Exercise select with total column.
 
 2024/01/01 Test

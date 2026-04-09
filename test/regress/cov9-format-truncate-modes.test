@@ -1,4 +1,4 @@
-; Coverage test for format.cc lines 499-509
+; Coverage test for format.cc
 ; Test alternative truncation modes: leading and middle.
 ; The default mode is TRUNCATE_TRAILING (append ..). The --truncate option
 ; switches to TRUNCATE_LEADING (prepend ..) or TRUNCATE_MIDDLE (.. in middle).

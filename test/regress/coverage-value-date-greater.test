@@ -1,4 +1,4 @@
-; Coverage for value.cc lines 1027-1028: date greater_than comparison
+; Coverage for value.cc date greater_than comparison
 ; Using --display with date > [date] exercises is_greater_than for DATE type
 
 2024/01/01 Test1

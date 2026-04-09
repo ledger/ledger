@@ -1,4 +1,4 @@
-; Test N directive (nomarket_directive) (lines 131-138 of textual_directives.cc)
+; Test N directive (nomarket_directive)
 ; Exercise the N line which marks a commodity as nomarket
 
 N MYSTOCK

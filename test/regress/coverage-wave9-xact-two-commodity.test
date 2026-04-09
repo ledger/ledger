@@ -1,4 +1,4 @@
-; Test coverage for xact.cc lines 215-276
+; Test coverage for xact.cc
 ; Two-commodity transaction auto-cost calculation (finalize path)
 
 2024/01/01 Currency Exchange

@@ -1,6 +1,6 @@
 ; Coverage tests for amount.cc
-; Test apostrophe thousands separator (line 1276-1283)
-; Test decimal comma / European style amounts (line 1198-1207)
+; Test apostrophe thousands separator
+; Test decimal comma / European style amounts
 
 commodity CHF
     format CHF 1'000.00

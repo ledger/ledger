@@ -1,4 +1,4 @@
-; Coverage for report.cc line 528: limit combining with & in commodities_report
+; Coverage for report.cc limit combining with & in commodities_report
 ; When commodities_report strips state predicates from a compound limit,
 ; remaining non-state terms are re-joined with &
 ; Three limit terms: "cleared" (state pred, stripped) + "total>0" + "commodity=~/AAPL/"

@@ -1,4 +1,4 @@
-; Test coverage for textual_directives.cc lines 136-154
+; Test coverage for textual_directives.cc
 ; --flat option directive in journal file
 
 --flat

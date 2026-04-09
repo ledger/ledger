@@ -1,4 +1,4 @@
-; Coverage for report.cc line 1127-1128: source_command with file argument
+; Coverage for report.cc source_command with file argument
 ; When source is given a filename, it reads that journal file
 
 2024/01/01 Test

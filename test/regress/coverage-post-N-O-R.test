@@ -1,4 +1,4 @@
-; Coverage: post.cc lines 521, 526, 531 - N, O, R single-char lookups
+; Coverage: post.cc - N, O, R single-char lookups
 ; N = count, O = total, R = real
 
 2024/01/01 Test

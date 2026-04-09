@@ -1,4 +1,4 @@
-; Coverage for textual_xacts.cc lines 447-448 (post state inheritance from xact)
+; Coverage for textual_xacts.cc (post state inheritance from xact)
 ; Post gets xact state when post is UNCLEARED but xact is not
 
 2024/01/01 * Cleared Parent

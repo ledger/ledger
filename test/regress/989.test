@@ -1,7 +1,6 @@
 ; Test for issue #989
-; Fixed by PR #207: Apply --time-colon option only to time commodities
-; https://github.com/ledger/ledger/issues/989
 ; --time-colon option should not affect non-time values
+; https://github.com/ledger/ledger/issues/989
 
 2024/01/01 Test
     Expenses        $1,234.56

@@ -1,10 +1,9 @@
-; Regression test for issue #616: bal --amount-data fails wrong (BZ#616)
+; Regression test for issue #616: bal --amount-data uses wrong date
 ; https://github.com/ledger/ledger/issues/616
 ;
 ; Bug: bal --amount-data outputs the period-end date for all account entries
-; instead of the actual transaction dates. The date shown (one day before -e)
-; is wrong; each account should reflect the date of its last posting.
-; Compare: reg --amount-data correctly shows per-posting dates.
+; instead of the date of the latest posting to each account.
+; Fix: account_t now resolves "date" to the latest posting date.
 
 2024/01/01 First Expense
     Expenses:Food          $10.00
@@ -15,5 +14,5 @@
     Assets:Cash
 
 test bal --amount-data -e 2025/01/01 Expenses
-2024-12-31 30
+2024-06-15 30
 end test

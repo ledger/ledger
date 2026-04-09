@@ -1,5 +1,5 @@
-; Coverage for textual_xacts.cc lines 353-355 (post note/metadata)
-; Also covers xact note continuation (line 126)
+; Coverage for textual_xacts.cc (post note/metadata)
+; Also covers xact note continuation
 
 2024/01/01 Payee  ; xact note
     ; more xact note

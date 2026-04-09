@@ -1,4 +1,4 @@
-; Test alias_directive via general_directive (lines 795-797 of textual_directives.cc)
+; Test alias_directive via general_directive
 ; Exercise the alias path through general_directive switch
 
 alias Food=Expenses:Food

@@ -1,4 +1,4 @@
-; Coverage test for post.cc line 531
+; Coverage test for post.cc
 ; Switch break for 'R' lookup when name is longer than 1 char
 
 2024/01/01 Test

@@ -1,7 +1,7 @@
 ; Coverage for op.cc O_LOOKUP calc path and expression error context:
 ; Attempting to access a member on a null/void value triggers the
 ; scope lookup error path. This also exercises O_LOOKUP printing
-; in the error context (op.cc lines 767-772).
+; in the error context
 
 2024/01/01 Test
     Expenses:Food    $100.00

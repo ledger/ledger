@@ -1,4 +1,4 @@
-; Test coverage for textual_xacts.cc lines 667-694
+; Test coverage for textual_xacts.cc
 ; Balance assertion with lot annotation (strip_annotations handling)
 
 2024/01/01 Buy Stock Lot 1

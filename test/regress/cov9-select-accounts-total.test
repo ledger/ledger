@@ -1,5 +1,5 @@
 ; Test select from accounts with total column
-; Covers select.cc lines 72, 82 (total identifier in accounts report)
+; Covers select.cc (total identifier in accounts report)
 
 2024/01/15 Test
     Expenses:Food    $50.00

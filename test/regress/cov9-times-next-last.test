@@ -1,4 +1,4 @@
-; Coverage for times.cc line 1238: handle_relative_token for "last"
+; Coverage for times.cc handle_relative_token for "last"
 
 2024/01/01 Test
     Expenses:Food    $10.00

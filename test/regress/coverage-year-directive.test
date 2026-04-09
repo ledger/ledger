@@ -1,4 +1,4 @@
-; Test textual_directives.cc lines 884-888: year directive
+; Test textual_directives.cc year directive
 ; in general_directive case y
 
 year 2024

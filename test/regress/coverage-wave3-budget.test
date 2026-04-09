@@ -1,5 +1,5 @@
-; Coverage tests for report.cc budget command (lines 1615-1622)
-; and filters.cc budget_posts (lines 1290-1347, 1349-1395)
+; Coverage tests for report.cc budget command
+; filters.cc budget_posts
 
 ~ Monthly
     Expenses:Food    $500.00

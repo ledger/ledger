@@ -1,5 +1,5 @@
 ; Coverage tests for filters.cc interval_posts
-; Tests: --weekly interval, --display predicate, --depth account truncation
+; Tests: --weekly interval, --display predicate, --depth 1 account truncation
 
 2024/01/01 Test1
     Expenses:Food                    $50.00

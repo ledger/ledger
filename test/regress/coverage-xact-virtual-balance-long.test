@@ -1,4 +1,4 @@
-; Coverage for xact.cc lines 612-613: virtual balance as long integer
+; Coverage for xact.cc virtual balance as long integer
 
 2024/01/01 Test
     [Expenses:Budget]    10

@@ -1,4 +1,4 @@
-; Coverage for textual_xacts.cc lines 276-278: period transaction failed to balance
+; Coverage for textual_xacts.cc period transaction failed to balance
 
 ~ monthly
     Expenses:Food    $100.00

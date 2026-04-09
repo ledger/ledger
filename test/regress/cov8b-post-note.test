@@ -1,4 +1,4 @@
-; Coverage test for post.cc lines 172-183
+; Coverage test for post.cc
 ; Test that the note field returns transaction note, posting note, or both.
 ; Tests get_note function paths:
 ; - post with note and xact with note (concatenated with newline)

@@ -1,5 +1,5 @@
 ; Test auto xact with %(format) in account name
-; Targets: xact.cc lines 867-874 (regex_search %(expr) in account)
+; Targets: xact.cc (regex_search %(expr) in account)
 
 = /Expenses:Food/
     (Saving:%(account))       -0.10

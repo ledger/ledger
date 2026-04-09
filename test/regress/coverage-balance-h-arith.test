@@ -1,6 +1,6 @@
 ; Test balance.h: multi-commodity balance arithmetic and comparisons
 ; Exercises balance_t operators, is_zero, is_nonzero, to_amount, number
-; Targets: balance.h lines 147, 188-229, 265-474
+; Targets: balance.h
 
 P 2024/01/01 EUR $1.10
 P 2024/01/01 GBP $1.30

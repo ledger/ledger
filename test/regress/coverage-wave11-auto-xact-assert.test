@@ -1,4 +1,4 @@
-; Coverage for xact.cc lines 846-856: auto_xact check_exprs evaluation.
+; Coverage for xact.cc auto_xact check_exprs evaluation
 ; The assert expression is evaluated during extend_xact.
 
 = /Expenses/

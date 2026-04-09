@@ -1,4 +1,4 @@
-; Coverage test for compare.cc lines 44-49:
+; Coverage test for compare.cc
 ; Exercise multi-key sort (O_CONS handling in push_sort_value).
 
 2024/01/01 BBB

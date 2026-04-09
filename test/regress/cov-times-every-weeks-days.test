@@ -1,4 +1,4 @@
-; Coverage test for times.cc lines 1112-1115
+; Coverage test for times.cc
 ; Exercise "every N weeks" and "every N days" period parsing
 ; Covers TOK_WEEKS and TOK_DAYS in handle_every_token
 

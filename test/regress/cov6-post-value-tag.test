@@ -1,6 +1,6 @@
 ; Test extend_post with Value tag on a posting
-; Covers post.cc lines 660 (get Value tag), 666-669 (typed Value expression
-; divided by amount), 671 (non-typed Value expression), 684-690 (value_expr
+; Covers post.cc (get Value tag), 666-669 (typed Value expression
+; divided by amount), (non-typed Value expression), 684-690 (value_expr
 ; set on commodity without annotation)
 
 2024/01/01 Typed value

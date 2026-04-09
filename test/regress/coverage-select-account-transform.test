@@ -1,8 +1,8 @@
 ; Coverage test for select.cc: account identifier transformation in select
-; Exercises: get_principal_identifiers with do_transforms=true (lines 48-89),
-;   account -> display_account transformation (line 62),
-;   amount -> display_amount transformation (line 68),
-;   total -> display_total transformation (line 74)
+; Exercises: get_principal_identifiers with do_transforms=true
+;   account -> display_account transformation
+;   amount -> display_amount transformation
+;   total -> display_total transformation
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00

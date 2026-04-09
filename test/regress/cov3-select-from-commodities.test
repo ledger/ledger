@@ -1,5 +1,5 @@
 ; Test select from commodities
-; Covers select.cc lines 364-368 (from commodities handling)
+; Covers select.cc (from commodities handling)
 
 P 2024/01/01 EUR $1.10
 

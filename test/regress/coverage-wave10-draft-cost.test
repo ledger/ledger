@@ -1,5 +1,5 @@
-; Coverage tests for draft.cc lines 451-469 (posting cost handling)
-; Also covers draft.cc lines 266-269 (date from year directive)
+; Coverage tests for draft.cc (posting cost handling)
+; Also covers draft.cc (date from year directive)
 
 2024/01/01 Grocery
     Expenses:Food    $50.00

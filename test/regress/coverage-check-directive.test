@@ -1,4 +1,4 @@
-; Test textual_directives.cc lines 815-818: check directive
+; Test textual_directives.cc check directive
 ; in general_directive case c
 
 check 1 == 1

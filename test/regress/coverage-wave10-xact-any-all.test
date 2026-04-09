@@ -1,4 +1,4 @@
-; Test coverage for xact.cc lines 608-630
+; Test coverage for xact.cc
 ; fn_any and fn_all from xact_t::lookup
 
 = /Expenses/

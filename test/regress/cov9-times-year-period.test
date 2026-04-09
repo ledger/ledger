@@ -1,4 +1,4 @@
-; Coverage for times.cc line 1601: period with year repeat detection
+; Coverage for times.cc period with year repeat detection
 
 2024/01/01 Test1
     Expenses:Food    $10.00

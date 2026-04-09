@@ -1,7 +1,7 @@
-; Coverage test for format.cc line 618
+; Coverage test for format.cc
 ; Tests account abbreviation with deeply nested account names that trigger
 ; the adjust=1 minimum adjustment in the abbreviation algorithm.
-; Line 618: when adjust==0, it's set to 1 as minimum
+; when adjust==0, it's set to 1 as minimum
 
 2024/01/15 Test
     Assets:Bank:Checking:SubA:SubB:SubC:SubD   $50.00

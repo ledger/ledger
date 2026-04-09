@@ -1,5 +1,5 @@
 ; Test budget command for report.cc coverage
-; Targets report.cc lines 1615-1622 (budget command lookup)
+; Targets report.cc (budget command lookup)
 
 ~ Monthly
     Expenses:Food    $200.00

@@ -1,6 +1,6 @@
-; Regression test for issue #991: output buffering in interactive (REPL) mode.
+; Regression test for issue #991: output buffering in batch mode.
 ; The accounts, payees, tags, and commodities commands were not flushing their
-; output, causing results to be delayed and only appear after the next command.
+; output correctly.
 
 2024/01/01 * Opening Balance
     Assets:Cash                    $100.00

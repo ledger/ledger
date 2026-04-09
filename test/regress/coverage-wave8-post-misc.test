@@ -1,7 +1,7 @@
 ; Coverage tests for post.cc miscellaneous paths
-; Targets lines 160-164 (code), 193-196 (amount null), 211-212 (compound),
-;   253 (total null), 262 (count), 272-274 (account truncate),
-;   287-289 (account with mask), 458-459 (index), 342-344 (datetime)
+; Targets (code), (amount null), (compound)
+;   (total null), (count), (account truncate)
+;   (account with mask), (index), (datetime)
 
 ; Transaction with code
 2024/01/01 (CHK001) Test with Code
@@ -13,7 +13,7 @@
     Expenses:Drink             $5.00
     Assets:Cash
 
-; Test code lookup (lines 160-164)
+; Test code lookup
 test reg --format '%(code)\n' Expenses:Food
 CHK001
 end test
@@ -22,7 +22,7 @@ test reg --format '%(code)X\n' Expenses:Drink
 X
 end test
 
-; Test index (alias for count) - line 458-459
+; Test index (alias for count)
 test reg --format '%(index)\n' Expenses:Food
 1
 end test
@@ -32,22 +32,22 @@ test reg --format '%(total)\n' Expenses:Food
 $10.00
 end test
 
-; Test xact lookup through post (line 510-511)
+; Test xact lookup through post
 test reg --format '%(xact ? "yes" : "no")\n' Expenses:Food
 yes
 end test
 
-; Test commodity lookup (line 435-436)
+; Test commodity lookup
 test reg --format '%(commodity)\n' Expenses:Food
 $
 end test
 
-; Test datetime lookup - lines 342-344
+; Test datetime lookup
 test reg --format '%(datetime)\n' Expenses:Food
 2024/01/01 00:00:00
 end test
 
-; Test post lookup (returns the post itself) - line 475-476
+; Test post lookup (returns the post itself)
 test reg --format '%(post ? "yes" : "no")\n' Expenses:Food
 yes
 end test

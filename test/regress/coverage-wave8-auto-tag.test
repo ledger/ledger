@@ -1,5 +1,5 @@
 ; Coverage tests for xact.cc auto_xact_t deferred tag handling
-; Targets lines 447, 449 (deferred_tag_data_t)
+; Targets (deferred_tag_data_t)
 
 ; Auto-xact with notes/tags that are deferred until extend_xact
 = /Food/

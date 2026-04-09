@@ -1,5 +1,5 @@
 ; Test query parser with 'payee' keyword and parentheses
-; Covers query.cc lines 218, 350-355 (LPAREN handling)
+; Covers query.cc (LPAREN handling)
 
 2024/01/15 Grocery Store
     Expenses:Food              $50.00

@@ -1,5 +1,5 @@
 ; Tests for query.cc: expr keyword detection in multi_args identifier
-; Covers: lines 217-221 (expr keyword split from identifier in multi_args mode)
+; Covers: (expr keyword split from identifier in multi_args mode)
 
 2024/01/01 Income
     Assets:Checking  $100
@@ -10,7 +10,7 @@
     Assets:Checking
 
 ; When 'expr amount>0' is a single argument, the tokenizer detects the
-; 'expr' prefix and splits it (lines 217-221), rewinds arg_i,
+; 'expr' prefix and splits it, rewinds arg_i
 ; and returns TOK_EXPR
 test reg 'expr amount>0'
 24-Jan-01 Income                Assets:Checking                $100         $100

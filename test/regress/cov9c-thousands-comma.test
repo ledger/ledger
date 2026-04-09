@@ -1,5 +1,5 @@
-; Coverage: amount.cc line 220 (thousands comma separator output)
-; and line 204 (decimal point output in formatted amounts)
+; Coverage: amount.cc (thousands comma separator output)
+; (decimal point output in formatted amounts)
 ; Exercises the thousands-separator formatting path in stream_out_mpq
 ; when the commodity has COMMODITY_STYLE_THOUSANDS
 

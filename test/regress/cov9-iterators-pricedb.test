@@ -1,4 +1,4 @@
-; Coverage for iterators.cc lines 130-149: generate_posts for pricedb
+; Coverage for iterators.cc generate_posts for pricedb
 
 P 2024/01/01 AAPL $150.00
 P 2024/01/15 AAPL $155.00

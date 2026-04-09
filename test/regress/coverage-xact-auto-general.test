@@ -1,5 +1,5 @@
 ; Test EXPR_GENERAL in auto xact check_exprs
-; Targets: xact.cc lines 794-795 (EXPR_GENERAL eval path)
+; Targets: xact.cc (EXPR_GENERAL eval path)
 
 = /Expenses/
     expr commodity == "$"

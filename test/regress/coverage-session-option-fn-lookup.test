@@ -1,5 +1,5 @@
 ; Test session.cc: option value access via function lookup
-; Exercises lookup() FUNCTION case falling through to lookup_option (line 392-393)
+; Exercises lookup FUNCTION case falling through to lookup_option
 
 account Expenses:Food
 account Assets:Checking

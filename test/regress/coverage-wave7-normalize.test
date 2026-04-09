@@ -1,5 +1,5 @@
 ; Tests for report.cc normalize_options uncovered lines and error paths
-; Covers: report.cc lines 75 77 151-154 159-161 163-170 173-175 620 626
+; Covers: report.cc 77 151-154 159-161 163-170 173-175 620 626
 
 ; --- Journal data ---
 P 2024/01/01 AAPL $150.00
@@ -10,34 +10,34 @@ P 2024/01/15 AAPL $155.00
     Expenses:Auto    $50.00
     Assets:Cash
 
-; --- Test 1: --output option (lines 75, 77 - suppress color/pager) ---
+; --- Test 1: --output option (suppress color/pager) ---
 ; With --output, stdout gets nothing; output goes to file
 test reg --output /dev/null Expenses
 end test
 
-; --- Test 2: -j amount_data option (line 151-152) ---
+; --- Test 2: -j amount_data option ---
 test reg -j Expenses:Food
 2024-01-01 10
 end test
 
-; --- Test 3: -J total_data option (line 153-154) ---
+; --- Test 3: -J total_data option ---
 test reg -J Expenses:Auto
 2024-01-01 50
 end test
 
-; --- Test 4: --immediate -V (lines 173-175) ---
+; --- Test 4: --immediate -V ---
 test reg --immediate -V Expenses:Food
 24-Jan-01 Test                  Expenses:Food              $1500.00     $1500.00
 end test
 
-; --- Test 5: --percent -V (lines 163-170) ---
+; --- Test 5: --percent -V ---
 test bal --percent -V Expenses
              100.00%  Expenses
                3.12%    Auto
               96.88%    Food
 end test
 
-; --- Test 6: fn_get_at error - index > 0 on non-sequence (line 620) ---
+; --- Test 6: fn_get_at error - index > 0 on non-sequence ---
 test reg --format "%(get_at(amount, 1))\n" Expenses:Food -> 1
 __ERROR__
 While evaluating value expression:
@@ -49,7 +49,7 @@ While handling posting from "$FILE", line 9:
 Error: Attempting to get argument at index 1 from an amount
 end test
 
-; --- Test 7: --meta option with width (lines 111-128) ---
+; --- Test 7: --meta option with width ---
 test reg --meta "nonexistent:15" Expenses:Auto
                24-Jan-01 Test             Expenses:Auto        $50.00     $50.00
 end test

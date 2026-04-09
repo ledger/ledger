@@ -13,17 +13,17 @@ P 2024/06/01 AAPL $150.00
     Assets:Broker         -10 AAPL @ $150.00
     Assets:Cash
 
-; Test --gain option (line 1171, OPT_CH(gain))
+; Test --gain option (OPT_CH(gain))
 test reg Assets:Broker --gain
 24-Jun-01 Commodities revalued  <Revalued>                  $500.00      $500.00
 end test
 
-; Test --basis option (line 1155-1156, OPT_CH(basis))
+; Test --basis option (OPT_CH(basis))
 test bal Assets:Broker --basis
             $-500.00  Assets:Broker
 end test
 
-; Test --historical option (line 1173-1174, OPT_CH(historical))
+; Test --historical option (OPT_CH(historical))
 test reg Assets:Broker --historical
 24-Jan-01 Buy                   Assets:Broker              $1000.00     $1000.00
 24-Jun-01 Sell                  Assets:Broker             $-1500.00     $-500.00

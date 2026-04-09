@@ -1,5 +1,5 @@
 ; Test format min_width padding (right justify)
-; Covers format.cc lines 424-426, 471-473 (min_width with right justify padding)
+; Covers format.cc (min_width with right justify padding)
 
 2024/01/15 Test
     Expenses:Food    $50.00

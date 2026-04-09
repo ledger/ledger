@@ -1,4 +1,4 @@
-; Test query parser with '&' AND operator (covers query.cc lines 134-135)
+; Test query parser with '&' AND operator (covers query.cc )
 ; The '&' character in a query should combine terms with AND logic
 
 2024/01/15 Grocery Store

@@ -1,7 +1,7 @@
-; Coverage test for account.cc lines 532-538
+; Coverage test for account.cc
 ; Tests account_t::children_with_xdata which checks if any child
 ; accounts have extended data set.
-; Also exercises the total() function (line 690) and amount() (line 630).
+; Also exercises the total function and amount
 
 2024/01/15 Test
     Expenses:Food:Groceries    $30.00

@@ -1,4 +1,4 @@
-; Coverage test for compare.cc lines 52-55:
+; Coverage test for compare.cc
 ; Exercise inverted sort (with negative sort key) via --sort.
 
 2024/01/01 Test

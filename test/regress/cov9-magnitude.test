@@ -1,4 +1,4 @@
-; Coverage test for post.cc line 187:
+; Coverage test for post.cc
 ; Exercise get_magnitude() which returns the transaction magnitude.
 
 2024/01/01 Test

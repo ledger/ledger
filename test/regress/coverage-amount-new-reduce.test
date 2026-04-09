@@ -1,5 +1,5 @@
 ; Coverage tests for amount.cc reduce/unreduce and time commodity paths
-; Exercises in_place_reduce (lines 705-713) and related paths
+; Exercises in_place_reduce and related paths
 
 commodity 1h
 C 1.00h = 60m
@@ -9,7 +9,7 @@ C 1.00m = 60s
     Expenses:Time    7200s
     Income:Work
 
-; Reduce exercises in_place_reduce (lines 705-713)
+; Reduce exercises in_place_reduce
 ; 7200s = 120m = 2h
 test bal Expenses:Time
                2.00h  Expenses:Time

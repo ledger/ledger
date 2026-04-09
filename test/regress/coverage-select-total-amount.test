@@ -1,5 +1,5 @@
 ; Coverage test for select.cc: total column and amount/total print paths
-; Exercises: total column in select (lines 300-329),
+; Exercises: total column in select
 ;   amount+total combined (thus_far tracking), total_width handling
 
 2024/01/15 Grocery Store
@@ -11,7 +11,7 @@
     Assets:Checking
 
 ; Select amount and total together exercises the thus_far accumulation
-; for column positioning (lines 313-319, 321-329)
+; for column positioning
 test select amount, total from posts --columns=80
       $50.00       $50.00
      $-50.00            0

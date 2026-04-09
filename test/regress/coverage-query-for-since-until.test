@@ -1,5 +1,5 @@
 ; Test query parser with 'for', 'since', and 'until' keywords
-; Covers query.cc lines 234, 236-237, 497-530
+; Covers query.cc
 
 2024/01/15 Grocery Store
     Expenses:Food              $50.00

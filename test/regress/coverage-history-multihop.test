@@ -1,8 +1,8 @@
 ; Tests for history.cc: multi-hop price conversion through graph
-; Covers: lines 438-488 (dijkstra shortest path, price conversion loop)
-;         lines 443 (continue in loop)
-;         lines 454 (return nullopt when u_comm/v_comm not last_target)
-;         lines 468-488 (price calculation with inversion)
+; Covers: (dijkstra shortest path, price conversion loop)
+;         (continue in loop)
+;         (return nullopt when u_comm/v_comm not last_target)
+;         (price calculation with inversion)
 
 ; Three commodities: EUR -> GBP -> $, requiring multi-hop conversion
 P 2024/01/01 EUR 0.85 GBP

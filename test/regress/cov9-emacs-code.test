@@ -1,4 +1,4 @@
-; Coverage for emacs.cc line 64-67: code and empty payee paths
+; Coverage for emacs.cc code and empty payee paths
 
 2024/01/01 (123) Test Purchase
     Expenses:Food    $10.00

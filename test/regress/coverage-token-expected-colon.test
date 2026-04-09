@@ -1,7 +1,7 @@
 ; Test token.cc expected(COLON) path
-; Exercises expected(kind_t) for COLON token (line 505-515)
-; operator<<(ostream, kind_t) for COLON case (line 616)
-; operator<<(ostream, token_t) default branch (line 652-654)
+; Exercises expected(kind_t) for COLON token
+; operator<<(ostream, kind_t) for COLON case
+; operator<<(ostream, token_t) default branch
 
 ; Ternary expression missing the colon part triggers expected(COLON)
 test eval "1 ? 2" -> 1

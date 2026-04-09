@@ -1,4 +1,4 @@
-; Coverage for report.cc line 528: limit conjunction with query
+; Coverage for report.cc limit conjunction with query
 
 2024/01/01 Test1
     Expenses:Food    $10.00

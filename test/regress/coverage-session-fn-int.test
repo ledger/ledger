@@ -1,4 +1,4 @@
-; Coverage test for session.cc line 267
+; Coverage test for session.cc
 ; Tests fn_int function - converting values to integers
 ; Ensures the int() function is accessible and works
 

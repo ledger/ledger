@@ -1,4 +1,4 @@
-; Coverage for filters.cc line 966: date_format branch in interval reporting
+; Coverage for filters.cc date_format branch in interval reporting
 
 2024/01/01 Test1
     Expenses:Food    $10.00

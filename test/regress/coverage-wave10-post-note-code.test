@@ -1,4 +1,4 @@
-; Test coverage for post.cc lines 71, 169 (get_payee via payee()),
+; Test coverage for post.cc (get_payee via payee)
 ; get_note combining post and xact notes, get_code
 
 2024/01/01 (1234) Test Payee  ; xact note

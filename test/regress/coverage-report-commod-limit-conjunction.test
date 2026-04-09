@@ -1,6 +1,6 @@
-; Coverage for report.cc line 528: commodities_report limit conjunction
+; Coverage for report.cc commodities_report limit conjunction
 ; When commodities_report strips state predicates from a compound limit,
-; if 2+ non-state terms remain, they are re-joined with & at line 528.
+; if 2+ non-state terms remain, they are re-joined with &
 ; Here --cleared is a state predicate (stripped), while the two --limit
 ; expressions survive and get conjoined: (total>0)&(commodity=~/AAPL/).
 

@@ -1,0 +1,19 @@
+; Regression test for issue #606:
+; ANSI escape codes should not affect column alignment in justify().
+; When ansify_if() wraps text in color codes, the invisible bytes
+; must not count toward the padding width.
+
+2024/01/15 Grocery Store
+    Expenses:Food              $10.00
+    Assets:Cash
+
+2024/01/15 Electric Company
+    Expenses:Utilities         $75.00
+    Assets:Cash
+
+test --force-color reg --format '%(justify(ansify_if(truncated(display_account, 20), blue if color), 20))  %(justify(scrub(display_amount), 12, 32, true))\n'
+[34mExpenses:Food[0m               $10.00
+[34mAssets:Cash[0m                $-10.00
+[34mExpenses:Utilities[0m          $75.00
+[34mAssets:Cash[0m                $-75.00
+end test

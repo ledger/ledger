@@ -5,32 +5,32 @@ commodity $
 commodity AAPL
 commodity GOOG
 
-; Test fixated price annotation (line 283-284)
+; Test fixated price annotation
 2024/01/15 Buy stock fixated
     Assets:Investments    10 AAPL {=$15.00}
     Assets:Cash
 
-; Test date annotation (line 72-76)
+; Test date annotation
 2024/01/20 Buy stock with date
     Assets:Investments    5 AAPL {$16.00} [2024/01/20]
     Assets:Cash
 
-; Test tag annotation (line 78-82)
+; Test tag annotation
 2024/02/01 Sell stock with tag
     Assets:Cash           $150.00
     Assets:Investments    -10 AAPL {=$15.00} (lot1)
 
-; Test valuation expression annotation (line 166, 176, 178, 220)
+; Test valuation expression annotation
 2024/03/01 Buy with valuation expr
     Assets:Investments    5 GOOG {$100.00} (($100.00))
     Assets:Cash
 
-; Price history (lines 286-288)
+; Price history
 P 2024/01/01 AAPL $14.00
 P 2024/02/01 AAPL $18.00
 P 2024/03/01 AAPL $20.00
 
-; Test --lots shows annotations (lines 203-204, 220, 234)
+; Test --lots shows annotations
 test balance Assets:Investments --lots
    10 AAPL {=$15.00}
 -10 AAPL {=$15.00} (lot1)
@@ -38,7 +38,7 @@ test balance Assets:Investments --lots
 5 GOOG {$100.00} (({$100.00}))  Assets:Investments
 end test
 
-; Test market value (exercises find_price for annotated commodity, line 271)
+; Test market value (exercises find_price for annotated commodity, )
 test balance Assets:Investments --market --now 2024/03/01
              $600.00  Assets:Investments
 end test

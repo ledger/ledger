@@ -1,6 +1,6 @@
 ; Test commodity comparison with different lot tags
-; Covers commodity.cc lines 470-476 (one has tag, other doesn't)
-; and lines 479-484 (both have tags, comparing lexically)
+; Covers commodity.cc (one has tag, other doesn't)
+; (both have tags, comparing lexically)
 
 2024/01/01 Buy with tag
     Assets:Brokerage    10 AAPL {$150.00} (alpha)

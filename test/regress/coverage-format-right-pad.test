@@ -1,4 +1,4 @@
-; Test format.cc lines 472-473: right-padding with spaces when output
+; Test format.cc right-padding with spaces when output
 ; is shorter than min_width (left-aligned format)
 
 2024/01/01 Test

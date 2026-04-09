@@ -1,4 +1,4 @@
-; Coverage test for account.cc lines 282-284:
+; Coverage test for account.cc
 ; Exercise get_cost for accounts which throws calc_error.
 
 2024/01/01 Test

@@ -1,4 +1,4 @@
-; Coverage test for account.cc line 499
+; Coverage test for account.cc
 ; Account lookup 'N' break when fn_name starts with N but isn't just 'N'
 
 2024/01/01 Test

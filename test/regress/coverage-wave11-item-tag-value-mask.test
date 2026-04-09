@@ -1,4 +1,4 @@
-; Coverage for item.cc line 64-65: has_tag with mask and value_mask.
+; Coverage for item.cc has_tag with mask and value_mask
 ; Tests the case where a tag is checked with both a tag mask and a value mask.
 
 2024/01/01 Test

@@ -139,9 +139,9 @@
         cmakeFlags = [
           "-DCMAKE_BUILD_TYPE=Debug"
           "-DUSE_PYTHON=ON"
-          "-DUSE_DOXYGEN=ON"
+          "-DUSE_DOXYGEN=OFF"
           "-DUSE_GPGME=ON"
-          "-DBUILD_DOCS=ON"
+          "-DBUILD_DOCS=OFF"
           # Explicitly pin Boost_DIR to the Nix-provided Boost with Python.
           # Without this, a stale CMakeCache.txt from a previous configure (e.g.
           # one that ran when a different Boost version was current) can leave a

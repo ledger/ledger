@@ -1,4 +1,4 @@
-; Coverage test for textual_directives.cc lines 445-465:
+; Coverage test for textual_directives.cc
 ; Exercise account directive with assert sub-directive.
 
 account Expenses:Food

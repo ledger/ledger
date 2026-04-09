@@ -1,4 +1,4 @@
-; Tests for xact.cc fn_any and fn_all (lines 608-630)
+; Tests for xact.cc fn_any and fn_all
 ; These are the xact-level any() and all() functions accessed via
 ; the transaction context, distinct from post-level any/all.
 

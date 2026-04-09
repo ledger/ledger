@@ -1,4 +1,4 @@
-; Test eval/expr directive (lines 682-685 of textual_directives.cc)
+; Test eval/expr directive
 ; Exercise the eval directive through general_directive
 
 eval 1 + 1

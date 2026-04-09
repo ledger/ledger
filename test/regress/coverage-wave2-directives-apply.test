@@ -1,6 +1,6 @@
 ; Wave 2 coverage tests for textual_directives.cc apply directives
-; Covers: apply_account_directive (lines 286-293), apply_tag_directive (lines 296-309),
-;   end_apply_directive (lines 380-404)
+; Covers: apply_account_directive, apply_tag_directive
+;   end_apply_directive
 
 apply account Assets
 

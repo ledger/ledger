@@ -1,6 +1,6 @@
 ; Coverage test for utils.cc expand_path/resolve_path
 ; Exercises tilde expansion with bare ~ (no path after tilde)
-; Targets: utils.cc lines 755-764, 786-789 (expand_path npos branch)
+; Targets: utils.cc (expand_path npos branch)
 include ~
 
 2024/01/01 Test

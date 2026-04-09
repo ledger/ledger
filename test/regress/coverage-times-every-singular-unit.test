@@ -1,5 +1,5 @@
 ; Test "every" with singular unit names (year, quarter, month, week, day)
-; Exercises handle_every_token else branch with singular tokens (lines 1139-1159)
+; Exercises handle_every_token else branch with singular tokens
 
 2024/01/15 Payee A
     Expenses:Food    $50.00

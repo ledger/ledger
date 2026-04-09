@@ -1,5 +1,4 @@
 ; Test balance assertion with --effective using aux dates
-; (textual_xacts.cc lines 341-354)
 2024/01/01=2024/01/01 Deposit
     Assets:Checking    $100.00
     Income:Salary

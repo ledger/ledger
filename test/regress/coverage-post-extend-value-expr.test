@@ -1,5 +1,7 @@
-; Test extend_post with Value tag
-; Targets: post.cc lines 634-666 (extend_post with Value tag)
+; Test posting with Value tag present in journal data
+; Targets: post.cc (extend_post with Value tag)
+; Note: bal output shows raw commodity quantity; the Value tag does not
+; visibly affect the output of this particular command
 
 2024/01/15 * Buy Stock
     ; Value: market(amount, date, exchange)

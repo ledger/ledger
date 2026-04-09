@@ -1,4 +1,4 @@
-; Coverage for history.cc line 233: alias_commodity early return (no graph_index)
+; Coverage for history.cc alias_commodity early return (no graph_index)
 ; "E" is used before the commodity alias maps it to EUR
 ; The alias collision calls alias_commodity, but "E" has no price graph index
 

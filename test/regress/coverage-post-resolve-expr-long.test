@@ -1,4 +1,4 @@
-; Coverage for post.cc line 542: resolve_expr returns integer as amount
+; Coverage for post.cc resolve_expr returns integer as amount
 
 2024/01/01 Test
     Expenses:Food    (5 * 2)

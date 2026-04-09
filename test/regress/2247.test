@@ -19,14 +19,14 @@
     assets:bank2  500 EUR
     equity:opening balances
 
-test budget --limit '(commodity == "USD")'
+test budget --now 2026/03/15 --limit '(commodity == "USD")'
      500 USD    31500 USD   -31000 USD    2%  assets:bank1
            0   -31500 USD    31500 USD     0  income:work
 ------------ ------------ ------------ -----
      500 USD            0      500 USD     0
 end test
 
-test budget --limit '(commodity == "EUR")'
+test budget --now 2026/03/15 --limit '(commodity == "EUR")'
      500 EUR    31500 EUR   -31000 EUR    2%  assets:bank2
            0   -31500 EUR    31500 EUR     0  income:work
 ------------ ------------ ------------ -----

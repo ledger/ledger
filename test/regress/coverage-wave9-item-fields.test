@@ -1,4 +1,4 @@
-; Test coverage for item.cc lines 439, 465, 488, 514
+; Test coverage for item.cc
 ; Test item lookup fields: depth, has_meta, parent, value_date
 
 2024/01/01=2024/01/15 * Test Payee

@@ -1,4 +1,4 @@
-; Test inject_posts (lines 1562-1604 of filters.cc)
+; Test inject_posts
 ; Exercise the tag injection path with --inject
 
 2024/01/01 Test

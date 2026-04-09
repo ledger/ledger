@@ -1,5 +1,5 @@
-; Coverage test for report.cc lines 872-883
-; fn_join replaces newlines with literal \n in a string
+; Coverage test for report.cc
+; fn_join on a single-line account name (no newlines to replace)
 
 2024/01/01 Test
     Expenses:Food    $10.00

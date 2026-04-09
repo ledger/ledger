@@ -1,4 +1,4 @@
-; Coverage: post.cc line 243 - get_price with annotation price
+; Coverage: post.cc - get_price with annotation price
 ; Tests price expression on a posting with @ annotation
 
 2024/01/01 Buy Stock

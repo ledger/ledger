@@ -1,4 +1,4 @@
-; Coverage for post.cc line 542: resolve_expr with amount expression
+; Coverage for post.cc resolve_expr with amount expression
 ; Using an expression as the posting amount
 
 2024/01/01 Test

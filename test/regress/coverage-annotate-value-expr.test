@@ -1,4 +1,4 @@
-; Coverage for annotate.cc line 265: annotation value_expr
+; Coverage for annotate.cc annotation value_expr
 
 2024/01/01 Buy
     Assets:Brokerage    10 AAPL {$150} ((100))

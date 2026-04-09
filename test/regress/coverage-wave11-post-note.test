@@ -1,4 +1,4 @@
-; Coverage for post.cc get_note: line 171-183.
+; Coverage for post.cc get_note:
 ; Tests both the case where a post has a note and the xact has a note,
 ; so they get concatenated.
 

@@ -1,4 +1,4 @@
-; Coverage test for times.cc lines 507-508, 516-517, 522-523
+; Coverage test for times.cc
 ; Exercise TOK_SLASH, TOK_DOT, and UNKNOWN in period token dump
 
 2024/01/01 Test

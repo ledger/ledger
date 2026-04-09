@@ -1,4 +1,4 @@
-; Coverage for xact.cc lines 464-467: balanced-virtual null posting where
+; Coverage for xact.cc balanced-virtual null posting where
 ; the virtual_balance is a long (integer amount), triggering the to_amount()
 ; conversion path.
 

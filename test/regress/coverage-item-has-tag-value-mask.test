@@ -1,5 +1,5 @@
 ; Test has_tag with tag_mask and value_mask filtering
-; Targets: item.cc lines 58-70 (has_tag mask variant with value checking)
+; Targets: item.cc (has_tag mask variant with value checking)
 
 2024/01/15 * Store
     ; Category: food

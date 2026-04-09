@@ -1,6 +1,6 @@
 ; Tests for history.cc: find_price returning nullopt when no path exists
-; Covers: lines 404-407 (return nullopt when source/target has no graph index)
-;         line 493-495 (return nullopt when price.is_null after dijkstra)
+; Covers: (return nullopt when source/target has no graph index)
+;         (return nullopt when price.is_null after dijkstra)
 
 ; Only EUR -> $ price exists, no GBP price
 P 2024/01/01 EUR $1.10

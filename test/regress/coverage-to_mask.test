@@ -1,4 +1,4 @@
-; Coverage test for report.cc fn_to_mask (line 1071)
+; Coverage test for report.cc fn_to_mask
 ; Tests to_mask() function in format expressions
 
 2024/01/15 Test Payee

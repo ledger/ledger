@@ -3,7 +3,7 @@
 ;   trace_ctor_func, trace_dtor_func, trace_new_func, trace_delete_func,
 ;   add_to_count_map, current_memory_size, current_objects_size,
 ;   operator new/delete overloads with tracing
-; Targets: utils.cc lines 88-256, 333-397
+; Targets: utils.cc
 
 2024/01/01 Opening Balance
     Assets:Checking         $1000.00

@@ -1,4 +1,4 @@
-; Coverage test for times.cc lines 1085-1093, 1242-1245
+; Coverage test for times.cc
 ; Exercise today/tomorrow/yesterday tokens in period parsing
 ; Covers handle_simple_period_token
 
@@ -6,10 +6,10 @@
     Expenses:Food            $10.00
     Assets:Cash
 
-; "today" - covers TOK_TODAY case (line 1085-1086, 1242-1245)
+; "today" - covers TOK_TODAY case
 test reg Expenses --begin today
 end test
 
-; "yesterday" - covers TOK_YESTERDAY case (line 1091-1092, 1244-1245)
+; "yesterday" - covers TOK_YESTERDAY case
 test reg Expenses --begin yesterday
 end test

@@ -1,4 +1,4 @@
-; Coverage for annotate.cc lines 166,176-178,203-204,234,271,283-288
+; Coverage for annotate.cc
 ; Tests various annotation types: price, date, tag, value_expr
 
 2024/01/01 Buy with lot date and tag

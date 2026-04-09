@@ -1,4 +1,4 @@
-; Coverage for commodity.cc lines 479-484: tag lexical comparison
+; Coverage for commodity.cc tag lexical comparison
 ; Two lots with different tags exercises the string comparison of tags
 ; "alpha" < "beta" in lexicographic order
 

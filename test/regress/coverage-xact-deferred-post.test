@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 690-692
+; Coverage test for xact.cc
 ; Tests deferred postings using <Account> syntax.
 ; Deferred postings (POST_DEFERRED) are added via add_deferred_post()
 ; instead of the regular add_post() path.

@@ -1,4 +1,4 @@
-; Test error.cc: line_context caret indicator (lines 66-68)
+; Test error.cc: line_context caret indicator
 
 2024/01/01 Test
     Expenses:Food   $10.00 @@ @@

@@ -1,5 +1,5 @@
 ; Test error for missing double closing brace in total cost annotation
-; Covers annotate.cc lines 131-132 (missing double closing brace)
+; Covers annotate.cc (missing double closing brace)
 
 2024/01/01 Test
     Assets:Brokerage    10 AAPL {{$1500}

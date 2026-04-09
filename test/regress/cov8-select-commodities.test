@@ -1,4 +1,4 @@
-; Coverage test for select.cc lines 364-368:
+; Coverage test for select.cc
 ; Exercise select from commodities.
 
 P 2024/01/01 EUR $1.10

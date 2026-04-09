@@ -1,8 +1,8 @@
-; Coverage for value.cc lines 1568, 1608-1613:
+; Coverage for value.cc
 ; When --exchange specifies source:target and the source commodity is
 ; not found, sources[index] is nullptr. For a BALANCE value this
 ; exercises the nullptr source branch where should_convert falls through
-; to the non-source path (line 1611-1613).
+; to the non-source path
 
 2024/01/01 Test
     Expenses:Food    $100.00

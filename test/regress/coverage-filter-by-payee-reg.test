@@ -1,4 +1,4 @@
-; Test by_payee_posts filter (covers filters.h lines 751-756)
+; Test by_payee_posts filter (covers filters.h )
 ; Exercises the --by-payee subtotaling
 
 2024/01/15 Grocery Store

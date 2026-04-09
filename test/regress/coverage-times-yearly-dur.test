@@ -1,4 +1,4 @@
-; Coverage test for times.cc line 327: operator<< for yearly duration
+; Coverage test for times.cc operator<< for yearly duration
 ; Tests the YEARS case in date_duration_t operator<< via the period command
 
 2024/01/15 Test

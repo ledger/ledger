@@ -1,6 +1,6 @@
 ; Wave 2 coverage tests for balance.cc
-; Covers: balance multiply by zero (line 112), balance division,
-; commodity_amount with multiple commodities (lines 191-192, 202-208),
+; Covers: balance multiply by zero, balance division
+; commodity_amount with multiple commodities
 ; balance value conversion
 
 P 2024/01/01 EUR $1.10

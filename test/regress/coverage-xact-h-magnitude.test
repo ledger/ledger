@@ -1,6 +1,6 @@
 ; Test xact.h: xact_base_t::magnitude and finalize methods
 ; Also exercises xact_t::valid, has_xdata, clear_xdata indirectly
-; Targets: xact.h lines 71-77, xact.cc lines 80-105
+; Targets: xact.h , xact.cc
 
 2024/01/15 (TXN-001) Grocery Store
     ; :groceries:

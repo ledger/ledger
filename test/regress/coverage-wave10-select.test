@@ -1,5 +1,4 @@
 ; Coverage: select.cc - exercises select command with various column combinations
-; Covers: lines 55, 59, 65, 71, 81, 84, 95, 145-173, 266, 322
 
 2024/01/01 Grocery Store
     Expenses:Food    $10.00

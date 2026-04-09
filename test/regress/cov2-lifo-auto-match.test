@@ -1,4 +1,4 @@
-; Test LIFO auto-matching for xact.cc lines 334-471
+; Test LIFO auto-matching for xact.cc
 ; When selling unannotated shares, LIFO should match newest lots first
 
 2024/01/01 Buy Lot 1
@@ -13,8 +13,8 @@
     Assets:Broker          -8 AAPL @ $200.00
     Income:Gains
 
-; After LIFO auto-matching: sold 5 from Lot 2 (newest) + 3 from Lot 1
-; Remaining: 7 from Lot 1 ($100)
+; After LIFO auto-matching: sold 5 from Lot (newest) + 3 from Lot 1
+; Remaining: 7 from Lot ($100)
 test bal Assets:Broker --lot-matching lifo --lot-prices --lot-dates
 7 AAPL {$100} [2024/01/01]  Assets:Broker
 end test

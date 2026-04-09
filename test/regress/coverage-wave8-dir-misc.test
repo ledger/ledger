@@ -1,6 +1,6 @@
 ; Coverage tests for textual_directives.cc miscellaneous directive paths
-; Targets lines 505-507 (account default), 454-458 (account eval),
-; 734-735 (@ prefix), 655-667 (value directive), 659-666 (comment directive)
+; Targets (account default), (account eval)
+; (@ prefix), (value directive), (comment directive)
 
 ; Test account with default sub-directive
 account Assets:Default

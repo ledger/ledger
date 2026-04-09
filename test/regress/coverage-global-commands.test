@@ -1,5 +1,5 @@
 ; Test global.cc: various command verbs
-; Exercises look_for_command (line 429-434) and execute_command paths
+; Exercises look_for_command and execute_command paths
 
 2024/01/01 Grocery Store
     Expenses:Food    $25.00

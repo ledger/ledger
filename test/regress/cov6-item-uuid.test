@@ -1,4 +1,4 @@
-; Coverage for item.cc line 107: uuid accessor
+; Coverage for item.cc uuid accessor
 
 2024/01/01 Test
     ; UUID: abc-123-def

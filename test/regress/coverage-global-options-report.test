@@ -1,4 +1,4 @@
-; Test global.cc: --options flag exercises report_options() (lines 287-308)
+; Test global.cc: --options flag exercises report_options
 
 2024/01/01 Test
     Expenses:Food    $25.00

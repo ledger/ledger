@@ -1,6 +1,6 @@
-; Coverage test for compare.cc lines 52-55, 80-107:
+; Coverage test for compare.cc
 ; compare_items<post_t> sorts postings by expression
-; Inverted sort (-amount) exercises O_NEG path at lines 52-55
+; Inverted sort (-amount) exercises O_NEG path
 
 2024/01/15 Test1
     Expenses:Food    $50.00

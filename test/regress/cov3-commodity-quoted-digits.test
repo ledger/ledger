@@ -1,5 +1,5 @@
 ; Test commodity with quoted all-digit symbol (quotes preserved)
-; Covers commodity.cc lines 350-353 (is_digit check prevents eliding quotes)
+; Covers commodity.cc (is_digit check prevents eliding quotes)
 
 2024/01/15 Buy
     Assets:Stocks    10 "12345"

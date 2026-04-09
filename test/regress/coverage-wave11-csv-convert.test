@@ -1,4 +1,4 @@
-; Coverage for convert.cc lines 97-100, 118-119
+; Coverage for convert.cc
 ; Tests CSV conversion (uses the 'convert' command)
 ; Note: this test uses --input-date-format to parse the CSV
 

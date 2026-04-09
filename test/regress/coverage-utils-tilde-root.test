@@ -1,6 +1,6 @@
 ; Coverage test for utils.cc expand_path/resolve_path
 ; Exercises tilde expansion with ~root/ to test successful getpwnam
-; Targets: utils.cc lines 775-778 (getpwnam success path), 786-797
+; Targets: utils.cc (getpwnam success path), 786-797
 include ~root/nonexistent_ledger_coverage_test.dat
 
 2024/01/01 Test

@@ -1,4 +1,4 @@
-; Coverage test for post.cc lines 541-542
+; Coverage test for post.cc
 ; Test resolve_expr where the expression result is a long integer,
 ; triggering the to_amount conversion path.
 

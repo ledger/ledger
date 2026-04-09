@@ -1,4 +1,4 @@
-; Coverage for filters.cc lines 1295-1297 (transfer_details SET_PAYEE)
+; Coverage for filters.cc (transfer_details SET_PAYEE)
 ; The --payee option overrides the payee with an expression.
 
 2024/01/01 Test

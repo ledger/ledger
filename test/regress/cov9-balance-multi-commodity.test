@@ -1,4 +1,4 @@
-; Coverage for balance.cc lines 206, 259, 263: multi-commodity balance operations
+; Coverage for balance.cc multi-commodity balance operations
 
 2024/01/01 Buy Stock
     Assets:Stock     10 AAPL

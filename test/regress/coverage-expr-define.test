@@ -1,6 +1,6 @@
 ; Test expr.cc: define directive and expression evaluation
-; Exercises: O_DEFINE with IDENT (op.cc lines 136-141),
-;   O_DEFINE with O_CALL (lines 144-155), O_LAMBDA (lines 162-183)
+; Exercises: O_DEFINE with IDENT
+;   O_DEFINE with O_CALL, O_LAMBDA
 
 define max(a, b) = a > b ? a : b
 

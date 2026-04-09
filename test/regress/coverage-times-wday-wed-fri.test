@@ -1,8 +1,8 @@
 ; Test Wednesday and Friday weekday names in period expressions
-; Exercises string_to_day_of_week (lines 214, 218):
-;   line 214: return gregorian::Wednesday
-;   line 218: return gregorian::Friday
-; Also exercises TOK_A_WDAY dump/to_string (lines 436-437, 506-507)
+; Exercises string_to_day_of_week:
+;   return gregorian::Wednesday
+;   return gregorian::Friday
+; Also exercises TOK_A_WDAY dump/to_string
 
 2024/01/15 Payee A
     Expenses:Food    $50.00

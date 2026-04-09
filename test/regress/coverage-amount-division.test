@@ -1,5 +1,5 @@
 ; Coverage test for amount.cc division paths
-; Test division by percentage (amount.cc lines 531-540)
+; Test division by percentage
 ; Test division of amounts
 
 2024/01/01 Calculate tax base

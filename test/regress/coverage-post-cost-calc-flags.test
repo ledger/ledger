@@ -1,4 +1,4 @@
-; Coverage test for post.cc lines 137-143, 202-203, 230-238
+; Coverage test for post.cc
 ; Tests cost, calculated, cost_calculated, and use_direct_amount accessors.
 ; The first posting has an explicit cost (@ price).
 ; The second posting is auto-calculated (POST_CALCULATED flag).

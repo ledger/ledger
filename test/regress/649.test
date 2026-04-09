@@ -1,0 +1,11 @@
+X bad line here
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 1:
+Error: Unrecognized source line 'X bad line here'
+end test

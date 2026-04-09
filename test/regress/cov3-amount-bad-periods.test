@@ -1,5 +1,5 @@
 ; Test error for too many periods in amount
-; Covers amount.cc lines 1189-1190 (no_more_periods check)
+; Covers amount.cc (no_more_periods check)
 
 commodity 1.000,00 EUR
 

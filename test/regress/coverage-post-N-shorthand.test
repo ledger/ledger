@@ -1,5 +1,5 @@
 ; Test post_t::lookup for N shorthand
-; Targets: post.cc lines 504-505 (N -> get_count)
+; Targets: post.cc (N -> get_count)
 
 2024/01/15 * Store
     Expenses:Food              $50.00

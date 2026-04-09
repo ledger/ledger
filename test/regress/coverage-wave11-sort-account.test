@@ -1,5 +1,4 @@
-; Coverage for compare.cc line 62 (sort with account)
-; Also covers lines 87-89, 98-100, 120, 131
+; Coverage for compare.cc (sort with account)
 
 2024/01/01 Payee A
     Expenses:Zebra    $10.00

@@ -1,5 +1,5 @@
 ; Test dash range operator in period expressions
-; (exercises handle_dash_operator in times.cc: lines 908-926)
+; (exercises handle_dash_operator in times.cc: )
 ; Also tests TOK_DASH token and inclusive end semantics
 
 2024/01/15 Payee A

@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 588-589, 592-593
+; Coverage test for report.cc
 ; fn_amount_expr evaluates the amount expression,
 ; fn_total_expr evaluates the total expression
 

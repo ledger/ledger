@@ -1,4 +1,4 @@
-; Coverage: journal.cc lines 277-289: register_metadata with CHECK_ERROR
+; Coverage: journal.cc register_metadata with CHECK_ERROR
 ; Using --pedantic to trigger error for unknown metadata tag
 
 commodity $

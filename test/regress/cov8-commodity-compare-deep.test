@@ -1,4 +1,4 @@
-; Coverage for commodity.cc lines 431, 515: deep commodity comparison
+; Coverage for commodity.cc deep commodity comparison
 ; Two commodities with same base name but different annotations
 
 2024/01/01 Buy Lot A

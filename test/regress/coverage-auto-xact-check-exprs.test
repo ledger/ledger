@@ -1,4 +1,4 @@
-; Coverage for xact.cc lines 1029-1038 (check_exprs in auto_xact)
+; Coverage for xact.cc (check_exprs in auto_xact)
 ; Tests assert, check, and eval expressions in auto transactions.
 
 = Expenses:Food

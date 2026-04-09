@@ -1,5 +1,5 @@
-; Coverage for textual_directives.cc lines 239-249 (include error path)
-; and textual.cc lines 163-164, 224, 244 (error handling)
+; Coverage for textual_directives.cc (include error path)
+; textual.cc (error handling)
 ; Tests include with non-existent file (should error)
 
 2024/01/01 Test

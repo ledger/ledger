@@ -1,4 +1,4 @@
-; Coverage for history.cc line 291: early return for empty price graph
+; Coverage for history.cc early return for empty price graph
 ; Use --market with a commodity that has no price entries
 
 2024/01/01 Buy

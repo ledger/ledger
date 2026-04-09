@@ -1,4 +1,4 @@
-; Coverage test for token.cc line 463
+; Coverage test for token.cc
 ; Non-alpha, non-underscore char in expression triggers expected()
 
 2024/01/01 Test

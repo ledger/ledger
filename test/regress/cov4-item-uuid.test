@@ -1,4 +1,4 @@
-; Test uuid accessor (lines 508-509 of item.cc)
+; Test uuid accessor
 ; Exercise the uuid lookup path (aliases to get_id)
 
 2024/01/01 Test

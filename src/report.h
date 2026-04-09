@@ -424,6 +424,7 @@ public:
     HANDLER(pending).report(out);
     HANDLER(percent).report(out);
     HANDLER(period_).report(out);
+    HANDLER(period_shift_).report(out);
     HANDLER(pivot_).report(out);
     HANDLER(plot_amount_format_).report(out);
     HANDLER(plot_total_format_).report(out);
@@ -639,12 +640,13 @@ public:
         on(none, "%(justify(scrub(get_at(display_total, 0)), 16, 16 + int(prepend_width), "
                  " true, color))  %(justify(scrub(get_at(display_total, 1)), 18, "
                  " 36 + int(prepend_width), true, color))"
-                 "    %(latest_cleared ? format_date(latest_cleared) : \"         \")"
+                 "    %(justify(latest_cleared ? format_date(latest_cleared) : \"\","
+                 " int(date_width)))"
                  "    %(!options.flat ? depth_spacer : \"\")"
                  "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
                  "%$1  %$2    %$3\n%/"
                  "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
-                 "----------------    ----------------    ---------\n");
+                 "----------------    ----------------    %(\"-\" * int(date_width))\n");
       });
 
   OPTION(report_t, color);
@@ -675,7 +677,10 @@ public:
 
   OPTION_(
       report_t, current, DO() { // -c
-        OTHER(limit_).on(whence, "date<=today");
+        // Use CURRENT_DATE() to eagerly resolve the date so that a
+        // later --end cannot widen --current's restriction by
+        // overwriting terminus (which the symbolic "today" reads).
+        OTHER(limit_).on(whence, "date<=[" + to_iso_extended_string(CURRENT_DATE()) + "]");
       });
 
   OPTION_(
@@ -1049,6 +1054,8 @@ public:
         if (handled)
           value += string(" ") + str;
       });
+
+  OPTION(report_t, period_shift_);
 
   OPTION(report_t, pivot_);
 

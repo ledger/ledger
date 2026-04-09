@@ -1,5 +1,5 @@
 ; Test sorting by amount with different commodities
-; Covers value.cc line 912 (is_less_than AMOUNT vs AMOUNT with different
+; Covers value.cc (is_less_than AMOUNT vs AMOUNT with different
 ; commodities using compare_by_commodity)
 
 2024/01/01 Test

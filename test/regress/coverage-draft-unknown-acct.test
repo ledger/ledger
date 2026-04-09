@@ -1,5 +1,5 @@
 ; Test draft.cc when no matching accounts are found for from/to without account_mask
-; This covers the Liabilities:Unknown and Expenses:Unknown paths (lines 410-415)
+; This covers the Liabilities:Unknown and Expenses:Unknown paths
 
 2024/01/15 * SomePayee
     Expenses:Food              $50.00

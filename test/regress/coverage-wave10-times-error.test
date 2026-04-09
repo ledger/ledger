@@ -1,6 +1,6 @@
-; Coverage tests for times.cc lines 1750, 1753 (token_t::expected error)
-; Also covers times.cc line 1776 (expected with wanted char)
-; Also covers times.cc line 306-307 (date_specifier_t::end() assert)
+; Coverage tests for times.cc (token_t::expected error)
+; Also covers times.cc (expected with wanted char)
+; Also covers times.cc (date_specifier_t::end assert)
 ; Tests invalid date period expressions that trigger error paths
 
 2024/01/01 Payee

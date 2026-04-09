@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 584-585
+; Coverage test for report.cc
 ; fn_top_amount returns the first amount from a balance or sequence
 
 2024/01/01 Test

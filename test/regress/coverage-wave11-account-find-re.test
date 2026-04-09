@@ -1,4 +1,4 @@
-; Coverage for account.cc line 119: find_account_re.
+; Coverage for account.cc find_account_re
 ; Uses the regex account lookup via an account argument with mask syntax.
 
 2024/01/01 Test

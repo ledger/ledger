@@ -1,4 +1,4 @@
-; Coverage for item.cc lines 49-53: has_tag/get_tag with metadata
+; Coverage for item.cc has_tag returning true when tag is present
 
 2024/01/01 Test
     ; :MyTag:

@@ -504,7 +504,9 @@ expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind, const string& fn
     break;
 
   case 'd':
-    if (fn_name == "depth")
+    if (fn_name[1] == '\0' || fn_name == "date")
+      return WRAP_FUNCTOR(get_wrapper<&get_latest>);
+    else if (fn_name == "depth")
       return WRAP_FUNCTOR(get_wrapper<&get_depth>);
     else if (fn_name == "depth_parent")
       return WRAP_FUNCTOR(get_wrapper<&get_depth_parent>);

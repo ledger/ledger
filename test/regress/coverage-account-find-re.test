@@ -1,5 +1,5 @@
-; Coverage: account.cc line 119 - find_account_re
-; post.cc lines 285,288-290 - get_account with mask arg calls find_account_re
+; Coverage: account.cc - find_account_re
+; post.cc - get_account with mask arg calls find_account_re
 ; This exercises find_account_re through post context account(/regex/)
 
 2024/01/01 Grocery

@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 665-671
+; Coverage test for xact.cc
 ; Tests the error path for unbalanced balanced-virtual postings.
 ; When [balanced virtual] postings don't sum to zero and there is no
 ; null posting among them, finalize() throws a balance error.

@@ -1,5 +1,5 @@
 ; Test period shortcut tokens (yearly, quarterly, bimonthly, monthly, biweekly, weekly, daily)
-; Exercises handle_period_token (lines 1162-1189)
+; Exercises handle_period_token
 
 2024/01/15 Payee A
     Expenses:Food    $50.00

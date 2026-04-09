@@ -1,5 +1,5 @@
 ; Test session with permissive checking mode
-; Covers session.cc lines 117-118 (permissive checking mode)
+; Covers session.cc (permissive checking mode)
 
 2024/01/15 Test
     Expenses:Food    $50.00

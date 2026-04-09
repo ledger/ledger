@@ -1,4 +1,4 @@
-; Coverage test for xact.cc line 719
+; Coverage test for xact.cc
 ; verify() skips postings where !must_balance() (virtual postings)
 
 = Expenses

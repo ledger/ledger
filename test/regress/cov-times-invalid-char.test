@@ -1,4 +1,4 @@
-; Coverage test for times.cc lines 1748-1752, 1775
+; Coverage test for times.cc
 ; Invalid character in period expression
 ; Exercises token_t::expected() with wanted == '\0'
 

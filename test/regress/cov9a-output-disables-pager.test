@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 77-78
+; Coverage test for report.cc
 ; When --output is set and --pager is on (but not --force-pager),
 ; pager gets turned off.
 

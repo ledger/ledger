@@ -1,4 +1,4 @@
-; Coverage: journal.cc lines 144-161: register_account with CHECK_ERROR
+; Coverage: journal.cc register_account with CHECK_ERROR
 ; Using --pedantic to trigger error for unknown accounts
 
 commodity $

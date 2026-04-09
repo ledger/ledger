@@ -1,183 +1,183 @@
 ; Coverage tests for token.cc - token parsing paths
 ; Tests various token types and reserved words
 
-; Reserved word: and (token.cc line 51-56)
+; Reserved word:
 test eval '1 and 1'
 1
 end test
 
-; Reserved word: div (token.cc line 60-65)
+; Reserved word: div
 test eval '10 div 5'
 2
 end test
 
-; Reserved word: else (token.cc line 69-73)
+; Reserved word: else
 test eval '1 if true else 0'
 1
 end test
 
-; Reserved word: false (token.cc line 77-82)
+; Reserved word: false
 test eval 'false'
 0
 end test
 
-; Reserved word: if (token.cc line 86-92)
+; Reserved word: if
 test eval '99 if true'
 99
 end test
 
-; Reserved word: or (token.cc line 96-101)
+; Reserved word: or
 test eval '0 or 42'
 42
 end test
 
-; Reserved word: not (token.cc line 105-110)
+; Reserved word: not
 test eval 'not false'
 1
 end test
 
-; Reserved word: true (token.cc line 114-118)
+; Reserved word: true
 test eval 'true'
 1
 end test
 
-; Double-ampersand && (token.cc line 165-169)
+; Double-ampersand &&
 test eval '1 && 1'
 1
 end test
 
-; Double-pipe || (token.cc line 176-180)
+; Double-pipe ||
 test eval '0 || 7'
 7
 end test
 
-; Single ampersand & (token.cc line 171)
+; Single ampersand &
 test eval '1 & 1'
 1
 end test
 
-; Single pipe | (token.cc line 182)
+; Single pipe |
 test eval '0 | 5'
 5
 end test
 
-; Parentheses (token.cc lines 186-191)
+; Parentheses
 test eval '(1 + 2)'
 3
 end test
 
-; Date literal [date] (token.cc lines 194-211)
+; Date literal [date]
 test eval '[2024/01/01]'
 2024/01/01
 end test
 
-; Single-quoted string (token.cc lines 214-225)
+; Single-quoted string
 test eval "'hello'"
 hello
 end test
 
-; Double-quoted string (token.cc lines 228-269)
+; Double-quoted string
 test eval '"world"'
 world
 end test
 
-; Braced amount {amount} (token.cc lines 272-282)
+; Braced amount {amount}
 test eval '{$10}'
 $10
 end test
 
-; Exclamation/not operator (token.cc line 303)
+; Exclamation/not operator
 test eval 'not 0'
 1
 end test
 
-; Not-equal != (token.cc lines 288-294)
+; Not-equal !=
 test eval '1 != 2'
 1
 end test
 
-; Not-match !~ (token.cc lines 295-301)
+; Not-match !~
 test eval '"hello" !~ /xyz/'
 1
 end test
 
-; Minus and subtraction (token.cc lines 306-318)
+; Minus and subtraction
 test eval '5 - 3'
 2
 end test
 
-; Arrow -> in lambda (token.cc lines 309-315)
+; Arrow -> in lambda
 test eval '(x -> x + 1)(5)'
 6
 end test
 
-; Plus (token.cc lines 319-321)
+; Plus
 test eval '2 + 3'
 5
 end test
 
-; Star (token.cc lines 324-326)
+; Star
 test eval '3 * 4'
 12
 end test
 
-; Query and colon (token.cc lines 329-336)
+; Query and colon
 test eval '1 ? 42 : 0'
 42
 end test
 
-; Regex literal /regex/ (token.cc lines 338-354)
+; Regex literal /regex/
 test eval '"abc" =~ /abc/'
 1
 end test
 
-; Match =~ (token.cc lines 360-366)
+; Match =~
 test eval '"test" =~ /te/'
 1
 end test
 
-; Equal == (token.cc lines 367-373)
+; Equal ==
 test eval '5 == 5'
 1
 end test
 
-; Assign = (token.cc line 375)
+; Assign =
 test eval 'myvar = 42; myvar'
 42
 end test
 
-; Less-than < (token.cc line 387)
+; Less-than <
 test eval '1 < 2'
 1
 end test
 
-; Less-equal <= (token.cc lines 380-385)
+; Less-equal <=
 test eval '3 <= 3'
 1
 end test
 
-; Greater-than > (token.cc line 399)
+; Greater-than >
 test eval '5 > 3'
 1
 end test
 
-; Greater-equal >= (token.cc lines 392-397)
+; Greater-equal >=
 test eval '5 >= 5'
 1
 end test
 
-; Comma operator (token.cc lines 407-409)
+; Comma operator
 test eval 'print(1, 2)'
 12
 1
 end test
 
-; Semicolon operator (token.cc lines 412-414)
+; Semicolon operator
 test eval 'x = 1; x'
 1
 end test
 
-; Amount parsing in default case (token.cc lines 450-484)
+; Amount parsing in default case
 test eval '$100'
 $100
 end test

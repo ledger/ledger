@@ -1,5 +1,6 @@
-; Test textual_directives.cc: account-rewrite directive parsing
-; in general_directive case 'a' (line 887)
+; Test textual_directives.cc: account-rewrite directive parsing without error.
+; Note: the rewrite does not appear in output; this only verifies
+; that the directive is parsed without error.
 
 account-rewrite /Food/  Expenses:Groceries
 

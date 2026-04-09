@@ -1,4 +1,4 @@
-; Test value_date accessor via item lookup (lines 513-514 of item.cc)
+; Test value_date accessor via item lookup
 ; Exercise the value_date lookup in item
 
 2024/01/01 Test

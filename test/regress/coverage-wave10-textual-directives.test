@@ -1,4 +1,4 @@
-; Test coverage for textual_directives.cc lines 485, 520, 556, 626, 735, 765
+; Test coverage for textual_directives.cc
 ; payee directive, commodity directive, tag directive, bucket, define
 
 payee Grocery Store

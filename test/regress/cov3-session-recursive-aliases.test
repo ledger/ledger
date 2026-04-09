@@ -1,5 +1,5 @@
 ; Test session with recursive aliases
-; Covers session.cc lines 106-107 (recursive_aliases handling)
+; Covers session.cc (recursive_aliases handling)
 
 alias food=Expenses:Food
 alias groceries=food

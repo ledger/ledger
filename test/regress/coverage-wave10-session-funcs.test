@@ -1,5 +1,5 @@
-; Coverage: session.cc - fn_int (line 265), fn_str (line 270)
-; Also fn_min (line 258) and fn_max (line 261)
+; Coverage: session.cc - fn_int, fn_str
+; Also fn_min and fn_max
 
 2024/01/01 Test
     Expenses:Food    $10.50

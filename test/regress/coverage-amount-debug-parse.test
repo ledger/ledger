@@ -1,4 +1,4 @@
-; Coverage for amount.cc lines 1334-1337:
+; Coverage for amount.cc
 ; IF_DEBUG("amount.parse") block in the parse function that prints the
 ; rational representation of the parsed amount. Triggered by --debug amount.parse.
 

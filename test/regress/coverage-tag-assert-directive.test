@@ -1,4 +1,4 @@
-; Test textual_directives.cc lines 674-678: tag directive with
+; Test textual_directives.cc tag directive with
 ; assert sub-directive
 
 tag Receipt

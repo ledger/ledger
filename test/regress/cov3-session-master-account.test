@@ -1,5 +1,5 @@
 ; Test session with master account
-; Covers session.cc lines 86-87 (master_account non-empty path)
+; Covers session.cc (master_account non-empty path)
 
 2024/01/15 Test
     Expenses:Food    $50.00

@@ -1,5 +1,5 @@
-; Coverage for csv.cc line 202: default commodity in csv convert
-; and csv.cc line 58: unget in csv parsing, line 96: early return
+; Coverage for the 'csv' output command with a default commodity directive
+; Note: the 'csv' output command is not implemented in csv.cc (which is the CSV input parser)
 
 commodity $1,000.00
 

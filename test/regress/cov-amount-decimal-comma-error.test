@@ -1,5 +1,5 @@
-; Coverage test for amount.cc line 1223
-; "Incorrect use of decimal comma" error
+; Coverage test for amount.cc
+; "Too many commas in amount" error
 ; With --decimal-comma, periods are thousands separators.
 ; If a comma appears after a period has already been seen,
 ; and the comma comes with an improper placement, error is raised.

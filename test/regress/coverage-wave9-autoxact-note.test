@@ -1,4 +1,4 @@
-; Test coverage for textual_xacts.cc lines 194-205
+; Test coverage for textual_xacts.cc
 ; Automated transaction with trailing note on the auto xact and on its posting
 
 = /Food/

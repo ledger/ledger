@@ -1,5 +1,5 @@
 ; Test fixated price recompute path when balance has > 2 commodities
-; Targets: xact.cc lines 271-302 (fixated price recompute path)
+; Targets: xact.cc (fixated price recompute path)
 ; This test creates a multi-commodity transaction where fixated prices
 ; trigger cost calculation to reduce the balance
 

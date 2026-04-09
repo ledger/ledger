@@ -1,4 +1,4 @@
-; Coverage for textual_xacts.cc line 126: auto_xact delete with non-matching skip
+; Coverage for textual_xacts.cc auto_xact delete with non-matching skip
 
 = :tax_rule: :: /Expenses/
     Expenses:Tax    $10.00

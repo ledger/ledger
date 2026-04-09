@@ -1,4 +1,4 @@
-; Test coverage for textual_xacts.cc lines 493-498, 935-953
+; Test coverage for textual_xacts.cc
 ; Value expression in posting amount and transaction-level assert/check/expr
 
 2024/01/15 Test Payee

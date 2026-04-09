@@ -1,7 +1,7 @@
 ; Test value.h: sort_value_t and sorting comparisons
 ; Exercises sort_value_is_less_than, sort_value_t constructor
 ; Also exercises is_less_than and is_greater_than with AMOUNT types
-; Targets: value.h line 963, value.cc sort comparisons
+; Targets: value.h , value.cc sort comparisons
 
 2024/01/15 Store
     Expenses:Food    $50.00

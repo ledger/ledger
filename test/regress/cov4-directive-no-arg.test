@@ -1,4 +1,4 @@
-; Test general_directive missing argument error (line 784 of textual_directives.cc)
+; Test general_directive missing argument error
 ; Exercise the error when a directive is used without required argument
 
 include

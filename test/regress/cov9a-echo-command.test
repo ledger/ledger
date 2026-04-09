@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 1134-1138
+; Coverage test for report.cc
 ; echo command outputs its argument followed by newline
 
 2024/01/01 Test

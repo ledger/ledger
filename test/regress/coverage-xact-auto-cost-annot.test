@@ -1,5 +1,5 @@
 ; Test auto xact with cost propagation from annotated amount
-; Targets: xact.cc lines 882-898 (auto cost derivation from annotation)
+; Targets: xact.cc (auto cost derivation from annotation)
 
 = /Expenses/
     (Budget)                   1.00

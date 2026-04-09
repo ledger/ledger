@@ -1,5 +1,5 @@
 ; Wave 2 coverage tests for annotate.cc error paths - unclosed bracket
-; Covers: unclosed date bracket (line 154)
+; Covers: unclosed date bracket
 
 2024/01/01 Unclosed Bracket
     Assets:Test              1 FOO [2024/01/01

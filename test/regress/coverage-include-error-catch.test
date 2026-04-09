@@ -1,4 +1,4 @@
-; Coverage for textual_directives.cc lines 248-258: catch block in include
+; Coverage for textual_directives.cc catch block in include
 include coverage-include-error-catch.dat
 
 test bal -> 1

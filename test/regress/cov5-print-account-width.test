@@ -1,4 +1,4 @@
-; Coverage for print.cc line 175: print with --account-width
+; Coverage for print.cc print with --account-width
 
 2024/01/01 Test
     Expenses:Food    $10.00

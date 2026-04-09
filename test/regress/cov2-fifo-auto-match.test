@@ -1,4 +1,4 @@
-; Test FIFO auto-matching for xact.cc lines 334-471
+; Test FIFO auto-matching for xact.cc via --lot-matching fifo
 ; When selling unannotated shares, FIFO should auto-match against lots
 
 2024/01/01 Buy Lot 1
@@ -13,8 +13,8 @@
     Assets:Broker          -8 AAPL @ $200.00
     Income:Gains
 
-; After FIFO auto-matching: sold 8 from Lot 1 (oldest first)
-; Remaining: 2 from Lot 1 ($100) + 5 from Lot 2 ($150)
+; After FIFO auto-matching: sold 8 from Lot (oldest first)
+; Remaining: 2 from Lot ($100) + 5 from Lot ($150)
 test bal Assets:Broker --lot-matching fifo --lot-prices --lot-dates
 2 AAPL {$100} [2024/01/01]
 5 AAPL {$150} [2024/02/01]  Assets:Broker

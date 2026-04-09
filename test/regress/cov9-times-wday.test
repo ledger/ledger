@@ -1,4 +1,4 @@
-; Coverage for times.cc lines 790-794: TOK_A_WDAY parsing
+; Coverage for times.cc TOK_A_WDAY parsing
 
 2024/01/01 Test1
     Expenses:Food    $10.00

@@ -1,5 +1,5 @@
 ; Test post_t::primary_date with xdata date and _date set
-; Targets: post.cc lines 95-106 (primary_date paths)
+; Targets: post.cc (primary_date paths)
 
 2024/01/15 * Store
     Expenses:Food              $50.00

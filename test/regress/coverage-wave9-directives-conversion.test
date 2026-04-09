@@ -1,4 +1,4 @@
-; Test coverage for textual_directives.cc lines 113-118
+; Test coverage for textual_directives.cc
 ; C directive (price conversion)
 
 C 1.00 GBP = $1.25

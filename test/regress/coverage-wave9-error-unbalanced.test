@@ -1,4 +1,4 @@
-; Test coverage for xact.cc lines 475-481
+; Test coverage for xact.cc
 ; Unbalanced transaction error path
 
 2024/01/01 Test

@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 805-806
+; Coverage test for report.cc
 ; fn_abs returns the absolute value
 
 2024/01/01 Test

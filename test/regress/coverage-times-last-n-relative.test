@@ -1,10 +1,10 @@
 ; Test "last/next N units" expressions in handle_relative_token
-; Exercises handle_relative_token TOK_INT branch (lines 962-1001):
-;   TOK_MONTHS (lines 978-979)
-;   TOK_QUARTERS (lines 975-976)
-;   TOK_WEEKS (lines 981-982)
-;   TOK_DAYS (lines 984-985)
-; Also tests the swap logic for adjust >= 0 (lines 992-996)
+; Exercises handle_relative_token TOK_INT branch:
+;   TOK_MONTHS
+;   TOK_QUARTERS
+;   TOK_WEEKS
+;   TOK_DAYS
+; Also tests the swap logic for adjust >= 0
 
 2024/01/01 Payee A
     Expenses:Food    $10.00

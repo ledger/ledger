@@ -1,5 +1,5 @@
 ; Test get_comment with short note (< 15 chars) for inline formatting
-; Targets: item.cc lines 371-372 (short note path)
+; Targets: item.cc (short note path)
 
 2024/01/15 * Store
     Expenses:Food              $50.00

@@ -1,4 +1,4 @@
-; Coverage test for filters.cc lines 1229, 1251:
+; Coverage test for filters.cc
 ; Exercise posts_as_equity::report_subtotal via equity command.
 
 2024/01/01 Opening

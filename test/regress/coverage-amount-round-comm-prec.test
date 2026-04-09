@@ -1,4 +1,4 @@
-; Coverage for amount.cc lines 635-640:
+; Coverage for amount.cc
 ; in_place_round_to_commodity_precision rounding path where the amount's
 ; internal precision exceeds the commodity's display precision.
 ; The rounded() function in a format expression triggers this path.

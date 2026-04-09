@@ -1,4 +1,4 @@
-; Coverage test for amount.cc line 200-202
+; Coverage test for amount.cc
 ; Exercise decimal comma output for small amounts (no thousands separator)
 ; This exercises the decimal point -> comma conversion path
 

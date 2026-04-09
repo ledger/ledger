@@ -1,5 +1,5 @@
 ; Coverage test for select.cc: FROM xacts/txns/transactions paths
-; Exercises: select_command FROM xacts (line 349-352), txns, transactions aliases
+; Exercises: select_command FROM xacts, txns, transactions aliases
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00

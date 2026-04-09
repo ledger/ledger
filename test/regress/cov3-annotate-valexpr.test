@@ -1,5 +1,5 @@
 ; Test annotation with valuation expression
-; Covers annotate.cc lines 164-201 (valuation expression parsing)
+; Covers annotate.cc (valuation expression parsing)
 
 2024/01/01 Buy Stock
     Assets:Brokerage    10 AAPL ((9))

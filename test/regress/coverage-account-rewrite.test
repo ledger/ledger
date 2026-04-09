@@ -1,4 +1,4 @@
-; Coverage for filters.cc lines 1641-1652 (rewrite_posts account rewrite)
+; Coverage for filters.cc (rewrite_posts account rewrite)
 ; When account-rewrite directive matches, the posting is rewritten
 ; with a new account path.
 

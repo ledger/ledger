@@ -1,4 +1,4 @@
-; Coverage tests for report.cc --output option (lines 73-77)
+; Coverage tests for report.cc --output option
 ; When --output is specified, color and pager are disabled
 
 2024/01/01 Payee

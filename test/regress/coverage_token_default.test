@@ -1,4 +1,4 @@
-; Coverage test for token.cc line 122
+; Coverage test for token.cc
 ; Identifier starting with 'd' hits default case in parse_reserved_word
 
 2024/01/01 Test Payee

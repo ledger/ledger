@@ -1,4 +1,4 @@
-; Coverage for amount.cc lines 107-110:
+; Coverage for amount.cc
 ; IF_DEBUG("amount.convert") block in stream_out_mpq that prints the
 ; rational number before conversion. Triggered by --debug amount.convert.
 ; The 2>/dev/null suppresses debug output on stderr to avoid timestamp

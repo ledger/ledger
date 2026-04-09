@@ -1,4 +1,4 @@
-; Coverage for output.cc line 386: annotated commodity price already in map
+; Coverage for output.cc annotated commodity price already in map
 
 2024/01/01 Buy
     Assets:Stocks    10 AAPL @ $100.00

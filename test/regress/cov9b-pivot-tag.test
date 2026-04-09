@@ -1,4 +1,4 @@
-; Coverage for filters.cc line 1290: transfer_details SET_ACCOUNT with pivot
+; Coverage for filters.cc transfer_details SET_ACCOUNT with pivot
 ; The --pivot option creates accounts based on tag values
 
 2024/01/01 Test

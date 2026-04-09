@@ -1,4 +1,4 @@
-; Test coverage for textual_xacts.cc lines 453-462
+; Test coverage for textual_xacts.cc
 ; Lot price syntax: {$150.00} and {=$155.00} (fixated)
 
 2024/01/01 Buy Stock

@@ -1,4 +1,4 @@
-; Coverage test for value.cc lines 132-133
+; Coverage test for value.cc
 ; Exercise set_type(VOID) which resets storage
 ; This happens when expressions produce null/void results
 

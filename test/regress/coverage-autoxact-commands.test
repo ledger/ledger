@@ -1,6 +1,6 @@
 ; Coverage tests for textual_xacts.cc
 ; Automated transaction enable/disable/delete commands
-; Lines 45-48 (check_command_has_match warning), 67-68, 77, 79, 126
+; Lines (check_command_has_match warning), 67-68, 77, 79, 126
 
 ; Named automated transaction
 = "food" :: /Food/

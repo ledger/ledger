@@ -1,6 +1,5 @@
-; Coverage for history.cc lines 232-243: alias_commodity
-; Tests the case where old commodity has no graph index (returns early)
-; and normal alias behavior
+; Coverage for history.cc market-value conversion
+; Tests reg --market -X $ with price history lookup
 
 commodity $
     note US Dollar

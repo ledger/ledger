@@ -1,8 +1,9 @@
-; Regression test for GitHub issue #1196: Fixed commodity treated as separate
-; commodity. When using a fixed lot price {=price}, the annotated commodity
-; should not appear as a distinct commodity from the base one. The running
-; total in reg and bal reports should combine amounts of the same base
-; commodity regardless of their lot price annotations.
+; Regression test for GitHub issue #1196: Annotated commodity treated as
+; separate commodity. Transaction 1 uses a fixed lot price {=price} and
+; Transaction 2 uses a regular lot price {price}. In both cases, the
+; annotated commodity should not appear as a distinct commodity from the
+; base one. The running total in reg and bal reports should combine amounts
+; of the same base commodity regardless of their lot price annotations.
 
 2016-02-26 Test 1
     Expenses:Foo            £560.70 {=$1.3866} @ $1.3866

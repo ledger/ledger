@@ -1,4 +1,4 @@
-; Coverage for textual_directives.cc lines 573-585: account_rewrite_directive
+; Coverage for textual_directives.cc account_rewrite_directive
 
 account-rewrite Food  Expenses:Groceries
 

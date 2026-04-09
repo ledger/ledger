@@ -1,5 +1,5 @@
 ; Test time-colon display with large hour value (> 3 digits uses colon separator)
-; Covers amount.cc lines 211-213 (time_colon thousands separator)
+; Covers amount.cc (time_colon thousands separator)
 
 2024/01/01 Work
     Expenses:Labor    12345.50h

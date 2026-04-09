@@ -200,6 +200,28 @@ public:
   const boost::uint32_t& operator[](const std::size_t index) const { return utf32chars[index]; }
 };
 
+/// Strip ANSI CSI (Control Sequence Introducer) escape sequences from a
+/// string so that invisible terminal formatting codes are not counted
+/// toward the display width.  The pattern matched is:
+///   ESC '[' <parameter bytes 0x30-0x3F>* <intermediate bytes 0x20-0x2F>* <final byte 0x40-0x7E>
+inline std::string strip_ansi_escapes(const std::string& input) {
+  std::string result;
+  result.reserve(input.size());
+  for (std::string::size_type i = 0; i < input.size(); ++i) {
+    if (input[i] == '\033' && i + 1 < input.size() && input[i + 1] == '[') {
+      i += 2; // skip ESC and '['
+      while (i < input.size() && input[i] >= 0x30 && input[i] <= 0x3F)
+        ++i; // parameter bytes
+      while (i < input.size() && input[i] >= 0x20 && input[i] <= 0x2F)
+        ++i; // intermediate bytes
+      // skip final byte (0x40-0x7E)
+    } else {
+      result += input[i];
+    }
+  }
+  return result;
+}
+
 /// Write @p str to @p out, padded with spaces to fill @p width display
 /// columns.  Used by format expressions to align report columns.
 /// @param right   If true, right-justify (pad on the left).
@@ -215,7 +237,7 @@ inline void justify(std::ostream& out, const std::string& str, int width, bool r
       out << "\033[0m";
   }
 
-  unistring temp(str);
+  unistring temp(strip_ansi_escapes(str));
 
   int spacing = width - int(temp.width());
   while (spacing-- > 0)

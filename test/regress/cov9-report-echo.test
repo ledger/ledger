@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 1134-1138: echo_command
+; Coverage test for report.cc echo_command
 ; Test the echo command which prints its argument to stdout.
 
 2024/01/01 Test

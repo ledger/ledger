@@ -1,4 +1,4 @@
-; Test equity posting with single commodity (line 1229 of filters.cc)
+; Test equity posting with single commodity
 ; Exercise posts_as_equity with a simple single-commodity case
 
 2024/01/15 Test1

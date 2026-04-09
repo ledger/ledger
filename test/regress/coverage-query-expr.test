@@ -1,6 +1,6 @@
 ; Tests for query.cc: expr token parsing
-; Covers: lines 218-221 (TOK_EXPR handling in parse_query_term)
-;         line 296 (recursive parse_query_term for TOK_EXPR)
+; Covers: (TOK_EXPR handling in parse_query_term)
+;         (recursive parse_query_term for TOK_EXPR)
 
 2024/01/01 Income
     Assets:Checking  $100
@@ -10,7 +10,7 @@
     Expenses:Food  $25
     Assets:Checking
 
-; expr keyword followed by expression argument (lines 218-221, 296)
+; expr keyword followed by expression argument
 test reg expr 'amount>0'
 24-Jan-01 Income                Assets:Checking                $100         $100
 24-Jan-15 Groceries             Expenses:Food                   $25         $125

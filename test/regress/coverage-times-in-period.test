@@ -1,4 +1,4 @@
-; Coverage for times.cc line 1231: handle_in_token
+; Coverage for times.cc handle_in_token
 ; Tests "in january" and "in 2024" period expressions
 
 2024/01/15 January

@@ -1,4 +1,4 @@
-; Coverage test for account.cc lines 335-337, 443-444:
+; Coverage test for account.cc
 ; Exercise has_children_to_display function.
 
 2024/01/01 Test

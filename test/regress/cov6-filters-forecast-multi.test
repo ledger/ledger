@@ -1,4 +1,4 @@
-; Coverage for filters.cc lines 1290,1652: forecast with xdata flags
+; Coverage for filters.cc forecast with xdata flags
 
 ~ monthly
     Expenses:Rent    $1000

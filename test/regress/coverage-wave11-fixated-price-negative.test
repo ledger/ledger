@@ -1,5 +1,5 @@
-; Coverage for xact.cc lines 296-298: fixated price (NOT_PER_UNIT) with
-; negative amount; and lines 313-315: balanced-virtual posting skip in
+; Coverage for xact.cc fixated price (NOT_PER_UNIT) with
+; negative amount; and balanced-virtual posting skip in
 ; the recompute loop.
 
 2024/01/01 Multi sell

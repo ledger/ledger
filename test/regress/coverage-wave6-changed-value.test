@@ -1,4 +1,4 @@
-; Tests for filters.cc changed_value_posts (lines 713-715, 805-806, 810, 815-817, 831, 865)
+; Tests for filters.cc changed_value_posts
 ; Covers: output_revaluation, operator(), catch block, last_total casting
 
 P 2024/01/01 AAPL $150.00

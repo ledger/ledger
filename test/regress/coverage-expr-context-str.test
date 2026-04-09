@@ -1,4 +1,4 @@
-; Coverage for expr.cc line 217 (context_to_str) and format.cc lines 449-457
+; Coverage for expr.cc (context_to_str) and format.cc
 ; Triggered by calc_error during format expression evaluation
 
 2024/01/15 Test

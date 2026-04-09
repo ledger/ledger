@@ -1,4 +1,4 @@
-; Test post_t::get_tag with mask (line 72 of post.cc)
+; Test post_t::get_tag with mask
 ; When item_t::get_tag(mask, value_mask) returns nullopt, fall through
 ; to xact->get_tag(mask, value_mask)
 

@@ -1,4 +1,4 @@
-; Coverage for compare.cc: post sort with context (lines 87-89, 98-100)
+; Coverage for compare.cc: post sort with context
 
 2024/01/01 Test1
     Expenses:Food    $10.00

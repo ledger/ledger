@@ -1,4 +1,4 @@
-; Coverage test for textual_xacts.cc lines 45-48
+; Coverage test for textual_xacts.cc
 ; check_command_has_match warning when no automated transaction matches
 
 = "food" :: /Food/

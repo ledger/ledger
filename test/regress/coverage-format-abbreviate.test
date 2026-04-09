@@ -1,4 +1,4 @@
-; Test format.cc lines 608-618: ABBREVIATE truncation path with
+; Test format.cc ABBREVIATE truncation path with
 ; account_abbrev_length set via --abbrev-len
 
 2024/01/01 Test

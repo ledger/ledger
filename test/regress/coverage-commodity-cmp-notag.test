@@ -1,4 +1,4 @@
-; Coverage for commodity.cc lines 470-477: tag presence comparison
+; Coverage for commodity.cc tag presence comparison
 ; One lot with tag, other without - tests the asymmetric tag paths
 ; The lot without tag sorts first
 

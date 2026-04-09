@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 765-767
+; Coverage test for report.cc
 ; fn_scrub strips display annotations from values
 
 2024/01/01 Test

@@ -1,4 +1,4 @@
-; Coverage for xact.cc lines 241-242: saw_cost with two commodities
+; Coverage for xact.cc saw_cost with two commodities
 
 2024/01/01 Test
     Assets:USD    $100.00 @@ 90 EUR

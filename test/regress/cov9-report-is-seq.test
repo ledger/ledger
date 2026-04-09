@@ -1,4 +1,4 @@
-; Coverage test for report.cc line 735: fn_is_seq
+; Coverage test for report.cc fn_is_seq
 ; Test is_seq() which checks if a value is a sequence type.
 ; A simple amount is not a sequence, so returns false.
 

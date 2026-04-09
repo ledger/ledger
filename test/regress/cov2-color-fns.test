@@ -11,12 +11,12 @@ test reg Expenses --format "%(black) %(blue) %(cyan) %(green) %(magenta) %(red) 
 black blue cyan green magenta red underline white yellow bold blink
 end test
 
-; Test null function (line 1115-1117, 1563-1564)
+; Test null function
 test reg Expenses --format "%(null ? \"yes\" : \"no\")\n"
 no
 end test
 
-; Test value_date function (line 1666-1668)
+; Test value_date function
 test reg Expenses --format "%(value_date)\n"
 2024/01/01
 end test

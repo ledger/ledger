@@ -1,4 +1,4 @@
-; Coverage for xact.cc line 641: rounding adjustment skipping @@ posting
+; Coverage for xact.cc rounding adjustment skipping @@ posting
 
 2024/01/01 Buy
     Assets:Stock    10 AAPL @@ $1500.00

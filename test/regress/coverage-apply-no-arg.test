@@ -1,4 +1,4 @@
-; Coverage test for textual_directives.cc line 282-284
+; Coverage test for textual_directives.cc
 ; apply directive without sub-directive argument
 
 apply

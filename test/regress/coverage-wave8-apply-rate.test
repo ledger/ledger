@@ -1,5 +1,5 @@
 ; Coverage tests for textual_directives.cc apply rate/fixed
-; Targets lines 337-348 (apply_rate_directive)
+; Targets (apply_rate_directive)
 
 ; Test apply fixed rate
 apply fixed EUR $1.10

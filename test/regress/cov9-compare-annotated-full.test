@@ -1,7 +1,7 @@
 ; Test full commodity comparison path with multiple annotation attributes
 ; Covers commodity.cc compare_by_commodity with prices, dates, and tags
-; including paths 391-399 (annotated vs non-annotated), 405-411
-; (price vs no-price), 445-467 (date comparison)
+; including paths (annotated vs non-annotated), 405-411
+; (price vs no-price), (date comparison)
 
 2024/01/01 Buy with full annotations
     Assets:Brokerage    10 AAPL {$150.00} [2024/01/01] (lot-a)

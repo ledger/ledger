@@ -1,4 +1,4 @@
-; Coverage for account.cc line 236: operator<< for account
+; Coverage for account.cc operator<< for account
 
 2024/01/01 Test
     Expenses:Food    $10.00

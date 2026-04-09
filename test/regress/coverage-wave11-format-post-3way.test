@@ -1,4 +1,4 @@
-; Coverage for output.cc lines 54-57 (format_posts operator, three-part format)
+; Coverage for output.cc (format_posts operator, three-part format)
 ; Tests format with %/ separators for first/next/between line formats
 
 2024/01/01 Payee A

@@ -1,5 +1,5 @@
 ; Test report_tags::clear() via --group-by for output.h coverage
-; Targets output.h lines 186-189 (report_tags::clear)
+; Targets output.h (report_tags::clear)
 ; The clear() method is called between groups by post_splitter
 
 2024/01/15 Alpha Store

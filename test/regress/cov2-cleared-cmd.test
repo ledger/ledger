@@ -1,5 +1,5 @@
 ; Test cleared command for report.cc coverage
-; Covers cleared command (line 1755-1757)
+; Covers cleared command
 
 2024/01/01 * Payee
     Expenses:Food            $10.00
@@ -9,7 +9,7 @@
     Expenses:Gas             $20.00
     Assets:Cash
 
-; Test cleared command (line 1755-1757)
+; Test cleared command
 test cleared
          $-30.00             $-10.00    24-Jan-01    Assets:Cash
           $30.00              $10.00                 Expenses

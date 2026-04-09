@@ -1,4 +1,4 @@
-; Coverage test for times.cc lines 718-727
+; Coverage test for times.cc
 ; Exercise "N months ago" and "N days hence" expressions
 ; These exercise the TOK_AGO and TOK_HENCE tokens
 
@@ -6,11 +6,11 @@
     Expenses:Food            $10.00
     Assets:Cash
 
-; "2 months ago" exercises TOK_AGO path (line 718-720)
+; "2 months ago" exercises TOK_AGO path
 test reg Expenses --begin "2 months ago"
 end test
 
-; "1 year hence" exercises TOK_HENCE path (line 721-723)
+; "1 year hence" exercises TOK_HENCE path
 test reg Expenses --begin "1 years hence"
 end test
 

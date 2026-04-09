@@ -1,4 +1,4 @@
-; Coverage for post.cc lines 542, 557: xact_id() and account_id()
+; Coverage for post.cc xact_id and account_id
 ; Use xact_id and account_id in format expressions
 
 2024/01/01 Test

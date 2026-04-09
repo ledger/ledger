@@ -1,5 +1,5 @@
 ; Test amount parsing with thousands separators (commas)
-; Covers amount.cc lines 1265, 1269-1270 (comma thousands separator)
+; Covers amount.cc (comma thousands separator)
 
 2024/01/01 Large Transaction
     Assets:Bank     $1,234,567.89

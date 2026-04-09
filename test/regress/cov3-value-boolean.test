@@ -1,5 +1,5 @@
 ; Test value boolean operations
-; Covers value.cc lines 85-90 (boolean truth value)
+; Covers value.cc (boolean truth value)
 
 2024/01/15 * Test
     Expenses:Food    $50.00

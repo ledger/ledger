@@ -1,5 +1,5 @@
-; Test report.cc: fn_top_amount (line 487), fn_unround (line 653),
-; and fn_commodity_price (lines 784-792)
+; Test report.cc: fn_top_amount, fn_unround
+; fn_commodity_price
 
 P 2024/01/15 AAPL $150.00
 

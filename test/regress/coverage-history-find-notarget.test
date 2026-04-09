@@ -1,4 +1,4 @@
-; Coverage for history.cc lines 337, 377: find_price without target commodity
+; Coverage for history.cc find_price without target commodity
 ; --market without --exchange uses find_price(source, moment, oldest)
 ; which finds the best price for the source commodity regardless of target
 

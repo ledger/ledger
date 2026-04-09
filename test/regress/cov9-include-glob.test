@@ -1,5 +1,5 @@
 ; Test include with glob pattern
-; Covers textual_directives.cc lines 204-215 (glob include directory iteration)
+; Covers textual_directives.cc (glob include directory iteration)
 
 include cov9-include-dir/*.dat
 

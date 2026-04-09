@@ -1,4 +1,4 @@
-; Coverage for amount.cc lines 1053-1055 (trailing period re-read):
+; Coverage for amount.cc (trailing period re-read):
 ; A trailing period with no following digits indicates zero decimal
 ; places (hledger compatibility). "$100." is treated as $100 with
 ; zero precision. Combined with a normal amount, the higher precision

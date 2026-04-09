@@ -1,5 +1,5 @@
 ; Test period followed by comma disambiguation (European style auto-detect)
-; Covers amount.cc lines 1198-1207 (period after comma retroactive switch)
+; Covers amount.cc (period after comma retroactive switch)
 
 2024/01/01 Test
     Expenses:Food    EUR 1.234,56

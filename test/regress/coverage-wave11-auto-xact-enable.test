@@ -1,4 +1,4 @@
-; Coverage for textual_xacts.cc lines 101-131 (auto xact enable/disable/delete)
+; Coverage for textual_xacts.cc (auto xact enable/disable/delete)
 
 = 'budget' :: Expenses:Food
     (Budget:Food)    -1

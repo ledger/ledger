@@ -1,4 +1,4 @@
-; Coverage for item.cc lines 468-469: is_account function
+; Coverage for item.cc is_account function
 
 2024/01/01 Test
     Expenses:Food    $10.00

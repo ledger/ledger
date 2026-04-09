@@ -1,4 +1,4 @@
-; Coverage for xact.cc line 1037 (check warning in auto_xact)
+; Coverage for xact.cc (check warning in auto_xact)
 ; When a check expression evaluates to false, a warning is issued
 ; but processing continues.
 

@@ -1,4 +1,4 @@
-; Coverage test for post.cc lines 250-264:
+; Coverage test for post.cc
 ; get_total() and get_count() return values
 
 2024/01/15 Test

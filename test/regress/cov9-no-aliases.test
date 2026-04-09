@@ -1,5 +1,5 @@
 ; Test --no-aliases option
-; Covers session.cc line 109 (no_aliases)
+; Covers session.cc (no_aliases)
 
 alias food=Expenses:Food
 

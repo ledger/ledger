@@ -1,4 +1,4 @@
-; Coverage for format.cc line 270: %$0 field reference error
+; Coverage for format.cc %$0 field reference error
 ; %$0 is invalid since field references must be digits 1-9
 
 2024/01/15 Test

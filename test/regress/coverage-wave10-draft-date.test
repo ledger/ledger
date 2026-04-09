@@ -1,6 +1,6 @@
-; Coverage tests for draft.cc lines 266-269 (date from year directive)
-; Also covers draft.cc line 363, 369 (copied postings from matching xact)
-; Also covers draft.cc line 488 (add_xact finalization)
+; Coverage tests for draft.cc (date from year directive)
+; Also covers draft.cc (copied postings from matching xact)
+; Also covers draft.cc (add_xact finalization)
 
 2024/01/01 Restaurant
     Expenses:Food    $50.00

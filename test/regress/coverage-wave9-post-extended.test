@@ -1,4 +1,4 @@
-; Test coverage for post.cc lines 363-396
+; Test coverage for post.cc
 ; Test fn_any and fn_all functions with exclusion parameter
 
 2024/01/01 Test Payee

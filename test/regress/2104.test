@@ -6,9 +6,9 @@
 ; resolved.  Fixed by returning CURRENT_DATE() as a fallback instead of
 ; asserting.
 ;
-; Also exercises issue #2079: plain account-predicate automated
-; transactions combined with periodic transactions produced the same
-; crash via the stats command.
+; Also related to issue #2079: automated transactions combined with
+; periodic transactions produced the same crash via the stats command.
+; This test uses an `expr date` predicate (not a plain account predicate).
 ;
 ; After the fix, `reg --budget` runs without error, and the date predicate
 ; correctly filters which *regular* transaction postings trigger the

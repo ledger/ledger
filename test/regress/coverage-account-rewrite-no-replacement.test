@@ -1,4 +1,4 @@
-; Coverage test for textual_directives.cc line 579
+; Coverage test for textual_directives.cc
 ; account-rewrite without replacement argument
 
 account-rewrite NoReplacement

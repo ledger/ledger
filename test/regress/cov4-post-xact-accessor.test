@@ -1,5 +1,5 @@
-; Test post_t::get_xact accessor (line 510-513 of post.cc)
-; and xact_id (line 514-515)
+; Test post_t::get_xact accessor
+; xact_id
 ; Exercise accessing the parent transaction
 
 2024/01/01 Test

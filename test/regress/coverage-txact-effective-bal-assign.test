@@ -1,4 +1,4 @@
-; Coverage for textual_xacts.cc lines 350,352: effective date balance assignment
+; Coverage for textual_xacts.cc effective date balance assignment
 
 2024/01/01 Test
     Assets:Cash    $100.00

@@ -1,5 +1,5 @@
 ; Test justify, format_datetime, and other functions for report.cc coverage
-; Covers fn_justify (line 826-838), fn_format_datetime (line 1521-1522)
+; Covers fn_justify, fn_format_datetime
 
 2024/01/01 Payee
     Expenses:Food            $10.00
@@ -9,13 +9,13 @@
     Expenses:Gas             $20.00
     Assets:Cash
 
-; Test justify function right-justified (line 829-830, 1544-1545)
+; Test justify function right-justified
 test reg Expenses --format "%(justify(payee, 20, 0, true))\n"
                Payee
            Payee Two
 end test
 
-; Test format_datetime function (line 1521-1522)
+; Test format_datetime function
 test reg Expenses --format "%(format_datetime(now, \"%Y/%m/%d\"))\n" --now 2024/06/01
 2024/06/01
 2024/06/01

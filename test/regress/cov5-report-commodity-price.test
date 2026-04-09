@@ -1,4 +1,4 @@
-; Coverage for report.cc lines 936, 940, 956: fn_percent, fn_commodity, fn_set_commodity_price
+; Coverage for report.cc fn_percent, fn_commodity, fn_set_commodity_price
 
 P 2024/01/01 EUR $1.10
 

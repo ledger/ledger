@@ -1,5 +1,5 @@
 ; Test "every N units" with plural unit tokens and various quantities
-; Exercises handle_every_token if branch (lines 1115-1137)
+; Exercises handle_every_token if branch
 ; with TOK_YEARS, TOK_QUARTERS, TOK_MONTHS, TOK_WEEKS, TOK_DAYS
 
 2024/01/15 Payee A

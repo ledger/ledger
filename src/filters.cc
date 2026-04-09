@@ -1681,8 +1681,16 @@ void generate_posts::add_period_xacts(period_xacts_list& period_xacts) {
       // Skip auto-transaction-generated posts (ITEM_GENERATED without
       // POST_CALCULATED); they have no xact back-pointer and should not
       // produce independent forecast/budget entries.
-      if (!post->has_flags(ITEM_GENERATED) || post->has_flags(POST_CALCULATED))
-        add_post(xact->period, *post);
+      if (!post->has_flags(ITEM_GENERATED) || post->has_flags(POST_CALCULATED)) {
+        if (xact->period.duration) {
+          add_post(xact->period, *post);
+        } else {
+          // Default to monthly when no duration is specified (#1625).
+          date_interval_t period(xact->period);
+          period.duration = date_duration_t(date_duration_t::MONTHS, 1);
+          add_post(period, *post);
+        }
+      }
 }
 
 /// Add a single periodic posting to the pending list.
@@ -2057,17 +2065,19 @@ void forecast_posts::flush() {
  */
 inject_posts::inject_posts(post_handler_ptr handler, const string& tag_list, account_t* master)
     : item_handler<post_t>(std::move(handler)) {
-  scoped_array<char> buf(new char[tag_list.length() + 1]);
-  std::strcpy(buf.get(), tag_list.c_str());
+  std::vector<string> tags;
+  boost::split(tags, tag_list, boost::is_any_of(","));
 
-  for (char* q = std::strtok(buf.get(), ","); q; q = std::strtok(nullptr, ",")) {
+  for (const string& tag : tags) {
+    if (tag.empty())
+      continue;
     std::list<string> account_names;
-    split_string(q, ':', account_names);
+    split_string(tag, ':', account_names);
 
     account_t* account = create_temp_account_from_path(account_names, temps, master);
     account->add_flags(ACCOUNT_GENERATED);
 
-    tags_list.push_back(tags_list_pair(q, tag_mapping_pair(account, tag_injected_set())));
+    tags_list.push_back(tags_list_pair(tag, tag_mapping_pair(account, tag_injected_set())));
   }
 
   TRACE_CTOR(inject_posts, "post_handler_ptr, string, account_t *");

@@ -1,4 +1,4 @@
-; Test coverage for textual_directives.cc lines 544-616
+; Test coverage for textual_directives.cc
 ; commodity directive with alias, value, format, nomarket, default, note
 
 commodity EUR

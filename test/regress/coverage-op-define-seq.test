@@ -1,6 +1,6 @@
 ; Test op.cc: O_DEFINE and O_SEQ operators
 ; Exercises compile/calc paths for variable definitions and sequences
-; Covers: O_DEFINE handler (lines 134-161), O_SEQ calc_seq (line 388),
+; Covers: O_DEFINE handler, O_SEQ calc_seq
 ;   split_cons_expr, variable lookup in sequences
 
 test eval "x = 5; x"

@@ -1,4 +1,4 @@
-; Coverage for filters.cc lines 746-748, 840-850: revaluation with market
+; Coverage for filters.cc revaluation with market
 
 P 2024/01/01 EUR $1.00
 P 2024/01/15 EUR $1.50

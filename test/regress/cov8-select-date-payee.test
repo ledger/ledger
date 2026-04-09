@@ -1,4 +1,4 @@
-; Coverage test for select.cc lines 56-85, 256-328:
+; Coverage test for select.cc
 ; Exercise select command with multiple fields.
 
 2024/01/01 Grocery Store

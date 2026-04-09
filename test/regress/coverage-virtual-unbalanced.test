@@ -1,4 +1,4 @@
-; Coverage for xact.cc lines 665-672 (virtual_balance non-zero error)
+; Coverage for xact.cc (virtual_balance non-zero error)
 ; When balanced virtual postings ([Account]) don't sum to zero,
 ; an error is thrown.
 

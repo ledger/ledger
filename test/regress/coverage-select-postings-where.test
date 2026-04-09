@@ -1,6 +1,6 @@
 ; Coverage test for select.cc: FROM postings path and WHERE clause
-; Exercises: FROM postings (lines 353-356), WHERE clause (line 376),
-;   payee-only column (lines 268-280), account-only column (lines 281-299)
+; Exercises: FROM postings, WHERE clause
+;   payee-only column, account-only column
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00

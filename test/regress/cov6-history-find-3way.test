@@ -1,4 +1,4 @@
-; Coverage for history.cc lines 337,377,397,405,407: price graph traversal
+; Coverage for history.cc price graph traversal
 
 P 2024/01/01 EUR $1.10
 P 2024/01/01 GBP 1.17 EUR

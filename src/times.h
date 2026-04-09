@@ -141,6 +141,13 @@ extern optional<int> year_directive_year;
 /// Configurable so that `weekly` reports can begin on Monday, etc.
 extern date_time::weekdays start_of_week;
 
+/// Number of days to shift the start of monthly/quarterly/yearly periods.
+/// When non-zero, period boundaries are moved forward by this many days.
+/// For example, `--period-shift 15` makes monthly periods run from the
+/// 16th of one month to the 15th of the next.  Does not affect weekly or
+/// daily periods.
+extern int day_of_period;
+
 /// @brief Convert a locale-aware weekday name or number ("mon", "monday", "1") to a weekdays enum.
 /// @return The weekday, or none if the string is not recognized.
 optional<date_time::weekdays> string_to_day_of_week(const std::string& str);

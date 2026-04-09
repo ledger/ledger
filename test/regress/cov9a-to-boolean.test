@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 1039-1041
+; Coverage test for report.cc
 ; fn_to_boolean converts a value to boolean
 
 2024/01/01 Test

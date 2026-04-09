@@ -9,25 +9,25 @@
     Expenses:Gas             $20.00
     Assets:Cash
 
-; Test --display-amount option (line 1270)
+; Test --display-amount option
 test reg Expenses --display-amount "amount * 2"
 24-Jan-01 Payee                 Expenses:Food                $20.00       $10.00
 24-Jan-15 Payee Two             Expenses:Gas                 $40.00       $30.00
 end test
 
-; Test --display-total option (line 1271)
+; Test --display-total option
 test reg Expenses --display-total "total * 2"
 24-Jan-01 Payee                 Expenses:Food                $10.00       $20.00
 24-Jan-15 Payee Two             Expenses:Gas                 $20.00       $60.00
 end test
 
-; Test --amount option (line 1224)
+; Test --amount option
 test reg Expenses --amount "amount * 2"
 24-Jan-01 Payee                 Expenses:Food                $20.00       $20.00
 24-Jan-15 Payee Two             Expenses:Gas                 $40.00       $60.00
 end test
 
-; Test --total option on bal (line 1201, 1391)
+; Test --total option on bal
 test bal Expenses --total "total * 2"
               $60.00  Expenses
               $20.00    Food
@@ -36,7 +36,7 @@ test bal Expenses --total "total * 2"
               $60.00
 end test
 
-; Test -T shortcut (line 1200-1202)
+; Test -T shortcut
 test bal Expenses -T "total * 2"
               $60.00  Expenses
               $20.00    Food

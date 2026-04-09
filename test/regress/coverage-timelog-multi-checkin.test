@@ -1,4 +1,4 @@
-; Coverage for timelog.cc lines 93-107: multiple check-ins with targeted check-out
+; Coverage for timelog.cc multiple check-ins with targeted check-out
 
 i 2024/01/01 09:00:00 Project:A
 i 2024/01/01 09:30:00 Project:B

@@ -1,6 +1,5 @@
-; Test token parsing for assignment operator = (lines 377 of token.cc)
-; and equality == (lines 369-375)
-; Exercise the assignment path in expression context
+; Test token parsing for equality operator ==
+; Exercise the equality comparison path in expression context
 
 2024/01/01 Test
     Expenses:Food    $10.00

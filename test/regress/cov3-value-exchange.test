@@ -1,5 +1,5 @@
 ; Test value exchange with --exchange
-; Covers value.cc lines 1555-1594 (value exchange with commodity conversion)
+; Covers value.cc (value exchange with commodity conversion)
 
 P 2024/01/01 EUR $1.10
 P 2024/01/01 GBP $1.30

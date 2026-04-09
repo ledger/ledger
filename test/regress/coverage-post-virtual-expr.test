@@ -1,4 +1,4 @@
-; Test post.cc: get_virtual (line 144) and get_real (line 148) expressions
+; Test post.cc: get_virtual and get_real expressions
 ; virtual returns true for virtual postings (both balanced and unbalanced)
 
 2024/01/15 Test

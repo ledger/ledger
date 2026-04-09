@@ -1,4 +1,4 @@
-; Coverage for filters.cc line 968 (default date format for intervals)
+; Coverage for filters.cc (default date format for intervals)
 ; When --period is used without --date-format, the default format is used.
 
 2024/01/01 Test1

@@ -1,4 +1,4 @@
-; Coverage for chain.cc line 197: --sort with explicit --sort-xacts expression
+; Coverage for chain.cc --sort with explicit --sort-xacts expression
 
 2024/01/01 Test
     Expenses:Food    $10.00

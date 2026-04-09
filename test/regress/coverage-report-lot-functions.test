@@ -1,4 +1,4 @@
-; Coverage for report.cc lines 1012-1037: lot_date, lot_price, lot_tag functions
+; Coverage for report.cc lot_date, lot_price, lot_tag functions
 
 2024/01/01 Buy
     Assets:Brokerage    10 AAPL {$150.00} [2024/01/01] (lot1)

@@ -1,5 +1,5 @@
 ; Test --price-exp option
-; Covers session.cc line 303 (price_exp_ lookup_option)
+; Covers session.cc (price_exp_ lookup_option)
 
 P 2024/01/10 AAPL $150.00
 P 2024/01/20 AAPL $160.00

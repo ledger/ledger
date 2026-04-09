@@ -1,4 +1,4 @@
-; Coverage for annotate.cc lines 231-237: print annotation with total cost
+; Coverage for annotate.cc print annotation with total cost
 
 2024/01/01 Buy Stock
     Assets:Brokerage    10 AAPL {{$1500.00}}

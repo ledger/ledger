@@ -1,5 +1,5 @@
 ; Test that multiple bare terms are implicitly OR'd at top level
-; Exercises parse_query_expr lines 577-586: accumulate OR-connected expressions
+; Exercises parse_query_expr accumulate OR-connected expressions
 
 2024/01/01 Grocery Store
     Expenses:Food    $25.00

@@ -1,0 +1,20 @@
+; Regression test for issue #698: When format_t outputs a balance, it should
+; know the next line width.
+;
+; When a format string uses justify() on a multi-commodity balance, the
+; continuation lines for additional commodities should be padded to the same
+; width as the first commodity line.
+
+2024/01/01 Test multi-commodity
+    Assets:Stocks   10 AAPL @ $150.00
+    Assets:Bonds    5 BOND @ $100.00
+    Assets:Cash     -$2000.00
+
+test bal --no-total --format '%(justify(scrub(display_total), 20, -1, true)) %(account)\n'
+           $-2000.00
+             10 AAPL
+              5 BOND Assets
+              5 BOND Assets:Bonds
+           $-2000.00 Assets:Cash
+             10 AAPL Assets:Stocks
+end test

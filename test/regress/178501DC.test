@@ -14,6 +14,8 @@ test bal -r simon
                  $50
 end test
 
+; Note: "expense:food:groceries" below is the column-width truncation of
+; the full account name "Expenses:Food:Groceries" in the register format.
 test reg -r simon
 11-Oct-26 trader joe's          alice                          $-50         $-50
                                 expense:food:groceries         $100          $50

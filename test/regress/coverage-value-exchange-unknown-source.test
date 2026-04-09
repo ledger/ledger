@@ -1,4 +1,4 @@
-; Coverage for value.cc line 1568:
+; Coverage for value.cc
 ; When --exchange specifies a source:target pair and the source commodity
 ; does not exist in the commodity pool, sources.push_back(nullptr) is
 ; called. Here NONEXIST is not a known commodity.

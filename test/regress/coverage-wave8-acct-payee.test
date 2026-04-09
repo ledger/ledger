@@ -1,5 +1,5 @@
 ; Coverage tests for textual_directives.cc account payee/alias directives
-; Targets lines 428-486 (account_alias_directive), 500-503 (account_payee_directive)
+; Targets (account_alias_directive), (account_payee_directive)
 
 ; Account with payee sub-directive
 account Expenses:Food

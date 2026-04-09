@@ -1,5 +1,6 @@
-; Coverage test for times.cc handle_relative_token with
-; TOK_A_MONTH, TOK_YEAR, TOK_QUARTER, TOK_WEEK, TOK_DAY
+; Coverage test for times.cc handle_relative_token with TOK_A_MONTH
+; Exercises last/next/this with a named month (june)
+; Note: TOK_YEAR, TOK_QUARTER, TOK_WEEK, TOK_DAY are not tested
 
 2024/05/15 May Transaction
     Expenses:Food    $10.00

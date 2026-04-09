@@ -1,5 +1,5 @@
-; Coverage: value.cc lines 1023-1024 (is_greater_than datetime comparison)
-; and lines 1028-1029 (is_greater_than date comparison)
+; Coverage: value.cc (is_greater_than datetime comparison)
+; (is_greater_than date comparison)
 ; Sorting by date in reverse exercises the is_greater_than path
 
 2024/01/01 First

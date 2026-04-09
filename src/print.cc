@@ -67,6 +67,67 @@ namespace ledger {
 namespace {
 
 /**
+ * @brief Rewrite bracketed dates in a note to use fully-qualified dates.
+ *
+ * When a year directive (`Y YYYY`) sets a default year, short-form
+ * dates like `[01/05]` in notes are parsed with the correct year at
+ * read time and stored in the item's _date/_date_aux fields.  However,
+ * `print` drops the `Y` directive and expands transaction header dates
+ * to full YYYY/MM/DD form.  Note dates must also be expanded so that
+ * the output round-trips correctly (issue #622).
+ *
+ * Handles three bracket forms:
+ *   - `[date]`         — primary date override
+ *   - `[=auxdate]`     — auxiliary date only
+ *   - `[date=auxdate]` — both primary and auxiliary dates
+ */
+string rewrite_note_dates(const string& note, const item_t& item, format_type_t format_type,
+                          const optional<const char*>& format) {
+  const char* p = note.c_str();
+  const char* b = std::strchr(p, '[');
+  if (!b || *(b + 1) == '\0' ||
+      (!std::isdigit(static_cast<unsigned char>(*(b + 1))) && *(b + 1) != '='))
+    return note;
+  const char* e = std::strchr(b, ']');
+  if (!e)
+    return note;
+
+  string result(p, static_cast<std::size_t>(b - p));
+  result += '[';
+
+  string content(b + 1, static_cast<std::size_t>(e - b - 1));
+  auto eq_pos = content.find('=');
+
+  if (content[0] == '=') {
+    result += '=';
+    if (item._date_aux)
+      result += format_date(*item._date_aux, format_type, format);
+    else
+      result += content.substr(1);
+  } else if (eq_pos != string::npos) {
+    if (item._date)
+      result += format_date(*item._date, format_type, format);
+    else
+      result += content.substr(0, eq_pos);
+    result += '=';
+    if (item._date_aux)
+      result += format_date(*item._date_aux, format_type, format);
+    else
+      result += content.substr(eq_pos + 1);
+  } else {
+    if (item._date)
+      result += format_date(*item._date, format_type, format);
+    else
+      result += content;
+  }
+
+  result += ']';
+  result += string(e + 1);
+
+  return result;
+}
+
+/**
  * @brief Determine whether a posting has a "simple" amount that can be
  *        elided in two-posting transactions.
  *
@@ -235,8 +296,8 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
       (report.HANDLED(columns_) ? lexical_cast<std::size_t>(report.HANDLER(columns_).str()) : 80);
 
   if (xact.note)
-    print_note(out, *xact.note, xact.has_flags(ITEM_NOTE_ON_NEXT_LINE), columns,
-               unistring(leader).length());
+    print_note(out, rewrite_note_dates(*xact.note, xact, format_type, format),
+               xact.has_flags(ITEM_NOTE_ON_NEXT_LINE), columns, unistring(leader).length());
   out << '\n';
 
   // Phase 2: Print transaction-level metadata tags.
@@ -375,8 +436,8 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
     }
 
     if (post->note)
-      print_note(out, *post->note, post->has_flags(ITEM_NOTE_ON_NEXT_LINE), columns,
-                 4 + account_width);
+      print_note(out, rewrite_note_dates(*post->note, *post, format_type, format),
+                 post->has_flags(ITEM_NOTE_ON_NEXT_LINE), columns, 4 + account_width);
     out << '\n';
   }
 }

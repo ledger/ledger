@@ -1,8 +1,8 @@
 ; Test value.cc: amount operations that trigger balance conversion
-; Coverage target: value.cc - AMOUNT += INTEGER with commodity (line 394-396),
-;   AMOUNT -= INTEGER with commodity (line 530-534),
-;   AMOUNT += AMOUNT different commodity (line 403-405),
-;   AMOUNT -= AMOUNT different commodity (line 542-546)
+; Coverage target: value.cc - AMOUNT += INTEGER with commodity
+;   AMOUNT -= INTEGER with commodity
+;   AMOUNT += AMOUNT different commodity
+;   AMOUNT -= AMOUNT different commodity
 
 2024/01/15 Purchase
     Expenses:Food       $100.00

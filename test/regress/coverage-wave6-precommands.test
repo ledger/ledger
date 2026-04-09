@@ -5,7 +5,7 @@
     Expenses:Food    $50.00
     Assets:Cash
 
-; Test 'eval' precommand (line 1713)
+; Test 'eval' precommand
 test eval 2+3
 5
 end test
@@ -15,6 +15,6 @@ test eval 10+20
 30
 end test
 
-; Test 'source' precommand (line 1687/1737)
+; Test 'source' precommand (/1737)
 test source $FILE -> 0
 end test

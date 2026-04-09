@@ -1,5 +1,5 @@
 ; Coverage tests for textual_directives.cc account assert/check
-; Targets lines 436-470 (account_directive with assert/check sub-directives)
+; Targets (account_directive with assert/check sub-directives)
 
 account Expenses:Food
   assert amount > 0 or amount == 0

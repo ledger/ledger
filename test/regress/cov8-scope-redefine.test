@@ -1,4 +1,4 @@
-; Coverage for scope.cc line 57: redefinition error
+; Coverage for scope.cc: register report with account formatting
 
 2024/01/01 Test
     Expenses:Food    $10.00

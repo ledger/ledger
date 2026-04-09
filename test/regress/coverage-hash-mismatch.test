@@ -1,4 +1,4 @@
-; Coverage test for textual_xacts.cc line 1011
+; Coverage test for textual_xacts.cc
 ; Hash mismatch error when --hashes is used with wrong Hash tag
 
 2024/01/01 Test

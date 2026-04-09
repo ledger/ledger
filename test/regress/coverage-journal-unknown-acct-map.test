@@ -1,4 +1,4 @@
-; Coverage: journal.cc lines 133-140: payees_for_unknown_accounts mapping
+; Coverage: journal.cc payees_for_unknown_accounts mapping
 ; When account name is "Unknown", check payee to find the real account
 
 account Expenses:Food

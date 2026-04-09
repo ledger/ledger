@@ -1,5 +1,5 @@
 ; Test pricemap command for report.cc coverage
-; Targets report.cc line 1669 (pricemap command lookup)
+; Targets report.cc (pricemap command lookup)
 
 P 2024/01/01 EUR $1.10
 

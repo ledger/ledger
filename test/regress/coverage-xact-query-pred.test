@@ -1,5 +1,5 @@
 ; Test O_QUERY ternary operator in auto xact predicate
-; Targets: xact.cc lines 707-710 (post_pred O_QUERY case)
+; Targets: xact.cc (post_pred O_QUERY case)
 
 = expr account =~ /Expenses/ ? account =~ /Food/ : account =~ /Income/
     (Budget)                   0.10

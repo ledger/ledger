@@ -1,4 +1,4 @@
-; Coverage test for value.cc lines 1884-1885
+; Coverage test for value.cc
 ; Exercise annotate() on an amount value
 ; Annotations are triggered by lot prices and notes
 

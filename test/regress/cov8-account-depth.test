@@ -1,4 +1,4 @@
-; Coverage test for account.cc lines 287-288:
+; Coverage test for account.cc
 ; Exercise get_depth function for accounts.
 
 2024/01/01 Test

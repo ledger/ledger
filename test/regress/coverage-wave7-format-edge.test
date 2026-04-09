@@ -22,7 +22,7 @@
     Expenses:Misc    $30.00
     Assets:Cash
 
-; Test custom format with padding (covers line 424 min_width, 471-472 padding)
+; Test custom format with padding (covers min_width, 471-472 padding)
 test reg --format "%10d %20P %20t %20T\n"
  24-Jan-01            Payee one               $10.00               $10.00
  24-Jan-01            Payee one              $-10.00                    0
@@ -32,7 +32,7 @@ test reg --format "%10d %20P %20t %20T\n"
  24-Jan-03          Payee three              $-30.00                    0
 end test
 
-; Test format with max_width truncation (covers line 466-472)
+; Test format with max_width truncation (covers )
 test reg --format "%-10.10P %10t\n"
 Payee one      $10.00
 Payee one     $-10.00

@@ -1,4 +1,4 @@
-; Coverage test for report.cc line 930
+; Coverage test for report.cc
 ; fn_ansify_if returns arg[0] unchanged when no color string is provided
 
 2024/01/01 Test

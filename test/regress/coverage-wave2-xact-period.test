@@ -1,7 +1,7 @@
 ; Wave 2 coverage tests for xact.h period_xact_t
-; Covers: period_xact_t description (lines 188-196)
+; Covers: period_xact_t description
 
-; Period transaction - covers period_xact_t lines 188-196
+; Period transaction - covers period_xact_t
 ~ Monthly
     Expenses:Rent             $1200.00
     Assets:Checking

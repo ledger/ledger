@@ -1,4 +1,4 @@
-; Coverage test for draft.cc lines 470-472: @@ cost with negative amount
+; Coverage test for draft.cc @@ cost with negative amount
 ; When a draft template posting has the @@ cost operator and the
 ; new_post amount is negative (from 'from' flag negation), the code
 ; negates the existing cost on the new_post before overwriting.

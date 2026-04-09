@@ -1,4 +1,4 @@
-; Coverage for filters.cc line 350 (POST_MUST_BALANCE in handle_value)
+; Coverage for filters.cc (POST_MUST_BALANCE in handle_value)
 ; When balanced virtual postings ([Account]) go through subtotal reports,
 ; the handle_value function sets POST_MUST_BALANCE based on account xdata.
 

@@ -1,4 +1,4 @@
-; Coverage test for account.cc lines 279-280:
+; Coverage test for account.cc
 ; Exercise get_count (family count) via balance report.
 
 2024/01/01 Test One

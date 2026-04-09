@@ -1,4 +1,4 @@
-; Test auto xact blank line break (textual_xacts.cc line 189)
+; Test auto xact blank line break
 = Expenses
     (Budget:Unknown)        1
  

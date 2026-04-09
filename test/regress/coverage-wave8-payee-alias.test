@@ -1,5 +1,5 @@
 ; Coverage tests for textual_directives.cc payee directive with alias/uuid
-; Targets lines 513-542 (payee_directive, payee_alias_directive, payee_uuid_directive)
+; Targets (payee_directive, payee_alias_directive, payee_uuid_directive)
 
 payee Grocery Store
   alias groceries

@@ -1,4 +1,4 @@
-; Coverage for history.cc lines 372-377: price inversion in find_price
+; Coverage for history.cc price inversion in find_price
 ; When the price's commodity matches the source, the price must be inverted
 ; P $ EUR means 1$ = 0.91 EUR, so 1 EUR = 1/0.91 $
 

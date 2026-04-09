@@ -1,4 +1,4 @@
-; Test get_filebase (lines 308-312 of item.cc)
+; Test get_filebase
 ; Exercise the filebase accessor
 
 2024/01/01 Test

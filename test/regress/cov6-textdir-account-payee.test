@@ -1,4 +1,4 @@
-; Coverage for textual_directives.cc line 440: account payee directive
+; Coverage for textual_directives.cc account payee directive
 
 account Expenses:Food
     payee Grocery

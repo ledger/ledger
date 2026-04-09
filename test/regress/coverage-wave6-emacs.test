@@ -5,14 +5,14 @@
     Expenses:Food    $50.00
     Assets:Cash
 
-; Test emacs command (line 1650)
+; Test emacs command
 test emacs
 (("$FILE" 4 (26002 21728 0) nil "Grocery"
   (5 "Expenses:Food" "$50.00" t)
   (6 "Assets:Cash" "$-50.00" t)))
 end test
 
-; Test lisp command (line 1658) - same as emacs
+; Test lisp command - same as emacs
 test lisp
 (("$FILE" 4 (26002 21728 0) nil "Grocery"
   (5 "Expenses:Food" "$50.00" t)

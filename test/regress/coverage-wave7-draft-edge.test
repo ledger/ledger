@@ -11,8 +11,8 @@
     Expenses:Gas          30 EUR
     Assets:Cash
 
-; Test template command to exercise dump (lines 363, 369)
-; covers parse_args: code (line 138), note (line 142)
+; Test template command to exercise dump
+; covers parse_args: code, note
 test template Grocery code 4567 note "lunch"
 --- Input arguments ---
 ("Grocery", "code", "4567", "note", "lunch")
@@ -26,7 +26,7 @@ Payee mask: Grocery
 <Posting copied from last related transaction>
 end test
 
-; Test template with "at" keyword (draft.cc lines 118-121)
+; Test template with "at" keyword
 test template 2024/03/15 at Grocery
 --- Input arguments ---
 ("2024/03/15", "at", "Grocery")
@@ -38,7 +38,7 @@ Payee mask: Grocery
 <Posting copied from last related transaction>
 end test
 
-; Test template with "on" keyword (draft.cc lines 131-135)
+; Test template with "on" keyword
 test template Grocery on 2024/06/15
 --- Input arguments ---
 ("Grocery", "on", "2024/06/15")
@@ -50,7 +50,7 @@ Payee mask: Grocery
 <Posting copied from last related transaction>
 end test
 
-; Test template with "from" keyword (draft.cc lines 122-130)
+; Test template with "from" keyword
 test template Grocery from Assets:Checking
 --- Input arguments ---
 ("Grocery", "from", "Assets:Checking")
@@ -78,7 +78,7 @@ Payee mask: Grocery
 <Posting copied from last related transaction>
 end test
 
-; Test template with account mask and rest keyword (line 144-145)
+; Test template with account mask and rest keyword
 test template Grocery Expenses:Food rest
 --- Input arguments ---
 ("Grocery", "Expenses:Food", "rest")

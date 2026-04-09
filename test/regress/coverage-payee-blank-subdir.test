@@ -1,4 +1,4 @@
-; Test textual_directives.cc line 534: break on blank whitespace line
+; Test textual_directives.cc break on blank whitespace line
 ; inside payee directive block
 payee Grocery Store
     alias Groceries

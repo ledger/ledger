@@ -1,6 +1,6 @@
 ; Test value sorting and comparison with expression types
 ; Exercises value.cc is_less_than for AMOUNT with different commodities
-; (line 912: compare_by_commodity for cross-commodity amount comparison)
+; (compare_by_commodity for cross-commodity amount comparison)
 
 2024/01/01 European trip
     Expenses:Travel    500 EUR

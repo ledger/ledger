@@ -1,4 +1,4 @@
-; Coverage for report.cc line 728: fn_get_at index out of bounds on sequence
+; Coverage for report.cc fn_get_at index out of bounds on sequence
 ; When get_at is called on a sequence with an index >= sequence size
 
 ~ Monthly

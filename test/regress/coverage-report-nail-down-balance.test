@@ -1,4 +1,4 @@
-; Coverage for report.cc lines 984-993: fn_nail_down with balance type
+; Coverage for report.cc fn_nail_down with balance type
 ; When --historical is used with multiple commodities in one account,
 ; the total is a balance which triggers the BALANCE case
 

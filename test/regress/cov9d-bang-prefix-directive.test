@@ -1,5 +1,5 @@
 ; Test ! prefix on directives
-; Covers textual_directives.cc line 779 (! prefix handling)
+; Covers textual_directives.cc (! prefix handling)
 
 !year 2023
 

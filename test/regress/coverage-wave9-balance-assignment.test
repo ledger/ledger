@@ -1,4 +1,4 @@
-; Test coverage for textual_xacts.cc lines 696-734
+; Test coverage for textual_xacts.cc
 ; Balance assignment: posting with null amount = target balance
 
 2024/01/01 Opening

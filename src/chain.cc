@@ -111,6 +111,13 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t
     budget_handler->add_period_xacts(report.session.journal->period_xacts);
     handler = budget_handler;
 
+    // budget_posts assumes postings arrive in chronological order because
+    // its date_interval_t can only advance forward.  When the journal has
+    // transactions in reverse (or arbitrary) order, budget entries are
+    // silently skipped for earlier periods.  Pre-sorting by date ensures
+    // every covered period gets its budget entry.  (#590)
+    handler = std::make_shared<sort_posts>(handler, "date", report);
+
     // Apply this before the budget handler, so that only matching posts are
     // calculated toward the budget.  The use of filter_posts above will
     // further clean the results so that no automated posts that don't match

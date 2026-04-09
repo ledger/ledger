@@ -1,4 +1,4 @@
-; Coverage test for post.cc lines 327-328, 323-324
+; Coverage test for post.cc
 ; Tests get_account_base (returns leaf account name)
 ; and get_account_id (returns position within the account's posts).
 

@@ -1,4 +1,4 @@
-; Coverage for history.cc line 488: last_target reassignment in multi-hop path
+; Coverage for history.cc last_target reassignment in multi-hop path
 ; A->B->C->D chain: 10 A * 2 B/A * 3 C/B * 4 D/C = 240 D
 ; Each hop changes last_target, exercising both branches of the assignment
 

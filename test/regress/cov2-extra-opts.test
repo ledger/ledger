@@ -10,31 +10,31 @@
     Expenses:Gas             $20.00
     Assets:Cash
 
-; Test --datetime-format option (line 1264)
+; Test --datetime-format option
 test reg Expenses --datetime-format "%Y/%m/%d %H:%M:%S"
 24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
 24-Feb-01 Gas Station           Expenses:Gas                 $20.00       $30.00
 end test
 
-; Test --payee-rewrite option (line 1348)
+; Test --payee-rewrite option
 test reg Expenses --payee-rewrite "/Grocery Store/=Market"
 24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
 24-Feb-01 Gas Station           Expenses:Gas                 $20.00       $30.00
 end test
 
-; Test --account-rewrite option (line 1221)
+; Test --account-rewrite option
 test reg Expenses --account-rewrite "/Expenses/=Spending"
 24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
 24-Feb-01 Gas Station           Expenses:Gas                 $20.00       $30.00
 end test
 
-; Test --ignore-diacritics option (line 1307)
+; Test --ignore-diacritics option
 test reg Expenses --ignore-diacritics
 24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
 24-Feb-01 Gas Station           Expenses:Gas                 $20.00       $30.00
 end test
 
-; Test --raw option on print (line 1369, 1789)
+; Test --raw option on print
 test print --raw
 2024/01/01 Grocery Store
     Expenses:Food            $10.00

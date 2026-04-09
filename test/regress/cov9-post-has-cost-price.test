@@ -1,4 +1,4 @@
-; Coverage test for post.cc line 236 (get_cost), 243 (get_price):
+; Coverage test for post.cc (get_cost), (get_price):
 ; Exercise get_has_cost, get_cost, and get_price with costs and without.
 
 2024/01/01 Buy Stock

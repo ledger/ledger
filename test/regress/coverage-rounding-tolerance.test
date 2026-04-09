@@ -1,4 +1,4 @@
-; Coverage for xact.cc lines 633-653 (rounding adjustment in balance check)
+; Coverage for xact.cc (rounding adjustment in balance check)
 ; When a per-unit cost is used and the total is rounded differently than
 ; the exact accumulated cost, the rounding tolerance check allows it.
 

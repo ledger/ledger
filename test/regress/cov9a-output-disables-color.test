@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 75-76
+; Coverage test for report.cc
 ; When --output is set and --color is on (but not --force-color),
 ; color gets turned off.
 

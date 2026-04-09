@@ -1,10 +1,10 @@
-; Coverage test for filters.cc lines 1506, 1554-1555
+; Coverage test for filters.cc
 ; Tests forecast_posts with a period that has a finish date, exercising:
-; Line 1506: assertion for start < finish
-; Line 1554-1555: pending_posts erasure when period increment exhausts start
+; assertion for start < finish
+; pending_posts erasure when period increment exhausts start
 ; The "in 2024" constraint causes the periodic transaction to have a
 ; definite end, so the forecast will exhaust the period and erase from
-; pending_posts (line 1554-1555).
+; pending_posts
 
 ~ monthly in 2024
     Expenses:Rent             $1000.00

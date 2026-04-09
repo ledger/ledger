@@ -1,0 +1,21 @@
+2024/01/10 First
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/01/20 Second
+    Expenses:Food    $30.00
+    Assets:Cash
+
+2024/02/05 Third
+    Expenses:Food    $40.00
+    Assets:Cash
+
+2024/02/18 Fourth
+    Expenses:Food    $25.00
+    Assets:Cash
+
+test reg --monthly --period-shift 15 Expenses
+23-Dec-16 - 24-Jan-15           Expenses:Food                $50.00       $50.00
+24-Jan-16 - 24-Feb-15           Expenses:Food                $70.00      $120.00
+24-Feb-16 - 24-Mar-15           Expenses:Food                $25.00      $145.00
+end test

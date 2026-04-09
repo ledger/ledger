@@ -1,8 +1,8 @@
-; Coverage test for account.cc line 630: last_reported_post
+; Coverage test for account.cc last_reported_post
 ; Tests --pivot which calls set_reported_account, populating
 ; reported_posts in the account xdata. The amount() function
-; then iterates these reported_posts, hitting line 630.
-; Also covers lines 499, 504 (N and O lookup break cases).
+; then iterates these reported_posts, hitting
+; Also covers (N and O lookup break cases)
 
 2024/01/15 Test
     ; Store: WholeFoods

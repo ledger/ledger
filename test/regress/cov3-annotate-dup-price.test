@@ -1,5 +1,5 @@
 ; Test error for duplicate price annotation
-; Covers annotate.cc lines 110-111 (duplicate price check)
+; Covers annotate.cc (duplicate price check)
 
 2024/01/01 Test
     Assets:Brokerage    10 AAPL {$150} {$160}

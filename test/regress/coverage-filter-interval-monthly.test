@@ -1,4 +1,4 @@
-; Test interval_posts filter with monthly period (covers filters.h lines 666-693)
+; Test interval_posts filter with monthly period (covers filters.h )
 ; Exercises interval_posts with monthly aggregation
 
 2024/01/15 Grocery Store

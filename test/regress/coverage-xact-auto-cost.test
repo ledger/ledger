@@ -1,5 +1,5 @@
 ; Test auto transaction with cost on auto posting
-; Targets: xact.cc lines 880-881 (post->cost in auto xact)
+; Targets: xact.cc (post->cost in auto xact)
 
 = /Expenses/
     (Budget)                  $10.00

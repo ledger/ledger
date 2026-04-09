@@ -1,4 +1,4 @@
-; Coverage: account.cc line 277: get_latest_checkout_cleared function
+; Coverage: account.cc get_latest_checkout_cleared function
 ; Tests format expression with latest_checkout_cleared for cleared timelog entries
 ; Note: I/O (uppercase) set cleared flag on timelog postings
 

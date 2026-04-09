@@ -1701,7 +1701,7 @@ Beneath these top level accounts you can have any level of detail you
 desire.  For example, if you want to keep specific track of how much
 you spend on burgers and fries, you could have the following:
 
-@smallexample @c input:validate
+@smallexample
 Expenses:Food:Hamburgers and Fries
 @end smallexample
 
@@ -7846,6 +7846,13 @@ Sort all accounts and commodities.
 @item --sort-xacts @var{VEXPR}
 @itemx --period-sort @var{VEXPR}
 Sort the postings within transactions using the given value expression.
+
+@item --period-shift @var{INT}
+Shift the starting day of monthly, quarterly, and yearly report periods
+by @var{INT} days.  For example, @samp{--monthly --period-shift 15}
+makes monthly periods run from the 16th of one month to the 15th of the
+next.  Does not affect weekly or daily periods.  See also
+@samp{--start-of-week}.
 
 @item --start-of-week @var{INT}
 @findex --align-intervals

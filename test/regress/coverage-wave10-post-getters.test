@@ -17,48 +17,48 @@
     Expenses:Misc         $25.00
     Assets:Cash
 
-; Test 1: Code is empty when no code (line 161-164)
+; Test 1: Code is empty when no code
 test reg Expenses:Misc --format "%(code)\n"
 
 end test
 
-; Test 2: Note from post with xact note concat (line 171-182)
+; Test 2: Note from post with xact note concat
 test reg Expenses:Food --format "%(note)\n"
  TagNote: A note
 end test
 
-; Test 3: get_commodity function (line 211-212)
+; Test 3: get_commodity function
 test reg Assets:Brokerage --format "%(commodity)\n"
 AAPL
 end test
 
-; Test 4: get_total when no xdata (line 252-255)
+; Test 4: get_total when no xdata
 test reg Expenses:Misc --format "%(total)\n"
 $25.00
 end test
 
-; Test 5: get_account as string in scope context (line 300-301)
+; Test 5: get_account as string in scope context
 test reg Expenses --format "%(account)\n"
 Expenses:Food:Produce
 Expenses:Misc
 end test
 
-; Test 6: primary commodity flag (line 218-220)
+; Test 6: primary commodity flag
 test reg Assets:Brokerage --format "%(primary ? 'yes' : 'no')\n"
 no
 end test
 
-; Test 7: cost_calculated flag (line 430)
+; Test 7: cost_calculated flag
 test reg Assets:Brokerage --format "%(cost_calculated)\n"
 false
 end test
 
-; Test 8: calculated flag (line 434)
+; Test 8: calculated flag
 test reg Assets:Brokerage --format "%(calculated)\n"
 false
 end test
 
-; Test 9: account_id (line 411-412)
+; Test 9: account_id
 test reg Expenses:Food --format "%(account_id)\n"
 1
 end test

@@ -1,5 +1,5 @@
 ; Test apply_format with format expressions in deferred tag data
-; Targets: xact.cc lines 722-727 (apply_format with %( expressions)
+; Targets: xact.cc (apply_format with %( expressions)
 
 = /Expenses/
     ; SourcePayee: %(payee)

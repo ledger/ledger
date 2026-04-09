@@ -1,4 +1,4 @@
-; Test payee directive via general_directive (lines 854-857 of textual_directives.cc)
+; Test payee directive via general_directive
 ; Exercise the payee keyword and payee alias through the switch
 
 payee Grocery Store

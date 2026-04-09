@@ -531,18 +531,18 @@ commodity_pool_t::parse_price_directive(char* line, bool do_not_add_price, bool 
  */
 commodity_t* commodity_pool_t::parse_price_expression(const std::string& str, const bool add_prices,
                                                       const std::optional<datetime_t>& moment) {
-  scoped_array<char> buf(new char[str.length() + 1]);
+  string::size_type eq_pos = str.find('=');
+  string commodity_name = (eq_pos != string::npos) ? str.substr(0, eq_pos) : str;
+  boost::trim(commodity_name);
 
-  std::strcpy(buf.get(), str.c_str());
-
-  char* price = std::strchr(buf.get(), '=');
-  if (price)
-    *price++ = '\0';
-
-  if (commodity_t* commodity = find_or_create(trim_ws(buf.get()))) {
-    if (price && add_prices) {
-      for (char* p = std::strtok(price, ";"); p; p = std::strtok(nullptr, ";")) {
-        commodity->add_price(moment ? *moment : CURRENT_TIME(), amount_t(p));
+  if (commodity_t* commodity = find_or_create(commodity_name)) {
+    if (eq_pos != string::npos && add_prices) {
+      string prices_str = str.substr(eq_pos + 1);
+      std::vector<string> prices;
+      boost::split(prices, prices_str, boost::is_any_of(";"));
+      for (const string& p : prices) {
+        if (!p.empty())
+          commodity->add_price(moment ? *moment : CURRENT_TIME(), amount_t(p));
       }
     }
     return commodity;

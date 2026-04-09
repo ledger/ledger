@@ -1,5 +1,5 @@
 ; Test "last N units" and "next N units" period expressions
-; Exercises handle_relative_token with TOK_INT (lines 974-1012)
+; Exercises handle_relative_token with TOK_INT
 ; Covers: last N years, last N quarters, last N months, last N weeks, last N days
 ; And: next N years, next N months, next N weeks, next N days
 

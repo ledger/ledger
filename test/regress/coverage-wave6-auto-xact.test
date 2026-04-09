@@ -1,4 +1,4 @@
-; Tests for xact.cc auto_xact_t::post_pred and operator() (lines 735, 863, 867-870)
+; Tests for xact.cc auto_xact_t::post_pred and operator
 ; Covers: automated transaction matching, amount expression evaluation
 
 = /Food/

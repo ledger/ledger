@@ -1,4 +1,4 @@
-; Test subtotal_posts filter in register output (covers filters.h lines 612-639)
+; Test subtotal_posts filter in register output (covers filters.h )
 ; Exercises subtotal_posts constructor, flush, clear
 
 2024/01/15 Grocery Store

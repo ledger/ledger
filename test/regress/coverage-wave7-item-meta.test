@@ -21,38 +21,38 @@
     Expenses:Food         $3.00
     Assets:Cash
 
-; Test has_tag with tag mask (item.cc line 58-69)
+; Test has_tag with tag mask
 test reg --format "%(has_tag(/MyTag/))\n" Expenses:Food -y "%y-%b-%d"
 true
 false
 false
 end test
 
-; Test has_tag with tag and value mask (item.cc line 66)
+; Test has_tag with tag and value mask
 test reg --format "%(has_tag(/MyTag/, /myvalue/))\n" Expenses:Food -y "%y-%b-%d"
 true
 false
 false
 end test
 
-; Test UUID accessor / id (item.cc line 344)
+; Test UUID accessor / id
 test reg --format "%(id)\n" Expenses:Food -y "%y-%b-%d"
 abc-123
 5
 8
 end test
 
-; Test filename (item.cc lines 306)
+; Test filename
 test reg --format "%(filename)\n" Expenses:Food -y "%y-%b-%d" --head 1
 $FILE
 end test
 
-; Test filebase (item.cc line 313)
+; Test filebase
 test reg --format "%(filebase)\n" Expenses:Food -y "%y-%b-%d" --head 1
 coverage-wave7-item-meta.test
 end test
 
-; Test filepath (item.cc line 320)
+; Test filepath
 test reg --format "%(filepath != \"\")\n" Expenses:Food -y "%y-%b-%d" --head 1
 true
 end test
@@ -64,7 +64,7 @@ test reg --format "%(depth)\n" Expenses:Food -y "%y-%b-%d"
 2
 end test
 
-; Test note accessor (item.cc line 392)
+; Test note accessor
 test reg --format "%(note)\n" Expenses:Food -y "%y-%b-%d"
  PostTag: postval
  MyTag: myvalue
@@ -73,7 +73,7 @@ test reg --format "%(note)\n" Expenses:Food -y "%y-%b-%d"
 
 end test
 
-; Test beg_line accessor (item.cc line 465)
+; Test beg_line accessor
 test reg --format "%(beg_line != 0)\n" Expenses:Food -y "%y-%b-%d"
 true
 true
@@ -94,7 +94,7 @@ false
 false
 end test
 
-; Test date (item.cc line 536-539, 542-543)
+; Test date
 test reg --format "%(date)\n" Expenses:Food -y "%y-%b-%d"
 24-Jan-01
 24-Jan-02

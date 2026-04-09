@@ -1,5 +1,5 @@
 ; Test append_note with multiple note lines
-; Targets: item.cc lines 204-213 (append_note with existing note)
+; Targets: item.cc (append_note with existing note)
 
 2024/01/15 * Store
     ; First line

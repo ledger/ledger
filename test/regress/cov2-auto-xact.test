@@ -1,4 +1,4 @@
-; Test auto transactions for xact.cc lines 789-811 coverage
+; Test auto transactions for xact.cc coverage
 ; Tests fn_any and fn_all predicate matching
 
 = Expenses:Food

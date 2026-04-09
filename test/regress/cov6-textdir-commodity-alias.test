@@ -1,4 +1,4 @@
-; Coverage for textual_directives.cc lines 624-629: commodity alias directive
+; Coverage for textual_directives.cc commodity alias directive
 
 commodity EUR
     alias Euro

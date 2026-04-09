@@ -1,4 +1,4 @@
-; Test draft.cc payee matching with reverse iteration (covers draft.cc lines 232-235)
+; Test draft.cc payee matching with reverse iteration (covers draft.cc )
 ; When payee matches a later transaction, that match should be used
 
 2024/01/15 * First Store

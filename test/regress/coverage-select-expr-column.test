@@ -1,4 +1,4 @@
-; Coverage test for select.cc lines 79-85: recursive identifier resolution
+; Coverage test for select.cc recursive identifier resolution
 ; When a select column is a binary expression (e.g., amount + total),
 ; get_principal_identifiers recurses into both left and right subtrees
 ; to determine what type of column it is. This exercises:

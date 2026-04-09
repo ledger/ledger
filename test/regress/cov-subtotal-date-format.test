@@ -1,4 +1,4 @@
-; Coverage test for filters.cc line 966
+; Coverage test for filters.cc
 ; subtotal_posts::report_subtotal uses date_format when set
 
 2024/01/01 Test

@@ -1,5 +1,5 @@
 ; Coverage tests for report.cc format options and output.h
-; Tests: format_accounts (lines 117-124), report_accounts (143-146),
+; Tests: format_accounts, report_accounts (143-146)
 ;        report_payees (164-167), report_tags (186-189),
 ;        report_commodities (210-213)
 
@@ -18,7 +18,7 @@
     Expenses:Food    $20.00
     Assets:Cash
 
-; Test custom balance format (covers format_accounts lines 104-124)
+; Test custom balance format (covers format_accounts )
 test bal --format "%(account) => %(display_total)\n"
 Assets:Cash => $-530.00
 Expenses => $530.00

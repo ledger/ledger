@@ -1,4 +1,4 @@
-; Coverage for balance.cc lines 259-278: FIFO lot sorting with annotated/unannotated
+; Coverage for balance.cc FIFO lot sorting with annotated/unannotated
 
 2024/01/01 Buy lot 1
     Assets:Stocks    10 AAPL {$100.00} [2024/01/01]

@@ -1,4 +1,4 @@
-; Coverage for query.cc lines 319-329: metadata equality in query
+; Coverage for query.cc metadata equality in query
 
 2024/01/01 Test
     ; Category: groceries

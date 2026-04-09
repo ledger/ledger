@@ -1,4 +1,4 @@
-; Test partial_name with flat=true (line 242 of account.cc)
+; Test partial_name with flat=true
 ; When flat is true, partial_name does not skip single-child parents
 
 2024/01/01 Test

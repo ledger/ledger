@@ -1,4 +1,4 @@
-; Coverage for item.cc line 476: meta function (alias for tag)
+; Coverage for item.cc meta function (alias for tag)
 
 2024/01/01 Test
     ; MyMeta: metavalue

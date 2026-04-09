@@ -1,5 +1,5 @@
 ; Test item_t::lookup for value_date keyword
-; Targets: item.cc lines 503-504 (value_date -> get_date)
+; Targets: item.cc (value_date -> get_date)
 ; Note: this goes through post_t::lookup for value_date -> get_value_date
 ; but the item.cc value_date path is not reachable from post context
 

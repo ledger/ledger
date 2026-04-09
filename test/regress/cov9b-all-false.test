@@ -1,4 +1,4 @@
-; Coverage for post.cc line 384: fn_all with second arg (false)
+; Coverage for post.cc fn_all with second arg (false)
 ; When all(EXPR, false) is used, the current posting is excluded from testing
 ; all(amount > 0, false) returns true for postings where ALL OTHER postings
 ; in the same transaction have positive amounts

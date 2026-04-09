@@ -9,7 +9,7 @@
     Expenses:Transport    $30.00
     Assets:Checking
 
-; Test eval command (covers line 133)
+; Test eval command (covers )
 test eval 2+3
 5
 end test

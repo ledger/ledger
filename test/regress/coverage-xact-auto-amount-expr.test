@@ -1,5 +1,5 @@
 ; Test auto transaction with amount_expr
-; Targets: xact.cc lines 807-818 (amount_expr evaluation path)
+; Targets: xact.cc (amount_expr evaluation path)
 
 = /Expenses/
     (Savings)                  (amount * -2)

@@ -1,6 +1,6 @@
 ; Wave 2 coverage tests for report.cc gain and market value paths
 ; Covers: report.cc -G/--gain flag, changed_value_posts in filters.cc,
-;   fn_market (lines 586-612), equity command
+;   fn_market, equity command
 
 P 2024/01/01 AAPL $150.00
 P 2024/02/01 AAPL $160.00

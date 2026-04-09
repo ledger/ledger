@@ -1,5 +1,5 @@
 ; Coverage tests for textual_xacts.cc automated_xact_directive commands
-; Targets lines 45-48, 67-68, 77, 79, 101-131 (enable/disable/delete commands)
+; Targets (enable/disable/delete commands)
 
 ; Define a named automated transaction
 = "myauto" :: /Expenses/

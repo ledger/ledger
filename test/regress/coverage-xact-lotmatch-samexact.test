@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 360-369
+; Coverage test for xact.cc
 ; Tests the "earlier postings in same transaction" code path in lot matching.
 ; When a transaction has multiple sell postings, the second sell must account
 ; for the lots already consumed by the first sell within the same transaction.

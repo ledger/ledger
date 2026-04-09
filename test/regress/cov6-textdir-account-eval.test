@@ -1,4 +1,4 @@
-; Coverage for textual_directives.cc lines 466-469: account eval sub-directive
+; Coverage for textual_directives.cc account eval sub-directive
 
 account Expenses:Food
     eval 1+1

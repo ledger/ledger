@@ -1,5 +1,5 @@
 ; Coverage tests for post.cc compound value paths
-; Covers lines: 212-213 (get_commodity compound), 221 (get_commodity_is_primary compound)
+; Covers (get_commodity compound), (get_commodity_is_primary compound)
 
 2024/01/01 Test
     Expenses:Food    $10.00
@@ -9,12 +9,12 @@
     Expenses:Food    $20.00
     Assets:Cash
 
-; Test get_commodity with compound value - covers post.cc lines 212-213
+; Test get_commodity with compound value
 test reg --subtotal --format "%(commodity)\n" Expenses
 $
 end test
 
-; Test get_commodity_is_primary with compound value - covers post.cc line 221
+; Test get_commodity_is_primary with compound value
 test reg --subtotal --format "%(primary)\n" Expenses
 false
 end test

@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 387-398
+; Coverage test for xact.cc
 ; Tests lot matching when lots have no explicit date in their annotation.
 ; The code falls back to finding the earliest transaction date for the lot
 ; from the account's postings as a date proxy for sorting.

@@ -1,4 +1,4 @@
-; Test setting target from price commodity (annotate.cc lines 317-319)
+; Test setting target from price commodity
 P 2024/01/01 AAPL $150.00
 P 2024/06/01 AAPL $200.00
 

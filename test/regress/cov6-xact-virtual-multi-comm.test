@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 608-609
+; Coverage test for xact.cc
 ; Tests balanced virtual postings with multiple commodities.
 ; When virtual postings involve multiple commodities, the virtual_balance
 ; is a balance_t and must be handled via map_sorted_amounts.

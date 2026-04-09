@@ -1,4 +1,4 @@
-; Coverage for textual_directives.cc line 442: account value directive
+; Coverage for textual_directives.cc account value directive
 
 account Expenses:Food
     value amount

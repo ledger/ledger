@@ -1,4 +1,4 @@
-; Coverage for amount.cc line 1205:
+; Coverage for amount.cc
 ; Incorrect use of thousand-mark period when a comma was retroactively
 ; identified as a decimal separator (European style with wrong grouping).
 ; Input "1.12,345" scanned right-to-left: 3 digits then comma (tentative

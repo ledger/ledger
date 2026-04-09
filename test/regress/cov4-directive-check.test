@@ -1,4 +1,4 @@
-; Test check directive (lines 693-696 of textual_directives.cc)
+; Test check directive
 ; Exercise the check directive that produces a warning if false
 
 check 1 == 1

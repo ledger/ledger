@@ -1,5 +1,5 @@
 ; Test total when xdata total is set
-; Targets: post.cc lines 242-249 (get_total with/without xdata)
+; Targets: post.cc (get_total with/without xdata)
 
 2024/01/15 * Store
     Expenses:Food              $50.00

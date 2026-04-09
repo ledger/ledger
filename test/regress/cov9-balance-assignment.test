@@ -1,5 +1,5 @@
 ; Test balance assignment on null posting
-; Covers textual_xacts.cc lines 718 (balance assignment diff)
+; Covers textual_xacts.cc (balance assignment diff)
 
 2024/01/01 Opening Balance
     Assets:Cash    $100.00

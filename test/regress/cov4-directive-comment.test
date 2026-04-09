@@ -1,4 +1,4 @@
-; Test comment directive (line 818-820 of textual_directives.cc)
+; Test comment directive
 ; Exercise the multi-line comment block
 
 comment

@@ -1,24 +1,24 @@
-; Coverage test for option.cc lines 92-93, 204, 213-214
+; Coverage test for option.cc
 ; Tests illegal option error paths in process_arguments
 
 2024/01/15 Test
     Expenses:Food   $100.00
     Assets:Cash
 
-; Test illegal single-dash option (line 203-204)
+; Test illegal single-dash option
 test - bal -> 1
 __ERROR__
 Error: illegal option --
 end test
 
-; Test option with bad value for error context (lines 92-93)
+; Test option with bad value for error context
 test --begin "not-a-date" bal -> 1
 __ERROR__
 While parsing option '--begin'
 Error: Unexpected date period token 'not'
 end test
 
-; Test illegal short option (lines 213-214)
+; Test illegal short option
 test -K bal -> 1
 __ERROR__
 Error: Illegal option -K

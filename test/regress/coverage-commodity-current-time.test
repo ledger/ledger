@@ -1,4 +1,4 @@
-; Coverage for commodity.cc line 79: CURRENT_TIME() fallback in map_prices
+; Coverage for commodity.cc CURRENT_TIME fallback in map_prices
 ; Without --now, the pricing code falls back to CURRENT_TIME()
 ; Verifies the conversion still works using the current time
 

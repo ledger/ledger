@@ -1,7 +1,7 @@
 ; Coverage tests for textual_directives.cc remaining paths
-; Targets lines 120-124 (price_xact_directive), 509-511 (account_value_directive)
+; Targets (price_xact_directive), (account_value_directive)
 
-; Test price directive (P line) - triggers line 120-124
+; Test price directive (P line) - triggers
 P 2024/01/01 EUR $1.10
 
 ; Test account value directive

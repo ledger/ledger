@@ -1,4 +1,4 @@
-; Coverage test for report.cc line 739
+; Coverage test for report.cc
 ; fn_strip strips annotations from a value
 
 2024/01/01 Test

@@ -1,5 +1,5 @@
 ; Test main.cc: exception handling in main
-; Exercises the error catch path in main (lines 190-194)
+; Exercises the error catch path in main
 ; via an invalid option that triggers an exception during initialization
 
 2024/01/01 Test

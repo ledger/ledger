@@ -1,4 +1,4 @@
-; Coverage test for times.cc lines 314-317
+; Coverage test for times.cc
 ; Exercise date_duration output for weekly and daily periods
 ; via the period command dump
 

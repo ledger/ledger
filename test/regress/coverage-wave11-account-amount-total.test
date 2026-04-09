@@ -1,4 +1,4 @@
-; Coverage for account.cc lines 453,460,487,492,500-501,506-507,511-512:
+; Coverage for account.cc
 ; Account lookup functions: 'n' (subcount), 'N' (family count), 'O' (total),
 ; 'l' (depth), and children_with_xdata/valid paths.
 

@@ -1,5 +1,5 @@
-; Coverage tests for xact.cc XML output (lines 1017-1032)
-; and hash function (lines 691-729)
+; Coverage tests for xact.cc XML output
+; hash function
 
 2024/01/01 * (ABC) Test Payee
     ; Note: test note

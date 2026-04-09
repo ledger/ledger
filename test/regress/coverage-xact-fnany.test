@@ -1,4 +1,4 @@
-; Coverage test for xact.cc lines 789-798
+; Coverage test for xact.cc
 ; Tests fn_any() - the any() predicate function for transactions.
 ; any(expr) returns true if any posting in the transaction matches expr.
 ; Here, only the Groceries transaction has an Expense posting, so the

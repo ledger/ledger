@@ -1,4 +1,4 @@
-; Test coverage for textual_xacts.cc lines 851-870
+; Test coverage for textual_xacts.cc
 ; Transaction with pending state, code, and inline note
 
 2024/01/01 ! (INV001) Grocery Store  ; Important note

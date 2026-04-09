@@ -1,4 +1,4 @@
-; Coverage for report.cc line 575: top_amount on SEQUENCE type
+; Coverage for report.cc top_amount on SEQUENCE type
 ; When the value is a sequence, top_amount recurses on the first element
 
 = Expenses

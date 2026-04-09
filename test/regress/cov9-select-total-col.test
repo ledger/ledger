@@ -1,5 +1,5 @@
 ; Test select with total column
-; Covers select.cc lines 72, 82 (total identifier handling)
+; Covers select.cc (total identifier handling)
 
 2024/01/15 Test
     Expenses:Food    $50.00

@@ -1,7 +1,7 @@
 ; Tests for journal.cc uncovered lines
-; Covers: add_account/remove_account (lines 104-109),
-;   journal::read (lines 440-478), has_xdata/clear_xdata (lines 480-513),
-;   journal::valid (lines 515-524)
+; Covers: add_account/remove_account
+;   journal::read, has_xdata/clear_xdata
+;   journal::valid
 
 2024/01/01 Test
     Expenses:Food          $10.00

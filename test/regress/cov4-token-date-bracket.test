@@ -1,4 +1,4 @@
-; Test token parsing with bracket date specifier (lines 196-214 of token.cc)
+; Test token parsing with bracket date specifier
 ; Exercise the date parsing in brackets
 
 2024/01/01 Test

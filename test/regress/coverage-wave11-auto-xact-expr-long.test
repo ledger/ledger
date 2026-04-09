@@ -1,4 +1,4 @@
-; Coverage for xact.cc lines 866-867: auto_xact posting with an amount
+; Coverage for xact.cc auto_xact posting with an amount
 ; expression that evaluates to a long (integer), which triggers the
 ; result.is_long() -> result.to_amount() conversion.
 

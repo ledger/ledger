@@ -60,6 +60,7 @@ if(SKBUILD)
 else()
   option(USE_PYTHON "Build support for the Python scripting bridge" OFF)
 endif()
+set(PYTHON_REQUIRED_VERSION "" CACHE STRING "Specific Python version to find (e.g. 3.11)")
 option(USE_DOXYGEN "Build reference documentation using Doxygen" OFF)
 
 option(DISABLE_ASSERTS "Build without any internal consistency checks" OFF)
@@ -214,16 +215,21 @@ if(USE_PYTHON)
     message(WARNING "Building the python module requires BUILD_LIBRARY=ON (or SKBUILD mode).")
   endif()
 
+  if(PYTHON_REQUIRED_VERSION)
+    set(_python_version ${PYTHON_REQUIRED_VERSION})
+  else()
+    set(_python_version ${Required_Python_Version})
+  endif()
   # In SKBUILD mode scikit-build-core only provides Development.Module (no
   # Development.Embed), so request that component explicitly.  In a regular
   # build the full Development component (Module + Embed) is still used so
   # that the interpreter can embed Python for the --python command.
   if(SKBUILD)
-    find_package(Python COMPONENTS Interpreter Development.Module)
+    find_package(Python ${_python_version} COMPONENTS Interpreter Development.Module)
   else()
     find_package(Python COMPONENTS Interpreter Development)
   endif()
-  if(Python_FOUND AND ${Python_VERSION} VERSION_GREATER_EQUAL ${Required_Python_Version})
+  if(Python_FOUND AND ${Python_VERSION} VERSION_GREATER_EQUAL ${_python_version})
     set(BOOST_PYTHON "python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}")
     set(HAVE_BOOST_PYTHON 1)
     include_directories(SYSTEM ${Python_INCLUDE_DIRS})
@@ -237,8 +243,8 @@ endif()
 
 # Set BOOST_ROOT to help CMake to find the right Boost version
 find_package(Boost ${Required_Boost_Version}
-  REQUIRED date_time iostreams regex unit_test_framework
-  ${BOOST_PYTHON} OPTIONAL_COMPONENTS nowide
+  REQUIRED date_time iostreams regex
+  ${BOOST_PYTHON} OPTIONAL_COMPONENTS nowide unit_test_framework
   CONFIG)
 
 # enable Boost::nowide library (for UTF8 command line args on Windows)
@@ -470,6 +476,9 @@ endif()
 
 macro(add_ledger_library_dependencies _target _scope)
   target_link_libraries(${_target} ${_scope} ${Boost_LIBRARIES})
+  if(HAVE_BOOST_NOWIDE)
+    target_link_libraries(${_target} ${_scope} Boost::nowide)
+  endif()
   target_link_libraries(${_target} PRIVATE ${GMP_LIB})
   target_link_libraries(${_target} PRIVATE ${MPFR_LIB})
   target_link_libraries(${_target} PRIVATE ${PROFILE_LIBS})
@@ -492,6 +501,7 @@ macro(add_ledger_library_dependencies _target _scope)
     target_link_libraries(${_target} ${_scope} ${ICU_LIBRARIES})
   endif()
   if(HAVE_BOOST_PYTHON)
+    target_link_libraries(${_target} PRIVATE Boost::${BOOST_PYTHON})
     if(CMAKE_SYSTEM_NAME STREQUAL Darwin)
       # Don't link directly to a Python framework on macOS, to avoid segfaults
       # when the module is imported from a different interpreter

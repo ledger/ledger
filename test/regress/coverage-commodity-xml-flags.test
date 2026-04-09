@@ -1,4 +1,4 @@
-; Test commodity output with thousands separator (covers commodity.cc lines 506-507)
+; Test commodity output with thousands separator (covers commodity.cc )
 ; Exercises COMMODITY_STYLE_THOUSANDS flag
 
 commodity 1,000.00 USD

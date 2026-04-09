@@ -1,4 +1,4 @@
-; Coverage test for post.cc lines 233-234
+; Coverage test for post.cc
 ; get_cost returns compound_value when post has POST_EXT_COMPOUND
 ; and no individual cost
 

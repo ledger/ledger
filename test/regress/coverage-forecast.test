@@ -1,4 +1,4 @@
-; Coverage for filters.cc forecast_posts (lines 1450-1461)
+; Coverage for filters.cc forecast_posts
 ; Tests the --forecast flag to generate future periodic transactions.
 
 ~ Monthly

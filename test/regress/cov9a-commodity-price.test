@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 942-951
+; Coverage test for report.cc
 ; fn_commodity_price looks up a historical price for a commodity
 
 P 2024/01/01 AAPL $150.00

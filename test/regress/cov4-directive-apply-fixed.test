@@ -1,4 +1,4 @@
-; Test apply fixed/rate directive (lines 346-357 of textual_directives.cc)
+; Test apply fixed/rate directive
 ; Exercise fixed exchange rate application
 
 apply fixed EUR $1.10

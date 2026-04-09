@@ -1,5 +1,6 @@
-; Test collapse_posts with only_collapse_if_zero option
-; Covers: collapse_posts::report_subtotal() non-zero branch with only_collapse_if_zero
+; Test --collapse-if-zero option without --collapse
+; Note: without --collapse, collapse_posts filter is not added; this tests
+; that --collapse-if-zero alone does not affect register output
 
 2024/01/15 Transfer
     Assets:Checking       $-100.00

@@ -1,4 +1,4 @@
-; Coverage test for times.cc lines 1024-1067
+; Coverage test for times.cc
 ; Exercise various relative date specifiers:
 ; "this year", "last quarter", "this week", "last day"
 ; These exercise TOK_YEAR, TOK_QUARTER, TOK_WEEK, TOK_DAY paths
@@ -11,18 +11,18 @@
     Expenses:Food            $20.00
     Assets:Cash
 
-; "this year" exercises TOK_YEAR with adjust=0 (line 1024-1028)
+; "this year" exercises TOK_YEAR with adjust=0
 test reg Expenses --begin "this year"
 end test
 
-; "last quarter" exercises TOK_QUARTER with adjust=-1 (line 1034-1035)
+; "last quarter" exercises TOK_QUARTER with adjust=-1
 test reg Expenses --begin "last quarter"
 end test
 
-; "this week" exercises TOK_WEEK with adjust=0 (line 1052-1053)
+; "this week" exercises TOK_WEEK with adjust=0
 test reg Expenses --begin "this week"
 end test
 
-; "last day" exercises TOK_DAY with adjust=-1 (line 1063-1066)
+; "last day" exercises TOK_DAY with adjust=-1
 test reg Expenses --begin "last day"
 end test

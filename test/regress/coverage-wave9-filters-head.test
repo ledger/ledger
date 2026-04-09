@@ -1,4 +1,4 @@
-; Test coverage for filters.cc lines 89-170
+; Test coverage for filters.cc
 ; --head exercises truncate_xacts filter
 
 2024/01/01 First

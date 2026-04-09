@@ -1,4 +1,4 @@
-; Coverage test for textual_directives.cc lines 305-334
+; Coverage test for textual_directives.cc
 ; apply tag with colon-separated tags
 
 apply tag :project:phase:

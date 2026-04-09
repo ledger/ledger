@@ -1,4 +1,4 @@
-; Coverage for filters.cc lines 1070-1071:
+; Coverage for filters.cc
 ; interval_posts::operator() when interval has no duration.
 ; Using --period with only a date range (no weekly/monthly) triggers
 ; the find_period path without a duration.

@@ -1,4 +1,4 @@
-; Coverage test for draft.cc lines 458-459: negative cost error
+; Coverage test for draft.cc negative cost error
 ; When a draft template posting has a negative cost value,
 ; the code throws a parse_error. Exercises:
 ;   L458: if (post.cost->sign() < 0) -- true branch

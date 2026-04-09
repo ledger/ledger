@@ -1,4 +1,4 @@
-; Test lot_date, lot_price, lot_tag functions in report.cc lines 1012-1037
+; Test lot_date, lot_price, lot_tag functions in report.cc
 ; These are format expression functions for lot annotations
 
 2024/01/01 Buy Stock

@@ -1,4 +1,4 @@
-; Coverage for report.cc lines 900-931 and 1079-1111: ansify_if with colors
+; Coverage for report.cc ansify_if with colors
 ; Tests that ansify_if renders ANSI escape codes when --force-color is active
 
 2024/01/01 Test

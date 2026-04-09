@@ -1,4 +1,4 @@
-; Test times.cc line 1752: invalid character in period expression
+; Test times.cc invalid character in period expression
 ; triggers expected() with wanted='\0'
 
 2026/03/01 Test

@@ -1,4 +1,4 @@
-; Test account lookup total (lines 487-488 of account.cc)
+; Test account lookup total
 ; Exercise the total accessor on accounts
 
 2024/01/01 Test

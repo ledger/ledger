@@ -13,25 +13,25 @@
     Expenses:Food:Dairy      $20.00
     Assets:Cash
 
-; Test 1: Account amount (line 266-268)
+; Test 1: Account amount
 test bal Expenses --format "%(amount) %(account)\n" --flat --no-total
 $20.00 Expenses:Food:Dairy
 $80.00 Expenses:Food:Produce
 end test
 
-; Test 2: Account total (line 270-272)
+; Test 2: Account total
 test bal Expenses --format "%(total) %(account)\n" --no-total
 $100.00 Expenses:Food
 $20.00 Expenses:Food:Dairy
 $80.00 Expenses:Food:Produce
 end test
 
-; Test 3: Latest cleared (line 445-446)
+; Test 3: Latest cleared
 test bal Expenses:Food:Produce --format "%(latest_cleared)\n" --flat --no-total
 2024/01/02
 end test
 
-; Test 4: Subcount via n (line 456-457)
+; Test 4: Subcount via n
 test bal Expenses --format "%(n) %(account)\n" --no-total
 0 Expenses:Food
 1 Expenses:Food:Dairy

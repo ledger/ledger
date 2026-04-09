@@ -1,4 +1,4 @@
-; Tests for filters.cc forecast_posts (lines 1383, 1436, 1484-1485)
+; Tests for filters.cc forecast_posts
 ; Covers: forecast_posts::add_post, flush, period iteration
 
 ~ Monthly
@@ -10,7 +10,7 @@
     Assets:Cash
 
 ; === Test 1: Forecast generates future periodic entries ===
-test reg Expenses:Rent --forecast-while "date < [2026/05/01]" --columns 80
+test reg Expenses:Rent --now 2026/03/01 --forecast-while "date < [2026/05/01]" --columns 80
 26-Mar-01 Forecast transaction  Expenses:Rent              $1000.00     $1000.00
 26-Apr-01 Forecast transaction  Expenses:Rent              $1000.00     $2000.00
 end test

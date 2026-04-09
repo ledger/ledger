@@ -1,4 +1,4 @@
-; Coverage test for report.cc lines 773-774
+; Coverage test for report.cc
 ; fn_unrounded returns the unrounded value of an amount
 
 2024/01/01 Test

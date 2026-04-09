@@ -1,9 +1,9 @@
 ; Test value.cc: mixed-type arithmetic (amount*balance, balance*amount, etc.)
-; Coverage target: value.cc - AMOUNT *= BALANCE-single (line 635-636),
-;   AMOUNT /= BALANCE-single (line 700-707),
-;   BALANCE *= AMOUNT-single (line 651-654),
-;   BALANCE /= AMOUNT-single (line 727-730),
-;   BALANCE /= AMOUNT-no-commodity (line 731-733)
+; Coverage target: value.cc - AMOUNT *= BALANCE-single
+;   AMOUNT /= BALANCE-single
+;   BALANCE *= AMOUNT-single
+;   BALANCE /= AMOUNT-single
+;   BALANCE /= AMOUNT-no-commodity
 
 2024/01/15 Purchase
     Expenses:Food       $10.00

@@ -1,4 +1,4 @@
-; Coverage test for times.cc line 1266
+; Coverage test for times.cc
 ; Unknown period token triggers default case and unexpected()
 
 2024/01/01 Test

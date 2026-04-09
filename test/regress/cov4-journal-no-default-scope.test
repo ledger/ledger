@@ -1,4 +1,4 @@
-; Test journal_t::read when no default scope (line 470 of journal.cc)
+; Test journal_t::read when no default scope
 ; This would require a very unusual code path - just verify basic parsing works
 
 2024/01/01 Test

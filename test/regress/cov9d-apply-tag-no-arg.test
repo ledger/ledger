@@ -1,5 +1,5 @@
 ; Test apply tag with no argument produces error
-; Covers textual_directives.cc line 307
+; Covers textual_directives.cc
 apply tag
 
 test reg -> 1
