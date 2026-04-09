@@ -528,9 +528,22 @@ class PrepareBuild(CommandLineApp):
                 ]
                 self.log.info('Executing: ' + ' '.join(packages))
                 self.execute(*packages)
+            else:
+                self.log.error(
+                    'No supported package manager found on macOS!\n'
+                    '\n'
+                    'Please install one of the following before running\n'
+                    '"acprep dependencies":\n'
+                    '\n'
+                    '  - Homebrew:  https://brew.sh\n'
+                    '  - MacPorts: https://www.macports.org\n'
+                    '  - Nix:      https://nixos.org/download\n'
+                )
+                sys.exit(1)
 
         elif system == 'Linux':
             is_ubuntu = False
+            found_distro = False
             if exists('/etc/issue'):
                 issue_name = open('/etc/issue').readline()
                 if issue_name.startswith('Ubuntu'):
@@ -597,6 +610,7 @@ class PrepareBuild(CommandLineApp):
                         )
                         self.log.info('Executing: ' + ' '.join(packages))
                         self.execute(*packages)
+                        found_distro = True
                 elif issue_name.startswith('Arch Linux'):
                     self.log.info('Looks like you are using Pacman on Arch Linux')
                     packages = [
@@ -614,6 +628,7 @@ class PrepareBuild(CommandLineApp):
                     ]
                     self.log.info('Executing: ' + ' '.join(packages))
                     self.execute(*packages)
+                    found_distro = True
 
             # Since Ubuntu also contains '/etc/debian_version', Ubuntu should skip it
             if not is_ubuntu and exists('/etc/debian_version'):
@@ -640,6 +655,7 @@ class PrepareBuild(CommandLineApp):
                     ]
                     self.log.info('Executing: ' + ' '.join(packages))
                     self.execute(*packages)
+                    found_distro = True
                 else:
                     self.log.info(f"I do not recognize your version '{release}' of Debian!")
 
@@ -672,6 +688,7 @@ class PrepareBuild(CommandLineApp):
                     ]
                     self.log.info('Executing: ' + ' '.join(packages))
                     self.execute(*packages)
+                    found_distro = True
                 elif release.startswith('Fedora release 20'):
                     self.log.info('Looks like you are using YUM on Fedora 20')
                     packages = [
@@ -696,10 +713,29 @@ class PrepareBuild(CommandLineApp):
                     ]
                     self.log.info('Executing: ' + ' '.join(packages))
                     self.execute(*packages)
+                    found_distro = True
+
+            if not found_distro:
+                self.log.error(
+                    'No supported Linux distribution detected!\n'
+                    '\n'
+                    'Please install the build dependencies manually.\n'
+                    'See INSTALL.md for the list of required packages.'
+                )
+                sys.exit(1)
 
         elif system.startswith('CYGWIN'):
             self.log.info('Looks like you are using Cygwin')
             self.log.info('Please install the dependencies manually.')
+
+        else:
+            self.log.error(
+                "Unknown platform '%s'!\n"
+                '\n'
+                'Please install the build dependencies manually.\n'
+                'See INSTALL.md for the list of required packages.' % system
+            )
+            sys.exit(1)
 
     #########################################################################
     # Determine the system's basic configuration                            #
