@@ -842,14 +842,15 @@ value_t report_t::fn_get_at(call_scope_t& args) {
     if (!args[0].is_sequence())
       return args[0];
   } else if (!args[0].is_sequence()) {
-    throw_(std::runtime_error,
-           _f("Attempting to get argument at index %1% from %2%") % index % args[0].label());
+    // Return void for non-sequence values at index > 0 so that
+    // callers using fallback expressions (e.g. "get_at(x, 1) || 0"
+    // in --dc format strings) work instead of crashing (issue #697).
+    return value_t();
   }
 
   value_t::sequence_t& seq(args[0].as_sequence_lval());
   if (index >= seq.size())
-    throw_(std::runtime_error, _f("Attempting to get index %1% from %2% with %3% elements") %
-                                   index % args[0].label() % seq.size());
+    return value_t();
 
   return seq[index];
 }
