@@ -295,6 +295,21 @@ struct add_balancing_post {
  * @throws balance_error if the transaction cannot be balanced.
  */
 bool xact_base_t::finalize() {
+  // Phase 0: Apply the default commodity (from the D directive) to any
+  // posting whose amount has no commodity.  This mirrors what draft.cc
+  // already does for the "xact" command and what csv.cc does for imports,
+  // but was missing for normal journal parsing.  Without this, bare
+  // amounts like "100" ignore the D directive's commodity and precision.
+  commodity_t* default_commodity = commodity_pool_t::current_pool->default_commodity;
+  if (default_commodity && *default_commodity) {
+    for (post_t* post : posts) {
+      if (!post->amount.is_null() && !post->amount.has_commodity()) {
+        post->amount.set_commodity(*default_commodity);
+        post->amount = post->amount.rounded();
+      }
+    }
+  }
+
   // Phase 1: Scan all postings, accumulate balance, find null-amount posts.
   // Real postings and balanced-virtual postings ([Account]) are tracked
   // in separate balances because they must balance independently.

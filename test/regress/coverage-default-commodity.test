@@ -7,8 +7,8 @@ D $1,000.00
     Assets:Checking
 
 test bal
-                 -10  Assets:Checking
-                  10  Expenses:Food
+             $-10.00  Assets:Checking
+              $10.00  Expenses:Food
 --------------------
                    0
 end test
