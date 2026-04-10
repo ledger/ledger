@@ -1,0 +1,19 @@
+; Regression test for issue #1110: the convert command incorrectly handles the cost field
+; https://github.com/ledger/ledger/issues/1110
+;
+; Three sub-issues:
+; 1. Cost annotation (@@ $cost) was silently dropped from the primary posting
+; 2. --invert negated the amount but not the cost, causing balance errors
+; 3. Empty cost field should be allowed (no cost annotation emitted)
+
+test -f /dev/null convert $sourcepath/test/input/1110.csv --input-date-format %Y/%m/%d -> 0
+2014/01/01 * Broker
+    Expenses:Unknown                         10 AAPL @@ $500.00
+    Equity:Unknown                          $-500.00
+end test
+
+test -f /dev/null convert $sourcepath/test/input/1110.csv --input-date-format %Y/%m/%d --invert -> 0
+2014/01/01 * Broker
+    Expenses:Unknown                        -10 AAPL @@ $500.00
+    Equity:Unknown                           $500.00
+end test

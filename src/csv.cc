@@ -254,6 +254,8 @@ xact_t* csv_reader::read_xact(bool rich_data) {
       if (!amt.has_commodity() && commodity_pool_t::current_pool->default_commodity)
         amt.set_commodity(*commodity_pool_t::current_pool->default_commodity);
       post->cost = amt;
+      post->given_cost = amt;
+      post->add_flags(POST_COST_IN_FULL);
       break;
     }
 
@@ -284,6 +286,8 @@ xact_t* csv_reader::read_xact(bool rich_data) {
   if (post->cost && !post->amount.is_null() &&
       post->amount.commodity() == post->cost->commodity()) {
     post->cost = std::nullopt;
+    post->given_cost = std::nullopt;
+    post->drop_flags(POST_COST_IN_FULL);
     amt = post->amount;
   }
 
