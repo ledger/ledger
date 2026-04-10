@@ -1,0 +1,56 @@
+; Regression test for issue #603: print ignores apply tag ... end apply tag
+; https://github.com/ledger/ledger/issues/603
+;
+; When 'apply tag' is used to apply metadata tags to a group of transactions,
+; the 'print' command must include those tags in the output so that no data
+; is lost when the printed output is used as a journal file.
+
+apply tag Category: Testing
+
+2024/01/01 Test Transaction
+    Expenses:Food    $10.00
+    Assets:Cash
+
+end apply tag
+
+apply tag reviewed
+
+2024/02/01 Groceries
+    Expenses:Food    $25.00
+    Assets:Cash
+
+2024/02/02 Coffee
+    Expenses:Food    $5.00
+    Assets:Cash
+
+end apply tag
+
+apply tag Source: Import
+
+2024/03/01 Payment  ; memo text
+    Expenses:Misc    $50.00
+    Assets:Cash
+
+end apply tag
+
+test print
+2024/01/01 Test Transaction
+    ; Category: Testing
+    Expenses:Food                             $10.00
+    Assets:Cash
+
+2024/02/01 Groceries
+    ; :reviewed:
+    Expenses:Food                             $25.00
+    Assets:Cash
+
+2024/02/02 Coffee
+    ; :reviewed:
+    Expenses:Food                              $5.00
+    Assets:Cash
+
+2024/03/01 Payment  ; memo text
+    ; Source: Import
+    Expenses:Misc                             $50.00
+    Assets:Cash
+end test
