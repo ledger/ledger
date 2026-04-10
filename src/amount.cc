@@ -1232,8 +1232,7 @@ std::optional<amount_t> amount_t::value(const datetime_t& moment,
         // to download a price from the Internet.  This is done if (a) no
         // price was found, or (b) the price is "stale" according to the
         // setting of --price-exp.
-        if (point)
-          point = commodity().check_for_updated_price(point, moment, comm);
+        point = commodity().check_for_updated_price(point, moment, comm);
 
         // If no price was found directly, walk the larger unit chain to find
         // a price for an equivalent larger unit (issue #2017).  This handles
@@ -1256,8 +1255,7 @@ std::optional<amount_t> amount_t::value(const datetime_t& moment,
             if (comm && scaled.commodity().referent() == comm->referent())
               return scaled;
             point = scaled.commodity().find_price(comm, moment);
-            if (point)
-              point = scaled.commodity().check_for_updated_price(point, moment, comm);
+            point = scaled.commodity().check_for_updated_price(point, moment, comm);
           }
           if (point) {
             amount_t price(point->price);
