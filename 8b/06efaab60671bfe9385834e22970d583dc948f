@@ -1,0 +1,9 @@
+doc/ledger3.texi
+  5213b757057a07e1 6957-6966,9014,9028-9030
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "8b06efaab60671bfe9385834e22970d583dc948f",
+  "prompts": {}
+}
