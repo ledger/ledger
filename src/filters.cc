@@ -1748,7 +1748,7 @@ void budget_posts::report_budget_items(const date_t& date) {
           range_begin = pair.first.range->begin();
 
         DEBUG("budget.generate", "Finding period for pending post");
-        if (!pair.first.find_period(range_begin ? *range_begin : date))
+        if (!pair.first.find_period(range_begin ? *range_begin : (origin ? *origin : date)))
           continue;
         if (!pair.first.start)
           throw_(std::logic_error, _("Failed to find period for periodic transaction"));
