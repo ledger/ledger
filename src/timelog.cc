@@ -52,8 +52,14 @@ void create_timelog_xact(const time_xact_t& in_event, const time_xact_t& out_eve
   if (!in_event.note.empty())
     curr->append_note(in_event.note.c_str(), *context.scope);
 
+  long secs = long((out_event.checkin - in_event.checkin).total_seconds());
+  if (context.journal->time_round > 0 && secs > 0) {
+    int r = context.journal->time_round;
+    secs = ((secs + r - 1) / r) * r;
+  }
+
   char buf[32];
-  std::snprintf(buf, 32, "%lds", long((out_event.checkin - in_event.checkin).total_seconds()));
+  std::snprintf(buf, 32, "%lds", secs);
   amount_t amt;
   (void)amt.parse(buf);
   VERIFY(amt.valid());
