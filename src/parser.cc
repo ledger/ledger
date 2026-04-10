@@ -283,6 +283,9 @@ expr_t::ptr_op_t expr_t::parser_t::parse_logic_expr(std::istream& in,
         kind = op_t::O_MATCH;
         negate = true;
         break;
+      case token_t::EMATCH:
+        kind = op_t::O_EMATCH;
+        break;
       case token_t::LESS:
         kind = op_t::O_LT;
         break;

@@ -9295,6 +9295,17 @@ be a regex delimited by forward slashes.  For example,
 @samp{account =~ /Assets/} matches postings whose account name
 contains @samp{Assets}, and @samp{commodity !~ /€/} matches postings
 whose commodity isn't the euro.
+@item ==~
+Regular expression extract.  Like @code{=~}, but instead of returning
+a boolean it returns the matched text as a string, making the content
+of capture groups accessible as value expressions.  If the regex
+contains capture groups, the text of the first group is returned;
+otherwise the entire match is returned.  Returns false when the regex
+does not match.  For example, @samp{account ==~ /(.+):(.+)/} returns
+the text matched by the first capture group (everything before the last
+colon), and @samp{account ==~ /Expenses.*/} returns the full matched
+substring.  Since non-empty strings are truthy, @code{==~} also works
+in boolean contexts such as @option{--limit}.
 @item and
 @itemx &
 Logical AND -- both sides must be true.
@@ -9427,6 +9438,27 @@ posting.
 @item expr code =~ /REGEX/
 A regular expression that matches against the transaction code (the
 text that occurs between parentheses before the payee).
+
+@item expr account ==~ /REGEX/
+Like @code{=~}, but returns the matched text as a string instead of a
+boolean, making the content of capture groups accessible as value
+expressions.  When the regex contains capture groups, the first
+group's text is returned; otherwise the entire match is returned.
+Returns false on non-match.  For example,
+@samp{account ==~ /Expenses:(.*)/} returns the sub-account name
+after @samp{Expenses:}.  This is useful in format strings:
+
+@smallexample
+$ ledger reg --format '%(account ==~ /(.+):(.+)/)\n'
+@end smallexample
+
+prints the first capture group for each posting's account.  Since
+non-empty strings are truthy, @code{==~} also works in boolean
+contexts:
+
+@smallexample
+$ ledger reg --limit 'account ==~ /Expenses:(.*)/'
+@end smallexample
 
 @item expr any(KEYWORD =~ /REGEX/)
 The @command{any} keyword is used to specify that at least one posting of

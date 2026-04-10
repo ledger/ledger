@@ -453,7 +453,17 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
       break;
     } else if (c == '=') {
       in.get();
-      symbol[1] = c;
+      c = in.peek();
+      if (c == '~') {
+        in.get();
+        symbol[1] = '=';
+        symbol[2] = c;
+        symbol[3] = '\0';
+        kind = EMATCH;
+        length = 3;
+        break;
+      }
+      symbol[1] = '=';
       symbol[2] = '\0';
       kind = EQUAL;
       length = 2;
@@ -713,6 +723,9 @@ std::ostream& operator<<(std::ostream& out, const expr_t::token_t::kind_t& kind)
     break;
   case expr_t::token_t::NMATCH:
     out << "!~";
+    break;
+  case expr_t::token_t::EMATCH:
+    out << "==~";
     break;
   case expr_t::token_t::MINUS:
     out << "-";

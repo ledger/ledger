@@ -1575,6 +1575,45 @@ Remove rounding from an amount.
 .It Fn unrounded amount
 Return unrounded version of amount.
 .El
+.Ss Operators
+In addition to the standard arithmetic
+.Pq Cm + , - , * , /
+and comparison
+.Pq Cm == , != , < , <= , > , >=
+operators, value expressions support the following regular expression
+operators:
+.Bl -tag -width "==~"
+.It Cm =~
+Regular expression match.
+Returns true if the left operand matches the regex on the right.
+For example,
+.Dl account =~ /Assets/
+matches postings whose account name contains
+.Dq Assets .
+.It Cm !~
+Negated regular expression match.
+Returns true if the left operand does not match the regex.
+For example,
+.Dl commodity !~ /EUR/
+matches postings whose commodity is not the euro.
+.It Cm ==~
+Regular expression extract.
+Like
+.Cm =~ ,
+but instead of returning a boolean it returns the matched text as
+a string, making the content of capture groups accessible as value
+expressions.
+If the regex contains capture groups, the first captured group is
+returned; otherwise the entire match is returned.
+Returns false when the regex does not match.
+For example,
+.Dl account ==~ /(.+):(.+)/
+returns the text matched by the first capture group.
+Since non-empty strings are truthy,
+.Cm ==~
+also works in boolean contexts such as
+.Fl \-limit .
+.El
 .\".Sh ENTRIES
 .\".Sh FORMATS
 .Sh DEBUG COMMANDS
