@@ -328,10 +328,17 @@ void anonymize_posts::operator()(post_t& post) {
 
   std::list<string> account_names;
 
-  for (account_t* acct = post.account; acct; acct = acct->parent) {
-    std::ostringstream buf;
-    buf << integer_gen() << acct << acct->fullname();
-    account_names.push_front(sha1sum(buf.str(), 8));
+  for (account_t* acct = post.account; acct && acct->parent; acct = acct->parent) {
+    auto it = acct_hashes.find(acct);
+    if (it != acct_hashes.end()) {
+      account_names.push_front(it->second);
+    } else {
+      std::ostringstream buf;
+      buf << integer_gen() << acct << acct->fullname();
+      string hashed = sha1sum(buf.str(), 8);
+      acct_hashes[acct] = hashed;
+      account_names.push_front(hashed);
+    }
   }
 
   account_t* new_account =
@@ -1766,6 +1773,7 @@ void budget_posts::report_budget_items(const date_t& date) {
         xact._date = begin;
 
         post_t& temp = temps.copy_post(post, xact);
+        temp.add_flags(ITEM_GENERATED);
         temp.amount.in_place_negate();
 
         if (flags & BUDGET_WRAP_VALUES) {
@@ -1989,6 +1997,7 @@ void forecast_posts::flush() {
       xact.payee = _("Forecast transaction");
       xact._date = earliest_date;
       post_t& temp = temps.copy_post(post, xact);
+      temp.add_flags(ITEM_GENERATED);
 
       DEBUG("filters.forecast", "Forecast transaction: " << temp.date() << " "
                                                          << temp.account->fullname() << " "

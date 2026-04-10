@@ -1,0 +1,25 @@
+; Regression test for issue #1602: Problem with "N" command (BZ#530)
+; https://github.com/ledger/ledger/issues/1602
+;
+; The N directive marks a commodity as non-market, meaning it should be
+; excluded from market-price valuations (-V/-X). Verify that amount_t::value()
+; respects the COMMODITY_NOMARKET flag and does not convert via the price
+; database.
+
+N ACME
+
+P 2020/06/01 ACME $75.00
+
+2020/01/01 Buy ACME
+    Assets:Investments   10 ACME @ $50.00
+    Assets:Cash
+
+test bal -V
+            $-500.00
+             10 ACME  Assets
+            $-500.00    Cash
+             10 ACME    Investments
+--------------------
+            $-500.00
+             10 ACME
+end test

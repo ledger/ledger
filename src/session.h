@@ -252,12 +252,14 @@ public:
         set_input_date_format(str.c_str());
       });
 
-  OPTION(session_t, explicit);          ///< Only accept explicitly declared accounts/commodities
-  OPTION(session_t, master_account_);   ///< Parent account for all postings
-  OPTION(session_t, pedantic);          ///< Treat warnings as errors (CHECK_ERROR)
-  OPTION(session_t, permissive);        ///< Suppress balance-check warnings (CHECK_PERMISSIVE)
-  OPTION(session_t, price_db_);         ///< Path to the price history database file
-  OPTION(session_t, strict);            ///< Warn on undeclared accounts/commodities (CHECK_WARNING)
+  OPTION(session_t, explicit);        ///< Only accept explicitly declared accounts/commodities
+  OPTION(session_t, master_account_); ///< Parent account for all postings
+  OPTION_(session_t, pedantic, DO() { parent->journal->checking_style = journal_t::CHECK_ERROR; });
+  OPTION_(
+      session_t, permissive,
+      DO() { parent->journal->checking_style = journal_t::CHECK_PERMISSIVE; });
+  OPTION(session_t, price_db_); ///< Path to the price history database file
+  OPTION_(session_t, strict, DO() { parent->journal->checking_style = journal_t::CHECK_WARNING; });
   OPTION(session_t, value_expr_);       ///< Expression used to compute posting values
   OPTION(session_t, recursive_aliases); ///< Allow aliases to reference other aliases
   OPTION(session_t, no_aliases);        ///< Disable all account alias expansion

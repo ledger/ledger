@@ -602,7 +602,7 @@ public:
 
   template <class VertexOrEdge>
   void operator()(std::ostream& out, const VertexOrEdge& v) const {
-    out << "[label=\"" << name[v]->symbol() << "\"]";
+    out << "[label=\"" << name[v]->base_symbol() << "\"]";
   }
 
 private:
