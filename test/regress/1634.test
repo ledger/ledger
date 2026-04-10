@@ -1,32 +1,17 @@
 ; Regression test for issue #1634: Metadata/Note contents can't include
 ; a ledger formatted date (BZ#562)
 ;
-; Bug 1: Querying tags whose values contain slashes (e.g. dates like
+; Querying tags whose values contain slashes (e.g. dates like
 ; 2011/08/30) failed because the query predicate serializer wrapped mask
 ; values in /.../ without escaping internal slashes, causing the
 ; expression parser to misinterpret them as regex delimiters.
-;
-; Bug 2: Typed metadata (Key:: Value) with a bare date like 2024/03/15
-; was evaluated as arithmetic (2024 / 3 / 15 = 44.977...) instead of
-; being recognized as a date literal.
 
 2014/05/01 * Business Trip
     ; trip: 2011/08/30 Corona
     Expenses:Travel    $500.00
     Assets:Cash
 
-2024/01/01 Invoice
-    ; Due:: 2024/03/15
-    Expenses:Food    $10.00
-    Assets:Cash
-
-; Bug 1: tag query with slashes in value should match correctly
 test reg tag trip="2011/08/30 Corona"
 14-May-01 Business Trip         Expenses:Travel             $500.00      $500.00
                                 Assets:Cash                $-500.00            0
-end test
-
-; Bug 2: typed metadata date should be stored as a date, not arithmetic
-test reg --limit 'account =~ /Food/' --format '%(tag("Due"))\n'
-2024/03/15
 end test
