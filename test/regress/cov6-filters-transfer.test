@@ -5,6 +5,6 @@
     Assets:Cash
 
 test reg --pivot payee
-24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
-24-Jan-01 Test                  Assets:Cash                 $-10.00            0
+24-Jan-01 Test                  pay:Test:Expenses:Food       $10.00       $10.00
+24-Jan-01 Test                  payee:Test:Assets:Cash      $-10.00            0
 end test

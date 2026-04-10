@@ -1627,6 +1627,26 @@ void transfer_details::operator()(post_t& post) {
 
     case SET_ACCOUNT: {
       string account_name = substitute.to_string();
+
+      // When the expression result ends with ':', the tag was not found.
+      // Try evaluating the prefix as a built-in property (e.g., payee,
+      // commodity) so that --pivot works with properties, not just tags.
+      if (!account_name.empty() && account_name.back() == ':') {
+        string prop_name = account_name.substr(0, account_name.length() - 1);
+        try {
+          expr_t prop_expr(prop_name);
+          value_t prop_val = prop_expr.calc(bound_scope);
+          if (!prop_val.is_null()) {
+            string prop_str = prop_val.to_string();
+            if (!prop_str.empty())
+              account_name = prop_name + ":" + prop_str;
+          }
+        } catch (...) { // NOLINT(bugprone-empty-catch)
+          // Not a built-in property; leave account_name as-is so the
+          // posting passes through unchanged.
+        }
+      }
+
       if (!account_name.empty() && account_name[account_name.length() - 1] != ':') {
         account_t* prev_account = temp.account;
         temp.account->remove_post(&temp);

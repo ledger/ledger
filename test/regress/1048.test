@@ -1,0 +1,31 @@
+; Regression test for issue #1048: --pivot doesn't work with built-in properties
+; https://github.com/ledger/ledger/issues/1048
+;
+; --pivot constructed its expression using tag("X") which only finds metadata
+; tags, not built-in properties like commodity or payee.  The fix uses
+; has_tag("X") ? tag("X") : X so that metadata tags take priority, with
+; built-in properties as fallback.
+
+2014-05-31 * Test
+    A         10.00 GBP
+    B
+
+2014-05-31 * Test
+    A         10.00 EUR
+    B
+
+2014-05-31 * Test
+    A          5.00 GBP
+    B
+
+test bal A --pivot commodity --no-total
+           10.00 EUR
+           15.00 GBP  commodity
+           10.00 EUR    EUR:A
+           15.00 GBP    GBP:A
+end test
+
+test bal A --account commodity --no-total
+           10.00 EUR  EUR:A
+           15.00 GBP  GBP:A
+end test
