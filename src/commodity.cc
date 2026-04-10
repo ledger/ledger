@@ -277,6 +277,11 @@ commodity_t::check_for_updated_price(const std::optional<price_point_t>& point,
         if (!in_terms_of ||
             (quote->price.has_commodity() && quote->price.commodity_ptr() == in_terms_of))
           return quote;
+      } else {
+        // Download failed — throttle retries via last_quote rather than
+        // setting COMMODITY_NOMARKET, which would suppress price-based
+        // valuations for this commodity (issue #1602).
+        referent().base->last_quote = TRUE_CURRENT_TIME();
       }
     }
   }
