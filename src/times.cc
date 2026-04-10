@@ -1829,6 +1829,21 @@ void date_interval_t::stabilize(const optional<date_t>& date, bool align_interva
         {
           if (align_intervals && since_specified) {
             start = when;
+          } else if (since_specified && initial_start) {
+            // When the user specified an explicit start date (e.g.
+            // "every 2 weeks from 2010-03-01"), preserve the offset from
+            // that date rather than snapping to a calendar week boundary.
+            // Advance from the range begin by whole intervals until we
+            // reach the interval that contains or immediately precedes
+            // 'when'.
+            start = *initial_start;
+            {
+              date_t next = duration->add(*start);
+              while (next <= when) {
+                start = next;
+                next = duration->add(*start);
+              }
+            }
           } else {
             int period = duration->length * 7;
             start = date_duration_t::find_nearest(when - gregorian::days(period + 400 % period),
