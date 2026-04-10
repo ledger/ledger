@@ -3,9 +3,9 @@
 # xact.posts and journal.xacts should be iterable as properties,
 # not require calling them as methods (i.e. xact.posts, not xact.posts()).
 
-import ledger
+from lpy import core
 
-journal = ledger.read_journal_from_string("""
+journal = core.read_journal_from_string("""
 2012-03-01 KFC
     Expenses:Food      $10.00
     Assets:Cash

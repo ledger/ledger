@@ -178,9 +178,9 @@ if(BUILD_WEB_DOCS)
   if(USE_PYTHON AND Python_EXECUTABLE)
     add_custom_command(OUTPUT ledger.html
       COMMAND ${CMAKE_COMMAND} -E env
-        PYTHONPATH=${CMAKE_BINARY_DIR}
+        PYTHONPATH=${PROJECT_BINARY_DIR}/python
         ${Python_EXECUTABLE} -m pydoc -w ledger
-      DEPENDS ${CMAKE_BINARY_DIR}/${_ledger_python_module_name}
+      DEPENDS ${PROJECT_BINARY_DIR}/${_ledger_python_module_name}
       VERBATIM)
     list(APPEND ledger_doc_files ledger.html)
   endif()

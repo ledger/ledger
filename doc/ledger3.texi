@@ -10550,6 +10550,7 @@ a word must be said about Ledger's data model, so that other things
 make sense later.
 
 @menu
+* The lpy Python Package::
 * Basic data traversal::
 * Raw versus Cooked::
 * Queries::
@@ -10557,7 +10558,41 @@ make sense later.
 * Amounts::
 @end menu
 
-@node Basic data traversal, Raw versus Cooked, Extending with Python, Extending with Python
+@node The lpy Python Package, Basic data traversal, Extending with Python, Extending with Python
+@section The lpy Python Package
+
+Ledger's Python support is exposed through the @code{lpy} package.
+The package is organized into two layers:
+
+@table @code
+@item lpy.core
+The native C++ extension module.  All fundamental types
+(@code{Amount}, @code{Balance}, @code{Journal}, @code{Account},
+@code{Value}, @dots{}) and top-level functions (@code{read_journal},
+@code{read_journal_from_string}, @dots{}) live here.
+
+@item lpy
+The top-level package.  Import @code{core} from it to access the
+native types, or add pure-Python sub-modules alongside @code{core}
+for higher-level tooling.
+@end table
+
+The recommended import idiom is:
+
+@smallexample
+from lpy import core
+
+journal = core.read_journal("sample.dat")
+@end smallexample
+
+A backwards-compatible @code{ledger} module is provided for existing
+scripts.  It re-exports every public name from @code{lpy.core} so
+that @code{import ledger} continues to work unchanged.  New scripts
+should use @code{lpy.core} directly.  See the file
+@file{doc/python-migration.md} for a step-by-step migration guide and
+a discussion of the benefits of the new package structure.
+
+@node Basic data traversal, Raw versus Cooked, The lpy Python Package, Extending with Python
 @section Basic data traversal
 
 Every interaction with Ledger happens in the context of a Session.
@@ -10577,11 +10612,11 @@ and PeriodicTransactions, etc.
 Here is how you would traverse all the postings in your data file:
 
 @smallexample
-import ledger
+from lpy import core
 
-for xact in ledger.read_journal("sample.dat").xacts:
+for xact in core.read_journal("sample.dat").xacts:
     for post in xact.posts:
-        print "Transferring %s to/from %s" % (post.amount, post.account)
+        print("Transferring %s to/from %s" % (post.amount, post.account))
 @end smallexample
 
 @node Raw versus Cooked, Queries, Basic data traversal, Extending with Python
@@ -10625,8 +10660,8 @@ generally looking at raw data.  In order to look at cooked data, you
 must generate a report of some kind by querying the journal:
 
 @smallexample
-for post in ledger.read_journal("sample.dat").query("food"):
-    print "Transferring %s to/from %s" % (post.amount, post.account)
+for post in core.read_journal("sample.dat").query("food"):
+    print("Transferring %s to/from %s" % (post.amount, post.account))
 @end smallexample
 
 The reason why queries iterate over postings instead of transactions is
@@ -10636,11 +10671,11 @@ looking at its @code{xact} member:
 
 @smallexample
 last_xact = None
-for post in ledger.read_journal("sample.dat").query(""):
+for post in core.read_journal("sample.dat").query(""):
     if post.xact != last_xact:
         for post in post.xact.posts:
-            print "Transferring %s to/from %s" % (post.amount,
-            post.account)
+            print("Transferring %s to/from %s" % (post.amount,
+                  post.account))
         last_xact = post.xact
 @end smallexample
 
@@ -10693,10 +10728,10 @@ commodity.  If you need to create sums of multiple commodities, use
 a Balance.  For example:
 
 @smallexample
-total = Balance()
-for post in ledger.read_journal("sample.dat").query(""):
+total = core.Balance()
+for post in core.read_journal("sample.dat").query(""):
     total += post.amount
-print total
+print(total)
 @end smallexample
 
 @node Ledger for Developers, Major Changes from version 2.6, Extending with Python, Top
