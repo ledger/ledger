@@ -670,7 +670,7 @@ $ ledger -f drewr3.dat cleared
         $ -20.00                   0                   MasterCard
         $ 200.00                   0                   Mortgage:Principal
        $ -243.60                   0                   Tithe
-----------------    ----------------    ---------
+----------------  ------------------    ---------
        $ -243.60                   0             
 @end smallexample
 
@@ -7132,7 +7132,7 @@ Strings}).  The default is:
 "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
 "%$1  %$2    %$3\n%/"
 "%(prepend_width ? \" \" * prepend_width : \"\")"
-"----------------    ----------------    ---------\n"
+"----------------  ------------------    ---------\n"
 @end smallexample
 
 @item --collapse
@@ -7246,7 +7246,7 @@ And with @option{--dc} it becomes this:
           $105            $35            $70  Assets:Cash
            $40            $10            $30  Expenses:Food
              0           $100          $-100  Income:Employer
---------------------------------------------
+-------------- -------------- --------------
           $145           $145              0
 @end smallexample
 
@@ -8342,7 +8342,7 @@ Define the format for the cleared report.  The default is:
       %-(ansify_if(partial_account(options.flat), blue if color))\n%/
       %$1  %$2    %$3\n%/
       %(prepend_width ? \" \" * int(prepend_width) : \"\")
-      ----------------    ----------------    ---------\n"
+      ----------------  ------------------    ---------\n"
 @end smallexample
 
 @item --register-format @var{FORMAT_STRING}
