@@ -1234,6 +1234,13 @@ bool post_pred(const expr_t::ptr_op_t& op, post_t& post) {
     else
       break;
 
+  case expr_t::op_t::O_CALL:
+    if (op->left()->kind == expr_t::op_t::IDENT && op->left()->as_ident() == "match_account" &&
+        op->right()->kind == expr_t::op_t::VALUE && op->right()->as_value().is_mask())
+      return post.reported_account()->match(op->right()->as_value().as_mask());
+    else
+      break;
+
   case expr_t::op_t::O_EQ:
     return post_pred(op->left(), post) == post_pred(op->right(), post);
 

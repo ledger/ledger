@@ -595,6 +595,7 @@ void instance_t::account_alias_directive(account_t* account, string alias) {
       context.journal->account_aliases.insert(accounts_map::value_type(alias, account));
   if (!inserted)
     iter->second = account;
+  account->aliases.insert(alias);
 }
 
 void instance_t::alias_directive(char* line) {
