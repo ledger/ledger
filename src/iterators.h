@@ -66,6 +66,7 @@
 #include "post.h"
 #include "account.h"
 #include "temps.h"
+#include "times.h"
 
 namespace ledger {
 
@@ -258,18 +259,20 @@ protected:
   xacts_list xact_temps;                ///< Owns the synthetic transaction objects.
   temporaries_t temps;                  ///< Arena allocator for temporary xacts and posts.
   bool latest_only;                     ///< If true, emit only the most recent price per commodity.
+  optional<date_interval_t> interval; ///< If set with a duration, keep only last price per period.
 
 public:
   posts_commodities_iterator() : latest_only(false) { TRACE_CTOR(posts_commodities_iterator, ""); }
-  posts_commodities_iterator(journal_t& journal, bool _latest_only = false)
-      : latest_only(_latest_only) {
+  posts_commodities_iterator(journal_t& journal, bool _latest_only = false,
+                             const optional<date_interval_t>& _interval = none)
+      : latest_only(_latest_only), interval(_interval) {
     reset(journal);
     TRACE_CTOR(posts_commodities_iterator, "journal_t&");
   }
   posts_commodities_iterator(const posts_commodities_iterator& i)
       : iterator_facade_base<posts_commodities_iterator, post_t*, boost::forward_traversal_tag>(i),
         journal_posts(i.journal_posts), xacts(i.xacts), posts(i.posts), xact_temps(i.xact_temps),
-        temps(i.temps), latest_only(i.latest_only) {
+        temps(i.temps), latest_only(i.latest_only), interval(i.interval) {
     TRACE_CTOR(posts_commodities_iterator, "copy");
   }
   posts_commodities_iterator& operator=(const posts_commodities_iterator&) = default;

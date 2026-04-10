@@ -662,8 +662,15 @@ void report_t::commodities_report(post_handler_ptr handler) {
     HANDLER(limit_).on(none, saved_limit);
   }
 
+  optional<date_interval_t> price_interval;
+  if (HANDLED(period_)) {
+    date_interval_t ival(HANDLER(period_).str());
+    if (ival.duration)
+      price_interval = ival;
+  }
+
   posts_commodities_iterator* walker(
-      new posts_commodities_iterator(*session.journal.get(), HANDLED(latest)));
+      new posts_commodities_iterator(*session.journal.get(), HANDLED(latest), price_interval));
   try {
     pass_down_posts<posts_commodities_iterator>(handler, *walker); // NOLINT(bugprone-unused-raii)
   } catch (...) {
