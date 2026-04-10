@@ -46,4 +46,24 @@ namespace ledger {
 std::optional<price_point_t> commodity_quote_from_script(commodity_t& commodity,
                                                          const commodity_t* exchange_commodity);
 
+/**
+ * @brief Fetch price quotes for multiple commodities in a single script
+ *        invocation.
+ *
+ * Invokes the getquote script with --batch, passing all commodity symbols
+ * on the command line grouped by their exchange commodity.  The script is
+ * expected to output one price directive per line ("P DATE SYMBOL AMOUNT")
+ * for each commodity it was able to price.
+ *
+ * If the command fails (non-zero exit) or produces no output, an empty
+ * vector is returned so the caller can fall back to per-commodity fetching.
+ *
+ * @param commodities        The commodities to fetch quotes for.
+ * @param exchange_commodity The target currency (may be nullptr).
+ * @return A vector of (commodity, price_point) pairs for successful quotes.
+ */
+std::vector<std::pair<commodity_t*, price_point_t>>
+commodity_batch_quote_from_script(std::vector<std::reference_wrapper<commodity_t>>& commodities,
+                                  const commodity_t* exchange_commodity);
+
 } // namespace ledger
