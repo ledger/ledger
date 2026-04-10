@@ -1562,6 +1562,7 @@ option_t<report_t>* report_t::lookup_option(const char* p) {
   case 'n':
     OPT_CH(collapse);
     else OPT(no_color);
+    else OPT(no_group_by);
     else OPT(no_pager);
     else OPT(no_revalued);
     else OPT(no_rounding);

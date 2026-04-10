@@ -412,6 +412,7 @@ public:
     HANDLER(market).report(out);
     HANDLER(meta_).report(out);
     HANDLER(monthly).report(out);
+    HANDLER(no_group_by).report(out);
     HANDLER(no_pager).report(out);
     HANDLER(no_rounding).report(out);
     HANDLER(no_titles).report(out);
@@ -977,6 +978,8 @@ public:
       });
 
   OPTION_(report_t, no_color, DO() { OTHER(color).off(); });
+
+  OPTION_(report_t, no_group_by, DO() { OTHER(group_by_).off(); });
 
   OPTION_(report_t, no_revalued, DO() { OTHER(revalued).off(); });
 

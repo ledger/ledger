@@ -710,6 +710,12 @@ or
 The
 .Fn tag
 function is also useful here.
+.It Fl \-no-group-by
+Cancel any prior
+.Fl \-group-by
+option, restoring flat ungrouped output.  Useful for overriding a
+.Fl \-group-by
+set in a configuration file.
 .It Fl \-group-title-format Ar FMT
 Set the format for the headers that separate reports section of
 a grouped report.  Only has effect with a
