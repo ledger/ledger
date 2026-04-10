@@ -7451,6 +7451,11 @@ Group transactions together in the @command{register} report.
 @var{EXPR} can be anything, although most common would be @code{payee}
 or @code{commodity}.  The @code{tags()} function is also useful here.
 
+@item --no-group-by
+Cancel any prior @option{--group-by} option, restoring flat ungrouped
+output.  This is useful for overriding a @option{--group-by} set in a
+configuration file.
+
 @item --group-title-format @var{FORMAT_STRING}
 Set the format for the headers that separates the report sections of
 a grouped report.  Only has an effect with a @option{--group-by
