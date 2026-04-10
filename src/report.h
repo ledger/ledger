@@ -364,6 +364,7 @@ public:
     HANDLER(collapse_if_zero).report(out);
     HANDLER(columns_).report(out);
     HANDLER(csv_format_).report(out);
+    HANDLER(csv_separator_).report(out);
     HANDLER(current).report(out);
     HANDLER(daily).report(out);
     HANDLER(date_).report(out);
@@ -674,6 +675,8 @@ public:
                  "%(quoted(cleared ? \"*\" : (pending ? \"!\" : \"\"))),"
                  "%(quoted(join(note | xact.note)))\n");
       });
+
+  OPTION(report_t, csv_separator_);
 
   OPTION_(
       report_t, current, DO() { // -c

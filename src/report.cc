@@ -1468,6 +1468,7 @@ option_t<report_t>* report_t::lookup_option(const char* p) {
     break;
   case 'c':
     OPT(csv_format_);
+    else OPT(csv_separator_);
     else OPT_ALT(gain, change);
     else OPT(cleared);
     else OPT(cleared_format_);
