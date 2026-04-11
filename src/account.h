@@ -187,6 +187,16 @@ public:
    */
   [[nodiscard]] account_t* find_account_re(const string& regexp);
 
+  /**
+   * @brief Find all accounts whose full names match a regular expression.
+   *
+   * Performs a depth-first search of the account tree starting from this
+   * node, collecting every account whose fullname() matches @p regexp.
+   *
+   * @return Vector of pointers to matching accounts (may be empty).
+   */
+  [[nodiscard]] std::vector<account_t*> find_accounts_re(const string& regexp);
+
   using accounts_map_seconds_iterator =
       transform_iterator<function<account_t*(accounts_map::value_type&)>, accounts_map::iterator>;
 

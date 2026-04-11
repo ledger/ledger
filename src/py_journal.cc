@@ -308,6 +308,13 @@ void py_fileinfo_set_modtime(journal_t::fileinfo_t& fi, const object& obj) {
     fi.modtime = extract<datetime_t>(obj)();
 }
 
+boost::python::list py_find_accounts_re(journal_t& journal, const string& regexp) {
+  boost::python::list result;
+  for (account_t* a : journal.find_accounts_re(regexp))
+    result.append(boost::python::ptr(a));
+  return result;
+}
+
 } // unnamed namespace
 
 #define EXC_TRANSLATOR(type)                                                                       \
@@ -364,6 +371,7 @@ void export_journal() {
            return_internal_reference<1, with_custodian_and_ward_postcall<1, 0>>())
       .def("find_account_re", &journal_t::find_account_re,
            return_internal_reference<1, with_custodian_and_ward_postcall<1, 0>>())
+      .def("find_accounts_re", py_find_accounts_re)
 
       .def("register_account", py_register_account,
            return_internal_reference<1, with_custodian_and_ward_postcall<1, 0>>())
