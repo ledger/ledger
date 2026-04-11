@@ -146,6 +146,16 @@ void report_t::normalize_options(const string& verb) {
   else
     commodity_pool_t::current_pool->price_db = none;
 
+  if (HANDLED(decimal_places_)) {
+    auto places =
+        static_cast<amount_t::precision_t>(lexical_cast<int>(HANDLER(decimal_places_).value));
+    for (auto& pair : commodity_pool_t::current_pool->commodities) {
+      if (pair.second->precision() > places)
+        pair.second->set_precision(places);
+      pair.second->add_flags(COMMODITY_STYLE_NO_MIGRATE);
+    }
+  }
+
   if (HANDLED(date_format_))
     set_date_format(HANDLER(date_format_).str().c_str());
   if (HANDLED(datetime_format_))
@@ -1493,6 +1503,7 @@ option_t<report_t>* report_t::lookup_option(const char* p) {
     else OPT(date_format_);
     else OPT(datetime_format_);
     else OPT(dc);
+    else OPT(decimal_places_);
     else OPT(depth_);
     else OPT(deviation);
     else OPT_ALT(rich_data, detail);

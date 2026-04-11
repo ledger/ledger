@@ -6849,6 +6849,12 @@ days by day.
 Direct Ledger to parse journals using the European standard comma as
 a decimal separator, not the usual period.
 
+@item --decimal-places @var{INT}
+Limit the display precision of all commodity amounts to @var{INT}
+decimal places.  Amounts with more decimal places in the journal are
+rounded for display.  This is a display option only; calculations are
+still performed at full precision.
+
 @item --download
 @itemx -Q
 Direct Ledger to download prices using the script defined via the option
@@ -7249,6 +7255,12 @@ And with @option{--dc} it becomes this:
 -------------- -------------- --------------
           $145           $145              0
 @end smallexample
+
+@item --decimal-places @var{INT}
+Limit the display precision of all commodity amounts to @var{INT}
+decimal places.  Amounts with more decimal places in the journal are
+rounded for display.  This is a display option only; calculations are
+still performed at full precision.
 
 @item --depth @var{INT}
 Limit the depth of displayed accounts in balance and register reports.  Any
