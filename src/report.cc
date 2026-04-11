@@ -399,8 +399,27 @@ void report_t::parse_query_args(const value_t& args, const string& whence) {
   if (args.empty())
     return;
 
+  // Expand account aliases in query arguments so that CLI terms like
+  // "ebike" (defined as `alias ebike=Expenses:Transport:Electric Bicycle`)
+  // are replaced with the target account's full name before the query
+  // predicate is built.  This fixes GitHub #1164.
+  value_t expanded_args(args);
+  if (!session.journal->no_aliases && !session.journal->account_aliases.empty()) {
+    expanded_args = value_t();
+    for (const auto& arg : args.to_sequence()) {
+      if (arg.is_string()) {
+        account_t* acct = session.journal->expand_aliases(arg.as_string());
+        if (acct) {
+          expanded_args.push_back(string_value(acct->fullname()));
+          continue;
+        }
+      }
+      expanded_args.push_back(arg);
+    }
+  }
+
   query_t query;
-  expr_t::ptr_op_t limit_op = query.parse_args(args, what_to_keep());
+  expr_t::ptr_op_t limit_op = query.parse_args(expanded_args, what_to_keep());
 
   if (limit_op) {
     string pred;
