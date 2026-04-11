@@ -1014,7 +1014,7 @@ value_t report_t::fn_truncated(call_scope_t& args) {
   return string_value(format_t::truncate(
       val.to_string(),
       (args.has<int>(1) && args.get<int>(1) > 0) ? static_cast<std::size_t>(args.get<int>(1)) : 0,
-      args.has<int>(2) ? static_cast<std::size_t>(args.get<int>(2)) : 0));
+      (args.has<int>(2) && args.get<int>(2) > 0) ? static_cast<std::size_t>(args.get<int>(2)) : 0));
 }
 
 value_t report_t::fn_justify(call_scope_t& args) {
