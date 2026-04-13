@@ -1,0 +1,21 @@
+; Regression test for issue #3126
+; Sorting by date on balance report should work for accounts
+; that have no direct postings (parent accounts).
+
+2026/03/30 * Department Store
+    Expenses:Clothing                       $20
+    Assets:Checking
+2026/04/06 * Grocery Store
+    Expenses:Groceries:Food                  $3.58
+    Assets:Cash
+
+test bal --sort date
+             $-23.58  Assets
+             $-20.00    Checking
+              $-3.58    Cash
+              $23.58  Expenses
+              $20.00    Clothing
+               $3.58    Groceries:Food
+--------------------
+                   0
+end test
