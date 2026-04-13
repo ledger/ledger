@@ -409,6 +409,9 @@ value_t get_earliest_checkin(account_t& account) {
 value_t get_latest(account_t& account) {
   return account.self_details().latest_post;
 }
+value_t get_account_date(account_t& account) {
+  return account.family_details().latest_post;
+}
 value_t get_latest_checkout(account_t& account) {
   return (!account.self_details().latest_checkout.is_not_a_date_time()
               ? value_t(account.self_details().latest_checkout)
@@ -505,7 +508,7 @@ expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind, const string& fn
 
   case 'd':
     if (fn_name[1] == '\0' || fn_name == "date")
-      return WRAP_FUNCTOR(get_wrapper<&get_latest>);
+      return WRAP_FUNCTOR(get_wrapper<&get_account_date>);
     else if (fn_name == "depth")
       return WRAP_FUNCTOR(get_wrapper<&get_depth>);
     else if (fn_name == "depth_parent")
