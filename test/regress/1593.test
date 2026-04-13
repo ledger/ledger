@@ -2,10 +2,9 @@
 ; https://github.com/ledger/ledger/issues/1593
 ;
 ; When using the xact/entry command with a non-default currency (e.g., EUR),
-; passing the amount and currency as separate arguments causes the currency
-; symbol to be treated as an account name rather than part of the amount.
-; The balancing account from past transactions (Assets:Cash) should be used,
-; but instead the currency name (EUR) appears as the balancing posting.
+; passing the amount and currency as separate arguments should correctly
+; combine them into a single commoditized amount, and the balancing account
+; from past transactions should be used.
 
 commodity EUR
     format 1.000,00 EUR
@@ -17,5 +16,5 @@ commodity EUR
 test xact 2024/02/01 Shop 1000 EUR
 2024/02/01 Shop
     Expenses:Food                       1.000,00 EUR
-    EUR
+    Assets:Cash
 end test
