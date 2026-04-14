@@ -4449,10 +4449,10 @@ BOOST_AUTO_TEST_CASE(testLambdaCallW8)
 }
 
 // =======================================================================
-// W8 Coverage: compare.cc - push_sort_value null throw (line 62)
+// W8 Coverage: compare.cc - push_sort_value null handling (line 62)
 // =======================================================================
 
-BOOST_AUTO_TEST_CASE(testPushSortValueNullThrowsW8)
+BOOST_AUTO_TEST_CASE(testPushSortValueNullHandledW8)
 {
   // Create an expression that evaluates to null
   // A PLUG node is typically null-like
@@ -4460,7 +4460,9 @@ BOOST_AUTO_TEST_CASE(testPushSortValueNullThrowsW8)
   expr_t::ptr_op_t node = expr_t::op_t::new_node(expr_t::op_t::PLUG);
 
   symbol_scope_t scope(*scope_t::empty_scope);
-  BOOST_CHECK_THROW(ledger::push_sort_value(sort_values, node, scope), std::exception);
+  ledger::push_sort_value(sort_values, node, scope);
+  BOOST_CHECK_EQUAL(sort_values.size(), 1U);
+  BOOST_CHECK(sort_values.back().value.is_null());
 }
 
 // =======================================================================
