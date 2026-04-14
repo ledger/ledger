@@ -426,7 +426,8 @@ value_t get_latest(account_t& account) {
   return account.self_details().latest_post;
 }
 value_t get_account_date(account_t& account) {
-  return account.family_details().latest_post;
+  date_t date = account.family_details().latest_post;
+  return is_valid(date) ? value_t(date) : NULL_VALUE;
 }
 value_t get_latest_checkout(account_t& account) {
   return (!account.self_details().latest_checkout.is_not_a_date_time()

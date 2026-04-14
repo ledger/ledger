@@ -1,11 +1,12 @@
-; Coverage for compare.cc null sort value error
+; Coverage for compare.cc null sort value handling
+; Sorting by a nonexistent tag should treat null values as VOID
+; and sort normally, not crash with an error.
 
 2024/01/01 Test
     Expenses:Food    $10.00
     Assets:Cash
 
-test reg --sort "tag('nonexistent')" -> 1
-__ERROR__
-While applying is_realzero to :
-Error: Cannot determine if an uninitialized value is really zero
+test reg --sort "tag('nonexistent')"
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
 end test

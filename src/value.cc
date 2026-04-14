@@ -395,6 +395,9 @@ void value_t::in_place_simplify() {
   LOGGER("value.simplify");
 #endif
 
+  if (is_null())
+    return;
+
   if (is_realzero()) {
     DEBUG_("Zeroing type " << static_cast<int>(type()));
     set_long(0L);
@@ -1120,9 +1123,12 @@ bool value_t::is_equal_to(const value_t& val) const {
 /// BALANCE comparison against scalars checks whether ALL component amounts
 /// are less than the scalar.  SEQUENCE comparison is lexicographic.
 bool value_t::is_less_than(const value_t& val) const {
+  if (val.is_null())
+    return false; // nothing is less than null (null sorts first)
+
   switch (type()) {
   case VOID:
-    return !val.is_null(); // null is less than any non-null value
+    return true; // null is less than any non-null value
 
   case BOOLEAN:
     if (val.is_boolean()) {
@@ -1266,6 +1272,9 @@ bool value_t::is_less_than(const value_t& val) const {
 /// never greater than anything.  BALANCE > scalar requires ALL components
 /// to be greater.
 bool value_t::is_greater_than(const value_t& val) const {
+  if (val.is_null())
+    return !is_null(); // non-null is greater than null
+
   switch (type()) {
   case VOID:
     return false; // null is not greater than anything
