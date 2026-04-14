@@ -70,10 +70,11 @@ void push_sort_value(std::list<sort_value_t>& sort_values, expr_t::ptr_op_t node
 
     sort_values.push_back(sort_value_t());
     sort_values.back().inverted = inverted;
-    sort_values.back().value = expr_t(node).calc(scope).simplified();
 
-    if (sort_values.back().value.is_null())
-      throw_(calc_error, _("Could not determine sorting value based an expression"));
+    value_t result = expr_t(node).calc(scope);
+    if (!result.is_null())
+      result.in_place_simplify();
+    sort_values.back().value = result;
   }
 }
 
