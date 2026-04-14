@@ -1,0 +1,17 @@
+; Regression test for #3128: --sort date broken with bucket accounts
+; The bucket directive creates accounts in the hierarchy that may have
+; no postings, causing date lookups to return null values that must be
+; handled gracefully during sorting.
+
+bucket Assets:Checking
+
+2026/04/01 * Grocery Store
+    Expenses:Groceries:Food                          $1.23
+    Liabilities:Credit
+
+test bal --sort date
+               $1.23  Expenses:Groceries:Food
+              $-1.23  Liabilities:Credit
+--------------------
+                   0
+end test
