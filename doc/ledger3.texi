@@ -6954,6 +6954,16 @@ based commodity as real hours and minutes.
 For example 8100 seconds by default will be displayed as 2.25 whereas
 with the @option{--time-colon} option they will be displayed as 2:15.
 
+@item --time-round @var{INT}
+Round timelog durations up to the next multiple of @var{INT} minutes.
+This is useful for billing in fixed increments.  For example, with
+@option{--time-round 15}, a 7-minute checkin is rounded up to 15 minutes
+and a 31-minute checkin is rounded up to 45 minutes.
+
+@smallexample @c command:
+$ ledger bal --time-round 15
+@end smallexample
+
 @item --value-expr @var{VEXPR}
 Set a global value expression annotation.
 @c needs example
@@ -9006,6 +9016,7 @@ $ ledger --forecast "d<[2010]" bal ^assets ^liabilities
 @node Time Keeping, Value Expressions, Budgeting and Forecasting, Top
 @chapter Time Keeping
 @findex --day-break
+@findex --time-round
 
 @anchor{timelog}
 Ledger directly supports ``timelog'' entries, which have this form:
@@ -9019,7 +9030,9 @@ This records a check-in to the given ACCOUNT, and a check-out.  You can
 be checked-in to multiple accounts at a time, if you wish, and they can
 span multiple days (use @option{--day-break} to break them up in the
 report).  The number of seconds between check-in and check-out is
-accumulated as time to that ACCOUNT.  If the checkout uses a capital
+accumulated as time to that ACCOUNT.  Use @option{--time-round @var{INT}}
+to round each duration up to the next multiple of @var{INT} minutes,
+which is useful for billing in fixed increments.  If the checkout uses a capital
 @samp{O}, the transaction is marked ``cleared''.  You can use an
 optional PAYEE for whatever meaning you like.
 

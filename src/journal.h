@@ -147,6 +147,7 @@ public:
   bool was_loaded;             ///< True after at least one successful read().
   bool check_payees;      ///< True if payee validation is enabled (payee directives were seen).
   bool day_break;         ///< True if day-break transactions should be inserted between days.
+  int time_round;         ///< Round timelog durations up to this many seconds (0 = no rounding).
   bool recursive_aliases; ///< If true, alias expansion repeats until no more aliases match.
   bool no_aliases;        ///< If true, all alias expansion is suppressed.
   lot_policy_t lot_matching_policy =

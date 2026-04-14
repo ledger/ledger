@@ -166,6 +166,15 @@ std::size_t session_t::read_data(const string& master_account) {
   if (HANDLED(day_break))
     journal->day_break = true;
 
+  if (HANDLED(time_round_)) {
+    int minutes = std::stoi(HANDLER(time_round_).str());
+    if (minutes > 0 && minutes <= INT_MAX / 60) {
+      journal->time_round = minutes * 60;
+    } else {
+      throw std::out_of_range("time_round value too large");
+    }
+  }
+
   if (HANDLED(recursive_aliases))
     journal->recursive_aliases = true;
   if (HANDLED(no_aliases))
@@ -450,6 +459,7 @@ option_t<session_t>* session_t::lookup_option(const char* p) {
     break;
   case 't':
     OPT(time_colon);
+    else OPT(time_round_);
     break;
   case 'v':
     OPT(value_expr_);

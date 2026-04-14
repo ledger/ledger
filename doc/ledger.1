@@ -1099,6 +1099,12 @@ entries.  Only useful on a register report.  Alias for
 .It Fl \-time-colon
 Display the value for commodities based on seconds as hours and minutes.
 Thus 8100s will be displayed as 2:15h instead of 2.25h.
+.It Fl \-time-round Ar INT
+Round timelog durations up to the next multiple of
+.Ar INT
+minutes.  For example,
+.Fl \-time-round Ar 15
+rounds a 7-minute timelog entry up to 15 minutes.
 .It Fl \-time-report
 Add two columns to the
 .Ic balance
