@@ -1,0 +1,33 @@
+; Regression test for issue #723: -S t doesn't sort timelog entries correctly
+; https://github.com/ledger/ledger/issues/723
+;
+; When sorting balance output by total (-S t), accounts with hierarchical
+; names (containing colons) were not sorted correctly.  The sort expression
+; 't' evaluates 'amount', which for parent accounts with no direct postings
+; returned zero instead of the family total, causing them to sort first
+; regardless of their children's totals.
+
+i 2006/03/16 01:08:22 College:Setup
+o 2006/03/16 02:28:17
+i 2006/03/16 03:02:34 College:Setup
+o 2006/03/16 03:34:47
+i 2006/03/16 08:08:17 College:Setup
+o 2006/03/16 08:59:51
+i 2005/03/22 10:31:58 aaa
+o 2005/03/22 13:06:15
+i 2004/07/27 14:11:31 Borland
+o 2004/07/27 14:35:56 discussed fake symbol consolidation schemes
+i 2004/07/29 17:54:42 Borland
+o 2004/07/29 18:32:50 discussed hashing issues in fake ns sym lookup
+i 2004/07/30 12:41:33 Borland
+o 2004/07/30 12:57:16 answered namespace lookup questions
+i 2006/03/15 21:02:35 College:Setup
+o 2006/03/15 22:10:44
+
+test -S t bal
+               1.30h  Borland
+               2.57h  aaa
+               3.86h  College:Setup
+--------------------
+               7.74h
+end test
