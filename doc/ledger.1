@@ -140,6 +140,9 @@ Report prices for all commodities in postings matching the
 Prices are reported down to the second, using the same format as the
 .Pa \[ti]/.pricedb
 file.
+Use
+.Fl \-both-directions
+to also emit the computed inverse of each price entry.
 .It Ic print Oo Ar report-query Oc
 Print out the full transactions of any matching postings using the same
 format as they would appear in a data file.  This can be used to extract
@@ -441,6 +444,16 @@ of all calculations.  Transactions before
 that date will be ignored.
 .It Fl \-bold-if Ar EXPR
 Print the entire line in bold if the given value expression is true.
+.It Fl \-both-directions
+When used with
+.Ic pricedb
+or
+.Ic pricesdb ,
+emit each price entry in both the forward and reverse directions.
+For example, if a price
+.Qq EUR 1.20 USD
+exists, also emit the computed inverse
+.Qq USD 0.83333333 EUR .
 .It Fl \-budget
 Only display budgeted items.  In a
 .Ic register
