@@ -1,0 +1,46 @@
+; Regression test for #3115: CSV output embeds mark in description when
+; both code and mark are present.
+;
+; When a transaction has both a code and a clearing mark, the CSV output
+; should place the mark in the mark column (column 7), not embed it in
+; the description column (column 3).
+
+2020/01/01 (CODE) * Payee
+    Assets:A  -1 USD
+    Expenses:B  1 USD
+
+2020/01/02 (CODE) ! Pending Payee
+    Assets:A  -1 USD
+    Expenses:B  1 USD
+
+2020/01/03 * (CODE) Cleared Before Code
+    Assets:A  -1 USD
+    Expenses:B  1 USD
+
+2020/01/04 (CODE) No Mark
+    Assets:A  -1 USD
+    Expenses:B  1 USD
+
+; === Test: code + cleared mark should separate mark from description ===
+test csv -d "date==[2020-01-01]"
+"2020/01/01","CODE","Payee","Assets:A","USD","-1","*",""
+"2020/01/01","CODE","Payee","Expenses:B","USD","1","*",""
+end test
+
+; === Test: code + pending mark ===
+test csv -d "date==[2020-01-02]"
+"2020/01/02","CODE","Pending Payee","Assets:A","USD","-1","!",""
+"2020/01/02","CODE","Pending Payee","Expenses:B","USD","1","!",""
+end test
+
+; === Test: mark before code (existing behavior should remain correct) ===
+test csv -d "date==[2020-01-03]"
+"2020/01/03","CODE","Cleared Before Code","Assets:A","USD","-1","*",""
+"2020/01/03","CODE","Cleared Before Code","Expenses:B","USD","1","*",""
+end test
+
+; === Test: code without mark ===
+test csv -d "date==[2020-01-04]"
+"2020/01/04","CODE","No Mark","Assets:A","USD","-1","",""
+"2020/01/04","CODE","No Mark","Expenses:B","USD","1","",""
+end test
