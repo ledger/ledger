@@ -1002,6 +1002,25 @@ xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* accou
       }
     }
 
+    // Phase 3b: Check for a state flag after the code.
+    // Ledger accepts the state flag either before or after the code,
+    // e.g., both "2020/01/01 * (CODE) Payee" and "2020/01/01 (CODE) * Payee".
+
+    if (next && xact->_state == item_t::UNCLEARED) {
+      switch (*next) {
+      case '*':
+        xact->_state = item_t::CLEARED;
+        next = skip_ws(++next);
+        break;
+      case '!':
+        xact->_state = item_t::PENDING;
+        next = skip_ws(++next);
+        break;
+      default:
+        break;
+      }
+    }
+
     // Phase 4: Parse the payee/description text.
     // The payee ends at the first inline note separator (two+ spaces or a
     // tab followed by ';').  The payee is validated/rewritten through the
