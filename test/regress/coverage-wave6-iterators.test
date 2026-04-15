@@ -29,9 +29,6 @@ end test
 
 ; Test pricedb report (exercises posts_commodities_iterator)
 test pricedb
-P 2020/01/01 00:00:00 $ 0.00666667 AAPL
-P 2020/02/01 00:00:00 $ 0.01 AAPL
-P 2020/03/01 00:00:00 $ 0.01 AAPL
 P 2020/01/01 00:00:00 AAPL $150.00
 P 2020/02/01 00:00:00 AAPL $155.00
 P 2020/03/01 00:00:00 AAPL $160.00

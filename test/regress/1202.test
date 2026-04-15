@@ -13,8 +13,6 @@ test prices --date-format %Y-%m-%d
 end test
 
 test pricedb --datetime-format "%Y-%m-%d %H:%M:%S"
-P 2020-01-10 00:00:00 $ 0.03333333 AAPL
-P 2020-01-15 00:00:00 $ 0.03 AAPL
 P 2020-01-10 00:00:00 AAPL $30.00
 P 2020-01-15 00:00:00 AAPL $31.00
 end test

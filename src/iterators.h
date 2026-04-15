@@ -260,7 +260,7 @@ protected:
   temporaries_t temps;                  ///< Arena allocator for temporary xacts and posts.
   bool latest_only;                     ///< If true, emit only the most recent price per commodity.
   optional<date_interval_t> interval; ///< If set with a duration, keep only last price per period.
-  bool bidirectional;                   ///< If true, emit prices in both directions.
+  bool bidirectional;                 ///< If true, emit prices in both directions.
 
 public:
   posts_commodities_iterator() : latest_only(false), bidirectional(false) {

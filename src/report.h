@@ -168,11 +168,9 @@ public:
   optional<datetime_t>
       gain_from; ///< Reference date for --gain-since (compute gain from this date's market value)
   uint_least8_t budget_flags; ///< Bitmask of BUDGET_* flags controlling budget report behavior
-  bool bidirectional_prices;  ///< When true, pricedb emits prices in both directions
 
   explicit report_t(session_t& _session)
-      : session(_session), terminus(CURRENT_TIME()), budget_flags(BUDGET_NO_BUDGET),
-        bidirectional_prices(false) {
+      : session(_session), terminus(CURRENT_TIME()), budget_flags(BUDGET_NO_BUDGET) {
     TRACE_CTOR(report_t, "session_t&");
   }
   ~report_t() override {
@@ -356,6 +354,7 @@ public:
     HANDLER(base).report(out);
     HANDLER(basis).report(out);
     HANDLER(begin_).report(out);
+    HANDLER(both_directions).report(out);
     HANDLER(budget).report(out);
     HANDLER(budget_format_).report(out);
     HANDLER(by_payee).report(out);
@@ -603,6 +602,8 @@ public:
       });
 
   OPTION_(report_t, bold_if_, expr_t expr; DO_() { expr = str; });
+
+  OPTION(report_t, both_directions);
 
   OPTION_(report_t, budget, DO() { parent->budget_flags |= BUDGET_BUDGETED; });
 

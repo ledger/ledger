@@ -699,8 +699,7 @@ void report_t::commodities_report(post_handler_ptr handler) {
   }
 
   posts_commodities_iterator* walker(new posts_commodities_iterator(
-      *session.journal.get(), HANDLED(latest), price_interval,
-      bidirectional_prices));
+      *session.journal.get(), HANDLED(latest), price_interval, HANDLED(both_directions)));
   try {
     pass_down_posts<posts_commodities_iterator>(handler, *walker); // NOLINT(bugprone-unused-raii)
   } catch (...) {
@@ -1501,6 +1500,7 @@ option_t<report_t>* report_t::lookup_option(const char* p) {
     else OPT(basis);
     else OPT_(begin_);
     else OPT(bold_if_);
+    else OPT(both_directions);
     else OPT(budget);
     else OPT(budget_format_);
     else OPT(by_payee);
@@ -2077,7 +2077,6 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
       } else if (is_eq(p, "prices")) {
         return FORMATTED_COMMODITIES_REPORTER(prices_format_);
       } else if (is_eq(p, "pricedb") || is_eq(p, "pricesdb")) {
-        bidirectional_prices = true;
         return FORMATTED_COMMODITIES_REPORTER(pricedb_format_);
       } else if (is_eq(p, "pricemap")) {
         return MAKE_FUNCTOR(report_t::pricemap_command);

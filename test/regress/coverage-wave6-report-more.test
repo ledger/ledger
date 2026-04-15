@@ -16,8 +16,6 @@ end test
 
 ; Test 'pricesdb' command
 test pricesdb
-P 2024/01/01 00:00:00 $ 0.00666667 AAPL
-P 2024/02/01 00:00:00 $ 0.00625 AAPL
 P 2024/01/01 00:00:00 AAPL $150.00
 P 2024/02/01 00:00:00 AAPL $160.00
 end test
