@@ -1465,6 +1465,28 @@ void interval_posts::flush() {
     report_subtotal(interval);
   }
 
+  // Generate trailing empty periods up to the report end date when --empty
+  // is active and --end was specified.  This mirrors the leading-period
+  // logic that uses begin_of_report_ to anchor the start.
+  if (generate_empty_posts && end_of_report_) {
+    ++interval;
+    while (interval.start && *interval.start < *end_of_report_) {
+      DEBUG("filters.interval", "Generating trailing empty post for " << *interval.start);
+
+      xact_t& null_xact = temps.create_xact();
+      null_xact._date = interval.inclusive_end();
+
+      post_t& null_post = temps.create_post(null_xact, empty_account);
+      null_post.add_flags(POST_CALCULATED);
+      null_post.amount = 0L;
+
+      subtotal_posts::operator()(null_post);
+      report_subtotal(interval);
+
+      ++interval;
+    }
+  }
+
   // Tell our parent class to flush
   subtotal_posts::flush();
 }
