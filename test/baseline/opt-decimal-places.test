@@ -1,0 +1,21 @@
+2024/01/01 Coffee Shop
+    Expenses:Food    $10.1234
+    Assets:Checking
+
+2024/01/02 Grocery
+    Expenses:Food    $25.6789
+    Assets:Checking
+
+test --decimal-places 2 reg
+24-Jan-01 Coffee Shop           Expenses:Food                $10.12       $10.12
+                                Assets:Checking             $-10.12            0
+24-Jan-02 Grocery               Expenses:Food                $25.68       $25.68
+                                Assets:Checking             $-25.68            0
+end test
+
+test --decimal-places 2 bal
+             $-35.80  Assets:Checking
+              $35.80  Expenses:Food
+--------------------
+                   0
+end test
