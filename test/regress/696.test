@@ -1,0 +1,15 @@
+; Regression test for issue #696: Width options return integers to expressions
+; https://github.com/ledger/ledger/issues/696
+;
+; Width options (total_width, amount_width, etc.) must return INTEGER
+; values to the expression engine so that arithmetic like `4 + total_width`
+; works without requiring an explicit int() cast.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --columns 80 -F "%(4 + total_width)\n"
+16
+16
+end test
