@@ -698,8 +698,8 @@ void report_t::commodities_report(post_handler_ptr handler) {
       price_interval = ival;
   }
 
-  posts_commodities_iterator* walker(
-      new posts_commodities_iterator(*session.journal.get(), HANDLED(latest), price_interval));
+  posts_commodities_iterator* walker(new posts_commodities_iterator(
+      *session.journal.get(), HANDLED(latest), price_interval, HANDLED(both_directions)));
   try {
     pass_down_posts<posts_commodities_iterator>(handler, *walker); // NOLINT(bugprone-unused-raii)
   } catch (...) {
@@ -1500,6 +1500,7 @@ option_t<report_t>* report_t::lookup_option(const char* p) {
     else OPT(basis);
     else OPT_(begin_);
     else OPT(bold_if_);
+    else OPT(both_directions);
     else OPT(budget);
     else OPT(budget_format_);
     else OPT(by_payee);

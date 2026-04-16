@@ -354,6 +354,7 @@ public:
     HANDLER(base).report(out);
     HANDLER(basis).report(out);
     HANDLER(begin_).report(out);
+    HANDLER(both_directions).report(out);
     HANDLER(budget).report(out);
     HANDLER(budget_format_).report(out);
     HANDLER(by_payee).report(out);
@@ -601,6 +602,8 @@ public:
       });
 
   OPTION_(report_t, bold_if_, expr_t expr; DO_() { expr = str; });
+
+  OPTION(report_t, both_directions);
 
   OPTION_(report_t, budget, DO() { parent->budget_flags |= BUDGET_BUDGETED; });
 

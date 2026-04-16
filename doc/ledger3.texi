@@ -6082,6 +6082,7 @@ the same data.
 @findex prices
 @findex pricedb
 @findex --average
+@findex --both-directions
 @findex --latest
 
 The @command{prices} command displays the price history for matching
@@ -6103,6 +6104,17 @@ information as @command{prices}, but does so in a format that can be
 parsed by Ledger.  This is useful for generating and tidying up
 pricedb database files.  The @option{--latest} option works with
 @command{pricedb} as well.
+
+Use @option{--both-directions} with @command{pricedb} to emit each
+price entry in both the forward and reverse directions.  For example,
+if a price ``EUR 1.20 USD'' exists, the output will also include the
+computed inverse ``USD 0.83333333 EUR''.  This is useful when the
+generated pricedb file needs to support conversions in either
+direction:
+
+@smallexample
+$ ledger pricedb --both-directions
+@end smallexample
 
 @node Reports about your Journals,  , Reports in other Formats, Reporting Commands
 @section Reports about your Journals
@@ -6370,7 +6382,8 @@ Print price history for matching commodities.
 
 @item pricedb
 Print price history for matching commodities in a format readable by
-ledger.
+ledger.  Use @option{--both-directions} to include computed inverse
+prices.
 
 @item xact
 Generate transactions based on previous postings.
@@ -7577,6 +7590,13 @@ treat the transaction as if the ``Expected Value'' was actual.
 
 @item --invert
 Change the sign of all reported values.
+
+@item --both-directions
+@findex --both-directions
+When used with @command{pricedb} or @command{pricesdb}, emit each
+price entry in both the forward and reverse directions.  For example,
+if a price ``EUR 1.20 USD'' exists, the output will also include the
+computed inverse ``USD 0.83333333 EUR''.
 
 @item --latest
 When used with @command{prices} or @command{pricedb}, display only

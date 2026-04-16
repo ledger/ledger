@@ -1,0 +1,20 @@
+; Regression test for issue #779: pricedb --both-directions should emit
+; entries in both forward and reverse directions.
+; https://github.com/ledger/ledger/issues/779
+
+P 2024/01/01 EUR 1.20 USD
+
+2024/01/01 Test
+    Assets:EUR   100 EUR @ 1.20 USD
+    Assets:Cash   -120 USD
+
+; Without --both-directions, only forward prices are shown
+test pricedb
+P 2024/01/01 00:00:00 EUR 1.20 USD
+end test
+
+; With --both-directions, both forward and reverse prices are shown
+test pricedb --both-directions
+P 2024/01/01 00:00:00 EUR 1.20 USD
+P 2024/01/01 00:00:00 USD 0.83333333 EUR
+end test
