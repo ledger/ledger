@@ -166,6 +166,59 @@ void draft_t::parse_args(const value_t& args) {
         tmpl->date = date;
         check_for_date = false;
       } else {
+        if (check_for_date && arg.find_first_of("abcdefghijklmnopqrstuvwxyz"
+                                                "ABCDEFGHIJKLMNOPQRSTUVWXYZ") != string::npos) {
+          // Try parsing as a date expression (e.g. "yesterday", "today",
+          // "tomorrow", "last month").  Only attempt this when the token
+          // contains letters — pure numbers are handled as amounts.
+          string date_expr = arg;
+          auto saved = begin;
+          optional<date_t> best_date;
+          auto best_begin = begin;
+
+          // Try single token first
+          try {
+            date_interval_t interval(date_expr);
+            optional<date_t> d = interval.begin();
+            if (d) {
+              best_date = *d;
+              best_begin = begin;
+            }
+          } catch (...) {} // NOLINT(bugprone-empty-catch)
+
+          // Try accumulating more tokens for multi-word expressions
+          while (std::next(begin) != end) {
+            string next_arg = (*std::next(begin)).to_string();
+            if (next_arg == "at" || next_arg == "to" || next_arg == "from" || next_arg == "on" ||
+                next_arg == "code" || next_arg == "note" || next_arg == "rest" || next_arg == "@" ||
+                next_arg == "@@")
+              break;
+            amount_t test_amt;
+            if (test_amt.parse(next_arg, PARSE_SOFT_FAIL | PARSE_NO_MIGRATE))
+              break;
+            date_expr += " ";
+            date_expr += next_arg;
+            ++begin;
+            try {
+              date_interval_t interval(date_expr);
+              optional<date_t> d = interval.begin();
+              if (d) {
+                best_date = *d;
+                best_begin = begin;
+              }
+            } catch (...) {
+              break;
+            }
+          }
+
+          if (best_date) {
+            tmpl->date = *best_date;
+            check_for_date = false;
+            begin = best_begin;
+            continue;
+          }
+          begin = saved;
+        }
         // NOLINTBEGIN(bugprone-branch-clone)
 
         // Handle preposition-based argument syntax
@@ -372,7 +425,18 @@ xact_t* draft_t::insert(journal_t& journal) {
     bool has_year = slash_count >= 2 || (date_str.find_first_of("0123456789") != string::npos &&
                                          date_str.length() > 5); // Rough check for year presence
 
-    added->_date = parse_date(date_str);
+    try {
+      added->_date = parse_date(date_str);
+    } catch (date_error&) {
+      // If parse_date failed, try parsing as a date expression
+      // (e.g. "yesterday", "today", "last month")
+      try {
+        date_interval_t interval(*tmpl->date_string);
+        optional<date_t> d = interval.begin();
+        if (d)
+          added->_date = *d;
+      } catch (...) {} // NOLINT(bugprone-empty-catch)
+    }
 
     // If no explicit year in the date and we have a year directive,
     // ensure we use the year directive's year
