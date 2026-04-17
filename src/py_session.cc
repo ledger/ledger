@@ -81,7 +81,7 @@ PyObject* py_error_context([[maybe_unused]] const session_t& session) {
 // find_price() on the new pool causes an out-of-bounds vertex() call and
 // the this=0x0 segfault described in issue #976.
 void py_update_commodities() {
-  object main_module = import("ledger");
+  object main_module = import("lpy.core");
   main_module.attr("commodities") = commodity_pool_t::current_pool;
 }
 

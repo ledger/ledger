@@ -64,7 +64,7 @@ void export_utils();
 void export_value();
 void export_xact();
 
-extern "C" PyObject* PyInit_ledger();
+extern "C" PyObject* PyInit__core();
 
 void initialize_for_python() {
   export_times();
@@ -132,7 +132,7 @@ void python_interpreter_t::initialize() {
     DEBUG("python.interp", "Initializing Python");
 
     // PyImport_AppendInittab docs: "This should be called before Py_Initialize()".
-    PyImport_AppendInittab((const char*)"ledger", PyInit_ledger);
+    PyImport_AppendInittab((const char*)"_core", PyInit__core);
 
     // Unbuffer stdio to avoid python output getting stuck in buffer when
     // stdout is not a TTY. Normally buffers are flushed by Py_Finalize but
@@ -157,10 +157,59 @@ void python_interpreter_t::initialize() {
 
     assert(Py_IsInitialized());
 
-    hack_system_paths();
-
     main_module = import_module("__main__");
-    PyImport_ImportModule("ledger");
+
+    // Load _core and alias it as lpy.core._core so that relative imports
+    // inside the lpy package (e.g. "from ._core import *" in
+    // lpy/core/__init__.py) resolve correctly when running embedded in the
+    // ledger CLI.  Must happen before hack_system_paths(), which may trigger
+    // import("lpy") → lpy/core/__init__.py → "from ._core import *", and
+    // therefore needs lpy.core._core already present in sys.modules.
+    PyObject* core_mod = PyImport_ImportModule("_core");
+    if (!core_mod) {
+      throw_(std::runtime_error,
+             _("Python failed to initialize (_core module could not be imported)"));
+    }
+    PyDict_SetItemString(PyImport_GetModuleDict(), "lpy.core._core", core_mod);
+    Py_DECREF(core_mod);
+
+    // Programmatically create the lpy and lpy.core module hierarchy in
+    // sys.modules so that "from lpy import core" works in the embedded CLI
+    // case where no PYTHONPATH is set and the on-disk packages are not
+    // available.  The guards ensure this is a no-op when the real packages
+    // have already been loaded from disk (e.g. via PYTHONPATH or install).
+    // Must also run before hack_system_paths() for the same reason above.
+    int result = PyRun_SimpleString(
+        "import sys, types\n"
+        "if 'lpy.core' not in sys.modules:\n"
+        "    _core = sys.modules['_core']\n"
+        "    _public = [n for n in dir(_core) if not n.startswith('_')]\n"
+        "    _lpy_core = types.ModuleType('lpy.core')\n"
+        "    _lpy_core.__package__ = 'lpy'\n"
+        "    _lpy_core.__path__ = []\n"
+        "    for _n in _public:\n"
+        "        setattr(_lpy_core, _n, getattr(_core, _n))\n"
+        "    sys.modules['lpy.core'] = _lpy_core\n"
+        "    _lpy = types.ModuleType('lpy')\n"
+        "    _lpy.__package__ = 'lpy'\n"
+        "    _lpy.__path__ = []\n"
+        "    _lpy.core = _lpy_core\n"
+        "    sys.modules['lpy'] = _lpy\n"
+        "if 'ledger' not in sys.modules:\n"
+        "    _lpy_core = sys.modules['lpy.core']\n"
+        "    _public = [n for n in dir(_lpy_core) if not n.startswith('_')]\n"
+        "    _ledger = types.ModuleType('ledger')\n"
+        "    _ledger.__package__ = 'ledger'\n"
+        "    _ledger.__path__ = []\n"
+        "    for _n in _public:\n"
+        "        setattr(_ledger, _n, getattr(_lpy_core, _n))\n"
+        "    sys.modules['ledger'] = _ledger\n");
+    if (result == -1) {
+      throw_(std::runtime_error,
+         _("Python failed to initialize (could not bootstrap lpy package hierarchy)"));
+    }
+
+    hack_system_paths();
 
     is_initialized = true;
   } catch (const error_already_set&) {
@@ -187,17 +236,17 @@ void python_interpreter_t::hack_system_paths() {
     path pathname(str());
     DEBUG("python.interp", "sys.path = " << pathname);
 
-    if (exists(pathname / "ledger" / "__init__.py")) {
-      if (object module_ledger = import("ledger")) {
-        DEBUG("python.interp", "Setting ledger.__path__ = " << (pathname / "ledger"));
+    if (exists(pathname / "lpy" / "__init__.py")) {
+      if (object module_lpy = import("lpy")) {
+        DEBUG("python.interp", "Setting lpy.__path__ = " << (pathname / "lpy"));
 
-        object ledger_dict = module_ledger.attr("__dict__");
+        object lpy_dict = module_lpy.attr("__dict__");
         list temp_list;
-        temp_list.append((pathname / "ledger").string());
+        temp_list.append((pathname / "lpy").string());
 
-        ledger_dict["__path__"] = temp_list;
+        lpy_dict["__path__"] = temp_list;
       } else {
-        throw_(std::runtime_error, _("Python failed to initialize (couldn't find ledger)"));
+        throw_(std::runtime_error, _("Python failed to initialize (couldn't find lpy)"));
       }
 #if DEBUG_ON
       path_initialized = true;
@@ -207,7 +256,7 @@ void python_interpreter_t::hack_system_paths() {
   }
 #if DEBUG_ON
   if (!path_initialized)
-    DEBUG("python.init", "Ledger failed to find 'ledger/__init__.py' on the PYTHONPATH");
+    DEBUG("python.init", "Ledger failed to find 'lpy/__init__.py' on the PYTHONPATH");
 #endif
 }
 
