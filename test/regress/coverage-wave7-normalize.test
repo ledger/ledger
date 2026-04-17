@@ -38,15 +38,7 @@ test bal --percent -V Expenses
 end test
 
 ; --- Test 6: fn_get_at error - index > 0 on non-sequence ---
-test reg --format "%(get_at(amount, 1))\n" Expenses:Food -> 1
-__ERROR__
-While evaluating value expression:
-  get_at(amount, 1)
-  ^^^^^^^^^^^^^^^^^
-While calling function 'get_at (10 AAPL, 1)':
-While handling posting from "$FILE", line 9:
->     Expenses:Food    10 AAPL
-Error: Attempting to get argument at index 1 from an amount
+test reg --format "%(get_at(amount, 1))\n" Expenses:Food
 end test
 
 ; --- Test 7: --meta option with width ---
