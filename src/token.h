@@ -109,6 +109,7 @@ struct expr_t::token_t : public noncopyable {
     ASSIGN, ///< Assignment `=`
     MATCH,  ///< Regex match `=~`
     NMATCH, ///< Regex non-match `!~`
+    EMATCH, ///< Regex extract `==~` (returns captured group or whole match)
     MINUS,  ///< Subtraction or unary negation `-`
     PLUS,   ///< Addition `+`
     STAR,   ///< Multiplication `*`

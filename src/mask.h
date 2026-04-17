@@ -145,6 +145,14 @@ public:
 #endif
   }
 
+  /// Return the number of marked subexpressions (capture groups) in the pattern.
+  std::size_t mark_count() const { return expr.mark_count(); }
+
+  /// Match against @p text and return the @p n-th capture group on success.
+  /// Returns the whole match for n=0, first group for n=1, etc.
+  /// Returns boost::none if the regex does not match or the group is unmatched.
+  boost::optional<string> match_group(string_view text, std::size_t n = 1) const;
+
   bool empty() const { return expr.empty(); } ///< True if no pattern has been assigned
 
   /// Return the regex pattern as a UTF-8 string.

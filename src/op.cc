@@ -456,11 +456,29 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t* locus, const int depth) {
       break;
 
     case O_MATCH:
-      result = (right()
-                    ->calc(scope, locus, depth + 1)
-                    .as_mask()
-                    .match(left()->calc(scope, locus, depth + 1).to_string()));
+      result = right()
+                   ->calc(scope, locus, depth + 1)
+                   .as_mask()
+                   .match(left()->calc(scope, locus, depth + 1).to_string());
       break;
+
+    case O_EMATCH: {
+      value_t mask_val = right()->calc(scope, locus, depth + 1);
+      const mask_t& m = mask_val.as_mask();
+      string text = left()->calc(scope, locus, depth + 1).to_string();
+      if (m.mark_count() > 0) {
+        if (auto captured = m.match_group(text, 1))
+          result = string_value(*captured);
+        else
+          result = false;
+      } else {
+        if (auto captured = m.match_group(text, 0))
+          result = string_value(*captured);
+        else
+          result = false;
+      }
+      break;
+    }
 
     case O_EQ:
       result = (left()->calc(scope, locus, depth + 1) == right()->calc(scope, locus, depth + 1));
@@ -965,6 +983,14 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const {
       found = true;
     break;
 
+  case O_EMATCH:
+    if (left() && left()->print(out, context))
+      found = true;
+    out << " ==~ ";
+    if (has_right() && right()->print(out, context))
+      found = true;
+    break;
+
   case PLUG:
     // PLUG is an internal sentinel; it has no printable representation.
     break;
@@ -1042,6 +1068,9 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const {
     break;
   case O_MATCH:
     out << "O_MATCH";
+    break;
+  case O_EMATCH:
+    out << "O_EMATCH";
     break;
 
   case O_NOT:

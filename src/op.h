@@ -169,6 +169,7 @@ public:
     O_LAMBDA, ///< Lambda expression (`params -> body`).
     O_CALL,   ///< Function call (`func(args)`).
     O_MATCH,  ///< Regex match operator (`expr =~ /pattern/`).
+    O_EMATCH, ///< Regex extract operator (`expr ==~ /pattern/`).
 
     BINARY_OPERATORS, ///< Sentinel: end of binary operator range.
 
