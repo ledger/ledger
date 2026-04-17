@@ -644,6 +644,133 @@ bool xact_base_t::finalize() {
       }
     }
 
+    // Phase 5.5: Propagate cost basis annotations for commodity transfers.
+    // When a commodity is transferred between accounts without explicit cost
+    // or lot notation, and the source account has annotated lots, propagate
+    // the lot annotations to both sides of the transfer so that -B (basis)
+    // reporting correctly shows the cost basis.
+    //
+    // Guard: Skip commodities where the user has already specified lot
+    // annotations or costs in this transaction.  If the user wrote explicit
+    // {price} or @ notation for a commodity, they are managing lots manually
+    // and we must not interfere (e.g., partial lot sales like issue #1029).
+    std::set<string> user_annotated_commodities;
+    for (const post_t* post : copy) {
+      if (post->has_flags(ITEM_GENERATED))
+        continue;
+      if (!post->amount.is_null() && post->amount.has_commodity() &&
+          (post->cost || post->amount.has_annotation())) {
+        user_annotated_commodities.insert(post->amount.commodity().base_symbol());
+      }
+    }
+
+    // Step 1: For negative unannotated postings not already handled by
+    // Phase 5, check if the source account has a single annotated lot
+    // commodity for this base symbol and annotate the posting.
+    for (post_t* post : copy) {
+      if (post->cost || post->amount.is_null() || post->amount.has_annotation() ||
+          !post->amount.has_commodity() || post->amount.sign() >= 0 ||
+          !post->amount.commodity().has_flags(COMMODITY_SAW_ANNOTATED))
+        continue;
+
+      const string& base_symbol = post->amount.commodity().base_symbol();
+
+      if (user_annotated_commodities.count(base_symbol))
+        continue;
+
+      // Verify this is a transfer: there must be a matching positive posting
+      // with the same base commodity and no explicit cost.
+      bool is_transfer = false;
+      for (const post_t* other : copy) {
+        if (other != post && !other->amount.is_null() && other->amount.has_commodity() &&
+            !other->cost && other->amount.commodity().base_symbol() == base_symbol &&
+            other->amount.sign() > 0) {
+          is_transfer = true;
+          break;
+        }
+      }
+      if (!is_transfer)
+        continue;
+
+      // Collect distinct annotated lot commodities from the source account.
+      commodity_t* sole_lot_comm = nullptr;
+      bool has_multiple_lots = false;
+      for (const post_t* prior : post->account->posts) {
+        if (prior->amount.has_commodity() && prior->amount.has_annotation() &&
+            prior->amount.commodity().base_symbol() == base_symbol) {
+          if (!sole_lot_comm)
+            sole_lot_comm = &prior->amount.commodity();
+          else if (sole_lot_comm != &prior->amount.commodity()) {
+            has_multiple_lots = true;
+            break;
+          }
+        }
+      }
+
+      if (sole_lot_comm && !has_multiple_lots)
+        post->amount.set_commodity(*sole_lot_comm);
+    }
+
+    // Step 2: For positive unannotated postings in transfers, mirror
+    // annotations from matching annotated negative postings.
+    for (std::size_t idx = 0; idx < copy.size(); ++idx) {
+      post_t* post = copy[idx];
+
+      if (post->cost || post->amount.is_null() || post->amount.has_annotation() ||
+          !post->amount.has_commodity() || post->amount.sign() <= 0)
+        continue;
+
+      const string& base_symbol = post->amount.commodity().base_symbol();
+
+      if (user_annotated_commodities.count(base_symbol))
+        continue;
+
+      // Collect matching negative annotated postings from the transaction.
+      std::vector<post_t*> sources;
+      for (post_t* other : copy) {
+        if (other != post && !other->amount.is_null() && other->amount.has_commodity() &&
+            other->amount.has_annotation() && !other->cost &&
+            other->amount.commodity().base_symbol() == base_symbol && other->amount.sign() < 0)
+          sources.push_back(other);
+      }
+
+      if (sources.empty())
+        continue;
+
+      if (sources.size() == 1) {
+        // Simple case: one source posting, mirror its annotation.
+        post->amount.set_commodity(sources[0]->amount.commodity());
+      } else {
+        // Multiple sources (e.g. Phase 5 split): split the destination
+        // posting to match each source lot.
+        amount_t remaining = post->amount;
+        bool first = true;
+
+        for (post_t* src : sources) {
+          if (remaining.is_zero())
+            break;
+
+          amount_t src_qty = src->amount.abs().strip_annotations(keep_details_t());
+          amount_t consumed = (remaining <= src_qty) ? remaining : src_qty;
+
+          if (first) {
+            post->amount = consumed;
+            post->amount.set_commodity(src->amount.commodity());
+            first = false;
+          } else {
+            post_t* split = new post_t(post->account, consumed);
+            split->amount.set_commodity(src->amount.commodity());
+            split->set_state(post->state());
+            split->add_flags(ITEM_GENERATED | POST_CALCULATED);
+            add_post(split);
+            copy.push_back(split);
+          }
+
+          remaining -= consumed;
+        }
+      }
+    }
+
     // Phase 6: Exchange amounts through the commodity pool.
     // For every posting with an explicit or computed cost, pass it
     // through commodity_pool_t::exchange().  This creates annotated
