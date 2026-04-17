@@ -272,6 +272,12 @@ void global_scope_t::execute_command(strings_list args, bool at_repl) {
 
     report().normalize_options(verb);
 
+    // Pre-fetch all commodity quotes in a single batch invocation
+    // of the getquote script, rather than one-at-a-time during
+    // report generation (issue #588).
+    if (commodity_pool_t::current_pool->get_quotes)
+      commodity_pool_t::current_pool->prefetch_quotes();
+
     if (!bool(command = look_for_command(bound_scope, verb)))
       throw_(std::logic_error, _f("Unrecognized command '%1%'") % verb);
   }
