@@ -1,4 +1,7 @@
-; Coverage for journal.cc infinite recursion on alias expansion
+; Coverage for journal.cc: partial alias cycle with progress
+; alias Exp=Expenses and alias Expenses=Exp:Food form a cycle,
+; but expansion makes progress (Exp:Groceries -> Exp:Food:Groceries)
+; so it stops without error.
 
 alias Exp=Expenses
 alias Expenses=Exp:Food
@@ -7,11 +10,9 @@ alias Expenses=Exp:Food
     Exp:Groceries    $10.00
     Assets:Cash
 
-test bal --recursive-aliases -> 1
-__ERROR__
-While parsing file "$FILE", line 7:
-While parsing posting:
-  Exp:Groceries    $10.00
-
-Error: Infinite recursion on alias expansion for Exp
+test bal --recursive-aliases
+             $-10.00  Assets:Cash
+              $10.00  Exp:Food:Groceries
+--------------------
+                   0
 end test
