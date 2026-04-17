@@ -721,7 +721,7 @@ void report_t::commodities_report(post_handler_ptr handler) {
 
 value_t report_t::display_value(const value_t& val) {
   value_t temp(val.strip_annotations(what_to_keep()));
-  if (HANDLED(base))
+  if (HANDLED(base) || HANDLED(exchange_))
     return temp;
   else
     return temp.unreduced();
