@@ -821,6 +821,32 @@ bool xact_base_t::finalize() {
   // The balance should be zero (or null).  If it is not, check whether
   // the discrepancy can be explained by per-unit cost rounding before
   // reporting an error.
+  //
+  // Cost amounts are parsed with PARSE_NO_MIGRATE, so their precision
+  // is not propagated to the commodity.  If the cost commodity still
+  // has its default precision of 0, the is_zero() check would render
+  // a sub-integer remainder like 0.01 EUR as "0" and falsely treat it
+  // as zero.  Temporarily widen such commodities to the cost amount's
+  // precision for the balance check, then restore (issue #1114).
+  std::vector<std::pair<commodity_t*, int>> saved_precisions;
+  for (post_t* post : posts) {
+    if (post->cost && !post->has_flags(POST_COST_CALCULATED) && post->cost->has_commodity() &&
+        post->cost->commodity().precision() == 0 && post->cost->precision() > 0) {
+      commodity_t& comm = post->cost->commodity();
+      // Only save once per commodity
+      bool already_saved = false;
+      for (auto& sp : saved_precisions)
+        if (sp.first == &comm) {
+          already_saved = true;
+          break;
+        }
+      if (!already_saved) {
+        saved_precisions.push_back({&comm, 0});
+        comm.set_precision(post->cost->precision());
+      }
+    }
+  }
+
   if (!balance.is_null() && !balance.is_zero()) {
     // Check whether the imbalance is fully explained by independently rounding
     // each per-unit (@) annotated cost to the price's decimal precision (issue
@@ -880,6 +906,9 @@ bool xact_base_t::finalize() {
       }
     }
 
+    // Restore before throwing so commodity state is clean.
+    for (auto& sp : saved_precisions)
+      sp.first->set_precision(sp.second);
     add_error_context(item_context(*this, _("While balancing transaction")));
     add_error_context(_("Unbalanced remainder is:"));
     add_error_context(value_context(balance));
@@ -888,6 +917,10 @@ bool xact_base_t::finalize() {
     throw_(balance_error, _("Transaction does not balance"));
   balanced:;
   }
+
+  // Restore commodity precisions widened for the balance check above.
+  for (auto& sp : saved_precisions)
+    sp.first->set_precision(sp.second);
 
   if (!virtual_balance.is_null() && !virtual_balance.is_zero()) {
     add_error_context(item_context(*this, _("While balancing transaction")));
@@ -988,7 +1021,31 @@ bool xact_base_t::verify() {
       throw_(amount_error, _("A posting's cost must be of a different commodity than its amount"));
   }
 
+  // Cost amounts are parsed with PARSE_NO_MIGRATE, so their precision
+  // is not propagated to the commodity.  Temporarily widen precision-0
+  // cost commodities for the balance check (see finalize, issue #1114).
+  std::vector<std::pair<commodity_t*, int>> saved_precisions;
+  for (post_t* post : posts) {
+    if (post->cost && !post->has_flags(POST_COST_CALCULATED) && post->cost->has_commodity() &&
+        post->cost->commodity().precision() == 0 && post->cost->precision() > 0) {
+      commodity_t& comm = post->cost->commodity();
+      bool already_saved = false;
+      for (auto& sp : saved_precisions)
+        if (sp.first == &comm) {
+          already_saved = true;
+          break;
+        }
+      if (!already_saved) {
+        saved_precisions.push_back({&comm, 0});
+        comm.set_precision(post->cost->precision());
+      }
+    }
+  }
+
   if (!balance.is_null() && !balance.is_zero()) {
+    // Restore before throwing so commodity state is clean.
+    for (auto& sp : saved_precisions)
+      sp.first->set_precision(sp.second);
     add_error_context(item_context(*this, _("While balancing transaction")));
     add_error_context(_("Unbalanced remainder is:"));
     add_error_context(value_context(balance));
@@ -996,6 +1053,9 @@ bool xact_base_t::verify() {
     add_error_context(value_context(magnitude()));
     throw_(balance_error, _("Transaction does not balance"));
   }
+
+  for (auto& sp : saved_precisions)
+    sp.first->set_precision(sp.second);
 
   VERIFY(valid());
 
