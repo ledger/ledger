@@ -1,0 +1,24 @@
+; Regression test for issue #675
+; Verify --account-value-expr and --commodity-value-expr options
+
+2015/01/01 Buy stocks
+    Assets:Investments            2 FOO @@ 20.00 EUR
+    Assets:Cash                            -20.00 EUR
+
+; Test 1: --commodity-value-expr provides a default per-unit price for all
+; commodities that lack their own "commodity ... value" directive.
+; Here, "25.00 EUR" means every unit of FOO is valued at 25 EUR.
+test bal assets:investments -V --commodity-value-expr "25.00 EUR"
+           50.00 EUR  Assets:Investments
+end test
+
+; Test 2: --account-value-expr provides a default per-unit price for
+; postings in accounts that lack their own "account ... value" directive.
+test bal assets:investments -V --account-value-expr "30.00 EUR"
+           60.00 EUR  Assets:Investments
+end test
+
+; Test 3: --account-value-expr takes precedence over --commodity-value-expr
+test bal assets:investments -V --account-value-expr "30.00 EUR" --commodity-value-expr "25.00 EUR"
+           60.00 EUR  Assets:Investments
+end test

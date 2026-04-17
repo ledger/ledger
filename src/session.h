@@ -170,7 +170,9 @@ public:
 
   /// Dump all session-level option values to the output stream.
   void report_options(std::ostream& out) {
+    HANDLER(account_value_expr_).report(out);
     HANDLER(check_payees).report(out);
+    HANDLER(commodity_value_expr_).report(out);
     HANDLER(day_break).report(out);
     HANDLER(time_round_).report(out);
     HANDLER(download).report(out);
@@ -203,19 +205,21 @@ public:
    * Option handlers
    */
 
+  OPTION(session_t, account_value_expr_);   ///< Default account-level valuation expression
   OPTION_(
       session_t, check_payees, DO() {
         if (parent->journal)
           parent->journal->check_payees = true;
       });
+  OPTION(session_t, commodity_value_expr_); ///< Default commodity-level valuation expression
   OPTION_(
       session_t, day_break, DO() {
         if (parent->journal)
           parent->journal->day_break = true;
       });
-  OPTION(session_t, time_round_); ///< Round timelog durations up to N-minute blocks
-  OPTION(session_t, download);    ///< Download commodity prices (-Q)
-  OPTION(session_t, getquote_);   ///< Path to the price-fetching script
+  OPTION(session_t, time_round_);           ///< Round timelog durations up to N-minute blocks
+  OPTION(session_t, download);              ///< Download commodity prices (-Q)
+  OPTION(session_t, getquote_);             ///< Path to the price-fetching script
 
   /// Use comma as decimal separator for commodity amounts.
   OPTION_(session_t, decimal_comma, DO() { commodity_t::decimal_comma_by_default = true; });
