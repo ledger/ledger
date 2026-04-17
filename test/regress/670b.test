@@ -1,0 +1,19 @@
+; Regression test for issue #670: CSV include with apply account
+; Verifies that the apply-account directive sets the balancing account
+; for CSV transactions, and that payee-to-account mappings work.
+
+account Expenses:Coffee
+    payee Coffee
+
+apply account Assets:Checking
+include 670b.csv
+end apply
+
+test bal
+                $-25  Assets:Checking
+                 $25  Expenses
+                  $5    Coffee
+                 $20    Unknown
+--------------------
+                   0
+end test
