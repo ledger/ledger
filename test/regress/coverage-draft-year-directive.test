@@ -1,12 +1,12 @@
-; Coverage for draft.cc year directive adjusts xact date
+; Coverage for draft.cc: year directive does not affect xact date (#707)
 year 2023
 
 2024/06/15 Grocery Store
     Expenses:Food    $10.00
     Assets:Cash
 
-test xact "06/15" "Grocery"
-2023/06/15 Grocery Store
+test --now 2026/07/01 xact "06/15" "Grocery"
+2026/06/15 Grocery Store
     Expenses:Food                             $10.00
     Assets:Cash
 end test

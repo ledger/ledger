@@ -1,8 +1,6 @@
 # Test case related to issue #2413
-# Verify that "end apply year" properly reverts year_directive_year
-# so that a subsequent "year" directive is correctly used by xact.
-# Without the fix, "end apply year" would leave year_directive_year stuck
-# at the old value, causing xact to use the wrong year.
+# The xact command uses --now (or today) for the year, not the year
+# directive.  (#707)
 
 apply year 2020
 
@@ -18,7 +16,7 @@ year 2025
     Expenses:Food                             $10.00
     Account
 
-test xact 03-03 Shop 10
+test --now 2025/04/01 xact 03-03 Shop 10
 2025/03/03 Shop
     Expenses:Food                             $10.00
     Account
