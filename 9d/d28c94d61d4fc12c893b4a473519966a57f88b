@@ -1,0 +1,461 @@
+src/query.cc
+  f8ba9f7ec0a74766 94-96,575-577,631-649
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.3",
+  "base_commit_sha": "9dd28c94d61d4fc12c893b4a473519966a57f88b",
+  "prompts": {
+    "f8ba9f7ec0a74766": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bf5093be-8e95-4563-a003-19652457f04c",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.\n\nSummary:\n1. **Primary Request and Intent:**\n   The conversation involves two distinct user requests:\n\n   **Request 1 (`/fix-ci`):** Fix CI test failures on PR #3053 (branch `johnw/fix-842`, titled \"Handle == in query metadata predicates (#842)\"), push fixes, monitor CI until green, and address any bot comments (BugBot, Graphite, Cursor, Devin) by replying and marking resolved.\n\n   **Request 2 (`/medium` with args):** \"I don't like how this == feature, as currently implemented, relies upon things like scanning for the closing paranthesis of a function invocation. Use your superpowers and cpp-pro to do some deeper research into more naturally integrating this support into the value expression parser. It should feel like a hack, the way the current implementation does.\" (Note: \"It should feel like a hack\" appears to be a typo — user means \"It shouldn't feel like a hack\"). The user wants a clean redesign of the `==` feature in `src/query.cc` to avoid AST node inspection and mutation.\n\n2. **Key Technical Concepts:**\n   - Ledger: C++ double-entry accounting CLI, flat `src/` directory\n   - Recursive-descent parser architecture (query_t parser building expr_t::op_t trees)\n   - Query parser vs. value expression parser (two distinct grammars)\n   - AST operations: O_CALL, O_EQ, O_MATCH, O_AND, O_OR, O_NOT, VALUE, IDENT\n   - `has_tag(mask)` = existence check, `has_tag(mask, mask)` = regex value match, `tag(mask) == val` = exact equality\n   - Tokens: TOK_META (`%`, `tag`, `meta`, `data`), TOK_EQ (`=`), TERM, LPAREN, RPAREN\n   - Hyperfine benchmark with 5.0% threshold\n   - GitHub Actions workflows: `cmake.yml`, `perf.yml`, `fuzz.yml`, `lint.yml`, `nix-flake.yml`\n   - `gh` CLI for GitHub operations\n   - Peephole rewriting / AST post-processing patterns\n\n3. **Files and Code Sections:**\n\n   - **`/Users/johnw/src/ledger/fix-842/src/query.cc`** (867 lines, read in full)\n     - Lines 32-98: EBNF grammar in header comment\n     - Lines 296-393: Lexer `next_token()` — handles `=` as TOK_EQ (line 370-377)\n     - Lines 408-461: `make_meta_node()` — the hacky \"bare\" `%Category == food` handler:\n       ```cpp\n       if (tok.kind == lexer_t::token_t::TOK_EQ) {\n         tok = lexer.next_token(tok_context); // consume first '='\n         lexer_t::token_t tok2 = lexer.peek_token(tok_context);\n         if (tok2.kind == lexer_t::token_t::TOK_EQ) {\n           // Double '==': mutate has_tag → tag, wrap in O_EQ\n           ident->set_ident(\"tag\");\n           node->set_right(arg1);\n           expr_t::ptr_op_t value_node = new expr_t::op_t(expr_t::op_t::VALUE);\n           value_node->set_value(string_value(*tok.value));\n           expr_t::ptr_op_t eq_node = new expr_t::op_t(expr_t::op_t::O_EQ);\n           eq_node->set_left(node);\n           eq_node->set_right(value_node);\n           return eq_node;\n         }\n         // Single '=': has_tag(mask, value_mask) ...\n       }\n       ```\n     - Lines 580-615: The second hack — post-recursion inspection in `parse_query_term`:\n       ```cpp\n       if (tok.kind == lexer_t::token_t::TOK_META && node->kind == expr_t::op_t::O_CALL &&\n           node->left() && node->left()->is_ident() && node->left()->as_ident() == \"has_tag\" &&\n           node->right() && node->right()->kind == expr_t::op_t::VALUE) {\n         lexer_t::token_t eq1 = lexer.peek_token(tok_context);\n         if (eq1.kind == lexer_t::token_t::TOK_EQ) {\n           lexer.next_token(tok_context);\n           lexer_t::token_t eq2 = lexer.peek_token(tok_context);\n           if (eq2.kind == lexer_t::token_t::TOK_EQ) {\n             // Mutate has_tag → tag in place\n             node->left()->set_ident(\"tag\");\n             // ...\n           }\n         }\n       }\n       ```\n\n   - **`/Users/johnw/src/ledger/fix-842/src/query.h`** (read in full)\n     - Lines 142-170: `token_t::kind_t` enum — where `TOK_EQEQ` would be added\n     - Lines 195-299: `to_string()` and `symbol()` methods needing updates\n     - Lines 420-444: `parser_t` class with `parse_query_term`, `make_meta_node`, etc.\n\n   - **`/Users/johnw/src/ledger/fix-842/src/item.cc`** (lines 600-689)\n     - Lines 615-619: `has_tag` / `has_meta` registration\n     - Lines 628-631: `meta` alias → get_tag\n     - Lines 654-657: `tag` → get_tag\n     - Confirms: value-expression parser already has `tag()` and `has_tag()` as functions\n\n   - **`/Users/johnw/src/ledger/fix-842/test/regress/842.test`** — the regression test this PR added:\n     - Uses `= tag(\"Category\") == \"food\"` (automated transaction)\n     - Tests `reg %Category==food` and `reg %Category=food`\n\n   - **`/Users/johnw/src/ledger/fix-842/test/regress/coverage-query-meta-eq.test`** — uses `%Category=transport` and `%Category=food`\n\n   - **`/Users/johnw/src/ledger/fix-842/test/regress/coverage-query-tag.test`** — uses `%food`\n\n   - **`/Users/johnw/src/ledger/fix-842/.github/workflows/perf.yml`** (102 lines, read in full) — benchmark workflow with 5.0% threshold, runs `balance`, `register`, `print`, `stats`, `csv`, `balance-depth-2`, `register-monthly`, `equity`\n\n   - **`/Users/johnw/src/ledger/fix-842/benchmark/run_benchmark.sh`** (read in full) — hyperfine benchmark runner\n\n   - **`/Users/johnw/src/ledger/fix-842/benchmark/compare_benchmarks.py`** (116 lines, read in full) — regression detection comparing medians\n\n4. **Errors and fixes:**\n   - **CI benchmark failure**: `print 3077.10 → 3231.64 +5.02%` — barely over 5.0% threshold.\n     - **Analysis**: PR only changes `src/query.cc` which isn't on the print command's hot path (print doesn't invoke query parser by default).\n     - **Fix**: Re-ran the benchmark job with `gh run rerun 24687093019 --failed`. On rerun, it passed — confirming original was CI noise.\n\n5. **Problem Solving:**\n   - **Solved**: CI benchmark failure (noise on rerun, now green).\n   - **Solved (analysis phase)**: Determined cpp-pro's Option C (delegate `tag(...)` to expr_t) is cleanest. Verified via tests that no existing test uses `tag(sub_query)` with boolean contents — so the behavior change is safe.\n   - **In progress**: Actual implementation of the refactor. Plan is defined, not yet written.\n\n6. **All user messages:**\n   - **Message 1** (`/fix-ci`): \"CI tests are failing for this PR. Use the appropriate programming language agent to diagnose and resolve this issue, then push your fixes to the PR and monitor the CI test results using `gh` until you observe that everything passes correctly. If any further problems should be observed, repeat this diagnose, resolve, push and monitor process until everything is working with this PR. Also, if there are any BugBot, Graphite, Cursor or Devin comments on this PR, I want you to fix and address these comments from these bots, and then after you have pushed the fixes, I want you to reply to those comments and then mark them resolved.\"\n   - **Message 2** (`/medium`): \"I don't like how this == feature, as currently implemented, relies upon things like scanning for the closing paranthesis of a function invocation. Use your superpowers and cpp-pro to do some deeper research into more naturally integrating this support into the value expression parser. It should feel like a hack, the way the current implementation does.\"\n\n7. **Pending Tasks:**\n   - Implement the Option C+A refactor in `src/query.cc` and `src/query.h`:\n     1. Add `TOK_EQEQ` to the `token_t::kind_t` enum in `query.h`\n     2. Update lexer in `query.cc` to emit `TOK_EQEQ` when it sees `==`\n     3. Update `to_string()` and `symbol()` methods in `query.h` for `TOK_EQEQ`\n     4. Refactor `make_meta_node()` for uniform TOK_EQ/TOK_EQEQ handling, no mutation\n     5. Refactor `parse_query_term`'s TOK_META post-recursion block (lines 580-615) — either delegate to expr_t or factor into a clean helper with fresh nodes\n     6. Run tests: `test/regress/842.test`, `coverage-query-meta-eq.test`, `coverage-query-tag.test`, `cov2-query-*.test`\n     7. Consider adding `meta`/`data` function aliases in `item.cc` if needed\n     8. Commit and push\n\n8. **Current Work:**\n   Just completed deep design analysis for refactoring the `==` feature in `src/query.cc`. The cpp-pro agent completed its deep analysis recommending a hybrid Option C+A approach:\n   - Add `TOK_EQEQ` as a distinct lexer token (eliminating double-peek)\n   - Delegate `tag(...)` / `meta(...)` / `data(...)` parenthesized form to the value-expression parser `expr_t` (eliminating node inspection)\n   - Bare `%foo == bar` still handled by simplified `make_meta_node`\n   \n   Verified via test grep that no existing test relies on `tag(boolean_subquery)` syntax in query position. The CI benchmark rerun passed (15m21s, all green), confirming the original 5.02% regression was noise. Was about to commit to the final plan and begin implementing the edits.\n\n9. **Optional Next Step:**\n   Implement the refactor. Per the user's explicit request: \"more naturally integrating this support into the value expression parser\" — implement Option C+A:\n   \n   1. First edit `src/query.h` to add `TOK_EQEQ` to the `kind_t` enum (line ~151), and update `to_string()` and `symbol()` methods to handle it.\n   2. Then edit `src/query.cc` lexer `next_token()` case `'=':` (line 370) to peek for a second `=` and emit `TOK_EQEQ`.\n   3. Refactor `make_meta_node()` (lines 408-461) to handle `TOK_EQ` and `TOK_EQEQ` symmetrically, building fresh nodes with no mutation.\n   4. Either delegate the LPAREN+TOK_META path to `expr_t` (Option C — cleanest) or factor lines 580-615 into a clean `try_apply_meta_eq_suffix(node, ctx)` helper that produces fresh nodes.\n   5. Run tests with `cd build && ctest -R 842` and related regression tests.\n   6. Commit inside `nix develop` shell (per user's CLAUDE.md memory notes).\n   \n   User's exact quote from the most recent task request: \"do some deeper research into more naturally integrating this support into the value expression parser.\"\n\nIf you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/johnw/.config/claude/personal/projects/-Users-johnw-src-ledger-fix-842/bf5093be-8e95-4563-a003-19652457f04c.jsonl\nContinue the conversation from where it left off without asking the user any further questions. Resume directly — do not acknowledge the summary, do not recap what was happening, do not preface with \"I'll continue\" or similar. Pick up the last task as if the break never happened.",
+          "timestamp": "2026-04-22T18:32:00.731Z"
+        },
+        {
+          "type": "user",
+          "text": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.\n\nSummary:\n1. Primary Request and Intent:\n   - **Original intent (from prior conversation):** User requested a refactor of the `==` metadata equality feature in `src/query.cc` to avoid the \"hack\" feeling of the original implementation. Specifically, the user said: \"I don't like how this == feature, as currently implemented, relies upon things like scanning for the closing paranthesis of a function invocation. Use your superpowers and cpp-pro to do some deeper research into more naturally integrating this support into the value expression parser.\"\n   - **Most recent explicit request:** After the first refactor (adding TOK_EQEQ, fresh-node construction, shared helper), user said the remaining post-recursion block in `parse_query_term` is \"still horribly awkward, although the rest has been cleaned up nicely. What can we do to make this less special-case?\" The user quoted the specific block: the TOK_EQEQ check with AST inspection (O_CALL + has_tag ident + VALUE right) in the TOK_META case of `parse_query_term`.\n   - CI monitoring: also monitor PR #3053 CI until green and address any bot comments (BugBot, Graphite, Cursor, Devin).\n\n2. Key Technical Concepts:\n   - Ledger: C++ double-entry accounting CLI, flat `src/` directory\n   - Recursive-descent parser for query language (query_t → parser_t → lexer_t)\n   - AST built from `expr_t::op_t` nodes (O_CALL, O_EQ, O_MATCH, O_AND, O_OR, O_NOT, O_CONS, VALUE, IDENT)\n   - Query sub-language tokens: TOK_META (`%`, `tag`, `meta`, `data`), TOK_EQ (`=`), TOK_EQEQ (`==`), TERM, LPAREN, RPAREN\n   - Semantic distinction: `has_tag(mask)` = bool existence, `has_tag(mask, value_mask)` = regex value match, `tag(mask) == \"value\"` = exact string comparison\n   - `peek_token` / `next_token` / `push_token` lexer lookahead API\n   - Nix develop shell required for lefthook pre-commit (cmake + 4000+ ctest + doxygen + nix build)\n   - GitHub Actions CI: `cmake.yml`, `perf.yml`, benchmark, sanitizers, coverage, lint-check\n\n3. Files and Code Sections:\n   - **`/Users/johnw/src/ledger/fix-842/src/query.h`** (536 lines)\n     - Modified: added `TOK_EQEQ` token kind to `kind_t` enum (line ~151)\n     - Added `TOK_EQEQ` cases to `to_string()` and `symbol()` methods\n     - Added declaration for `make_meta_eq_node` static helper in `parser_t`:\n       ```cpp\n       static expr_t::ptr_op_t make_meta_eq_node(const expr_t::ptr_op_t& mask_arg,\n                                                 const string& val_str);\n       ```\n\n   - **`/Users/johnw/src/ledger/fix-842/src/query.cc`** (867 lines)\n     - Modified lexer `next_token` case `'='` to emit TOK_EQEQ for `==`:\n       ```cpp\n       case '=':\n         if (arg_i == (*begin).as_string().begin()) { ++arg_i; return token_t(token_t::TOK_NOTE); }\n         ++arg_i;\n         if (arg_i != arg_end && *arg_i == '=') { ++arg_i; return token_t(token_t::TOK_EQEQ); }\n         return token_t(token_t::TOK_EQ);\n       ```\n     - Added `make_meta_eq_node` helper builds `O_EQ(O_CALL(tag, mask), VALUE(string))` with fresh nodes\n     - Refactored `make_meta_node` to dispatch on TOK_EQEQ first, then TOK_EQ, else bare\n     - **Last edit (just completed):** removed the post-recursion block from the TOK_META case in `parse_query_term`, leaving:\n       ```cpp\n       case lexer_t::token_t::TOK_CODE:\n       case lexer_t::token_t::TOK_PAYEE:\n       case lexer_t::token_t::TOK_NOTE:\n       case lexer_t::token_t::TOK_ACCOUNT:\n       case lexer_t::token_t::TOK_META:\n       case lexer_t::token_t::TOK_EXPR:\n         node = parse_query_term(tok.kind);\n         if (!node)\n           throw_(parse_error, _f(\"%1% operator not followed by argument\") % tok.symbol());\n         break;\n       ```\n     - **NOT YET DONE:** The LPAREN case still needs the equivalent logic added to handle the trailing `==` when `tok_context == TOK_META`. Current LPAREN case still reads:\n       ```cpp\n       case lexer_t::token_t::LPAREN:\n         if (++parse_depth > MAX_PARSE_DEPTH)\n           throw_(parse_error, _(\"Query expression nested too deeply\"));\n         node = parse_query_expr(tok_context, true);\n         --parse_depth;\n         tok = lexer.next_token(tok_context);\n         if (tok.kind != lexer_t::token_t::RPAREN)\n           tok.expected(')');\n         break;\n       ```\n\n   - **`/Users/johnw/src/ledger/fix-842/test/regress/842.test`** — regression test using `reg %Category==food` and `reg %Category=food`\n   - **`/Users/johnw/src/ledger/fix-842/test/regress/coverage-query-meta-eq.test`** — uses `%Category=transport`, `%Category=food`\n   - **`/Users/johnw/src/ledger/fix-842/test/regress/coverage-query-tag.test`** — uses `%food`\n\n4. Errors and fixes:\n   - **Pre-existing clangd diagnostics** (system.hh not found, unknown types): IGNORED — all stem from clangd not loading the PCH context; actual build succeeded fine.\n   - **4 \"Not Run\" unit tests** after initial `make ledger`: fixed by running `make -j8 UtilTests MathTests FilterTests TextualTests` — all then passed.\n   - **No actual compile or test errors** after my TOK_EQEQ refactor. All 4285 tests passed locally.\n   - **No CI failures** — all 13 GitHub Actions jobs on PR #3053 passed (final confirmed via bsoyqlewa background monitor).\n\n5. Problem Solving:\n   - **Solved:** Added TOK_EQEQ as distinct lexer token → eliminated double-peek hack.\n   - **Solved:** Added `make_meta_eq_node` helper → eliminated duplicated O_EQ construction code and node mutation.\n   - **Solved:** Refactored `make_meta_node` to linear dispatch → cleaner branch structure, no mutation.\n   - **Solved:** CI re-run benchmark was noise; all 13 jobs now green on latest push.\n   - **In progress (interrupted):** User asked for further cleanup of the post-recursion block. I removed the block from TOK_META case but HAVE NOT YET added the replacement logic in the LPAREN case. Current state leaves `%tag(\"Category\")==food` broken because the `==` after `)` is no longer handled.\n\n6. All user messages:\n   - (from compaction) `/fix-ci`: Fix CI failures on PR #3053, monitor until green, address bot comments.\n   - (from compaction) `/medium I don't like how this == feature, as currently implemented, relies upon things like scanning for the closing paranthesis of a function invocation. Use your superpowers and cpp-pro to do some deeper research into more naturally integrating this support into the value expression parser. It should feel like a hack, the way the current implementation does.`\n   - \"Check the status of the re-run benchmark for PR #3053 (run ID 24687093019). If it passed, we're done. If it failed again, investigate whether the regression is real or noise and act accordingly. Also check for any new bot comments on the PR.\"\n   - `/fix-ci` (three separate invocations during CI wait)\n   - **Most recent:** \"This logic is still horribly awkward, although the rest has been cleaned up nicely. What can we do to make this less special-case?\" with the AST-inspection code block quoted.\n\n7. Pending Tasks:\n   - **Critical:** Add the trailing `==` handling to the LPAREN case in `parse_query_term` (gated on `tok_context == TOK_META`) to replace the removed post-recursion block. Without this, `%tag(\"Category\") == \"food\"` form is broken.\n   - Run tests to verify the restructure preserves behavior (especially 842.test).\n   - Commit the second-pass cleanup inside nix develop shell.\n   - Push and monitor CI.\n\n8. Current Work:\n   User pointed to the remaining awkward code block:\n   ```cpp\n   if (tok.kind == lexer_t::token_t::TOK_META && node->kind == expr_t::op_t::O_CALL &&\n       node->left() && node->left()->is_ident() && node->left()->as_ident() == \"has_tag\" &&\n       node->right() && node->right()->kind == expr_t::op_t::VALUE &&\n       lexer.peek_token(tok_context).kind == lexer_t::token_t::TOK_EQEQ) {\n     lexer.next_token(tok_context); // consume '=='\n     lexer_t::token_t val_tok = lexer.next_token(tok_context);\n     if (val_tok.kind != lexer_t::token_t::TERM)\n       throw_(parse_error, _(\"Metadata equality operator not followed by term\"));\n     assert(val_tok.value);\n     node = make_meta_eq_node(node->right(), *val_tok.value);\n   }\n   ```\n   And asked: \"What can we do to make this less special-case?\"\n\n   I reasoned that this block only ever fires for the LPAR********META path — because TERM cases go through `make_meta_node`, which already handles `==` directly. So the right move is to push the check into the LPAREN case of `parse_query_term`, gated on `tok_context == TOK_META`. That way the logic lives where the closing `)` is consumed rather than after an opaque recursion returns.\n\n   I completed the first half: **removed** the block from the TOK_META case in `parse_query_term`. The TOK_META case is now just:\n   ```cpp\n   case lexer_t::token_t::TOK_META:\n   case lexer_t::token_t::TOK_EXPR:\n     node = parse_query_term(tok.kind);\n     if (!node)\n       throw_(parse_error, _f(\"%1% operator not followed by argument\") % tok.symbol());\n     break;\n   ```\n\n   I have **not yet** added the corresponding `==` handling to the LPAREN case. The build is currently broken for the `%tag(\"Category\") == \"food\"` form until that second edit lands.\n\n9. Optional Next Step:\n   Add the trailing `==` suffix handler to the LPAREN case in `parse_query_term` (file `/Users/johnw/src/ledger/fix-842/src/query.cc`, around the existing LPAREN case). The edit transforms:\n   ```cpp\n   case lexer_t::token_t::LPAREN:\n     if (++parse_depth > MAX_PARSE_DEPTH)\n       throw_(parse_error, _(\"Query expression nested too deeply\"));\n     node = parse_query_expr(tok_context, true);\n     --parse_depth;\n     tok = lexer.next_token(tok_context);\n     if (tok.kind != lexer_t::token_t::RPAREN)\n       tok.expected(')');\n     break;\n   ```\n   into a version that, after consuming `)`, checks `tok_context == TOK_META` + `peek == TOK_EQEQ` and calls `make_meta_eq_node` with the mask extracted from the inner has_tag call. User's quote establishing direction: \"This logic is still horribly awkward, although the rest has been cleaned up nicely. What can we do to make this less special-case?\"\n\n   After the edit: rebuild, run `test/regress/842.test`, `coverage-query-meta-eq.test`, and the broader query test suite to verify behavior preserved, then commit (in nix develop shell) and push to PR #3053.\n\nIf you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/johnw/.config/claude/personal/projects/-Users-johnw-src-ledger-fix-842/bf5093be-8e95-4563-a003-19652457f04c.jsonl\nContinue the conversation from where it left off without asking the user any further questions. Resume directly — do not acknowledge the summary, do not recap what was happening, do not preface with \"I'll continue\" or similar. Pick up the last task as if the break never happened.",
+          "timestamp": "2026-04-22T20:01:20.115Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-842/src/query.cc"
+          },
+          "timestamp": "2026-04-22T20:01:24.217Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-842/test/regress/842.test"
+          },
+          "timestamp": "2026-04-22T20:02:16.045Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn 'tag(.*)==\\|%tag(' test/ --include='*.test' 2>/dev/null | head -20",
+            "description": "Search for %tag(x)==y patterns in tests"
+          },
+          "timestamp": "2026-04-22T20:02:22.223Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn 'reg %\\|bal %\\|print %\\|reg meta\\|reg tag' test/ --include='*.test' 2>/dev/null | head -30",
+            "description": "Search for query-level metadata usage in tests"
+          },
+          "timestamp": "2026-04-22T20:02:27.061Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --oneline -20",
+            "description": "Check recent commits on fix-842 branch"
+          },
+          "timestamp": "2026-04-22T20:02:34.557Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git show 7fa722abc --stat",
+            "description": "View original == feature commit stat"
+          },
+          "timestamp": "2026-04-22T20:02:37.358Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git show 7fa722abc -- src/query.cc | head -200",
+            "description": "View original == feature commit diff"
+          },
+          "timestamp": "2026-04-22T20:03:01.516Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn 'auto_xact\\|automated\\|predicate' src/textual.cc src/xact.cc src/session.cc 2>/dev/null | grep -i 'parse\\|predicate\\|query' | head -20",
+            "description": "Find auto-xact predicate parsing"
+          },
+          "timestamp": "2026-04-22T20:03:35.958Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n 'automated_xact_t\\|parse_xact.*=\\|query_t\\|parse_query_args\\|parse_xact' src/textual.cc 2>/dev/null | head -20",
+            "description": "Find auto-xact parsing path"
+          },
+          "timestamp": "2026-04-22T20:03:40.951Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"case '='\" src/textual.cc",
+            "description": "Find auto-xact parse case"
+          },
+          "timestamp": "2026-04-22T20:03:43.960Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-842/src/textual.cc",
+            "limit": 50,
+            "offset": 280
+          },
+          "timestamp": "2026-04-22T20:03:47.531Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n 'automated_xact_directive\\|query_t' src/textual.cc | head -20",
+            "description": "Find automated_xact_directive and query_t usage in textual.cc"
+          },
+          "timestamp": "2026-04-22T20:03:50.716Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn 'automated_xact_directive' src/ | head",
+            "description": "Find automated_xact_directive definition"
+          },
+          "timestamp": "2026-04-22T20:03:53.612Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-842/src/textual_xacts.cc",
+            "limit": 80,
+            "offset": 85
+          },
+          "timestamp": "2026-04-22T20:03:56.682Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-842/src/textual_xacts.cc",
+            "limit": 120,
+            "offset": 165
+          },
+          "timestamp": "2026-04-22T20:03:59.285Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn '%(.*and\\|%(.*or\\|%(.*&\\|%(.*|\\|tag(.*and\\|tag(.*or' test/ --include='*.test' 2>/dev/null | head -20",
+            "description": "Search for complex subqueries in metadata context"
+          },
+          "timestamp": "2026-04-22T20:04:48.762Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn 'test.*tag(\\|test.*meta(\\|test.*data(\\|reg tag(\\|reg meta(\\|bal tag(' test/regress/ test/baseline/ 2>/dev/null | grep -v format | grep -v 'has_tag\\|get_tag\\|lot_tag' | head -20",
+            "description": "Find tests using tag(x) as a query"
+          },
+          "timestamp": "2026-04-22T20:05:10.937Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n 'push_token\\|token_cache\\|peek_token' src/query.h src/query.cc",
+            "description": "Find push_token, token_cache, peek_token implementations"
+          },
+          "timestamp": "2026-04-22T20:05:42.314Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn '%(\\|meta (\\|tag (\\|data (' test/regress/ test/baseline/ 2>/dev/null | head -30",
+            "description": "Search for subquery uses in metadata context"
+          },
+          "timestamp": "2026-04-22T20:05:57.589Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn 'reg %(\\|reg tag (\\|reg meta (\\|reg data (\\|reg %tag\\|reg %meta' test/ 2>/dev/null | head -20",
+            "description": "Search for metadata query with parens"
+          },
+          "timestamp": "2026-04-22T20:06:21.799Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-842/src/query.h",
+            "limit": 60,
+            "offset": 140
+          },
+          "timestamp": "2026-04-22T20:06:26.808Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the structure well. Let me simplify by pushing the `(pattern)` handling into the LPAREN case so it funnels through `make_meta_node` — no AST inspection needed.",
+          "timestamp": "2026-04-22T20:07:14.094Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-842/src/query.cc",
+            "new_string": " *   (*   TOK_META:                                                       *)\n *   (*     pattern                → has_tag(/pattern/)         (O_CALL node) *)\n *   (*     pattern TOK_EQ   value → has_tag(/pattern/, /value/) (O_CALL node) *)\n *   (*     pattern TOK_EQEQ value → tag(/pattern/) == \"value\"  (O_EQ  node) *)\n *   (*     A parenthesized pattern (`(pattern)`) desugars to the           *)\n *   (*     unparenthesized form, so `tag(name) == value` and               *)\n *   (*     `tag name==value` both produce the same tag()==value tree.      *)",
+            "old_string": " *   (*   TOK_META:                                                       *)\n *   (*     pattern                → has_tag(/pattern/)         (O_CALL node) *)\n *   (*     pattern TOK_EQ   value → has_tag(/pattern/, /value/) (O_CALL node) *)\n *   (*     pattern TOK_EQEQ value → tag(/pattern/) == \"value\"  (O_EQ  node) *)\n *   (*     The TOK_EQEQ form is also recognized after a parenthesized     *)\n *   (*     subquery, e.g. %tag(pattern) == value, in which case the       *)\n *   (*     has_tag(mask) built inside the parens is re-used as tag(mask). *)",
+            "replace_all": false
+          },
+          "timestamp": "2026-04-22T20:07:18.440Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now update the LPAREN case to funnel TOK_META parens through `make_meta_node`:",
+          "timestamp": "2026-04-22T20:07:21.752Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-842/src/query.cc",
+            "new_string": "  case lexer_t::token_t::LPAREN:\n    if (++parse_depth > MAX_PARSE_DEPTH)\n      throw_(parse_error, _(\"Query expression nested too deeply\"));\n    if (tok_context == lexer_t::token_t::TOK_META) {\n      // In TOK_META context, `(pattern)` is a parenthesized tag-name mask,\n      // not a boolean subexpression.  Forward the pattern to make_meta_node\n      // so any trailing `=` / `==` operator is handled uniformly with the\n      // unparenthesized form (`tag name` vs `tag(name)`).\n      lexer_t::token_t name_tok = lexer.next_token(tok_context);\n      if (name_tok.kind != lexer_t::token_t::TERM)\n        throw_(parse_error, _(\"Expected metadata tag name inside parentheses\"));\n      tok = lexer.next_token(tok_context);\n      if (tok.kind != lexer_t::token_t::RPAREN)\n        tok.expected(')');\n      assert(name_tok.value);\n      node = make_meta_node(*name_tok.value, tok_context);\n    } else {\n      node = parse_query_expr(tok_context, true);\n      tok = lexer.next_token(tok_context);\n      if (tok.kind != lexer_t::token_t::RPAREN)\n        tok.expected(')');\n    }\n    --parse_depth;\n    break;",
+            "old_string": "  case lexer_t::token_t::LPAREN:\n    if (++parse_depth > MAX_PARSE_DEPTH)\n      throw_(parse_error, _(\"Query expression nested too deeply\"));\n    node = parse_query_expr(tok_context, true);\n    --parse_depth;\n    tok = lexer.next_token(tok_context);\n    if (tok.kind != lexer_t::token_t::RPAREN)\n      tok.expected(')');\n    break;",
+            "replace_all": false
+          },
+          "timestamp": "2026-04-22T20:07:29.181Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me build and test.",
+          "timestamp": "2026-04-22T20:07:31.888Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cmake --build build --target ledger -j8 2>&1 | tail -30",
+            "description": "Build ledger"
+          },
+          "timestamp": "2026-04-22T20:07:32.603Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd build && TZ=America/Chicago python3 ../test/RegressTests.py --ledger ./ledger --sourcepath .. ../test/regress/842.test 2>&1 | tail -20",
+            "description": "Run 842.test regression"
+          },
+          "timestamp": "2026-04-22T20:07:41.962Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd build && TZ=America/Chicago python3 ../test/RegressTests.py --ledger ./ledger --sourcepath .. ../test/regress/coverage-query-meta-eq.test ../test/regress/coverage-query-tag.test ../test/regress/cov2-query-advanced.test ../test/regress/coverage-query-meta-keywords.test ../test/regress/coverage-query-meta-value.test ../test/regress/coverage-query-errors.test ../test/regress/exhaustive-query-errors.test ../test/regress/exhaustive-query-field-contexts.test 2>&1 | tail -30",
+            "description": "Run metadata query test suite"
+          },
+          "timestamp": "2026-04-22T20:07:52.608Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "pwd && ls -d build* 2>&1",
+            "description": "Check current directory and build dirs"
+          },
+          "timestamp": "2026-04-22T20:07:55.333Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "TZ=America/Chicago python3 ../test/RegressTests.py --ledger ./ledger --sourcepath .. ../test/regress/coverage-query-meta-eq.test ../test/regress/coverage-query-tag.test ../test/regress/cov2-query-advanced.test ../test/regress/coverage-query-meta-keywords.test ../test/regress/coverage-query-meta-value.test ../test/regress/coverage-query-errors.test ../test/regress/exhaustive-query-errors.test ../test/regress/exhaustive-query-field-contexts.test 2>&1 | tail -30",
+            "description": "Run metadata query test suite"
+          },
+          "timestamp": "2026-04-22T20:07:59.020Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "for t in coverage-query-meta-eq coverage-query-tag cov2-query-advanced coverage-query-meta-keywords coverage-query-meta-value coverage-query-errors exhaustive-query-errors exhaustive-query-field-contexts coverage-query-meta coverage-query-meta-keyword; do echo \"=== $t ===\"; TZ=America/Chicago python3 ../test/RegressTests.py --ledger ./ledger --sourcepath .. \"../test/regress/$t.test\" 2>&1 | tail -5; done",
+            "description": "Run query regression tests one by one"
+          },
+          "timestamp": "2026-04-22T20:08:03.386Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest -j8 2>&1 | tail -20",
+            "description": "Run full test suite",
+            "timeout": 600000
+          },
+          "timestamp": "2026-04-22T20:08:09.528Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-842/src/query.cc",
+            "limit": 80,
+            "offset": 560
+          },
+          "timestamp": "2026-04-22T20:09:10.969Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-842/src/query.cc",
+            "limit": 30,
+            "offset": 640
+          },
+          "timestamp": "2026-04-22T20:09:13.597Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-842/src/query.cc",
+            "new_string": " * - **Parenthesized sub-expressions**: Recurse into parse_query_expr, or in\n *   TOK_META context, consume a single pattern so `tag(name) == value`\n *   flows through make_meta_node like the unparenthesized form.\n */",
+            "old_string": " * - **Parenthesized sub-expressions**: Recurse into parse_query_expr.\n */",
+            "replace_all": false
+          },
+          "timestamp": "2026-04-22T20:09:19.310Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cmake --build build --target ledger -j8 2>&1 | tail -5",
+            "description": "Rebuild after docstring edit"
+          },
+          "timestamp": "2026-04-22T20:09:21.749Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cmake --build . --target ledger -j8 2>&1 | tail -5",
+            "description": "Rebuild ledger from build dir"
+          },
+          "timestamp": "2026-04-22T20:09:25.017Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest -j8 2>&1 | tail -5",
+            "description": "Run full test suite again",
+            "timeout": 600000
+          },
+          "timestamp": "2026-04-22T20:09:34.079Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-842 diff src/query.cc",
+            "description": "Review diff for query.cc"
+          },
+          "timestamp": "2026-04-22T20:10:36.076Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n 'make_meta_eq_node' src/query.cc src/query.h",
+            "description": "Check make_meta_eq_node usage"
+          },
+          "timestamp": "2026-04-22T20:10:40.202Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "-n": true,
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-842/src",
+            "pattern": "make_meta_eq_node"
+          },
+          "timestamp": "2026-04-22T20:10:43.579Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "clang-format --style=file -n /Users/johnw/src/ledger/fix-842/src/query.cc 2>&1 | head -20",
+            "description": "Check clang-format compliance"
+          },
+          "timestamp": "2026-04-22T20:10:47.374Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-842 status && git -C /Users/johnw/src/ledger/fix-842 log --oneline -5",
+            "description": "Review branch status and recent commits"
+          },
+          "timestamp": "2026-04-22T20:10:50.781Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-842 && nix develop --command bash -c 'echo ok' 2>&1 | tail -3",
+            "description": "Pre-build nix dev env",
+            "timeout": 600000
+          },
+          "timestamp": "2026-04-22T20:10:56.663Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-842/.lefthook-local.yml 2>&1",
+            "description": "Check for .lefthook-local.yml"
+          },
+          "timestamp": "2026-04-22T20:11:03.583Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c 'git commit -am \"$(cat <<'\"'\"'EOF'\"'\"'\nSimplify `==` parsing: consume (pattern) in TOK_META context directly (#842)\n\nPreviously the `tag(\"Category\") == \"food\"` form was handled by parsing the\nparenthesized body as a full subexpression, building has_tag(mask), and then\ninspecting the resulting AST to detect a trailing `==` and rebuild the tree\nas tag(mask) == \"value\".  The AST inspection was fragile and special-cased\nthe exact has_tag(VALUE) shape.\n\nInstead, recognize `(pattern)` inside TOK_META context as a parenthesized\ntag-name mask and forward the pattern through make_meta_node.  That helper\nalready peeks for `=` / `==` to choose between has_tag, has_tag/value, and\ntag()==string, so parenthesized and unparenthesized metadata queries share\none code path.  No AST inspection, no post-recursion rewrite.\n\nEOF\n)\"' 2>&1 | tail -40",
+            "description": "Commit simplification inside nix develop",
+            "timeout": 600000
+          },
+          "timestamp": "2026-04-22T20:11:12.772Z"
+        }
+      ],
+      "total_additions": 25,
+      "total_deletions": 26,
+      "accepted_lines": 25,
+      "overriden_lines": 0
+    }
+  }
+}
