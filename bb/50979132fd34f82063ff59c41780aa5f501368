@@ -1,0 +1,9 @@
+src/stats.cc
+  97868713b74f4337 56-58,60,62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.3",
+  "base_commit_sha": "bb50979132fd34f82063ff59c41780aa5f501368",
+  "prompts": {}
+}
