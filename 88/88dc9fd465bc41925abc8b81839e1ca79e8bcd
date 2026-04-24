@@ -1,0 +1,1379 @@
+test/regress/1214.test
+  7a728e5544bc7370 1-27
+test/regress/1214-dir/a/b/t.dat
+  7a728e5544bc7370 1-3
+test/regress/1214-dir/a/c/t.dat
+  7a728e5544bc7370 1-3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.3",
+  "base_commit_sha": "8888dc9fd465bc41925abc8b81839e1ca79e8bcd",
+  "prompts": {
+    "7a728e5544bc7370": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1f232396-6f75-429f-9e2a-5506ca715a3d",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "<command-message>fix</command-message>\n<command-name>/fix</command-name>\n<command-args>1214</command-args>",
+          "timestamp": "2026-04-24T06:58:48.957Z"
+        },
+        {
+          "type": "user",
+          "text": "# Think, Research, Plan, Act, Review\n\nThink deeply to analyze the following query, construct a well thought out plan of action based on the following context, and then carefully execute that plan step by step.\n\nIf you find that the bug or feature you’re attempting to fix has already been addressed in an earlier commit, just add a regression test to demonstrate the item has been dealt with.\n\nCreate a PR for each using my jwiegley user on GitHub. The author/committer for all new commits should be signed by johnw@newartisans.com.\n\nThis series of jobs will take a long time, so make a comprehensive and effective plan and then execute step by step until you have completed them all and added new regression tests for each.\n\nNow, please analyze and fix the GitHub issue: 1214.\n\nNOTE: Do not work on a bug that already has a PR open that addresses it. In that case, just give the PR number and stop immediately.\n\n# If present, change confirmation tests into regression tests\n\nSometime an issue will already have a “confirmation test” in the directory test/todo, with the name `<ISSUE-NUMBER>.test`. This test “confirms” the existence of the bug by stating the behavior as described in the issue report. What should happen if such a test exists is that the test gets moved to `test/regress` and then modified to test the correct expected behavior. You may need to use cpp-pro and your superpowers to thoroughly research and discover what this correct behavior should be. Modify the new regression test to express this behavior -- which will necessary fail at first -- with the aim of correcting the issue until the test passes, plus whatever other additional tests you may add to confirm that no other behaviors have been impacted by the fixes you made to the issue under question.\n\n# Follow these steps\n\n1. Use `gh issue view` to get the issue details\n2. Understand the problem described in the issue\n3. Search the codebase for relevant files\n4. Implement the necessary changes to fix the issue\n5. Write and run tests to verify the fix\n6. Ensure code passes linting and type checking\n7. Leave your work uncommitted in the working tree, so it can be reviewed.\n\nRemember the following:\n- Use the GitHub CLI (`gh`) for all GitHub-related tasks\n- Search the codebase for relevant files\n- Ensure code passes linting and type checking after doing any work\n- Use cpp-pro, python-pro, emacs-lisp-pro, rust-pro or haskell-pro as needed for diagnosing and analyzing PRs, fixing code, and writing any new code.\n- Use Web Search and Perplexity as need for research and discovering resources.\n- Use sequential-thinking when appropriate to break down tasks further.\n- Use context7 whenever code examples might help.\n\nCommit all work as a series of atomic, logically sequenced commits. Each commit should represent one coherent change that can be understood, reviewed, and reverted independently.\n\n# Monitor your work after submitting the PR\n\nUse `gh` to montainer for CI test results and possible BugBot comments. If CI tests are failing for this PR, use the appropriate programming language agent to diagnose and resolve this issue, then push your fixes to the PR and monitor the CI test results using `gh` until you observe that everything passes correctly. If any further problems should be observed, repeat this diagnose, resolve, push and monitor process until everything is working with this PR.\n\nAlso, if there are any BugBot, Cursor or Devin comments on this PR, I want you to fix and address these comments from these bots, and then after you have pushed the fixes, I want you to reply to those comments and then mark them resolved.\n\n# Commit Decomposition Principles\n\n**Scope each commit to a single logical change.** A commit should do exactly one thing: add a function, fix a bug, refactor a module, update documentation. If you find yourself writing \"and\" in a commit message, consider splitting the commit.\n\n**Sequence commits to tell a story.** Arrange commits so each builds naturally on the previous. A reviewer reading the series should understand why each change was made and how the code evolved. Foundational changes come before dependent ones.\n\n**Keep each commit in a working state.** Every commit should compile, pass tests, and not introduce obvious regressions. This enables bisection for debugging and allows reviewers to check out any point in history.\n\n# Categorizing Changes\n\nBefore committing, analyze the working tree and group changes into categories:\n\n1. **Infrastructure/setup changes** — new dependencies, configuration, tooling\n2. **Refactoring** — restructuring existing code without changing behavior\n3. **New functionality** — features, APIs, modules\n4. **Bug fixes** — corrections to existing behavior\n5. **Tests** — new or modified test coverage\n6. **Documentation** — comments, READMEs, inline docs\n\nCommit these categories in order when dependencies exist between them. Refactoring that enables a new feature should precede the feature commit.\n\n# Commit Message Format\n\n```\n<summary>\n\n<body>\n\n<footer>\n```\n\n**Summary line:** Imperative mood, no period, under 50 characters. Describe what applying the commit does, not what you did.\n\n**Body:** Explain the motivation and contrast with previous behavior. Wrap at 72 characters. Focus on *why*, not *what* (the diff shows what).\n\n**Footer:** Reference issues, breaking changes, or co-authors.\n\n# Staging Strategy\n\nUse selective staging to craft precise commits:\n\n- `git add -p` for hunks within files\n- `git add <specific-files>` to group related files\n- Review staged changes with `git diff --staged` before committing\n\nWhen a single file contains changes belonging to multiple logical commits, stage hunks separately rather than committing the entire file.\n\n# Quality Checklist\n\nBefore finalizing each commit:\n\n- [ ] Does this commit do exactly one thing?\n- [ ] Could someone understand this change without seeing other commits?\n- [ ] Is the commit message searchable? Will someone find this when grepping history?\n- [ ] Does the code compile and pass tests at this point?\n- [ ] Would reverting this commit cleanly undo one logical change?\n\n# Example Decomposition\n\nGiven work that adds a feature with tests and required refactoring:\n\n```\n1. Extract token validation into dedicated module\n2. Add unit tests for token validation\n3. Implement refresh token rotation\n4. Add integration tests for token refresh flow\n5. Document refresh token behavior in API guide\n```\n\nEach commit is independently reviewable, the sequence shows logical progression, and future developers can find relevant changes through targeted searches.\n\n# Handling Mixed Changes\n\nIf the working tree contains entangled changes:\n\n1. **Identify the distinct changes** — list what logical modifications exist\n2. **Determine dependencies** — which changes require others to be present\n3. **Create a commit plan** — order commits to satisfy dependencies\n4. **Stage incrementally** — use partial staging to isolate each change\n5. **Verify at each step** — ensure the repository works after each commit\n\nWhen changes are too entangled to separate cleanly, prefer a slightly larger commit with a clear message over a commit that leaves the repository in a broken state.\n",
+          "timestamp": "2026-04-24T06:58:48.957Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I'll start by analyzing issue #1214 and checking for existing PRs.",
+          "timestamp": "2026-04-24T06:58:56.230Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 1214 --repo ledger/ledger",
+            "description": "View issue #1214 details"
+          },
+          "timestamp": "2026-04-24T06:58:56.282Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh pr list --repo ledger/ledger --state all --search \"1214\" --limit 10",
+            "description": "Check for existing PRs for issue 1214"
+          },
+          "timestamp": "2026-04-24T06:58:56.999Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1214/test/todo/ 2>/dev/null | grep -i 1214",
+            "description": "Check for existing todo test"
+          },
+          "timestamp": "2026-04-24T06:58:58.167Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1214/test/regress/ 2>/dev/null | grep -i 1214",
+            "description": "Check for existing regression test"
+          },
+          "timestamp": "2026-04-24T06:58:58.544Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 1214 --repo ledger/ledger --comments",
+            "description": "View full issue with comments"
+          },
+          "timestamp": "2026-04-24T06:59:13.768Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "pwd && git log --oneline -5",
+            "description": "Check current state"
+          },
+          "timestamp": "2026-04-24T06:59:14.125Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the issue. The `!include` directive doesn't support globs with multiple wildcards (e.g., `a/*/*.ledger`). Let me research the current implementation.",
+          "timestamp": "2026-04-24T06:59:27.897Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"include\" /Users/johnw/src/ledger/fix-1214/src/textual.cc | grep -i \"direc\\|glob\\|parse\" | head -30",
+            "description": "Find include directive code"
+          },
+          "timestamp": "2026-04-24T06:59:28.398Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"include_directive\\|include_file\\|glob\" /Users/johnw/src/ledger/fix-1214/src/*.cc /Users/johnw/src/ledger/fix-1214/src/*.h | head -30",
+            "description": "Find include/glob refs"
+          },
+          "timestamp": "2026-04-24T06:59:29.240Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"include\\|glob\" /Users/johnw/src/ledger/fix-1214/src/textual.cc | grep -i \"glob\\|directive\\|wildcard\\|include_dir\\|parse_incl\" | head -20",
+            "description": "Find include code in textual.cc"
+          },
+          "timestamp": "2026-04-24T06:59:33.478Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"include_directive\\|\\\"include\\\"\\|include_dir\" /Users/johnw/src/ledger/fix-1214/src/ | head -20",
+            "description": "Find include directives"
+          },
+          "timestamp": "2026-04-24T06:59:34.324Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1214/src/textual_directives.cc",
+            "limit": 100,
+            "offset": 267
+          },
+          "timestamp": "2026-04-24T06:59:39.430Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1214/src/textual_directives.cc",
+            "limit": 50,
+            "offset": 367
+          },
+          "timestamp": "2026-04-24T06:59:42.713Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me investigate further and check existing tests for include glob patterns.",
+          "timestamp": "2026-04-24T07:00:05.480Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rln \"include.*\\*\" /Users/johnw/src/ledger/fix-1214/test/ 2>/dev/null | head -10",
+            "description": "Find existing include glob tests"
+          },
+          "timestamp": "2026-04-24T07:00:05.536Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"!include\\|include \" /Users/johnw/src/ledger/fix-1214/test/regress/ 2>/dev/null | grep -i \"\\*\" | head -20",
+            "description": "Find wildcard includes"
+          },
+          "timestamp": "2026-04-24T07:00:06.136Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1214/src/textual_internal.h",
+            "limit": 30,
+            "offset": 290
+          },
+          "timestamp": "2026-04-24T07:00:06.782Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me examine the existing glob test and then examine the current directory structure to plan my implementation.",
+          "timestamp": "2026-04-24T07:00:10.623Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1214/test/regress/cov9-include-glob.test"
+          },
+          "timestamp": "2026-04-24T07:00:11.070Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1214/test/regress/cov9-include-dir/ 2>/dev/null; ls /Users/johnw/src/ledger/fix-1214/test/regress/glob_includes/ 2>/dev/null",
+            "description": "Check test glob directories"
+          },
+          "timestamp": "2026-04-24T07:00:12.170Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"mask_t\\|assign_glob\\|assign(\\|mask::match\" /Users/johnw/src/ledger/fix-1214/src/mask.* | head -20",
+            "description": "Look at mask_t interface"
+          },
+          "timestamp": "2026-04-24T07:00:13.426Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1214/src/mask.cc",
+            "limit": 50,
+            "offset": 379
+          },
+          "timestamp": "2026-04-24T07:00:22.491Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me reproduce the bug locally, plan the fix, and check the test structure.",
+          "timestamp": "2026-04-24T07:00:26.889Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1214/build/ledger 2>/dev/null && echo \"Build exists\" || echo \"Need to build\"",
+            "description": "Check if build exists"
+          },
+          "timestamp": "2026-04-24T07:00:27.610Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1214/test/regress/ | grep -E \"^(cov|glob|164|166)\" | head -10",
+            "description": "Look at similar glob tests"
+          },
+          "timestamp": "2026-04-24T07:00:28.748Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1214/test/regress/1662.test"
+          },
+          "timestamp": "2026-04-24T07:00:29.269Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c 'echo ok' 2>&1 | tail -3",
+            "description": "Verify nix dev shell"
+          },
+          "timestamp": "2026-04-24T07:00:32.169Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c 'cmake -B build $cmakeFlags -DCMAKE_C_COMPILER_FORCED=TRUE -DCMAKE_CXX_COMPILER_FORCED=TRUE 2>&1 | tail -10'",
+            "description": "Configure build"
+          },
+          "timestamp": "2026-04-24T07:00:39.391Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c 'cd /Users/johnw/src/ledger/fix-1214/build && make -j8 ledger 2>&1 | tail -20'",
+            "description": "Build ledger"
+          },
+          "timestamp": "2026-04-24T07:01:17.101Z"
+        },
+        {
+          "type": "assistant",
+          "text": "While building, let me plan the fix and draft the solution.",
+          "timestamp": "2026-04-24T07:03:28.804Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"resolve_path\\|expand_path\\|path =\" /Users/johnw/src/ledger/fix-1214/src/utils.* /Users/johnw/src/ledger/fix-1214/src/system.hh | head -20",
+            "description": "Find resolve_path definition"
+          },
+          "timestamp": "2026-04-24T07:03:29.921Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"path resolve_path\\|resolve_path(\" /Users/johnw/src/ledger/fix-1214/src/*.cc | head -10",
+            "description": "resolve_path usage"
+          },
+          "timestamp": "2026-04-24T07:03:30.743Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1214/src/utils.cc",
+            "limit": 60,
+            "offset": 785
+          },
+          "timestamp": "2026-04-24T07:03:39.102Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me examine the include section and imports in the file:",
+          "timestamp": "2026-04-24T07:04:41.178Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1214/src/textual_directives.cc",
+            "limit": 100,
+            "offset": 1
+          },
+          "timestamp": "2026-04-24T07:04:41.179Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"filesystem\\|using namespace\\|std::filesystem\" /Users/johnw/src/ledger/fix-1214/src/textual_internal.h /Users/johnw/src/ledger/fix-1214/src/utils.h | head -10",
+            "description": "Check filesystem namespace"
+          },
+          "timestamp": "2026-04-24T07:04:47.865Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"^using \\|^namespace \" /Users/johnw/src/ledger/fix-1214/src/utils.h | head -20",
+            "description": "Check utils.h using declarations"
+          },
+          "timestamp": "2026-04-24T07:04:53.894Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c 'test -f build/ledger && ls -la build/ledger' 2>&1",
+            "description": "Check build status"
+          },
+          "timestamp": "2026-04-24T07:04:59.865Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "tail -5 /private/tmp/claude-501/-Users-johnw-src-ledger-fix-1214/1f232396-6f75-429f-9e2a-5506ca715a3d/tasks/bbgwz0593.output 2>&1",
+            "description": "Check build progress"
+          },
+          "timestamp": "2026-04-24T07:05:18.279Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "wc -l /private/tmp/claude-501/-Users-johnw-src-ledger-fix-1214/1f232396-6f75-429f-9e2a-5506ca715a3d/tasks/bbgwz0593.output && tail -20 /private/tmp/claude-501/-Users-johnw-src-ledger-fix-1214/1f232396-6f75-429f-9e2a-5506ca715a3d/tasks/bbgwz0593.output",
+            "description": "More build info"
+          },
+          "timestamp": "2026-04-24T07:05:25.353Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me monitor the build task:",
+          "timestamp": "2026-04-24T07:05:32.626Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "ToolSearch",
+          "input": {
+            "max_results": 4,
+            "query": "select:TaskList,TaskGet,TaskOutput,Monitor"
+          },
+          "timestamp": "2026-04-24T07:05:32.749Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskOutput",
+          "input": {
+            "block": true,
+            "task_id": "bbgwz0593",
+            "timeout": 180000
+          },
+          "timestamp": "2026-04-24T07:05:42.778Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Build succeeded. Let me verify the bug reproduces, then implement the fix.",
+          "timestamp": "2026-04-24T07:06:33.184Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "mkdir -p /tmp/ledger_bug_1214/a/b /tmp/ledger_bug_1214/a/c && cat > /tmp/ledger_bug_1214/a/b/t.ledger <<'EOF'\n2024/01/15 Payee B\n    Expenses:Food    $10.00\n    Assets:Cash\nEOF\ncat > /tmp/ledger_bug_1214/a/c/t.ledger <<'EOF'\n2024/01/16 Payee C\n    Expenses:Rent    $20.00\n    Assets:Cash\nEOF\necho '!include a/*/*.ledger' > /tmp/ledger_bug_1214/t.ledger\ncd /tmp/ledger_bug_1214 && /Users/johnw/src/ledger/fix-1214/build/ledger -f t.ledger bal 2>&1",
+            "description": "Reproduce the bug"
+          },
+          "timestamp": "2026-04-24T07:06:36.805Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Bug confirmed. Now let me implement the fix.",
+          "timestamp": "2026-04-24T07:06:46.593Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1214/src/textual_directives.cc",
+            "limit": 150,
+            "offset": 250
+          },
+          "timestamp": "2026-04-24T07:06:47.510Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I'll refactor `include_directive` to support globs at any path component. I'll extract a recursive helper function.",
+          "timestamp": "2026-04-24T07:07:55.872Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1214/src/textual_directives.cc",
+            "new_string": "namespace {\n\n/// Return true if the path component contains any shell glob metacharacters.\nbool has_glob_chars(const string& component) {\n  return component.find_first_of(\"*?[\") != string::npos;\n}\n\n/// Recursively expand a glob path by walking its components.\n///\n/// Components without glob characters are appended to @p base and processed\n/// as a direct path join.  Components containing glob characters cause the\n/// current @p base to be enumerated and each matching entry drives a further\n/// recursive step.  When the last component matches, regular files are\n/// appended to @p results in sorted order.\n///\n/// This allows `include a/*/foo*.ledger`-style patterns to match across\n/// multiple directory levels, unlike simple parent-path iteration which\n/// would fail as soon as `a/*` itself does not exist.\nvoid expand_glob_path(const path& base, const std::vector<path>& components,\n                      std::size_t index, std::vector<path>& results) {\n  if (index == components.size()) {\n    if (is_regular_file(base))\n      results.push_back(base);\n    return;\n  }\n\n  const string comp = components[index].string();\n\n  if (!has_glob_chars(comp)) {\n    expand_glob_path(base / components[index], components, index + 1, results);\n    return;\n  }\n\n  if (!exists(base) || !is_directory(base))\n    return;\n\n  mask_t glob;\n  glob.assign_glob('^' + comp + '$');\n\n  std::vector<path> sorted_entries;\n  std::copy(std::filesystem::directory_iterator(base),\n            std::filesystem::directory_iterator(), std::back_inserter(sorted_entries));\n  std::sort(sorted_entries.begin(), sorted_entries.end());\n\n  const bool is_last = (index + 1 == components.size());\n\n  for (const path& entry : sorted_entries) {\n    string name = entry.filename().string();\n    if (!utf8::is_valid(name.begin(), name.end())) {\n      DEBUG(\"textual.include\", \"Skipping file with invalid UTF-8 name: \" << name);\n      continue;\n    }\n    if (!glob.match(name))\n      continue;\n\n    if (is_last) {\n      if (is_regular_file(entry))\n        results.push_back(entry);\n    } else if (is_directory(entry)) {\n      expand_glob_path(entry, components, index + 1, results);\n    }\n  }\n}\n\n/// Split @p filename into a starting @p base directory and the list of\n/// remaining path components that may contain glob metacharacters.\n///\n/// For absolute paths the base is the root path (e.g. `/`); for relative\n/// paths the base is the current directory so that enumeration works when\n/// the first component is itself a glob.\nvoid split_glob_path(const path& filename, path& base, std::vector<path>& components) {\n  if (filename.has_root_path()) {\n    base = filename.root_path();\n    for (const path& c : filename.relative_path())\n      components.push_back(c);\n  } else {\n    base = path(\".\");\n    for (const path& c : filename)\n      components.push_back(c);\n  }\n}\n\n} // namespace\n\n/**\n * @brief Process an `include` directive.\n *\n * The include path may contain glob wildcards at any level (e.g.\n * `include *.ledger`, `include a/*/b.ledger`).  Paths are resolved\n * relative to the directory of the current file.  Recursive includes\n * are detected and skipped; a hard depth limit of 100 prevents runaway\n * include chains.\n *\n * For each matched file, a new instance_t is created and parsed.  The\n * parent file's year/epoch state is saved and restored after the include\n * so that `year` directives in included files do not leak back.\n */\nvoid instance_t::include_directive(char* line) {\n  int include_depth = 0;\n  for (instance_t* p = parent; p; p = p->parent)\n    ++include_depth;\n  if (include_depth > 100)\n    throw_(parse_error, _(\"Maximum include depth exceeded (100)\"));\n\n  // Strip balanced surrounding quotes (\" or ') from the include path so that\n  // both `include \"file.ledger\"` and `include 'file.ledger'` work as expected.\n  // We also avoid the confusing case where a stray trailing quote (e.g.\n  // `include test.ledger\"`) is silently embedded in the filename.\n  {\n    std::size_t line_len = std::strlen(line);\n    if (line_len >= 2 && (line[0] == '\"' || line[0] == '\\'') && line[line_len - 1] == line[0]) {\n      line[line_len - 1] = '\\0';\n      ++line;\n    }\n  }\n\n  path filename;\n\n  DEBUG(\"textual.include\", \"include: \" << line);\n\n  if (line[0] != '/' && line[0] != '\\\\' && line[0] != '~') {\n    DEBUG(\"textual.include\", \"received a relative path\");\n    DEBUG(\"textual.include\", \"parent file path: \" << context.pathname);\n    path parent_path = context.pathname.parent_path();\n    if (parent_path.empty()) {\n      filename = context.current_directory / line;\n    } else {\n      filename = parent_path / line;\n      DEBUG(\"textual.include\", \"normalized path: \" << filename.string());\n    }\n  } else {\n    filename = line;\n  }\n\n  filename = resolve_path(filename);\n  DEBUG(\"textual.include\", \"resolved path: \" << filename.string());\n\n  path base;\n  std::vector<path> components;\n  split_glob_path(filename, base, components);\n\n  std::vector<path> matched_files;\n  expand_glob_path(base, components, 0, matched_files);\n\n  bool files_found = false;\n  for (const path& matched : matched_files) {\n    if (context.pathname == matched) {\n      DEBUG(\"textual.include\", \"Avoiding recursive include of: \" << matched);\n      continue;\n    }\n\n    journal_t* journal = context.journal;\n    account_t* master = top_account();\n    scope_t* scope = context.scope;\n    std::size_t& errors = context.errors;\n    std::size_t& count = context.count;\n    std::size_t& sequence = context.sequence;\n\n    DEBUG(\"textual.include\", \"Including: \" << matched);\n    DEBUG(\"textual.include\", \"Master account: \" << master->fullname());\n\n    context_stack.push(matched);\n\n    context_stack.get_current().journal = journal;\n    context_stack.get_current().master = master;\n    context_stack.get_current().scope = scope;\n\n    parse_context_t* save_current_context = journal->current_context;\n    journal->current_context = &context_stack.get_current();\n\n    // Save year state so that year/Y directives inside the included\n    // file do not bleed back into the parent file after the include\n    // returns.  This mirrors what end_apply_directive does for the\n    // \"apply year\" / \"end apply year\" pair.\n    optional<datetime_t> saved_epoch = epoch;\n    optional<int> saved_year_directive_year = year_directive_year;\n\n    try {\n      instance_t instance(context_stack, context_stack.get_current(), this, no_assertions,\n                          hash_type);\n      instance.apply_stack.push_front(application_t(\"account\", master));\n      instance.parse();\n    } catch (...) {\n      errors += context_stack.get_current().errors;\n      count += context_stack.get_current().count;\n      sequence += context_stack.get_current().sequence;\n\n      epoch = saved_epoch;\n      year_directive_year = saved_year_directive_year;\n\n      journal->current_context = save_current_context;\n      context_stack.pop();\n      throw;\n    }\n\n    epoch = saved_epoch;\n    year_directive_year = saved_year_directive_year;\n\n    errors += context_stack.get_current().errors;\n    count += context_stack.get_current().count;\n    sequence += context_stack.get_current().sequence;\n\n    journal->current_context = save_current_context;\n    context_stack.pop();\n\n    files_found = true;\n  }\n\n  if (!files_found)\n    throw_(std::runtime_error, _f(\"File to include was not found: %1%\") % filename.string());\n}",
+            "old_string": "/**\n * @brief Process an `include` directive.\n *\n * The include path may contain glob wildcards (e.g. `include *.ledger`).\n * Paths are resolved relative to the directory of the current file.\n * Recursive includes are detected and skipped; a hard depth limit of 100\n * prevents runaway include chains.\n *\n * For each matched file, a new instance_t is created and parsed.  The\n * parent file's year/epoch state is saved and restored after the include\n * so that `year` directives in included files do not leak back.\n */\nvoid instance_t::include_directive(char* line) {\n  int include_depth = 0;\n  for (instance_t* p = parent; p; p = p->parent)\n    ++include_depth;\n  if (include_depth > 100)\n    throw_(parse_error, _(\"Maximum include depth exceeded (100)\"));\n\n  // Strip balanced surrounding quotes (\" or ') from the include path so that\n  // both `include \"file.ledger\"` and `include 'file.ledger'` work as expected.\n  // We also avoid the confusing case where a stray trailing quote (e.g.\n  // `include test.ledger\"`) is silently embedded in the filename.\n  {\n    std::size_t line_len = std::strlen(line);\n    if (line_len >= 2 && (line[0] == '\"' || line[0] == '\\'') && line[line_len - 1] == line[0]) {\n      line[line_len - 1] = '\\0';\n      ++line;\n    }\n  }\n\n  path filename;\n\n  DEBUG(\"textual.include\", \"include: \" << line);\n\n  if (line[0] != '/' && line[0] != '\\\\' && line[0] != '~') {\n    DEBUG(\"textual.include\", \"received a relative path\");\n    DEBUG(\"textual.include\", \"parent file path: \" << context.pathname);\n    path parent_path = context.pathname.parent_path();\n    if (parent_path.empty()) {\n      filename = context.current_directory / line;\n    } else {\n      filename = parent_path / line;\n      DEBUG(\"textual.include\", \"normalized path: \" << filename.string());\n    }\n  } else {\n    filename = line;\n  }\n\n  filename = resolve_path(filename);\n  DEBUG(\"textual.include\", \"resolved path: \" << filename.string());\n\n  mask_t glob;\n  path parent_path = filename.parent_path();\n  glob.assign_glob('^' + filename.filename().string() + '$');\n\n  bool files_found = false;\n  if (exists(parent_path)) {\n    std::filesystem::directory_iterator end;\n\n    // Sort parent_path since on some file systems it is unsorted.\n    std::vector<path> sorted_parent_path;\n    std::copy(std::filesystem::directory_iterator(parent_path),\n              std::filesystem::directory_iterator(), std::back_inserter(sorted_parent_path));\n    std::sort(sorted_parent_path.begin(), sorted_parent_path.end());\n\n    for (std::vector<path>::const_iterator iter(sorted_parent_path.begin()),\n         it_end(sorted_parent_path.end());\n         iter != it_end; ++iter) {\n      if (is_regular_file(*iter)) {\n        string base = (*iter).filename().string();\n        // Skip files with invalid UTF-8 in their names to avoid encoding errors\n        if (!utf8::is_valid(base.begin(), base.end())) {\n          DEBUG(\"textual.include\", \"Skipping file with invalid UTF-8 name: \" << base);\n          continue;\n        }\n        if (context.pathname == *iter) {\n          DEBUG(\"textual.include\", \"Avoiding recursive include of: \" << *iter);\n          continue;\n        }\n        if (glob.match(base)) {\n          journal_t* journal = context.journal;\n          account_t* master = top_account();\n          scope_t* scope = context.scope;\n          std::size_t& errors = context.errors;\n          std::size_t& count = context.count;\n          std::size_t& sequence = context.sequence;\n\n          DEBUG(\"textual.include\", \"Including: \" << *iter);\n          DEBUG(\"textual.include\", \"Master account: \" << master->fullname());\n\n          context_stack.push(*iter);\n\n          context_stack.get_current().journal = journal;\n          context_stack.get_current().master = master;\n          context_stack.get_current().scope = scope;\n\n          parse_context_t* save_current_context = journal->current_context;\n          journal->current_context = &context_stack.get_current();\n\n          // Save year state so that year/Y directives inside the included\n          // file do not bleed back into the parent file after the include\n          // returns.  This mirrors what end_apply_directive does for the\n          // \"apply year\" / \"end apply year\" pair.\n          optional<datetime_t> saved_epoch = epoch;\n          optional<int> saved_year_directive_year = year_directive_year;\n\n          try {\n            instance_t instance(context_stack, context_stack.get_current(), this, no_assertions,\n                                hash_type);\n            instance.apply_stack.push_front(application_t(\"account\", master));\n            instance.parse();\n          } catch (...) {\n            errors += context_stack.get_current().errors;\n            count += context_stack.get_current().count;\n            sequence += context_stack.get_current().sequence;\n\n            epoch = saved_epoch;\n            year_directive_year = saved_year_directive_year;\n\n            journal->current_context = save_current_context;\n            context_stack.pop();\n            throw;\n          }\n\n          epoch = saved_epoch;\n          year_directive_year = saved_year_directive_year;\n\n          errors += context_stack.get_current().errors;\n          count += context_stack.get_current().count;\n          sequence += context_stack.get_current().sequence;\n\n          journal->current_context = save_current_context;\n          context_stack.pop();\n\n          files_found = true;\n        }\n      }\n    }\n  }\n\n  if (!files_found)\n    throw_(std::runtime_error, _f(\"File to include was not found: %1%\") % filename.string());\n}",
+            "replace_all": false
+          },
+          "timestamp": "2026-04-24T07:08:28.412Z"
+        },
+        {
+          "type": "assistant",
+          "text": "That's just the clangd IDE diagnostic not knowing the include path — it should compile fine via the build system. Let me rebuild and verify.",
+          "timestamp": "2026-04-24T07:08:45.585Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c 'cd /Users/johnw/src/ledger/fix-1214/build && make -j8 ledger 2>&1 | tail -20'",
+            "description": "Rebuild ledger with fix",
+            "run_in_background": true
+          },
+          "timestamp": "2026-04-24T07:08:46.558Z"
+        },
+        {
+          "type": "assistant",
+          "text": "While building, let me also create the regression test file.",
+          "timestamp": "2026-04-24T07:08:52.644Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1214/test/regress/coverage-wave3-glob-include.test"
+          },
+          "timestamp": "2026-04-24T07:08:53.830Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1214/test/regress/glob_includes/",
+            "description": "Check existing glob test layout"
+          },
+          "timestamp": "2026-04-24T07:08:54.223Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat /Users/johnw/src/ledger/fix-1214/test/regress/glob_includes/data_a.dat",
+            "description": "Check data file format"
+          },
+          "timestamp": "2026-04-24T07:08:58.226Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me create the regression test for issue #1214. The test needs subdirectories, so I'll create support files.",
+          "timestamp": "2026-04-24T07:09:01.470Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "mkdir -p /Users/johnw/src/ledger/fix-1214/test/regress/1214-dir/a/b /Users/johnw/src/ledger/fix-1214/test/regress/1214-dir/a/c",
+            "description": "Create regression test directories"
+          },
+          "timestamp": "2026-04-24T07:09:02.357Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Write",
+          "input": {
+            "content": "2024/01/15 Payee B\n    Expenses:Food    $10.00\n    Assets:Cash\n",
+            "file_path": "/Users/johnw/src/ledger/fix-1214/test/regress/1214-dir/a/b/t.dat"
+          },
+          "timestamp": "2026-04-24T07:09:06.075Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Write",
+          "input": {
+            "content": "2024/01/16 Payee C\n    Expenses:Rent    $20.00\n    Assets:Cash\n",
+            "file_path": "/Users/johnw/src/ledger/fix-1214/test/regress/1214-dir/a/c/t.dat"
+          },
+          "timestamp": "2026-04-24T07:09:07.195Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Write",
+          "input": {
+            "content": "; Regression test for issue #1214: `!include` should accept paths whose\n; directory components contain glob wildcards (e.g. `a/*/*.ledger`).\n;\n; Prior to the fix, the include directive only globbed the last path\n; component; any wildcard in a parent directory caused the include to\n; fail with \"File to include was not found\".\n\n!include 1214-dir/a/*/*.dat\n\ntest bal\n             $-30.00  Assets:Cash\n              $30.00  Expenses\n              $10.00    Food\n              $20.00    Rent\n--------------------\n                   0\nend test\n\ntest reg @\"Payee B\" --date-format \"%Y/%m/%d\"\n2024/01/15 Payee B              Expenses:Food                $10.00       $10.00\n                                Assets:Cash                 $-10.00            0\nend test\n\ntest reg @\"Payee C\" --date-format \"%Y/%m/%d\"\n2024/01/16 Payee C              Expenses:Rent                $20.00       $20.00\n                                Assets:Cash                 $-20.00            0\nend test\n",
+            "file_path": "/Users/johnw/src/ledger/fix-1214/test/regress/1214.test"
+          },
+          "timestamp": "2026-04-24T07:09:13.151Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskOutput",
+          "input": {
+            "block": true,
+            "task_id": "bn3skgd20",
+            "timeout": 300000
+          },
+          "timestamp": "2026-04-24T07:09:17.143Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The build error shows the doxygen comment got broken somehow. Let me check the file.",
+          "timestamp": "2026-04-24T07:10:06.833Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1214/src/textual_directives.cc",
+            "limit": 25,
+            "offset": 335
+          },
+          "timestamp": "2026-04-24T07:10:07.291Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The `*/` in `a/*/b.ledger` inside the doxygen comment closes the comment prematurely. Let me fix that.",
+          "timestamp": "2026-04-24T07:10:21.107Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1214/src/textual_directives.cc",
+            "new_string": "/**\n * @brief Process an `include` directive.\n *\n * The include path may contain glob wildcards at any level (e.g.\n * `include *.ledger` or `include a/sub*/b.ledger`).  Paths are resolved\n * relative to the directory of the current file.  Recursive includes\n * are detected and skipped; a hard depth limit of 100 prevents runaway\n * include chains.\n *\n * For each matched file, a new instance_t is created and parsed.  The\n * parent file's year/epoch state is saved and restored after the include\n * so that `year` directives in included files do not leak back.\n */",
+            "old_string": "/**\n * @brief Process an `include` directive.\n *\n * The include path may contain glob wildcards at any level (e.g.\n * `include *.ledger`, `include a/*/b.ledger`).  Paths are resolved\n * relative to the directory of the current file.  Recursive includes\n * are detected and skipped; a hard depth limit of 100 prevents runaway\n * include chains.\n *\n * For each matched file, a new instance_t is created and parsed.  The\n * parent file's year/epoch state is saved and restored after the include\n * so that `year` directives in included files do not leak back.\n */",
+            "replace_all": false
+          },
+          "timestamp": "2026-04-24T07:10:24.099Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c 'cd /Users/johnw/src/ledger/fix-1214/build && make -j8 ledger 2>&1 | tail -10'",
+            "description": "Rebuild ledger",
+            "run_in_background": true
+          },
+          "timestamp": "2026-04-24T07:10:30.350Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskOutput",
+          "input": {
+            "block": true,
+            "task_id": "bggve26ri",
+            "timeout": 300000
+          },
+          "timestamp": "2026-04-24T07:10:38.124Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/private/tmp/claude-501/-Users-johnw-src-ledger-fix-1214/1f232396-6f75-429f-9e2a-5506ca715a3d/tasks/bggve26ri.output"
+          },
+          "timestamp": "2026-04-24T07:15:09.025Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c 'cd /Users/johnw/src/ledger/fix-1214/build && make ledger 2>&1 | head -50'",
+            "description": "Get full build errors"
+          },
+          "timestamp": "2026-04-24T07:16:26.186Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskOutput",
+          "input": {
+            "block": true,
+            "task_id": "bo55ofqd8",
+            "timeout": 60000
+          },
+          "timestamp": "2026-04-24T07:18:37.095Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The `*/` in `sub*/b` still closes the comment. Let me reword to avoid any `*/` sequence.",
+          "timestamp": "2026-04-24T07:19:39.512Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1214/src/textual_directives.cc",
+            "new_string": "/**\n * @brief Process an `include` directive.\n *\n * The include path may contain shell glob wildcards in any path\n * component, not just the filename.  For example,\n * `include *.ledger` matches files in the current directory and\n * `include sub?/accounts/*.ledger` matches across multiple\n * directory levels.  Paths are resolved relative to the directory\n * of the current file.  Recursive includes are detected and\n * skipped; a hard depth limit of 100 prevents runaway include\n * chains.\n *\n * For each matched file, a new instance_t is created and parsed.\n * The parent file's year/epoch state is saved and restored after the\n * include so that `year` directives in included files do not leak\n * back.\n */",
+            "old_string": "/**\n * @brief Process an `include` directive.\n *\n * The include path may contain glob wildcards at any level (e.g.\n * `include *.ledger` or `include a/sub*/b.ledger`).  Paths are resolved\n * relative to the directory of the current file.  Recursive includes\n * are detected and skipped; a hard depth limit of 100 prevents runaway\n * include chains.\n *\n * For each matched file, a new instance_t is created and parsed.  The\n * parent file's year/epoch state is saved and restored after the include\n * so that `year` directives in included files do not leak back.\n */",
+            "replace_all": false
+          },
+          "timestamp": "2026-04-24T07:19:44.258Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c 'cd /Users/johnw/src/ledger/fix-1214/build && make -j8 ledger 2>&1 | tail -10'",
+            "description": "Rebuild",
+            "run_in_background": true
+          },
+          "timestamp": "2026-04-24T07:19:50.007Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskOutput",
+          "input": {
+            "block": true,
+            "task_id": "bda1774jz",
+            "timeout": 120000
+          },
+          "timestamp": "2026-04-24T07:20:01.683Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskOutput",
+          "input": {
+            "block": true,
+            "task_id": "bda1774jz",
+            "timeout": 240000
+          },
+          "timestamp": "2026-04-24T07:22:08.646Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskOutput",
+          "input": {
+            "block": true,
+            "task_id": "bda1774jz",
+            "timeout": 300000
+          },
+          "timestamp": "2026-04-24T07:26:15.071Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Build succeeded with a warning. Let me clean up the comment to avoid `/*` inside the block.",
+          "timestamp": "2026-04-24T07:27:01.779Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1214/src/textual_directives.cc",
+            "new_string": " * The include path may contain shell glob wildcards in any path\n * component, not just the filename.  For example,\n * `include accounts-@.ledger` (using `@` here to stand in for `*`)\n * matches files in the current directory, while patterns that also\n * wildcard a parent directory match across multiple directory\n * levels.  Paths are resolved relative to the directory",
+            "old_string": " * The include path may contain shell glob wildcards in any path\n * component, not just the filename.  For example,\n * `include *.ledger` matches files in the current directory and\n * `include sub?/accounts/*.ledger` matches across multiple\n * directory levels.  Paths are resolved relative to the directory",
+            "replace_all": false
+          },
+          "timestamp": "2026-04-24T07:27:05.379Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me simplify the comment further.",
+          "timestamp": "2026-04-24T07:27:13.385Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1214/src/textual_directives.cc",
+            "new_string": " * The include path may contain shell glob wildcards in any path\n * component, not just the filename -- wildcards in parent directory\n * components are expanded as well, so a single directive can match\n * files across multiple directory levels.  Paths are resolved\n * relative to the directory",
+            "old_string": " * The include path may contain shell glob wildcards in any path\n * component, not just the filename.  For example,\n * `include accounts-@.ledger` (using `@` here to stand in for `*`)\n * matches files in the current directory, while patterns that also\n * wildcard a parent directory match across multiple directory\n * levels.  Paths are resolved relative to the directory",
+            "replace_all": false
+          },
+          "timestamp": "2026-04-24T07:27:15.094Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c 'cd /Users/johnw/src/ledger/fix-1214/build && make -j8 ledger 2>&1 | tail -10'",
+            "description": "Rebuild",
+            "run_in_background": true
+          },
+          "timestamp": "2026-04-24T07:27:22.052Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskOutput",
+          "input": {
+            "block": true,
+            "task_id": "b3zmetdhz",
+            "timeout": 300000
+          },
+          "timestamp": "2026-04-24T07:29:54.850Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Clean build. Let me verify the fix works and run the regression tests.",
+          "timestamp": "2026-04-24T07:34:01.137Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /tmp/ledger_bug_1214 && /Users/johnw/src/ledger/fix-1214/build/ledger -f t.ledger bal 2>&1",
+            "description": "Verify bug fixed"
+          },
+          "timestamp": "2026-04-24T07:34:02.134Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "python3 test/RegressTests.py --ledger ./build/ledger --sourcepath . test/regress/1214.test 2>&1",
+            "description": "Run the new regression test"
+          },
+          "timestamp": "2026-04-24T07:34:03.981Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "TZ=America/Chicago python3 test/RegressTests.py --ledger ./build/ledger --sourcepath . test/regress/1214.test 2>&1",
+            "description": "Run regression test with TZ"
+          },
+          "timestamp": "2026-04-24T07:34:10.617Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "TZ=America/Chicago timeout 60 python3 test/RegressTests.py --ledger ./build/ledger --sourcepath . test/regress/1214.test 2>&1",
+            "description": "Run regression test with TZ and timeout"
+          },
+          "timestamp": "2026-04-24T07:34:25.279Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1214/build && TZ=America/Chicago ctest -R '^1214$' --output-on-failure 2>&1 | head -50",
+            "description": "Run regression test via ctest"
+          },
+          "timestamp": "2026-04-24T07:34:30.947Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "TZ=America/Chicago ctest -R 'regress' -N 2>&1 | grep 1214",
+            "description": "List test names"
+          },
+          "timestamp": "2026-04-24T07:34:36.949Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "TZ=America/Chicago ctest -N 2>&1 | grep -i 1214",
+            "description": "Check if 1214 test is registered"
+          },
+          "timestamp": "2026-04-24T07:34:42.848Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The new test file needs to be picked up by CMake. Let me re-configure.",
+          "timestamp": "2026-04-24T07:34:49.270Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1214 && nix develop --command bash -c 'cmake -B build $cmakeFlags -DCMAKE_C_COMPILER_FORCED=TRUE -DCMAKE_CXX_COMPILER_FORCED=TRUE 2>&1 | tail -5'",
+            "description": "Re-run cmake to pick up new test"
+          },
+          "timestamp": "2026-04-24T07:34:50.531Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskOutput",
+          "input": {
+            "block": true,
+            "task_id": "bgxzzwega",
+            "timeout": 60000
+          },
+          "timestamp": "2026-04-24T07:36:56.456Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "TZ=America/Chicago ctest -R '1214' --output-on-failure 2>&1 | tail -30",
+            "description": "Run the 1214 regression test"
+          },
+          "timestamp": "2026-04-24T07:37:04.372Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The regression test passes. Let me also run related tests to ensure I haven't broken anything.",
+          "timestamp": "2026-04-24T07:37:10.874Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "TZ=America/Chicago ctest -R 'include|glob|1662|cov9' --output-on-failure 2>&1 | tail -30",
+            "description": "Run include/glob related tests"
+          },
+          "timestamp": "2026-04-24T07:37:12.091Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/private/tmp/claude-501/-Users-johnw-src-ledger-fix-1214/1f232396-6f75-429f-9e2a-5506ca715a3d/tasks/bhz3a7yf0.output"
+          },
+          "timestamp": "2026-04-24T07:39:29.181Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "TZ=America/Chicago ctest -R '^RegressTest_coverage-mask-glob-escape$' --output-on-failure 2>&1 | tail -30",
+            "description": "Investigate failed test"
+          },
+          "timestamp": "2026-04-24T07:39:47.158Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1214/test/regress/coverage-mask-glob-escape.test"
+          },
+          "timestamp": "2026-04-24T07:39:56.196Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1214/test/regress/glob_test_dir/ 2>/dev/null",
+            "description": "Check glob_test_dir contents"
+          },
+          "timestamp": "2026-04-24T07:39:56.658Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The regression is from not handling `\\` escapes. Let me fix `has_glob_chars` to include it.",
+          "timestamp": "2026-04-24T07:40:15.732Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1214/src/textual_directives.cc",
+            "new_string": "/// Return true if the path component contains any shell glob metacharacters,\n/// including the backslash used by `mask_t::assign_glob` to escape literal\n/// characters (e.g. `data\\_a.dat`).\nbool has_glob_chars(const string& component) {\n  return component.find_first_of(\"*?[\\\\\") != string::npos;\n}",
+            "old_string": "/// Return true if the path component contains any shell glob metacharacters.\nbool has_glob_chars(const string& component) {\n  return component.find_first_of(\"*?[\") != string::npos;\n}",
+            "replace_all": false
+          },
+          "timestamp": "2026-04-24T07:40:17.755Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c 'make -j8 ledger 2>&1 | tail -5'",
+            "description": "Rebuild with fix",
+            "run_in_background": true
+          },
+          "timestamp": "2026-04-24T07:40:39.985Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "pwd",
+            "description": "Check cwd"
+          },
+          "timestamp": "2026-04-24T07:41:32.110Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskOutput",
+          "input": {
+            "block": true,
+            "task_id": "b0ncm5dgq",
+            "timeout": 180000
+          },
+          "timestamp": "2026-04-24T07:43:18.843Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "TZ=America/Chicago ctest -R 'include|glob|1662|cov9|1214' --output-on-failure 2>&1 | tail -15",
+            "description": "Run include/glob related tests",
+            "run_in_background": true
+          },
+          "timestamp": "2026-04-24T07:48:00.601Z"
+        },
+        {
+          "type": "user",
+          "text": "Continue from where you left off.",
+          "timestamp": "2026-04-24T17:40:00.185Z"
+        },
+        {
+          "type": "assistant",
+          "text": "No response requested.",
+          "timestamp": "2026-04-24T17:40:00.185Z"
+        },
+        {
+          "type": "user",
+          "text": "continue",
+          "timestamp": "2026-04-24T17:40:11.746Z"
+        },
+        {
+          "type": "user",
+          "text": "<system-reminder>Respond with just the action or changes and without a thinking block, unless this is a redesign or requires fresh reasoning.</system-reminder>",
+          "timestamp": "2026-04-24T17:40:11.746Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1214/build && TZ=America/Chicago ctest -R 'include|glob|1662|cov9|1214' --output-on-failure 2>&1 | tail -15",
+            "description": "Run include/glob related tests"
+          },
+          "timestamp": "2026-04-24T17:40:16.874Z"
+        },
+        {
+          "type": "assistant",
+          "text": "All 303 include/glob tests now pass. Let me run a broader ctest to ensure no regressions elsewhere, then commit.",
+          "timestamp": "2026-04-24T17:40:48.507Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "TZ=America/Chicago ctest -j8 2>&1 | tail -10",
+            "description": "Run full test suite",
+            "run_in_background": true
+          },
+          "timestamp": "2026-04-24T17:40:49.475Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskOutput",
+          "input": {
+            "block": true,
+            "task_id": "b0ky3utjm",
+            "timeout": 600000
+          },
+          "timestamp": "2026-04-24T17:40:52.161Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "TZ=America/Chicago ctest -R '^RegressTest_1660$' --output-on-failure 2>&1 | tail -40",
+            "description": "Investigate 1660 test failure"
+          },
+          "timestamp": "2026-04-24T17:42:24.685Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1214/test/regress/1660.test"
+          },
+          "timestamp": "2026-04-24T17:42:28.134Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1214/test/regress/1660* 2>&1",
+            "description": "Check 1660 test files"
+          },
+          "timestamp": "2026-04-24T17:42:28.453Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The 1660 test wants a case-sensitive match. The issue is that a literal path (no glob chars) now calls `is_regular_file(base)` at the end — but on macOS HFS+/APFS is case-insensitive, so `1660.DAT` resolves to `1660.dat`. The original code called `mask.match(base)` which was case-sensitive regex matching. \n\nLet me look at it more carefully. The original code enumerated the parent directory, found `1660.dat`, and then checked `mask.match(\"1660.dat\")` against the regex `^1660.DAT$` (case-sensitive), which failed.\n\nThe new code for literal components simply joins and calls `is_regular_file()`, which on APFS is case-insensitive. I need to preserve the case-sensitive behavior.",
+          "timestamp": "2026-04-24T17:42:35.052Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1214/src/textual_directives.cc",
+            "limit": 85,
+            "offset": 265
+          },
+          "timestamp": "2026-04-24T17:42:36.089Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I'm checking whether the old and new implementations handle filename case sensitivity the same way. The original approach extracted the parent directory and filename, then iterated through the directory to match each entry against a glob pattern — which is case-sensitive — so if a user wrote `include 1660.DAT` but the actual file had different casing, it might not match correctly.\n\nMy new code for literal paths just joins them directly and checks if the file exists, which doesn't enforce case-sensitive matching on case-insensitive filesystems. To fix this, I should enumerate the directory and use the same mask-based matching for literal components too, treating every path component consistently through directory iteration rather than relying on filesystem lookups.",
+          "timestamp": "2026-04-24T17:42:50.376Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I need to preserve case-sensitive matching. On case-insensitive filesystems, `is_regular_file(\"1660.DAT\")` returns true even when the actual file is `1660.dat`. The original code relied on directory enumeration + regex matching to enforce case sensitivity. Let me fix `expand_glob_path` to always enumerate and regex-match, rather than shortcutting for literal components.",
+          "timestamp": "2026-04-24T17:42:50.430Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1214/src/textual_directives.cc",
+            "new_string": "/// Recursively expand a glob path by walking its components.\n///\n/// For each component we enumerate the current base directory and match\n/// entries against the component interpreted as a shell glob.  Using\n/// `mask_t::assign_glob` (which is case-sensitive) rather than a direct\n/// filesystem lookup ensures that `include FOO.dat` does not silently\n/// match a differently-cased `foo.dat` on case-insensitive filesystems\n/// (issue #1660).  Matched entries drive the next level of recursion;\n/// the final component contributes regular files to @p results.\n///\n/// This allows patterns with glob metacharacters in any component --\n/// not just the filename -- to match across multiple directory levels\n/// (issue #1214).\nvoid expand_glob_path(const path& base, const std::vector<path>& components,\n                      std::size_t index, std::vector<path>& results) {\n  if (index == components.size())\n    return;\n\n  if (!exists(base) || !is_directory(base))\n    return;\n\n  const string comp = components[index].string();\n  mask_t glob;\n  glob.assign_glob('^' + comp + '$');\n\n  std::vector<path> sorted_entries;\n  std::copy(std::filesystem::directory_iterator(base),\n            std::filesystem::directory_iterator(), std::back_inserter(sorted_entries));\n  std::sort(sorted_entries.begin(), sorted_entries.end());\n\n  const bool is_last = (index + 1 == components.size());\n\n  for (const path& entry : sorted_entries) {\n    string name = entry.filename().string();\n    if (!utf8::is_valid(name.begin(), name.end())) {\n      DEBUG(\"textual.include\", \"Skipping file with invalid UTF-8 name: \" << name);\n      continue;\n    }\n    if (!glob.match(name))\n      continue;\n\n    if (is_last) {\n      if (is_regular_file(entry))\n        results.push_back(entry);\n    } else if (is_directory(entry)) {\n      expand_glob_path(entry, components, index + 1, results);\n    }\n  }\n}",
+            "old_string": "/// Return true if the path component contains any shell glob metacharacters,\n/// including the backslash used by `mask_t::assign_glob` to escape literal\n/// characters (e.g. `data\\_a.dat`).\nbool has_glob_chars(const string& component) {\n  return component.find_first_of(\"*?[\\\\\") != string::npos;\n}\n\n/// Recursively expand a glob path by walking its components.\n///\n/// Components without glob characters are appended to @p base and processed\n/// as a direct path join.  Components containing glob characters cause the\n/// current @p base to be enumerated and each matching entry drives a further\n/// recursive step.  When the last component matches, regular files are\n/// appended to @p results in sorted order.\n///\n/// This allows `include a/*/foo*.ledger`-style patterns to match across\n/// multiple directory levels, unlike simple parent-path iteration which\n/// would fail as soon as `a/*` itself does not exist.\nvoid expand_glob_path(const path& base, const std::vector<path>& components,\n                      std::size_t index, std::vector<path>& results) {\n  if (index == components.size()) {\n    if (is_regular_file(base))\n      results.push_back(base);\n    return;\n  }\n\n  const string comp = components[index].string();\n\n  if (!has_glob_chars(comp)) {\n    expand_glob_path(base / components[index], components, index + 1, results);\n    return;\n  }\n\n  if (!exists(base) || !is_directory(base))\n    return;\n\n  mask_t glob;\n  glob.assign_glob('^' + comp + '$');\n\n  std::vector<path> sorted_entries;\n  std::copy(std::filesystem::directory_iterator(base),\n            std::filesystem::directory_iterator(), std::back_inserter(sorted_entries));\n  std::sort(sorted_entries.begin(), sorted_entries.end());\n\n  const bool is_last = (index + 1 == components.size());\n\n  for (const path& entry : sorted_entries) {\n    string name = entry.filename().string();\n    if (!utf8::is_valid(name.begin(), name.end())) {\n      DEBUG(\"textual.include\", \"Skipping file with invalid UTF-8 name: \" << name);\n      continue;\n    }\n    if (!glob.match(name))\n      continue;\n\n    if (is_last) {\n      if (is_regular_file(entry))\n        results.push_back(entry);\n    } else if (is_directory(entry)) {\n      expand_glob_path(entry, components, index + 1, results);\n    }\n  }\n}",
+            "replace_all": false
+          },
+          "timestamp": "2026-04-24T17:43:09.498Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c 'make -j8 ledger 2>&1 | tail -5'",
+            "description": "Rebuild",
+            "run_in_background": true
+          },
+          "timestamp": "2026-04-24T17:43:13.175Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskOutput",
+          "input": {
+            "block": true,
+            "task_id": "buocku7re",
+            "timeout": 120000
+          },
+          "timestamp": "2026-04-24T17:43:16.244Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "TZ=America/Chicago ctest -R 'include|glob|1662|cov9|1214|1660' --output-on-failure 2>&1 | tail -10",
+            "description": "Run related tests",
+            "run_in_background": true
+          },
+          "timestamp": "2026-04-24T17:43:39.908Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskOutput",
+          "input": {
+            "block": true,
+            "task_id": "b1f76ad7i",
+            "timeout": 120000
+          },
+          "timestamp": "2026-04-24T17:43:42.878Z"
+        },
+        {
+          "type": "assistant",
+          "text": "All 304 tests pass. Now let me run the full test suite to verify no regressions.",
+          "timestamp": "2026-04-24T17:44:12.709Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "TZ=America/Chicago ctest -j8 2>&1 | tail -15",
+            "description": "Run full test suite",
+            "run_in_background": true
+          },
+          "timestamp": "2026-04-24T17:44:13.501Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskOutput",
+          "input": {
+            "block": true,
+            "task_id": "beqx7psw4",
+            "timeout": 600000
+          },
+          "timestamp": "2026-04-24T17:44:16.285Z"
+        },
+        {
+          "type": "assistant",
+          "text": "All regression tests pass. The 4 \"Not Run\" failures are pre-existing build-configuration issues (they need a Boost test runner binary that wasn't built) — unrelated to this change. Let me verify that.",
+          "timestamp": "2026-04-24T17:45:32.966Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "TZ=America/Chicago ctest -R '^LedgerUtilTests$' --output-on-failure 2>&1 | tail -10",
+            "description": "Check unrelated test failure"
+          },
+          "timestamp": "2026-04-24T17:45:34.443Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Pre-existing build config issue (missing executable) — unrelated to my changes. Now let me commit.",
+          "timestamp": "2026-04-24T17:45:37.714Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1214 && git status && echo \"---\" && git diff --stat",
+            "description": "Check working tree state"
+          },
+          "timestamp": "2026-04-24T17:45:38.271Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff src/textual_directives.cc | head -200",
+            "description": "Review diff"
+          },
+          "timestamp": "2026-04-24T17:45:43.472Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me clean up the doxygen comment formatting (odd line breaks).",
+          "timestamp": "2026-04-24T17:45:47.413Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1214/src/textual_directives.cc",
+            "new_string": " * The include path may contain shell glob wildcards in any path\n * component, not just the filename -- wildcards in parent directory\n * components are expanded as well, so a single directive can match\n * files across multiple directory levels.  Paths are resolved relative\n * to the directory of the current file.  Recursive includes are\n * detected and skipped; a hard depth limit of 100 prevents runaway\n * include chains.\n *\n * For each matched file, a new instance_t is created and parsed.  The\n * parent file's year/epoch state is saved and restored after the\n * include so that `year` directives in included files do not leak back.",
+            "old_string": " * The include path may contain shell glob wildcards in any path\n * component, not just the filename -- wildcards in parent directory\n * components are expanded as well, so a single directive can match\n * files across multiple directory levels.  Paths are resolved\n * relative to the directory\n * of the current file.  Recursive includes are detected and\n * skipped; a hard depth limit of 100 prevents runaway include\n * chains.\n *\n * For each matched file, a new instance_t is created and parsed.\n * The parent file's year/epoch state is saved and restored after the\n * include so that `year` directives in included files do not leak\n * back.",
+            "replace_all": false
+          },
+          "timestamp": "2026-04-24T17:45:51.522Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me check for clang-tidy / formatting issues and ensure the build stays clean.",
+          "timestamp": "2026-04-24T17:45:54.890Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c 'clang-format --dry-run -Werror src/textual_directives.cc 2>&1 | head -20'",
+            "description": "Check clang-format"
+          },
+          "timestamp": "2026-04-24T17:45:55.418Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c 'clang-format -i src/textual_directives.cc'",
+            "description": "Run clang-format"
+          },
+          "timestamp": "2026-04-24T17:46:21.425Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c 'make -j8 ledger 2>&1 | tail -5'",
+            "description": "Rebuild",
+            "run_in_background": true
+          },
+          "timestamp": "2026-04-24T17:46:33.288Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskOutput",
+          "input": {
+            "block": true,
+            "task_id": "bmt40xdln",
+            "timeout": 120000
+          },
+          "timestamp": "2026-04-24T17:46:36.220Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "pwd",
+            "description": "check cwd"
+          },
+          "timestamp": "2026-04-24T17:46:51.481Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c 'cd /Users/johnw/src/ledger/fix-1214/build && make -j8 ledger 2>&1 | tail -5'",
+            "description": "Rebuild",
+            "run_in_background": true
+          },
+          "timestamp": "2026-04-24T17:46:58.021Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskOutput",
+          "input": {
+            "block": true,
+            "task_id": "bh2uggv0q",
+            "timeout": 120000
+          },
+          "timestamp": "2026-04-24T17:47:00.890Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1214/build && TZ=America/Chicago ctest -R '1214|1660' --output-on-failure 2>&1 | tail -10",
+            "description": "Final test verification"
+          },
+          "timestamp": "2026-04-24T17:47:19.466Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Both pass. Let me now commit the changes atomically.",
+          "timestamp": "2026-04-24T17:47:24.326Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1214 && git log --oneline -5 main 2>&1 | head -10",
+            "description": "Check base commits"
+          },
+          "timestamp": "2026-04-24T17:47:25.462Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --oneline --not main -- 2>&1 | head -10",
+            "description": "Check branch-specific commits"
+          },
+          "timestamp": "2026-04-24T17:47:26.177Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git config user.email && git config user.name",
+            "description": "Check git identity"
+          },
+          "timestamp": "2026-04-24T17:47:30.468Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Good. Let me commit in two atomic commits: the fix, and the regression test.",
+          "timestamp": "2026-04-24T17:47:33.757Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git add src/textual_directives.cc && git diff --staged --stat",
+            "description": "Stage the fix"
+          },
+          "timestamp": "2026-04-24T17:47:34.404Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c 'git -C /Users/johnw/src/ledger/fix-1214 commit -m \"$(cat <<'\"'\"'EOF'\"'\"'\nSupport glob wildcards in all include path components\n\nPreviously, `!include` only honoured glob metacharacters in the last\npath component.  A pattern like `!include a/*/file.ledger` would\nattempt to open the literal path `a/*/file.ledger` and fail with\n\"File to include was not found\", even when the expansion matched\nactual files.\n\nRefactor the directive into a recursive walk that splits the\ninclude path into components and enumerates each level of the\nfilesystem, matching entries with `mask_t::assign_glob`\n(case-sensitive) so that globs in parent directory components are\nexpanded as well.  This preserves the existing case-sensitive\nbehaviour that was fixed in #1660 while adding multi-level glob\nsupport requested in #1214.\nEOF\n)\"'",
+            "description": "Commit the fix",
+            "run_in_background": true
+          },
+          "timestamp": "2026-04-24T17:47:42.950Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskOutput",
+          "input": {
+            "block": true,
+            "task_id": "bvcaxj0yj",
+            "timeout": 600000
+          },
+          "timestamp": "2026-04-24T17:47:46.520Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Lefthook is running, which takes ~8 minutes. Let me wait for it to finish.",
+          "timestamp": "2026-04-24T17:57:50.459Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskOutput",
+          "input": {
+            "block": true,
+            "task_id": "bvcaxj0yj",
+            "timeout": 600000
+          },
+          "timestamp": "2026-04-24T17:57:51.279Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Fix committed (fa0e70dff) with full lefthook passing. Now the regression test commit.",
+          "timestamp": "2026-04-24T17:58:10.721Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git add test/regress/1214.test test/regress/1214-dir/ && git status",
+            "description": "Stage regression test"
+          },
+          "timestamp": "2026-04-24T17:58:11.689Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c 'git -C /Users/johnw/src/ledger/fix-1214 commit -m \"$(cat <<'\"'\"'EOF'\"'\"'\nAdd regression test for #1214 (multi-level include globs)\n\nExercises `!include a/*/*.dat`, which previously failed with \"File to\ninclude was not found\" but now expands across both the wildcard\ndirectory and the wildcard filename components.\nEOF\n)\"'",
+            "description": "Commit regression test",
+            "run_in_background": true
+          },
+          "timestamp": "2026-04-24T17:58:17.873Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskOutput",
+          "input": {
+            "block": true,
+            "task_id": "bl2vxpda7",
+            "timeout": 900000
+          },
+          "timestamp": "2026-04-24T17:58:21.150Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskOutput",
+          "input": {
+            "block": true,
+            "task_id": "bl2vxpda7",
+            "timeout": 600000
+          },
+          "timestamp": "2026-04-24T17:58:23.881Z"
+        }
+      ],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 33,
+      "overriden_lines": 0
+    }
+  }
+}
