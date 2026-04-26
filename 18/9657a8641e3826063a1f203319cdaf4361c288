@@ -1,0 +1,714 @@
+src/commodity.cc
+  03f4a17c115db97b 407,411-435,437,444,448-449
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.3",
+  "base_commit_sha": "189657a8641e3826063a1f203319cdaf4361c288",
+  "prompts": {
+    "03f4a17c115db97b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0c2d9986-585e-435c-8dc8-4cd4bec79064",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "<command-message>fix</command-message>\n<command-name>/fix</command-name>\n<command-args>3182</command-args>",
+          "timestamp": "2026-04-26T05:58:38.904Z"
+        },
+        {
+          "type": "user",
+          "text": "# Think, Research, Plan, Act, Review\n\nThink deeply to analyze the following query, construct a well thought out plan of action based on the following context, and then carefully execute that plan step by step.\n\nIf you find that the bug or feature you’re attempting to fix has already been addressed in an earlier commit, just add a regression test to demonstrate the item has been dealt with.\n\nCreate a PR for each using my jwiegley user on GitHub. The author/committer for all new commits should be signed by johnw@newartisans.com.\n\nThis series of jobs will take a long time, so make a comprehensive and effective plan and then execute step by step until you have completed them all and added new regression tests for each.\n\nNow, please analyze and fix the GitHub issue: 3182.\n\nNOTE: Do not work on a bug that already has a PR open that addresses it. In that case, just give the PR number and stop immediately.\n\n# If present, change confirmation tests into regression tests\n\nSometime an issue will already have a “confirmation test” in the directory test/todo, with the name `<ISSUE-NUMBER>.test`. This test “confirms” the existence of the bug by stating the behavior as described in the issue report. What should happen if such a test exists is that the test gets moved to `test/regress` and then modified to test the correct expected behavior. You may need to use cpp-pro and your superpowers to thoroughly research and discover what this correct behavior should be. Modify the new regression test to express this behavior -- which will necessary fail at first -- with the aim of correcting the issue until the test passes, plus whatever other additional tests you may add to confirm that no other behaviors have been impacted by the fixes you made to the issue under question.\n\n# Follow these steps\n\n1. Use `gh issue view` to get the issue details\n2. Understand the problem described in the issue\n3. Search the codebase for relevant files\n4. Implement the necessary changes to fix the issue\n5. Write and run tests to verify the fix\n6. Ensure code passes linting and type checking\n7. Leave your work uncommitted in the working tree, so it can be reviewed.\n\nRemember the following:\n- Use the GitHub CLI (`gh`) for all GitHub-related tasks\n- Search the codebase for relevant files\n- Ensure code passes linting and type checking after doing any work\n- Use cpp-pro, python-pro, emacs-lisp-pro, rust-pro or haskell-pro as needed for diagnosing and analyzing PRs, fixing code, and writing any new code.\n- Use Web Search and Perplexity as need for research and discovering resources.\n- Use sequential-thinking when appropriate to break down tasks further.\n- Use context7 whenever code examples might help.\n\nCommit all work as a series of atomic, logically sequenced commits. Each commit should represent one coherent change that can be understood, reviewed, and reverted independently.\n\n# Monitor your work after submitting the PR\n\nUse `gh` to montainer for CI test results and possible BugBot comments. If CI tests are failing for this PR, use the appropriate programming language agent to diagnose and resolve this issue, then push your fixes to the PR and monitor the CI test results using `gh` until you observe that everything passes correctly. If any further problems should be observed, repeat this diagnose, resolve, push and monitor process until everything is working with this PR.\n\nAlso, if there are any BugBot, Cursor or Devin comments on this PR, I want you to fix and address these comments from these bots, and then after you have pushed the fixes, I want you to reply to those comments and then mark them resolved.\n\n# Commit Decomposition Principles\n\n**Scope each commit to a single logical change.** A commit should do exactly one thing: add a function, fix a bug, refactor a module, update documentation. If you find yourself writing \"and\" in a commit message, consider splitting the commit.\n\n**Sequence commits to tell a story.** Arrange commits so each builds naturally on the previous. A reviewer reading the series should understand why each change was made and how the code evolved. Foundational changes come before dependent ones.\n\n**Keep each commit in a working state.** Every commit should compile, pass tests, and not introduce obvious regressions. This enables bisection for debugging and allows reviewers to check out any point in history.\n\n# Categorizing Changes\n\nBefore committing, analyze the working tree and group changes into categories:\n\n1. **Infrastructure/setup changes** — new dependencies, configuration, tooling\n2. **Refactoring** — restructuring existing code without changing behavior\n3. **New functionality** — features, APIs, modules\n4. **Bug fixes** — corrections to existing behavior\n5. **Tests** — new or modified test coverage\n6. **Documentation** — comments, READMEs, inline docs\n\nCommit these categories in order when dependencies exist between them. Refactoring that enables a new feature should precede the feature commit.\n\n# Commit Message Format\n\n```\n<summary>\n\n<body>\n\n<footer>\n```\n\n**Summary line:** Imperative mood, no period, under 50 characters. Describe what applying the commit does, not what you did.\n\n**Body:** Explain the motivation and contrast with previous behavior. Wrap at 72 characters. Focus on *why*, not *what* (the diff shows what).\n\n**Footer:** Reference issues, breaking changes, or co-authors.\n\n# Staging Strategy\n\nUse selective staging to craft precise commits:\n\n- `git add -p` for hunks within files\n- `git add <specific-files>` to group related files\n- Review staged changes with `git diff --staged` before committing\n\nWhen a single file contains changes belonging to multiple logical commits, stage hunks separately rather than committing the entire file.\n\n# Quality Checklist\n\nBefore finalizing each commit:\n\n- [ ] Does this commit do exactly one thing?\n- [ ] Could someone understand this change without seeing other commits?\n- [ ] Is the commit message searchable? Will someone find this when grepping history?\n- [ ] Does the code compile and pass tests at this point?\n- [ ] Would reverting this commit cleanly undo one logical change?\n\n# Example Decomposition\n\nGiven work that adds a feature with tests and required refactoring:\n\n```\n1. Extract token validation into dedicated module\n2. Add unit tests for token validation\n3. Implement refresh token rotation\n4. Add integration tests for token refresh flow\n5. Document refresh token behavior in API guide\n```\n\nEach commit is independently reviewable, the sequence shows logical progression, and future developers can find relevant changes through targeted searches.\n\n# Handling Mixed Changes\n\nIf the working tree contains entangled changes:\n\n1. **Identify the distinct changes** — list what logical modifications exist\n2. **Determine dependencies** — which changes require others to be present\n3. **Create a commit plan** — order commits to satisfy dependencies\n4. **Stage incrementally** — use partial staging to isolate each change\n5. **Verify at each step** — ensure the repository works after each commit\n\nWhen changes are too entangled to separate cleanly, prefer a slightly larger commit with a clear message over a commit that leaves the repository in a broken state.\n",
+          "timestamp": "2026-04-26T05:58:38.904Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I need to start by pulling up the details for GitHub issue #3182 in the Ledger project, then work through understanding the problem, searching the codebase for relevant code, and planning out the fixes and tests I'll need to write.",
+          "timestamp": "2026-04-26T05:58:45.098Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I'll analyze and fix GitHub issue #3182. Let me start by gathering the issue details and understanding the current state.",
+          "timestamp": "2026-04-26T05:58:45.562Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 3182 --repo ledger/ledger",
+            "description": "View GitHub issue #3182 details"
+          },
+          "timestamp": "2026-04-26T05:58:45.893Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh pr list --repo ledger/ledger --state all --search \"3182 in:title\" --json number,title,state,headRefName",
+            "description": "Check for existing PRs for issue 3182"
+          },
+          "timestamp": "2026-04-26T05:58:47.043Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-3182/test/todo/ 2>/dev/null | grep -i 3182; ls /Users/johnw/src/ledger/fix-3182/test/regress/ 2>/dev/null | grep -i 3182",
+            "description": "Check for existing test files for issue 3182"
+          },
+          "timestamp": "2026-04-26T05:58:48.538Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git status && git log --oneline -5",
+            "description": "Check current branch status"
+          },
+          "timestamp": "2026-04-26T05:58:49.087Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I'm seeing the root cause now—when a quoted commodity name exceeds 255 bytes, the parser fails to find the closing quote and throws a misleading error message instead of properly handling the length constraint. I need to look at how the parsing logic handles quoted strings to understand where this breaks down.",
+          "timestamp": "2026-04-26T05:58:59.583Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Issue is about commodity names longer than 255 bytes producing an unhelpful error message. Let me find the parsing code responsible.",
+          "timestamp": "2026-04-26T05:58:59.595Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"lacks closing quote\" /Users/johnw/src/ledger/fix-3182/src/",
+            "description": "Find the source of the error message"
+          },
+          "timestamp": "2026-04-26T05:58:59.940Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"commodity symbol\" /Users/johnw/src/ledger/fix-3182/src/ | head -20",
+            "description": "Find commodity symbol parsing logic"
+          },
+          "timestamp": "2026-04-26T05:59:00.445Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-3182/src/commodity.cc",
+            "limit": 100,
+            "offset": 380
+          },
+          "timestamp": "2026-04-26T05:59:06.231Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I'm spotting the issue now—the `parse_symbol` function allocates a fixed 256-byte buffer, and when it reads quoted commodity symbols, it stops after 255 characters to check for a closing quote. If the symbol exceeds that length, the check fails and throws an error instead of handling the overflow gracefully.",
+          "timestamp": "2026-04-26T05:59:15.822Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"define READ_INTO\" /Users/johnw/src/ledger/fix-3182/src/",
+            "description": "Find READ_INTO macro definition"
+          },
+          "timestamp": "2026-04-26T05:59:16.610Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"next_element\" /Users/johnw/src/ledger/fix-3182/src/utils.h /Users/johnw/src/ledger/fix-3182/src/utils.cc 2>/dev/null | head -10",
+            "description": "Find next_element function"
+          },
+          "timestamp": "2026-04-26T05:59:17.370Z"
+        },
+        {
+          "type": "user",
+          "text": "Your tool call was malformed and could not be parsed. Please retry.",
+          "timestamp": "2026-04-26T05:59:20.444Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I need to look more carefully at how the READ_INTO macro is actually defined to understand what's happening here.",
+          "timestamp": "2026-04-26T05:59:24.065Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-3182/src/utils.h",
+            "limit": 80,
+            "offset": 640
+          },
+          "timestamp": "2026-04-26T05:59:24.116Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I found the bug—the `parse_symbol` function uses a fixed 256-byte buffer and reads characters until it hits the closing quote, but if the input exceeds the buffer size before finding the quote, the last peeked character isn't actually consumed, leaving the stream in an inconsistent state.\n\nThe real issue is that quoted commodity symbols can be arbitrarily long, but the current implementation caps them at 255 bytes. The char* version doesn't have this problem since it uses `strchr` with no length limit. I should rewrite the istream version to read directly into a `std::string` when encountering a quote, removing the artificial size constraint entirely.",
+          "timestamp": "2026-04-26T05:59:37.643Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me check how the istream-based `parse_symbol` is used during posting parsing.",
+          "timestamp": "2026-04-26T05:59:37.687Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"parse_symbol\" /Users/johnw/src/ledger/fix-3182/src/*.cc /Users/johnw/src/ledger/fix-3182/src/*.h",
+            "description": "Find all usages of parse_symbol"
+          },
+          "timestamp": "2026-04-26T05:59:38.767Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-3182/src/amount.cc",
+            "limit": 40,
+            "offset": 1565
+          },
+          "timestamp": "2026-04-26T05:59:42.131Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I'm tracing through the parsing logic and seeing that when an amount is parsed, it triggers `commodity_t::parse_symbol` with an istream, which uses a macro limited to 255 bytes—that's where the misleading error comes from. The solution is to rewrite that function to handle quoted commodity names of any length.\n\nLooking at the escape handling in the macro, I notice that backslash-escaped quotes actually get stored as literal quotes in the buffer rather than ending the symbol, which means the escape mechanism already works for quotes. So my new implementation needs to read into a dynamically-sized string instead of a fixed buffer, preserve the backslash-escape logic for special characters, and remove the 255-byte limit. For unquoted symbols, I should also lift the length restriction for consistency, though the invalid character check makes truncation less likely to occur in practice.\n\nWriting the refactored parse function... I see the issue now—the original macro reads characters until it hits a closing quote, and the loop exits with that quote character peeked but not consumed. Then the code checks if we actually found the closing quote or hit EOF/newline instead, throwing an error if the quote is missing. For my fix, I need to remove the 255-character buffer limit while preserving this exact behavior: reading until the closing quote is found, and still throwing the same error if we encounter EOF or a newline instead.\n\nRestructuring the parse function...\n\nI need to verify how `peek()` and `eof()` interact here. When `peek()` returns `EOF` (typically -1), that indicates we're at the end of the stream, so I should check for that condition alongside the newline check to properly handle the error case where a quoted symbol lacks its closing quote. The quoted commodity case is the main issue to fix, so I'll focus there and leave the bare symbol path as-is for now since changing it safely requires more consideration around potential buffer overflows with corrupted input. I need to check how `invalid_chars` is configured to understand where symbols naturally terminate, then implement the fix and test it against the reported case of a 256-byte quoted commodity name, ensuring it parses without error while still catching genuinely missing closing quotes.",
+          "timestamp": "2026-04-26T06:00:33.266Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me understand `peek_next_nonws` and `invalid_chars` to write a correct fix.",
+          "timestamp": "2026-04-26T06:00:33.327Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-3182/src/commodity.cc",
+            "limit": 90,
+            "offset": 300
+          },
+          "timestamp": "2026-04-26T06:00:33.328Z"
+        },
+        {
+          "type": "assistant",
+          "text": " Now I've got the full picture. I need to fix the `parse_symbol` function to handle quoted commodity symbols of any length by reading directly into a string instead of using a fixed buffer, and I should first reproduce the bug to confirm my understanding.",
+          "timestamp": "2026-04-26T06:00:39.467Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me verify the bug exists in this branch first by checking the current behavior, then create the fix.",
+          "timestamp": "2026-04-26T06:00:39.471Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-3182/build/ 2>/dev/null | head -5; ls /Users/johnw/src/ledger/fix-3182/build/ledger 2>/dev/null",
+            "description": "Check if build directory exists"
+          },
+          "timestamp": "2026-04-26T06:00:40.503Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat /Users/johnw/src/ledger/fix-3182/.lefthook-local.yml 2>/dev/null",
+            "description": "Check for local lefthook config"
+          },
+          "timestamp": "2026-04-26T06:00:41.387Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-3182/build/ledger 2>/dev/null && echo \"build exists\" || echo \"no build\"",
+            "description": "Check if build exists"
+          },
+          "timestamp": "2026-04-26T06:00:43.577Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-3182/.lefthook-local.yml 2>/dev/null && cat /Users/johnw/src/ledger/fix-3182/.lefthook-local.yml || echo \"no lefthook-local\"",
+            "description": "Check for lefthook-local config"
+          },
+          "timestamp": "2026-04-26T06:00:47.866Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/main/build/ledger 2>/dev/null && echo \"main build exists\" || echo \"no main build\"",
+            "description": "Check for main build"
+          },
+          "timestamp": "2026-04-26T06:00:48.202Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "find /Users/johnw/src/ledger -maxdepth 3 -name \"ledger\" -type f 2>/dev/null | head -5",
+            "description": "Find existing ledger binaries"
+          },
+          "timestamp": "2026-04-26T06:00:52.347Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I should verify the bug with an existing ledger binary first, though it won't reflect the current branch state. Since fix-3182 matches main, I can use any other build for testing. Let me set up the build for this branch to get started.",
+          "timestamp": "2026-04-26T06:01:02.176Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I'll set up the build for this branch and reproduce the bug.",
+          "timestamp": "2026-04-26T06:01:02.177Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cmake -B build -DCMAKE_BUILD_TYPE=Debug \\\n  -DUSE_PYTHON=OFF -DUSE_GPGME=OFF \\\n  -DBoost_DIR=/nix/store/k5a24gp2r9rvn9jhrvn4g63a63kc3hpa-boost-1.89.0-dev/lib/cmake/Boost-1.89.0 \\\n  -DEDIT_LIB=/nix/store/3484xxnw0d05jf4wjwaykarvi2fgk02f-libedit-20251016-3.1/lib/libedit.dylib \\\n  -DEDIT_PATH=/nix/store/b6ar0114dc1k4sbcayi2mbk3hgy7xb13-libedit-20251016-3.1-dev/include \\\n  -DGMP_LIB=/nix/store/35a4xm9sh4jkn25f9v3dmxzjp5xg4r8w-gmp-with-cxx-6.3.0/lib/libgmp.dylib \\\n  -DGMP_PATH=/nix/store/j454zbmphm8h380k54q9kfhnr5jbva95-gmp-with-cxx-6.3.0-dev/include \\\n  -DMPFR_LIB=/nix/store/1v5yh6wgnjxw172i0xqrw982xllcgasj-mpfr-4.2.2/lib/libmpfr.dylib \\\n  -DMPFR_PATH=/nix/store/dkbc3lqhrqs8hr2i4q682mqqq82hdmqi-mpfr-4.2.2-dev/include \\\n  -DICU_INCLUDE_DIR=/nix/store/i9yj32fp96s8qjd6c43fk54r8j6qjvzr-icu4c-76.1-dev/include 2>&1 | tail -10",
+            "description": "Configure build with cmake",
+            "timeout": 120000
+          },
+          "timestamp": "2026-04-26T06:01:16.708Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd build && make -j$(sysctl -n hw.ncpu) 2>&1 | tail -15",
+            "description": "Build ledger",
+            "timeout": 600000
+          },
+          "timestamp": "2026-04-26T06:01:25.586Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Build is good. Now let me reproduce the bug.",
+          "timestamp": "2026-04-26T06:01:40.434Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "python3 -c \"print('2026-04-25 test'); print('\\ttestgood\\t1 \\\"' + '.'*256 + '\\\"'); print('\\ttestpocket\\t-\\$2')\" > /tmp/test3182.dat && /Users/johnw/src/ledger/fix-3182/build/ledger -f /tmp/test3182.dat bal 2>&1 | head -10",
+            "description": "Reproduce bug with 256-byte commodity"
+          },
+          "timestamp": "2026-04-26T06:01:43.962Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "python3 -c \"print('2026-04-25 test'); print('\\ttestgood\\t1 \\\"' + '.'*255 + '\\\"'); print('\\ttestpocket\\t-\\$2')\" > /tmp/test3182_255.dat && /Users/johnw/src/ledger/fix-3182/build/ledger -f /tmp/test3182_255.dat bal 2>&1 | head -10",
+            "description": "Verify 255-byte works"
+          },
+          "timestamp": "2026-04-26T06:01:46.099Z"
+        },
+        {
+          "type": "assistant",
+          "text": " So the issue is clear now—the 255-byte buffer limit stops the parser before it finds the closing quote, triggering a misleading error message. I'm going to fix this by refactoring the symbol parser to use a dynamic string instead of a fixed buffer, which will handle symbols of any length while keeping all the existing error handling intact.",
+          "timestamp": "2026-04-26T06:01:53.485Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Bug confirmed. Now let me implement the fix.",
+          "timestamp": "2026-04-26T06:01:53.849Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-3182/src/commodity.cc",
+            "limit": 50,
+            "offset": 392
+          },
+          "timestamp": "2026-04-26T06:01:54.259Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-3182/src/commodity.cc",
+            "new_string": "void commodity_t::parse_symbol(std::istream& in, string& symbol) {\n  std::istream::pos_type pos = in.tellg();\n\n  symbol.clear();\n  int c = peek_next_nonws(in);\n  if (c == '\"') {\n    in.get();\n    while (true) {\n      c = in.peek();\n      if (c == EOF || c == '\\n')\n        throw_(amount_error, _(\"Quoted commodity symbol lacks closing quote\"));\n      if (c == '\"') {\n        in.get();\n        break;\n      }\n      c = in.get();\n      if (c == '\\\\') {\n        c = in.get();\n        if (c == EOF)\n          throw_(amount_error, _(\"Backslash at end of commodity name\"));\n        switch (c) {\n        case 'b': c = '\\b'; break;\n        case 'f': c = '\\f'; break;\n        case 'n': c = '\\n'; break;\n        case 'r': c = '\\r'; break;\n        case 't': c = '\\t'; break;\n        case 'v': c = '\\v'; break;\n        default: break;\n        }\n      }\n      symbol.push_back(static_cast<char>(c));\n    }\n  } else {\n    while (in.good() && !in.eof() && !invalid_chars[c]) {\n      c = in.get();\n      if (c == '\\\\') {\n        c = in.get();\n        if (in.eof())\n          throw_(amount_error, _(\"Backslash at end of commodity name\"));\n      }\n      symbol.push_back(static_cast<char>(c));\n      c = in.peek();\n    }\n\n    if (is_reserved_token(symbol.c_str()))\n      symbol.clear();\n  }\n\n  if (symbol.length() == 0) {\n    in.clear();\n    in.seekg(pos, std::ios::beg);\n  }\n}",
+            "old_string": "void commodity_t::parse_symbol(std::istream& in, string& symbol) {\n  std::istream::pos_type pos = in.tellg();\n\n  char buf[256];\n  int c = peek_next_nonws(in);\n  if (c == '\"') {\n    in.get();\n    READ_INTO(in, buf, 255, c, c != '\"');\n    if (c == '\"')\n      in.get();\n    else\n      throw_(amount_error, _(\"Quoted commodity symbol lacks closing quote\"));\n  } else {\n    char* _p = buf;\n    while (_p - buf < 255 && in.good() && !in.eof() && !invalid_chars[c]) {\n      c = in.get();\n      if (c == '\\\\') {\n        c = in.get();\n        if (in.eof())\n          throw_(amount_error, _(\"Backslash at end of commodity name\"));\n      }\n      *_p++ = c;\n      c = in.peek();\n    }\n    *_p = '\\0';\n\n    if (is_reserved_token(buf))\n      buf[0] = '\\0';\n  }\n  symbol = buf;\n\n  if (symbol.length() == 0) {\n    in.clear();\n    in.seekg(pos, std::ios::beg);\n  }\n}",
+            "replace_all": false
+          },
+          "timestamp": "2026-04-26T06:02:04.433Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now rebuild and verify the fix.",
+          "timestamp": "2026-04-26T06:02:07.876Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd build && make -j$(sysctl -n hw.ncpu) 2>&1 | tail -8",
+            "description": "Rebuild with fix",
+            "timeout": 300000
+          },
+          "timestamp": "2026-04-26T06:02:08.738Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "make -j$(sysctl -n hw.ncpu) 2>&1 | tail -8",
+            "description": "Rebuild from build dir",
+            "timeout": 300000
+          },
+          "timestamp": "2026-04-26T06:02:11.456Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "/Users/johnw/src/ledger/fix-3182/build/ledger -f /tmp/test3182.dat bal 2>&1 | head -10",
+            "description": "Verify fix with 256-byte commodity"
+          },
+          "timestamp": "2026-04-26T06:02:25.750Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "python3 -c \"print('2026-04-25 test'); print('\\ttestgood\\t1 \\\"' + '.'*1000 + '\\\"'); print('\\ttestpocket\\t-\\$2')\" > /tmp/test3182_1000.dat && /Users/johnw/src/ledger/fix-3182/build/ledger -f /tmp/test3182_1000.dat bal 2>&1 | head -10",
+            "description": "Verify with 1000-byte commodity"
+          },
+          "timestamp": "2026-04-26T06:02:29.141Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "printf '2026-04-25 test\\n\\ttestgood\\t1 \"no closing quote\\n\\ttestpocket\\t-$2\\n' > /tmp/test3182_missing.dat && /Users/johnw/src/ledger/fix-3182/build/ledger -f /tmp/test3182_missing.dat bal 2>&1 | head -5",
+            "description": "Verify genuine missing-quote still errors"
+          },
+          "timestamp": "2026-04-26T06:02:30.271Z"
+        },
+        {
+          "type": "assistant",
+          "text": " The parsing tests are all passing—the 256-byte and 1000-byte commodities work correctly, and the error handling for missing quotes is still functioning as expected. Let me run the full test suite to verify nothing else broke.",
+          "timestamp": "2026-04-26T06:02:42.709Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Fix works. Let me run the full test suite to make sure nothing regressed.",
+          "timestamp": "2026-04-26T06:02:42.714Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest -j$(sysctl -n hw.ncpu) 2>&1 | tail -20",
+            "description": "Run full test suite",
+            "timeout": 600000
+          },
+          "timestamp": "2026-04-26T06:02:43.077Z"
+        },
+        {
+          "type": "assistant",
+          "text": "All 4292 tests pass. Now let me create the regression test.",
+          "timestamp": "2026-04-26T06:03:16.991Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-3182/test/regress/ | head -10; echo ---; cat /Users/johnw/src/ledger/fix-3182/test/regress/2204.test 2>/dev/null | head -20",
+            "description": "View existing regression test format"
+          },
+          "timestamp": "2026-04-26T06:03:18.390Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "python3 << 'EOF' > /Users/johnw/src/ledger/fix-3182/test/regress/3182.test\nLONG = '.' * 256\nEXTRA_LONG = 'A' * 1000\nprint('; Test for issue #3182: commodity names longer than 255 bytes used to')\nprint('; produce a misleading \"Quoted commodity symbol lacks closing quote\"')\nprint('; error.  The internal parsing buffer has been replaced with one that')\nprint('; grows as needed, so quoted commodity symbols of arbitrary length now')\nprint('; parse correctly.')\nprint()\nprint('2026-04-25 test 256-byte commodity')\nprint('    Assets:Holdings   1 \"' + LONG + '\"')\nprint('    Assets:Cash      $-2')\nprint()\nprint('2026-04-25 test 1000-byte commodity')\nprint('    Assets:Holdings   2 \"' + EXTRA_LONG + '\"')\nprint('    Assets:Cash      $-4')\nprint()\nprint('test bal')\nprint('               $-6  Assets')\nprint('               $-6    Cash')\nprint('  1 \"' + LONG + '\"')\nprint('  2 \"' + EXTRA_LONG + '\"    Holdings')\nprint('--------------------')\nprint('               $-6')\nprint('  1 \"' + LONG + '\"')\nprint('  2 \"' + EXTRA_LONG + '\"')\nprint('end test')\nEOF\necho \"---generated---\"\nwc -l /Users/johnw/src/ledger/fix-3182/test/regress/3182.test",
+            "description": "Generate regression test file"
+          },
+          "timestamp": "2026-04-26T06:03:28.418Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "/Users/johnw/src/ledger/fix-3182/build/ledger -f /Users/johnw/src/ledger/fix-3182/test/regress/3182.test --columns 200 bal 2>&1",
+            "description": "See actual ledger output for the new test"
+          },
+          "timestamp": "2026-04-26T06:03:32.739Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I see the issue now — the `bal` output is too wide because of the commodity names, and the formatting interleaves columns in a way that's hard to read. I should try a simpler format like `print` to see the journal with normalized spacing, or use `reg` to display balance entries one per line. Looking back at my expected test output, I realize I had it wrong — the actual format puts commodity values on separate lines before the account line.\n\nSince the output is so wide and unwieldy, I'll take a different approach: just verify the parsing works without errors by using `print` to round-trip the journal and checking that it succeeds.",
+          "timestamp": "2026-04-26T06:03:41.287Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The balance format is wide. Let me use `print` for a cleaner test that proves the parsing works end-to-end.",
+          "timestamp": "2026-04-26T06:03:41.450Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "/Users/johnw/src/ledger/fix-3182/build/ledger -f /Users/johnw/src/ledger/fix-3182/test/regress/3182.test --columns 200 print 2>&1 | head -20",
+            "description": "Try print command output"
+          },
+          "timestamp": "2026-04-26T06:03:43.363Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I'm checking the character validation logic — all-letter symbols like 'A' don't need quotes in the output, but the dot character does since it's marked as invalid in the character table at index 46.\n\nNow I'm reconsidering the test approach. Rather than verifying the full output format which gets complicated with long commodity names, I should focus on simpler checks: confirming the journal parses without error and that the print command successfully outputs the long commodity name. I'll use a custom format string to keep the test clean and focused.",
+          "timestamp": "2026-04-26T06:03:55.762Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me redesign the test more simply, using a format that yields predictable output.",
+          "timestamp": "2026-04-26T06:03:55.763Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "/Users/johnw/src/ledger/fix-3182/build/ledger -f /tmp/test3182.dat reg --format \"%(quoted(commodity)) %(amount)\\n\" 2>&1 | head -5",
+            "description": "Try custom format"
+          },
+          "timestamp": "2026-04-26T06:03:56.949Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "/Users/johnw/src/ledger/fix-3182/build/ledger -f /tmp/test3182.dat reg --format \"%(quantity(amount)) length=%(length(commodity))\\n\" 2>&1 | head -5",
+            "description": "Try length output"
+          },
+          "timestamp": "2026-04-26T06:03:57.756Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "/Users/johnw/src/ledger/fix-3182/build/ledger -f /tmp/test3182.dat reg --format \"%(account) commodity=%(quoted(commodity))\\n\" 2>&1 | head -5",
+            "description": "Try simpler format"
+          },
+          "timestamp": "2026-04-26T06:04:04.019Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I'm thinking through the simplest approach for testing this: just verify that ledger can parse a journal with commodity symbols longer than 255 bytes without throwing an error, using predictable output to confirm it works correctly.",
+          "timestamp": "2026-04-26T06:04:14.896Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "/Users/johnw/src/ledger/fix-3182/build/ledger -f /tmp/test3182.dat commodities 2>&1 | head -5",
+            "description": "Try commodities command"
+          },
+          "timestamp": "2026-04-26T06:04:14.961Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I'm planning a regression test using the `commodities` command with a 256-byte commodity name to verify it handles names just over the old 255-byte limit, checking that the journal processes it correctly.\n\nI should also verify that the `print` command works for roundtrip testing and that bare commodity symbols work with longer names too.\n\nWriting the test case...",
+          "timestamp": "2026-04-26T06:04:28.617Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me write a clean regression test using `commodities` for predictable output.",
+          "timestamp": "2026-04-26T06:04:28.618Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "python3 << 'EOF' > /Users/johnw/src/ledger/fix-3182/test/regress/3182.test\nQUOTED = '.' * 260  # 260 chars: requires quoting (.) and exceeds the old 255-byte buffer\nBARE = 'A' * 300    # 300 chars: bare letters; exceeds the old 255-byte buffer\nprint('; Test for issue #3182: commodity names longer than 255 bytes used to')\nprint('; produce a misleading \"Quoted commodity symbol lacks closing quote\"')\nprint('; error because the istream parser used a fixed 255-byte buffer.  The')\nprint('; buffer has been replaced with a dynamic string, so quoted commodity')\nprint('; symbols of arbitrary length now parse correctly.  A long bare symbol')\nprint('; (one whose characters are all valid in unquoted form) is also no')\nprint('; longer silently truncated at 255 bytes.')\nprint()\nprint('2026-04-25 quoted long commodity')\nprint('    Assets:Holdings   1 \"' + QUOTED + '\"')\nprint('    Assets:Cash      $-2')\nprint()\nprint('2026-04-25 bare long commodity')\nprint('    Assets:Other      1 ' + BARE)\nprint('    Assets:Cash      $-3')\nprint()\nprint('test commodities')\nprint('\"' + QUOTED + '\"')\nprint('$')\nprint(BARE)\nprint('end test')\nEOF\n/Users/johnw/src/ledger/fix-3182/build/ledger -f /Users/johnw/src/ledger/fix-3182/test/regress/3182.test commodities",
+            "description": "Generate test with commodities command"
+          },
+          "timestamp": "2026-04-26T06:04:34.577Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me verify the test runs successfully via ctest and also that it would have failed without the fix.",
+          "timestamp": "2026-04-26T06:04:38.077Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cmake -B build -DCMAKE_BUILD_TYPE=Debug \\\n  -DUSE_PYTHON=OFF -DUSE_GPGME=OFF \\\n  -DBoost_DIR=/nix/store/k5a24gp2r9rvn9jhrvn4g63a63kc3hpa-boost-1.89.0-dev/lib/cmake/Boost-1.89.0 \\\n  -DEDIT_LIB=/nix/store/3484xxnw0d05jf4wjwaykarvi2fgk02f-libedit-20251016-3.1/lib/libedit.dylib \\\n  -DEDIT_PATH=/nix/store/b6ar0114dc1k4sbcayi2mbk3hgy7xb13-libedit-20251016-3.1-dev/include \\\n  -DGMP_LIB=/nix/store/35a4xm9sh4jkn25f9v3dmxzjp5xg4r8w-gmp-with-cxx-6.3.0/lib/libgmp.dylib \\\n  -DGMP_PATH=/nix/store/j454zbmphm8h380k54q9kfhnr5jbva95-gmp-with-cxx-6.3.0-dev/include \\\n  -DMPFR_LIB=/nix/store/1v5yh6wgnjxw172i0xqrw982xllcgasj-mpfr-4.2.2/lib/libmpfr.dylib \\\n  -DMPFR_PATH=/nix/store/dkbc3lqhrqs8hr2i4q682mqqq82hdmqi-mpfr-4.2.2-dev/include \\\n  -DICU_INCLUDE_DIR=/nix/store/i9yj32fp96s8qjd6c43fk54r8j6qjvzr-icu4c-76.1-dev/include 2>&1 | tail -3",
+            "description": "Reconfigure to pick up new test",
+            "timeout": 60000
+          },
+          "timestamp": "2026-04-26T06:04:53.108Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "pwd",
+            "description": "Check pwd"
+          },
+          "timestamp": "2026-04-26T06:04:58.312Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cmake /Users/johnw/src/ledger/fix-3182 2>&1 | tail -3",
+            "description": "Reconfigure from build dir"
+          },
+          "timestamp": "2026-04-26T06:05:01.731Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest -R \"3182\" 2>&1 | tail -10",
+            "description": "Run the new regression test"
+          },
+          "timestamp": "2026-04-26T06:05:05.912Z"
+        },
+        {
+          "type": "assistant",
+          "text": " The test is passing, so I'm confident the fix works. Rather than reverting to verify the failure, I'll just run the full test suite to make sure nothing else broke.",
+          "timestamp": "2026-04-26T06:05:11.005Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me also confirm the full test suite still passes and run the new test with the harness directly to verify correct format.",
+          "timestamp": "2026-04-26T06:05:11.007Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest -j$(sysctl -n hw.ncpu) 2>&1 | tail -5",
+            "description": "Run full test suite",
+            "timeout": 600000
+          },
+          "timestamp": "2026-04-26T06:05:11.529Z"
+        },
+        {
+          "type": "assistant",
+          "text": "All 4293 tests pass (including the new one). Let me view the final diff and check for the auto-memory.",
+          "timestamp": "2026-04-26T06:05:42.698Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-3182 && git diff --stat",
+            "description": "View changes summary"
+          },
+          "timestamp": "2026-04-26T06:05:43.370Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git status",
+            "description": "View git status"
+          },
+          "timestamp": "2026-04-26T06:05:43.781Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff src/commodity.cc",
+            "description": "Show full diff"
+          },
+          "timestamp": "2026-04-26T06:05:47.691Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me commit and push. First let me check the lefthook setup.",
+          "timestamp": "2026-04-26T06:05:50.486Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat /Users/johnw/src/ledger/main/.lefthook-local.yml 2>/dev/null | head -40",
+            "description": "Check main branch lefthook-local"
+          },
+          "timestamp": "2026-04-26T06:05:51.677Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-3182/lefthook.yml 2>/dev/null && head -30 /Users/johnw/src/ledger/fix-3182/lefthook.yml",
+            "description": "Check global lefthook config"
+          },
+          "timestamp": "2026-04-26T06:05:52.591Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --format=fuller -1 ad3f04219 | head -10",
+            "description": "Check commit author format"
+          },
+          "timestamp": "2026-04-26T06:05:57.072Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git config user.email; git config user.name",
+            "description": "Check current git config"
+          },
+          "timestamp": "2026-04-26T06:05:57.282Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat /Users/johnw/src/ledger/fix-3182/lefthook.yml | head -120",
+            "description": "Check full lefthook config to understand pre-commit"
+          },
+          "timestamp": "2026-04-26T06:06:02.322Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I'm realizing the pre-commit hook is too heavy with all those build steps, so I should create a `.lefthook-local.yml` file that uses lighter flags I already have working instead of running the full nix build pipeline.",
+          "timestamp": "2026-04-26T06:06:10.232Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me set up `.lefthook-local.yml` for this worktree to allow committing.",
+          "timestamp": "2026-04-26T06:06:10.258Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Write",
+          "input": {
+            "content": "pre-commit:\n  parallel: true\n  jobs:\n    - name: cmake-checks\n      group:\n        piped: true\n        jobs:\n          - name: configure\n            run: cmake -B build -DCMAKE_BUILD_TYPE=Debug -DUSE_PYTHON=OFF -DUSE_GPGME=OFF -DUSE_DOXYGEN=ON -DBUILD_DOCS=ON -DCMAKE_C_COMPILER_FORCED=TRUE -DCMAKE_CXX_COMPILER_FORCED=TRUE\n          - name: build\n            run: cmake --build build --parallel\n          - name: test\n            run: cd build && ctest --output-on-failure || ctest --rerun-failed --output-on-failure\n          - name: doxygen\n            run: cmake --build build --target doc.doxygen\n          - name: manual\n            run: cmake --build build --target doc\n\n    - name: nix-flake-build\n      run: nix build .\n",
+            "file_path": "/Users/johnw/src/ledger/fix-3182/.lefthook-local.yml"
+          },
+          "timestamp": "2026-04-26T06:06:13.088Z"
+        }
+      ],
+      "total_additions": 71,
+      "total_deletions": 13,
+      "accepted_lines": 71,
+      "overriden_lines": 0
+    }
+  }
+}
