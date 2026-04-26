@@ -1,0 +1,31 @@
+doc/ledger.1
+  3595e28f7adb74f4 976-982
+src/chain.cc
+  3595e28f7adb74f4 114-127
+src/filters.cc
+  3595e28f7adb74f4 1654,1673-1674,1700-1706
+doc/ledger3.texi
+  3595e28f7adb74f4 6732-6738,7982-8000,8468-8473
+src/report.h
+  3595e28f7adb74f4 440,1085
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.3",
+  "base_commit_sha": "ad8829c41d564c84af08202b0673025421b3259a",
+  "prompts": {
+    "3595e28f7adb74f4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e5caefa3-ce4f-4838-9a92-40df44903131",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 65,
+      "overriden_lines": 0
+    }
+  }
+}
