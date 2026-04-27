@@ -1,0 +1,9 @@
+src/account.h
+  16c07525be4f3e65 240,252-253,263,270-271,273-274,285,290,292
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.3",
+  "base_commit_sha": "5c2c0422b5c47e0a0bb2aedc148f2747ae6ad7ac",
+  "prompts": {}
+}
