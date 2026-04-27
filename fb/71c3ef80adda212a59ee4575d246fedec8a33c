@@ -1,0 +1,1505 @@
+test/regress/1692.test
+  883c77cf8e09a409 5,10-32,38-41,43-44,49-50,52-53,62-68,75-78
+src/amount.cc
+  883c77cf8e09a409 1370-1378,1380-1396,2043-2066
+src/xact.cc
+  883c77cf8e09a409 197-209,217
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.3",
+  "base_commit_sha": "fb71c3ef80adda212a59ee4575d246fedec8a33c",
+  "prompts": {
+    "883c77cf8e09a409": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "aa196477-ec2e-405a-9a58-81f2308f0f69",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "<command-message>medium</command-message>\n<command-name>/medium</command-name>\n<command-args>The fix in this branch to the problem described by the PR seems rather insufficient to me. This has a lot of special casing around commodities that have no precision, but it could just as easily affect those that have any kind of precision, as long as the balancing lies outside of that precision depth. I want you to re-review the changes in this PR branch and dig deeper to find a solution that really thoroughly addresses the underlying problem and solves it in the correct way. Use your superpowers and cpp-pro to assist you in this task.</command-args>",
+          "timestamp": "2026-04-26T23:08:26.460Z"
+        },
+        {
+          "type": "user",
+          "text": "Remember the following:\n\n- Use the GitHub CLI (`gh`) for all GitHub-related tasks\n- Search the codebase for relevant files\n- Ensure code passes linting and type checking after doing any work\n- Use cpp-pro, python-pro, emacs-lisp-pro, rust-pro or haskell-pro as needed for diagnosing and analyzing PRs, fixing code, and writing any new code.\n- Use Web Search and Perplexity as need for research and discovering resources.\n- Use sequential-thinking when appropriate to break down tasks further.\n- Use context7 whenever code examples might help.\n\nThink deeply to analyze the following query, construct a well thought out plan of action based on the following context, and then carefully execute that plan step by step:\n\n\nARGUMENTS: The fix in this branch to the problem described by the PR seems rather insufficient to me. This has a lot of special casing around commodities that have no precision, but it could just as easily affect those that have any kind of precision, as long as the balancing lies outside of that precision depth. I want you to re-review the changes in this PR branch and dig deeper to find a solution that really thoroughly addresses the underlying problem and solves it in the correct way. Use your superpowers and cpp-pro to assist you in this task.",
+          "timestamp": "2026-04-26T23:08:26.460Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I need to dig into the PR for issue #1692 in the ledger project more carefully. The user is pointing out that the current fix is too narrowly focused on commodities with zero precision, when the real problem could surface with any precision level as long as the balancing amount falls outside that precision threshold. Let me examine the actual changes and think through what a more general solution would look like.",
+          "timestamp": "2026-04-26T23:08:32.210Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I'll start by invoking the systematic-debugging skill to approach this rigorously, then dig into the current branch's changes.",
+          "timestamp": "2026-04-26T23:08:32.214Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Skill",
+          "input": {
+            "skill": "superpowers:systematic-debugging"
+          },
+          "timestamp": "2026-04-26T23:08:32.475Z"
+        },
+        {
+          "type": "user",
+          "text": "Base directory for this skill: /Users/johnw/.config/claude/personal/plugins/cache/claude-plugins-official/superpowers/5.0.2/skills/systematic-debugging\n\n# Systematic Debugging\n\n## Overview\n\nRandom fixes waste time and create new bugs. Quick patches mask underlying issues.\n\n**Core principle:** ALWAYS find root cause before attempting fixes. Symptom fixes are failure.\n\n**Violating the letter of this process is violating the spirit of debugging.**\n\n## The Iron Law\n\n```\nNO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST\n```\n\nIf you haven't completed Phase 1, you cannot propose fixes.\n\n## When to Use\n\nUse for ANY technical issue:\n- Test failures\n- Bugs in production\n- Unexpected behavior\n- Performance problems\n- Build failures\n- Integration issues\n\n**Use this ESPECIALLY when:**\n- Under time pressure (emergencies make guessing tempting)\n- \"Just one quick fix\" seems obvious\n- You've already tried multiple fixes\n- Previous fix didn't work\n- You don't fully understand the issue\n\n**Don't skip when:**\n- Issue seems simple (simple bugs have root causes too)\n- You're in a hurry (rushing guarantees rework)\n- Manager wants it fixed NOW (systematic is faster than thrashing)\n\n## The Four Phases\n\nYou MUST complete each phase before proceeding to the next.\n\n### Phase 1: Root Cause Investigation\n\n**BEFORE attempting ANY fix:**\n\n1. **Read Error Messages Carefully**\n   - Don't skip past errors or warnings\n   - They often contain the exact solution\n   - Read stack traces completely\n   - Note line numbers, file paths, error codes\n\n2. **Reproduce Consistently**\n   - Can you trigger it reliably?\n   - What are the exact steps?\n   - Does it happen every time?\n   - If not reproducible → gather more data, don't guess\n\n3. **Check Recent Changes**\n   - What changed that could cause this?\n   - Git diff, recent commits\n   - New dependencies, config changes\n   - Environmental differences\n\n4. **Gather Evidence in Multi-Component Systems**\n\n   **WHEN system has multiple components (CI → build → signing, API → service → database):**\n\n   **BEFORE proposing fixes, add diagnostic instrumentation:**\n   ```\n   For EACH component boundary:\n     - Log what data enters component\n     - Log what data exits component\n     - Verify environment/config propagation\n     - Check state at each layer\n\n   Run once to gather evidence showing WHERE it breaks\n   THEN analyze evidence to identify failing component\n   THEN investigate that specific component\n   ```\n\n   **Example (multi-layer system):**\n   ```bash\n   # Layer 1: Workflow\n   echo \"=== Secrets available in workflow: ===\"\n   echo \"IDENTITY: ${IDENTITY:+SET}${IDENTITY:-UNSET}\"\n\n   # Layer 2: Build script\n   echo \"=== Env vars in build script: ===\"\n   env | grep IDENTITY || echo \"IDENTITY not in environment\"\n\n   # Layer 3: Signing script\n   echo \"=== Keychain state: ===\"\n   security list-keychains\n   security find-identity -v\n\n   # Layer 4: Actual signing\n   codesign --sign \"$IDENTITY\" --verbose=4 \"$APP\"\n   ```\n\n   **This reveals:** Which layer fails (secrets → workflow ✓, workflow → build ✗)\n\n5. **Trace Data Flow**\n\n   **WHEN error is deep in call stack:**\n\n   See `root-cause-tracing.md` in this directory for the complete backward tracing technique.\n\n   **Quick version:**\n   - Where does bad value originate?\n   - What called this with bad value?\n   - Keep tracing up until you find the source\n   - Fix at source, not at symptom\n\n### Phase 2: Pattern Analysis\n\n**Find the pattern before fixing:**\n\n1. **Find Working Examples**\n   - Locate similar working code in same codebase\n   - What works that's similar to what's broken?\n\n2. **Compare Against References**\n   - If implementing pattern, read reference implementation COMPLETELY\n   - Don't skim - read every line\n   - Understand the pattern fully before applying\n\n3. **Identify Differences**\n   - What's different between working and broken?\n   - List every difference, however small\n   - Don't assume \"that can't matter\"\n\n4. **Understand Dependencies**\n   - What other components does this need?\n   - What settings, config, environment?\n   - What assumptions does it make?\n\n### Phase 3: Hypothesis and Testing\n\n**Scientific method:**\n\n1. **Form Single Hypothesis**\n   - State clearly: \"I think X is the root cause because Y\"\n   - Write it down\n   - Be specific, not vague\n\n2. **Test Minimally**\n   - Make the SMALLEST possible change to test hypothesis\n   - One variable at a time\n   - Don't fix multiple things at once\n\n3. **Verify Before Continuing**\n   - Did it work? Yes → Phase 4\n   - Didn't work? Form NEW hypothesis\n   - DON'T add more fixes on top\n\n4. **When You Don't Know**\n   - Say \"I don't understand X\"\n   - Don't pretend to know\n   - Ask for help\n   - Research more\n\n### Phase 4: Implementation\n\n**Fix the root cause, not the symptom:**\n\n1. **Create Failing Test Case**\n   - Simplest possible reproduction\n   - Automated test if possible\n   - One-off test script if no framework\n   - MUST have before fixing\n   - Use the `superpowers:test-driven-development` skill for writing proper failing tests\n\n2. **Implement Single Fix**\n   - Address the root cause identified\n   - ONE change at a time\n   - No \"while I'm here\" improvements\n   - No bundled refactoring\n\n3. **Verify Fix**\n   - Test passes now?\n   - No other tests broken?\n   - Issue actually resolved?\n\n4. **If Fix Doesn't Work**\n   - STOP\n   - Count: How many fixes have you tried?\n   - If < 3: Return to Phase 1, re-analyze with new information\n   - **If ≥ 3: STOP and question the architecture (step 5 below)**\n   - DON'T attempt Fix #4 without architectural discussion\n\n5. **If 3+ Fixes Failed: Question Architecture**\n\n   **Pattern indicating architectural problem:**\n   - Each fix reveals new shared state/coupling/problem in different place\n   - Fixes require \"massive refactoring\" to implement\n   - Each fix creates new symptoms elsewhere\n\n   **STOP and question fundamentals:**\n   - Is this pattern fundamentally sound?\n   - Are we \"sticking with it through sheer inertia\"?\n   - Should we refactor architecture vs. continue fixing symptoms?\n\n   **Discuss with your human partner before attempting more fixes**\n\n   This is NOT a failed hypothesis - this is a wrong architecture.\n\n## Red Flags - STOP and Follow Process\n\nIf you catch yourself thinking:\n- \"Quick fix for now, investigate later\"\n- \"Just try changing X and see if it works\"\n- \"Add multiple changes, run tests\"\n- \"Skip the test, I'll manually verify\"\n- \"It's probably X, let me fix that\"\n- \"I don't fully understand but this might work\"\n- \"Pattern says X but I'll adapt it differently\"\n- \"Here are the main problems: [lists fixes without investigation]\"\n- Proposing solutions before tracing data flow\n- **\"One more fix attempt\" (when already tried 2+)**\n- **Each fix reveals new problem in different place**\n\n**ALL of these mean: STOP. Return to Phase 1.**\n\n**If 3+ fixes failed:** Question the architecture (see Phase 4.5)\n\n## your human partner's Signals You're Doing It Wrong\n\n**Watch for these redirections:**\n- \"Is that not happening?\" - You assumed without verifying\n- \"Will it show us...?\" - You should have added evidence gathering\n- \"Stop guessing\" - You're proposing fixes without understanding\n- \"Ultrathink this\" - Question fundamentals, not just symptoms\n- \"We're stuck?\" (frustrated) - Your approach isn't working\n\n**When you see these:** STOP. Return to Phase 1.\n\n## Common Rationalizations\n\n| Excuse | Reality |\n|--------|---------|\n| \"Issue is simple, don't need process\" | Simple issues have root causes too. Process is fast for simple bugs. |\n| \"Emergency, no time for process\" | Systematic debugging is FASTER than guess-and-check thrashing. |\n| \"Just try this first, then investigate\" | First fix sets the pattern. Do it right from the start. |\n| \"I'll write test after confirming fix works\" | Untested fixes don't stick. Test first proves it. |\n| \"Multiple fixes at once saves time\" | Can't isolate what worked. Causes new bugs. |\n| \"Reference too long, I'll adapt the pattern\" | Partial understanding guarantees bugs. Read it completely. |\n| \"I see the problem, let me fix it\" | Seeing symptoms ≠ understanding root cause. |\n| \"One more fix attempt\" (after 2+ failures) | 3+ failures = architectural problem. Question pattern, don't fix again. |\n\n## Quick Reference\n\n| Phase | Key Activities | Success Criteria |\n|-------|---------------|------------------|\n| **1. Root Cause** | Read errors, reproduce, check changes, gather evidence | Understand WHAT and WHY |\n| **2. Pattern** | Find working examples, compare | Identify differences |\n| **3. Hypothesis** | Form theory, test minimally | Confirmed or new hypothesis |\n| **4. Implementation** | Create test, fix, verify | Bug resolved, tests pass |\n\n## When Process Reveals \"No Root Cause\"\n\nIf systematic investigation reveals issue is truly environmental, timing-dependent, or external:\n\n1. You've completed the process\n2. Document what you investigated\n3. Implement appropriate handling (retry, timeout, error message)\n4. Add monitoring/logging for future investigation\n\n**But:** 95% of \"no root cause\" cases are incomplete investigation.\n\n## Supporting Techniques\n\nThese techniques are part of systematic debugging and available in this directory:\n\n- **`root-cause-tracing.md`** - Trace bugs backward through call stack to find original trigger\n- **`defense-in-depth.md`** - Add validation at multiple layers after finding root cause\n- **`condition-based-waiting.md`** - Replace arbitrary timeouts with condition polling\n\n**Related skills:**\n- **superpowers:test-driven-development** - For creating failing test case (Phase 4, Step 1)\n- **superpowers:verification-before-completion** - Verify fix worked before claiming success\n\n## Real-World Impact\n\nFrom debugging sessions:\n- Systematic approach: 15-30 minutes to fix\n- Random fixes approach: 2-3 hours of thrashing\n- First-time fix rate: 95% vs 40%\n- New bugs introduced: Near zero vs common\n",
+          "timestamp": "2026-04-26T23:08:32.608Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I need to gather context about this issue by examining the branch's recent commits, reviewing issue #1692, understanding how the codebase is structured, and then analyzing what the current fix is attempting to address and what might be causing the underlying problem.",
+          "timestamp": "2026-04-26T23:08:39.306Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me start with Phase 1: Root Cause Investigation. I'll gather evidence about the current branch and issue #1692 in parallel.",
+          "timestamp": "2026-04-26T23:08:39.318Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1692 log --oneline -20",
+            "description": "Show recent commits on fix-1692 branch"
+          },
+          "timestamp": "2026-04-26T23:08:39.366Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1692 log main..HEAD --stat",
+            "description": "Show commits ahead of main with stats"
+          },
+          "timestamp": "2026-04-26T23:08:40.011Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 1692 --repo ledger/ledger",
+            "description": "View issue 1692 from GitHub"
+          },
+          "timestamp": "2026-04-26T23:08:40.795Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1692 diff main..HEAD",
+            "description": "Show the full diff of the branch"
+          },
+          "timestamp": "2026-04-26T23:08:41.336Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I need to filter out the noise from merged commits and focus on what fix-1692 actually changed.",
+          "timestamp": "2026-04-26T23:08:47.328Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The diff includes too much. Let me focus only on the fix commit and look at issue specifics.",
+          "timestamp": "2026-04-26T23:08:47.496Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1692 show 18542fd9a --stat",
+            "description": "Show the fix commit stats"
+          },
+          "timestamp": "2026-04-26T23:08:48.655Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1692 show 18542fd9a",
+            "description": "Show full fix commit"
+          },
+          "timestamp": "2026-04-26T23:08:49.471Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1692 show e2365ad2b",
+            "description": "Show test commit"
+          },
+          "timestamp": "2026-04-26T23:08:49.896Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I'm diving into issue #1692 in ledger where a transaction like `2 X @ 0.2 Y` with a missing posting should balance by inferring `-0.4 Y`, but the display precision for Y rounds this to zero, causing the balancing posting to be incorrectly dropped and violating double-entry accounting. The fix appears to involve adjusting how zero amounts are checked.\n\nThe current approach only handles the narrow case where the commodity has zero precision and the BIGINT_COST_PREC flag is set, using the quantity's precision instead. But the user is pointing out this should also apply when a commodity has higher precision yet the inferred amount requires even more precision to represent accurately—like when Y has precision 2 but the calculated balance needs precision 5 to avoid rounding to zero. I need to examine how is_zero() works, how BIGINT_COST_PREC is used throughout the codebase, and where precision gets set and applied, particularly in the transaction balancing logic.",
+          "timestamp": "2026-04-26T23:09:03.614Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I have the full picture of the current fix. Let me dig deeper into the underlying mechanisms.",
+          "timestamp": "2026-04-26T23:09:03.614Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"BIGINT_COST_PREC\\|set_cost_precision\\|set_cost_prec_if_needed\" /Users/johnw/src/ledger/fix-1692/src/*.cc /Users/johnw/src/ledger/fix-1692/src/*.h",
+            "description": "Find all uses of BIGINT_COST_PREC and related functions"
+          },
+          "timestamp": "2026-04-26T23:09:03.787Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"is_zero\\b\" /Users/johnw/src/ledger/fix-1692/src/amount.cc /Users/johnw/src/ledger/fix-1692/src/amount.h | head -40",
+            "description": "Find is_zero usage in amount.cc"
+          },
+          "timestamp": "2026-04-26T23:09:04.980Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/src/amount.cc",
+            "limit": 120,
+            "offset": 1300
+          },
+          "timestamp": "2026-04-26T23:09:05.554Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I'm tracing through how the precision system works across these three key areas: the `is_zero()` function that determines when a value is negligible, the `print()` function that applies `BIGINT_COST_PREC` formatting, and the transaction code that infers and sets the cost precision based on actual values.",
+          "timestamp": "2026-04-26T23:09:12.187Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me look at the print() function and the xact balancing code in parallel.",
+          "timestamp": "2026-04-26T23:09:12.197Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/src/amount.cc",
+            "limit": 120,
+            "offset": 2000
+          },
+          "timestamp": "2026-04-26T23:09:12.223Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/src/xact.cc",
+            "limit": 80,
+            "offset": 180
+          },
+          "timestamp": "2026-04-26T23:09:12.565Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/src/amount.cc",
+            "limit": 40,
+            "offset": 855
+          },
+          "timestamp": "2026-04-26T23:09:13.063Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I'm seeing the broader issue now—the user's pointing out that the problem isn't really specific to commodities with zero precision, but rather any commodity where the balancing amount falls outside its precision depth. Let me reconsider the example they're building with commodity Y having precision 2.\n\nThe real problem is that `is_zero()` is checking against display precision rather than actual value, which creates this semantic bug where amounts that aren't truly zero get treated as zero and silently dropped. The current fix only patches the zero-precision case, but the underlying issue affects any commodity where the inferred balance rounds to zero at display precision.\n\nLooking at how `display_precision()` and `print()` interact, there's special handling for cost-precision amounts when the commodity has zero precision, but this doesn't account for the broader case where display precision differs from the actual precision of the calculated amount.\n\nThe core issue is that `BIGINT_COST_PREC` and `BIGINT_KEEP_PREC` serve similar purposes but are treated differently—one flags that we should preserve the calculated precision for display, yet the code only applies this logic under specific conditions. The cleaner approach would be to make cost-precision amounts behave consistently with keep-precision amounts, using the maximum of the quantity's precision and the commodity's precision for both display and zero-checking, rather than restricting this behavior to cases where commodity precision is zero. I need to understand where the balancing posting actually gets filtered out from the output. The core issue is whether an inferred amount that's mathematically non-zero should ever be omitted just because it rounds to zero for display purposes—in double-entry accounting, that would break the fundamental equation. Let me trace through the filtering logic to see where is_zero() is being called to drop postings.",
+          "timestamp": "2026-04-26T23:09:48.491Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me examine where this is_zero() actually filters postings out, and find the deeper architectural issue.",
+          "timestamp": "2026-04-26T23:09:48.492Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"is_zero\\|is_realzero\\|is_nonzero\" /Users/johnw/src/ledger/fix-1692/src/filters.cc /Users/johnw/src/ledger/fix-1692/src/balance.cc /Users/johnw/src/ledger/fix-1692/src/value.cc 2>/dev/null | head -50",
+            "description": "Find is_zero usage in display layers"
+          },
+          "timestamp": "2026-04-26T23:09:49.948Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"is_zero\\|is_realzero\\|is_nonzero\" /Users/johnw/src/ledger/fix-1692/src/ 2>/dev/null | grep -v \"amount.cc\\|amount.h\" | head -60",
+            "description": "Find all is_zero callers outside amount.cc"
+          },
+          "timestamp": "2026-04-26T23:09:50.785Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I'm mapping out the call sites where values get filtered out through the is_zero() function across the codebase—filters.cc has the main logic around subtotals, value.cc handles display formatting, and balance.cc manages the output layer—though I need to identify which one is actually causing the values to disappear.\n\nThe critical calls are in textual_xacts.cc during transaction parsing, so I'm diving into those specific lines to trace where the inferred posting gets dropped.",
+          "timestamp": "2026-04-26T23:09:59.375Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me set up tracking and look at the actual posting drop points.",
+          "timestamp": "2026-04-26T23:09:59.379Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "ToolSearch",
+          "input": {
+            "max_results": 2,
+            "query": "select:TaskCreate,TaskUpdate"
+          },
+          "timestamp": "2026-04-26T23:09:59.484Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/src/textual_xacts.cc",
+            "limit": 100,
+            "offset": 770
+          },
+          "timestamp": "2026-04-26T23:10:00.485Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/src/filters.cc",
+            "limit": 120,
+            "offset": 1500
+          },
+          "timestamp": "2026-04-26T23:10:00.754Z"
+        },
+        {
+          "type": "assistant",
+          "text": " Now I'm diving deeper into the core issue: when a commodity's declared precision is lower than the number of decimal places that naturally emerge from a transaction, how should the system handle that discrepancy? For instance, if Y is set to 2 decimal places but a calculation produces -0.0004 Y, rounding it to the display precision would lose information and show -0.00, which masks the actual balance.\n\nThe current code skips precision adjustment whenever a commodity already has a declared precision, so it never captures the finer granularity that the cost introduces. I'm realizing the real question is whether parsing `0.2 Y` actually bumps Y's precision to 1, and if so, whether that same mechanism should apply to inferred amounts derived from costs with higher precision.",
+          "timestamp": "2026-04-26T23:10:21.210Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskCreate",
+          "input": {
+            "activeForm": "Analyzing whether costs bump commodity precision",
+            "description": "Determine whether parsing an inline cost like '@ 0.2 Y' bumps Y's commodity precision. This is critical to understanding the depth of the bug.",
+            "subject": "Analyze whether costs bump commodity precision"
+          },
+          "timestamp": "2026-04-26T23:10:22.287Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskCreate",
+          "input": {
+            "activeForm": "Reproducing variant bug with non-zero precision",
+            "description": "Construct a test case where Y has precision 2 (set by D directive or prior amount) but the inferred balance is -0.0004 Y. Verify whether the current fix handles this. Per user complaint: 'it could just as easily affect those that have any kind of precision, as long as the balancing lies outside of that precision depth'.",
+            "subject": "Reproduce bug variant: commodity with precision > 0"
+          },
+          "timestamp": "2026-04-26T23:10:25.381Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskCreate",
+          "input": {
+            "activeForm": "Designing the proper fix",
+            "description": "After understanding the broken case for arbitrary precision commodities, design a proper general fix that handles all precision depths uniformly, without special-casing precision==0.",
+            "subject": "Identify root cause and design proper fix"
+          },
+          "timestamp": "2026-04-26T23:10:27.292Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskCreate",
+          "input": {
+            "activeForm": "Implementing and testing the proper fix",
+            "description": "Replace the special-cased fix with a general solution. Run the regression tests to confirm no regressions.",
+            "subject": "Implement and test the proper fix"
+          },
+          "timestamp": "2026-04-26T23:10:28.435Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"set_precision\\|precision_\\s*=\\|precision_(\" /Users/johnw/src/ledger/fix-1692/src/commodity.cc /Users/johnw/src/ledger/fix-1692/src/amount.cc | grep -v \"// \" | head -40",
+            "description": "Find where commodity precision is mutated"
+          },
+          "timestamp": "2026-04-26T23:10:30.341Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"COMMODITY_NOMARKET\\|COMMODITY_PRIMARY\\|ANNOTATED\\|PARSE_NO_MIGRATE\\|set_precision\\|precision()\" /Users/johnw/src/ledger/fix-1692/src/amount.cc | head -50",
+            "description": "Look at parse-time precision handling"
+          },
+          "timestamp": "2026-04-26T23:10:36.435Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/src/amount.cc",
+            "limit": 60,
+            "offset": 1820
+          },
+          "timestamp": "2026-04-26T23:10:39.487Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I'm realizing the precision bump happens during parsing when the commodity exists and migration style isn't disabled, so `0.2 Y` should increase Y's precision to 1. But I need to verify whether the cost amount in `2 X @ 0.2 Y` is actually being parsed with that flag enabled, or if something's preventing the precision adjustment from taking effect.",
+          "timestamp": "2026-04-26T23:10:46.934Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me trace how the cost `@ 0.2 Y` is actually parsed and whether it bumps Y's precision.",
+          "timestamp": "2026-04-26T23:10:46.941Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"parse.*PARSE_NO_MIGRATE\\|parse_amount\\|PARSE_NO_REDUCE\\|parse_flags\\|PARSE_DEFAULT\" /Users/johnw/src/ledger/fix-1692/src/textual_xacts.cc /Users/johnw/src/ledger/fix-1692/src/amount.h | head -40",
+            "description": "Find amount parse flags"
+          },
+          "timestamp": "2026-04-26T23:10:49.410Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"post->cost\\|cost->parse\\|cost.parse\\|amt.parse\\|amount.parse\\|parse.*cost\" /Users/johnw/src/ledger/fix-1692/src/textual_xacts.cc | head -30",
+            "description": "Find cost parsing in textual_xacts.cc"
+          },
+          "timestamp": "2026-04-26T23:10:50.583Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/src/amount.h",
+            "limit": 75,
+            "offset": 75
+          },
+          "timestamp": "2026-04-26T23:10:51.265Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I found the critical detail—at line 677 of textual_xacts.cc, the cost is parsed with `PARSE_NO_MIGRATE`, which prevents the commodity's display precision from being updated even though the amount itself retains its precision setting.\n\nThis creates a real problem: if commodity Y already has precision 2 from elsewhere in the journal, and someone writes `2 X @ 0.0002 Y`, the inferred null balance `-0.0004 Y` gets computed correctly internally but displays as `-0.00 Y` at precision 2, which rounds to zero and gets dropped. The current fix's check for `comm.precision() == 0` misses this case entirely.\n\nThe proper solution is to make `set_cost_prec_if_needed` check whether the inferred amount's precision exceeds the commodity's display precision, using `amt_precision > comm.precision()` instead of only checking for zero precision.\n\nRefining the logic...\n\nThe key insight is that when `BIGINT_COST_PREC` is set, I need to use the maximum of the commodity's precision and the quantity's stored precision for any zero-checks or display logic, rather than just checking if the flag exists. This ensures the amount respects whichever precision is higher. I'm verifying the fix works correctly: with the general condition checking if quantity's precision exceeds the commodity's precision, the is_zero() method now properly uses the higher precision (4) instead of the commodity's lower precision (2), so the small inferred balance isn't incorrectly rounded to zero. Now I need to reconsider the set_cost_prec_if_needed function—removing the early exit when commodity has any precision would let the logic calculate the actual price precision needed to faithfully represent the inferred balance, which for cases like `2 X @ 0.0002 Y` means preserving that 4-digit precision even when Y's display precision is only 2.\n\nRefining the logic...\n\nNow I'm thinking through whether this precision issue could show up in other scenarios beyond the inferred posting case—like when both postings are explicit and one has a very precise cost while the other is a simple balance amount.\n\nThe core problem is specifically when an explicit cost with a commodity is parsed without migrating the precision, then the inferred balancing posting ends up with precision that exceeds what the commodity currently displays.\n\nLet me also consider what happens with balance assignments in this scenario—the computed difference would preserve the full precision internally, but display at the commodity's current precision, potentially losing information in the output.\n\nI need to build the project and create a test case to confirm this bug actually manifests, then trace through the `set_cost_prec_if_needed` logic more carefully to understand how it decides whether to bump the cost precision. The early exit was probably defensive—once a commodity has explicit precision, inferring additional precision from costs felt intrusive. But that's exactly the problem: when the inferred balance falls below the display precision, the posting vanishes entirely, which is worse than showing a slightly rounded amount. I'll move forward with the fix to check if the recovered price precision exceeds the commodity's precision before deciding whether to set cost precision. Let me also think through some edge cases: if a commodity displays at precision 2 but a cost has precision 7, the inferred balance will be rounded for display, which is expected behavior—the posting won't disappear as long as the amount isn't actually zero.\n\nThe real bug emerges with cases like `1 X @ 0.0005 Y` where the cost precision is 4, the amount precision is 0, so the recovered price precision becomes 4, and the inferred balance of -0.0005 Y rounds to -0.00 at display precision 2, triggering the zero check incorrectly. I need to verify how precision is actually calculated for the amount when parsing a new commodity.\n\nLooking at the PARSE_NO_MIGRATE flag, it sets BIGINT_KEEP_PREC on the parsed amount, which means display_precision() returns the maximum of the quantity's precision and the commodity's precision. Let me trace through exactly what happens when the cost is examined to understand the precision recovery logic. IGINT_KEEP_PREC is set:\n```cpp\namount_t::precision_t amount_t::display_precision() const {\n  ...\n  if (comm && !keep_precision())\n    return comm.precision();\n  else\n    return comm ? std::max(quantity->prec, comm.precision()) : quantity->prec;\n}\n```\n\nSo when keep_precision() is true, returns max(quantity->prec, comm.precision()).\nFor \"0.0005 Y\" parsed as cost with PARSE_NO_MIGRATE: quantity->prec=4, BIGINT_KEEP_PREC is set, comm.precision()=2. display_precision returns max(4,2)=4. cost.precision() = 4. Good.\n\nOh wait, what does cost.precision() return? Let me check:\n```cpp\namount_t::precision_t amount_t::precision() const {\n  if (!quantity)\n    throw_(amount_error, _(\"Cannot get precision of an uninitialized amount\"));\n  return quantity->prec;\n}\n```\n\nSo cost.precision() = quantity->prec = 4 for \"0.0005 Y\". Good.\n\nAnd amount.precision() in the loop: that's post->amount.precision() = post->amount.quantity->prec. For \"1 X\", that's 0.\n\nOK now let me also think about the case of `2 X @ 0.20 Y` (as in the original bug):\n- cost \"0.20 Y\" parsed with PARSE_NO_MIGRATE → cost.quantity->prec = 2\n\nActually, the user wrote `0.2 Y` not `0.20 Y`. The original test has cost \"0.2 Y\" with precision 1, which infers amount -0.4 Y with high internal precision. In set_cost_prec_if_needed, cost_prec is 1 and amt_prec is 0, so after rounding and truncating checks, the amount gets BIGINT_COST_PREC set with quantity->prec=1. When is_zero() checks with Y's precision at 0 (not bumped from PARSE_NO_MIGRATE), the check_prec becomes 1 due to BIGINT_COST_PREC, so quantity->prec (1) <= check_prec (1) calls is_realzero() which returns false, keeping the posting.\n\nNow testing my variant with `2 X @ 0.0002 Y` where Y already has precision 2 from a D directive: the cost \"0.0002 Y\" gets parsed with PARSE_NO_MIGRATE...\n\nLet me just write a test and run it to see what actually happens, then check the existing test suite to make sure my fix doesn't break anything.",
+          "timestamp": "2026-04-26T23:12:25.841Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The cost `@ 0.2 Y` is parsed with `PARSE_NO_MIGRATE` (line 677). This is the key — the cost does NOT bump the commodity's display precision. Now let me confirm my analysis of the broader bug variant by building and reproducing.",
+          "timestamp": "2026-04-26T23:12:25.841Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1692/build 2>/dev/null && echo \"---\" && ls /Users/johnw/src/ledger/fix-1692/build/ledger 2>/dev/null && echo \"binary exists\"",
+            "description": "Check if build dir and binary exist"
+          },
+          "timestamp": "2026-04-26T23:12:25.842Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1692/",
+            "description": "List branch directory"
+          },
+          "timestamp": "2026-04-26T23:12:29.298Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskUpdate",
+          "input": {
+            "status": "in_progress",
+            "taskId": "1"
+          },
+          "timestamp": "2026-04-26T23:12:29.475Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cmake -B build -DCMAKE_BUILD_TYPE=Debug \\\n  -DUSE_PYTHON=OFF -DUSE_GPGME=OFF \\\n  -DBoost_DIR=/nix/store/k5a24gp2r9rvn9jhrvn4g63a63kc3hpa-boost-1.89.0-dev/lib/cmake/Boost-1.89.0 \\\n  -DEDIT_LIB=/nix/store/3484xxnw0d05jf4wjwaykarvi2fgk02f-libedit-20251016-3.1/lib/libedit.dylib \\\n  -DEDIT_PATH=/nix/store/b6ar0114dc1k4sbcayi2mbk3hgy7xb13-libedit-20251016-3.1-dev/include \\\n  -DGMP_LIB=/nix/store/35a4xm9sh4jkn25f9v3dmxzjp5xg4r8w-gmp-with-cxx-6.3.0/lib/libgmp.dylib \\\n  -DGMP_PATH=/nix/store/j454zbmphm8h380k54q9kfhnr5jbva95-gmp-with-cxx-6.3.0-dev/include \\\n  -DMPFR_LIB=/nix/store/1v5yh6wgnjxw172i0xqrw982xllcgasj-mpfr-4.2.2/lib/libmpfr.dylib \\\n  -DMPFR_PATH=/nix/store/dkbc3lqhrqs8hr2i4q682mqqq82hdmqi-mpfr-4.2.2-dev/include \\\n  -DICU_INCLUDE_DIR=/nix/store/i9yj32fp96s8qjd6c43fk54r8j6qjvzr-icu4c-76.1-dev/include 2>&1 | tail -20",
+            "description": "Configure cmake build"
+          },
+          "timestamp": "2026-04-26T23:12:48.270Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1692/build && make -j8 2>&1 | tail -10",
+            "description": "Build ledger binary",
+            "timeout": 600000
+          },
+          "timestamp": "2026-04-26T23:12:55.394Z"
+        },
+        {
+          "type": "assistant",
+          "text": " The build is working now. I'm setting up a test case to reproduce the precision bug—I'll define commodity Y with 2 decimal places, then create a transaction that infers a balance of -0.0004 Y, which rounds to \"-0.00\" at precision 2 and gets incorrectly dropped.",
+          "timestamp": "2026-04-26T23:13:23.178Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Build succeeded. Now let me reproduce the variant bug — commodity with precision > 0 but inferred balance below that depth.",
+          "timestamp": "2026-04-26T23:13:23.186Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat > /tmp/bug-1692-variant.dat << 'EOF'\nD 10.00 Y\n\n2018-01-01 * Foo\n    Assets:A                    2 X @ 0.0002 Y\n    Assets:B\nEOF\necho \"=== balance ===\"\nTZ=America/Chicago /Users/johnw/src/ledger/fix-1692/build/ledger -f /tmp/bug-1692-variant.dat balance\necho \"=== register ===\"\nTZ=America/Chicago /Users/johnw/src/ledger/fix-1692/build/ledger -f /tmp/bug-1692-variant.dat reg\necho \"=== print ===\"\nTZ=America/Chicago /Users/johnw/src/ledger/fix-1692/build/ledger -f /tmp/bug-1692-variant.dat print",
+            "description": "Test variant bug: Y has precision 2, inferred balance below depth"
+          },
+          "timestamp": "2026-04-26T23:13:25.858Z"
+        },
+        {
+          "type": "assistant",
+          "text": " So the user's prediction was right—Y's precision is set to 2 from the transaction, but the inferred -0.0004 Y value gets silently dropped from both the balance and register output, breaking the accounting equation again. This is the same issue as #1692, except the current fix doesn't catch it because the commodity's precision is greater than 0.\n\nThe real problem is that the fix only handles the precision==0 case, but the same bug appears whenever an inferred amount falls below any commodity's precision. I need a general solution that modifies the condition in xact.cc's set_cost_prec_if_needed to allow proceeding when the price precision exceeds the commodity precision, then generalize the checks in amount.cc's is_zero() and print() functions to handle this properly.\n\nThe operator+= and operator-= changes should still be necessary to prevent BIGINT_COST_PREC from propagating to running totals, which would rebreak #717. Let me examine the code sections I need to modify more carefully.",
+          "timestamp": "2026-04-26T23:13:37.843Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Confirmed the variant bug. The `D 10.00 Y` directive sets Y's precision to 2, but the inferred -0.0004 Y is silently dropped — same accounting equation violation. Let me dig further to confirm my hypothesis on the fix design.",
+          "timestamp": "2026-04-26T23:13:37.844Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskUpdate",
+          "input": {
+            "status": "completed",
+            "taskId": "1"
+          },
+          "timestamp": "2026-04-26T23:13:38.098Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskUpdate",
+          "input": {
+            "status": "completed",
+            "taskId": "2"
+          },
+          "timestamp": "2026-04-26T23:13:38.488Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskUpdate",
+          "input": {
+            "status": "in_progress",
+            "taskId": "3"
+          },
+          "timestamp": "2026-04-26T23:13:38.869Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/src/xact.cc",
+            "limit": 80,
+            "offset": 155
+          },
+          "timestamp": "2026-04-26T23:13:39.408Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I need to check issue #717 to understand the constraints on operator+= and operator-=, and then trace through how is_zero() behaves when amounts accumulate into balances by looking at the balance class implementation.",
+          "timestamp": "2026-04-26T23:13:44.954Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me also check the balance_t::is_zero() path and how amounts get aggregated.",
+          "timestamp": "2026-04-26T23:13:44.974Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/src/balance.h",
+            "limit": 130,
+            "offset": 100
+          },
+          "timestamp": "2026-04-26T23:13:46.153Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"BIGINT_COST_PREC\\|set_cost_precision\" /Users/johnw/src/ledger/fix-1692/src/balance.cc /Users/johnw/src/ledger/fix-1692/src/balance.h /Users/johnw/src/ledger/fix-1692/src/value.cc 2>/dev/null",
+            "description": "Check if BIGINT_COST_PREC is referenced in balance/value"
+          },
+          "timestamp": "2026-04-26T23:13:48.162Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/src/balance.cc",
+            "limit": 100,
+            "offset": 115
+          },
+          "timestamp": "2026-04-26T23:13:48.419Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I'm noticing a potential issue with how the BIGINT_COST_PREC flag is handled in two different code paths. When amounts are added to an existing balance entry via the += operator, the flag gets cleared by the current fix, but I need to check whether the same thing happens during the initial insertion of a commodity into the balance.\n\nLooking at the display logic, when a balance is rendered, it checks `is_zero()` on each amount, and my patched version respects the BIGINT_COST_PREC flag to correctly identify near-zero values. So if an inferred amount like -0.4 Y preserves the flag through the initial insert, it should display correctly.\n\nNow I'm tracing through a scenario with multiple transactions to see if the flag-clearing in operator+= causes problems when accumulating amounts. The real issue is that BIGINT_COST_PREC clearing in arithmetic operations causes the display to revert to commodity precision, which masks sub-precision residuals in running totals. The proper fix involves three changes: firing set_cost_prec_if_needed whenever the recovered price precision exceeds commodity precision, adjusting is_zero to use the maximum of quantity precision and commodity precision when BIGINT_COST_PREC is set, and updating print to respect quantity precision for display when BIGINT_COST_PREC is active and quantity precision exceeds commodity precision. I need to verify how display_precision already handles this for keep_precision cases, since BIGINT_COST_PREC operates differently.\n\nActually, I'm wondering if there's a simpler solution: what if set_cost_precision also sets BIGINT_KEEP_PREC instead? Then display_precision would naturally return the maximum of quantity and commodity precision without needing custom logic in is_zero or print. The concern would be whether BIGINT_KEEP_PREC causes unwanted display changes, but since set_cost_precision already rounds to price_prec, the internal precision shouldn't be excessive. Let me trace through what this would actually produce for a few cases to see if it matches what we need.\n\nNow I'm checking whether BIGINT_KEEP_PREC propagates through arithmetic operations like addition. Looking at the operator+= implementation, I can see it adjusts precision when combining quantities, but I need to verify whether the flag itself gets carried through or dropped during these operations.",
+          "timestamp": "2026-04-26T23:14:31.028Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me check the relationship between `BIGINT_COST_PREC` and `BIGINT_KEEP_PREC`, and look at the operator+= implementation in detail.",
+          "timestamp": "2026-04-26T23:14:31.396Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/src/amount.cc",
+            "limit": 90,
+            "offset": 600
+          },
+          "timestamp": "2026-04-26T23:14:32.591Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"BIGINT_KEEP_PREC\\|BIGINT_BULK_ALLOC\\|BIGINT_COST_PREC\" /Users/johnw/src/ledger/fix-1692/src/amount.cc | head -30",
+            "description": "Look at flag definitions and usages"
+          },
+          "timestamp": "2026-04-26T23:14:33.476Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I'm seeing a pattern across three different code locations where the same precision check is being applied inconsistently. The print function, is_zero check, and the cost precision setter all assume precision must be zero, but they're implementing this assumption in slightly different ways that could cause issues.\n\nLooking at the specific test case with `2 X @ 0.0002 Y` and the `D 10.00 Y` directive, I need to trace through what happens: the directive sets Y's display precision to 2, the cost amount preserves its 4-digit precision through the PARSE_NO_MIGRATE flag, but then when the inferred balance is calculated, it doesn't get the BIGINT_COST_PREC flag that would protect its precision. The set_cost_prec_if_needed function bails out early because the commodity already has a precision setting, leaving the inferred amount vulnerable to being rounded down to \"0.00\" and incorrectly treated as zero.\n\nThe real issue is that I need to understand how the balance accumulates and what precision the inferred amount actually ends up with after the cost multiplication.\n\nThe fix needs three parts: first, modify the print function to check if the internal precision exceeds the commodity's display precision rather than just checking if display precision is zero; second, apply the same logic to the is_zero check so it uses the higher precision when evaluating whether an amount is actually zero; and third, update set_cost_prec_if_needed to not exit early when the commodity has a precision, but instead check inside the loop whether any price precision exceeds the commodity's precision and bump it accordingly.\n\nRefining the implementation... I see the issue now—the truncation check was meant to detect any fractional part at all, but what we really need is to check if there are meaningful fractional digits below the commodity's display precision. For the example of `2 X @ 0.0002 Y` where Y displays with 2 decimals, the amount `-0.0004` has fractional information that would be lost if we don't preserve the higher precision. The check should compare the amount at the commodity's precision against the original to see if rounding would lose information. price_prec = 2, comm.precision() = 2, so the outer condition fails and we skip the check entirely—which is correct since the amount displays properly at commodity precision already. I'm working through these edge cases to confirm the logic: we only set cost precision when the amount has non-integer fractional content that would be lost at commodity precision but is preserved at price precision. I'm working through the rounding behavior—-0.005 rounds to either \"-0.00\" or \"-0.01\" depending on the rounding mode, and if it lands on \"-0.00\" the posting gets dropped as zero, which is the user's complaint. The real issue is that the price_prec calculation doesn't account for cases where the cost has lower precision than the amount, missing these edge cases. Let me reconsider what price_prec actually represents—it should reflect the decimal places in the per-unit cost, not just a simple subtraction of precisions.\n\nLooking at how costs are computed in the code, a per-unit cost like `@ 0.2 Y` gets multiplied by the amount to produce the total cost, so `2 X @ 0.2 Y` becomes `0.4 Y` with precision 1 (sum of operand precisions). But when I trace through the set_cost_prec_if_needed function, the cost.precision() is already the precision of the total cost after multiplication, not the original per-unit cost, which breaks my understanding of what the formula is actually trying to compute.\n\nLet me work through a few examples to see if the formula `price_prec = cost_prec - amt_prec` actually recovers the per-unit precision correctly. For `2 X @ 0.2 Y`, the total cost has precision 1 and the amount has precision 0, so price_prec = 1 - 0 = 1, which matches the per-unit cost precision. For `0.5 X @ 0.05 Y`, the total cost 0.025 has precision 3 (from 2 + 1), and the amount has precision 1, so price_prec = 3 - 1 = 2, which correctly recovers the per-unit precision of 2. So the formula does work—it's subtracting the amount's precision from the total cost's precision to back out the original per-unit precision.\n\nBut now I'm realizing there's a potential issue: when we set the cost precision to the per-unit precision, we're actually rounding the inferred amount. For example, -0.025 rounded to precision 2 becomes -0.03, which loses information. The philosophy seems to be that by quoting the cost at a certain precision, the user implicitly accepts that level of rounding, so it's acceptable to round the inferred amount to match. Let me check what happens with the \"rounded\" check to see if this is the intended behavior.\n\nThe code first checks whether rounding the inferred amount to the per-unit cost precision would change it. If it would, the cost is skipped entirely—so no information loss occurs in those cases. For the case of 1 X @ 0.0005 Y, the inferred amount -0.0005 already fits exactly at precision 4, so it passes the check and gets the cost precision set correctly. But I'm wondering about edge cases where the price precision calculation might be too conservative, like with 0.005 X @ 0.1 Y, where the multiplication gives precision 4 but the amount itself is only precision 3.\n\nActually, looking at the rounding check more carefully: if we tried to set cost precision to 1 for an inferred amount of -0.0005, it would round to -0.0 (which equals 0), and that wouldn't match the original amount, so the check would correctly skip it. The logic seems sound, but the early exit when comm.precision() > 0 is still the real problem. For the proposed fix, I need to think about whether the condition should be price_prec > comm.precision() or just price_prec > 0. If we always use price_prec > 0, we'd set the cost precision flag even when the commodity precision already covers it, which is harmless since the display logic checks whether cost precision exceeds commodity precision anyway. But I should verify that rounding to a lower precision doesn't lose information in cases like 0.5 X @ 0.20 Y. So the real issue is that setting the flag unconditionally might interfere with other code paths, even if the rounded and truncated checks prevent actual precision loss. The safer approach is to only set cost precision when the price precision actually exceeds the commodity precision, rather than just checking if price precision is positive. The rounding check iterates through costs to find one whose precision can represent the amount exactly, but my change to only consider costs with `price_prec > comm.precision()` creates an edge case: if a cost has precision between 0 and commodity precision and can represent the amount exactly, it gets skipped, potentially using a higher-precision cost instead and displaying with unnecessary decimal places. This is a cosmetic issue but worth considering whether the original behavior or my stricter filtering is more correct. I need to trace through the actual finalize logic to understand what precision the inferred amount gets. In the transaction finalization, costs are accumulated into the running balance rather than amounts when a cost is present, so for the test case the balance builds up as 0.4 Y with precision 1. That means the inferred amount for the null posting is -0.4 Y, also with precision 1 from the start. Now I need to check what precision values are actually being used when set_cost_prec_if_needed processes the original amount and its cost. to 0.2 * 2 = 0.4 (precision 1).\n\nSo:\n- amt = -0.4 Y, prec 1, BIGINT_KEEP_PREC? Hmm probably not, because operator+= probably doesn't preserve the cost's BIGINT_KEEP_PREC.\n\nAnyway, in set_cost_prec_if_needed:\n- cost_prec = 1 (the multiplied total cost)\n- amt_prec = 0 (the post amount \"2 X\")\n- price_prec = 1 - 0 = 1\n\nFor my variant `2 X @ 0.0002 Y`:\n- cost = 0.0002 * 2 = 0.0004, precision 4 (4+0=4)\n- amt_prec = 0\n- price_prec = 4 - 0 = 4\n- inferred amount is -0.0004 Y at quantity->prec=4 (whatever the cost was)\n\nHmm, so quantity->prec of the inferred amount is already 4. So set_cost_precision(4) doesn't really change quantity->prec. It just adds the BIGINT_COST_PREC flag.\n\nBut what about the original test case after my fix:\n- amt = -0.4 Y, quantity->prec = 1\n- price_prec = 1 (from `2 X @ 0.2 Y`)\n- comm.precision() of Y = 0 (not bumped by cost)\n- price_prec (1) > comm.precision() (0)? YES → enter body\n- rounded(-0.4) at prec 1 = -0.4 → check passes\n- truncated = 0 → != amt → set_cost_precision(1)\n- in_place_roundto applies precision 1 to -0.4 with no change, sets BIGINT_COST_PREC flag\n\nNow for the cosmetic case with `2 X @ 0.20 Y` where comm.precision() = 2 from a prior `D 10.00 Y`: the cost is 0.40 at precision 2, so price_prec equals comm.precision() and the condition doesn't trigger, leaving BIGINT_COST_PREC unset and displaying as \"0.40 Y\". But with `2 X @ 0.0001 Y` against the same comm precision 2, the cost is 0.0002 at precision 4, which exceeds comm.precision(), so the flag gets set and the amount displays at its full precision 4 as \"-0.0002 Y\".\n\nNow checking the zero-detection logic: when BIGINT_COST_PREC is set and quantity->prec is 4, the condition BIGINT_COST_PREC && quantity->prec > check_prec evaluates to 4 > 2, so check_prec becomes 4, and then quantity->prec (4) <= check_prec (4) returns false from is_realzero(), meaning the posting isn't treated as zero and gets kept.\n\nThe operator+= clearing of BIGINT_COST_PREC still makes sense because running totals shouldn't inherit the flag—they could accumulate from multiple postings and the flag would become misleading. The original issue #717 was about ghost rounding adjustments surfacing from inherited flags on running balances, so clearing it defensively prevents that. When a balance accumulates two amounts each with BIGINT_COST_PREC, the operator+= clears the flag on the result, so the final balance at -0.8 Y with precision 1 won't have the flag set.\n\nWhen displaying this, the is_zero() check uses check_prec=0 with no flag adjustment, so prec (1) > check_prec (0) falls through to print-and-scan, which rounds to precision 0 and prints \"-1 Y\" instead of \"-0.8 Y\"—a cosmetic loss from clearing the flag, but it avoids the ghost adjustment problem. I should implement these changes and run the tests to see if anything breaks, then address it if needed. The key modifications are generalizing the precision comparisons from checking against zero to checking against commodity precision, and keeping the flag-clearing logic in arithmetic operations to prevent propagation issues.\n\nNow I'm thinking through the cost iteration logic—if I change the condition to `price_prec > comm.precision()`, the loop will skip costs with lower precision but might miss valid options. For example, if cost 1 has price_prec=4 and cost 2 has price_prec=1, entering on cost 1 and setting precision to 4 causes cosmetic widening, but the current code just takes the first matching cost anyway, so that's probably acceptable. The real question is whether the rounded check still works correctly when we skip lower-precision costs entirely.\n\nLet me trace through a concrete scenario with mixed precisions: if I have two postings with costs at different precisions (0.2 Y and 0.0002 Y), the inferred amount becomes 0.4006 Y at precision 4. When set_cost_prec_if_needed iterates, it skips the first cost because rounding 0.4006 at precision 1 gives 0.4, which doesn't match. The second cost rounds to 0.4006 unchanged, so it passes the check and sets the cost precision to 4, displaying the amount as \"-0.4006 Y\".\n\nWith my proposed change using `price_prec > comm.precision()`, the logic simplifies: both posts enter the check since their price precisions exceed the commodity's zero precision, and the second post triggers the cost precision setting. The result is identical.\n\nI should update the comment in is_zero to be more general rather than specific to zero-precision commodities, and I'm confident the > comparison is correct since set_cost_precision only fires when precision exceeds the commodity's precision anyway. Let me verify the existing regression test still passes with this fix.\n\nFor the original test case with Y having no prior precision, my condition correctly identifies that price precision 1 exceeds commodity precision 0, sets the cost precision, and produces the expected output \"Y-0.4\" with proper zero-checking behavior. The variant test with a D directive setting Y's precision to 2 also works as intended—price precision 4 exceeds commodity precision 2, so it sets cost precision to 4 and displays \"Y-0.0004\" correctly.\n\nNow I'm ready to implement these changes, though I should also consider how the BIGINT_COST_PREC flag propagates when it's set more frequently with this fix, particularly around operator+= clearing behavior.\n\nWhen multiple inferred amounts with sub-precision values accumulate through arithmetic operations, the flag gets cleared during addition, causing the running total to revert to commodity precision. In a scenario with two transactions each inferring -0.0004 Y and -0.0006 Y with the flag set at precision 4, their sum becomes -0.001 Y at precision 4 but without the flag. When displaying this combined amount, the system falls back to commodity precision 2 for zero-checking, which would round the result to \"-0.00\" and potentially mask the accumulated sub-precision residual.\n\nThis creates a tension: the user's commodity declaration `D 10.00 Y` signals they want 2-decimal display, so -0.001 Y naturally rounds to zero at that precision. But the running total might actually be non-zero in the accounting, and the existing fix has this same cosmetic issue where sub-precision amounts disappear from the display once the flag clears.\n\nMy fix directly addresses the user's complaint—preserving the original posting before arithmetic—which is a strict improvement over the status quo. The running total precision issue is separate and wasn't raised by the user, so I'll keep the operator clearing behavior as-is for now. Let me check what issue #717 actually requires about clearing BIGINT_COST_PREC to understand the ghost rounding constraint better.",
+          "timestamp": "2026-04-26T23:17:47.920Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me check issue #717 to fully understand the rationale for clearing BIGINT_COST_PREC on arithmetic.",
+          "timestamp": "2026-04-26T23:17:47.921Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1692/test/regress/717* 2>/dev/null; ls /Users/johnw/src/ledger/fix-1692/test/todo/717* 2>/dev/null; gh issue view 717 --repo ledger/ledger 2>&1 | head -50",
+            "description": "Look up issue #717 and tests"
+          },
+          "timestamp": "2026-04-26T23:17:49.297Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"ghost\\|rounding adjustment\\|BIGINT_COST_PREC.*propag\\|cost_prec.*propag\" /Users/johnw/src/ledger/fix-1692/src/ /Users/johnw/src/ledger/fix-1692/test/regress/ 2>/dev/null | head -10",
+            "description": "Find references to ghost rounding adjustments and BIGINT_COST_PREC propagation"
+          },
+          "timestamp": "2026-04-26T23:17:50.661Z"
+        },
+        {
+          "type": "assistant",
+          "text": " Looking at the test for issue 717 to see what was failing...",
+          "timestamp": "2026-04-26T23:17:56.646Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/test/regress/717.test"
+          },
+          "timestamp": "2026-04-26T23:17:56.687Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/src/filters.h",
+            "limit": 40,
+            "offset": 770
+          },
+          "timestamp": "2026-04-26T23:17:57.022Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I'm tracking down where the rounding adjustment happens in the display_filter_posts function and checking whether the operator+= clearing logic properly prevents ghost rounding adjustments from BIGINT_COST_PREC propagation. I should also verify that removing the early exit won't break the test case for #717, which relies on an Adjustment posting to compensate for something specific.\n\nLet me think through the scenario more carefully: when we add a posting with BIGINT_COST_PREC to the running total, the is_zero checks during balance display might use a different precision than expected, potentially triggering spurious adjustments. But I'm not entirely convinced that's how the propagation would cause issues, so I'll trust the existing fix and focus on making sure my changes don't break #717's test. I should run that test specifically after implementing to verify.\n\nNow I'm examining what happens with the operator+= clearing more closely. The flag gets cleared after addition, but the precision on the quantity itself remains unchanged. So if I add -0.4 Y with precision 1 and BIGINT_COST_PREC to 0.4 Y with precision 1, the result is 0 Y with precision 1 but no flag. When is_zero checks this against the commodity precision of 0, it rounds at precision 0 and correctly identifies it as zero. In another case where I add two inferred amounts together, the result might display as \"-1 Y\" when rounded, even though the actual value is -0.8 Y—but that's existing behavior and not what the user is complaining about. Let me proceed with the implementation.",
+          "timestamp": "2026-04-26T23:18:21.103Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I understand enough now. Let me design the proper fix and consult cpp-pro for an independent technical review.",
+          "timestamp": "2026-04-26T23:18:21.105Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskUpdate",
+          "input": {
+            "status": "completed",
+            "taskId": "3"
+          },
+          "timestamp": "2026-04-26T23:18:21.143Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskUpdate",
+          "input": {
+            "status": "in_progress",
+            "taskId": "4"
+          },
+          "timestamp": "2026-04-26T23:18:21.145Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Agent",
+          "input": {
+            "description": "Independent review of generalized fix design",
+            "prompt": "I'm working on a fix for issue #1692 in the Ledger accounting program (C++17, GMP-based rational arithmetic). I need an independent technical review of my proposed generalization of an existing fix.\n\n# Context\n\nIn Ledger, when a transaction has a null balancing posting, e.g.\n```\n2018-01-01 * Foo\n    Assets:A    2 X @ 0.2 Y\n    Assets:B\n```\nthe balancing posting for `Assets:B` is inferred as `-0.4 Y`. The issue: if commodity `Y` has display precision 0 (never seen explicitly with decimals), the rendered output rounds `-0.4 Y` to `0` and then `amount_t::is_zero()` reports the posting as zero. The display layer then drops it, breaking the double-entry equation.\n\nThe cost `@ 0.2 Y` is parsed with `PARSE_NO_MIGRATE`, which deliberately suppresses bumping commodity Y's display precision (so a low-precision per-unit cost doesn't pollute the commodity style). Hence Y's display precision stays at 0.\n\n# Current fix on this branch (which I think is too narrow)\n\nThree edits, all gated on `commodity().precision() == 0`:\n\n1. `src/xact.cc` — `add_balancing_post::set_cost_prec_if_needed(amount_t& amt)`:\n```cpp\nvoid set_cost_prec_if_needed(amount_t& amt) {\n    commodity_t& comm = amt.commodity();\n    if (comm.precision() > 0)        // <-- early exit when comm has any precision\n      return;\n    for (auto& post : xact.posts) {\n      if (post->cost && post->amount) {\n        const amount_t& cost = *post->cost;\n        if (&cost.commodity() == &comm.referent()) {\n          auto cost_prec = cost.precision();\n          auto amt_prec  = post->amount.precision();\n          auto price_prec = cost_prec > amt_prec ? cost_prec - amt_prec : cost_prec;\n          if (price_prec > 0) {\n            amount_t rounded(amt);\n            rounded.in_place_roundto(price_prec);\n            if (amt != rounded) continue;          // amt has digits beyond price_prec\n            amount_t truncated(amt);\n            truncated.in_place_truncate();\n            if (amt != truncated)\n              amt.set_cost_precision(price_prec);  // sets BIGINT_COST_PREC, prec=price_prec\n            return;\n          }\n        }\n      }\n    }\n}\n```\n\n2. `src/amount.cc` `is_zero()`:\n```cpp\nprecision_t check_prec = commodity().precision();\nif (check_prec == 0 && quantity->has_flags(BIGINT_COST_PREC))\n  check_prec = quantity->prec;\n```\n\n3. `src/amount.cc` `print()`:\n```cpp\nprecision_t disp_prec = display_precision();\nint zeros_prec = comm ? commodity().precision() : 0;\nif (comm && quantity->has_flags(BIGINT_COST_PREC) && commodity().precision() == 0) {\n  disp_prec = quantity->prec;\n  zeros_prec = quantity->prec;\n}\n```\n\nPlus operator+= and operator-= clear `BIGINT_COST_PREC` to prevent propagation (mitigation for issue #717 ghost rounding adjustments).\n\n# Bug variant I have empirically reproduced\n\n```\nD 10.00 Y                                  ; sets Y precision to 2\n\n2018-01-01 * Foo\n    Assets:A    2 X @ 0.0002 Y\n    Assets:B\n```\n\n`balance` output:\n```\n                 2 X  Assets:A\n```\n\nThe `-0.0004 Y` balancing posting is silently dropped — same accounting violation. Current fix doesn't trigger because `comm.precision() > 0`.\n\n# My proposed generalization\n\nA) **xact.cc** — change the early exit to a per-cost check:\n```cpp\nvoid set_cost_prec_if_needed(amount_t& amt) {\n    commodity_t& comm = amt.commodity();\n    for (auto& post : xact.posts) {\n      if (post->cost && post->amount) {\n        const amount_t& cost = *post->cost;\n        if (&cost.commodity() == &comm.referent()) {\n          auto cost_prec = cost.precision();\n          auto amt_prec  = post->amount.precision();\n          auto price_prec = cost_prec > amt_prec ? cost_prec - amt_prec : cost_prec;\n          if (price_prec > comm.precision()) {           // <-- general condition\n            amount_t rounded(amt);\n            rounded.in_place_roundto(price_prec);\n            if (amt != rounded) continue;\n            amount_t truncated(amt);\n            truncated.in_place_truncate();\n            if (amt != truncated)\n              amt.set_cost_precision(price_prec);\n            return;\n          }\n        }\n      }\n    }\n}\n```\n\nB) **amount.cc is_zero()**:\n```cpp\nprecision_t check_prec = commodity().precision();\nif (quantity->has_flags(BIGINT_COST_PREC) && quantity->prec > check_prec)\n  check_prec = quantity->prec;\n```\n\nC) **amount.cc print()**:\n```cpp\nprecision_t disp_prec = display_precision();\nint zeros_prec = comm ? commodity().precision() : 0;\nif (comm && quantity->has_flags(BIGINT_COST_PREC) &&\n    quantity->prec > commodity().precision()) {\n  disp_prec = quantity->prec;\n  zeros_prec = quantity->prec;\n}\n```\n\nThe operator+= / operator-= flag-clearing for #717 is unchanged.\n\n# Questions for your review\n\n1. Is the generalization mechanically correct? Specifically, the boundary case `quantity->prec > commodity().precision()` (strict `>`, not `>=`) — does that match what `print()` semantically wants?\n\n2. The condition change in `set_cost_prec_if_needed` from `price_prec > 0` to `price_prec > comm.precision()` skips setting `BIGINT_COST_PREC` when the cost's recovered precision matches the commodity's display precision. Is that the right semantic, or should we set the flag whenever `price_prec > 0`? Argument for setting unconditionally: the flag is harmless when `quantity->prec <= comm.precision()` because both `print()` and `is_zero()` use a strict `>` test. Argument for not setting: less surprising to readers; the flag's lifetime is shorter.\n\n3. Are there subtle invariants on `BIGINT_COST_PREC` propagation I might be missing? In `bigint_t::_dup()`, `_copy()`, ref counting, etc., should the flag be cleared anywhere I haven't considered? The relevant flag definitions are in src/amount.cc:128-130:\n```cpp\n#define BIGINT_BULK_ALLOC 0x01\n#define BIGINT_KEEP_PREC  0x02\n#define BIGINT_COST_PREC  0x04\n```\n\n4. Is there a cleaner refactoring that I'm missing? E.g., should `set_cost_precision()` simply set `BIGINT_KEEP_PREC` instead of a new `BIGINT_COST_PREC` flag? `display_precision()` already returns `max(quantity->prec, comm.precision())` when `keep_precision()` is true, which would naturally handle both `print()` and `is_zero()`. The downside is unknown side effects of `BIGINT_KEEP_PREC` elsewhere in the codebase.\n\n5. Any code-review concerns or red flags?\n\nRead these files at /Users/johnw/src/ledger/fix-1692/:\n- src/amount.cc (focus on lines 600-700 for arithmetic, 820-900 for keep_prec/cost_prec/display_prec, 1300-1410 for is_zero, 2000-2050 for print)\n- src/amount.h (focus on lines 70-90 for parse flags, 470-490 for is_zero declaration)\n- src/xact.cc (focus on lines 180-250 for add_balancing_post)\n- src/textual_xacts.cc (line 677 shows cost is parsed with PARSE_NO_MIGRATE)\n\nPlease give a focused technical review (under 600 words). Don't write code; just assess my design and call out any issues.",
+            "subagent_type": "cpp-pro"
+          },
+          "timestamp": "2026-04-26T23:18:57.193Z"
+        },
+        {
+          "type": "assistant",
+          "text": " cpp-pro validated the core design decisions—the strict boundary check and the precision gating are both correct—but flagged that the `BIGINT_COST_PREC` flag needs careful handling since it propagates through the copy constructor, so I should audit operations like `multiply`, `divide`, and the in-place rounding functions to see if the flag should be cleared there too.\n\nThe cleaner approach cpp-pro suggested is to clear the flag centrally in `_dup()` itself, then only re-set it explicitly at the `set_cost_precision()` callsite—this way the flag never implicitly propagates through any operation. But I'm realizing that's probably too aggressive since `_dup()` handles copy-on-write semantics, and clearing it there would lose the flag during assignments and container operations. Let me trace through the actual flow in xact.cc to see where the flag really needs to survive—it looks like `set_cost_prec_if_needed()` is called *after* negation, so the flag gets set on the negated amount, not before. The real problem is that arithmetic operations like multiply and divide could also propagate the flag inappropriately, not just addition and subtraction. Market value calculations in value reports would involve multiplication, so I need to think about whether clearing the flag in `_dup()` would be cleaner than patching each operation individually. If I clear it during the copy-on-write in `_dup()`, the flag would be set after that call in `set_cost_precision()`, but then any subsequent modification would trigger `_dup()` again and clear it. Let me trace through the lifecycle to see if this approach actually works—starting with how `negated()` constructs a new amount.",
+          "timestamp": "2026-04-26T23:20:17.172Z"
+        },
+        {
+          "type": "assistant",
+          "text": "cpp-pro identified an important issue — `BIGINT_COST_PREC` may propagate through other operations (`multiply`, `divide`, `negated`, etc.). Let me check those propagation paths.",
+          "timestamp": "2026-04-26T23:20:17.175Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"negated\\|in_place_negate\\|in_place_multiply\\|in_place_divide\\|in_place_round\\|in_place_unround\\|in_place_truncate\" /Users/johnw/src/ledger/fix-1692/src/amount.cc | head -30",
+            "description": "Find arithmetic operations that might propagate flags"
+          },
+          "timestamp": "2026-04-26T23:20:17.386Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/src/amount.cc",
+            "limit": 100,
+            "offset": 895
+          },
+          "timestamp": "2026-04-26T23:20:17.830Z"
+        },
+        {
+          "type": "assistant",
+          "text": " Looking at how multiply and divide operations handle flags — they probably propagate them the same way negate does.",
+          "timestamp": "2026-04-26T23:20:29.925Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/src/amount.cc",
+            "limit": 100,
+            "offset": 685
+          },
+          "timestamp": "2026-04-26T23:20:29.962Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I'm tracing through the multiply function to see how the flag propagates—`_dup()` preserves it during the copy, then `mpq_mul` does the multiplication, and the precision gets bumped up. The flag survives the whole operation, which confirms cpp-pro's concern. I'm considering whether to clear the flag directly in `_dup()` itself, but I need to think through the copy-on-write logic first since it only does a deep copy when necessary.\n\nActually, clearing in `_dup()` makes sense because it's only called before mutations—reads preserve the flag through reference counting, and assignments or copy constructions don't trigger `_dup()` either. So any actual mutation would lose the flag, which aligns with the intent: once you start modifying an amount that was inferred from a balance with cost, it's no longer that original amount. Though this is more aggressive than just clearing it in `+=` like the current fix does.\n\nLooking at what the current fix preserves: negation, rounding, truncation, and inversion all keep the flag, while only `+=` and `-=` clear it. But with my change firing `set_cost_precision()` more often, operations like multiply could become problematic when converting amounts to market values. For instance, in a `-V` report where an inferred amount gets multiplied to convert currencies, the flag might propagate incorrectly.\n\nThe conservative approach is to implement the minimal fix for the user's actual complaint—making `is_zero()` and print respect the precision—and let test failures guide whether multiply/divide need clearing. Since my generalization could set the flag on common currencies that participate in market valuation, the risk is higher than before, but I should test the minimal change first rather than over-engineer. ressing concern.\n\nOK let me be defensive and also clear in multiply and divide. That should cover the bulk of \"derived value\" operations. negate doesn't change the intrinsic property of being \"originally inferred\", so leave it.\n\nActually thinking about it more: the issue isn't just multiply/divide. It's any operation that creates a derived amount whose precision should be governed by the destination commodity, not by the source's BIGINT_COST_PREC.\n\nLet me think what operations create derived amounts:\n- multiply by commodity → result inherits source commodity (changes commodity? sometimes)\n- divide → similar\n- value() / market() → converts to different commodity\n- value chain stuff\n\nThe cleanest: clear BIGINT_COST_PREC any time the commodity changes. That matches the semantic: BIGINT_COST_PREC is a hint about \"this amount needs more digits than its commodity displays\". If the commodity changes, the hint is meaningless.\n\nBut that's more invasive. Let me start minimal and iterate based on test failures.\n\nPLAN:\n1. Implement the three core changes (xact.cc, is_zero, print)\n2. Run all regression tests\n3. If something fails specifically due to BIGINT_COST_PREC propagation, add targeted clearing\n4. Add the variant test\n5. Update existing test if expected output changes\n\nLet me go.\n\nActually, I realize I should reconsider one more time. cpp-pro mentioned that I might be hitting a wider blast radius than the original `precision()==0` case. They specifically called out `cmd-balance*`, conversion tests, D directive tests, @ cost tests.\n\nThere are likely many tests touching @ costs, so my change could ripple through the test suite. The risk is that BIGINT_COST_PREC might fire on commodities that never previously had it, causing display changes elsewhere. But semantically, the intent is right: when a balancing amount is inferred from a cost and falls below display precision, I should preserve it. If the user wrote `@ 0.0002`, they're acknowledging precision 4, so the inferred -0.0004 should be preserved too.\n\nTests that would break are ones where the inferred amount has digits beyond commodity precision—my fix preserves them while the old behavior dropped them. But that's actually a correctness bug I'm fixing. Let me just implement and see what happens, then check how the D directive affects commodity precision.",
+          "timestamp": "2026-04-26T23:21:23.141Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me check whether `D` directive affects precision and look at one more related path before implementing.",
+          "timestamp": "2026-04-26T23:21:23.191Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"default_commodity_directive\\|COMMODITY_STYLE_NO_MIGRATE\\|^D \" /Users/johnw/src/ledger/fix-1692/src/textual_directives.cc 2>/dev/null | head -20",
+            "description": "Look at D directive implementation"
+          },
+          "timestamp": "2026-04-26T23:21:23.672Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"default_commodity_directive\\|directive_d\" /Users/johnw/src/ledger/fix-1692/src/textual.cc /Users/johnw/src/ledger/fix-1692/src/textual_directives.cc 2>/dev/null | head -10",
+            "description": "Find D directive handler"
+          },
+          "timestamp": "2026-04-26T23:21:24.036Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/src/textual_directives.cc",
+            "limit": 35,
+            "offset": 140
+          },
+          "timestamp": "2026-04-26T23:21:28.092Z"
+        },
+        {
+          "type": "assistant",
+          "text": " Looking at how the `D 10.00 Y` directive works — it parses the amount with style application, assigns precision 2 to commodity Y based on the parsed value, and then locks that format with a flag so future amounts won't change the precision.\n\nWhen `0.0002 Y` gets parsed as a cost later, the NO_MIGRATE flag prevents any precision bump anyway, so the locked format holds. The negation operation preserves flags, but the real timing issue is that in xact.cc, the amount gets negated before the cost precision is even set, so the flag isn't applied until after the negation happens on the copy. I need to trace where that inferred amount ends up after set_cost_prec_if_needed...\n\nTracing through xact.cc operator()...\n\nThe negated amount with BIGINT_COST_PREC gets stored on either null_post->amount or a new post's amount, then added to the transaction. When the report pipeline processes these posts through the filter chain, the amount survives through balance_t insertion (which copies it and preserves the flag), but once we hit the first += operation on an existing commodity in the balance map, the operator+= clears the flag as intended for #717.\n\nFor a single inferred posting per commodity, the flag persists through display. But if there are multiple inferred postings for the same commodity, the second addition clears it from the running total.\n\nI'm realizing there's also a multiply propagation issue—when inferred amounts get converted via market value calculations, they inherit BIGINT_COST_PREC but the precision value becomes meaningless for the new commodity, potentially causing unexpected display precision. I should clear the flag in multiply(), divide(), and operator/= to prevent this.\n\nActually, multiply() already calls _dup() at the start, so if I centralize the flag clearing there, all mutating operations would handle it. And since _dup() is also called by set_cost_precision() right before adding BIGINT_COST_PREC, that flow still works. For in_place_negate(), the flag isn't set yet when negation happens during initial amount setup, so clearing in _dup() won't affect that path. Later negations of stored inferred amounts shouldn't occur in typical usage—they get summed into balances, printed, or checked for zero.\n\nLet me implement the minimal fix by clearing BIGINT_COST_PREC in _dup() and test it.\n\nTracing through set_cost_precision() with this approach: _dup() clears the flag, then in_place_roundto() calls _dup() again (which is a no-op since the bigint is already unique), then we set the precision and add the flag back. The flag ends up preserved through the operation.",
+          "timestamp": "2026-04-26T23:22:11.200Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me look at `_dup()` carefully to understand the COW semantics.",
+          "timestamp": "2026-04-26T23:22:11.236Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"void amount_t::_dup\\|amount_t::_copy\\|void _dup\\|void _copy\" /Users/johnw/src/ledger/fix-1692/src/amount.cc",
+            "description": "Find _dup and _copy definitions"
+          },
+          "timestamp": "2026-04-26T23:22:12.432Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/src/amount.cc",
+            "limit": 100,
+            "offset": 405
+          },
+          "timestamp": "2026-04-26T23:22:12.724Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I'm realizing that adding a flag-clear inside `_dup()` would only trigger during actual duplication, but what I really need is to clear the flag whenever the amount gets mutated, not just in specific cases like duplication.\n\nLooking back at cpp-pro's suggestion more carefully, they're proposing that the copy constructor should clear `COST_PREC` at the same point where `BULK_ALLOC` gets masked. But that still has the same problem — it only clears when a deep copy happens, not on all mutations.\n\nI think the right approach is to clear the flag in the arithmetic operations themselves: `operator+=`, `operator-=`, and also in multiply and divide. The key insight is that `COST_PREC` marks a source amount's precision needs, but once arithmetic combines amounts or changes the commodity (like in market value calculations), the result's precision requirements are determined by its own context, not inherited from the source. So I should preserve the flag for in-place operations like negation or rounding, but clear it for operations that derive new values.\n\nActually, let me be more conservative here. The user's specific complaint is about inferred postings being dropped, and the `+=`/`-=` clearing handles the most common case of running totals. I haven't seen test failures from multiplication propagation yet, so I'll skip adding multiply/divide clearing for now and just run the tests with the minimal fix to see if anything breaks.",
+          "timestamp": "2026-04-26T23:22:36.548Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I have enough understanding. Let me implement the proper generalized fix.",
+          "timestamp": "2026-04-26T23:22:36.588Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/src/xact.cc",
+            "new_string": "  void set_cost_prec_if_needed(amount_t& amt) {\n    commodity_t& comm = amt.commodity();\n    // Scan postings for an inline cost that uses this commodity and\n    // recover the per-unit cost precision.  When the recovered\n    // precision exceeds the commodity's display precision, the\n    // inferred balancing amount may have meaningful fractional digits\n    // below the displayed precision.  This affects two cases:\n    //\n    //   - A new commodity with default precision 0 (e.g. `2 X @ 0.2 Y`\n    //     yielding -0.4 Y when Y has not yet been seen at any\n    //     precision), and\n    //\n    //   - An established commodity whose declared precision is still\n    //     coarser than the cost's (e.g. `D 10.00 Y` followed by\n    //     `2 X @ 0.0002 Y` yielding -0.0004 Y when Y prints with two\n    //     decimal places).\n    //\n    // In both cases the inferred posting would otherwise round to zero\n    // at the commodity's display precision and be silently dropped from\n    // output, breaking double-entry accounting (issue #1692).  Tag the\n    // amount with BIGINT_COST_PREC so amount_t::is_zero() and ::print()\n    // honour the recovered cost precision.\n    for (auto& post : xact.posts) {\n      if (post->cost && post->amount) {\n        const amount_t& cost = *post->cost;\n        if (&cost.commodity() == &comm.referent()) {\n          auto cost_prec = cost.precision();\n          auto amt_prec = post->amount.precision();\n          auto price_prec = cost_prec > amt_prec ? cost_prec - amt_prec : cost_prec;\n          if (price_prec > comm.precision()) {\n            amount_t rounded(amt);\n            rounded.in_place_roundto(price_prec);\n            if (amt != rounded)\n              continue; // fractional digits extend beyond price_prec\n            // Check that the amount has meaningful fractional digits\n            amount_t truncated(amt);\n            truncated.in_place_truncate();\n            if (amt != truncated)\n              amt.set_cost_precision(price_prec);\n            return;\n          }\n        }\n      }\n    }\n  }",
+            "old_string": "  void set_cost_prec_if_needed(amount_t& amt) {\n    commodity_t& comm = amt.commodity();\n    if (comm.precision() > 0)\n      return;\n    // The commodity's display precision is 0 (never saw an explicit\n    // amount for it).  Scan postings for an inline cost that uses\n    // this commodity and recover the per-unit cost precision, then\n    // check whether the auto-balanced amount actually has meaningful\n    // fractional digits at that precision.\n    for (auto& post : xact.posts) {\n      if (post->cost && post->amount) {\n        const amount_t& cost = *post->cost;\n        if (&cost.commodity() == &comm.referent()) {\n          auto cost_prec = cost.precision();\n          auto amt_prec = post->amount.precision();\n          auto price_prec = cost_prec > amt_prec ? cost_prec - amt_prec : cost_prec;\n          if (price_prec > 0) {\n            amount_t rounded(amt);\n            rounded.in_place_roundto(price_prec);\n            if (amt != rounded)\n              continue; // fractional digits extend beyond price_prec\n            // Check that the amount has meaningful fractional digits\n            amount_t truncated(amt);\n            truncated.in_place_truncate();\n            if (amt != truncated)\n              amt.set_cost_precision(price_prec);\n            return;\n          }\n        }\n      }\n    }\n  }",
+            "replace_all": false
+          },
+          "timestamp": "2026-04-26T23:22:52.280Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/src/amount.cc",
+            "new_string": "  if (has_commodity()) {\n    // For amounts flagged with BIGINT_COST_PREC, print() uses\n    // quantity->prec as the effective display precision whenever it\n    // exceeds the commodity's display precision.  Mirror that here so\n    // inferred balancing postings whose value falls below the\n    // commodity's display precision (e.g. \"-0.4 Y\" with Y at precision\n    // 0, or \"-0.0004 Y\" with Y at precision 2) are not classified as\n    // zero, which would hide them from output and break the accounting\n    // equation (issue #1692).\n    precision_t check_prec = commodity().precision();\n    if (quantity->has_flags(BIGINT_COST_PREC) && quantity->prec > check_prec)\n      check_prec = quantity->prec;\n\n    if (keep_precision() || quantity->prec <= check_prec) {",
+            "old_string": "  if (has_commodity()) {\n    // For amounts flagged with BIGINT_COST_PREC against a zero-precision\n    // commodity, print() treats quantity->prec as the effective display\n    // precision.  Mirror that here so inferred balancing postings like\n    // \"-0.4 Y\" (where Y's default display precision is 0) are not treated\n    // as zero, which would hide them from output and break the accounting\n    // equation (issue #1692).\n    precision_t check_prec = commodity().precision();\n    if (check_prec == 0 && quantity->has_flags(BIGINT_COST_PREC))\n      check_prec = quantity->prec;\n\n    if (keep_precision() || quantity->prec <= check_prec) {",
+            "replace_all": false
+          },
+          "timestamp": "2026-04-26T23:23:01.605Z"
+        },
+        {
+          "type": "assistant",
+          "text": " The diagnostic about the missing include file is just an LSP configuration issue, not something caused by my changes—the build was working fine before with that same include path, so I'll move past it and keep going.",
+          "timestamp": "2026-04-26T23:23:07.465Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The diagnostic is an unrelated LSP misconfiguration (the include resolves correctly during build). Now the print() change.",
+          "timestamp": "2026-04-26T23:23:07.491Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/src/amount.cc",
+            "new_string": "  precision_t disp_prec = display_precision();\n  int zeros_prec = comm ? commodity().precision() : 0;\n  // Inferred balancing amounts tagged by set_cost_precision() carry\n  // BIGINT_COST_PREC together with a quantity->prec that captures the\n  // recovered cost precision.  When that precision exceeds the\n  // commodity's display precision, render at the recovered precision so\n  // the value is not silently rounded to zero on the page (issue #1692).\n  if (comm && quantity->has_flags(BIGINT_COST_PREC) &&\n      quantity->prec > commodity().precision()) {\n    disp_prec = quantity->prec;\n    zeros_prec = quantity->prec;\n  }\n  stream_out_mpq(out, MP(quantity), disp_prec, zeros_prec, GMP_RNDN, comm);",
+            "old_string": "  precision_t disp_prec = display_precision();\n  int zeros_prec = comm ? commodity().precision() : 0;\n  if (comm && quantity->has_flags(BIGINT_COST_PREC) && commodity().precision() == 0) {\n    disp_prec = quantity->prec;\n    zeros_prec = quantity->prec;\n  }\n  stream_out_mpq(out, MP(quantity), disp_prec, zeros_prec, GMP_RNDN, comm);",
+            "replace_all": false
+          },
+          "timestamp": "2026-04-26T23:23:13.362Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me build and run the existing #1692 test plus the variant.",
+          "timestamp": "2026-04-26T23:23:25.007Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "make ledger -j8 2>&1 | tail -10",
+            "description": "Rebuild after fix",
+            "timeout": 600000
+          },
+          "timestamp": "2026-04-26T23:23:30.043Z"
+        },
+        {
+          "type": "assistant",
+          "text": " The LSP errors are separate from my actual changes—the build completed successfully. I should try running it again from the build directory to see where it actually executed.",
+          "timestamp": "2026-04-26T23:23:42.034Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "make ledger -j8 2>&1 | tail -5",
+            "description": "Confirm build from build dir",
+            "timeout": 600000
+          },
+          "timestamp": "2026-04-26T23:23:42.129Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "echo \"=== Variant test (Y has precision 2 from D directive) ===\"\necho \"--- balance ---\"\nTZ=America/Chicago /Users/johnw/src/ledger/fix-1692/build/ledger -f /tmp/bug-1692-variant.dat balance\necho \"--- register ---\"\nTZ=America/Chicago /Users/johnw/src/ledger/fix-1692/build/ledger -f /tmp/bug-1692-variant.dat reg\necho \"--- print ---\"\nTZ=America/Chicago /Users/johnw/src/ledger/fix-1692/build/ledger -f /tmp/bug-1692-variant.dat print\necho\necho \"=== Original 1692 test (no D directive) ===\"\necho \"--- balance ---\"\nTZ=America/Chicago /Users/johnw/src/ledger/fix-1692/build/ledger -f /Users/johnw/src/ledger/fix-1692/test/regress/1692.test balance\necho \"--- register ---\"\nTZ=America/Chicago /Users/johnw/src/ledger/fix-1692/build/ledger -f /Users/johnw/src/ledger/fix-1692/test/regress/1692.test reg\necho \"--- print ---\"\nTZ=America/Chicago /Users/johnw/src/ledger/fix-1692/build/ledger -f /Users/johnw/src/ledger/fix-1692/test/regress/1692.test print",
+            "description": "Test both the variant and original cases"
+          },
+          "timestamp": "2026-04-26T23:23:51.082Z"
+        },
+        {
+          "type": "assistant",
+          "text": " Both test cases are passing now — the original test preserves `-0.4 Y` and the variant correctly handles `-0.0004 Y` with precision 2, while maintaining the accounting equation in both scenarios. Let me run the full test suite to make sure I haven't introduced any regressions.",
+          "timestamp": "2026-04-26T23:23:58.179Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Both cases work. Now let me run the full test suite to check for regressions.",
+          "timestamp": "2026-04-26T23:23:58.215Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest -j8 2>&1 | tail -30",
+            "description": "Run full test suite",
+            "timeout": 600000
+          },
+          "timestamp": "2026-04-26T23:23:58.264Z"
+        },
+        {
+          "type": "assistant",
+          "text": " Four tests are failing, so I need to investigate each one to determine whether they represent actual regressions or if the expected outputs just need updating based on the corrected behavior.",
+          "timestamp": "2026-04-26T23:25:15.915Z"
+        },
+        {
+          "type": "assistant",
+          "text": "4 test failures — let me investigate each to determine whether they're real regressions or tests whose expected output needs updating.",
+          "timestamp": "2026-04-26T23:25:15.917Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest --rerun-failed --output-on-failure 2>&1 | head -200",
+            "description": "Show details of failing tests",
+            "timeout": 120000
+          },
+          "timestamp": "2026-04-26T23:25:15.963Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I'm seeing a pattern in these test failures—the `-X EUR -H` flag for historical exchange rates is now showing extra decimal precision on the opening balance line. The old output was `-6409.77 EUR`, but now it's displaying as `-6409.77249590 EUR`. This looks like the inferred opening balance posting is being calculated through the market value chain with the historical exchange rate flag, and there's something about how BIGINT_COST is being handled that's causing the precision to expand.\n\nLet me examine one of these failing tests more closely to understand what's happening.",
+          "timestamp": "2026-04-26T23:25:24.553Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The failures confirm cpp-pro's concern: `BIGINT_COST_PREC` propagates through multiplication in `-X -H` market value calculations. Let me investigate.",
+          "timestamp": "2026-04-26T23:25:24.583Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/test/regress/1612.test"
+          },
+          "timestamp": "2026-04-26T23:25:24.604Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I'm running into the exact issue cpp-pro flagged with multiple cost postings at different precisions—200 units at 24.77 EUR versus 58 units at 24.79900855 EUR—and I need to figure out whether the inferred null posting for the opening balance should be in the original LU02 currency or in EUR after conversion, especially when there are multiple cost-bearing entries involved.\n\nLet me trace through the balance calculation: starting with 17.43 EUR, then adding the cost equivalents of both stock purchases (4954.00 EUR and 1438.34249590 EUR), the running balance reaches 6409.77249590 EUR with 8-digit precision, which becomes the inferred amount for the opening balance posting. Now I'm checking my cost precision logic against each cost posting—the first one at 24.77 EUR doesn't trigger an update since the calculated price precision doesn't exceed EUR's established 2-digit precision, but the second posting with 24.79900855 EUR is where the precision calculation gets interesting.\n\nSince the price has 8 decimal places and the amount has 0, the price precision becomes 8, which exceeds the commodity's 2-digit precision, so I set the cost precision to 8. This means the inferred opening balance amount stays at full precision: -6409.77249590 EUR. When displaying with `bal -X EUR -H`, the system detects that the cost precision flag is set and the quantity precision (8) exceeds the commodity precision (2), so it displays the full -6409.77249590 EUR rather than rounding to -6409.77 EUR like the old behavior did. The question is whether this full-precision display is actually correct, since the old test expected the rounded version even though the actual cost calculation requires all 8 decimal places to balance properly. I'm trying to trace where the 6398.14 EUR figure comes from. Let me recalculate: 200 LU02 at 24.77 EUR equals 4954 EUR, and 58 LU02 at 24.79900855 EUR equals 1438.34249590 EUR, which totals 6392.34249590 EUR. But the test shows 6398.14 EUR for Investments, which doesn't match my math. I'm wondering if the 17.43 EUR equity balance is somehow being included in this calculation, or if there's a different historical price being applied that I'm missing.\n\nLooking at the account balances, I see the 5.80 EUR difference might be related to rounding adjustments that the system inserts to keep displayed amounts clean at the commodity's precision level. I think my fix is actually overcorrecting by preserving unnecessary precision in cases where the chart of accounts already handles rounding through adjustment postings. The real distinction from the other issue is that this case doesn't round to zero at display precision, so the adjustment logic works differently.\n\nWhat I actually need is a more targeted approach: only use the wider precision when the inferred amount would round to zero at the commodity's display precision. If the amount is already non-zero at display precision, the existing behavior is correct. I should refine the logic to check whether the value actually needs the extra precision to avoid being dropped, rather than always applying it whenever the cost precision is wider. Refining the logic for when to widen precision — I should only apply it when the amount rounds to zero at commodity precision, which is what causes the posting to be dropped. The fix checks if rounding to commodity precision gives zero, and if so, widens to cost precision to preserve the actual value in display. But I'm realizing `continue` won't work here since this isn't in a loop context.\n\nLooking at the test cases more carefully: when the amount displays as non-zero at commodity precision (like -6409.77), no widening is needed and I should return early. When it rounds to zero (like -0.0004 Y at precision 2), then I proceed with the rounded/truncated checks to decide whether to set cost precision. The tricky part is that `is_zero()` has multiple conditions beyond just the displayed value, so I need to be careful about what other reasons might cause a posting to be dropped. Looking at these specific cases, when BIGINT_COST_PREC is set and quantity precision exceeds commodity precision, I display at the finer quantity precision—so the variant case shows \"-0.0004 Y\" at precision 4, while the original case shows \"-0.4 Y\" at precision 1. For the 1612 case where the flag isn't set, the normal commodity precision of 2 applies, rendering \"-6409.77 EUR\" and correctly identifying it as non-zero through the print-and-scan check. The logic holds up across all these scenarios. (unchanged) → check passes\n- truncated(-0.4) = 0 → != amt → check passes\n- set_cost_precision(1)\n\nFor the 1612 case with amt = -6409.77249590, price_prec = 8, comm.precision() = 2, rounding to comm precision gives -6409.77 which isn't a real zero, so we return early without widening. That makes sense because if the amount displays fine at the commission precision, there's no need to adjust. And since at_comm_prec only depends on the amount and commission precision, not on which cost we're iterating over, I should pull that calculation out of the loop entirely.\n\nRefactoring the logic... The early exit makes sense: if the amount renders non-zero at commodity precision, there's no need to widen. Let me trace through the logic with a few cases to make sure it's sound. When precision is 0 and the amount is -0.4, rounding gives 0, so is_realzero() returns true and we proceed to widen—correct. When precision is 2 and the amount is -6409.77249590, rounding gives -6409.77, which is non-zero, so we return early—also correct. The is_realzero() check on the rounded value properly detects whether the underlying mpq is actually zero. This approach should work. Now I need to think through whether this generalization affects other places that call is_zero(), like in balance.cc's filter_amount function.",
+          "timestamp": "2026-04-26T23:27:03.797Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The test expectations show I'm over-correcting. The `-6409.77 EUR` cases display non-zero at commodity precision — they shouldn't have BIGINT_COST_PREC set in the first place. Let me refine the xact.cc fix to only widen precision when the amount would actually round to zero.",
+          "timestamp": "2026-04-26T23:27:04.933Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/src/xact.cc",
+            "new_string": "  void set_cost_prec_if_needed(amount_t& amt) {\n    commodity_t& comm = amt.commodity();\n    // Only intervene when the inferred amount would round to zero at\n    // the commodity's display precision -- that is the case where the\n    // posting would be silently dropped from output and break\n    // double-entry accounting (issue #1692).  When the amount renders\n    // non-zero at commodity precision (e.g. -6409.77 EUR with a cost\n    // residual at the eighth decimal place), normal display via the\n    // commodity's precision is what the user expects; sub-precision\n    // residuals are absorbed by the standard rounding-adjustment\n    // machinery downstream.\n    amount_t at_comm_prec(amt);\n    at_comm_prec.in_place_roundto(comm.precision());\n    if (!at_comm_prec.is_realzero())\n      return;\n\n    // The amount rounds to zero at commodity precision: the posting is\n    // headed for omission.  Scan postings for an inline cost that uses\n    // this commodity and recover the per-unit cost precision.  This\n    // covers both the original report (a new commodity with default\n    // precision 0, e.g. `2 X @ 0.2 Y` yielding -0.4 Y) and an\n    // established commodity whose declared precision is coarser than\n    // the cost's (e.g. `D 10.00 Y` followed by `2 X @ 0.0002 Y`\n    // yielding -0.0004 Y when Y prints with two decimal places).  Tag\n    // the amount with BIGINT_COST_PREC so amount_t::is_zero() and\n    // ::print() honour the recovered cost precision.\n    for (auto& post : xact.posts) {\n      if (post->cost && post->amount) {\n        const amount_t& cost = *post->cost;\n        if (&cost.commodity() == &comm.referent()) {\n          auto cost_prec = cost.precision();\n          auto amt_prec = post->amount.precision();\n          auto price_prec = cost_prec > amt_prec ? cost_prec - amt_prec : cost_prec;\n          if (price_prec > comm.precision()) {\n            amount_t rounded(amt);\n            rounded.in_place_roundto(price_prec);\n            if (amt != rounded)\n              continue; // fractional digits extend beyond price_prec\n            // Check that the amount has meaningful fractional digits\n            amount_t truncated(amt);\n            truncated.in_place_truncate();\n            if (amt != truncated)\n              amt.set_cost_precision(price_prec);\n            return;\n          }\n        }\n      }\n    }\n  }",
+            "old_string": "  void set_cost_prec_if_needed(amount_t& amt) {\n    commodity_t& comm = amt.commodity();\n    // Scan postings for an inline cost that uses this commodity and\n    // recover the per-unit cost precision.  When the recovered\n    // precision exceeds the commodity's display precision, the\n    // inferred balancing amount may have meaningful fractional digits\n    // below the displayed precision.  This affects two cases:\n    //\n    //   - A new commodity with default precision 0 (e.g. `2 X @ 0.2 Y`\n    //     yielding -0.4 Y when Y has not yet been seen at any\n    //     precision), and\n    //\n    //   - An established commodity whose declared precision is still\n    //     coarser than the cost's (e.g. `D 10.00 Y` followed by\n    //     `2 X @ 0.0002 Y` yielding -0.0004 Y when Y prints with two\n    //     decimal places).\n    //\n    // In both cases the inferred posting would otherwise round to zero\n    // at the commodity's display precision and be silently dropped from\n    // output, breaking double-entry accounting (issue #1692).  Tag the\n    // amount with BIGINT_COST_PREC so amount_t::is_zero() and ::print()\n    // honour the recovered cost precision.\n    for (auto& post : xact.posts) {\n      if (post->cost && post->amount) {\n        const amount_t& cost = *post->cost;\n        if (&cost.commodity() == &comm.referent()) {\n          auto cost_prec = cost.precision();\n          auto amt_prec = post->amount.precision();\n          auto price_prec = cost_prec > amt_prec ? cost_prec - amt_prec : cost_prec;\n          if (price_prec > comm.precision()) {\n            amount_t rounded(amt);\n            rounded.in_place_roundto(price_prec);\n            if (amt != rounded)\n              continue; // fractional digits extend beyond price_prec\n            // Check that the amount has meaningful fractional digits\n            amount_t truncated(amt);\n            truncated.in_place_truncate();\n            if (amt != truncated)\n              amt.set_cost_precision(price_prec);\n            return;\n          }\n        }\n      }\n    }\n  }",
+            "replace_all": false
+          },
+          "timestamp": "2026-04-26T23:27:20.837Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "make ledger -j8 2>&1 | tail -5",
+            "description": "Rebuild after refinement",
+            "timeout": 600000
+          },
+          "timestamp": "2026-04-26T23:27:25.024Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "echo \"=== Variant test ===\"\nTZ=America/Chicago /Users/johnw/src/ledger/fix-1692/build/ledger -f /tmp/bug-1692-variant.dat balance\necho \"--- print ---\"\nTZ=America/Chicago /Users/johnw/src/ledger/fix-1692/build/ledger -f /tmp/bug-1692-variant.dat print\necho\necho \"=== Original 1692 test ===\"\nTZ=America/Chicago /Users/johnw/src/ledger/fix-1692/build/ledger -f /Users/johnw/src/ledger/fix-1692/test/regress/1692.test balance\necho\necho \"=== Run previously failing tests ===\"\nctest -R \"opt-no-rounding|1612|A560FDAD|BFD3FBE1\" 2>&1 | tail -15",
+            "description": "Verify both bug variants and previously failing tests"
+          },
+          "timestamp": "2026-04-26T23:27:36.159Z"
+        },
+        {
+          "type": "assistant",
+          "text": "All four previously failing tests now pass, and both bug variants work. Let me run the full suite to confirm.",
+          "timestamp": "2026-04-26T23:27:41.124Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest -j8 2>&1 | tail -10",
+            "description": "Full test suite",
+            "timeout": 600000
+          },
+          "timestamp": "2026-04-26T23:27:41.861Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I've got 4 tests failing now—I need to dig into what's happening. These are likely tests that were relying on the old behavior where inferred amounts got rounded down to zero, which actually masked a bug by silently dropping postings. Let me go through each one to understand what's going on.",
+          "timestamp": "2026-04-26T23:29:00.037Z"
+        },
+        {
+          "type": "assistant",
+          "text": "A different set of 4 tests failing. Let me check each — these may reveal more cases of the same bug or be expected behavior changes.",
+          "timestamp": "2026-04-26T23:29:00.045Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest --rerun-failed --output-on-failure 2>&1 | head -250",
+            "description": "Show failure details",
+            "timeout": 120000
+          },
+          "timestamp": "2026-04-26T23:29:00.748Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I'm looking at some test failures where precision is being lost. Test 1773 shows a value getting rounded from $-25.300 down to $-25, and Test 717 reveals an even more dramatic issue where a long decimal in GBP is being truncated to just GBP-3 instead of preserving the full precision.\n\nThe problem is that my recent changes flipped the behavior—previously these amounts displayed with full precision because BIGINT_KEEP_PREC was set during parsing, but now they're showing at commodity precision instead. I need to trace through what's happening: GBP only appears in the cost expression and gets parsed without BIGINT_KEEP_PREC, so its precision stays at 0. The old fix would check if precision equals 0 and set BIGINT_COST_PREC to display at high precision, but my new approach isn't triggering that same behavior.\n\nThe real issue is that my refinement only sets the flag when the amount rounds to a non-zero value, which loses precision for cases like -2.653329339867 that round to -3 at precision 0. The original logic was closer to correct—it unconditionally set the flag when commodity precision was 0, which makes sense because an unobserved commodity has no established display expectations. The missing piece is handling the case where a commodity *does* have established precision but the inferred amount would round to zero, which should still show full precision.\n\nSo the fix needs to distinguish: if the commodity has no established precision, always widen to cost precision; if it has established precision, only widen when rounding would produce zero.\n\nWriting the corrected logic...\n\nNow I'm checking test 1773 to see what's happening with the `$-25.300` case—it looks like the Assets:Checking line was previously showing three decimal places instead of the expected two.",
+          "timestamp": "2026-04-26T23:29:34.386Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I see — for commodities with **no** established precision (like GBP only seen in costs), users expect to see inferred amounts at full cost precision. My refinement broke this case. Let me restructure to preserve original behavior for `precision() == 0` while adding the new case.",
+          "timestamp": "2026-04-26T23:29:35.022Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/test/regress/1773.test"
+          },
+          "timestamp": "2026-04-26T23:29:35.793Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/test/regress/cov9-xact-rounding-adj.test"
+          },
+          "timestamp": "2026-04-26T23:29:35.944Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I'm noticing that test 1773 expects `$-25.300` with three decimal places, but my current fix is only displaying `$-25`, which means I'm losing the precision from the lot annotation `{=$2.299}`.\n\nThe core issue is figuring out what value should actually be displayed and at what precision. The total cost from `@@ $25.30` is two decimal places, but the lot price `{=$2.299}` has three decimal places. When I multiply 2.299 × 11, I get $25.289, which doesn't match the `@@ $25.30` amount. The expected output `$-25.300` suggests the display precision should be 3, not 0 as my fix currently assumes, so I need to reconsider how the precision is being determined from the journal entries.\n\nLooking at the pattern: when a commodity has no established precision (precision 0), I should always widen to the cost precision to show the actual value rather than dropping precision. But when a commodity already has an established precision, I should only widen if the amount would round to zero at that precision. This distinction explains why the original test expects the wider precision—the dollar amount has no baseline precision set, so showing it at the cost precision's 3 decimal places is correct. Implementing the fix now...",
+          "timestamp": "2026-04-26T23:30:04.917Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The regressions are all `comm.precision() == 0` cases where the original behavior expected widening. Let me restructure the logic:",
+          "timestamp": "2026-04-26T23:30:04.920Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/src/xact.cc",
+            "new_string": "  void set_cost_prec_if_needed(amount_t& amt) {\n    commodity_t& comm = amt.commodity();\n    // When the commodity already has a user-established display\n    // precision, the user expects amounts of that commodity to render\n    // at that precision; sub-precision residuals on inferred balances\n    // are absorbed by the standard rounding-adjustment machinery\n    // downstream.  Intervene only in the pathological case where the\n    // inferred amount rounds to zero at the established precision --\n    // that is the case where the posting would otherwise be silently\n    // dropped from output and break double-entry accounting (issue\n    // #1692, e.g. `D 10.00 Y` followed by `2 X @ 0.0002 Y` yielding\n    // -0.0004 Y when Y prints with two decimal places).\n    //\n    // When the commodity has no established precision (default 0,\n    // e.g. a commodity that has only ever appeared inside an inline\n    // cost parsed with PARSE_NO_MIGRATE), the user has expressed no\n    // expectation of display precision; recover the cost precision\n    // unconditionally so the inferred amount displays meaningfully\n    // (e.g. `2 X @ 0.2 Y` yielding -0.4 Y rather than 0).\n    if (comm.precision() > 0) {\n      amount_t at_comm_prec(amt);\n      at_comm_prec.in_place_roundto(comm.precision());\n      if (!at_comm_prec.is_realzero())\n        return;\n    }\n\n    // Scan postings for an inline cost that uses this commodity and\n    // recover the per-unit cost precision.  Tag the amount with\n    // BIGINT_COST_PREC so amount_t::is_zero() and ::print() honour the\n    // recovered precision.\n    for (auto& post : xact.posts) {\n      if (post->cost && post->amount) {\n        const amount_t& cost = *post->cost;\n        if (&cost.commodity() == &comm.referent()) {\n          auto cost_prec = cost.precision();\n          auto amt_prec = post->amount.precision();\n          auto price_prec = cost_prec > amt_prec ? cost_prec - amt_prec : cost_prec;\n          if (price_prec > comm.precision()) {\n            amount_t rounded(amt);\n            rounded.in_place_roundto(price_prec);\n            if (amt != rounded)\n              continue; // fractional digits extend beyond price_prec\n            // Check that the amount has meaningful fractional digits\n            amount_t truncated(amt);\n            truncated.in_place_truncate();\n            if (amt != truncated)\n              amt.set_cost_precision(price_prec);\n            return;\n          }\n        }\n      }\n    }\n  }",
+            "old_string": "  void set_cost_prec_if_needed(amount_t& amt) {\n    commodity_t& comm = amt.commodity();\n    // Only intervene when the inferred amount would round to zero at\n    // the commodity's display precision -- that is the case where the\n    // posting would be silently dropped from output and break\n    // double-entry accounting (issue #1692).  When the amount renders\n    // non-zero at commodity precision (e.g. -6409.77 EUR with a cost\n    // residual at the eighth decimal place), normal display via the\n    // commodity's precision is what the user expects; sub-precision\n    // residuals are absorbed by the standard rounding-adjustment\n    // machinery downstream.\n    amount_t at_comm_prec(amt);\n    at_comm_prec.in_place_roundto(comm.precision());\n    if (!at_comm_prec.is_realzero())\n      return;\n\n    // The amount rounds to zero at commodity precision: the posting is\n    // headed for omission.  Scan postings for an inline cost that uses\n    // this commodity and recover the per-unit cost precision.  This\n    // covers both the original report (a new commodity with default\n    // precision 0, e.g. `2 X @ 0.2 Y` yielding -0.4 Y) and an\n    // established commodity whose declared precision is coarser than\n    // the cost's (e.g. `D 10.00 Y` followed by `2 X @ 0.0002 Y`\n    // yielding -0.0004 Y when Y prints with two decimal places).  Tag\n    // the amount with BIGINT_COST_PREC so amount_t::is_zero() and\n    // ::print() honour the recovered cost precision.\n    for (auto& post : xact.posts) {\n      if (post->cost && post->amount) {\n        const amount_t& cost = *post->cost;\n        if (&cost.commodity() == &comm.referent()) {\n          auto cost_prec = cost.precision();\n          auto amt_prec = post->amount.precision();\n          auto price_prec = cost_prec > amt_prec ? cost_prec - amt_prec : cost_prec;\n          if (price_prec > comm.precision()) {\n            amount_t rounded(amt);\n            rounded.in_place_roundto(price_prec);\n            if (amt != rounded)\n              continue; // fractional digits extend beyond price_prec\n            // Check that the amount has meaningful fractional digits\n            amount_t truncated(amt);\n            truncated.in_place_truncate();\n            if (amt != truncated)\n              amt.set_cost_precision(price_prec);\n            return;\n          }\n        }\n      }\n    }\n  }",
+            "replace_all": false
+          },
+          "timestamp": "2026-04-26T23:30:25.650Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "make ledger -j8 2>&1 | tail -3",
+            "description": "Rebuild",
+            "timeout": 600000
+          },
+          "timestamp": "2026-04-26T23:30:28.402Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "echo \"=== Variant test ===\"\nTZ=America/Chicago /Users/johnw/src/ledger/fix-1692/build/ledger -f /tmp/bug-1692-variant.dat balance\necho \"=== Original 1692 ===\"\nTZ=America/Chicago /Users/johnw/src/ledger/fix-1692/build/ledger -f /Users/johnw/src/ledger/fix-1692/test/regress/1692.test balance\necho \"=== Run all previously failing tests ===\"\nctest -R \"opt-no-rounding|1612|A560FDAD|BFD3FBE1|1773|^RegressTest_717$|763|cov9-xact-rounding-adj\" 2>&1 | tail -15",
+            "description": "Verify both bug variants and all previously failing tests"
+          },
+          "timestamp": "2026-04-26T23:30:39.795Z"
+        },
+        {
+          "type": "assistant",
+          "text": " Almost there — eight tests passing, but that one test case BFD3FBE1 is still failing, so let me dig into what's going wrong with it.",
+          "timestamp": "2026-04-26T23:30:46.452Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Almost there. Let me check BFD3FBE1.",
+          "timestamp": "2026-04-26T23:30:46.453Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/test/regress/BFD3FBE1.test"
+          },
+          "timestamp": "2026-04-26T23:30:46.554Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest -R \"BFD3FBE1\" --output-on-failure 2>&1 | head -50",
+            "description": "Show BFD3FBE1 failure"
+          },
+          "timestamp": "2026-04-26T23:30:47.262Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I'm working through a ledger entry with opening balances for two investments, calculating the total cost basis by multiplying the quantities by their per-unit prices in EUR, which gives me a combined total of 1782.89 EUR across both positions.\n\nNow I'm examining how currency precision gets determined — the first transaction uses costs with high decimal precision but doesn't explicitly state EUR amounts, so EUR's precision stays at 0 at that point. Then when the second transaction is processed later, it explicitly shows EUR with 2 decimal places, which would bump the precision, but that happens after the first transaction has already been finalized. So when inferring the opening balance equity amount, the system uses EUR's current precision of 0, not the 2 decimal places that will be seen later.\n\nThe real issue is that the inferred amount gets tagged with BIGINT_COST_PREC during the first transaction's finalization when EUR precision is still 0, and this flag persists even after EUR's precision gets updated to 2 when the second transaction is parsed. At display time, the system respects the BIGINT_COST_PREC flag and shows the full 8 decimal places instead of rounding to the 2 decimal places that EUR eventually gets assigned.\n\nThe cleanest fix would be to check at display time whether the commodity's precision has since grown to match or exceed the stored quantity precision—if it has, we should suppress the flag's override effect and use the current commodity precision instead, as long as the value remains non-zero at that precision. I'm verifying this logic against the actual test cases to make sure it handles all the edge cases correctly—when the inferred amount rounds to zero at commodity precision, we use the wider precision to display the non-zero value, otherwise we display at normal commodity precision.\n\nFor test 717 though, this creates a problem: GBP has precision 0, so -2.653 rounds to -3, which is misleading since the actual balance is -2.653. The old behavior showed full precision for zero-precision commodities with BIGINT_COST_PREC, so I need to add a special case: if the commodity precision is 0, always use the quantity's full precision to avoid losing significant information.\n\nFor BFD3FBE1, the situation is different—EUR gets precision 2 from a later transaction, but the inferred amount was calculated when EUR had precision 0, so it's stuck at high precision. The right behavior here is probably to display at EUR's eventual precision (2) with adjustments for the residual, since the user explicitly expressed an expectation of precision 2 by writing 1.80 EUR.\n\nSo the logic should be: apply BIGINT_COST_PREC when either the amount rounds to zero at current precision, or when the commodity has no established precision. Let me code this up...\n\nWriting condition logic... The display-time check would be uniform: widen whenever the amount rounds to zero at commodity precision or when commodity precision is zero itself, since integer display can lose information. But test 717 expects this oddly-formatted output with many trailing zeros, which seems like an artifact rather than something actually desired—maybe this is a good moment to question whether that expected output should even be preserved.\n\nI think the cleaner approach is to set the flag only when we actually want it to take effect: set BIGINT_COST_PREC when commodity precision is zero (to preserve existing test behavior) or when commodity precision is positive but the amount rounds to zero at that precision. Then have print and is_zero unconditionally honor the flag. The real problem is that at finalize time we don't know what the commodity's precision will be later at display time, so basing the flag on parse-time precision doesn't work—I need to set it based on what's knowable: the cost's recovered precision and the amount's actual precision needed, then let the display layer decide.\n\nActually, the simplest fix is to check at display time whether the amount would round to zero at the current commodity precision, rather than relying on a flag set earlier. The \"commodity precision is zero\" case is just a special case of this: when precision is zero, non-integer amounts like -0.4 round to 0, which is real-zero, so we widen. For amounts with non-zero integer parts, rounding to zero precision gives a non-zero result, so we don't widen.\n\nBut test 717 expects the full precision output, which suggests the inferred amount should have BIGINT_KEEP_PREC semantics, not BIGINT_COST_PREC. Let me trace through: the cost amount `2.653329339867 GBP` is parsed with PARSE_NO_MIGRATE and gets BIGINT_KEEP_PREC, then when the inferred equity balance is created from that cost, it needs to inherit the same precision-keeping behavior rather than getting tagged as BIGINT_COST_PREC.\n\nIn my recovery loop logic, when I find the cost with precision 12 and check if rounding to commodity precision (0) would lose information, I correctly set the cost precision to 12 and display at that precision. For test 717 this works because GBP's commodity precision is 0, so the early exit is skipped and the recovery loop runs. But for BFD3FBE1, the commodity precision might be 0 at finalization time too, so I need to verify the logic handles both cases correctly.\n\nThe key insight is that the determining factor is the commodity precision at display time, not at parse time. For 717, GBP stays at precision 0 throughout, so I should widen the display. For BFD3FBE1, EUR gets bumped to precision 2 after the inference, so at display time the commodity precision is 2, not 0. This means I should only widen when the current commodity precision is 0 OR when the amount rounds to zero at the current commodity precision. Let me refine the display logic to check both conditions. The new special case for `commodity().precision() == 0` is actually justified — when precision is 0, users have no display expectations, but when it's greater than 0, we only override to prevent the dropped-posting bug. I'm wondering if I can unify these cases by recognizing that \"amount rounds to zero at comm precision\" captures the essence of what we're trying to detect.\n\nTesting this logic: for -2.653329339867 GBP with comm prec 0, it rounds to -3 (not zero), so my unified rule wouldn't widen and would display \"GBP-3\". But test 717 expects \"GBP-2.653329339867\", which means I'd need to either update the test or keep the comm prec 0 special case. The question is whether \"GBP-3\" is actually wrong — it's misleading since the real balance is -2.653329339867, but for currencies with established precision, rounding to that precision is acceptable. The ambiguity is that comm prec 0 could mean either \"I don't care about decimals\" or \"I haven't specified my preference,\" which makes the semantics unclear for pure integer commodities.\n\nShowing full precision when a commodity has no established precision seems more user-friendly than displaying a rounded value that looks exact but isn't. So keeping the comm prec 0 special case makes sense: when prec is 0 (no user expectation), default to full precision; when prec > 0 (user has set an expectation), respect it unless the amount would round to zero. The original PR's mistake was always widening at prec 0 and never widening at prec > 0, whereas the new approach widens uniformly when rounding would lose the amount entirely, plus widens for the default no-expectation case.\n\nBut I'm realizing the current logic gates the \"round to zero\" check on comm.precision() > 0, which means for BFD3FBE1 where comm prec is still 0 at finalize time, we skip the early exit and fall through to set the cost precision to 8. Then at display time, the quantity shows at prec 8 while comm is at prec 2, causing the widening. I need to defer this decision to display time instead—always set the flag when conditions allow and let the display logic decide whether to honor it based on the current comm precision.\n\nThe real issue is that xact.cc and amount.cc have different views of commodity precision at different points in time. I should consolidate this logic so the widening decision only happens if rounding at comm precision yields zero, and I need to apply this check consistently in both print() and is_zero() to avoid duplication.\n\nActually, a cleaner approach: let xact.cc set the BIGINT_COST_PREC flag liberally whenever an inferred amount has more precision than the commodity's current precision, then let the display-time check in amount.cc decide whether to actually honor it based on whether the amount would round to zero at comm precision. This way the flag signals \"this was inferred with extra precision\" and the display layer makes the final call on whether to widen.\n\nLet me trace through the test cases to verify this works: for 1612, the flag gets set since quantity precision (8) exceeds EUR's finalized precision (2), but at display the amount doesn't round to zero so it stays at comm precision. For 717 with GBP at precision 0, the flag triggers widening since rounding would lose information. The variant case with Y at precision 2 also widens because rounding to 0.00 would hide the actual value. All the edge cases resolve correctly with this approach.\n\nNow I'm reconsidering the `price_prec > 0` check in the cost precision setter—I could drop the comm precision guard, but keeping the cost precision check makes sense to avoid unnecessary flag overhead when the cost itself has no precision to recover.\n\nWriting the cost precision logic... So in 1612, EUR's precision is already set to 2 by the time finalize runs, which means the cost precision check will see price_prec=8 > comm.precision()=2 and set the flag. The inferred amount ends up with precision 8, but when displaying it, I need to check whether to widen or stick with the commodity's precision of 2 — since it doesn't round to zero at that precision, I'd display it as \"-6409.77 EUR\". My approach is to drop the early exit in the transaction code, add the widening logic to the display and is_zero functions, and make sure is_zero uses the same logic as display so they stay consistent.\n\nImplementing the widening check...\n\nI'm testing this logic against the variant case where the commodity precision is 2 from the directive, and the inferred amount is -0.0004 Y with cost precision 4. When displaying, the widening condition should trigger because rounding to 2 decimals gives zero. For the BFD3FBE1 case with initial precision 0, the early exit is skipped and the recovery loop sets cost precision to 8, then at display time the commodity precision becomes 2 for EUR.\n\nThe key insight is that the xact.cc change should only skip the flag when the amount doesn't round to zero at the current commodity precision, but the display layer also needs to check this condition independently since the commodity precision can change between finalization and display. Defining the recovery function...\n\nThe key insight is that the display layer should decide whether to widen based on the at_comm_prec flag, not the finalize layer. So I'm setting the flag whenever recovery would help (price_prec > current comm.precision()), and then at display time, the at_comm_prec check gates whether we actually widen. For BFD3FBE1, even though the flag gets set at finalize when EUR is still precision 0, the display-time check sees that EUR is now precision 2 and the amount doesn't round to zero, so no widening happens. At display time with the current state, EUR at precision 2 is widening incorrectly because the flag was set at finalize when precision was 0. I need to add display-time checks to print() and is_zero() that verify the flag should actually apply — checking that the commodity precision is either 0 or we're at the commodity precision point, and only then widening. The xact.cc early-exit is a performance optimization to avoid unnecessary rounding calls, but the real safeguard needs to live in the display layer where we know the actual display precision. Memory per amount is negligible, and operations like += and -= just clear the flag anyway if it's set. I'm going to keep the early-exit in xact.cc as a performance optimization and add the display-time check instead.\n\nLet me trace through what happens with BFD3FBE1 again: at finalize, EUR precision is still 0, so the early-exit gets skipped, the loop runs, and the cost precision flag gets set to 8. Then later when EUR becomes 2, the print function needs to catch this and not widen the display. So I need to add the at_comm_prec check to both print() and is_zero().\n\nThe core issue is that the first transaction finalizes before the second one is parsed, so the flag gets set with stale precision info. At display time, I need to check whether rounding to the current commodity precision would lose meaningful information—if the commodity has no established precision yet, I should show the full value, but if it does and rounding loses everything, then I shouldn't widen.\n\nImplementing the display-time logic... I'm keeping the xact.cc early-exit check since it avoids unnecessary flag allocation, and commodity precision only grows monotonically anyway. Now let me trace through the test cases to verify the logic works: for GBP with zero precision throughout, the flag gets set and display widens to show full precision, while for EUR the amount rounds to a non-zero value at commodity precision so display stays narrow. The is_zero check with the new widening logic should handle both cases correctly.",
+          "timestamp": "2026-04-26T23:34:55.735Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The BFD3FBE1 case shows commodity precision can change AFTER finalize. The display layer must make the decision based on current precision. Let me restructure with a display-time check.",
+          "timestamp": "2026-04-26T23:34:56.536Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/src/amount.cc",
+            "new_string": "  if (has_commodity()) {\n    // For amounts flagged with BIGINT_COST_PREC, print() may use\n    // quantity->prec as the effective display precision when the\n    // commodity's display precision would otherwise drop the value to\n    // zero on the page (or when the commodity has no established\n    // precision at all).  Mirror that here so inferred balancing\n    // postings whose value falls below the commodity's display\n    // precision are not silently classified as zero -- which would\n    // hide them from output and break the accounting equation (issue\n    // #1692).\n    precision_t check_prec = commodity().precision();\n    if (quantity->has_flags(BIGINT_COST_PREC) && quantity->prec > check_prec) {\n      // Widen the precision used for the zero-check whenever the\n      // commodity has no established precision (the user has expressed\n      // no expectation of display precision), or whenever the value\n      // would round to zero at the commodity's display precision (the\n      // case the original report describes).  In other situations the\n      // commodity's display precision has caught up to or covered the\n      // value's significant digits and is the right precision to use.\n      if (check_prec == 0) {\n        check_prec = quantity->prec;\n      } else {\n        amount_t at_comm_prec(*this);\n        at_comm_prec.in_place_roundto(check_prec);\n        if (at_comm_prec.is_realzero())\n          check_prec = quantity->prec;\n      }\n    }\n\n    if (keep_precision() || quantity->prec <= check_prec) {",
+            "old_string": "  if (has_commodity()) {\n    // For amounts flagged with BIGINT_COST_PREC, print() uses\n    // quantity->prec as the effective display precision whenever it\n    // exceeds the commodity's display precision.  Mirror that here so\n    // inferred balancing postings whose value falls below the\n    // commodity's display precision (e.g. \"-0.4 Y\" with Y at precision\n    // 0, or \"-0.0004 Y\" with Y at precision 2) are not classified as\n    // zero, which would hide them from output and break the accounting\n    // equation (issue #1692).\n    precision_t check_prec = commodity().precision();\n    if (quantity->has_flags(BIGINT_COST_PREC) && quantity->prec > check_prec)\n      check_prec = quantity->prec;\n\n    if (keep_precision() || quantity->prec <= check_prec) {",
+            "replace_all": false
+          },
+          "timestamp": "2026-04-26T23:35:06.605Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/src/amount.cc",
+            "new_string": "  precision_t disp_prec = display_precision();\n  int zeros_prec = comm ? commodity().precision() : 0;\n  // Inferred balancing amounts tagged by set_cost_precision() carry\n  // BIGINT_COST_PREC together with a quantity->prec that captures the\n  // recovered cost precision.  Render at the recovered precision when\n  // the commodity has no established display precision (so we don't\n  // collapse to integer rendering) or when the value would otherwise\n  // round to zero on the page (issue #1692).  When the commodity's\n  // display precision has grown to a meaningful coverage (e.g. EUR was\n  // at precision 0 when the inference happened but a later transaction\n  // bumped it to 2), normal display via that precision is what the\n  // user expects.\n  if (comm && quantity->has_flags(BIGINT_COST_PREC) &&\n      quantity->prec > commodity().precision()) {\n    bool widen = false;\n    if (commodity().precision() == 0) {\n      widen = true;\n    } else {\n      amount_t at_comm_prec(*this);\n      at_comm_prec.in_place_roundto(commodity().precision());\n      widen = at_comm_prec.is_realzero();\n    }\n    if (widen) {\n      disp_prec = quantity->prec;\n      zeros_prec = quantity->prec;\n    }\n  }\n  stream_out_mpq(out, MP(quantity), disp_prec, zeros_prec, GMP_RNDN, comm);",
+            "old_string": "  precision_t disp_prec = display_precision();\n  int zeros_prec = comm ? commodity().precision() : 0;\n  // Inferred balancing amounts tagged by set_cost_precision() carry\n  // BIGINT_COST_PREC together with a quantity->prec that captures the\n  // recovered cost precision.  When that precision exceeds the\n  // commodity's display precision, render at the recovered precision so\n  // the value is not silently rounded to zero on the page (issue #1692).\n  if (comm && quantity->has_flags(BIGINT_COST_PREC) &&\n      quantity->prec > commodity().precision()) {\n    disp_prec = quantity->prec;\n    zeros_prec = quantity->prec;\n  }\n  stream_out_mpq(out, MP(quantity), disp_prec, zeros_prec, GMP_RNDN, comm);",
+            "replace_all": false
+          },
+          "timestamp": "2026-04-26T23:35:19.523Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I need to simplify xact.cc by removing the redundant at_comm_prec early-exit since the display layer now handles that logic, while keeping the inner price_prec check as a useful optimization that avoids unnecessary flag operations.",
+          "timestamp": "2026-04-26T23:35:26.479Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I should simplify xact.cc since the display layer makes the decision. Let me drop the at_comm_prec early-exit there.",
+          "timestamp": "2026-04-26T23:35:26.486Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/src/xact.cc",
+            "new_string": "  void set_cost_prec_if_needed(amount_t& amt) {\n    commodity_t& comm = amt.commodity();\n    // Scan postings for an inline cost that uses this commodity and\n    // recover the per-unit cost precision.  Tag the inferred amount\n    // with BIGINT_COST_PREC whenever the recovered precision exceeds\n    // the commodity's current display precision; amount_t::is_zero()\n    // and ::print() decide at display time whether the flag actually\n    // affects output, based on the commodity's display precision *at\n    // that time* and on whether the value would otherwise be rendered\n    // as zero (issue #1692).  Deferring the policy to display time is\n    // necessary because the commodity's display precision can grow\n    // after this call -- a later transaction may parse an explicit\n    // amount of the same commodity, bumping its precision (the\n    // pattern in test/regress/BFD3FBE1.test, where EUR is established\n    // at precision 2 only by the second transaction).\n    for (auto& post : xact.posts) {\n      if (post->cost && post->amount) {\n        const amount_t& cost = *post->cost;\n        if (&cost.commodity() == &comm.referent()) {\n          auto cost_prec = cost.precision();\n          auto amt_prec = post->amount.precision();\n          auto price_prec = cost_prec > amt_prec ? cost_prec - amt_prec : cost_prec;\n          if (price_prec > comm.precision()) {\n            amount_t rounded(amt);\n            rounded.in_place_roundto(price_prec);\n            if (amt != rounded)\n              continue; // fractional digits extend beyond price_prec\n            // Check that the amount has meaningful fractional digits\n            amount_t truncated(amt);\n            truncated.in_place_truncate();\n            if (amt != truncated)\n              amt.set_cost_precision(price_prec);\n            return;\n          }\n        }\n      }\n    }\n  }",
+            "old_string": "  void set_cost_prec_if_needed(amount_t& amt) {\n    commodity_t& comm = amt.commodity();\n    // When the commodity already has a user-established display\n    // precision, the user expects amounts of that commodity to render\n    // at that precision; sub-precision residuals on inferred balances\n    // are absorbed by the standard rounding-adjustment machinery\n    // downstream.  Intervene only in the pathological case where the\n    // inferred amount rounds to zero at the established precision --\n    // that is the case where the posting would otherwise be silently\n    // dropped from output and break double-entry accounting (issue\n    // #1692, e.g. `D 10.00 Y` followed by `2 X @ 0.0002 Y` yielding\n    // -0.0004 Y when Y prints with two decimal places).\n    //\n    // When the commodity has no established precision (default 0,\n    // e.g. a commodity that has only ever appeared inside an inline\n    // cost parsed with PARSE_NO_MIGRATE), the user has expressed no\n    // expectation of display precision; recover the cost precision\n    // unconditionally so the inferred amount displays meaningfully\n    // (e.g. `2 X @ 0.2 Y` yielding -0.4 Y rather than 0).\n    if (comm.precision() > 0) {\n      amount_t at_comm_prec(amt);\n      at_comm_prec.in_place_roundto(comm.precision());\n      if (!at_comm_prec.is_realzero())\n        return;\n    }\n\n    // Scan postings for an inline cost that uses this commodity and\n    // recover the per-unit cost precision.  Tag the amount with\n    // BIGINT_COST_PREC so amount_t::is_zero() and ::print() honour the\n    // recovered precision.\n    for (auto& post : xact.posts) {\n      if (post->cost && post->amount) {\n        const amount_t& cost = *post->cost;\n        if (&cost.commodity() == &comm.referent()) {\n          auto cost_prec = cost.precision();\n          auto amt_prec = post->amount.precision();\n          auto price_prec = cost_prec > amt_prec ? cost_prec - amt_prec : cost_prec;\n          if (price_prec > comm.precision()) {\n            amount_t rounded(amt);\n            rounded.in_place_roundto(price_prec);\n            if (amt != rounded)\n              continue; // fractional digits extend beyond price_prec\n            // Check that the amount has meaningful fractional digits\n            amount_t truncated(amt);\n            truncated.in_place_truncate();\n            if (amt != truncated)\n              amt.set_cost_precision(price_prec);\n            return;\n          }\n        }\n      }\n    }\n  }",
+            "replace_all": false
+          },
+          "timestamp": "2026-04-26T23:35:47.026Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "make ledger -j8 2>&1 | tail -5",
+            "description": "Rebuild",
+            "timeout": 600000
+          },
+          "timestamp": "2026-04-26T23:35:50.379Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "echo \"=== Variant test ===\"\nTZ=America/Chicago /Users/johnw/src/ledger/fix-1692/build/ledger -f /tmp/bug-1692-variant.dat balance\necho \"=== Original 1692 ===\"\nTZ=America/Chicago /Users/johnw/src/ledger/fix-1692/build/ledger -f /Users/johnw/src/ledger/fix-1692/test/regress/1692.test balance\necho \"=== Run all previously failing tests ===\"\nctest -R \"opt-no-rounding|1612|A560FDAD|BFD3FBE1|1773|^RegressTest_717$|763|cov9-xact-rounding-adj\" 2>&1 | tail -15",
+            "description": "Verify all previously affected tests"
+          },
+          "timestamp": "2026-04-26T23:36:01.760Z"
+        },
+        {
+          "type": "assistant",
+          "text": "All 9 tests pass. Let me run the full suite.",
+          "timestamp": "2026-04-26T23:36:06.723Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest -j8 2>&1 | tail -10",
+            "description": "Full test suite",
+            "timeout": 600000
+          },
+          "timestamp": "2026-04-26T23:36:07.466Z"
+        },
+        {
+          "type": "assistant",
+          "text": " All the tests are passing, which is great. Now I need to update the regression test to include the variant case I discovered—the existing test only covers the precision==0 scenario, so I'll add the variant to that same test since they're both validating the same fix. I'm also thinking through what other edge cases might exist, like what happens when the comment precision is...\n\nActually, let me trace through a more complex scenario: what if a single transaction has multiple inferred amounts with different precisions? I'm working through the logic of how the cost precision gets set when iterating through posts with different price precisions, checking whether the rounded amount matches the actual amount to determine if we need to widen the precision.\n\nNow I'm thinking about the broader implication of setting the BIGINT_COST_PREC flag more liberally—specifically, what happens when that flag propagates through the report pipeline. The operator+= clears the flag, so when an inferred amount gets added to a running balance, the flag disappears from the total, which could cause issues if multiple transactions contribute to the same commodity balance.\n\nFor a single transaction, the inferred amount keeps the flag and displays correctly. But with multiple transactions, the running total loses the flag after each addition, even though it might have inherited a high precision from the cost amounts. If that total rounds to zero at the commodity's declared precision, it gets treated as zero and potentially dropped—which is the same behavior as before, so no regression there.\n\nI'm wondering if the flag clearing in operator+= is still necessary given my changes, or if reverting it would break something. The tests pass with it in place, so I'll leave it. But I should verify that the flag doesn't cause problems when it propagates through multiplication, which happens during market value conversions. All tests pass there too, which suggests either the display-time check is suppressing unwanted widening, or there's no test coverage for that edge case. Let me trace through a specific scenario to see if multiply propagation could actually cause a problem. I've verified that the multiply operation preserves both the BIGINT_COST_PREC flag and precision through the propagation chain, so the display-time check handles all cases consistently. Now I need to update the regression test to cover this variant.",
+          "timestamp": "2026-04-26T23:38:03.189Z"
+        },
+        {
+          "type": "assistant",
+          "text": "All tests pass. Now let me also add the variant case to the regression test to lock in this broader coverage.",
+          "timestamp": "2026-04-26T23:38:03.198Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1692/test/regress/1692.test"
+          },
+          "timestamp": "2026-04-26T23:38:03.198Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Write",
+          "input": {
+            "content": "; Regression test for issue #1692: Output breaks accounting equation\n; https://github.com/ledger/ledger/issues/1692\n;\n; Inferred balancing amounts whose magnitude was less than the\n; commodity's display precision were compared equal to zero via\n; amount_t::is_zero(), even though the value was non-zero at the\n; recovered cost precision.  Balance and register output then silently\n; omitted the balancing posting, violating double-entry accounting.\n;\n; Two scenarios trigger this:\n;\n;   - A new commodity (default display precision 0) participating only\n;     as a cost; the inferred balance has fractional digits the\n;     commodity has never seen explicitly.  This is the report's\n;     original reproducer (`2 X @ 0.2 Y` -> -0.4 Y dropped).\n;\n;   - An established commodity whose display precision is coarser than\n;     the cost's; the inferred balance has digits below the displayed\n;     precision (`D 10.00 Y` followed by `2 X @ 0.0002 Y` -> -0.0004 Y\n;     dropped at display precision 2).\n;\n; The fix tags the inferred amount with BIGINT_COST_PREC via\n; set_cost_precision() and teaches amount_t::is_zero() and\n; amount_t::print() to honour the recovered precision when the\n; commodity's display precision would otherwise drop the value to\n; zero on the page (or when the commodity has no established\n; precision).  The display-time check is what allows the same\n; mechanism to handle both scenarios uniformly.  BIGINT_COST_PREC must\n; not propagate through addition/subtraction, or running-total\n; residuals would inherit it (see issue #717 rounding adjustments).\n\n2018-01-01 * Foo\n    Assets:A                    2 X @ 0.2 Y\n    Assets:B\n\ntest bal\n                 2 X\n               Y-0.4  Assets\n                 2 X    A\n               Y-0.4    B\n--------------------\n                 2 X\n               Y-0.4\nend test\n\ntest reg\n18-Jan-01 Foo                   Assets:A                        2 X          2 X\n                                Assets:B                      Y-0.4          2 X\n                                                                           Y-0.4\nend test\n\ntest print\n2018/01/01 * Foo\n    Assets:A                                     2 X @ Y0.2\n    Assets:B\nend test\n\n\n; --- Variant: commodity Y has an established precision of 2 ----------\n\nD 10.00 Y\n\n2018-02-01 * Bar\n    Assets:C                    2 X @ 0.0002 Y\n    Assets:D\n\ntest bal\n                 4 X\n           -0.0004 Y\n               Y-0.4  Assets\n                 2 X    A\n               Y-0.4    B\n                 2 X    C\n           -0.0004 Y    D\n--------------------\n                 4 X\n           -0.0004 Y\n               Y-0.4\nend test\n\ntest reg\n18-Jan-01 Foo                   Assets:A                        2 X          2 X\n                                Assets:B                      Y-0.4          2 X\n                                                                           Y-0.4\n18-Feb-01 Bar                   Assets:C                        2 X          4 X\n                                                                           Y-0.4\n                                Assets:D                  -0.0004 Y          4 X\n                                                                       -0.0004 Y\n                                                                           Y-0.4\nend test\n\ntest print\n2018/01/01 * Foo\n    Assets:A                                     2 X @ Y0.2\n    Assets:B\n\n2018/02/01 * Bar\n    Assets:C                                     2 X @ 0.0002 Y\n    Assets:D\nend test\n",
+            "file_path": "/Users/johnw/src/ledger/fix-1692/test/regress/1692.test"
+          },
+          "timestamp": "2026-04-26T23:38:19.982Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest -R \"RegressTest_1692\" --output-on-failure 2>&1 | head -50",
+            "description": "Run updated 1692 test"
+          },
+          "timestamp": "2026-04-26T23:38:23.856Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I'm realizing that the precision formatting for Y changed between test blocks—it went from \"Y-0.4\" to \"-0.40 Y\"—which suggests the D directive in the second block is affecting how the first transaction displays. This makes me wonder if all test blocks in a file share the same parsed journal, meaning directives get applied globally rather than per-block.\n\nLooking at the test file structure, I see the D directive comes after the first set of test blocks but before the second transaction. The key insight is that the test framework parses all journal data (both at the top and between test blocks) before running any test commands, so when the tests execute, Y's precision is already set to 2 from the D directive, which is why the first transaction's amount now displays with that precision.\n\nThe display format also changed from \"Y-0.4\" (prefix style) to \"-0.40 Y\" (suffix style) because the D directive established Y with the suffix format, and once a commodity's precision is set, all amounts display consistently at that precision. I need to update my test expectations to reflect this correct behavior.\n\nTo avoid the D directive's side effect of changing Y's format across the entire journal, I should isolate the variant case—either by using different commodity names (like Q and R) for the variant scenario, or by moving it to a separate test file entirely.\n\nLooking at the test structure, since all test/end blocks in a file share the same journal, I need to use distinct commodity names to prevent interference. Let me go with M and N for the variant case to keep it cleanly separated from the original X and Y test.",
+          "timestamp": "2026-04-26T23:38:57.411Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The D directive changes Y's style for the whole journal, affecting the first scenario. Let me use distinct commodities for each scenario so they don't interfere.",
+          "timestamp": "2026-04-26T23:38:57.420Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Write",
+          "input": {
+            "content": "; Regression test for issue #1692: Output breaks accounting equation\n; https://github.com/ledger/ledger/issues/1692\n;\n; Inferred balancing amounts whose magnitude was less than the\n; commodity's display precision were compared equal to zero via\n; amount_t::is_zero(), even though the value was non-zero at the\n; recovered cost precision.  Balance and register output then silently\n; omitted the balancing posting, violating double-entry accounting.\n;\n; Two scenarios trigger this:\n;\n;   - A new commodity (default display precision 0) participating only\n;     as a cost; the inferred balance has fractional digits the\n;     commodity has never seen explicitly.  This is the report's\n;     original reproducer (`2 X @ 0.2 Y` -> -0.4 Y dropped).\n;\n;   - An established commodity whose display precision is coarser than\n;     the cost's; the inferred balance has digits below the displayed\n;     precision (`D 10.00 N` followed by `2 M @ 0.0002 N` -> -0.0004 N\n;     dropped at display precision 2).\n;\n; The fix tags the inferred amount with BIGINT_COST_PREC via\n; set_cost_precision() and teaches amount_t::is_zero() and\n; amount_t::print() to honour the recovered precision when the\n; commodity's display precision would otherwise drop the value to\n; zero on the page (or when the commodity has no established\n; precision).  The display-time check is what allows the same\n; mechanism to handle both scenarios uniformly.  BIGINT_COST_PREC must\n; not propagate through addition/subtraction, or running-total\n; residuals would inherit it (see issue #717 rounding adjustments).\n\nD 10.00 N\n\n2018-01-01 * Foo\n    Assets:A                    2 X @ 0.2 Y\n    Assets:B\n\n2018-02-01 * Bar\n    Assets:C                    2 M @ 0.0002 N\n    Assets:D\n\ntest bal\n                 2 M\n                 2 X\n            -0.00 N\n               Y-0.4  Assets\n                 2 X    A\n               Y-0.4    B\n                 2 M    C\n            -0.00 N    D\n--------------------\n                 2 M\n                 2 X\n            -0.00 N\n               Y-0.4\nend test\n\ntest reg\n18-Jan-01 Foo                   Assets:A                        2 X          2 X\n                                Assets:B                      Y-0.4          2 X\n                                                                           Y-0.4\n18-Feb-01 Bar                   Assets:C                        2 M          2 X\n                                                                           Y-0.4\n                                                                            2 M\n                                Assets:D                  -0.0004 N          2 X\n                                                                           Y-0.4\n                                                                            2 M\n                                                                       -0.0004 N\nend test\n\ntest print\n2018/01/01 * Foo\n    Assets:A                                     2 X @ Y0.2\n    Assets:B\n\n2018/02/01 * Bar\n    Assets:C                                     2 M @ 0.0002 N\n    Assets:D\nend test\n",
+            "file_path": "/Users/johnw/src/ledger/fix-1692/test/regress/1692.test"
+          },
+          "timestamp": "2026-04-26T23:39:12.853Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest -R \"RegressTest_1692\" --output-on-failure 2>&1 | head -80",
+            "description": "Run updated test"
+          },
+          "timestamp": "2026-04-26T23:39:18.093Z"
+        },
+        {
+          "type": "assistant",
+          "text": " The variant amount is displaying correctly as \"-0.0004 N\" with the expected widening, so I need to update my expected output to match what's actually happening. The multi-commodity balance display order also differs from my initial assumption, so I'll regenerate the expected output based on the actual results.",
+          "timestamp": "2026-04-26T23:39:26.428Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Good — the output shows the variant works correctly. Let me regenerate the expected output to match the actual.",
+          "timestamp": "2026-04-26T23:39:26.439Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat > /tmp/journal-1692.dat << 'EOF'\nD 10.00 N\n\n2018-01-01 * Foo\n    Assets:A                    2 X @ 0.2 Y\n    Assets:B\n\n2018-02-01 * Bar\n    Assets:C                    2 M @ 0.0002 N\n    Assets:D\nEOF\necho \"=== bal ===\"\nTZ=America/Chicago /Users/johnw/src/ledger/fix-1692/build/ledger -f /tmp/journal-1692.dat bal\necho\necho \"=== reg ===\"\nTZ=America/Chicago /Users/johnw/src/ledger/fix-1692/build/ledger -f /tmp/journal-1692.dat reg\necho\necho \"=== print ===\"\nTZ=America/Chicago /Users/johnw/src/ledger/fix-1692/build/ledger -f /tmp/journal-1692.dat print",
+            "description": "Capture actual output for the test"
+          },
+          "timestamp": "2026-04-26T23:39:28.663Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Write",
+          "input": {
+            "content": "; Regression test for issue #1692: Output breaks accounting equation\n; https://github.com/ledger/ledger/issues/1692\n;\n; Inferred balancing amounts whose magnitude was less than the\n; commodity's display precision were compared equal to zero via\n; amount_t::is_zero(), even though the value was non-zero at the\n; recovered cost precision.  Balance and register output then silently\n; omitted the balancing posting, violating double-entry accounting.\n;\n; Two scenarios trigger this:\n;\n;   - A new commodity (default display precision 0) participating only\n;     as a cost; the inferred balance has fractional digits the\n;     commodity has never seen explicitly.  This is the report's\n;     original reproducer (`2 X @ 0.2 Y` -> -0.4 Y dropped).\n;\n;   - An established commodity whose display precision is coarser than\n;     the cost's; the inferred balance has digits below the displayed\n;     precision (`D 10.00 N` followed by `2 M @ 0.0002 N` -> -0.0004 N\n;     dropped at display precision 2).\n;\n; The fix tags the inferred amount with BIGINT_COST_PREC via\n; set_cost_precision() and teaches amount_t::is_zero() and\n; amount_t::print() to honour the recovered precision when the\n; commodity's display precision would otherwise drop the value to\n; zero on the page (or when the commodity has no established\n; precision).  The display-time check is what allows the same\n; mechanism to handle both scenarios uniformly.  BIGINT_COST_PREC must\n; not propagate through addition/subtraction, or running-total\n; residuals would inherit it (see issue #717 rounding adjustments).\n\nD 10.00 N\n\n2018-01-01 * Foo\n    Assets:A                    2 X @ 0.2 Y\n    Assets:B\n\n2018-02-01 * Bar\n    Assets:C                    2 M @ 0.0002 N\n    Assets:D\n\ntest bal\n                 2 M\n           -0.0004 N\n                 2 X\n               Y-0.4  Assets\n                 2 X    A\n               Y-0.4    B\n                 2 M    C\n           -0.0004 N    D\n--------------------\n                 2 M\n           -0.0004 N\n                 2 X\n               Y-0.4\nend test\n\ntest reg\n18-Jan-01 Foo                   Assets:A                        2 X          2 X\n                                Assets:B                      Y-0.4          2 X\n                                                                           Y-0.4\n18-Feb-01 Bar                   Assets:C                        2 M          2 M\n                                                                             2 X\n                                                                           Y-0.4\n                                Assets:D                  -0.0004 N          2 M\n                                                                       -0.0004 N\n                                                                             2 X\n                                                                           Y-0.4\nend test\n\ntest print\n2018/01/01 * Foo\n    Assets:A                                     2 X @ Y0.2\n    Assets:B\n\n2018/02/01 * Bar\n    Assets:C                                     2 M @ 0.0002 N\n    Assets:D\nend test\n",
+            "file_path": "/Users/johnw/src/ledger/fix-1692/test/regress/1692.test"
+          },
+          "timestamp": "2026-04-26T23:39:46.701Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest -R \"RegressTest_1692\" --output-on-failure 2>&1 | tail -10",
+            "description": "Run updated test"
+          },
+          "timestamp": "2026-04-26T23:39:50.970Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me run the full test suite one final time to confirm no regressions.",
+          "timestamp": "2026-04-26T23:39:56.569Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest -j8 2>&1 | tail -8",
+            "description": "Final full test run",
+            "timeout": 600000
+          },
+          "timestamp": "2026-04-26T23:39:56.917Z"
+        },
+        {
+          "type": "assistant",
+          "text": "All 4295 tests pass. Let me complete the task tracking and review the final diff.",
+          "timestamp": "2026-04-26T23:41:14.867Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskUpdate",
+          "input": {
+            "status": "completed",
+            "taskId": "4"
+          },
+          "timestamp": "2026-04-26T23:41:15.253Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1692 diff HEAD~2 -- src/amount.cc src/xact.cc test/regress/1692.test",
+            "description": "Show final diff vs prior fix commit"
+          },
+          "timestamp": "2026-04-26T23:41:16.664Z"
+        },
+        {
+          "type": "assistant",
+          "text": " I should hold off on committing since the user asked me to find a proper fix rather than explicitly requesting a commit — they'll want to review these changes first on the PR branch. Let me summarize what I've done and do a final check of the modified files before wrapping up.",
+          "timestamp": "2026-04-26T23:41:29.469Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Done. Here's the summary:\n\n## Original Fix Was Too Narrow\n\nThe branch's fix special-cased `commodity().precision() == 0` in three places, leaving a clearly-reproducible variant unhandled:\n\n```\nD 10.00 Y                              ; Y is now precision 2\n2018-01-01 * Foo\n    Assets:A    2 X @ 0.0002 Y\n    Assets:B\n```\n\nThe inferred `-0.0004 Y` balance was silently dropped — same accounting equation violation as #1692 — because the original fix's `comm.precision() > 0` early-exit skipped this case entirely.\n\n## Generalized Fix\n\nThree changes (`src/amount.cc:1351-1410`, `src/amount.cc:2040-2070`, `src/xact.cc:194-225`) plus the variant added to `test/regress/1692.test`:\n\n1. **`xact.cc set_cost_prec_if_needed`** — dropped the precision-0 gate. It now sets `BIGINT_COST_PREC` whenever the recovered cost precision exceeds the commodity's *current* precision. The policy decision is deferred to display time.\n\n2. **`amount.cc print()`** and **`amount.cc is_zero()`** — when `BIGINT_COST_PREC` is set, decide *at display time* whether to widen, based on a uniform criterion: widen if the commodity has no established precision **or** the value would round to zero at commodity precision.\n\nThe display-time decision is necessary because commodity precision can grow *after* the inference happens (the BFD3FBE1 test exercises exactly that pattern: EUR is bumped from 0 to 2 only when the second transaction is parsed).\n\n## Why one residual `precision == 0` clause stays\n\nThe branching is now justified semantically rather than as a special case:\n- **`comm.precision() == 0`** → user has expressed no precision expectation; show full cost precision (preserves test 717's `GBP-2.653329339867` and test 1773's `$-25.300`).\n- **`comm.precision() > 0`** → user has expectation; respect it unless the value would round to zero (the actual bug).\n\n## Verification\n\n- All 4295 tests pass.\n- Both bug cases (original and variant) now display correctly.\n- Tests that previously broke during my iteration (`1612`, `BFD3FBE1`, `717`, `763`, `1773`, `cov9-xact-rounding-adj`, `opt-no-rounding`, `A560FDAD`) all confirm the asymmetry is intentional and well-grounded.\n\nChanges are uncommitted in the working tree — review at your leisure before deciding whether to amend the existing fix commit or create a new one.",
+          "timestamp": "2026-04-26T23:41:44.699Z"
+        },
+        {
+          "type": "user",
+          "text": "Create a new commit and push",
+          "timestamp": "2026-04-27T01:48:31.269Z"
+        },
+        {
+          "type": "user",
+          "text": "<system-reminder>Respond with just the action or changes and without a thinking block, unless this is a redesign or requires fresh reasoning.</system-reminder>",
+          "timestamp": "2026-04-27T01:48:31.269Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1692 status && echo \"---\" && git -C /Users/johnw/src/ledger/fix-1692 log -1 --format='%h %s'",
+            "description": "Check status and recent commit"
+          },
+          "timestamp": "2026-04-27T01:48:39.582Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c 'echo ok' 2>&1 | tail -3",
+            "description": "Prime nix dev env for signing",
+            "timeout": 600000
+          },
+          "timestamp": "2026-04-27T01:48:45.773Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gpg --list-secret-keys --keyid-format LONG 2>&1 | head -10 && echo \"---\" && git -C /Users/johnw/src/ledger/fix-1692 config --get user.signingkey && git -C /Users/johnw/src/ledger/fix-1692 config --get commit.gpgsign",
+            "description": "Check GPG signing config"
+          },
+          "timestamp": "2026-04-27T01:48:47.245Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "echo \"test\" | gpg --clearsign --local-user 12D70076AB504679 2>&1 | tail -5",
+            "description": "Test GPG signing works"
+          },
+          "timestamp": "2026-04-27T01:48:54.295Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Signing works. Now let me stage and commit inside `nix develop` so the lefthook pre-commit hook has `$cmakeFlags`.",
+          "timestamp": "2026-04-27T01:48:58.905Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1692/.lefthook-local.yml 2>/dev/null && echo \"lefthook-local exists\" || echo \"no lefthook-local\"",
+            "description": "Check for lefthook-local override"
+          },
+          "timestamp": "2026-04-27T01:49:00.058Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1692 add src/amount.cc src/xact.cc test/regress/1692.test && git -C /Users/johnw/src/ledger/fix-1692 status",
+            "description": "Stage changes"
+          },
+          "timestamp": "2026-04-27T01:49:04.453Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop --command bash -c 'git -C /Users/johnw/src/ledger/fix-1692 commit -S -m \"$(cat <<'\"'\"'EOF'\"'\"'\nFix #1692: generalise inferred-amount precision recovery\n\nThe original fix gated the precision recovery on\ncommodity().precision() == 0 in three places (xact.cc, is_zero, print).\nThat left a clear variant unaddressed: an established commodity whose\ndisplay precision is coarser than the cost'\"'\"'s -- e.g. `D 10.00 N`\nfollowed by `2 M @ 0.0002 N` -- still silently dropped the inferred\n-0.0004 N posting, breaking the same accounting invariant.\n\nGeneralise the fix so the policy is uniform across precisions:\n\n  * xact.cc set_cost_prec_if_needed() drops the precision-0 early\n    exit and tags the inferred amount with BIGINT_COST_PREC whenever\n    the recovered cost precision exceeds the commodity'\"'\"'s current\n    display precision.\n\n  * amount_t::is_zero() and amount_t::print() honour the flag at\n    display time.  The decision to widen precision is made there\n    rather than at xact-finalize time, because a later transaction\n    can bump the commodity'\"'\"'s display precision after the inference\n    happens (the BFD3FBE1 pattern, where EUR is established at\n    precision 2 only by the second transaction).  Widen if the\n    commodity has no established precision (the user has expressed\n    no expectation), or if the value would otherwise round to zero\n    on the page (the original report).\n\n  * The operator+= / operator-= flag-clearing for issue #717 is\n    unchanged.\n\nAdd the variant case to test/regress/1692.test alongside the original\nreproducer so both scenarios are pinned.\n\nVerified against the full ctest suite (4295/4295 passing).\nEOF\n)\"' 2>&1 | tail -40",
+            "description": "Commit signed inside nix dev shell",
+            "timeout": 600000
+          },
+          "timestamp": "2026-04-27T01:49:24.159Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "ToolSearch",
+          "input": {
+            "max_results": 1,
+            "query": "select:Monitor"
+          },
+          "timestamp": "2026-04-27T01:59:28.910Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The commit is running in the background (lefthook runs the full test suite). I'll wait for completion.",
+          "timestamp": "2026-04-27T01:59:34.454Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Monitor",
+          "input": {
+            "command": "until [ -f /private/tmp/claude-501/-Users-johnw-src-ledger-fix-1692/aa196477-ec2e-405a-9a58-81f2308f0f69/tasks/bxz4djmqd.exitcode ]; do\n  if [ -f /private/tmp/claude-501/-Users-johnw-src-ledger-fix-1692/aa196477-ec2e-405a-9a58-81f2308f0f69/tasks/bxz4djmqd.output ]; then\n    tail -n 1 /private/tmp/claude-501/-Users-johnw-src-ledger-fix-1692/aa196477-ec2e-405a-9a58-81f2308f0f69/tasks/bxz4djmqd.output | grep -E --line-buffered \"FAIL|PASS|Error|error:|warning:|done|completed|✔|✘|━━\" || true\n  fi\n  sleep 30\ndone\necho \"DONE: exit=$(cat /private/tmp/claude-501/-Users-johnw-src-ledger-fix-1692/aa196477-ec2e-405a-9a58-81f2308f0f69/tasks/bxz4djmqd.exitcode)\"",
+            "description": "commit progress and outcome",
+            "persistent": false,
+            "timeout_ms": 900000
+          },
+          "timestamp": "2026-04-27T01:59:40.831Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "tail -20 /private/tmp/claude-501/-Users-johnw-src-ledger-fix-1692/aa196477-ec2e-405a-9a58-81f2308f0f69/tasks/bxz4djmqd.output 2>&1",
+            "description": "Peek at current commit progress"
+          },
+          "timestamp": "2026-04-27T01:59:44.880Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls -la /private/tmp/claude-501/-Users-johnw-src-ledger-fix-1692/aa196477-ec2e-405a-9a58-81f2308f0f69/tasks/bxz4djmqd* 2>&1",
+            "description": "Find background task files"
+          },
+          "timestamp": "2026-04-27T02:00:00.429Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Output file empty so far — lefthook hasn't started producing output. The hook takes ~8 minutes for the full build+test+doxygen+nix sequence. Waiting for the monitor to fire.",
+          "timestamp": "2026-04-27T02:00:05.232Z"
+        },
+        {
+          "type": "user",
+          "text": "Did it fire?",
+          "timestamp": "2026-04-27T02:02:18.622Z"
+        },
+        {
+          "type": "user",
+          "text": "<system-reminder>Respond with just the action or changes and without a thinking block, unless this is a redesign or requires fresh reasoning.</system-reminder>",
+          "timestamp": "2026-04-27T02:02:18.622Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls -la /private/tmp/claude-501/-Users-johnw-src-ledger-fix-1692/aa196477-ec2e-405a-9a58-81f2308f0f69/tasks/bxz4djmqd* 2>&1 && echo \"---\" && wc -l /private/tmp/claude-501/-Users-johnw-src-ledger-fix-1692/aa196477-ec2e-405a-9a58-81f2308f0f69/tasks/bxz4djmqd.output 2>&1 && echo \"---\" && tail -20 /private/tmp/claude-501/-Users-johnw-src-ledger-fix-1692/aa196477-ec2e-405a-9a58-81f2308f0f69/tasks/bxz4djmqd.output 2>&1",
+            "description": "Check task status and output"
+          },
+          "timestamp": "2026-04-27T02:02:22.885Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ps -ef | grep -E \"lefthook|cmake|ctest|git commit\" | grep -v grep | head -10",
+            "description": "Check if commit is running"
+          },
+          "timestamp": "2026-04-27T02:02:27.406Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Not yet — lefthook is currently in the `ctest` phase (still running). The commit/git process is alive (PIDs 71830, 72137, 72140, 79472, 79473) and the output file is empty because the wrapping `tail -40` at the end will only emit when the process exits. The monitor will fire once `bxz4djmqd.exitcode` appears.",
+          "timestamp": "2026-04-27T02:02:34.158Z"
+        }
+      ],
+      "total_additions": 237,
+      "total_deletions": 154,
+      "accepted_lines": 118,
+      "overriden_lines": 0
+    }
+  }
+}
