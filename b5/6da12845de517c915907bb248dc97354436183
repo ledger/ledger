@@ -1,0 +1,25 @@
+test/regress/3187.test
+  4971adf9854b82cd 1-29
+src/amount.cc
+  4971adf9854b82cd 958-964
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.5",
+  "base_commit_sha": "b56da12845de517c915907bb248dc97354436183",
+  "prompts": {
+    "4971adf9854b82cd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d9e5403e-427b-4eed-9f43-fe1b9f09546e",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [],
+      "total_additions": 63,
+      "total_deletions": 14,
+      "accepted_lines": 49,
+      "overriden_lines": 0
+    }
+  }
+}
