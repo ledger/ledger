@@ -1,0 +1,25 @@
+src/output.cc
+  be3b63fd6b8e3f64 283-296,298
+test/regress/3189.test
+  be3b63fd6b8e3f64 1-41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.5",
+  "base_commit_sha": "61937b466c3758bb3f905f442d565ab89c2dabc7",
+  "prompts": {
+    "be3b63fd6b8e3f64": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "35d798ad-c2f8-46fd-8928-2a7bcddbb7f7",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [],
+      "total_additions": 56,
+      "total_deletions": 2,
+      "accepted_lines": 56,
+      "overriden_lines": 0
+    }
+  }
+}
