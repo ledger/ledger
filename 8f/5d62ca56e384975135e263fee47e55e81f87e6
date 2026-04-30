@@ -1,0 +1,23 @@
+NEWS.md
+  b5a2fbadf3e3d784 3-4,6,9,12-16,18-31,34-72,76-164,166-247,249-330,333-371,373-429
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.5",
+  "base_commit_sha": "8f5d62ca56e384975135e263fee47e55e81f87e6",
+  "prompts": {
+    "b5a2fbadf3e3d784": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "96c44981-88a2-47b3-b3ac-f713ad838822",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [],
+      "total_additions": 499,
+      "total_deletions": 12,
+      "accepted_lines": 395,
+      "overriden_lines": 15
+    }
+  }
+}
