@@ -1,0 +1,50 @@
+; Regression test for issue #3192: typed date metadata is taken as the
+; effective date if no other effective date is given.
+;
+; A bracketed date expression that appears as a *value* of a metadata tag
+; (e.g. "; key:: [2020-01-01]") must not be misread as the posting's
+; actual or effective date.  Only "[date]" or "[=auxdate]" written as the
+; very first token of the comment (the documented "; [date]" notation)
+; should override the posting date.
+
+2026-05-01 * Sell stuck
+    Assets:Broker  -40 STOCK @ $10.00
+    ; some_random_metadata:: [2020-01-01]
+    ; some_random_metadata_v2:: [2020-02-01]
+    Assets:Cash
+
+; The 2020 period contains no real transactions, so --effective should
+; produce no output.  Before the fix the last bracketed date in the typed
+; metadata (2020-02-01) leaked into the posting's effective date, and
+; --period 2020 incorrectly matched the broker leg.
+
+test reg --period 2020 --effective Assets:Broker
+end test
+
+; Without a period filter, the "Sell stuck" postings keep the actual
+; transaction date (2026-05-01) regardless of any typed metadata
+; bracketed dates.
+
+test reg --effective Assets:Broker
+26-May-01 Sell stuck            Assets:Broker             -40 STOCK    -40 STOCK
+end test
+
+; The typed metadata values themselves remain accessible as date-typed
+; tags, so existing functionality (e.g. format_date(tag('...'))) keeps
+; working.
+
+test reg --format "%(format_date(tag('some_random_metadata'), '%Y-%m-%d')) %(format_date(tag('some_random_metadata_v2'), '%Y-%m-%d'))\n" Assets:Broker
+2020-01-01 2020-02-01
+end test
+
+; The documented "; [=date]" directive (bracketed date as the first
+; token of the comment) continues to override the posting's effective
+; date as before.
+
+2026-06-01 * Backdated invoice
+    Expenses:Office                $100.00  ; [=2020-03-15]
+    Assets:Cash
+
+test reg --period 2020 --effective Expenses
+20-Mar-15 Backdated invoice     Expenses:Office             $100.00      $100.00
+end test

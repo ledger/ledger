@@ -71,21 +71,22 @@ void item_t::parse_tags(const char* p, scope_t& scope, bool overwrite_existing) 
   while (*d == ' ' || *d == '\t' || *d == ';')
     ++d;
 
-  if (const char* b = std::strchr(d, '[')) {
-    if (*(b + 1) != '\0' &&
-        (std::isdigit(static_cast<unsigned char>(*(b + 1))) || *(b + 1) == '=')) {
-      if (const char* e = std::strchr(b, ']')) {
-        char buf[256];
-        std::strncpy(buf, b + 1, static_cast<std::size_t>(e - b - 1));
-        buf[e - b - 1] = '\0';
+  // Only treat `[date]` / `[=auxdate]` as a date directive when it is the
+  // first non-whitespace, non-`;` token of the comment.  A bracketed date
+  // appearing later in the line (e.g. as a value within typed metadata
+  // such as `; Due:: [2024/01/01]`) is a value, not a directive (#3192).
+  if (*d == '[' && (std::isdigit(static_cast<unsigned char>(*(d + 1))) || *(d + 1) == '=')) {
+    if (const char* e = std::strchr(d, ']')) {
+      char buf[256];
+      std::strncpy(buf, d + 1, static_cast<std::size_t>(e - d - 1));
+      buf[e - d - 1] = '\0';
 
-        if (char* pp = std::strchr(buf, '=')) {
-          *pp++ = '\0';
-          _date_aux = parse_date(pp);
-        }
-        if (buf[0])
-          _date = parse_date(buf);
+      if (char* pp = std::strchr(buf, '=')) {
+        *pp++ = '\0';
+        _date_aux = parse_date(pp);
       }
+      if (buf[0])
+        _date = parse_date(buf);
     }
   }
 
