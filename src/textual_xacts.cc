@@ -408,9 +408,8 @@ static balance_t compute_balance_diff(const amount_t& amt, post_t* post, xact_t*
     real_only = false;
   }
   value_t account_total;
-  bool use_file_order =
-      (context.journal && context.journal->check_in_file_order) ||
-      (item_t::use_aux_date && !post->aux_date());
+  bool use_file_order = (context.journal && context.journal->check_in_file_order) ||
+                        (item_t::use_aux_date && !post->aux_date());
   if (use_file_order) {
     // File-order accumulation: sum every posting parsed so far for this
     // account, regardless of date.  This is required in --effective mode

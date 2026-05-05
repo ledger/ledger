@@ -151,12 +151,13 @@ public:
       known_payees; ///< Payees declared with `payee` directive (for --strict validation).
   std::set<string> known_tags; ///< Tags declared with `tag` directive (for --strict validation).
   bool was_loaded;             ///< True after at least one successful read().
-  bool check_payees;      ///< True if payee validation is enabled (payee directives were seen).
-  bool day_break;         ///< True if day-break transactions should be inserted between days.
-  int time_round;         ///< Round timelog durations up to this many seconds (0 = no rounding).
-  bool recursive_aliases; ///< If true, alias expansion repeats until no more aliases match.
-  bool no_aliases;        ///< If true, all alias expansion is suppressed.
-  bool check_in_file_order; ///< If true, balance assertions/assignments use file order, not date order.
+  bool check_payees;        ///< True if payee validation is enabled (payee directives were seen).
+  bool day_break;           ///< True if day-break transactions should be inserted between days.
+  int time_round;           ///< Round timelog durations up to this many seconds (0 = no rounding).
+  bool recursive_aliases;   ///< If true, alias expansion repeats until no more aliases match.
+  bool no_aliases;          ///< If true, all alias expansion is suppressed.
+  bool check_in_file_order; ///< If true, balance assertions/assignments use file order, not date
+                            ///< order.
   lot_policy_t lot_matching_policy =
       lot_policy_t::none; ///< How commodity lots are matched for consumption.
   payee_alias_mappings_t
