@@ -119,6 +119,7 @@ void journal_t::initialize() {
   checking_style = CHECK_NORMAL;
   recursive_aliases = false;
   no_aliases = false;
+  check_in_file_order = false;
 
   // Pre-register built-in metadata tags so --strict/--pedantic don't
   // warn about them.  These are tags that ledger uses internally.

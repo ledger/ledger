@@ -1,0 +1,41 @@
+; Regression test for issue #3186: --check-in-file-order restores the
+; pre-#1092 behaviour where balance assertions/assignments accumulate
+; postings in file (parse) order rather than date order.
+;
+; Journal data (used by every test block below): the entries deliberately
+; appear in reverse date order so that file-order and date-order
+; accumulation yield different results.  Date-order accumulation will
+; reject the second transaction's assertion because, on 2026/04/01,
+; the only posting to Assets:Bank seen so far in date order is -$7,
+; not $3.
+
+2026/04/02 * Balance
+    Assets:Bank                               $10.00
+    Equity
+
+2026/04/01 * Expense
+    Expenses:Food                              $7.00
+    Assets:Bank                               $-7.00 = $3.00
+
+; Default (post-#1092) behaviour: the assertion fails because
+; 2026/04/01 precedes 2026/04/02 in date order, so the $10 deposit
+; is not yet visible when the $-7 posting is checked.
+test -f $FILE bal -> 1
+__ERROR__
+While parsing file "$FILE", line 18:
+While parsing posting:
+  Assets:Bank                               $-7.00 = $3.00
+                                                     ^^^^^
+Error: Balance assertion off by $10.00 (expected to see $-7.00)
+end test
+
+; --check-in-file-order restores the pre-#1092 file-order accumulation.
+; In file order the $10 deposit is parsed before the $-7 posting, so the
+; running total of Assets:Bank is $10 - $7 = $3 and the assertion holds.
+test --check-in-file-order -f $FILE bal
+               $3.00  Assets:Bank
+             $-10.00  Equity
+               $7.00  Expenses:Food
+--------------------
+                   0
+end test

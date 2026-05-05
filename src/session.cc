@@ -183,6 +183,9 @@ std::size_t session_t::read_data(const string& master_account) {
   if (HANDLED(explicit)) {
     // No-op
   }
+  if (HANDLED(check_in_file_order))
+    journal->check_in_file_order = true;
+
   if (HANDLED(check_payees))
     journal->check_payees = true;
 
@@ -422,7 +425,8 @@ option_t<session_t>* session_t::lookup_option(const char* p) {
     OPT(account_value_expr_);
     break;
   case 'c':
-    OPT(check_payees);
+    OPT(check_in_file_order);
+    else OPT(check_payees);
     else OPT(commodity_value_expr_);
     break;
   case 'd':

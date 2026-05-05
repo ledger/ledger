@@ -6674,6 +6674,15 @@ Enable strict and pedantic checking for payees as well as accounts,
 commodities and tags.  This only works in conjunction with
 @option{--strict} or @option{--pedantic}.
 
+@item --check-in-file-order
+Evaluate balance assertions and assignments in file (parse) order rather
+than date order.  By default, ledger filters the running account total
+by date so that an assertion dated July 10 sees only postings dated on
+or before July 10, even when a July 20 transaction was parsed earlier
+in the file.  Specify this option to restore the pre-3.5 behaviour
+where every posting parsed so far contributes to the running total
+regardless of date.
+
 @item --immediate
 Instruct ledger to evaluate calculations immediately rather than lazily.
 
@@ -7032,6 +7041,11 @@ the resolution order.
 Enable strict and pedantic checking for payees as well as accounts,
 commodities and tags.  This only works in conjunction with
 @option{--strict} or @option{--pedantic}.
+
+@item --check-in-file-order
+Evaluate balance assertions and assignments in file (parse) order
+rather than date order.  See @ref{Error Checking and Calculation
+Options} for details.
 
 @item --commodity-value-expr @var{VEXPR}
 Set a default valuation expression for all commodities that do not
