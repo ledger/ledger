@@ -75,8 +75,7 @@ void item_t::parse_tags(const char* p, scope_t& scope, bool overwrite_existing) 
   // first non-whitespace, non-`;` token of the comment.  A bracketed date
   // appearing later in the line (e.g. as a value within typed metadata
   // such as `; Due:: [2024/01/01]`) is a value, not a directive (#3192).
-  if (*d == '[' &&
-      (std::isdigit(static_cast<unsigned char>(*(d + 1))) || *(d + 1) == '=')) {
+  if (*d == '[' && (std::isdigit(static_cast<unsigned char>(*(d + 1))) || *(d + 1) == '=')) {
     if (const char* e = std::strchr(d, ']')) {
       char buf[256];
       std::strncpy(buf, d + 1, static_cast<std::size_t>(e - d - 1));
