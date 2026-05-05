@@ -408,11 +408,17 @@ static balance_t compute_balance_diff(const amount_t& amt, post_t* post, xact_t*
     real_only = false;
   }
   value_t account_total;
-  if (item_t::use_aux_date && !post->aux_date()) {
-    // In --effective mode, postings without an explicit effective date
-    // use file-order accumulation so that balance assertions are not
-    // confused by other postings whose effective dates land after the
-    // current posting's primary date (fixes #2966).
+  bool use_file_order = (context.journal && context.journal->check_in_file_order) ||
+                        (item_t::use_aux_date && !post->aux_date());
+  if (use_file_order) {
+    // File-order accumulation: sum every posting parsed so far for this
+    // account, regardless of date.  This is required in --effective mode
+    // for postings without an explicit effective date so that assertions
+    // are not confused by other postings whose effective dates land after
+    // the current posting's primary date (fixes #2966).  It is also
+    // selected via --check-in-file-order to restore the pre-#1092
+    // behaviour for users who depend on file order rather than date
+    // order (issue #3186).
     account_total = post->account->self_total(real_only);
   } else {
     // Filter account posts by date so that balance assertions respect
@@ -420,7 +426,7 @@ static balance_t compute_balance_diff(const amount_t& amt, post_t* post, xact_t*
     // an explicit effective date this uses effective-date ordering
     // (fixes #2071); otherwise it uses primary-date ordering so that
     // an assertion dated before later-dated transactions in the file
-    // is not polluted by those future-dated posts (fixes #847).
+    // is not polluted by those future-dated posts (fixes #847, #1092).
     date_t cutoff = post->date();
     std::set<const post_t*> seen;
     for (const post_t* p : post->account->posts) {

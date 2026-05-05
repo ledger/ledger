@@ -156,7 +156,9 @@ components with their standard-library equivalents.
 - Filter balance assertions by date rather than file order; skip balance
   assertions on UUID-duplicate transactions; check account assertions on
   auto-generated postings; respect `--permissive` for balance assignments with
-  elided amounts (#2005)
+  elided amounts (#2005).  Add `--check-in-file-order` to restore the
+  pre-3.5 file-order accumulation for journals that depend on out-of-order
+  dated entries (#3186).
 
 - Fix balance assertions for accounts with only virtual postings (#1699), with
   quoted commodities (#904), with per-unit price annotations (#1125), with

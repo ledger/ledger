@@ -171,6 +171,7 @@ public:
   /// Dump all session-level option values to the output stream.
   void report_options(std::ostream& out) {
     HANDLER(account_value_expr_).report(out);
+    HANDLER(check_in_file_order).report(out);
     HANDLER(check_payees).report(out);
     HANDLER(commodity_value_expr_).report(out);
     HANDLER(day_break).report(out);
@@ -206,6 +207,11 @@ public:
    */
 
   OPTION(session_t, account_value_expr_); ///< Default account-level valuation expression
+  OPTION_(
+      session_t, check_in_file_order, DO() {
+        if (parent->journal)
+          parent->journal->check_in_file_order = true;
+      });
   OPTION_(
       session_t, check_payees, DO() {
         if (parent->journal)

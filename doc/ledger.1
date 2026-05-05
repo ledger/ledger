@@ -489,6 +489,10 @@ Specify the format to use for the
 report.
 .It Fl \-by-payee Pq Fl P
 Group postings in the register report by common payee names.
+.It Fl \-check-in-file-order
+Evaluate balance assertions and assignments in file (parse) order rather
+than date order, restoring the pre-3.5 behaviour for journals that rely
+on out-of-order dated entries.
 .It Fl \-check-payees
 Enable strict and pedantic checking for payees as well as accounts,
 commodities and tags.

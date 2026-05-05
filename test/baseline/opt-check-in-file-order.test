@@ -1,0 +1,20 @@
+; Baseline test for --check-in-file-order: when set, balance assertions
+; and assignments accumulate postings in file order rather than date
+; order, restoring the pre-#1092 behaviour for users who depend on
+; reverse-dated entries (issue #3186).
+
+2026/04/02 * Balance
+    Assets:Bank                               $10.00
+    Equity
+
+2026/04/01 * Expense
+    Expenses:Food                              $7.00
+    Assets:Bank                               $-7.00 = $3.00
+
+test bal --check-in-file-order
+               $3.00  Assets:Bank
+             $-10.00  Equity
+               $7.00  Expenses:Food
+--------------------
+                   0
+end test
