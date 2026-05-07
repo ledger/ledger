@@ -78,10 +78,11 @@ test reg --revalued-only --market --exchange '$' Assets:Brokerage
 24-Jun-01 Commodities revalued  <Revalued>                  $450.00     $1950.00
 end test
 
-; Test --no-revalued option
+; Test --no-revalued option (issue #3196): --no-revalued must suppress
+; <Revalued> postings even when it appears before --market/--exchange,
+; both of which call OTHER(revalued).on(whence) inside their handler.
 test reg --no-revalued --market --exchange '$' Assets:Brokerage
 24-Jan-01 Buy Stock             Assets:Brokerage           $1500.00     $1500.00
-24-Jun-01 Commodities revalued  <Revalued>                  $450.00     $1950.00
 end test
 
 ; Test --exchange option
