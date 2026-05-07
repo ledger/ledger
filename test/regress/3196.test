@@ -1,0 +1,70 @@
+; Regression test for issue #3196
+;
+; --no-revalued must be respected regardless of where it appears on the
+; command line.  Previously, options like --market (-V), --exchange (-X),
+; --basis (-B), and --gain (-G) called OTHER(revalued).on(whence) inside
+; their handlers, silently re-enabling revalued behavior even after the
+; user had set --no-revalued earlier.
+;
+; The fix forces revalued.off() one final time at the end of
+; normalize_options() whenever --no-revalued was provided, so that the
+; user's intent wins regardless of option order.
+;
+; Issue #3196 became visible only after #2131 was fixed, because before
+; that fix the intermediate revaluation diff was always zero and the
+; would-be <Revalued> postings collapsed into a single <Adjustment>.
+
+P 2024/01/01 $ 30 TWD
+P 2024/06/01 $ 31 TWD
+P 2025/01/01 $ 32 TWD
+P 2025/06/01 $ 33 TWD
+P 2026/01/01 $ 34 TWD
+
+2024/01/15 Salary
+    Assets:Checking          $1000
+    Income:Salary
+
+2024/04/15 Coffee
+    Expenses:Coffee          $5
+    Assets:Checking
+
+2025/02/01 Salary
+    Assets:Checking          $2000
+    Income:Salary
+
+; --no-revalued *before* -X must still suppress <Revalued> postings.
+test reg --no-revalued -X TWD Assets: --yearly --current --now=2026/05/26
+24-Jan-01 - 24-Dec-31           Assets:Checking            TWD30845     TWD30845
+25-Jan-01 - 25-Dec-31           Assets:Checking            TWD66000     TWD98835
+end test
+
+; --no-revalued *after* -X already worked; verify we did not regress it.
+test reg -X TWD Assets: --yearly --current --no-revalued --now=2026/05/26
+24-Jan-01 - 24-Dec-31           Assets:Checking            TWD30845     TWD30845
+25-Jan-01 - 25-Dec-31           Assets:Checking            TWD66000     TWD98835
+end test
+
+; Without --no-revalued, intermediate <Revalued> postings still appear
+; (per the #2131 fix).  This guards the inverse direction: --no-revalued
+; must not be applied implicitly.
+test reg -X TWD Assets: --yearly --current --now=2026/05/26
+24-Jan-01 - 24-Dec-31           Assets:Checking            TWD30845     TWD30845
+25-Jan-01 Commodities revalued  <Revalued>                   TWD995     TWD31840
+25-Jun-01 Commodities revalued  <Revalued>                   TWD995     TWD32835
+25-Jan-01 - 25-Dec-31           Assets:Checking            TWD66000     TWD98835
+26-Jan-01 Commodities revalued  <Revalued>                  TWD2995    TWD101830
+end test
+
+; --no-revalued before --market (-V) must also win.
+test reg --no-revalued -V Assets: --yearly --current --now=2026/05/26
+24-Jan-01 - 24-Dec-31           Assets:Checking            TWD30845     TWD30845
+25-Jan-01 - 25-Dec-31           Assets:Checking            TWD66000     TWD98835
+end test
+
+; --no-revalued before --basis (-B) must win, even though --basis also
+; activates --revalued via its handler.
+test reg --no-revalued -B -M -e 2026/01/01 Assets:Checking
+24-Jan-01 - 24-Jan-31           Assets:Checking               $1000        $1000
+24-Apr-01 - 24-Apr-30           Assets:Checking                 $-5         $995
+25-Feb-01 - 25-Feb-28           Assets:Checking               $2000        $2995
+end test

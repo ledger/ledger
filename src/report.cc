@@ -289,6 +289,15 @@ void report_t::normalize_options(const string& verb) {
     value_t(0L).exchange_commodities(HANDLER(exchange_).str(), true, terminus);
   }
 
+  // --no-revalued must win regardless of option order: -V/-X (and other
+  // options that imply --revalued, like --basis or --gain) call
+  // OTHER(revalued).on(whence) inside their handlers, so a --no-revalued
+  // appearing earlier on the command line is silently re-enabled.  After
+  // all options have been parsed, force --revalued back off if the user
+  // explicitly requested --no-revalued.
+  if (HANDLED(no_revalued))
+    HANDLER(revalued).off();
+
   if (HANDLED(percent)) {
     commodity_t::decimal_comma_by_default = false;
     if (HANDLED(market)) {
