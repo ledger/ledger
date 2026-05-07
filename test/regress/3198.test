@@ -1,0 +1,29 @@
+; Regression test for issue #3198: --depth 0 (with --collapse) hides
+; every collapsed posting since the fix for #2985 parented the synthetic
+; <Total> account to the journal master.  That gave <Total> depth 1, so
+; the implicit "depth<=0" display predicate filtered every <Total> row
+; out, leaving only empty-period <None> rows visible.
+
+2024/01/01 Open
+    Assets:Cash      $100
+    Equity
+
+2024/01/03 Buy
+    Expenses:Food     $5
+    Assets:Cash
+
+test reg --collapse --depth 0 --daily --empty Assets
+24-Jan-01 - 24-Jan-01           <Total>                        $100         $100
+24-Jan-02 - 24-Jan-02           <None>                            0         $100
+24-Jan-03 - 24-Jan-03           <Total>                         $-5          $95
+end test
+
+test reg --collapse --depth 0 --daily Assets
+24-Jan-01 - 24-Jan-01           <Total>                        $100         $100
+24-Jan-03 - 24-Jan-03           <Total>                         $-5          $95
+end test
+
+test reg --collapse --depth 0 Assets
+24-Jan-01 Open                  <Total>                        $100         $100
+24-Jan-03 Buy                   <Total>                         $-5          $95
+end test

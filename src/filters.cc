@@ -572,6 +572,12 @@ void handle_value(const value_t& value, account_t* account, xact_t* xact, tempor
 
 void collapse_posts::create_accounts() {
   global_totals_account = &temps.create_account(_("<Total>"), report.session.journal->master);
+  // <Total> is parented to the journal master so that get_account() can walk
+  // up to the real journal root for account() lookups (issue #2985).  But
+  // <Total> is a synthetic top-level summary account; like the other
+  // synthetics (<None>, <Adjustment>, <Revalued>) it must report depth 0 so
+  // that --depth 0 reports include it instead of filtering it out (#3198).
+  global_totals_account->depth = 0;
 }
 
 /**
