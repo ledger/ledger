@@ -117,6 +117,7 @@ void journal_t::initialize() {
   day_break = false;
   time_round = 0;
   checking_style = CHECK_NORMAL;
+  commodity_checking_style = CHECK_NORMAL;
   recursive_aliases = false;
   no_aliases = false;
   check_in_file_order = false;
@@ -389,13 +390,21 @@ string journal_t::translate_payee_name(const string& name) {
 /*--- Commodity and Metadata Registration ---*/
 
 void journal_t::register_commodity(commodity_t& comm, std::variant<int, xact_t*, post_t*> context) {
-  if (checking_style == CHECK_WARNING || checking_style == CHECK_ERROR) {
+  // Commodity validation honours the commodity-specific override when set
+  // (--strict-commodity / --pedantic-commodity, issue #3200).  When the
+  // commodity-specific level is at its default (CHECK_NORMAL), fall back
+  // to the global checking_style so that --strict / --pedantic and any
+  // direct callers that only adjust checking_style continue to work.
+  checking_style_t style =
+      commodity_checking_style != CHECK_NORMAL ? commodity_checking_style : checking_style;
+
+  if (style == CHECK_WARNING || style == CHECK_ERROR) {
     if (!comm.has_flags(COMMODITY_KNOWN)) {
       if (context.index() == 0) {
         comm.add_flags(COMMODITY_KNOWN);
-      } else if (checking_style == CHECK_WARNING) {
+      } else if (style == CHECK_WARNING) {
         current_context->warning(_f("Unknown commodity '%1%'") % comm);
-      } else if (checking_style == CHECK_ERROR) {
+      } else if (style == CHECK_ERROR) {
         throw_(parse_error, _f("Unknown commodity '%1%'") % comm);
       }
     }

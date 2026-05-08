@@ -191,6 +191,18 @@ public:
     CHECK_ERROR       ///< Error on unknown entities (--pedantic).
   } checking_style;
 
+  /**
+   * @brief Per-commodity checking style.
+   *
+   * Mirrors @ref checking_style but applies only to commodity validation
+   * in register_commodity().  This lets users opt into commodity-only
+   * strictness via --strict-commodity / --pedantic-commodity without
+   * triggering warnings or errors for undeclared accounts, payees, or
+   * tags.  --strict and --pedantic continue to set both fields together
+   * for backward compatibility.
+   */
+  checking_style_t commodity_checking_style;
+
   journal_t();
 #if 0
   journal_t(const path& pathname);

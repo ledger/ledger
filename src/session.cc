@@ -196,6 +196,18 @@ std::size_t session_t::read_data(const string& master_account) {
   else if (HANDLED(strict))
     journal->checking_style = journal_t::CHECK_WARNING;
 
+  // Commodity-only strictness (issue #3200): --strict and --pedantic
+  // already set both fields together via their option handlers, so by
+  // default commodity checking tracks the global checking style.  The
+  // explicit --strict-commodity / --pedantic-commodity flags are
+  // re-applied here so they win when read_journal_files runs after all
+  // options have been parsed.
+  if (HANDLED(pedantic_commodity))
+    journal->commodity_checking_style = journal_t::CHECK_ERROR;
+  else if (HANDLED(strict_commodity) &&
+           journal->commodity_checking_style != journal_t::CHECK_ERROR)
+    journal->commodity_checking_style = journal_t::CHECK_WARNING;
+
   if (HANDLED(value_expr_))
     journal->value_expr = HANDLER(value_expr_).str();
 
@@ -463,6 +475,7 @@ option_t<session_t>* session_t::lookup_option(const char* p) {
     OPT(price_db_);
     else OPT(price_exp_);
     else OPT(pedantic);
+    else OPT(pedantic_commodity);
     else OPT(permissive);
     break;
   case 'r':
@@ -470,6 +483,7 @@ option_t<session_t>* session_t::lookup_option(const char* p) {
     break;
   case 's':
     OPT(strict);
+    else OPT(strict_commodity);
     break;
   case 't':
     OPT(time_colon);

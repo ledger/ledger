@@ -963,6 +963,11 @@ report to
 .Ar INT .
 .It Fl \-pedantic
 Accounts, tags or commodities not previously declared will cause errors.
+.It Fl \-pedantic-commodity
+Like
+.Fl \-pedantic ,
+but only commodities not previously declared will cause errors.
+Undeclared accounts, payees, and tags are accepted silently.
 .It Fl \-pending
 Use only postings that are marked pending.
 .It Fl \-percent Pq Fl %
@@ -1171,6 +1176,11 @@ starting at 0 for Sunday.
 Sort all accounts and commodities.
 .It Fl \-strict
 Accounts, tags or commodities not previously declared will cause warnings.
+.It Fl \-strict-commodity
+Like
+.Fl \-strict ,
+but only commodities not previously declared will cause warnings.
+Undeclared accounts, payees, and tags are accepted silently.
 .It Fl \-subtotal Pq Fl s
 Report register as a single subtotal.
 .It Fl \-tail Ar INT

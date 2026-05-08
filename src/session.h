@@ -185,12 +185,14 @@ public:
     HANDLER(explicit).report(out);
     HANDLER(master_account_).report(out);
     HANDLER(pedantic).report(out);
+    HANDLER(pedantic_commodity).report(out);
     HANDLER(permissive).report(out);
     HANDLER(price_db_).report(out);
     HANDLER(price_exp_).report(out);
     HANDLER(recursive_aliases).report(out);
     HANDLER(no_aliases).report(out);
     HANDLER(strict).report(out);
+    HANDLER(strict_commodity).report(out);
     HANDLER(value_expr_).report(out);
     HANDLER(lot_matching_).report(out);
   }
@@ -276,8 +278,16 @@ public:
   OPTION(session_t, master_account_); ///< Parent account for all postings
   OPTION_(
       session_t, pedantic, DO() {
-        if (parent->journal)
+        if (parent->journal) {
           parent->journal->checking_style = journal_t::CHECK_ERROR;
+          parent->journal->commodity_checking_style = journal_t::CHECK_ERROR;
+        }
+      });
+  /// Like --pedantic but applies only to commodity validation (issue #3200).
+  OPTION_(
+      session_t, pedantic_commodity, DO() {
+        if (parent->journal && parent->journal->commodity_checking_style != journal_t::CHECK_ERROR)
+          parent->journal->commodity_checking_style = journal_t::CHECK_ERROR;
       });
   OPTION_(
       session_t, permissive, DO() {
@@ -287,8 +297,16 @@ public:
   OPTION(session_t, price_db_); ///< Path to the price history database file
   OPTION_(
       session_t, strict, DO() {
-        if (parent->journal)
+        if (parent->journal) {
           parent->journal->checking_style = journal_t::CHECK_WARNING;
+          parent->journal->commodity_checking_style = journal_t::CHECK_WARNING;
+        }
+      });
+  /// Like --strict but applies only to commodity validation (issue #3200).
+  OPTION_(
+      session_t, strict_commodity, DO() {
+        if (parent->journal && parent->journal->commodity_checking_style != journal_t::CHECK_ERROR)
+          parent->journal->commodity_checking_style = journal_t::CHECK_WARNING;
       });
   OPTION(session_t, value_expr_); ///< Expression used to compute posting values
   OPTION_(
