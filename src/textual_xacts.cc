@@ -598,13 +598,21 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
 
         if (!post->amount_expr && post->amount.commodity().has_flags(COMMODITY_STYLE_NO_MIGRATE) &&
             post->amount.precision() > post->amount.commodity().precision()) {
-          if (context.journal->checking_style == journal_t::CHECK_WARNING) {
+          // Commodity precision is a commodity-level check, so honour the
+          // commodity-specific override when set; otherwise fall back to
+          // the global checking_style.  Mirrors register_commodity()
+          // (issue #3200).
+          journal_t::checking_style_t style =
+              context.journal->commodity_checking_style != journal_t::CHECK_NORMAL
+                  ? context.journal->commodity_checking_style
+                  : context.journal->checking_style;
+          if (style == journal_t::CHECK_WARNING) {
             context.warning(
                 _f("Amount for commodity '%1%' has %2% decimal places but declared format only "
                    "shows %3%") %
                 post->amount.commodity().symbol() % post->amount.precision() %
                 post->amount.commodity().precision());
-          } else if (context.journal->checking_style == journal_t::CHECK_ERROR) {
+          } else if (style == journal_t::CHECK_ERROR) {
             throw_(parse_error,
                    _f("Amount for commodity '%1%' has %2% decimal places but declared format only "
                       "shows %3%") %

@@ -1,0 +1,12 @@
+2012-03-20 Test GBP
+    Expenses:Phone            20.00 GBP
+    Assets:Cash
+
+test bal --strict-commodity
+          -20.00 GBP  Assets:Cash
+           20.00 GBP  Expenses:Phone
+--------------------
+                   0
+__ERROR__
+Warning: "$FILE", line 2: Unknown commodity 'GBP'
+end test

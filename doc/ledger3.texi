@@ -6666,8 +6666,19 @@ Change the value expression used for ``totals'' column in
 Accounts, tags or commodities not previously declared will cause
 warnings.
 
+@item --strict-commodity
+Like @option{--strict}, but only commodities not previously declared
+trigger warnings.  Undeclared accounts, payees, and tags are accepted
+silently.  Useful when the journal already declares all expected
+commodities but accounts and payees are still curated informally.
+
 @item --pedantic
 Accounts, tags or commodities not previously declared will cause errors.
+
+@item --pedantic-commodity
+Like @option{--pedantic}, but only commodities not previously declared
+trigger errors.  Undeclared accounts, payees, and tags are accepted
+silently.
 
 @item --check-payees
 Enable strict and pedantic checking for payees as well as accounts,
