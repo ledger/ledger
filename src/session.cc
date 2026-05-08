@@ -204,8 +204,7 @@ std::size_t session_t::read_data(const string& master_account) {
   // options have been parsed.
   if (HANDLED(pedantic_commodity))
     journal->commodity_checking_style = journal_t::CHECK_ERROR;
-  else if (HANDLED(strict_commodity) &&
-           journal->commodity_checking_style != journal_t::CHECK_ERROR)
+  else if (HANDLED(strict_commodity) && journal->commodity_checking_style != journal_t::CHECK_ERROR)
     journal->commodity_checking_style = journal_t::CHECK_WARNING;
 
   if (HANDLED(value_expr_))
