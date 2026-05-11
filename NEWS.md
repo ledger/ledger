@@ -178,6 +178,14 @@ components with their standard-library equivalents.
   a stripped running total, and early-returning from
   `balance_t::strip_annotations` when nothing carries annotations
 
+- Route the `accounts`, `payees`, `tags`, and `commodities` listing commands
+  through the `stats` fast path (#3202).  These commands only iterate the
+  posting stream to collect distinct names; previously they paid for the
+  running-total and rounding filters used by `register` and `balance`, which
+  on a 20K-posting journal made them 6-10× slower than `stats`.  The fast
+  path still honors `--limit`, `--period`, `--begin`/`--end`, `--pivot`,
+  `--anon`, `--budget`, `--forecast-while`, and `--group-by`
+
 - Align multi-commodity balance rows with wide decimals (#1795); fix
   multi-commodity balance formatting width (#698); make separator lines adapt
   to `amount_width`; show the payee when it changes between sorted postings;

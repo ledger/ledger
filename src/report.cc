@@ -597,12 +597,18 @@ void report_t::posts_report(post_handler_ptr handler, post_handler_ptr& saved_ch
 }
 
 void report_t::posts_report_quick(post_handler_ptr handler) {
+  if (HANDLED(group_by_)) {
+    unique_ptr<post_splitter> splitter(new post_splitter(handler, *this, HANDLER(group_by_).expr));
+    splitter->set_postflush_func(posts_flusher(handler, *this));
+    handler = post_handler_ptr(splitter.release());
+  }
   handler = chain_pre_post_handlers(handler, *this);
 
   journal_posts_iterator walker(*session.journal.get());
   pass_down_posts<journal_posts_iterator>(handler, walker); // NOLINT(bugprone-unused-raii)
 
-  posts_flusher(handler, *this)(value_t());
+  if (!HANDLED(group_by_))
+    posts_flusher(handler, *this)(value_t());
 }
 
 void report_t::generate_report(post_handler_ptr handler) {
@@ -2102,7 +2108,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
     switch (*p) { // NOLINT(bugprone-branch-clone,bugprone-switch-missing-default-case)
     case 'a':
       if (is_eq(p, "accounts")) {
-        return POSTS_REPORTER(new report_accounts(*this));
+        return POSTS_REPORTER_(&report_t::posts_report_quick, new report_accounts(*this));
       }
       break;
 
@@ -2136,7 +2142,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
       } else if (is_eq(p, "convert")) {
         return WRAP_FUNCTOR(convert_command);
       } else if (is_eq(p, "commodities")) {
-        return POSTS_REPORTER(new report_commodities(*this));
+        return POSTS_REPORTER_(&report_t::posts_report_quick, new report_commodities(*this));
       }
       break;
     case 'd':
@@ -2172,7 +2178,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
       } else if (is_eq(p, "pricemap")) {
         return MAKE_FUNCTOR(report_t::pricemap_command);
       } else if (is_eq(p, "payees")) {
-        return POSTS_REPORTER(new report_payees(*this));
+        return POSTS_REPORTER_(&report_t::posts_report_quick, new report_payees(*this));
       }
       break;
 
@@ -2193,7 +2199,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
       break;
     case 't':
       if (is_eq(p, "tags")) {
-        return POSTS_REPORTER(new report_tags(*this));
+        return POSTS_REPORTER_(&report_t::posts_report_quick, new report_tags(*this));
       }
       break;
     case 'x':

@@ -1,0 +1,145 @@
+; Regression test for #3202.  The `accounts', `payees', `tags', and
+; `commodities' commands previously went through the same post-handler
+; chain as the `balance' and `register' reports.  That chain runs
+; calc_posts() and display_filter_posts() for every posting --- two
+; filters that perform GMP arithmetic and amount-expression evaluation
+; that listing commands never use.  On a 20k-posting journal those
+; passes alone took 5-6x longer than `stats', even though stats already
+; iterates every posting.
+;
+; The fix routes the listing commands through posts_report_quick(), the
+; same fast path used by `stats'.  This still applies --limit, --period,
+; --begin/--end, --pivot, --anon, --budget, --forecast-while, and
+; --group-by (via post_splitter), but skips the running-total filters
+; that the listing handlers do not read from.
+;
+; The cases below exercise option combinations that distinguish the
+; fast path from the regular path, to guard against accidentally
+; regressing back to the slow path or losing any of the filters the
+; fast path still must honor.
+
+2018-01-01 * Alpha
+    ; :early:
+    Expenses:Food      $10.00
+    Assets:Bank
+
+2018-06-15 * Beta
+    ; :mid:
+    Expenses:Books     $20.00
+    Assets:Bank
+
+2019-03-01 * Gamma
+    ; :late:
+    Expenses:Auto      $30.00
+    Assets:Credit
+
+2019-09-01 * Delta
+    Expenses:Books     5.00 EUR
+    Assets:Cash
+
+2020-02-14 * Epsilon
+    ; :late:
+    Assets:Broker      10 ACME @ $50.00
+    Assets:Bank
+
+test accounts
+Assets:Bank
+Assets:Broker
+Assets:Cash
+Assets:Credit
+Expenses:Auto
+Expenses:Books
+Expenses:Food
+end test
+
+test payees
+Alpha
+Beta
+Delta
+Epsilon
+Gamma
+end test
+
+test tags
+early
+late
+mid
+end test
+
+test commodities
+$
+ACME
+EUR
+end test
+
+; --limit filters should be applied (chain_pre_post_handlers)
+
+test accounts -l 'commodity == "EUR"'
+Assets:Cash
+Expenses:Books
+end test
+
+test payees -l 'commodity == "EUR"'
+Delta
+end test
+
+test commodities -l 'date >= [2020-01-01]'
+$
+ACME
+end test
+
+; --begin / --end / -p should be applied (via normalize_period -> --limit)
+
+test accounts -b 2019-01-01
+Assets:Bank
+Assets:Broker
+Assets:Cash
+Assets:Credit
+Expenses:Auto
+Expenses:Books
+end test
+
+test payees -p '2018'
+Alpha
+Beta
+end test
+
+test tags -b 2019-01-01
+late
+end test
+
+; --count is preserved (the listing handlers count occurrences directly).
+; Each transaction contributes two postings, so a one-transaction payee
+; counts as 2 and a one-transaction tag (on the xact) also counts as 2.
+
+test payees --count
+2 Alpha
+2 Beta
+2 Delta
+2 Epsilon
+2 Gamma
+end test
+
+test tags --count
+2 early
+4 late
+2 mid
+end test
+
+; --group-by splits the post stream into batches that each flush the
+; handler in turn.  This requires post_splitter to be wired up on the
+; fast path; without it the second group's items would also appear in
+; the first group's output.
+
+test accounts --group-by 'payee'
+Assets:Bank
+Expenses:Food
+Assets:Bank
+Expenses:Books
+Assets:Cash
+Expenses:Books
+Assets:Bank
+Assets:Broker
+Assets:Credit
+Expenses:Auto
+end test
