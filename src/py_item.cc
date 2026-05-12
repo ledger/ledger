@@ -84,12 +84,12 @@ std::optional<value_t> py_get_tag_2m(item_t& item, const mask_t& tag_mask,
 
 /*--- Position Property Wrappers ---*/
 
-/// Adapt position_t::pathname (a boost::filesystem::path) to/from Python str.
+/// Adapt position_t::pathname (a shared_ptr<const path>) to/from Python str.
 std::string py_position_pathname(position_t const& pos) {
-  return pos.pathname.native();
+  return pos.pathname->native();
 }
 void py_position_set_pathname(position_t& pos, string const& s) {
-  pos.pathname = s;
+  pos.pathname = std::make_shared<const path>(s);
 }
 
 } // unnamed namespace

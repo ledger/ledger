@@ -83,7 +83,11 @@ class parse_context_t {
 public:
   std::shared_ptr<std::istream> stream; ///< The input stream (file, string, or decrypted GPG)
 
-  path pathname;          ///< Absolute path of the file being parsed (empty for stdin)
+  path pathname; ///< Absolute path of the file being parsed (empty for stdin)
+  /// Shared handle for `pathname`, distributed to every position_t parsed
+  /// from this file so that items don't each pay for their own path copy.
+  /// Must be kept in sync whenever pathname is reassigned.
+  std::shared_ptr<const path> pathname_ref;
   path current_directory; ///< Working directory for resolving relative `include` paths
   journal_t* journal;     ///< The journal accumulating parsed data
   account_t* master;   ///< Root account for this parse scope (may be narrowed by `apply account`)
@@ -98,15 +102,15 @@ public:
   std::string last;     ///< Text of the most recent error (for reporting after parsing)
 
   explicit parse_context_t(const path& cwd)
-      : current_directory(cwd), master(nullptr), scope(nullptr), linenum(0), errors(0), count(0),
-        sequence(1) {}
-
-  explicit parse_context_t(std::shared_ptr<std::istream> _stream, const path& cwd)
-      : stream(std::move(_stream)), current_directory(cwd), master(nullptr), scope(nullptr),
+      : pathname_ref(empty_pathname_ptr()), current_directory(cwd), master(nullptr), scope(nullptr),
         linenum(0), errors(0), count(0), sequence(1) {}
 
+  explicit parse_context_t(std::shared_ptr<std::istream> _stream, const path& cwd)
+      : stream(std::move(_stream)), pathname_ref(empty_pathname_ptr()), current_directory(cwd),
+        master(nullptr), scope(nullptr), linenum(0), errors(0), count(0), sequence(1) {}
+
   parse_context_t(const parse_context_t& context)
-      : stream(context.stream), pathname(context.pathname),
+      : stream(context.stream), pathname(context.pathname), pathname_ref(context.pathname_ref),
         current_directory(context.current_directory), journal(context.journal),
         master(context.master), scope(context.scope), linebuf(context.linebuf),
         line_beg_pos(context.line_beg_pos), curr_pos(context.curr_pos), linenum(context.linenum),
@@ -151,6 +155,7 @@ inline parse_context_t open_for_reading(const path& pathname, const path& cwd) {
 #endif
   parse_context_t context(stream, parent);
   context.pathname = filename;
+  context.pathname_ref = std::make_shared<const path>(filename);
   return context;
 }
 

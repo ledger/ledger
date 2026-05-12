@@ -167,7 +167,7 @@ xact_t* csv_reader::read_xact(bool rich_data) {
   xact->set_state(item_t::CLEARED);
 
   xact->pos = position_t();
-  xact->pos->pathname = context.pathname;
+  xact->pos->pathname = context.pathname_ref;
   xact->pos->beg_pos = context.stream->tellg();
   xact->pos->beg_line = context.linenum;
   xact->pos->sequence = context.sequence++;
@@ -175,7 +175,7 @@ xact_t* csv_reader::read_xact(bool rich_data) {
   post->xact = xact.get();
 
   post->pos = position_t();
-  post->pos->pathname = context.pathname;
+  post->pos->pathname = context.pathname_ref;
   post->pos->beg_pos = context.stream->tellg();
   post->pos->beg_line = context.linenum;
   post->pos->sequence = context.sequence++;
@@ -319,7 +319,7 @@ xact_t* csv_reader::read_xact(bool rich_data) {
   post->xact = xact.get();
 
   post->pos = position_t();
-  post->pos->pathname = context.pathname;
+  post->pos->pathname = context.pathname_ref;
   post->pos->beg_pos = context.stream->tellg();
   post->pos->beg_line = context.linenum;
   post->pos->sequence = context.sequence++;

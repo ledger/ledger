@@ -157,21 +157,21 @@ value_t item_get_tag(call_scope_t& args) {
 
 value_t get_pathname(item_t& item) {
   if (item.pos)
-    return string_value(item.pos->pathname.string());
+    return string_value(item.pos->pathname->string());
   else
     return NULL_VALUE;
 }
 
 value_t get_filebase(item_t& item) {
   if (item.pos)
-    return string_value(item.pos->pathname.filename().string());
+    return string_value(item.pos->pathname->filename().string());
   else
     return NULL_VALUE;
 }
 
 value_t get_filepath(item_t& item) {
   if (item.pos)
-    return string_value(item.pos->pathname.parent_path().string());
+    return string_value(item.pos->pathname->parent_path().string());
   else
     return NULL_VALUE;
 }
@@ -448,12 +448,12 @@ bool item_t::valid() const {
 /** @brief Re-read and print the original source text of an item. */
 void print_item(std::ostream& out, const item_t& item, const string& prefix) {
   if (!prefix.empty()) {
-    out << source_context(item.pos->pathname, item.pos->beg_pos, item.pos->end_pos, prefix);
+    out << source_context(*item.pos->pathname, item.pos->beg_pos, item.pos->end_pos, prefix);
     return;
   }
 
   // Raw printing: stream source directly without any size limit.
-  if (!item.pos || item.pos->pathname.empty())
+  if (!item.pos || item.pos->pathname->empty())
     return;
 
   const std::streamoff len = item.pos->end_pos - item.pos->beg_pos;
@@ -462,9 +462,9 @@ void print_item(std::ostream& out, const item_t& item, const string& prefix) {
 
   std::unique_ptr<std::istream> in(
 #if HAVE_GPGME
-      decrypted_stream_t::open_stream(item.pos->pathname)
+      decrypted_stream_t::open_stream(*item.pos->pathname)
 #else
-      new ifstream(item.pos->pathname, std::ios::binary)
+      new ifstream(*item.pos->pathname, std::ios::binary)
 #endif
   );
 
@@ -529,12 +529,12 @@ string item_context(const item_t& item, const string& desc) {
 
   std::ostringstream out;
 
-  if (item.pos->pathname.empty()) {
+  if (item.pos->pathname->empty()) {
     out << desc << _(" from streamed input:");
     return out.str();
   }
 
-  out << desc << _(" from \"") << item.pos->pathname.string() << "\"";
+  out << desc << _(" from \"") << item.pos->pathname->string() << "\"";
 
   if (item.pos->beg_line != item.pos->end_line)
     out << _(", lines ") << item.pos->beg_line << "-" << item.pos->end_line << ":\n";

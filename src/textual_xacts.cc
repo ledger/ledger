@@ -220,7 +220,7 @@ void instance_t::automated_xact_directive(char* line) {
 
     unique_ptr<auto_xact_t> ae(new auto_xact_t(predicate_t(expr, keeper), xact_name));
     ae->pos = position_t();
-    ae->pos->pathname = context.pathname;
+    ae->pos->pathname = context.pathname_ref;
     ae->pos->beg_pos = context.line_beg_pos;
     ae->pos->beg_line = context.linenum;
     ae->pos->sequence = context.sequence++;
@@ -302,7 +302,7 @@ void instance_t::period_xact_directive(char* line) {
 
     unique_ptr<period_xact_t> pe(new period_xact_t(skip_ws(line + 1)));
     pe->pos = position_t();
-    pe->pos->pathname = context.pathname;
+    pe->pos->pathname = context.pathname_ref;
     pe->pos->beg_pos = context.line_beg_pos;
     pe->pos->beg_line = context.linenum;
     pe->pos->sequence = context.sequence++;
@@ -489,7 +489,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
 
   post->xact = xact; // this could be NULL (for automated/period xacts)
   post->pos = position_t();
-  post->pos->pathname = context.pathname;
+  post->pos->pathname = context.pathname_ref;
   post->pos->beg_pos = context.line_beg_pos;
   post->pos->beg_line = context.linenum;
   post->pos->sequence = context.sequence++;
@@ -970,7 +970,7 @@ xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* accou
   unique_ptr<xact_t> xact(new xact_t);
 
   xact->pos = position_t();
-  xact->pos->pathname = context.pathname;
+  xact->pos->pathname = context.pathname_ref;
   xact->pos->beg_pos = context.line_beg_pos;
   xact->pos->beg_line = context.linenum;
   xact->pos->sequence = context.sequence++;
@@ -1211,7 +1211,7 @@ xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* accou
     if (reveal_context) {
       add_error_context(_("While parsing transaction:"));
       add_error_context(
-          source_context(xact->pos->pathname, xact->pos->beg_pos, context.curr_pos, "> "));
+          source_context(*xact->pos->pathname, xact->pos->beg_pos, context.curr_pos, "> "));
     }
     throw;
   }
