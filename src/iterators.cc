@@ -108,6 +108,14 @@ struct create_price_xact {
 
   std::map<string, xact_t*> xacts_by_commodity; ///< One xact per commodity symbol.
 
+  // Per xact, an index of already-inserted (date, amount) pairs, used to
+  // deduplicate in O(log) instead of a linear scan of xact->posts.  A single
+  // xact for a popular price commodity (e.g. the reporting currency) can
+  // accumulate every parsed price, so the prior O(N) scan made the overall
+  // synthesis O(N^2) -- with the inner `date.date()` ptime->date conversion
+  // dominating cost.
+  std::map<string, std::map<date_t, std::vector<amount_t>>> seen_by_commodity;
+
   create_price_xact(journal_t& _journal, account_t* _account, temporaries_t& _temps,
                     xacts_list& _xact_temps)
       : journal(_journal), account(_account), temps(_temps), xact_temps(_xact_temps) {
@@ -119,6 +127,7 @@ struct create_price_xact {
   void operator()(const datetime_t& date, const amount_t& price) {
     xact_t* xact;
     string symbol = price.commodity().symbol();
+    date_t d = date.date();
 
     if (auto i = xacts_by_commodity.find(symbol); i != xacts_by_commodity.end()) {
       xact = (*i).second;
@@ -126,16 +135,16 @@ struct create_price_xact {
       xact = &temps.create_xact();
       xact_temps.push_back(xact);
       xact->payee = symbol;
-      xact->_date = date.date();
+      xact->_date = d;
       xact->_state = item_t::CLEARED;
       xacts_by_commodity.insert(std::pair<string, xact_t*>(symbol, xact));
       xact->journal = &journal;
     }
 
+    std::vector<amount_t>& seen_amounts = seen_by_commodity[symbol][d];
     bool post_already_exists = false;
-
-    for (post_t* post : xact->posts) {
-      if (post->date() == date.date() && post->amount == price) {
+    for (const amount_t& a : seen_amounts) {
+      if (a == price) {
         post_already_exists = true;
         break;
       }
@@ -143,11 +152,13 @@ struct create_price_xact {
 
     if (!post_already_exists) {
       post_t& temp = temps.create_post(*xact, account);
-      temp._date = date.date();
+      temp._date = d;
       temp.amount = price;
       temp._state = item_t::CLEARED;
 
       temp.xdata().datetime = date;
+
+      seen_amounts.push_back(price);
     }
   }
 };
