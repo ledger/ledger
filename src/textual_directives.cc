@@ -99,7 +99,7 @@ void instance_t::clock_in_directive(char* line, bool capitalized) {
     end = nullptr;
 
   position_t position;
-  position.pathname = context.pathname;
+  position.pathname = context.pathname_ref;
   position.beg_pos = context.line_beg_pos;
   position.beg_line = context.linenum;
   position.end_pos = context.curr_pos;
@@ -128,7 +128,7 @@ void instance_t::clock_out_directive(char* line, bool capitalized) {
     end = nullptr;
 
   position_t position;
-  position.pathname = context.pathname;
+  position.pathname = context.pathname_ref;
   position.beg_pos = context.line_beg_pos;
   position.beg_line = context.linenum;
   position.end_pos = context.curr_pos;
@@ -665,7 +665,7 @@ void instance_t::account_directive_body(char* line, account_t* parent, std::size
         ae.reset(new auto_xact_t(pred));
 
         ae->pos = position_t();
-        ae->pos->pathname = context.pathname;
+        ae->pos->pathname = context.pathname_ref;
         ae->pos->beg_pos = beg_pos;
         ae->pos->beg_line = beg_linenum;
         ae->pos->sequence = context.sequence++;

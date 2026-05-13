@@ -480,11 +480,14 @@ void check_all_metadata(journal_t& journal, std::variant<int, xact_t*, post_t*> 
     item_t* item = xact ? static_cast<item_t*>(xact) : static_cast<item_t*>(post);
 
     path saved_pathname;
+    std::shared_ptr<const path> saved_pathname_ref;
     std::size_t saved_linenum = 0;
     if (journal.current_context && item->pos) {
       saved_pathname = journal.current_context->pathname;
+      saved_pathname_ref = journal.current_context->pathname_ref;
       saved_linenum = journal.current_context->linenum;
-      journal.current_context->pathname = item->pos->pathname;
+      journal.current_context->pathname = *item->pos->pathname;
+      journal.current_context->pathname_ref = item->pos->pathname;
       journal.current_context->linenum = item->pos->beg_line;
     }
 
@@ -500,6 +503,7 @@ void check_all_metadata(journal_t& journal, std::variant<int, xact_t*, post_t*> 
 
     if (journal.current_context && item->pos) {
       journal.current_context->pathname = saved_pathname;
+      journal.current_context->pathname_ref = saved_pathname_ref;
       journal.current_context->linenum = saved_linenum;
     }
   }
@@ -594,10 +598,10 @@ bool journal_t::add_xact(xact_t* xact) {
       if (!match || this_posts.size() != other_posts.size()) {
         add_error_context(_("While comparing this previously seen transaction:"));
         add_error_context(
-            source_context(other->pos->pathname, other->pos->beg_pos, other->pos->end_pos, "> "));
+            source_context(*other->pos->pathname, other->pos->beg_pos, other->pos->end_pos, "> "));
         add_error_context(_("to this later transaction:"));
         add_error_context(
-            source_context(xact->pos->pathname, xact->pos->beg_pos, xact->pos->end_pos, "> "));
+            source_context(*xact->pos->pathname, xact->pos->beg_pos, xact->pos->end_pos, "> "));
         throw_(std::runtime_error,
                _f("Transactions with the same UUID must have equivalent postings"));
       }

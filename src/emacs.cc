@@ -62,7 +62,8 @@ namespace ledger {
 
 void format_emacs_posts::write_xact(xact_t& xact) {
   if (xact.pos)
-    out << "\"" << escape_string(xact.pos->pathname.string()) << "\" " << xact.pos->beg_line << " ";
+    out << "\"" << escape_string(xact.pos->pathname->string()) << "\" " << xact.pos->beg_line
+        << " ";
   else
     out << "\"\" " << -1 << " ";
 

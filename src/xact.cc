@@ -1484,11 +1484,11 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
                 if (pair.second == expr_t::EXPR_ASSERTION)
                   throw_(parse_error, _f("Transaction assertion failed: %1%") % pair.first);
                 else
-                  warning_func((xact.pos ? file_context(xact.pos->pathname, xact.pos->beg_line)
+                  warning_func((xact.pos ? file_context(*xact.pos->pathname, xact.pos->beg_line)
                                          : context.location()) +
                                " " + (_f("Transaction check failed: %1%") % pair.first).str() +
                                (pos ? "\n  " + (_f("(check expression at \"%1%\", line %2%)") %
-                                                pos->pathname.string() % pos->beg_line)
+                                                pos->pathname->string() % pos->beg_line)
                                                    .str()
                                     : ""));
               }
@@ -1704,11 +1704,11 @@ void auto_xact_t::apply_checks_to_post(post_t& initial_post, parse_context_t& co
           throw_(parse_error, _f("Transaction assertion failed: %1%") % pair.first);
         else
           warning_func((parent_xact && parent_xact->pos
-                            ? file_context(parent_xact->pos->pathname, parent_xact->pos->beg_line)
+                            ? file_context(*parent_xact->pos->pathname, parent_xact->pos->beg_line)
                             : context.location()) +
                        " " + (_f("Transaction check failed: %1%") % pair.first).str() +
                        (pos ? "\n  " + (_f("(check expression at \"%1%\", line %2%)") %
-                                        pos->pathname.string() % pos->beg_line)
+                                        pos->pathname->string() % pos->beg_line)
                                            .str()
                             : ""));
       }

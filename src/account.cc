@@ -922,7 +922,7 @@ void account_t::xdata_t::details_t::update(post_t& post, bool gather_all) {
     posts_virtuals_count++;
 
   if (gather_all && post.pos)
-    filenames.insert(post.pos->pathname);
+    filenames.insert(*post.pos->pathname);
 
   date_t date = post.date();
   date_t today = CURRENT_DATE();

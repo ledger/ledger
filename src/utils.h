@@ -90,6 +90,15 @@ using path = std::filesystem::path;                         ///< Filesystem path
 using ifstream = std::ifstream;                             ///< Input file stream
 using ofstream = std::ofstream;                             ///< Output file stream
 using filesystem_error = std::filesystem::filesystem_error; ///< Filesystem error
+
+/// Shared sentinel pathname (an empty path) used as the default for
+/// position_t::pathname and parse_context_t::pathname_ref.  Sharing one
+/// allocation lets every default-initialized item dereference the pointer
+/// unconditionally without per-item null checks.
+inline const std::shared_ptr<const path>& empty_pathname_ptr() {
+  static const std::shared_ptr<const path> ref = std::make_shared<const path>();
+  return ref;
+}
 } // namespace ledger
 
 /*@}*/

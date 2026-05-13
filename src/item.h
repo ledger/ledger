@@ -75,14 +75,20 @@ namespace ledger {
  * across all items parsed during a session.
  */
 struct position_t {
-  path pathname;                  ///< Filesystem path of the journal file.
+  /// Filesystem path of the journal file.  Held by shared_ptr so that all
+  /// items parsed from the same file share a single allocation rather than
+  /// each carrying its own copy (issue: ~3 M redundant path copies for a
+  /// 1 M-xact journal).  Always non-null; defaults to empty_pathname_ptr().
+  std::shared_ptr<const path> pathname;
   std::istream::pos_type beg_pos; ///< Stream offset where the item begins.
   std::size_t beg_line;           ///< Line number where the item begins (1-based).
   std::istream::pos_type end_pos; ///< Stream offset just past the item's last byte.
   std::size_t end_line;           ///< Line number where the item ends (inclusive).
   std::size_t sequence;           ///< Global parse-order sequence number.
 
-  position_t() : beg_pos(0), beg_line(0), end_pos(0), end_line(0), sequence(0) {
+  position_t()
+      : pathname(empty_pathname_ptr()), beg_pos(0), beg_line(0), end_pos(0), end_line(0),
+        sequence(0) {
     TRACE_CTOR(position_t, "");
   }
   position_t(const position_t& pos) {
