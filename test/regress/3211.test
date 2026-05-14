@@ -1,0 +1,144 @@
+; Regression test for issue #3211: feature request for --display-account and
+; account-name manipulation helpers (account_prefix, account_suffix,
+; account_skip_prefix, account_skip_suffix).
+;
+; --display-account works like --display-amount and --display-total: its
+; value expression replaces the per-posting account name in format strings
+; (register, csv, etc.).  Virtual-posting wrappers ('()' or '[]') are still
+; applied to the transformed name.
+;
+; The four account_* helpers split an account name on ':' and rejoin the
+; selected components.  Negative counts are clamped to zero; counts larger
+; than the depth are clamped to the depth.
+
+2024/01/15 Acme
+    Assets:Bank:Checking    $-50.00
+    Expenses:Food:Coffee     $50.00
+
+2024/01/20 Coffee Shop
+    Assets:Bank:Checking    $-10.00
+    Expenses:Food:Dining     $10.00
+
+2024/02/01 Salary
+    Assets:Bank:Savings     $1000.00
+    Income:Salary          $-1000.00
+
+2024/02/05 Virtual move
+    (Assets:Bank:Checking)  $-25.00
+    Expenses:Food:Dining     $25.00
+    Assets:Cash             $-25.00
+
+test reg --display-account='account_prefix(account, 2)'
+24-Jan-15 Acme                  Assets:Bank                 $-50.00      $-50.00
+                                Expenses:Food                $50.00            0
+24-Jan-20 Coffee Shop           Assets:Bank                 $-10.00      $-10.00
+                                Expenses:Food                $10.00            0
+24-Feb-01 Salary                Assets:Bank                $1000.00     $1000.00
+                                Income:Salary             $-1000.00            0
+24-Feb-05 Virtual move          (Assets:Bank)               $-25.00      $-25.00
+                                Expenses:Food                $25.00            0
+                                Assets:Cash                 $-25.00      $-25.00
+end test
+
+test reg --display-account='account_skip_prefix(account, 1)'
+24-Jan-15 Acme                  Bank:Checking               $-50.00      $-50.00
+                                Food:Coffee                  $50.00            0
+24-Jan-20 Coffee Shop           Bank:Checking               $-10.00      $-10.00
+                                Food:Dining                  $10.00            0
+24-Feb-01 Salary                Bank:Savings               $1000.00     $1000.00
+                                Salary                    $-1000.00            0
+24-Feb-05 Virtual move          (Bank:Checking)             $-25.00      $-25.00
+                                Food:Dining                  $25.00            0
+                                Cash                        $-25.00      $-25.00
+end test
+
+test reg --display-account='account_suffix(account, 1)'
+24-Jan-15 Acme                  Checking                    $-50.00      $-50.00
+                                Coffee                       $50.00            0
+24-Jan-20 Coffee Shop           Checking                    $-10.00      $-10.00
+                                Dining                       $10.00            0
+24-Feb-01 Salary                Savings                    $1000.00     $1000.00
+                                Salary                    $-1000.00            0
+24-Feb-05 Virtual move          (Checking)                  $-25.00      $-25.00
+                                Dining                       $25.00            0
+                                Cash                        $-25.00      $-25.00
+end test
+
+test reg --display-account='account_skip_suffix(account, 1)'
+24-Jan-15 Acme                  Assets:Bank                 $-50.00      $-50.00
+                                Expenses:Food                $50.00            0
+24-Jan-20 Coffee Shop           Assets:Bank                 $-10.00      $-10.00
+                                Expenses:Food                $10.00            0
+24-Feb-01 Salary                Assets:Bank                $1000.00     $1000.00
+                                Income                    $-1000.00            0
+24-Feb-05 Virtual move          (Assets:Bank)               $-25.00      $-25.00
+                                Expenses:Food                $25.00            0
+                                Assets                      $-25.00      $-25.00
+end test
+
+; Edge case: count of 0 returns empty string for prefix/suffix, and original
+; for skip_prefix/skip_suffix.
+test reg --display-account='account_prefix(account, 0)'
+24-Jan-15 Acme                                              $-50.00      $-50.00
+                                                             $50.00            0
+24-Jan-20 Coffee Shop                                       $-10.00      $-10.00
+                                                             $10.00            0
+24-Feb-01 Salary                                           $1000.00     $1000.00
+                                                          $-1000.00            0
+24-Feb-05 Virtual move          ()                          $-25.00      $-25.00
+                                                             $25.00            0
+                                                            $-25.00      $-25.00
+end test
+
+; Edge case: count larger than depth is clamped to depth (full name).
+test reg --display-account='account_prefix(account, 10)'
+24-Jan-15 Acme                  Assets:Bank:Checking        $-50.00      $-50.00
+                                Expenses:Food:Coffee         $50.00            0
+24-Jan-20 Coffee Shop           Assets:Bank:Checking        $-10.00      $-10.00
+                                Expenses:Food:Dining         $10.00            0
+24-Feb-01 Salary                Assets:Bank:Savings        $1000.00     $1000.00
+                                Income:Salary             $-1000.00            0
+24-Feb-05 Virtual move          (Assets:Bank:Checking)      $-25.00      $-25.00
+                                Expenses:Food:Dining         $25.00            0
+                                Assets:Cash                 $-25.00      $-25.00
+end test
+
+; The helpers are also usable in arbitrary format strings.
+test reg --format "%-20(account_skip_prefix(account, 2)) %(scrub(display_amount))\n"
+Checking             $-50.00
+Coffee               $50.00
+Checking             $-10.00
+Dining               $10.00
+Savings              $1000.00
+                     $-1000.00
+Checking             $-25.00
+Dining               $25.00
+                     $-25.00
+end test
+
+; Default behavior (no --display-account) is unchanged.
+test reg
+24-Jan-15 Acme                  Assets:Bank:Checking        $-50.00      $-50.00
+                                Expenses:Food:Coffee         $50.00            0
+24-Jan-20 Coffee Shop           Assets:Bank:Checking        $-10.00      $-10.00
+                                Expenses:Food:Dining         $10.00            0
+24-Feb-01 Salary                Assets:Bank:Savings        $1000.00     $1000.00
+                                Income:Salary             $-1000.00            0
+24-Feb-05 Virtual move          (Assets:Bank:Checking)      $-25.00      $-25.00
+                                Expenses:Food:Dining         $25.00            0
+                                Assets:Cash                 $-25.00      $-25.00
+end test
+
+; --display-account also affects the csv command, since the default csv
+; format string also uses `display_account`.
+test csv --display-account='account_skip_prefix(account, 1)'
+"2024/01/15","","Acme","Bank:Checking","$","-50","",""
+"2024/01/15","","Acme","Food:Coffee","$","50","",""
+"2024/01/20","","Coffee Shop","Bank:Checking","$","-10","",""
+"2024/01/20","","Coffee Shop","Food:Dining","$","10","",""
+"2024/02/01","","Salary","Bank:Savings","$","1000","",""
+"2024/02/01","","Salary","Salary","$","-1000","",""
+"2024/02/05","","Virtual move","(Bank:Checking)","$","-25","",""
+"2024/02/05","","Virtual move","Food:Dining","$","25","",""
+"2024/02/05","","Virtual move","Cash","$","-25","",""
+end test
