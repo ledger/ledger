@@ -858,6 +858,10 @@ value_t report_t::fn_display_total(call_scope_t& scope) {
   return HANDLER(display_total_).expr.calc(scope);
 }
 
+value_t report_t::fn_display_account(call_scope_t& scope) {
+  return HANDLER(display_account_).expr.calc(scope);
+}
+
 value_t report_t::fn_should_bold(call_scope_t& scope) {
   if (HANDLED(bold_if_))
     return HANDLER(bold_if_).expr.calc(scope);
@@ -1204,6 +1208,77 @@ value_t report_t::fn_join(call_scope_t& args) {
       out << "\\n";
   }
   return string_value(out.str());
+}
+
+namespace {
+/// Split a colon-separated account name into its components.
+std::vector<string> split_account_name(const string& name) {
+  std::vector<string> parts;
+  string::size_type start = 0;
+  while (start <= name.size()) {
+    string::size_type pos = name.find(':', start);
+    if (pos == string::npos) {
+      parts.push_back(name.substr(start));
+      break;
+    }
+    parts.push_back(name.substr(start, pos - start));
+    start = pos + 1;
+  }
+  return parts;
+}
+
+/// Rejoin components with ':' separators.
+string join_account_name(const std::vector<string>& parts, std::size_t begin, std::size_t end) {
+  string result;
+  for (std::size_t i = begin; i < end; ++i) {
+    if (i > begin)
+      result += ':';
+    result += parts[i];
+  }
+  return result;
+}
+
+/// Read the count argument for an account_* helper; clamp negatives to zero.
+std::size_t account_count_arg(call_scope_t& args) {
+  long n = args.get<long>(1);
+  return n < 0 ? 0 : static_cast<std::size_t>(n);
+}
+} // namespace
+
+value_t report_t::fn_account_prefix(call_scope_t& args) {
+  string name(args.get<string>(0)); // NOLINT(bugprone-unused-local-non-trivial-variable)
+  std::size_t n = account_count_arg(args);
+  std::vector<string> parts = split_account_name(name);
+  if (n > parts.size())
+    n = parts.size();
+  return string_value(join_account_name(parts, 0, n));
+}
+
+value_t report_t::fn_account_suffix(call_scope_t& args) {
+  string name(args.get<string>(0)); // NOLINT(bugprone-unused-local-non-trivial-variable)
+  std::size_t n = account_count_arg(args);
+  std::vector<string> parts = split_account_name(name);
+  if (n > parts.size())
+    n = parts.size();
+  return string_value(join_account_name(parts, parts.size() - n, parts.size()));
+}
+
+value_t report_t::fn_account_skip_prefix(call_scope_t& args) {
+  string name(args.get<string>(0)); // NOLINT(bugprone-unused-local-non-trivial-variable)
+  std::size_t n = account_count_arg(args);
+  std::vector<string> parts = split_account_name(name);
+  if (n > parts.size())
+    n = parts.size();
+  return string_value(join_account_name(parts, n, parts.size()));
+}
+
+value_t report_t::fn_account_skip_suffix(call_scope_t& args) {
+  string name(args.get<string>(0)); // NOLINT(bugprone-unused-local-non-trivial-variable)
+  std::size_t n = account_count_arg(args);
+  std::vector<string> parts = split_account_name(name);
+  if (n > parts.size())
+    n = parts.size();
+  return string_value(join_account_name(parts, 0, parts.size() - n));
 }
 
 value_t report_t::fn_format_date(call_scope_t& args) {
@@ -1625,6 +1700,7 @@ option_t<report_t>* report_t::lookup_option(const char* p) {
     else OPT(deviation);
     else OPT_ALT(rich_data, detail);
     else OPT_(display_);
+    else OPT(display_account_);
     else OPT(display_amount_);
     else OPT(display_total_);
     else OPT_ALT(dow, days_of_week);
@@ -1849,6 +1925,14 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
         return MAKE_FUNCTOR(report_t::fn_abs);
       else if (is_eq(p, "averaged_lots"))
         return MAKE_FUNCTOR(report_t::fn_averaged_lots);
+      else if (is_eq(p, "account_prefix"))
+        return MAKE_FUNCTOR(report_t::fn_account_prefix);
+      else if (is_eq(p, "account_suffix"))
+        return MAKE_FUNCTOR(report_t::fn_account_suffix);
+      else if (is_eq(p, "account_skip_prefix"))
+        return MAKE_FUNCTOR(report_t::fn_account_skip_prefix);
+      else if (is_eq(p, "account_skip_suffix"))
+        return MAKE_FUNCTOR(report_t::fn_account_skip_suffix);
       break;
 
     case 'b':
@@ -1880,6 +1964,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
         return MAKE_FUNCTOR(report_t::fn_display_amount);
       else if (is_eq(p, "display_total"))
         return MAKE_FUNCTOR(report_t::fn_display_total);
+      else if (is_eq(p, "display_account"))
+        return MAKE_FUNCTOR(report_t::fn_display_account);
       else if (is_eq(p, "date"))
         return MAKE_FUNCTOR(report_t::fn_today);
       break;

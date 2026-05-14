@@ -52,6 +52,7 @@
 #include "journal.h"
 #include "format.h"
 #include "pool.h"
+#include "report.h"
 
 namespace ledger {
 
@@ -575,9 +576,17 @@ value_t get_account(call_scope_t& args) {
  *
  * Virtual postings are wrapped in parentheses, balanced virtual postings
  * in brackets, matching the journal syntax the user originally wrote.
+ *
+ * If --display-account is set, the user-supplied expression is evaluated
+ * first to transform the account name (e.g., to drop a leading prefix);
+ * the virtual-posting wrappers are then applied to the transformed name.
  */
 value_t get_display_account(call_scope_t& args) {
-  value_t acct = get_account(args);
+  value_t acct;
+  if (report_t* report = search_scope<report_t>(&args))
+    acct = report->HANDLER(display_account_).expr.calc(args);
+  else
+    acct = get_account(args);
   if (acct.is_string()) {
     post_t& post(args.context<post_t>());
     if (post.has_flags(POST_VIRTUAL)) {
