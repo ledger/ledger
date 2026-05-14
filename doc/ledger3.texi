@@ -6921,6 +6921,7 @@ using FIFO or LIFO order.  @var{POLICY} must be @samp{fifo} or
 * Report Options::
 * Basic options::
 * Report filtering::
+* Search terms::
 * Output customization::
 * Commodity reporting::
 * Environment variables::
@@ -8300,7 +8301,7 @@ relate to.
 
 @end ftable
 
-@node Report filtering, Output customization, Basic options, Detailed Option Description
+@node Report filtering, Search terms, Basic options, Detailed Option Description
 @subsection Report filtering
 
 These options change which postings affect the outcome of a
@@ -8421,51 +8422,147 @@ Set the value expression used for the ``totals'' column in the
 
 @end ftable
 
-@c @node Search Terms, Output Customization, Report Filtering, Detailed Options Description
-@c @subsection Search Terms
+@node Search terms, Output customization, Report filtering, Detailed Option Description
+@subsection Search terms
 
-@c Valid Ledger invocations look like:
-@c @smallexample
-@c ledger [OPTIONS] <COMMAND> <SEARCH-TERMS>
-@c @end smallexample
+Valid Ledger invocations look like:
+@smallexample
+ledger [OPTIONS] <COMMAND> <SEARCH-TERMS>
+@end smallexample
 
-@c Where @code{COMMAND} is any command verb (@pxref{Reporting
-@c Commands}), @code{OPTIONS} can occur anywhere, and
-@c @code{SEARCH-TERM} is one or more of the following:
+Where @code{COMMAND} is any command verb (@pxref{Reporting
+Commands}), @code{OPTIONS} can occur anywhere, and
+@code{SEARCH-TERMS} is zero or more atoms drawn from the following
+table.  Atoms are combined with the boolean connectives shown in the
+``Composition'' rows.
 
-@c @smallexample
-@c word              search for any account containing 'word'
-@c TERM and TERM     boolean AND between terms
-@c TERM or TERM      boolean OR between terms
-@c not TERM          invert the meaning of the term
-@c payee word        search for any payee containing 'word'
-@c @@word            shorthand for 'payee word'
-@c desc word         alternate for 'payee word'
-@c note word         search for any note containing 'word'
-@c &word             shorthand for 'note word'
-@c tag word          search for any metadata tag containing 'word'
-@c tag word=value    search for any metadata tag containing 'word'
-@c                   whose value contains 'value'
-@c %word             shorthand for 'tag word'
-@c %word=value       shorthand for 'tag word=value'
-@c meta word         alternate for 'tag word'
-@c meta word=value   alternate for 'tag word=value'
-@c expr 'EXPR'       apply the given value expression as a predicate
-@c '=EXPR'           shorthand for 'expr EXPR'
-@c \( TERMS \)       group terms; useful if using and/or/not
-@c @end smallexample
+@multitable @columnfractions 0.32 0.68
+@headitem Atom @tab Meaning
 
-@c So, to list all transaction that charged to ``food'' but not
-@c ``dining'' for any payee other than ``chang'' the following three
-@c commands would be equivalent:
+@item @code{word}
+@tab Match any account whose name contains the regex @code{word}.
 
-@c @smallexample
-@c ledger reg food not dining @@chang
-@c ledger reg food and not dining and not payee chang
-@c ledger reg food not dining expr 'payee =~ /chang/'
-@c @end smallexample
+@item @code{/REGEX/}
+@tab Like a bare word, but explicitly delimited; useful when the
+pattern contains characters that the shorthand grammar would
+otherwise treat as operators.  Single quotes (@code{'REGEX'}) and
+double quotes (@code{"REGEX"}) work the same way.
 
-@node Output customization, Commodity reporting, Report filtering, Detailed Option Description
+@item @code{prefix(alt|alt)}
+@tab Once an identifier has started, a balanced parenthesized group
+is treated as part of the regex.  For example,
+@code{Invest:(Stock|Bond)} matches accounts whose names contain
+@code{Invest:Stock} or @code{Invest:Bond}, not all of @code{Invest:},
+@code{Stock}, and @code{Bond} separately.
+
+@item @code{payee WORD}
+@tab Match any payee whose description contains the regex @code{WORD}.
+@code{@@WORD} and @code{desc WORD} are aliases.
+
+@item @code{note WORD}
+@tab Match any note whose text contains the regex @code{WORD}.
+A leading @code{=WORD} at the start of an argument is a shorthand
+for @code{note WORD}.
+
+@item @code{code WORD}
+@tab Match any transaction code containing the regex @code{WORD}.
+@code{#WORD} is an alias.
+
+@item @code{tag WORD}
+@tab Match any metadata tag whose name contains the regex
+@code{WORD}.  @code{meta WORD} and @code{data WORD} are aliases.
+
+@item @code{tag WORD=VALUE}
+@tab Match any metadata tag whose name contains @code{WORD} and
+whose value matches the regex @code{VALUE}.  @code{%WORD=VALUE}
+is the @code{%}-shorthand for this form.
+
+@item @code{tag WORD==VALUE}
+@tab Match any metadata tag whose name contains @code{WORD} and
+whose value is exactly @code{VALUE} (string equality, not regex).
+
+@item @code{%WORD}
+@tab Shorthand for @code{tag WORD}.
+
+@item @code{expr 'EXPR'}
+@tab Apply the given value expression as a predicate.  Inside
+@code{EXPR}, @code{account}, @code{payee}, @code{note},
+@code{commodity}, and other functions are available.
+
+@end multitable
+
+@multitable @columnfractions 0.32 0.68
+@headitem Composition @tab Meaning
+
+@item @code{TERM and TERM}
+@tab Boolean AND.  @code{&} is an alias.
+
+@item @code{TERM or TERM}
+@tab Boolean OR.  @code{|} is an alias.
+
+@item @code{not TERM}
+@tab Invert the sense of @code{TERM}.  @code{!} is an alias.
+
+@item @code{( TERMS )}
+@tab Group terms together; useful when mixing @code{and}/@code{or}
+or when overriding the default precedence.  An opening @code{(} at
+the start of an argument begins a sub-expression; an @code{(} that
+appears in the middle of a bare-word identifier is treated as part
+of a regex group (see @code{prefix(alt|alt)} above).
+
+@item @code{show TERMS}
+@tab After the main predicate, @code{show TERMS} narrows which
+matching items are displayed (equivalent to @option{--display}).
+
+@item @code{only TERMS}
+@tab After the main predicate, @code{only TERMS} further filters
+which postings are retained (equivalent to @option{--only}).
+
+@item @code{bold TERMS}
+@tab Mark matching postings as bold in the output (equivalent
+to @option{--bold-if}).
+
+@item @code{for PERIOD}, @code{since DATE}, @code{until DATE}
+@tab Constrain the report to the given period (equivalent to
+@option{--period}).
+
+@end multitable
+
+To list all transactions that charged to ``food'' but not ``dining''
+for any payee other than ``chang'', the following three commands are
+equivalent:
+
+@smallexample
+ledger reg food not dining @@chang
+ledger reg food and not dining and not payee chang
+ledger reg food not dining expr 'payee =~ /chang/'
+@end smallexample
+
+To match account names that contain @code{Invest:Stock} or
+@code{Invest:Bond}, write the regex group inline:
+
+@smallexample
+ledger reg 'Invest:(Stock|Bond)'
+@end smallexample
+
+The same pattern is accepted in the predicate of an automated
+transaction:
+
+@smallexample
+= Invest:(Stock|Bond)
+    ; :BondsAndStocks:
+@end smallexample
+
+If you want to inspect how a particular search-term string is being
+parsed, use the @command{query} pre-command, which prints the
+expression tree that the search terms desugar to without running a
+report:
+
+@smallexample
+ledger query 'Invest:(Stock|Bond)'
+@end smallexample
+
+@node Output customization, Commodity reporting, Search terms, Detailed Option Description
 @subsection Output customization
 
 These options affect only the output, but not which postings are
