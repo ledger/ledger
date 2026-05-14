@@ -1,0 +1,62 @@
+; Regression test for issue #3206: a bare-word query pattern with an embedded
+; balanced `(...)` group should be treated as a single regex pattern, not split
+; into an `Invest:` term followed by a `(Stock|Bond)` boolean sub-expression.
+;
+; The user expects `ledger reg Invest:(Stock|Bond)` to match `Invest:Stock` and
+; `Invest:Bond` but not `Invest:Mutual`.  The same expectation applies to the
+; left-hand side of an automated-transaction directive.
+
+= Invest:(Stock|Bond)
+    ; :BondsAndStocks:
+
+2024/01/01 Investing
+    Assets:Invest:Stock      $100.00
+    Assets:Cash
+
+2024/01/02 Investing
+    Assets:Invest:Bond       $200.00
+    Assets:Cash
+
+2024/01/03 Investing
+    Assets:Invest:Mutual     $300.00
+    Assets:Cash
+
+; Bare command-line pattern with an embedded `(alt1|alt2)` regex group.
+test reg 'Invest:(Stock|Bond)'
+24-Jan-01 Investing             Assets:Invest:Stock         $100.00      $100.00
+24-Jan-02 Investing             Assets:Invest:Bond          $200.00      $300.00
+end test
+
+; The slash-delimited form must continue to work and give the same result.
+test reg '/Invest:(Stock|Bond)/'
+24-Jan-01 Investing             Assets:Invest:Stock         $100.00      $100.00
+24-Jan-02 Investing             Assets:Invest:Bond          $200.00      $300.00
+end test
+
+; A leading `(` is still a sub-expression boundary, so `(Stock|Bond)` parses
+; as a parenthesized boolean group with two account-name match terms.
+test reg '(Stock|Bond)'
+24-Jan-01 Investing             Assets:Invest:Stock         $100.00      $100.00
+24-Jan-02 Investing             Assets:Invest:Bond          $200.00      $300.00
+end test
+
+; An unbalanced opening `(` after identifier chars must still produce the
+; familiar "Missing ')'" diagnostic, not a regex-engine error.
+test reg 'Invest:(Stock' -> 1
+__ERROR__
+Error: Missing ')'
+end test
+
+; Nested groups inside the regex are honored.
+test reg 'Invest:((Stock)|Bond)'
+24-Jan-01 Investing             Assets:Invest:Stock         $100.00      $100.00
+24-Jan-02 Investing             Assets:Invest:Bond          $200.00      $300.00
+end test
+
+; The automated-transaction directive at the top of this file uses the same
+; bare-word regex pattern, so the `:BondsAndStocks:` tag must end up on the
+; Invest:Stock and Invest:Bond postings only.
+test reg %BondsAndStocks
+24-Jan-01 Investing             Assets:Invest:Stock         $100.00      $100.00
+24-Jan-02 Investing             Assets:Invest:Bond          $200.00      $300.00
+end test

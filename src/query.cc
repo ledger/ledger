@@ -162,6 +162,16 @@ query_t::lexer_t::token_t query_t::lexer_t::scan_quoted_pattern() {
   return token_t(token_t::TERM, pat);
 }
 
+/// True when @p ident is a query-language keyword that would consume the
+/// trailing `(` in its own way (e.g., `tag(name)` is a parenthesized tag-name
+/// mask, not a regex group inside a bare account pattern).
+static bool is_query_keyword(const string& ident) {
+  return ident == "and" || ident == "or" || ident == "not" || ident == "code" || ident == "desc" ||
+         ident == "payee" || ident == "note" || ident == "tag" || ident == "meta" ||
+         ident == "data" || ident == "show" || ident == "only" || ident == "bold" ||
+         ident == "for" || ident == "since" || ident == "until" || ident == "expr";
+}
+
 /// Accumulate a bare-word identifier from arg_i until an operator boundary
 /// character is reached or the argument string is exhausted.
 ///
@@ -174,10 +184,19 @@ query_t::lexer_t::token_t query_t::lexer_t::scan_quoted_pattern() {
 /// @param hit_boundary Set to true if scanning stopped at an operator
 ///                     boundary (arg_i points at the boundary char);
 ///                     false if the entire argument was consumed.
+///
+/// Bare-word patterns may embed a balanced parenthesized regex group: once
+/// an identifier has begun (and is not itself a query keyword), an `(`
+/// whose matching `)` lies within the same argument is treated as a regex
+/// grouping character rather than the start of a new sub-expression.  This
+/// lets `Invest:(Stock|Bond)` parse as a single account regex (#3206).
+/// Operator chars (`|`, `&`, etc.) inside such a group are likewise
+/// treated as regex metacharacters.
 string query_t::lexer_t::scan_identifier(token_t::kind_t tok_context, bool consume_next,
                                          bool& hit_boundary) {
   string ident;
   hit_boundary = false;
+  int paren_depth = 0; // Depth of regex-group parens currently inside `ident`.
 
   for (; arg_i != arg_end; ++arg_i) {
     switch (*arg_i) {
@@ -185,23 +204,69 @@ string query_t::lexer_t::scan_identifier(token_t::kind_t tok_context, bool consu
     case '\t':
     case '\n':
     case '\r':
-      if (!multiple_args && !consume_whitespace && !consume_next_arg)
+      // Inside an open regex group, whitespace is a literal char rather
+      // than a token boundary, so single-argument inputs like
+      // `Invest:(Stock | Bond)` still scan as a single pattern.
+      if (paren_depth == 0 && !multiple_args && !consume_whitespace && !consume_next_arg)
         hit_boundary = true;
       else
         ident.push_back(*arg_i);
       break;
 
     case ')':
-      if (unbalanced_braces(ident))
-        consume_next = true;
-      if (!consume_next) {
-        hit_boundary = true;
-      } else {
+      if (paren_depth > 0) {
+        // Closing a regex group that began earlier in this identifier.
+        --paren_depth;
         ident.push_back(*arg_i);
+      } else {
+        if (unbalanced_braces(ident))
+          consume_next = true;
+        if (!consume_next) {
+          hit_boundary = true;
+        } else {
+          ident.push_back(*arg_i);
+        }
       }
       break;
 
     case '(':
+      // When we have already begun an identifier and the preceding char is
+      // not whitespace, treat `(` as a regex grouping char if (and only if)
+      // a balanced `)` lies later in the same argument (and is not blocked
+      // by whitespace in single-argument mode).  Without the balance check
+      // we would silently swallow a stray `(` and turn a missing-close-paren
+      // typo into a regex compile error.  Query-language keywords (`tag`,
+      // `payee`, etc.) are excluded so that `tag(name)` continues to flow
+      // through the parser's TOK_META LPAREN handler.
+      if (!ident.empty() && ident.back() != ' ' && ident.back() != '\t' && ident.back() != '\n' &&
+          ident.back() != '\r' && !is_query_keyword(ident)) {
+        int look_depth = 1;
+        bool balanced = false;
+        for (auto p = arg_i + 1; p != arg_end; ++p) {
+          if (*p == '(') {
+            ++look_depth;
+          } else if (*p == ')') {
+            if (--look_depth == 0) {
+              balanced = true;
+              break;
+            }
+          } else if (!multiple_args && !consume_whitespace &&
+                     (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r')) {
+            break;
+          }
+        }
+        if (balanced) {
+          ++paren_depth;
+          ident.push_back(*arg_i);
+          break;
+        }
+      }
+      if (!consume_next && tok_context != token_t::TOK_EXPR)
+        hit_boundary = true;
+      else
+        ident.push_back(*arg_i);
+      break;
+
     case '&':
     case '|':
     case '!':
@@ -209,11 +274,12 @@ string query_t::lexer_t::scan_identifier(token_t::kind_t tok_context, bool consu
     case '#':
     case '%':
     case '=':
-      if (!consume_next && tok_context != token_t::TOK_EXPR) {
-        hit_boundary = true;
-      } else {
+      // Inside an open regex group, these operator chars are literal regex
+      // metacharacters rather than boolean query operators.
+      if (paren_depth > 0 || consume_next || tok_context == token_t::TOK_EXPR)
         ident.push_back(*arg_i);
-      }
+      else
+        hit_boundary = true;
       break;
 
     default:
