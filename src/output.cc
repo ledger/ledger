@@ -341,6 +341,12 @@ void format_accounts::flush() {
   }
 
   out.flush();
+
+  // Drop queued accounts so subsequent group flushes (--group-by) don't see
+  // stale pointers.  Without this, accounts created by transfer_details that
+  // are torn down by post_chain->clear() between groups would leave dangling
+  // entries in posted_accounts, crashing the next group's flush (#3207).
+  posted_accounts.clear();
 }
 
 void format_accounts::operator()(account_t& account) {

@@ -74,6 +74,13 @@ void post_splitter::print_title(const value_t& val) {
  * forwarded through the post_chain, which is flushed and optionally cleared
  * (unless --group-by-cumulative is active, which preserves running totals
  * across groups).
+ *
+ * The postflush callback runs before post_chain->clear() so that an
+ * accounts-report flusher can walk the account tree while any temporary
+ * postings created by transfer_details (--payee, --account, --date) are
+ * still attached to their accounts.  Calling clear() first would remove
+ * those temps via temporaries_t::clear(), leaving the account totals
+ * at zero for the group (issue #3207).
  */
 void post_splitter::flush() {
   bool cumulative = report.HANDLED(group_by_cumulative);
@@ -86,13 +93,13 @@ void post_splitter::flush() {
 
     post_chain->flush();
 
+    if (postflush_func)
+      (*postflush_func)(pair.first);
+
     // In cumulative mode, don't clear the chain state between groups
     // so that account totals accumulate across groups.
     if (!cumulative)
       post_chain->clear();
-
-    if (postflush_func)
-      (*postflush_func)(pair.first);
   }
 }
 

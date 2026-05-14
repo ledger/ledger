@@ -1,0 +1,84 @@
+; Regression test for issue #3207: `balance --group-by` produced empty output
+; whenever `--payee`, `--account`, or `--date` was also active (a common case
+; when one of those options is set in `.ledgerrc`).
+;
+; Root cause: post_splitter::flush() called post_chain->clear() before the
+; postflush callback.  clear() propagates through transfer_details::clear()
+; into temporaries_t::clear(), which removes the temporary postings it
+; created from their (non-temp) account's post list.  When the accounts
+; flusher then walked the master account tree, account_t::amount() found
+; no posts with POST_EXT_VISITED and returned zero, so display_value() was
+; falsy and no rows were emitted.  Moving the postflush callback ahead of
+; clear() lets the flusher see the temp postings while they are still
+; attached to their accounts.
+
+2026-01-01 buy
+    Food   100 USD
+    Cash  -100 USD
+
+2026-01-02 sell
+    Misc    50 USD
+    Cash   -50 USD
+
+test bal --payee payee --group-by account
+Cash
+            -150 USD  Cash
+
+Food
+             100 USD  Food
+
+Misc
+              50 USD  Misc
+end test
+
+test bal --account '"X"' --group-by account
+Cash
+            -150 USD  X:Cash
+
+Food
+             100 USD  X:Food
+
+Misc
+              50 USD  X:Misc
+end test
+
+test bal --date 'date' --group-by account
+Cash
+            -150 USD  Cash
+
+Food
+             100 USD  Food
+
+Misc
+              50 USD  Misc
+end test
+
+test bal --payee payee --group-by account --group-by-cumulative
+Cash
+            -150 USD  Cash
+
+Food
+            -150 USD  Cash
+             100 USD  Food
+--------------------
+             -50 USD
+
+Misc
+            -150 USD  Cash
+             100 USD  Food
+              50 USD  Misc
+--------------------
+                   0
+end test
+
+test reg --payee payee --group-by account
+Cash
+26-Jan-01 buy                   Cash                       -100 USD     -100 USD
+26-Jan-02 sell                  Cash                        -50 USD     -150 USD
+
+Food
+26-Jan-01 buy                   Food                        100 USD      100 USD
+
+Misc
+26-Jan-02 sell                  Misc                         50 USD       50 USD
+end test
