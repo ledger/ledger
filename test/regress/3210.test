@@ -1,0 +1,110 @@
+; Regression test for issue #3210: --pivot-only doesn't work with built-in
+; properties.
+; https://github.com/ledger/ledger/issues/3210
+;
+; --pivot-only replaces the original account name entirely with the pivot
+; expression's value.  When the pivot key is a built-in property like
+; `commodity` or `account_base`, every posting evaluates to a non-empty
+; value, so every posting gets renamed.  Command-line account queries
+; (e.g. `bal Assets --pivot-only commodity`) must filter the pre-pivot
+; postings; otherwise the original "Assets" hierarchy is gone by the time
+; the filter sees the postings and the report is empty.  --pivot-only's
+; filter is now evaluated before the rename, so the query matches the
+; original account names.
+
+2026-01-01
+        Assets:BankA  10 CAD
+        Assets:BankA  10 USD
+        Assets:BankA  10 EUR
+        Assets:BankB  20 CAD
+        Assets:BankB  20 USD
+        Assets:BankB  20 EUR
+        Cash
+
+; --pivot-only with the built-in `commodity` property: the Assets filter
+; matches the pre-pivot accounts, and the rename groups the matching
+; postings under "commodity:<symbol>".
+test bal Assets --pivot-only commodity
+              30 CAD
+              30 EUR
+              30 USD  commodity
+              30 CAD    CAD
+              30 EUR    EUR
+              30 USD    USD
+--------------------
+              30 CAD
+              30 EUR
+              30 USD
+end test
+
+; --pivot-only with the built-in `account_base` property splits each
+; original account by its leaf segment.  The Assets filter keeps only the
+; BankA and BankB postings (Cash is dropped pre-pivot).
+test bal Assets --pivot-only account_base
+              30 CAD
+              30 EUR
+              30 USD  account_base
+              10 CAD
+              10 EUR
+              10 USD    BankA
+              20 CAD
+              20 EUR
+              20 USD    BankB
+--------------------
+              30 CAD
+              30 EUR
+              30 USD
+end test
+
+; The register report agrees: each posting is reassigned to the
+; commodity:<symbol> bucket, with the original Assets postings selected
+; pre-pivot.
+test reg Assets --pivot-only commodity --sort commodity
+26-Jan-01 <Unspecified payee>   commodity:CAD                10 CAD       10 CAD
+26-Jan-01 <Unspecified payee>   commodity:CAD                20 CAD       30 CAD
+26-Jan-01 <Unspecified payee>   commodity:EUR                10 EUR       30 CAD
+                                                                          10 EUR
+26-Jan-01 <Unspecified payee>   commodity:EUR                20 EUR       30 CAD
+                                                                          30 EUR
+26-Jan-01 <Unspecified payee>   commodity:USD                10 USD       30 CAD
+                                                                          30 EUR
+                                                                          10 USD
+26-Jan-01 <Unspecified payee>   commodity:USD                20 USD       30 CAD
+                                                                          30 EUR
+                                                                          30 USD
+end test
+
+; Without a filter, every posting is renamed and the report is non-empty
+; once --empty is given (without it, the balance nets to zero per
+; commodity bucket because the Cash balancing posting offsets the Assets
+; postings).
+test bal --pivot-only commodity --empty
+                   0  commodity
+               0 CAD    CAD
+               0 EUR    EUR
+               0 USD    USD
+--------------------
+                   0
+end test
+
+; --pivot (not --pivot-only) keeps the original account hierarchy as a
+; suffix, so an Assets filter has always worked here.  This is the
+; baseline behaviour the issue compared against.
+test bal Assets --pivot commodity
+              30 CAD
+              30 EUR
+              30 USD  commodity
+              30 CAD    CAD:Assets
+              10 CAD      BankA
+              20 CAD      BankB
+              30 EUR    EUR:Assets
+              10 EUR      BankA
+              20 EUR      BankB
+              30 USD    USD:Assets
+              10 USD      BankA
+              20 USD      BankB
+--------------------
+              30 CAD
+              30 EUR
+              30 USD
+end test
