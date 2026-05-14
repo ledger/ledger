@@ -1,0 +1,58 @@
+; Regression test for issue #3212: `ledger accounts <regex>` ignored the
+; regex argument and listed every account declared with an `account`
+; directive, even those that did not match the query.
+;
+; Root cause: report_accounts::flush() calls collect_known_accounts(), which
+; walks the master account tree and unconditionally admits every account
+; flagged ACCOUNT_KNOWN.  The --limit predicate (which is what the
+; command-line regex becomes) was not consulted, so declared accounts
+; bypassed the filter -- mirroring the bug fixed in #3189 for `bal -E`.
+;
+; The fix applies the same predicate evaluation used by format_accounts'
+; KNOWN+empty admission, restricted to declared accounts that match the
+; query.  Accounts visited by an actual posting are unaffected because
+; they were already filtered upstream by filter_posts.
+
+account Bank
+account Cash
+account Liabilities:Card
+account Expenses:Food
+
+2026-01-01 test
+    Bank   $100
+    Cash
+
+test accounts Bank
+Bank
+end test
+
+test accounts Cash
+Cash
+end test
+
+test accounts
+Bank
+Cash
+Expenses:Food
+Liabilities:Card
+end test
+
+test accounts Other
+end test
+
+; Declared-but-unused accounts must still be filtered by the regex.
+test accounts Liabilities
+Liabilities:Card
+end test
+
+test accounts Expenses
+Expenses:Food
+end test
+
+; A broader regex should pick up both visited and declared accounts that
+; match, while excluding those that do not (Expenses:Food has no 'a').
+test accounts a
+Bank
+Cash
+Liabilities:Card
+end test
