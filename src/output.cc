@@ -357,15 +357,28 @@ void format_accounts::operator()(account_t& account) {
 /*--- report_accounts: Account Listing ---*/
 
 namespace {
-/// @brief Recursively collect all accounts marked as ACCOUNT_KNOWN into the
-///        map, so that accounts referenced in the journal but not matched by
-///        the current query still appear in the `accounts` listing.
-void collect_known_accounts(account_t& account, report_accounts::accounts_report_map& accounts) {
-  if (account.has_flags(ACCOUNT_KNOWN) && accounts.find(&account) == accounts.end())
-    accounts.insert(report_accounts::accounts_report_map::value_type(&account, 0));
+/// @brief Recursively collect accounts marked as ACCOUNT_KNOWN into the
+///        map, so that declared-but-unused accounts still appear in the
+///        `accounts` listing.  When the report carries a --limit predicate
+///        (the regex form of `accounts <regex>` becomes one), require that
+///        each candidate match it -- otherwise an `account` directive for
+///        an unrelated account would surface in `accounts Bank`, ignoring
+///        the filter (#3212).  Visited accounts have already been filtered
+///        upstream by filter_posts.
+void collect_known_accounts(account_t& account, report_accounts::accounts_report_map& accounts,
+                            report_t& report) {
+  if (account.has_flags(ACCOUNT_KNOWN) && accounts.find(&account) == accounts.end()) {
+    bool admit = true;
+    if (report.HANDLED(limit_)) {
+      bind_scope_t limit_scope(report, account);
+      admit = predicate_t(report.HANDLER(limit_).str(), report.what_to_keep())(limit_scope);
+    }
+    if (admit)
+      accounts.insert(report_accounts::accounts_report_map::value_type(&account, 0));
+  }
 
   for (accounts_map::value_type& pair : account.accounts)
-    collect_known_accounts(*pair.second, accounts);
+    collect_known_accounts(*pair.second, accounts, report);
 }
 } // namespace
 
@@ -389,7 +402,7 @@ void report_accounts::flush() {
   if (do_append_format)
     append_format.parse_format(report.HANDLER(append_format_).str());
 
-  collect_known_accounts(*report.session.journal->master, accounts);
+  collect_known_accounts(*report.session.journal->master, accounts, report);
 
   for (accounts_pair& entry : accounts) {
     bind_scope_t bound_scope(report, *entry.first);
