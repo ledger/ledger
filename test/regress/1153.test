@@ -42,9 +42,22 @@ test bal --pivot-only Member
                    0
 end test
 
-; Filtering by the pivoted name works with --pivot-only as well.
-test bal --pivot-only Member "Member:John Doe"
+; Filters apply to the pre-pivot account hierarchy, so command-line account
+; queries select the original postings before they are renamed.  To filter
+; one Member's bucket, use a -l predicate against the tag value rather than
+; the pivoted account name (#3210).
+test bal --pivot-only Member -l "tag(\"Member\") =~ /John Doe/"
              $-84.00  Member:John Doe
+end test
+
+; Filtering by an original account name selects pre-pivot postings, then
+; the rename happens on what remains.
+test bal --pivot-only Member Income:Fees
+            $-114.00  Member
+             $-30.00    Jane Roe
+             $-84.00    John Doe
+--------------------
+            $-114.00
 end test
 
 ; --pivot-only also works on a register report.

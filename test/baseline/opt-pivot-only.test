@@ -71,7 +71,6 @@ test bal --pivot-only Invoice --empty -p "until 2014-05-05"
             0.00 GBP    102
             0.00 GBP    103
             0.00 GBP    104
-                   0    105
 --------------------
                    0
 end test
@@ -94,7 +93,6 @@ test bal --pivot-only Customer --empty -p "until 2014-05-05"
             0.00 GBP    AAA
             0.00 GBP    BBB
             0.00 GBP    CCC
-                   0    DDD
           -25.00 GBP  Equity:Opening balance
 --------------------
                    0

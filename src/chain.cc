@@ -91,6 +91,26 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t
   if (report.HANDLED(anon))
     handler = std::make_shared<anonymize_posts>(handler);
 
+  // --pivot-only (issue #1153) replaces the original account entirely with
+  // "Tag:Value" rather than prepending it.  Because the original account
+  // hierarchy is dropped, command-line account queries must be evaluated
+  // against the ORIGINAL account name (before the rename); otherwise filters
+  // like `bal Assets --pivot-only commodity` would never match the pivoted
+  // "commodity:CAD" accounts and produce empty output (#3210).  Adding the
+  // transformer here -- before the --limit filter below -- makes the filter
+  // wrap the pivot in the data flow, so the predicate sees the original
+  // account.
+  //
+  // --account, --pivot, and --pivot-only are mutually exclusive; --account
+  // stays in chain_post_handlers because it does not interact with query
+  // filtering.
+  if (report.HANDLED(pivot_only_) && !report.HANDLED(account_)) {
+    string pivot = report.HANDLER(pivot_only_).str();
+    pivot = string("\"") + pivot + ":\" + tag(\"" + pivot + "\")";
+    handler = std::make_shared<transfer_details>(handler, transfer_details::SET_ACCOUNT_REPLACE,
+                                                 report.session.journal->master, pivot, report);
+  }
+
   // This filter_posts will only pass through posts matching the `predicate'.
   if (report.HANDLED(limit_)) {
     DEBUG("report.predicate", "Report predicate expression = " << report.HANDLER(limit_).str());
@@ -110,21 +130,10 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t
   // --limit terms) match the pivoted account names rather than the original
   // ones.  This makes `bal --pivot Tag Value` filter by the pivoted name
   // "Tag:Value:..." instead of the original account name.  (See #1154.)
-  //
-  // --pivot-only (issue #1153) differs from --pivot in that it replaces the
-  // original account entirely with "Tag:Value" rather than prepending.  This
-  // gives a cleaner pivot view when the original account hierarchy is not
-  // wanted (e.g. "Member:John Doe" instead of "Member:John Doe:Income:Fees").
-  //
-  // --account, --pivot, and --pivot-only are mutually exclusive; --account
-  // stays in chain_post_handlers because it does not interact with query
-  // filtering.
-  if (report.HANDLED(pivot_only_) && !report.HANDLED(account_)) {
-    string pivot = report.HANDLER(pivot_only_).str();
-    pivot = string("\"") + pivot + ":\" + tag(\"" + pivot + "\")";
-    handler = std::make_shared<transfer_details>(handler, transfer_details::SET_ACCOUNT_REPLACE,
-                                                 report.session.journal->master, pivot, report);
-  } else if (report.HANDLED(pivot_) && !report.HANDLED(account_)) {
+  // Because --pivot keeps the original account as a suffix, a query like
+  // `bal --pivot Project Expenses` still matches the original "Expenses"
+  // segment, so the same filter works for both pivoted and unpivoted names.
+  if (report.HANDLED(pivot_) && !report.HANDLED(account_)) {
     string pivot = report.HANDLER(pivot_).str();
     pivot = string("\"") + pivot + ":\" + tag(\"" + pivot + "\")";
     handler = std::make_shared<transfer_details>(handler, transfer_details::SET_ACCOUNT,
