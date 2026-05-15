@@ -1,0 +1,68 @@
+; Regression test for #3216: In interval report mode (like --daily, --monthly),
+; the default value of payee_width should be date_width + 2 so the period range
+; "- <end-date>" fits exactly and the remaining width goes to the account
+; column instead of being wasted.
+
+2024/01/15 Pay 1
+    Expenses:Food                    $10.00
+    Assets:Cash
+
+2024/01/15 Pay 2
+    Expenses:Food                    $20.00
+    Assets:Cash
+
+2024/02/15 Pay 3
+    Expenses:Food                    $30.00
+    Assets:Cash
+
+; Default format "%y-%b-%d" gives date_width = 9, so payee_width = 11.
+; The payee column "- 24-Jan-15" is exactly 11 characters wide.
+test reg --daily
+24-Jan-15 - 24-Jan-15 Assets:Cash                   $-30.00      $-30.00
+                      Expenses:Food                  $30.00            0
+24-Feb-15 - 24-Feb-15 Assets:Cash                   $-30.00      $-30.00
+                      Expenses:Food                  $30.00            0
+end test
+
+; --monthly uses the same default.
+test reg --monthly
+24-Jan-01 - 24-Jan-31 Assets:Cash                   $-30.00      $-30.00
+                      Expenses:Food                  $30.00            0
+24-Feb-01 - 24-Feb-29 Assets:Cash                   $-30.00      $-30.00
+                      Expenses:Food                  $30.00            0
+end test
+
+; Explicit --payee-width still wins over the interval default.
+test reg --daily --payee-width=30
+24-Jan-15 - 24-Jan-15                    Assets:Cash                   $-30.00      $-30.00
+                                         Expenses:Food                  $30.00            0
+24-Feb-15 - 24-Feb-15                    Assets:Cash                   $-30.00      $-30.00
+                                         Expenses:Food                  $30.00            0
+end test
+
+; Custom date format scales the relationship: 10-char dates -> payee_width = 12.
+test reg --daily --date-format "%Y-%m-%d"
+2024-01-15 - 2024-01-15 Assets:Cash                   $-30.00      $-30.00
+                        Expenses:Food                  $30.00            0
+2024-02-15 - 2024-02-15 Assets:Cash                   $-30.00      $-30.00
+                        Expenses:Food                  $30.00            0
+end test
+
+; Without an interval, payee_width keeps its non-interval default (~21 of 80).
+test reg
+24-Jan-15 Pay 1                 Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Jan-15 Pay 2                 Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+24-Feb-15 Pay 3                 Expenses:Food                $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test
+
+; The select command applies the same rule.  Free space goes to the
+; account column rather than expanding payee in interval mode.
+test --monthly select date, payee, account, amount, total
+24-Jan-01 - 24-Jan-31 Assets:Cash                          $-30.00      $-30.00
+24-Jan-01 - 24-Jan-31 Expenses:Food                         $30.00            0
+24-Feb-01 - 24-Feb-29 Assets:Cash                          $-30.00      $-30.00
+24-Feb-01 - 24-Feb-29 Expenses:Food                         $30.00            0
+end test
