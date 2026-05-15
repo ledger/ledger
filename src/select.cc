@@ -206,9 +206,8 @@ value_t select_command(call_scope_t& args) {
       // and wastes space better given to the account column (#3216).
       std::size_t payee_width = (report.HANDLED(payee_width_)
                                      ? lexical_cast<std::size_t>(report.HANDLER(payee_width_).str())
-                                 : report.HANDLED(period_)
-                                     ? date_width + 2
-                                     : std::size_t(double(cols) * 0.263157));
+                                 : report.HANDLED(period_) ? date_width + 2
+                                                           : std::size_t(double(cols) * 0.263157));
       std::size_t account_width =
           (report.HANDLED(account_width_)
                ? lexical_cast<std::size_t>(report.HANDLER(account_width_).str())
