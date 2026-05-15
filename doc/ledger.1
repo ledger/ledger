@@ -634,6 +634,21 @@ reports.
 .It Fl \-display Ar EXPR Pq Fl d
 Display lines that satisfy the expression
 .Ar EXPR .
+.It Fl \-display-account Ar EXPR
+Apply a transformation to the
+.Em displayed
+account name (in format strings that reference
+.Em display_account ) .
+The expression sees the raw account name as
+.Em account ;
+the helpers
+.Em account_prefix ,
+.Em account_suffix ,
+.Em account_skip_prefix ,
+and
+.Em account_skip_suffix
+can pick out colon-separated components.  Virtual-posting wrappers are
+reapplied to the transformed name.
 .It Fl \-display-amount Ar EXPR
 Apply a transformation to the
 .Em displayed

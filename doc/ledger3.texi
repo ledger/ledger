@@ -7545,6 +7545,15 @@ in the register and prices reports.
 @item --display @var{EXPR}
 Display only lines that satisfy the expression @var{EXPR}.
 
+@item --display-account @var{EXPR}
+Apply a transformation to the @emph{displayed} account name in format
+strings that reference @code{display_account} (register, csv, prices, etc.).
+The expression sees the raw account name as @code{account}; the four helper
+functions @code{account_prefix}, @code{account_suffix},
+@code{account_skip_prefix}, and @code{account_skip_suffix} can pick out
+specific colon-separated components.  Virtual-posting wrappers (@code{()}
+or @code{[]}) are reapplied to the transformed name.
+
 @item --display-amount @var{EXPR}
 Apply a transformation to the @emph{displayed} amount.  This happens
 after calculations occur.
@@ -11664,9 +11673,27 @@ terminal character colors and font highlights in a normal TTY session.
 @subsection Quantities and Calculations
 
 @table @code
+@item account_prefix(@var{name}, @var{n})
+Return the first @var{n} colon-separated components of an account name.
+For example, @code{account_prefix("Assets:Bank:HSBC", 2)} returns
+@code{"Assets:Bank"}.  When @var{n} is greater than the depth, returns the
+full name; when @var{n} is zero or negative, returns the empty string.
+@item account_suffix(@var{name}, @var{n})
+Return the last @var{n} colon-separated components of an account name.
+For example, @code{account_suffix("Assets:Bank:HSBC", 2)} returns
+@code{"Bank:HSBC"}.
+@item account_skip_prefix(@var{name}, @var{n})
+Drop the first @var{n} colon-separated components of an account name.
+For example, @code{account_skip_prefix("Assets:Bank:HSBC", 2)} returns
+@code{"HSBC"}.
+@item account_skip_suffix(@var{name}, @var{n})
+Drop the last @var{n} colon-separated components of an account name.
+For example, @code{account_skip_suffix("Assets:Bank:HSBC", 2)} returns
+@code{"Assets"}.
 @item amount_expr
 @item abs
 @item commodity
+@item display_account
 @item display_amount
 @item display_total
 @item floor

@@ -238,7 +238,8 @@ public:
   value_t fn_total_expr(call_scope_t& scope);     ///< Evaluate the current --total expression
   value_t fn_display_amount(call_scope_t& scope); ///< Evaluate --display-amount expression
   value_t
-  fn_display_total(call_scope_t& scope);    ///< Evaluate --display-total (with caching fast path)
+  fn_display_total(call_scope_t& scope); ///< Evaluate --display-total (with caching fast path)
+  value_t fn_display_account(call_scope_t& scope); ///< Evaluate --display-account expression
   value_t fn_top_amount(call_scope_t& val); ///< Extract the first amount from a balance or sequence
   value_t
   fn_should_bold(call_scope_t& scope); ///< Evaluate --bold-if expression for conditional formatting
@@ -269,10 +270,18 @@ public:
   value_t fn_abs(call_scope_t& scope);             ///< Absolute value
 
   // Formatting and display helpers
-  value_t fn_justify(call_scope_t& scope);     ///< Justify/pad a value within a column width
-  value_t fn_quoted(call_scope_t& scope);      ///< Wrap in double quotes (backslash escaping)
-  value_t fn_quoted_rfc(call_scope_t& scope);  ///< Wrap in double quotes (RFC 4180 CSV escaping)
-  value_t fn_join(call_scope_t& scope);        ///< Replace newlines with \\n in a string
+  value_t fn_justify(call_scope_t& scope);    ///< Justify/pad a value within a column width
+  value_t fn_quoted(call_scope_t& scope);     ///< Wrap in double quotes (backslash escaping)
+  value_t fn_quoted_rfc(call_scope_t& scope); ///< Wrap in double quotes (RFC 4180 CSV escaping)
+  value_t fn_join(call_scope_t& scope);       ///< Replace newlines with \\n in a string
+  value_t
+  fn_account_prefix(call_scope_t& scope); ///< Keep first N colon-separated account components
+  value_t
+  fn_account_suffix(call_scope_t& scope); ///< Keep last N colon-separated account components
+  value_t
+  fn_account_skip_prefix(call_scope_t& scope); ///< Drop first N colon-separated account components
+  value_t
+  fn_account_skip_suffix(call_scope_t& scope); ///< Drop last N colon-separated account components
   value_t fn_format_date(call_scope_t& scope); ///< Format a date: format_date(d [, fmt])
   value_t
   fn_format_datetime(call_scope_t& scope);   ///< Format a datetime: format_datetime(dt [, fmt])
@@ -384,6 +393,7 @@ public:
     HANDLER(depth_).report(out);
     HANDLER(deviation).report(out);
     HANDLER(display_).report(out);
+    HANDLER(display_account_).report(out);
     HANDLER(display_amount_).report(out);
     HANDLER(display_total_).report(out);
     HANDLER(dow).report(out);
@@ -825,6 +835,11 @@ public:
         if (handled)
           value = string("(") + value + ")&(" + str + ")";
       });
+
+  OPTION_CTOR(
+      report_t, display_account_,
+      DECL1(report_t, display_account_, merged_expr_t, expr, ("display_account", "account")) {
+      } DO_() { expr.append(str); });
 
   OPTION_CTOR(
       report_t, display_amount_,
