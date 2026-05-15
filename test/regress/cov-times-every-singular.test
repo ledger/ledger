@@ -16,19 +16,19 @@
 
 ; "every quarter" exercises the singular TOK_QUARTER path
 test reg Expenses --period "every quarter"
-24-Jan-01 - 24-Mar-31           Expenses:Food                $10.00       $10.00
-24-Apr-01 - 24-Jun-30           Expenses:Food                $20.00       $30.00
-24-Jul-01 - 24-Sep-30           Expenses:Food                $30.00       $60.00
+24-Jan-01 - 24-Mar-31 Expenses:Food                  $10.00       $10.00
+24-Apr-01 - 24-Jun-30 Expenses:Food                  $20.00       $30.00
+24-Jul-01 - 24-Sep-30 Expenses:Food                  $30.00       $60.00
 end test
 
 ; "every year" exercises the singular TOK_YEAR path
 test reg Expenses --period "every year"
-24-Jan-01 - 24-Dec-31           Expenses:Food                $60.00       $60.00
+24-Jan-01 - 24-Dec-31 Expenses:Food                  $60.00       $60.00
 end test
 
 ; "every month" exercises the singular TOK_MONTH path
 test reg Expenses --period "every month"
-24-Jan-01 - 24-Jan-31           Expenses:Food                $10.00       $10.00
-24-Apr-01 - 24-Apr-30           Expenses:Food                $20.00       $30.00
-24-Jul-01 - 24-Jul-31           Expenses:Food                $30.00       $60.00
+24-Jan-01 - 24-Jan-31 Expenses:Food                  $10.00       $10.00
+24-Apr-01 - 24-Apr-30 Expenses:Food                  $20.00       $30.00
+24-Jul-01 - 24-Jul-31 Expenses:Food                  $30.00       $60.00
 end test

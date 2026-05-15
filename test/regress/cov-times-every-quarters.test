@@ -19,8 +19,8 @@
     Assets:Cash
 
 test reg Expenses --period "every 1 quarters"
-24-Jan-01 - 24-Mar-31           Expenses:Food                $10.00       $10.00
-24-Apr-01 - 24-Jun-30           Expenses:Food                $20.00       $30.00
-24-Jul-01 - 24-Sep-30           Expenses:Food                $30.00       $60.00
-24-Oct-01 - 24-Dec-31           Expenses:Food                $40.00      $100.00
+24-Jan-01 - 24-Mar-31 Expenses:Food                  $10.00       $10.00
+24-Apr-01 - 24-Jun-30 Expenses:Food                  $20.00       $30.00
+24-Jul-01 - 24-Sep-30 Expenses:Food                  $30.00       $60.00
+24-Oct-01 - 24-Dec-31 Expenses:Food                  $40.00      $100.00
 end test

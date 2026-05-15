@@ -12,7 +12,7 @@
     Equity
 
 test reg --columns 80 --daily --average A:B
-16-Aug-01 - 16-Aug-01           A:B                              10           10
-16-Aug-02 - 16-Aug-02           A:B                              10           10
-                                A:B:C                             1          0.5
+16-Aug-01 - 16-Aug-01 A:B                                10           10
+16-Aug-02 - 16-Aug-02 A:B                                10           10
+                      A:B:C                               1          0.5
 end test

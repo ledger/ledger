@@ -13,7 +13,7 @@
     Assets:Cash
 
 test reg Expenses --period "every week"
-23-Dec-31 - 24-Jan-06           Expenses:Food                $10.00       $10.00
-24-Jan-07 - 24-Jan-13           Expenses:Food                $20.00       $30.00
-24-Jan-14 - 24-Jan-20           Expenses:Food                $30.00       $60.00
+23-Dec-31 - 24-Jan-06 Expenses:Food                  $10.00       $10.00
+24-Jan-07 - 24-Jan-13 Expenses:Food                  $20.00       $30.00
+24-Jan-14 - 24-Jan-20 Expenses:Food                  $30.00       $60.00
 end test

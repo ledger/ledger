@@ -13,6 +13,6 @@
     Assets:Checking
 
 test reg --period quarterly -> 0
-24-Jan-01 - 24-Mar-31           Assets:Checking            $-120.00     $-120.00
-                                Expenses:Food               $120.00            0
+24-Jan-01 - 24-Mar-31 Assets:Checking              $-120.00     $-120.00
+                      Expenses:Food                 $120.00            0
 end test

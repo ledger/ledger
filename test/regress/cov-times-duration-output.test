@@ -18,6 +18,6 @@
 ; Test yearly period - covers TOK_YEARLY -> date_duration_t(YEARS, 1)
 ; the operator<< for YEARS on
 test reg Expenses --period yearly
-24-Jan-01 - 24-Dec-31           Expenses:Food                $30.00       $30.00
-25-Jan-01 - 25-Dec-31           Expenses:Food                $30.00       $60.00
+24-Jan-01 - 24-Dec-31 Expenses:Food                  $30.00       $30.00
+25-Jan-01 - 25-Dec-31 Expenses:Food                  $30.00       $60.00
 end test

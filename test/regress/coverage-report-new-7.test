@@ -29,12 +29,12 @@ end test
 
 ; Test quarterly interval (filters.h interval_posts)
 test reg --quarterly Expenses
-24-Jan-01 - 24-Mar-31           Expenses:Food                $95.00       $95.00
+24-Jan-01 - 24-Mar-31 Expenses:Food                  $95.00       $95.00
 end test
 
 ; Test yearly interval (filters.h interval_posts)
 test reg --yearly Expenses
-24-Jan-01 - 24-Dec-31           Expenses:Food                $95.00       $95.00
+24-Jan-01 - 24-Dec-31 Expenses:Food                  $95.00       $95.00
 end test
 
 ; Test commodity function in eval

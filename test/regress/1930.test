@@ -28,9 +28,9 @@ test reg --budget --now=2020/07/01
 end test
 
 test reg --budget --monthly --now=2020/07/01
-20-Jun-01 - 20-Jun-30           assets:checking               $1050        $1050
-                                expenses:phone                 $-50        $1000
-20-Jul-01 - 20-Jul-31           assets:checking                $500        $1500
-                                expenses:phone                 $-50        $1450
-                                expenses:rent                 $-450        $1000
+20-Jun-01 - 20-Jun-30 assets:checking                 $1050        $1050
+                      expenses:phone                   $-50        $1000
+20-Jul-01 - 20-Jul-31 assets:checking                  $500        $1500
+                      expenses:phone                   $-50        $1450
+                      expenses:rent                   $-450        $1000
 end test

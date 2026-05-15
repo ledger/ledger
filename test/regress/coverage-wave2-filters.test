@@ -23,16 +23,16 @@
 
 ; Test subtotal with interval - covers interval_posts
 test reg --monthly Expenses
-24-Jan-01 - 24-Jan-31           Expenses:Auto:Gas            $35.00       $35.00
-                                Expenses:Food                $50.00       $85.00
-24-Feb-01 - 24-Feb-29           Expenses:Auto:Gas            $40.00      $125.00
-                                Expenses:Food                $55.00      $180.00
+24-Jan-01 - 24-Jan-31 Expenses:Auto:Gas              $35.00       $35.00
+                      Expenses:Food                  $50.00       $85.00
+24-Feb-01 - 24-Feb-29 Expenses:Auto:Gas              $40.00      $125.00
+                      Expenses:Food                  $55.00      $180.00
 end test
 
 ; Test weekly interval - covers interval_posts
 test reg --weekly Expenses:Food
-23-Dec-31 - 24-Jan-06           Expenses:Food                $50.00       $50.00
-24-Jan-28 - 24-Feb-03           Expenses:Food                $55.00      $105.00
+23-Dec-31 - 24-Jan-06 Expenses:Food                  $50.00       $50.00
+24-Jan-28 - 24-Feb-03 Expenses:Food                  $55.00      $105.00
 end test
 
 ; Test --display filter - covers
@@ -62,9 +62,9 @@ P 2024/03/01 AAPL $170.00
     Assets:Cash           $-1500.00
 
 test reg --market --monthly -e 2024/04/01 Assets:Brokerage
-24-Jan-01 - 24-Jan-31           Assets:Brokerage           $1500.00     $1500.00
-24-Feb-01 Commodities revalued  <Revalued>                  $100.00     $1600.00
-24-Mar-01 Commodities revalued  <Revalued>                  $100.00     $1700.00
+24-Jan-01 - 24-Jan-31 Assets:Brokerage             $1500.00     $1500.00
+24-Feb-01 Commoditi.. <Revalued>                    $100.00     $1600.00
+24-Mar-01 Commoditi.. <Revalued>                    $100.00     $1700.00
 end test
 
 ; Test --collapse flag - covers related filter paths

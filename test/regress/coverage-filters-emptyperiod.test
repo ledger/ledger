@@ -12,9 +12,9 @@
     Assets:Cash
 
 test reg --monthly -E --align-intervals --empty
-24-Jan-01 - 24-Jan-31           Assets:Cash                 $-50.00      $-50.00
-                                Expenses:Food                $50.00            0
-24-Feb-01 - 24-Feb-29           <None>                            0            0
-24-Mar-01 - 24-Mar-31           Assets:Cash                 $-30.00      $-30.00
-                                Expenses:Food                $30.00            0
+24-Jan-01 - 24-Jan-31 Assets:Cash                   $-50.00      $-50.00
+                      Expenses:Food                  $50.00            0
+24-Feb-01 - 24-Feb-29 <None>                              0            0
+24-Mar-01 - 24-Mar-31 Assets:Cash                   $-30.00      $-30.00
+                      Expenses:Food                  $30.00            0
 end test

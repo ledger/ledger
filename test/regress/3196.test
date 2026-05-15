@@ -34,37 +34,37 @@ P 2026/01/01 $ 34 TWD
 
 ; --no-revalued *before* -X must still suppress <Revalued> postings.
 test reg --no-revalued -X TWD Assets: --yearly --current --now=2026/05/26
-24-Jan-01 - 24-Dec-31           Assets:Checking            TWD30845     TWD30845
-25-Jan-01 - 25-Dec-31           Assets:Checking            TWD66000     TWD98835
+24-Jan-01 - 24-Dec-31 Assets:Checking              TWD30845     TWD30845
+25-Jan-01 - 25-Dec-31 Assets:Checking              TWD66000     TWD98835
 end test
 
 ; --no-revalued *after* -X already worked; verify we did not regress it.
 test reg -X TWD Assets: --yearly --current --no-revalued --now=2026/05/26
-24-Jan-01 - 24-Dec-31           Assets:Checking            TWD30845     TWD30845
-25-Jan-01 - 25-Dec-31           Assets:Checking            TWD66000     TWD98835
+24-Jan-01 - 24-Dec-31 Assets:Checking              TWD30845     TWD30845
+25-Jan-01 - 25-Dec-31 Assets:Checking              TWD66000     TWD98835
 end test
 
 ; Without --no-revalued, intermediate <Revalued> postings still appear
 ; (per the #2131 fix).  This guards the inverse direction: --no-revalued
 ; must not be applied implicitly.
 test reg -X TWD Assets: --yearly --current --now=2026/05/26
-24-Jan-01 - 24-Dec-31           Assets:Checking            TWD30845     TWD30845
-25-Jan-01 Commodities revalued  <Revalued>                   TWD995     TWD31840
-25-Jun-01 Commodities revalued  <Revalued>                   TWD995     TWD32835
-25-Jan-01 - 25-Dec-31           Assets:Checking            TWD66000     TWD98835
-26-Jan-01 Commodities revalued  <Revalued>                  TWD2995    TWD101830
+24-Jan-01 - 24-Dec-31 Assets:Checking              TWD30845     TWD30845
+25-Jan-01 Commoditi.. <Revalued>                     TWD995     TWD31840
+25-Jun-01 Commoditi.. <Revalued>                     TWD995     TWD32835
+25-Jan-01 - 25-Dec-31 Assets:Checking              TWD66000     TWD98835
+26-Jan-01 Commoditi.. <Revalued>                    TWD2995    TWD101830
 end test
 
 ; --no-revalued before --market (-V) must also win.
 test reg --no-revalued -V Assets: --yearly --current --now=2026/05/26
-24-Jan-01 - 24-Dec-31           Assets:Checking            TWD30845     TWD30845
-25-Jan-01 - 25-Dec-31           Assets:Checking            TWD66000     TWD98835
+24-Jan-01 - 24-Dec-31 Assets:Checking              TWD30845     TWD30845
+25-Jan-01 - 25-Dec-31 Assets:Checking              TWD66000     TWD98835
 end test
 
 ; --no-revalued before --basis (-B) must win, even though --basis also
 ; activates --revalued via its handler.
 test reg --no-revalued -B -M -e 2026/01/01 Assets:Checking
-24-Jan-01 - 24-Jan-31           Assets:Checking               $1000        $1000
-24-Apr-01 - 24-Apr-30           Assets:Checking                 $-5         $995
-25-Feb-01 - 25-Feb-28           Assets:Checking               $2000        $2995
+24-Jan-01 - 24-Jan-31 Assets:Checking                 $1000        $1000
+24-Apr-01 - 24-Apr-30 Assets:Checking                   $-5         $995
+25-Feb-01 - 25-Feb-28 Assets:Checking                 $2000        $2995
 end test

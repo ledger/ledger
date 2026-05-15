@@ -97,20 +97,20 @@ end test
 
 ; Test --monthly subtotal (filters.h interval_posts)
 test reg --monthly Expenses
-24-Jan-01 - 24-Jan-31           Expenses:Food                $50.00       $50.00
-                                Expenses:Utilities          $120.00      $170.00
-24-Feb-01 - 24-Feb-29           Expenses:Food                $45.00      $215.00
+24-Jan-01 - 24-Jan-31 Expenses:Food                  $50.00       $50.00
+                      Expenses:Utilities            $120.00      $170.00
+24-Feb-01 - 24-Feb-29 Expenses:Food                  $45.00      $215.00
 end test
 
 ; Test --weekly subtotal
 test reg --weekly --begin 2024/01/15 --end 2024/01/22 Expenses
-24-Jan-14 - 24-Jan-20           Expenses:Food                $50.00       $50.00
-                                Expenses:Utilities          $120.00      $170.00
+24-Jan-14 - 24-Jan-20 Expenses:Food                  $50.00       $50.00
+                      Expenses:Utilities            $120.00      $170.00
 end test
 
 ; Test --daily subtotal
 test reg --daily --begin 2024/01/15 --end 2024/01/16 Expenses
-24-Jan-15 - 24-Jan-15           Expenses:Food                $50.00       $50.00
+24-Jan-15 - 24-Jan-15 Expenses:Food                  $50.00       $50.00
 end test
 
 ; Test --subtotal option

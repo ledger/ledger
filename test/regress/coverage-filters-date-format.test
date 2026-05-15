@@ -9,5 +9,5 @@
     Assets:Cash
 
 test reg --monthly --date-format "%Y-%m" Expenses
-2024-01 - 2024-01             Expenses:Food                  $30.00       $30.00
+2024-01 - 2024-01 Expenses:Food                  $30.00       $30.00
 end test

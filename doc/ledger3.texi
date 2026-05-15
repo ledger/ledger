@@ -846,7 +846,7 @@ $ ledger -M register -f drewr3.dat expenses:auto
 @end smallexample
 
 @smallexample @c output:DB524E4
-11-Jan-01 - 11-Jan-31           Expenses:Auto            $ 5,500.00   $ 5,500.00
+11-Jan-01 - 11-Jan-31 Expenses:Auto              $ 5,500.00   $ 5,500.00
 @end smallexample
 
 This assumes, of course, that you use account names like

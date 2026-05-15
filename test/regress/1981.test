@@ -25,6 +25,6 @@
     Assets:Cash
 
 test reg Expenses -p "monthly from 2024/01/20" --align-intervals
-24-Jan-20 - 24-Feb-19           Expenses:Food                $70.00       $70.00
-24-Feb-20 - 24-Mar-19           Expenses:Food                $80.00      $150.00
+24-Jan-20 - 24-Feb-19 Expenses:Food                  $70.00       $70.00
+24-Feb-20 - 24-Mar-19 Expenses:Food                  $80.00      $150.00
 end test

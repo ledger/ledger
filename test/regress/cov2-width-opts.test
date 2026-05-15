@@ -19,8 +19,8 @@ end test
 
 ; Test --align-intervals option
 test reg Expenses --align-intervals --monthly
-24-Jan-01 - 24-Jan-31           Expenses:Food                $10.00       $10.00
-24-Feb-01 - 24-Feb-29           Expenses:Gas                 $20.00       $30.00
+24-Jan-01 - 24-Jan-31 Expenses:Food                  $10.00       $10.00
+24-Feb-01 - 24-Feb-29 Expenses:Gas                   $20.00       $30.00
 end test
 
 ; Test --abbrev-len option

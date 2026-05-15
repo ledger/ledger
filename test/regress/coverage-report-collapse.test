@@ -13,6 +13,6 @@
     Assets:Checking
 
 test reg --period monthly --collapse Expenses -> 0
-24-Jan-01 - 24-Jan-31           <Total>                      $80.00       $80.00
-24-Feb-01 - 24-Feb-29           Expenses:Food                $40.00      $120.00
+24-Jan-01 - 24-Jan-31 <Total>                        $80.00       $80.00
+24-Feb-01 - 24-Feb-29 Expenses:Food                  $40.00      $120.00
 end test

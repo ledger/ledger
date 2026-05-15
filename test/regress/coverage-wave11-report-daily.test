@@ -9,8 +9,8 @@
     Assets:Checking
 
 test reg -D
-24-Jan-15 - 24-Jan-15           Assets:Checking             $-50.00      $-50.00
-                                Expenses:Food                $50.00            0
-24-Jan-16 - 24-Jan-16           Assets:Checking             $-30.00      $-30.00
-                                Expenses:Food                $30.00            0
+24-Jan-15 - 24-Jan-15 Assets:Checking               $-50.00      $-50.00
+                      Expenses:Food                  $50.00            0
+24-Jan-16 - 24-Jan-16 Assets:Checking               $-30.00      $-30.00
+                      Expenses:Food                  $30.00            0
 end test

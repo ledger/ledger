@@ -13,5 +13,5 @@
     Assets:Checking
 
 test --weekly reg Expenses
-24-Jan-14 - 24-Jan-20           Expenses:Food                $60.00       $60.00
+24-Jan-14 - 24-Jan-20 Expenses:Food                  $60.00       $60.00
 end test

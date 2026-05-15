@@ -24,10 +24,10 @@
     Assets:Checking
 
 test --date-format '%Y-%m-%d' --start-of-week 1 --script test/regress/1980.dat
-2010-12-01 - 2010-12-05         Assets:Checking            $-100.00     $-100.00
-                                Expenses:Food               $100.00            0
-2010-12-06 - 2010-12-12         Assets:Checking            $-200.00     $-200.00
-                                Expenses:Food               $200.00            0
-2010-12-13 - 2010-12-19         Assets:Checking            $-150.00     $-150.00
-                                Expenses:Food               $150.00            0
+2010-12-01 - 2010-12-05 Assets:Checking              $-100.00     $-100.00
+                        Expenses:Food                 $100.00            0
+2010-12-06 - 2010-12-12 Assets:Checking              $-200.00     $-200.00
+                        Expenses:Food                 $200.00            0
+2010-12-13 - 2010-12-19 Assets:Checking              $-150.00     $-150.00
+                        Expenses:Food                 $150.00            0
 end test

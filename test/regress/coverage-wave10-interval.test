@@ -15,13 +15,13 @@
 
 ; Test 1: Monthly subtotals
 test reg Expenses --monthly --columns 80
-24-Jan-01 - 24-Jan-31           Expenses:Food               $300.00      $300.00
-24-Feb-01 - 24-Feb-29           Expenses:Food               $150.00      $450.00
+24-Jan-01 - 24-Jan-31 Expenses:Food                 $300.00      $300.00
+24-Feb-01 - 24-Feb-29 Expenses:Food                 $150.00      $450.00
 end test
 
 ; Test 2: Weekly subtotals
 test reg Expenses --weekly --columns 80
-23-Dec-31 - 24-Jan-06           Expenses:Food               $100.00      $100.00
-24-Jan-14 - 24-Jan-20           Expenses:Food               $200.00      $300.00
-24-Jan-28 - 24-Feb-03           Expenses:Food               $150.00      $450.00
+23-Dec-31 - 24-Jan-06 Expenses:Food                 $100.00      $100.00
+24-Jan-14 - 24-Jan-20 Expenses:Food                 $200.00      $300.00
+24-Jan-28 - 24-Feb-03 Expenses:Food                 $150.00      $450.00
 end test

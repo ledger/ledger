@@ -199,8 +199,15 @@ value_t select_command(call_scope_t& args) {
           (report.HANDLED(date_width_)
                ? lexical_cast<std::size_t>(report.HANDLER(date_width_).str())
                : static_cast<std::size_t>(format_date(CURRENT_DATE(), FMT_PRINTED).length()));
+      // In interval reports (e.g. --daily, --monthly), the payee column
+      // contains the period range "- <end-date>", which is exactly
+      // date_width + 2 wide.  Default payee_width to that size in interval
+      // mode -- the usual cols * 0.263 fraction is much wider than needed
+      // and wastes space better given to the account column (#3216).
       std::size_t payee_width = (report.HANDLED(payee_width_)
                                      ? lexical_cast<std::size_t>(report.HANDLER(payee_width_).str())
+                                 : report.HANDLED(period_)
+                                     ? date_width + 2
                                      : std::size_t(double(cols) * 0.263157));
       std::size_t account_width =
           (report.HANDLED(account_width_)
@@ -244,7 +251,10 @@ value_t select_command(call_scope_t& args) {
       }
 
       // Distribute any remaining terminal width to payee/account columns.
-      while ((saw_account || saw_payee) && cols_needed < cols) {
+      // In interval mode, the payee width is fixed at date_width + 2, so
+      // grow only the account column (#3216).
+      const bool grow_payee = saw_payee && !report.HANDLED(period_);
+      while ((saw_account || grow_payee) && cols_needed < cols) {
         if (saw_account && cols_needed < cols) {
           ++account_width;
           ++cols_needed;
@@ -253,7 +263,7 @@ value_t select_command(call_scope_t& args) {
             ++cols_needed;
           }
         }
-        if (saw_payee && cols_needed < cols) {
+        if (grow_payee && cols_needed < cols) {
           ++payee_width;
           ++cols_needed;
         }

@@ -22,15 +22,15 @@
 
 test --group-by account --daily reg
 A
-17-Jun-01 - 17-Jun-01           A                               $15          $15
-17-Jun-02 - 17-Jun-02           A                               $10          $25
-17-Jun-03 - 17-Jun-03           A                               $-3          $22
+17-Jun-01 - 17-Jun-01 A                                 $15          $15
+17-Jun-02 - 17-Jun-02 A                                 $10          $25
+17-Jun-03 - 17-Jun-03 A                                 $-3          $22
 
 Ex
-17-Jun-01 - 17-Jun-01           Ex                              $15          $15
-17-Jun-03 - 17-Jun-03           Ex                               $3          $18
+17-Jun-01 - 17-Jun-01 Ex                                $15          $15
+17-Jun-03 - 17-Jun-03 Ex                                 $3          $18
 
 I
-17-Jun-01 - 17-Jun-01           I                              $-30         $-30
-17-Jun-02 - 17-Jun-02           I                              $-10         $-40
+17-Jun-01 - 17-Jun-01 I                                $-30         $-30
+17-Jun-02 - 17-Jun-02 I                                $-10         $-40
 end test

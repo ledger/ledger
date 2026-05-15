@@ -5,5 +5,5 @@
     Income:Salary
 
 test reg 'Assets:Cash' --forecast "d<[2024/04/01]" --period monthly
-24-Jan-01 - 24-Jan-31           Assets:Cash                   $1000        $1000
+24-Jan-01 - 24-Jan-31 Assets:Cash                     $1000        $1000
 end test

@@ -49,8 +49,8 @@
     Assets:Checking
 
 test --quarterly reg Expenses
-24-Jan-01 - 24-Mar-31           Expenses:Food                $60.00       $60.00
-24-Apr-01 - 24-Jun-30           Expenses:Food               $150.00      $210.00
-24-Jul-01 - 24-Sep-30           Expenses:Food               $240.00      $450.00
-24-Oct-01 - 24-Dec-31           Expenses:Food               $330.00      $780.00
+24-Jan-01 - 24-Mar-31 Expenses:Food                  $60.00       $60.00
+24-Apr-01 - 24-Jun-30 Expenses:Food                 $150.00      $210.00
+24-Jul-01 - 24-Sep-30 Expenses:Food                 $240.00      $450.00
+24-Oct-01 - 24-Dec-31 Expenses:Food                 $330.00      $780.00
 end test

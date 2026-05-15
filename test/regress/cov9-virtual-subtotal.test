@@ -16,8 +16,8 @@
     [Assets:Cash]            $-500.00
 
 test reg --monthly
-24-Jan-01 - 24-Jan-31           Assets:Cash                $6000.00     $6000.00
-                                [Assets:Cash]             $-1000.00     $5000.00
-                                [Assets:Savings]           $1000.00     $6000.00
-                                Income:Salary             $-6000.00            0
+24-Jan-01 - 24-Jan-31 Assets:Cash                  $6000.00     $6000.00
+                      [Assets:Cash]               $-1000.00     $5000.00
+                      [Assets:Savings]             $1000.00     $6000.00
+                      Income:Salary               $-6000.00            0
 end test
