@@ -364,7 +364,16 @@ void report_t::normalize_options(const string& verb) {
     long date_width = (HANDLED(date_width_)
                            ? lexical_cast<long>(HANDLER(date_width_).str())
                            : static_cast<long>(format_date(CURRENT_DATE(), FMT_PRINTED).length()));
+    // In interval reports (e.g. --daily, --monthly), the payee column shows
+    // the period range "- <end-date>", which is exactly date_width + 2 wide.
+    // Default payee_width to that size + 1 so the column ends with a trailing
+    // space, giving two visual spaces of separation from the account column
+    // (the format string adds one more between fields).  This avoids the
+    // usual cols * 0.263 default, which leaves the column much wider than
+    // needed and wastes space that would be better given to the account
+    // column (#3216).
     long payee_width = (HANDLED(payee_width_) ? lexical_cast<long>(HANDLER(payee_width_).str())
+                        : HANDLED(period_)    ? date_width + 3
                                               : long(double(cols) * 0.263157));
     long account_width =
         (HANDLED(account_width_) ? lexical_cast<long>(HANDLER(account_width_).str())

@@ -10,6 +10,6 @@
     Assets:Cash
 
 test reg --yearly --now 2024/01/01
-24-Jan-01 - 24-Dec-31           Assets:Cash                 $-30.00      $-30.00
-                                Expenses:Food                $30.00            0
+24-Jan-01 - 24-Dec-31  Assets:Cash                   $-30.00      $-30.00
+                       Expenses:Food                  $30.00            0
 end test

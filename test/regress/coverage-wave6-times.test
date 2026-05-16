@@ -25,8 +25,8 @@
     Assets:Checking
 
 test reg -p "monthly from 2020/01/01 to 2020/04/01" Expenses
-20-Feb-01 - 20-Feb-29           Expenses:Food                $50.00       $50.00
-20-Mar-01 - 20-Mar-31           Expenses:Rent               $800.00      $850.00
+20-Feb-01 - 20-Feb-29  Expenses:Food                  $50.00       $50.00
+20-Mar-01 - 20-Mar-31  Expenses:Rent                 $800.00      $850.00
 end test
 
 test reg -p "from 2020/02/01 to 2020/04/01" Expenses

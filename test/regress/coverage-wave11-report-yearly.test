@@ -9,6 +9,6 @@
     Assets:Checking
 
 test reg -Y
-24-Jan-01 - 24-Dec-31           Assets:Checking             $-80.00      $-80.00
-                                Expenses:Food                $80.00            0
+24-Jan-01 - 24-Dec-31  Assets:Checking               $-80.00      $-80.00
+                       Expenses:Food                  $80.00            0
 end test

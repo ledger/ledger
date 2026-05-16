@@ -60,12 +60,12 @@ end test
 ; Rent: $1000/1=$1000, $2000/2=$1000, $3000/3=$1000
 
 test -M -A reg Expenses
-24-Jan-01 - 24-Jan-31           Expenses:Food                  $100         $100
-                                Expenses:Rent                 $1000        $1000
-24-Feb-01 - 24-Feb-29           Expenses:Food                  $200         $150
-                                Expenses:Rent                 $1000        $1000
-24-Mar-01 - 24-Mar-31           Expenses:Food                  $300         $200
-                                Expenses:Rent                 $1000        $1000
+24-Jan-01 - 24-Jan-31  Expenses:Food                    $100         $100
+                       Expenses:Rent                   $1000        $1000
+24-Feb-01 - 24-Feb-29  Expenses:Food                    $200         $150
+                       Expenses:Rent                   $1000        $1000
+24-Mar-01 - 24-Mar-31  Expenses:Food                    $300         $200
+                       Expenses:Rent                   $1000        $1000
 end test
 
 ; --- Test 4: Register --monthly --average --collapse ---
@@ -73,24 +73,24 @@ end test
 ; Running average: $1100/1=$1100, $2300/2=$1150, $3600/3=$1200
 
 test -M -A --collapse reg Expenses
-24-Jan-01 - 24-Jan-31           <Total>                       $1100        $1100
-24-Feb-01 - 24-Feb-29           <Total>                       $1200        $1150
-24-Mar-01 - 24-Mar-31           <Total>                       $1300        $1200
+24-Jan-01 - 24-Jan-31  <Total>                         $1100        $1100
+24-Feb-01 - 24-Feb-29  <Total>                         $1200        $1150
+24-Mar-01 - 24-Mar-31  <Total>                         $1300        $1200
 end test
 
 ; --- Test 5: Register --yearly --average ---
 ; All data is in one year, so just one period.
 
 test -Y -A reg Expenses
-24-Jan-01 - 24-Dec-31           Expenses:Food                  $600         $600
-                                Expenses:Rent                 $3000        $3000
+24-Jan-01 - 24-Dec-31  Expenses:Food                    $600         $600
+                       Expenses:Rent                   $3000        $3000
 end test
 
 ; --- Test 6: Register --monthly --average, single account (Rent) ---
 ; Rent appears in all 3 months at $1000 each, so average is $1000 throughout.
 
 test -M -A reg Expenses:Rent
-24-Jan-01 - 24-Jan-31           Expenses:Rent                 $1000        $1000
-24-Feb-01 - 24-Feb-29           Expenses:Rent                 $1000        $1000
-24-Mar-01 - 24-Mar-31           Expenses:Rent                 $1000        $1000
+24-Jan-01 - 24-Jan-31  Expenses:Rent                   $1000        $1000
+24-Feb-01 - 24-Feb-29  Expenses:Rent                   $1000        $1000
+24-Mar-01 - 24-Mar-31  Expenses:Rent                   $1000        $1000
 end test

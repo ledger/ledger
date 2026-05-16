@@ -9,6 +9,6 @@
     Assets:Cash
 
 test reg Expenses --daily
-24-Jan-01 - 24-Jan-01           Expenses:Food                $10.00       $10.00
-24-Jan-02 - 24-Jan-02           Expenses:Food                $20.00       $30.00
+24-Jan-01 - 24-Jan-01  Expenses:Food                  $10.00       $10.00
+24-Jan-02 - 24-Jan-02  Expenses:Food                  $20.00       $30.00
 end test

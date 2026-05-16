@@ -25,37 +25,37 @@ end test
 
 ; Test --weekly option
 test reg Expenses --weekly
-23-Dec-31 - 24-Jan-06           Expenses:Food                $10.00       $10.00
-24-Jan-14 - 24-Jan-20           Expenses:Gas                 $20.00       $30.00
-24-Jan-28 - 24-Feb-03           Expenses:Dining              $30.00       $60.00
+23-Dec-31 - 24-Jan-06  Expenses:Food                  $10.00       $10.00
+24-Jan-14 - 24-Jan-20  Expenses:Gas                   $20.00       $30.00
+24-Jan-28 - 24-Feb-03  Expenses:Dining                $30.00       $60.00
 end test
 
 ; Test --monthly option
 test reg Expenses --monthly
-24-Jan-01 - 24-Jan-31           Expenses:Food                $10.00       $10.00
-                                Expenses:Gas                 $20.00       $30.00
-24-Feb-01 - 24-Feb-29           Expenses:Dining              $30.00       $60.00
+24-Jan-01 - 24-Jan-31  Expenses:Food                  $10.00       $10.00
+                       Expenses:Gas                   $20.00       $30.00
+24-Feb-01 - 24-Feb-29  Expenses:Dining                $30.00       $60.00
 end test
 
 ; Test --yearly option
 test reg Expenses --yearly
-24-Jan-01 - 24-Dec-31           Expenses:Dining              $30.00       $30.00
-                                Expenses:Food                $10.00       $40.00
-                                Expenses:Gas                 $20.00       $60.00
+24-Jan-01 - 24-Dec-31  Expenses:Dining                $30.00       $30.00
+                       Expenses:Food                  $10.00       $40.00
+                       Expenses:Gas                   $20.00       $60.00
 end test
 
 ; Test --quarterly option
 test reg Expenses --quarterly
-24-Jan-01 - 24-Mar-31           Expenses:Dining              $30.00       $30.00
-                                Expenses:Food                $10.00       $40.00
-                                Expenses:Gas                 $20.00       $60.00
+24-Jan-01 - 24-Mar-31  Expenses:Dining                $30.00       $30.00
+                       Expenses:Food                  $10.00       $40.00
+                       Expenses:Gas                   $20.00       $60.00
 end test
 
 ; Test --average / -A option
 test reg Expenses --monthly --average
-24-Jan-01 - 24-Jan-31           Expenses:Food                $10.00       $10.00
-                                Expenses:Gas                 $20.00       $20.00
-24-Feb-01 - 24-Feb-29           Expenses:Dining              $30.00       $15.00
+24-Jan-01 - 24-Jan-31  Expenses:Food                  $10.00       $10.00
+                       Expenses:Gas                   $20.00       $20.00
+24-Feb-01 - 24-Feb-29  Expenses:Dining                $30.00       $15.00
 end test
 
 ; Test --percent / -% option

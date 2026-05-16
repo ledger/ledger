@@ -9,8 +9,8 @@
     Assets:Cash
 
 test reg --yearly
-24-Jan-01 - 24-Dec-31           Assets:Cash                 $-10.00      $-10.00
-                                Expenses:Food                $10.00            0
-25-Jan-01 - 25-Dec-31           Assets:Cash                 $-20.00      $-20.00
-                                Expenses:Gas                 $20.00            0
+24-Jan-01 - 24-Dec-31  Assets:Cash                   $-10.00      $-10.00
+                       Expenses:Food                  $10.00            0
+25-Jan-01 - 25-Dec-31  Assets:Cash                   $-20.00      $-20.00
+                       Expenses:Gas                   $20.00            0
 end test

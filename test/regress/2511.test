@@ -28,32 +28,32 @@
 
 test reg expenses -M --group-by account
 Expenses:Eating out
-25-Jan-01 - 25-Jan-31           Expenses:Eating out             $10          $10
-25-Feb-01 - 25-Feb-28           Expenses:Eating out             $10          $20
-25-Mar-01 - 25-Mar-31           Expenses:Eating out             $10          $30
+25-Jan-01 - 25-Jan-31  Expenses:Eating out               $10          $10
+25-Feb-01 - 25-Feb-28  Expenses:Eating out               $10          $20
+25-Mar-01 - 25-Mar-31  Expenses:Eating out               $10          $30
 
 Expenses:Groceries
-25-Jan-01 - 25-Jan-31           Expenses:Groceries              $10          $10
-25-Feb-01 - 25-Feb-28           Expenses:Groceries              $10          $20
-25-Mar-01 - 25-Mar-31           Expenses:Groceries              $10          $30
+25-Jan-01 - 25-Jan-31  Expenses:Groceries                $10          $10
+25-Feb-01 - 25-Feb-28  Expenses:Groceries                $10          $20
+25-Mar-01 - 25-Mar-31  Expenses:Groceries                $10          $30
 end test
 
 test reg expenses -D --group-by account
 Expenses:Eating out
-25-Jan-01 - 25-Jan-01           Expenses:Eating out             $10          $10
-25-Feb-01 - 25-Feb-01           Expenses:Eating out             $10          $20
-25-Mar-01 - 25-Mar-01           Expenses:Eating out             $10          $30
+25-Jan-01 - 25-Jan-01  Expenses:Eating out               $10          $10
+25-Feb-01 - 25-Feb-01  Expenses:Eating out               $10          $20
+25-Mar-01 - 25-Mar-01  Expenses:Eating out               $10          $30
 
 Expenses:Groceries
-25-Jan-01 - 25-Jan-01           Expenses:Groceries              $10          $10
-25-Feb-01 - 25-Feb-01           Expenses:Groceries              $10          $20
-25-Mar-01 - 25-Mar-01           Expenses:Groceries              $10          $30
+25-Jan-01 - 25-Jan-01  Expenses:Groceries                $10          $10
+25-Feb-01 - 25-Feb-01  Expenses:Groceries                $10          $20
+25-Mar-01 - 25-Mar-01  Expenses:Groceries                $10          $30
 end test
 
 test reg expenses -Y --group-by account
 Expenses:Eating out
-25-Jan-01 - 25-Dec-31           Expenses:Eating out             $30          $30
+25-Jan-01 - 25-Dec-31  Expenses:Eating out               $30          $30
 
 Expenses:Groceries
-25-Jan-01 - 25-Dec-31           Expenses:Groceries              $30          $30
+25-Jan-01 - 25-Dec-31  Expenses:Groceries                $30          $30
 end test

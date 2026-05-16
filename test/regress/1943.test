@@ -13,12 +13,12 @@
 
 ; Without --invert: collapsed daily total is positive
 test reg Expenses --daily --collapse
-20-Jul-11 - 20-Jul-11           <Total>                 1100.00 EUR  1100.00 EUR
+20-Jul-11 - 20-Jul-11  <Total>                   1100.00 EUR  1100.00 EUR
 end test
 
 ; With --invert: collapsed daily total must be negated
 test reg Expenses --daily --collapse --invert
-20-Jul-11 - 20-Jul-11           <Total>                -1100.00 EUR -1100.00 EUR
+20-Jul-11 - 20-Jul-11  <Total>                  -1100.00 EUR -1100.00 EUR
 end test
 
 ; --invert without period grouping: individual entries are negated

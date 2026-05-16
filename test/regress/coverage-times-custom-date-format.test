@@ -16,10 +16,10 @@
     Assets:Checking
 
 test reg --now 2024/12/15 --period "monthly from 2024/01 to 2024/10" --date-format "%d/%m/%Y"
-01/01/2024 - 31/01/2024         Assets:Checking             $-50.00      $-50.00
-                                Expenses:Food                $50.00            0
-01/04/2024 - 30/04/2024         Assets:Checking           $-1000.00    $-1000.00
-                                Expenses:Rent              $1000.00            0
-01/08/2024 - 31/08/2024         Assets:Checking             $-75.00      $-75.00
-                                Expenses:Transport           $75.00            0
+01/01/2024 - 31/01/2024  Assets:Checking               $-50.00      $-50.00
+                         Expenses:Food                  $50.00            0
+01/04/2024 - 30/04/2024  Assets:Checking             $-1000.00    $-1000.00
+                         Expenses:Rent                $1000.00            0
+01/08/2024 - 31/08/2024  Assets:Checking               $-75.00      $-75.00
+                         Expenses:Transport             $75.00            0
 end test

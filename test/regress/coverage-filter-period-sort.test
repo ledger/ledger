@@ -18,6 +18,6 @@
     Assets:Checking
 
 test --period-sort amount --monthly reg Expenses -> 0
-24-Jan-01 - 24-Jan-31           Expenses:Food                $30.00       $30.00
-24-Feb-01 - 24-Feb-29           Expenses:Food                $70.00      $100.00
+24-Jan-01 - 24-Jan-31  Expenses:Food                  $30.00       $30.00
+24-Feb-01 - 24-Feb-29  Expenses:Food                  $70.00      $100.00
 end test

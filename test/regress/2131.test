@@ -27,6 +27,6 @@ P 2022/08/01 ACME $200.00
     Assets:Cash
 
 test reg -V -M -e 2022/09/01 Assets:Investments
-22-Jul-01 - 22-Jul-31           Assets:Investments          $100.00      $100.00
-22-Aug-01 Commodities revalued  <Revalued>                  $100.00      $200.00
+22-Jul-01 - 22-Jul-31  Assets:Investments            $100.00      $100.00
+22-Aug-01 Commoditie.. <Revalued>                    $100.00      $200.00
 end test

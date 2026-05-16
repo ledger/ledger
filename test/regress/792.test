@@ -27,14 +27,14 @@
     Assets:Cash
 
 test reg -Mn Expenses
-13-Jan-01 - 13-Jan-31           <Total>                      $80.00       $80.00
-13-Feb-01 - 13-Feb-28           Expenses:Food                $40.00      $120.00
-13-Mar-01 - 13-Mar-31           <Total>                     300 EUR      $120.00
-                                                                         300 EUR
+13-Jan-01 - 13-Jan-31  <Total>                        $80.00       $80.00
+13-Feb-01 - 13-Feb-28  Expenses:Food                  $40.00      $120.00
+13-Mar-01 - 13-Mar-31  <Total>                       300 EUR      $120.00
+                                                                  300 EUR
 end test
 
 test reg -B -X $ -Mn Expenses
-13-Jan-01 - 13-Jan-31           <Total>                      $80.00       $80.00
-13-Feb-01 - 13-Feb-28           Expenses:Food                $40.00      $120.00
-13-Mar-01 - 13-Mar-31           <Total>                     $401.00      $521.00
+13-Jan-01 - 13-Jan-31  <Total>                        $80.00       $80.00
+13-Feb-01 - 13-Feb-28  Expenses:Food                  $40.00      $120.00
+13-Mar-01 - 13-Mar-31  <Total>                       $401.00      $521.00
 end test

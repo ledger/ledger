@@ -3,5 +3,5 @@
     Assets:Cash
 
 test reg --monthly --invert exp
-12-Mar-01 - 12-Mar-31           Expenses:Food                  $-20         $-20
+12-Mar-01 - 12-Mar-31  Expenses:Food                    $-20         $-20
 end test

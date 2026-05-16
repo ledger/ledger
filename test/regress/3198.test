@@ -13,14 +13,14 @@
     Assets:Cash
 
 test reg --collapse --depth 0 --daily --empty Assets
-24-Jan-01 - 24-Jan-01           <Total>                        $100         $100
-24-Jan-02 - 24-Jan-02           <None>                            0         $100
-24-Jan-03 - 24-Jan-03           <Total>                         $-5          $95
+24-Jan-01 - 24-Jan-01  <Total>                          $100         $100
+24-Jan-02 - 24-Jan-02  <None>                              0         $100
+24-Jan-03 - 24-Jan-03  <Total>                           $-5          $95
 end test
 
 test reg --collapse --depth 0 --daily Assets
-24-Jan-01 - 24-Jan-01           <Total>                        $100         $100
-24-Jan-03 - 24-Jan-03           <Total>                         $-5          $95
+24-Jan-01 - 24-Jan-01  <Total>                          $100         $100
+24-Jan-03 - 24-Jan-03  <Total>                           $-5          $95
 end test
 
 test reg --collapse --depth 0 Assets

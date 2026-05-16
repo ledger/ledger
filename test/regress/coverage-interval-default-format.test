@@ -14,8 +14,8 @@
     Assets:Cash
 
 test reg --period "monthly"
-24-Jan-01 - 24-Jan-31           Assets:Cash                 $-30.00      $-30.00
-                                Expenses:Food                $30.00            0
-24-Feb-01 - 24-Feb-29           Assets:Cash                 $-30.00      $-30.00
-                                Expenses:Food                $30.00            0
+24-Jan-01 - 24-Jan-31  Assets:Cash                   $-30.00      $-30.00
+                       Expenses:Food                  $30.00            0
+24-Feb-01 - 24-Feb-29  Assets:Cash                   $-30.00      $-30.00
+                       Expenses:Food                  $30.00            0
 end test

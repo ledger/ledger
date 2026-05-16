@@ -20,6 +20,6 @@
     Assets:Cash
 
 test reg Expenses --period "every 2 years"
-20-Jan-01 - 21-Dec-31           Expenses:Food                $30.00       $30.00
-22-Jan-01 - 23-Dec-31           Expenses:Food                $70.00      $100.00
+20-Jan-01 - 21-Dec-31  Expenses:Food                  $30.00       $30.00
+22-Jan-01 - 23-Dec-31  Expenses:Food                  $70.00      $100.00
 end test

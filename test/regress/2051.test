@@ -16,9 +16,9 @@
     [Assets:Checking]                 $-500.00
 
 test register -M
-04-Mar-01 - 04-Mar-31           Assets:Checking             $500.00      $500.00
-                                [Assets:Checking]          $-500.00            0
-                                [Funds:Building]            $200.00      $200.00
-                                [Funds:School]              $300.00      $500.00
-                                Income:Donations           $-500.00            0
+04-Mar-01 - 04-Mar-31  Assets:Checking               $500.00      $500.00
+                       [Assets:Checking]            $-500.00            0
+                       [Funds:Building]              $200.00      $200.00
+                       [Funds:School]                $300.00      $500.00
+                       Income:Donations             $-500.00            0
 end test

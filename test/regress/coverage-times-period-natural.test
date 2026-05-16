@@ -80,10 +80,10 @@ test reg --period "in 2024" --now 2024/06/15
 end test
 
 test reg --period "yearly" --now 2024/06/15
-24-Jan-01 - 24-Dec-31           Assets:Checking           $-1450.00    $-1450.00
-                                Expenses:Food:Dining         $35.00    $-1415.00
-                                Expense:Food:Groceries       $50.00    $-1365.00
-                                Expenses:Housing:Rent      $1200.00     $-165.00
-                                Expenses:Transport:Gas       $45.00     $-120.00
-                                Exp:Utilities:Electric      $120.00            0
+24-Jan-01 - 24-Dec-31  Assets:Checking             $-1450.00    $-1450.00
+                       Expenses:Food:Dining           $35.00    $-1415.00
+                       Expenses:Food:Groceries        $50.00    $-1365.00
+                       Expenses:Housing:Rent        $1200.00     $-165.00
+                       Expenses:Transport:Gas         $45.00     $-120.00
+                       Expen:Utilities:Electric      $120.00            0
 end test
