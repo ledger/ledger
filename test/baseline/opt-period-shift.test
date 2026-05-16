@@ -15,7 +15,7 @@
     Assets:Cash
 
 test reg --monthly --period-shift 15 Expenses
-23-Dec-16 - 24-Jan-15 Expenses:Food                  $50.00       $50.00
-24-Jan-16 - 24-Feb-15 Expenses:Food                  $70.00      $120.00
-24-Feb-16 - 24-Mar-15 Expenses:Food                  $25.00      $145.00
+23-Dec-16 - 24-Jan-15  Expenses:Food                  $50.00       $50.00
+24-Jan-16 - 24-Feb-15  Expenses:Food                  $70.00      $120.00
+24-Feb-16 - 24-Mar-15  Expenses:Food                  $25.00      $145.00
 end test

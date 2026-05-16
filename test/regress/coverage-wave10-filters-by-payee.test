@@ -14,8 +14,8 @@
     Assets:Cash
 
 test reg --by-payee --monthly
-24-Feb-01 - 24-Feb-29 Assets:Cash                   $-25.00      $-25.00
-                      Expenses:Food                  $25.00            0
-24-Jan-01 - 24-Jan-31 Assets:Cash                   $-80.00      $-80.00
-                      Expenses:Food                  $80.00            0
+24-Feb-01 - 24-Feb-29  Assets:Cash                   $-25.00      $-25.00
+                       Expenses:Food                  $25.00            0
+24-Jan-01 - 24-Jan-31  Assets:Cash                   $-80.00      $-80.00
+                       Expenses:Food                  $80.00            0
 end test

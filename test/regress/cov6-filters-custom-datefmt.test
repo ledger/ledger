@@ -9,6 +9,6 @@
     Assets:Cash
 
 test reg --monthly --date-format '%Y/%m/%d'
-2024/01/01 - 2024/01/31 Assets:Cash                   $-30.00      $-30.00
-                        Expenses:Food                  $30.00            0
+2024/01/01 - 2024/01/31  Assets:Cash                   $-30.00      $-30.00
+                         Expenses:Food                  $30.00            0
 end test

@@ -39,18 +39,18 @@
     Assets:Checking
 
 test --monthly --average --collapse reg Expenses
-25-Jan-01 - 25-Jan-31 Expenses:Subscriptions         $1,000       $1,000
-25-Feb-01 - 25-Feb-28 Expenses:Subscriptions         $1,000       $1,000
-25-Mar-01 - 25-Mar-31 Expenses:Subscriptions         $1,000       $1,000
-25-Apr-01 - 25-Apr-30 Expenses:Subscriptions         $1,000       $1,000
-25-May-01 - 25-May-31 Expenses:Subscriptions         $1,000       $1,000
-25-Jun-01 - 25-Jun-30 Expenses:Subscriptions         $1,000       $1,000
-25-Jul-01 - 25-Jul-31 Expenses:Subscriptions         $1,000       $1,000
-25-Aug-01 - 25-Aug-31 Expenses:Subscriptions         $1,000       $1,000
-25-Sep-01 - 25-Sep-30 Expenses:Subscriptions         $1,000       $1,000
-25-Oct-01 - 25-Oct-31 Expenses:Subscriptions         $1,000       $1,000
-25-Nov-01 - 25-Nov-30 Expenses:Subscriptions         $1,000       $1,000
-25-Dec-01 - 25-Dec-31 <Total>                        $1,000       $1,000
-26-Jan-01 - 26-Jan-31 Expenses:Entertainment         $1,000       $1,000
-26-Feb-01 - 26-Feb-28 Expenses:Entertainment         $1,000       $1,000
+25-Jan-01 - 25-Jan-31  Expenses:Subscriptions         $1,000       $1,000
+25-Feb-01 - 25-Feb-28  Expenses:Subscriptions         $1,000       $1,000
+25-Mar-01 - 25-Mar-31  Expenses:Subscriptions         $1,000       $1,000
+25-Apr-01 - 25-Apr-30  Expenses:Subscriptions         $1,000       $1,000
+25-May-01 - 25-May-31  Expenses:Subscriptions         $1,000       $1,000
+25-Jun-01 - 25-Jun-30  Expenses:Subscriptions         $1,000       $1,000
+25-Jul-01 - 25-Jul-31  Expenses:Subscriptions         $1,000       $1,000
+25-Aug-01 - 25-Aug-31  Expenses:Subscriptions         $1,000       $1,000
+25-Sep-01 - 25-Sep-30  Expenses:Subscriptions         $1,000       $1,000
+25-Oct-01 - 25-Oct-31  Expenses:Subscriptions         $1,000       $1,000
+25-Nov-01 - 25-Nov-30  Expenses:Subscriptions         $1,000       $1,000
+25-Dec-01 - 25-Dec-31  <Total>                        $1,000       $1,000
+26-Jan-01 - 26-Jan-31  Expenses:Entertainment         $1,000       $1,000
+26-Feb-01 - 26-Feb-28  Expenses:Entertainment         $1,000       $1,000
 end test

@@ -20,8 +20,8 @@
     Assets:Checking
 
 test reg -Y Expenses
-10-Jan-01 - 10-Dec-31 Expenses:Auto                  $50.00       $50.00
-                      Expenses:Food                 $100.00      $150.00
-11-Jan-01 - 11-Dec-31 Expenses:Auto                  $75.00      $225.00
-                      Expenses:Food                 $200.00      $425.00
+10-Jan-01 - 10-Dec-31  Expenses:Auto                  $50.00       $50.00
+                       Expenses:Food                 $100.00      $150.00
+11-Jan-01 - 11-Dec-31  Expenses:Auto                  $75.00      $225.00
+                       Expenses:Food                 $200.00      $425.00
 end test

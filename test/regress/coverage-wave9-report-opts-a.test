@@ -160,30 +160,30 @@ end test
 
 ; Test --daily option
 test reg --daily Expenses
-24-Jan-15 - 24-Jan-15 Expenses:Food:Groceries        $50.00       $50.00
-                      Expenses:Food:Restaurant       $25.00       $75.00
-24-Feb-01 - 24-Feb-01 Expenses:Auto:Gas              $35.00      $110.00
+24-Jan-15 - 24-Jan-15  Expenses:Food:Groceries        $50.00       $50.00
+                       Expenses:Food:Restaurant       $25.00       $75.00
+24-Feb-01 - 24-Feb-01  Expenses:Auto:Gas              $35.00      $110.00
 end test
 
 ; Test --weekly option
 test reg --weekly Expenses
-24-Jan-14 - 24-Jan-20 Expenses:Food:Groceries        $50.00       $50.00
-                      Expenses:Food:Restaurant       $25.00       $75.00
-24-Jan-28 - 24-Feb-03 Expenses:Auto:Gas              $35.00      $110.00
+24-Jan-14 - 24-Jan-20  Expenses:Food:Groceries        $50.00       $50.00
+                       Expenses:Food:Restaurant       $25.00       $75.00
+24-Jan-28 - 24-Feb-03  Expenses:Auto:Gas              $35.00      $110.00
 end test
 
 ; Test --quarterly option
 test reg --quarterly Expenses
-24-Jan-01 - 24-Mar-31 Expenses:Auto:Gas              $35.00       $35.00
-                      Expenses:Food:Groceries        $50.00       $85.00
-                      Expenses:Food:Restaurant       $25.00      $110.00
+24-Jan-01 - 24-Mar-31  Expenses:Auto:Gas              $35.00       $35.00
+                       Expenses:Food:Groceries        $50.00       $85.00
+                       Expenses:Food:Restaurant       $25.00      $110.00
 end test
 
 ; Test --yearly option
 test reg --yearly Expenses
-24-Jan-01 - 24-Dec-31 Expenses:Auto:Gas              $35.00       $35.00
-                      Expenses:Food:Groceries        $50.00       $85.00
-                      Expenses:Food:Restaurant       $25.00      $110.00
+24-Jan-01 - 24-Dec-31  Expenses:Auto:Gas              $35.00       $35.00
+                       Expenses:Food:Groceries        $50.00       $85.00
+                       Expenses:Food:Restaurant       $25.00      $110.00
 end test
 
 ; Test --dow option

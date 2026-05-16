@@ -15,9 +15,9 @@
 
 ; Test --weekly reporting
 test reg --weekly Expenses
-23-Dec-31 - 24-Jan-06 Expenses:Food                  $50.00       $50.00
-24-Jan-07 - 24-Jan-13 Expenses:Food                  $30.00       $80.00
-24-Jan-14 - 24-Jan-20 Expenses:Food                  $20.00      $100.00
+23-Dec-31 - 24-Jan-06  Expenses:Food                  $50.00       $50.00
+24-Jan-07 - 24-Jan-13  Expenses:Food                  $30.00       $80.00
+24-Jan-14 - 24-Jan-20  Expenses:Food                  $20.00      $100.00
 end test
 
 ; Test --display predicate filter

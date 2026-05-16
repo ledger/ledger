@@ -15,13 +15,13 @@
 
 ; "every week" exercises the singular TOK_WEEK path
 test reg Expenses --period "every week"
-23-Dec-31 - 24-Jan-06 Expenses:Food                  $30.00       $30.00
-24-Jan-07 - 24-Jan-13 Expenses:Food                  $30.00       $60.00
+23-Dec-31 - 24-Jan-06  Expenses:Food                  $30.00       $30.00
+24-Jan-07 - 24-Jan-13  Expenses:Food                  $30.00       $60.00
 end test
 
 ; "every day" exercises the singular TOK_DAY path
 test reg Expenses --period "every day"
-24-Jan-01 - 24-Jan-01 Expenses:Food                  $10.00       $10.00
-24-Jan-02 - 24-Jan-02 Expenses:Food                  $20.00       $30.00
-24-Jan-08 - 24-Jan-08 Expenses:Food                  $30.00       $60.00
+24-Jan-01 - 24-Jan-01  Expenses:Food                  $10.00       $10.00
+24-Jan-02 - 24-Jan-02  Expenses:Food                  $20.00       $30.00
+24-Jan-08 - 24-Jan-08  Expenses:Food                  $30.00       $60.00
 end test

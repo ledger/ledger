@@ -50,7 +50,7 @@ end test
 
 ; Test --daily option
 test reg Expenses --daily
-24-Jan-01 - 24-Jan-01 Expenses:Food                  $10.00       $10.00
-24-Jan-02 - 24-Jan-02 Expenses:Gas                   $20.00       $30.00
-24-Jan-03 - 24-Jan-03 Expenses:Dining                $30.00       $60.00
+24-Jan-01 - 24-Jan-01  Expenses:Food                  $10.00       $10.00
+24-Jan-02 - 24-Jan-02  Expenses:Gas                   $20.00       $30.00
+24-Jan-03 - 24-Jan-03  Expenses:Dining                $30.00       $60.00
 end test

@@ -130,9 +130,9 @@ end test
 
 ; Test --start-of-week option
 test reg --start-of-week=monday --weekly Expenses
-24-Jan-15 - 24-Jan-21 Expenses:Food:Groceries        $50.00       $50.00
-                      Expenses:Food:Restaurant       $25.00       $75.00
-24-Jan-29 - 24-Feb-04 Expenses:Auto:Gas              $35.00      $110.00
+24-Jan-15 - 24-Jan-21  Expenses:Food:Groceries        $50.00       $50.00
+                       Expenses:Food:Restaurant       $25.00       $75.00
+24-Jan-29 - 24-Feb-04  Expenses:Auto:Gas              $35.00      $110.00
 end test
 
 ; Test pricemap command

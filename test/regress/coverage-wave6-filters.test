@@ -19,15 +19,15 @@
 
 ; Test monthly grouped register (filters.cc interval handling)
 test reg --monthly Expenses
-24-Jan-01 - 24-Jan-31 Expenses:Dining                $30.00       $30.00
-                      Expenses:Food                  $50.00       $80.00
-24-Feb-01 - 24-Feb-29 Expenses:Food                  $40.00      $120.00
-                      Expenses:Transport             $25.00      $145.00
+24-Jan-01 - 24-Jan-31  Expenses:Dining                $30.00       $30.00
+                       Expenses:Food                  $50.00       $80.00
+24-Feb-01 - 24-Feb-29  Expenses:Food                  $40.00      $120.00
+                       Expenses:Transport             $25.00      $145.00
 end test
 
 ; Test --daily register
 test reg --daily --limit "date==[2024/01/01]" Expenses
-24-Jan-01 - 24-Jan-01 Expenses:Food                  $50.00       $50.00
+24-Jan-01 - 24-Jan-01  Expenses:Food                  $50.00       $50.00
 end test
 
 ; Test --by-payee grouping (filters.cc)
@@ -43,8 +43,8 @@ end test
 ; Dining: $30 in Jan only → avg $30. Food: $(Jan) + $(Feb) → avg $45
 ; Transport: $25 in Feb only but count=2 periods → avg $12.50.
 test reg --monthly --average Expenses
-24-Jan-01 - 24-Jan-31 Expenses:Dining                $30.00       $30.00
-                      Expenses:Food                  $50.00       $50.00
-24-Feb-01 - 24-Feb-29 Expenses:Food                  $40.00       $45.00
-                      Expenses:Transport             $25.00       $12.50
+24-Jan-01 - 24-Jan-31  Expenses:Dining                $30.00       $30.00
+                       Expenses:Food                  $50.00       $50.00
+24-Feb-01 - 24-Feb-29  Expenses:Food                  $40.00       $45.00
+                       Expenses:Transport             $25.00       $12.50
 end test

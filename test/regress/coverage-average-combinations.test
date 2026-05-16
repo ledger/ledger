@@ -146,14 +146,14 @@
 ; Utilities appears only in wk2: $120, then avg diminishes with count.
 
 test -W -A --columns 80 --begin 2024/01/01 --end 2024/02/01 reg Expenses
-23-Dec-31 - 24-Jan-06 Expenses:Food                    $100         $100
-                      Expenses:Transport                $50          $50
-24-Jan-07 - 24-Jan-13 Expenses:Food                     $80          $90
-                      Expenses:Utilities               $120          $60
-24-Jan-14 - 24-Jan-20 Expenses:Food                     $90          $90
-                      Expenses:Transport                $60          $37
-24-Jan-21 - 24-Jan-27 Expenses:Food                     $70          $85
-                      Expenses:Transport                $40          $38
+23-Dec-31 - 24-Jan-06  Expenses:Food                    $100         $100
+                       Expenses:Transport                $50          $50
+24-Jan-07 - 24-Jan-13  Expenses:Food                     $80          $90
+                       Expenses:Utilities               $120          $60
+24-Jan-14 - 24-Jan-20  Expenses:Food                     $90          $90
+                       Expenses:Transport                $60          $37
+24-Jan-21 - 24-Jan-27  Expenses:Food                     $70          $85
+                       Expenses:Transport                $40          $38
 end test
 
 ; ---------------------------------------------------------------------------
@@ -185,15 +185,15 @@ end test
 ; Running avg: Q1=$620, Q2=(620+650)/2=$635, Q3=(620+650+115)/3=$462
 
 test --period quarterly -A --columns 80 reg Expenses
-24-Jan-01 - 24-Mar-31 Expenses:Food                    $620         $620
-                      Expenses:Transport               $265         $265
-                      Expenses:Utilities               $250         $250
-24-Apr-01 - 24-Jun-30 Expenses:Food                    $650         $635
-                      Expenses:Transport               $165         $215
-                      Expenses:Utilities               $110         $180
-24-Jul-01 - 24-Sep-30 Expenses:Food                    $115         $462
-                      Expenses:Transport                $50         $160
-                      Expenses:Utilities               $125         $162
+24-Jan-01 - 24-Mar-31  Expenses:Food                    $620         $620
+                       Expenses:Transport               $265         $265
+                       Expenses:Utilities               $250         $250
+24-Apr-01 - 24-Jun-30  Expenses:Food                    $650         $635
+                       Expenses:Transport               $165         $215
+                       Expenses:Utilities               $110         $180
+24-Jul-01 - 24-Sep-30  Expenses:Food                    $115         $462
+                       Expenses:Transport                $50         $160
+                       Expenses:Utilities               $125         $162
 end test
 
 ; ---------------------------------------------------------------------------
@@ -206,13 +206,13 @@ end test
 ; Jan=$610, Feb=$240, Mar=$285, Apr=$235, May=$425, Jun=$265, Jul=$290
 
 test -M -A --depth 1 --columns 80 reg Expenses
-24-Jan-01 - 24-Jan-31 Expenses                         $610         $610
-24-Feb-01 - 24-Feb-29 Expenses                         $240         $425
-24-Mar-01 - 24-Mar-31 Expenses                         $285         $378
-24-Apr-01 - 24-Apr-30 Expenses                         $235         $342
-24-May-01 - 24-May-31 Expenses                         $425         $359
-24-Jun-01 - 24-Jun-30 Expenses                         $265         $343
-24-Jul-01 - 24-Jul-31 Expenses                         $290         $336
+24-Jan-01 - 24-Jan-31  Expenses                         $610         $610
+24-Feb-01 - 24-Feb-29  Expenses                         $240         $425
+24-Mar-01 - 24-Mar-31  Expenses                         $285         $378
+24-Apr-01 - 24-Apr-30  Expenses                         $235         $342
+24-May-01 - 24-May-31  Expenses                         $425         $359
+24-Jun-01 - 24-Jun-30  Expenses                         $265         $343
+24-Jul-01 - 24-Jul-31  Expenses                         $290         $336
 end test
 
 ; ---------------------------------------------------------------------------
@@ -236,13 +236,13 @@ end test
 ; The amounts are the counterpart totals; averages track Assets.
 
 test -M -A --related --columns 80 reg Expenses
-24-Jan-01 - 24-Jan-31 Assets:Checking                 $-610        $-610
-24-Feb-01 - 24-Feb-29 Assets:Checking                 $-240        $-425
-24-Mar-01 - 24-Mar-31 Assets:Checking                 $-285        $-378
-24-Apr-01 - 24-Apr-30 Assets:Checking                 $-235        $-342
-24-May-01 - 24-May-31 Assets:Checking                 $-425        $-359
-24-Jun-01 - 24-Jun-30 Assets:Checking                 $-265        $-343
-24-Jul-01 - 24-Jul-31 Assets:Checking                 $-290        $-336
+24-Jan-01 - 24-Jan-31  Assets:Checking                 $-610        $-610
+24-Feb-01 - 24-Feb-29  Assets:Checking                 $-240        $-425
+24-Mar-01 - 24-Mar-31  Assets:Checking                 $-285        $-378
+24-Apr-01 - 24-Apr-30  Assets:Checking                 $-235        $-342
+24-May-01 - 24-May-31  Assets:Checking                 $-425        $-359
+24-Jun-01 - 24-Jun-30  Assets:Checking                 $-265        $-343
+24-Jul-01 - 24-Jul-31  Assets:Checking                 $-290        $-336
 end test
 
 ; ---------------------------------------------------------------------------
@@ -253,14 +253,14 @@ end test
 ; Jan Food: -$(inverted from $340), Transport: -$150, Utilities: -$120
 
 test -M -A --invert --columns 80 --begin 2024/01/01 --end 2024/04/01 reg Expenses
-24-Jan-01 - 24-Jan-31 Expenses:Food                   $-340        $-340
-                      Expenses:Transport              $-150        $-150
-                      Expenses:Utilities              $-120        $-120
-24-Feb-01 - 24-Feb-29 Expenses:Food                   $-185        $-262
-                      Expenses:Transport               $-55        $-102
-24-Mar-01 - 24-Mar-31 Expenses:Food                    $-95        $-207
-                      Expenses:Transport               $-60         $-88
-                      Expenses:Utilities              $-130         $-83
+24-Jan-01 - 24-Jan-31  Expenses:Food                   $-340        $-340
+                       Expenses:Transport              $-150        $-150
+                       Expenses:Utilities              $-120        $-120
+24-Feb-01 - 24-Feb-29  Expenses:Food                   $-185        $-262
+                       Expenses:Transport               $-55        $-102
+24-Mar-01 - 24-Mar-31  Expenses:Food                    $-95        $-207
+                       Expenses:Transport               $-60         $-88
+                       Expenses:Utilities              $-130         $-83
 end test
 
 ; ---------------------------------------------------------------------------
@@ -274,11 +274,11 @@ end test
 ; Utilities: only Mar, so avg=$130/2=$(count=2 due to 2 periods)
 
 test -M -A --begin 2024/02/01 --end 2024/04/01 --columns 80 reg Expenses
-24-Feb-01 - 24-Feb-29 Expenses:Food                    $185         $185
-                      Expenses:Transport                $55          $55
-24-Mar-01 - 24-Mar-31 Expenses:Food                     $95         $140
-                      Expenses:Transport                $60          $58
-                      Expenses:Utilities               $130          $65
+24-Feb-01 - 24-Feb-29  Expenses:Food                    $185         $185
+                       Expenses:Transport                $55          $55
+24-Mar-01 - 24-Mar-31  Expenses:Food                     $95         $140
+                       Expenses:Transport                $60          $58
+                       Expenses:Utilities               $130          $65
 end test
 
 ; ---------------------------------------------------------------------------
@@ -291,15 +291,15 @@ end test
 ; Each month's qualifying total and running per-account averages shown.
 
 test -M -A --limit 'amount > 100' --columns 80 reg Expenses
-24-Jan-01 - 24-Jan-31 Expenses:Utilities               $120         $120
-24-Feb-01 - 24-Feb-29 Expenses:Food                    $110          $55
-24-Mar-01 - 24-Mar-31 Expenses:Utilities               $130          $83
-24-Apr-01 - 24-Apr-30 Expenses:Food                    $105          $54
-24-May-01 - 24-May-31 Expenses:Food                    $250          $93
-                      Expenses:Utilities               $110          $72
-24-Jun-01 - 24-Jun-30 Expenses:Food                    $120          $98
-24-Jul-01 - 24-Jul-31 Expenses:Food                    $115         $100
-                      Expenses:Utilities               $125          $69
+24-Jan-01 - 24-Jan-31  Expenses:Utilities               $120         $120
+24-Feb-01 - 24-Feb-29  Expenses:Food                    $110          $55
+24-Mar-01 - 24-Mar-31  Expenses:Utilities               $130          $83
+24-Apr-01 - 24-Apr-30  Expenses:Food                    $105          $54
+24-May-01 - 24-May-31  Expenses:Food                    $250          $93
+                       Expenses:Utilities               $110          $72
+24-Jun-01 - 24-Jun-30  Expenses:Food                    $120          $98
+24-Jul-01 - 24-Jul-31  Expenses:Food                    $115         $100
+                       Expenses:Utilities               $125          $69
 end test
 
 ; ---------------------------------------------------------------------------
@@ -309,14 +309,14 @@ end test
 ; same grouped output as the -M shorthand.  Restricted to Jan-Mar.
 
 test --period monthly -A --columns 80 --begin 2024/01/01 --end 2024/04/01 reg Expenses
-24-Jan-01 - 24-Jan-31 Expenses:Food                    $340         $340
-                      Expenses:Transport               $150         $150
-                      Expenses:Utilities               $120         $120
-24-Feb-01 - 24-Feb-29 Expenses:Food                    $185         $262
-                      Expenses:Transport                $55         $102
-24-Mar-01 - 24-Mar-31 Expenses:Food                     $95         $207
-                      Expenses:Transport                $60          $88
-                      Expenses:Utilities               $130          $83
+24-Jan-01 - 24-Jan-31  Expenses:Food                    $340         $340
+                       Expenses:Transport               $150         $150
+                       Expenses:Utilities               $120         $120
+24-Feb-01 - 24-Feb-29  Expenses:Food                    $185         $262
+                       Expenses:Transport                $55         $102
+24-Mar-01 - 24-Mar-31  Expenses:Food                     $95         $207
+                       Expenses:Transport                $60          $88
+                       Expenses:Utilities               $130          $83
 end test
 
 ; ---------------------------------------------------------------------------
@@ -328,15 +328,15 @@ end test
 ; EUR running avg: Jan=50, Feb=(50+30)/2=40, Mar=(50+30+40)/3=40.
 
 test -M -A --columns 80 reg Travel:Food
-24-Jan-01 - 24-Jan-31 Travel:Food                      $100
-                                                     50 EUR         $100
-                                                                  50 EUR
-24-Feb-01 - 24-Feb-29 Travel:Food                       $80
-                                                     30 EUR          $90
-                                                                  40 EUR
-24-Mar-01 - 24-Mar-31 Travel:Food                      $120
-                                                     40 EUR         $100
-                                                                  40 EUR
+24-Jan-01 - 24-Jan-31  Travel:Food                      $100
+                                                      50 EUR         $100
+                                                                   50 EUR
+24-Feb-01 - 24-Feb-29  Travel:Food                       $80
+                                                      30 EUR          $90
+                                                                   40 EUR
+24-Mar-01 - 24-Mar-31  Travel:Food                      $120
+                                                      40 EUR         $100
+                                                                   40 EUR
 end test
 
 ; ---------------------------------------------------------------------------
@@ -349,14 +349,14 @@ end test
 ; ($150) < Food ($340) in Jan.
 
 test -M -A --sort amount --columns 80 --begin 2024/01/01 --end 2024/04/01 reg Expenses
-24-Jan-01 - 24-Jan-31 Expenses:Utilities               $120         $120
-                      Expenses:Transport               $150         $150
-                      Expenses:Food                    $340         $340
-24-Feb-01 - 24-Feb-29 Expenses:Transport                $55         $102
-                      Expenses:Food                    $185         $262
-24-Mar-01 - 24-Mar-31 Expenses:Transport                $60          $88
-                      Expenses:Food                     $95         $207
-                      Expenses:Utilities               $130          $83
+24-Jan-01 - 24-Jan-31  Expenses:Utilities               $120         $120
+                       Expenses:Transport               $150         $150
+                       Expenses:Food                    $340         $340
+24-Feb-01 - 24-Feb-29  Expenses:Transport                $55         $102
+                       Expenses:Food                    $185         $262
+24-Mar-01 - 24-Mar-31  Expenses:Transport                $60          $88
+                       Expenses:Food                     $95         $207
+                       Expenses:Utilities               $130          $83
 end test
 
 ; ---------------------------------------------------------------------------
@@ -369,14 +369,14 @@ end test
 ; Utilities appears in periods 1 and 3: dev(1)=0, dev(3)=$130-$83=$47.
 
 test -M -A --deviation --columns 80 --begin 2024/01/01 --end 2024/04/01 reg Expenses
-24-Jan-01 - 24-Jan-31 Expenses:Food                    $340            0
-                      Expenses:Transport               $150            0
-                      Expenses:Utilities               $120            0
-24-Feb-01 - 24-Feb-29 Expenses:Food                    $185         $-78
-                      Expenses:Transport                $55         $-48
-24-Mar-01 - 24-Mar-31 Expenses:Food                     $95        $-112
-                      Expenses:Transport                $60         $-28
-                      Expenses:Utilities               $130          $47
+24-Jan-01 - 24-Jan-31  Expenses:Food                    $340            0
+                       Expenses:Transport               $150            0
+                       Expenses:Utilities               $120            0
+24-Feb-01 - 24-Feb-29  Expenses:Food                    $185         $-78
+                       Expenses:Transport                $55         $-48
+24-Mar-01 - 24-Mar-31  Expenses:Food                     $95        $-112
+                       Expenses:Transport                $60         $-28
+                       Expenses:Utilities               $130          $47
 end test
 
 ; ---------------------------------------------------------------------------
@@ -389,16 +389,16 @@ end test
 ; This tests that empty periods correctly contribute to the divisor.
 
 test -M -A --empty --columns 80 --begin 2023/11/01 --end 2024/04/01 reg Expenses
-23-Nov-01 - 23-Nov-30 <None>                              0            0
-23-Dec-01 - 23-Dec-31 <None>                              0            0
-24-Jan-01 - 24-Jan-31 Expenses:Food                    $340         $113
-                      Expenses:Transport               $150          $50
-                      Expenses:Utilities               $120          $40
-24-Feb-01 - 24-Feb-29 Expenses:Food                    $185         $131
-                      Expenses:Transport                $55          $51
-24-Mar-01 - 24-Mar-31 Expenses:Food                     $95         $124
-                      Expenses:Transport                $60          $53
-                      Expenses:Utilities               $130          $50
+23-Nov-01 - 23-Nov-30  <None>                              0            0
+23-Dec-01 - 23-Dec-31  <None>                              0            0
+24-Jan-01 - 24-Jan-31  Expenses:Food                    $340         $113
+                       Expenses:Transport               $150          $50
+                       Expenses:Utilities               $120          $40
+24-Feb-01 - 24-Feb-29  Expenses:Food                    $185         $131
+                       Expenses:Transport                $55          $51
+24-Mar-01 - 24-Mar-31  Expenses:Food                     $95         $124
+                       Expenses:Transport                $60          $53
+                       Expenses:Utilities               $130          $50
 end test
 
 ; ---------------------------------------------------------------------------

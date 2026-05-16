@@ -25,10 +25,10 @@ test reg --begin 2024/02/01 --end 2024/04/01
 end test
 
 test reg --period "monthly" --collapse Expenses
-24-Jan-01 - 24-Jan-31 Expenses:Food                  $50.00       $50.00
-24-Feb-01 - 24-Feb-29 Expenses:Food                  $60.00      $110.00
-24-Mar-01 - 24-Mar-31 Expenses:Food                  $70.00      $180.00
-24-Apr-01 - 24-Apr-30 Expenses:Food                  $80.00      $260.00
+24-Jan-01 - 24-Jan-31  Expenses:Food                  $50.00       $50.00
+24-Feb-01 - 24-Feb-29  Expenses:Food                  $60.00      $110.00
+24-Mar-01 - 24-Mar-31  Expenses:Food                  $70.00      $180.00
+24-Apr-01 - 24-Apr-30  Expenses:Food                  $80.00      $260.00
 end test
 
 test reg --period "in 2024" Expenses

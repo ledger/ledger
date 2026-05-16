@@ -201,12 +201,14 @@ value_t select_command(call_scope_t& args) {
                : static_cast<std::size_t>(format_date(CURRENT_DATE(), FMT_PRINTED).length()));
       // In interval reports (e.g. --daily, --monthly), the payee column
       // contains the period range "- <end-date>", which is exactly
-      // date_width + 2 wide.  Default payee_width to that size in interval
-      // mode -- the usual cols * 0.263 fraction is much wider than needed
-      // and wastes space better given to the account column (#3216).
+      // date_width + 2 wide.  Default payee_width to that size + 1 so the
+      // column ends with a trailing space, giving two visual spaces of
+      // separation from the account column.  This replaces the usual
+      // cols * 0.263 default, which leaves the column much wider than
+      // needed and wastes space better given to the account column (#3216).
       std::size_t payee_width = (report.HANDLED(payee_width_)
                                      ? lexical_cast<std::size_t>(report.HANDLER(payee_width_).str())
-                                 : report.HANDLED(period_) ? date_width + 2
+                                 : report.HANDLED(period_) ? date_width + 3
                                                            : std::size_t(double(cols) * 0.263157));
       std::size_t account_width =
           (report.HANDLED(account_width_)

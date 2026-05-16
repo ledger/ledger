@@ -19,6 +19,6 @@
     Assets:Cash
 
 test reg Expenses --period "every 2 months"
-24-Jan-01 - 24-Feb-29 Expenses:Food                  $30.00       $30.00
-24-Mar-01 - 24-Apr-30 Expenses:Food                  $70.00      $100.00
+24-Jan-01 - 24-Feb-29  Expenses:Food                  $30.00       $30.00
+24-Mar-01 - 24-Apr-30  Expenses:Food                  $70.00      $100.00
 end test

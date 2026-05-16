@@ -9,6 +9,6 @@
     Assets:Checking
 
 test reg -Y Expenses
-24-Jan-01 - 24-Dec-31 Expenses:Dining                $30.00       $30.00
-                      Expenses:Food                  $50.00       $80.00
+24-Jan-01 - 24-Dec-31  Expenses:Dining                $30.00       $30.00
+                       Expenses:Food                  $50.00       $80.00
 end test

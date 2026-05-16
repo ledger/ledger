@@ -32,18 +32,18 @@
 
 ; Test with monthly period
 test reg Expenses --monthly
-24-Jan-01 - 24-Jan-31 Expenses:Food                  $10.00       $10.00
-24-Feb-01 - 24-Feb-29 Expenses:Food                  $20.00       $30.00
-24-Mar-01 - 24-Mar-31 Expenses:Food                  $30.00       $60.00
-24-Apr-01 - 24-Apr-30 Expenses:Food                  $40.00      $100.00
-24-May-01 - 24-May-31 Expenses:Food                  $50.00      $150.00
-24-Jun-01 - 24-Jun-30 Expenses:Food                  $60.00      $210.00
+24-Jan-01 - 24-Jan-31  Expenses:Food                  $10.00       $10.00
+24-Feb-01 - 24-Feb-29  Expenses:Food                  $20.00       $30.00
+24-Mar-01 - 24-Mar-31  Expenses:Food                  $30.00       $60.00
+24-Apr-01 - 24-Apr-30  Expenses:Food                  $40.00      $100.00
+24-May-01 - 24-May-31  Expenses:Food                  $50.00      $150.00
+24-Jun-01 - 24-Jun-30  Expenses:Food                  $60.00      $210.00
 end test
 
 ; Test with quarterly period
 test reg Expenses --quarterly
-24-Jan-01 - 24-Mar-31 Expenses:Food                  $60.00       $60.00
-24-Apr-01 - 24-Jun-30 Expenses:Food                 $150.00      $210.00
+24-Jan-01 - 24-Mar-31  Expenses:Food                  $60.00       $60.00
+24-Apr-01 - 24-Jun-30  Expenses:Food                 $150.00      $210.00
 end test
 
 ; Test with --begin and --end date range

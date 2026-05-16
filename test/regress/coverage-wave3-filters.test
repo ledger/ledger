@@ -18,15 +18,15 @@
 
 ; Monthly interval (covers interval_posts )
 test reg --monthly Expenses:Food
-24-Jan-01 - 24-Jan-31 Expenses:Food                 $250.00      $250.00
-24-Feb-01 - 24-Feb-29 Expenses:Food                 $200.00      $450.00
+24-Jan-01 - 24-Jan-31  Expenses:Food                 $250.00      $250.00
+24-Feb-01 - 24-Feb-29  Expenses:Food                 $200.00      $450.00
 end test
 
 ; Weekly interval
 test reg --weekly Expenses:Food
-23-Dec-31 - 24-Jan-06 Expenses:Food                 $100.00      $100.00
-24-Jan-14 - 24-Jan-20 Expenses:Food                 $150.00      $250.00
-24-Feb-04 - 24-Feb-10 Expenses:Food                 $200.00      $450.00
+23-Dec-31 - 24-Jan-06  Expenses:Food                 $100.00      $100.00
+24-Jan-14 - 24-Jan-20  Expenses:Food                 $150.00      $250.00
+24-Feb-04 - 24-Feb-10  Expenses:Food                 $200.00      $450.00
 end test
 
 ; Test subtotal (covers subtotal_posts report_subtotal )

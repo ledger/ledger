@@ -35,8 +35,8 @@ commodity $
 
 ; Test weekly interval
 test register Expenses:Food --weekly
-24-Jan-14 - 24-Jan-20 Expenses:Food                  $30.00       $30.00
-24-Feb-11 - 24-Feb-17 Expenses:Food                  $15.00       $45.00
+24-Jan-14 - 24-Jan-20  Expenses:Food                  $30.00       $30.00
+24-Feb-11 - 24-Feb-17  Expenses:Food                  $15.00       $45.00
 end test
 
 ; Test equity
@@ -71,7 +71,7 @@ end test
     Assets:Cash
 
 test register Expenses:Food --budget --monthly --end 2024/04/01
-24-Jan-01 - 24-Jan-31 Expenses:Food                $-170.00     $-170.00
-24-Feb-01 - 24-Feb-29 Expenses:Food                $-185.00     $-355.00
-24-Mar-01 - 24-Mar-31 Expenses:Food                $-200.00     $-555.00
+24-Jan-01 - 24-Jan-31  Expenses:Food                $-170.00     $-170.00
+24-Feb-01 - 24-Feb-29  Expenses:Food                $-185.00     $-355.00
+24-Mar-01 - 24-Mar-31  Expenses:Food                $-200.00     $-555.00
 end test

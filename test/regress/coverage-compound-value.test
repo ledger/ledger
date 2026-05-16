@@ -12,9 +12,9 @@
     Assets:Cash
 
 test reg --monthly
-24-Jan-01 - 24-Jan-31 Assets:Cash                   $-10.00
-                                                    -10 EUR      $-10.00
-                                                                 -10 EUR
-                      Expenses:Food                  $10.00
-                                                     10 EUR            0
+24-Jan-01 - 24-Jan-31  Assets:Cash                   $-10.00
+                                                     -10 EUR      $-10.00
+                                                                  -10 EUR
+                       Expenses:Food                  $10.00
+                                                      10 EUR            0
 end test

@@ -19,10 +19,10 @@
     Assets:Cash
 
 test reg --monthly --sort amount
-08-Jan-01 - 08-Jan-31 Assets:Cash                  $-530.00     $-530.00
-                      Expenses:Food                  $30.00     $-500.00
-                      Expenses:Rent                 $500.00            0
-08-Feb-01 - 08-Feb-29 Assets:Cash                  $-525.00     $-525.00
-                      Expenses:Food                  $25.00     $-500.00
-                      Expenses:Rent                 $500.00            0
+08-Jan-01 - 08-Jan-31  Assets:Cash                  $-530.00     $-530.00
+                       Expenses:Food                  $30.00     $-500.00
+                       Expenses:Rent                 $500.00            0
+08-Feb-01 - 08-Feb-29  Assets:Cash                  $-525.00     $-525.00
+                       Expenses:Food                  $25.00     $-500.00
+                       Expenses:Rent                 $500.00            0
 end test

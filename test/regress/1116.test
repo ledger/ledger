@@ -7,5 +7,5 @@
     Assets:Checking
 
 test reg -p Monthly ^A
-15-Jan-01 - 15-Jan-31 Assets:Checking               $-10.00      $-10.00
+15-Jan-01 - 15-Jan-31  Assets:Checking               $-10.00      $-10.00
 end test

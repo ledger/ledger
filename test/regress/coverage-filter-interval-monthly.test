@@ -18,8 +18,8 @@
     Assets:Checking
 
 test reg --monthly Expenses
-24-Jan-01 - 24-Jan-31 Expenses:Food                  $50.00       $50.00
-                      Expenses:Gas                   $35.00       $85.00
-24-Feb-01 - 24-Feb-29 Expenses:Dining                $40.00      $125.00
-                      Expenses:Food                  $45.00      $170.00
+24-Jan-01 - 24-Jan-31  Expenses:Food                  $50.00       $50.00
+                       Expenses:Gas                   $35.00       $85.00
+24-Feb-01 - 24-Feb-29  Expenses:Dining                $40.00      $125.00
+                       Expenses:Food                  $45.00      $170.00
 end test

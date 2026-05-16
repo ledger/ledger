@@ -206,79 +206,79 @@ test reg -p "apr 2011" Expenses
 end test
 
 test reg -p "apr 2011" Expenses --monthly
-11-Apr-01 - 11-Apr-30 Expenses:Auto:Fees             $13.00       $13.00
-                      Expenses:Cash                 $-13.00            0
-                      Expens:Computer:Internet       $16.10       $16.10
-                      Expenses:Computer:Movies        $0.99       $17.09
-                      Expens:Computer:Software        $4.99       $22.08
-                      Expenses:Movies                 $4.98       $27.06
-                      Expenses:Music                  $1.29       $28.35
-                      Expenses:Taxes:Sales            $0.86       $29.21
+11-Apr-01 - 11-Apr-30  Expenses:Auto:Fees             $13.00       $13.00
+                       Expenses:Cash                 $-13.00            0
+                       Expens:Computer:Internet       $16.10       $16.10
+                       Expenses:Computer:Movies        $0.99       $17.09
+                       Expens:Computer:Software        $4.99       $22.08
+                       Expenses:Movies                 $4.98       $27.06
+                       Expenses:Music                  $1.29       $28.35
+                       Expenses:Taxes:Sales            $0.86       $29.21
 end test
 
 test reg -p "apr 2011" Expenses --monthly --exact
-11-Apr-01 - 11-Apr-29 Expenses:Auto:Fees             $13.00       $13.00
-                      Expenses:Cash                 $-13.00            0
-                      Expens:Computer:Internet       $16.10       $16.10
-                      Expenses:Computer:Movies        $0.99       $17.09
-                      Expens:Computer:Software        $4.99       $22.08
-                      Expenses:Movies                 $4.98       $27.06
-                      Expenses:Music                  $1.29       $28.35
-                      Expenses:Taxes:Sales            $0.86       $29.21
+11-Apr-01 - 11-Apr-29  Expenses:Auto:Fees             $13.00       $13.00
+                       Expenses:Cash                 $-13.00            0
+                       Expens:Computer:Internet       $16.10       $16.10
+                       Expenses:Computer:Movies        $0.99       $17.09
+                       Expens:Computer:Software        $4.99       $22.08
+                       Expenses:Movies                 $4.98       $27.06
+                       Expenses:Music                  $1.29       $28.35
+                       Expenses:Taxes:Sales            $0.86       $29.21
 end test
 
 test reg -p "apr 2011" Expenses --weekly
-11-Apr-01 - 11-Apr-02 Expens:Computer:Internet       $16.10       $16.10
-11-Apr-03 - 11-Apr-09 Expenses:Auto:Fees             $13.00       $29.10
-                      Expenses:Cash                 $-13.00       $16.10
-                      Expenses:Music                  $1.29       $17.39
-                      Expenses:Taxes:Sales            $0.09       $17.48
-11-Apr-17 - 11-Apr-23 Expens:Computer:Software        $4.99       $22.47
-                      Expenses:Taxes:Sales            $0.35       $22.82
-11-Apr-24 - 11-Apr-30 Expenses:Computer:Movies        $0.99       $23.81
-                      Expenses:Movies                 $4.98       $28.79
-                      Expenses:Taxes:Sales            $0.42       $29.21
+11-Apr-01 - 11-Apr-02  Expens:Computer:Internet       $16.10       $16.10
+11-Apr-03 - 11-Apr-09  Expenses:Auto:Fees             $13.00       $29.10
+                       Expenses:Cash                 $-13.00       $16.10
+                       Expenses:Music                  $1.29       $17.39
+                       Expenses:Taxes:Sales            $0.09       $17.48
+11-Apr-17 - 11-Apr-23  Expens:Computer:Software        $4.99       $22.47
+                       Expenses:Taxes:Sales            $0.35       $22.82
+11-Apr-24 - 11-Apr-30  Expenses:Computer:Movies        $0.99       $23.81
+                       Expenses:Movies                 $4.98       $28.79
+                       Expenses:Taxes:Sales            $0.42       $29.21
 end test
 
 test reg -p "apr 2011" Expenses --weekly --exact
-11-Apr-01 - 11-Apr-01 Expens:Computer:Internet       $16.10       $16.10
-11-Apr-05 - 11-Apr-05 Expenses:Auto:Fees             $13.00       $29.10
-                      Expenses:Cash                 $-13.00       $16.10
-                      Expenses:Music                  $1.29       $17.39
-                      Expenses:Taxes:Sales            $0.09       $17.48
-11-Apr-19 - 11-Apr-19 Expens:Computer:Software        $4.99       $22.47
-                      Expenses:Taxes:Sales            $0.35       $22.82
-11-Apr-24 - 11-Apr-29 Expenses:Computer:Movies        $0.99       $23.81
-                      Expenses:Movies                 $4.98       $28.79
-                      Expenses:Taxes:Sales            $0.42       $29.21
+11-Apr-01 - 11-Apr-01  Expens:Computer:Internet       $16.10       $16.10
+11-Apr-05 - 11-Apr-05  Expenses:Auto:Fees             $13.00       $29.10
+                       Expenses:Cash                 $-13.00       $16.10
+                       Expenses:Music                  $1.29       $17.39
+                       Expenses:Taxes:Sales            $0.09       $17.48
+11-Apr-19 - 11-Apr-19  Expens:Computer:Software        $4.99       $22.47
+                       Expenses:Taxes:Sales            $0.35       $22.82
+11-Apr-24 - 11-Apr-29  Expenses:Computer:Movies        $0.99       $23.81
+                       Expenses:Movies                 $4.98       $28.79
+                       Expenses:Taxes:Sales            $0.42       $29.21
 end test
 
 test reg -p "apr 2011" Expenses --weekly --empty
-11-Apr-01 - 11-Apr-02 Expens:Computer:Internet       $16.10       $16.10
-11-Apr-03 - 11-Apr-09 Expenses:Auto:Fees             $13.00       $29.10
-                      Expenses:Cash                 $-13.00       $16.10
-                      Expenses:Music                  $1.29       $17.39
-                      Expenses:Taxes:Sales            $0.09       $17.48
-11-Apr-10 - 11-Apr-16 <None>                              0       $17.48
-11-Apr-17 - 11-Apr-23 Expens:Computer:Software        $4.99       $22.47
-                      Expenses:Taxes:Sales            $0.35       $22.82
-11-Apr-24 - 11-Apr-30 Expenses:Computer:Movies        $0.99       $23.81
-                      Expenses:Movies                 $4.98       $28.79
-                      Expenses:Taxes:Sales            $0.42       $29.21
+11-Apr-01 - 11-Apr-02  Expens:Computer:Internet       $16.10       $16.10
+11-Apr-03 - 11-Apr-09  Expenses:Auto:Fees             $13.00       $29.10
+                       Expenses:Cash                 $-13.00       $16.10
+                       Expenses:Music                  $1.29       $17.39
+                       Expenses:Taxes:Sales            $0.09       $17.48
+11-Apr-10 - 11-Apr-16  <None>                              0       $17.48
+11-Apr-17 - 11-Apr-23  Expens:Computer:Software        $4.99       $22.47
+                       Expenses:Taxes:Sales            $0.35       $22.82
+11-Apr-24 - 11-Apr-30  Expenses:Computer:Movies        $0.99       $23.81
+                       Expenses:Movies                 $4.98       $28.79
+                       Expenses:Taxes:Sales            $0.42       $29.21
 end test
 
 test reg -p "apr 2011" Expenses --weekly --empty --exact
-11-Apr-01 - 11-Apr-01 Expens:Computer:Internet       $16.10       $16.10
-11-Apr-05 - 11-Apr-05 Expenses:Auto:Fees             $13.00       $29.10
-                      Expenses:Cash                 $-13.00       $16.10
-                      Expenses:Music                  $1.29       $17.39
-                      Expenses:Taxes:Sales            $0.09       $17.48
-11-Apr-16 - 11-Apr-16 <None>                              0       $17.48
-11-Apr-19 - 11-Apr-19 Expens:Computer:Software        $4.99       $22.47
-                      Expenses:Taxes:Sales            $0.35       $22.82
-11-Apr-24 - 11-Apr-29 Expenses:Computer:Movies        $0.99       $23.81
-                      Expenses:Movies                 $4.98       $28.79
-                      Expenses:Taxes:Sales            $0.42       $29.21
+11-Apr-01 - 11-Apr-01  Expens:Computer:Internet       $16.10       $16.10
+11-Apr-05 - 11-Apr-05  Expenses:Auto:Fees             $13.00       $29.10
+                       Expenses:Cash                 $-13.00       $16.10
+                       Expenses:Music                  $1.29       $17.39
+                       Expenses:Taxes:Sales            $0.09       $17.48
+11-Apr-16 - 11-Apr-16  <None>                              0       $17.48
+11-Apr-19 - 11-Apr-19  Expens:Computer:Software        $4.99       $22.47
+                       Expenses:Taxes:Sales            $0.35       $22.82
+11-Apr-24 - 11-Apr-29  Expenses:Computer:Movies        $0.99       $23.81
+                       Expenses:Movies                 $4.98       $28.79
+                       Expenses:Taxes:Sales            $0.42       $29.21
 end test
 
 test reg -p "may 2011"
@@ -406,147 +406,147 @@ test reg -p "may 2011"
 end test
 
 test reg -p "may 2011" --monthly
-11-May-01 - 11-May-31 Expenses:Auto:Gas              $70.20       $70.20
-                      Expenses:Beauty                $18.91       $89.11
-                      Expenses:Bedding              $108.84      $197.95
-                      Expenses:Cash                 $-97.00      $100.95
-                      Expenses:Clothing               $2.96      $103.91
-                      Expens:Computer:Internet       $46.10      $150.01
-                      Expens:Computer:Software        $6.99      $157.00
-                      Expenses:Food                  $19.90      $176.90
-                      Expenses:Food:Dining           $85.22      $262.12
-                      Expenses:Food:Grocery         $225.61      $487.73
-                      Expenses:Home               $1,971.57    $2,459.30
-                      Expenses:Home:Supplies         $38.90    $2,498.20
-                      Expenses:Movies                 $5.97    $2,504.17
-                      Expenses:Supplies              $21.82    $2,525.99
-                      Expenses:Taxes:Sales          $185.03    $2,711.02
-                      Expenses:Tips                 $108.85    $2,819.87
-                      Liabilities:MasterCard     $-2,819.87            0
+11-May-01 - 11-May-31  Expenses:Auto:Gas              $70.20       $70.20
+                       Expenses:Beauty                $18.91       $89.11
+                       Expenses:Bedding              $108.84      $197.95
+                       Expenses:Cash                 $-97.00      $100.95
+                       Expenses:Clothing               $2.96      $103.91
+                       Expens:Computer:Internet       $46.10      $150.01
+                       Expens:Computer:Software        $6.99      $157.00
+                       Expenses:Food                  $19.90      $176.90
+                       Expenses:Food:Dining           $85.22      $262.12
+                       Expenses:Food:Grocery         $225.61      $487.73
+                       Expenses:Home               $1,971.57    $2,459.30
+                       Expenses:Home:Supplies         $38.90    $2,498.20
+                       Expenses:Movies                 $5.97    $2,504.17
+                       Expenses:Supplies              $21.82    $2,525.99
+                       Expenses:Taxes:Sales          $185.03    $2,711.02
+                       Expenses:Tips                 $108.85    $2,819.87
+                       Liabilities:MasterCard     $-2,819.87            0
 end test
 
 test reg -p "may 2011" --weekly
-11-May-01 - 11-May-07 Expens:Computer:Internet       $16.10       $16.10
-                      Liabilities:MasterCard        $-16.10            0
-11-May-15 - 11-May-21 Expens:Computer:Internet       $30.00       $30.00
-                      Expens:Computer:Software        $6.99       $36.99
-                      Expenses:Taxes:Sales            $0.49       $37.48
-                      Liabilities:MasterCard        $-37.48            0
-11-May-22 - 11-May-28 Expenses:Auto:Gas              $70.20       $70.20
-                      Expenses:Beauty                $18.91       $89.11
-                      Expenses:Bedding              $108.84      $197.95
-                      Expenses:Clothing               $2.96      $200.91
-                      Expenses:Food                  $19.90      $220.81
-                      Expenses:Food:Dining           $78.32      $299.13
-                      Expenses:Food:Grocery          $67.97      $367.10
-                      Expenses:Home               $1,863.44    $2,230.54
-                      Expenses:Home:Supplies         $38.90    $2,269.44
-                      Expenses:Movies                 $5.97    $2,275.41
-                      Expenses:Supplies               $3.84    $2,279.25
-                      Expenses:Taxes:Sales          $169.44    $2,448.69
-                      Expenses:Tips                  $11.85    $2,460.54
-                      Liabilities:MasterCard     $-2,460.54            0
-11-May-29 - 11-May-31 Expenses:Cash                 $-97.00      $-97.00
-                      Expenses:Food:Dining            $6.90      $-90.10
-                      Expenses:Food:Grocery         $157.64       $67.54
-                      Expenses:Home                 $108.13      $175.67
-                      Expenses:Supplies              $17.98      $193.65
-                      Expenses:Taxes:Sales           $15.10      $208.75
-                      Expenses:Tips                  $97.00      $305.75
-                      Liabilities:MasterCard       $-305.75            0
+11-May-01 - 11-May-07  Expens:Computer:Internet       $16.10       $16.10
+                       Liabilities:MasterCard        $-16.10            0
+11-May-15 - 11-May-21  Expens:Computer:Internet       $30.00       $30.00
+                       Expens:Computer:Software        $6.99       $36.99
+                       Expenses:Taxes:Sales            $0.49       $37.48
+                       Liabilities:MasterCard        $-37.48            0
+11-May-22 - 11-May-28  Expenses:Auto:Gas              $70.20       $70.20
+                       Expenses:Beauty                $18.91       $89.11
+                       Expenses:Bedding              $108.84      $197.95
+                       Expenses:Clothing               $2.96      $200.91
+                       Expenses:Food                  $19.90      $220.81
+                       Expenses:Food:Dining           $78.32      $299.13
+                       Expenses:Food:Grocery          $67.97      $367.10
+                       Expenses:Home               $1,863.44    $2,230.54
+                       Expenses:Home:Supplies         $38.90    $2,269.44
+                       Expenses:Movies                 $5.97    $2,275.41
+                       Expenses:Supplies               $3.84    $2,279.25
+                       Expenses:Taxes:Sales          $169.44    $2,448.69
+                       Expenses:Tips                  $11.85    $2,460.54
+                       Liabilities:MasterCard     $-2,460.54            0
+11-May-29 - 11-May-31  Expenses:Cash                 $-97.00      $-97.00
+                       Expenses:Food:Dining            $6.90      $-90.10
+                       Expenses:Food:Grocery         $157.64       $67.54
+                       Expenses:Home                 $108.13      $175.67
+                       Expenses:Supplies              $17.98      $193.65
+                       Expenses:Taxes:Sales           $15.10      $208.75
+                       Expenses:Tips                  $97.00      $305.75
+                       Liabilities:MasterCard       $-305.75            0
 end test
 
 test reg -p "may 2011" --weekly --exact
-11-May-01 - 11-May-01 Expens:Computer:Internet       $16.10       $16.10
-                      Liabilities:MasterCard        $-16.10            0
-11-May-18 - 11-May-20 Expens:Computer:Internet       $30.00       $30.00
-                      Expens:Computer:Software        $6.99       $36.99
-                      Expenses:Taxes:Sales            $0.49       $37.48
-                      Liabilities:MasterCard        $-37.48            0
-11-May-26 - 11-May-28 Expenses:Auto:Gas              $70.20       $70.20
-                      Expenses:Beauty                $18.91       $89.11
-                      Expenses:Bedding              $108.84      $197.95
-                      Expenses:Clothing               $2.96      $200.91
-                      Expenses:Food                  $19.90      $220.81
-                      Expenses:Food:Dining           $78.32      $299.13
-                      Expenses:Food:Grocery          $67.97      $367.10
-                      Expenses:Home               $1,863.44    $2,230.54
-                      Expenses:Home:Supplies         $38.90    $2,269.44
-                      Expenses:Movies                 $5.97    $2,275.41
-                      Expenses:Supplies               $3.84    $2,279.25
-                      Expenses:Taxes:Sales          $169.44    $2,448.69
-                      Expenses:Tips                  $11.85    $2,460.54
-                      Liabilities:MasterCard     $-2,460.54            0
-11-May-29 - 11-May-31 Expenses:Cash                 $-97.00      $-97.00
-                      Expenses:Food:Dining            $6.90      $-90.10
-                      Expenses:Food:Grocery         $157.64       $67.54
-                      Expenses:Home                 $108.13      $175.67
-                      Expenses:Supplies              $17.98      $193.65
-                      Expenses:Taxes:Sales           $15.10      $208.75
-                      Expenses:Tips                  $97.00      $305.75
-                      Liabilities:MasterCard       $-305.75            0
+11-May-01 - 11-May-01  Expens:Computer:Internet       $16.10       $16.10
+                       Liabilities:MasterCard        $-16.10            0
+11-May-18 - 11-May-20  Expens:Computer:Internet       $30.00       $30.00
+                       Expens:Computer:Software        $6.99       $36.99
+                       Expenses:Taxes:Sales            $0.49       $37.48
+                       Liabilities:MasterCard        $-37.48            0
+11-May-26 - 11-May-28  Expenses:Auto:Gas              $70.20       $70.20
+                       Expenses:Beauty                $18.91       $89.11
+                       Expenses:Bedding              $108.84      $197.95
+                       Expenses:Clothing               $2.96      $200.91
+                       Expenses:Food                  $19.90      $220.81
+                       Expenses:Food:Dining           $78.32      $299.13
+                       Expenses:Food:Grocery          $67.97      $367.10
+                       Expenses:Home               $1,863.44    $2,230.54
+                       Expenses:Home:Supplies         $38.90    $2,269.44
+                       Expenses:Movies                 $5.97    $2,275.41
+                       Expenses:Supplies               $3.84    $2,279.25
+                       Expenses:Taxes:Sales          $169.44    $2,448.69
+                       Expenses:Tips                  $11.85    $2,460.54
+                       Liabilities:MasterCard     $-2,460.54            0
+11-May-29 - 11-May-31  Expenses:Cash                 $-97.00      $-97.00
+                       Expenses:Food:Dining            $6.90      $-90.10
+                       Expenses:Food:Grocery         $157.64       $67.54
+                       Expenses:Home                 $108.13      $175.67
+                       Expenses:Supplies              $17.98      $193.65
+                       Expenses:Taxes:Sales           $15.10      $208.75
+                       Expenses:Tips                  $97.00      $305.75
+                       Liabilities:MasterCard       $-305.75            0
 end test
 
 test reg -p "may 2011" --weekly --empty
-11-May-01 - 11-May-07 Expens:Computer:Internet       $16.10       $16.10
-                      Liabilities:MasterCard        $-16.10            0
-11-May-08 - 11-May-14 <None>                              0            0
-11-May-15 - 11-May-21 Expens:Computer:Internet       $30.00       $30.00
-                      Expens:Computer:Software        $6.99       $36.99
-                      Expenses:Taxes:Sales            $0.49       $37.48
-                      Liabilities:MasterCard        $-37.48            0
-11-May-22 - 11-May-28 Expenses:Auto:Gas              $70.20       $70.20
-                      Expenses:Beauty                $18.91       $89.11
-                      Expenses:Bedding              $108.84      $197.95
-                      Expenses:Clothing               $2.96      $200.91
-                      Expenses:Food                  $19.90      $220.81
-                      Expenses:Food:Dining           $78.32      $299.13
-                      Expenses:Food:Grocery          $67.97      $367.10
-                      Expenses:Home               $1,863.44    $2,230.54
-                      Expenses:Home:Supplies         $38.90    $2,269.44
-                      Expenses:Movies                 $5.97    $2,275.41
-                      Expenses:Supplies               $3.84    $2,279.25
-                      Expenses:Taxes:Sales          $169.44    $2,448.69
-                      Expenses:Tips                  $11.85    $2,460.54
-                      Liabilities:MasterCard     $-2,460.54            0
-11-May-29 - 11-May-31 Expenses:Cash                 $-97.00      $-97.00
-                      Expenses:Food:Dining            $6.90      $-90.10
-                      Expenses:Food:Grocery         $157.64       $67.54
-                      Expenses:Home                 $108.13      $175.67
-                      Expenses:Supplies              $17.98      $193.65
-                      Expenses:Taxes:Sales           $15.10      $208.75
-                      Expenses:Tips                  $97.00      $305.75
-                      Liabilities:MasterCard       $-305.75            0
+11-May-01 - 11-May-07  Expens:Computer:Internet       $16.10       $16.10
+                       Liabilities:MasterCard        $-16.10            0
+11-May-08 - 11-May-14  <None>                              0            0
+11-May-15 - 11-May-21  Expens:Computer:Internet       $30.00       $30.00
+                       Expens:Computer:Software        $6.99       $36.99
+                       Expenses:Taxes:Sales            $0.49       $37.48
+                       Liabilities:MasterCard        $-37.48            0
+11-May-22 - 11-May-28  Expenses:Auto:Gas              $70.20       $70.20
+                       Expenses:Beauty                $18.91       $89.11
+                       Expenses:Bedding              $108.84      $197.95
+                       Expenses:Clothing               $2.96      $200.91
+                       Expenses:Food                  $19.90      $220.81
+                       Expenses:Food:Dining           $78.32      $299.13
+                       Expenses:Food:Grocery          $67.97      $367.10
+                       Expenses:Home               $1,863.44    $2,230.54
+                       Expenses:Home:Supplies         $38.90    $2,269.44
+                       Expenses:Movies                 $5.97    $2,275.41
+                       Expenses:Supplies               $3.84    $2,279.25
+                       Expenses:Taxes:Sales          $169.44    $2,448.69
+                       Expenses:Tips                  $11.85    $2,460.54
+                       Liabilities:MasterCard     $-2,460.54            0
+11-May-29 - 11-May-31  Expenses:Cash                 $-97.00      $-97.00
+                       Expenses:Food:Dining            $6.90      $-90.10
+                       Expenses:Food:Grocery         $157.64       $67.54
+                       Expenses:Home                 $108.13      $175.67
+                       Expenses:Supplies              $17.98      $193.65
+                       Expenses:Taxes:Sales           $15.10      $208.75
+                       Expenses:Tips                  $97.00      $305.75
+                       Liabilities:MasterCard       $-305.75            0
 end test
 
 test reg -p "may 2011" --weekly --empty --exact
-11-May-01 - 11-May-01 Expens:Computer:Internet       $16.10       $16.10
-                      Liabilities:MasterCard        $-16.10            0
-11-May-14 - 11-May-14 <None>                              0            0
-11-May-18 - 11-May-20 Expens:Computer:Internet       $30.00       $30.00
-                      Expens:Computer:Software        $6.99       $36.99
-                      Expenses:Taxes:Sales            $0.49       $37.48
-                      Liabilities:MasterCard        $-37.48            0
-11-May-26 - 11-May-28 Expenses:Auto:Gas              $70.20       $70.20
-                      Expenses:Beauty                $18.91       $89.11
-                      Expenses:Bedding              $108.84      $197.95
-                      Expenses:Clothing               $2.96      $200.91
-                      Expenses:Food                  $19.90      $220.81
-                      Expenses:Food:Dining           $78.32      $299.13
-                      Expenses:Food:Grocery          $67.97      $367.10
-                      Expenses:Home               $1,863.44    $2,230.54
-                      Expenses:Home:Supplies         $38.90    $2,269.44
-                      Expenses:Movies                 $5.97    $2,275.41
-                      Expenses:Supplies               $3.84    $2,279.25
-                      Expenses:Taxes:Sales          $169.44    $2,448.69
-                      Expenses:Tips                  $11.85    $2,460.54
-                      Liabilities:MasterCard     $-2,460.54            0
-11-May-29 - 11-May-31 Expenses:Cash                 $-97.00      $-97.00
-                      Expenses:Food:Dining            $6.90      $-90.10
-                      Expenses:Food:Grocery         $157.64       $67.54
-                      Expenses:Home                 $108.13      $175.67
-                      Expenses:Supplies              $17.98      $193.65
-                      Expenses:Taxes:Sales           $15.10      $208.75
-                      Expenses:Tips                  $97.00      $305.75
-                      Liabilities:MasterCard       $-305.75            0
+11-May-01 - 11-May-01  Expens:Computer:Internet       $16.10       $16.10
+                       Liabilities:MasterCard        $-16.10            0
+11-May-14 - 11-May-14  <None>                              0            0
+11-May-18 - 11-May-20  Expens:Computer:Internet       $30.00       $30.00
+                       Expens:Computer:Software        $6.99       $36.99
+                       Expenses:Taxes:Sales            $0.49       $37.48
+                       Liabilities:MasterCard        $-37.48            0
+11-May-26 - 11-May-28  Expenses:Auto:Gas              $70.20       $70.20
+                       Expenses:Beauty                $18.91       $89.11
+                       Expenses:Bedding              $108.84      $197.95
+                       Expenses:Clothing               $2.96      $200.91
+                       Expenses:Food                  $19.90      $220.81
+                       Expenses:Food:Dining           $78.32      $299.13
+                       Expenses:Food:Grocery          $67.97      $367.10
+                       Expenses:Home               $1,863.44    $2,230.54
+                       Expenses:Home:Supplies         $38.90    $2,269.44
+                       Expenses:Movies                 $5.97    $2,275.41
+                       Expenses:Supplies               $3.84    $2,279.25
+                       Expenses:Taxes:Sales          $169.44    $2,448.69
+                       Expenses:Tips                  $11.85    $2,460.54
+                       Liabilities:MasterCard     $-2,460.54            0
+11-May-29 - 11-May-31  Expenses:Cash                 $-97.00      $-97.00
+                       Expenses:Food:Dining            $6.90      $-90.10
+                       Expenses:Food:Grocery         $157.64       $67.54
+                       Expenses:Home                 $108.13      $175.67
+                       Expenses:Supplies              $17.98      $193.65
+                       Expenses:Taxes:Sales           $15.10      $208.75
+                       Expenses:Tips                  $97.00      $305.75
+                       Liabilities:MasterCard       $-305.75            0
 end test

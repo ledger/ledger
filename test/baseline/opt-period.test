@@ -248,24 +248,24 @@ test reg -p "january 2008"
 end test
 
 test reg -p "monthly january 2008"
-08-Jan-01 - 08-Jan-31 Assets:Cash                   $-40.00      $-40.00
-                      Expenses:Books                 $20.00      $-20.00
-                      Liabilities:Cards              $20.00            0
+08-Jan-01 - 08-Jan-31  Assets:Cash                   $-40.00      $-40.00
+                       Expenses:Books                 $20.00      $-20.00
+                       Liabilities:Cards              $20.00            0
 end test
 
 test reg -p "weekly january 2008"
-08-Jan-01 - 08-Jan-05 Assets:Cash                   $-20.00      $-20.00
-                      Expenses:Books                 $10.00      $-10.00
-                      Liabilities:Cards              $10.00            0
-08-Jan-27 - 08-Jan-31 Assets:Cash                   $-20.00      $-20.00
-                      Expenses:Books                 $10.00      $-10.00
-                      Liabilities:Cards              $10.00            0
+08-Jan-01 - 08-Jan-05  Assets:Cash                   $-20.00      $-20.00
+                       Expenses:Books                 $10.00      $-10.00
+                       Liabilities:Cards              $10.00            0
+08-Jan-27 - 08-Jan-31  Assets:Cash                   $-20.00      $-20.00
+                       Expenses:Books                 $10.00      $-10.00
+                       Liabilities:Cards              $10.00            0
 end test
 
 test reg -p "yearly 2008"
-08-Jan-01 - 08-Dec-31 Assets:Cash                 $-3120.00    $-3120.00
-                      Expenses:Books               $1560.00    $-1560.00
-                      Liabilities:Cards            $1560.00            0
+08-Jan-01 - 08-Dec-31  Assets:Cash                 $-3120.00    $-3120.00
+                       Expenses:Books               $1560.00    $-1560.00
+                       Liabilities:Cards            $1560.00            0
 end test
 
 test reg -p "from 2009/11/01"

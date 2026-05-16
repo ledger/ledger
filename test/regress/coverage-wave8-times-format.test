@@ -27,15 +27,15 @@
     Assets:Cash
 
 test reg Expenses --monthly --begin 2020/01/01 --end 2020/07/01
-20-Jan-01 - 20-Jan-31 Expenses:Food                  $10.00       $10.00
-20-Feb-01 - 20-Feb-29 Expenses:Food                  $20.00       $30.00
-20-Mar-01 - 20-Mar-31 Expenses:Food                  $30.00       $60.00
-20-Apr-01 - 20-Apr-30 Expenses:Food                  $40.00      $100.00
-20-May-01 - 20-May-31 Expenses:Food                  $50.00      $150.00
-20-Jun-01 - 20-Jun-30 Expenses:Food                  $60.00      $210.00
+20-Jan-01 - 20-Jan-31  Expenses:Food                  $10.00       $10.00
+20-Feb-01 - 20-Feb-29  Expenses:Food                  $20.00       $30.00
+20-Mar-01 - 20-Mar-31  Expenses:Food                  $30.00       $60.00
+20-Apr-01 - 20-Apr-30  Expenses:Food                  $40.00      $100.00
+20-May-01 - 20-May-31  Expenses:Food                  $50.00      $150.00
+20-Jun-01 - 20-Jun-30  Expenses:Food                  $60.00      $210.00
 end test
 
 test reg Expenses --quarterly --begin 2020/01/01 --end 2020/07/01
-20-Jan-01 - 20-Mar-31 Expenses:Food                  $60.00       $60.00
-20-Apr-01 - 20-Jun-30 Expenses:Food                 $150.00      $210.00
+20-Jan-01 - 20-Mar-31  Expenses:Food                  $60.00       $60.00
+20-Apr-01 - 20-Jun-30  Expenses:Food                 $150.00      $210.00
 end test
