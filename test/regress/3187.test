@@ -4,9 +4,9 @@
 ; explicit USD posting, USD's display precision stays at 0, and the computed
 ; basis (e.g. 20 ETH * $5.025 = $100.500) was being rounded to $100.
 ;
-; in_place_round_to_commodity_precision now leaves keep_precision in place
-; when the commodity precision is 0 and the value has fractional digits, so
-; the unrounded value flows through to display.
+; The rounded() value expression (the --basis amount expression) leaves
+; keep_precision in place when the commodity precision is 0 and the value has
+; fractional digits, so the unrounded value flows through to display.
 
 2026-04-21 * Swap
     Assets        -10 BTC @ $10.05
