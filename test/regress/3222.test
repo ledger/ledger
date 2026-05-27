@@ -1,0 +1,89 @@
+; Regression test for GitHub issue #3222:
+; "feature request: --collapse-if"
+;
+; --collapse-if EXPR collapses, in an account (balance) report, every account
+; whose EXPR evaluates true: that account is shown as a single line carrying
+; the rolled-up subtotal of itself and all of its descendants, and its
+; descendants are no longer broken out individually.  Unlike --collapse (-n),
+; which flattens the whole report to depth 1, --collapse-if is selective and
+; driven by a value expression evaluated in each account's scope, so it can
+; match on the account name (account =~ /.../), on account metadata
+; (has_tag(...)), or on any other account-scope predicate.  The grand total is
+; never affected -- only which accounts are displayed.
+
+account Expenses:NotImportant
+    ; collapse: yes
+
+2024/01/01 Grocery
+    Expenses:Food:Groceries        $100
+    Assets:Cash
+
+2024/01/02 Dining
+    Expenses:Food:Dining            $50
+    Assets:Cash
+
+2024/01/03 Rent
+    Expenses:Rent                 $1000
+    Assets:Cash
+
+2024/01/04 Toy
+    Expenses:NotImportant:Toys       $20
+    Assets:Cash
+
+2024/01/05 Candy
+    Expenses:NotImportant:Candy       $5
+    Assets:Cash
+
+; Collapse by account name: the Expenses:NotImportant subtree folds into a
+; single line, while the rest of the tree is unaffected.
+test bal --collapse-if 'account =~ /:NotImportant/' Expenses
+               $1175  Expenses
+                $150    Food
+                 $50      Dining
+                $100      Groceries
+                 $25    NotImportant
+               $1000    Rent
+--------------------
+               $1175
+end test
+
+; Collapse by account metadata: only Expenses:NotImportant carries the
+; "collapse" tag, so the same subtree folds.
+test bal --collapse-if 'has_tag("collapse")' Expenses
+               $1175  Expenses
+                $150    Food
+                 $50      Dining
+                $100      Groceries
+                 $25    NotImportant
+               $1000    Rent
+--------------------
+               $1175
+end test
+
+; A different target: collapse Expenses:Food instead, leaving NotImportant
+; expanded.  Demonstrates that matching is per-account, not global.
+test bal --collapse-if 'account =~ /:Food$/' Expenses
+               $1175  Expenses
+                $150    Food
+                 $25    NotImportant
+                  $5      Candy
+                 $20      Toys
+               $1000    Rent
+--------------------
+               $1175
+end test
+
+; A predicate that matches nothing leaves the report identical to a plain
+; balance: --collapse-if never alters totals or account selection on its own.
+test bal --collapse-if 'account =~ /Nonexistent/' Expenses
+               $1175  Expenses
+                $150    Food
+                 $50      Dining
+                $100      Groceries
+                 $25    NotImportant
+                  $5      Candy
+                 $20      Toys
+               $1000    Rent
+--------------------
+               $1175
+end test
