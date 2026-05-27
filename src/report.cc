@@ -1715,6 +1715,7 @@ option_t<report_t>* report_t::lookup_option(const char* p) {
     else OPT(cleared);
     else OPT(cleared_format_);
     else OPT(collapse);
+    else OPT(collapse_if_);
     else OPT(collapse_if_zero);
     else OPT(color);
     else OPT(columns_);

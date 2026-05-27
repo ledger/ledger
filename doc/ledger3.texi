@@ -7414,6 +7414,18 @@ Strings}).  The default is:
 By default ledger prints all accounts in an account tree.  With
 @option{--collapse} it prints only the top level account specified.
 
+@item --collapse-if @var{EXPR}
+In an account (@command{balance}) report, collapse every account for
+which the value expression @var{EXPR} is true into a single line showing
+the rolled-up subtotal of that account and all of its descendants; the
+descendants themselves are not displayed.  Unlike @option{--collapse},
+which folds the whole report to its top level, @option{--collapse-if} is
+selective: @var{EXPR} is evaluated in each account's scope, so it may
+match on the account name (e.g.@: @code{account =~ /:NotImportant/}), on
+account metadata (e.g.@: @code{has_tag("collapse")}), or on any other
+account predicate.  Only which accounts are displayed is affected; the
+report total is unchanged.
+
 @item --collapse-if-zero
 Collapse the account display only if it has a zero balance.
 

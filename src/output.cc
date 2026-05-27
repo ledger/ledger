@@ -261,13 +261,28 @@ std::size_t format_accounts::post_account(account_t& account, const bool flat) {
   return 0;
 }
 
-std::pair<std::size_t, std::size_t> format_accounts::mark_accounts(account_t& account,
-                                                                   const bool flat) {
+std::pair<std::size_t, std::size_t>
+format_accounts::mark_accounts(account_t& account, const bool flat,
+                               const bool collapsed_by_ancestor) {
+  // A --collapse-if predicate turns every matching account into a collapse
+  // point: it is displayed as a single line carrying the rolled-up subtotal of
+  // its whole subtree, and its descendants are hidden.  Evaluate the predicate
+  // top-down (before recursing) so the first matching ancestor wins; the master
+  // (parent-less) account is never collapsed, as that would fold away the
+  // entire report.
+  bool collapse_here = false;
+  if (collapse_pred && account.parent) {
+    bind_scope_t bound_scope(report, account);
+    collapse_here = collapse_pred(bound_scope);
+  }
+  const bool descendants_collapsed = collapsed_by_ancestor || collapse_here;
+
   std::size_t visited = 0;
   std::size_t to_display = 0;
 
   for (accounts_map::value_type& pair : account.accounts) {
-    auto [child_visited, child_to_display] = mark_accounts(*pair.second, flat);
+    auto [child_visited, child_to_display] =
+        mark_accounts(*pair.second, flat, descendants_collapsed);
     visited += child_visited;
     to_display += child_to_display;
   }
@@ -296,15 +311,23 @@ std::pair<std::size_t, std::size_t> format_accounts::mark_accounts(account_t& ac
 
   if (account.parent && (account.has_xflags(ACCOUNT_EXT_VISITED) || (!flat && visited > 0) ||
                          (flat && visited > 0 && to_display == 0) || known_empty_admit())) {
-    bind_scope_t bound_scope(report, account);
-    call_scope_t call_scope(bound_scope);
-    if ((!flat && to_display > 1) || (!flat && to_display == 1 && !account.posts.empty()) ||
-        ((flat || to_display != 1 || account.has_xflags(ACCOUNT_EXT_VISITED)) &&
-         (report.HANDLED(empty) || report.display_value(report.fn_display_total(call_scope))) &&
-         disp_pred(bound_scope))) {
-      account.xdata().add_flags(ACCOUNT_EXT_TO_DISPLAY);
-      DEBUG("account.display", "Marking account as TO_DISPLAY");
-      to_display = 1;
+    // An account folded into a collapsing ancestor is never displayed in its
+    // own right; only its visited-ness propagates upward so the ancestor knows
+    // it has a subtree to summarise.  Because the collapse flag is passed down
+    // to every descendant, such an account also contributes no displayable
+    // children (to_display stays 0), leaving the collapse point itself to stand
+    // in for the entire subtree.
+    if (!collapsed_by_ancestor) {
+      bind_scope_t bound_scope(report, account);
+      call_scope_t call_scope(bound_scope);
+      if ((!flat && to_display > 1) || (!flat && to_display == 1 && !account.posts.empty()) ||
+          ((flat || to_display != 1 || account.has_xflags(ACCOUNT_EXT_VISITED)) &&
+           (report.HANDLED(empty) || report.display_value(report.fn_display_total(call_scope))) &&
+           disp_pred(bound_scope))) {
+        account.xdata().add_flags(ACCOUNT_EXT_TO_DISPLAY);
+        DEBUG("account.display", "Marking account as TO_DISPLAY");
+        to_display = 1;
+      }
     }
     visited = 1;
   }
@@ -318,6 +341,11 @@ void format_accounts::flush() {
   if (report.HANDLED(display_)) {
     DEBUG("account.display", "Account display predicate: " << report.HANDLER(display_).str());
     disp_pred.parse(report.HANDLER(display_).str());
+  }
+
+  if (report.HANDLED(collapse_if_)) {
+    DEBUG("account.display", "Account collapse predicate: " << report.HANDLER(collapse_if_).str());
+    collapse_pred.parse(report.HANDLER(collapse_if_).str());
   }
 
   mark_accounts(*report.session.journal->master, report.HANDLED(flat));

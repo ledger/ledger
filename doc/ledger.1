@@ -504,6 +504,17 @@ Specify the format to use for the
 report
 .It Fl \-collapse Pq Fl n
 Print only the top level accounts.
+.It Fl \-collapse-if Ar EXPR
+In an account (balance) report, collapse every account for which
+.Ar EXPR
+is true into a single line showing the rolled-up subtotal of that
+account and all of its descendants.
+Unlike
+.Fl \-collapse ,
+which folds the whole report to its top level, this is selective:
+.Ar EXPR
+is evaluated in each account's scope, so it may match on the account
+name, on account metadata, or on any other account predicate.
 .It Fl \-collapse-if-zero
 Collapse the account display only if it has a zero balance.
 .It Fl \-color
