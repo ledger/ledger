@@ -8145,10 +8145,15 @@ When generating a ledger transaction from a CSV file using the
 @command{convert} command, add CSV, Imported, and UUID metadata.
 
 @item --round
-Round all calculated values to the display precision of their
-commodity.  This is the default behavior for display, but this option
-explicitly forces rounding in the expression pipeline, which is useful
-when @option{--unround} has been set in the init file and you want to
+Round each calculated value to the display precision of its commodity
+@emph{before} postings are aggregated, so that a report total reflects
+the sum of the individually rounded amounts -- the way a broker
+statement totals positions that have each already been rounded to the
+cent.  Without this option Ledger keeps full precision while
+accumulating and rounds only once for display, so totals never drift by
+a fraction of the smallest displayed unit.  @option{--round} also forces
+rounding in the expression pipeline, which is useful when
+@option{--unround} has been set in the init file and you want to
 override it for a specific invocation.
 
 @item --seed @var{INT}
