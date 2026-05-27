@@ -83,38 +83,14 @@ void instance_t::parse() {
       }
     } catch (const std::exception& err) {
       error_flag = true;
-
-      string current_context = error_context();
-
-      if (parent) {
-        std::list<instance_t*> instances;
-
-        for (instance_t* instance = parent; instance; instance = instance->parent)
-          instances.push_front(instance);
-
-        for (instance_t* instance : instances)
-          add_error_context(_f("In file included from %1%") % instance->context.location());
-      }
-      add_error_context(_f("While parsing file %1%") % context.location());
-
-      if (caught_signal != NONE_CAUGHT)
-        throw;
-
-      string err_context = error_context();
-      if (!err_context.empty())
-        std::cerr << err_context << '\n';
-
-      if (!current_context.empty())
-        std::cerr << current_context << '\n';
-
-      std::cerr << _("Error: ") << err.what() << '\n';
-      context.errors++;
-      if (!current_context.empty())
-        context.last = current_context + "\n" + err.what();
-      else
-        context.last = err.what();
+      report_parse_error(err);
     }
   }
+
+  // Every transaction in this file has now been parsed and finalized, so each
+  // account holds all of its postings.  Verify the balance assertions that
+  // were deferred during parsing, now in true date order (issue #3218).
+  verify_deferred_assertions();
 
   // After the file is fully parsed, propagate any epoch/year changes made
   // by year/Y directives back to the global state so that subsequent files
@@ -131,6 +107,38 @@ void instance_t::parse() {
 #endif // TIMELOG_SUPPORT
 
   TRACE_STOP(instance_parse, 1);
+}
+
+void instance_t::report_parse_error(const std::exception& err) {
+  string current_context = error_context();
+
+  if (parent) {
+    std::list<instance_t*> instances;
+
+    for (instance_t* instance = parent; instance; instance = instance->parent)
+      instances.push_front(instance);
+
+    for (instance_t* instance : instances)
+      add_error_context(_f("In file included from %1%") % instance->context.location());
+  }
+  add_error_context(_f("While parsing file %1%") % context.location());
+
+  if (caught_signal != NONE_CAUGHT)
+    throw;
+
+  string err_context = error_context();
+  if (!err_context.empty())
+    std::cerr << err_context << '\n';
+
+  if (!current_context.empty())
+    std::cerr << current_context << '\n';
+
+  std::cerr << _("Error: ") << err.what() << '\n';
+  context.errors++;
+  if (!current_context.empty())
+    context.last = current_context + "\n" + err.what();
+  else
+    context.last = err.what();
 }
 
 /// Return true if a Unicode codepoint is a whitespace character.

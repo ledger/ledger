@@ -342,18 +342,29 @@ void instance_t::period_xact_directive(char* line) {
 xact_t* instance_t::xact_directive(char* line, std::streamsize len, xact_t* previous_xact) {
   TRACE_START(xacts, 2, "Time spent handling transactions:");
 
-  if (xact_t* xact = parse_xact(line, len, top_account(), previous_xact)) {
-    unique_ptr<xact_t> manager(xact);
+  // parse_xact() appends a deferred-assertion record (#3218) for each balance
+  // assertion it parses.  If the transaction is then rejected or fails to
+  // finalize, its postings are destroyed, so drop those trailing records to
+  // keep every surviving record's post pointer valid.
+  const std::size_t saved_assertions = deferred_assertions.size();
+  try {
+    if (xact_t* xact = parse_xact(line, len, top_account(), previous_xact)) {
+      unique_ptr<xact_t> manager(xact);
 
-    if (context.journal->add_xact(xact)) {
-      context.count++;
-      return manager.release(); // it's owned by the journal now
+      if (context.journal->add_xact(xact)) {
+        context.count++;
+        return manager.release(); // it's owned by the journal now
+      }
+      // It's perfectly valid for the journal to reject the xact, which it
+      // will do if the xact has no substantive effect (for example, a
+      // checking xact, all of whose postings have null amounts).
+      deferred_assertions.resize(saved_assertions);
+    } else {
+      throw parse_error(_("Failed to parse transaction"));
     }
-    // It's perfectly valid for the journal to reject the xact, which it
-    // will do if the xact has no substantive effect (for example, a
-    // checking xact, all of whose postings have null amounts).
-  } else {
-    throw parse_error(_("Failed to parse transaction"));
+  } catch (...) {
+    deferred_assertions.resize(saved_assertions);
+    throw;
   }
 
   TRACE_STOP(xacts, 2);
@@ -379,6 +390,28 @@ void detail::parse_amount_expr(std::istream& in, scope_t& scope, post_t& post, a
 }
 
 /**
+ * Decide whether a posting's balance assertion/assignment counts only real
+ * postings.  A real posting uses real_only=true so that the real and virtual
+ * balances of an account can be asserted independently (#543).  Exception: if
+ * the account has no prior real postings at all, fall back to the combined
+ * (real + virtual) total so that patterns like setting up an account with a
+ * virtual balance assignment and then settling with a real posting remain
+ * assertable (#1699).
+ *
+ * The decision depends on the account's posting history as it stood when the
+ * posting was parsed, so deferred assertions (#3218) capture this value at
+ * parse time and replay it during verify_deferred_assertions().
+ */
+static bool posting_real_only(const post_t* post) {
+  if (post->has_flags(POST_VIRTUAL | POST_IS_TIMELOG))
+    return false;
+  for (const post_t* p : post->account->posts)
+    if (!p->has_flags(POST_VIRTUAL | POST_IS_TIMELOG))
+      return true;
+  return false;
+}
+
+/**
  * Compute the difference between the assigned/asserted amount and the
  * current account balance, subtracting amounts from previous posts to
  * the same account in the current transaction.
@@ -389,24 +422,7 @@ void detail::parse_amount_expr(std::istream& in, scope_t& scope, post_t& post, a
  */
 static balance_t compute_balance_diff(const amount_t& amt, post_t* post, xact_t* xact,
                                       bool strip_annotations, parse_context_t& context) {
-  // A real posting uses real_only=true so that the real and virtual balances
-  // of an account can be asserted independently (#543).  Exception: if the
-  // account has no prior real postings at all, fall back to the combined
-  // (real + virtual) total so that patterns like setting up an account with
-  // a virtual balance assignment and then settling with a real posting
-  // remain assertable (#1699).
-  bool real_only;
-  if (!post->has_flags(POST_VIRTUAL | POST_IS_TIMELOG)) {
-    real_only = false;
-    for (const post_t* p : post->account->posts) {
-      if (!p->has_flags(POST_VIRTUAL | POST_IS_TIMELOG)) {
-        real_only = true;
-        break;
-      }
-    }
-  } else {
-    real_only = false;
-  }
+  bool real_only = posting_real_only(post);
   value_t account_total;
   bool use_file_order = (context.journal && context.journal->check_in_file_order) ||
                         (item_t::use_aux_date && !post->aux_date());
@@ -477,6 +493,75 @@ static balance_t compute_balance_diff(const amount_t& amt, post_t* post, xact_t*
   DEBUG("post.assign", "line " << context.linenum << ": " << "diff = " << diff);
 
   return diff;
+}
+
+void instance_t::verify_deferred_assertions() {
+  for (const deferred_assertion_t& da : deferred_assertions) {
+    post_t* post = da.post;
+    const amount_t& amt(da.amt);
+
+    // Sum every posting to this account that falls on or before this posting
+    // in (date, file-sequence) order, excluding the posting itself (subtracted
+    // separately below, mirroring the inline check).  This is the account
+    // balance as of this posting in true date order, now that every posting in
+    // the file is present.  Same-date postings keep file order via the
+    // sequence tie-break, so chronological journals behave exactly as before;
+    // only earlier-dated transactions appearing later in the file -- invisible
+    // to the inline check -- now contribute (issue #3218).
+    post_t::compare_by_date_and_sequence in_order;
+    value_t account_total;
+    for (post_t* p : post->account->posts) {
+      if (p == post || in_order(post, p))
+        continue; // the posting itself, or a posting that sorts after it
+      if (da.real_only && p->has_flags(POST_VIRTUAL))
+        continue;
+      if (!p->amount.is_null())
+        add_or_set_value(account_total, p->amount);
+    }
+    if (da.strip)
+      account_total = account_total.strip_annotations(keep_details_t());
+
+    balance_t diff = amt;
+    switch (account_total.type()) {
+    case value_t::AMOUNT:
+      diff -= account_total.as_amount().reduced();
+      break;
+    case value_t::BALANCE:
+      diff -= account_total.as_balance();
+      break;
+    default:
+      break;
+    }
+
+    // If amt has a commodity, restrict balancing to that.  Otherwise it is the
+    // blanket '0' and every commodity must be zero.
+    if (amt.has_commodity()) {
+      optional<amount_t> wanted_commodity = diff.commodity_amount(amt.commodity());
+      if (!wanted_commodity)
+        diff = amt - amt; // this is '0' with the correct commodity.
+      else
+        diff = *wanted_commodity;
+    }
+
+    amount_t post_amt(da.strip ? post->amount.reduced().strip_annotations(keep_details_t())
+                               : post->amount.reduced());
+    diff -= post_amt;
+
+    if (!diff.is_zero()) {
+      balance_t tot = da.strip ? (-diff + amt).strip_annotations(keep_details_t()) : (-diff + amt);
+      // Reproduce the parse-time error context (file, line, posting, caret) so
+      // the diagnostic is identical to an inline balance-assertion failure.
+      context.linenum = da.linenum;
+      try {
+        add_error_context(_("While parsing posting:"));
+        add_error_context(line_context(da.buf, da.beg, da.len));
+        throw_(parse_error, _f("Balance assertion off by %1% (expected to see %2%)") %
+                                diff.to_string() % tot.to_string());
+      } catch (const std::exception& err) {
+        report_parse_error(err);
+      }
+    }
+  }
 }
 
 /*--- Posting Parsing ---*/
@@ -806,7 +891,24 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
         // (the behavior that bug #1055 depends on).
         bool strip = !amt.has_annotation();
 
-        if (!is_uuid_dup) {
+        // A balance ASSERTION in the default mode cannot be verified yet: the
+        // running account total is filtered by date, but a transaction dated
+        // earlier and appearing later in the file has not been parsed, so its
+        // posting is still missing.  Defer the assertion and verify it in date
+        // order once the whole file is read (issue #3218).  Balance ASSIGNMENTS
+        // are computed inline (their amount feeds transaction balancing), and
+        // --check-in-file-order and --effective keep their own ordering and are
+        // also checked inline.  UUID duplicates are skipped entirely (#1771).
+        bool defer_assertion = !is_uuid_dup && !post->amount.is_null() &&
+                               !(context.journal && context.journal->check_in_file_order) &&
+                               !item_t::use_aux_date;
+
+        if (defer_assertion) {
+          if (!no_assertions)
+            deferred_assertions.push_back({post.get(), amt, strip, posting_real_only(post.get()),
+                                           context.linenum, buf, static_cast<std::size_t>(beg),
+                                           static_cast<std::size_t>(len)});
+        } else if (!is_uuid_dup) {
           DEBUG("post.assign", "line " << context.linenum << ": "
                                        << "post amount = " << post->amount
                                        << " (is_zero = " << post->amount.is_zero() << ")");
@@ -870,7 +972,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
             }
             post->add_flags(POST_CALCULATED);
           } else {
-            // balance assertion
+            // balance assertion (inline: --check-in-file-order or --effective)
             amount_t post_amt(strip ? post->amount.reduced().strip_annotations(keep_details_t())
                                     : post->amount.reduced());
             diff -= post_amt;

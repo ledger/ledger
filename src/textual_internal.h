@@ -144,6 +144,42 @@ public:
   time_log_t timelog; ///< Accumulates clock-in/out events for time tracking
 #endif
 
+  /**
+   * @brief A balance assertion whose verification is deferred until the whole
+   *        file has been parsed (issue #3218).
+   *
+   * The default (date-order) balance-assertion check is unsound when verified
+   * inline during a single forward pass: a transaction dated earlier but
+   * appearing later in the file has not been parsed yet, so its posting is
+   * missing from the account total.  We therefore record each assertion as it
+   * is parsed and verify them all in date order from verify_deferred_assertions()
+   * once every posting in the file is present.
+   *
+   * @c real_only and @c strip are captured at parse time because they depend on
+   * the account's posting history as it stood when the posting was parsed
+   * (e.g. the virtual-only-history rule of #1699); the remaining fields
+   * reproduce the exact parse-time error context if the assertion fails.
+   *
+   * The @c post pointer is safe to dereference at verification time because a
+   * record is discarded (see xact_directive()) if its transaction fails to
+   * finalize -- the only case in which the posting would be destroyed.  Every
+   * surviving record therefore belongs to a transaction the journal owns.
+   */
+  struct deferred_assertion_t {
+    post_t* post;        ///< The posting carrying the assertion.
+    amount_t amt;        ///< The asserted target balance.
+    bool strip;          ///< Whether to strip lot annotations before comparing.
+    bool real_only;      ///< Whether only real postings count (captured at parse time).
+    std::size_t linenum; ///< Source line of the posting (for error context).
+    std::string buf;     ///< The posting line text (for error context).
+    std::size_t beg;     ///< Byte offset of the assertion amount within @c buf.
+    std::size_t len;     ///< Length of the posting line (for error context).
+  };
+  /// Balance assertions in this file awaiting date-order verification (#3218).
+  /// A vector so xact_directive() can drop the trailing records of a
+  /// transaction that fails to finalize.
+  std::vector<deferred_assertion_t> deferred_assertions;
+
   instance_t(parse_context_stack_t& _context_stack, parse_context_t& _context,
              instance_t* _parent = nullptr, const bool _no_assertions = false,
              const hash_type_t _hash_type = NO_HASHES)
@@ -186,6 +222,15 @@ public:
 
   /// @brief Main parse loop: reads lines until EOF, dispatching each to read_next_directive().
   void parse();
+
+  /// @brief Report a parse-time exception to stderr with full source context
+  ///        and record it in the parse context's error count.  Shared by the
+  ///        main parse loop and verify_deferred_assertions().
+  void report_parse_error(const std::exception& err);
+
+  /// @brief Verify every deferred balance assertion in date order, now that
+  ///        the whole file is parsed and all postings are present (#3218).
+  void verify_deferred_assertions();
 
   /**
    * @brief Read the next line from the input stream into context.linebuf.
