@@ -256,8 +256,10 @@ public:
   value_t fn_scrub(call_scope_t& scope);  ///< Alias for display_value() -- strip and unreduced
 
   // Numeric rounding and precision
-  value_t fn_quantity(call_scope_t& scope);  ///< Extract the numeric quantity (strip commodity)
-  value_t fn_rounded(call_scope_t& scope);   ///< Round to commodity display precision
+  value_t fn_quantity(call_scope_t& scope); ///< Extract the numeric quantity (strip commodity)
+  value_t fn_rounded(call_scope_t& scope);  ///< Display-only round to commodity precision (#3220)
+  value_t
+  fn_roundto_commodity(call_scope_t& scope); ///< Physically round to commodity precision (--round)
   value_t fn_unrounded(call_scope_t& scope); ///< Return the unrounded (full precision) value
   value_t fn_truncated(call_scope_t& scope); ///< Truncate display string or numeric value
   value_t fn_truncate(call_scope_t& scope);  ///< Numeric truncation (toward zero)
@@ -1335,8 +1337,11 @@ public:
 
   OPTION_(
       report_t, round, DO() {
-        OTHER(amount_).on(whence, "rounded(amount_expr)");
-        OTHER(total_).on(whence, "rounded(total_expr)");
+        // --round physically rounds each posting to commodity precision before
+        // aggregation (#781), so it uses roundto_commodity rather than the
+        // display-only rounded() that backs --basis/--cost (see #3220).
+        OTHER(amount_).on(whence, "roundto_commodity(amount_expr)");
+        OTHER(total_).on(whence, "roundto_commodity(total_expr)");
       });
 
   OPTION_(

@@ -323,10 +323,10 @@ void report_t::normalize_options(const string& verb) {
         // price history entries and thus fall back to the lot cost.
         HANDLER(amount_).on("?normalize", "market(amount_expr, today, exchange)");
       }
-      HANDLER(amount_).on("?normalize_round", "rounded(amount_expr)");
+      HANDLER(amount_).on("?normalize_round", "roundto_commodity(amount_expr)");
     } else {
-      HANDLER(amount_).on("?normalize_round", "rounded(amount_expr)");
-      HANDLER(total_).on("?normalize_round", "rounded(total_expr)");
+      HANDLER(amount_).on("?normalize_round", "roundto_commodity(amount_expr)");
+      HANDLER(total_).on("?normalize_round", "roundto_commodity(total_expr)");
     }
   }
 
@@ -1084,6 +1084,30 @@ value_t report_t::fn_scrub(call_scope_t& args) {
 }
 
 value_t report_t::fn_rounded(call_scope_t& args) {
+  value_t val(args.value());
+  // #3187: when a cost basis is in a commodity that has no declared display
+  // precision -- a dollar that appears only inside `@`/`@@` price annotations,
+  // never as a posting amount -- there is no precision to round to, and
+  // rounding would discard the value's fractional content (rendering a basis
+  // like 20 ETH * `@ $5.025` = $100.500 as $100).  Leave such an amount as is.
+  if (val.is_amount()) {
+    const amount_t& amt(val.as_amount());
+    if (amt.has_commodity() && amt.commodity().precision() == 0 && amt.precision() > 0)
+      return val;
+  }
+  // Display-only rounding (#3220): clear keep_precision so the value prints at
+  // commodity precision, but leave the stored value exact so a balance
+  // accumulates full precision and rounds only once at display time.  This
+  // backs the --basis/--cost amount expression rounded(cost).  (Per-posting
+  // physical rounding for --round goes through fn_roundto_commodity below.)
+  return val.rounded();
+}
+
+value_t report_t::fn_roundto_commodity(call_scope_t& args) {
+  // Physically round to commodity precision before aggregation, for the
+  // --round option (#781): this mutates the stored value so each posting is
+  // rounded before it is summed, matching how a broker statement totals
+  // positions that have each already been rounded to the cent.
   return args.value().rounded_to_commodity_precision();
 }
 
@@ -2058,6 +2082,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
     case 'r':
       if (is_eq(p, "rounded"))
         return MAKE_FUNCTOR(report_t::fn_rounded);
+      else if (is_eq(p, "roundto_commodity"))
+        return MAKE_FUNCTOR(report_t::fn_roundto_commodity);
       else if (is_eq(p, "red"))
         return WRAP_FUNCTOR(fn_red);
       else if (is_eq(p, "round"))
