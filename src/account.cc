@@ -455,32 +455,32 @@ value_t get_has_children_to_display(account_t& account) {
 }
 
 value_t get_latest_cleared(account_t& account) {
-  return account.self_details().latest_cleared_post;
+  return account.self_details(false).latest_cleared_post;
 }
 
 value_t get_earliest(account_t& account) {
-  return account.self_details().earliest_post;
+  return account.self_details(false).earliest_post;
 }
 value_t get_earliest_checkin(account_t& account) {
-  return (!account.self_details().earliest_checkin.is_not_a_date_time()
-              ? value_t(account.self_details().earliest_checkin)
+  return (!account.self_details(false).earliest_checkin.is_not_a_date_time()
+              ? value_t(account.self_details(false).earliest_checkin)
               : NULL_VALUE);
 }
 
 value_t get_latest(account_t& account) {
-  return account.self_details().latest_post;
+  return account.self_details(false).latest_post;
 }
 value_t get_account_date(account_t& account) {
-  date_t date = account.family_details().latest_post;
+  date_t date = account.family_details(false).latest_post;
   return is_valid(date) ? value_t(date) : NULL_VALUE;
 }
 value_t get_latest_checkout(account_t& account) {
-  return (!account.self_details().latest_checkout.is_not_a_date_time()
-              ? value_t(account.self_details().latest_checkout)
+  return (!account.self_details(false).latest_checkout.is_not_a_date_time()
+              ? value_t(account.self_details(false).latest_checkout)
               : NULL_VALUE);
 }
 value_t get_latest_checkout_cleared(account_t& account) {
-  return account.self_details().latest_checkout_cleared;
+  return account.self_details(false).latest_checkout_cleared;
 }
 
 template <value_t (*Func)(account_t&)>
@@ -894,25 +894,46 @@ value_t account_t::total(const optional<expr_t&>& expr) const {
 }
 
 const account_t::xdata_t::details_t& account_t::self_details(bool gather_all) const {
-  if (!(xdata_ && xdata_->self_details.gathered)) {
-    const_cast<account_t&>(*this).xdata().self_details.gathered = true;
+  xdata_t::details_t& details = const_cast<account_t&>(*this).xdata().self_details;
 
+  if (!details.gathered) {
+    details.gathered = true;
     for (const post_t* post : posts)
-      xdata_->self_details.update(const_cast<post_t&>(*post), gather_all);
+      details.update(const_cast<post_t&>(*post));
   }
-  return xdata_->self_details;
+
+  // The reference sets (filenames/accounts/payees) are consumed only by the
+  // `stats` command and the Python bindings, and constructing each posting's
+  // full account name is comparatively costly, so gather them only on demand.
+  if (gather_all && !details.gathered_all) {
+    details.gathered_all = true;
+    for (const post_t* post : posts)
+      details.gather_references(const_cast<post_t&>(*post));
+  }
+
+  return details;
 }
 
 const account_t::xdata_t::details_t& account_t::family_details(bool gather_all) const {
-  if (!(xdata_ && xdata_->family_details.gathered)) {
-    const_cast<account_t&>(*this).xdata().family_details.gathered = true;
+  account_t& self = const_cast<account_t&>(*this);
+  xdata_t::details_t& details = self.xdata().family_details;
+
+  // If the aggregate was gathered earlier without the reference sets but they
+  // are now required, discard it and re-aggregate with gather_all set.
+  if (details.gathered && gather_all && !details.gathered_all)
+    details = xdata_t::details_t();
+
+  if (!details.gathered) {
+    details.gathered = true;
+    details.gathered_all = gather_all;
 
     for (const accounts_map::value_type& pair : accounts)
-      xdata_->family_details += pair.second->family_details(gather_all);
+      details += pair.second->family_details(gather_all);
 
-    xdata_->family_details += self_details(gather_all);
+    details += self_details(gather_all);
   }
-  return xdata_->family_details;
+
+  return details;
 }
 
 void account_t::xdata_t::details_t::update(post_t& post, bool gather_all) {
@@ -920,9 +941,6 @@ void account_t::xdata_t::details_t::update(post_t& post, bool gather_all) {
 
   if (post.has_flags(POST_VIRTUAL))
     posts_virtuals_count++;
-
-  if (gather_all && post.pos)
-    filenames.insert(*post.pos->pathname);
 
   date_t date = post.date();
   date_t today = CURRENT_DATE();
@@ -965,10 +983,15 @@ void account_t::xdata_t::details_t::update(post_t& post, bool gather_all) {
       latest_cleared_post = post.date();
   }
 
-  if (gather_all) {
-    accounts_referenced.insert(post.account->fullname());
-    payees_referenced.insert(post.payee());
-  }
+  if (gather_all)
+    gather_references(post);
+}
+
+void account_t::xdata_t::details_t::gather_references(post_t& post) {
+  if (post.pos)
+    filenames.insert(*post.pos->pathname);
+  accounts_referenced.insert(post.account->fullname());
+  payees_referenced.insert(post.payee());
 }
 
 /*--- XML Serialization ---*/
