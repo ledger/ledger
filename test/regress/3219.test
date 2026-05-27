@@ -1,0 +1,60 @@
+; Regression test for GitHub issue #3219:
+; "Performance regression with --group-by payee"
+;
+; Commit edacfecf ("Resolve 'date' to latest posting date for accounts",
+; fixing #616) gave the `date` expression a real per-account value in the
+; balance report: account_t::lookup now resolves `date` to the account's
+; latest posting date via self_details().latest_post.  Before that, `date`
+; for an account fell through to the report scope and returned a constant,
+; so `--sort date` on a balance report was effectively a no-op.
+;
+; A user with `--sort date` in their ~/.ledgerrc therefore saw balance
+; reports suddenly start sorting -- and `bal -X USD --group-by payee` ran
+; ~10x slower, because each payee group re-gathered every account's full
+; details (constructing each posting's full name and inserting it into the
+; referenced-account/payee/file sets) just to read one date.
+;
+; The fix keeps the #616 behavior but makes the date cheap to obtain: the
+; per-posting statistics are cached on the account (they are a pure function
+; of its postings, so they survive the xdata clear between groups), and the
+; expensive referenced-name sets are gathered only when actually requested
+; (the `stats` command and the Python bindings).  These tests lock in the
+; resulting sort order, which must be unaffected by the optimization.
+
+2021/01/05 Grocery
+    Expenses:Apple      $5.00
+    Assets:Checking
+
+2021/03/15 Grocery
+    Expenses:Mango      $20.00
+    Assets:Checking
+
+2021/06/20 Market
+    Expenses:Apple      $8.00
+    Assets:Checking
+
+; `--sort date` orders accounts by their latest posting date.  Mango's only
+; posting is 2021/03/15; Apple's latest is 2021/06/20, so Mango sorts before
+; Apple -- the reverse of the default alphabetical order, confirming the sort
+; key is the date and not the name.
+test --sort date --no-total bal Expenses
+              $33.00  Expenses
+              $20.00    Mango
+              $13.00    Apple
+end test
+
+; The reported scenario: --group-by payee with --sort date.  Within the
+; Grocery group, Apple's local posting (2021/01/05) is older than Mango's
+; (2021/03/15), yet Apple still sorts last because the date key is the
+; account's overall latest posting (2021/06/20, from the Market group).  This
+; exercises the cross-group statistics cache: the value must be identical in
+; every group, exactly as it was before the optimization.
+test --group-by payee --sort date --no-total bal Expenses
+Grocery
+              $25.00  Expenses
+              $20.00    Mango
+               $5.00    Apple
+
+Market
+               $8.00  Expenses:Apple
+end test
