@@ -1,0 +1,65 @@
+; Regression test for GitHub issue #3220:
+; "Major ledger rounding changes in main" -- a cost-basis report drifted by a
+; penny per transaction that needed rounding.
+;
+; --cost (an alias for --basis) sets the amount expression to rounded(cost).
+; The fix for #1765 had made rounded() *physically* round each posting's cost
+; to the commodity's display precision before aggregation, so a transaction
+; whose costs cancel exactly at full precision no longer cancelled once each
+; leg was rounded:
+;
+;     0.005 FOO @ $124.95  ->  $0.62475  ->  $0.62
+;     0.001 BAR @ $124.95  ->  $0.12495  ->  $0.12
+;     (balancing leg)      -> -$0.74970  -> -$0.75
+;                                            ------
+;                                            -$0.01   per transaction
+;
+; With three such transactions the error accumulated to -$0.03, breaking the
+; long-standing rule that a cost-basis report balances to zero.
+;
+; The fix restores display-only rounding for rounded(): each posting still
+; *prints* at commodity precision, but the stored value keeps full precision,
+; so the balance accumulates exactly and rounds only once at display time.
+; Per-posting ("broker statement") rounding remains available via --round.
+
+2025/01/01 * Opening Balances
+    Assets:Brokerage     $123.45
+    Equity:Opening Balances
+2025/02/01 * Investment
+    Assets:Brokerage    0.005 FOO @ $124.95
+    Assets:Brokerage    0.001 BAR @ $124.95
+    Assets:Brokerage
+2025/02/01 * Investment
+    Assets:Brokerage    0.005 FOO @ $124.95
+    Assets:Brokerage    0.001 BAR @ $124.95
+    Assets:Brokerage
+2025/02/01 * Investment
+    Assets:Brokerage    0.005 FOO @ $124.95
+    Assets:Brokerage    0.001 BAR @ $124.95
+    Assets:Brokerage
+
+; The cost basis, valued in USD, must balance to zero no matter how many
+; rounding transactions are present (it drifted to -$0.03 before the fix).
+test --cost -X USD bal
+             $123.45  Assets:Brokerage
+            $-123.45  Equity:Opening Balances
+--------------------
+                   0
+end test
+
+; The drift originates in --cost itself, independent of -X valuation.
+test --cost bal
+             $123.45  Assets:Brokerage
+            $-123.45  Equity:Opening Balances
+--------------------
+                   0
+end test
+
+; --round opts in to per-posting rounding before aggregation, which
+; intentionally exposes the accumulated rounding residual.
+test --cost -X USD --round bal
+             $123.42  Assets:Brokerage
+            $-123.45  Equity:Opening Balances
+--------------------
+              $-0.03
+end test
