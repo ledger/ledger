@@ -1,0 +1,19 @@
+2024/01/01 Grocery
+    Expenses:Food:Groceries     $100
+    Assets:Cash
+
+2024/01/02 Dining
+    Expenses:Food:Dining         $50
+    Assets:Cash
+
+2024/01/03 Rent
+    Expenses:Rent              $1000
+    Assets:Cash
+
+test bal --collapse-if 'account =~ /:Food/' Expenses
+               $1150  Expenses
+                $150    Food
+               $1000    Rent
+--------------------
+               $1150
+end test

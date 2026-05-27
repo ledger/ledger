@@ -146,6 +146,7 @@ protected:
   format_t append_format;       ///< Optional suffix appended to every output line.
   std::size_t prepend_width;    ///< Width reserved for the prepend column.
   predicate_t disp_pred;        ///< Display predicate from --display option.
+  predicate_t collapse_pred;    ///< Collapse predicate from --collapse-if option.
   bool first_report_title;      ///< True until the first group title has been printed.
   string report_title;          ///< Current group title.
 
@@ -166,12 +167,20 @@ public:
    * --flat flag changes the visibility logic so that intermediate
    * parent accounts are not shown.
    *
-   * @param account  The root of the subtree to mark.
-   * @param flat     True if --flat mode is active.
+   * When a --collapse-if predicate is active and matches an account, that
+   * account becomes a collapse point: its descendants are not marked for
+   * display, so it renders as a single line carrying the rolled-up subtotal.
+   *
+   * @param account               The root of the subtree to mark.
+   * @param flat                  True if --flat mode is active.
+   * @param collapsed_by_ancestor True if an ancestor matched --collapse-if, in
+   *                              which case this account is not displayed on
+   *                              its own (it has been folded into that ancestor).
    * @return         A pair of (visited_count, to_display_count) for the
    *                 subtree.
    */
-  std::pair<std::size_t, std::size_t> mark_accounts(account_t& account, const bool flat);
+  std::pair<std::size_t, std::size_t> mark_accounts(account_t& account, const bool flat,
+                                                    const bool collapsed_by_ancestor = false);
 
   /// @brief Set the group title to be printed before the next account.
   void title(const string& str) override { report_title = str; }
@@ -191,6 +200,7 @@ public:
 
   void clear() override {
     disp_pred.mark_uncompiled();
+    collapse_pred.mark_uncompiled();
     posted_accounts.clear();
 
     report_title = "";

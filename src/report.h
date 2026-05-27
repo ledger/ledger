@@ -381,6 +381,7 @@ public:
     HANDLER(cleared_format_).report(out);
     HANDLER(color).report(out);
     HANDLER(collapse).report(out);
+    HANDLER(collapse_if_).report(out);
     HANDLER(collapse_if_zero).report(out);
     HANDLER(columns_).report(out);
     HANDLER(csv_format_).report(out);
@@ -700,6 +701,12 @@ public:
         // to account xacts
         OTHER(display_).on(whence, "post|depth<=1");
       });
+
+  // --collapse-if EXPR: in an account (balance) report, collapse every account
+  // for which EXPR is true into a single line carrying the rolled-up subtotal
+  // of itself and its descendants.  Unlike --collapse (-n), which folds the
+  // whole report to depth 1, this is selective and predicate-driven (#3222).
+  OPTION(report_t, collapse_if_);
 
   OPTION_(report_t, collapse_if_zero, DO() { OTHER(collapse).on(whence); });
 
