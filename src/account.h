@@ -384,6 +384,17 @@ public:
        * which require constructing each posting's full account name.
        */
       void gather_references(post_t& post);
+
+      /**
+       * @brief Copy the immutable per-posting statistics from @p src.
+       *
+       * Copies only the fields that are a pure function of an account's own
+       * postings (counts, date ranges, timeclock data) -- not the running
+       * total, resume iterators, or reference sets.  Used to seed an
+       * account's per-report details from a cache that survives the xdata
+       * clears between --group-by groups.
+       */
+      void copy_statistics_from(const details_t& src);
     };
 
     details_t self_details;    ///< Statistics for this account's own postings only.
@@ -407,6 +418,13 @@ public:
   /// memory-saving measure: most accounts never need xdata outside of an
   /// active report pass, so allocation is deferred until first access.
   mutable optional<xdata_t> xdata_;
+
+  /// Cache of this account's immutable own-posting statistics (counts, date
+  /// ranges, timeclock data), computed once from `posts`.  Unlike
+  /// self_details in xdata_, this survives clear_xdata(), so a sort or format
+  /// expression that references `date`, `latest`, etc. need not rescan every
+  /// posting once per --group-by group.  Invalidated by add_post/remove_post.
+  mutable optional<xdata_t::details_t> self_stats_cache_;
 
   bool has_xdata() const { return static_cast<bool>(xdata_); }
 

@@ -203,7 +203,8 @@ void account_t::add_post(post_t* post) {
   posts.push_back(post);
 
   // Adding a new post changes the possible totals that may have been
-  // computed before.
+  // computed before, as well as this account's cached own-posting statistics.
+  self_stats_cache_ = none;
   invalidate_xdata_cache(this);
 }
 
@@ -242,6 +243,9 @@ bool account_t::remove_post(post_t* post) {
   // xact_t::finalize has not yet added that posting to the account.
   posts.remove(post);
   post->account = nullptr;
+
+  // Removing a post changes this account's cached own-posting statistics.
+  self_stats_cache_ = none;
 
   // Invalidate cached iterators
   if (xdata_) {
@@ -894,12 +898,24 @@ value_t account_t::total(const optional<expr_t&>& expr) const {
 }
 
 const account_t::xdata_t::details_t& account_t::self_details(bool gather_all) const {
-  xdata_t::details_t& details = const_cast<account_t&>(*this).xdata().self_details;
+  account_t& self = const_cast<account_t&>(*this);
+  xdata_t::details_t& details = self.xdata().self_details;
 
   if (!details.gathered) {
     details.gathered = true;
-    for (const post_t* post : posts)
-      details.update(const_cast<post_t&>(*post));
+
+    // The statistical fields (counts, date ranges, timeclock data) are a pure
+    // function of `posts`, so compute them once and cache them on the account
+    // itself.  xdata is cleared between --group-by groups, but the cache
+    // survives, so reseeding the per-group details is O(1) rather than a
+    // rescan of every posting -- the fix for the #3219 regression, where
+    // `--sort date` re-gathered each account for every payee group.
+    if (!self_stats_cache_) {
+      self.self_stats_cache_.emplace();
+      for (const post_t* post : posts)
+        self.self_stats_cache_->update(const_cast<post_t&>(*post));
+    }
+    details.copy_statistics_from(*self_stats_cache_);
   }
 
   // The reference sets (filenames/accounts/payees) are consumed only by the
@@ -992,6 +1008,25 @@ void account_t::xdata_t::details_t::gather_references(post_t& post) {
     filenames.insert(*post.pos->pathname);
   accounts_referenced.insert(post.account->fullname());
   payees_referenced.insert(post.payee());
+}
+
+void account_t::xdata_t::details_t::copy_statistics_from(const details_t& src) {
+  posts_count = src.posts_count;
+  posts_virtuals_count = src.posts_virtuals_count;
+  posts_cleared_count = src.posts_cleared_count;
+  posts_last_7_count = src.posts_last_7_count;
+  posts_last_30_count = src.posts_last_30_count;
+  posts_this_month_count = src.posts_this_month_count;
+
+  earliest_post = src.earliest_post;
+  earliest_cleared_post = src.earliest_cleared_post;
+  latest_post = src.latest_post;
+  latest_cleared_post = src.latest_cleared_post;
+  latest_past_post = src.latest_past_post;
+
+  earliest_checkin = src.earliest_checkin;
+  latest_checkout = src.latest_checkout;
+  latest_checkout_cleared = src.latest_checkout_cleared;
 }
 
 /*--- XML Serialization ---*/
