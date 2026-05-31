@@ -959,6 +959,8 @@ void instance_t::import_directive(char* line) {
 }
 
 void instance_t::python_directive(char* line) {
+  // Security guard: skip Python block content regardless of --allow-python
+  // so the parser stays synchronized.
   std::ostringstream script;
 
   if (line)
@@ -987,6 +989,18 @@ void instance_t::python_directive(char* line) {
       if (*p)
         script << p << '\n';
     }
+  }
+
+  // Require explicit --allow-python opt-in before executing code from a
+  // journal file.  A malicious or untrusted .ledger file should not be able
+  // to execute arbitrary Python code without the user's explicit consent.
+  session_t& session = find_scope<session_t>(*context.scope);
+  if (!session.HANDLED(allow_python)) {
+    warning_(
+        _f("Skipping 'python' directive in %1% -- pass --allow-python to enable Python execution "
+           "in journal files") %
+        context.pathname.string());
+    return;
   }
 
   if (!python_session->is_initialized)

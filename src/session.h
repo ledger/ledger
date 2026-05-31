@@ -170,6 +170,7 @@ public:
 
   /// Dump all session-level option values to the output stream.
   void report_options(std::ostream& out) {
+    HANDLER(allow_python).report(out);
     HANDLER(account_value_expr_).report(out);
     HANDLER(check_in_file_order).report(out);
     HANDLER(check_payees).report(out);
@@ -308,6 +309,7 @@ public:
         if (parent->journal && parent->journal->commodity_checking_style != journal_t::CHECK_ERROR)
           parent->journal->commodity_checking_style = journal_t::CHECK_WARNING;
       });
+  OPTION(session_t, allow_python); ///< Allow execution of python directives in journal files
   OPTION(session_t, value_expr_); ///< Expression used to compute posting values
   OPTION_(
       session_t, recursive_aliases, DO() {

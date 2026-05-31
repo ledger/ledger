@@ -433,7 +433,8 @@ option_t<session_t>* session_t::lookup_option(const char* p) {
     OPT_CH(price_exp_);
     break;
   case 'a':
-    OPT(account_value_expr_);
+    OPT(allow_python);
+    else OPT(account_value_expr_);
     break;
   case 'c':
     OPT(check_in_file_order);
