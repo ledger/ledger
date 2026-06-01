@@ -1,0 +1,54 @@
+; Regression test for GitHub issue #3227:
+; "Commodity Swaps Over a Common Base Currency: No Cost Basis Reported Under
+; Certain Circumstances"
+;
+; When two commodities are swapped over a common base currency and both legs
+; carry a base-currency lot price (e.g. BTC {$100} exchanged for ETH {$50}),
+; xact_base_t::finalize() rewrites the swapping leg's cost into that base
+; currency, so that --basis (-B) reports the lot's cost basis in dollars
+; rather than in the intermediate commodity.
+;
+; The rewrite was only performed when the computed gain/loss was non-zero.
+; When both sides had the *same* base-currency value the gain/loss was exactly
+; zero, the rewrite was skipped, and the cost was left denominated in the
+; secondary commodity.  Here 100 BTC at $100 is worth $10,000 and the 200 ETH
+; received at $50 is also worth $10,000, so a -B report showed the BTC lot's
+; basis as "200 ETH" instead of "$10,000.00" -- and a report spanning both
+; legs failed to reconcile, since one leg was in ETH and the other in dollars.
+;
+; The fix always rewrites the cost into the base currency, even when the
+; gain/loss rounds to zero (the base-currency cost has already been computed).
+
+D $1,000.00
+
+2001-01-01 Coinbase
+    Assets:Coinbase            100 BTC {$100} @ 2 ETH {$50}
+    Assets:Coinbase           -200 ETH {$50}
+
+; The BTC lot's cost basis is its dollar value, $10,000.00 -- not the 200 ETH
+; that were paid for it.  This is the specific regression from #3227.
+test bal --limit "commodity == 'BTC'" -B Assets
+          $10,000.00  Assets:Coinbase
+end test
+
+; The ETH leg was already reported in dollars; confirm it still is, so the two
+; legs are expressed in the same common base currency.
+test bal --limit "commodity == 'ETH'" -B Assets
+         $-10,000.00  Assets:Coinbase
+end test
+
+; Across the whole swap both legs are now denominated in dollars, so the
+; running cost-basis total returns to zero: the swap neither created nor
+; destroyed cost basis.
+test reg -B
+01-Jan-01 Coinbase              Assets:Coinbase          $10,000.00   $10,000.00
+                                Assets:Coinbase         $-10,000.00            0
+end test
+
+; The annotations round-trip unchanged: the fix only affects the derived cost,
+; not the stored amounts.
+test print
+2001/01/01 Coinbase
+    Assets:Coinbase                     100 BTC {$100.00} @ 2 ETH {$50.00}
+    Assets:Coinbase                     -200 ETH {$50.00}
+end test
