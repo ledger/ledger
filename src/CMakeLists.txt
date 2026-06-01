@@ -259,6 +259,26 @@ if(USE_PYTHON)
       TARGET libledger POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
       $<TARGET_FILE:libledger> "${CMAKE_BINARY_DIR}/${_ledger_python_module_name}")
+
+    # Security fix for issue #3229 / Debian #1138597: the module above is a copy
+    # of the build-tree libledger installed via install(PROGRAMS ...), so CMake
+    # never rewrites its RPATH at install time the way it does for
+    # install(TARGETS ...).  The build-tree RPATH -- which CMake pads with empty
+    # entries to reserve room for the longer install RPATH -- would otherwise
+    # leak into the installed module, and ELF loaders treat an empty
+    # RPATH/RUNPATH element as the current working directory.  Strip the RPATH
+    # from the copied module so the installed artifact cannot be hijacked by a
+    # library planted in CWD.  ELF-only: macOS (Mach-O) and Windows (PE) use
+    # different mechanisms and are not affected.
+    if(UNIX AND NOT APPLE)
+      add_custom_command(
+        TARGET libledger POST_BUILD
+        COMMAND ${CMAKE_COMMAND}
+          "-DLEDGER_PYTHON_MODULE=${CMAKE_BINARY_DIR}/${_ledger_python_module_name}"
+          -P "${CMAKE_SOURCE_DIR}/cmake/SanitizeModuleRPath.cmake"
+        COMMENT "Stripping insecure RPATH from ledger Python module (#3229)")
+    endif()
+
     # Use PROGRAMS (not FILES) so the installed Python extension module has
     # executable permissions (mode 755).  Fedora and other distributions
     # require dynamic libraries to be installed with the executable bit set.

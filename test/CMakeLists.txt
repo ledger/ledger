@@ -97,6 +97,18 @@ if(Python_EXECUTABLE)
       WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
     set_tests_properties(RegressPyTest_513
       PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE};PYTHONPATH=.")
+
+    # Regression test for GitHub issue #3229 (Debian #1138597): the ledger
+    # Python extension module must not carry an RPATH/RUNPATH with empty
+    # elements, which ELF dynamic linkers treat as the current working
+    # directory and which therefore permit library-search-path hijacking.  The
+    # check is ELF-specific, so it is skipped on macOS (Mach-O) and Windows
+    # (PE), which use different mechanisms and are not affected.
+    if(UNIX AND NOT APPLE)
+      add_test(NAME RegressPyTest_3229
+        COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/regress/3229.py
+        "${PROJECT_BINARY_DIR}/ledger${CMAKE_SHARED_LIBRARY_SUFFIX}")
+    endif()
   endif()
 endif()
 
