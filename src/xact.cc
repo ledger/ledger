@@ -752,24 +752,29 @@ bool xact_base_t::finalize() {
               DEBUG("xact.finalize", "Commodity swap to_cost = " << to_cost);
 
               // Calculate gain/loss in the base commodity
-              if (amount_t gain_loss = from_cost - to_cost) {
-                DEBUG("xact.finalize", "Commodity swap gain_loss = " << gain_loss);
-                if (gain_loss.has_commodity())
-                  gain_loss.in_place_roundto(static_cast<int>(gain_loss.commodity().precision()) +
-                                             static_cast<int>(post->amount.precision()));
-                gain_loss.in_place_round();
-                DEBUG("xact.finalize", "Commodity swap gain_loss rounds to = " << gain_loss);
+              amount_t gain_loss = from_cost - to_cost;
+              if (gain_loss.has_commodity())
+                gain_loss.in_place_roundto(static_cast<int>(gain_loss.commodity().precision()) +
+                                           static_cast<int>(post->amount.precision()));
+              gain_loss.in_place_round();
+              DEBUG("xact.finalize", "Commodity swap gain_loss rounds to = " << gain_loss);
 
-                if (post->must_balance())
-                  add_or_set_value(balance, gain_loss.reduced());
+              if (gain_loss && post->must_balance())
+                add_or_set_value(balance, gain_loss.reduced());
 
-                // Modify the post->cost to reflect the adjusted value
-                *post->cost = to_cost + gain_loss;
+              // Always rewrite the posting's cost into the common base
+              // currency, even when the gain/loss is zero (i.e. both
+              // commodities have the same base-currency value).  The
+              // base-currency cost is `to_cost + gain_loss`, which equals
+              // `from_cost`.  Skipping this assignment in the zero-gain case
+              // left the cost denominated in the secondary commodity, so
+              // `--basis` reported the lot in that commodity rather than the
+              // base currency -- or produced no output at all when the two
+              // sides cancelled (#3227).
+              *post->cost = to_cost + gain_loss;
 
-                DEBUG("xact.finalize", "added commodity swap gain_loss, balance = " << balance);
-              } else {
-                DEBUG("xact.finalize", "Commodity swap gain_loss would have displayed as zero");
-              }
+              DEBUG("xact.finalize",
+                    "commodity swap cost = " << *post->cost << ", balance = " << balance);
             }
           }
         }
