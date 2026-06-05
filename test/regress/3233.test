@@ -1,0 +1,11 @@
+2021/12/23 * minimal zero-commodity repro
+    Expenses:Interest        $0.00
+    Expenses:Principal     $100.00
+    Assets:Checking       $-100.00
+
+test print -> 0
+2021/12/23 * minimal zero-commodity repro
+    Expenses:Interest                          $0.00
+    Expenses:Principal                       $100.00
+    Assets:Checking                         $-100.00
+end test
