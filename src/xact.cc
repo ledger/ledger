@@ -777,6 +777,27 @@ bool xact_base_t::finalize() {
                     "commodity swap cost = " << *post->cost << ", balance = " << balance);
             }
           }
+        } else if (post->has_flags(POST_COST_CALCULATED) && !post->has_flags(POST_COST_VIRTUAL) &&
+                   !post->amount.annotation().has_flags(ANNOTATION_PRICE_FIXATED)) {
+          // Issue #3232: the posting acquires a commodity with a lot price
+          // whose commodity (e.g. C) differs from the cost commodity (e.g.
+          // B), and the cost was *inferred* from balancing the transaction's
+          // legs (POST_COST_CALCULATED) rather than written explicitly.
+          // exchange() above recorded the implied amount-to-cost rate
+          // (A -> B), but the declared lot price (A -> C) was never entered
+          // into the price history.  As a result a report repricing into C
+          // (`--exchange C`) could not chain B -> A -> C and silently fell
+          // back to mixed-commodity output.  Record the lot price so the
+          // valuation graph can traverse it, the same way an "@" cost would
+          // have.  This is restricted to inferred costs so that a lot's cost
+          // basis is never re-published as a spurious market price when the
+          // lot is later sold (an explicit "@" disposal).
+          commodity_pool_t::current_pool->exchange(
+              post->amount.commodity(), *post->amount.annotation().price,
+              datetime_t(post->date(), time_duration(0, 0, 0, 0)));
+          DEBUG("xact.finalize", "recorded inferred lot price "
+                                     << *post->amount.annotation().price << " for "
+                                     << post->amount.commodity().symbol() << " (#3232)");
         }
       } else {
         post->amount =
