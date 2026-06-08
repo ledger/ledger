@@ -1,0 +1,84 @@
+; Regression test for GitHub issue #3232:
+; "Unexpected --exchange Register Report Output When Lot Prices Are Specified"
+;
+; When a posting acquires a commodity with a lot price expressed in a third
+; commodity, e.g.
+;
+;     Assets:Brokerage    100 A {3 C}
+;     Assets:Brokerage   -200 B
+;
+; the transaction bakes in two exchange rates: balancing the two legs implies
+; 100 A == 200 B (so 1 A = 2 B), and the lot price declares 1 A = 3 C.
+; xact_base_t::finalize() recorded the first rate (A -> B) in the price
+; history but dropped the declared lot price (A -> C) whenever the cost
+; commodity (B) differed from the lot-price commodity (C) and the cost itself
+; was unannotated.
+;
+; As a result `--exchange A` and `--exchange B` repriced the register report
+; correctly, but `--exchange C` could not chain B -> A -> C, so the -200 B leg
+; was left unconverted and the report silently fell back to mixed-commodity
+; output -- as if --exchange had not been supplied at all.
+;
+; The fix records the declared lot price into the price history, exactly as an
+; explicit "@" cost would have, so the valuation graph can traverse it.
+
+2001-01-01 Per-unit lot price
+    Assets:PerUnit                         100 A {3 C}
+    Assets:PerUnit                        -200 B
+
+2001-01-02 Total lot price
+    Assets:Total                           100 A {{300 C}}
+    Assets:Total                          -200 B
+
+; The per-unit ({3 C}) and total ({{300 C}}) lot-price forms normalize to the
+; same stored per-unit annotation, so the fix applies identically to both.
+test print
+2001/01/01 Per-unit lot price
+    Assets:PerUnit                        100 A {C3}
+    Assets:PerUnit                            -200 B
+
+2001/01/02 Total lot price
+    Assets:Total                          100 A {C3}
+    Assets:Total                              -200 B
+end test
+
+; Repricing into A already worked: the implied 1 A = 2 B rate lets the -200 B
+; leg be expressed as -100 A, and the two legs cancel to zero.
+test reg --exchange A
+01-Jan-01 Per-unit lot price    Assets:PerUnit                100 A        100 A
+                                Assets:PerUnit               -100 A            0
+01-Jan-02 Total lot price       Assets:Total                  100 A        100 A
+                                Assets:Total                 -100 A            0
+end test
+
+; Repricing into B likewise worked.
+test reg --exchange B
+01-Jan-01 Per-unit lot price    Assets:PerUnit                200 B        200 B
+                                Assets:PerUnit               -200 B            0
+01-Jan-02 Total lot price       Assets:Total                  200 B        200 B
+                                Assets:Total                 -200 B            0
+end test
+
+; The regression: repricing into C (the lot-price commodity) must use the
+; baked-in rates -- 100 A == 300 C, and 200 B == 100 A == 300 C -- so both legs
+; convert to C and the running total returns to zero.  Previously the -200 B
+; leg was left unconverted.
+test reg --exchange C Assets:PerUnit
+01-Jan-01 Per-unit lot price    Assets:PerUnit                 C300         C300
+                                Assets:PerUnit                C-300            0
+end test
+
+; The total-price form ({{300 C}}) must behave identically.
+test reg --exchange C Assets:Total
+01-Jan-02 Total lot price       Assets:Total                   C300         C300
+                                Assets:Total                  C-300            0
+end test
+
+; The declared lot price now appears in the price history alongside the implied
+; A -> B rate; the A -> C edge is what lets the valuation graph chain B -> A -> C.
+test prices
+2001/01/01 A                 2 B
+2001/01/02 A                 2 B
+2001/01/01 A                  C3
+2001/01/02 A                  C3
+end test
