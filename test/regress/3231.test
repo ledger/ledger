@@ -1,0 +1,62 @@
+; Regression test for issue #3231:
+;   "Discrepancy in --exchange Behaviour Between register and balance Reports"
+;
+; The issue raised two separate behaviours, both exercised below on
+; independent accounts (Assets:Swap and Assets:Brokerage) whose commodity
+; graphs do not interact.
+;
+; ----------------------------------------------------------------------
+; Part 1 -- the reported reg/bal "discrepancy" is correct by design.
+;
+; A bare two-commodity exchange establishes an implied rate
+; (100 A = 200 B, i.e. 1 B = 0.5 A).  Valued in A with --exchange, the two
+; postings are +100 A and -100 A, so the *account total* is exactly zero.
+; A register report lists each posting along the way, but a balance report
+; shows only the (zero) total and therefore suppresses the account.  This
+; is by design, not a bug: --empty reveals the genuine "0 A" total, and
+; --dc shows both legs of the swap side by side.
+;
+; ----------------------------------------------------------------------
+; Part 2 -- a cost basis can be reported in a secondary commodity.
+;
+; The 2 SPY were acquired for 200 USD, whose basis is 1.4 CAD each, so the
+; lot's basis is 280 CAD (the {{280 CAD}} total-cost annotation, kept in
+; the base currency by #3227).  --basis therefore reports CAD280.  Given a
+; USD/CAD market price -- here a P directive -- "--exchange USD --basis"
+; re-expresses that basis in USD, reporting 200 USD.
+
+P 2001-01-01 USD 1.4 CAD
+
+2001-01-01 * Stock Purchase
+    Assets:Brokerage             2 SPY {{280 CAD}} @ 100 USD {1.4 CAD}
+    Assets:Brokerage             -200 USD {1.4 CAD}
+
+2001-01-01 Exchange
+    Assets:Swap                            100 A
+    Assets:Swap                           -200 B
+
+; Part 1: register lists each --exchange'd posting ...
+test --exchange "A" reg Assets:Swap
+01-Jan-01 Exchange              Assets:Swap                   100 A        100 A
+                                Assets:Swap                  -100 A            0
+end test
+
+; ... while the balance total nets to exactly zero (shown via --empty) ...
+test --exchange "A" --empty bal Assets:Swap
+                 0 A  Assets:Swap
+end test
+
+; ... and --dc shows both legs of the swap.
+test --exchange "A" --dc bal Assets:Swap
+         100 A          100 A              0  Assets:Swap
+end test
+
+; Part 2: the SPY lot's cost basis is held in the base currency (CAD) ...
+test --limit "commodity == 'SPY'" --basis bal Assets
+            CAD280.0  Assets:Brokerage
+end test
+
+; ... and --exchange re-expresses that basis in USD via the known rate.
+test --limit "commodity == 'SPY'" --exchange "USD" --basis bal Assets
+             200 USD  Assets:Brokerage
+end test
