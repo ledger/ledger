@@ -387,11 +387,16 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
         // When printing user-annotated amounts, preserve {{total}} lot-price
         // notation so that the output round-trips faithfully (issue #1033).
         bool preserve_total = post->has_flags(POST_AMOUNT_USER_ANNOTATED);
-        value_t(post->amount)
-            .print(amt_str, boost::numeric_cast<int>(amount_width), -1,
-                   AMOUNT_PRINT_RIGHT_JUSTIFY |
-                       (suppress_computed ? AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS : 0) |
-                       (preserve_total ? AMOUNT_PRINT_PRESERVE_TOTAL_COST : 0));
+        uint_least8_t flags = AMOUNT_PRINT_RIGHT_JUSTIFY |
+                              (suppress_computed ? AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS : 0) |
+                              (preserve_total ? AMOUNT_PRINT_PRESERVE_TOTAL_COST : 0);
+        if (post->amount.is_zero()) {
+          std::ostringstream buf;
+          post->amount.print(buf, flags);
+          justify(amt_str, buf.str(), boost::numeric_cast<int>(amount_width), true);
+        } else {
+          value_t(post->amount).print(amt_str, boost::numeric_cast<int>(amount_width), -1, flags);
+        }
         amt = amt_str.str();
       }
 
