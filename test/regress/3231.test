@@ -1,29 +1,57 @@
 ; Regression test for issue #3231:
 ;   "Discrepancy in --exchange Behaviour Between register and balance Reports"
 ;
-; The issue raised two separate behaviours, both exercised below on
-; independent accounts (Assets:Swap and Assets:Brokerage) whose commodity
-; graphs do not interact.
+; The issue raised two separate facets.  Both are exercised below on
+; independent accounts whose commodity graphs do not interact, so a single
+; journal can pin every behaviour at once.
 ;
 ; ----------------------------------------------------------------------
-; Part 1 -- the reported reg/bal "discrepancy" is correct by design.
+; Facet (1) -- the reported reg/bal "discrepancy" is correct BY DESIGN.
 ;
 ; A bare two-commodity exchange establishes an implied rate
 ; (100 A = 200 B, i.e. 1 B = 0.5 A).  Valued in A with --exchange, the two
 ; postings are +100 A and -100 A, so the *account total* is exactly zero.
 ; A register report lists each posting along the way, but a balance report
-; shows only the (zero) total and therefore suppresses the account.  This
-; is by design, not a bug: --empty reveals the genuine "0 A" total, and
-; --dc shows both legs of the swap side by side.
+; shows only the (zero) total and therefore suppresses the account.  The
+; maintainer confirmed on the issue that this is intended, not a bug:
+; --empty reveals the genuine "0 A" total, and --dc shows both legs of the
+; swap side by side.
 ;
 ; ----------------------------------------------------------------------
-; Part 2 -- a cost basis can be reported in a secondary commodity.
+; Facet (2) -- the reporter's actual ("XY problem") goal: get
+;   --limit "commodity == 'SPY'" --exchange USD --basis bal Assets
+; to report 200 USD using the 1 USD = 1.4 CAD rate "baked into" the lot
+; annotation, WITHOUT a separate price directive.
 ;
-; The 2 SPY were acquired for 200 USD, whose basis is 1.4 CAD each, so the
-; lot's basis is 280 CAD (the {{280 CAD}} total-cost annotation, kept in
-; the base currency by #3227).  --basis therefore reports CAD280.  Given a
-; USD/CAD market price -- here a P directive -- "--exchange USD --basis"
-; re-expresses that basis in USD, reporting 200 USD.
+; This is a DOCUMENTED LIMITATION, fixed by supplying a market price.
+; Mechanism (verified against ./build/ledger and src/xact.cc):
+;
+;   * The {1.4 CAD} lot annotation binds to the 100 USD COST, not to the
+;     SPY amount.  Because the SPY leg has an explicit "@" cost,
+;     POST_COST_CALCULATED is never set (that flag is added only by the
+;     cost-INFERENCE paths in xact.cc).  The posting is consumed by the
+;     commodity-swap branch in xact.cc, which rewrites the cost into the
+;     base currency (CAD) for --basis purposes.
+;
+;   * That branch does NOT publish a USD<->CAD market price.  ledger
+;     deliberately keeps lot prices separate from market prices
+;     (see #1217 / #1130 / #1032), so the lot annotation on an explicit-@
+;     cost does not populate the price database.  The `prices` command
+;     proves this: with no P directive it shows only the SPY->USD edge from
+;     the explicit "@", and NO USD<->CAD edge.
+;
+;   * With no USD<->CAD edge in the valuation graph, --exchange USD cannot
+;     reprice the CAD basis, so --basis leaves it in the base currency.
+;     This is the reporter's bare-example result, and it is by design.
+;
+;   * Supplying a market price (the P directive below) adds the missing
+;     edge, after which --exchange USD --basis re-expresses the basis as
+;     200 USD.  The "P 2001-01-01 USD 1.4 CAD" directive is therefore
+;     LOAD-BEARING for the SPY/USD/CAD success case.
+;
+; To pin BOTH states in one journal we use two parallel triples:
+;   - SPY / USD / CAD  WITH a P directive (the success case), and
+;   - ZZZ / WWW / QQQ  with NO price at all (the by-design limitation).
 
 P 2001-01-01 USD 1.4 CAD
 
@@ -31,11 +59,18 @@ P 2001-01-01 USD 1.4 CAD
     Assets:Brokerage             2 SPY {{280 CAD}} @ 100 USD {1.4 CAD}
     Assets:Brokerage             -200 USD {1.4 CAD}
 
+2001-01-01 * Buy Unpriced
+    Assets:Unpriced              2 ZZZ {{280 QQQ}} @ 100 WWW {1.4 QQQ}
+    Assets:Unpriced              -200 WWW {1.4 QQQ}
+
 2001-01-01 Exchange
     Assets:Swap                            100 A
     Assets:Swap                           -200 B
 
-; Part 1: register lists each --exchange'd posting ...
+; --------------------------------------------------------------------------
+; Facet (1): the swap reg/bal behaviour, correct and maintainer-endorsed.
+
+; register lists each --exchange'd posting ...
 test --exchange "A" reg Assets:Swap
 01-Jan-01 Exchange              Assets:Swap                   100 A        100 A
                                 Assets:Swap                  -100 A            0
@@ -51,12 +86,53 @@ test --exchange "A" --dc bal Assets:Swap
          100 A          100 A              0  Assets:Swap
 end test
 
-; Part 2: the SPY lot's cost basis is held in the base currency (CAD) ...
-test --limit "commodity == 'SPY'" --basis bal Assets
+; --------------------------------------------------------------------------
+; Facet (2), SUCCESS case (SPY/USD/CAD, WITH the P directive above).
+;
+; The 2 SPY were acquired for 200 USD at a basis of 1.4 CAD each, so the
+; lot's basis is the {{280 CAD}} total-cost annotation, held in the base
+; currency.  --basis alone reports it in CAD ...
+test --limit "commodity == 'SPY'" --basis bal Assets:Brokerage
             CAD280.0  Assets:Brokerage
 end test
 
-; ... and --exchange re-expresses that basis in USD via the known rate.
-test --limit "commodity == 'SPY'" --exchange "USD" --basis bal Assets
+; ... and because the P directive supplies the USD<->CAD edge, --exchange
+; USD re-expresses that basis as 200 USD.  This P directive is LOAD-BEARING;
+; remove it and the result falls back to the base-currency CAD (see the ZZZ
+; limitation case below).
+test --limit "commodity == 'SPY'" --exchange "USD" --basis bal Assets:Brokerage
              200 USD  Assets:Brokerage
+end test
+
+; --------------------------------------------------------------------------
+; Facet (2), LIMITATION case (ZZZ/WWW/QQQ, NO price directive anywhere).
+;
+; This is the reporter's bare example, reproduced with a fresh triple that
+; has no market price.  The {1.4 QQQ} lot annotation on the explicit-@ cost
+; does NOT populate the market price DB (#1217), so there is no WWW<->QQQ
+; edge to traverse.  --basis reports the {{280 QQQ}} total cost in its base
+; currency ...
+test --limit "commodity == 'ZZZ'" --basis bal Assets:Unpriced
+              QQQ280  Assets:Unpriced
+end test
+
+; ... and --exchange WWW changes NOTHING -- with no WWW<->QQQ rate the basis
+; stays QQQ280.  This is identical to having no --exchange at all, and is the
+; intended behaviour, not a bug.  The reporter's facet-(2) request is met
+; only by supplying an explicit market price (as in the SPY case above).
+test --limit "commodity == 'ZZZ'" --exchange "WWW" --basis bal Assets:Unpriced
+              QQQ280  Assets:Unpriced
+end test
+
+; --------------------------------------------------------------------------
+; The price database is the "smoking gun" for the by-design behaviour:
+; the only commodity-derived edges are the explicit "@" costs (A->B,
+; SPY->USD, ZZZ->WWW) and the explicit P directive (USD->CAD).  There is NO
+; WWW<->QQQ edge, even though {1.4 QQQ} appears as a lot annotation -- lot
+; annotations are deliberately kept out of the market price DB.
+test prices
+2001/01/01 A                 2 B
+2001/01/01 SPY           100 USD
+2001/01/01 USD            CAD1.4
+2001/01/01 ZZZ           100 WWW
 end test
