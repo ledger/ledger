@@ -12,7 +12,7 @@ jobs:
       CC: clang
       CXX: clang++
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         name: Check out repository code
 
       - name: Install dependencies
