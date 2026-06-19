@@ -18,7 +18,7 @@ jobs:
       with:
         nix_path: nixpkgs=channel:nixos-unstable
 
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Install lefthook
       run: npm install -g lefthook

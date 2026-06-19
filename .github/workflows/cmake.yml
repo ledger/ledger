@@ -44,7 +44,7 @@ jobs:
             cmake_args: -DUSE_SANITIZERS=ON
           }
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         name: Check out repository code
 
       - if: runner.os == 'Linux'
@@ -113,7 +113,7 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         name: Check out repository code
 
       - uses: msys2/setup-msys2@v2
@@ -175,7 +175,7 @@ jobs:
           sudo docker system prune -af --volumes 2>/dev/null || true
           df -h /
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         name: Check out repository code
 
       - name: Install dependencies
@@ -256,7 +256,7 @@ jobs:
   packaging:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         name: Check out repository code
 
       - name: Install dependencies
@@ -310,7 +310,7 @@ jobs:
   doxygen:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         name: Check out repository code
 
       - name: Install dependencies
@@ -337,7 +337,7 @@ jobs:
   manual:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         name: Check out repository code
 
       - name: Install dependencies
