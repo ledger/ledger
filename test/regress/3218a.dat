@@ -1,0 +1,7 @@
+2026-05-13 * Newer, written first
+    Assets:Checking          EUR 1.00 = EUR 2.00
+    Assets:Cash
+
+2026-05-12 * Older, written second
+    Assets:Checking          EUR 1.00
+    Assets:Cash

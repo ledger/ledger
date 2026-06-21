@@ -1,0 +1,61 @@
+; Regression test for issue #3218: balance assertions must be verified in
+; date order, not in the order the transactions happen to appear in the file.
+;
+; Before the fix each assertion was checked inline as its posting was parsed,
+; so a transaction dated earlier but written later in the file had not been
+; read yet and its posting was missing from the running account total.  This
+; produced two opposite symptoms, both demonstrated below:
+;
+;   * spurious "off by" failures, when the not-yet-seen posting would have
+;     satisfied the assertion (3218a.dat); and
+;
+;   * silently accepted assertions that a complete date-ordered total would
+;     have rejected (3218b.dat).
+;
+; Both data files list a 2026-05-13 transaction (carrying the assertion)
+; before the 2026-05-12 transaction it depends on.  In date order the running
+; balance of Assets:Checking is EUR 1.00 on 05-12 and EUR 2.00 on 05-13.
+
+; 3218a.dat asserts "= EUR 2.00", which is correct in date order, so the
+; default report now succeeds even though the transactions are newest-first.
+test -f $sourcepath/test/regress/3218a.dat bal
+                   0  Assets
+           EUR -2.00    Cash
+            EUR 2.00    Checking
+--------------------
+                   0
+end test
+
+; --check-in-file-order restores the pre-3.5 file-order behaviour: the
+; 2026-05-13 posting is checked before the 05-12 deposit it relies on and so
+; sees only its own EUR 1.00, failing the assertion.
+test -f $sourcepath/test/regress/3218a.dat --check-in-file-order bal -> 1
+__ERROR__
+While parsing file "$sourcepath/test/regress/3218a.dat", line 2:
+While parsing posting:
+  Assets:Checking          EUR 1.00 = EUR 2.00
+                                      ^^^^^^^^
+Error: Balance assertion off by EUR 1.00 (expected to see EUR 1.00)
+end test
+
+; 3218b.dat uses the same layout but asserts "= EUR 1.00", which is wrong once
+; the backdated 05-12 deposit is included.  Date order now catches it.
+test -f $sourcepath/test/regress/3218b.dat bal -> 1
+__ERROR__
+While parsing file "$sourcepath/test/regress/3218b.dat", line 2:
+While parsing posting:
+  Assets:Checking          EUR 1.00 = EUR 1.00
+                                      ^^^^^^^^
+Error: Balance assertion off by EUR -1.00 (expected to see EUR 2.00)
+end test
+
+; The same journal under --check-in-file-order slips through unchecked -- the
+; exact bug #3218 fixes.  In file order the assertion is verified before the
+; backdated deposit is read, sees EUR 1.00, and is wrongly accepted.
+test -f $sourcepath/test/regress/3218b.dat --check-in-file-order bal
+                   0  Assets
+           EUR -2.00    Cash
+            EUR 2.00    Checking
+--------------------
+                   0
+end test
