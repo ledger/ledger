@@ -315,6 +315,7 @@ public:
       value_t real_total; ///< Accumulated total of non-virtual postings only.
       bool calculated;    ///< True once total/real_total have been computed.
       bool gathered;      ///< True once update() has processed all known posts.
+      bool gathered_all;  ///< True once the referenced-name sets have been filled.
 
       std::size_t posts_count;            ///< Total number of postings.
       std::size_t posts_virtuals_count;   ///< Number of virtual postings.
@@ -343,7 +344,7 @@ public:
           last_reported_post; ///< Resume point for incremental accumulation over reported_posts.
 
       details_t()
-          : calculated(false), gathered(false),
+          : calculated(false), gathered(false), gathered_all(false),
 
             posts_count(0), posts_virtuals_count(0), posts_cleared_count(0), posts_last_7_count(0),
             posts_last_30_count(0), posts_this_month_count(0), latest_checkout_cleared(false) {
@@ -351,7 +352,7 @@ public:
       }
       // A copy copies nothing
       details_t(const details_t&)
-          : calculated(false), gathered(false),
+          : calculated(false), gathered(false), gathered_all(false),
 
             posts_count(0), posts_virtuals_count(0), posts_cleared_count(0), posts_last_7_count(0),
             posts_last_30_count(0), posts_this_month_count(0), latest_checkout_cleared(false) {
@@ -366,11 +367,34 @@ public:
       /**
        * @brief Update statistics with data from a single posting.
        *
-       * Increments counters, extends date ranges, records timeclock
-       * data, and (when @p gather_all is true) collects referenced
-       * account names, payee names, and source file paths.
+       * Increments counters, extends date ranges, and records timeclock
+       * data.  When @p gather_all is true, also collects the referenced
+       * account names, payee names, and source file paths (see
+       * gather_references); these sets are comparatively expensive to
+       * build and are only consumed by the `stats` command and the Python
+       * bindings, so callers that need only counts or dates pass false.
        */
       void update(post_t& post, bool gather_all = false);
+
+      /**
+       * @brief Collect the referenced account/payee/file sets for a posting.
+       *
+       * Split out from update() so that the cheap statistical fields can be
+       * gathered without paying for the (rarely needed) reference sets,
+       * which require constructing each posting's full account name.
+       */
+      void gather_references(post_t& post);
+
+      /**
+       * @brief Copy the immutable per-posting statistics from @p src.
+       *
+       * Copies only the fields that are a pure function of an account's own
+       * postings (counts, date ranges, timeclock data) -- not the running
+       * total, resume iterators, or reference sets.  Used to seed an
+       * account's per-report details from a cache that survives the xdata
+       * clears between --group-by groups.
+       */
+      void copy_statistics_from(const details_t& src);
     };
 
     details_t self_details;    ///< Statistics for this account's own postings only.
@@ -394,6 +418,13 @@ public:
   /// memory-saving measure: most accounts never need xdata outside of an
   /// active report pass, so allocation is deferred until first access.
   mutable optional<xdata_t> xdata_;
+
+  /// Cache of this account's immutable own-posting statistics (counts, date
+  /// ranges, timeclock data), computed once from `posts`.  Unlike
+  /// self_details in xdata_, this survives clear_xdata(), so a sort or format
+  /// expression that references `date`, `latest`, etc. need not rescan every
+  /// posting once per --group-by group.  Invalidated by add_post/remove_post.
+  mutable optional<xdata_t::details_t> self_stats_cache_;
 
   bool has_xdata() const { return static_cast<bool>(xdata_); }
 
