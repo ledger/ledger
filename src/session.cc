@@ -219,6 +219,9 @@ std::size_t session_t::read_data(const string& master_account) {
   if (HANDLED(lot_matching_))
     journal->lot_matching_policy = HANDLER(lot_matching_).policy;
 
+  if (HANDLED(external_directive_))
+    journal->external_directives = HANDLER(external_directive_).directives;
+
   // Read the price database first so that commodity prices are available
   // during journal parsing (e.g., for balance assertions involving
   // market values).
@@ -447,6 +450,7 @@ option_t<session_t>* session_t::lookup_option(const char* p) {
     break;
   case 'e':
     OPT(explicit);
+    else OPT(external_directive_);
     break;
   case 'f':
     OPT_(file_); // -f

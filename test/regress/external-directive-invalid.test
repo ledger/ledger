@@ -1,0 +1,40 @@
+; An invalid --external-directive argument must fail clearly, both when the
+; NAME:MODE separator is missing and when the mode keyword is not recognized.
+
+2024/01/01 Opening
+    Assets:Checking    $100.00
+    Equity:Opening
+
+test --external-directive newdirective bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Invalid --external-directive 'newdirective': expected NAME:MODE
+end test
+
+test --external-directive newdirective:bogus bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Invalid --external-directive mode 'bogus': must be 'line' or 'block'
+end test
+
+; A built-in word directive name may not be claimed as an external directive.
+test --external-directive account:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'account' as an external directive
+end test
+
+; The single-character directives are reserved as well.
+test --external-directive P:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'P' as an external directive
+end test
+
+; A malformed item anywhere in a comma-separated list fails, and the error
+; names the offending item rather than the whole list.
+test --external-directive newdirective:line,plugin:bogus bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Invalid --external-directive mode 'bogus': must be 'line' or 'block'
+end test

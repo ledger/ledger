@@ -177,6 +177,7 @@ public:
     HANDLER(day_break).report(out);
     HANDLER(time_round_).report(out);
     HANDLER(download).report(out);
+    HANDLER(external_directive_).report(out);
     HANDLER(decimal_comma).report(out);
     HANDLER(time_colon).report(out);
     HANDLER(file_).report(out);
@@ -333,6 +334,53 @@ public:
         else
           throw_(std::invalid_argument,
                  _f("Unknown lot-matching policy '%1%': must be 'fifo', 'lifo', or 'none'") % str);
+      });
+
+  /// Register a top-level directive that ledger does not natively understand,
+  /// so the parser skips it instead of reporting an error.  The argument is a
+  /// comma-separated list of NAME:MODE items MODE "line" skips only the directive's
+  /// header line. MODE "block" currently behaves the same as "line". Skipping its
+  /// indented body will be implemented in a future PR.  The option may also be given
+  /// more than once, accumulating registrations.
+  OPTION_CTOR(
+      session_t, external_directive_, external_directives_map_t directives;
+      CTOR(session_t, external_directive_) {} DO_() {
+        for (string::size_type pos = 0;;) {
+          string::size_type comma = str.find(',', pos);
+          string item = str.substr(pos, comma == string::npos ? string::npos : comma - pos);
+
+          // Trim surrounding whitespace, then skip empty items so a trailing
+          // or doubled comma is tolerated.
+          string::size_type first = item.find_first_not_of(" \t\r\n");
+          if (first != string::npos) {
+            item = item.substr(first, item.find_last_not_of(" \t\r\n") - first + 1);
+
+            string::size_type colon = item.rfind(':');
+            if (colon == string::npos || colon == 0 || colon + 1 >= item.length())
+              throw_(std::invalid_argument,
+                     _f("Invalid --external-directive '%1%': expected NAME:MODE") % item);
+
+            string name = item.substr(0, colon);
+            string mode = item.substr(colon + 1);
+            if (is_reserved_directive_name(name))
+              throw_(std::invalid_argument,
+                     _f("Cannot register reserved directive name '%1%' as an external directive") %
+                         name);
+
+            if (mode == "line")
+              directives[name] = external_directive_mode_t::line;
+            else if (mode == "block")
+              directives[name] = external_directive_mode_t::block;
+            else
+              throw_(std::invalid_argument,
+                     _f("Invalid --external-directive mode '%1%': must be 'line' or 'block'") %
+                         mode);
+          }
+
+          if (comma == string::npos)
+            break;
+          pos = comma + 1;
+        }
       });
 };
 

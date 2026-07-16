@@ -1,0 +1,14 @@
+; Registering one external directive must not suppress a different, unregistered
+; directive: the baseline "unrecognized source line" behavior is unchanged for
+; any directive name that was not registered.
+newdirective experiment tag=cool region=us
+
+2024/01/01 Opening
+    Assets:Checking    $100.00
+    Equity:Opening
+
+test --external-directive other:line reg -> 1
+__ERROR__
+While parsing file "$FILE", line 4:
+Error: Unrecognized source line 'newdirective experiment tag=cool region=us'
+end test

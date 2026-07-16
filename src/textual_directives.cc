@@ -1011,6 +1011,19 @@ void instance_t::python_directive(char*) {
 
 /*--- General Directive Dispatch ---*/
 
+bool is_reserved_directive_name(const string& name) {
+  // Word-based directives dispatched by general_directive() plus the
+  // single-character directives dispatched by read_next_directive().  Keep
+  // this in sync with those two switch statements.
+  static const std::set<string> reserved = {
+      "account", "account-rewrite", "alias", "apply", "assert", "bucket",
+      "check",   "comment",         "commodity", "def", "define", "end",
+      "eval",    "expr",            "include",   "import", "payee",
+      "payee-rewrite", "python",    "tag",       "test", "value", "year",
+      "A", "b", "C", "D", "h", "i", "I", "N", "o", "O", "P", "Y"};
+  return reserved.find(name) != reserved.end();
+}
+
 /**
  * @brief Main dispatch table for word-based directives.
  *
@@ -1030,6 +1043,19 @@ bool instance_t::general_directive(char* line) {
 
   if (*p == '@' || *p == '!')
     p++;
+
+  // A directive registered via --external-directive is recognized but skipped
+  // rather than reported as an error.  Both modes currently consume only the
+  // directive's header line.  `block` mode will additionally skip the indented
+  // body in a future PR.
+  if (!context.journal->external_directives.empty()) {
+    external_directives_map_t::const_iterator entry =
+        context.journal->external_directives.find(p);
+    if (entry != context.journal->external_directives.end()) {
+      DEBUG("textual.directive", "Ignoring external directive: " << p);
+      return true;
+    }
+  }
 
   // Ensure there's an argument for all directives that need one.
   if (!arg && std::strcmp(p, "comment") != 0 && std::strcmp(p, "end") != 0 &&

@@ -1,0 +1,26 @@
+; Baseline test for --external-directive: register top-level directives that
+; ledger does not natively understand, so the parser skips them instead of
+; reporting an error.  In "line" mode only the directive's header line is
+; consumed. The surrounding transactions parse normally.
+newdirective experiment tag=cool region=us
+myplugin plugin foo
+
+2024/01/01 Opening
+    Assets:Checking    $100.00
+    Equity:Opening
+
+; One comma-separated option registers both names at once.
+test --external-directive newdirective:line,myplugin:line reg
+24-Jan-01 Opening               Assets:Checking             $100.00      $100.00
+                                Equity:Opening             $-100.00            0
+end test
+
+; Without the registration the same journal reports both unrecognized lines,
+; so the option only affects the names it registers.
+test reg -> 2
+__ERROR__
+While parsing file "$FILE", line 5:
+Error: Unrecognized source line 'newdirective experiment tag=cool region=us'
+While parsing file "$FILE", line 6:
+Error: Unrecognized source line 'myplugin plugin foo'
+end test

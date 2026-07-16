@@ -68,6 +68,22 @@ enum class lot_policy_t : std::uint8_t {
   lifo  ///< Last-in, first-out: newest lots are consumed first.
 };
 
+/// How a directive registered via --external-directive is consumed by the
+/// parser when it appears at top level in a journal file.
+enum class external_directive_mode_t : std::uint8_t {
+  line, ///< Ignore only the directive's header line.
+  block ///< Ignore the header line and its indented body (to be implemented in a future PR).
+};
+
+/// Registry mapping a directive name to the mode used to skip it.
+using external_directives_map_t = std::map<string, external_directive_mode_t>;
+
+/// True if @a name is a directive the textual parser handles natively (a
+/// word-based directive or a single-character one).  Such names may
+/// not be claimed via --external-directive, since doing so would shadow the
+/// built-in.  Defined in textual_directives.cc alongside the dispatch table.
+bool is_reserved_directive_name(const string& name);
+
 class xact_base_t;
 class parse_context_t;
 class parse_context_stack_t;
@@ -160,6 +176,8 @@ public:
                             ///< order.
   lot_policy_t lot_matching_policy =
       lot_policy_t::none; ///< How commodity lots are matched for consumption.
+  external_directives_map_t
+      external_directives; ///< Directive names to skip during parsing, from --external-directive.
   payee_alias_mappings_t
       payee_alias_mappings; ///< Regex-based payee alias rules from `alias` directives.
   payee_uuid_mappings_t payee_uuid_mappings;       ///< UUID-to-payee-name mappings.

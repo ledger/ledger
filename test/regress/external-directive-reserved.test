@@ -1,0 +1,220 @@
+; Every name the textual parser dispatches natively is reserved and may not be
+; claimed via --external-directive.  This test registers each built-in directive
+; name and asserts it is rejected, so is_reserved_directive_name() in
+; textual_directives.cc cannot silently drift out of sync with the
+; general_directive() and read_next_directive() dispatch switches.
+
+2024/01/01 Opening
+    Assets:Checking    $100.00
+    Equity:Opening
+
+test --external-directive account:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'account' as an external directive
+end test
+
+test --external-directive account-rewrite:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'account-rewrite' as an external directive
+end test
+
+test --external-directive alias:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'alias' as an external directive
+end test
+
+test --external-directive apply:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'apply' as an external directive
+end test
+
+test --external-directive assert:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'assert' as an external directive
+end test
+
+test --external-directive bucket:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'bucket' as an external directive
+end test
+
+test --external-directive check:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'check' as an external directive
+end test
+
+test --external-directive comment:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'comment' as an external directive
+end test
+
+test --external-directive commodity:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'commodity' as an external directive
+end test
+
+test --external-directive def:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'def' as an external directive
+end test
+
+test --external-directive define:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'define' as an external directive
+end test
+
+test --external-directive end:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'end' as an external directive
+end test
+
+test --external-directive eval:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'eval' as an external directive
+end test
+
+test --external-directive expr:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'expr' as an external directive
+end test
+
+test --external-directive include:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'include' as an external directive
+end test
+
+test --external-directive import:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'import' as an external directive
+end test
+
+test --external-directive payee:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'payee' as an external directive
+end test
+
+test --external-directive payee-rewrite:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'payee-rewrite' as an external directive
+end test
+
+test --external-directive python:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'python' as an external directive
+end test
+
+test --external-directive tag:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'tag' as an external directive
+end test
+
+test --external-directive test:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'test' as an external directive
+end test
+
+test --external-directive value:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'value' as an external directive
+end test
+
+test --external-directive year:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'year' as an external directive
+end test
+
+test --external-directive A:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'A' as an external directive
+end test
+
+test --external-directive b:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'b' as an external directive
+end test
+
+test --external-directive C:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'C' as an external directive
+end test
+
+test --external-directive D:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'D' as an external directive
+end test
+
+test --external-directive h:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'h' as an external directive
+end test
+
+test --external-directive i:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'i' as an external directive
+end test
+
+test --external-directive I:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'I' as an external directive
+end test
+
+test --external-directive N:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'N' as an external directive
+end test
+
+test --external-directive o:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'o' as an external directive
+end test
+
+test --external-directive O:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'O' as an external directive
+end test
+
+test --external-directive P:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'P' as an external directive
+end test
+
+test --external-directive Y:line bal -> 1
+__ERROR__
+While parsing option '--external-directive'
+Error: Cannot register reserved directive name 'Y' as an external directive
+end test
+

@@ -1,0 +1,15 @@
+; A single --external-directive may carry a comma-separated list of NAME:MODE
+; items.
+newdirective experiment four
+myplugin plugin foo
+
+2024/01/01 Opening
+    Assets:Checking    $100.00
+    Equity:Opening
+
+; Both names registered in line mode from one comma-separated option, so both
+; header lines are skipped and the transaction parses normally.
+test --external-directive newdirective:line,myplugin:line reg
+24-Jan-01 Opening               Assets:Checking             $100.00      $100.00
+                                Equity:Opening             $-100.00            0
+end test

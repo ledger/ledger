@@ -717,6 +717,23 @@ Display values in terms of the given
 If multiple commodities are given, values in a listed commodity will remain
 as-is, and others will be displayed in the first listed commodity they can be
 converted to.
+.It Fl \-external-directive Ar NAME : Ns Ar MODE Ns Oo , Ar ... Oc
+Recognize top-level directives that Ledger does not otherwise understand, so
+that the parser skips them instead of reporting an unrecognized-source-line
+error.
+The argument is a comma-separated list of
+.Ar NAME : Ns Ar MODE
+items.
+.Ar MODE
+selects how much is skipped.
+.Ic line
+ignores only the directive's header line.
+.Ic block
+currently behaves the same as
+.Ic line .
+Skipping the indented body will be added in a future release.
+The names of built-in directives may not be registered.
+This option may also be given more than once, accumulating registrations.
 .It Fl \-file Ar FILE Pq Fl f
 Read journal data from
 .Ar FILE .

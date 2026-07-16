@@ -1,0 +1,14 @@
+; A directive registered via --external-directive in "block" mode currently
+; behaves the same as "line": only the header line is skipped, and the
+; surrounding transactions parse normally.  Skipping an indented body will be
+; added in a future PR.
+newdirective experiment tag=cool region=us
+
+2024/01/01 Opening
+    Assets:Checking    $100.00
+    Equity:Opening
+
+test --external-directive newdirective:block reg
+24-Jan-01 Opening               Assets:Checking             $100.00      $100.00
+                                Equity:Opening             $-100.00            0
+end test

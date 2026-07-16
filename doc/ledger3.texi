@@ -7105,6 +7105,16 @@ still performed at full precision.
 Direct Ledger to download prices using the script defined via the option
 @option{--getquote @var{PATH}} (defaults to @file{getquote}).
 
+@item --external-directive @var{NAME}:@var{MODE}[,@dots{}]
+Recognize top-level directives that Ledger does not otherwise understand, so
+that the parser skips them instead of reporting an unrecognized-source-line
+error.  The argument is a comma-separated list of @var{NAME}:@var{MODE}
+items directives.  @var{MODE} selects how much is skipped.  @samp{line}
+ignores only the directive's header line.  @samp{block} currently behaves
+the same as @samp{line}.  Skipping the indented body will be added in a
+future release.  The names of built-in directives may not be registered.
+This option may also be given more than once, accumulating registrations.
+
 @item --file @var{FILE}
 @itemx -f @var{FILE}
 Specify the input @file{FILE} for this invocation.

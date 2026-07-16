@@ -1,0 +1,13 @@
+; A directive registered via --external-directive in "line" mode is skipped
+; instead of causing a parse error.  Only the header line is consumed, and the
+; surrounding transactions parse normally.
+newdirective experiment tag=cool region=us
+
+2024/01/01 Opening
+    Assets:Checking    $100.00
+    Equity:Opening
+
+test --external-directive newdirective:line reg
+24-Jan-01 Opening               Assets:Checking             $100.00      $100.00
+                                Equity:Opening             $-100.00            0
+end test
