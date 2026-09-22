@@ -20,23 +20,30 @@ jobs:
 
     - uses: actions/checkout@v7
 
-    # Cache the nix store between runs: the semantic-bisimulation
-    # oracle depends on a multi-gigabyte Mathlib artifact tree (the
-    # ledger-semantics flake's `deps` fixed-output derivation) that
-    # would otherwise be re-fetched on every run.  flake.lock pins the
-    # semantics revision, so the key follows every Lean upgrade.
-    # GitHub grants a repository 10 GB of Actions cache in total, so
-    # only one leg gets the cache; two stores of this size would evict
-    # each other (and every other cache in the repository) on every
-    # alternation.  The macOS leg re-fetches the fixed-output
-    # derivation each run instead, which costs minutes, not
-    # correctness.
+    # Cache the nix store between runs on the Linux leg.  After
+    # `nix build .` the store holds the ledger build together with the
+    # semantic-bisimulation oracle and its Mathlib artifact tree (the
+    # ledger-semantics flake's `deps` fixed-output derivation, about
+    # 10 GB on disk), and fetching and validating that tree is what
+    # makes a cold run slow.  No store-size cap is set on purpose:
+    # `nix build .` roots only the ledger output, whose closure does
+    # not contain the oracle, the Mathlib tree or the Lean toolchain
+    # (they are check-time inputs), so a pre-save garbage collection
+    # deletes exactly those paths first -- the previous 8G cap did so
+    # on every run and saved a 160 MB cache that could never help.
+    # flake.lock pins the semantics revision, so the key follows every
+    # Lean upgrade, and `deps` is content-addressed, so a cache restored
+    # by prefix stays valid until that pin moves.  Only pushes to main
+    # save, so pull requests restore main's cache instead of each
+    # saving a copy under their own ref.  GitHub grants a repository
+    # 10 GB of Actions cache in total, which is why only one leg gets
+    # the cache; the macOS leg fetches the Mathlib artifacts each run.
     - uses: nix-community/cache-nix-action@v7
       if: runner.os == 'Linux'
       with:
         primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.lock') }}
         restore-prefixes-first-match: nix-${{ runner.os }}-
-        gc-max-store-size-linux: 8G
+        save: ${{ github.event_name == 'push' }}
         purge: true
         purge-prefixes: nix-${{ runner.os }}-
         purge-created: 0

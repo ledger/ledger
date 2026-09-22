@@ -50,9 +50,15 @@ cmake-manual:
     - name: build-manual
       run: cmake --build build --target doc
 
+# Streams every derivation's build log (-L) as it is produced (follow),
+# so the GitHub job log carries a timestamp on each line and a slow
+# derivation can be attributed from this repository's own log.  Without
+# both, the whole `nix build` is one silent block that lefthook prints
+# once the step ends.
 nix-flake-build:
+  follow: true
   jobs:
-    - run: nix build .
+    - run: nix build -L .
 
 # ---------------------------------------------------------------------------
 # Pre-commit — all checks, optimized for local dev (single configure)
