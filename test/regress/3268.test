@@ -6,7 +6,8 @@
 ; string_to_day_of_week() compared the raw option value against lower-case
 ; names only, so "Mon" and "Monday" were silently ignored and the weekly
 ; report kept starting on Sunday.  Day names are now matched without regard
-; to case.
+; to case, and a value that names no weekday is rejected instead of being
+; silently ignored.
 
 2026/09/14 Lunch
     Expenses:Dining          $10.00
@@ -63,6 +64,12 @@ end test
 test reg --weekly --start-of-week SUN Dining
 26-Sep-13 - 26-Sep-19  Expenses:Dining                $10.00       $10.00
 26-Sep-20 - 26-Sep-26  Expenses:Dining                $50.00       $60.00
+end test
+
+; A value that names no weekday is an error, not a silent fallback to Sunday.
+test reg --weekly --start-of-week Funday Dining -> 1
+__ERROR__
+Error: Invalid value for --start-of-week: Funday; expected a day name like Monday or Mon, or 0-6 with 0 for Sunday
 end test
 
 ; The xact command's day-of-week date argument goes through the same lookup.

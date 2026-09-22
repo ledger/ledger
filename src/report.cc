@@ -221,9 +221,13 @@ void report_t::normalize_options(const string& verb) {
   if (HANDLED(datetime_format_))
     set_datetime_format(HANDLER(datetime_format_).str().c_str());
   if (HANDLED(start_of_week_)) {
-    if (optional<date_time::weekdays> weekday =
-            string_to_day_of_week(HANDLER(start_of_week_).str()))
+    const string value = HANDLER(start_of_week_).str();
+    if (optional<date_time::weekdays> weekday = string_to_day_of_week(value))
       start_of_week = *weekday;
+    else
+      throw_(option_error, _f("Invalid value for --start-of-week: %1%; expected a day name "
+                              "like Monday or Mon, or 0-6 with 0 for Sunday") %
+                               value);
   }
 
   if (HANDLED(period_shift_)) {
