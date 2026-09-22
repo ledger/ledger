@@ -334,22 +334,25 @@ date_t parse_date_mask(const char* date_str, date_traits_t* traits = nullptr) {
  * @brief Map a weekday name (locale-aware, case-insensitive) or digit to a Boost weekday.
  *
  * Accepts full names ("monday"), abbreviations ("mon"), or digit strings
- * ("0" for Sunday through "6" for Saturday).
+ * ("0" for Sunday through "6" for Saturday).  Names are matched without
+ * regard to case, so "Monday", "MON" and "monday" all name the same day;
+ * callers such as --start-of-week pass the user's text through verbatim.
  */
 optional<date_time::weekdays> string_to_day_of_week(const std::string& str) {
-  if (str == _("sun") || str == _("sunday") || str == "0")
+  const string s = lowered(str);
+  if (s == _("sun") || s == _("sunday") || s == "0")
     return gregorian::Sunday;
-  else if (str == _("mon") || str == _("monday") || str == "1")
+  else if (s == _("mon") || s == _("monday") || s == "1")
     return gregorian::Monday;
-  else if (str == _("tue") || str == _("tuesday") || str == "2")
+  else if (s == _("tue") || s == _("tuesday") || s == "2")
     return gregorian::Tuesday;
-  else if (str == _("wed") || str == _("wednesday") || str == "3")
+  else if (s == _("wed") || s == _("wednesday") || s == "3")
     return gregorian::Wednesday;
-  else if (str == _("thu") || str == _("thursday") || str == "4")
+  else if (s == _("thu") || s == _("thursday") || s == "4")
     return gregorian::Thursday;
-  else if (str == _("fri") || str == _("friday") || str == "5")
+  else if (s == _("fri") || s == _("friday") || s == "5")
     return gregorian::Friday;
-  else if (str == _("sat") || str == _("saturday") || str == "6")
+  else if (s == _("sat") || s == _("saturday") || s == "6")
     return gregorian::Saturday;
   else
     return none;
@@ -359,32 +362,34 @@ optional<date_time::weekdays> string_to_day_of_week(const std::string& str) {
  * @brief Map a month name (locale-aware, case-insensitive) or digit to a Boost month.
  *
  * Accepts full names ("january"), abbreviations ("jan"), or digit
- * strings ("0" for January through "11" for December).
+ * strings ("0" for January through "11" for December).  Names are
+ * matched without regard to case.
  */
 optional<date_time::months_of_year> string_to_month_of_year(const std::string& str) {
-  if (str == _("jan") || str == _("january") || str == "0")
+  const string s = lowered(str);
+  if (s == _("jan") || s == _("january") || s == "0")
     return gregorian::Jan;
-  else if (str == _("feb") || str == _("february") || str == "1")
+  else if (s == _("feb") || s == _("february") || s == "1")
     return gregorian::Feb;
-  else if (str == _("mar") || str == _("march") || str == "2")
+  else if (s == _("mar") || s == _("march") || s == "2")
     return gregorian::Mar;
-  else if (str == _("apr") || str == _("april") || str == "3")
+  else if (s == _("apr") || s == _("april") || s == "3")
     return gregorian::Apr;
-  else if (str == _("may") || str == _("may") || str == "4")
+  else if (s == _("may") || s == "4")
     return gregorian::May;
-  else if (str == _("jun") || str == _("june") || str == "5")
+  else if (s == _("jun") || s == _("june") || s == "5")
     return gregorian::Jun;
-  else if (str == _("jul") || str == _("july") || str == "6")
+  else if (s == _("jul") || s == _("july") || s == "6")
     return gregorian::Jul;
-  else if (str == _("aug") || str == _("august") || str == "7")
+  else if (s == _("aug") || s == _("august") || s == "7")
     return gregorian::Aug;
-  else if (str == _("sep") || str == _("september") || str == "8")
+  else if (s == _("sep") || s == _("september") || s == "8")
     return gregorian::Sep;
-  else if (str == _("oct") || str == _("october") || str == "9")
+  else if (s == _("oct") || s == _("october") || s == "9")
     return gregorian::Oct;
-  else if (str == _("nov") || str == _("november") || str == "10")
+  else if (s == _("nov") || s == _("november") || s == "10")
     return gregorian::Nov;
-  else if (str == _("dec") || str == _("december") || str == "11")
+  else if (s == _("dec") || s == _("december") || s == "11")
     return gregorian::Dec;
   else
     return none;
@@ -397,14 +402,16 @@ optional<date_time::months_of_year> string_to_month_of_year(const std::string& s
  * an explicit date: "today"/"tday", "yesterday"/"yday", "tomorrow"/"tmrw".
  * The anchor is `epoch->date()` when --now is in effect, otherwise
  * CURRENT_DATE(), matching the conventions used elsewhere by
- * date_interval_t::determine_when().
+ * date_interval_t::determine_when().  Keywords are matched without
+ * regard to case.
  */
 optional<date_t> string_to_relative_date(const std::string& str) {
-  if (str == _("today") || str == _("tday"))
+  const string s = lowered(str);
+  if (s == _("today") || s == _("tday"))
     return epoch ? epoch->date() : CURRENT_DATE();
-  if (str == _("yesterday") || str == _("yday"))
+  if (s == _("yesterday") || s == _("yday"))
     return (epoch ? epoch->date() : CURRENT_DATE()) - gregorian::days(1);
-  if (str == _("tomorrow") || str == _("tmrw"))
+  if (s == _("tomorrow") || s == _("tmrw"))
     return (epoch ? epoch->date() : CURRENT_DATE()) + gregorian::days(1);
   return none;
 }
