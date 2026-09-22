@@ -7287,11 +7287,11 @@ transactions.
 Show only unbudgeted postings.
 
 @item --align-intervals
-@findex --start-of-week @var{INT}
+@findex --start-of-week @var{STR}
 Use the begin time of a period expression as the start of its intervals, if
 specified (@pxref{Period Expressions}).  For example with a period expression of
 "weekly from 2009/01/10" then the begin time of "2009/01/10 will be used as the
-start of the weekly intervals. Overrides @samp{--start-of-week @var{INT}}.
+start of the weekly intervals. Overrides @samp{--start-of-week @var{STR}}.
 
 @item --amount @var{EXPR}
 @itemx -t @var{EXPR}
@@ -8212,11 +8212,15 @@ makes monthly periods run from the 16th of one month to the 15th of the
 next.  Does not affect weekly or daily periods.  See also
 @samp{--start-of-week}.
 
-@item --start-of-week @var{INT}
+@item --start-of-week @var{STR}
 @findex --align-intervals
 Tell ledger to use a particular day of the week to start its ``weekly''
-summary.  @samp{--start-of-week=1} specifies Monday as the start of the
-week. Can be overriden by @samp{--align-intervals}.
+summary.  @var{STR} may be a day name such as @samp{Monday}, an
+abbreviation such as @samp{Mon}, or the weekday number starting at 0 for
+Sunday; names are matched without regard to case.  For example,
+@samp{--start-of-week=1} and @samp{--start-of-week=Monday} both specify
+Monday as the start of the week.  Can be overridden by
+@samp{--align-intervals}.
 
 @item --subtotal
 @itemx -s
