@@ -158,7 +158,10 @@ components with their standard-library equivalents.
   auto-generated postings; respect `--permissive` for balance assignments with
   elided amounts (#2005).  Add `--check-in-file-order` to restore the
   pre-3.5 file-order accumulation for journals that depend on out-of-order
-  dated entries (#3186).
+  dated entries (#3186).  Verify date-ordered balance assertions after the
+  whole file is read so they account for transactions dated earlier but
+  written later in the file, fixing both spurious failures and assertions
+  that were silently accepted when they should have failed (#3218).
 
 - Fix balance assertions for accounts with only virtual postings (#1699), with
   quoted commodities (#904), with per-unit price annotations (#1125), with
