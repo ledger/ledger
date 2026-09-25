@@ -262,6 +262,7 @@ else()
         COMMENT "Stripping insecure RPATH from ledger Python module (#3229)")
     endif()
 
+    install(TARGETS libledger DESTINATION ${CMAKE_INSTALL_LIBDIR})
     install(FILES ${LEDGER_INCLUDES}
       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ledger)
   else()
