@@ -313,6 +313,17 @@ else()
           "${PROJECT_SOURCE_DIR}/python/lpy/core/__init__.py" "${CMAKE_BINARY_DIR}/python/lpy/core/__init__.py"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
           "${PROJECT_SOURCE_DIR}/python/ledger/__init__.py" "${CMAKE_BINARY_DIR}/python/ledger/__init__.py")
+      # Same RPATH-hijack risk as the top-level copy above (#3229 / Debian
+      # #1138597): this copy is what actually gets install(PROGRAMS ...)'d
+      # into site-packages, so it must be sanitized too.
+      if(UNIX AND NOT APPLE)
+        add_custom_command(
+          TARGET libledger POST_BUILD
+          COMMAND ${CMAKE_COMMAND}
+            "-DLEDGER_PYTHON_MODULE=${CMAKE_BINARY_DIR}/python/lpy/core/${_ledger_python_module_name}"
+            -P "${CMAKE_SOURCE_DIR}/cmake/SanitizeModuleRPath.cmake"
+          COMMENT "Stripping insecure RPATH from ledger Python module (#3229)")
+      endif()
       # Use PROGRAMS (not FILES) so the installed Python extension module has
       # executable permissions (mode 755).  Fedora and other distributions
       # require dynamic libraries to be installed with the executable bit set.
