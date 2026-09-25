@@ -124,10 +124,10 @@ if(Python_EXECUTABLE)
 
   if(HAVE_BOOST_PYTHON)
     add_test(NAME demo
-      COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/python/demo.py
+      COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/examples/demo.py
       WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
     set_tests_properties(demo
-      PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE};PYTHONPATH=.")
+      PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE};PYTHONPATH=${PROJECT_BINARY_DIR}/python")
 
     # Regression test for GitHub issue #513: loading the ledger module from
     # an external Python interpreter must not re-initialize Python, and
@@ -141,7 +141,7 @@ if(Python_EXECUTABLE)
       COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/regress/513.py
       WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
     set_tests_properties(RegressPyTest_513
-      PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE};PYTHONPATH=.")
+      PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE};PYTHONPATH=${PROJECT_BINARY_DIR}/python")
 
     # Regression test for GitHub issue #3229 (Debian #1138597): the ledger
     # Python extension module must not carry an RPATH/RUNPATH with empty
@@ -150,9 +150,10 @@ if(Python_EXECUTABLE)
     # check is ELF-specific, so it is skipped on macOS (Mach-O) and Windows
     # (PE), which use different mechanisms and are not affected.
     if(UNIX AND NOT APPLE)
+      set(_ledger_python_module_name "_core${CMAKE_SHARED_LIBRARY_SUFFIX}")
       add_test(NAME RegressPyTest_3229
         COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/regress/3229.py
-        "${PROJECT_BINARY_DIR}/ledger${CMAKE_SHARED_LIBRARY_SUFFIX}")
+        "${PROJECT_BINARY_DIR}/python/lpy/core/${_ledger_python_module_name}")
     endif()
   endif()
 endif()

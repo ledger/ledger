@@ -3,7 +3,7 @@
 from datetime import datetime
 import unittest
 
-from ledger import *
+from lpy.core import *
 
 class ValueTestCase(unittest.TestCase):
     @classmethod

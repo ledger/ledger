@@ -7,7 +7,7 @@ from datetime import datetime
 # Ledger Python module to access your data and build custom reports using the
 # magic of Python.
 
-import ledger
+from lpy import core
 
 print("Welcome to the Ledger.Python demo!")
 
@@ -45,12 +45,12 @@ def assertEqual(pat, candidate):
 # $123.56, while stock options could be output as 10.113 AAPL.
 #
 # Your program can access the known set of commodities using the global
-# `ledger.commodities'.  This object behaves like a dict, and support all of
+# `core.commodities'.  This object behaves like a dict, and support all of
 # the non-modifying dict protocol methods.  If you wish to create a new
 # commodity without parsing an amount, you can use the method
 # `find_or_create':
 
-comms = ledger.commodities
+comms = core.commodities
 
 usd = comms.find_or_create('$')
 xcd = comms.find_or_create('XCD')
@@ -70,9 +70,9 @@ assert not 'CAD' in comms
 # want all amounts to default to the European-style, set the static variable
 # `european_by_default'.
 
-eur.add_flags(ledger.COMMODITY_STYLE_DECIMAL_COMMA)
-assert eur.has_flags(ledger.COMMODITY_STYLE_DECIMAL_COMMA)
-assert not eur.has_flags(ledger.COMMODITY_STYLE_THOUSANDS)
+eur.add_flags(core.COMMODITY_STYLE_DECIMAL_COMMA)
+assert eur.has_flags(core.COMMODITY_STYLE_DECIMAL_COMMA)
+assert not eur.has_flags(core.COMMODITY_STYLE_THOUSANDS)
 
 comms.european_by_default = True
 
@@ -99,8 +99,8 @@ for commodity in comms.itervalues():
 # that date.  You can record specific conversion rates for any date using the
 # `exchange' method.
 
-comms.exchange(eur, ledger.Amount('$0.77')) # Trade 1 € for $0.77
-comms.exchange(eur, ledger.Amount('$0.66'), datetime.now())
+comms.exchange(eur, core.Amount('$0.77')) # Trade 1 € for $0.77
+comms.exchange(eur, core.Amount('$0.66'), datetime.now())
 
 # For the most part, however, you won't be interacting with commodities
 # directly, except maybe to look at their `symbol'.
@@ -120,11 +120,11 @@ assertEqual('$', comms['$'].symbol)
 # Amounts support all the math operations you might expect of an integer,
 # except it carries a commodity.  Let's take dollars for example:
 
-zero  = ledger.Amount("$0")
-one   = ledger.Amount("$1")
-oneb  = ledger.Amount("$1")
-two   = ledger.Amount("$2")
-three = ledger.Amount("3")      # uncommoditized
+zero  = core.Amount("$0")
+one   = core.Amount("$1")
+oneb  = core.Amount("$1")
+two   = core.Amount("$2")
+three = core.Amount("3")      # uncommoditized
 
 assert one == oneb              # numeric equality, not identity
 assert one != two
@@ -138,13 +138,13 @@ assert one > zero
 # example, causes an ArithmeticError exception, but adding 10 to $10 gives
 # $20.
 
-four = ledger.Amount(two)       # make a copy
+four = core.Amount(two)       # make a copy
 four += two
 assertEqual(four, two + two)
 assertEqual(zero, one - one)
 
 try:
-    two += ledger.Amount("20 €")
+    two += core.Amount("20 €")
     assert False
 except ArithmeticError:
     pass
@@ -159,10 +159,10 @@ assertEqual(three, (two + one).number())
 #     the other amount.
 #   - Otherwise, the result always carries the commodity of the first amount.
 
-five = ledger.Amount("5 CAD")
+five = core.Amount("5 CAD")
 
 assertEqual(one, two / two)
-assertEqual(five, (five * ledger.Amount("$2")) - ledger.Amount("5"))
+assertEqual(five, (five * core.Amount("$2")) - core.Amount("5"))
 
 # An amount's commodity determines the decimal precision it's displayed with.
 # However, this "precision" is a notional thing only.  You can tell an amount
@@ -173,8 +173,8 @@ assertEqual(five, (five * ledger.Amount("$2")) - ledger.Amount("5"))
 # precision of 4.  This tracking is just a best estimate, however, since
 # internally Ledger never uses floating-point values.
 
-amt  = ledger.Amount('$100.12')
-mini = ledger.Amount('0.00045')
+amt  = core.Amount('$100.12')
+mini = core.Amount('0.00045')
 
 assert not amt.keep_precision
 
@@ -193,8 +193,8 @@ assertEqual(2, amt.display_precision)
 
 # There are several other supported math operations:
 
-amt    = ledger.Amount('$100.12')
-market = ((ledger.Amount('1 €') / ledger.Amount('$0.66')) * amt)
+amt    = core.Amount('$100.12')
+market = ((core.Amount('1 €') / core.Amount('$0.66')) * amt)
 
 assertEqual(market, amt.value(eur))            # find present market value
 
@@ -229,13 +229,13 @@ assertEqual(100, amt.to_long())
 # multiplying by its per-unit lot price, call the `Amount.price' method
 # instead of the `Annotation.price' property.
 
-amt2 = ledger.Amount('$100.12 {140 €} [2009/10/01]')
+amt2 = core.Amount('$100.12 {140 €} [2009/10/01]')
 
 assert amt2.has_annotation()
 assertEqual(amt, amt2.strip_annotations())
 
-assertEqual(ledger.Amount('140 €'), amt2.annotation.price)
-assertEqual(ledger.Amount('14016,8 €'), amt2.price()) # european amount!
+assertEqual(core.Amount('140 €'), amt2.annotation.price)
+assertEqual(core.Amount('14016,8 €'), amt2.price()) # european amount!
 
 ###############################################################################
 #
@@ -263,7 +263,7 @@ assertEqual(ledger.Amount('14016,8 €'), amt2.price()) # european amount!
 # Values are not used by any of Ledger's data objects (Journal, Transaction,
 # Posting or Account), but they are used extensively by value expressions.
 
-val = ledger.Value('$100.00')
+val = core.Value('$100.00')
 
 assert val.is_amount()
 assertEqual('$', val.to_amount().commodity.symbol)

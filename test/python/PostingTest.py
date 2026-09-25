@@ -3,7 +3,7 @@
 import unittest
 import operator
 
-from ledger import *
+from lpy.core import *
 from datetime import *
 
 class PostingTestCase(unittest.TestCase):

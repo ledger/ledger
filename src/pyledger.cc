@@ -56,7 +56,7 @@ void release_python_session() {
 
 } // namespace
 
-BOOST_PYTHON_MODULE(ledger) {
+BOOST_PYTHON_MODULE(_core) {
   using namespace ledger;
 
   scope().attr("__author__") = "John Wiegley <jwiegley@gmail.com>";

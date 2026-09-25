@@ -97,6 +97,8 @@
           # Install the Python module into our own 'py' output rather than the
           # read-only Python store path.
           "-DLEDGER_PYTHON_INSTALL_DIR=${placeholder "py"}/${python3.sitePackages}"
+          # Install Python examples (demo.py) into the 'py' output as well.
+          "-DLEDGER_PYTHON_EXAMPLES_INSTALL_DIR=${placeholder "py"}/share"
         ];
 
         installTargets = [ "doc" "install" ];
@@ -198,8 +200,7 @@
           "-DBoost_DIR=${boostWithPython.dev}/lib/cmake/Boost-${boost.version}"
           # Pin CMake to the Nix-provided Python so it doesn't pick up a
           # Homebrew Python (e.g. 3.14) that mismatches the Boost.Python build.
-          "-DPython_EXECUTABLE=${python3}/bin/python3"
-          "-DPython3_EXECUTABLE=${python3}/bin/python3"
+          "-DPython_EXECUTABLE=${pkgs.lib.getBin python3}/bin/python3"
         ];
 
         shellHook = ''
@@ -213,7 +214,7 @@
           echo "  - gcov: Not available on $(uname)"
           ''}
           echo "  - lcov: $(lcov --version | head -1)"
-          echo "  - llvm-cov: $(llvm-cov --version | head -1)"
+          echo "  - llvm-cov: $(llvm-cov --version | grep -o 'version.*')"
         '';
       };
     });

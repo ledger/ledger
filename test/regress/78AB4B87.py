@@ -1,12 +1,12 @@
-import ledger
+from lpy import core
 
-eur = ledger.commodities.find_or_create('EUR')
+eur = core.commodities.find_or_create('EUR')
 
-total_eur = ledger.Amount("0.00 EUR")
-total_gbp = ledger.Amount("0.00 GBP")
-total = ledger.Amount("0.00 EUR")
+total_eur = core.Amount("0.00 EUR")
+total_gbp = core.Amount("0.00 GBP")
+total = core.Amount("0.00 EUR")
 
-for post in ledger.read_journal("test/regress/78AB4B87.dat").query("^income:"):
+for post in core.read_journal("test/regress/78AB4B87.dat").query("^income:"):
     print(post.amount)
     print(post.amount.commodity)
     if post.amount.commodity == "EUR":
