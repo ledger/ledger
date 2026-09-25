@@ -20,9 +20,9 @@ import warnings
 # this converts into a failing test.
 warnings.simplefilter("error", RuntimeWarning)
 
-import ledger
+import lpy
 
-journal = ledger.read_journal_from_string("""
+journal = lpy.core.read_journal_from_string("""
 python
     print("Hello from python block")
 
