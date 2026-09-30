@@ -271,8 +271,7 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
     // total == prev_total + amount, so we disable rounding for those.
     bool default_exprs = report.HANDLER(display_total_).expr.exprs.empty() &&
                          report.HANDLER(display_total_).expr.base_expr == "total_expr" &&
-                         report.HANDLER(total_).expr.exprs.empty() &&
-                         report.HANDLER(total_).expr.base_expr == "total" &&
+                         report.total_is_running_total() &&
                          report.HANDLER(display_amount_).expr.exprs.empty() &&
                          report.HANDLER(display_amount_).expr.base_expr == "amount_expr" &&
                          report.HANDLER(amount_).expr.exprs.empty() &&
@@ -314,15 +313,15 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
         (!for_accounts_report || (report.HANDLED(revalued) && report.HANDLED(unrealized)));
 
     // Enable incremental stripped total maintenance when the display_total
-    // and total expressions are unmodified (default "total" accumulation)
+    // expression is unmodified, the total expression is the running total
+    // (see report_t::total_is_running_total, which allows --flat's addition)
     // and annotations need stripping.  This allows the format's
     // scrub(display_total) to use the pre-stripped value from xdata,
     // avoiding expensive O(K) GMP arithmetic per posting.
     keep_details_t wtk = report.what_to_keep();
     bool maintain_stripped = calc_running && report.HANDLER(display_total_).expr.exprs.empty() &&
                              report.HANDLER(display_total_).expr.base_expr == "total_expr" &&
-                             report.HANDLER(total_).expr.exprs.empty() &&
-                             report.HANDLER(total_).expr.base_expr == "total" && !wtk.keep_all();
+                             report.total_is_running_total() && !wtk.keep_all();
 
     // Per-account period averaging (period_average_) tracks independent
     // running totals for each account across interval periods, so that

@@ -1,0 +1,88 @@
+; --flat together with --unrealized, and in the register report.  Since
+; 84446a154 the --flat total expression called has_children_to_display,
+; which exists only for accounts, and the revaluation filter that
+; --unrealized adds to the balance report evaluates that expression in the
+; scope of a posting, as the register report does, so both reports failed
+; with "Unknown identifier 'has_children_to_display'".  In posting scope
+; the expression is now the running total, and the register treats it as
+; the plain total: reg --flat keeps the rounding adjustment of #1054 and
+; the running total stripped of lot annotations, as reg does.  Assets has
+; a posting of its own beside its sub-accounts, so the balance reports
+; show its own amount under --flat.
+
+D $1,000.00
+
+2008/10/01 Sample
+    Assets:Brokerage        10 AAPL
+    Assets:Checking        $-200.00
+
+2008/10/02 Parent
+    Assets                   5 AAPL
+    Assets:Checking        $-100.00
+
+2008/10/03 Lunch
+    Expenses:Food           $9.184
+    Assets:Checking
+
+2008/10/04 Lunch
+    Expenses:Food           $9.184
+    Assets:Checking
+
+2008/10/05 Lunch
+    Expenses:Food           $9.184
+    Assets:Checking
+
+P 2008/10/20 12:00:00 AAPL $30.00
+
+test bal --flat -V --unrealized
+             $150.00  Assets
+             $300.00  Assets:Brokerage
+            $-327.55  Assets:Checking
+            $-150.00  Equity:Unrealized Gains
+              $27.55  Expenses:Food
+--------------------
+                   0
+end test
+
+test bal --flat --depth 1 -V --unrealized
+             $122.45  Assets
+            $-150.00  Equity
+              $27.55  Expenses
+--------------------
+                   0
+end test
+
+test cleared --flat -V --unrealized
+         $150.00                   0                 Assets
+         $300.00                   0                 Assets:Brokerage
+        $-327.55                   0                 Assets:Checking
+        $-150.00                                     Equity:Unrealized Gains
+          $27.55                   0                 Expenses:Food
+----------------  ------------------    ---------
+               0                   0             
+end test
+
+test reg --flat -V --now 2008/10/31
+08-Oct-01 Sample                Assets:Brokerage            $200.00      $200.00
+                                Assets:Checking            $-200.00            0
+08-Oct-02 Parent                Assets                      $100.00      $100.00
+                                Assets:Checking            $-100.00            0
+08-Oct-03 Lunch                 Expenses:Food                 $9.18        $9.18
+                                Assets:Checking              $-9.18            0
+08-Oct-04 Lunch                 Expenses:Food                 $9.18        $9.18
+                                Assets:Checking              $-9.18            0
+08-Oct-05 Lunch                 Expenses:Food                 $9.18        $9.18
+                                Assets:Checking              $-9.18            0
+08-Oct-31 Commodities revalued  <Revalued>                  $150.00      $150.00
+end test
+
+test reg --flat Expenses
+08-Oct-03 Lunch                 Expenses:Food                 $9.18        $9.18
+08-Oct-04 Lunch                 <Adjustment>                  $0.01        $9.19
+                                Expenses:Food                 $9.18       $18.37
+08-Oct-05 Lunch                 Expenses:Food                 $9.18       $27.55
+end test
+
+test reg --flat --no-rounding --format "%(display_total)\n" Assets:Brokerage
+10 AAPL
+end test

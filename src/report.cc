@@ -448,6 +448,17 @@ void report_t::normalize_period() {
     HANDLER(sort_xacts_).on("?normalize");
 }
 
+bool report_t::total_is_running_total() const {
+  // --flat appends flat_total_expr, once per occurrence of the option.  The
+  // callers evaluate the total only in posting scope, where that expression
+  // is total, so --flat must not turn off the rounding adjustments of #1054
+  // or the incrementally stripped running total.
+  const merged_expr_t& total = HANDLER(total_).expr;
+  return total.base_expr == "total" &&
+         std::all_of(total.exprs.begin(), total.exprs.end(),
+                     [](const string& expr) { return expr == flat_total_expr; });
+}
+
 /*--- Query Argument Parsing ---*/
 
 namespace {

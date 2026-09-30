@@ -194,6 +194,22 @@ public:
   /// If the period has no duration component (just begin/end), turns off --period.
   void normalize_period();
 
+  /// @brief The total expression that --flat appends.  It is an account's own
+  /// amount when the account has a parent and a displayed sub-account, and
+  /// the account's total otherwise, so that the root still yields the grand
+  /// total.  The is_account guard makes it plain total in posting scope,
+  /// where parent names the transaction and has_children_to_display is
+  /// undefined; the register report, and the revaluation filter that
+  /// --unrealized adds to the balance report, evaluate the total there.
+  static constexpr const char* flat_total_expr =
+      "is_account & parent ? (has_children_to_display ? amount : total) : total";
+
+  /// @brief True when the total expression is the running total of the
+  /// postings: "total" with nothing appended, or with only the --flat
+  /// expression, which is total in posting scope.  The register's rounding
+  /// adjustments and its incrementally stripped running total depend on it.
+  bool total_is_running_total() const;
+
   /// @brief Parse positional query arguments into --limit, --only, --display, etc.
   /// Uses the query_t parser to decompose structured query expressions.
   /// @param args    The positional arguments as a value_t sequence.
@@ -913,8 +929,9 @@ public:
         // In flat mode, each account is listed independently, so show only
         // the account's own amount rather than the family total (which
         // includes sub-accounts).  The root account (where parent is null)
-        // still uses total for the grand total line.
-        OTHER(total_).on(whence, "parent ? (has_children_to_display ? amount : total) : total");
+        // still uses total for the grand total line.  In posting scope the
+        // expression is total (see flat_total_expr).
+        OTHER(total_).on(whence, flat_total_expr);
       });
   OPTION(report_t, force_color);
   OPTION(report_t, force_pager);

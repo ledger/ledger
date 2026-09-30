@@ -781,14 +781,14 @@ display_filter_posts::display_filter_posts(post_handler_ptr handler, report_t& _
       has_stripped_cache(false), what_to_keep(report.what_to_keep()) {
   // The incremental stripped total optimization is only safe when the
   // display_total expression is the simple running total accumulation
-  // (i.e., display_total_ = total_expr, total_ = total).  Options like
-  // --market, --exchange, --average, etc. modify these expressions,
-  // breaking the distributive property: strip(f(total)) != f(strip(total)).
+  // (i.e., display_total_ = total_expr, and total_ = total, alone or with
+  // only --flat's addition; see report_t::total_is_running_total).
+  // Options like --market, --exchange, --average, etc. modify these
+  // expressions, breaking the distributive property:
+  // strip(f(total)) != f(strip(total)).
   incremental_strip_eligible = report.HANDLER(display_total_).expr.exprs.empty() &&
                                report.HANDLER(display_total_).expr.base_expr == "total_expr" &&
-                               report.HANDLER(total_).expr.exprs.empty() &&
-                               report.HANDLER(total_).expr.base_expr == "total" &&
-                               !what_to_keep.keep_all();
+                               report.total_is_running_total() && !what_to_keep.keep_all();
   create_accounts();
   TRACE_CTOR(display_filter_posts, "post_handler_ptr, report_t&, bool");
 }

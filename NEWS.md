@@ -220,7 +220,8 @@ components with their standard-library equivalents.
 
 - Sort by converted value when `-X` is active (#1556); sort parent accounts by
   family total (#723); allow `--sort` and `--sort-xacts` together; show the
-  own amount instead of the family total in `--flat` balance mode
+  own amount instead of the family total in `--flat` balance mode, also under
+  `--unrealized`, while `--flat` leaves register reports unchanged
 
 - Enable ANSI color on Windows CMD/PowerShell (#2110); fix `justify()` to
   ignore ANSI escape codes when computing width; flush stdout after each REPL
