@@ -1,0 +1,25 @@
+; bal -V --unrealized --anon keeps the revaluation between postings and
+; foots as it did before the balance report valued postings at cost.
+; anonymize_posts relabels a posting's cost and the price in its lot
+; annotation separately and gives the dollar two labels: print --anon
+; shows the lot as "10 A {=C150.00}" and the books as "B10.00".  A cost
+; baseline would read the lot's cost in B while the report values the lot
+; at its fixated price in C, and the report total would be "B1500.00 /
+; C-1500.00".  Account names are hashed at random under --anon, so each
+; report prints its total only.
+
+2024/01/01 Buy
+    Assets:Brokerage        10 AAPL {=$150}
+    Assets:Checking
+
+2024/01/15 Books
+    Expenses:Books          $10.00
+    Assets:Checking
+
+test bal -V --unrealized --anon --balance-format '%/%(scrub(display_total))\n' --now 2024/04/01
+0
+end test
+
+test bal --exchange $ --unrealized --anon --balance-format '%/%(scrub(display_total))\n' --now 2024/04/01
+0
+end test

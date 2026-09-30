@@ -1,0 +1,47 @@
+; bal -V --unrealized books no unrealized gain on a holding the report
+; cannot value.  ACME is declared with N, so it has no market price and
+; stays in its own commodity; only the AAPL lot is revalued, and the
+; report total is what -V leaves unvalued (10 ACME against the $500 it
+; cost).  Booking ACME at its cost instead would print an Equity:Unrealized
+; Gains row of "$500 / -10 ACME", mixing the cost with the held commodity.
+; Under --dc both holdings stay in the debit column, ACME in its own
+; commodity, and the one unrealized row is the AAPL revaluation.
+
+N ACME
+
+2024/01/01 Buy ACME
+    Assets:Private          10 ACME @ $50
+    Assets:Checking
+
+2024/01/01 Buy AAPL
+    Assets:Brokerage        10 AAPL @ $150
+    Assets:Checking
+
+P 2024/03/01 AAPL $170
+P 2024/03/01 ACME $75
+
+test bal -V --unrealized
+               $-300
+             10 ACME  Assets
+               $1700    Brokerage
+              $-2000    Checking
+             10 ACME    Private
+               $-200  Equity:Unrealized Gains
+--------------------
+               $-500
+             10 ACME
+end test
+
+test bal -V --unrealized --dc
+         $1700
+       10 ACME          $2000          $-300
+                                 10 ACME  Assets
+         $1700              0          $1700    Brokerage
+             0          $2000         $-2000    Checking
+       10 ACME              0        10 ACME    Private
+          $200              0          $-200  Equity:Unrealized Gains
+-------------- -------------- --------------
+         $1500
+       10 ACME          $2000          $-500
+                                 10 ACME
+end test

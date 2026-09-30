@@ -1,0 +1,52 @@
+; bal -V --unrealized tests one posting at a time whether the report can
+; bring the posting's cost to the commodity in which it values the posting's
+; holding.  Five AAPL are bought for euros, in which -V values them, so the
+; purchase is booked at its cost of 500.00 EUR.  Two are sold for dollars,
+; which -V leaves as they are, so the sale contributes the two AAPL
+; themselves, which the report values at the report date at 225.00 EUR
+; instead of the 200.00 EUR they cost.  Equity:Unrealized Gains therefore
+; holds the 37.50 EUR gain on the three AAPL still held and the 25.00 EUR
+; by which the price of the two sold rose between their purchase and their
+; sale, and the report does not foot.  Before the balance report valued
+; postings at cost it printed no unrealized row, since no price changes
+; after the last posting, and did not foot either.  Under -X EUR the report
+; converts the dollars to euros, books the sale at its cost and foots.
+
+P 2024/01/01 EUR $1.10
+
+2024/01/01 Buy euros
+    Assets:Euros             1000.00 EUR @ $1.10
+    Assets:Checking
+
+2024/01/10 Buy shares with euros
+    Assets:Brokerage            5 AAPL @ 100.00 EUR
+    Assets:Euros
+
+P 2024/03/01 AAPL $130.00
+P 2024/03/01 EUR $1.20
+
+2024/03/15 Sell shares for dollars
+    Assets:Brokerage           -2 AAPL {100.00 EUR} @ $135.00
+    Assets:Checking          $270.00
+
+test bal -V --unrealized --now 2024/04/01
+            $-830.00
+          837.50 EUR  Assets
+          337.50 EUR    Brokerage
+            $-830.00    Checking
+          500.00 EUR    Euros
+          -62.50 EUR  Equity:Unrealized Gains
+--------------------
+            $-830.00
+          775.00 EUR
+end test
+
+test bal -X EUR --unrealized --now 2024/04/01
+          145.83 EUR  Assets
+          337.50 EUR    Brokerage
+         -691.67 EUR    Checking
+          500.00 EUR    Euros
+         -145.83 EUR  Equity:Unrealized Gains
+--------------------
+                   0
+end test

@@ -1,0 +1,83 @@
+; bal -X EUR --unrealized must foot to zero when a posting carries its own
+; date.  The Brokerage posting of the 2024/01/01 purchase is dated
+; 2024/01/15, after the dollar fell from EUR 0.90 to EUR 0.80.  Both
+; postings of the purchase are converted at the rate of the transaction's
+; date, so the purchase adds nothing to the report total, and the whole
+; change in the euro value of the lot is the one unrealized row, equal to
+; minus the --gain total.  The report used to total EUR10.00.
+;
+; Under --pivot, --pivot-only, --account, --payee and --date,
+; transfer_details copies each posting into a transaction of its own, dated
+; by the posting, so the two postings of the purchase no longer share a
+; date.  A baseline that valued each cost on the date of its transaction
+; converted the $1500 at EUR 0.80 on one side and at EUR 0.90 on the other,
+; and printed Equity:Unrealized Gains EUR-310.00 and a total of EUR-150.00.
+; These reports keep the revaluation between postings and print what they
+; printed before, a total of EUR10.00.
+
+P 2024/01/01 $ 0.90 EUR
+P 2024/01/10 $ 0.80 EUR
+
+2024/01/01 Buy
+    Assets:Brokerage        10 AAPL @ $150  ; [2024/01/15]
+    Assets:Checking
+
+P 2024/03/05 AAPL $170
+
+test bal -X EUR --unrealized
+           EUR160.00  Assets
+          EUR1360.00    Brokerage
+         EUR-1200.00    Checking
+          EUR-160.00  Equity:Unrealized Gains
+--------------------
+                   0
+end test
+
+test bal -G -X EUR
+           EUR160.00  Assets:Brokerage
+end test
+
+test bal -X EUR --unrealized --pivot payee
+          EUR-150.00  Equity:Unrealized Gains
+           EUR160.00  payee:Buy:Assets
+          EUR1360.00    Brokerage
+         EUR-1200.00    Checking
+--------------------
+            EUR10.00
+end test
+
+test bal -X EUR --unrealized --pivot-only payee
+          EUR-150.00  Equity:Unrealized Gains
+           EUR160.00  payee:Buy
+--------------------
+            EUR10.00
+end test
+
+test bal -X EUR --unrealized --account account
+           EUR160.00  Assets
+          EUR1360.00    Brokerage
+          EUR1360.00      Assets:Brokerage
+         EUR-1200.00    Checking
+         EUR-1200.00      Assets:Checking
+          EUR-150.00  Equity:Unrealized Gains
+--------------------
+            EUR10.00
+end test
+
+test bal -X EUR --unrealized --payee payee
+           EUR160.00  Assets
+          EUR1360.00    Brokerage
+         EUR-1200.00    Checking
+          EUR-150.00  Equity:Unrealized Gains
+--------------------
+            EUR10.00
+end test
+
+test bal -X EUR --unrealized --date date
+           EUR160.00  Assets
+          EUR1360.00    Brokerage
+         EUR-1200.00    Checking
+          EUR-150.00  Equity:Unrealized Gains
+--------------------
+            EUR10.00
+end test

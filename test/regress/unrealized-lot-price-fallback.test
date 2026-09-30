@@ -1,0 +1,61 @@
+; bal --exchange $ --unrealized books no unrealized gain on lots that the
+; report leaves unvalued.  No commodity here has a market price.  market()
+; values a lone lot at its lot price when it finds no market price, which
+; is why Equity:Opening shows $-1500, but it does not do so for a balance,
+; so the Brokerage and Coinbase accounts and the report total stay in
+; their own commodities.  Whether the report can value what a posting
+; contributes is therefore tested on that contribution taken as a balance.
+; Tested as a lone amount, each lot here was valued at its lot price and
+; booked at its cost, and the report printed an Equity:Unrealized Gains
+; row equal to the negated report total, for the swap of regress/3227
+; alone "-100 BTC / 200 ETH".  Under --dc each column is tested in the
+; same way.
+
+2024/01/01 Opening lots transferred in
+    Assets:Brokerage       10 AAPL {$150}
+    Equity:Opening        -10 AAPL {$150}
+
+2024/02/01 Swap the lots for another asset
+    Assets:Brokerage        5 XYZ {$300} @@ 10 AAPL {$150}
+    Assets:Brokerage      -10 AAPL {$150}
+
+2024/03/01 Coinbase
+    Assets:Coinbase       100 BTC {$100} @ 2 ETH {$50}
+    Assets:Coinbase      -200 ETH {$50}
+
+test bal --exchange $ --unrealized --now 2024/04/01
+             100 BTC
+            -200 ETH
+               5 XYZ  Assets
+               5 XYZ    Brokerage
+             100 BTC
+            -200 ETH    Coinbase
+              $-1500  Equity:Opening
+--------------------
+            -10 AAPL
+             100 BTC
+            -200 ETH
+               5 XYZ
+end test
+
+test bal --exchange $ --unrealized --dc --now 2024/04/01
+       10 AAPL
+       100 BTC
+         5 XYZ        10 AAPL
+                    200 ETH        100 BTC
+                                -200 ETH
+                                   5 XYZ  Assets
+       10 AAPL
+         5 XYZ        10 AAPL          5 XYZ    Brokerage
+       100 BTC        200 ETH        100 BTC
+                                -200 ETH    Coinbase
+             0        10 AAPL       -10 AAPL  Equity:Opening
+-------------- -------------- --------------
+       10 AAPL
+       100 BTC
+         5 XYZ        20 AAPL
+                    200 ETH       -10 AAPL
+                                 100 BTC
+                                -200 ETH
+                                   5 XYZ
+end test

@@ -1,0 +1,41 @@
+; bal -V --unrealized must foot to zero when a price change precedes an
+; unrelated later posting.  One lot of AAPL is revalued by the P directive
+; of 2024/02/01, before the Coffee posting of 2024/02/15; since 75c9c37a5
+; that revaluation was dropped from balance reports, leaving
+; Equity:Unrealized Gains at $-100 and the total at $100.
+
+2024/01/01 Buy
+    Assets:Brokerage        10 AAPL @ $150
+    Assets:Checking
+
+P 2024/02/01 AAPL $160
+
+2024/02/15 Coffee
+    Expenses:Food           $5
+    Assets:Checking
+
+P 2024/03/01 AAPL $170
+
+test bal -V --unrealized
+                $195  Assets
+               $1700    Brokerage
+              $-1505    Checking
+               $-200  Equity:Unrealized Gains
+                  $5  Expenses:Food
+--------------------
+                   0
+end test
+
+test bal --exchange $ --unrealized
+                $195  Assets
+               $1700    Brokerage
+              $-1505    Checking
+               $-200  Equity:Unrealized Gains
+                  $5  Expenses:Food
+--------------------
+                   0
+end test
+
+test bal -G
+                $200  Assets:Brokerage
+end test

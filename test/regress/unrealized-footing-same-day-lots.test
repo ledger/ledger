@@ -1,0 +1,37 @@
+; bal -V --unrealized must foot to zero when two lots of one commodity are
+; bought on the same day at different costs.  The price history keeps one
+; AAPL price per timestamp, so the first purchase, valued at the day's
+; last price ($160) rather than at its cost ($150), carried a $100 gap
+; into the report total.  This failure predates 75c9c37a5.
+
+2024/01/01 Buy
+    Assets:Brokerage        10 AAPL @ $150
+    Assets:Checking
+
+2024/01/01 Buy
+    Assets:Brokerage        10 AAPL @ $160
+    Assets:Checking
+
+P 2024/03/01 AAPL $170
+
+test bal -V --unrealized
+                $300  Assets
+               $3400    Brokerage
+              $-3100    Checking
+               $-300  Equity:Unrealized Gains
+--------------------
+                   0
+end test
+
+test bal --exchange $ --unrealized
+                $300  Assets
+               $3400    Brokerage
+              $-3100    Checking
+               $-300  Equity:Unrealized Gains
+--------------------
+                   0
+end test
+
+test bal -G
+                $300  Assets:Brokerage
+end test

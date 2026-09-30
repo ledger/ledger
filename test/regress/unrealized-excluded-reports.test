@@ -1,0 +1,225 @@
+; bal -V --unrealized values each posting at its cost only when the running
+; total is the sum of the journal's postings and the report displays that
+; total.  The reports below do not meet that condition, so they keep the
+; revaluation between postings and print what they printed before the
+; balance report valued postings at cost.
+;
+; --plopen makes the amount a pair of amount and cost, valued at today; a
+; baseline of plain amounts cannot be added to that pair ("Cannot add
+; sequences of different lengths").  -A displays a running average, which
+; divides the total by the number of postings, and seeds the running total
+; of the automated Expenses:Taxes and Assets:Checking postings from a
+; per-account accumulator; a baseline summed over every posting printed
+; Equity:Unrealized Losses as $10.06 instead of $5.00.  --deviation
+; displays each amount less the total, which is no running total either; a
+; baseline printed Equity as -120 instead of -60.  Budget reports receive
+; budget postings whose amount is negated but whose cost is not; a
+; baseline read from those costs booked the budgeted purchases as a
+; $1160.00 loss, and the budget command, which pairs each amount with its
+; budget, failed ("Cannot compare an amount to a sequence").  Under
+; --forecast the posting that ends the forecast enters the running total
+; but is filtered out after the revaluation, so a revaluation at the
+; terminus would include a gain that no displayed row carries.  Under -V
+; or -X, --immediate values each posting on its own date already, and a
+; baseline at cost booked the $40.00 gain realized by the sale a second
+; time, as Equity:Unrealized Losses $40.00.  An amount expression given
+; with -t is not one the report builds itself, and a baseline would read the
+; cost in place of the amount, which is the cost of the posting's
+; contribution only for an expression that passes the amount on as it is.
+; market(amount, value_date, exchange) is the expression that --immediate
+; installs, and a baseline at cost booked the $40.00 gain again; an
+; expression that tests the commodity of the amount read the commodity of
+; the cost, and a baseline at cost booked the whole $1020.00 value of the
+; AAPL held as Equity:Unrealized Gains.  -H nails each posting at its
+; value on its own date and books no revaluation at the report date, so
+; its report has no unrealized row; on this journal a baseline at cost
+; prints the same, and regress/1692 shows where it does not.  -G reports
+; the gain itself, market value less cost; a baseline at cost booked its
+; unrealized row as $-120.00 instead of $-60.00.  --inject
+; adds a posting for the Fee tag of the purchase, and the posting it
+; generates keeps the $1500 cost of the posting it copies; a baseline read
+; from that cost printed Equity:Unrealized Losses $1375.00.  The last
+; report, with none of these options, values postings at cost and foots.
+
+= Books
+    Expenses:Taxes                0.05
+    Assets:Checking              -0.05
+
+~ Monthly
+    Assets:Brokerage              1 AAPL @ $150
+    Assets:Checking
+
+2024/01/01 Buy
+    ; Fee: $5
+    Assets:Brokerage             10 AAPL @ $150
+    Assets:Checking
+
+2024/01/15 Books
+    Expenses:Books               $10.00
+    Assets:Checking
+
+2024/02/01 Sell
+    Assets:Brokerage             -4 AAPL {$150} @ $160
+    Assets:Checking              $640
+    Income:Capital Gains
+
+P 2024/03/01 AAPL $170
+
+test bal -V --unrealized --plopen --now 2024/04/01
+             $120.00  Assets:Brokerage
+end test
+
+test bal --exchange $ --unrealized --plopen --now 2024/04/01
+             $120.00  Assets:Brokerage
+end test
+
+test bal -V --unrealized -A --now 2024/04/01
+              $24.92  Assets
+             $510.00    Brokerage
+            $-217.62    Checking
+               $5.00  Equity:Unrealized Losses
+               $5.25  Expenses
+              $10.00    Books
+               $0.50    Taxes
+             $-40.00  Income:Capital Gains
+--------------------
+              $12.50
+end test
+
+test bal --exchange $ --unrealized -A --now 2024/04/01
+              $24.92  Assets
+             $510.00    Brokerage
+            $-217.62    Checking
+               $5.00  Equity:Unrealized Losses
+               $5.25  Expenses
+              $10.00    Books
+               $0.50    Taxes
+             $-40.00  Income:Capital Gains
+--------------------
+              $12.50
+end test
+
+test bal -V --unrealized --deviation --now 2024/04/01
+            $-149.50  Assets
+                 -60  Equity
+                 -10  Expenses
+                  40  Income
+--------------------
+            $-180.00
+end test
+
+test bal -V --unrealized --budget --now 2024/04/01
+              $69.50  Assets
+             $340.00    Brokerage
+            $-270.50    Checking
+--------------------
+              $69.50
+end test
+
+test budget -V --unrealized --now 2024/04/01
+     $149.50       $80.00       $69.50  187%  Assets
+    $1020.00      $680.00      $340.00  150%    Brokerage
+    $-870.50     $-600.00     $-270.50  145%    Checking
+------------ ------------ ------------ -----
+     $149.50       $80.00       $69.50  187%
+end test
+
+test bal -V --unrealized --forecast 'd<[2024/07/01]' --now 2024/04/01
+             $209.50  Assets
+            $1530.00    Brokerage
+           $-1320.50    Checking
+              $10.50  Expenses
+              $10.00    Books
+               $0.50    Taxes
+             $-40.00  Income:Capital Gains
+--------------------
+             $180.00
+end test
+
+test bal -V --unrealized --immediate --now 2024/04/01
+             $-10.50  Assets
+             $860.00    Brokerage
+            $-870.50    Checking
+              $10.50  Expenses
+              $10.00    Books
+               $0.50    Taxes
+             $-40.00  Income:Capital Gains
+--------------------
+             $-40.00
+end test
+
+test bal --exchange $ --unrealized --immediate --now 2024/04/01
+             $-10.50  Assets
+             $860.00    Brokerage
+            $-870.50    Checking
+              $10.50  Expenses
+              $10.00    Books
+               $0.50    Taxes
+             $-40.00  Income:Capital Gains
+--------------------
+             $-40.00
+end test
+
+test bal -V --unrealized -t 'market(amount, value_date, exchange)' --now 2024/04/01
+             $-10.50  Assets
+             $860.00    Brokerage
+            $-870.50    Checking
+              $10.50  Expenses
+              $10.00    Books
+               $0.50    Taxes
+             $-40.00  Income:Capital Gains
+--------------------
+             $-40.00
+end test
+
+test bal -V --unrealized -t '(commodity == "AAPL") ? amount : 0' --now 2024/04/01
+            $1020.00  Assets:Brokerage
+             $-60.00  Equity:Unrealized Gains
+--------------------
+             $960.00
+end test
+
+test bal -V --unrealized -H --now 2024/04/01
+             $-10.50  Assets
+             $860.00    Brokerage
+            $-870.50    Checking
+              $10.50  Expenses
+              $10.00    Books
+               $0.50    Taxes
+             $-40.00  Income:Capital Gains
+--------------------
+             $-40.00
+end test
+
+test bal -G -V --unrealized --now 2024/04/01
+             $120.00  Assets:Brokerage
+             $-60.00  Equity:Unrealized Gains
+--------------------
+              $60.00
+end test
+
+test bal -V --unrealized --inject Fee --now 2024/04/01
+             $154.50  Assets
+            $1025.00    Brokerage
+            $-870.50    Checking
+             $-60.00  Equity:Unrealized Gains
+              $10.50  Expenses
+              $10.00    Books
+               $0.50    Taxes
+             $-40.00  Income:Capital Gains
+--------------------
+              $65.00
+end test
+
+test bal -V --unrealized --now 2024/04/01
+             $149.50  Assets
+            $1020.00    Brokerage
+            $-870.50    Checking
+            $-120.00  Equity:Unrealized Gains
+              $10.50  Expenses
+              $10.00    Books
+               $0.50    Taxes
+             $-40.00  Income:Capital Gains
+--------------------
+                   0
+end test

@@ -911,6 +911,137 @@ void display_filter_posts::operator()(post_t& post) {
 
 /*--- Revaluation (changed value) ---*/
 
+namespace {
+/**
+ * Whether the report's amount expression is one that the report builds from
+ * its own options and that passes a posting's amount on as it is, so that
+ * with the posting's cost read in place of the amount it yields the cost of
+ * the posting's contribution to the running total (see cost_baseline()).
+ *
+ * The base expression is that of the default report, of --basis, of --price
+ * or of --dc, and each piece appended to it is one that --round or --unround
+ * appends, the valuation at today that --round appends under -V, or the pair
+ * of an amount and its cleared part that the cleared command appends.  The
+ * test compares the expressions as strings, as chain_post_handlers does to
+ * decide whether display_filter_posts may add rounding postings.
+ */
+bool amount_expr_reads_cost(const report_t& report) {
+  // The base expression that the --dc handler in report.h installs.
+  static const char* const dc_expr =
+      "is_seq(amount) ? amount : (amount > 0 ? amount : 0, amount < 0 ? amount : 0)";
+  static const char* const bases[] = {"amount", "rounded(cost)", "price", dc_expr};
+  static const char* const pieces[] = {"roundto_commodity(amount_expr)", "unrounded(amount_expr)",
+                                       "market(amount_expr, today, exchange)",
+                                       "(amount, cleared ? amount : 0)"};
+  auto listed = [](const string& expr, const auto& list) {
+    return std::any_of(std::begin(list), std::end(list),
+                       [&expr](const char* entry) { return expr == entry; });
+  };
+  const merged_expr_t& expr(report.HANDLER(amount_).expr);
+  return listed(expr.base_expr, bases) &&
+         std::all_of(expr.exprs.begin(), expr.exprs.end(),
+                     [&listed](const string& piece) { return listed(piece, pieces); });
+}
+
+/**
+ * Whether -X, when given, names a single commodity: the form that
+ * value_t::exchange_commodities() values directly, with no list of
+ * commodities, price expression or selective conversion.
+ */
+bool exchange_names_one_commodity(const report_t& report) {
+  return !report.HANDLED(exchange_) ||
+         report.HANDLER(exchange_).str().find_first_of(",=:") == string::npos;
+}
+
+/**
+ * Whether changed_value_posts builds its report on a cost baseline (see the
+ * class note): an accounts report (balance or cleared) under -V or -X with
+ * --unrealized whose running total is the sum of the report's amount
+ * expression over the journal's postings, and whose display shows that
+ * total.
+ *
+ * Every other report keeps the between-posting revaluation:
+ *
+ * - Under -V or -X, --immediate values each posting on its own date
+ *   already, so a cost baseline would book the difference between that value
+ *   and the cost as an unrealized gain; for a lot sale that difference is the
+ *   gain already realized, booked again as an unrealized loss
+ *   (regress/unrealized-excluded-reports; regress/1821_2 guards against the
+ *   same symptom).
+ * - -H nails each posting at its value on its own date, and flush() books no
+ *   revaluation under it, so a cost baseline would be compared with nothing;
+ *   valuing from cost there omitted a balancing amount below the display
+ *   precision under -X (regress/1692).
+ * - -G (which sets --revalued-total) reports the gain itself, market value
+ *   less cost; a cost baseline booked its unrealized row as the whole change
+ *   in value since the purchase (regress/unrealized-excluded-reports).
+ * - --plopen makes the amount a pair of amount and cost and values it at
+ *   today, so no revaluation is booked; a cost baseline of plain amounts
+ *   cannot be added to that pair.
+ * - --percent shows each account's share of its parent, not a running total,
+ *   and never values a holding; valuing one here could evaluate a lot's value
+ *   expression that fails (regress/cov9-annotate-value-expr).
+ * - --average shows a running average, and calc_posts seeds the total of a
+ *   generated posting (an automated transaction's, for instance) from a
+ *   per-account accumulator, so the running total is not the sum over the
+ *   postings seen here.  --deviation shows each amount less the total.
+ * - --period (and -M and the rest), --dow and --by-payee pass on subtotals
+ *   that carry no cost; valuing them books the gain that regress/1821_2
+ *   realizes a second time under -M.
+ * - Budget reports receive generated budget postings whose amount
+ *   budget_posts negates while their cost keeps its sign, and the budget
+ *   command pairs each amount with its budget.
+ * - Under --forecast the forecast-while filter sits downstream of this
+ *   handler (chain_post_handlers), so the forecast posting that ends the
+ *   forecast enters the running total but is never displayed.
+ * - Under --anon, anonymize_posts relabels a posting's cost and the price in
+ *   its lot annotation separately and can give one commodity two labels (in
+ *   regress/1190 the cost is in B and the fixated price in C), so the cost is
+ *   not in the terms in which the lot is valued.
+ * - --pivot, --pivot-only, --account, --payee and --date (transfer_details),
+ *   the account-rewrite and payee-rewrite directives (rewrite_posts, which
+ *   chain_post_handlers adds under the same condition) and --inject
+ *   (inject_posts) copy a posting into a transaction of its own, dated by
+ *   the posting.  A posting that carries its own date then no longer shares
+ *   the date on which cost_baseline values the costs of the rest of its
+ *   transaction, so under -X the two sides of a balanced transaction are
+ *   converted at different rates (regress/unrealized-footing-posting-date,
+ *   regress/unrealized-account-rewrite and regress/unrealized-payee-rewrite).
+ *   --inject also leaves on the posting it generates the cost of the posting
+ *   it copies (regress/unrealized-excluded-reports).
+ * - An amount expression of the user's own (--amount or -t, or the collect
+ *   clause of select), and any other than those that amount_expr_reads_cost
+ *   accepts: cost_baseline reads the cost in place of the amount, which gives
+ *   the cost of the posting's contribution only for an expression that
+ *   passes the amount on as it is, as the report's own expressions do.  An
+ *   expression that values the amount, tests its commodity or drops the
+ *   commodity does not.  market(amount, value_date, exchange), given by hand,
+ *   is the expression that --immediate installs, and a baseline at cost
+ *   booked the gain realized by a sale a second time
+ *   (regress/unrealized-excluded-reports).
+ * - -X naming more than one commodity (a list, a price expression or a
+ *   selective conversion): such a report can value a holding into one of
+ *   its commodities and leave the cost of the holding in another, which it
+ *   does not convert, so the holding would book no gain where the
+ *   revaluation between postings books one (under -X 'EUR,$' in
+ *   regress/unrealized-unconvertible-cost).
+ */
+bool uses_cost_baseline(const report_t& report, bool for_accounts_report, bool show_unrealized) {
+  const journal_t& journal(*report.session.journal);
+  return for_accounts_report && show_unrealized && report.HANDLED(market) &&
+         amount_expr_reads_cost(report) && exchange_names_one_commodity(report) &&
+         !report.HANDLED(historical) && !report.HANDLED(immediate) &&
+         !report.HANDLED(revalued_total_) && !report.HANDLED(plopen) && !report.HANDLED(percent) &&
+         !report.HANDLED(average) && !report.HANDLED(deviation) && !report.HANDLED(period_) &&
+         !report.HANDLED(dow) && !report.HANDLED(by_payee) &&
+         report.budget_flags == BUDGET_NO_BUDGET && !report.HANDLED(forecast_while_) &&
+         !report.HANDLED(anon) && !report.HANDLED(pivot_) && !report.HANDLED(pivot_only_) &&
+         !report.HANDLED(account_) && !report.HANDLED(payee_) && !report.HANDLED(date_) &&
+         !report.HANDLED(inject_) && journal.payee_rewrite_mappings.empty() &&
+         journal.account_rewrite_mappings.empty();
+}
+} // namespace
+
 changed_value_posts::changed_value_posts(post_handler_ptr handler, report_t& _report,
                                          bool _for_accounts_report, bool _show_unrealized,
                                          display_filter_posts* _display_filter)
@@ -920,7 +1051,12 @@ changed_value_posts::changed_value_posts(post_handler_ptr handler, report_t& _re
       display_total_expr(report.HANDLER(display_total_).expr),
       changed_values_only(report.HANDLED(revalued_only)),
       historical_prices_only(report.HANDLED(historical)), for_accounts_report(_for_accounts_report),
-      show_unrealized(_show_unrealized), last_post(nullptr), display_filter(_display_filter) {
+      show_unrealized(_show_unrealized),
+      value_from_cost(uses_cost_baseline(_report, _for_accounts_report, _show_unrealized)),
+      amount_expr(report.HANDLER(amount_).expr), cost_expr("cost"),
+      held_value_expr("market(amount, value_date, exchange)"),
+      baseline_expr("market(amount_expr, value_date, exchange)"), last_post(nullptr),
+      display_filter(_display_filter) {
   string gains_equity_account_name;
   if (report.HANDLED(unrealized_gains_))
     gains_equity_account_name = report.HANDLER(unrealized_gains_).str();
@@ -943,15 +1079,70 @@ changed_value_posts::changed_value_posts(post_handler_ptr handler, report_t& _re
              "post_handler_ptr, report_t&, bool, bool, display_filter_posts *");
 }
 
+namespace {
+/**
+ * Evaluate @p expr for @p post as though the posting were dated @p date and,
+ * when given, as though @p amount were its amount and @p total its running
+ * total.
+ *
+ * market(..., value_date, exchange) reads the posting's value date, which
+ * get_value_date() takes from xdata.value_date before xdata.date and date(),
+ * so both fields are overridden.  An amount is substituted the way filters
+ * substitute one, as the compound value that get_amount() returns in place
+ * of post.amount; a total replaces xdata.total, which get_total() returns.
+ * Every field is restored afterwards, also when the evaluation throws, so
+ * the posting is left as it was.
+ */
+value_t calc_as_of(report_t& report, post_t& post, const date_t& date, expr_t& expr,
+                   const value_t* amount = nullptr, const value_t* total = nullptr) {
+  post_t::xdata_t& xdata(post.xdata());
+  const date_t saved_date = xdata.date;
+  const date_t saved_value_date = xdata.value_date;
+  const bool saved_compound_flag = xdata.has_flags(POST_EXT_COMPOUND);
+  const value_t saved_compound_value = xdata.compound_value;
+  const value_t saved_total = xdata.total;
+  auto restore = [&]() {
+    xdata.date = saved_date;
+    xdata.value_date = saved_value_date;
+    xdata.compound_value = saved_compound_value;
+    if (!saved_compound_flag)
+      xdata.drop_flags(POST_EXT_COMPOUND);
+    xdata.total = saved_total;
+  };
+  xdata.date = date;
+  xdata.value_date = date;
+  if (amount) {
+    xdata.compound_value = *amount;
+    xdata.add_flags(POST_EXT_COMPOUND);
+  }
+  if (total)
+    xdata.total = *total;
+  try {
+    bind_scope_t bound_scope(report, post);
+    value_t result = expr.calc(bound_scope);
+    restore();
+    return result;
+  } catch (...) {
+    restore();
+    throw;
+  }
+}
+} // namespace
+
 /**
  * Emit final revaluation up to the report terminus date.
  *
  * After all real postings have been processed, this generates one last
  * revaluation for any price changes between the last posting and the
- * report's terminus date.
+ * report's terminus date.  Under value_from_cost that revaluation is the
+ * only one, so it is booked even when the last posting is dated after the
+ * terminus: the report values every holding at the terminus regardless of
+ * when it was acquired, and the equity rows must cover that whole change.
+ * Its baseline is cost_total put through the report's total expression at
+ * the terminus, so that it is compared in the same terms as repriced_total.
  */
 void changed_value_posts::flush() {
-  if (last_post && last_post->date() <= report.terminus.date()) {
+  if (last_post && (value_from_cost || last_post->date() <= report.terminus.date())) {
     if (!historical_prices_only) {
       // In plot mode (-j/-J) combined with period mode (-M/--period),
       // suppress intermediate price entries: each period already reflects
@@ -962,6 +1153,9 @@ void changed_value_posts::flush() {
           report.HANDLED(period_) && (report.HANDLED(amount_data) || report.HANDLED(total_data));
       if (!for_accounts_report && !suppress_for_plot)
         output_intermediate_prices(*last_post, report.terminus.date());
+      if (value_from_cost)
+        last_total = calc_as_of(report, *last_post, report.terminus.date(), total_expr, nullptr,
+                                &cost_total);
       output_revaluation(*last_post, report.terminus.date());
     }
     last_post = nullptr;
@@ -1175,6 +1369,137 @@ void changed_value_posts::output_intermediate_prices(post_t& post, const date_t&
 }
 
 /**
+ * The contribution of @p post to cost_total under value_from_cost.
+ *
+ * It is the report's amount expression with the posting's cost read in place
+ * of its amount, valued on the transaction's date, or on the terminus for a
+ * transaction dated after it, so that no price later than the report's
+ * valuation date enters the baseline.  Valuing every posting of a
+ * transaction on one date converts them all at the same rates, so a
+ * transaction that balances at cost contributes zero even when a posting
+ * carries its own date.  That holds because every posting seen here still
+ * belongs to its journal transaction: uses_cost_baseline excludes the reports
+ * whose handlers copy a posting into a transaction of its own, dated by the
+ * posting.  Evaluating the amount expression gives the
+ * contribution the shape of the posting's own contribution to the running
+ * total: a debit and credit pair under --dc, a plain amount otherwise.
+ *
+ * Where the report cannot compare the posting's own contribution with its
+ * cost at the terminus (incomparable_at_terminus), because it leaves the
+ * holding unvalued or cannot bring the cost to the commodity in which it
+ * values the holding, the posting contributes that instead, so that it adds
+ * nothing to the unrealized rows.  The test is needed only when the two
+ * contributions differ.  It is made one posting at a time, so a sale whose
+ * cost, the proceeds, the report cannot bring to the commodity in which it
+ * values the lot contributes the units sold at their value at the terminus,
+ * while their purchase contributed its cost; the change in the price of those
+ * units since their purchase then joins the unrealized rows
+ * (regress/unrealized-unconvertible-proceeds).
+ */
+value_t changed_value_posts::cost_baseline(post_t& post) {
+  value_t contribution;
+  value_t cost;
+  {
+    bind_scope_t bound_scope(report, post);
+    contribution = amount_expr.calc(bound_scope);
+    cost = cost_expr.calc(bound_scope);
+  }
+  const date_t terminus = report.terminus.date();
+  date_t date = post.xact ? post.xact->date() : post.date();
+  if (terminus < date)
+    date = terminus;
+  value_t at_cost = calc_as_of(report, post, date, baseline_expr, &cost);
+  if (at_cost.is_sequence() == contribution.is_sequence() && at_cost == contribution)
+    return at_cost;
+  return incomparable_at_terminus(post, contribution, at_cost) ? contribution : at_cost;
+}
+
+namespace {
+/// @p value as a balance, or a null value when it holds no amount.
+value_t as_balance(const value_t& value) {
+  if (value.is_amount() && !value.as_amount().is_null())
+    return balance_t(value.as_amount());
+  if (value.is_balance())
+    return value;
+  return value_t();
+}
+
+/// The commodities of the amounts in @p value.
+std::set<const commodity_t*> commodities_of(const value_t& value) {
+  std::set<const commodity_t*> commodities;
+  if (value.is_amount())
+    commodities.insert(&value.as_amount().commodity());
+  else if (value.is_balance())
+    for (const auto& pair : value.as_balance().amounts)
+      commodities.insert(pair.first);
+  return commodities;
+}
+} // namespace
+
+/**
+ * Whether the report cannot compare @p contribution, a posting's contribution
+ * to the running total, with @p at_cost, the posting's cost baseline, because
+ * valuing each of them at the terminus leaves them in different commodities.
+ *
+ * That is so for a holding the report leaves as it is, one in a commodity
+ * with no price (under -V also one declared with N) or an amount with no
+ * commodity, when its cost is valued into another commodity.  It is so also
+ * for a holding that the report values into a commodity to which it cannot
+ * bring the cost: under -X, a holding in the exchange commodity bought with
+ * a currency that has no price in it (regress/unrealized-unconvertible-cost),
+ * and under -V, a holding whose most recent price is in another commodity at
+ * the terminus than on its transaction's date
+ * (regress/unrealized-valuation-commodity-change).  Booking either at its
+ * cost set the holding against the amount that paid for it in an unrealized
+ * row of mixed commodities.  A contribution that the amount expression has
+ * valued already (under -V with --round it values each posting), or that is
+ * in the valuation commodity, stays in the commodity of its valued cost and
+ * is compared.  A cost of zero holds no commodity once valued; it is
+ * compared with any holding that the report values, and not with one that
+ * the report leaves as it is.
+ *
+ * The contribution is valued in the form of a balance, the form the running
+ * total takes once it holds more than one commodity: market() values a lone
+ * annotated amount at its lot price when it finds no market price, but not a
+ * balance, so testing a lone amount would call a lot valuable that the
+ * report leaves unvalued (regress/3227 under -X).  It is the contribution
+ * that is tested, not the posting's amount, since under --basis the running
+ * total holds the cost.  Under --dc each column that holds an amount is
+ * tested against the same column of @p at_cost, and the empty column, which
+ * holds zero, is passed over.
+ */
+bool changed_value_posts::incomparable_at_terminus(post_t& post, const value_t& contribution,
+                                                   const value_t& at_cost) {
+  if (contribution.is_sequence()) {
+    if (!at_cost.is_sequence() || at_cost.as_sequence().size() != contribution.as_sequence().size())
+      return false;
+    bool tested = false;
+    for (std::size_t i = 0; i < contribution.as_sequence().size(); ++i) {
+      const value_t& column(contribution.as_sequence()[i]);
+      if ((!column.is_amount() && !column.is_balance()) || column.is_realzero())
+        continue;
+      if (!incomparable_at_terminus(post, column, at_cost.as_sequence()[i]))
+        return false;
+      tested = true;
+    }
+    return tested;
+  }
+  value_t held = as_balance(contribution);
+  if (held.is_null() || held.is_realzero())
+    return false;
+  const date_t terminus = report.terminus.date();
+  const value_t held_value = calc_as_of(report, post, terminus, held_value_expr, &held);
+  value_t baseline = as_balance(at_cost);
+  if (!baseline.is_null())
+    baseline = calc_as_of(report, post, terminus, held_value_expr, &baseline);
+  if (commodities_of(held_value) == commodities_of(baseline))
+    return false;
+  if (baseline.is_null() || baseline.is_realzero())
+    return held_value == held;
+  return true;
+}
+
+/**
  * Process a posting, generating revaluations for price changes since the
  * previous posting.
  *
@@ -1185,8 +1510,33 @@ void changed_value_posts::output_intermediate_prices(post_t& post, const date_t&
  *
  * The posting is then forwarded downstream, and the current total is
  * captured as last_total for the next comparison.
+ *
+ * In an accounts report under -V or -X with --unrealized (value_from_cost),
+ * no revaluation is generated between postings; cost_total accumulates each
+ * posting's cost valued on its transaction's date (cost_baseline), and
+ * flush() books the difference from the terminus valuation.
  */
 void changed_value_posts::operator()(post_t& post) {
+  // Revaluing the running total between postings leaves a balance report
+  // out of balance whenever a transaction does not balance at the market
+  // price of its own date: two lots of one commodity bought on one day at
+  // different costs (the price history keeps one price per timestamp), a
+  // stock split (#1821), or a sale balanced at its lot price.  Commit
+  // 75c9c37a5 avoided the last two by skipping the between-posting
+  // revaluation for balance reports, which dropped every price change that
+  // precedes the report's last posting.  Valuing each posting at its cost
+  // avoids all of them: the report total is then the journal's balance at
+  // cost and, when the costs are in the valuation commodity, the unrealized
+  // rows are minus the --gain total.
+  if (value_from_cost) {
+    if (changed_values_only)
+      post.xdata().add_flags(POST_EXT_DISPLAYED);
+    item_handler<post_t>::operator()(post);
+    cost_total += cost_baseline(post);
+    last_post = &post;
+    return;
+  }
+
   if (last_post) {
     // Don't generate spurious revaluations when postings are from the same
     // transaction (e.g., stock splits with multiple prices on the same date).

@@ -117,6 +117,32 @@ components with their standard-library equivalents.
   usable price (#2335); and trigger a price download even when no prior price
   exists (#652, #655)
 
+- Make `balance` and `cleared` with `-V` or `-X` and `--unrealized` foot to
+  zero for a journal that balances at cost, when the report can value each
+  holding and its cost in one commodity, also when a posting is dated after
+  the report date (the day before `--end`, `--now`, or today), by valuing each
+  posting at its cost on its transaction's date or on the report date,
+  whichever is earlier, and booking one revaluation at the report date; a
+  holding that the report cannot so value adds nothing to the unrealized rows,
+  but a lot sold for proceeds that the report cannot bring to the commodity in
+  which it values the lot leaves at its value on the report date, so the price
+  change of the units sold since their purchase joins the unrealized rows;
+  each column of a `--dc` or `cleared` report is revalued against its own
+  cost, so under `--dc` the debit and credit totals are at cost, and a
+  commodity held on both sides of a transaction whose price changed (a
+  foreign-currency account, a split or a lot sale) shows a zero-net unrealized
+  row, which the report prints as absolute values in both columns, and the
+  columns as printed then need not add up to their totals; `--invert` still
+  does not foot; reports under `--anon`, `--average`, `--deviation`, `--gain`
+  or `--revalued-total`, `--historical`, `--immediate`, `--percent` or
+  `--plopen`, reports with an `--amount` expression of their own or with an
+  `-X` that names more than one commodity, reports that copy each posting into
+  a transaction of its own (under `--account`, `--date`, `--inject`,
+  `--payee`, `--pivot` or `--pivot-only`, or for a journal with
+  `account-rewrite` or `payee-rewrite` directives), budget and forecast
+  reports, and reports grouped by period, weekday or payee keep the earlier
+  revaluation
+
 - Set commodity precision from price records and let later transactions widen,
   but not narrow, the recorded precision (#1190, #2481)
 

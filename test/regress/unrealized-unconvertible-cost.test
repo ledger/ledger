@@ -1,0 +1,73 @@
+; bal -X EUR --unrealized books no unrealized gain on a holding whose cost
+; the report cannot bring to the commodity in which it values the holding.
+; The euros in Assets:Euros are in the exchange commodity, but they were
+; bought at a virtual cost in USD, which records no price, so -X cannot
+; convert that cost to euros.  They contribute themselves to the baseline
+; and add nothing to the unrealized rows, the report total is what -X
+; leaves unconverted, and the report prints what it printed before the
+; balance report valued postings at cost.  The AAPL lot is revalued as
+; usual.  Testing only whether the report could value the euros, which -X
+; does by dropping their lot annotation, booked them at their cost and
+; printed an Equity:Unrealized Gains row of "-190.00 EUR / USD12.30",
+; which made the report total zero only by setting the euros against the
+; USD that paid for them.  Under --dc each column is tested in the same
+; way.  The shape is that of regress/1936.  Under -X 'EUR,$', which names
+; two commodities, the report values the AAPL lot in euros and leaves its
+; dollar cost in dollars, so a baseline at cost booked no gain on the lot
+; and printed no unrealized row; the report keeps the revaluation between
+; postings instead and books the -180.00 EUR it booked before.
+
+P 2024/01/01 $ EUR0.90
+
+2024/01/10 Buy euros at a virtual cost in USD
+    Assets:Euros            10.00 EUR {1.23 USD} (@) 1.23 USD
+    Assets:Bank
+
+2024/02/01 Buy shares
+    Assets:Brokerage        10 AAPL @ $150
+    Assets:Checking
+
+P 2024/03/01 AAPL $170
+
+test bal -X EUR --unrealized --now 2024/04/01
+          190.00 EUR
+           USD-12.30  Assets
+           USD-12.30    Bank
+         1530.00 EUR    Brokerage
+        -1350.00 EUR    Checking
+           10.00 EUR    Euros
+         -180.00 EUR  Equity:Unrealized Gains
+--------------------
+           10.00 EUR
+           USD-12.30
+end test
+
+test bal -X EUR --unrealized --dc --now 2024/04/01
+   1540.00 EUR    1350.00 EUR
+                   USD12.30     190.00 EUR
+                               USD-12.30  Assets
+             0       USD12.30      USD-12.30    Bank
+   1530.00 EUR              0    1530.00 EUR    Brokerage
+             0    1350.00 EUR   -1350.00 EUR    Checking
+     10.00 EUR              0      10.00 EUR    Euros
+    180.00 EUR              0    -180.00 EUR  Equity:Unrealized Gains
+-------------- -------------- --------------
+   1360.00 EUR    1350.00 EUR
+                   USD12.30      10.00 EUR
+                               USD-12.30
+end test
+
+test bal -X 'EUR,$' --unrealized --now 2024/04/01
+              $-1500
+         1540.00 EUR
+           USD-12.30  Assets
+           USD-12.30    Bank
+         1530.00 EUR    Brokerage
+              $-1500    Checking
+           10.00 EUR    Euros
+         -180.00 EUR  Equity:Unrealized Gains
+--------------------
+              $-1500
+         1360.00 EUR
+           USD-12.30
+end test

@@ -7,3 +7,11 @@
 test reg Assets:Stock --lots --lot-notes
 24-Jan-01 Buy                   Assets:Stock           10 AAPL {$100} ((market(amount, date, t))) 10 AAPL {$100} ((market(amount, date, t)))
 end test
+
+; A report that never values the lot must not evaluate its value
+; expression.  Under --percent the balance report shows each account's
+; share of its parent instead of a value, so bal -V --unrealized leaves
+; the lot unvalued and, like bal --percent, prints nothing here.
+
+test bal -V --unrealized --percent --now 2026/08/26
+end test

@@ -1,0 +1,32 @@
+; bal -V --unrealized --dc keeps the report's debit and credit columns.
+; Under --dc the running total is a pair of debit and credit amounts, so
+; each posting's cost enters the baseline through the same amount
+; expression.  A baseline of plain amounts, subtracted from that pair,
+; would print the gross columns ($1700 and $1500) as the unrealized row
+; and total both columns to zero.  One lot bought at $150 and valued at
+; $170 prints a $200 revaluation in the debit column, and both columns
+; total $1500, as before the balance report valued postings at cost.
+
+2024/01/01 Buy
+    Assets:Brokerage        10 AAPL @ $150
+    Assets:Checking
+
+P 2024/03/01 AAPL $170
+
+test bal -V --unrealized --dc
+         $1700          $1500           $200  Assets
+         $1700              0          $1700    Brokerage
+             0          $1500         $-1500    Checking
+          $200              0          $-200  Equity:Unrealized Gains
+-------------- -------------- --------------
+         $1500          $1500              0
+end test
+
+test bal --exchange $ --unrealized --dc
+         $1700          $1500           $200  Assets
+         $1700              0          $1700    Brokerage
+             0          $1500         $-1500    Checking
+          $200              0          $-200  Equity:Unrealized Gains
+-------------- -------------- --------------
+         $1500          $1500              0
+end test

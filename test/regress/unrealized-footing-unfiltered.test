@@ -1,0 +1,40 @@
+; The journal of cov2-revalued-opts.test, reported unfiltered.  The price
+; change of 2024/06/01 falls on the date of the last posting, so the
+; balance report since 75c9c37a5 emitted no unrealized gain at all and
+; totalled $500.00.  Filtered to Assets:Broker (cov2-revalued-opts.test)
+; the report is not expected to foot.
+
+P 2024/01/01 AAPL $100.00
+P 2024/06/01 AAPL $150.00
+
+2024/01/01 Buy
+    Assets:Broker          10 AAPL @ $100.00
+    Assets:Cash
+
+2024/06/01 Hold
+    Expenses:Fees            $5.00
+    Assets:Cash
+
+test bal -V --unrealized
+             $495.00  Assets
+            $1500.00    Broker
+           $-1005.00    Cash
+            $-500.00  Equity:Unrealized Gains
+               $5.00  Expenses:Fees
+--------------------
+                   0
+end test
+
+test bal --exchange $ --unrealized
+             $495.00  Assets
+            $1500.00    Broker
+           $-1005.00    Cash
+            $-500.00  Equity:Unrealized Gains
+               $5.00  Expenses:Fees
+--------------------
+                   0
+end test
+
+test bal -G
+             $500.00  Assets:Broker
+end test

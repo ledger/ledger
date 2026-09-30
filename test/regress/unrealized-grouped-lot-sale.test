@@ -1,0 +1,52 @@
+; bal -V --unrealized books no unrealized gain for a lot bought and sold in
+; different periods when the report groups postings by period, weekday or
+; payee.  Such a report passes on each account's subtotal for the group,
+; which carries no cost, so it keeps the revaluation between postings
+; instead of valuing each posting at its cost.  Valuing the subtotals on
+; their own dates would count the $1,000.00 gain realized by the sale a
+; second time, as an unrealized gain.  The journal is that of 1821_2.test.
+; The --by-payee report prints nothing, as bal --by-payee does on this
+; journal; a baseline built from its subtotals printed "$-1,000.00
+; Equity:Unrealized Gains".
+;
+; Under --dc, which does not group postings, each column is revalued
+; against its own cost.  The 50 AAPL bought, in the debit column, and the
+; 50 AAPL sold, in the credit column, are each valued at $2,500.00 against
+; the $1,500.00 they cost, so Equity:Unrealized Gains is zero net: it holds
+; $-1,000.00 in the debit column and $1,000.00 in the credit column, which
+; the report prints as absolute values, so the debit column as printed does
+; not add up to its total.  Both columns total $4,000.00.
+
+2004-05-01 Stock purchase
+    Assets:Broker                   50 AAPL @ $30.00
+    Assets:Broker                   $-1,500
+
+2005-08-01 Stock sale
+    Assets:Broker                   -50 AAPL {$30} @ $50.00
+    Income:Capital Gains            $-1,000.00
+    Assets:Broker                   $2,500
+
+test bal -V --unrealized -M
+           $1,000.00  Assets:Broker
+          $-1,000.00  Income:Capital Gains
+--------------------
+                   0
+end test
+
+test bal -V --unrealized --dow
+           $1,000.00  Assets:Broker
+          $-1,000.00  Income:Capital Gains
+--------------------
+                   0
+end test
+
+test bal -V --unrealized --by-payee
+end test
+
+test bal -V --unrealized --dc
+     $5,000.00      $4,000.00      $1,000.00  Assets:Broker
+     $1,000.00      $1,000.00              0  Equity:Unrealized Gains
+             0      $1,000.00     $-1,000.00  Income:Capital Gains
+-------------- -------------- --------------
+     $4,000.00      $4,000.00              0
+end test
