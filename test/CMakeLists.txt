@@ -84,6 +84,22 @@ if(Python_EXECUTABLE)
       "SemanticBisimulation: not registered (lean/ submodule not "
       "initialized and LEDGER_LEAN_DIR unset)")
   endif()
+
+  # Valuation footing (test/semantic/footing.py): on each positive
+  # .test journal that balances at cost in one commodity C, bal -V
+  # --unrealized, where its rows are in one commodity, and bal -X C
+  # --unrealized, where its rows are in C, must total zero, and their
+  # unrealized rows must equal minus the matching bal -G total.  The
+  # script bins every journal it cannot compare and records why.  It
+  # compares C++ with C++ and needs no Lean oracle, so it registers
+  # wherever Python is found, outside the condition above.
+  add_test(NAME ValuationFooting
+    COMMAND ${Python_EXECUTABLE}
+      ${PROJECT_SOURCE_DIR}/test/semantic/footing.py
+      --ledger $<TARGET_FILE:ledger> --source ${PROJECT_SOURCE_DIR})
+  set_tests_properties(ValuationFooting PROPERTIES
+    ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}"
+    TIMEOUT 1800)
 endif()
 
 if(Python_EXECUTABLE)

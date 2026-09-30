@@ -60,6 +60,12 @@ import sweep  # normalization + C++ balance parsing
 TEST_RE = re.compile(r"^test\s+(.*?)(?:\s*->\s*([0-9]+))?\s*$")
 
 
+def has_python_block(journal):
+    """A python block anywhere makes a journal non-comparable."""
+    return any(ln == "python" or ln.startswith("python ")
+               for ln in (l.strip() for l in journal.splitlines()))
+
+
 def classify_test_file(path):
     """-> (journal_text or None, skip_reason or None, cpp_flags, dc)"""
     try:
@@ -218,9 +224,7 @@ def main():
         candidates = []  # (test_path, dat_path, cpp_flags, dc)
         for i, tpath in enumerate(tests):
             journal, skip, cpp_flags, dc = classify_test_file(tpath)
-            if journal is not None and any(
-                    ln == "python" or ln.startswith("python ")
-                    for ln in (l.strip() for l in journal.splitlines())):
+            if journal is not None and has_python_block(journal):
                 # a python block anywhere in the journal makes the
                 # file non-comparable, whatever its name
                 journal, skip = None, "python"
