@@ -82,6 +82,11 @@ std::optional<value_t> py_get_tag_2m(item_t& item, const mask_t& tag_mask,
   return item.get_tag(tag_mask, value_mask);
 }
 
+void py_set_tag(item_t& item, const string& tag, const std::optional<value_t>& value,
+                bool overwrite_existing) {
+  item.set_tag(tag, value, overwrite_existing);
+}
+
 /*--- Position Property Wrappers ---*/
 
 /// Adapt position_t::pathname (a shared_ptr<const path>) to/from Python str.
@@ -160,7 +165,7 @@ void export_item() {
       .def("tag", py_get_tag_1m)
       .def("tag", py_get_tag_2m)
 
-      .def("set_tag", &item_t::set_tag)
+      .def("set_tag", py_set_tag)
 
       .def("parse_tags", &item_t::parse_tags)
       .def("append_note", &item_t::append_note)

@@ -1,0 +1,5 @@
+test python test/regress/3237.py
+Posting tag assignment passed
+Transaction tag assignment and inheritance passed
+Explicit overwrite argument remains required
+end test
