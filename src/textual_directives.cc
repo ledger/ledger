@@ -331,9 +331,11 @@ void split_glob_path(const path& filename, path& base, std::vector<path>& compon
  * component, not just the filename -- wildcards in parent directory
  * components are expanded as well, so a single directive can match
  * files across multiple directory levels.  Paths are resolved relative
- * to the directory of the current file.  Recursive includes are
- * detected and skipped; a hard depth limit of 100 prevents runaway
- * include chains.
+ * to the directory of the current file.  Any matched file that is
+ * already open somewhere in the current include chain -- whether a
+ * direct self-include or an indirect cycle (A includes B, B includes
+ * A) -- is silently skipped.  A hard depth limit of 100 remains as a
+ * safety net for long non-cyclic chains.
  *
  * For each matched file, a new instance_t is created and parsed.  The
  * parent file's year/epoch state is saved and restored after the
@@ -393,10 +395,16 @@ void instance_t::include_directive(char* line) {
 
   bool files_found = false;
   for (const path& matched : matched_files) {
-    if (context.pathname == matched) {
-      DEBUG("textual.include", "Avoiding recursive include of: " << matched);
-      continue;
+    bool already_open = false;
+    for (instance_t* p = this; p; p = p->parent) {
+      if (p->context.pathname == matched) {
+        DEBUG("textual.include", "Avoiding recursive include of: " << matched);
+        already_open = true;
+        break;
+      }
     }
+    if (already_open)
+      continue;
 
     journal_t* journal = context.journal;
     account_t* master = top_account();
