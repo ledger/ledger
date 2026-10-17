@@ -26,7 +26,7 @@ jobs:
       matrix:
         config:
           - {
-            os: ubuntu-latest,
+            os: ubuntu-24.04,
             name: Ubuntu,
             PY_MAJOR: 3,
             cmake_args: -DUSE_PYTHON=ON -DUSE_GPGME=ON
@@ -38,7 +38,7 @@ jobs:
             cmake_args: -DUSE_PYTHON=ON -DUSE_GPGME=ON
           }
           - {
-            os: ubuntu-latest,
+            os: ubuntu-24.04,
             name: Ubuntu-Sanitizers,
             PY_MAJOR: 3,
             cmake_args: -DUSE_SANITIZERS=ON
@@ -47,6 +47,7 @@ jobs:
       - uses: actions/checkout@v7
         name: Check out repository code
         with:
+          persist-credentials: false
           # The lean/ submodule registers SemanticBisimulation; these
           # runners have no Lean toolchain, so it reports SKIPPED --
           # visibly, never as a silent pass.
@@ -119,6 +120,8 @@ jobs:
         shell: msys2 {0}
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
         name: Check out repository code
 
       - uses: msys2/setup-msys2@v2
@@ -150,13 +153,13 @@ jobs:
         run: cmake --build build
 
   coverage:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Free disk space
         # LLVM coverage instrumentation generates several GB of .profraw data
-        # across the full test suite; the default ubuntu-latest image has been
+        # across the full test suite; the default ubuntu-24.04 image has been
         # running out of disk space mid-test, aborting the runner with
-        # "No space left on device".  GitHub provisions the ubuntu-latest
+        # "No space left on device".  GitHub provisions the ubuntu-24.04
         # image with either ~145 GB or ~72 GB of root disk depending on
         # availability, so we clean aggressively here to leave headroom on
         # the smaller variant.  Remove preinstalled toolchains that this job
@@ -181,6 +184,8 @@ jobs:
           df -h /
 
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
         name: Check out repository code
 
       - name: Install dependencies
@@ -259,9 +264,11 @@ jobs:
           if-no-files-found: error
 
   packaging:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
         name: Check out repository code
 
       - name: Install dependencies
@@ -313,9 +320,11 @@ jobs:
           if-no-files-found: error
 
   doxygen:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
         name: Check out repository code
 
       - name: Install dependencies
@@ -340,9 +349,11 @@ jobs:
           if-no-files-found: error
 
   manual:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
         name: Check out repository code
 
       - name: Install dependencies
