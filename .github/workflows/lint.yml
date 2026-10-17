@@ -24,6 +24,10 @@ jobs:
 
       - name: Install clang-18 and cppcheck
         run: |
+          curl -fsSL https://apt.llvm.org/llvm-snapshot.gpg.key -o "$RUNNER_TEMP/llvm-snapshot.gpg.key"
+          printf '%s  %s\n' '8b2a587ffd672c4687e7581dad4b2f6c1bb2ad6b480cd9771ba2ff48e0b8c75d' "$RUNNER_TEMP/llvm-snapshot.gpg.key" | sha256sum --check --status
+          sudo install -m 0644 "$RUNNER_TEMP/llvm-snapshot.gpg.key" /usr/share/keyrings/llvm-archive-keyring.asc
+          echo 'deb [signed-by=/usr/share/keyrings/llvm-archive-keyring.asc] https://apt.llvm.org/noble/ llvm-toolchain-noble-18 main' | sudo tee /etc/apt/sources.list.d/llvm18.list
           sudo apt-get update
           sudo apt-get install -y clang-format-18 clang-tidy-18 cppcheck
           sudo ln -sf /usr/bin/clang-format-18 /usr/local/bin/clang-format
