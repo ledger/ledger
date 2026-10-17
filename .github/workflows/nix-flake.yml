@@ -11,7 +11,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-24.04, macos-latest]
 
     steps:
     - uses: cachix/install-nix-action@v31
@@ -19,6 +19,8 @@ jobs:
         nix_path: nixpkgs=channel:nixos-unstable
 
     - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
 
     # Cache the nix store between runs on the Linux leg.  After
     # `nix build .` the store holds the ledger build together with the
