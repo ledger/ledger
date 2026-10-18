@@ -13,12 +13,11 @@ env:
 
 jobs:
   benchmark:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
         name: Check out PR branch
         with:
-          persist-credentials: false
           fetch-depth: 0
 
       - uses: cachix/install-nix-action@v31

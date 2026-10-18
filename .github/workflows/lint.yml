@@ -9,13 +9,11 @@ on:
 
 jobs:
   lint-check:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Check out repository code
         uses: actions/checkout@v7
-        with:
-          persist-credentials: false
 
       - name: Install build dependencies
         run: |
