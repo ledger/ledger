@@ -1,24 +1,36 @@
-; Test for issue #693: Optimized Ledger crashes when exceptions are thrown
+; Regression test for issue #693: optimized builds crashed whenever an
+; exception was thrown.
 ;
-; This test verifies that exception handling works correctly in optimized builds.
-; Previously, optimized builds would crash when exceptions were thrown due to
-; -fomit-frame-pointer breaking stack unwinding.
-;
-; The key is that these commands should exit with error code 1 (not crash with
-; SIGSEGV exit code 139), showing that exceptions are properly caught and handled.
+; Each case below throws from a different depth and must end with an
+; error message and exit status 1, never a signal.  The Nix flake's
+; check phase runs the suite against a Release build, which is where
+; these cases matter most.
 
 2024/01/01 Test transaction
     Expenses:Test    $100
     Assets:Cash
 
-; Test 1: File not found exception - should return error, not crash
+; Thrown while opening the journal.
 test bal -f /nonexistent/file.dat -> 1
 __ERROR__
 Error: Cannot read journal file "/nonexistent/file.dat"
 end test
 
-; Test 2: Invalid option to trigger an exception
+; Thrown while processing arguments.
 test bal --invalid-option -> 1
 __ERROR__
 Error: Illegal option --invalid-option
+end test
+
+; Thrown deep in report evaluation, then caught and rethrown by three
+; layers that each add context on the way out to main().
+test reg -d 'amount > "abc"' -> 1
+__ERROR__
+While evaluating value expression:
+  (amount > "abc")
+  ^^^^^^^^^^^^^^^^
+While comparing if abc is less than $100:
+While handling posting from "$FILE", line 10:
+>     Expenses:Test    $100
+Error: Cannot compare a string to an amount
 end test
