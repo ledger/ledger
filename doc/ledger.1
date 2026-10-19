@@ -416,6 +416,11 @@ Useful for graphing and spreadsheet applications.
 Set the width in characters of the amount column in the
 .Ic register
 report.
+In the default format of the
+.Ic balance
+report, a value above 20 widens the amount column and its separator line,
+so that amounts too wide for the default column, such as those with many
+decimal places, line up with the rest; a smaller value has no effect.
 .It Fl \-anon
 Anonymize registry output, mostly for sending in bug reports.
 .It Fl \-append-format Ar FMT

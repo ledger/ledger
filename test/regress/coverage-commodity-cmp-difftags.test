@@ -12,5 +12,5 @@
 
 test bal --lots Assets:Brokerage
 10 AAPL {$150} (alpha)
-  5 AAPL {$150} (beta)  Assets:Brokerage
+5 AAPL {$150} (beta)  Assets:Brokerage
 end test

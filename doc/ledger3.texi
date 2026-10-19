@@ -7306,7 +7306,11 @@ Useful for graphing and spreadsheet applications.
 
 @item --amount-width @var{INT}
 Set the width in characters of the amount column in the
-@command{register} report.
+@command{register} report.  In the default format of the
+@command{balance} report, a value above 20 widens the amount column and
+its separator line, so that amounts too wide for the default column,
+such as those with many decimal places, line up with the rest; a smaller
+value has no effect.
 
 @item --anon
 Anonymize registry output, mostly for sending in bug reports.
@@ -7340,11 +7344,17 @@ Specify the format to use for the @command{balance} report (@pxref{Format
 Strings}).  The default is:
 
 @smallexample
-"%(justify(scrub(display_total), 20, -1, true, color))"
+"%(ansify_if("
+"  justify(scrub(display_total), max(int(amount_width),20),"
+"          max(int(amount_width),20) + int(prepend_width), true, color),"
+"            bold if should_bold))"
 "  %(!options.flat ? depth_spacer : \"\")"
-"%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
+"%-(ansify_if("
+"   ansify_if(partial_account(options.flat), blue if color),"
+"             bold if should_bold))\n%/"
 "%$1\n%/"
-"--------------------\n"
+"%(prepend_width ? \" \" * int(prepend_width) : \"\")"
+"%(\"-\" * max(int(amount_width),20))\n"
 @end smallexample
 
 @item --base
@@ -8677,12 +8687,13 @@ each report type:
 
 @item --balance-format @var{FORMAT_STRING}
 Define the output format for the @command{balance} report.  The default
-(defined in @file{report.h} is:
+(defined in @file{report.h}) is:
 
 @smallexample
 "%(ansify_if(
-        justify(scrub(display_total), 20,
-                20 + int(prepend_width), true, color),
+        justify(scrub(display_total), max(int(amount_width),20),
+                max(int(amount_width),20) + int(prepend_width),
+                true, color),
                   bold if should_bold))
         %(!options.flat ? depth_spacer : \"\")
       %-(ansify_if(
@@ -8690,7 +8701,7 @@ Define the output format for the @command{balance} report.  The default
                    bold if should_bold))\n%/
       %$1\n%/
       %(prepend_width ? \" \" * int(prepend_width) : \"\")
-      --------------------\n"
+      %(\"-\" * max(int(amount_width),20))\n"
 @end smallexample
 
 @item --cleared-format @var{FORMAT_STRING}
@@ -11663,11 +11674,17 @@ strings can be, the default balance format looks like this (the various
 functions are described later):
 
 @smallexample
-"%(justify(scrub(display_total), 20, -1, true, color))"
+"%(ansify_if("
+"  justify(scrub(display_total), max(int(amount_width),20),"
+"          max(int(amount_width),20) + int(prepend_width), true, color),"
+"            bold if should_bold))"
 "  %(!options.flat ? depth_spacer : \"\")"
-"%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
+"%-(ansify_if("
+"   ansify_if(partial_account(options.flat), blue if color),"
+"             bold if should_bold))\n%/"
 "%$1\n%/"
-"--------------------\n"
+"%(prepend_width ? \" \" * int(prepend_width) : \"\")"
+"%(\"-\" * max(int(amount_width),20))\n"
 @end smallexample
 
 @node Formatting Functions and Codes,  , Balance format, Format Strings

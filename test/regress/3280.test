@@ -1,0 +1,85 @@
+; Regression test for issue #3280: alignment of the balance report with long
+; commodity names.
+; https://github.com/ledger/ledger/issues/3280
+;
+; The balance report's amount column is 20 characters wide by default, and
+; every amount is right-aligned to it, including each line of a
+; multi-commodity balance.  An amount wider than the column, such as
+; "1 Veryveryverylongname" (22 characters), is printed in full and runs past
+; the column's right edge on its own line.  The other lines of the same
+; balance must stay on the column shared by the rest of the report.  The fix
+; for #1795 had instead widened each balance to its own widest amount, which
+; pushed its other lines two columns right of the same amounts on the other
+; rows.
+
+2023-01-01 * Property
+    Assets:Property                       1 Veryveryverylongname
+    Equity:Opening balance               -1 Veryveryverylongname
+
+2023-01-01 * Property
+    Assets:Property                       1 Shortername
+    Equity:Opening balance               -1 Shortername
+
+2023-01-01 * Bank
+    Assets:Bank                           100.00 USD
+    Equity:Opening balance               -100.00 USD
+
+2023-01-01 * Rewards
+    Assets:Rewards                        10000 Marriott
+    Equity:Opening balance               -10000 Marriott
+
+2023-01-02 * Antiques
+    Collections:Antiques                  1 Aardvarkcollectibles
+    Collections:Antiques                  10.00 USD
+    Equity:Opening balance               -1 Aardvarkcollectibles
+    Equity:Opening balance               -10.00 USD
+
+test bal property
+       1 Shortername
+1 Veryveryverylongname  Assets:Property
+end test
+
+test bal assets
+      10000 Marriott
+       1 Shortername
+          100.00 USD
+1 Veryveryverylongname  Assets
+          100.00 USD    Bank
+       1 Shortername
+1 Veryveryverylongname    Property
+      10000 Marriott    Rewards
+--------------------
+      10000 Marriott
+       1 Shortername
+          100.00 USD
+1 Veryveryverylongname
+end test
+
+; When the wide amount is not the last line of its balance, the account name
+; that follows the last line stays aligned with the other rows' names as well.
+test bal bank antiques
+          100.00 USD  Assets:Bank
+1 Aardvarkcollectibles
+           10.00 USD  Collections:Antiques
+--------------------
+1 Aardvarkcollectibles
+          110.00 USD
+end test
+
+; --amount-width widens the column for the whole report, so that every amount
+; fits and all of them line up.
+test bal assets --amount-width 22
+        10000 Marriott
+         1 Shortername
+            100.00 USD
+1 Veryveryverylongname  Assets
+            100.00 USD    Bank
+         1 Shortername
+1 Veryveryverylongname    Property
+        10000 Marriott    Rewards
+----------------------
+        10000 Marriott
+         1 Shortername
+            100.00 USD
+1 Veryveryverylongname
+end test

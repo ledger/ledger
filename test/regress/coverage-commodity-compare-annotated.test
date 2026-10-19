@@ -18,6 +18,6 @@ P 2024/01/01 GOOG $140.00
 
 test bal Assets:Brokerage --lots
 10 AAPL {$150.00} [2024/01/15] (lot1)
- 5 AAPL {$155.00} [2024/01/20] (lot2)
-                     8 GOOG {$140.00}  Assets:Brokerage
+5 AAPL {$155.00} [2024/01/20] (lot2)
+    8 GOOG {$140.00}  Assets:Brokerage
 end test

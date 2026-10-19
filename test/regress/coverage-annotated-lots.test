@@ -11,9 +11,9 @@
 test bal --lots --args-only --columns=80 -> 0
                    0  Assets
 10 AAPL {$150} [2024/01/15] (lot1)
- 5 AAPL {$160} [2024/02/15] (lot2)    Brokerage
+5 AAPL {$160} [2024/02/15] (lot2)    Brokerage
 -10 AAPL {$150} [2024/01/15] (lot1)
- -5 AAPL {$160} [2024/02/15] (lot2)    Checking
+-5 AAPL {$160} [2024/02/15] (lot2)    Checking
 --------------------
                    0
 end test

@@ -15,6 +15,6 @@
 
 ; Explicit lot selection shows correct remaining lots
 test bal Assets:Broker --lot-matching fifo --lot-prices --lot-dates
- 5 AAPL {$100} [2024/01/01]
+5 AAPL {$100} [2024/01/01]
 10 AAPL {$150} [2024/02/01]  Assets:Broker
 end test

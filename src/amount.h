@@ -723,13 +723,6 @@ public:
 #define AMOUNT_PRINT_ELIDE_COMMODITY_QUOTES 0x08
 #define AMOUNT_PRINT_PRESERVE_TOTAL_COST 0x10
 #define AMOUNT_PRINT_SHOW_ZEROS 0x20
-// balance_t::print: widen the column uniformly if any single commodity's
-// rendered form overflows first_width, so all commodity lines of a
-// multi-commodity balance stay right-aligned with each other and with
-// the suffix (account name) appended after the balance.  Opt-in because
-// unconditionally widening shifts downstream columns in register-style
-// layouts where the balance is one of several fixed-width fields.
-#define AMOUNT_PRINT_FIT_TO_WIDEST 0x40
 
   void print(std::ostream& out, const uint_least8_t flags = AMOUNT_PRINT_NO_FLAGS) const;
 

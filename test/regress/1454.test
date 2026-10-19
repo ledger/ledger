@@ -24,6 +24,6 @@
 
 ; Test that --lots shows both variable {0.05 EUR} and fixed {=0.05 EUR} separately
 test bal expenses --lots
- 200.00 Kc {0.05 EUR}
+200.00 Kc {0.05 EUR}
 100.00 Kc {=0.05 EUR}  Expenses:Food
 end test

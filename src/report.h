@@ -589,8 +589,7 @@ public:
       report_t, balance_format_, CTOR(report_t, balance_format_) {
         on(none, "%(ansify_if("
                  "  justify(scrub(display_total), max(int(amount_width),20),"
-                 "          max(int(amount_width),20) + int(prepend_width), true, color,"
-                 "          true),"
+                 "          max(int(amount_width),20) + int(prepend_width), true, color),"
                  "            bold if should_bold))"
                  "  %(!options.flat ? depth_spacer : \"\")"
                  "%-(ansify_if("

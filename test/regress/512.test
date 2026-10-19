@@ -34,14 +34,14 @@ test bal --lots
       -20,000.00 USD  Exchange
 --------------------
 2.0 BTC {10,000.00 USD} [2018/01/23]
-                      -20,000.00 USD
+      -20,000.00 USD
 end test
 
 test --base bal --lots
 2,000,000.00 bit {0.01 USD} [2018/01/23]  Crypto:BTC
       -20,000.00 USD  Exchange
 --------------------
-                          -20,000.00 USD
+      -20,000.00 USD
 2,000,000.00 bit {0.01 USD} [2018/01/23]
 end test
 

@@ -1,10 +1,14 @@
 ; Regression test for issue #1795: Currencies with Many Decimal Places
 ; https://github.com/ledger/ledger/issues/1795
-; When a multi-commodity balance includes an amount whose rendered form
-; is wider than the amount column (e.g., ETH with 18 decimal places),
-; balance_t::print() must widen the column uniformly so the individual
-; commodity lines stay right-aligned relative to each other and to the
-; account-name suffix emitted by the format string.
+; An ETH balance printed with 18 decimal places is 24 characters wide, wider
+; than the balance report's 20-character amount column.  By design it is
+; printed in full on its own line, while the BTC and USD lines of the same
+; balance stay on the column shared by every other row of the report: the
+; Assets name after the USD line stays aligned with Equity:Adjustment, and
+; only the name that follows the wide amount itself, Crypto's, is pushed
+; right.  Widening just this balance instead would move its other lines off
+; the column (issue #3280).  To fit such amounts, --amount-width widens the
+; column for the whole report, so that all of them line up.
 
 commodity USD
     note United States Dollar
@@ -29,11 +33,25 @@ commodity ETH
     Assets:Crypto
 
 test bal --no-total
+      BTC 0.34000000
+ETH 0.556800000000000000
+          USD 754.00  Assets
+          USD 754.00    Bank
+      BTC 0.34000000
+ETH 0.556800000000000000    Crypto
+       USD -1,000.00  Equity:Adjustment
+end test
+
+test bal --amount-width 24
           BTC 0.34000000
 ETH 0.556800000000000000
               USD 754.00  Assets
-          USD 754.00    Bank
+              USD 754.00    Bank
           BTC 0.34000000
 ETH 0.556800000000000000    Crypto
-       USD -1,000.00  Equity:Adjustment
+           USD -1,000.00  Equity:Adjustment
+------------------------
+          BTC 0.34000000
+ETH 0.556800000000000000
+             USD -246.00
 end test

@@ -25,5 +25,5 @@ end test
 
 test bal --lots Assets:Brokerage
 10 AAPL {$100} [2020/09/15]
- 5 AAPL {$120} [2020/10/20]  Assets:Brokerage
+5 AAPL {$120} [2020/10/20]  Assets:Brokerage
 end test

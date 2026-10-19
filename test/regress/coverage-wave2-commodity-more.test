@@ -38,7 +38,7 @@ end test
 
 test bal --flat --lots Assets:Tagged
 4 BAR {$20.00} (alpha)
- 6 BAR {$20.00} (beta)  Assets:Tagged
+6 BAR {$20.00} (beta)  Assets:Tagged
 end test
 
 ; Test pricesdb - exercises map_prices

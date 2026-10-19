@@ -13,7 +13,7 @@ test bal --lot-dates --args-only --columns=80 -> 0
 10 AAPL [2024/01/15]
  5 AAPL [2024/02/15]    Brokerage
 -10 AAPL [2024/01/15]
- -5 AAPL [2024/02/15]    Checking
+-5 AAPL [2024/02/15]    Checking
 --------------------
                    0
 end test

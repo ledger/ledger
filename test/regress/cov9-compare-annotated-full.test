@@ -16,7 +16,7 @@
     Assets:Cash         $-450.00
 
 test bal --no-total --lots Brokerage
-                      3 AAPL {$150.00}
+    3 AAPL {$150.00}
 10 AAPL {$150.00} [2024/01/01] (lot-a)
- 5 AAPL {$150.00} [2024/06/15] (lot-b)  Assets:Brokerage
+5 AAPL {$150.00} [2024/06/15] (lot-b)  Assets:Brokerage
 end test
