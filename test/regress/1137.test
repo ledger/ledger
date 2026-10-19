@@ -16,9 +16,9 @@
     c
 
 test bal --empty
-                 0 p  a
+                   0  a
                 10 p  b
-                 0 p  c
+                   0  c
                -10 p  z
 --------------------
                    0

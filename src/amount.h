@@ -722,7 +722,6 @@ public:
 #define AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS 0x04
 #define AMOUNT_PRINT_ELIDE_COMMODITY_QUOTES 0x08
 #define AMOUNT_PRINT_PRESERVE_TOTAL_COST 0x10
-#define AMOUNT_PRINT_SHOW_ZEROS 0x20
 // balance_t::print: widen the column uniformly if any single commodity's
 // rendered form overflows first_width, so all commodity lines of a
 // multi-commodity balance stay right-aligned with each other and with
