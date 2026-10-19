@@ -1027,64 +1027,7 @@ value_t report_t::fn_print(call_scope_t& args) {
 }
 
 value_t report_t::fn_scrub(call_scope_t& args) {
-  value_t result = display_value(args.value());
-
-  // When --empty is active and we are in an account scope, augment the
-  // display balance with zero-amount entries for every commodity that
-  // has been visited in this account's postings but has netted to zero
-  // (and was therefore dropped from the accumulated balance).
-  // Skip this augmentation when commodity conversion is active (-X, -V)
-  // because the display commodities differ from the original posting
-  // commodities; inserting zeros for the original commodities would be
-  // misleading (e.g. showing €0.00 when -X $ converted EUR to USD).
-  if (HANDLED(empty) && !HANDLED(exchange_) && !HANDLED(market)) {
-    if (account_t* acct = search_scope<account_t>(&args)) {
-      // Build a working balance from the already-scrubbed result.
-      balance_t bal;
-      if (result.is_balance()) {
-        bal = result.as_balance();
-      } else if (result.is_amount()) {
-        const amount_t& amt = result.as_amount();
-        if (!amt.is_null())
-          bal += amt;
-      }
-
-      // Walk all postings in this account; for each commodity that was
-      // actually visited during this report run (POST_EXT_VISITED) but
-      // is not already present in the scrubbed balance, insert a zero.
-      auto augment = [&](const post_t* post) {
-        if (!post->has_xdata() || !post->xdata().has_flags(POST_EXT_VISITED))
-          return;
-        if (post->amount.is_null())
-          return;
-        // Strip annotations so the lookup key matches what display_value()
-        // produced (e.g. AAPL {$120} -> AAPL).
-        amount_t stripped = post->amount.strip_annotations(what_to_keep());
-        if (!stripped.has_commodity())
-          return;
-        commodity_t* comm = &stripped.commodity();
-        if (!bal.amounts.count(comm)) {
-          amount_t zero_amt;
-          zero_amt.set_commodity(*comm);
-          bal.amounts.insert({comm, zero_amt});
-        }
-      };
-
-      for (const post_t* post : acct->posts)
-        augment(post);
-      if (acct->has_xdata()) {
-        for (const post_t* post : acct->xdata().reported_posts)
-          augment(post);
-      }
-
-      // Only replace the result if we actually added zero entries.
-      if (!bal.is_empty() && (result.is_balance() || result.is_amount() || result.is_null() ||
-                              result.type() == value_t::INTEGER))
-        return value_t(bal);
-    }
-  }
-
-  return result;
+  return display_value(args.value());
 }
 
 value_t report_t::fn_rounded(call_scope_t& args) {
@@ -1184,11 +1127,6 @@ value_t report_t::fn_justify(call_scope_t& args) {
     flags |= AMOUNT_PRINT_RIGHT_JUSTIFY;
   if (args.has<bool>(4) && args.get<bool>(4))
     flags |= AMOUNT_PRINT_COLORIZE;
-  // When --empty is active the scrub() function may have injected zero-amount
-  // entries for commodities that netted to zero; tell balance_t::print() to
-  // emit them instead of silently skipping them.
-  if (HANDLED(empty))
-    flags |= AMOUNT_PRINT_SHOW_ZEROS;
   // Optional 6th argument: widen the first/latter widths uniformly to fit
   // the widest commodity in a multi-commodity balance (used by the balance
   // report to align amounts whose rendered form overflows the nominal

@@ -558,7 +558,7 @@ struct print_amount_from_balance {
 
   /// @brief Format and output a single amount, justified to the column width.
   void operator()(const amount_t& amount) {
-    if (amount.is_zero() && !(flags & AMOUNT_PRINT_SHOW_ZEROS))
+    if (amount.is_zero())
       return;
 
     int width;
@@ -627,7 +627,7 @@ void balance_t::print(std::ostream& out, const int first_width, const int latter
       (flags & AMOUNT_PRINT_FIT_TO_WIDEST)) {
     int widest = 0;
     map_sorted_amounts([&widest, flags](const amount_t& amount) {
-      if (amount.is_zero() && !(flags & AMOUNT_PRINT_SHOW_ZEROS))
+      if (amount.is_zero())
         return;
       std::ostringstream buf;
       amount.print(buf, flags);

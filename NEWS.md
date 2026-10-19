@@ -189,8 +189,7 @@ components with their standard-library equivalents.
 - Align multi-commodity balance rows with wide decimals (#1795); fix
   multi-commodity balance formatting width (#698); make separator lines adapt
   to `amount_width`; show the payee when it changes between sorted postings;
-  show zero commodity amounts with `--empty` in the balance report (extending
-  #2204); preserve virtual posting flags in `equity` output
+  preserve virtual posting flags in `equity` output
 
 - Sort by converted value when `-X` is active (#1556); sort parent accounts by
   family total (#723); allow `--sort` and `--sort-xacts` together; show the
