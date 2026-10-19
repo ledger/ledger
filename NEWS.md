@@ -170,6 +170,13 @@ components with their standard-library equivalents.
   in balance assertions (#2071); and use fixated price annotations for
   multi-commodity balance checking
 
+- Reject a transaction whose costs leave a remainder in a commodity that has
+  appeared only in costs, such as `$1.00 @ 1.02 EUR` against
+  `-$1.00 @ 1.01 EUR`: no written amount has taught such a commodity a display
+  precision, so its remainder is checked at the precision of its costs
+  (#1114).  A commodity whose written amounts have no decimal places is still
+  checked at that precision, as in 3.4.1 (#3278)
+
 ### Reporting and Display Improvements
 
 - Optimize the `register` command for a 46% speedup on large journals (≈50K
