@@ -964,14 +964,16 @@ bool xact_base_t::finalize() {
       }
     }
 
-    // Restore before throwing so commodity state is clean.
-    for (auto& sp : saved_precisions)
-      sp.first->set_precision(sp.second);
     add_error_context(item_context(*this, _("While balancing transaction")));
     add_error_context(_("Unbalanced remainder is:"));
     add_error_context(value_context(balance));
     add_error_context(_("Amount to balance against:"));
     add_error_context(value_context(magnitude()));
+    // Restore before throwing so commodity state is clean, but only once
+    // the remainder has been printed at the precision the check used:
+    // restored first, it printed a remainder that failed the check as "0".
+    for (auto& sp : saved_precisions)
+      sp.first->set_precision(sp.second);
     throw_(balance_error, _("Transaction does not balance"));
   balanced:;
   }
@@ -1103,14 +1105,15 @@ bool xact_base_t::verify() {
   }
 
   if (!balance.is_null() && !balance.is_zero()) {
-    // Restore before throwing so commodity state is clean.
-    for (auto& sp : saved_precisions)
-      sp.first->set_precision(sp.second);
     add_error_context(item_context(*this, _("While balancing transaction")));
     add_error_context(_("Unbalanced remainder is:"));
     add_error_context(value_context(balance));
     add_error_context(_("Amount to balance against:"));
     add_error_context(value_context(magnitude()));
+    // Restore before throwing, once the remainder has been printed at the
+    // precision the check used (see finalize).
+    for (auto& sp : saved_precisions)
+      sp.first->set_precision(sp.second);
     throw_(balance_error, _("Transaction does not balance"));
   }
 

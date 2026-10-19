@@ -23,8 +23,8 @@ While balancing transaction from "$FILE", lines 14-16:
 >     Assets:Bank                                $1.00 @  1.02 EUR
 >     Income:Revenue                            -$1.00 @  1.01 EUR
 Unbalanced remainder is:
-                   0
+          0.0100 EUR
 Amount to balance against:
-            1.02 EUR
+          1.0200 EUR
 Error: Transaction does not balance
 end test
