@@ -258,6 +258,16 @@ account_t* create_temp_account_from_path(std::list<string>& account_names, tempo
   assert(new_account != nullptr);
   return new_account;
 }
+
+/// Give @p account, which a posting has been moved onto while reporting, the
+/// flags of the @p original account it came from.  ACCOUNT_KNOWN stays
+/// behind: the copy was never declared, and --empty lists declared accounts
+/// even when no posting reaches them, so it would show the copy too (#3281).
+void transfer_account_flags(account_t& account, account_t& original) {
+  account.add_flags(original.flags() & ~ACCOUNT_KNOWN);
+  if (original.has_xdata())
+    account.xdata().add_flags(original.xdata().flags());
+}
 } // namespace
 
 /*--- Anonymization ---*/
@@ -1723,9 +1733,7 @@ void transfer_details::operator()(post_t& post) {
         temp.account = create_temp_account_from_path(account_names, temps, xact.journal->master);
         temp.account->add_post(&temp);
 
-        temp.account->add_flags(prev_account->flags());
-        if (prev_account->has_xdata())
-          temp.account->xdata().add_flags(prev_account->xdata().flags());
+        transfer_account_flags(*temp.account, *prev_account);
       }
       break;
     }
@@ -2262,9 +2270,7 @@ void rewrite_posts::operator()(post_t& post) {
     temp.account = create_temp_account_from_path(account_names, temps, journal->master);
     temp.account->add_post(&temp);
 
-    temp.account->add_flags(prev_account->flags());
-    if (prev_account->has_xdata())
-      temp.account->xdata().add_flags(prev_account->xdata().flags());
+    transfer_account_flags(*temp.account, *prev_account);
   }
 
   item_handler<post_t>::operator()(temp);

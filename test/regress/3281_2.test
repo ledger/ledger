@@ -1,0 +1,51 @@
+; Regression test for issue #3281: with --pivot, the pivoted copy of a
+; declared account was itself treated as declared.
+;
+; --pivot moves each posting onto a temporary account such as
+; `Fund:Vanguard:Equity:Opening balance` before --limit filters it, and that
+; account inherited the flags of the original -- including the mark left by
+; the `account` directive.  When --limit then rejected every posting of a
+; declared account, --empty and the accounts listing still showed its
+; pivoted copy, an account that no posting in the report uses.  The
+; declared accounts themselves are still listed under their own names.
+
+account Assets:Pension
+account Equity:Opening balance
+
+2022-01-01 * Opening
+    ; Fund: Vanguard
+    Assets:Pension             100.00 GBP
+    Equity:Opening balance
+
+2022-01-11 Monthly fee
+    ; Fund: Vanguard
+    Expenses:Fees                5.00 GBP
+    Assets:Pension
+
+; Only the fee is uncleared, so the opening balance must not appear under
+; Fund:Vanguard.
+test --empty bal --pivot Fund --uncleared
+                   0  Assets:Pension
+                   0  Equity:Opening balance
+                   0  Fund:Vanguard
+           -5.00 GBP    Assets:Pension
+            5.00 GBP    Expenses:Fees
+--------------------
+                   0
+end test
+
+test accounts --pivot Fund --uncleared
+Assets:Pension
+Equity:Opening balance
+Fund:Vanguard:Assets:Pension
+Fund:Vanguard:Expenses:Fees
+end test
+
+; The second command from the issue report, on data tagged with the fund:
+; every posting is rejected, so nothing appears under Fund:Vanguard.
+test --empty bal --pivot Fund -l 'commodity !~ /GBP/'
+                   0  Assets:Pension
+                   0  Equity:Opening balance
+--------------------
+                   0
+end test
