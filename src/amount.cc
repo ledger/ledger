@@ -1835,6 +1835,12 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
     new_quantity->add_flags(BIGINT_KEEP_PREC);
   } else if (commodity_ && !no_migrate_style) {
     commodity().add_flags(comm_flags);
+    // Record that the precision is learned even when this amount leaves it
+    // unchanged: an amount without decimals teaches a precision of 0, which
+    // the balance check must not mistake for the default (issue #3278).  A
+    // zero teaches nothing, being written without decimals in every currency.
+    if (new_quantity->prec > 0 || quant.find_first_of("123456789") != string::npos)
+      commodity().set_precision_learned();
 
     if (commodity().has_flags(COMMODITY_PRECISION_FROM_PRICE) && new_quantity->prec > 0) {
       // Precision was set tentatively from a price record; a real transaction

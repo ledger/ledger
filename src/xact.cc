@@ -876,10 +876,20 @@ bool xact_base_t::finalize() {
   // a sub-integer remainder like 0.01 EUR as "0" and falsely treat it
   // as zero.  Temporarily widen such commodities to the cost amount's
   // precision for the balance check, then restore (issue #1114).
+  //
+  // A precision of 0 that an amount written in the journal has taught,
+  // as "-1 IHGfreenight" does, is not that default: it states how the
+  // user writes the commodity, and is honored like any other learned
+  // precision.  Widened to the precision of the cost, it would reject
+  // the remainder left by a per-unit price that is a rounded quotient,
+  // such as 0.00008333333333333333333333333333 for 1/12000, or by a
+  // fractional exchange rate into a currency without minor units
+  // (issue #3278).
   std::vector<std::pair<commodity_t*, int>> saved_precisions;
   for (post_t* post : posts) {
     if (post->cost && !post->has_flags(POST_COST_CALCULATED) && post->cost->has_commodity() &&
-        post->cost->commodity().precision() == 0 && post->cost->precision() > 0) {
+        post->cost->commodity().precision() == 0 && !post->cost->commodity().precision_learned() &&
+        post->cost->precision() > 0) {
       commodity_t& comm = post->cost->commodity();
       // Only save once per commodity
       bool already_saved = false;
@@ -1070,12 +1080,14 @@ bool xact_base_t::verify() {
   }
 
   // Cost amounts are parsed with PARSE_NO_MIGRATE, so their precision
-  // is not propagated to the commodity.  Temporarily widen precision-0
-  // cost commodities for the balance check (see finalize, issue #1114).
+  // is not propagated to the commodity.  Temporarily widen cost
+  // commodities whose precision of 0 nothing has taught for the
+  // balance check (see finalize, issues #1114 and #3278).
   std::vector<std::pair<commodity_t*, int>> saved_precisions;
   for (post_t* post : posts) {
     if (post->cost && !post->has_flags(POST_COST_CALCULATED) && post->cost->has_commodity() &&
-        post->cost->commodity().precision() == 0 && post->cost->precision() > 0) {
+        post->cost->commodity().precision() == 0 && !post->cost->commodity().precision_learned() &&
+        post->cost->precision() > 0) {
       commodity_t& comm = post->cost->commodity();
       bool already_saved = false;
       for (auto& sp : saved_precisions)

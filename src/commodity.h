@@ -134,6 +134,7 @@ protected:
     string symbol;                     ///< The canonical commodity name (e.g., "$", "AAPL").
     optional<std::size_t> graph_index; ///< Index into the price history graph adjacency list.
     amount_t::precision_t precision;   ///< Number of decimal places for display.
+    bool precision_learned;            ///< Whether the journal has taught the precision.
     optional<string> name;             ///< Long descriptive name (from commodity directive).
     optional<string> note;             ///< User-supplied note (from commodity directive).
     optional<amount_t> smaller;        ///< Subdivision unit (e.g., cents for dollars).
@@ -156,7 +157,7 @@ protected:
               commodity_t::decimal_comma_by_default
                   ? static_cast<uint_least16_t>(COMMODITY_STYLE_DECIMAL_COMMA)
                   : static_cast<uint_least16_t>(COMMODITY_STYLE_DEFAULTS)),
-          symbol(_symbol), precision(0) {
+          symbol(_symbol), precision(0), precision_learned(false) {
       TRACE_CTOR(commodity_t::base_t, "const string&");
     }
     virtual ~base_t() { TRACE_DTOR(commodity_t::base_t); }
@@ -219,6 +220,24 @@ public:
 
   amount_t::precision_t precision() const { return base->precision; }
   void set_precision(amount_t::precision_t arg) { base->precision = arg; }
+
+  /** @brief Whether the journal has taught this commodity its display
+   *  precision.
+   *
+   *  Set by an observed amount, one parsed without PARSE_NO_MIGRATE such
+   *  as a posting amount or the literal of a balance assertion, even when
+   *  it has no decimals and so leaves the precision at 0; and by the D and
+   *  format directives, which declare the precision.  An observed zero
+   *  without decimals teaches nothing, since zero is written that way in
+   *  every currency.  Costs, lot prices and the plain price of a P
+   *  directive are parsed with PARSE_NO_MIGRATE and teach nothing either,
+   *  so a commodity seen only in them keeps an unlearned precision: the
+   *  default of 0, or the tentative precision of a price directive
+   *  (COMMODITY_PRECISION_FROM_PRICE).  The balance checks of
+   *  xact_base_t::finalize() and verify() rely on telling a learned
+   *  precision of 0 from the default (issues #1114 and #3278). */
+  bool precision_learned() const { return base->precision_learned; }
+  void set_precision_learned(bool arg = true) { base->precision_learned = arg; }
 
   optional<amount_t> smaller() const { return base->smaller; }
   void set_smaller(const optional<amount_t>& arg = none) { base->smaller = arg; }

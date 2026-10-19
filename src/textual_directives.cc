@@ -158,6 +158,8 @@ void instance_t::default_commodity_directive(char* line) {
   VERIFY(amt.valid());
   commodity_pool_t::current_pool->default_commodity = &amt.commodity();
   amt.commodity().add_flags(COMMODITY_KNOWN);
+  // The directive declares the precision, even when its amount is a zero.
+  amt.commodity().set_precision_learned();
   // Set COMMODITY_STYLE_NO_MIGRATE to lock the format and prevent
   // observational formatting from overriding it (issue #1197).  When
   // the directive is bare, amt.commodity() returns null_commodity, so
@@ -872,6 +874,7 @@ void instance_t::commodity_format_directive(commodity_t& comm, string format) {
   // above only updates precision when the new precision is greater, but a
   // format directive should be authoritative and set the exact precision.
   amt.commodity().set_precision(amt.precision());
+  amt.commodity().set_precision_learned();
   amt.commodity().add_flags(COMMODITY_STYLE_NO_MIGRATE);
   VERIFY(amt.valid());
 }

@@ -1,0 +1,18 @@
+; Regression test for issue #3278: the balance check honors a precision of
+; 0 that whole-number amounts have taught, whatever left the remainder.
+;
+; -22 EUR teaches EUR a precision of 0.  The cost of (1/9 FOO) @ 200 EUR is
+; 22.222222 EUR, and its remainder of 0.222222 EUR is zero at that
+; precision, so the transaction balances, as it did before the fix for
+; issue #1114.  1114.test once rejected this journal; it now checks the
+; journal from that issue, in which EUR appears only in costs.
+
+2015/01/01 Fractional cost against a whole-number total
+    Expenses:Food   (1/9 FOO) @ 200 EUR
+    Assets:Cash     -22 EUR
+
+test print
+2015/01/01 Fractional cost against a whole-number total
+    Expenses:Food                          (1/9 FOO) @ 200 EUR
+    Assets:Cash                              -22 EUR
+end test
