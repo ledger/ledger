@@ -716,6 +716,20 @@ struct accounts_flusher {
 
 void report_t::accounts_report(
     acct_handler_ptr handler) { // NOLINT(performance-unnecessary-value-param)
+  // With --flat every account has a line of its own, so an account whose
+  // sub-accounts are listed as well shows only its own amount rather than
+  // the family total (#1987); one whose sub-accounts are all hidden, e.g. by
+  // --depth, still shows the family total (#1020), as does the grand total
+  // line.  This is only the default total of an account report, so it is
+  // installed here, after every option has been parsed, as the base of
+  // the --total chain: --round and --unround wrap it, while an explicit
+  // --total or --percent replaces it whatever the order of the options.
+  // Posting reports never see it, and is_account protects the postings
+  // that account reports evaluate along the way (#3282).
+  if (HANDLED(flat) && HANDLER(total_).expr.base_expr == "total")
+    HANDLER(total_).expr.set_base_expr(
+        "is_account & parent & has_children_to_display ? amount : total");
+
   post_handler_ptr chain = chain_post_handlers(post_handler_ptr(new ignore_posts), *this,
                                                /* for_accounts_report= */ true);
   if (HANDLED(group_by_)) {
