@@ -57,9 +57,13 @@ Only show totals for the top-most accounts.
 .It Fl \-empty Pq Fl E
 Show accounts whose total is zero.
 .It Fl \-flat
-Rather than display a hierarchical tree, flatten the report to show subtotals
-for only accounts matching
-.Ar report-query .
+Rather than display a hierarchical tree, flatten the report to show only the
+accounts matching
+.Ar report-query ,
+each with its full name and its own amount.
+An account whose sub-accounts are all hidden, for example by
+.Fl \-depth ,
+shows the total of the account and its sub-accounts instead.
 .It Fl \-no-total
 Suppress the summary total shown at the bottom of the report.
 .El
@@ -729,7 +733,13 @@ Alias for
 .Fl \-head .
 .It Fl \-flat
 Force the full names of accounts to be used in the balance report.  The
-balance report will not use an indented tree.
+balance report will not use an indented tree, and since every account then
+has a line of its own, an account whose sub-accounts are listed as well
+shows only its own amount, not the total of the account and its
+sub-accounts.
+An account whose sub-accounts are all hidden, for example by
+.Fl \-depth ,
+shows that total instead.
 .It Fl \-force-color
 Output TTY color codes even if the TTY doesn't support them.  Useful
 for TTYs that don't advertise their capabilities correctly.

@@ -7683,7 +7683,11 @@ should be displayed that way.
 
 @item --flat
 Force the full names of accounts to be used in the balance report.  The
-balance report will not use an indented tree.
+balance report will not use an indented tree, and since every account then
+has a line of its own, an account whose sub-accounts are listed as well
+shows only its own amount, not the total of the account and its
+sub-accounts.  An account whose sub-accounts are all hidden, for example
+by @option{--depth}, shows that total instead.
 
 @item --force-color
 Output TTY color codes even if the TTY doesn't support them.  Useful
