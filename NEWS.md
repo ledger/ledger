@@ -172,6 +172,18 @@ components with their standard-library equivalents.
 
 ### Reporting and Display Improvements
 
+- `--flat` now lists each account with its own amount rather than the total
+  of the account and its sub-accounts (#1987), which changes the output of
+  existing reports.  An account with postings of its own as well as
+  sub-accounts used to show its family total, counting the sub-accounts'
+  amounts a second time, so the lines did not add up to the total beneath
+  them.  An account whose sub-accounts are all hidden, for example by
+  `--depth`, shows its family total instead, and is no longer left out when
+  it has no postings of its own (#1020).  This affects `balance`, `cleared`,
+  `budget`, and `select ... from accounts`, but not posting reports such as
+  `register`, and an explicit `--total` or `--percent` still takes
+  precedence.  Use the tree view, without `--flat`, to see family totals.
+
 - Optimize the `register` command for a 46% speedup on large journals (≈50K
   postings: 6.0s → 3.3s on the benchmark) by short-circuiting the trivial
   `amount` expression, exploiting `strip(A+B) = strip(A)+strip(B)` to maintain
@@ -193,8 +205,7 @@ components with their standard-library equivalents.
   #2204); preserve virtual posting flags in `equity` output
 
 - Sort by converted value when `-X` is active (#1556); sort parent accounts by
-  family total (#723); allow `--sort` and `--sort-xacts` together; show the
-  own amount instead of the family total in `--flat` balance mode
+  family total (#723); allow `--sort` and `--sort-xacts` together
 
 - Enable ANSI color on Windows CMD/PowerShell (#2110); fix `justify()` to
   ignore ANSI escape codes when computing width; flush stdout after each REPL
@@ -237,7 +248,7 @@ components with their standard-library equivalents.
   command-line account queries (#1154), with built-in properties (#1048), and
   with tag-based grouping (#1042); fix `--group-by` combined with `--pivot`
   dropping subsequent groups (#1034); fix `--depth` interacting with
-  `--effective` and with `--flat`; fix `--only` so it applies after
+  `--effective` (#2599); fix `--only` so it applies after
   `calc_posts` and does not alter running totals (#762); compute per-account
   averages for period reports (#1950); anchor interval averages to the report
   begin date
