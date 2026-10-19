@@ -12,6 +12,8 @@ effects across the entire CLI surface.
 
 ## Quick Start
 
+Run the commands in this guide from the top of the source tree.
+
 ```bash
 # Capture a baseline snapshot (curated combos only, ~438 combos, <1s)
 python3 test/snapshot.py ./build/ledger test/input/drewr3.dat /tmp/before
