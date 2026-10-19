@@ -31,12 +31,12 @@ commodity EUR
 
 test bal broker --lots
 8.00 APPL {1.02608696 EUR} [2017/01/20]
-                              15.39 EUR  Broker
+           15.39 EUR  Broker
            15.39 EUR    Profits
 8.00 APPL {1.02608696 EUR} [2017/01/20]    Stock
 --------------------
 8.00 APPL {1.02608696 EUR} [2017/01/20]
-                              15.39 EUR
+           15.39 EUR
 end test
 
 ; The same journal, reported as a plain balance, should net out to a

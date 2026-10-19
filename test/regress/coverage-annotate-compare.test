@@ -15,7 +15,7 @@
     Assets:Checking    $-435.00
 
 test bal Assets:Brokerage --lots --sort 'd' -> 0
- 3 AAPL {$145.00} [2024/01/03] (lotC)
+3 AAPL {$145.00} [2024/01/03] (lotC)
 10 AAPL {$150.00} [2024/01/01] (lotA)
- 5 AAPL {$155.00} [2024/01/02] (lotB)  Assets:Brokerage
+5 AAPL {$155.00} [2024/01/02] (lotB)  Assets:Brokerage
 end test

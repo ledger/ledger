@@ -8,11 +8,11 @@
     Assets:Savings
 
 test bal --lots
-                     $-250
+               $-250
 25 AMZN {$10} [2021/01/05]  Assets
                $-250    Savings
 25 AMZN {$10} [2021/01/05]    Stocks
 --------------------
-                     $-250
+               $-250
 25 AMZN {$10} [2021/01/05]
 end test

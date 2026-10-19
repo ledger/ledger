@@ -31,7 +31,7 @@ end test
 ; Balance with lots
 test bal --lots Assets:Brokerage
 10 AAPL {$150} [2024/01/01]
- 5 AAPL {$155} [2024/01/02]  Assets:Brokerage
+5 AAPL {$155} [2024/01/02]  Assets:Brokerage
 end test
 
 ; Stripping annotations exercises strip_annotations

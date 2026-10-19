@@ -13,7 +13,7 @@
     Assets:Cash
 
 test bal Assets:Brokerage --lots --lot-dates
-                        3 AAPL
+              3 AAPL
 10 AAPL {$150.00} [2024/01/01]
- 5 AAPL {$160.00} [2024/01/02]  Assets:Brokerage
+5 AAPL {$160.00} [2024/01/02]  Assets:Brokerage
 end test

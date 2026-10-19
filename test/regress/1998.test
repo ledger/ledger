@@ -4,10 +4,10 @@
     Equity
 
 test bal --lots
- 1 Stock {EUR100} [2021/01/01]
+1 Stock {EUR100} [2021/01/01]
 -1 Stock {USD100} [2021/01/01]  Assets
 -1 Stock {EUR100} [2021/01/01]
- 1 Stock {USD100} [2021/01/01]  Equity
+1 Stock {USD100} [2021/01/01]  Equity
 --------------------
                    0
 end test

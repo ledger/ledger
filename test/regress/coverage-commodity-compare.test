@@ -22,10 +22,10 @@
 test bal --flat --lots
 10 AAPL {$150} [2024/01/15] (lot1)
 10 AAPL {$155} [2024/01/20] (lot2)
- 5 GOOG {$100} [2024/01/25] (lotG)  Assets:Brokerage
+5 GOOG {$100} [2024/01/25] (lotG)  Assets:Brokerage
 -10 AAPL {$150} [2024/01/15] (lot1)
 -10 AAPL {$155} [2024/01/20] (lot2)
- -5 GOOG {$100} [2024/01/25] (lotG)  Assets:Cash
+-5 GOOG {$100} [2024/01/25] (lotG)  Assets:Cash
 --------------------
                    0
 end test

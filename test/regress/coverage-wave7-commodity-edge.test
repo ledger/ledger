@@ -31,8 +31,8 @@ P 2024/03/01 00:00:00 AAPL $160.00
     Assets:Cash
 
 test bal Assets:Brokerage --lots
-            10 AAPL {$150.00}
+   10 AAPL {$150.00}
 5 AAPL {$155.00} [2024/02/15]
-           100 AAPL {$160.00}
-            3 AAPL {=$160.00}  Assets:Brokerage
+  100 AAPL {$160.00}
+   3 AAPL {=$160.00}  Assets:Brokerage
 end test

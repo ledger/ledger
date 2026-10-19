@@ -11,5 +11,5 @@
 
 test bal --lots Assets:Broker
 10 AAPL {$150.00} [2024/01/01] (lot1)
-                    5 AAPL {=$155.00}  Assets:Broker
+   5 AAPL {=$155.00}  Assets:Broker
 end test

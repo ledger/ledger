@@ -37,11 +37,11 @@
 
 ; Test stripping annotations with --lot-prices only
 test bal Assets:Brokerage --lots --lot-prices --no-total
-            10 AAPL {$100}
- 5 AAPL {$100} (lot-alpha)
-  3 AAPL {$100} (lot-beta)
-            10 AAPL {$105}
-            5 AAPL {=$110}
+      10 AAPL {$100}
+5 AAPL {$100} (lot-alpha)
+3 AAPL {$100} (lot-beta)
+      10 AAPL {$105}
+      5 AAPL {=$110}
 2 AAPL {$115} [2024/02/01]  Assets:Brokerage
 end test
 
@@ -52,20 +52,20 @@ end test
 
 ; Test with lot-dates only
 test bal Assets:Brokerage --lots --lot-dates --no-total
-            10 AAPL {$100}
- 5 AAPL {$100} (lot-alpha)
-  3 AAPL {$100} (lot-beta)
-            10 AAPL {$105}
-            5 AAPL {=$110}
+      10 AAPL {$100}
+5 AAPL {$100} (lot-alpha)
+3 AAPL {$100} (lot-beta)
+      10 AAPL {$105}
+      5 AAPL {=$110}
 2 AAPL {$115} [2024/02/01]  Assets:Brokerage
 end test
 
 ; Test with lot-tags only
 test bal Assets:Brokerage --lots --lot-tags --no-total
-            10 AAPL {$100}
- 5 AAPL {$100} (lot-alpha)
-  3 AAPL {$100} (lot-beta)
-            10 AAPL {$105}
-            5 AAPL {=$110}
+      10 AAPL {$100}
+5 AAPL {$100} (lot-alpha)
+3 AAPL {$100} (lot-beta)
+      10 AAPL {$105}
+      5 AAPL {=$110}
 2 AAPL {$115} [2024/02/01]  Assets:Brokerage
 end test

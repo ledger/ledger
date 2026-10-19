@@ -18,8 +18,8 @@
 
 ; Without lot matching, the sale creates its own lot entry
 test bal --lots Assets:Crypto
- 2 BTC {$8000} [2020/01/15]
- 1 BTC {$9000} [2020/03/20]
+2 BTC {$8000} [2020/01/15]
+1 BTC {$9000} [2020/03/20]
 -1 BTC {$9500} [2020/06/01]  Assets:Crypto
 end test
 

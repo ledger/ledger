@@ -597,9 +597,10 @@ struct print_amount_from_balance {
 /// line; @p latter_width controls subsequent lines, which is useful when
 /// the balance appears in a right-aligned column of a register report.
 ///
-/// If any commodity's rendered form is wider than the requested column,
-/// the column is widened uniformly to fit the widest amount so that all
-/// lines of the balance remain right-aligned with each other (issue #1795).
+/// An amount wider than its column is printed in full and runs past the
+/// column's right edge.  The column is not widened to fit it, since the
+/// report's other rows share the column: the remaining lines of this
+/// balance stay aligned with those rows (issue #3280).
 ///
 /// If the balance is empty or all amounts are zero, a single "0" is
 /// printed, justified to @p first_width.
@@ -607,44 +608,13 @@ struct print_amount_from_balance {
 /// @param out           The output stream.
 /// @param first_width   Column width for the first commodity line.
 /// @param latter_width  Column width for subsequent lines (defaults to
-///                      first_width if set to 1).
+///                      first_width if negative).
 /// @param flags         Formatting flags (right-justify, colorize, etc.).
 void balance_t::print(std::ostream& out, const int first_width, const int latter_width,
                       const uint_least8_t flags) const {
-  int effective_first = first_width;
-  int effective_latter = latter_width < 0 ? first_width : latter_width;
-
-  // When AMOUNT_PRINT_FIT_TO_WIDEST is requested (balance report), widen
-  // the column uniformly if any single commodity's rendered form would
-  // overflow first_width.  Without this, a balance whose widest amount
-  // exceeds the nominal column (e.g., ETH with 18-place precision) prints
-  // without leading padding while narrower siblings (BTC, USD) are padded
-  // to the nominal column, causing the suffix appended after the balance
-  // (the account name) to land at an inconsistent column (issue #1795).
-  // Opt-in because the register format embeds first_width/latter_width in
-  // a fixed column grid; widening there would shift downstream columns.
-  if (first_width > 0 && (flags & AMOUNT_PRINT_RIGHT_JUSTIFY) &&
-      (flags & AMOUNT_PRINT_FIT_TO_WIDEST)) {
-    int widest = 0;
-    map_sorted_amounts([&widest, flags](const amount_t& amount) {
-      if (amount.is_zero() && !(flags & AMOUNT_PRINT_SHOW_ZEROS))
-        return;
-      std::ostringstream buf;
-      amount.print(buf, flags);
-      const int w = static_cast<int>(unistring(strip_ansi_escapes(buf.str())).width());
-      if (w > widest)
-        widest = w;
-    });
-
-    // Expand both widths by the same amount so that any prefix padding
-    // encoded in latter_width (e.g., --prepend-format output) is preserved.
-    const int extra = std::max(0, widest - first_width);
-    effective_first += extra;
-    effective_latter += extra;
-  }
-
   bool first = true;
-  print_amount_from_balance amount_printer(out, first, effective_first, effective_latter, flags);
+  print_amount_from_balance amount_printer(out, first, first_width,
+                                           latter_width < 0 ? first_width : latter_width, flags);
   map_sorted_amounts(amount_printer);
 
   if (first)

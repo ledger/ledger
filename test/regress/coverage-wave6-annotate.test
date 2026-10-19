@@ -17,10 +17,10 @@
     Assets:Checking    $-3000.00
 
 test bal Assets:Investments --lots
-           10 AAPL {=$150.00}
+  10 AAPL {=$150.00}
 5 AAPL {$155.00} [2020/02/01]
-      3 AAPL {$160.00} (lot1)
-            2 GOLD {$1500.00}  Assets:Investments
+3 AAPL {$160.00} (lot1)
+   2 GOLD {$1500.00}  Assets:Investments
 end test
 
 test reg Assets:Investments

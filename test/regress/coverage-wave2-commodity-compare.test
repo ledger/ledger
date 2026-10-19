@@ -32,7 +32,7 @@ end test
 
 ; Lots with and without tags - exercises tag comparison paths
 test bal --lots --flat Assets:Other
-         5 GOOG {$100.00} [2024/01/04]
+5 GOOG {$100.00} [2024/01/04]
 5 GOOG {$100.00} [2024/01/05] (tagged)  Assets:Other
 end test
 

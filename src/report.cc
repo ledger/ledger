@@ -1189,12 +1189,6 @@ value_t report_t::fn_justify(call_scope_t& args) {
   // emit them instead of silently skipping them.
   if (HANDLED(empty))
     flags |= AMOUNT_PRINT_SHOW_ZEROS;
-  // Optional 6th argument: widen the first/latter widths uniformly to fit
-  // the widest commodity in a multi-commodity balance (used by the balance
-  // report to align amounts whose rendered form overflows the nominal
-  // column width; see issue #1795).
-  if (args.has<bool>(5) && args.get<bool>(5))
-    flags |= AMOUNT_PRINT_FIT_TO_WIDEST;
 
   std::ostringstream out;
   args[0].print(out, args.get<int>(1), args.has<int>(2) ? args.get<int>(2) : -1, flags);

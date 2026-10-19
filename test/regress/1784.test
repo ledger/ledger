@@ -35,12 +35,12 @@ end test
 ; Verify lot information is preserved correctly
 test bal --lots
 28 ABCDEF {10.00 EUR} [2022/08/03]
-                       -280.00 EUR  Assets
+         -280.00 EUR  Assets
          -280.00 EUR    Bank
 28 ABCDEF {10.00 EUR} [2022/08/03]    depot
 --------------------
 28 ABCDEF {10.00 EUR} [2022/08/03]
-                       -280.00 EUR
+         -280.00 EUR
 end test
 
 ; Verify the cost basis is correct for capital gains calculations
