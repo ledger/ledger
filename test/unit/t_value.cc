@@ -3596,12 +3596,17 @@ BOOST_AUTO_TEST_CASE(testPrintNegativeIntegerColorize)
 {
   value_t v1(-42L);
   std::ostringstream out;
-  v1.print(out, 10, -1, AMOUNT_PRINT_COLORIZE);
+  v1.print(out, 10, -1, AMOUNT_PRINT_COLORIZE, "\033[31m");
   BOOST_CHECK_EQUAL(out.str(), "\033[31m-42\033[0m       ");
 
   std::ostringstream right;
-  v1.print(right, 10, -1, AMOUNT_PRINT_COLORIZE | AMOUNT_PRINT_RIGHT_JUSTIFY);
+  v1.print(right, 10, -1, AMOUNT_PRINT_COLORIZE | AMOUNT_PRINT_RIGHT_JUSTIFY, "\033[31m");
   BOOST_CHECK_EQUAL(right.str(), "       \033[31m-42\033[0m");
+
+  // Without a color to render it in, the number is printed plainly.
+  std::ostringstream plain;
+  v1.print(plain, 10, -1, AMOUNT_PRINT_COLORIZE | AMOUNT_PRINT_RIGHT_JUSTIFY);
+  BOOST_CHECK_EQUAL(plain.str(), "       -42");
 }
 
 BOOST_AUTO_TEST_CASE(testPrintIntegerLeftJustify)
@@ -3632,8 +3637,14 @@ BOOST_AUTO_TEST_CASE(testPrintNonZeroAmountColorize)
 {
   value_t v1(amount_t("-$42.00"));
   std::ostringstream out;
-  v1.print(out, 10, -1, AMOUNT_PRINT_COLORIZE);
-  BOOST_CHECK(!out.str().empty());
+  v1.print(out, 10, -1, AMOUNT_PRINT_COLORIZE | AMOUNT_PRINT_RIGHT_JUSTIFY, "\033[38;5;196m");
+  BOOST_CHECK_EQUAL(out.str(), "   \033[38;5;196m$-42.00\033[0m");
+
+  // A positive amount is not colored.
+  value_t v2(amount_t("$42.00"));
+  std::ostringstream positive;
+  v2.print(positive, 10, -1, AMOUNT_PRINT_COLORIZE | AMOUNT_PRINT_RIGHT_JUSTIFY, "\033[38;5;196m");
+  BOOST_CHECK_EQUAL(positive.str(), "    $42.00");
 }
 
 BOOST_AUTO_TEST_CASE(testPrintNonZeroAmountRightJustify)

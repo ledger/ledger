@@ -2480,8 +2480,11 @@ string value_t::label(optional<type_t> the_type) const {
 ///                      BALANCE which may span multiple lines).
 /// @param flags         Bitmask of AMOUNT_PRINT_* flags controlling
 ///                      right-justification, colorization, etc.
+/// @param negative_color  The ANSI escape sequence with which
+///                      AMOUNT_PRINT_COLORIZE renders negative values;
+///                      empty renders them without color.
 void value_t::print(std::ostream& _out, const int first_width, const int latter_width,
-                    const uint_least8_t flags) const {
+                    const uint_least8_t flags, const string& negative_color) const {
   // We buffer into a local ostringstream so that width and justification
   // settings do not leak into the caller's stream.
   std::ostringstream out;
@@ -2519,7 +2522,7 @@ void value_t::print(std::ostream& _out, const int first_width, const int latter_
     if (flags & AMOUNT_PRINT_COLORIZE && as_long() < 0) {
       // justify() pads the number itself, so drop the width set above.
       out.width(0);
-      justify(out, to_string(), first_width, flags & AMOUNT_PRINT_RIGHT_JUSTIFY, true);
+      justify(out, to_string(), first_width, flags & AMOUNT_PRINT_RIGHT_JUSTIFY, negative_color);
     } else {
       out << as_long();
     }
@@ -2532,13 +2535,14 @@ void value_t::print(std::ostream& _out, const int first_width, const int latter_
       std::ostringstream buf;
       as_amount().print(buf, flags);
       justify(out, buf.str(), first_width, flags & AMOUNT_PRINT_RIGHT_JUSTIFY,
-              flags & AMOUNT_PRINT_COLORIZE && as_amount().sign() < 0);
+              (flags & AMOUNT_PRINT_COLORIZE && as_amount().sign() < 0) ? negative_color
+                                                                        : empty_string);
     }
     break;
   }
 
   case BALANCE:
-    as_balance().print(out, first_width, latter_width, flags);
+    as_balance().print(out, first_width, latter_width, flags, negative_color);
     break;
 
   case COMMODITY:

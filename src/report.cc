@@ -1148,8 +1148,10 @@ value_t report_t::fn_justify(call_scope_t& args) {
   if (args.has<bool>(5) && args.get<bool>(5))
     flags |= AMOUNT_PRINT_FIT_TO_WIDEST;
 
+  // Colorized negative amounts are red.
   std::ostringstream out;
-  args[0].print(out, args.get<int>(1), args.has<int>(2) ? args.get<int>(2) : -1, flags);
+  args[0].print(out, args.get<int>(1), args.has<int>(2) ? args.get<int>(2) : -1, flags,
+                (flags & AMOUNT_PRINT_COLORIZE) ? color_escape("red") : string());
 
   return string_value(out.str());
 }

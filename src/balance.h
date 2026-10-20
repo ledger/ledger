@@ -552,9 +552,13 @@ public:
    * with commodities in alphabetized order, regardless of the
    * relative amounts of those commodities.  There is no option to
    * change this behavior.
+   *
+   * With AMOUNT_PRINT_COLORIZE in flags, each negative amount is
+   * rendered with the ANSI escape sequence negative_color, if given.
    */
   void print(std::ostream& out, const int first_width = -1, const int latter_width = -1,
-             const uint_least8_t flags = AMOUNT_PRINT_NO_FLAGS) const;
+             const uint_least8_t flags = AMOUNT_PRINT_NO_FLAGS,
+             const string& negative_color = empty_string) const;
 
   /**
    * Debugging methods.  There are two methods defined to help with
