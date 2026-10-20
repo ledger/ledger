@@ -1,0 +1,7 @@
+test python test/regress/3261.py
+larger: Commodity conversion requires a commodity on each side
+10 X {$1}
+smaller: Commodity conversion requires a commodity on each side
+10 X
+120 Y
+end test

@@ -1,12 +1,17 @@
+; Regression test for issue #2057: C 1 "" = 1 € crashed the balance
+; report, which followed the euro's link to a bare amount and read the
+; commodity that amount lacks.  A conversion needs a commodity on each
+; side, so since issue #3261 the directive is rejected and that link is
+; never made.
+
 C 1 "" = 1 $
 
 2021-01-01 Test
     A               $10
     B
 
-test bal
-                  10  A
-                 -10  B
---------------------
-                   0
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 7:
+Error: Commodity conversion requires a commodity on each side
 end test

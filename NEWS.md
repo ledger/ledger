@@ -132,6 +132,19 @@ components with their standard-library equivalents.
   the `C` directive interaction with `-X` (#1066), and
   crash-when-empty-commodity in `getquote` (#1869)
 
+- Reject a `C` directive without a commodity on each side (#3261): equating a
+  commodity with a bare number merged the two, and reports showed the
+  commodity's amounts without its symbol or number format, whichever side the
+  bare number stood on.  To report amounts without their symbol, transform
+  them at report time instead, as with `--amount 'quantity(amount)'` in a
+  single-commodity journal
+
+- Detect every cycle a `C` directive would close (#1065): a commodity
+  converted into itself, directly, through an alias or from an annotated
+  form, failed an assertion or linked the commodity to itself, and a cycle
+  closed through annotated forms ran amounts round the chain into numbers
+  like 2^100
+
 - Add `--decimal-places` to limit display precision (#797), accept an optional
   precision argument in `round()` (#628), and add a `--round` option that
   rounds each posting before aggregation (#781) plus a `--round` option that
@@ -360,6 +373,11 @@ components with their standard-library equivalents.
   `TypeError` when accessing `boost::optional` fields like `note`; use checked
   utfcpp functions for Python string conversion; restore terminal settings
   after `ledger python` exits (#774)
+
+- Raise `ValueError` when a Python `Commodity`'s `smaller` or `larger` link is
+  set to an amount without a commodity, which a `C` directive may no longer
+  create either (#3261); unreducing an annotated amount through such a link
+  crashed
 
 ### New Commands and Directives
 

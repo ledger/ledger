@@ -1941,12 +1941,22 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
  * @param larger_str   String representation of the larger unit (e.g. "1.0h").
  * @param smaller_str  String representation of the equivalent smaller
  *                     unit (e.g. "60m").
+ * @throws parse_error if either amount lacks a commodity, or if the new
+ *         link would close a cycle of conversions.
  */
 void amount_t::parse_conversion(const string& larger_str, const string& smaller_str) {
   amount_t larger, smaller;
 
   (void)larger.parse(larger_str, PARSE_NO_REDUCE);
   (void)smaller.parse(smaller_str, PARSE_NO_REDUCE);
+
+  // A conversion relates two units, and an amount without a commodity
+  // names none.  Equating a commodity with bare numbers would merge it
+  // into them, and reports would show its amounts without their symbol
+  // or number format, whichever side the bare number was written on
+  // (issue #3261).
+  if (!larger.has_commodity() || !smaller.has_commodity())
+    throw parse_error(_("Commodity conversion requires a commodity on each side"));
 
   // Normalize so the stored smaller/larger links represent a per-unit
   // conversion factor (issue #1793).  For "C 100 apple = 48 kcal" the
@@ -1964,28 +1974,33 @@ void amount_t::parse_conversion(const string& larger_str, const string& smaller_
   // Detect cycles before setting the smaller/larger links (bug #1065).
   // The C directive (e.g. "C 3600s = 1h") can create cycles when there
   // is already a chain connecting the two commodities.  Walk both chains
-  // to verify that the new link would not close a loop.
-  if (larger.commodity_ && smaller.commodity_) {
-    // Would setting larger_commodity.smaller = smaller create a cycle?
-    // Walk the existing smaller chain from smaller's commodity.
-    for (commodity_t* c = smaller.commodity_; c && c->smaller(); c = c->smaller()->commodity_) {
-      if (c->smaller()->commodity_ == larger.commodity_)
-        throw parse_error(_("Commodity conversion would create a cycle"));
-    }
-    // Would setting smaller_commodity.larger = larger create a cycle?
-    // Walk the existing larger chain from larger's commodity.
-    for (commodity_t* c = larger.commodity_; c && c->larger(); c = c->larger()->commodity_) {
-      if (c->larger()->commodity_ == smaller.commodity_)
-        throw parse_error(_("Commodity conversion would create a cycle"));
-    }
+  // to verify that the new link would not close a loop.  The links live on
+  // a commodity's base, which its annotated forms share, so commodities are
+  // compared by referent; and each walk begins a link past the commodity it
+  // starts from, so a commodity converted into itself, a cycle of one link,
+  // has to be caught first.
+  auto same_unit = [](const commodity_t& a, const commodity_t& b) {
+    return a.referent() == b.referent();
+  };
+  if (same_unit(larger.commodity(), smaller.commodity()))
+    throw parse_error(_("Commodity conversion would create a cycle"));
+
+  // Would setting larger_commodity.smaller = smaller create a cycle?
+  // Walk the existing smaller chain from smaller's commodity.
+  for (commodity_t* c = smaller.commodity_; c && c->smaller(); c = c->smaller()->commodity_) {
+    if (same_unit(c->smaller()->commodity(), larger.commodity()))
+      throw parse_error(_("Commodity conversion would create a cycle"));
+  }
+  // Would setting smaller_commodity.larger = larger create a cycle?
+  // Walk the existing larger chain from larger's commodity.
+  for (commodity_t* c = larger.commodity_; c && c->larger(); c = c->larger()->commodity_) {
+    if (same_unit(c->larger()->commodity(), smaller.commodity()))
+      throw parse_error(_("Commodity conversion would create a cycle"));
   }
 
-  if (larger.commodity()) {
-    larger.commodity().set_smaller(smaller);
-    larger.commodity().add_flags(smaller.commodity().flags() | COMMODITY_NOMARKET);
-  }
-  if (smaller.commodity())
-    smaller.commodity().set_larger(larger);
+  larger.commodity().set_smaller(smaller);
+  larger.commodity().add_flags(smaller.commodity().flags() | COMMODITY_NOMARKET);
+  smaller.commodity().set_larger(larger);
 }
 
 /*----------------------------------------------------------------------*/

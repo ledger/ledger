@@ -2843,6 +2843,12 @@ decimal precision desired during reporting:
 C 1.00 Kb = 1024 bytes
 @end smallexample
 
+Both amounts must name a commodity: a conversion relates two units, and
+a bare number is not one, so a directive such as @samp{C 1 EUR = 1} is
+an error.  To report amounts without their commodity symbol, transform
+them at report time instead; in a journal kept in a single commodity,
+@samp{--amount 'quantity(amount)'} does this.
+
 @item I, i, O, o, b, h
 @findex I
 @findex i
