@@ -117,8 +117,14 @@ public:
   /// Unlike operator=, this compiles case-sensitively for filesystem matching.
   mask_t& assign_glob(string_view other);
 
-  bool operator<(const mask_t& other) const { return expr < other.expr; }
-  bool operator==(const mask_t& other) const { return expr == other.expr; }
+  // Not expr == other.expr: before Boost 1.89, basic_regex::compare() calls
+  // the str() that mask_t::str() below avoids.  Comparing empty() keeps a
+  // default mask unequal to an empty pattern compiled with the same (zero)
+  // flags.
+  bool operator==(const mask_t& other) const {
+    return expr.empty() == other.expr.empty() && expr.flags() == other.expr.flags() &&
+           std::equal(expr.begin(), expr.end(), other.expr.begin(), other.expr.end());
+  }
 
   /// Test whether @p text matches this mask's regex pattern.
   /// Applies diacritics folding when `ignore_diacritics` is active.
