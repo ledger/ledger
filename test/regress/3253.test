@@ -1,0 +1,68 @@
+; Regression test for issue #3253: interactive and --script sessions must
+; give the results the command line gives under --effective.
+; https://github.com/ledger/ledger/issues/3253
+;
+; --effective (or --aux-date) makes each auxiliary date stand in for the
+; primary date "in all reports and calculations (including pricing)".  The
+; command line applies it before reading the journal, so the price inferred
+; from the @@ cost below, and the lot that cost creates, are dated
+; 2022/01/04, and the 2021/12/31 opening balance has no price to be valued
+; at until then (#1837, #2071).  A session reads the journal once, at
+; startup, and used to do so without applying --effective even when it was
+; given at startup: the price and the lot were dated 2021/12/31, and the
+; price valued the opening balance on the day it was opened.
+
+2021/12/31 Opening
+    Assets:Broker                         1 AGGY
+    Equity:Opening Balances
+
+2021/12/31=2022/01/04 Later
+    Assets:Broker                         1 AGGY @@ $2.00
+    Assets:Cash
+
+; The command line, which the sessions below must match.
+
+test pricedb --effective
+P 2022/01/04 00:00:00 AGGY $2
+end test
+
+test pricedb
+P 2021/12/31 00:00:00 AGGY $2
+end test
+
+test register --exchange '$' --effective Assets
+21-Dec-31 Opening               Assets:Broker                1 AGGY       1 AGGY
+22-Jan-04 Commodities revalued  <Revalued>                        0           $2
+22-Jan-04 Later                 Assets:Broker                    $2           $4
+                                Assets:Cash                     $-2           $2
+end test
+
+test register --exchange '$' Assets
+21-Dec-31 Opening               Assets:Broker                    $2           $2
+21-Dec-31 Later                 Assets:Broker                    $2           $4
+                                Assets:Cash                     $-2           $2
+end test
+
+test balance --lots --effective Broker
+                  1 AGGY
+1 AGGY {$2} [2022/01/04]  Assets:Broker
+end test
+
+test balance --lots Broker
+                  1 AGGY
+1 AGGY {$2} [2021/12/31]  Assets:Broker
+end test
+
+; A session started with --effective reads the journal under it.  The
+; script runs pricedb, register --exchange $ Assets, and
+; balance --lots Broker.
+
+test --effective --script test/regress/3253_startup.dat
+P 2022/01/04 00:00:00 AGGY $2
+21-Dec-31 Opening               Assets:Broker                1 AGGY       1 AGGY
+22-Jan-04 Commodities revalued  <Revalued>                        0           $2
+22-Jan-04 Later                 Assets:Broker                    $2           $4
+                                Assets:Cash                     $-2           $2
+                  1 AGGY
+1 AGGY {$2} [2022/01/04]  Assets:Broker
+end test

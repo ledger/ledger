@@ -221,6 +221,11 @@ void global_scope_t::report_error(const std::exception& err) {
 
 /*--- Command Execution ---*/
 
+void global_scope_t::load_journal() {
+  item_t::use_aux_date = (report().HANDLED(aux_date) && !report().HANDLED(primary_date));
+  session().read_journal_files();
+}
+
 void global_scope_t::execute_command(strings_list args, bool at_repl) {
   session().set_flush_on_next_data_file(true);
 
@@ -262,13 +267,8 @@ void global_scope_t::execute_command(strings_list args, bool at_repl) {
   // Then patch up the report options based on the command verb.
 
   if (!is_precommand) {
-    if (!at_repl) {
-      // Set use_aux_date before reading journal files so that balance
-      // assertions respect effective date ordering when --effective is used
-      // (fixes #2071).
-      item_t::use_aux_date = (report().HANDLED(aux_date) && !report().HANDLED(primary_date));
-      session().read_journal_files();
-    }
+    if (!at_repl)
+      load_journal();
 
     report().normalize_options(verb);
 

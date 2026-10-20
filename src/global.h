@@ -167,6 +167,15 @@ public:
   /// signal is silently cleared).
   void report_error(const std::exception& err);
 
+  /// Read the journal files under the date mode the current report selects.
+  /// --effective (or --aux-date) changes how the journal is parsed, not only
+  /// how it is reported: balance assertions are checked in effective-date
+  /// order (#2071), and lots and the prices inferred from costs are dated by
+  /// effective dates (#1837).  Every mode that reads a journal must therefore
+  /// apply it first, so that interactive and script sessions read the
+  /// journal as the command line does (#3253).
+  void load_journal();
+
   /// Execute a single command: resolve the verb, load journal data if
   /// needed, open the output stream, and invoke the command handler.
   void execute_command(strings_list args, bool at_repl);
