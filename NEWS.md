@@ -111,11 +111,14 @@ components with their standard-library equivalents.
 
 - Fix unrealized gains/losses when multiple prices are recorded on the same
   day (#1821); add `--plopen` for unrealized P&L on open positions; add
-  `--gain-since` for period-relative gain calculation; account for quantity
-  precision when rounding gain/loss; fix the rounding error in `--price` with
-  `@@` total cost notation; warn when a `getquote` script fails or returns no
-  usable price (#2335); and trigger a price download even when no prior price
-  exists (#652, #655)
+  `--gain-since` for period-relative gain calculation; drop from the gain or
+  loss on a lot only the residue that a per-unit lot price rounded out of a
+  total leaves in its basis (#2975), so a posting with a lot price and a cost
+  balances at its lot basis whatever display precision the commodity has
+  learned (#3013, #3258); fix the rounding error in `--price` with `@@` total
+  cost notation; warn when a `getquote` script fails or returns no usable
+  price (#2335); and trigger a price download even when no prior price exists
+  (#652, #655)
 
 - Set commodity precision from price records and let later transactions widen,
   but not narrow, the recorded precision (#1190, #2481)
