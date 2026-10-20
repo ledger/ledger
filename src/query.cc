@@ -507,6 +507,7 @@ query_t::parser_t::try_parse_comparison(const string& term,
         string expr_str = term + "=" + *rhs.value;
         return expr_t(expr_str).get_op();
       } catch (...) {
+        discard_error_context();
         return nullptr;
       }
     }
@@ -515,6 +516,7 @@ query_t::parser_t::try_parse_comparison(const string& term,
     try {
       return expr_t(term).get_op();
     } catch (...) {
+      discard_error_context();
       return nullptr;
     }
   }

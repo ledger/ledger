@@ -40,6 +40,12 @@ The following is a complete list of accepted reporting commands:
 .It Ic accounts Oo Ar report-query Oc
 List all accounts for postings that match the
 .Ar report-query .
+Accounts declared with an
+.Ic account
+directive are listed too, unless the
+.Ar report-query
+excludes them by account name or depth; its conditions on postings do not
+apply to them.
 .El
 .Bl -tag -width balance
 .It Ic balance Oo Ar report-query Oc
@@ -702,7 +708,12 @@ commodity symbol as an argument and should return the current price.
 Show auxiliary dates for all calculations.  Alias for
 .Fl \-aux-date .
 .It Fl \-empty Pq Fl E
-Include empty accounts in report.
+Include empty accounts in report, including accounts declared with an
+.Ic account
+directive that no posting in the report uses, unless the
+.Ar report-query
+excludes them by account name or depth; its conditions on postings do not
+apply to them.
 .It Fl \-end Ar DATE Pq Fl e
 Constrain the report so that transactions on or after
 .Ar DATE

@@ -87,6 +87,75 @@ inline void write_with_append(std::ostream& out, const string& formatted,
     out << (*append_format_ptr)(scope);
   }
 }
+
+/// @brief True when @p op tests nothing but the account of a posting.
+///
+/// `account`, `account_base` and `depth` are the only names that mean the
+/// same thing for an account as for a posting to it.  Calls, member lookups
+/// and definitions never count: `account(...)` with arguments, for one,
+/// abbreviates or looks up names differently in the two scopes.
+bool is_account_term(const expr_t::ptr_op_t& op) {
+  using op_t = expr_t::op_t;
+
+  if (!op || op->is_value())
+    return true;
+  if (op->is_ident()) {
+    const string& name(op->as_ident());
+    return name == "account" || name == "account_base" || name == "depth";
+  }
+  switch (op->kind) {
+  case op_t::O_CALL:
+  case op_t::O_LOOKUP:
+  case op_t::O_LAMBDA:
+  case op_t::O_DEFINE:
+  case op_t::O_SEQ:
+    return false;
+  default:
+    return op->kind > op_t::TERMINALS && is_account_term(op->left()) &&
+           (!op->has_right() || is_account_term(op->right()));
+  }
+}
+
+/// @brief Reduce a posting predicate to what it can say about an account
+///        that no posting in the report reaches.
+///
+/// Account terms are kept.  Every other term tests a posting, so it cannot
+/// be judged for such an account and becomes the constant @p unknown, which
+/// flips under each negation so that `!` of an unknown term stays unknown.
+/// Called with @p unknown true, this is the three-valued (Kleene) reading
+/// of the predicate with "unknown" resolved in favour of the account: the
+/// result is false only when the account terms alone rule the account out.
+expr_t::ptr_op_t project_onto_account(const expr_t::ptr_op_t& op, const bool unknown) {
+  using op_t = expr_t::op_t;
+
+  switch (op->kind) {
+  case op_t::O_NOT:
+    return op_t::new_node(op_t::O_NOT, project_onto_account(op->left(), !unknown));
+  case op_t::O_AND:
+  case op_t::O_OR:
+    return op_t::new_node(op->kind, project_onto_account(op->left(), unknown),
+                          project_onto_account(op->right(), unknown));
+  default:
+    return is_account_term(op) ? op : op_t::wrap_value(unknown);
+  }
+}
+
+/// @brief The predicate that decides whether a declared account with no
+///        postings in the report still matches the query/--limit predicate.
+///
+/// --empty lists such accounts (#1204), but only those the query allows
+/// (#3189, #3212).  --limit is a posting predicate, though: evaluated whole
+/// against an account it fails for names like `commodity` and quietly tests
+/// something else for names like `date` (#3281).  So only its account terms
+/// are applied.
+predicate_t known_account_predicate(report_t& report) {
+  if (!report.HANDLED(limit_))
+    return predicate_t();
+  predicate_t limit(report.HANDLER(limit_).str(), report.what_to_keep());
+  if (!limit)
+    return limit;
+  return predicate_t(project_onto_account(limit.get_op(), true), report.what_to_keep());
+}
 } // namespace
 
 /*--- format_posts: Register Command Output ---*/
@@ -296,17 +365,16 @@ format_accounts::mark_accounts(account_t& account, const bool flat,
 #endif
 
   // For declared-but-unused accounts admitted only by --empty, also require
-  // that the query/--limit predicate match the account.  Otherwise an
-  // `account` directive for an unrelated account (e.g. `Liabilities:C`)
-  // would surface in `bal -E Assets`, ignoring the `Assets` filter.  Visited
-  // accounts have already been filtered upstream by filter_posts.
+  // that the account terms of the query/--limit predicate match the account
+  // (see known_account_predicate).  Otherwise an `account` directive for an
+  // unrelated account (e.g. `Liabilities:C`) would surface in `bal -E
+  // Assets`, ignoring the `Assets` filter.  Visited accounts have already
+  // been filtered upstream by filter_posts.
   auto known_empty_admit = [&]() -> bool {
     if (!report.HANDLED(empty) || !account.has_flags(ACCOUNT_KNOWN))
       return false;
-    if (!report.HANDLED(limit_))
-      return true;
     bind_scope_t limit_scope(report, account);
-    return predicate_t(report.HANDLER(limit_).str(), report.what_to_keep())(limit_scope);
+    return known_pred(limit_scope);
   };
 
   if (account.parent && (account.has_xflags(ACCOUNT_EXT_VISITED) || (!flat && visited > 0) ||
@@ -348,6 +416,8 @@ void format_accounts::flush() {
     collapse_pred.parse(report.HANDLER(collapse_if_).str());
   }
 
+  known_pred = known_account_predicate(report);
+
   mark_accounts(*report.session.journal->master, report.HANDLED(flat));
 
   std::size_t displayed = 0;
@@ -387,26 +457,22 @@ void format_accounts::operator()(account_t& account) {
 namespace {
 /// @brief Recursively collect accounts marked as ACCOUNT_KNOWN into the
 ///        map, so that declared-but-unused accounts still appear in the
-///        `accounts` listing.  When the report carries a --limit predicate
-///        (the regex form of `accounts <regex>` becomes one), require that
-///        each candidate match it -- otherwise an `account` directive for
-///        an unrelated account would surface in `accounts Bank`, ignoring
-///        the filter (#3212).  Visited accounts have already been filtered
-///        upstream by filter_posts.
+///        `accounts` listing.  Each candidate must match @p known_pred, the
+///        account terms of the query/--limit predicate (the regex form of
+///        `accounts <regex>` becomes one) -- otherwise an `account`
+///        directive for an unrelated account would surface in `accounts
+///        Bank`, ignoring the filter (#3212).  Visited accounts have already
+///        been filtered upstream by filter_posts.
 void collect_known_accounts(account_t& account, report_accounts::accounts_report_map& accounts,
-                            report_t& report) {
+                            report_t& report, predicate_t& known_pred) {
   if (account.has_flags(ACCOUNT_KNOWN) && accounts.find(&account) == accounts.end()) {
-    bool admit = true;
-    if (report.HANDLED(limit_)) {
-      bind_scope_t limit_scope(report, account);
-      admit = predicate_t(report.HANDLER(limit_).str(), report.what_to_keep())(limit_scope);
-    }
-    if (admit)
+    bind_scope_t limit_scope(report, account);
+    if (known_pred(limit_scope))
       accounts.insert(report_accounts::accounts_report_map::value_type(&account, 0));
   }
 
   for (accounts_map::value_type& pair : account.accounts)
-    collect_known_accounts(*pair.second, accounts, report);
+    collect_known_accounts(*pair.second, accounts, report, known_pred);
 }
 } // namespace
 
@@ -430,7 +496,8 @@ void report_accounts::flush() {
   if (do_append_format)
     append_format.parse_format(report.HANDLER(append_format_).str());
 
-  collect_known_accounts(*report.session.journal->master, accounts, report);
+  predicate_t known_pred(known_account_predicate(report));
+  collect_known_accounts(*report.session.journal->master, accounts, report, known_pred);
 
   for (accounts_pair& entry : accounts) {
     bind_scope_t bound_scope(report, *entry.first);
