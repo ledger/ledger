@@ -272,9 +272,9 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
   case '"': {
     std::istream::pos_type pos = in.tellg();
 
-    // Phase 1: attempt amount parsing.  Under PARSE_IN_EXPR a comma after
-    // the closing quote separates arguments, as in f("abc",1); it does not
-    // begin a quantity.
+    // Phase 1: attempt amount parsing.  Under PARSE_IN_EXPR a comma or plus
+    // sign after the closing quote is an operator, as in f("abc",1) or
+    // "abc"+1; it does not begin a quantity.
     parse_flags_t parse_flags;
     parse_flags.add_flags(PARSE_NO_ANNOT);
     parse_flags.add_flags(PARSE_IN_EXPR);
@@ -549,8 +549,9 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
     parse_flags_t parse_flags;
 
     parse_flags.add_flags(PARSE_NO_ANNOT);
-    // In f(account,1) the comma separates the arguments; it must not begin
-    // the quantity of an amount whose commodity would be the identifier.
+    // In f(account,1) or x+1 the comma or plus sign is an operator; it must
+    // not begin the quantity of an amount whose commodity would be the
+    // identifier.
     parse_flags.add_flags(PARSE_IN_EXPR);
     if (pflags.has_flags(PARSE_NO_MIGRATE))
       parse_flags.add_flags(PARSE_NO_MIGRATE);

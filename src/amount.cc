@@ -1542,8 +1542,8 @@ namespace {
  * conventions).  Trailing non-digit punctuation is stripped and pushed
  * back onto the stream, with special handling for a trailing period
  * (which may indicate zero decimal places in hledger-style input).
- * Under PARSE_IN_EXPR, a comma where the number would begin is left in
- * the stream and the quantity is empty.
+ * Under PARSE_IN_EXPR, a comma or plus sign where the number would begin
+ * is left in the stream and the quantity is empty.
  *
  * @param[in]  in     Input stream positioned at the start of a number.
  * @param[out] value  The raw numeric string, including punctuation but
@@ -1553,7 +1553,7 @@ namespace {
 void parse_quantity(std::istream& in, string& value, const parse_flags_t& flags) {
   value.clear();
   int c = peek_next_nonws(in);
-  if (c == ',' && flags.has_flags(PARSE_IN_EXPR))
+  if ((c == ',' || c == '+') && flags.has_flags(PARSE_IN_EXPR))
     return;
   if (c == '-') {
     value.push_back(static_cast<char>(c));
