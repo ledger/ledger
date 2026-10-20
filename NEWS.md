@@ -374,6 +374,11 @@ components with their standard-library equivalents.
   utfcpp functions for Python string conversion; restore terminal settings
   after `ledger python` exits (#774)
 
+- Raise `ValueError` when a Python `Commodity`'s `smaller` or `larger` link is
+  set to an amount without a commodity, which a `C` directive may no longer
+  create either (#3261); unreducing an annotated amount through such a link
+  crashed
+
 ### New Commands and Directives
 
 - Add `payee-rewrite` and `account-rewrite` directives for report-time
