@@ -84,7 +84,8 @@ orientation:
 
 **./src/**:  the C++ header and source files in a flat directory.
 
-**./test/**:  a testing harness with subdirectories full of tests
+**./test/**:  a testing harness with subdirectories full of tests.  See
+  `test/snapshot.md` for the behavioral snapshot tool.
 
 **./tools/**:  an accretion of tools, mostly small scripts, to aid development
 
