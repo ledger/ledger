@@ -224,8 +224,8 @@ void global_scope_t::report_error(const std::exception& err) {
 
 /*--- Command Execution ---*/
 
-#if HAVE_BOOST_PYTHON
 namespace {
+#if HAVE_BOOST_PYTHON
 /// Point Python's `journal`, which a python directive sets to the journal
 /// being read, at @p journal, unless that name holds something else.
 void point_python_at(journal_t* journal) {
@@ -239,14 +239,96 @@ void point_python_at(journal_t* journal) {
     python_session->main_module->define_global("journal",
                                                boost::python::object(boost::python::ptr(journal)));
 }
-} // namespace
 #endif
 
-void global_scope_t::load_journal(bool at_repl) {
-  if (at_repl) {
-    if (session().reread)
-      return;
+/// Thrown, in place of the parser's error_count, when a session could not
+/// read its journal again for a command (see read_journal_again).  The
+/// parser has reported the errors, and the session has its journal back.
+struct reread_failed {
+  std::size_t count; ///< The number of errors the parser reported
+};
 
+/// Whether @p option, as set for a command in a session, selects its date
+/// mode, which the command line decides before it reads the journal: so not
+/// if an option line in a data file set it as the session first read the
+/// journal (@p from_file), and nothing has set it since.
+bool selects_date_mode(const option_t<report_t>& option, const optional<string>& from_file) {
+  return option && !(from_file && option.whence() == from_file);
+}
+
+/// Read @p session's journal again under the date mode @p aux_date, from the
+/// data files of its latest reading: a -f given to a command since then
+/// takes effect at the next reload, as it did before, and not here, where
+/// only the date mode changes.  If the reading fails, put back the journal
+/// the session had, with its prices and the parser's state, before passing
+/// the failure on.
+void read_journal_again(session_t& session, bool aux_date) {
+  session_t::reread_t& reread(*session.reread);
+  commodity_pool_t& pool(*commodity_pool_t::current_pool);
+
+  const boost::shared_ptr<journal_t> journal(session.journal);
+  commodity_history_t::price_changes_t prices(reread.prices);
+  const bool journal_aux_date = reread.aux_date;
+  const optional<int> year = year_directive_year;
+  const optional<datetime_t> now = epoch;
+  commodity_t* const commodity = pool.default_commodity;
+
+  // The files are read as they were at startup, after -f had named them,
+  // so that a --file line in a data file adds to them rather than emptying
+  // the list being read; the command gets back -f as it had it.
+  const std::list<path> files(session.HANDLER(file_).data_files);
+  const bool flush = session.flush_on_next_data_file;
+  auto put_back_files = [&] {
+    session.HANDLER(file_).data_files = files;
+    session.set_flush_on_next_data_file(flush);
+  };
+
+  auto put_back = [&] {
+    pool.undo_price_changes(reread.prices);
+    reread.prices = std::move(prices);
+    pool.redo_price_changes(reread.prices);
+    session.journal = journal;
+    reread.aux_date = journal_aux_date;
+    item_t::use_aux_date = journal_aux_date;
+    year_directive_year = year;
+    epoch = now;
+    pool.default_commodity = commodity;
+    put_back_files();
+#if HAVE_BOOST_PYTHON
+    point_python_at(journal.get());
+#endif
+  };
+
+  item_t::use_aux_date = aux_date;
+  session.HANDLER(file_).data_files = reread.files;
+  session.set_flush_on_next_data_file(false);
+  try {
+    session.close_journal_files();
+    session.read_journal_files();
+  } catch (const error_count& errors) {
+    put_back();
+    throw reread_failed{errors.count};
+  } catch (...) {
+    put_back();
+    throw;
+  }
+  put_back_files();
+}
+} // namespace
+
+void global_scope_t::load_journal(bool at_repl) {
+  if (at_repl && session().reread) {
+    // The command line reads the journal under the date mode that the
+    // command at hand selects, so a command that selects the other one has
+    // the journal read again.
+    const bool aux_date = selects_date_mode(report().HANDLER(aux_date), file_aux_date) &&
+                          !selects_date_mode(report().HANDLER(primary_date), file_primary_date);
+    if (aux_date != session().reread->aux_date)
+      read_journal_again(session(), aux_date);
+    return;
+  }
+
+  if (at_repl) {
     // A session keeps its journal from command to command and may read it
     // again (session_t::reread), each time from where this first reading
     // starts: with the year, the time and the default commodity as they are
@@ -270,16 +352,27 @@ void global_scope_t::load_journal(bool at_repl) {
     };
   }
 
-  item_t::use_aux_date = (report().HANDLED(aux_date) && !report().HANDLED(primary_date));
+  const bool aux_date_set = report().HANDLED(aux_date);
+  const bool primary_date_set = report().HANDLED(primary_date);
+
+  item_t::use_aux_date = aux_date_set && !primary_date_set;
   session().read_journal_files();
 
-  // Option lines in the data files have set this report's options, as they
-  // do on the command line, and here they stay in effect: have later
-  // readings apply such lines to a copy of the report instead.
-  if (at_repl)
+  if (at_repl) {
+    // Option lines in the data files set this report's options, as they do
+    // on the command line -- where, though, they take effect only as the
+    // journal is read, too late to change the date mode it is read in.
+    // Note the date options they set, so as not to count them for that, and
+    // have later readings apply such lines to a copy of the report: here
+    // they are in effect already.
+    if (!aux_date_set && report().HANDLED(aux_date))
+      file_aux_date = report().HANDLER(aux_date).whence();
+    if (!primary_date_set && report().HANDLED(primary_date))
+      file_primary_date = report().HANDLER(primary_date).whence();
     session().reread->option_scope = [this] {
       return std::unique_ptr<scope_t>(new report_t(report_stack.back()));
     };
+  }
 }
 
 void global_scope_t::execute_command(strings_list args, bool at_repl) {
@@ -385,6 +478,12 @@ int global_scope_t::execute_command_wrapper(strings_list args, bool at_repl) {
     if (at_repl)
       pop_report();
     report_error(err);
+  } catch (const reread_failed& failure) {
+    // The command line would have failed to read the journal for this
+    // command, and the parser has said why; the session goes on with the
+    // journal it had.
+    pop_report();
+    status = boost::numeric_cast<int>(failure.count);
   }
 
   return status;

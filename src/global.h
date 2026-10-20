@@ -90,6 +90,11 @@ class global_scope_t : public noncopyable, public scope_t {
   empty_scope_t empty_scope;              ///< Sentinel scope used for empty lookups
   std::optional<path> parsed_init_file;   ///< The init file read at startup, if any
 
+  /// Where option lines in the data files set --effective (or --aux-date)
+  /// and --primary-date, if they set them, when a session first read its
+  /// journal; see load_journal.
+  optional<string> file_aux_date, file_primary_date;
+
 public:
   /// Construct the global scope, reading environment and init-file options.
   global_scope_t(char** envp);
@@ -181,7 +186,10 @@ public:
   ///
   /// The command line reads the journal once.  A session (@p at_repl) reads
   /// it at startup and keeps it, readying itself to read it again cleanly
-  /// (see session_t::reread).
+  /// (see session_t::reread), which it does for a command that selects the
+  /// other date mode.  Should that reading fail, as it would have on the
+  /// command line, the command fails and the session keeps the journal it
+  /// had.
   void load_journal(bool at_repl);
 
   /// Execute a single command: resolve the verb, load journal data if

@@ -10,7 +10,10 @@
 ; at until then (#1837, #2071).  A session reads the journal once, at
 ; startup, and used to do so without applying --effective even when it was
 ; given at startup: the price and the lot were dated 2021/12/31, and the
-; price valued the opening balance on the day it was opened.
+; price valued the opening balance on the day it was opened.  Nor could
+; --effective given to one command in a session reach a journal already
+; read; now the session reads its journal again when a command turns
+; --effective on or off.
 
 2021/12/31 Opening
     Assets:Broker                         1 AGGY
@@ -65,4 +68,54 @@ P 2022/01/04 00:00:00 AGGY $2
                                 Assets:Cash                     $-2           $2
                   1 AGGY
 1 AGGY {$2} [2022/01/04]  Assets:Broker
+end test
+
+; A session started without it runs the same three commands with
+; --effective, then without it, then gives pricedb --aux-date (its alias),
+; --effective --primary-date (which turns it off again), and --effective
+; by way of push, until pop.  Each command prints what it prints on the
+; command line, so no price outlives the reading of the journal that made
+; it.
+
+test --script test/regress/3253_toggle.dat
+P 2022/01/04 00:00:00 AGGY $2
+21-Dec-31 Opening               Assets:Broker                1 AGGY       1 AGGY
+22-Jan-04 Commodities revalued  <Revalued>                        0           $2
+22-Jan-04 Later                 Assets:Broker                    $2           $4
+                                Assets:Cash                     $-2           $2
+                  1 AGGY
+1 AGGY {$2} [2022/01/04]  Assets:Broker
+P 2021/12/31 00:00:00 AGGY $2
+21-Dec-31 Opening               Assets:Broker                    $2           $2
+21-Dec-31 Later                 Assets:Broker                    $2           $4
+                                Assets:Cash                     $-2           $2
+                  1 AGGY
+1 AGGY {$2} [2021/12/31]  Assets:Broker
+P 2022/01/04 00:00:00 AGGY $2
+P 2021/12/31 00:00:00 AGGY $2
+P 2022/01/04 00:00:00 AGGY $2
+P 2021/12/31 00:00:00 AGGY $2
+end test
+
+; The same, with the journal read from standard input, which gives it up
+; only once.
+
+test -f - --script test/regress/3253_toggle.dat
+P 2022/01/04 00:00:00 AGGY $2
+21-Dec-31 Opening               Assets:Broker                1 AGGY       1 AGGY
+22-Jan-04 Commodities revalued  <Revalued>                        0           $2
+22-Jan-04 Later                 Assets:Broker                    $2           $4
+                                Assets:Cash                     $-2           $2
+                  1 AGGY
+1 AGGY {$2} [2022/01/04]  Assets:Broker
+P 2021/12/31 00:00:00 AGGY $2
+21-Dec-31 Opening               Assets:Broker                    $2           $2
+21-Dec-31 Later                 Assets:Broker                    $2           $4
+                                Assets:Cash                     $-2           $2
+                  1 AGGY
+1 AGGY {$2} [2021/12/31]  Assets:Broker
+P 2022/01/04 00:00:00 AGGY $2
+P 2021/12/31 00:00:00 AGGY $2
+P 2022/01/04 00:00:00 AGGY $2
+P 2021/12/31 00:00:00 AGGY $2
 end test

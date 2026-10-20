@@ -132,14 +132,17 @@ public:
 std::size_t session_t::read_data(const string& master_account) {
   bool populated_data_files = false;
 
-  // A session that may read its journal again (see reread) reads in the
-  // scope it read in at startup, with the option lines of a reading after
-  // the first in a scope of their own, and records the prices the reading
-  // puts into the price history.
+  // A session that may read its journal again (see reread) remembers the
+  // files it reads and the date mode it reads them in, reads in the scope
+  // it read in at startup, with the option lines of a reading after the
+  // first in a scope of their own, and records the prices the reading puts
+  // into the price history.
   std::optional<default_scope_guard_t> in_scope;
   std::unique_ptr<scope_t> option_scope;
   std::optional<commodity_history_t::recording_t> recording;
   if (reread) {
+    reread->files = HANDLER(file_).data_files;
+    reread->aux_date = item_t::use_aux_date;
     in_scope.emplace(reread->scope);
     if (reread->option_scope)
       option_scope = reread->option_scope();

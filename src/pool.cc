@@ -685,6 +685,11 @@ void commodity_pool_t::undo_price_changes(const commodity_history_t::price_chang
   forget_price_lookups();
 }
 
+void commodity_pool_t::redo_price_changes(const commodity_history_t::price_changes_t& changes) {
+  commodity_price_history.redo(changes);
+  forget_price_lookups();
+}
+
 void commodity_pool_t::forget_price_lookups() {
   // Annotated commodities share the base of the commodity they annotate, so
   // the base commodities' memos are all there are.

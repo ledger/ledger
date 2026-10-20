@@ -147,7 +147,7 @@ public:
   void remove_price(const commodity_t& source, const commodity_t& target, const datetime_t& date);
 
   /// Set the price between vertices @p sv and @p tv at @p when to @p price,
-  /// or remove it if @p price is empty.  Used to undo changes.
+  /// or remove it if @p price is empty.  Used to undo and redo changes.
   void set_price(vertex_descriptor sv, vertex_descriptor tv, const datetime_t& when,
                  const std::optional<amount_t>& price);
 
@@ -199,6 +199,11 @@ commodity_history_t::record_changes(price_changes_t* changes) {
 void commodity_history_t::undo(const price_changes_t& changes) {
   for (auto change = changes.rbegin(); change != changes.rend(); ++change)
     p_impl->set_price(change->source, change->target, change->when, change->replaced);
+}
+
+void commodity_history_t::redo(const price_changes_t& changes) {
+  for (const price_change_t& change : changes)
+    p_impl->set_price(change.source, change.target, change.when, change.price);
 }
 
 void commodity_history_t::alias_commodity(commodity_t& old_comm, commodity_t& new_comm) {

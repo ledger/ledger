@@ -147,6 +147,9 @@ public:
   /// Undo @p changes, newest first, putting back the prices they replaced.
   void undo(const price_changes_t& changes);
 
+  /// Make @p changes again, oldest first.
+  void redo(const price_changes_t& changes);
+
   /// Iterate over all prices for @p source that fall within the time range
   /// [@p _oldest, @p moment], calling @p fn for each.  When
   /// @p bidirectionally is true, also yields inverted prices (i.e., if

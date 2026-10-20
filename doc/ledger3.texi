@@ -4622,6 +4622,21 @@ for a comment such as @samp{; :refund: [2026/01/01]}, where the brackets
 follow a @samp{:tag:} series.  Write the date first ---
 @samp{; [2026/01/01] :refund:} --- when you want both.
 
+The @option{--effective} option changes how the journal is read, not
+only how it is reported: balance assertions are checked in the order of
+the effective dates, and the prices and lot dates that costs establish
+take the effective dates.  Ledger therefore applies it before reading
+the journal.  An interactive session, or one running a
+@option{--script}, reads the journal once and keeps it from command to
+command, so a command that turns @option{--effective} on or off has the
+journal read again, from the files it was last read from.  The command
+then reports what it would report if run on its own from the command
+line, save for what the session carries over from earlier commands,
+such as the options given to them that govern how the journal is read.
+If the journal cannot be read under the new setting, the command fails
+as it would on the command line, and the session keeps the journal it
+had.
+
 Note that the @option{--aux-date} option is an alias for
 @option{--effective}; for a brief explanation of auxiliary date
 @pxref{Auxiliary dates}.

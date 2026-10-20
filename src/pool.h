@@ -294,14 +294,15 @@ public:
                                       const std::optional<datetime_t>& moment = {});
 
   /**
-   * @brief Undo changes recorded in the price history.
+   * @brief Undo, or make again, changes recorded in the price history.
    *
-   * Applies commodity_history_t::undo() to @p changes, then forgets every
-   * price lookup the commodities have memoized: a lookup may have passed
-   * through a price that has just been taken out, which the memo of the
-   * commodity looked up would never learn of.
+   * Applies commodity_history_t::undo() or redo() to @p changes, then
+   * forgets every price lookup the commodities have memoized: a lookup may
+   * have passed through a price that has just been taken out or restored,
+   * which the memo of the commodity looked up would never learn of.
    */
   void undo_price_changes(const commodity_history_t::price_changes_t& changes);
+  void redo_price_changes(const commodity_history_t::price_changes_t& changes);
 
   /**
    * @brief Pre-fetch price quotes for all eligible commodities in batch.

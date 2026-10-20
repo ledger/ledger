@@ -119,30 +119,33 @@ public:
    * @brief What a session needs to read its journal again in-process.
    *
    * An interactive or --script session keeps its journal from command to
-   * command, and reads it again for `reload` and `source`.  Each reading
-   * should find what a fresh process would, but the price history and some
-   * of the parser's state belong to the whole process.  So the session
-   * records the prices each reading puts into the price history and takes
-   * them out when it closes the journal, has each fresh journal prepared as
-   * the first one was, and reads in the scope it read in at startup, rather
-   * than in that of the command at hand, which ends with the command.
-   * Option lines in the data files are the exception: those of the first
-   * reading have been in effect in that scope since, and applied there
-   * again they would pile up (an --invert inverting back), so later
-   * readings apply them in a scope of their own.  The command line, which
-   * reads once, leaves this unset.
+   * command, and reads it again for `reload`, for `source`, and when a
+   * command selects the other date mode (global_scope_t::load_journal).
+   * Each reading should find what a fresh process would, but the price
+   * history and some of the parser's state belong to the whole process.
+   * So the session records the prices each reading puts into the price
+   * history and takes them out when it closes the journal, has each fresh
+   * journal prepared as the first one was, and reads in the scope it read
+   * in at startup, rather than in that of the command at hand, which ends
+   * with the command.  Option lines in the data files are the exception:
+   * those of the first reading have been in effect in that scope since,
+   * and applied there again they would pile up (an --invert inverting
+   * back), so later readings apply them in a scope of their own.  The
+   * command line, which reads once, leaves this unset.
    */
   struct reread_t {
     scope_t* scope;                              ///< Scope to read in: the base report
     std::function<void()> prepare;               ///< Prepares each fresh journal
     commodity_history_t::price_changes_t prices; ///< Prices the journal's readings recorded
+    std::list<path> files;                       ///< Data files of the latest reading
+    bool aux_date;                               ///< Its date mode (item_t::use_aux_date)
     /// Makes the scope for the option lines of a later reading, once the
     /// first reading is done.
     std::function<std::unique_ptr<scope_t>()> option_scope;
 
     // A constructor, not default member initializers: Clang will not use
     // those for std::optional<reread_t> before session_t is complete.
-    reread_t() : scope(nullptr) {}
+    reread_t() : scope(nullptr), aux_date(false) {}
   };
   std::optional<reread_t> reread;
 
