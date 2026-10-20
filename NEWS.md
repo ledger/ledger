@@ -49,6 +49,14 @@ directives, and commands.
 - Fix `--invert` to work correctly with composite reports (#1908) and with the
   `equity` command (#1645)
 
+- Make session teardown (`set_session_context(nullptr)`) restore the
+  process-wide defaults that options and directives change, so a program that
+  reads several journals in one process no longer carries one journal's
+  `--decimal-comma`, `--time-colon`, `--input-date-format`, `--now`,
+  `--start-of-week`, `--period-shift`, `--truncate`, `--ignore-diacritics`,
+  `--aux-date` or `year` directive into the next; after `--decimal-comma`,
+  setting up the next session failed outright (#3292)
+
 ### Code Modernization
 
 This release migrates the codebase to C++17 and replaces several Boost utility

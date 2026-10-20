@@ -67,7 +67,8 @@
  *     using written (canonical), printed (display), or custom formats.
  *
  *   - **Initialization and shutdown**: times_initialize() registers the
- *     built-in date formats; times_shutdown() releases them.
+ *     built-in date formats; times_shutdown() releases them and restores
+ *     the defaults that options and directives change.
  */
 
 #include <cstddef>
@@ -2554,7 +2555,8 @@ void times_initialize() {
   }
 }
 
-/// @brief Release all IO objects, clear caches, and reset the initialized flag.
+/// @brief Release all IO objects, clear caches, restore the defaults that
+/// options and directives change, and reset the initialized flag.
 void times_shutdown() {
   if (is_initialized) {
     input_datetime_io.reset();
@@ -2569,6 +2571,15 @@ void times_shutdown() {
     temp_datetime_io.clear();
 
     temp_date_io.clear();
+
+    // --now, --start-of-week, --period-shift, --input-date-format and the
+    // year directive set these; a session that starts after this one must
+    // not inherit them (#3292).
+    epoch = none;
+    year_directive_year = none;
+    start_of_week = gregorian::Sunday;
+    day_of_period = 0;
+    convert_separators_to_slashes = true;
 
     is_initialized = false;
   }
