@@ -15,6 +15,7 @@ test -f "$FILE" bal --options --columns 80 -> 0
 
 [Report scope options]
                --columns = 80                                        --columns
+                   --now = 2030/06/15                                --now=2030/06/15
 ===============================================================================
              $-25.00  Assets:Checking
               $25.00  Expenses:Food
