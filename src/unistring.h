@@ -48,7 +48,7 @@
  *
  * - `length()`: the number of codepoints (not bytes)
  * - `width()`: the display width in terminal columns, accounting for
- *   double-width CJK characters via `mk_wcwidth()`
+ *   double-width CJK characters via `display_width()`
  * - `extract()` / `extract_by_width()`: substring extraction by
  *   codepoint index or by display-column range
  *
@@ -62,9 +62,20 @@ namespace ledger {
 
 /// Return the display width of a Unicode codepoint in terminal columns.
 /// Most characters are width 1; East Asian wide characters (CJK) are
-/// width 2; zero-width combining marks return 0.  This is a portable
-/// replacement for the POSIX `wcwidth()` function.
+/// width 2; zero-width combining marks and NUL return 0.  Other C0 and C1
+/// control characters, and DEL, return -1, as `wcwidth()` does for
+/// characters that are not printable.  This is a portable replacement for
+/// the POSIX `wcwidth()` function.
 int mk_wcwidth(boost::uint32_t ucs);
+
+/// Return the number of terminal columns that codepoint @p ucs occupies.
+/// This is `mk_wcwidth()` with control characters counted as zero
+/// columns instead of -1, so that widths can be summed into a
+/// `std::size_t` without wrapping around.
+inline std::size_t display_width(boost::uint32_t ucs) {
+  const int width = mk_wcwidth(ucs);
+  return width > 0 ? static_cast<std::size_t>(width) : 0;
+}
 
 /**
  * @class unistring
@@ -102,12 +113,13 @@ public:
   /// Number of Unicode codepoints (not bytes, not display columns).
   std::size_t length() const { return utf32chars.size(); }
 
-  /// Display width in terminal columns, summing `mk_wcwidth()` for each
-  /// codepoint.  East Asian wide characters contribute 2; most others 1.
+  /// Display width in terminal columns, summing `display_width()` for each
+  /// codepoint.  East Asian wide characters contribute 2; combining marks
+  /// and control characters 0; most others 1.
   std::size_t width() const {
     std::size_t width = 0;
     for (const boost::uint32_t& ch : utf32chars) {
-      width += mk_wcwidth(ch);
+      width += display_width(ch);
     }
     return width;
   }
@@ -152,7 +164,7 @@ public:
     std::size_t begin_idx = 0, end_idx = 0;
     std::size_t head = 0, tail = 0;
     for (std::size_t idx = 0; idx < this_len; ++idx) {
-      std::size_t w = mk_wcwidth(utf32chars[idx]);
+      std::size_t w = display_width(utf32chars[idx]);
 
       if (pos < begin) {
         if (pos + w >= begin) {

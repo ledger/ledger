@@ -122,6 +122,60 @@ BOOST_AUTO_TEST_CASE(testTruncateAbbreviate)
 }
 
 // -----------------------------------------------------------------------
+// Control characters occupy zero columns (#3291)
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testDisplayWidthControlCharacters)
+{
+  // mk_wcwidth() keeps wcwidth()'s -1 for control characters, which
+  // display_width() counts as zero columns.
+  BOOST_CHECK_EQUAL(mk_wcwidth(0x15), -1);
+  BOOST_CHECK_EQUAL(display_width(0x15), 0U); // NAK
+  BOOST_CHECK_EQUAL(display_width(0x0C), 0U); // form feed
+  BOOST_CHECK_EQUAL(display_width(0x7F), 0U); // DEL
+  BOOST_CHECK_EQUAL(display_width(0x85), 0U); // NEL, a C1 control
+  BOOST_CHECK_EQUAL(display_width(0x00), 0U);
+  BOOST_CHECK_EQUAL(display_width('a'), 1U);
+  BOOST_CHECK_EQUAL(display_width(0x0301), 0U); // combining acute accent
+  BOOST_CHECK_EQUAL(display_width(0x4E2D), 2U); // 中
+}
+
+BOOST_AUTO_TEST_CASE(testUnistringWidthControlCharacters)
+{
+  // Eight printable characters and 43 control characters: summing -1 for
+  // each control character used to wrap the width around to nearly 2^64.
+  const string naks(43, '\x15');
+  unistring segment("DemoBa" + naks + "nk");
+  BOOST_CHECK_EQUAL(segment.length(), 51U);
+  BOOST_CHECK_EQUAL(segment.width(), 8U);
+
+  // Zero-width characters are kept along with the text that follows them,
+  // and left out when the range ends just before them.
+  BOOST_CHECK_EQUAL(segment.extract_by_width(0, 7), "DemoBa" + naks + "n");
+  BOOST_CHECK_EQUAL(segment.extract_by_width(0, 6), "DemoBa");
+  BOOST_CHECK_EQUAL(segment.extract_by_width(6, 2), naks + "nk");
+
+  // "\025" is NAK; the padding counts it as zero columns.
+  std::ostringstream out;
+  justify(out, "a\025b", 5);
+  BOOST_CHECK_EQUAL(out.str(), "a\025b   ");
+}
+
+BOOST_AUTO_TEST_CASE(testTruncateAbbreviateControlCharacters)
+{
+  // The account name from #3291 is 29 columns wide.
+  format_t::default_style = format_t::ABBREVIATE;
+  const string naks(43, '\x15');
+  unistring acct("Assets:Bank:DemoBa" + naks + "nk:Checking");
+  BOOST_CHECK_EQUAL(acct.width(), 29U);
+
+  BOOST_CHECK_EQUAL(format_t::truncate(acct, 29, 2), "Assets:Bank:DemoBa" + naks + "nk:Checking");
+  BOOST_CHECK_EQUAL(format_t::truncate(acct, 23, 2), "As:Ba:DemoBa" + naks + "nk:Checking");
+  BOOST_CHECK_EQUAL(format_t::truncate(acct, 22, 2), "As:Ba:DemoBa" + naks + "n:Checking");
+  BOOST_CHECK_EQUAL(format_t::truncate(acct, 20, 2), "As:Ba:DemoB:Checking");
+}
+
+// -----------------------------------------------------------------------
 // Format element parsing tests - cover format.cc uncovered lines
 // -----------------------------------------------------------------------
 

@@ -42,6 +42,12 @@ directives, and commands.
 - Fix buffer overread in the quantity punctuation-stripping loop and add
   `numeric_cast` guards against narrowing overflows
 
+- Fix an out-of-bounds read in `truncate()` caused by control characters in
+  an account name (#3291).  Each control character was counted as -1
+  columns, so a name holding enough of them wrapped its width around;
+  control characters now count as zero columns when `justify()` and
+  `truncate()` measure text
+
 - Fix infinite recursion with `--unround` and `--group-by` (issue #518) and
   the infinite loop produced by a self-referential `C` (commodity equivalence)
   directive (#1065)
