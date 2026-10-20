@@ -7454,6 +7454,22 @@ Collapse the account display only if it has a zero balance.
 @itemx --ansi
 Use color if the terminal supports it.
 
+@item --colors @var{NAME=COLOR,...}
+Change what the color @var{NAME} looks like, where @var{NAME} is one of
+the color names that formats use (@pxref{Colors}), such as @code{blue}
+for account names or @code{red} for negative amounts.  @var{COLOR} is a
+color name, a number from 0 to 255 for one of a terminal's 256 colors,
+or a 24-bit color written @samp{#RRGGBB}, or several of these separated
+by spaces; names within @var{COLOR} mean the standard ANSI colors.  For
+example, @samp{--colors 'blue=#5f87ff,red=bold 196'} shows account
+names in a lighter blue and negative amounts in a bold, bright red.  An
+empty @var{COLOR} leaves text of that color uncolored.  The assignments
+of every use of the option add up, a later assignment to a name
+replacing an earlier one, so that colors set in an init file can be
+adjusted on the command line.  This option does not turn color on or
+off: that is still up to @option{--color}, @option{--force-color} and
+@option{--no-color}.
+
 @item --columns @var{INT}
 Specify the width of the @command{register} report in characters.
 
@@ -11728,6 +11744,20 @@ Where a format gives a color, such as the second argument of
 @samp{#RRGGBB} in hexadecimal, for terminals that support those.
 Several of these separated by spaces combine, so that
 @samp{bold #5f87ff} is a bold light blue.
+
+The option @option{--colors} changes what a color name looks like,
+wherever it is used.  This makes account names a lighter blue:
+
+@smallexample @c command:043BAC8,with_input:3406FC1
+$ ledger -f expr.dat --colors blue=#5f87ff --format "%(ansify_if(account, blue))\n" reg
+@end smallexample
+@smallexample @c output:043BAC8
+[38;2;95;135;255mAssets:Cash[0m
+[38;2;95;135;255mExpenses:Office Supplies[0m
+@end smallexample
+
+Set @option{--colors} in your @file{~/.ledgerrc}, or in the environment
+variable @env{LEDGER_COLORS}, to have every report use your colors.
 
 @node Quantities and Calculations, Date Functions, Colors, Formatting Functions and Codes
 @subsection Quantities and Calculations

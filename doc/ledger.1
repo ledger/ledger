@@ -525,6 +525,36 @@ Collapse the account display only if it has a zero balance.
 Use color if the terminal supports it.
 Alias for
 .Fl \-ansi
+.It Fl \-colors Ar NAME=COLOR,...
+Change what the color
+.Ar NAME
+looks like, where
+.Ar NAME
+is one of the color names that formats use: black, red, green, yellow,
+blue, magenta, cyan, white, bold, underline or blink.
+The default formats show account names in blue and negative amounts in
+red, for instance.
+.Ar COLOR
+is a color name, a number from 0 to 255 for one of a terminal's 256
+colors, or a 24-bit color written
+.Li #RRGGBB ,
+or several of these separated by spaces; names within
+.Ar COLOR
+mean the standard ANSI colors.
+An empty
+.Ar COLOR
+leaves text of that color uncolored.
+For example,
+.Dl ledger bal --colors \[aq]blue=#5f87ff,red=bold 196\[aq]
+shows account names in a lighter blue and negative amounts in a bold,
+bright red.
+The assignments of every use of the option add up, a later assignment
+to a name replacing an earlier one.
+This option does not turn color on or off; that is up to
+.Fl \-color ,
+.Fl \-force-color
+and
+.Fl \-no-color .
 .It Fl \-commodity-value-expr Ar VEXPR
 Set a default valuation expression for all commodities that do not
 already have their own
@@ -1430,7 +1460,8 @@ as a string, applying the proper ANSI escape codes to display it in the given
 .Ar color :
 a color name, a number from 0 to 255, a 24-bit color written
 .Li #RRGGBB ,
-or several of these separated by spaces.
+or several of these separated by spaces, as for
+.Fl \-colors .
 If
 .Ar color
 is not provided, or is null, empty or a boolean, the value is returned

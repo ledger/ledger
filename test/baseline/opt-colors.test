@@ -1,0 +1,17 @@
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+test bal --force-color --colors 'blue=#5f87ff,red=bold 196' | cat -v
+             ^[[1;38;5;196m$-25.00^[[0m  ^[[38;2;95;135;255mAssets:Checking^[[0m
+              $25.00  ^[[38;2;95;135;255mExpenses:Food^[[0m
+--------------------
+                   0
+end test
+
+test bal --colors 'blue=#5f87ff,red=bold 196'
+             $-25.00  Assets:Checking
+              $25.00  Expenses:Food
+--------------------
+                   0
+end test

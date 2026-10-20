@@ -1148,7 +1148,7 @@ value_t report_t::fn_justify(call_scope_t& args) {
   if (args.has<bool>(5) && args.get<bool>(5))
     flags |= AMOUNT_PRINT_FIT_TO_WIDEST;
 
-  // Colorized negative amounts are red.
+  // Colorized negative amounts are red, or whatever color --colors makes red.
   std::ostringstream out;
   args[0].print(out, args.get<int>(1), args.has<int>(2) ? args.get<int>(2) : -1, flags,
                 (flags & AMOUNT_PRINT_COLORIZE) ? color_escape("red") : string());
@@ -1294,6 +1294,7 @@ namespace {
 /// The colors that formats name, such as blue for account names and red for
 /// negative amounts, with the parameters of the ANSI "Select Graphic
 /// Rendition" escape sequence (ESC [ parameters m) that renders each.
+/// --colors can make any of these names stand for another color.
 const std::pair<const char*, const char*> standard_colors[] = {
     {"black", "30"}, {"red", "31"},      {"green", "32"}, {"yellow", "33"},
     {"blue", "34"},  {"magenta", "35"},  {"cyan", "36"},  {"white", "37"},
@@ -1323,10 +1324,10 @@ bool is_rgb_color(const string& word) {
 }
 
 /// Translate @p color into SGR parameters.  Each of its words is a color
-/// name, a 256-color index from 0 to 255, or a 24-bit color written
-/// #RRGGBB.  So "bold #5f87ff" becomes "1;38;2;95;135;255", and an empty
-/// color nothing.
-string sgr_parameters(const string& color) {
+/// name, which means what @p palette assigns it or else the standard color;
+/// a 256-color index from 0 to 255; or a 24-bit color written #RRGGBB.  So
+/// "bold #5f87ff" becomes "1;38;2;95;135;255", and an empty color nothing.
+string sgr_parameters(const string& color, const std::map<string, string>& palette) {
   string parameters;
   string::size_type end = 0;
   for (string::size_type begin = color.find_first_not_of(" \t", end); begin != string::npos;
@@ -1335,7 +1336,9 @@ string sgr_parameters(const string& color) {
     const string word = color.substr(begin, end - begin);
 
     string parameter;
-    if (const char* standard = standard_color(word)) {
+    if (auto assigned = palette.find(word); assigned != palette.end()) {
+      parameter = assigned->second;
+    } else if (const char* standard = standard_color(word)) {
       parameter = standard;
     } else if (is_color_index(word)) {
       parameter = "38;5;" + std::to_string(std::stoi(word));
@@ -1361,8 +1364,37 @@ string sgr_parameters(const string& color) {
 } // namespace
 
 string report_t::color_escape(const string& color) {
-  const string parameters = sgr_parameters(color);
+  const string parameters = sgr_parameters(color, HANDLER(colors_).palette);
   return parameters.empty() ? string() : "\033[" + parameters + "m";
+}
+
+void report_t::assign_colors(const string& assignments, std::map<string, string>& palette) {
+  // Assign to a copy, so that a mistake leaves the palette as it was.
+  std::map<string, string> assigned(palette);
+
+  std::istringstream in(assignments);
+  string assignment;
+  while (std::getline(in, assignment, ',')) {
+    trim(assignment);
+    if (assignment.empty())
+      continue;
+
+    const string::size_type equals = assignment.find('=');
+    if (equals == string::npos)
+      throw_(option_error, _f("Invalid color assignment '%1%'; expected NAME=COLOR") % assignment);
+
+    const string name = trim_copy(assignment.substr(0, equals));
+    if (!standard_color(name))
+      throw_(option_error, _f("Invalid color name '%1%'; expected black, red, green, yellow, "
+                              "blue, magenta, cyan, white, bold, underline or blink") %
+                               name);
+
+    // The names in the color itself mean the standard colors, so that
+    // "red=green,green=red" swaps the two rather than making both green.
+    assigned[name] = sgr_parameters(assignment.substr(equals + 1), {});
+  }
+
+  palette.swap(assigned);
 }
 
 value_t report_t::fn_ansify_if(call_scope_t& args) {
@@ -1735,6 +1767,7 @@ option_t<report_t>* report_t::lookup_option(const char* p) {
     else OPT(collapse_if_);
     else OPT(collapse_if_zero);
     else OPT(color);
+    else OPT(colors_);
     else OPT(columns_);
     else OPT_ALT(basis, cost);
     else OPT_(current);
