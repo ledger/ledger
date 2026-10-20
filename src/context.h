@@ -100,21 +100,31 @@ public:
   std::size_t count;                   ///< Count of transactions successfully added to the journal
   std::size_t sequence; ///< Monotonically increasing sequence for ordering items across files
   std::string last;     ///< Text of the most recent error (for reporting after parsing)
+  /// Ignore option lines ("--strict"), which took effect when the file was
+  /// first read; set when an init file is read again for its declarations
+  /// alone (see global_scope_t::parse_init), and passed on to its includes.
+  bool skip_options;
+  /// Where option lines take effect, if not in `scope`: set when a session
+  /// reads its data files again (see session_t::reread_t), and passed on to
+  /// their includes.
+  scope_t* option_scope;
 
   explicit parse_context_t(const path& cwd)
       : pathname_ref(empty_pathname_ptr()), current_directory(cwd), master(nullptr), scope(nullptr),
-        linenum(0), errors(0), count(0), sequence(1) {}
+        linenum(0), errors(0), count(0), sequence(1), skip_options(false), option_scope(nullptr) {}
 
   explicit parse_context_t(std::shared_ptr<std::istream> _stream, const path& cwd)
       : stream(std::move(_stream)), pathname_ref(empty_pathname_ptr()), current_directory(cwd),
-        master(nullptr), scope(nullptr), linenum(0), errors(0), count(0), sequence(1) {}
+        master(nullptr), scope(nullptr), linenum(0), errors(0), count(0), sequence(1),
+        skip_options(false), option_scope(nullptr) {}
 
   parse_context_t(const parse_context_t& context)
       : stream(context.stream), pathname(context.pathname), pathname_ref(context.pathname_ref),
         current_directory(context.current_directory), journal(context.journal),
         master(context.master), scope(context.scope), linebuf(context.linebuf),
         line_beg_pos(context.line_beg_pos), curr_pos(context.curr_pos), linenum(context.linenum),
-        errors(context.errors), count(context.count), sequence(context.sequence) {}
+        errors(context.errors), count(context.count), sequence(context.sequence),
+        skip_options(context.skip_options), option_scope(context.option_scope) {}
   parse_context_t& operator=(const parse_context_t&) = default;
 
   /// @brief Return a human-readable "file:line" string for error messages.

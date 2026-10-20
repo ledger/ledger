@@ -1371,7 +1371,7 @@ public:
  * the mapping.  Non-matching postings pass through unchanged.
  */
 class rewrite_posts : public item_handler<post_t> {
-  report_t& report;    ///< Report context (provides access to the journal's rewrite mappings).
+  report_t& report;    ///< Report context (its own rewrite rules and the journal's).
   temporaries_t temps; ///< Temporary storage for rewritten xacts/posts.
 
   rewrite_posts();

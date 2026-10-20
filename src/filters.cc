@@ -2209,11 +2209,26 @@ void inject_posts::operator()(post_t& post) {
 
 /*--- Payee/account rewriting ---*/
 
+namespace {
+/// The replacement given by the first rule, in @p first and then in
+/// @p second, whose pattern matches @p text; empty if none matches.
+string rewrite_of(const string& text, const std::list<std::pair<mask_t, string>>& first,
+                  const std::list<std::pair<mask_t, string>>& second) {
+  for (const auto* rules : {&first, &second})
+    for (const auto& rule : *rules)
+      if (rule.first.match(text))
+        return rule.second;
+  return string();
+}
+} // namespace
+
 /**
- * Apply payee and account rewrite rules from the journal to each posting.
+ * Apply payee and account rewrite rules to each posting: the report's,
+ * from --payee-rewrite and --account-rewrite, before the journal's, from
+ * its directives.
  *
- * Checks the posting against all payee_rewrite_mappings (matching on the
- * transaction payee) and account_rewrite_mappings (matching on the account
+ * Checks the posting against all payee rewrite rules (matching on the
+ * transaction payee) and account rewrite rules (matching on the account
  * fullname).  If either matches, a temporary copy is created with the
  * rewritten payee and/or account.  Non-matching postings pass through
  * unchanged.
@@ -2222,21 +2237,10 @@ void rewrite_posts::operator()(post_t& post) {
   journal_t* journal = report.session.journal.get();
 
   // Check whether any payee or account rewrite rule matches this posting.
-  string new_payee;
-  for (const payee_rewrite_mapping_t& pair : journal->payee_rewrite_mappings) {
-    if (pair.first.match(post.xact->payee)) {
-      new_payee = pair.second;
-      break;
-    }
-  }
-
-  string new_account;
-  for (const account_rewrite_mapping_t& pair : journal->account_rewrite_mappings) {
-    if (pair.first.match(post.account->fullname())) {
-      new_account = pair.second;
-      break;
-    }
-  }
+  string new_payee =
+      rewrite_of(post.xact->payee, report.payee_rewrite_mappings, journal->payee_rewrite_mappings);
+  string new_account = rewrite_of(post.account->fullname(), report.account_rewrite_mappings,
+                                  journal->account_rewrite_mappings);
 
   // If neither rule matched, forward the original posting unchanged.
   if (new_payee.empty() && new_account.empty()) {

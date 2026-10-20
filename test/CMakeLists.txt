@@ -162,6 +162,15 @@ if(Python_EXECUTABLE)
         "${PROJECT_BINARY_DIR}/ledger${CMAKE_SHARED_LIBRARY_SUFFIX}")
     endif()
   endif()
+
+  # Regression test for GitHub issue #3253: an interactive session must give
+  # the results the command line gives under --effective.  The .test harness
+  # cannot drive an interactive session, so this script does.
+  add_test(NAME RegressPyTest_3253
+    COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/regress/3253.py
+    $<TARGET_FILE:ledger>)
+  set_tests_properties(RegressPyTest_3253
+    PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}")
 endif()
 
 ### CMakeLists.txt ends here

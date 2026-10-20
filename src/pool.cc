@@ -680,6 +680,25 @@ commodity_t* commodity_pool_t::parse_price_expression(const std::string& str, co
   return nullptr;
 }
 
+void commodity_pool_t::undo_price_changes(const commodity_history_t::price_changes_t& changes) {
+  commodity_price_history.undo(changes);
+  forget_price_lookups();
+}
+
+void commodity_pool_t::redo_price_changes(const commodity_history_t::price_changes_t& changes) {
+  commodity_price_history.redo(changes);
+  forget_price_lookups();
+}
+
+void commodity_pool_t::forget_price_lookups() {
+  // Annotated commodities share the base of the commodity they annotate, so
+  // the base commodities' memos are all there are.
+  for (const auto& pair : commodities)
+    pair.second->base->price_map.clear();
+  for (const std::shared_ptr<commodity_t>& commodity : retired_commodities)
+    commodity->base->price_map.clear();
+}
+
 /// @}
 
 /// @name Batch quote prefetching

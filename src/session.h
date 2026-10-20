@@ -67,6 +67,7 @@
 #include "context.h"
 #include "option.h"
 #include "commodity.h"
+#include "history.h"
 
 namespace ledger {
 
@@ -114,6 +115,44 @@ public:
   parse_context_stack_t parsing_context; ///< Stack of active parse contexts (for includes)
   optional<expr_t> value_expr;           ///< User-specified value expression (--value-expr)
 
+  /**
+   * @brief What a session needs to read its journal again in-process.
+   *
+   * An interactive or --script session keeps its journal from command to
+   * command, and reads it again for `reload`, for `source`, and when a
+   * command selects the other date mode (global_scope_t::load_journal).
+   * Each reading should find what a fresh process would, but the price
+   * history and some of the parser's state belong to the whole process.
+   * So the session records the prices each reading puts into the price
+   * history and takes them out when it closes the journal, has each fresh
+   * journal prepared as the first one was, and reads in the scope it read
+   * in at startup, rather than in that of the command at hand, which ends
+   * with the command.  Option lines in the data files are the exception:
+   * those of the first reading have been in effect in that scope since,
+   * and applied there again they would pile up (an --invert inverting
+   * back), so later readings apply them in a scope of their own.  The
+   * command line, which reads once, leaves this unset.
+   */
+  struct reread_t {
+    scope_t* scope;                              ///< Scope to read in: the base report
+    std::function<void()> prepare;               ///< Prepares each fresh journal
+    commodity_history_t::price_changes_t prices; ///< Prices the journal's readings recorded
+    std::list<path> files;                       ///< Data files of the latest reading
+    bool aux_date;                               ///< Its date mode (item_t::use_aux_date)
+    /// Makes the scope for the option lines of a later reading, once the
+    /// first reading is done.
+    std::function<std::unique_ptr<scope_t>()> option_scope;
+
+    // A constructor, not default member initializers: Clang will not use
+    // those for std::optional<reread_t> before session_t is complete.
+    reread_t() : scope(nullptr), aux_date(false) {}
+  };
+  std::optional<reread_t> reread;
+
+  /// The text read from standard input (-f -), which a session keeps for
+  /// reading its journal again: standard input gives it up only once.
+  std::optional<string> stdin_journal;
+
   explicit session_t();
   ~session_t() override {
     TRACE_DTOR(session_t);
@@ -124,8 +163,9 @@ public:
 
   void set_flush_on_next_data_file(const bool truth) { flush_on_next_data_file = truth; }
 
-  /// Read a single journal file, resetting the journal first.
-  /// Used by the programmatic API (e.g., Python bindings).
+  /// Read a single journal file, resetting the journal first, as
+  /// close_journal_files() does.  Used by the programmatic API (e.g., Python
+  /// bindings) and the `source` command.
   journal_t* read_journal(const path& pathname);
 
   /// Read journal data from an in-memory string, resetting the journal first.
@@ -143,7 +183,8 @@ public:
   /// Calls read_data() with the --master-account value if set.
   journal_t* read_journal_files();
 
-  /// Reset the journal, discarding all loaded data.
+  /// Reset the journal, discarding all loaded data, and, in a session
+  /// that reads its journal again (see reread), the prices it recorded.
   void close_journal_files();
 
   /// @return A raw pointer to the current journal.

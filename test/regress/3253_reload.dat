@@ -1,0 +1,9 @@
+--no-pager --columns=80 eval mytoday
+--no-pager --columns=80 register Food
+--no-pager --columns=80 pricedb
+--no-pager --columns=80 reload
+--no-pager --columns=80 eval mytoday
+--no-pager --columns=80 register Food
+--no-pager --columns=80 pricedb
+--no-pager --columns=80 source test/regress/3253_other.dat
+--no-pager --columns=80 pricedb
