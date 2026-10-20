@@ -97,6 +97,12 @@
           # Install the Python module into our own 'py' output rather than the
           # read-only Python store path.
           "-DLEDGER_PYTHON_INSTALL_DIR=${placeholder "py"}/${python3.sitePackages}"
+        ] ++ lib.optionals stdenv.hostPlatform.isDarwin [
+          # Apple's libc++ still has the deprecated std::char_traits base
+          # template that LLVM's own libc++ dropped in LLVM 19.  Leave it out,
+          # so that code needing it, such as std::basic_string<UChar32>
+          # (#3276), fails to build here as it does against LLVM's libc++.
+          "-DCMAKE_CXX_FLAGS=-D_LIBCPP_CHAR_TRAITS_REMOVE_BASE_SPECIALIZATION"
         ];
 
         installTargets = [ "doc" "install" ];
