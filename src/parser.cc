@@ -303,20 +303,18 @@ expr_t::ptr_op_t expr_t::parser_t::parse_logic_expr(std::istream& in,
         goto exit_loop;
       }
 
-      if (kind != op_t::LAST) {
-        ptr_op_t prev(node);
-        node = new op_t(kind);
+      ptr_op_t prev(node);
+      node = new op_t(kind);
+      node->set_left(prev);
+      node->set_right(parse_add_expr(in, _flags));
+
+      if (!node->right())
+        throw_(parse_error, _f("%1% operator not followed by argument") % tok.symbol);
+
+      if (negate) {
+        prev = node;
+        node = new op_t(op_t::O_NOT);
         node->set_left(prev);
-        node->set_right(parse_add_expr(in, _flags));
-
-        if (!node->right())
-          throw_(parse_error, _f("%1% operator not followed by argument") % tok.symbol);
-
-        if (negate) {
-          prev = node;
-          node = new op_t(op_t::O_NOT);
-          node->set_left(prev);
-        }
       }
     }
   }
