@@ -464,16 +464,24 @@ void instance_t::include_directive(char* line) {
 void instance_t::apply_directive(char* line) {
   char* b = next_element(line);
   string keyword(line);
-  if (!b)
-    throw_(parse_error, _f("Directive 'apply %1%' requires an argument") % keyword);
+  // As in account_directive_body(), only a recognized keyword is checked
+  // for a missing argument.
+  auto argument = [&]() -> char* {
+    if (!b)
+      throw_(parse_error, _f("Directive 'apply %1%' requires an argument") % keyword);
+    return b;
+  };
+
   if (keyword == "account")
-    apply_account_directive(b);
+    apply_account_directive(argument());
   else if (keyword == "tag")
-    apply_tag_directive(b);
+    apply_tag_directive(argument());
   else if (keyword == "fixed" || keyword == "rate")
-    apply_rate_directive(b);
+    apply_rate_directive(argument());
   else if (keyword == "year")
-    apply_year_directive(b, true); // "apply year" uses apply_stack
+    apply_year_directive(argument(), true); // "apply year" uses apply_stack
+  else
+    throw_(parse_error, _f("Unrecognized directive 'apply %1%'") % keyword);
 }
 
 void instance_t::apply_account_directive(char* line) {
@@ -660,24 +668,30 @@ void instance_t::account_directive_body(char* line, account_t* parent, std::size
 
     char* b = next_element(q);
     string keyword(q);
-    // Ensure there's an argument for the directives that need one.
-    if (!b && keyword != "default")
-      throw_(parse_error, _f("Account directive '%1%' requires an argument") % keyword);
+    // Sub-directives that take an argument fetch it through here, so that
+    // a keyword is checked for a missing argument only once it has been
+    // recognized; anything else is reported as unrecognized (issue #3260).
+    auto argument = [&]() -> char* {
+      if (!b)
+        throw_(parse_error, _f("Account directive '%1%' requires an argument") % keyword);
+      return b;
+    };
 
     if (keyword == "alias") {
-      account_alias_directive(account, b);
+      account_alias_directive(account, argument());
     } else if (keyword == "payee") {
-      account_payee_directive(account, b);
+      account_payee_directive(account, argument());
     } else if (keyword == "value") {
-      account_value_directive(account, b);
+      account_value_directive(account, argument());
     } else if (keyword == "default") {
       account_default_directive(account);
     } else if (keyword == "account") {
       // Nested account declaration (issue #877): register a child account
       // using the enclosing account as its parent, avoiding the need to
       // repeat the full colon-separated path.
-      account_directive_body(b, account, next_indent);
+      account_directive_body(argument(), account, next_indent);
     } else if (keyword == "assert" || keyword == "check") {
+      char* expr_str = argument();
       keep_details_t keeper(true, true, true);
       string safe_name = account->fullname();
       boost::replace_all(safe_name, "\\", "\\\\");
@@ -697,14 +711,16 @@ void instance_t::account_directive_body(char* line, account_t* parent, std::size
       }
 
       ae->check_exprs->push_back(expr_t::check_expr_pair(
-          expr_t(b), keyword == "assert" ? expr_t::EXPR_ASSERTION : expr_t::EXPR_CHECK));
+          expr_t(expr_str), keyword == "assert" ? expr_t::EXPR_ASSERTION : expr_t::EXPR_CHECK));
     } else if (keyword == "eval" || keyword == "expr") {
       // jww (2012-02-27): Make account into symbol scopes so that this
       // can be used to override definitions within the account.
       bind_scope_t bound_scope(*context.scope, *account);
-      expr_t(b).calc(bound_scope);
+      expr_t(argument()).calc(bound_scope);
     } else if (keyword == "note") {
-      account->note = b;
+      account->note = argument();
+    } else {
+      throw_(parse_error, _f("Unrecognized account directive '%1%'") % keyword);
     }
   }
 
@@ -779,13 +795,20 @@ void instance_t::payee_directive(char* line) {
 
     char* b = next_element(p);
     string keyword(p);
-    if (!b)
-      throw_(parse_error, _f("Payee directive '%1%' requires an argument") % keyword);
+    // As in account_directive_body(), only a recognized keyword is checked
+    // for a missing argument.
+    auto argument = [&]() -> char* {
+      if (!b)
+        throw_(parse_error, _f("Payee directive '%1%' requires an argument") % keyword);
+      return b;
+    };
 
     if (keyword == "alias")
-      payee_alias_directive(payee, b);
+      payee_alias_directive(payee, argument());
     else if (keyword == "uuid")
-      payee_uuid_directive(payee, b);
+      payee_uuid_directive(payee, argument());
+    else
+      throw_(parse_error, _f("Unrecognized payee directive '%1%'") % keyword);
   }
 }
 
@@ -849,22 +872,28 @@ void instance_t::commodity_directive(char* line) {
 
       char* b = next_element(q);
       string keyword(q);
-      // Ensure there's an argument for the directives that need one.
-      if (!b && keyword != "nomarket" && keyword != "default")
-        throw_(parse_error, _f("Commodity directive '%1%' requires an argument") % keyword);
+      // As in account_directive_body(), only a recognized keyword is
+      // checked for a missing argument.
+      auto argument = [&]() -> char* {
+        if (!b)
+          throw_(parse_error, _f("Commodity directive '%1%' requires an argument") % keyword);
+        return b;
+      };
 
       if (keyword == "alias")
-        commodity_alias_directive(*commodity, b);
+        commodity_alias_directive(*commodity, argument());
       else if (keyword == "value")
-        commodity_value_directive(*commodity, b);
+        commodity_value_directive(*commodity, argument());
       else if (keyword == "format")
-        commodity_format_directive(*commodity, b);
+        commodity_format_directive(*commodity, argument());
       else if (keyword == "nomarket")
         commodity_nomarket_directive(*commodity);
       else if (keyword == "default")
         commodity_default_directive(*commodity);
       else if (keyword == "note")
-        commodity->set_note(string(b));
+        commodity->set_note(string(argument()));
+      else
+        throw_(parse_error, _f("Unrecognized commodity directive '%1%'") % keyword);
     }
   }
 }
@@ -928,12 +957,21 @@ void instance_t::tag_directive(char* line) {
 
     char* b = next_element(q);
     string keyword(q);
-    if (keyword == "assert" || keyword == "check") {
+    // As in account_directive_body(), only a recognized keyword is checked
+    // for a missing argument.
+    auto argument = [&]() -> char* {
       if (!b)
         throw_(parse_error, _f("Tag directive '%1%' requires an argument") % keyword);
+      return b;
+    };
+
+    if (keyword == "assert" || keyword == "check") {
       context.journal->tag_check_exprs.insert(tag_check_exprs_map::value_type(
-          string(p), expr_t::check_expr_pair(expr_t(b), keyword == "assert" ? expr_t::EXPR_ASSERTION
-                                                                            : expr_t::EXPR_CHECK)));
+          string(p),
+          expr_t::check_expr_pair(expr_t(argument()), keyword == "assert" ? expr_t::EXPR_ASSERTION
+                                                                          : expr_t::EXPR_CHECK)));
+    } else {
+      throw_(parse_error, _f("Unrecognized tag directive '%1%'") % keyword);
     }
   }
 }

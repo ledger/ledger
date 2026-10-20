@@ -377,6 +377,11 @@ components with their standard-library equivalents.
   Beneath `commodity` or `payee`, `;text` or a bare `;` was rejected as a
   sub-directive missing its argument (#3260).
 
+- Report an unrecognized keyword beneath an `account`, `commodity`, `payee`
+  or `tag` directive, or after `apply`, as an error.  A misspelled
+  sub-directive such as `formt $1,000.00` or `chek amount > 0` was ignored
+  without a word, even under `--pedantic` (#3260).
+
 - Return regex capture-group text from the `=~` operator (extending #664)
 
 ### Documentation
