@@ -1542,14 +1542,19 @@ namespace {
  * conventions).  Trailing non-digit punctuation is stripped and pushed
  * back onto the stream, with special handling for a trailing period
  * (which may indicate zero decimal places in hledger-style input).
+ * Under PARSE_IN_EXPR, a comma where the number would begin is left in
+ * the stream and the quantity is empty.
  *
  * @param[in]  in     Input stream positioned at the start of a number.
  * @param[out] value  The raw numeric string, including punctuation but
  *                    excluding any commodity symbol.
+ * @param[in]  flags  The amount's parsing flags.
  */
-void parse_quantity(std::istream& in, string& value) {
+void parse_quantity(std::istream& in, string& value, const parse_flags_t& flags) {
   value.clear();
   int c = peek_next_nonws(in);
+  if (c == ',' && flags.has_flags(PARSE_IN_EXPR))
+    return;
   if (c == '-') {
     value.push_back(static_cast<char>(c));
     in.get();
@@ -1626,7 +1631,7 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
 
   char n;
   if (std::isdigit(static_cast<unsigned char>(c)) || c == '.') {
-    parse_quantity(in, quant);
+    parse_quantity(in, quant, flags);
 
     n = in.eof() ? '\n' : static_cast<char>(in.peek());
     if (!in.eof() && n != '\n') {
@@ -1650,7 +1655,7 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
       if (std::isspace(static_cast<unsigned char>(in.peek())))
         comm_flags |= COMMODITY_STYLE_SEPARATED;
 
-      parse_quantity(in, quant);
+      parse_quantity(in, quant, flags);
 
       n = in.eof() ? '\n' : static_cast<char>(in.peek());
       if (!flags.has_flags(PARSE_NO_ANNOT) && !quant.empty() && !in.eof() && n != '\n')
