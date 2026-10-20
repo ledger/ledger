@@ -143,6 +143,11 @@ components with their standard-library equivalents.
   (#739), report errors for self-referential price directives, and add
   `--latest` to `prices`/`pricedb`
 
+- Fix `prices` and `pricedb` leaking the postings they synthesize from the
+  price history (#3293).  The postings stayed in the account named after each
+  priced commodity, so a later report in the same REPL or `--script` session
+  added the prices into that account's balance
+
 - Fix the `D` directive to lock the commodity display format (#1197), apply
   `D`-directive formatting to bare amounts (#761), and allow apostrophe (`'`)
   as a digit-group separator
