@@ -210,6 +210,11 @@ components with their standard-library equivalents.
   ignore ANSI escape codes when computing width, and to pad a negative integer
   that it colors only once; flush stdout after each REPL command (#991)
 
+- Let the color argument of `ansify_if()` be a 256-color index (0-255) or a
+  24-bit `#RRGGBB` value as well as a standard name, or several such words
+  at once, as in `"bold #5f87ff"` (#589).  `ansify_if()` now reports an
+  unknown color as an error instead of leaving the text uncolored
+
 - Fix percentage amounts to act as fractions in arithmetic; fix `width`
   options to return integers for expression arithmetic; fix the `truncated()`
   function to work with amounts in value expressions; expose

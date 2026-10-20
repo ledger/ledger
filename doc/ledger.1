@@ -1427,10 +1427,14 @@ option.
 Render the given
 .Ar value
 as a string, applying the proper ANSI escape codes to display it in the given
-.Ar color .
+.Ar color :
+a color name, a number from 0 to 255, a 24-bit color written
+.Li #RRGGBB ,
+or several of these separated by spaces.
 If
 .Ar color
-is not provided, the value is returned unchanged.  The condition is
+is not provided, or is null, empty or a boolean, the value is returned
+unchanged.  The condition is
 typically embedded in the color argument using an
 .Li if
 expression, for example:

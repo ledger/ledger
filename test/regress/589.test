@@ -1,8 +1,10 @@
-; Regression test for issue #589: Add ability to control color output (BZ#589)
+; Regression test for issue #589: Add ability to control color output
 ; https://github.com/ledger/ledger/issues/589
 ;
-; Tests that --no-color flag is available and works correctly.
-; --no-color suppresses ANSI color codes in output
+; Report formats name the colors they use: account names are blue,
+; negative amounts red, the payees of uncleared transactions bold, and
+; so on.  The color argument of ansify_if() may also be a 256-color
+; index (0-255) or a 24-bit #RRGGBB value.  `cat -v` shows ESC as ^[.
 
 2024/01/01 Test
     Expenses:Food    $10.00
@@ -12,9 +14,35 @@
     Expenses:Food    $-5.00
     Assets:Cash
 
+; Output is uncolored with --no-color.
 test bal --no-color
               $-5.00  Assets:Cash
                $5.00  Expenses:Food
 --------------------
                    0
+end test
+
+; ansify_if() accepts 24-bit and 256-color values directly, and several
+; words at once.
+test eval 'ansify_if("a", "#FF8700") + ansify_if("b", 208) + ansify_if("c", "bold underline red")' | cat -v
+^[[38;2;255;135;0ma^[[0m^[[38;5;208mb^[[0m^[[1;4;31mc^[[0m
+end test
+
+test eval 'ansify_if("a", "0") + ansify_if("b", "255")' | cat -v
+^[[38;5;0ma^[[0m^[[38;5;255mb^[[0m
+end test
+
+; A color that is empty, or a condition rather than a color, leaves the
+; value unchanged.
+test eval 'ansify_if("a", "") + ansify_if("b", 3 > 2) + ansify_if("c", 1 > 2)' | cat -v
+abc
+end test
+
+test eval 'ansify_if("a", "purple")' -> 1
+__ERROR__
+While evaluating value expression:
+  ansify_if("a", "purple")
+  ^^^^^^^^^^^^^^^^^^^^^^^^
+While calling function 'ansify_if (<#EXPR "a">, purple)':
+Error: Invalid color 'purple'; expected a color name, a number from 0 to 255, or #RRGGBB
 end test

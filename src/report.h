@@ -228,6 +228,11 @@ public:
   /// Called as "scrub()" in format strings to clean lot info before display.
   value_t display_value(const value_t& val);
 
+  /// @brief Return the ANSI escape sequence that renders @p color, or ""
+  /// if it renders none.  @p color is a color as ansify_if() accepts it:
+  /// names such as "blue", 256-color indexes and #RRGGBB values.
+  string color_escape(const string& color);
+
   /*--- Built-in Value Expression Functions ---*/
   // These methods implement the functions callable from format strings and
   // value expressions (e.g., "market(amount, value_date, exchange)").
