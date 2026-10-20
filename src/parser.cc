@@ -268,10 +268,7 @@ expr_t::ptr_op_t expr_t::parser_t::parse_logic_expr(std::istream& in,
 
       switch (tok.kind) {
       case token_t::EQUAL:
-        if (tflags.has_flags(PARSE_NO_ASSIGN))
-          tok.rewind(in);
-        else
-          kind = op_t::O_EQ;
+        kind = op_t::O_EQ;
         break;
       // != and !~ are desugared as O_NOT(O_EQ(...)) and O_NOT(O_MATCH(...))
       // rather than having their own op_t kinds, reducing evaluator complexity.
@@ -306,20 +303,18 @@ expr_t::ptr_op_t expr_t::parser_t::parse_logic_expr(std::istream& in,
         goto exit_loop;
       }
 
-      if (kind != op_t::LAST) {
-        ptr_op_t prev(node);
-        node = new op_t(kind);
+      ptr_op_t prev(node);
+      node = new op_t(kind);
+      node->set_left(prev);
+      node->set_right(parse_add_expr(in, _flags));
+
+      if (!node->right())
+        throw_(parse_error, _f("%1% operator not followed by argument") % tok.symbol);
+
+      if (negate) {
+        prev = node;
+        node = new op_t(op_t::O_NOT);
         node->set_left(prev);
-        node->set_right(parse_add_expr(in, _flags));
-
-        if (!node->right())
-          throw_(parse_error, _f("%1% operator not followed by argument") % tok.symbol);
-
-        if (negate) {
-          prev = node;
-          node = new op_t(op_t::O_NOT);
-          node->set_left(prev);
-        }
       }
     }
   }

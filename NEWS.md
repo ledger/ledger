@@ -46,6 +46,10 @@ directives, and commands.
   the infinite loop produced by a self-referential `C` (commodity equivalence)
   directive (#1065)
 
+- Fix the parser looping forever on `==` in a posting's amount or cost
+  expression, such as `(1 == 1)`.  `==` now compares there, as `!=` already did
+  (#3290)
+
 - Fix `--invert` to work correctly with composite reports (#1908) and with the
   `equity` command (#1645)
 
