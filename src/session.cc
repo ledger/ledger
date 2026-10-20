@@ -148,7 +148,7 @@ std::size_t session_t::read_data(const string& master_account) {
 
   // Resolve the price database path: the --price-db file, which must exist,
   // or else, while use_default_price_db is set (--args-only clears it),
-  // ~/.pricedb, read only if it exists.
+  // ~/.pricedb (./.pricedb without HOME), read only if it exists.
   optional<path> price_db_path;
   if (HANDLED(price_db_)) {
     price_db_path = resolve_path(HANDLER(price_db_).str());
@@ -159,7 +159,7 @@ std::size_t session_t::read_data(const string& master_account) {
     if (const char* home_var = std::getenv("HOME")) {
       price_db_path = (path(home_var) / ".pricedb");
     } else {
-      price_db_path = ("./.ledgerrc");
+      price_db_path = ("./.pricedb");
     }
   }
 
