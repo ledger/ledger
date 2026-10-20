@@ -3597,7 +3597,11 @@ BOOST_AUTO_TEST_CASE(testPrintNegativeIntegerColorize)
   value_t v1(-42L);
   std::ostringstream out;
   v1.print(out, 10, -1, AMOUNT_PRINT_COLORIZE);
-  BOOST_CHECK(!out.str().empty());
+  BOOST_CHECK_EQUAL(out.str(), "\033[31m-42\033[0m       ");
+
+  std::ostringstream right;
+  v1.print(right, 10, -1, AMOUNT_PRINT_COLORIZE | AMOUNT_PRINT_RIGHT_JUSTIFY);
+  BOOST_CHECK_EQUAL(right.str(), "       \033[31m-42\033[0m");
 }
 
 BOOST_AUTO_TEST_CASE(testPrintIntegerLeftJustify)

@@ -207,8 +207,8 @@ components with their standard-library equivalents.
   family total (#723); allow `--sort` and `--sort-xacts` together
 
 - Enable ANSI color on Windows CMD/PowerShell (#2110); fix `justify()` to
-  ignore ANSI escape codes when computing width; flush stdout after each REPL
-  command (#991)
+  ignore ANSI escape codes when computing width, and to pad a negative integer
+  that it colors only once; flush stdout after each REPL command (#991)
 
 - Fix percentage amounts to act as fractions in arithmetic; fix `width`
   options to return integers for expression arithmetic; fix the `truncated()`

@@ -2516,10 +2516,13 @@ void value_t::print(std::ostream& _out, const int first_width, const int latter_
     break;
 
   case INTEGER:
-    if (flags & AMOUNT_PRINT_COLORIZE && as_long() < 0)
+    if (flags & AMOUNT_PRINT_COLORIZE && as_long() < 0) {
+      // justify() pads the number itself, so drop the width set above.
+      out.width(0);
       justify(out, to_string(), first_width, flags & AMOUNT_PRINT_RIGHT_JUSTIFY, true);
-    else
+    } else {
       out << as_long();
+    }
     break;
 
   case AMOUNT: {
