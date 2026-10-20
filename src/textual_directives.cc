@@ -899,6 +899,8 @@ void instance_t::tag_directive(char* line) {
     char* b = next_element(q);
     string keyword(q);
     if (keyword == "assert" || keyword == "check") {
+      if (!b)
+        throw_(parse_error, _f("Tag directive '%1%' requires an argument") % keyword);
       context.journal->tag_check_exprs.insert(tag_check_exprs_map::value_type(
           string(p), expr_t::check_expr_pair(expr_t(b), keyword == "assert" ? expr_t::EXPR_ASSERTION
                                                                             : expr_t::EXPR_CHECK)));

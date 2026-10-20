@@ -19,8 +19,9 @@ directives, and commands.
   converter
 
 - Fix null pointer dereferences in `get_code()`, `post_pred` (issue #1219),
-  `apply` directive functions (#1221), and `magnitude()` when a posting has a
-  null amount (#2212)
+  `apply` directive functions (#1221), `magnitude()` when a posting has a
+  null amount (#2212), and a `tag` directive's `check` or `assert` given no
+  expression (#3260)
 
 - Fix dangling context pointers from stack-allocated `bind_scope_t` and from
   tag-assertion expressions in the journal

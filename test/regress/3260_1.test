@@ -1,0 +1,18 @@
+; A check or assert beneath a tag directive that has no expression is
+; reported as missing its argument, as the other block directives
+; report theirs (issue #3260).  The reader used to build the
+; expression from a null pointer, which crashed it.
+
+tag Invoice
+    check
+
+tag Order
+    assert
+
+test bal -> 2
+__ERROR__
+While parsing file "$FILE", line 7:
+Error: Tag directive 'check' requires an argument
+While parsing file "$FILE", line 10:
+Error: Tag directive 'assert' requires an argument
+end test
