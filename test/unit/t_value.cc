@@ -179,6 +179,15 @@ BOOST_AUTO_TEST_CASE(testEquality)
   BOOST_CHECK(v17 != string_value("EUR"));
   BOOST_CHECK(string_value("EUR") != v17);
 
+  // A symbol that a journal must quote is named by the bare symbol and by
+  // the quoted spelling alike (#3241).
+  value_t quoted(amount_t("1 \"ABC3\"").commodity());
+  BOOST_CHECK(quoted == string_value("ABC3"));
+  BOOST_CHECK(quoted == string_value("\"ABC3\""));
+  BOOST_CHECK(string_value("\"ABC3\"") == quoted);
+  BOOST_CHECK(quoted != string_value("\"ABC\""));
+  BOOST_CHECK(v17 != string_value("\"ABC3\""));
+
   BOOST_CHECK_THROW(v8 == v10, value_error);
   BOOST_CHECK_THROW(v17 == v8, value_error);
   BOOST_CHECK_THROW(v8 == v17, value_error);
@@ -253,6 +262,16 @@ BOOST_AUTO_TEST_CASE(testOrder)
   BOOST_CHECK(string_value("V") >= v1);
   BOOST_CHECK_THROW(v1 >= value_t(amount_t("USD1")), value_error);
   BOOST_CHECK_THROW(value_t(amount_t("USD1")) >= v1, value_error);
+
+  // Order follows the bare symbol, as equality does, under either spelling
+  // of a symbol that a journal must quote (#3241).
+  value_t v2(amount_t("1 \"ABC3\"").commodity());
+  BOOST_CHECK((v2 < string_value("ABC3")) == false);
+  BOOST_CHECK((v2 > string_value("ABC3")) == false);
+  BOOST_CHECK((v2 < string_value("\"ABC3\"")) == false);
+  BOOST_CHECK((v2 > string_value("\"ABC3\"")) == false);
+  BOOST_CHECK(value_t(amount_t("$1").commodity()) < string_value("ABC3"));
+  BOOST_CHECK(v2 < string_value("\"ABD\""));
 
   BOOST_CHECK(v1.valid());
 }
@@ -917,6 +936,8 @@ BOOST_AUTO_TEST_CASE(testConversion)
   BOOST_CHECK(string_value("$").to_commodity() == usd);
   BOOST_CHECK(string_value("USD").to_commodity() == usd);
   BOOST_CHECK_THROW(string_value("A").to_commodity(), value_error);
+  auto& abc3 = amount_t("1 \"ABC3\"").commodity();
+  BOOST_CHECK(string_value("\"ABC3\"").to_commodity() == abc3);
 
   BOOST_CHECK(v1.casted(value_t::type_t::COMMODITY) == v1);
   BOOST_CHECK(value_t(amount_t("USD1").commodity()).casted(value_t::type_t::COMMODITY) == v1);
