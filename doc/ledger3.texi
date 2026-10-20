@@ -2138,6 +2138,7 @@ $ ledger reg -V food
 @node Keeping it Consistent, Journal Format, Currency and Commodities, Keeping a Journal
 @section Keeping it Consistent
 @findex --strict
+@findex --strict-commodity
 @findex accounts
 
 Sometimes Ledger's flexibility can lead to difficulties.  Using a
@@ -2163,6 +2164,15 @@ Warning: "FinanceData/Master.dat", line 6: Unknown account 'Liabilities:Tithe Ow
 Warning: "FinanceData/Master.dat", line 8: Unknown account 'Liabilities:Tithe Owed'
 Warning: "FinanceData/Master.dat", line 15: Unknown account 'Allocation:Equities:Domestic'
 @end smallexample
+
+Commodities and tags are declared the same way, with the
+@code{commodity} and @code{tag} directives, and @option{--strict} checks
+them too; payees, declared with the @code{payee} directive, are checked
+only if @option{--check-payees} is also given.  To check commodities
+alone, use @option{--strict-commodity} instead, which warns about
+undeclared commodities but accepts any account, payee or tag.  The
+@option{--pedantic} and @option{--pedantic-commodity} options check the
+same things, but report errors rather than warnings.
 
 If you have a large Ledger register already created use the
 @command{accounts} command to get started:
@@ -2582,7 +2592,8 @@ Start a block comment, closed by @code{end comment}.
 @findex commodity
 @cindex pre-declare commodity
 Pre-declare commodity names.  This only has an effect if
-@option{--strict} or @option{--pedantic} is used (see below).
+@option{--strict}, @option{--pedantic}, @option{--strict-commodity} or
+@option{--pedantic-commodity} is used (see below).
 
 @smallexample @c input:validate
 commodity $
@@ -7190,6 +7201,11 @@ Ledger does not expand any aliases if this option is specified.
 @item --pedantic
 Accounts, tags or commodities not previously declared will cause errors.
 
+@item --pedantic-commodity
+Like @option{--pedantic}, but only commodities not previously declared
+cause errors; undeclared accounts, payees and tags are accepted
+silently.
+
 @item --permissive
 Quiet balance assertions.
 
@@ -7213,10 +7229,16 @@ to be fresh enough.
 Ledger normally silently accepts any account or commodity in a posting,
 even if you have misspelled a commonly used one.  The option
 @option{--strict} changes that behavior.  While running with
-@option{--strict}, Ledger interprets all cleared transactions as
-correct, and if it encounters a new account or commodity (same as
-a misspelled commodity or account) it will issue a warning giving you
-the file and line number of the problem.
+@option{--strict}, if Ledger encounters an account, commodity or tag
+that was not previously declared---a misspelled one, for instance---it
+will issue a warning giving you the file and line number of the
+problem.  @xref{Keeping it Consistent}.
+
+@item --strict-commodity
+Like @option{--strict}, but only commodities not previously declared
+cause warnings; undeclared accounts, payees and tags are accepted
+silently.  This suits a journal that declares every commodity it uses,
+while its accounts and payees are kept informally.
 
 @item --recursive-aliases
 Normally, ledger only expands aliases once.  With this option, ledger
