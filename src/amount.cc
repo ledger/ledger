@@ -1919,7 +1919,10 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
       if (details.price->has_commodity() && details.price->keep_precision()) {
         int round_prec = boost::numeric_cast<int>(
             this->precision() + details.price->commodity().precision() + extend_by_digits);
+        amount_t exact(*details.price);
         details.price->in_place_roundto(round_prec);
+        if (*details.price != exact)
+          details.add_flags(ANNOTATION_PRICE_ROUNDED);
       }
     }
     set_commodity(*commodity_pool_t::current_pool->find_or_create(*commodity_, details));
