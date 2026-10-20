@@ -3643,6 +3643,34 @@ from the first posting's cost, you can elide the other amount:
     Assets:Brokerage:Cash
 @end smallexample
 
+A per-unit cost that is a rounded fraction can make the total cost
+differ slightly from the amount you balance it against:
+
+@smallexample @c input:validate
+2023-09-25 Free night redemption
+    Expenses:Hotels         12000 IHG @@ 0.0000833333 IHGfreenight
+    Assets:Rewards                       -1 IHGfreenight
+@end smallexample
+
+The cost of the first posting is 0.9999996 IHGfreenight, and yet this
+transaction balances.  A transaction balances when what remains of
+each commodity rounds to zero at that commodity's display precision,
+which Ledger learns from the amounts you write, unless a directive
+declares it.  Here @samp{-1 IHGfreenight} teaches it no decimal
+places, so the remainder of 0.0000004 IHGfreenight counts as zero.
+
+Cost amounts teach no display precision (@pxref{Posting costs}).  When
+a commodity has appeared only in costs, Ledger has no precision to
+learn for it, and checks what remains of it at the precision of the
+costs themselves.  This transaction therefore does not balance, since
+0.01 EUR is left over:
+
+@smallexample
+2015-03-05 Exchange
+    Assets:Bank                       $1.00 @@ 1.02 EUR
+    Income:Revenue                   -$1.00 @@ 1.01 EUR
+@end smallexample
+
 @menu
 * Primary and secondary commodities::
 @end menu

@@ -1,0 +1,36 @@
+; Regression test for issue #3278: a balance error from xact_base_t::verify()
+; states the remainder at the precision the check used.
+;
+; The automated transaction adds a posting whose cost of 0.01 BAR leaves
+; the extended transaction unbalanced.  BAR appears only in costs, so
+; verify() widens it to the precision of the cost (see 1114.test), and
+; reports that remainder; it used to restore the precision of 0 first,
+; and so printed the remainder that failed the check as "0".
+
+= /^Expenses:Food$/
+    Expenses:Tips                    1 TIP @ 0.01 BAR
+
+2024/01/01 Lunch
+    Expenses:Food                     1 MEAL @ 12 BAR
+    Assets:Cash                     -12 MEAL @ 1 BAR
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 15:
+While balancing transaction from "$FILE", lines 13-15:
+> 2024/01/01 Lunch
+>     Expenses:Food                     1 MEAL @ 12 BAR
+>     Assets:Cash                     -12 MEAL @ 1 BAR
+Unbalanced remainder is:
+             BAR0.01
+Amount to balance against:
+            BAR12.01
+While applying automated transaction from "$FILE", lines 10-11:
+> = /^Expenses:Food$/
+>     Expenses:Tips                    1 TIP @ 0.01 BAR
+While extending transaction from "$FILE", lines 13-15:
+> 2024/01/01 Lunch
+>     Expenses:Food                     1 MEAL @ 12 BAR
+>     Assets:Cash                     -12 MEAL @ 1 BAR
+Error: Transaction does not balance
+end test

@@ -1,0 +1,30 @@
+; Regression test for issue #3278: a written zero teaches no precision.
+;
+; A precision of 0 that an amount written in the journal has taught is
+; honored by the balance check, while a commodity whose precision nothing
+; has taught is checked at the precision of its costs (see 1114.test).  A
+; zero is written without decimals in every currency, so 0 EUR teaches EUR
+; nothing, and the remainder of 0.01 EUR in the second transaction is
+; still caught.
+
+2015/03/01 * Account opened, still empty
+    Assets:Wise:EUR                            0 EUR = 0 EUR
+    Equity:Opening
+
+2015/03/05 * Payee
+    Assets:Bank                                $1.00 @  1.02 EUR
+    Income:Revenue                            -$1.00 @  1.01 EUR
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 16:
+While balancing transaction from "$FILE", lines 14-16:
+> 2015/03/05 * Payee
+>     Assets:Bank                                $1.00 @  1.02 EUR
+>     Income:Revenue                            -$1.00 @  1.01 EUR
+Unbalanced remainder is:
+          0.0100 EUR
+Amount to balance against:
+          1.0200 EUR
+Error: Transaction does not balance
+end test
