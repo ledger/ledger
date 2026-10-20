@@ -698,26 +698,42 @@ string format_t::truncate(const unistring& ustr, const std::size_t width,
             break;
           DEBUG("format.abbrev", "Overflow is " << overflow << " chars");
           std::size_t adjust;
-          if (overflow == 1)
+          if (overflow == 1) {
             adjust = 1;
-          else
-            adjust = std::size_t(
-                std::ceil(double(overflow) * ((double(*i + counter * 3) * double(iteration)) /
-                                              (double(len_minus_last) - double(counter)))));
+          } else {
+            // The divisor is zero when every segment but the last is zero
+            // columns wide.  This segment is then one of them and has no
+            // slack to give up, so let its weight be the whole overflow.
+            const double divisor = double(len_minus_last) - double(counter);
+            const double weight =
+                divisor > 0 ? std::ceil(double(overflow) *
+                                        ((double(*i + counter * 3) * double(iteration)) / divisor))
+                            : double(overflow);
+            // Converting a double that size_t cannot represent is
+            // undefined, so cap the weight at the overflow first.
+            adjust = weight < double(overflow) ? std::size_t(weight) : overflow;
+          }
           DEBUG("format.abbrev", "Weight calc: (" << overflow << " * (((" << *i << " + " << counter
                                                   << ") * " << iteration << ") / ("
                                                   << len_minus_last << " - " << counter << ")))");
-          if (adjust == 0)
-            adjust = 1;
-          else if (adjust > overflow)
-            adjust = overflow;
           DEBUG("format.abbrev", "The weighted part is " << adjust << " chars");
           std::size_t slack = *i - std::min(*i, account_abbrev_length);
           if (adjust > slack)
             adjust = slack;
           if (adjust > 0) {
             DEBUG("format.abbrev", "Reducing segment " << ++index << " by " << adjust << " chars");
-            while (std::isspace(static_cast<unsigned char>((*x)[*i - adjust - 1])) && adjust < *i) {
+            // Don't leave the shortened segment ending in whitespace.  *i
+            // counts display columns, not bytes, so look at the text that
+            // will be shown rather than indexing into *x.  Only an ASCII
+            // byte is a character by itself; in a UTF-8 locale, isspace()
+            // may also claim one that ends a longer character, as 0xA0
+            // ends "à".
+            const unistring segment(*x);
+            while (adjust < *i) {
+              const string kept = segment.extract_by_width(0, *i - adjust);
+              const auto last = static_cast<unsigned char>(kept.empty() ? '\0' : kept.back());
+              if (last >= 0x80 || !std::isspace(last))
+                break;
               DEBUG("format.abbrev", "Segment ends in whitespace, adjusting down");
               ++adjust;
             }
