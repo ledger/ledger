@@ -415,6 +415,10 @@ components with their standard-library equivalents.
   `CMAKE_OSX_SYSROOT` for reproducible macOS builds; add code-coverage tools
   to the Nix development environment
 
+- Fix the build with ICU against LLVM's libc++ 19 or later, as on FreeBSD
+  15.1, which rejects the `std::basic_string<UChar32>` that Boost.Regex's
+  `u32regex` uses for `str()` and, before Boost 1.89, for comparisons (#3276)
+
 ### Testing and Coverage
 
 - Add 419 new regression tests, raising source-code coverage to 89.6%, and
