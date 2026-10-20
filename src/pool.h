@@ -294,6 +294,16 @@ public:
                                       const std::optional<datetime_t>& moment = {});
 
   /**
+   * @brief Undo changes recorded in the price history.
+   *
+   * Applies commodity_history_t::undo() to @p changes, then forgets every
+   * price lookup the commodities have memoized: a lookup may have passed
+   * through a price that has just been taken out, which the memo of the
+   * commodity looked up would never learn of.
+   */
+  void undo_price_changes(const commodity_history_t::price_changes_t& changes);
+
+  /**
    * @brief Pre-fetch price quotes for all eligible commodities in batch.
    *
    * Collects commodities that are candidates for downloading (not builtin,
@@ -305,6 +315,9 @@ public:
    * invocations during the report (issue #588).
    */
   void prefetch_quotes();
+
+private:
+  void forget_price_lookups();
 };
 
 } // namespace ledger

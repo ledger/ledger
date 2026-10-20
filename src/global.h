@@ -88,6 +88,7 @@ class global_scope_t : public noncopyable, public scope_t {
   std::shared_ptr<session_t> session_ptr; ///< The single session for this invocation
   ptr_list<report_t> report_stack;        ///< Stack of report objects; front() is current
   empty_scope_t empty_scope;              ///< Sentinel scope used for empty lookups
+  std::optional<path> parsed_init_file;   ///< The init file read at startup, if any
 
 public:
   /// Construct the global scope, reading environment and init-file options.
@@ -106,7 +107,10 @@ public:
 
   /// Parse an initialization file, which may contain option directives
   /// and account/commodity declarations but must not contain transactions.
-  void parse_init(const path& init_file);
+  /// With @p skip_options its option directives are passed over: a session
+  /// that reads its journal again reads the init file's declarations into
+  /// each fresh journal, its options having been in effect since startup.
+  void parse_init(const path& init_file, bool skip_options = false);
 
   /// Locate and read the user's init file.  Searches, in order:
   /// --init-file path, $XDG_CONFIG_HOME/ledger/ledgerrc,
@@ -174,7 +178,11 @@ public:
   /// effective dates (#1837).  Every mode that reads a journal must therefore
   /// apply it first, so that interactive and script sessions read the
   /// journal as the command line does (#3253).
-  void load_journal();
+  ///
+  /// The command line reads the journal once.  A session (@p at_repl) reads
+  /// it at startup and keeps it, readying itself to read it again cleanly
+  /// (see session_t::reread).
+  void load_journal(bool at_repl);
 
   /// Execute a single command: resolve the verb, load journal data if
   /// needed, open the output stream, and invoke the command handler.

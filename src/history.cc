@@ -134,6 +134,9 @@ public:
   PricePointMap pricemap; ///< Property map for cached price points
   PriceRatioMap ratiomap; ///< Property map for price history maps
 
+  /// Where add_price() records its changes, if anywhere (record_changes).
+  commodity_history_t::price_changes_t* changes = nullptr;
+
   commodity_history_impl_t()
       : pricemap(get(edge_price_point, price_graph)), ratiomap(get(edge_price_ratio, price_graph)) {
   }
@@ -142,6 +145,11 @@ public:
 
   void add_price(const commodity_t& source, const datetime_t& when, const amount_t& price);
   void remove_price(const commodity_t& source, const commodity_t& target, const datetime_t& date);
+
+  /// Set the price between vertices @p sv and @p tv at @p when to @p price,
+  /// or remove it if @p price is empty.  Used to undo changes.
+  void set_price(vertex_descriptor sv, vertex_descriptor tv, const datetime_t& when,
+                 const std::optional<amount_t>& price);
 
   void map_prices(const function<void(datetime_t, const amount_t&)>& fn, const commodity_t& source,
                   const datetime_t& moment, const datetime_t& _oldest = datetime_t(),
@@ -179,6 +187,18 @@ void commodity_history_t::add_price(const commodity_t& source, const datetime_t&
 void commodity_history_t::remove_price(const commodity_t& source, const commodity_t& target,
                                        const datetime_t& date) {
   p_impl->remove_price(source, target, date);
+}
+
+commodity_history_t::price_changes_t*
+commodity_history_t::record_changes(price_changes_t* changes) {
+  price_changes_t* previous = p_impl->changes;
+  p_impl->changes = changes;
+  return previous;
+}
+
+void commodity_history_t::undo(const price_changes_t& changes) {
+  for (auto change = changes.rbegin(); change != changes.rend(); ++change)
+    p_impl->set_price(change->source, change->target, change->when, change->replaced);
 }
 
 void commodity_history_t::alias_commodity(commodity_t& old_comm, commodity_t& new_comm) {
@@ -361,10 +381,34 @@ void commodity_history_impl_t::add_price(const commodity_t& source, const dateti
 
   price_map_t& prices(get(ratiomap, e1_desc));
 
-  auto [iter, inserted] = prices.insert(price_map_t::value_type(when, price));
-  if (!inserted) {
+  // Log the change before making it, so that no price goes in unlogged.
+  auto iter = prices.find(when);
+  if (changes)
+    changes->push_back(
+        {sv, tv, when, price,
+         iter == prices.end() ? std::nullopt : std::optional<amount_t>(iter->second)});
+
+  if (iter == prices.end()) {
+    prices.insert(price_map_t::value_type(when, price));
+  } else {
     // There is already an entry for this moment, so update it
     iter->second = price;
+  }
+}
+
+void commodity_history_impl_t::set_price(vertex_descriptor sv, vertex_descriptor tv,
+                                         const datetime_t& when,
+                                         const std::optional<amount_t>& price) {
+  auto [edge_desc, edge_exists] = edge(sv, tv, price_graph);
+  if (price) {
+    if (!edge_exists)
+      edge_desc = add_edge(sv, tv, price_graph).first;
+    get(ratiomap, edge_desc)[when] = *price;
+  } else if (edge_exists) {
+    price_map_t& prices(get(ratiomap, edge_desc));
+    prices.erase(when);
+    if (prices.empty())
+      remove_edge(edge_desc, price_graph);
   }
 }
 

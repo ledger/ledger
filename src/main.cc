@@ -140,7 +140,7 @@ int main(int argc, char* argv[], char* envp[]) {
 
     if (global_scope->HANDLED(script_)) {
       // Script mode: execute commands from a file, one per line
-      global_scope->load_journal();
+      global_scope->load_journal(true);
 
       status = 0;
 
@@ -160,7 +160,7 @@ int main(int argc, char* argv[], char* envp[]) {
       // REPL mode: interactive command loop
       global_scope->show_version_info(std::cout);
 
-      global_scope->load_journal();
+      global_scope->load_journal(true);
 
       bool exit_loop = false;
 

@@ -136,18 +136,20 @@ global_scope_t::~global_scope_t() {
 
 /*--- Init File Processing ---*/
 
-void global_scope_t::parse_init(const path& init_file) {
+void global_scope_t::parse_init(const path& init_file, bool skip_options) {
   TRACE_START(init, 1, "Read initialization file");
 
   // The init file is parsed as a journal, but it must not contain any
   // transactions -- only option directives and account/commodity
   // declarations are permitted.  Automated and periodic transactions are
   // also forbidden because they would silently affect report output in
-  // ways that are hard to debug.
+  // ways that are hard to debug.  It is parsed in the scope of the base
+  // report, the only one at startup, whatever command reads it again.
   parse_context_stack_t parsing_context;
   parsing_context.push(init_file);
   parsing_context.get_current().journal = session().journal.get();
-  parsing_context.get_current().scope = &report();
+  parsing_context.get_current().scope = &report_stack.back();
+  parsing_context.get_current().skip_options = skip_options;
 
   if (session().journal->read(parsing_context, NO_HASHES) > 0 ||
       session().journal->auto_xacts.size() > 0 || session().journal->period_xacts.size() > 0) {
@@ -192,6 +194,7 @@ void global_scope_t::read_init() {
   }
   if (exists(init_file)) {
     parse_init(init_file);
+    parsed_init_file = init_file;
   }
 }
 
@@ -221,9 +224,62 @@ void global_scope_t::report_error(const std::exception& err) {
 
 /*--- Command Execution ---*/
 
-void global_scope_t::load_journal() {
+#if HAVE_BOOST_PYTHON
+namespace {
+/// Point Python's `journal`, which a python directive sets to the journal
+/// being read, at @p journal, unless that name holds something else.
+void point_python_at(journal_t* journal) {
+  if (!python_session || !python_session->is_initialized)
+    return;
+  boost::python::dict& globals(python_session->main_module->module_globals);
+  if (!globals.has_key("journal"))
+    return;
+  boost::python::object current = globals["journal"];
+  if (boost::python::extract<journal_t*>(current).check())
+    python_session->main_module->define_global("journal",
+                                               boost::python::object(boost::python::ptr(journal)));
+}
+} // namespace
+#endif
+
+void global_scope_t::load_journal(bool at_repl) {
+  if (at_repl) {
+    if (session().reread)
+      return;
+
+    // A session keeps its journal from command to command and may read it
+    // again (session_t::reread), each time from where this first reading
+    // starts: with the year, the time and the default commodity as they are
+    // now, before any data file has set them, and with the init file's
+    // declarations but not its options, which have been in effect since
+    // startup.  A --now given to the command at hand stands, as it would on
+    // the command line.
+    session_t::reread_t& reread(session().reread.emplace());
+    reread.scope = &report_stack.back();
+    reread.prepare = [this, year = year_directive_year, now = epoch,
+                      commodity = commodity_pool_t::current_pool->default_commodity] {
+      year_directive_year = year;
+      if (!report().HANDLED(now_))
+        epoch = now;
+      commodity_pool_t::current_pool->default_commodity = commodity;
+      if (parsed_init_file && exists(*parsed_init_file))
+        parse_init(*parsed_init_file, true);
+#if HAVE_BOOST_PYTHON
+      point_python_at(session().journal.get());
+#endif
+    };
+  }
+
   item_t::use_aux_date = (report().HANDLED(aux_date) && !report().HANDLED(primary_date));
   session().read_journal_files();
+
+  // Option lines in the data files have set this report's options, as they
+  // do on the command line, and here they stay in effect: have later
+  // readings apply such lines to a copy of the report instead.
+  if (at_repl)
+    session().reread->option_scope = [this] {
+      return std::unique_ptr<scope_t>(new report_t(report_stack.back()));
+    };
 }
 
 void global_scope_t::execute_command(strings_list args, bool at_repl) {
@@ -267,8 +323,7 @@ void global_scope_t::execute_command(strings_list args, bool at_repl) {
   // Then patch up the report options based on the command verb.
 
   if (!is_precommand) {
-    if (!at_repl)
-      load_journal();
+    load_journal(at_repl);
 
     report().normalize_options(verb);
 
