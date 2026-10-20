@@ -12,6 +12,9 @@
 ;
 ; This test verifies that --group-by works correctly with -B when some
 ; postings lack the grouping field.
+;
+; The dates have no year, so they fall in the current year; the register
+; tests pin "now" so that their output stays the same as the years pass.
 
 1/2 Payee1
     Acct1  -$100
@@ -23,7 +26,7 @@
     Acct2   $50 ; Note1
 
 
-test reg Acct2 --group-by note
+test reg Acct2 --group-by note --now 2026/02/16
  Note1
 26-Jan-02 Payee1                Acct2                           $50          $50
 26-Jan-02 Payee2                Acct2                           $50         $100
@@ -32,7 +35,7 @@ test reg Acct2 --group-by note
 26-Jan-02 Payee1                Acct2                           $50          $50
 end test
 
-test reg Acct2 --group-by note -B
+test reg Acct2 --group-by note -B --now 2026/02/16
  Note1
 26-Jan-02 Payee1                Acct2                           $50          $50
 26-Jan-02 Payee2                Acct2                           $50         $100

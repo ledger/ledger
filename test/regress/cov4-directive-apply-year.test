@@ -1,5 +1,7 @@
 ; Test apply year / end apply year directive
 ; Exercise the year_directive_year and apply_stack flow
+; After "end apply year", 01/15 falls back to the current year, which the
+; test pins with --now.
 
 apply year 2023
 
@@ -13,7 +15,7 @@ end apply year
     Expenses:Auto    $20.00
     Assets:Cash
 
-test reg
+test reg --now 2026/03/04
 23-Jan-15 Test1                 Expenses:Food                $10.00       $10.00
                                 Assets:Cash                 $-10.00            0
 26-Jan-15 Test2                 Expenses:Auto                $20.00       $20.00
