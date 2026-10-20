@@ -132,6 +132,13 @@ components with their standard-library equivalents.
   the `C` directive interaction with `-X` (#1066), and
   crash-when-empty-commodity in `getquote` (#1869)
 
+- Reject a `C` directive without a commodity on each side (#3261): equating a
+  commodity with a bare number merged the two, and reports showed the
+  commodity's amounts without its symbol or number format, whichever side the
+  bare number stood on.  To report amounts without their symbol, transform
+  them at report time instead, as with `--amount 'quantity(amount)'` in a
+  single-commodity journal
+
 - Add `--decimal-places` to limit display precision (#797), accept an optional
   precision argument in `round()` (#628), and add a `--round` option that
   rounds each posting before aggregation (#781) plus a `--round` option that
