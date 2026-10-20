@@ -882,7 +882,8 @@ public:
 void times_initialize();
 
 /// @brief Tear down the date/time subsystem: release all IO objects and
-/// cached format strings.
+/// cached format strings, and restore the epoch, year directive, start of
+/// week, period shift and date separators to their defaults.
 void times_shutdown();
 
 /// @brief Tokenize a period expression string and dump each token with its
