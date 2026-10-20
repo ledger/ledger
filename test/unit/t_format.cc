@@ -175,6 +175,18 @@ BOOST_AUTO_TEST_CASE(testTruncateAbbreviateControlCharacters)
   BOOST_CHECK_EQUAL(format_t::truncate(acct, 20, 2), "As:Ba:DemoB:Checking");
 }
 
+BOOST_AUTO_TEST_CASE(testTruncateAbbreviateZeroWidthSegments)
+{
+  // When every segment but the last is zero columns wide, the weight that
+  // shares out the overflow used to divide by zero, and converting the
+  // infinite result to size_t is undefined; clang's UBSan reports it.
+  // There is nothing to take from those segments, so the name is truncated
+  // at the beginning instead.
+  format_t::default_style = format_t::ABBREVIATE;
+  BOOST_CHECK_EQUAL(format_t::truncate(unistring("::Checking"), 5, 2), "..ing");
+  BOOST_CHECK_EQUAL(format_t::truncate(unistring("\025:\025:Checking"), 5, 2), "..ing");
+}
+
 // -----------------------------------------------------------------------
 // Format element parsing tests - cover format.cc uncovered lines
 // -----------------------------------------------------------------------

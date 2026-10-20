@@ -698,19 +698,24 @@ string format_t::truncate(const unistring& ustr, const std::size_t width,
             break;
           DEBUG("format.abbrev", "Overflow is " << overflow << " chars");
           std::size_t adjust;
-          if (overflow == 1)
+          if (overflow == 1) {
             adjust = 1;
-          else
-            adjust = std::size_t(
-                std::ceil(double(overflow) * ((double(*i + counter * 3) * double(iteration)) /
-                                              (double(len_minus_last) - double(counter)))));
+          } else {
+            // The divisor is zero when every segment but the last is zero
+            // columns wide.  This segment is then one of them and has no
+            // slack to give up, so let its weight be the whole overflow.
+            const double divisor = double(len_minus_last) - double(counter);
+            const double weight =
+                divisor > 0 ? std::ceil(double(overflow) *
+                                        ((double(*i + counter * 3) * double(iteration)) / divisor))
+                            : double(overflow);
+            // Converting a double that size_t cannot represent is
+            // undefined, so cap the weight at the overflow first.
+            adjust = weight < double(overflow) ? std::size_t(weight) : overflow;
+          }
           DEBUG("format.abbrev", "Weight calc: (" << overflow << " * (((" << *i << " + " << counter
                                                   << ") * " << iteration << ") / ("
                                                   << len_minus_last << " - " << counter << ")))");
-          if (adjust == 0)
-            adjust = 1;
-          else if (adjust > overflow)
-            adjust = overflow;
           DEBUG("format.abbrev", "The weighted part is " << adjust << " chars");
           std::size_t slack = *i - std::min(*i, account_abbrev_length);
           if (adjust > slack)
