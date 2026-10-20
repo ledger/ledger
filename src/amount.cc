@@ -1974,18 +1974,27 @@ void amount_t::parse_conversion(const string& larger_str, const string& smaller_
   // Detect cycles before setting the smaller/larger links (bug #1065).
   // The C directive (e.g. "C 3600s = 1h") can create cycles when there
   // is already a chain connecting the two commodities.  Walk both chains
-  // to verify that the new link would not close a loop.
-  //
+  // to verify that the new link would not close a loop.  The links live on
+  // a commodity's base, which its annotated forms share, so commodities are
+  // compared by referent; and each walk begins a link past the commodity it
+  // starts from, so a commodity converted into itself, a cycle of one link,
+  // has to be caught first.
+  auto same_unit = [](const commodity_t& a, const commodity_t& b) {
+    return a.referent() == b.referent();
+  };
+  if (same_unit(larger.commodity(), smaller.commodity()))
+    throw parse_error(_("Commodity conversion would create a cycle"));
+
   // Would setting larger_commodity.smaller = smaller create a cycle?
   // Walk the existing smaller chain from smaller's commodity.
   for (commodity_t* c = smaller.commodity_; c && c->smaller(); c = c->smaller()->commodity_) {
-    if (c->smaller()->commodity_ == larger.commodity_)
+    if (same_unit(c->smaller()->commodity(), larger.commodity()))
       throw parse_error(_("Commodity conversion would create a cycle"));
   }
   // Would setting smaller_commodity.larger = larger create a cycle?
   // Walk the existing larger chain from larger's commodity.
   for (commodity_t* c = larger.commodity_; c && c->larger(); c = c->larger()->commodity_) {
-    if (c->larger()->commodity_ == smaller.commodity_)
+    if (same_unit(c->larger()->commodity(), smaller.commodity()))
       throw parse_error(_("Commodity conversion would create a cycle"));
   }
 
