@@ -4492,6 +4492,29 @@ BOOST_AUTO_TEST_CASE(testIsEqualToMask)
   BOOST_CHECK(v1 == v2);
 }
 
+BOOST_AUTO_TEST_CASE(testMaskEquality)
+{
+  // Masks are equal when their compiled patterns and flags are.
+  BOOST_CHECK(mask_t("caf\xc3\xa9") == mask_t("caf\xc3\xa9"));
+  BOOST_CHECK(!(mask_t("caf\xc3\xa9") == mask_t("cafe")));
+  BOOST_CHECK(!(mask_t("abc") == mask_t("ABC")));
+
+  mask_t glob; // compiled case-sensitively, unlike mask_t("abc")
+  glob.assign_glob("abc");
+  BOOST_CHECK(!(glob == mask_t("abc")));
+
+  // A default mask has no pattern at all, so it differs from a compiled
+  // empty pattern even when the flags agree (an empty glob's are zero too).
+  mask_t empty_glob;
+  empty_glob.assign_glob("");
+  mask_t empty_glob2;
+  empty_glob2.assign_glob("");
+  BOOST_CHECK(mask_t() == mask_t());
+  BOOST_CHECK(empty_glob == empty_glob2);
+  BOOST_CHECK(!(mask_t() == empty_glob));
+  BOOST_CHECK(!(empty_glob == mask_t()));
+}
+
 BOOST_AUTO_TEST_CASE(testIsEqualToSequence)
 {
   value_t seq1;
