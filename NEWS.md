@@ -372,6 +372,11 @@ components with their standard-library equivalents.
 - Support nested `account` declarations (#877) and metadata tags on `account`
   directives (#1681)
 
+- Accept comment lines, with or without a space after the comment
+  character, beneath `account`, `commodity`, `payee` and `tag` directives.
+  Beneath `commodity` or `payee`, `;text` or a bare `;` was rejected as a
+  sub-directive missing its argument (#3260).
+
 - Return regex capture-group text from the `=~` operator (extending #664)
 
 ### Documentation

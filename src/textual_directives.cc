@@ -597,6 +597,30 @@ void instance_t::end_apply_directive(char* kind) {
   apply_stack.pop_front();
 }
 
+/*--- Directive Blocks ---*/
+
+namespace {
+
+/// Return true if @p line, an indented line beneath an `account`,
+/// `commodity`, `payee` or `tag` directive with its leading whitespace
+/// skipped, is a comment rather than a sub-directive.  These are the
+/// characters that read_next_directive() treats as starting a comment at
+/// the beginning of a top-level line.
+bool is_block_comment(const char* line) {
+  switch (*line) {
+  case ';':
+  case '#':
+  case '%':
+  case '*':
+  case '|':
+    return true;
+  default:
+    return false;
+  }
+}
+
+} // namespace
+
 /*--- Account Directives ---*/
 
 void instance_t::account_directive(char* line) {
@@ -628,7 +652,7 @@ void instance_t::account_directive_body(char* line, account_t* parent, std::size
     // account_t::parse_tags makes the `:tag:` and `Key: value` forms
     // available to balance-format expressions such as
     // `%(tag("Contribution"))` (issue #1681).
-    if (*q == ';' || *q == '#' || *q == '*' || *q == '|') {
+    if (is_block_comment(q)) {
       char* body = skip_ws(q + 1);
       account->parse_tags(body, *context.scope, true);
       continue;
@@ -750,6 +774,8 @@ void instance_t::payee_directive(char* line) {
     char* p = skip_ws(line);
     if (!*p)
       break;
+    if (is_block_comment(p))
+      continue;
 
     char* b = next_element(p);
     string keyword(p);
@@ -818,6 +844,8 @@ void instance_t::commodity_directive(char* line) {
       char* q = skip_ws(line);
       if (!*q)
         break;
+      if (is_block_comment(q))
+        continue;
 
       char* b = next_element(q);
       string keyword(q);
@@ -895,6 +923,8 @@ void instance_t::tag_directive(char* line) {
     char* q = skip_ws(line);
     if (!*q)
       break;
+    if (is_block_comment(q))
+      continue;
 
     char* b = next_element(q);
     string keyword(q);
