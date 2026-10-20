@@ -268,10 +268,7 @@ expr_t::ptr_op_t expr_t::parser_t::parse_logic_expr(std::istream& in,
 
       switch (tok.kind) {
       case token_t::EQUAL:
-        if (tflags.has_flags(PARSE_NO_ASSIGN))
-          tok.rewind(in);
-        else
-          kind = op_t::O_EQ;
+        kind = op_t::O_EQ;
         break;
       // != and !~ are desugared as O_NOT(O_EQ(...)) and O_NOT(O_MATCH(...))
       // rather than having their own op_t kinds, reducing evaluator complexity.
