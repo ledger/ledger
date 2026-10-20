@@ -291,7 +291,7 @@ public:
   value_t fn_percent(call_scope_t& scope);   ///< Compute percentage: percent(part, whole)
 
   // Commodity and lot inspection
-  value_t fn_commodity(call_scope_t& scope);       ///< Return the commodity symbol of an amount
+  value_t fn_commodity(call_scope_t& scope);       ///< Return the commodity of an amount
   value_t fn_commodity_price(call_scope_t& scope); ///< Look up a commodity's price at a given date
   value_t fn_set_commodity_price(call_scope_t& scope); ///< Inject a price into the price history
   value_t fn_nail_down(call_scope_t& scope); ///< Fix an amount's per-unit cost via annotation
