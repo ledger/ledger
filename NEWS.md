@@ -49,6 +49,13 @@ directives, and commands.
 - Fix `--invert` to work correctly with composite reports (#1908) and with the
   `equity` command (#1645)
 
+- Fix a use-after-free when an interactive or `--script` session read a
+  journal containing a `define` again with `reload` or `source`.  Each such
+  reading now starts afresh, as a new process would: the previous journal's
+  prices, `year` and default commodity (`D`) no longer linger, a journal read
+  from standard input is read again rather than found empty, and the init
+  file's declarations are kept
+
 ### Code Modernization
 
 This release migrates the codebase to C++17 and replaces several Boost utility
@@ -281,6 +288,13 @@ components with their standard-library equivalents.
   directive no longer leaks into `xact`/`entry` commands (#707); fix the year
   directive interaction with price history (#1748); restore year/epoch state
   after processing included files (#1979)
+
+- Make interactive and `--script` sessions honor `--effective` (or
+  `--aux-date`) as the command line does (#3253): the journal is read under
+  the date mode given at startup, and read again when a command turns
+  `--effective` on or off, so that balance assertions, the prices that costs
+  imply, and lot dates agree with what the same command reports on the
+  command line
 
 ### Automated Transactions, Forecasting, and Budgets
 
