@@ -1,0 +1,38 @@
+; A lot sold over several postings, each at its own price, balances at
+; its lot basis: every posting books the gain between basis and price
+; exactly, and the transaction must balance within EUR's two places.
+; Rounding each posting's gain to two places before summing let the
+; errors add up, so these sales were rejected by a cent.  The gains
+; below are what 3.4.1 and beancount accept.
+
+2018-09-24 * Sold
+    Assets:Current                                     92836.79 EUR
+    Income:Capital gains                              -38525.84 EUR
+    Assets:Investments       -1391 FOO {21.802871170463472 EUR} [2018-09-24] @ 37.2680 EUR
+    Assets:Investments       -1100 FOO {21.802871170463472 EUR} [2018-09-24] @ 37.2700 EUR
+
+2018-09-24 * Sold FOO
+    Assets:Current                            633.56 EUR
+    Income:Capital gains                     -262.91 EUR
+    Assets:Investments       -13 FOO {21.802871170463472 EUR} [2018-09-24] @ 37.2680 EUR
+    Assets:Investments        -4 FOO {21.802871170463472 EUR} [2018-09-24] @ 37.2700 EUR
+
+test bal
+        93470.35 EUR
+           -2508 FOO  Assets
+        93470.35 EUR    Current
+           -2508 FOO    Investments
+       -38788.75 EUR  Income:Capital gains
+--------------------
+        54681.60 EUR
+           -2508 FOO
+end test
+
+; Each sale posting carries its lot basis, quantity times lot price, as
+; its cost.
+test reg --basis Investments
+18-Sep-24 Sold                  Assets:Investments     -30327.79 EUR -30327.79 EUR
+                                Assets:Investments     -23983.16 EUR -54310.95 EUR
+18-Sep-24 Sold FOO              Assets:Investments      -283.44 EUR -54594.39 EUR
+                                Assets:Investments       -87.21 EUR -54681.60 EUR
+end test
