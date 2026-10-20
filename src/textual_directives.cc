@@ -163,6 +163,9 @@ void instance_t::default_commodity_directive(char* line) {
   // the directive is bare, amt.commodity() returns null_commodity, so
   // this also locks null_commodity's newly-installed style.
   amt.commodity().add_flags(COMMODITY_STYLE_NO_MIGRATE);
+  // A bare directive names no commodity to declare.
+  if (amt.has_commodity())
+    context.journal->register_commodity(amt.commodity(), 0);
 }
 
 void instance_t::default_account_directive(char* line) {
@@ -204,8 +207,10 @@ void instance_t::nomarket_directive(char* line) {
   string symbol; // NOLINT(bugprone-unused-local-non-trivial-variable)
   commodity_t::parse_symbol(p, symbol);
 
-  if (commodity_t* commodity = commodity_pool_t::current_pool->find_or_create(symbol))
+  if (commodity_t* commodity = commodity_pool_t::current_pool->find_or_create(symbol)) {
     commodity->add_flags(COMMODITY_NOMARKET | COMMODITY_KNOWN);
+    context.journal->register_commodity(*commodity, 0);
+  }
 }
 
 /*--- File and Option Directives ---*/

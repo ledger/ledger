@@ -1,0 +1,37 @@
+; Issue #3265: --strict-commodity, like --strict, must only add checking.
+; A `commodity` directive used to mark its commodity known only under one
+; of these options, and a known commodity takes no display precision from
+; price entries (#2481), so the option dropped the cents that $ otherwise
+; learns from the price below.
+
+commodity $
+commodity AAPL
+account Assets:Brokerage
+account Equity:Opening
+
+P 2024/01/01 AAPL $150.125
+
+2024/01/02 Buy
+    Assets:Brokerage    10 AAPL
+    Equity:Opening
+
+test bal -X $
+           $1501.250  Assets:Brokerage
+          $-1501.250  Equity:Opening
+--------------------
+                   0
+end test
+
+test bal -X $ --strict-commodity
+           $1501.250  Assets:Brokerage
+          $-1501.250  Equity:Opening
+--------------------
+                   0
+end test
+
+test bal -X $ --strict
+           $1501.250  Assets:Brokerage
+          $-1501.250  Equity:Opening
+--------------------
+                   0
+end test

@@ -2138,6 +2138,7 @@ $ ledger reg -V food
 @node Keeping it Consistent, Journal Format, Currency and Commodities, Keeping a Journal
 @section Keeping it Consistent
 @findex --strict
+@findex --strict-commodity
 @findex accounts
 
 Sometimes Ledger's flexibility can lead to difficulties.  Using a
@@ -2163,6 +2164,15 @@ Warning: "FinanceData/Master.dat", line 6: Unknown account 'Liabilities:Tithe Ow
 Warning: "FinanceData/Master.dat", line 8: Unknown account 'Liabilities:Tithe Owed'
 Warning: "FinanceData/Master.dat", line 15: Unknown account 'Allocation:Equities:Domestic'
 @end smallexample
+
+Commodities and tags are declared the same way, with the
+@code{commodity} and @code{tag} directives, and @option{--strict} checks
+them too; payees, declared with the @code{payee} directive, are checked
+only if @option{--check-payees} is also given.  To check commodities
+alone, use @option{--strict-commodity} instead, which warns about
+undeclared commodities but accepts any account, payee or tag.  The
+@option{--pedantic} and @option{--pedantic-commodity} options check the
+same things, but report errors rather than warnings.
 
 If you have a large Ledger register already created use the
 @command{accounts} command to get started:
@@ -2581,8 +2591,12 @@ Start a block comment, closed by @code{end comment}.
 @item commodity
 @findex commodity
 @cindex pre-declare commodity
-Pre-declare commodity names.  This only has an effect if
-@option{--strict} or @option{--pedantic} is used (see below).
+Pre-declare commodity names.  A posting in an undeclared commodity
+causes a warning only under @option{--strict} or
+@option{--strict-commodity}, and an error only under @option{--pedantic}
+or @option{--pedantic-commodity} (see below).  Declared commodities are
+also listed by the @command{commodities} command, even when no posting
+uses them.
 
 @smallexample @c input:validate
 commodity $
@@ -2651,10 +2665,16 @@ name can contain a wildcard (@samp{*}) to refer to multiple files (e.g.
 
 @item payee
 @findex payee
+@cindex pre-declare payee
 @c instance_t::payee_alias_mapping_directive in textual.cc
 @c instance_t::payee_uuid_mapping_directive in textual.cc
 @findex print
 @findex register
+Pre-declare payee names.  A transaction with an undeclared payee causes
+a warning under @option{--strict}, or an error under
+@option{--pedantic}, only if @option{--check-payees} is also used.
+Declared payees are also listed by the @command{payees} command, even
+when no transaction uses them.
 
 The @code{payee} directive supports two optional sub-directives, if they
 immediately follow the payee directive and---if it is on a successive
@@ -2745,8 +2765,10 @@ is the equivalent of:
 @item tag
 @findex tag
 @cindex pre-declare tag
-Pre-declares tag names.  This only has an effect if @option{--strict} or
-@option{--pedantic} is used (see below).
+Pre-declares tag names.  An undeclared tag causes a warning only under
+@option{--strict}, and an error only under @option{--pedantic} (see
+below).  Declared tags are also listed by the @command{tags} command,
+even when no posting uses them.
 
 @smallexample @c input:validate
 tag Receipt
@@ -6320,9 +6342,10 @@ each account.
 @findex payees
 
 The @command{payees} command reports all of the unique payees in the
-journal.  Using the @option{--count} option will tell you how many
-entries use each payee.  To filter the payees displayed you must use the
-prefix @@:
+journal, including those declared with a @code{payee} directive that no
+transaction in the report uses.  Using the @option{--count} option will
+tell you how many entries use each payee, which is 0 for such a declared
+payee.  To filter the payees displayed you must use the prefix @@:
 
 @smallexample @c command:validate
 $ ledger payees @@Nic
@@ -6334,23 +6357,38 @@ Oudtshoorn Municipality
 Vaca Veronica
 @end smallexample
 
+A declared payee that no transaction in the report uses is filtered only
+by such tests of its name; the other conditions of a query, such as an
+account or a period, test postings, so they do not apply to it.  Under
+@option{--anon}, which could not anonymize it, it is not reported at
+all.  The same holds for the declared commodities and tags reported by
+the @command{commodities} and @command{tags} commands.
+
 @node @command{commodities}, @command{tags}, @command{payees}, Reports about your Journals
 @subsection @command{commodities}
 @findex commodities
 
-Report all commodities present in the journals under consideration.  The
-output is sorted by name.  Using the @option{--count} option will tell
-you how many entries use each commodity.
+Report all commodities present in the journals under consideration,
+including those declared with a @code{commodity}, @code{D} or @code{N}
+directive that no posting in the report uses.  The output is sorted by
+name.  Using the @option{--count} option will tell you how many entries
+use each commodity, which is 0 for such a declared commodity.  A query
+leaves out such a declared commodity only by a condition on the
+commodity itself, such as @samp{expr 'commodity == "EUR"'}.
 
 @node @command{tags}, @command{xact}, @command{commodities}, Reports about your Journals
 @subsection @command{tags}
 @findex tags
 @findex --values
 
-The @command{tags} command reports all of the tags in the journal.  The
-output is sorted by name.  Using the @option{--count} option will tell
-you how many entries use each tag.  Using the @option{--values} option
-will report the values used by each tag.
+The @command{tags} command reports all of the tags in the journal,
+including those declared with a @code{tag} directive that no posting in
+the report uses.  The output is sorted by name.  Using the
+@option{--count} option will tell you how many entries use each tag,
+which is 0 for such a declared tag.  Using the @option{--values} option
+will report the values used by each tag.  A query leaves out such a
+declared tag only by a test of its name, as @samp{%Receipt} and
+@samp{%Receipt=yes} both make.
 
 @node @command{xact}, @command{stats}, @command{tags}, Reports about your Journals
 @subsection @command{xact}
@@ -7190,6 +7228,11 @@ Ledger does not expand any aliases if this option is specified.
 @item --pedantic
 Accounts, tags or commodities not previously declared will cause errors.
 
+@item --pedantic-commodity
+Like @option{--pedantic}, but only commodities not previously declared
+cause errors; undeclared accounts, payees and tags are accepted
+silently.
+
 @item --permissive
 Quiet balance assertions.
 
@@ -7213,10 +7256,16 @@ to be fresh enough.
 Ledger normally silently accepts any account or commodity in a posting,
 even if you have misspelled a commonly used one.  The option
 @option{--strict} changes that behavior.  While running with
-@option{--strict}, Ledger interprets all cleared transactions as
-correct, and if it encounters a new account or commodity (same as
-a misspelled commodity or account) it will issue a warning giving you
-the file and line number of the problem.
+@option{--strict}, if Ledger encounters an account, commodity or tag
+that was not previously declared---a misspelled one, for instance---it
+will issue a warning giving you the file and line number of the
+problem.  @xref{Keeping it Consistent}.
+
+@item --strict-commodity
+Like @option{--strict}, but only commodities not previously declared
+cause warnings; undeclared accounts, payees and tags are accepted
+silently.  This suits a journal that declares every commodity it uses,
+while its accounts and payees are kept informally.
 
 @item --recursive-aliases
 Normally, ledger only expands aliases once.  With this option, ledger

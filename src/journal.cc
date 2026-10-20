@@ -121,14 +121,6 @@ void journal_t::initialize() {
   recursive_aliases = false;
   no_aliases = false;
   check_in_file_order = false;
-
-  // Pre-register built-in metadata tags so --strict/--pedantic don't
-  // warn about them.  These are tags that ledger uses internally.
-  known_tags.insert(_("Payee"));
-  known_tags.insert("payee");
-  known_tags.insert(_("UUID"));
-  known_tags.insert(_("Value"));
-  known_tags.insert("Hash");
 }
 
 /*--- Account Registration ---*/
@@ -350,9 +342,10 @@ account_t* journal_t::expand_aliases(string name) {
 /*--- Payee Validation ---*/
 
 string journal_t::register_payee(const string& name) {
-  if (should_check_payees() && payee_not_registered(name)) {
-    known_payees.insert(name);
-  }
+  // A declaration is recorded whatever the checking style, so that the
+  // payees listing includes it, and a --strict that the journal turns on
+  // after this point still knows it (#3265).
+  known_payees.insert(name);
 
   return name;
 }
@@ -395,6 +388,20 @@ string journal_t::translate_payee_name(const string& name) {
 /*--- Commodity and Metadata Registration ---*/
 
 void journal_t::register_commodity(commodity_t& comm, std::variant<int, xact_t*, post_t*> context) {
+  // A declaration is recorded whatever the checking style, so that the
+  // commodities listing includes it, and a --strict that the journal turns
+  // on after this point still knows it (#3265).  It goes into
+  // known_commodities rather than COMMODITY_KNOWN: that flag also keeps a
+  // price directive from lending the commodity its precision (#2481), so
+  // setting it here only under --strict made --strict change the report.
+  // A lot such as `10 AAPL {$150}` is a commodity of its own, so both the
+  // declaration and the lookup go by the base commodity it annotates.
+  commodity_t& base(comm.referent());
+  if (context.index() == 0) {
+    known_commodities.insert(&base);
+    return;
+  }
+
   // Commodity validation honours the commodity-specific override when set
   // (--strict-commodity / --pedantic-commodity, issue #3200).  When the
   // commodity-specific level is at its default (CHECK_NORMAL), fall back
@@ -403,48 +410,52 @@ void journal_t::register_commodity(commodity_t& comm, std::variant<int, xact_t*,
   checking_style_t style =
       commodity_checking_style != CHECK_NORMAL ? commodity_checking_style : checking_style;
 
-  if (style == CHECK_WARNING || style == CHECK_ERROR) {
-    if (!comm.has_flags(COMMODITY_KNOWN)) {
-      if (context.index() == 0) {
-        comm.add_flags(COMMODITY_KNOWN);
-      } else if (style == CHECK_WARNING) {
-        current_context->warning(_f("Unknown commodity '%1%'") % comm);
-      } else if (style == CHECK_ERROR) {
-        throw_(parse_error, _f("Unknown commodity '%1%'") % comm);
-      }
-    }
+  if ((style == CHECK_WARNING || style == CHECK_ERROR) && !comm.has_flags(COMMODITY_KNOWN) &&
+      known_commodities.find(&base) == known_commodities.end()) {
+    if (style == CHECK_WARNING)
+      current_context->warning(_f("Unknown commodity '%1%'") % comm);
+    else
+      throw_(parse_error, _f("Unknown commodity '%1%'") % comm);
   }
 }
 
+namespace {
+/// @brief True for the metadata tags that ledger itself reads, which
+///        --strict and --pedantic accept without a `tag` declaration.
+bool is_builtin_tag(const string& key) {
+  return key == _("Payee") || key == "payee" || key == _("UUID") || key == _("Value") ||
+         key == "Hash";
+}
+} // namespace
+
 /**
- * @brief Validate a metadata tag and evaluate tag_check_exprs assertions.
+ * @brief Declare a metadata tag, or validate one and evaluate
+ *        tag_check_exprs assertions.
  *
- * First checks the tag name against known_tags when --strict/--pedantic
- * is active.  Then, if there are any check/assert expressions registered
- * for this tag (via `tag Foo assert ...`), evaluates each one against
- * the metadata value.  A failing assertion throws; a failing check warns.
+ * A declaration (an int(0) context) is recorded in known_tags whatever
+ * the checking style, as for commodities and payees (#3265).  Otherwise
+ * the tag name is checked against known_tags and the built-in tags when
+ * --strict/--pedantic is active.  Then, if there are any check/assert
+ * expressions registered for this tag (via `tag Foo assert ...`),
+ * evaluates each one against the metadata value.  A failing assertion
+ * throws; a failing check warns.
  */
 void journal_t::register_metadata(const string& key, const value_t& value,
                                   std::variant<int, xact_t*, post_t*> context) {
-  if (checking_style == CHECK_WARNING || checking_style == CHECK_ERROR) {
-    std::set<string>::iterator i = known_tags.find(key);
-
-    // NOLINTBEGIN(bugprone-branch-clone)
-    if (i == known_tags.end()) {
-      if (context.index() == 0) {
-        known_tags.insert(key);
-      } else if (checking_style == CHECK_WARNING) {
-        // Outside of parsing (e.g. add_xact called from Python) there is
-        // no parse context, and thus no source location to point at.
-        if (current_context)
-          current_context->warning(_f("Unknown metadata tag '%1%'") % key);
-        else
-          warning_func((_f("Unknown metadata tag '%1%'") % key).str());
-      } else if (checking_style == CHECK_ERROR) {
-        throw_(parse_error, _f("Unknown metadata tag '%1%'") % key);
-      }
+  if (context.index() == 0) {
+    known_tags.insert(key);
+  } else if ((checking_style == CHECK_WARNING || checking_style == CHECK_ERROR) &&
+             known_tags.find(key) == known_tags.end() && !is_builtin_tag(key)) {
+    if (checking_style == CHECK_WARNING) {
+      // Outside of parsing (e.g. add_xact called from Python) there is
+      // no parse context, and thus no source location to point at.
+      if (current_context)
+        current_context->warning(_f("Unknown metadata tag '%1%'") % key);
+      else
+        warning_func((_f("Unknown metadata tag '%1%'") % key).str());
+    } else {
+      throw_(parse_error, _f("Unknown metadata tag '%1%'") % key);
     }
-    // NOLINTEND(bugprone-branch-clone)
   }
 
   if (!value.is_null() && context.index() != 0) {

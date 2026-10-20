@@ -622,9 +622,10 @@ commodity_pool_t::parse_price_directive(char* line, bool do_not_add_price, bool 
   // When PARSE_NO_MIGRATE is used, the commodity precision isn't automatically
   // updated during parsing, so we need to do it manually here. However, only
   // update if the commodity's precision is at the default value (0) AND the
-  // commodity hasn't been explicitly declared (COMMODITY_KNOWN) or had its
-  // format set (COMMODITY_STYLE_NO_MIGRATE). This ensures we don't override
-  // precision set by commodity directives, D directives, or N directives.
+  // commodity hasn't been made known by a D, N or P directive (COMMODITY_KNOWN)
+  // or had its format fixed by a `format` sub-directive or a D directive
+  // (COMMODITY_STYLE_NO_MIGRATE). This ensures we don't override a declared
+  // format.
   if (point.price.has_commodity()) {
     commodity_t& price_commodity = point.price.commodity();
     if (price_commodity.precision() == 0 && !price_commodity.has_flags(COMMODITY_KNOWN) &&

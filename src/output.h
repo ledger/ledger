@@ -244,8 +244,9 @@ public:
 /**
  * @brief Lists unique payee names with optional posting counts.
  *
- * Used by the `payees` command.  Collects payee strings from postings
- * and outputs them alphabetically.
+ * Used by the `payees` command.  Collects payee strings from postings,
+ * plus the payees declared by `payee` directives that the payee terms of
+ * the --limit predicate do not rule out, and outputs them alphabetically.
  */
 class report_payees : public item_handler<post_t> {
 protected:
@@ -273,13 +274,16 @@ public:
  * @brief Lists unique metadata tag names with optional counts.
  *
  * Used by the `tags` command.  Gathers tags from both the transaction and
- * the posting metadata.  When `--values` is active, tag values are
- * appended (e.g., "Tag: value").
+ * the posting metadata, plus the tags declared by `tag` or `apply tag`
+ * directives that no posting carries and that the tag-name tests of the
+ * --limit predicate do not rule out.  When `--values` is active, tag
+ * values are appended (e.g., "Tag: value").
  */
 class report_tags : public item_handler<post_t> {
 protected:
   report_t& report;                   ///< The report context.
   std::map<string, std::size_t> tags; ///< Map of tag strings to occurrence counts.
+  std::set<string> names;             ///< Names of the tags gathered, with or without values.
 
   using tags_pair = std::map<string, std::size_t>::value_type;
 
@@ -296,6 +300,7 @@ public:
 
   void clear() override {
     tags.clear();
+    names.clear();
     item_handler<post_t>::clear();
   }
 };
@@ -304,7 +309,9 @@ public:
  * @brief Lists unique commodity symbols with optional counts.
  *
  * Used by the `commodities` command.  Collects commodities from posting
- * amounts, annotated price commodities, and cost commodities.
+ * amounts, annotated price commodities, and cost commodities, plus the
+ * commodities declared by `commodity`, `D` or `N` directives that the
+ * commodity terms of the --limit predicate do not rule out.
  */
 class report_commodities : public item_handler<post_t> {
 protected:
