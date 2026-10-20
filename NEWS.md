@@ -243,6 +243,14 @@ components with their standard-library equivalents.
   (#842); honor `not` in positional queries for `print`/`xact`/`dump` (#1227);
   evaluate the `expr any()` keyword in single-argument queries (#1185)
 
+- A comma after a name now separates value expression arguments with or
+  without a space after it (#3251).  It used to begin the quantity of an
+  amount whose commodity was the name, so `truncated(account,10)` produced
+  the amount `account0,10` and `justify(account,20)` failed with "Too few
+  arguments to function".  As a result, a comma can no longer begin a
+  quantity in a value expression outside a braced amount literal, including
+  in a parenthesized posting amount: write `($0,50 * 2)`, not `($,50 * 2)`.
+
 - Expand account aliases in CLI query arguments; fix `--pivot` with
   command-line account queries (#1154), with built-in properties (#1048), and
   with tag-based grouping (#1042); fix `--group-by` combined with `--pivot`
