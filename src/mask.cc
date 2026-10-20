@@ -366,7 +366,6 @@ mask_t& mask_t::operator=(string_view pat) {
 #else
   expr.assign(folded_pat.c_str(), boost::regex::perl | boost::regex::icase);
 #endif
-  pattern_str = folded_pat;
   VERIFY(valid());
   return *this;
 }
@@ -419,7 +418,6 @@ mask_t& mask_t::assign_glob(string_view pat) {
 #else
   expr.assign(re_pat.c_str(), boost::regex::perl);
 #endif
-  pattern_str = re_pat;
   VERIFY(valid());
   return *this;
 }
