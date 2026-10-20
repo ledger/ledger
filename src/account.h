@@ -229,6 +229,14 @@ public:
   /** @brief Remove a posting from this account and invalidate cached iterators. */
   bool remove_post(post_t* post);
 
+  /**
+   * @brief Remove several postings at once, as remove_post() removes one.
+   *
+   * The posting list is scanned once rather than once per posting, so
+   * that removing many temporaries from an account is not quadratic.
+   */
+  void remove_posts(const std::set<post_t*>& doomed);
+
   posts_list::iterator posts_begin() { return posts.begin(); }
   posts_list::iterator posts_end() { return posts.end(); }
 
