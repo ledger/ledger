@@ -4,6 +4,8 @@
 
 #include <system.hh>
 
+#include <clocale>
+
 #include "format.h"
 #include "session.h"
 #include "report.h"
@@ -185,6 +187,40 @@ BOOST_AUTO_TEST_CASE(testTruncateAbbreviateZeroWidthSegments)
   format_t::default_style = format_t::ABBREVIATE;
   BOOST_CHECK_EQUAL(format_t::truncate(unistring("::Checking"), 5, 2), "..ing");
   BOOST_CHECK_EQUAL(format_t::truncate(unistring("\025:\025:Checking"), 5, 2), "..ing");
+}
+
+BOOST_AUTO_TEST_CASE(testTruncateAbbreviateTrailingWhitespace)
+{
+  // A shortened segment may not end in whitespace.  The test for it used
+  // to index the segment's UTF-8 bytes by display column, reading the byte
+  // before the segment once only whitespace was left, and looking at the
+  // wrong character when the segment held control or wide characters.
+  format_t::default_style = format_t::ABBREVIATE;
+
+  BOOST_CHECK_EQUAL(format_t::truncate(unistring("A: XYZ:Checking"), 13, 1), "A: X:Checking");
+  BOOST_CHECK_EQUAL(format_t::truncate(unistring("A: XYZ:Checking"), 12, 1), "A::Checking");
+  BOOST_CHECK_EQUAL(format_t::truncate(unistring("A: \f\fXYZ:Checking"), 13, 1),
+                    "A: \f\fX:Checking");
+
+  BOOST_CHECK_EQUAL(format_t::truncate(unistring("日 abc:Checking"), 13, 2), "日 a:Checking");
+  BOOST_CHECK_EQUAL(format_t::truncate(unistring("日 xyz:Checking"), 12, 2), "日:Checking");
+}
+
+BOOST_AUTO_TEST_CASE(testTruncateAbbreviateTrailingWhitespaceUtf8Locale)
+{
+  // The embedded Python interpreter sets LC_CTYPE from the environment, and
+  // in a UTF-8 locale isspace() on macOS claims 0xA0, the byte that ends "Р"
+  // and "à".  Neither character is whitespace, so neither may be trimmed.
+  format_t::default_style = format_t::ABBREVIATE;
+  const string saved = std::setlocale(LC_CTYPE, nullptr);
+  if (!std::setlocale(LC_CTYPE, "en_US.UTF-8"))
+    std::setlocale(LC_CTYPE, "C.UTF-8");
+  const string cyrillic = format_t::truncate(unistring("Расходы:Еда"), 5, 1);
+  const string latin = format_t::truncate(unistring("Bànk:Checking"), 11, 2);
+  std::setlocale(LC_CTYPE, saved.c_str());
+
+  BOOST_CHECK_EQUAL(cyrillic, "Р:Еда");
+  BOOST_CHECK_EQUAL(latin, "Bà:Checking");
 }
 
 // -----------------------------------------------------------------------
