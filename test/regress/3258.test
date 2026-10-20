@@ -1,0 +1,47 @@
+; A posting that carries both a lot price and a cost balances at its lot
+; basis, so an elided posting completes to that basis.  Lot prices and
+; costs teach no display precision, and nothing here writes a plain
+; dollar amount, so $ has none; the gain between basis and cost must
+; still keep its cents rather than be rounded to whole dollars.
+
+2009/01/01 Buy
+    Exp             10 GAL {$2.00} @@ $25.30
+    Assets:Checking
+
+2009/01/02 More gallons
+    Exp             11 GAL {$2.00} @@ $25.30
+    Assets:More
+
+2009/01/03 Other cents
+    Exp             10 GAL {$2.00} @@ $25.37
+    Assets:Cents
+
+2009/01/04 Lot price above the cost
+    Exp             10 GAL {$3.00} @@ $25.30
+    Assets:Above
+
+2009/01/05 Lot price with cents
+    Exp             10 GAL {$2.10} @@ $25.30
+    Assets:Dimes
+
+2009/01/06 Per-unit cost
+    Exp             10 GAL {$2.00} @ $2.53
+    Assets:PerUnit
+
+2009/01/07 Sale
+    Exp            -10 GAL {$2.00} @@ $25.30
+    Assets:Sale
+
+test reg --format '%(account)  %(quantity(amount))\n' Assets:Checking Assets:More Assets:Cents Assets:Above Assets:Dimes Assets:PerUnit Assets:Sale
+Assets:Checking  -20
+Assets:More  -22
+Assets:Cents  -20
+Assets:Above  -30
+Assets:Dimes  -21
+Assets:PerUnit  -20
+Assets:Sale  20
+end test
+
+test bal Assets:Checking
+                $-20  Assets:Checking
+end test
