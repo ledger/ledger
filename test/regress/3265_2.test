@@ -1,0 +1,37 @@
+; Issue #3265: a commodity, payee or tag declaration was only recorded while
+; strict checking was on, so declarations that preceded a --strict option
+; given in the journal itself were forgotten, and every use of those items
+; warned as if undeclared.  Account declarations were always recorded and
+; never had this problem.
+
+commodity EUR
+payee Grocery Store
+payee Bakery
+tag Receipt
+account Assets:Cash
+account Expenses:Food
+
+--strict
+--check-payees
+
+2024/01/01 Grocery Store
+    ; Receipt: yes
+    Expenses:Food    10 EUR
+    Assets:Cash
+
+; Payee is one of the tags ledger reads itself, and needs no declaration.
+2024/01/02 Grocery Store
+    Expenses:Food    5 EUR  ; Payee: Bakery
+    Assets:Cash
+
+test bal
+             -15 EUR  Assets:Cash
+              15 EUR  Expenses:Food
+--------------------
+                   0
+end test
+
+test payees
+Bakery
+Grocery Store
+end test

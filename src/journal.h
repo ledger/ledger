@@ -147,10 +147,14 @@ public:
   std::unordered_map<account_t*, std::vector<auto_xact_t*>> account_check_xacts;
   period_xacts_list period_xacts; ///< Periodic transactions (~ period) for budgeting/forecasting.
   std::list<fileinfo_t> sources;  ///< Source files that were parsed into this journal.
-  std::set<string>
-      known_payees; ///< Payees declared with `payee` directive (for --strict validation).
-  std::set<string> known_tags; ///< Tags declared with `tag` directive (for --strict validation).
-  bool was_loaded;             ///< True after at least one successful read().
+  /// Commodities declared with `commodity`, `D` or `N` directives, recorded
+  /// whatever the checking style.  A `commodity` declaration lives only
+  /// here, not in COMMODITY_KNOWN, so that it never affects display
+  /// precision.  Both are consulted for --strict validation.
+  std::set<commodity_t*> known_commodities;
+  std::set<string> known_payees; ///< Payees declared with `payee` directives.
+  std::set<string> known_tags;   ///< Tags declared with `tag` or `apply tag` directives.
+  bool was_loaded;               ///< True after at least one successful read().
   bool check_payees;        ///< True if payee validation is enabled (payee directives were seen).
   bool day_break;           ///< True if day-break transactions should be inserted between days.
   int time_round;           ///< Round timelog durations up to this many seconds (0 = no rounding).
@@ -243,7 +247,7 @@ public:
    */
   account_t* register_account(string_view name, post_t* post, account_t* master = nullptr);
 
-  /** @brief Register a payee name as known (for --strict validation). */
+  /** @brief Record a payee declared by a `payee` directive in known_payees. */
   string register_payee(const string& name);
 
   /**
@@ -255,17 +259,20 @@ public:
   string validate_payee(const string& name_or_alias);
 
   /**
-   * @brief Validate a commodity against known commodities (--strict/--pedantic).
-   * @param context  int(0) for directive context (auto-registers), or xact/post for error context.
+   * @brief Declare a commodity, or validate one against the declared and
+   *        known commodities (--strict/--pedantic and their -commodity forms).
+   * @param context  int(0) to declare it in known_commodities, or the xact/post using it.
    */
   void register_commodity(commodity_t& comm, std::variant<int, xact_t*, post_t*> context);
 
   /**
-   * @brief Validate a metadata tag and evaluate any tag_check_exprs assertions.
+   * @brief Declare a metadata tag, or validate one and evaluate any
+   *        tag_check_exprs assertions.
    *
-   * When --strict/--pedantic is active, warns or errors on unknown tags.
-   * Then evaluates any check/assert expressions registered for this tag
-   * name via the `tag` directive's value assertions.
+   * With an int(0) context the tag is declared in known_tags.  Otherwise,
+   * when --strict/--pedantic is active, an unknown tag warns or errors;
+   * then any check/assert expressions registered for this tag name via
+   * the `tag` directive's value assertions are evaluated.
    */
   void register_metadata(const string& key, const value_t& value,
                          std::variant<int, xact_t*, post_t*> context);

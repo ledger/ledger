@@ -284,57 +284,29 @@ BOOST_AUTO_TEST_CASE(testAccountDirectiveWithNote)
 
 BOOST_AUTO_TEST_CASE(testCommodityDirective)
 {
-  // The "commodity" directive should create the commodity in the pool.
-  // The COMMODITY_KNOWN flag is only set when checking_style >= CHECK_WARNING,
-  // so we enable strict checking to verify it.
+  // The "commodity" directive should create the commodity in the pool and
+  // declare it in the journal, whatever the checking style (#3265).  The
+  // declaration stays out of COMMODITY_KNOWN, which would stop a price
+  // directive from lending the commodity its display precision (#2481).
   std::string input = "commodity $\n";
 
-  session.journal.reset(new journal_t);
-  session.journal->checking_style = journal_t::CHECK_WARNING;
-
-  std::shared_ptr<std::istream> stream(new std::istringstream(input));
-  session.parsing_context.push(stream);
-  parse_context_t& ctx = session.parsing_context.get_current();
-  ctx.journal  = session.journal.get();
-  ctx.master   = session.journal->master;
-  try {
-    session.journal->read(session.parsing_context, NO_HASHES);
-  } catch (...) {
-    session.parsing_context.pop();
-    throw;
-  }
-  session.parsing_context.pop();
+  parse_text(input);
 
   commodity_t* comm = commodity_pool_t::current_pool->find("$");
   BOOST_CHECK(comm != nullptr);
-  BOOST_CHECK(comm->has_flags(COMMODITY_KNOWN));
+  BOOST_CHECK(session.journal->known_commodities.count(comm) == 1);
+  BOOST_CHECK(!comm->has_flags(COMMODITY_KNOWN));
 }
 
 BOOST_AUTO_TEST_CASE(testPayeeDirective)
 {
-  // The "payee" directive should register the payee.
-  // Payees are tracked in known_payees only when check_payees is true
-  // and checking_style >= CHECK_WARNING.  Enable strict mode to verify.
+  // The "payee" directive should declare the payee, whatever the checking
+  // style (#3265).
   std::string input =
     "payee Grocery Store\n"
     "    alias Groceries\n";
 
-  session.journal.reset(new journal_t);
-  session.journal->check_payees = true;
-  session.journal->checking_style = journal_t::CHECK_WARNING;
-
-  std::shared_ptr<std::istream> stream(new std::istringstream(input));
-  session.parsing_context.push(stream);
-  parse_context_t& ctx = session.parsing_context.get_current();
-  ctx.journal  = session.journal.get();
-  ctx.master   = session.journal->master;
-  try {
-    session.journal->read(session.parsing_context, NO_HASHES);
-  } catch (...) {
-    session.parsing_context.pop();
-    throw;
-  }
-  session.parsing_context.pop();
+  parse_text(input);
 
   // The payee should be known
   BOOST_CHECK(session.journal->known_payees.find("Grocery Store") !=
@@ -362,27 +334,16 @@ BOOST_AUTO_TEST_CASE(testAliasDirective)
 
 BOOST_AUTO_TEST_CASE(testTagDirective)
 {
-  // The "tag" directive should register the tag as known metadata.
-  // Tags are only added to known_tags when checking_style >= CHECK_WARNING.
+  // The "tag" directive should declare the tag, whatever the checking
+  // style (#3265).  known_tags holds declarations only: the tags ledger
+  // reads itself, such as Payee, are accepted without being listed there.
   std::string input = "tag ProjectCode\n";
 
-  session.journal.reset(new journal_t);
-  session.journal->checking_style = journal_t::CHECK_WARNING;
-
-  std::shared_ptr<std::istream> stream(new std::istringstream(input));
-  session.parsing_context.push(stream);
-  parse_context_t& ctx = session.parsing_context.get_current();
-  ctx.journal  = session.journal.get();
-  ctx.master   = session.journal->master;
-  try {
-    session.journal->read(session.parsing_context, NO_HASHES);
-  } catch (...) {
-    session.parsing_context.pop();
-    throw;
-  }
-  session.parsing_context.pop();
+  parse_text(input);
 
   BOOST_CHECK(session.journal->known_tags.find("ProjectCode") !=
+              session.journal->known_tags.end());
+  BOOST_CHECK(session.journal->known_tags.find("Payee") ==
               session.journal->known_tags.end());
 }
 

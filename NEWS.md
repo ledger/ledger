@@ -198,6 +198,12 @@ components with their standard-library equivalents.
   path still honors `--limit`, `--period`, `--begin`/`--end`, `--pivot`,
   `--anon`, `--budget`, `--forecast-while`, and `--group-by`
 
+- Record the declarations of `commodity`, `payee`, and `tag` directives
+  whatever the checking options (#3265), so a `--strict` given inside the
+  journal honors the declarations before it, and `--strict` and
+  `--strict-commodity` no longer change the display precision that a declared
+  commodity learns from price directives
+
 - Align multi-commodity balance rows with wide decimals (#1795); fix
   multi-commodity balance formatting width (#698); make separator lines adapt
   to `amount_width`; show the payee when it changes between sorted postings;
