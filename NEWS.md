@@ -204,6 +204,13 @@ components with their standard-library equivalents.
   `--strict-commodity` no longer change the display precision that a declared
   commodity learns from price directives
 
+- List the commodities, payees, and tags that `commodity`, `payee`, and `tag`
+  directives declare in the `commodities`, `payees`, and `tags` reports even
+  when no posting in the report uses them (with a `--count` of 0), as
+  `accounts` already lists declared accounts (#3265).  A query leaves such
+  an item out only by the terms that test the item itself, such as a payee's
+  name, and `--anon` leaves them all out
+
 - Align multi-commodity balance rows with wide decimals (#1795); fix
   multi-commodity balance formatting width (#698); make separator lines adapt
   to `amount_width`; show the payee when it changes between sorted postings;

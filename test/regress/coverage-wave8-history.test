@@ -42,8 +42,10 @@ test balance Expenses --exchange $ --now 2024/02/01
              $405.60  Expenses:Travel
 end test
 
-; Test commodities listing (exercises print_map, )
+; Test commodities listing (exercises print_map, ).  $ is listed too,
+; because a commodity directive declares it (#3265).
 test commodities
+$
 CHF
 EUR
 GBP

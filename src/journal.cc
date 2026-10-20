@@ -342,9 +342,9 @@ account_t* journal_t::expand_aliases(string name) {
 /*--- Payee Validation ---*/
 
 string journal_t::register_payee(const string& name) {
-  // A declaration is recorded whatever the checking style, so that a
-  // --strict that the journal turns on after this point still knows it
-  // (#3265).
+  // A declaration is recorded whatever the checking style, so that the
+  // payees listing includes it, and a --strict that the journal turns on
+  // after this point still knows it (#3265).
   known_payees.insert(name);
 
   return name;
@@ -388,14 +388,14 @@ string journal_t::translate_payee_name(const string& name) {
 /*--- Commodity and Metadata Registration ---*/
 
 void journal_t::register_commodity(commodity_t& comm, std::variant<int, xact_t*, post_t*> context) {
-  // A declaration is recorded whatever the checking style, so that a
-  // --strict that the journal turns on after this point still knows it
-  // (#3265).  It goes into known_commodities rather than COMMODITY_KNOWN:
-  // that flag also keeps a price directive from lending the commodity its
-  // precision (#2481), so setting it here only under --strict made --strict
-  // change the report.  A lot such as `10 AAPL {$150}` is a commodity of
-  // its own, so both the declaration and the lookup go by the base
-  // commodity it annotates.
+  // A declaration is recorded whatever the checking style, so that the
+  // commodities listing includes it, and a --strict that the journal turns
+  // on after this point still knows it (#3265).  It goes into
+  // known_commodities rather than COMMODITY_KNOWN: that flag also keeps a
+  // price directive from lending the commodity its precision (#2481), so
+  // setting it here only under --strict made --strict change the report.
+  // A lot such as `10 AAPL {$150}` is a commodity of its own, so both the
+  // declaration and the lookup go by the base commodity it annotates.
   commodity_t& base(comm.referent());
   if (context.index() == 0) {
     known_commodities.insert(&base);
