@@ -328,8 +328,8 @@ inline bool balances_in_group(const post_t* post, bool virtual_group) {
  * annotated commodities, and compute capital gains/losses.
  *
  * **Phase 7 -- Infer null-amount postings.**
- * If exactly one posting has a null amount, set it to the negation
- * of the accumulated balance.  If multiple commodities are in the
+ * If exactly one posting of a group has a null amount, set it to the
+ * negation of the group's balance.  If multiple commodities are in the
  * balance, generate additional postings (one per extra commodity).
  *
  * **Phase 8 -- Verify final balance.**
@@ -893,44 +893,35 @@ bool xact_base_t::finalize() {
   }
 
   // Phase 7: Infer null-amount postings.
-  // If exactly one real posting has no amount, its value becomes the
-  // negation of the accumulated balance.  If the balance involves
-  // multiple commodities, additional generated postings are created
-  // (one per extra commodity) on the same account.
-  if (null_post != nullptr) {
+  // If exactly one posting of a group has no amount, its value becomes
+  // the negation of the group's accumulated balance.  If the balance
+  // involves multiple commodities, additional generated postings are
+  // created (one per extra commodity) on the same account.  A posting
+  // whose group has no other amounts balances nothing, and is zero,
+  // provided the other group has amounts: in a transaction with none at
+  // all it keeps no amount, as before, for Phase 9 to report or ignore.
+  const bool has_amounts = !balance.is_null() || !virtual_balance.is_null();
+  for (const balancing_group_t& group : groups) {
+    if (group.null_post == nullptr)
+      continue;
 
-    DEBUG("xact.finalize", "there was a null posting");
-    add_balancing_post post_adder(*this, null_post);
+    DEBUG("xact.finalize", (group.is_virtual ? "there was a null balanced-virtual posting"
+                                             : "there was a null posting"));
+    add_balancing_post post_adder(*this, group.null_post);
 
-    if (balance.is_balance())
-      balance.as_balance_lval().map_sorted_amounts(post_adder);
-    else if (balance.is_amount())
-      post_adder(balance.as_amount_lval());
-    else if (balance.is_long())
-      post_adder(balance.to_amount());
-    else if (!balance.is_null() && !balance.is_realzero())
+    if (group.balance.is_null() && has_amounts)
+      group.balance = 0L;
+
+    if (group.balance.is_balance())
+      group.balance.as_balance_lval().map_sorted_amounts(post_adder);
+    else if (group.balance.is_amount())
+      post_adder(group.balance.as_amount_lval());
+    else if (group.balance.is_long())
+      post_adder(group.balance.to_amount());
+    else if (!group.balance.is_null() && !group.balance.is_realzero())
       throw_(balance_error, _("Transaction does not balance"));
 
-    balance = NULL_VALUE;
-  }
-
-  // Same null-amount inference, but for balanced-virtual postings
-  // ([Account] syntax).  These balance independently from real postings.
-  if (virtual_null_post != nullptr) {
-
-    DEBUG("xact.finalize", "there was a null balanced-virtual posting");
-    add_balancing_post post_adder(*this, virtual_null_post);
-
-    if (virtual_balance.is_balance())
-      virtual_balance.as_balance_lval().map_sorted_amounts(post_adder);
-    else if (virtual_balance.is_amount())
-      post_adder(virtual_balance.as_amount_lval());
-    else if (virtual_balance.is_long())
-      post_adder(virtual_balance.to_amount());
-    else if (!virtual_balance.is_null() && !virtual_balance.is_realzero())
-      throw_(balance_error, _("Transaction does not balance"));
-
-    virtual_balance = NULL_VALUE;
+    group.balance = NULL_VALUE;
   }
 
   DEBUG("xact.finalize", "resolved balance = " << balance);
