@@ -246,6 +246,47 @@ struct add_balancing_post {
     }
   }
 };
+
+/// The postings that must balance form two groups, and each group must
+/// balance by itself: the real postings, and the balanced virtual
+/// postings, whose accounts are written in [brackets] (#2105, #3314).
+/// Virtual postings in (parentheses) need not balance and belong to
+/// neither group.
+inline bool balances_in_group(const post_t* post, bool virtual_group) {
+  return post->must_balance() && post->has_flags(POST_VIRTUAL) == virtual_group;
+}
+
+/// Report that a group of a transaction's postings leaves a remainder,
+/// measured against the group's own magnitude, and named by its group
+/// wherever the transaction has balanced virtual postings.
+[[noreturn]] void throw_unbalanced(const xact_base_t& xact, const value_t& remainder,
+                                   bool virtual_group) {
+  value_t halfbal = 0L;
+  bool has_virtual_group = false;
+  for (const post_t* post : xact.posts) {
+    if (balances_in_group(post, true))
+      has_virtual_group = true;
+    if (balances_in_group(post, virtual_group) && !post->amount.is_null() &&
+        post->amount.sign() > 0) {
+      if (post->cost)
+        halfbal += *post->cost;
+      else
+        halfbal += post->amount;
+    }
+  }
+
+  add_error_context(item_context(xact, _("While balancing transaction")));
+  if (virtual_group)
+    add_error_context(_("Unbalanced remainder of balanced virtual postings is:"));
+  else if (has_virtual_group)
+    add_error_context(_("Unbalanced remainder of real postings is:"));
+  else
+    add_error_context(_("Unbalanced remainder is:"));
+  add_error_context(value_context(remainder));
+  add_error_context(_("Amount to balance against:"));
+  add_error_context(value_context(halfbal));
+  throw_(balance_error, _("Transaction does not balance"));
+}
 } // namespace
 
 /**
@@ -341,6 +382,9 @@ bool xact_base_t::finalize() {
                _f("Posting with null amount's account may be misspelled:\n  \"%1%\"") %
                    (post_account_bad ? post->account->fullname()
                                      : cur_null_post->account->fullname()));
+      else if (is_balanced_virtual)
+        throw_(std::logic_error,
+               _("Only one balanced virtual posting with null amount allowed per transaction"));
       else
         throw_(std::logic_error, _("Only one posting with null amount allowed per transaction"));
     } else {
@@ -957,12 +1001,7 @@ bool xact_base_t::finalize() {
     // Restore before throwing so commodity state is clean.
     for (auto& sp : saved_precisions)
       sp.first->set_precision(sp.second);
-    add_error_context(item_context(*this, _("While balancing transaction")));
-    add_error_context(_("Unbalanced remainder is:"));
-    add_error_context(value_context(balance));
-    add_error_context(_("Amount to balance against:"));
-    add_error_context(value_context(magnitude()));
-    throw_(balance_error, _("Transaction does not balance"));
+    throw_unbalanced(*this, balance, false);
   balanced:;
   }
 
@@ -970,14 +1009,8 @@ bool xact_base_t::finalize() {
   for (auto& sp : saved_precisions)
     sp.first->set_precision(sp.second);
 
-  if (!virtual_balance.is_null() && !virtual_balance.is_zero()) {
-    add_error_context(item_context(*this, _("While balancing transaction")));
-    add_error_context(_("Unbalanced remainder is:"));
-    add_error_context(value_context(virtual_balance));
-    add_error_context(_("Amount to balance against:"));
-    add_error_context(value_context(magnitude()));
-    throw_(balance_error, _("Transaction does not balance"));
-  }
+  if (!virtual_balance.is_null() && !virtual_balance.is_zero())
+    throw_unbalanced(*this, virtual_balance, true);
 
   // Phase 9: Register postings with their accounts.
   // Each posting is added to its account's post list so that account

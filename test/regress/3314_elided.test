@@ -1,0 +1,17 @@
+; Regression test for GitHub issue #3314: each group of postings, the real
+; ones and the balanced virtual ones in [brackets], may have one posting
+; without an amount.  A transaction can therefore have two such postings,
+; so when the balanced virtual postings have a second one, the error says
+; which group it is in.
+
+2020-01-01 Groceries
+    Expenses:Food                     $10.00
+    Assets:Cash
+    [Budget:Food]
+    [Budget:Unallocated]
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 11:
+Error: Only one balanced virtual posting with null amount allowed per transaction
+end test
