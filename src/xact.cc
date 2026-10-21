@@ -695,10 +695,11 @@ bool xact_base_t::finalize() {
             first_consumed = consumed;
             first = false;
           } else {
-            // Create a new posting for this lot
+            // Create a new posting for this lot, in the posting's group
             post_t* split = new post_t(post->account, sale_amt);
             split->set_state(post->state());
-            split->add_flags(ITEM_GENERATED | POST_CALCULATED);
+            split->add_flags(ITEM_GENERATED | POST_CALCULATED |
+                             (post->flags() & (POST_VIRTUAL | POST_MUST_BALANCE)));
             if (original_cost) {
               // Split cost proportionally: this lot's share of total
               split->cost = *original_cost * (consumed / total_sale);
@@ -722,7 +723,8 @@ bool xact_base_t::finalize() {
           remainder_amt.set_commodity(post->amount.commodity().referent());
           post_t* remainder = new post_t(post->account, remainder_amt);
           remainder->set_state(post->state());
-          remainder->add_flags(ITEM_GENERATED | POST_CALCULATED);
+          remainder->add_flags(ITEM_GENERATED | POST_CALCULATED |
+                               (post->flags() & (POST_VIRTUAL | POST_MUST_BALANCE)));
           if (original_cost) {
             remainder->cost = *original_cost * (remaining / total_sale);
           }
