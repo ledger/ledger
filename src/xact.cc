@@ -1088,13 +1088,17 @@ bool xact_base_t::finalize() {
  * Called by auto_xact_t::extend_xact() after adding generated postings
  * to ensure the transaction still satisfies the double-entry invariant.
  * Unlike finalize(), this method does not infer null amounts, compute
- * costs, or perform lot matching -- it simply sums all must-balance
- * postings and checks the result is zero.
+ * costs, or perform lot matching -- it simply sums the must-balance
+ * postings of each group, real and balanced virtual, and checks that
+ * each sum is zero.
  */
 bool xact_base_t::verify() {
-  // Scan through and compute the total balance for the xact.
+  // Scan through and compute the total balance for the xact, keeping the
+  // real postings and the balanced virtual postings ([Account]) apart, as
+  // each group must balance by itself.
 
   value_t balance;
+  value_t virtual_balance;
 
   for (post_t* post : posts) {
     if (!post->must_balance())
@@ -1107,9 +1111,11 @@ bool xact_base_t::verify() {
     // set, meaning commodity display precision is ignored when displaying the
     // amount.  We never want this set for the balance, so we must clear the
     // flag in a temporary to avoid it propagating into the balance.
-    add_or_set_value(balance, p.keep_precision() ? p.rounded().reduced() : p.reduced());
+    add_or_set_value(post->has_flags(POST_VIRTUAL) ? virtual_balance : balance,
+                     p.keep_precision() ? p.rounded().reduced() : p.reduced());
   }
   VERIFY(balance.valid());
+  VERIFY(virtual_balance.valid());
 
   // Now that the post list has its final form, calculate the balance once
   // more in terms of total cost, accounting for any possible gain/loss
@@ -1144,16 +1150,14 @@ bool xact_base_t::verify() {
     }
   }
 
-  if (!balance.is_null() && !balance.is_zero()) {
-    // Restore before throwing so commodity state is clean.
-    for (auto& sp : saved_precisions)
-      sp.first->set_precision(sp.second);
-    add_error_context(item_context(*this, _("While balancing transaction")));
-    add_error_context(_("Unbalanced remainder is:"));
-    add_error_context(value_context(balance));
-    add_error_context(_("Amount to balance against:"));
-    add_error_context(value_context(magnitude()));
-    throw_(balance_error, _("Transaction does not balance"));
+  for (const bool virtual_group : {false, true}) {
+    const value_t& group_balance = virtual_group ? virtual_balance : balance;
+    if (!group_balance.is_null() && !group_balance.is_zero()) {
+      // Restore before throwing so commodity state is clean.
+      for (auto& sp : saved_precisions)
+        sp.first->set_precision(sp.second);
+      throw_unbalanced(*this, group_balance, virtual_group);
+    }
   }
 
   for (auto& sp : saved_precisions)
