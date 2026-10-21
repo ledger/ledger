@@ -1221,6 +1221,86 @@ BOOST_AUTO_TEST_CASE(testParseSymbolFromCharPtr)
     string sym;
     BOOST_CHECK_THROW(commodity_t::parse_symbol(p, sym), amount_error);
   }
+  {
+    // A ';' ends a bare symbol and begins a comment (issue #3313)
+    char buf[] = "N1; foo";
+    char* p = buf;
+    string sym;
+    commodity_t::parse_symbol(p, sym);
+    BOOST_CHECK_EQUAL(string("N1"), sym);
+    BOOST_CHECK_EQUAL(string("; foo"), string(p));
+  }
+  {
+    // p is left at the next field, past the whitespace
+    char buf[] = "USD \t 1.50 EUR";
+    char* p = buf;
+    string sym;
+    commodity_t::parse_symbol(p, sym);
+    BOOST_CHECK_EQUAL(string("USD"), sym);
+    BOOST_CHECK_EQUAL(string("1.50 EUR"), string(p));
+  }
+  {
+    // A quoted symbol keeps its ';', and a comment may follow the quote
+    char buf[] = "\"N1; foo\";bar";
+    char* p = buf;
+    string sym;
+    commodity_t::parse_symbol(p, sym);
+    BOOST_CHECK_EQUAL(string("N1; foo"), sym);
+    BOOST_CHECK_EQUAL(string(";bar"), string(p));
+  }
+  {
+    // Nothing follows the closing quote
+    char buf[] = "\"My Fund\"";
+    char* p = buf;
+    string sym;
+    commodity_t::parse_symbol(p, sym);
+    BOOST_CHECK_EQUAL(string("My Fund"), sym);
+    BOOST_CHECK(p == buf + std::strlen(buf));
+  }
+  {
+    // The field after a closing quote is not cut short when no space
+    // separates them
+    char buf[] = "\"N1\"1.50 EUR";
+    char* p = buf;
+    string sym;
+    commodity_t::parse_symbol(p, sym);
+    BOOST_CHECK_EQUAL(string("N1"), sym);
+    BOOST_CHECK_EQUAL(string("1.50 EUR"), string(p));
+  }
+  {
+    // A backslash escapes a ';' into the symbol, as in an amount
+    char buf[] = "A\\;B c";
+    char* p = buf;
+    string sym;
+    commodity_t::parse_symbol(p, sym);
+    BOOST_CHECK_EQUAL(string("A;B"), sym);
+    BOOST_CHECK_EQUAL(string("c"), string(p));
+  }
+  {
+    // ... and whitespace
+    char buf[] = "A\\ B c";
+    char* p = buf;
+    string sym;
+    commodity_t::parse_symbol(p, sym);
+    BOOST_CHECK_EQUAL(string("A B"), sym);
+    BOOST_CHECK_EQUAL(string("c"), string(p));
+  }
+  {
+    // A backslash that ends the line escapes nothing and is kept
+    char buf[] = "AB\\";
+    char* p = buf;
+    string sym;
+    commodity_t::parse_symbol(p, sym);
+    BOOST_CHECK_EQUAL(string("AB\\"), sym);
+    BOOST_CHECK(p == buf + std::strlen(buf));
+  }
+  {
+    // A ';' cannot begin a bare symbol
+    char buf[] = "; foo";
+    char* p = buf;
+    string sym;
+    BOOST_CHECK_THROW(commodity_t::parse_symbol(p, sym), amount_error);
+  }
 }
 
 BOOST_AUTO_TEST_CASE(testCommodityPrintDigitQuotedSymbol)

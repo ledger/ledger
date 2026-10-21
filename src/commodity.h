@@ -300,7 +300,14 @@ public:
    * commodity name and the stream is rewound.
    */
   static void parse_symbol(std::istream& in, string& symbol);
-  /** @brief Parse a commodity symbol from a C string pointer (advances p). */
+  /**
+   * @brief Parse a commodity symbol from a directive line (advances p).
+   *
+   * Quoted symbols run to the closing quote; bare symbols run to
+   * whitespace or a ';', which begins a comment, and a backslash escapes
+   * the next character.  p is left at the text after the symbol and its
+   * trailing whitespace.
+   */
   static void parse_symbol(char*& p, string& symbol);
   /** @brief Convenience overload that returns the parsed symbol by value. */
   static string parse_symbol(std::istream& in) {

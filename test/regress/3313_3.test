@@ -1,0 +1,15 @@
+; Regression test for issue #3313: since a ';' ends a bare commodity
+; symbol, a directive whose symbol would start with one names no
+; commodity at all.  These used to declare commodities called ";" and
+; ";foo".
+
+commodity ; foo
+N ;foo
+
+test bal -> 2
+__ERROR__
+While parsing file "$FILE", line 6:
+Error: Failed to parse commodity
+While parsing file "$FILE", line 7:
+Error: Failed to parse commodity
+end test

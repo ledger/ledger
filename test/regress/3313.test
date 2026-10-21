@@ -1,0 +1,83 @@
+; Regression test for issue #3313: on a commodity directive line, a ';'
+; outside a quoted symbol ends the symbol and begins a comment, whether
+; or not whitespace precedes it, just as a ';' ends a commodity after an
+; amount in a posting.  A ';' written right after a bare symbol used to
+; become part of the symbol, and the rest of the line was dropped:
+; `commodity N2; foo` declared the commodity "N2;", so the format and
+; alias under it, and --pedantic, never reached N2.
+
+; The three headers from the report.  Each format names the commodity
+; its header declares, and each alias shows which commodity that is.
+commodity N1 ; foo
+    format 1000.00 "N1"
+    alias ONE
+
+commodity N2; foo
+    format 1000.00 "N2"
+    alias TWO
+
+commodity "N3; foo"
+    format 1000.00 "N3; foo"
+    alias THREE
+
+; With no whitespace at all, and after a quoted symbol.
+commodity USD;the US dollar
+    alias DOLLAR
+
+commodity "EUR";the euro
+    alias EURO
+
+; The historical @ and ! prefixes change nothing.
+@commodity JPY;the yen
+    alias YEN
+
+!commodity CNY;the yuan
+    alias YUAN
+
+; As in an amount, a backslash puts a ';' into a bare symbol, so this
+; format names the same commodity as its header.
+commodity A\;B
+    format 1.00 A\;B
+
+; The N directive reads its symbol the same way.
+N CHF; no price downloads
+
+account Assets:Cash
+account Equity
+
+2024/01/01 Test
+    Assets:Cash    1234.5 ONE
+    Assets:Cash    1234.5 TWO
+    Assets:Cash    1234.5 THREE
+    Assets:Cash    10 DOLLAR
+    Assets:Cash    10 EURO
+    Assets:Cash    10 YEN
+    Assets:Cash    10 YUAN
+    Assets:Cash    1 "A;B"
+    Assets:Cash    10 CHF
+    Equity
+
+test bal --flat Assets
+            1.00 A;B
+              10 CHF
+              10 CNY
+              10 EUR
+              10 JPY
+          1234.50 N1
+          1234.50 N2
+     1234.50 N3; foo
+              10 USD  Assets:Cash
+end test
+
+; Every commodity posted is one a directive declared.
+test --pedantic bal --flat Assets
+            1.00 A;B
+              10 CHF
+              10 CNY
+              10 EUR
+              10 JPY
+          1234.50 N1
+          1234.50 N2
+     1234.50 N3; foo
+              10 USD  Assets:Cash
+end test
