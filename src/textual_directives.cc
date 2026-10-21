@@ -805,6 +805,31 @@ void instance_t::account_rewrite_directive(char* line) {
 
 /*--- Commodity Directives ---*/
 
+namespace {
+
+/// Erase a trailing comment from the argument of a sub-directive that
+/// names a commodity (`alias`, `format`).  The comment begins at the
+/// first ';' that is neither inside a quoted symbol nor escaped with a
+/// backslash, the only places a commodity symbol can hold one (issue
+/// #3313).
+void strip_commodity_comment(string& arg) {
+  bool quoted = false;
+  for (std::size_t i = 0; i < arg.length(); ++i) {
+    if (arg[i] == '"') {
+      quoted = !quoted;
+    } else if (quoted) {
+      continue;
+    } else if (arg[i] == '\\') {
+      ++i;
+    } else if (arg[i] == ';') {
+      arg.erase(i);
+      break;
+    }
+  }
+}
+
+} // namespace
+
 void instance_t::commodity_directive(char* line) {
   char* p = skip_ws(line);
   string symbol; // NOLINT(bugprone-unused-local-non-trivial-variable)
@@ -842,7 +867,12 @@ void instance_t::commodity_directive(char* line) {
 }
 
 void instance_t::commodity_alias_directive(commodity_t& comm, string alias) {
+  strip_commodity_comment(alias);
   trim(alias);
+  // A line holding only a comment names no alias; an empty name would
+  // remap the null commodity, whose symbol is empty.
+  if (alias.empty())
+    throw_(parse_error, _f("Commodity directive '%1%' requires an argument") % "alias");
   // Strip surrounding quotes if present, matching how commodity names are parsed
   if (alias.length() > 2 && alias[0] == '"' && alias[alias.length() - 1] == '"')
     alias = alias.substr(1, alias.length() - 2);
@@ -856,6 +886,7 @@ void instance_t::commodity_value_directive(commodity_t& comm, const string& expr
 void instance_t::commodity_format_directive(commodity_t& comm, string format) {
   // jww (2012-02-27): A format specified this way should turn off
   // observational formatting.
+  strip_commodity_comment(format);
   trim(format);
   amount_t amt;
   std::istringstream in(format);
