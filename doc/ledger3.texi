@@ -2589,6 +2589,17 @@ commodity $
 commodity CAD
 @end smallexample
 
+A semicolon after the symbol begins a comment, whether or not a space
+precedes it, just as it does after an amount in a posting; the same
+holds after the argument of the @code{alias} and @code{format}
+sub-directives described below.  A symbol that contains a semicolon
+must therefore be quoted:
+
+@smallexample @c input:validate
+commodity CAD; Canadian dollars
+commodity "Fund; Class A"  ; the quotes keep its semicolon
+@end smallexample
+
 The @code{commodity} directive supports several optional
 sub-directives, if they immediately follow the commodity directive
 and---if they are on successive lines---begin with whitespace:
