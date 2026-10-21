@@ -11,7 +11,7 @@ While balancing transaction from "$FILE", lines 3-5:
 > 2024/01/01 Test
 >     [Budget:Food]     $100.00
 >     [Budget:Rent]     $200.00
-Unbalanced remainder is:
+Unbalanced remainder of balanced virtual postings is:
              $300.00
 Amount to balance against:
              $300.00

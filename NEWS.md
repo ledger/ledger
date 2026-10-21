@@ -153,6 +153,27 @@ components with their standard-library equivalents.
 
 ### Balance, Assertions, and Assignments
 
+- Balanced virtual postings, whose accounts are written in `[brackets]`, now
+  balance only against one another, apart from the real postings of their
+  transaction, as the manual describes them (#563, #1827, #2105).  Ledger 3.4
+  added both kinds into a single sum, so a bracketed posting could balance a
+  real one, or an elided real posting take up what the bracketed ones left,
+  and the real postings, which `--real` reports, did not have to add up to
+  zero.  Such transactions are now errors, which changes the outcome for
+  existing journals that contain them; the error names the group whose
+  postings leave a remainder, and measures it against that group alone
+  (#3314).  The rules that balance a transaction apply to each group by
+  itself: each may have one posting without an amount, which is zero if only
+  the other group has amounts; each implies its own exchange rate between two
+  commodities, prices its own postings at their fixated lot prices, books its
+  own lot gains and losses, and gets its own allowances for rounded per-unit
+  costs and, under `--permissive`, for balance assignments; and the postings
+  that automated transactions or `--lot-matching` add balance within their
+  own group.  To correct a rejected transaction, write a bracketed posting
+  that moves real money as a real posting, balance it against other bracketed
+  postings, or surround its account with parentheses, so that it need not
+  balance at all.
+
 - Filter balance assertions by date rather than file order; skip balance
   assertions on UUID-duplicate transactions; check account assertions on
   auto-generated postings; respect `--permissive` for balance assignments with

@@ -1,0 +1,24 @@
+; Regression test for GitHub issue #3314: balanced virtual postings, in
+; [brackets], must balance to zero as strictly as real postings must.
+; EUR appears here only in costs, so it has no display precision of its
+; own, and the 0.01 EUR left over would round away to nothing; the check
+; widens EUR to the precision of the costs (#1114) for these postings as
+; it does for real ones.  The remainder still prints at EUR's precision.
+
+2015/03/05 * Payee
+    [Budget:Bank]                              $1.00 @  1.02 EUR
+    [Budget:Revenue]                          -$1.00 @  1.01 EUR
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 10:
+While balancing transaction from "$FILE", lines 8-10:
+> 2015/03/05 * Payee
+>     [Budget:Bank]                              $1.00 @  1.02 EUR
+>     [Budget:Revenue]                          -$1.00 @  1.01 EUR
+Unbalanced remainder of balanced virtual postings is:
+                   0
+Amount to balance against:
+             EUR1.02
+Error: Transaction does not balance
+end test

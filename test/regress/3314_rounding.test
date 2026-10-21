@@ -1,0 +1,13 @@
+; Regression test for GitHub issue #3314: balanced virtual postings, in
+; [brackets], get the allowance for per-unit cost rounding that real
+; postings get (#1125).  Each cost rounded to the cent, $2.00 + $7.49,
+; comes to the $9.49 written against them.
+
+2015-07-02 Bread budget
+    [Budget:Bread]            0.50 bread @ $3.99
+    [Budget:Bread]            1.50 bread @ $4.99
+    [Budget:Checking]              -$9.49
+
+test bal --flat --no-total Budget:Bread
+          2.00 bread  Budget:Bread
+end test

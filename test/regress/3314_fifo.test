@@ -1,0 +1,39 @@
+; Regression test for GitHub issue #3314: when --lot-matching splits a
+; sale across lots, the postings it adds stay in the group of the
+; posting they split -- here the balanced virtual postings, in
+; [brackets] -- and the gain on each lot balances within that group.
+; The first sale's elided posting takes the lots' basis, $1000 + $550;
+; the second sale finds only 5 VTI left in lots and books the other 5
+; as a posting of their own, which stays bracketed too.  Its elided
+; posting takes the basis of the 5 matched, $550, plus the $800 cost of
+; the 5 unmatched, leaving $800 in checking.
+
+2020-01-01 Buy
+    [Budget:Fund]                       10 VTI {$100} @ $100
+    [Budget:Checking]
+
+2020-01-02 Buy
+    [Budget:Fund]                       10 VTI {$110} @ $110
+    [Budget:Checking]
+
+2020-02-01 Sell
+    [Budget:Fund]                      -15 VTI @ $150
+    [Budget:Checking]
+
+2020-03-01 Sell
+    [Budget:Fund]                      -10 VTI @ $160
+    [Budget:Checking]
+
+test reg --lot-matching fifo --lots Fund
+20-Jan-01 Buy                   [Budget:Fund]          10 VTI {$100} 10 VTI {$100}
+20-Jan-02 Buy                   [Budget:Fund]          10 VTI {$110} 10 VTI {$100}
+                                                                   10 VTI {$110}
+20-Feb-01 Sell                  [Budget:Fund]          -10 VTI {$100} 10 VTI {$110}
+                                [Budget:Fund]          -5 VTI {$110} 5 VTI {$110}
+20-Mar-01 Sell                  [Budget:Fund]          -5 VTI {$110}            0
+                                [Budget:Fund]          -5 VTI {$160} [2020/03/01] -5 VTI {$160} [2020/03/01]
+end test
+
+test bal --lot-matching fifo --flat Checking
+                $800  Budget:Checking
+end test

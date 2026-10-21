@@ -2222,7 +2222,8 @@ The format of each following posting is:
 
 The @code{ACCOUNT} may be surrounded by parentheses if it is a virtual
 posting, or square brackets if it is a virtual posting that
-must balance.  The @code{AMOUNT} can be followed by a per-unit
+must balance against the transaction's other bracketed postings.
+The @code{AMOUNT} can be followed by a per-unit
 posting cost, by specifying @code{@@ AMOUNT}, or a complete
 posting cost with @code{@@@@ AMOUNT}.  The @code{NOTE} may
 specify an actual and/or effective date for the posting by using
@@ -3452,6 +3453,56 @@ look ``harder'') rather than parentheses:
     [Budget:Food]               $-20.00
     [Equity:Budgets]             $20.00
 @end smallexample
+
+The bracketed postings balance only against one another, never against
+the real postings of their transaction: here the real postings,
+@samp{Expenses:Food} and @samp{Assets:Cash}, balance each other, and
+the two bracketed postings do the same.  The real postings of every
+transaction therefore add up to zero, and so does a report made with
+@option{--real}.  Each of the two groups may have one posting without
+an amount, which takes whatever amount balances the rest of its own
+group---zero, if only the other group has amounts.  Above,
+@samp{Assets:Cash} receives @samp{$-20.00}, and nothing from the
+bracketed postings.
+
+So a bracketed posting cannot balance a real one, and this transaction
+is an error, because nothing balances its only real posting:
+
+@smallexample
+2012-03-10 * KFC
+    Expenses:Food                $20.00
+    [Assets:Cash]
+@end smallexample
+
+@noindent
+Ledger reports it this way:
+
+@smallexample
+While parsing file "kfc.dat", line 3:
+While balancing transaction from "kfc.dat", lines 1-3:
+> 2012-03-10 * KFC
+>     Expenses:Food                $20.00
+>     [Assets:Cash]
+Unbalanced remainder of real postings is:
+              $20.00
+Amount to balance against:
+              $20.00
+Error: Transaction does not balance
+@end smallexample
+
+Versions of Ledger before 3.5 added the two groups together, and
+accepted transactions like this one.  To correct one, write a bracketed
+posting that moves real money as a real posting, balance it against
+other bracketed postings, or surround its account with parentheses, so
+that it need not balance at all.
+
+The rules by which Ledger balances a transaction apply to each group by
+itself.  Each group implies its own exchange rate when it holds two
+commodities and no cost (@pxref{Posting cost}), prices its own postings
+at their fixated lot prices (@pxref{Fixated prices and costs}), and
+books its own gains and losses; and the postings that automated
+transactions add (@pxref{Automated Transactions}) must balance in the
+same way.
 
 @node Expression amounts, Balance verification, Virtual postings, Transactions
 @section Expression amounts
