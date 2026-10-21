@@ -853,12 +853,57 @@ void instance_t::commodity_value_directive(commodity_t& comm, const string& expr
   comm.set_value_expr(expr_t(expr_str));
 }
 
+namespace {
+
+/// True if a bare symbol and a number that meet at characters @p a and @p b
+/// would run together: both are characters parse_quantity() reads as part of
+/// a number.
+bool runs_together(char a, char b) {
+  auto in_number = [](char c) {
+    return std::isdigit(static_cast<unsigned char>(c)) || c == '.' || c == ',' || c == '\'';
+  };
+  return in_number(a) && in_number(b);
+}
+
+/// Quote a bare @p symbol found at either end of the format sample @p format.
+///
+/// A commodity directive reads its symbol as a whole word, so `commodity N1`
+/// declares the commodity that an amount writes as "N1": unquoted, the digit
+/// would end the symbol.  Quoting the bare spelling lets the format
+/// sub-directive name the commodity as the directive did (issue #3312).
+///
+/// A sample that quotes its own symbol is left as written.  So is one in
+/// which the bare symbol meets the number between two number characters, as
+/// in `N11,000.00`, since nothing there marks where the symbol ends.
+string quote_bare_symbol(const string& format, const string& symbol) {
+  if (!commodity_t::symbol_needs_quotes(symbol) || format.find('"') != string::npos)
+    return format;
+
+  const string quoted = '"' + symbol + '"';
+  const std::size_t len = symbol.length();
+
+  if (format.compare(0, len, symbol) == 0 &&
+      (format.length() == len || !runs_together(symbol.back(), format[len])))
+    return quoted + format.substr(len);
+
+  if (format.length() > len) {
+    const std::size_t start = format.length() - len;
+    if (format.compare(start, len, symbol) == 0 &&
+        !runs_together(format[start - 1], symbol.front()))
+      return format.substr(0, start) + quoted;
+  }
+
+  return format;
+}
+
+} // namespace
+
 void instance_t::commodity_format_directive(commodity_t& comm, string format) {
   // jww (2012-02-27): A format specified this way should turn off
   // observational formatting.
   trim(format);
   amount_t amt;
-  std::istringstream in(format);
+  std::istringstream in(quote_bare_symbol(format, comm.base_symbol()));
   (void)amt.parse(in, PARSE_NO_REDUCE);
   string trailing;
   if (in >> trailing)
