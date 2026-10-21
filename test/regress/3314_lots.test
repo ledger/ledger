@@ -1,0 +1,43 @@
+; Regression test for GitHub issue #3314: the gain on a lot sold above its
+; basis, and the loss on a lot swapped for another commodity over a
+; common base currency, balance within the group of the posting that
+; carries them.  Here every posting is a balanced virtual one, in
+; [brackets]; booking the gain or loss to the real postings, which have
+; none, left these transactions unbalanced.
+
+2020-03-01 Buy fund
+    [Budget:Fund]                       10 VTI @ $100.00
+    [Budget:Checking]
+
+2020-04-01 Sell fund
+    [Budget:Fund]                      -10 VTI {$100.00} @ $150.00
+    [Budget:Checking]                $1500.00
+    [Budget:Gains]                   $-500.00
+
+2020-05-01 Buy coins
+    [Budget:Coins]                     100 BTC @ $100.00
+    [Budget:Checking]
+
+2020-05-02 Swap coins
+    [Budget:Coins]                    -100 BTC {$100.00} @ 2 ETH {$40.00}
+    [Budget:Coins]                     200 ETH {$40.00}
+    [Budget:Losses]                  $2000.00
+
+test bal --flat
+           $-9500.00  Budget:Checking
+             200 ETH  Budget:Coins
+            $-500.00  Budget:Gains
+            $2000.00  Budget:Losses
+--------------------
+           $-8000.00
+             200 ETH
+end test
+
+test bal --flat --basis
+           $-9500.00  Budget:Checking
+            $8000.00  Budget:Coins
+            $-500.00  Budget:Gains
+            $2000.00  Budget:Losses
+--------------------
+                   0
+end test

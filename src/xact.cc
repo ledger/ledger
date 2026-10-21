@@ -775,8 +775,10 @@ bool xact_base_t::finalize() {
                                          static_cast<int>(post->amount.precision()));
             gain_loss.in_place_round();
             DEBUG("xact.finalize", "gain_loss rounds to = " << gain_loss);
+            // The gain balances within the posting's own group.
             if (post->must_balance())
-              add_or_set_value(balance, gain_loss.reduced());
+              add_or_set_value(post->has_flags(POST_VIRTUAL) ? virtual_balance : balance,
+                               gain_loss.reduced());
 #if 0
             account_t * account;
             if (gain_loss.sign() > 0)
@@ -826,7 +828,8 @@ bool xact_base_t::finalize() {
               DEBUG("xact.finalize", "Commodity swap gain_loss rounds to = " << gain_loss);
 
               if (gain_loss && post->must_balance())
-                add_or_set_value(balance, gain_loss.reduced());
+                add_or_set_value(post->has_flags(POST_VIRTUAL) ? virtual_balance : balance,
+                                 gain_loss.reduced());
 
               // Always rewrite the posting's cost into the common base
               // currency, even when the gain/loss is zero (i.e. both
