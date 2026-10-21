@@ -536,17 +536,22 @@ bool xact_base_t::finalize() {
   }
 
   // Phase 4: Fixated price annotation cost derivation.
-  // If the balance still has 2+ commodities and no null post, check for
-  // fixated price annotations ({=price}).  These lock the per-unit cost
-  // regardless of market prices.  For each posting with a fixated price
-  // and no explicit cost, compute the cost from the annotation and
-  // recalculate the balance.  This handles the case where multiple
-  // postings have different fixated prices for the same base commodity
-  // (e.g., EUR {=$1.32} and EUR {=$1.33}).
-  if (!null_post && balance.is_balance() && balance.as_balance().amounts.size() >= 2) {
+  // If a group's balance still has 2+ commodities and the group has no
+  // null post, check its postings for fixated price annotations
+  // ({=price}).  These lock the per-unit cost regardless of market
+  // prices.  For each posting with a fixated price and no explicit cost,
+  // compute the cost from the annotation and recalculate the group's
+  // balance.  This handles the case where multiple postings have
+  // different fixated prices for the same base commodity (e.g., EUR
+  // {=$1.32} and EUR {=$1.33}).
+  for (const balancing_group_t& group : groups) {
+    if (group.null_post || !group.balance.is_balance() ||
+        group.balance.as_balance().amounts.size() < 2)
+      continue;
+
     bool recompute = false;
     for (post_t* post : posts) {
-      if (!post->cost && !post->amount.is_null() && post->must_balance() &&
+      if (!post->cost && !post->amount.is_null() && balances_in_group(post, group.is_virtual) &&
           post->amount.has_annotation() && post->amount.annotation().price &&
           post->amount.annotation().has_flags(ANNOTATION_PRICE_FIXATED)) {
         const annotation_t& ann(post->amount.annotation());
@@ -567,15 +572,13 @@ bool xact_base_t::finalize() {
     }
 
     if (recompute) {
-      balance = NULL_VALUE;
+      group.balance = NULL_VALUE;
       for (post_t* post : posts) {
-        if (!post->must_balance())
-          continue;
-        if (post->has_flags(POST_VIRTUAL)) // skip balanced-virtual postings
+        if (!balances_in_group(post, group.is_virtual))
           continue;
         amount_t& p(post->cost ? *post->cost : post->amount);
         if (!p.is_null())
-          add_or_set_value(balance, p.keep_precision() ? p.rounded().reduced() : p.reduced());
+          add_or_set_value(group.balance, p.keep_precision() ? p.rounded().reduced() : p.reduced());
       }
     }
   }
