@@ -147,6 +147,11 @@ components with their standard-library equivalents.
   `D`-directive formatting to bare amounts (#761), and allow apostrophe (`'`)
   as a digit-group separator
 
+- Accept a `commodity` block's own symbol unquoted in its `format`
+  sub-directive (#3312): `commodity N1` declares the commodity that amounts
+  write as `"N1"`, but `format 1,000.00 N1` stopped the symbol at its digit
+  and was rejected
+
 - Add batch commodity quote fetching to amortize the per-call cost (#588); add
   `--account-value-expr` and `--commodity-value-expr` options for custom
   valuations; expose a `capital_gain` value expression variable

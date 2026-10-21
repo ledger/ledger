@@ -2610,6 +2610,22 @@ format this commodity.  In the future, using this directive will disable
 Ledger's observation of other ways that commodity is used, and will
 provide the ``canonical'' representation.
 
+The format may spell the commodity's symbol as the @code{commodity}
+directive does.  A symbol that an amount must enclose in double quotes,
+such as one containing a digit (@pxref{Naming Commodities}), may appear
+in the format with or without them:
+
+@smallexample @c input:validate
+commodity N1
+   format 1,000.00 N1
+@end smallexample
+
+Where an unquoted symbol meets the number digit against digit, nothing
+shows where the symbol ends.  Ledger then reads @samp{N11,000.00} as
+the symbol @samp{N} and the number @samp{11,000.00}, and reports that
+the format names the wrong commodity; write @samp{@w{N1 1,000.00}} or
+@samp{"N1"1,000.00} instead.
+
 The @code{nomarket} sub-directive states that the commodity's price
 should never be auto-downloaded.
 
