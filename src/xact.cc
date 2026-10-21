@@ -294,23 +294,25 @@ inline bool balances_in_group(const post_t* post, bool virtual_group) {
  *
  * This is the most important function in Ledger.  It implements the
  * double-entry accounting invariant: every transaction's debits must
- * equal its credits.  The function proceeds in several phases:
+ * equal its credits.  The postings that must balance form two groups,
+ * each balanced by itself: the real postings, and the balanced virtual
+ * postings ([Account]).  The function proceeds in several phases:
  *
  * **Phase 1 -- Scan postings and accumulate the balance.**
  * Iterate over all must-balance postings.  For each one that has an
- * amount (or cost), add it to the running balance.  Track whether any
- * posting has a null amount (meaning it should be auto-filled).  Real
- * and balanced-virtual postings ([Account]) are tracked separately.
+ * amount (or cost), add it to the running balance of its group.  Track
+ * whether a posting of each group has a null amount (meaning it should
+ * be auto-filled).
  *
  * **Phase 2 -- Handle single-posting transactions.**
  * If only one posting exists and a default "bucket" account is
  * configured, create a second posting to that account.
  *
- * **Phase 3 -- Infer conversion prices for two-commodity transactions.**
- * When the balance contains exactly two commodities and no explicit
- * costs were given, compute the exchange rate by dividing one
- * commodity's total by the other's, and set computed costs on all
- * postings of the primary commodity.
+ * **Phase 3 -- Infer conversion prices for two-commodity groups.**
+ * When a group's balance contains exactly two commodities and the group
+ * gave no explicit costs, compute the exchange rate by dividing one
+ * commodity's total by the other's, and set computed costs on the
+ * group's postings of the primary commodity.
  *
  * **Phase 4 -- Apply fixated price annotations.**
  * For postings with {=price} annotations that have not yet had costs
@@ -415,13 +417,27 @@ bool xact_base_t::finalize() {
     add_post(null_post);
   }
 
+  // The groups of postings that must balance, each by itself as though it
+  // were a transaction of its own, with each group's balance and its
+  // posting without an amount, if any.
+  struct balancing_group_t {
+    bool is_virtual;
+    value_t& balance;
+    post_t*& null_post;
+  };
+  const balancing_group_t groups[] = {{false, balance, null_post},
+                                      {true, virtual_balance, virtual_null_post}};
+
   // Phase 3: Two-commodity conversion price inference.
-  // When the balance has exactly two commodities and no null posting,
-  // compute the implied exchange rate.  For example, if the balance
-  // is {$100, -80 EUR}, the per-unit cost of EUR in $ is computed as
-  // $100/80 = $1.25 per EUR.  This price is assigned as a computed
-  // cost on all postings of the primary commodity.
-  if (!null_post && balance.is_balance() && balance.as_balance().amounts.size() == 2) {
+  // When a group's balance has exactly two commodities and the group has
+  // no null posting, compute the implied exchange rate.  For example, if
+  // the balance is {$100, -80 EUR}, the per-unit cost of EUR in $ is
+  // computed as $100/80 = $1.25 per EUR.  This price is assigned as a
+  // computed cost on the group's postings of the primary commodity.
+  for (const balancing_group_t& group : groups) {
+    if (group.null_post || !group.balance.is_balance() ||
+        group.balance.as_balance().amounts.size() != 2)
+      continue;
 
     DEBUG("xact.finalize", "there were exactly two commodities, and no null post");
 
@@ -429,7 +445,10 @@ bool xact_base_t::finalize() {
     post_t* top_post = nullptr;
 
     for (post_t* post : posts) {
-      if (!post->amount.is_null() && post->must_balance()) {
+      if (!balances_in_group(post, group.is_virtual))
+        continue;
+
+      if (!post->amount.is_null()) {
         if (post->amount.has_annotation())
           top_post = post; // NOLINT(bugprone-branch-clone)
         else if (!top_post)
@@ -445,7 +464,7 @@ bool xact_base_t::finalize() {
     if (!saw_cost && top_post &&
         !(top_post->amount.has_annotation() && top_post->amount.annotation().price &&
           top_post->amount.annotation().has_flags(ANNOTATION_PRICE_FIXATED))) {
-      const balance_t& bal(balance.as_balance());
+      const balance_t& bal(group.balance.as_balance());
 
       DEBUG("xact.finalize", "there were no costs, and a valid top_post");
 
@@ -502,11 +521,11 @@ bool xact_base_t::finalize() {
           for (post_t* post : posts) {
             const amount_t& amt(post->amount.reduced());
 
-            if (post->must_balance() && amt.commodity() == comm) {
-              balance -= amt;
+            if (balances_in_group(post, group.is_virtual) && amt.commodity() == comm) {
+              group.balance -= amt;
               post->cost = per_unit_cost * amt;
               post->add_flags(POST_COST_CALCULATED);
-              balance += *post->cost;
+              group.balance += *post->cost;
 
               DEBUG("xact.finalize", "set post->cost to = " << *post->cost);
             }

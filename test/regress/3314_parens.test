@@ -1,0 +1,17 @@
+; Regression test for GitHub issue #3314: a virtual posting in
+; (parentheses) belongs to neither group of postings that must balance,
+; so a cost written on it no longer keeps the real postings from
+; implying their own exchange rate, here $150 a share.
+
+2020-01-04 Buy shares, noting their price in euros
+    Assets:Brokerage                    10 AAPL
+    Assets:Checking                  $-1500.00
+    (Memo:Euros)                    1250.00 EUR @ $1.20
+
+test bal --flat --basis
+            $1500.00  Assets:Brokerage
+           $-1500.00  Assets:Checking
+            $1500.00  Memo:Euros
+--------------------
+            $1500.00
+end test
