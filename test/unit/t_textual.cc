@@ -145,6 +145,32 @@ BOOST_AUTO_TEST_CASE(testParseTransactionWithNote)
   BOOST_CHECK(xact->note);
 }
 
+BOOST_AUTO_TEST_CASE(testParseTransactionPayeeEndsAtNote)
+{
+  // The payee ends where a note begins, at a ';' after a hard separator (a
+  // tab here); a ';' after a single space is part of the payee
+  std::string input =
+    "2024/01/15 Grocery Store\t; This is a note\n"
+    "    Expenses:Food                $50.00\n"
+    "    Assets:Checking\n"
+    "\n"
+    "2024/01/16 Grocery ; Store\n"
+    "    Expenses:Food                $50.00\n"
+    "    Assets:Checking\n";
+
+  std::size_t count = parse_text(input);
+  BOOST_REQUIRE_EQUAL(2u, count);
+
+  xact_t* noted = session.journal->xacts.front();
+  BOOST_CHECK_EQUAL(string("Grocery Store"), noted->payee);
+  BOOST_REQUIRE(noted->note);
+  BOOST_CHECK_EQUAL(string(" This is a note"), *noted->note);
+
+  xact_t* plain = session.journal->xacts.back();
+  BOOST_CHECK_EQUAL(string("Grocery ; Store"), plain->payee);
+  BOOST_CHECK(!plain->note);
+}
+
 // ---------------------------------------------------------------------------
 // 2. Error Paths
 // ---------------------------------------------------------------------------
