@@ -44,15 +44,17 @@
  *      against the search identifier.  The score reflects how closely
  *      the characters of the identifier appear (in order, in sequence,
  *      at similar positions) within the payee string.  Scores below 30
- *      are discarded.  An exact match scores 100 and stops the search.
+ *      are discarded.  An exact match outranks any score and stops the
+ *      search.
  *
- *   2. **Account ranking**: The top five scoring transactions are
- *      examined.  For each posting in those transactions (in one that
- *      matched through a Payee tag, each posting carrying that tag),
- *      the account's usage count is incremented by the transaction's
- *      score (with a small recency decay).  The account with the
- *      highest total wins.  Temporary/generated accounts and the
- *      reference account are excluded.
+ *   2. **Account ranking**: The top five scoring transactions of the
+ *      strongest kind of match found are examined.  For each posting in
+ *      those transactions (in one that matched through a Payee tag,
+ *      each posting carrying that tag), the account's usage count is
+ *      incremented by the transaction's score (with a small recency
+ *      decay).  The account with the highest total wins.
+ *      Temporary/generated accounts and the reference account are
+ *      excluded.
  */
 
 #include <system.hh>
@@ -67,9 +69,17 @@ namespace ledger {
 
 namespace {
 
-/// A transaction with the score of its best-matching payee.
+/// How a payee matched the search identifier, weakest first.  A stronger
+/// kind of match outranks a weaker one whatever their scores.
+enum match_kind_t : uint8_t {
+  SIMILAR_MATCH, ///< Resembles the identifier, as measured by its score
+  EXACT_MATCH    ///< Equals the identifier
+};
+
+/// A transaction with the kind and score of its best-matching payee.
 struct score_entry_t {
   xact_t* xact;
+  match_kind_t kind;
   int score;
   string tag_payee; ///< The Payee tag that matched, or empty for the payee
 };
@@ -77,9 +87,11 @@ using scorecard_t = std::deque<score_entry_t>; ///< Collected match scores
 using char_positions_map =
     std::map<uint32_t, std::size_t>; ///< Tracks last matched position per character
 
-/// Sort score entries by descending score.
+/// Sort score entries by descending kind of match, then descending score.
 struct score_sorter {
   bool operator()(const score_entry_t& left, const score_entry_t& right) const {
+    if (left.kind != right.kind)
+      return left.kind > right.kind;
     return left.score > right.score;
   }
 };
@@ -143,7 +155,7 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
         payee_candidates.push_back(tag_payee);
     }
 
-    score_entry_t best{xact, 0, string()};
+    score_entry_t best{xact, SIMILAR_MATCH, 0, string()};
 
     for (const string& candidate : payee_candidates) {
       // Each candidate after the payee itself is a Payee tag
@@ -152,6 +164,7 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
       // An exact match is worth a score of 100 and terminates the search
       if (ident == candidate) {
         DEBUG("lookup", "  we have an exact match, score = 100");
+        best.kind = EXACT_MATCH;
         best.score = 100;
         best.tag_payee = from_tag ? candidate : string();
         found_exact = true;
@@ -305,10 +318,13 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
 
   /*--- Stage 2: Rank accounts by usage among top matches ---*/
 
-  // Sort the results by descending score, then look at every account ever
-  // used among the top five.  Rank these by number of times used.  Lastly,
-  // "decay" any latter accounts, so that we give recently used accounts a
-  // slightly higher rating in case of a tie.
+  // Sort the results by descending kind of match and score, then look at
+  // every account ever used among the top five of the strongest kind, so
+  // that payees merely resembling the identifier cannot outvote one equal
+  // to it, whose score their own can exceed: fuzzy scores grow with the
+  // length of the identifier.  Rank these by number of times used.
+  // Lastly, "decay" any latter accounts, so that we give recently used
+  // accounts a slightly higher rating in case of a tie.
 
   std::stable_sort(scores.begin(), scores.end(), score_sorter());
 
@@ -317,7 +333,7 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
   xact_t* best_xact = si != scores.end() ? si->xact : nullptr;
   account_use_map account_usage;
 
-  for (int i = 0; i < 5 && si != scores.end(); i++, si++) {
+  for (int i = 0; i < 5 && si != scores.end() && si->kind == scores.front().kind; i++, si++) {
     DEBUG("lookup.account",
           "Payee: " << std::setw(5) << std::right << si->score << " - " << si->xact->payee);
 

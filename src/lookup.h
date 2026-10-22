@@ -50,17 +50,19 @@
  * The algorithm scores each historical payee against the search
  * identifier using a character-by-character similarity metric that
  * rewards:
- *   - Exact matches (score 100, terminates search)
  *   - In-sequence character runs (10 points, with chain bonuses)
  *   - In-order but non-adjacent matches (5 points)
  *   - Proximity bonuses for nearby matches
  *   - Position decay so that early characters weigh more heavily
  *     (useful for credit card payees that share trailing location info)
  *
- * After scoring, the top five matching transactions are examined to
- * find the most frequently used account (excluding any reference
- * account), with a recency bias applied to break ties.  A transaction
- * that matched through a Payee tag counts only the postings carrying it.
+ * An exact match outranks any score and terminates the search.
+ *
+ * After scoring, the top five matching transactions of the strongest
+ * kind of match found are examined to find the most frequently used
+ * account (excluding any reference account), with a recency bias
+ * applied to break ties.  A transaction that matched through a Payee
+ * tag counts only the postings carrying it.
  */
 #pragma once
 
