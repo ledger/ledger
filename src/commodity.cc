@@ -309,7 +309,8 @@ commodity_t& commodity_t::nail_down(const expr_t& expr) {
   new_details.value_expr = expr;
   new_details.add_flags(ANNOTATION_VALUE_EXPR_CALCULATED);
 
-  return *pool().find_or_create(symbol(), new_details);
+  // The pool knows a commodity by its bare symbol; symbol() may add quotes.
+  return *pool().find_or_create(base_symbol(), new_details);
 }
 
 commodity_t::operator bool() const {
