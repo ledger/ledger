@@ -47,8 +47,10 @@
  *
  *   2. **Historical matching** (insert): Search the journal's transaction
  *      list (most recent first) for a payee that matches the template's
- *      payee mask.  Two strategies are tried: first a probabilistic lookup
- *      (via lookup_probable_account), then a simple regex match.
+ *      payee mask, via the probabilistic lookup_probable_account().  It
+ *      prefers an exact match, then the payees matching the mask, and
+ *      settles for the payee that most resembles the mask only when no
+ *      payee matches it.
  *
  *   3. **Transaction construction** (insert): Build a new xact_t by
  *      merging the template's explicit fields with details from the
@@ -342,10 +344,11 @@ optional<string> strip_uuid_lines(const optional<string>& note) {
  *
  * The algorithm proceeds in several phases:
  *
- *   1. **Payee matching**: Search for the most recent historical
- *      transaction whose payee matches the template's payee_mask.
- *      First try probabilistic matching (lookup_probable_account),
- *      then fall back to simple regex matching.
+ *   1. **Payee matching**: Search for the historical transaction whose
+ *      payee best matches the template's payee_mask, using probabilistic
+ *      matching (lookup_probable_account): an exact match first, then
+ *      the payees matching the mask, and only when no payee matches it,
+ *      the payee that most resembles it.
  *
  *   2. **Header construction**: Set the date, payee, code, note, and
  *      metadata from the template, falling back to the matching
@@ -374,33 +377,15 @@ xact_t* draft_t::insert(journal_t& journal) {
   // There is no need to check drafts for errors, because we generated them.
   journal.checking_style = journal_t::CHECK_PERMISSIVE;
 
-  // Phase 1: Search for a matching historical transaction
+  // Phase 1: Search for a matching historical transaction.  Payees matching
+  // the payee mask, directly or through a Payee tag, outrank those that
+  // merely resemble it, so the lookup settles for a resemblance only when
+  // no payee matches.
   if (xact_t* xact = lookup_probable_account(tmpl->payee_mask.str(), journal.xacts.rbegin(),
-                                             journal.xacts.rend())
+                                             journal.xacts.rend(), nullptr, &tmpl->payee_mask)
                          .first) {
     DEBUG("draft.xact", "Found payee by lookup: transaction on line " << xact->pos->beg_line);
     matching = xact;
-  } else {
-    for (xacts_list::reverse_iterator j = journal.xacts.rbegin(); j != journal.xacts.rend(); j++) {
-      if (tmpl->payee_mask.match((*j)->payee)) {
-        matching = *j;
-        DEBUG("draft.xact", "Found payee match: transaction on line " << (*j)->pos->beg_line);
-        break;
-      }
-      bool found_via_tag = false;
-      for (post_t* post : (*j)->posts) {
-        string tag_payee = post->payee_from_tag();
-        if (!tag_payee.empty() && tmpl->payee_mask.match(tag_payee)) {
-          matching = *j;
-          found_via_tag = true;
-          DEBUG("draft.xact",
-                "Found payee match via Payee tag: transaction on line " << (*j)->pos->beg_line);
-          break;
-        }
-      }
-      if (found_via_tag)
-        break;
-    }
   }
 
   // Phase 2: Set the transaction date

@@ -6390,9 +6390,13 @@ This produces the following output:
 
 It works by finding a past posting matching the regular expression
 @samp{viva}, and assuming that any accounts or amounts specified will be
-similar to that earlier posting.  If Ledger does not succeed in
-generating a new transaction, an error is printed and the exit code is
-set to @samp{1}.
+similar to that earlier posting.  Ledger prefers a past payee identical
+to the one you typed.  Otherwise it takes, from the payees matching the
+expression, the one most resembling what you typed, or the most recent
+one when none resembles it closely or several do equally.  Only if no
+payee matches does Ledger settle for the past payee most resembling the
+expression.  If Ledger does not succeed in generating a new transaction,
+an error is printed and the exit code is set to @samp{1}.
 
 Here are a few more examples of the @command{xact} command, assuming
 the above journal transaction:

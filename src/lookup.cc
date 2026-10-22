@@ -44,8 +44,10 @@
  *      against the search identifier.  The score reflects how closely
  *      the characters of the identifier appear (in order, in sequence,
  *      at similar positions) within the payee string.  Scores below 30
- *      are discarded.  An exact match outranks any score and stops the
- *      search.
+ *      are discarded.  Some kinds of match outrank any score: an exact
+ *      match, which also stops the search; then, when the caller
+ *      supplies a payee pattern, the payees matching it, whatever their
+ *      scores.
  *
  *   2. **Account ranking**: The top five scoring transactions of the
  *      strongest kind of match found are examined.  For each posting in
@@ -73,6 +75,7 @@ namespace {
 /// kind of match outranks a weaker one whatever their scores.
 enum match_kind_t : uint8_t {
   SIMILAR_MATCH, ///< Resembles the identifier, as measured by its score
+  PATTERN_MATCH, ///< Matches the caller's payee pattern
   EXACT_MATCH    ///< Equals the identifier
 };
 
@@ -112,7 +115,8 @@ struct usage_sorter {
 std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
                                                        xacts_list::reverse_iterator iter,
                                                        const xacts_list::reverse_iterator& end,
-                                                       account_t* ref_account) {
+                                                       account_t* ref_account,
+                                                       const mask_t* payee_mask) {
   scorecard_t scores;
 
   // Normalize the search identifier to lowercase for case-insensitive
@@ -305,14 +309,26 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
         index++;
       }
 
-      if (score > best.score) {
+      // A payee matching the caller's pattern outranks every payee that
+      // merely resembles the identifier.  Its score orders it among the
+      // other matches only from 30, where a resemblance starts to count:
+      // lower scores are raised to 29, so that recency alone ranks those
+      // matches while each still votes for its accounts.
+      match_kind_t kind = SIMILAR_MATCH;
+      if (payee_mask != nullptr && payee_mask->match(candidate)) {
+        kind = PATTERN_MATCH;
+        score = std::max(score, 29);
+      }
+      if (kind > best.kind || (kind == best.kind && score > best.score)) {
+        best.kind = kind;
         best.score = score;
         best.tag_payee = from_tag ? candidate : string();
       }
     }
 
-    // Only consider payees with a score of 30 or greater
-    if (best.score >= 30)
+    // Only consider resembling payees with a score of 30 or greater; the
+    // stronger kinds of match count whatever their scores
+    if (best.kind != SIMILAR_MATCH || best.score >= 30)
       scores.push_back(best);
   }
 
