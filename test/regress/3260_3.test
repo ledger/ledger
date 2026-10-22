@@ -1,0 +1,30 @@
+; The payee and tag blocks and the apply directive close their keyword
+; chains the same way as the commodity and account blocks (issue #3260):
+; an unrecognized keyword is an error, with or without an argument.
+
+payee Grocer
+    alais   Grocery Store
+
+payee Bakery
+    uid
+
+tag Receipt
+    chek    value =~ /^[0-9]+$/
+
+apply acount Personal
+
+apply acount
+
+test bal -> 5
+__ERROR__
+While parsing file "$FILE", line 6:
+Error: Unrecognized payee directive 'alais'
+While parsing file "$FILE", line 9:
+Error: Unrecognized payee directive 'uid'
+While parsing file "$FILE", line 12:
+Error: Unrecognized tag directive 'chek'
+While parsing file "$FILE", line 14:
+Error: Unrecognized directive 'apply acount'
+While parsing file "$FILE", line 16:
+Error: Unrecognized directive 'apply acount'
+end test

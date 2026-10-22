@@ -19,8 +19,9 @@ directives, and commands.
   converter
 
 - Fix null pointer dereferences in `get_code()`, `post_pred` (issue #1219),
-  `apply` directive functions (#1221), and `magnitude()` when a posting has a
-  null amount (#2212)
+  `apply` directive functions (#1221), `magnitude()` when a posting has a
+  null amount (#2212), and a `tag` directive's `check` or `assert` given no
+  expression (#3260)
 
 - Fix dangling context pointers from stack-allocated `bind_scope_t` and from
   tag-assertion expressions in the journal
@@ -379,6 +380,16 @@ components with their standard-library equivalents.
 
 - Support nested `account` declarations (#877) and metadata tags on `account`
   directives (#1681)
+
+- Accept comment lines, with or without a space after the comment
+  character, beneath `account`, `commodity`, `payee` and `tag` directives.
+  Beneath `commodity` or `payee`, `;text` or a bare `;` was rejected as a
+  sub-directive missing its argument (#3260).
+
+- Report an unrecognized keyword beneath an `account`, `commodity`, `payee`
+  or `tag` directive, or after `apply`, as an error.  A misspelled
+  sub-directive such as `formt $1,000.00` or `chek amount > 0` was ignored
+  without a word, even under `--pedantic` (#3260).
 
 - Return regex capture-group text from the `=~` operator (extending #664)
 
