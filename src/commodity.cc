@@ -387,7 +387,9 @@ bool commodity_t::symbol_needs_quotes(const string& symbol) {
     if (invalid_chars[static_cast<unsigned char>(ch)])
       return true;
 
-  return false;
+  // parse_symbol does not read a reserved word as a bare symbol, so a
+  // commodity with such a name must be printed in quotes to be read back.
+  return is_reserved_token(symbol.c_str());
 }
 
 /**
