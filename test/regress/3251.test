@@ -1,0 +1,77 @@
+; Regression test for #3251: in a value expression, a comma after a name or a
+; string must separate function arguments whether or not a space follows it.
+; The tokenizer tries to read an identifier or a double-quoted string as the
+; commodity of a prefix amount, and the quantity reader let a comma begin the
+; quantity, so account_skip_prefix("abc:def:ghi",1) received one argument,
+; the amount "abc:def:ghi"0,1, and account_skip_prefix(account,1) read the
+; identifier account as a commodity in the same way.
+
+2024/01/01 Payee
+    Assets:Bank:Checking    $10.00
+    Income:Salary:Acme
+
+; The report's examples: the string argument, with and without the space.
+test eval 'account_skip_prefix("abc:def:ghi", 1)'
+def:ghi
+end test
+
+test eval 'account_skip_prefix("abc:def:ghi",1)'
+def:ghi
+end test
+
+; ... and the identifier argument.
+test reg --group-by 'account_skip_prefix(account,1)'
+Bank:Checking
+24-Jan-01 Payee                 Assets:Bank:Checking         $10.00       $10.00
+
+Salary:Acme
+24-Jan-01 Payee                 Income:Salary:Acme          $-10.00      $-10.00
+end test
+
+; Before, this printed the amount "account0,10" in place of each account.
+test reg --format '%(truncated(account,10))\n'
+Assets:B..
+Income:S..
+end test
+
+; A comma after a string or an identifier is a separator even when a space
+; precedes it, or when a sign or a quote follows it.
+test eval '"abc",1'
+(abc, 1)
+end test
+
+test eval '"abc" ,1'
+(abc, 1)
+end test
+
+test eval '"abc",-1'
+(abc, -1)
+end test
+
+test eval 'x=1; (x,2)'
+(1, 2)
+end test
+
+test eval "x=1; (x,'2')"
+(1, 2)
+end test
+
+; A comma inside a quantity still belongs to it, after a prefix commodity
+; written either way, and a quoted commodity still prefixes an amount (#2172).
+test eval '"foo" 1,000'
+foo 1,000
+end test
+
+test eval 'USD 1,000'
+USD 1,000
+end test
+
+test eval '"foo" 10'
+foo 10
+end test
+
+; The braced amount literal keeps journal syntax, in which a comma may begin
+; the quantity as a leading decimal comma; 3251_journal.test checks a posting.
+test eval '{EUR ,50}'
+EUR0.5
+end test

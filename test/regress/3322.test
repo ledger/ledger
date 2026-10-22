@@ -1,0 +1,38 @@
+; Regression test for #3322: in a value expression a minus sign after a name
+; begins the quantity of an amount whose commodity is the name, just as in
+; $-10 or USD -10, so subtracting from a name needs a space on each side of
+; the minus.  #3322 settled on keeping this rule, which the Literals section
+; of the manual documents.
+
+2015/10/12 Exxon
+    Expenses:Gas             $10.00
+    Liabilities:MasterCard
+
+test reg --format '%(depth-1)\n' Expenses:Gas
+depth-1
+end test
+
+test reg --format '%(depth - 1)\n' Expenses:Gas
+1
+end test
+
+test eval 'x=5; x -1'
+x -1
+end test
+
+; The amounts that the rule keeps working, prefix commodities quoted or not.
+test eval '$-10'
+$-10
+end test
+
+test eval 'USD -10'
+USD -10
+end test
+
+test eval 'USD-10'
+USD-10
+end test
+
+test eval '"ab cd" -10'
+"ab cd" -10
+end test

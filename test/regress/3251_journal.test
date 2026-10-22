@@ -1,0 +1,11 @@
+; Regression test for #3251: only inside a value expression does a comma after
+; a prefix commodity have to separate.  In the journal it may still begin the
+; quantity, as a leading decimal comma.
+
+2024/01/01 Payee
+    Expenses:Food    EUR ,50
+    Assets:Cash
+
+test bal Expenses
+            EUR 0,50  Expenses:Food
+end test

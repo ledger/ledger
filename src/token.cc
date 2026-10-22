@@ -46,7 +46,8 @@
  *   - Single- and multi-character operators (`+`, `==`, `->`, `&&`)
  *   - Reserved words (`and`, `or`, `not`, `div`, `if`, `else`, `true`, `false`)
  *   - Bracketed date literals (`[2024/01/01]`)
- *   - Quoted strings (`'hello'`, `"$10.00"` with amount-parse fallback)
+ *   - Quoted strings (`'hello'`, `"hello"`); a double-quoted string followed
+ *     by a quantity is instead the commodity of an amount (`"ab cd" 17`)
  *   - Braced amount literals (`{$10.00}`)
  *   - Regular expression masks (`/pattern/`)
  *   - Numeric amounts and commodity values (delegated to amount_t::parse)
@@ -266,14 +267,17 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
     break;
   }
 
-  // Double-quoted string: first tries to parse as a commodity amount
-  // (e.g., "$10.00"), falling back to a plain string if that fails.
+  // Double-quoted string: first tries to parse as an amount whose commodity
+  // is quoted (e.g., "ab cd" 17), falling back to a plain string if that fails.
   case '"': {
     std::istream::pos_type pos = in.tellg();
 
-    // Phase 1: attempt amount parsing (handles commodity strings like "$10")
+    // Phase 1: attempt amount parsing.  Under PARSE_IN_EXPR a comma or plus
+    // sign after the closing quote is an operator, as in f("abc",1) or
+    // "abc"+1; it does not begin a quantity.
     parse_flags_t parse_flags;
     parse_flags.add_flags(PARSE_NO_ANNOT);
+    parse_flags.add_flags(PARSE_IN_EXPR);
     if (pflags.has_flags(PARSE_NO_MIGRATE))
       parse_flags.add_flags(PARSE_NO_MIGRATE);
     if (pflags.has_flags(PARSE_NO_REDUCE))
@@ -545,6 +549,10 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
     parse_flags_t parse_flags;
 
     parse_flags.add_flags(PARSE_NO_ANNOT);
+    // In f(account,1) or x+1 the comma or plus sign is an operator; it must
+    // not begin the quantity of an amount whose commodity would be the
+    // identifier.
+    parse_flags.add_flags(PARSE_IN_EXPR);
     if (pflags.has_flags(PARSE_NO_MIGRATE))
       parse_flags.add_flags(PARSE_NO_MIGRATE);
     if (pflags.has_flags(PARSE_NO_REDUCE))
