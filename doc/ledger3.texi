@@ -7454,6 +7454,22 @@ Collapse the account display only if it has a zero balance.
 @itemx --ansi
 Use color if the terminal supports it.
 
+@item --colors @var{NAME=COLOR,...}
+Change what the color @var{NAME} looks like, where @var{NAME} is one of
+the color names that formats use (@pxref{Colors}), such as @code{blue}
+for account names or @code{red} for negative amounts.  @var{COLOR} is a
+color name, a number from 0 to 255 for one of a terminal's 256 colors,
+or a 24-bit color written @samp{#RRGGBB}, or several of these separated
+by spaces; names within @var{COLOR} mean the standard ANSI colors.  For
+example, @samp{--colors 'blue=#5f87ff,red=bold 196'} shows account
+names in a lighter blue and negative amounts in a bold, bright red.  An
+empty @var{COLOR} leaves text of that color uncolored.  The assignments
+of every use of the option add up, a later assignment to a name
+replacing an earlier one, so that colors set in an init file can be
+adjusted on the command line.  This option does not turn color on or
+off: that is still up to @option{--color}, @option{--force-color} and
+@option{--no-color}.
+
 @item --columns @var{INT}
 Specify the width of the @command{register} report in characters.
 
@@ -10764,8 +10780,11 @@ $ ledger reg --limit 'any(account =~ /Assets:/)'
 
 @defun ansify_if value color
 Render the given @var{value} as a string, applying the proper ANSI escape
-codes to display it in the given @var{color}.  If @var{color} is not
-provided, the value is returned unchanged.  The condition is typically
+codes to display it in the given @var{color}: a color name such as
+@code{blue}, a number from 0 to 255, a 24-bit color written
+@samp{#RRGGBB}, or several of these separated by spaces
+(@pxref{Colors}).  If @var{color} is not provided, or is null, empty or
+a boolean, the value is returned unchanged.  The condition is typically
 embedded in the color argument using an @code{if} expression, e.g.,
 @code{blue if color}, which checks the value of the option
 @option{--color}.  Since ANSI escape codes include non-printable character
@@ -11705,8 +11724,12 @@ options:
 @node Colors, Quantities and Calculations, Field Widths, Formatting Functions and Codes
 @subsection Colors
 
-The character-based formatting ledger can do is limited to the ANSI
-terminal character colors and font highlights in a normal TTY session.
+When it writes to a terminal, or when @option{--force-color} is given,
+ledger colors its reports with ANSI escape sequences.  Formats refer to
+colors by name: the default formats show account names in @code{blue},
+negative amounts in @code{red}, future dates in @code{green} and the
+payees of uncleared transactions in @code{bold}.  These are the names
+that formats can use:
 
 @multitable @columnfractions .3 .3 .3
 @item @code{red}    @tab @code{magenta} @tab @code{bold}
@@ -11714,6 +11737,27 @@ terminal character colors and font highlights in a normal TTY session.
 @item @code{yellow} @tab @code{white}   @tab @code{blink}
 @item @code{blue}   @tab @code{black}
 @end multitable
+
+Where a format gives a color, such as the second argument of
+@code{ansify_if}, it can also give a number from 0 to 255, for one of the
+256 colors that most terminals offer, or a 24-bit color written
+@samp{#RRGGBB} in hexadecimal, for terminals that support those.
+Several of these separated by spaces combine, so that
+@samp{bold #5f87ff} is a bold light blue.
+
+The option @option{--colors} changes what a color name looks like,
+wherever it is used.  This makes account names a lighter blue:
+
+@smallexample @c command:043BAC8,with_input:3406FC1
+$ ledger -f expr.dat --colors blue=#5f87ff --format "%(ansify_if(account, blue))\n" reg
+@end smallexample
+@smallexample @c output:043BAC8
+[38;2;95;135;255mAssets:Cash[0m
+[38;2;95;135;255mExpenses:Office Supplies[0m
+@end smallexample
+
+Set @option{--colors} in your @file{~/.ledgerrc}, or in the environment
+variable @env{LEDGER_COLORS}, to have every report use your colors.
 
 @node Quantities and Calculations, Date Functions, Colors, Formatting Functions and Codes
 @subsection Quantities and Calculations
@@ -11952,7 +11996,8 @@ The following format functions allow you limited formatting of text:
 
 @item ansify_if(value, color)
 Surrounds the string representing value with ANSI codes to give it
-@code{color} on a TTY display.  Has no effect if directed to a file.
+@code{color} (@pxref{Colors}) on a TTY display.  Has no effect if
+directed to a file.
 
 @item justify(value, first_width, latter_width, right_justify, colorize)
 Right or left justify the string representing @code{value}.  The width

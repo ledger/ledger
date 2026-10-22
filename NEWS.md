@@ -207,8 +207,17 @@ components with their standard-library equivalents.
   family total (#723); allow `--sort` and `--sort-xacts` together
 
 - Enable ANSI color on Windows CMD/PowerShell (#2110); fix `justify()` to
-  ignore ANSI escape codes when computing width; flush stdout after each REPL
-  command (#991)
+  ignore ANSI escape codes when computing width, and to pad a negative integer
+  that it colors only once; flush stdout after each REPL command (#991)
+
+- Add `--colors NAME=COLOR,...` to change what the colors that report formats
+  name look like (#589): `--colors 'blue=#5f87ff,red=bold 196'` shows account
+  names in a lighter blue and negative amounts in a bold, bright red.  A
+  color, there or as the color argument of `ansify_if()`, can now be a
+  256-color index (0-255) or a 24-bit `#RRGGBB` value as well as a standard
+  name, and several such words combine.  Like other options, `--colors` can
+  be set in `~/.ledgerrc` or through `LEDGER_COLORS`.  `ansify_if()` now
+  reports an unknown color as an error instead of leaving the text uncolored
 
 - Fix percentage amounts to act as fractions in arithmetic; fix `width`
   options to return integers for expression arithmetic; fix the `truncated()`

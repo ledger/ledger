@@ -543,15 +543,17 @@ struct print_amount_from_balance {
   int fwidth;
   int lwidth;
   uint_least8_t flags;
+  const string& negative_color;
 
   explicit print_amount_from_balance(std::ostream& _out, bool& _first, int _fwidth, int _lwidth,
-                                     uint_least8_t _flags)
-      : out(_out), first(_first), fwidth(_fwidth), lwidth(_lwidth), flags(_flags) {
-    TRACE_CTOR(print_amount_from_balance, "ostream&, int, int, uint_least8_t");
+                                     uint_least8_t _flags, const string& _negative_color)
+      : out(_out), first(_first), fwidth(_fwidth), lwidth(_lwidth), flags(_flags),
+        negative_color(_negative_color) {
+    TRACE_CTOR(print_amount_from_balance, "ostream&, int, int, uint_least8_t, const string&");
   }
   print_amount_from_balance(const print_amount_from_balance& other)
       : out(other.out), first(other.first), fwidth(other.fwidth), lwidth(other.lwidth),
-        flags(other.flags) {
+        flags(other.flags), negative_color(other.negative_color) {
     TRACE_CTOR(print_amount_from_balance, "copy");
   }
   ~print_amount_from_balance() noexcept { TRACE_DTOR(print_amount_from_balance); }
@@ -574,7 +576,7 @@ struct print_amount_from_balance {
     amount.print(buf, flags);
 
     justify(out, buf.str(), width, flags & AMOUNT_PRINT_RIGHT_JUSTIFY,
-            flags & AMOUNT_PRINT_COLORIZE && amount.sign() < 0);
+            (flags & AMOUNT_PRINT_COLORIZE && amount.sign() < 0) ? negative_color : empty_string);
   }
 
   /// @brief Emit a zero placeholder when the balance is entirely zero.
@@ -609,8 +611,11 @@ struct print_amount_from_balance {
 /// @param latter_width  Column width for subsequent lines (defaults to
 ///                      first_width if set to 1).
 /// @param flags         Formatting flags (right-justify, colorize, etc.).
+/// @param negative_color  The ANSI escape sequence with which
+///                      AMOUNT_PRINT_COLORIZE renders negative amounts;
+///                      empty renders them without color.
 void balance_t::print(std::ostream& out, const int first_width, const int latter_width,
-                      const uint_least8_t flags) const {
+                      const uint_least8_t flags, const string& negative_color) const {
   int effective_first = first_width;
   int effective_latter = latter_width < 0 ? first_width : latter_width;
 
@@ -644,7 +649,8 @@ void balance_t::print(std::ostream& out, const int first_width, const int latter
   }
 
   bool first = true;
-  print_amount_from_balance amount_printer(out, first, effective_first, effective_latter, flags);
+  print_amount_from_balance amount_printer(out, first, effective_first, effective_latter, flags,
+                                           negative_color);
   map_sorted_amounts(amount_printer);
 
   if (first)

@@ -228,6 +228,18 @@ public:
   /// Called as "scrub()" in format strings to clean lot info before display.
   value_t display_value(const value_t& val);
 
+  /// @brief Return the ANSI escape sequence that renders @p color, or ""
+  /// if it renders none.  @p color is a color as ansify_if() accepts it:
+  /// names such as "blue", 256-color indexes and #RRGGBB values, where a
+  /// name means the color that --colors assigns it, if any.
+  string color_escape(const string& color);
+
+  /// @brief Apply the NAME=COLOR assignments of a --colors argument to
+  /// @p palette, which maps color names to the SGR parameters of the ANSI
+  /// escape sequences that render them (e.g. "blue" to "38;5;33").
+  /// @throws option_error for a malformed assignment or unknown name.
+  static void assign_colors(const string& assignments, std::map<string, string>& palette);
+
   /*--- Built-in Value Expression Functions ---*/
   // These methods implement the functions callable from format strings and
   // value expressions (e.g., "market(amount, value_date, exchange)").
@@ -380,6 +392,7 @@ public:
     HANDLER(cleared).report(out);
     HANDLER(cleared_format_).report(out);
     HANDLER(color).report(out);
+    HANDLER(colors_).report(out);
     HANDLER(collapse).report(out);
     HANDLER(collapse_if_).report(out);
     HANDLER(collapse_if_zero).report(out);
@@ -694,6 +707,15 @@ public:
       });
 
   OPTION(report_t, color);
+
+  OPTION_(
+      report_t, colors_, std::map<string, string> palette; DO_() {
+        // Each use adds to the colors that earlier ones assigned, such as
+        // those from ~/.ledgerrc, rather than replacing them.
+        assign_colors(str, palette);
+        if (handled)
+          value += "," + str;
+      });
 
   OPTION_(
       report_t, collapse, DO() { // -n
