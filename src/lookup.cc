@@ -47,11 +47,12 @@
  *      are discarded.  An exact match scores 100 and stops the search.
  *
  *   2. **Account ranking**: The top five scoring transactions are
- *      examined.  For each posting in those transactions, the account's
- *      usage count is incremented by the transaction's score (with a
- *      small recency decay).  The account with the highest total wins.
- *      Temporary/generated accounts and the reference account are
- *      excluded.
+ *      examined.  For each posting in those transactions (in one that
+ *      matched through a Payee tag, each posting carrying that tag),
+ *      the account's usage count is incremented by the transaction's
+ *      score (with a small recency decay).  The account with the
+ *      highest total wins.  Temporary/generated accounts and the
+ *      reference account are excluded.
  */
 
 #include <system.hh>
@@ -66,7 +67,12 @@ namespace ledger {
 
 namespace {
 
-using score_entry_t = std::pair<xact_t*, int>; ///< (transaction, match score)
+/// A transaction with the score of its best-matching payee.
+struct score_entry_t {
+  xact_t* xact;
+  int score;
+  string tag_payee; ///< The Payee tag that matched, or empty for the payee
+};
 using scorecard_t = std::deque<score_entry_t>; ///< Collected match scores
 using char_positions_map =
     std::map<uint32_t, std::size_t>; ///< Tracks last matched position per character
@@ -74,7 +80,7 @@ using char_positions_map =
 /// Sort score entries by descending score.
 struct score_sorter {
   bool operator()(const score_entry_t& left, const score_entry_t& right) const {
-    return left.second > right.second;
+    return left.score > right.score;
   }
 };
 
@@ -137,13 +143,17 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
         payee_candidates.push_back(tag_payee);
     }
 
-    int best_score = 0;
+    score_entry_t best{xact, 0, string()};
 
     for (const string& candidate : payee_candidates) {
+      // Each candidate after the payee itself is a Payee tag
+      bool from_tag = &candidate != &payee_candidates.front();
+
       // An exact match is worth a score of 100 and terminates the search
       if (ident == candidate) {
         DEBUG("lookup", "  we have an exact match, score = 100");
-        best_score = 100;
+        best.score = 100;
+        best.tag_payee = from_tag ? candidate : string();
         found_exact = true;
         break;
       }
@@ -282,12 +292,15 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
         index++;
       }
 
-      best_score = std::max(best_score, score);
+      if (score > best.score) {
+        best.score = score;
+        best.tag_payee = from_tag ? candidate : string();
+      }
     }
 
     // Only consider payees with a score of 30 or greater
-    if (best_score >= 30)
-      scores.push_back(score_entry_t(xact, best_score));
+    if (best.score >= 30)
+      scores.push_back(best);
   }
 
   /*--- Stage 2: Rank accounts by usage among top matches ---*/
@@ -301,20 +314,23 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
 
   scorecard_t::iterator si = scores.begin();
   int decay = 0;
-  xact_t* best_xact = si != scores.end() ? (*si).first : NULL;
+  xact_t* best_xact = si != scores.end() ? si->xact : nullptr;
   account_use_map account_usage;
 
   for (int i = 0; i < 5 && si != scores.end(); i++, si++) {
     DEBUG("lookup.account",
-          "Payee: " << std::setw(5) << std::right << (*si).second << " - " << (*si).first->payee);
+          "Payee: " << std::setw(5) << std::right << si->score << " - " << si->xact->payee);
 
-    for (post_t* post : (*si).first->posts) {
+    // A transaction that matched through a Payee tag votes only with the
+    // postings carrying it
+    for (post_t* post : si->xact->posts) {
       if (!post->has_flags(ITEM_TEMP | ITEM_GENERATED) && post->account != ref_account &&
-          !post->account->has_flags(ACCOUNT_TEMP | ACCOUNT_GENERATED)) {
+          !post->account->has_flags(ACCOUNT_TEMP | ACCOUNT_GENERATED) &&
+          (si->tag_payee.empty() || post->payee_from_tag() == si->tag_payee)) {
         if (auto x = account_usage.find(post->account); x == account_usage.end())
-          account_usage.insert(account_use_pair(post->account, ((*si).second - decay)));
+          account_usage.insert(account_use_pair(post->account, (si->score - decay)));
         else
-          (*x).second += ((*si).second - decay);
+          (*x).second += (si->score - decay);
       }
       decay++;
     }

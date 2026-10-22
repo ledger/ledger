@@ -1,0 +1,24 @@
+; Regression test for issue #3243: a transaction that matched through a
+; Payee tag votes for the account only with the postings carrying it.
+;
+; lookup_probable_account() matches the Payee tags of a transaction's
+; postings as well as its payee, but when ranking accounts it counted
+; every posting of a matching transaction, the first weighing the most.
+; So `convert --auto-match` filed a "Starbucks" line under Expenses:Fuel,
+; the first posting of a card statement whose Expenses:Coffee posting is
+; the one tagged "Payee: Starbucks".  Only the tagged posting now votes.
+
+2026/06/01 Card Statement
+    Expenses:Fuel                          40.00 USD  ; Payee: Shell
+    Expenses:Coffee                         5.00 USD  ; Payee: Starbucks
+    Liabilities:CC
+
+test --auto-match --account Liabilities:CC convert $sourcepath/test/input/3243_tag.csv
+2026/07/01 * Starbucks
+    Expenses:Coffee                            -4.75
+    Liabilities:CC
+
+2026/07/02 * Shell
+    Expenses:Fuel                                -38
+    Liabilities:CC
+end test

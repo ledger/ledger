@@ -59,7 +59,8 @@
  *
  * After scoring, the top five matching transactions are examined to
  * find the most frequently used account (excluding any reference
- * account), with a recency bias applied to break ties.
+ * account), with a recency bias applied to break ties.  A transaction
+ * that matched through a Payee tag counts only the postings carrying it.
  */
 #pragma once
 
