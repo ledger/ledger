@@ -50,22 +50,30 @@
  * The algorithm scores each historical payee against the search
  * identifier using a character-by-character similarity metric that
  * rewards:
- *   - Exact matches (score 100, terminates search)
  *   - In-sequence character runs (10 points, with chain bonuses)
  *   - In-order but non-adjacent matches (5 points)
  *   - Proximity bonuses for nearby matches
  *   - Position decay so that early characters weigh more heavily
  *     (useful for credit card payees that share trailing location info)
  *
- * After scoring, the top five matching transactions are examined to
- * find the most frequently used account (excluding any reference
- * account), with a recency bias applied to break ties.
+ * Some kinds of match outrank any score: an exact match, which also
+ * terminates the search; then a payee equal to the identifier but for
+ * case; then, when the caller supplies a payee pattern as "xact" does,
+ * the payees matching it.
+ *
+ * After scoring, the top five matching transactions of the strongest
+ * kind of match found are examined to find the most frequently used
+ * account (excluding any reference account), with a recency bias
+ * applied to break ties.  A transaction that matched through a Payee
+ * tag counts only the postings carrying it.
  */
 #pragma once
 
 #include "iterators.h"
 
 namespace ledger {
+
+class mask_t;
 
 /**
  * @brief Find the most probable transaction and account for a given payee.
@@ -80,12 +88,16 @@ namespace ledger {
  * @param end          Reverse iterator past the end of the transaction list.
  * @param ref_account  If non-null, this account is excluded from the
  *                     account frequency count (typically the "from" account).
+ * @param payee_mask   If non-null, payees matching this pattern outrank
+ *                     every payee that merely resembles @p ident, and
+ *                     count as matches whatever their scores.
  * @return A pair of (best matching transaction, most probable account).
  *         Either or both may be null if no match scores high enough.
  */
 std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
                                                        xacts_list::reverse_iterator iter,
                                                        const xacts_list::reverse_iterator& end,
-                                                       account_t* ref_account = nullptr);
+                                                       account_t* ref_account = nullptr,
+                                                       const mask_t* payee_mask = nullptr);
 
 } // namespace ledger

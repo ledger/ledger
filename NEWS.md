@@ -261,6 +261,10 @@ components with their standard-library equivalents.
   averages for period reports (#1950); anchor interval averages to the report
   begin date
 
+- Make `xact` draft from a past payee that matches its payee pattern, rather
+  than from one that merely resembles the pattern, and prefer a payee
+  identical to the one typed, then one differing from it only in case (#3243)
+
 ### Date, Period, and Time Handling
 
 - Accept a time component for `--begin`/`--end`/`--now` (#1696): the parser
@@ -336,6 +340,10 @@ components with their standard-library equivalents.
   UUID mappings during CSV import; fix CSV `convert` handling of missing or
   same-commodity cost fields; fix signed debit amounts in CSV `convert`;
   report a clear error for CSV files missing a date column
+
+- Make `convert --auto-match` take the account from a payee equal to the CSV
+  payee, ignoring case, instead of letting merely similar payees outvote it,
+  and count only the postings that carry a matching Payee tag (#3243)
 
 ### Timelog and Time-based Reporting
 
