@@ -266,13 +266,16 @@ public:
    * @brief Parse a "P" price directive line from a journal or price database.
    *
    * Accepts lines in the format "DATE [TIME] SYMBOL AMOUNT" (e.g.,
-   * "2024/01/15 AAPL $185.00").  Parses the date/time, commodity symbol,
-   * and price amount, then optionally records the price in the history graph.
+   * "2024/01/15 AAPL $185.00"), or "SYMBOL AMOUNT" when the line does not
+   * begin with a digit, in which case the price takes effect now.  Parses
+   * the date/time, commodity symbol, and price amount, then optionally
+   * records the price in the history graph.
    *
    * @param line              Mutable C string to parse (modified in place).
    * @param do_not_add_price  If true, parse only -- do not add to history.
-   * @param no_date           If true, treat the line as "SYMBOL AMOUNT" without
-   *                          a leading date (used for getquote script output).
+   * @param no_date           If true, treat the line as "SYMBOL AMOUNT" even
+   *                          if it begins with a digit (used by the
+   *                          `apply fixed` and `apply rate` directives).
    * @return A pair of (commodity, price_point) on success, or nullopt.
    */
   std::optional<std::pair<commodity_t*, price_point_t>>

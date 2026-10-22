@@ -299,6 +299,14 @@ BOOST_AUTO_TEST_CASE(testSymbolNeedsQuotes)
   BOOST_CHECK(commodity_t::symbol_needs_quotes("A(B"));
   BOOST_CHECK(commodity_t::symbol_needs_quotes("A{B"));
 
+  // A bare symbol may not be a word of the expression language, so these
+  // names must be quoted to be read back -- but only the exact words
+  BOOST_CHECK(commodity_t::symbol_needs_quotes("and"));
+  BOOST_CHECK(commodity_t::symbol_needs_quotes("div"));
+  BOOST_CHECK(commodity_t::symbol_needs_quotes("true"));
+  BOOST_CHECK(! commodity_t::symbol_needs_quotes("AND"));
+  BOOST_CHECK(! commodity_t::symbol_needs_quotes("andy"));
+
   // Empty string should not need quotes (no invalid chars)
   BOOST_CHECK(! commodity_t::symbol_needs_quotes(""));
 }

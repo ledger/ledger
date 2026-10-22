@@ -532,12 +532,13 @@ cost_breakdown_t commodity_pool_t::exchange(const amount_t& amount, const amount
 /// @{
 
 /**
- * @brief Parse a price directive line ("P DATE [TIME] SYMBOL AMOUNT").
+ * @brief Parse a price directive line ("P [DATE [TIME]] SYMBOL AMOUNT").
  *
- * The line is split into whitespace-separated fields.  If a time component
- * is present, it is combined with the date into a full datetime; otherwise,
- * midnight is assumed.  The commodity symbol is parsed (handling quoted
- * symbols), and the remaining text is parsed as the price amount.
+ * A line that begins with a digit begins with a date, which a time of day
+ * may follow; midnight is assumed without one.  Any other line is just
+ * "SYMBOL AMOUNT", priced at the current time.  The commodity symbol is
+ * parsed the same way in both (handling quoted symbols), and the remaining
+ * text is parsed as the price amount.
  *
  * On success, the commodity is looked up (or created) in the pool, the
  * price is optionally added to the history graph, and the commodity is
@@ -546,33 +547,39 @@ cost_breakdown_t commodity_pool_t::exchange(const amount_t& amount, const amount
  */
 std::optional<std::pair<commodity_t*, price_point_t>>
 commodity_pool_t::parse_price_directive(char* line, bool do_not_add_price, bool no_date) {
-  char* date_field_ptr = line;
-  char* time_field_ptr = next_element(date_field_ptr);
-  if (!time_field_ptr)
-    return std::nullopt;
-  string date_field = date_field_ptr; // NOLINT(bugprone-unused-local-non-trivial-variable)
-
-  char* symbol_and_price;
+  line = skip_ws(line); // a getquote script may print white-space first
+  char* symbol_and_price = line;
   datetime_t datetime;
   string symbol;
 
-  if (!no_date && std::isdigit(static_cast<unsigned char>(time_field_ptr[0]))) {
-    symbol_and_price = next_element(time_field_ptr);
-    if (!symbol_and_price)
+  if (!no_date && std::isdigit(static_cast<unsigned char>(line[0]))) {
+    char* date_field_ptr = line;
+    char* time_field_ptr = next_element(date_field_ptr);
+    if (!time_field_ptr)
       return std::nullopt;
+    string date_field = date_field_ptr; // NOLINT(bugprone-unused-local-non-trivial-variable)
 
-    datetime = parse_datetime(date_field + " " + time_field_ptr);
-  } else if (!no_date && std::isdigit(static_cast<unsigned char>(date_field_ptr[0]))) {
-    symbol_and_price = time_field_ptr;
-    datetime = datetime_t(parse_date(date_field));
+    if (std::isdigit(static_cast<unsigned char>(time_field_ptr[0]))) {
+      symbol_and_price = next_element(time_field_ptr);
+      if (!symbol_and_price)
+        return std::nullopt;
+
+      datetime = parse_datetime(date_field + " " + time_field_ptr);
+    } else {
+      symbol_and_price = time_field_ptr;
+      datetime = datetime_t(parse_date(date_field));
+    }
+    commodity_t::parse_symbol(symbol_and_price, symbol);
   } else {
-    symbol = date_field_ptr;
-    symbol_and_price = time_field_ptr;
+    // Without a date, the symbol is still read by parse_symbol, which
+    // removes its quotes; this line used to be split at its first space,
+    // so `P "Fund A" 3.00 USD` priced a commodity named `"Fund` (issue
+    // #3321).  As before, a lone word is not a price line at all.
+    commodity_t::parse_symbol(symbol_and_price, symbol);
+    if (!*symbol_and_price)
+      return std::nullopt;
     datetime = CURRENT_TIME();
   }
-
-  if (symbol.empty())
-    commodity_t::parse_symbol(symbol_and_price, symbol);
 
   price_point_t point;
   point.when = datetime;
