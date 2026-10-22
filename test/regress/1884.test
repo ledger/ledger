@@ -1,16 +1,27 @@
-; Test for issue #1884: --balance-format with quoted value in init file.
+; Regression test for issue #1884: option values in quotes.
+; https://github.com/ledger/ledger/issues/1884
 ;
-; When specifying --balance-format (or other format options) in a .ledgerrc
-; init file, the value is read as raw text without shell processing.  Users
-; need to wrap the value in double-quotes to handle spaces, and use \" inside
-; those quotes to embed a literal double-quote (e.g., for empty string
-; literals in expressions like `depth_spacer : ""`).
+; An option line in ~/.ledgerrc takes the rest of the line as its value,
+; and no shell removes quotes from it.  A value copied from a command
+; line, as in the issue, arrives in quotes, and in double quotes a
+; literal double quote is written \" -- as in `depth_spacer : \"\"`
+; below, the empty string "".  Ledger strips the outer quotes, turns \"
+; into " and \\ into \, and leaves other sequences, such as \n, for the
+; format.  It strips single quotes too, but processes no escapes in them.
 ;
-; This test verifies that:
-;   1. Double-quoted option values in init files have their outer quotes
-;      stripped and \" sequences unescaped to ".
-;   2. The resulting format string is parsed correctly, including expressions
-;      that use "" (empty string literal).
+; Init files and journals read option lines the same way, so this test
+; gives them in its journal: the test harness runs ledger with
+; --args-only, which reads no init file, not even one named with
+; --init-file.  test/CheckEnvVars.py reads the same line from a
+; ~/.ledgerrc.
+;
+; The balance format is the documented one that the issue quotes, with
+; account names in yellow, as in the issue's ~/.ledgerrc, rather than the
+; default blue, so the output shows that the option took effect.  `cat -v`
+; shows ESC as ^[.
+
+--balance-format "%(justify(scrub(display_total), 20, -1, true, color))  %(!options.flat ? depth_spacer : \"\")%-(ansify_if(partial_account(options.flat), yellow if color))\n%/%$1\n%/--------------------\n"
+--register-format '%(payee) %(amount < 0 ? "out" : "in") %(amount)\n'
 
 2024/01/01 Groceries
     Expenses:Food    $50.00
@@ -20,14 +31,29 @@
     Expenses:Books   $25.00
     Assets:Cash
 
-; Verify that \" inside a double-quoted init-file option value is unescaped.
-; The format uses the expression `!options.flat ? depth_spacer : ""` which
-; requires a literal double-quote inside the init-file quoted value.
-test bal --init-file $sourcepath/test/regress/1884.ledgerrc
-             $-75.00  Assets:Cash
-              $75.00  Expenses
-              $25.00    Books
-              $50.00    Food
+test bal --force-color | cat -v
+             ^[[31m$-75.00^[[0m  ^[[33mAssets:Cash^[[0m
+              $75.00  ^[[33mExpenses^[[0m
+              $25.00    ^[[33mBooks^[[0m
+              $50.00    ^[[33mFood^[[0m
 --------------------
                    0
+end test
+
+; With --flat, the expression yields the empty string "" instead.
+test bal --flat --force-color | cat -v
+             ^[[31m$-75.00^[[0m  ^[[33mAssets:Cash^[[0m
+              $25.00  ^[[33mExpenses:Books^[[0m
+              $50.00  ^[[33mExpenses:Food^[[0m
+--------------------
+                   0
+end test
+
+; The register format is in single quotes, so its double quotes need no
+; backslashes.
+test reg
+Groceries in $50.00
+Groceries out $-50.00
+Books in $25.00
+Books out $-25.00
 end test

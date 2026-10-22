@@ -195,6 +195,33 @@ with tempfile.TemporaryDirectory() as tmpdir:
         expected_exit=0
     )
 
+# Test 6: a double-quoted format in ~/.ledgerrc, where \" writes the
+# expression's empty string "" (issue #1884)
+with tempfile.TemporaryDirectory() as tmpdir:
+    journal_file = os.path.join(tmpdir, 'journal.dat')
+
+    with open(journal_file, 'w') as f:
+        f.write('2024/01/01 Test payee\n')
+        f.write('    Expenses:Food    $25.00\n')
+        f.write('    Assets:Checking\n')
+
+    with open(os.path.join(tmpdir, '.ledgerrc'), 'w') as f:
+        f.write(r'--balance-format "%(justify(scrub(display_total), 20, -1, true, color))'
+                r'  %(!options.flat ? depth_spacer : \"\")'
+                r'%-(ansify_if(partial_account(options.flat), yellow if color))'
+                r'\n%/%$1\n%/--------------------\n"' '\n')
+
+    run_test(
+        'A quoted format in ~/.ledgerrc is honored (issue #1884)',
+        {'HOME': tmpdir},
+        ['-f', journal_file, 'bal', '--force-color', '--columns=80'],
+            '             \033[31m$-25.00\033[0m  \033[33mAssets:Checking\033[0m\n'
+            '              $25.00  \033[33mExpenses:Food\033[0m\n'
+            '--------------------\n'
+            '                   0',
+        expected_exit=0
+    )
+
 print()
 if succeeded > 0:
     print(f'OK ({succeeded})')
