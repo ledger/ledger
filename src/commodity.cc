@@ -435,21 +435,33 @@ void commodity_t::parse_symbol(std::istream& in, string& symbol) {
   }
 }
 
+/**
+ * @brief Parse a commodity symbol from a directive line.
+ *
+ * A quoted symbol runs to the closing quote.  A bare symbol runs to
+ * whitespace or to a ';', which begins a comment here just as it ends
+ * the commodity of an amount in a posting (issue #3313); unlike the
+ * stream parser, any other character is accepted, so `commodity N1`
+ * declares the commodity "N1".  As in an amount, a backslash makes the
+ * next character part of the symbol, so `A\;B` names "A;B".  On return,
+ * p points past the symbol and any whitespace after it.
+ */
 void commodity_t::parse_symbol(char*& p, string& symbol) {
   if (*p == '"') {
     char* q = std::strchr(p + 1, '"');
     if (!q)
       throw_(amount_error, _("Quoted commodity symbol lacks closing quote"));
     symbol = string(p + 1, static_cast<std::string::size_type>(q - p - 1));
-    p = q + 2;
+    p = q + 1;
   } else {
-    char* q = next_element(p);
-    symbol = p;
-    if (q)
-      p = q;
-    else
-      p += symbol.length();
+    symbol.clear();
+    while (*p && *p != ' ' && *p != '\t' && *p != ';') {
+      if (*p == '\\' && *(p + 1))
+        ++p;
+      symbol.push_back(*p++);
+    }
   }
+  p = skip_ws(p);
   if (symbol.empty())
     throw_(amount_error, _("Failed to parse commodity"));
 }

@@ -147,6 +147,19 @@ components with their standard-library equivalents.
   `D`-directive formatting to bare amounts (#761), and allow apostrophe (`'`)
   as a digit-group separator
 
+- Make a semicolon end the symbol of a `commodity`, `N`, or dated `P`
+  directive and begin a comment, with or without a space before it, as it
+  does after an amount in a posting (#3313).  `commodity USD; dollars`
+  declared a commodity named `USD;`, so a `format` line for `USD` beneath it
+  was rejected and an `alias` beneath it resolved to `USD;`.  As in an
+  amount, a backslash now puts the next character into such a symbol, so
+  `commodity A\;B` names `A;B`.  An `alias` line in a `commodity` block also
+  ends at a semicolon comment instead of keeping it as part of the alias.  A
+  `P` directive no longer misreads a price written directly after a quoted
+  symbol, as in `P 2024/01/01 "N1"1.50 EUR`, and a `P` line that ends after
+  its quoted symbol is reported as missing its price instead of reading past
+  the end of the line
+
 - Add batch commodity quote fetching to amortize the per-call cost (#588); add
   `--account-value-expr` and `--commodity-value-expr` options for custom
   valuations; expose a `capital_gain` value expression variable
