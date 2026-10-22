@@ -797,7 +797,12 @@ void report_t::commodities_report(post_handler_ptr handler) {
       HANDLER(limit_).on(none, new_limit);
   }
 
-  handler = chain_handlers(handler, *this);
+  // The walker owns the synthetic xacts and posts that it passes down the
+  // chain, and display_filter_posts links its rounding posts to those
+  // xacts, so the chain has to be destroyed first.  Declaring the walker
+  // ahead of the chain makes that so on every path out of this function.
+  unique_ptr<posts_commodities_iterator> walker;
+  post_handler_ptr chain = chain_handlers(std::move(handler), *this);
 
   // Restore the original limit.
   if (had_limit) {
@@ -812,18 +817,13 @@ void report_t::commodities_report(post_handler_ptr handler) {
       price_interval = ival;
   }
 
-  posts_commodities_iterator* walker(new posts_commodities_iterator(
-      *session.journal.get(), HANDLED(latest), price_interval, HANDLED(both_directions)));
-  try {
-    pass_down_posts<posts_commodities_iterator>(handler, *walker); // NOLINT(bugprone-unused-raii)
-  } catch (...) {
-    IF_VERIFY() {
-      // If --verify was used, clean up the posts_commodities_iterator.
-      // Otherwise, just leak like a sieve.
-      checked_delete(walker);
-    }
-    throw;
-  }
+  // Destroying the walker removes its posts from the accounts it filed
+  // them under, one per priced commodity.  Leaking it instead, as this
+  // once did, left them there for the next report in a REPL or embedding
+  // session to add into those accounts' totals (#3293).
+  walker.reset(new posts_commodities_iterator(*session.journal.get(), HANDLED(latest),
+                                              price_interval, HANDLED(both_directions)));
+  pass_down_posts<posts_commodities_iterator>(chain, *walker); // NOLINT(bugprone-unused-raii)
 
   session.journal->clear_xdata();
 }

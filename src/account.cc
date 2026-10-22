@@ -259,6 +259,27 @@ bool account_t::remove_post(post_t* post) {
   return true;
 }
 
+void account_t::remove_posts(const std::set<post_t*>& doomed) {
+  auto is_doomed = [&doomed](post_t* post) { return doomed.count(post) != 0; };
+
+  posts.remove_if(is_doomed);
+  for (post_t* post : doomed)
+    post->account = nullptr;
+
+  if (deferred_posts) {
+    for (auto& pair : *deferred_posts) {
+      pair.second.remove_if(is_doomed);
+    }
+  }
+
+  // Invalidate cached iterators
+  if (xdata_) {
+    xdata_->self_details.last_post = none;
+    xdata_->self_details.last_reported_post = none;
+    invalidate_xdata_cache(this);
+  }
+}
+
 /*--- Name Formatting ---*/
 
 string account_t::fullname() const {

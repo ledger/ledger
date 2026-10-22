@@ -1,0 +1,82 @@
+; Regression test for #3293: pricedb and prices leaked the
+; posts_commodities_iterator that holds their synthetic price postings.
+; Those postings stayed in the account named after each priced commodity,
+; so later reports in the same REPL or --script session added the prices
+; into that account: the second balance below used to show $460.00 in
+; AAPL and a total of $-1150.00.
+
+P 2024/01/01 AAPL $150.00
+P 2024/02/01 AAPL $160.00
+P 2024/01/01 EUR $1.10
+P 2024/02/01 EUR $1.12
+
+2024/01/05 Buy
+    AAPL    10 AAPL @ $150.00
+    Checking
+
+2024/01/06 Exchange
+    Cash    100.00 EUR @ $1.10
+    Checking
+
+test --script test/regress/3293.dat
+             10 AAPL  AAPL
+          100.00 EUR  Cash
+           $-1610.00  Checking
+--------------------
+           $-1610.00
+             10 AAPL
+          100.00 EUR
+P 2024/01/01 00:00:00 AAPL $150.00
+P 2024/01/05 00:00:00 AAPL $150.00
+P 2024/02/01 00:00:00 AAPL $160.00
+P 2024/01/01 00:00:00 EUR $1.10
+P 2024/01/06 00:00:00 EUR $1.10
+P 2024/02/01 00:00:00 EUR $1.12
+             10 AAPL  AAPL
+          100.00 EUR  Cash
+           $-1610.00  Checking
+--------------------
+           $-1610.00
+             10 AAPL
+          100.00 EUR
+2024/01/01 AAPL          $150.00
+2024/01/05 AAPL          $150.00
+2024/02/01 AAPL          $160.00
+2024/01/01 EUR             $1.10
+2024/01/06 EUR             $1.10
+2024/02/01 EUR             $1.12
+             10 AAPL  AAPL
+          100.00 EUR  Cash
+           $-1610.00  Checking
+--------------------
+           $-1610.00
+             10 AAPL
+          100.00 EUR
+end test
+
+; In a debug build, --verify destroys the session at exit and reports any
+; traced object still alive, as the iterator and its postings were.
+test --verify pricedb
+P 2024/01/01 00:00:00 AAPL $150.00
+P 2024/01/05 00:00:00 AAPL $150.00
+P 2024/02/01 00:00:00 AAPL $160.00
+P 2024/01/01 00:00:00 EUR $1.10
+P 2024/01/06 00:00:00 EUR $1.10
+P 2024/02/01 00:00:00 EUR $1.12
+end test
+
+; -X makes display_filter_posts add rounding adjustments that point at the
+; iterator's synthetic transactions, so the handler chain has to be
+; destroyed before the iterator is; a sanitizer build catches it if not.
+test prices -X EUR
+2024/01/01 AAPL       136.36 EUR
+2024/01/01 <Adjustment>     0.01 EUR
+2024/01/05 AAPL       136.36 EUR
+2024/01/01 <Adjustment>    -4.88 EUR
+2024/02/01 AAPL       142.86 EUR
+2024/01/01 <Adjustment>     7.47 EUR
+2024/01/01 EUR          1.00 EUR
+2024/01/06 EUR          1.00 EUR
+2024/01/01 <Adjustment>    -7.50 EUR
+2024/02/01 EUR          1.00 EUR
+end test
