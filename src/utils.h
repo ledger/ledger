@@ -639,6 +639,36 @@ inline char* next_element(char* buf, bool variable = false) {
   return nullptr;
 }
 
+/// Split an inline note from the text in @p buf.  The note begins at the
+/// first ';' that follows a hard separator -- a tab, or two or more spaces
+/// -- as a note does after a transaction's payee.  A ';' after a single
+/// space belongs to the text, as in the account name "A ; B".
+///
+/// @return The note's text, just past its ';', after ending @p buf where
+///         the text before the separator ends; or nullptr, leaving @p buf
+///         whole, if there is no note.
+inline char* split_inline_note(char* buf) {
+  std::size_t spaces = 0;
+  std::size_t tabs = 0;
+  for (char* p = buf; *p; ++p) {
+    if (*p == ' ') {
+      ++spaces;
+    } else if (*p == '\t') {
+      ++tabs;
+    } else if (*p == ';' && (tabs > 0 || spaces > 1)) {
+      char* end = p;
+      while (end > buf && std::isspace(static_cast<unsigned char>(*(end - 1))))
+        --end;
+      *end = '\0';
+      return p + 1;
+    } else {
+      spaces = 0;
+      tabs = 0;
+    }
+  }
+  return nullptr;
+}
+
 /// Consume whitespace from @p in and return the next non-whitespace
 /// character (via peek, so it remains in the stream).
 inline int peek_next_nonws(std::istream& in) {

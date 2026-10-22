@@ -380,6 +380,16 @@ components with their standard-library equivalents.
 - Support nested `account` declarations (#877) and metadata tags on `account`
   directives (#1681)
 
+- End the account name on an `account` directive line at a `;` that follows
+  a hard separator (two or more spaces, or a tab), as a payee ends on a
+  transaction's first line, and read the comment after it for the account's
+  metadata tags, as on the comment lines beneath the directive (#3320).
+  `account Expenses:Food  ; groceries` declared an account named
+  `Expenses:Food  ; groceries`, which no posting could name, so `--strict`
+  reported `Expenses:Food` as unknown, and the `alias`, `payee`, `default`,
+  `check` and `assert` lines beneath it applied to the misnamed account.  A
+  `;` after a single space is still part of the name, as it is in a posting
+
 - Return regex capture-group text from the `=~` operator (extending #664)
 
 ### Documentation
