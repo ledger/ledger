@@ -45,9 +45,9 @@
  *      the characters of the identifier appear (in order, in sequence,
  *      at similar positions) within the payee string.  Scores below 30
  *      are discarded.  Some kinds of match outrank any score: an exact
- *      match, which also stops the search; then, when the caller
- *      supplies a payee pattern, the payees matching it, whatever their
- *      scores.
+ *      match, which also stops the search; then a payee equal to the
+ *      identifier but for case; then, when the caller supplies a payee
+ *      pattern, the payees matching it, whatever their scores.
  *
  *   2. **Account ranking**: The top five scoring transactions of the
  *      strongest kind of match found are examined.  For each posting in
@@ -76,6 +76,7 @@ namespace {
 enum match_kind_t : uint8_t {
   SIMILAR_MATCH, ///< Resembles the identifier, as measured by its score
   PATTERN_MATCH, ///< Matches the caller's payee pattern
+  NOCASE_MATCH,  ///< Equals the identifier but for case
   EXACT_MATCH    ///< Equals the identifier
 };
 
@@ -108,6 +109,23 @@ struct usage_sorter {
     return left.second < right.second;
   }
 };
+
+/// Fold the case of @p ch the way case-insensitive payee patterns do.
+boost::uint32_t fold_case(boost::uint32_t ch) {
+#if HAVE_BOOST_REGEX_UNICODE
+  return static_cast<boost::uint32_t>(u_foldCase(static_cast<UChar32>(ch), U_FOLD_CASE_DEFAULT));
+#else
+  return ch >= 'A' && ch <= 'Z' ? ch + ('a' - 'A') : ch;
+#endif
+}
+
+/// Whether @p left and @p right are the same string when case is ignored.
+bool equal_ignoring_case(const unistring& left, const unistring& right) {
+  return std::equal(left.utf32chars.begin(), left.utf32chars.end(), right.utf32chars.begin(),
+                    right.utf32chars.end(), [](boost::uint32_t l, boost::uint32_t r) {
+                      return fold_case(l) == fold_case(r);
+                    });
+}
 } // namespace
 
 /*--- Fuzzy Matching Algorithm ---*/
@@ -185,6 +203,18 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
 #endif
 
       DEBUG("lookup", "Considering payee: " << value_key.extract());
+
+      // A payee equal to the identifier but for case outranks everything
+      // except an exact match, which an older transaction may yet supply.
+      // Fold case for the comparison: only builds without ICU fold the
+      // strings that the score below is computed from.
+      if (equal_ignoring_case(value_key, lowered_ident)) {
+        DEBUG("lookup", "  we have a match ignoring case, score = 100");
+        best.kind = NOCASE_MATCH;
+        best.score = 100;
+        best.tag_payee = from_tag ? candidate : string();
+        continue;
+      }
 
       std::size_t index = 0;
       std::size_t last_match_pos = unistring::npos;

@@ -1,0 +1,72 @@
+; Regression test for issue #3243: a payee equal to the identifier but
+; for case is the best match after an exact one.
+;
+; Only a payee identical to the identifier counted as an exact match, so
+; `xact kroger` scored "Kroger" like any payee starting with "kroger" and
+; drafted from the more recent "Kroger Fuel".  A payee equal to the
+; identifier when case is ignored now outranks every merely similar
+; payee and, like an exact match, alone chooses the account in `convert
+; --auto-match`, so "Shell" decides a "SHELL" line despite three newer
+; visits to "Shell Beach Cafe".  A payee identical to the identifier
+; still comes first: `xact Acme` drafts from "Acme" though "ACME" is
+; more recent.
+
+2026-06-01 * Acme
+    Expenses:Supplies                     10.00 USD
+    Assets:Checking
+
+2026-06-10 * ACME
+    Expenses:Hardware                     20.00 USD
+    Assets:Checking
+
+2026-06-11 * Shell
+    Expenses:Auto:Fuel                    40.00 USD
+    Assets:Checking
+
+2026-06-12 * Shell Beach Cafe
+    Expenses:Dining                       20.00 USD
+    Assets:Checking
+
+2026-06-13 * Shell Beach Cafe
+    Expenses:Dining                       22.00 USD
+    Assets:Checking
+
+2026-06-14 * Shell Beach Cafe
+    Expenses:Dining                       18.00 USD
+    Assets:Checking
+
+2026-06-20 * Kroger
+    Expenses:Groceries                    50.00 USD
+    Assets:Checking
+
+2026-06-25 * Kroger Fuel
+    Expenses:Auto:Fuel                    40.00 USD
+    Assets:Checking
+
+test --now 2026/06/30 xact kroger
+2026/06/30 Kroger
+    Expenses:Groceries                     50.00 USD
+    Assets:Checking
+end test
+
+test --now 2026/06/30 xact Acme
+2026/06/30 Acme
+    Expenses:Supplies                      10.00 USD
+    Assets:Checking
+end test
+
+test --now 2026/06/30 xact acme
+2026/06/30 ACME
+    Expenses:Hardware                      20.00 USD
+    Assets:Checking
+end test
+
+test --auto-match --account Assets:Checking convert $sourcepath/test/input/3243_nocase.csv
+2026/07/01 * KROGER
+    Expenses:Groceries                           -60
+    Assets:Checking
+
+2026/07/02 * SHELL
+    Expenses:Auto:Fuel                           -45
+    Assets:Checking
+end test

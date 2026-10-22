@@ -48,9 +48,9 @@
  *   2. **Historical matching** (insert): Search the journal's transaction
  *      list (most recent first) for a payee that matches the template's
  *      payee mask, via the probabilistic lookup_probable_account().  It
- *      prefers an exact match, then the payees matching the mask, and
- *      settles for the payee that most resembles the mask only when no
- *      payee matches it.
+ *      prefers an exact match, then a payee equal to the mask but for
+ *      case, then the payees matching the mask, and settles for the
+ *      payee that most resembles the mask only when no payee matches it.
  *
  *   3. **Transaction construction** (insert): Build a new xact_t by
  *      merging the template's explicit fields with details from the
@@ -347,8 +347,9 @@ optional<string> strip_uuid_lines(const optional<string>& note) {
  *   1. **Payee matching**: Search for the historical transaction whose
  *      payee best matches the template's payee_mask, using probabilistic
  *      matching (lookup_probable_account): an exact match first, then
- *      the payees matching the mask, and only when no payee matches it,
- *      the payee that most resembles it.
+ *      one equal to the mask but for case, then the payees matching the
+ *      mask, and only when no payee matches it, the payee that most
+ *      resembles it.
  *
  *   2. **Header construction**: Set the date, payee, code, note, and
  *      metadata from the template, falling back to the matching

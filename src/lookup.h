@@ -57,8 +57,9 @@
  *     (useful for credit card payees that share trailing location info)
  *
  * Some kinds of match outrank any score: an exact match, which also
- * terminates the search; then, when the caller supplies a payee pattern
- * as "xact" does, the payees matching it.
+ * terminates the search; then a payee equal to the identifier but for
+ * case; then, when the caller supplies a payee pattern as "xact" does,
+ * the payees matching it.
  *
  * After scoring, the top five matching transactions of the strongest
  * kind of match found are examined to find the most frequently used
