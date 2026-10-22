@@ -171,6 +171,41 @@ BOOST_AUTO_TEST_CASE(testParseTransactionPayeeEndsAtNote)
   BOOST_CHECK(!plain->note);
 }
 
+BOOST_AUTO_TEST_CASE(testSplitInlineNote)
+{
+  // split_inline_note() ends the text before a ';' that follows a hard
+  // separator and returns the note after that ';'; a ';' after a single
+  // space, or after none, belongs to the text
+  struct split_case {
+    const char* line;
+    const char* text;
+    const char* note; // nullptr when the line holds no note
+  };
+  const split_case cases[] = {
+    {"Name  ; note", "Name", " note"},
+    {"Name\t;note", "Name", "note"},
+    {"Name \t; note", "Name", " note"},
+    {"Name  ;", "Name", ""},
+    {"A ; B", "A ; B", nullptr},
+    {"A;B  ; C", "A;B", " C"},
+    {"A ;  ; B", "A ;", " B"},
+    {"  ; note", "", " note"},
+    {"Name", "Name", nullptr},
+  };
+
+  for (const split_case& c : cases) {
+    std::string buf(c.line);
+    char* note = split_inline_note(&buf[0]);
+    BOOST_CHECK_EQUAL(string(c.text), string(buf.c_str()));
+    if (c.note) {
+      BOOST_REQUIRE(note != nullptr);
+      BOOST_CHECK_EQUAL(string(c.note), string(note));
+    } else {
+      BOOST_CHECK(note == nullptr);
+    }
+  }
+}
+
 // ---------------------------------------------------------------------------
 // 2. Error Paths
 // ---------------------------------------------------------------------------
@@ -291,6 +326,29 @@ BOOST_AUTO_TEST_CASE(testAccountDirective)
   account_t* acct = session.journal->find_account("Expenses:Food", false);
   BOOST_CHECK(acct != nullptr);
   BOOST_CHECK(acct->has_flags(ACCOUNT_KNOWN));
+}
+
+BOOST_AUTO_TEST_CASE(testAccountDirectiveWithComment)
+{
+  // A ';' after a hard separator on the "account" line begins a comment,
+  // whose tags belong to the account; a ';' after a single space is part
+  // of the account name, as it is in a posting (#3320)
+  std::string input =
+    "account Assets:Checking  ; type: Asset\n"
+    "account Expenses:Food ; Dining\n";
+
+  parse_text(input);
+
+  account_t* acct = session.journal->find_account("Assets:Checking", false);
+  BOOST_REQUIRE(acct != nullptr);
+  BOOST_CHECK(acct->has_flags(ACCOUNT_KNOWN));
+  BOOST_CHECK(acct->accounts.empty());
+  std::optional<value_t> type = acct->get_tag("type");
+  BOOST_REQUIRE(type);
+  BOOST_CHECK_EQUAL(string("Asset"), type->to_string());
+
+  BOOST_CHECK(session.journal->find_account("Expenses:Food ; Dining", false) != nullptr);
+  BOOST_CHECK(session.journal->find_account("Expenses:Food", false) == nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(testAccountDirectiveWithNote)
