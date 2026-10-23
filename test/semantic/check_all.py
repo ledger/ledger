@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Suite-wide oracle bisimulation: every positive test, on `make check`.
+"""Suite-wide oracle bisimulation: balances and balance rejections.
 
 For EVERY positive `.test` file in test/baseline, test/regress, and
 test/manual — positive meaning no test block expects a nonzero exit
@@ -18,8 +18,14 @@ lists them all — absence of output is never silent success):
                     exposes a C++ defect or a convention the oracle
                     has not yet recorded — see the bisimulation
                     section of lean/README.md).
-  SKIP:negative   — the test intentionally exercises errors; its
-                    journal is not claimed valid.
+  NEG:unbalanced  : a negative test whose every expected error is
+                    "Transaction does not balance" (the strict
+                    classifier below): C++ rejects the extracted
+                    journal as unbalanced and the oracle rejects it
+                    with a balance reason.  A NEG:unbalanced file on
+                    which either side disagrees is a FAIL.
+  SKIP:negative   : any other test that intentionally exercises
+                    errors; its journal is not claimed valid.
   SKIP:no-journal — no journal text before the first test block.
   SKIP:out-of-scope — the oracle parser rejected the journal, with
                     the construct named; the goal state, reached by
@@ -33,7 +39,23 @@ lists them all — absence of output is never silent success):
                     journal language, so the file is inherently
                     non-comparable.
 
-Exit codes: 0 all compared files PASS and the ratchet bins are empty;
+The strict NEG classifier admits a negative test only when (a) its
+__ERROR__ sections contain at least one `Error:` line and every
+`Error:` line is exactly "Error: Transaction does not balance", (b)
+no test command reads a journal other than the file itself (`-f`
+or `--file` naming anything but $FILE; noncanonical long file aliases
+and short-option bundles containing `f` are conservatively excluded),
+(c) every `include` in the extracted journal resolves to files next to
+the test, and (d) that journal embeds no python block.  Its per-test
+flags are derived exactly as for positive tests.  The oracle's rejection
+must match NEG_REASON_RE, the balance reason documented in the oracle
+protocol section of lean/README.md: `line N: unbalanced transaction ...`,
+prefixed by `periodic transaction: ` for a `~` template.  The oracle
+models non-permissive balancing, so the C++ side of this comparison
+runs without --permissive.  C++ must exit with a positive error status;
+signal termination is a failure even if it printed a balance error.
+
+Exit codes: 0 all comparisons pass and the ratchet bins are empty;
 1 any FAIL, or any entry in SKIP:out-of-scope or SKIP:cpp-parse (both
 reached zero against the full suite and are held there — an entry
 reappearing means one side stopped reading a journal it used to read,
@@ -48,6 +70,8 @@ import datetime
 import json
 import os
 import re
+import shlex
+import signal
 import subprocess
 import shutil
 import sys
@@ -58,12 +82,169 @@ sys.path.insert(0, HERE)
 import sweep  # normalization + C++ balance parsing
 
 TEST_RE = re.compile(r"^test\s+(.*?)(?:\s*->\s*([0-9]+))?\s*$")
+# The only expected error a NEG:unbalanced test may carry
+# (src/xact.cc, xact_base_t::finalize and verify).
+BALANCE_ERROR = "Error: Transaction does not balance"
+# The oracle's balance rejection, as documented in lean/README.md.
+NEG_REASON_RE = re.compile(
+    r"^(?:periodic transaction: )?line \d+: unbalanced transaction\b")
+
+
+def command_flags(line, cpp_flags):
+    """Fold the input-affecting flags of one `test` command line into
+    cpp_flags (first occurrence wins); True if it names
+    --decimal-comma."""
+    dc = False
+    toks = line.split()
+    for i, tk in enumerate(toks):
+        if tk == "--now" and i + 1 < len(toks):
+            pair = [tk, toks[i + 1].strip("'\"")]
+            if pair[0] not in cpp_flags:
+                cpp_flags.extend(pair)
+        elif tk.startswith("--now="):
+            if "--now" not in cpp_flags:
+                cpp_flags.extend(["--now", tk.split("=", 1)[1].strip("'\"")])
+        elif tk == "--recursive-aliases":
+            if tk not in cpp_flags:
+                cpp_flags.append(tk)
+        elif tk == "--input-date-format" and i + 1 < len(toks):
+            pair = [tk, toks[i + 1].strip("'\"")]
+            if pair[0] not in cpp_flags:
+                cpp_flags.extend(pair)
+        elif tk.startswith("--input-date-format="):
+            if "--input-date-format" not in cpp_flags:
+                cpp_flags.extend(["--input-date-format",
+                                  tk.split("=", 1)[1].strip("'\"")])
+        elif tk == "--decimal-comma":
+            dc = True
+            if tk not in cpp_flags:
+                cpp_flags.append(tk)
+    return dc
 
 
 def has_python_block(journal):
     """A python block anywhere makes a journal non-comparable."""
     return any(ln == "python" or ln.startswith("python ")
                for ln in (l.strip() for l in journal.splitlines()))
+
+
+def classify_negative_test(path):
+    """-> (journal_text, cpp_flags, dc) when a negative test meets the
+    strict NEG classifier (module docstring), else None."""
+    try:
+        with open(path, encoding="utf-8") as fh:
+            text = fh.read()
+    except UnicodeDecodeError:
+        return None
+    journal_lines, commands, errors = [], [], []
+    in_journal, in_error, negative = True, False, False
+    cpp_flags, dc = [], False
+    for line in text.splitlines():
+        line = line.rstrip("\r")
+        if line.startswith("test "):
+            in_journal, in_error = False, False
+            commands.append(line)
+            m = TEST_RE.match(line)
+            if m and m.group(2) and m.group(2) != "0":
+                negative = True
+            dc = command_flags(line, cpp_flags) or dc
+        elif in_journal:
+            journal_lines.append(line)
+        elif line.startswith("__ERROR__"):
+            negative = in_error = True
+        elif line.rstrip() == "end test":
+            in_error = False
+        elif in_error and line.startswith("Error:"):
+            errors.append(line.strip())
+    if not negative or not errors or any(e != BALANCE_ERROR for e in errors):
+        return None
+    for command in commands:
+        try:
+            tokens = iter(shlex.split(command))
+        except ValueError:
+            return None
+        for token in tokens:
+            if token in ("-f", "--file"):
+                if next(tokens, None) != "$FILE":
+                    return None
+            elif token.startswith("--file="):
+                if token[len("--file="):] != "$FILE":
+                    return None
+            elif token.split("=", 1)[0] in ("--f", "--file_", "--file-", "--f_", "--f-"):
+                # src/option.cc:find_option and src/option.h:OPT_ accept these aliases.
+                return None
+            elif token.startswith("-") and not token.startswith("--") and "f" in token[1:]:
+                # src/option.cc:process_arguments reads short-option bundles,
+                # not attached operands: -fPATH does not mean -f PATH.
+                return None
+    journal = "\n".join(journal_lines) + "\n"
+    if has_python_block(journal):
+        return None
+    import glob as _glob
+    for m in INCLUDE_RE.finditer(journal):
+        name = m.group(1).strip("'\"").replace("\\", "")
+        matches = _glob.glob(os.path.join(os.path.dirname(path), name))
+        if not matches or not all(os.path.isfile(p) for p in matches):
+            return None
+    if "--now" not in cpp_flags:
+        cpp_flags.extend(["--now", "2026/08/26"])  # as for positives
+    return journal, cpp_flags, dc
+
+
+def negative_classifier_failures(directory, journal):
+    """Exercise the NEG admission boundary with extracted-journal fixtures."""
+    journal = journal.rstrip("\n") + "\n"
+    block = "test balance -> 1\n__ERROR__\n" + BALANCE_ERROR + "\nend test\n"
+    text = journal + block
+    cases = [("balance error", text, True),
+             ("positive", journal + "test balance\nend test\n", False),
+             ("no error reason", journal + "test balance -> 1\nend test\n", False),
+             ("other error", text.replace(BALANCE_ERROR, "Error: other"), False),
+             ("mixed errors", text.replace(BALANCE_ERROR,
+                                           BALANCE_ERROR + "\nError: other"), False),
+             ("python", "python\npass\nend python\n" + text, False),
+             ("missing include", "include missing.dat\n" + text, False),
+             ("include", "include selftest-neg-control.dat\n" + text, True),
+             ("directory include", "include .\n" + text, False)]
+    for flag in ('-f $FILE', '--file "$FILE"', '--file=$FILE'):
+        cases.append((flag, text.replace("balance ->", "balance " + flag + " ->"), True))
+    for flag in ('-f"$FILE"', '-f other.dat', '-fother.dat', '--file=other.dat',
+                 '--file "other file.dat"', '"-f" other.dat', '-f', '--file',
+                 '-Vf other.dat', '-fV other.dat', '-Vf "$FILE"',
+                 '--f other.dat', '--f "$FILE"'):
+        cases.append((flag, text.replace("balance ->", "balance " + flag + " ->"), False))
+    for alias in ('--f', '--file_', '--file-', '--f_', '--f-'):
+        for name in ('other.dat', '$FILE'):
+            flag = alias + '=' + name
+            cases.append((flag, text.replace("balance ->", "balance " + flag + " ->"), False))
+    cases.append(("bad quoting", text.replace("balance ->", 'balance " ->'), False))
+    failures = []
+    path = os.path.join(directory, "selftest-neg-classifier.test")
+    for name, fixture, want in cases:
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(fixture)
+        if (classify_negative_test(path) is not None) != want:
+            failures.append(name)
+    return failures
+
+
+def neg_failures(oracle_res, cpp):
+    """Every reason a NEG:unbalanced comparison fails; empty if none.
+    oracle_res is the oracle's result for the file (a set of rows,
+    ("ERROR", reason), or None); cpp is the C++ `balance` run."""
+    why = []
+    errors = [line.strip() for line in cpp.stderr.splitlines()
+              if line.startswith("Error:")]
+    if cpp.returncode <= 0 or not errors or any(e != BALANCE_ERROR for e in errors):
+        why.append("C++ did not reject the extracted journal as unbalanced")
+    if oracle_res is None:
+        why.append("no oracle output for journal")
+    elif not isinstance(oracle_res, tuple):
+        why.append("oracle accepted a journal classified as unbalanced")
+    elif not NEG_REASON_RE.match(oracle_res[1]):
+        why.append("oracle rejected it for another reason: "
+                   + oracle_res[1][:160])
+    return why
 
 
 def classify_test_file(path):
@@ -87,30 +268,7 @@ def classify_test_file(path):
                 negative = True
             # input-affecting flags of the test's own command become
             # part of the comparison tuple for this file
-            toks = line.split()
-            for i, tk in enumerate(toks):
-                if tk == "--now" and i + 1 < len(toks):
-                    pair = [tk, toks[i + 1].strip("'\"")]
-                    if pair[0] not in cpp_flags:
-                        cpp_flags.extend(pair)
-                elif tk.startswith("--now="):
-                    if "--now" not in cpp_flags:
-                        cpp_flags.extend(["--now", tk.split("=", 1)[1].strip("'\"")])
-                elif tk == "--recursive-aliases":
-                    if tk not in cpp_flags:
-                        cpp_flags.append(tk)
-                elif tk == "--input-date-format" and i + 1 < len(toks):
-                    pair = [tk, toks[i + 1].strip("'\"")]
-                    if pair[0] not in cpp_flags:
-                        cpp_flags.extend(pair)
-                elif tk.startswith("--input-date-format="):
-                    if "--input-date-format" not in cpp_flags:
-                        cpp_flags.extend(["--input-date-format",
-                                          tk.split("=", 1)[1].strip("'\"")])
-                elif tk == "--decimal-comma":
-                    dc = True
-                    if tk not in cpp_flags:
-                        cpp_flags.append(tk)
+            dc = command_flags(line, cpp_flags) or dc
 
         elif in_journal:
             journal_lines.append(line)
@@ -215,13 +373,14 @@ def main():
                 if f.endswith(".test"):
                     tests.append(os.path.join(root, f))
 
-    bins = {"PASS": [], "FAIL": [], "SKIP:negative": [],
+    bins = {"PASS": [], "FAIL": [], "NEG:unbalanced": [], "SKIP:negative": [],
             "SKIP:no-journal": [], "SKIP:python": [],
             "SKIP:out-of-scope": [], "SKIP:cpp-parse": []}
     details = []
 
     with tempfile.TemporaryDirectory() as tmp:
         candidates = []  # (test_path, dat_path, cpp_flags, dc)
+        neg_candidates = []  # the same, for NEG:unbalanced files
         for i, tpath in enumerate(tests):
             journal, skip, cpp_flags, dc = classify_test_file(tpath)
             if journal is not None and has_python_block(journal):
@@ -229,7 +388,17 @@ def main():
                 # file non-comparable, whatever its name
                 journal, skip = None, "python"
             rel = os.path.relpath(tpath, repo)
-            if skip == "negative":
+            neg = classify_negative_test(tpath) if skip == "negative" else None
+            if neg is not None:
+                njournal, nflags, ndc = neg
+                fdir = os.path.join(tmp, f"{i:05d}")
+                os.makedirs(fdir, exist_ok=True)
+                dat = os.path.join(fdir, os.path.basename(tpath))
+                with open(dat, "w", encoding="utf-8") as fh:
+                    fh.write(njournal)
+                copy_includes(njournal, os.path.dirname(tpath), fdir)
+                neg_candidates.append((tpath, dat, nflags, ndc))
+            elif skip == "negative":
                 bins["SKIP:negative"].append(rel)
             elif skip == "no-journal":
                 bins["SKIP:no-journal"].append(rel)
@@ -273,12 +442,42 @@ def main():
         candidates.append(("__selftest__", p1, [], False))
         selftest = (p1, p2)
 
+        # NEG detector fixtures, derived from the same journal: the
+        # control (the Grocer transaction given a wrong counter-amount)
+        # must pass the NEG comparison; the pristine journal, which
+        # both sides accept, and a journal both sides reject for a
+        # non-balance reason (a C directive with a zero left side)
+        # must each fail it.  All three ride the oracle batch.
+        neg_control, n = re.subn(
+            r"^(\s+Expenses:Food\s+\$150\.00\n\s+Assets:Checking)\s*$",
+            r"\1      $-149.00", j, count=1, flags=re.M)
+        if n != 1:
+            print("NEG detector fixture cannot be derived from " + demo_src,
+                  file=sys.stderr)
+            sys.exit(2)
+        n1 = os.path.join(tmp, "selftest-neg-control.dat")
+        n2 = os.path.join(tmp, "selftest-neg-reason.dat")
+        with open(n1, "w") as fh:
+            fh.write(neg_control)
+        with open(n2, "w") as fh:
+            fh.write("C 0 h = 60 m\n" + j)
+        neg_fixtures = [("__neg_selftest__", n1, [], False),
+                        ("__neg_selftest__", n2, [], False)]
+        classifier_failures = negative_classifier_failures(tmp, neg_control)
+        if classifier_failures:
+            bins["FAIL"].append("<neg-classifier-selftest>")
+            details.append({"file": "<neg-classifier-selftest>", "status": "FAIL",
+                            "why": "NEG classifier fixtures: " + ", ".join(classifier_failures)})
+        else:
+            print("selftest: NEG classifier fixtures green")
+
         # Batched oracle runs (chunked argv).
         oracle = {}  # dat_path -> set(rows) | ("ERROR", msg)
         styles = {}  # dat_path -> set of decimal-comma commodities
         CHUNK = 800
-        for lo in range(0, len(candidates), CHUNK):
-            chunk = candidates[lo:lo + CHUNK]
+        oracle_inputs = candidates + neg_candidates + neg_fixtures
+        for lo in range(0, len(oracle_inputs), CHUNK):
+            chunk = oracle_inputs[lo:lo + CHUNK]
             argv = []
             for _, d, fl, dc in chunk:
                 if dc:
@@ -400,6 +599,50 @@ def main():
                     "why": f"detector fixtures: control_ok={control_ok} "
                            f"fired_on_planted_defect={fired}"})
 
+        def cpp_reject(path, flags):
+            return subprocess.run([ledger, *flags, "-f", path, "balance"],
+                                  capture_output=True, text=True, env=env)
+
+        for tpath, dat, nflags, _ in neg_candidates:
+            rel = os.path.relpath(tpath, repo)
+            why = neg_failures(oracle.get(dat), cpp_reject(dat, nflags))
+            if not why:
+                bins["NEG:unbalanced"].append(rel)
+            else:
+                bins["FAIL"].append(rel)
+                details.append({"file": rel, "status": "FAIL",
+                                "bin": "NEG:unbalanced", "why": why})
+
+        # Each side must independently reject for imbalance.  Reuse
+        # the live results to plant one-sided acceptance, missing
+        # oracle output and signal termination after balance diagnostics.
+        (_, n1, _, _), (_, n2, _, _) = neg_fixtures
+        cpp_control = cpp_reject(n1, [])
+        w_control = neg_failures(oracle.get(n1), cpp_control)
+        w_accept = neg_failures(oracle.get(p1), cpp_control)
+        w_cpp_accept = neg_failures(oracle.get(n1), cpp_reject(p1, []))
+        w_reason = neg_failures(oracle.get(n2), cpp_reject(n2, []))
+        w_missing = neg_failures(None, cpp_control)
+        cpp_signal = subprocess.CompletedProcess(
+            cpp_control.args, -signal.SIGTERM, cpp_control.stdout, cpp_control.stderr)
+        w_signal = neg_failures(oracle.get(n1), cpp_signal)
+        neg_ok = (not w_control
+                  and w_accept == ["oracle accepted a journal classified as unbalanced"]
+                  and w_cpp_accept == ["C++ did not reject the extracted journal as unbalanced"]
+                  and any(w.startswith("oracle rejected it for another")
+                          for w in w_reason)
+                  and w_missing == ["no oracle output for journal"]
+                  and w_signal == ["C++ did not reject the extracted journal as unbalanced"])
+        if neg_ok:
+            print("selftest: NEG detector fixtures green")
+        else:
+            bins["FAIL"].append("<neg-selftest>")
+            details.append({
+                "file": "<neg-selftest>", "status": "FAIL",
+                "why": f"NEG detector fixtures: control={w_control} "
+                       f"accepted={w_accept} cpp_accepted={w_cpp_accept} "
+                       f"other_reason={w_reason} missing={w_missing} signal={w_signal}"})
+
     def run_line(cmd, **kw):
         try:
             out = subprocess.run(cmd, capture_output=True, text=True,
@@ -425,7 +668,9 @@ def main():
             "cpp_flags_note": ("per-file flags (--now, --decimal-comma,"
                                " --recursive-aliases,"
                                " --input-date-format) are derived from"
-                               " each test's own command lines")},
+                               " each test's own command lines"),
+            "neg_cpp_flags_common": ["balance"],
+            "neg_reason_pattern": NEG_REASON_RE.pattern},
         "counts": {k: len(v) for k, v in bins.items()},
         "details": details,
         "bins": {k: v for k, v in bins.items() if k != "PASS"},
@@ -446,7 +691,7 @@ def main():
 
     total = sum(len(v) for v in bins.values())
     print(f"semantic bisimulation over {total} .test files:")
-    for k in ("PASS", "FAIL", "SKIP:out-of-scope", "SKIP:cpp-parse",
+    for k in ("PASS", "FAIL", "NEG:unbalanced", "SKIP:out-of-scope", "SKIP:cpp-parse",
               "SKIP:negative", "SKIP:no-journal", "SKIP:python"):
         print(f"  {k:<18} {len(bins[k])}")
     for d in details:
