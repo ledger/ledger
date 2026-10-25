@@ -22,8 +22,10 @@ lists them all — absence of output is never silent success):
                     "Transaction does not balance" (the strict
                     classifier below): C++ rejects the extracted
                     journal as unbalanced and the oracle rejects it
-                    with a balance reason.  A NEG:unbalanced file on
-                    which either side disagrees is a FAIL.
+                    with a balance reason at the same entry, except
+                    for visibly counted include-context skips.  A
+                    NEG:unbalanced file on which either side disagrees
+                    is a FAIL.
   SKIP:negative   : any other test that intentionally exercises
                     errors; its journal is not claimed valid.
   SKIP:no-journal — no journal text before the first test block.
@@ -54,6 +56,16 @@ prefixed by `periodic transaction: ` for a `~` template.  The oracle
 models non-permissive balancing, so the C++ side of this comparison
 runs without --permissive.  C++ must exit with a positive error status;
 signal termination is a failure even if it printed a balance error.
+Without includes, the first C++ rejection must name the oracle's
+transaction header, or, for a periodic template, a line in the same
+indented block.  The oracle numbers include-spliced lines; C++ reports
+file-local positions, even for entries in the main file after an include.
+The entry check is therefore conservatively skipped for any journal
+containing an include line, provided C++ reports a rejection context.
+The summary counts these files and the artifact lists them under
+neg_line_check_skipped and in details.  Missing contexts fail the
+comparison.  An include skip confirms only rejection for imbalance,
+not agreement on the rejected entry.
 
 Exit codes: 0 all comparisons pass and the ratchet bins are empty;
 1 any FAIL, or any entry in SKIP:out-of-scope or SKIP:cpp-parse (both
@@ -88,6 +100,17 @@ BALANCE_ERROR = "Error: Transaction does not balance"
 # The oracle's balance rejection, as documented in lean/README.md.
 NEG_REASON_RE = re.compile(
     r"^(?:periodic transaction: )?line \d+: unbalanced transaction\b")
+ORACLE_LINE_RE = re.compile(r"^(periodic transaction: )?line (\d+):")
+# src/xact.cc:finalize/verify and src/item.cc:item_context name the entry;
+# src/textual.cc:parse names the last parsed line of a periodic template.
+CPP_BALANCING_RE = re.compile(
+    r'^While balancing transaction from "([^"]*)", lines? (\d+)(?:-\d+)?:$', re.M)
+CPP_PARSING_RE = re.compile(r'^While parsing file "([^"]*)", line (\d+):$', re.M)
+CPP_CONTEXT_RE = re.compile(
+    r'^While (?:parsing file|balancing transaction from) "([^"]*)"', re.M)
+# No C++ context names no entry: the same-entry check fails closed.
+NO_CONTEXT_REASON = ("C++ rejection context not found; the rejected"
+                     " entry cannot be confirmed")
 
 
 def command_flags(line, cpp_flags):
@@ -228,10 +251,50 @@ def negative_classifier_failures(directory, journal):
     return failures
 
 
-def neg_failures(oracle_res, cpp):
-    """Every reason a NEG:unbalanced comparison fails; empty if none.
+def same_entry(reason, stderr, cpp_path, journal):
+    """-> (failure reasons, include skip) for the first C++ rejection."""
+    m = ORACLE_LINE_RE.match(reason)
+    if not m:
+        return ["the oracle's reason names no line"], False
+    periodic, n = bool(m.group(1)), int(m.group(2))
+    # C++ can recover and report more errors; later contexts prove nothing
+    # about the first rejection (src/textual.cc:parse).
+    context = re.split(r"^Error:", stderr, maxsplit=1, flags=re.M)[0]
+
+    def same(path):
+        return os.path.realpath(path) == os.path.realpath(cpp_path)
+
+    first = CPP_CONTEXT_RE.search(context)
+    # Driver.splice numbers expanded lines, while src/item.cc:item_context
+    # and src/textual.cc:parse retain file-local positions. Even a main-file
+    # line can collide with a different expanded entry after an include.
+    if first and INCLUDE_RE.search(journal):
+        return [], True
+    bal = CPP_BALANCING_RE.search(context)
+    if bal and same(bal.group(1)):
+        a = int(bal.group(2))
+        if periodic or n != a:
+            return [f"oracle rejected a different entry: line {n}, C++ the"
+                    f" transaction at line {a}"], False
+        return [], False
+    if not bal and periodic:
+        parsed = CPP_PARSING_RE.search(context)
+        if parsed and same(parsed.group(1)):
+            last = int(parsed.group(2))
+            lines = journal.splitlines()
+            if (1 <= n <= last <= len(lines)
+                    and all(l[:1] in (" ", "\t") for l in lines[n:last])):
+                return [], False
+            return [f"oracle rejected a different entry: line {n}, C++ the"
+                    f" template ending at line {last}"], False
+    return [NO_CONTEXT_REASON], False
+
+
+def neg_failures(oracle_res, cpp, cpp_path, journal):
+    """-> (failure reasons, include skip) for a NEG:unbalanced comparison.
     oracle_res is the oracle's result for the file (a set of rows,
-    ("ERROR", reason), or None); cpp is the C++ `balance` run."""
+    ("ERROR", reason), or None); cpp is the C++ `balance` run on cpp_path,
+    whose text is journal.  A skip must be reported, not silently passed."""
     why = []
     errors = [line.strip() for line in cpp.stderr.splitlines()
               if line.startswith("Error:")]
@@ -244,7 +307,9 @@ def neg_failures(oracle_res, cpp):
     elif not NEG_REASON_RE.match(oracle_res[1]):
         why.append("oracle rejected it for another reason: "
                    + oracle_res[1][:160])
-    return why
+    if why:
+        return why, False
+    return same_entry(oracle_res[1], cpp.stderr, cpp_path, journal)
 
 
 def classify_test_file(path):
@@ -291,7 +356,9 @@ def classify_test_file(path):
     return "\n".join(journal_lines) + "\n", None, cpp_flags, dc
 
 
-INCLUDE_RE = re.compile(r"^\s*!?include\s+(.+?)\s*$", re.M)
+# src/textual.cc:read_line/read_next_directive and
+# src/textual_directives.cc:general_directive strip a BOM and up to two prefixes.
+INCLUDE_RE = re.compile(r"^\s*\ufeff?[@!]{0,2}include\s+(.+?)\s*$", re.M)
 
 
 def copy_includes(journal, src_dir, dst_dir, depth=4):
@@ -377,6 +444,7 @@ def main():
             "SKIP:no-journal": [], "SKIP:python": [],
             "SKIP:out-of-scope": [], "SKIP:cpp-parse": []}
     details = []
+    neg_skipped = []
 
     with tempfile.TemporaryDirectory() as tmp:
         candidates = []  # (test_path, dat_path, cpp_flags, dc)
@@ -447,7 +515,7 @@ def main():
         # must pass the NEG comparison; the pristine journal, which
         # both sides accept, and a journal both sides reject for a
         # non-balance reason (a C directive with a zero left side)
-        # must each fail it.  All three ride the oracle batch.
+        # must each fail it.  All ride the oracle batch.
         neg_control, n = re.subn(
             r"^(\s+Expenses:Food\s+\$150\.00\n\s+Assets:Checking)\s*$",
             r"\1      $-149.00", j, count=1, flags=re.M)
@@ -463,6 +531,44 @@ def main():
             fh.write("C 0 h = 60 m\n" + j)
         neg_fixtures = [("__neg_selftest__", n1, [], False),
                         ("__neg_selftest__", n2, [], False)]
+
+        # Three included lines shift First from source line 3 to oracle
+        # line 6, the source line of Second: equality alone proves nothing.
+        with open(os.path.join(tmp, "selftest-neg-padding.dat"), "w") as fh:
+            fh.write("; padding one\n; padding two\n; padding three\n")
+        include_control = ("include selftest-neg-padding.dat\n\n"
+                           "2026/01/01 First\n    A    $1\n    B    $-2\n"
+                           "2026/01/02 Second\n    C    $3\n    D    $-4\n")
+        include_periodic = ("\ufeff@!include selftest-neg-padding.dat\n\n"
+                            "~ monthly\n    A    $1\n    B    $-2\n")
+        ni = os.path.join(tmp, "selftest-neg-include.dat")
+        np = os.path.join(tmp, "selftest-neg-include-periodic.dat")
+        for path, text in ((ni, include_control), (np, include_periodic)):
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write(text)
+            neg_fixtures.append(("__neg_selftest__", path, [], False))
+
+        # An include-less periodic collision, so the template block
+        # rule of same_entry is itself exercised on live diagnostics:
+        # the oracle rejects the unbalanced yearly template at its
+        # header (line 5) while C++ reports the template's last
+        # posting line (8), so nothing but the indented-block rule can
+        # confirm the same entry.  The monthly template balances, so a
+        # comparator matching any template, or any line, would pass a
+        # real rejection of the other one.
+        periodic_text = ("~ monthly\n"
+                         "    A    $1\n"
+                         "    B    $-1\n"
+                         "\n"
+                         "~ yearly\n"
+                         "    A    $2\n"
+                         "    B    $-1\n"
+                         "    C    $-2\n")
+        n4 = os.path.join(tmp, "selftest-neg-periodic.dat")
+        with open(n4, "w", encoding="utf-8") as fh:
+            fh.write(periodic_text)
+        neg_fixtures.append(("__neg_selftest__", n4, [], False))
+
         classifier_failures = negative_classifier_failures(tmp, neg_control)
         if classifier_failures:
             bins["FAIL"].append("<neg-classifier-selftest>")
@@ -605,9 +711,15 @@ def main():
 
         for tpath, dat, nflags, _ in neg_candidates:
             rel = os.path.relpath(tpath, repo)
-            why = neg_failures(oracle.get(dat), cpp_reject(dat, nflags))
+            with open(dat, encoding="utf-8") as fh:
+                ntext = fh.read()
+            why, skipped = neg_failures(oracle.get(dat), cpp_reject(dat, nflags), dat, ntext)
             if not why:
                 bins["NEG:unbalanced"].append(rel)
+                if skipped:
+                    neg_skipped.append(rel)
+                    details.append({"file": rel, "status": "NEG:unbalanced",
+                                    "why": "same-entry check skipped: include context"})
             else:
                 bins["FAIL"].append(rel)
                 details.append({"file": rel, "status": "FAIL",
@@ -616,23 +728,108 @@ def main():
         # Each side must independently reject for imbalance.  Reuse
         # the live results to plant one-sided acceptance, missing
         # oracle output and signal termination after balance diagnostics.
-        (_, n1, _, _), (_, n2, _, _) = neg_fixtures
         cpp_control = cpp_reject(n1, [])
-        w_control = neg_failures(oracle.get(n1), cpp_control)
-        w_accept = neg_failures(oracle.get(p1), cpp_control)
-        w_cpp_accept = neg_failures(oracle.get(n1), cpp_reject(p1, []))
-        w_reason = neg_failures(oracle.get(n2), cpp_reject(n2, []))
-        w_missing = neg_failures(None, cpp_control)
+        w_control = neg_failures(oracle.get(n1), cpp_control, n1, neg_control)
+        w_accept = neg_failures(oracle.get(p1), cpp_control, n1, neg_control)
+        w_cpp_accept = neg_failures(oracle.get(n1), cpp_reject(p1, []), p1, j)
+        w_reason = neg_failures(oracle.get(n2), cpp_reject(n2, []), n2, "C 0 h = 60 m\n" + j)
+        w_missing = neg_failures(None, cpp_control, n1, neg_control)
         cpp_signal = subprocess.CompletedProcess(
             cpp_control.args, -signal.SIGTERM, cpp_control.stdout, cpp_control.stderr)
-        w_signal = neg_failures(oracle.get(n1), cpp_signal)
-        neg_ok = (not w_control
-                  and w_accept == ["oracle accepted a journal classified as unbalanced"]
-                  and w_cpp_accept == ["C++ did not reject the extracted journal as unbalanced"]
+        w_signal = neg_failures(oracle.get(n1), cpp_signal, n1, neg_control)
+
+        # A rejection whose context is stripped names no entry; the
+        # comparison must fail closed rather than confirm.
+        cpp_noctx = subprocess.CompletedProcess(
+            cpp_control.args, cpp_control.returncode, cpp_control.stdout,
+            "".join(l + "\n" for l in cpp_control.stderr.splitlines()
+                    if not CPP_CONTEXT_RE.match(l)))
+        w_noctx = neg_failures(oracle.get(n1), cpp_noctx, n1, neg_control)
+
+        # The bare shape, with no diagnostic text but the Error lines
+        # themselves, must take the same fail-closed branch.
+        cpp_noctx2 = subprocess.CompletedProcess(
+            cpp_control.args, cpp_control.returncode, cpp_control.stdout,
+            "".join(l + "\n" for l in cpp_control.stderr.splitlines()
+                    if l.startswith("Error:")))
+        w_noctx2 = neg_failures(oracle.get(n1), cpp_noctx2, n1, neg_control)
+
+        # C++ alone rejects Landlord before Grocer; merely agreeing on
+        # imbalance must not pass the same-entry comparison.
+        other_text, n = re.subn(
+            r"^([ \t]+Expenses:Rent[ \t]+\$2000\.00\n[ \t]+Assets:Checking)[ \t]*$",
+            r"\1      $-1999.00", neg_control, count=1, flags=re.M)
+        if n != 1:
+            print("NEG other-entry fixture cannot be derived from " + demo_src,
+                  file=sys.stderr)
+            sys.exit(2)
+        n3 = os.path.join(tmp, "selftest-neg-other-entry.dat")
+        with open(n3, "w") as fh:
+            fh.write(other_text)
+        w_entry, entry_skipped = neg_failures(oracle.get(n1), cpp_reject(n3, []), n3, other_text)
+
+        # Balance First only on the C++ side. Both this collision and the
+        # agreeing control must be visible skips, never confirmed entries.
+        ni_other = os.path.join(tmp, "selftest-neg-include-other.dat")
+        include_other = include_control.replace("B    $-2", "B    $-1")
+        with open(ni_other, "w") as fh:
+            fh.write(include_other)
+        cpp_include = cpp_reject(ni, [])
+        cpp_include_other = cpp_reject(ni_other, [])
+        w_include = neg_failures(oracle.get(ni), cpp_include, ni, include_control)
+        w_include_other = neg_failures(oracle.get(ni), cpp_include_other, ni_other, include_other)
+        w_include_periodic = neg_failures(oracle.get(np), cpp_reject(np, []), np, include_periodic)
+        include_res = oracle.get(ni)
+        include_line = (ORACLE_LINE_RE.match(include_res[1])
+                        if isinstance(include_res, tuple) else None)
+        include_contexts = [CPP_BALANCING_RE.search(out.stderr)
+                            for out in (cpp_include, cpp_include_other)]
+        include_lines = [ctx.group(2) if ctx else None for ctx in include_contexts]
+
+        # The periodic block rule, both directions, against real
+        # diagnostics: the live fixture must confirm the same entry
+        # (header 5 against reported end 8), a stubbed context that
+        # ends the template before the oracle's header must fail it,
+        # and so must a torn block with a de-indented posting still
+        # covered by the reported end.  The stubs reuse the live
+        # oracle result and rejection; only the text they judge is
+        # shifted, in the manner of the stripped-context probes.
+        cpp_periodic = cpp_reject(n4, [])
+        w_periodic = neg_failures(oracle.get(n4), cpp_periodic, n4,
+                                  periodic_text)
+        cpp_periodic_shift = subprocess.CompletedProcess(
+            cpp_periodic.args, cpp_periodic.returncode, cpp_periodic.stdout,
+            re.sub(r'^(While parsing file "[^"]*"), line \d+:$',
+                   r"\1, line 3:", cpp_periodic.stderr, count=1, flags=re.M))
+        w_periodic_shift = neg_failures(oracle.get(n4), cpp_periodic_shift,
+                                        n4, periodic_text)
+        periodic_torn = periodic_text.replace(
+            "    A    $2\n    B    $-1\n    C    $-2",
+            "    A    $2\nB    $-1\n    C    $-2")
+        w_periodic_torn = neg_failures(oracle.get(n4), cpp_periodic, n4,
+                                       periodic_torn)
+
+        neg_ok = (w_control == ([], False)
+                  and w_accept == (["oracle accepted a journal classified as unbalanced"], False)
+                  and w_cpp_accept == (["C++ did not reject the extracted journal as unbalanced"],
+                                       False)
                   and any(w.startswith("oracle rejected it for another")
-                          for w in w_reason)
-                  and w_missing == ["no oracle output for journal"]
-                  and w_signal == ["C++ did not reject the extracted journal as unbalanced"])
+                          for w in w_reason[0])
+                  and w_missing == (["no oracle output for journal"], False)
+                  and w_signal == (["C++ did not reject the extracted journal as unbalanced"],
+                                   False)
+                  and w_noctx == ([NO_CONTEXT_REASON], False)
+                  and w_noctx2 == ([NO_CONTEXT_REASON], False)
+                  and not entry_skipped
+                  and any(w.startswith("oracle rejected a different entry") for w in w_entry)
+                  and w_include == w_include_other == w_include_periodic == ([], True)
+                  and include_line and include_line.group(2) == "6"
+                  and include_lines == ["3", "6"]
+                  and w_periodic == ([], False)
+                  and w_periodic_shift == (["oracle rejected a different entry: line 5, C++ the"
+                                            " template ending at line 3"], False)
+                  and w_periodic_torn == (["oracle rejected a different entry: line 5, C++ the"
+                                           " template ending at line 8"], False))
         if neg_ok:
             print("selftest: NEG detector fixtures green")
         else:
@@ -641,7 +838,14 @@ def main():
                 "file": "<neg-selftest>", "status": "FAIL",
                 "why": f"NEG detector fixtures: control={w_control} "
                        f"accepted={w_accept} cpp_accepted={w_cpp_accept} "
-                       f"other_reason={w_reason} missing={w_missing} signal={w_signal}"})
+                       f"other_reason={w_reason} missing={w_missing} signal={w_signal} "
+                       f"no_context={w_noctx} no_context2={w_noctx2} "
+                       f"other_entry={w_entry} entry_skipped={entry_skipped} "
+                       f"include={w_include} include_other={w_include_other} "
+                       f"include_periodic={w_include_periodic} "
+                       f"include_oracle={include_res} include_cpp_lines={include_lines} "
+                       f"periodic={w_periodic} periodic_shift={w_periodic_shift} "
+                       f"periodic_torn={w_periodic_torn}"})
 
     def run_line(cmd, **kw):
         try:
@@ -672,6 +876,7 @@ def main():
             "neg_cpp_flags_common": ["balance"],
             "neg_reason_pattern": NEG_REASON_RE.pattern},
         "counts": {k: len(v) for k, v in bins.items()},
+        "neg_line_check_skipped": neg_skipped,
         "details": details,
         "bins": {k: v for k, v in bins.items() if k != "PASS"},
     }
@@ -693,7 +898,11 @@ def main():
     print(f"semantic bisimulation over {total} .test files:")
     for k in ("PASS", "FAIL", "NEG:unbalanced", "SKIP:out-of-scope", "SKIP:cpp-parse",
               "SKIP:negative", "SKIP:no-journal", "SKIP:python"):
-        print(f"  {k:<18} {len(bins[k])}")
+        extra = ""
+        if k == "NEG:unbalanced" and neg_skipped:
+            extra = (f" ({len(neg_skipped)} without the same-entry check:"
+                     " include context)")
+        print(f"  {k:<18} {len(bins[k])}{extra}")
     for d in details:
         if d["status"] == "FAIL":
             print(f"  FAIL {d['file']}")
