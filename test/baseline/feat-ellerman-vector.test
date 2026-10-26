@@ -1,0 +1,47 @@
+; Ellerman, "On Double-Entry Bookkeeping: The Mathematical Treatment",
+; Accounting Education 23:5 (2014), pp. 496-498: the vector journal over
+; three property types, with transaction 2b routed through Equity "for
+; simplicity, directly with equity rather than using income statement or
+; property-flow accounts" (p. 497).  The balances are p. 498's ending row,
+; (10200, 35, 20) (-9200, 0, 0) (-1000, -35, -20), which sums to zero in
+; each property type.  The same journal is a kernel-checked golden in the
+; ledger-semantics oracle (namespace Ledger.Ellerman).
+
+2014/01/01 Beginning vector balance sheet
+    Assets          $9000
+    Assets          40 WIDGET
+    Assets          50 HALF
+    Liabilities     $-10000
+    Equity          $1000
+    Equity          -40 WIDGET
+    Equity          -50 HALF
+
+2014/01/02 1. inputs used
+    Assets          -30 HALF
+    Equity          30 HALF
+
+2014/01/03 2a. widgets produced
+    Assets          15 WIDGET
+    Equity          -15 WIDGET
+
+2014/01/04 2b. widgets sold, Ellerman's encoding
+    Assets          $2000
+    Assets          -20 WIDGET
+    Equity          20 WIDGET
+    Equity          $-2000
+
+2014/01/05 3. loan principal
+    Assets          $-800
+    Liabilities     $800
+
+test bal --flat
+              $10200
+             20 HALF
+           35 WIDGET  Assets
+              $-1000
+            -20 HALF
+          -35 WIDGET  Equity
+              $-9200  Liabilities
+--------------------
+                   0
+end test

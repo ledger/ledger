@@ -1,0 +1,46 @@
+; Ellerman's vector journal (Accounting Education 23:5 (2014),
+; pp. 496-498) with transaction 2b written in Ledger's cost syntax.  The
+; journal is a kernel-checked golden in the ledger-semantics oracle
+; (namespace Ledger.Ellerman).  The cost balances the sale at $2000, and
+; Ledger leaves the exchange leg that Ellerman books to Equity implicit,
+; so the per-commodity totals are $2000 and -20 WIDGET rather than zero.
+; This illustrates the @ convention (see opt-equity and regress 1125,
+; 1794); it is not a witness for a new balancing rule.
+
+2014/01/01 Beginning vector balance sheet
+    Assets          $9000
+    Assets          40 WIDGET
+    Assets          50 HALF
+    Liabilities     $-10000
+    Equity          $1000
+    Equity          -40 WIDGET
+    Equity          -50 HALF
+
+2014/01/02 1. inputs used
+    Assets          -30 HALF
+    Equity          30 HALF
+
+2014/01/03 2a. widgets produced
+    Assets          15 WIDGET
+    Equity          -15 WIDGET
+
+2014/01/04 2b. widgets sold, Ledger cost syntax
+    Assets          $2000
+    Assets          -20 WIDGET @ $100
+
+2014/01/05 3. loan principal
+    Assets          $-800
+    Liabilities     $800
+
+test bal --flat
+              $10200
+             20 HALF
+           35 WIDGET  Assets
+               $1000
+            -20 HALF
+          -55 WIDGET  Equity
+              $-9200  Liabilities
+--------------------
+               $2000
+          -20 WIDGET
+end test
