@@ -1,0 +1,21 @@
+; A bucket account completes only a transaction that has exactly one
+; posting (src/xact.cc, xact_base_t::finalize: "posts.size() == 1").
+; This two-posting transaction is an implicit exchange: C++ infers the
+; cost of the AAPL posting from the dollar posting, the transaction
+; balances, and the bucket receives nothing.  The semantic
+; bisimulation (test/semantic/check_all.py) replays this journal, so an
+; oracle that completed the residual into the bucket would fail here.
+
+bucket Equity:Bucket
+
+2024/01/01 Buy
+    Assets:Broker   10 AAPL
+    Assets:Cash     $-500
+
+test bal --flat
+             10 AAPL  Assets:Broker
+               $-500  Assets:Cash
+--------------------
+               $-500
+             10 AAPL
+end test

@@ -1,0 +1,32 @@
+; A bucket account completes only a transaction that has exactly one
+; posting (src/xact.cc, xact_base_t::finalize: "posts.size() == 1").
+; The second transaction balances within display precision: its cost,
+; 3 x $3.333 = $9.999, leaves $0.001 against $-10.00.  The residual is
+; real (kept at full precision in the balance, src/xact.cc:325-333;
+; rounded() only clears the keep-precision flag, src/amount.h:351), and
+; C++ accepts it because the final balance check (src/xact.cc:898)
+; treats a residual that renders as zero at the $ commodity's display
+; precision as zero (amount_t::is_zero, src/amount.cc:1374).  The
+; bucket receives nothing because the transaction has two postings
+; (posts.size() == 1, src/xact.cc:368).  The semantic bisimulation
+; (test/semantic/check_all.py) replays this journal, so an oracle that
+; completed the residual into the bucket would fail here.
+
+bucket Equity:Bucket
+
+2024/01/01 Opening
+    Assets:Cash   $100.00
+    Equity:Open  $-100.00
+
+2024/01/02 Buy with rounded cost
+    Assets:Broker   3 AAPL @ $3.333
+    Assets:Cash     $-10.00
+
+test bal --flat
+              3 AAPL  Assets:Broker
+              $90.00  Assets:Cash
+            $-100.00  Equity:Open
+--------------------
+             $-10.00
+              3 AAPL
+end test
