@@ -1,0 +1,23 @@
+; An explicit cost on an unbalanced virtual posting still disables the
+; implicit exchange of Phase 3.
+
+2024/01/01 Virtual cost plus a real exchange
+    Assets:A    $100
+    Assets:B    -80 EUR
+    (Memo)      1 XYZ @ $1
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 7:
+While balancing transaction from "$FILE", lines 4-7:
+> 2024/01/01 Virtual cost plus a real exchange
+>     Assets:A    $100
+>     Assets:B    -80 EUR
+>     (Memo)      1 XYZ @ $1
+Unbalanced remainder is:
+                $100
+             -80 EUR
+Amount to balance against:
+                $101
+Error: Transaction does not balance
+end test
