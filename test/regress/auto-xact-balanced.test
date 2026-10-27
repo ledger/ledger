@@ -1,0 +1,58 @@
+; Automated transactions whose must-balance postings keep every
+; transaction balanced (src/xact.cc, auto_xact_t::extend_xact at
+; src/xact.cc:1426, re-verifying at src/xact.cc:1677-1684, and
+; xact_base_t::verify at src/xact.cc:1040-1110).
+
+= /^Expenses:Food/
+    [Budget:Food]    -1
+    Assets:Savings    1
+
+= /^Expenses:Books/
+    (Budget:Books)    -1
+
+= /^Expenses:Snacks/
+    Assets:Savings    0.0001
+
+= /^Expenses:Energy/
+    Assets:Rebate    1
+    Income:Rebate   -72.00 EUR
+
+2026/01/01 lunch
+    Expenses:Food    10.00 USD
+    Assets:Cash
+
+2026/01/02 novel
+    Expenses:Books    20.00 USD
+    Assets:Cash
+
+2026/01/03 crisps
+    Expenses:Snacks    10.00 USD
+    Assets:Cash
+
+2026/01/04 power
+    Expenses:Energy    100 kWh @@ 72.00 EUR
+    Assets:Cash
+
+test bal
+          -72.00 EUR
+          -30.00 USD
+             100 kWh  Assets
+          -72.00 EUR
+          -40.00 USD    Cash
+             100 kWh    Rebate
+           10.00 USD    Savings
+          -30.00 USD  Budget
+          -20.00 USD    Books
+          -10.00 USD    Food
+           40.00 USD
+             100 kWh  Expenses
+           20.00 USD    Books
+             100 kWh    Energy
+           10.00 USD    Food
+           10.00 USD    Snacks
+          -72.00 EUR  Income:Rebate
+--------------------
+         -144.00 EUR
+          -20.00 USD
+             200 kWh
+end test
