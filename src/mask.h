@@ -102,12 +102,16 @@ public:
 #else
   boost::regex expr; ///< Compiled regex (byte-oriented Boost.Regex)
 #endif
+  /// Pattern as compiled, in UTF-8.  Stored because u32regex::str() returns
+  /// std::basic_string<UChar32>, which is ill-formed: UChar32 is int32_t and
+  /// std::char_traits has no specialization for it.
+  string pattern_str;
 
   /// Construct a mask from a Perl-compatible regex pattern string.
   explicit mask_t(string_view pattern);
 
   mask_t() : expr() { TRACE_CTOR(mask_t, ""); }
-  mask_t(const mask_t& m) : expr(m.expr) { TRACE_CTOR(mask_t, "copy"); }
+  mask_t(const mask_t& m) : expr(m.expr), pattern_str(m.pattern_str) { TRACE_CTOR(mask_t, "copy"); }
   mask_t& operator=(const mask_t&) = default;
   ~mask_t() noexcept { TRACE_DTOR(mask_t); }
 
@@ -169,11 +173,7 @@ public:
   string str() const {
     if (!empty()) {
 #if HAVE_BOOST_REGEX_UNICODE
-      assert(sizeof(boost::uint32_t) == sizeof(UChar32));
-      unistring ustr;
-      std::basic_string<UChar32> expr_str = expr.str();
-      std::copy(expr_str.begin(), expr_str.end(), std::back_inserter(ustr.utf32chars));
-      return ustr.extract();
+      return pattern_str;
 #else
       return expr.str();
 #endif
