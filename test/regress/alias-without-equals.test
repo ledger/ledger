@@ -1,0 +1,21 @@
+; alias_directive splits an alias at the first equals sign and ignores a
+; line with none (src/textual_directives.cc, instance_t::alias_directive),
+; so the bare "alias Checking" changes nothing and Card denotes the
+; account named by everything after its first equals sign.  The semantic
+; bisimulation (test/semantic/check_all.py) replays this journal, so an
+; oracle that errored on the line without '=', or that split at the last
+; equals sign instead of the first, would fail here.
+
+alias Checking
+alias Card=Liabilities:Card=Visa
+
+2024/01/01 Groceries
+    Checking    $10
+    Card
+
+test bal
+                 $10  Checking
+                $-10  Liabilities:Card=Visa
+--------------------
+                   0
+end test
