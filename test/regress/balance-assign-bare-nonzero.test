@@ -1,0 +1,22 @@
+; A bare balance assignment leaves the target less the account's balance
+; and its earlier postings in the transaction (src/textual_xacts.cc,
+; compute_balance_diff), so the bare 5 against the held $10 also leaves a
+; second commodity, the null one, and to_amount rejects the difference
+; (src/balance.h:473-480).
+
+2024/01/01 Open
+    Assets:A    $10
+    Equity:O
+
+2024/01/02 Bare five
+    Assets:A    = 5
+    Assets:B
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 12:
+While parsing posting:
+  Assets:A    = 5
+                ^
+Error: Cannot convert a balance with multiple commodities to an amount
+end test
