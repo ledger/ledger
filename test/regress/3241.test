@@ -1,0 +1,59 @@
+; Regression test for #3241: a commodity equals a string that names it,
+; whether the string gives the bare symbol or the double-quoted spelling
+; a journal uses for a symbol containing spaces, digits, or other
+; reserved characters.
+;
+; Through 3.3.2 the value of `commodity` was that quoted spelling, which
+; the manual shows.  Once `commodity` became the commodity itself, the
+; comparison looked the string up as a bare symbol, so '"NAME"' named
+; nothing: the automated transaction below stopped applying, silently.
+; Ordering compared the bare symbol against the quoted one, so a
+; commodity sorted after its own name.
+
+= expr ( commodity == '"Amundi_NASDAQ-100_II_UCITS_ETF_Acc"' and account =~ /^Actif:/ )
+    (Allocation:Index:MSCI USA Growth)         1
+
+2024/01/02 * MyBroker
+    Actif:Invest:MyBroker       1 "Amundi_NASDAQ-100_II_UCITS_ETF_Acc" @@ 100 €  ; @ 100 €
+    Actif:Invest:MyBroker
+
+; The reported commands: the automated transaction applies.
+test --exchange=€ bal
+                €100  Allocation:Index:MSCI USA Growth
+end test
+
+test --exchange=€ --percent bal
+             100.00%  Allocation:Index:MSCI USA Growth
+end test
+
+; The quoted spelling, with its quotes escaped, as the manual shows it.
+test reg --format '%(account)  %(commodity)\n' -l 'commodity == "\"Amundi_NASDAQ-100_II_UCITS_ETF_Acc\""'
+Actif:Invest:MyBroker  Amundi_NASDAQ-100_II_UCITS_ETF_Acc
+Allocation:Index:MSCI USA Growth  Amundi_NASDAQ-100_II_UCITS_ETF_Acc
+end test
+
+; The bare symbol names the same commodity (#1097).
+test reg --format '%(account)  %(commodity)\n' -l "commodity == 'Amundi_NASDAQ-100_II_UCITS_ETF_Acc'"
+Actif:Invest:MyBroker  Amundi_NASDAQ-100_II_UCITS_ETF_Acc
+Allocation:Index:MSCI USA Growth  Amundi_NASDAQ-100_II_UCITS_ETF_Acc
+end test
+
+; Ordering agrees with equality: a commodity is not greater than its own
+; name, under either spelling, and € still sorts after it.
+test reg --format '%(account)  %(commodity)\n' -l 'commodity > "Amundi_NASDAQ-100_II_UCITS_ETF_Acc"'
+Actif:Invest:MyBroker  €
+end test
+
+test reg --format '%(account)  %(commodity)\n' -l 'commodity <= "\"Amundi_NASDAQ-100_II_UCITS_ETF_Acc\""'
+Actif:Invest:MyBroker  Amundi_NASDAQ-100_II_UCITS_ETF_Acc
+Allocation:Index:MSCI USA Growth  Amundi_NASDAQ-100_II_UCITS_ETF_Acc
+end test
+
+; Outside a posting, commodity() compares the same way under both spellings.
+test eval 'commodity(1 "Amundi_NASDAQ-100_II_UCITS_ETF_Acc") == "\"Amundi_NASDAQ-100_II_UCITS_ETF_Acc\""'
+1
+end test
+
+test eval 'commodity(1 "Amundi_NASDAQ-100_II_UCITS_ETF_Acc") == "Amundi_NASDAQ-100_II_UCITS_ETF_Acc"'
+1
+end test

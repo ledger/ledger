@@ -1003,12 +1003,36 @@ value_t& value_t::operator/=(const value_t& val) {
 // Comparing incompatible types (e.g., DATE to AMOUNT) throws value_error.
 // ----------------------------------------------------------------------
 
+namespace {
+
+/// @brief Strip the double quotes that a journal writes around a symbol.
+string without_journal_quotes(const string& name) {
+  if (name.length() >= 2 && name.front() == '"' && name.back() == '"')
+    return string(name, 1, name.length() - 2);
+  return name;
+}
+
+/// @brief Find the commodity that a string names in a value expression.
+///
+/// The string may give the commodity's symbol or one of its aliases, or
+/// either of those in the double quotes that a journal writes around a
+/// symbol containing spaces, digits, or other reserved characters (issue
+/// #3241).  Returns nullptr if the string names no commodity.
+commodity_t* find_named_commodity(commodity_pool_t& pool, const string& name) {
+  if (commodity_t* commodity = pool.find(name))
+    return commodity;
+  string symbol = without_journal_quotes(name);
+  return symbol != name ? pool.find(symbol) : nullptr;
+}
+
+} // namespace
+
 /// @brief Test equality between two values, handling cross-type comparisons.
 ///
 /// VOID is only equal to VOID.  For numeric types (INTEGER, AMOUNT,
 /// BALANCE), cross-type equality is supported by promoting the simpler
-/// operand.  COMMODITY can be compared to STRING by looking up the
-/// string in the commodity pool.
+/// operand.  COMMODITY equals a STRING that names it, by symbol, alias,
+/// or quoted symbol (see find_named_commodity()).
 bool value_t::is_equal_to(const value_t& val) const {
   switch (type()) {
   case VOID:
@@ -1073,7 +1097,7 @@ bool value_t::is_equal_to(const value_t& val) const {
     case COMMODITY:
       return as_commodity() == val.as_commodity();
     case STRING: {
-      if (const auto* otherCommodity = as_commodity().pool().find(val.as_string()))
+      if (const auto* otherCommodity = find_named_commodity(as_commodity().pool(), val.as_string()))
         return as_commodity() == *otherCommodity;
       return false;
     }
@@ -1122,6 +1146,8 @@ bool value_t::is_equal_to(const value_t& val) const {
 ///
 /// BALANCE comparison against scalars checks whether ALL component amounts
 /// are less than the scalar.  SEQUENCE comparison is lexicographic.
+/// COMMODITY orders by bare symbol, against a STRING as against another
+/// COMMODITY, so it neither precedes nor follows a string that names it.
 bool value_t::is_less_than(const value_t& val) const {
   if (val.is_null())
     return false; // nothing is less than null (null sorts first)
@@ -1211,9 +1237,9 @@ bool value_t::is_less_than(const value_t& val) const {
     case COMMODITY:
       return to_string() < val.to_string();
     case STRING: {
-      if (const auto* otherCommodity = as_commodity().pool().find(val.as_string()))
-        return to_string() < otherCommodity->symbol();
-      return to_string() < val.as_string();
+      if (const auto* otherCommodity = find_named_commodity(as_commodity().pool(), val.as_string()))
+        return to_string() < otherCommodity->base_symbol();
+      return to_string() < without_journal_quotes(val.as_string());
     }
     default:
       break;
@@ -1360,9 +1386,9 @@ bool value_t::is_greater_than(const value_t& val) const {
     case COMMODITY:
       return to_string() > val.to_string();
     case STRING: {
-      if (const auto* otherCommodity = as_commodity().pool().find(val.as_string()))
-        return to_string() > otherCommodity->symbol();
-      return to_string() > val.as_string();
+      if (const auto* otherCommodity = find_named_commodity(as_commodity().pool(), val.as_string()))
+        return to_string() > otherCommodity->base_symbol();
+      return to_string() > without_journal_quotes(val.as_string());
     }
     default:
       break;
@@ -1614,7 +1640,8 @@ void value_t::in_place_cast(type_t cast_type) {
       set_amount(amount_t(as_string()));
       return;
     case COMMODITY:
-      if (const auto* commodity = commodity_pool_t::current_pool->find(as_string())) {
+      if (const auto* commodity =
+              find_named_commodity(*commodity_pool_t::current_pool, as_string())) {
         set_commodity(*commodity);
         return;
       }

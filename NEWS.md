@@ -261,6 +261,15 @@ components with their standard-library equivalents.
   averages for period reports (#1950); anchor interval averages to the report
   begin date
 
+- Accept both spellings of a commodity whose symbol needs quotes, such as
+  `"ABC 3"`: `commodity == 'ABC 3'` and `commodity == '"ABC 3"'` now match
+  the same postings, and `commodity(AMOUNT)` compares the same way in every
+  report (#3241, #1097).  The quoted spelling, which the manual shows and 3.3
+  required, stopped matching in 3.4.0, so automated transactions and
+  `--limit` predicates written for 3.3 silently matched nothing.  Ordering a
+  commodity against a string now follows the bare symbol, as ordering two
+  commodities does
+
 ### Date, Period, and Time Handling
 
 - Accept a time component for `--begin`/`--end`/`--now` (#1696): the parser

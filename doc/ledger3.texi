@@ -1834,7 +1834,7 @@ Commodity names can have any character, including white-space.
 However, if you include white-space or numeric characters, the
 commodity name must be enclosed in double quotes @samp{"}:
 
-@smallexample @c input:validate
+@smallexample @c input:9FB8B7E
 1999/06/09 ! Achat
     Actif:SG PEE STK         49.957 "Arcancia Équilibre 454"
     Actif:SG PEE STK      $-234.90
@@ -1844,10 +1844,18 @@ commodity name must be enclosed in double quotes @samp{"}:
     Actif:SG PEE STK    $-10742.54
 @end smallexample
 
-Please note that, for querying quoted commodities, the quotes need to be escaped, as follows:
+A value expression can name such a commodity with or without its
+quotes, so @samp{commodity == "Arcancia Équilibre 454"} and
+@samp{commodity == "\"Arcancia Équilibre 454\""} select the same
+postings.  Quotes written inside a double-quoted string must be
+escaped, as follows:
 
 @smallexample @c command:9FB8B7E
 $ ledger -f d reg -l 'commodity == "\"Arcancia Équilibre 454\""'
+@end smallexample
+
+@smallexample @c output:9FB8B7E
+99-Jun-09 Achat                 Actif:SG PEE STK       49.957 Arcancia Équilibre 454 49.957 Arcancia Équilibre 454
 @end smallexample
 
 @node Buying and Selling Stock, Dividends, Naming Commodities, Currency and Commodities
