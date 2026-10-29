@@ -1,0 +1,175 @@
+; Issue #3265: the commodities, payees and tags listings showed only what
+; postings used.  A commodity, payee or tag that a directive declared but no
+; posting used was missing, and --strict-commodity (or --strict) did not
+; bring it back: the listings never looked at declarations, and those were
+; only recorded while a strict checking option was active.
+;
+; Declarations are now recorded whatever the checking style, and each
+; listing includes the declared items no posting in the report uses, as the
+; accounts listing has done for declared accounts since #2519.
+
+commodity $
+commodity EUR
+    note Euro
+N JPY
+D 1,000.00 CAD
+
+; A price entry is not a declaration, so GBP is never listed.
+P 2024/01/01 GBP $1.30
+
+account Assets:Cash
+account Expenses:Food
+
+payee Grocery Store
+payee Unused Payee
+
+tag Receipt
+tag Unused
+
+2024/01/01 Grocery Store
+    ; Receipt: yes
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test commodities
+$
+CAD
+EUR
+JPY
+end test
+
+test commodities --count
+2 $
+0 CAD
+0 EUR
+0 JPY
+end test
+
+test payees
+Grocery Store
+Unused Payee
+end test
+
+test payees --count
+2 Grocery Store
+0 Unused Payee
+end test
+
+test tags
+Receipt
+Unused
+end test
+
+test tags --count
+2 Receipt
+0 Unused
+end test
+
+; A declared tag that nothing uses has no value to show.
+test tags --values
+Receipt: yes
+Unused
+end test
+
+; No checking option changes what the listings show.
+test commodities --strict-commodity
+$
+CAD
+EUR
+JPY
+end test
+
+test commodities --pedantic-commodity
+$
+CAD
+EUR
+JPY
+end test
+
+test payees --strict --check-payees
+Grocery Store
+Unused Payee
+end test
+
+test tags --pedantic
+Receipt
+Unused
+end test
+
+; A query rules out a declared item only by the terms that test the item
+; itself -- a payee's name, a commodity, a tag's name.  Terms about
+; postings, such as an account, never do, since no posting uses the item.
+test payees @Unused
+Unused Payee
+end test
+
+test payees @Grocery
+Grocery Store
+end test
+
+test payees not @Unused
+Grocery Store
+end test
+
+test payees Expenses
+Grocery Store
+Unused Payee
+end test
+
+; Grocery Store pays only into Expenses:Food, so no posting in this report
+; uses it either: like Unused Payee, it is listed with a count of 0.
+test payees --count Expenses:Rent
+0 Grocery Store
+0 Unused Payee
+end test
+
+test commodities expr 'commodity == "EUR"'
+EUR
+end test
+
+test commodities Expenses
+$
+CAD
+EUR
+JPY
+end test
+
+test tags %Unused
+Unused
+end test
+
+test tags %Receipt
+Receipt
+end test
+
+test tags not %Receipt
+Unused
+end test
+
+; A test of a tag's value also names the tag, which rules out the other
+; declared tags.
+test tags %Receipt=yes
+Receipt
+end test
+
+test tags %Unused=yes
+Unused
+end test
+
+test tags %Receipt==yes
+Receipt
+end test
+
+; Under --anon only what the postings use is listed, anonymized where
+; --anon anonymizes it: a declared item could only appear by its real name.
+test payees --anon | sed -E 's/[0-9a-f]{8}/XXXXXXXX/g'
+XXXXXXXX
+end test
+
+test commodities --anon
+A
+end test
+
+test tags --anon
+Receipt
+end test

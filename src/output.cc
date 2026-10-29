@@ -457,10 +457,154 @@ void report_accounts::operator()(post_t& post) {
     (*i).second++;
 }
 
+/*--- Declared Items in the Listings ---*/
+
+namespace {
+/// @brief Whether a term of a posting predicate tests a declared item
+///        itself, so that the item can answer it without any posting.
+using own_term_t = std::function<bool(const expr_t::ptr_op_t&)>;
+
+/// @brief For a term that tests postings, a test of the item's own that
+///        the term implies, or null when it implies none.
+using implied_term_t = std::function<expr_t::ptr_op_t(const expr_t::ptr_op_t&)>;
+
+/// @brief The own_term_t that accepts the identifier @p name alone.
+own_term_t identifier(const char* name) {
+  return [name](const expr_t::ptr_op_t& op) { return op->is_ident() && op->as_ident() == name; };
+}
+
+/// @brief Whether @p op calls the function named @p name or @p alias.
+bool is_call_to(const expr_t::ptr_op_t& op, const char* name, const char* alias) {
+  return op->kind == expr_t::op_t::O_CALL && op->left()->is_ident() &&
+         (op->left()->as_ident() == name || op->left()->as_ident() == alias);
+}
+
+/// @brief has_tag(N) and has_meta(N), which test the name of a tag.
+bool is_tag_name_test(const expr_t::ptr_op_t& op) {
+  return is_call_to(op, "has_tag", "has_meta") && op->has_right() && op->right()->is_value();
+}
+
+/// @brief For a test of the value a posting gives a tag -- has_tag(N, V),
+///        or tag(N) == V as a `%N==V` query writes it -- the test
+///        has_tag(N) of the tag's name that it implies.
+expr_t::ptr_op_t implied_tag_name_test(const expr_t::ptr_op_t& op) {
+  using op_t = expr_t::op_t;
+
+  expr_t::ptr_op_t name;
+  if (is_call_to(op, "has_tag", "has_meta") && op->has_right() && op->right()->kind == op_t::O_CONS)
+    name = op->right()->left();
+  else if (op->kind == op_t::O_EQ && is_call_to(op->left(), "tag", "meta") &&
+           op->left()->has_right())
+    name = op->left()->right();
+  if (!name || !name->is_value())
+    return nullptr;
+
+  expr_t::ptr_op_t has_tag(new op_t(op_t::IDENT));
+  has_tag->set_ident("has_tag");
+  return op_t::new_node(op_t::O_CALL, has_tag, name);
+}
+
+/// @brief True when @p op tests nothing but terms that @p own accepts.
+///
+/// Constants qualify.  No other identifier does, nor does a call, member
+/// lookup or definition that @p own does not accept as a whole.
+bool tests_only(const expr_t::ptr_op_t& op, const own_term_t& own) {
+  using op_t = expr_t::op_t;
+
+  if (!op || op->is_value() || own(op))
+    return true;
+  switch (op->kind) {
+  case op_t::O_CALL:
+  case op_t::O_LOOKUP:
+  case op_t::O_LAMBDA:
+  case op_t::O_DEFINE:
+  case op_t::O_SEQ:
+    return false;
+  default:
+    return op->kind > op_t::TERMINALS && tests_only(op->left(), own) &&
+           (!op->has_right() || tests_only(op->right(), own));
+  }
+}
+
+/// @brief Reduce a posting predicate to what it can say about a declared
+///        item that no posting in the report uses.
+///
+/// Terms that @p own accepts are kept.  Every other term tests a posting,
+/// so it cannot be judged for such an item and becomes the constant
+/// @p unknown, which flips under each negation so that `!` of an unknown
+/// term stays unknown -- or, when @p implied finds a test of the item's
+/// own that the term implies, that test and @p unknown.  Called with
+/// @p unknown true, this is the three-valued (Kleene) reading of the
+/// predicate with "unknown" resolved in favour of the item: the result is
+/// false only when the item's own terms rule it out.
+expr_t::ptr_op_t project_onto(const expr_t::ptr_op_t& op, const own_term_t& own,
+                              const implied_term_t& implied, const bool unknown) {
+  using op_t = expr_t::op_t;
+
+  switch (op->kind) {
+  case op_t::O_NOT:
+    return op_t::new_node(op_t::O_NOT, project_onto(op->left(), own, implied, !unknown));
+  case op_t::O_AND:
+  case op_t::O_OR:
+    return op_t::new_node(op->kind, project_onto(op->left(), own, implied, unknown),
+                          project_onto(op->right(), own, implied, unknown));
+  default:
+    if (tests_only(op, own))
+      return op;
+    if (implied)
+      if (expr_t::ptr_op_t test = implied(op))
+        return op_t::new_node(op_t::O_AND, test, op_t::wrap_value(unknown));
+    return op_t::wrap_value(unknown);
+  }
+}
+
+/// @brief Lists the declared items that no posting in the report uses.
+///
+/// The `commodities`, `payees` and `tags` listings show such items with a
+/// count of zero (#3265), as the `accounts` listing does for declared
+/// accounts.  The query/--limit predicate is a posting predicate, so only
+/// the terms that test the item itself apply to it (see project_onto).
+/// Under --anon no such item is listed: it would appear under its real
+/// name, since only what postings carry gets anonymized.
+class declared_items_t {
+  report_t& report;
+  bool listed;             ///< False under --anon.
+  expr_t::ptr_op_t filter; ///< The projected --limit predicate; null admits all.
+
+public:
+  declared_items_t(report_t& _report, const own_term_t& own,
+                   const implied_term_t& implied = nullptr)
+      : report(_report), listed(!report.HANDLED(anon)) {
+    if (listed && report.HANDLED(limit_)) {
+      predicate_t limit(report.HANDLER(limit_).str(), report.what_to_keep());
+      if (limit)
+        filter = project_onto(limit.get_op(), own, implied, true);
+    }
+  }
+
+  /// @brief Whether the item whose own terms @p item_scope defines passes
+  ///        the query.  Each item compiles its own predicate, because
+  ///        compiling binds those terms to the item's values.
+  bool admits(scope_t& item_scope) const {
+    return listed && (!filter || predicate_t(filter, report.what_to_keep())(item_scope));
+  }
+};
+} // namespace
+
 /*--- report_payees: Payee Listing ---*/
 
 void report_payees::flush() {
   std::ostream& out(report.output_stream);
+
+  declared_items_t declared(report, identifier("payee"));
+  for (const string& payee : report.session.journal->known_payees) {
+    if (payees.find(payee) != payees.end())
+      continue;
+    symbol_scope_t payee_scope(*scope_t::empty_scope);
+    payee_scope.define(symbol_t::FUNCTION, "payee", expr_t::op_t::wrap_value(string_value(payee)));
+    if (declared.admits(payee_scope))
+      payees.insert(payees_pair(payee, 0));
+  }
 
   for (payees_pair& entry : payees) {
     if (report.HANDLED(count))
@@ -482,6 +626,21 @@ void report_payees::operator()(post_t& post) {
 void report_tags::flush() {
   std::ostream& out(report.output_stream);
 
+  declared_items_t declared(report, is_tag_name_test, implied_tag_name_test);
+  for (const string& tag : report.session.journal->known_tags) {
+    if (names.find(tag) != names.end())
+      continue;
+    metadata_t carrier;
+    carrier.set_tag(tag);
+    expr_t::ptr_op_t has_tag(expr_t::op_t::wrap_functor(
+        [&carrier](call_scope_t& args) { return metadata_has_tag(carrier, args); }));
+    symbol_scope_t tag_scope(*scope_t::empty_scope);
+    tag_scope.define(symbol_t::FUNCTION, "has_tag", has_tag);
+    tag_scope.define(symbol_t::FUNCTION, "has_meta", has_tag);
+    if (declared.admits(tag_scope))
+      tags.insert(tags_pair(tag, 0));
+  }
+
   for (tags_pair& entry : tags) {
     if (report.HANDLED(count))
       out << entry.second << ' ';
@@ -494,6 +653,7 @@ void report_tags::gather_metadata(item_t& item) {
   if (!item.metadata)
     return;
   for (const item_t::string_map::value_type& data : *item.metadata) {
+    names.insert(data.first);
     string tag(data.first);
     if (report.HANDLED(values) && data.second.first)
       tag += ": " + data.second.first->to_string();
@@ -514,6 +674,16 @@ void report_tags::operator()(post_t& post) {
 
 void report_commodities::flush() {
   std::ostream& out(report.output_stream);
+
+  declared_items_t declared(report, identifier("commodity"));
+  for (commodity_t* comm : report.session.journal->known_commodities) {
+    if (commodities.find(comm) != commodities.end())
+      continue;
+    symbol_scope_t comm_scope(*scope_t::empty_scope);
+    comm_scope.define(symbol_t::FUNCTION, "commodity", expr_t::op_t::wrap_value(value_t(*comm)));
+    if (declared.admits(comm_scope))
+      commodities.insert(commodities_pair(comm, 0));
+  }
 
   for (commodities_pair& entry : commodities) {
     if (report.HANDLED(count))

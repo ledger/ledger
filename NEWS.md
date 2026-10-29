@@ -198,6 +198,19 @@ components with their standard-library equivalents.
   path still honors `--limit`, `--period`, `--begin`/`--end`, `--pivot`,
   `--anon`, `--budget`, `--forecast-while`, and `--group-by`
 
+- Record the declarations of `commodity`, `payee`, and `tag` directives
+  whatever the checking options (#3265), so a `--strict` given inside the
+  journal honors the declarations before it, and `--strict` and
+  `--strict-commodity` no longer change the display precision that a declared
+  commodity learns from price directives
+
+- List the commodities, payees, and tags that `commodity`, `payee`, and `tag`
+  directives declare in the `commodities`, `payees`, and `tags` reports even
+  when no posting in the report uses them (with a `--count` of 0), as
+  `accounts` already lists declared accounts (#3265).  A query leaves such
+  an item out only by the terms that test the item itself, such as a payee's
+  name, and `--anon` leaves them all out
+
 - Align multi-commodity balance rows with wide decimals (#1795); fix
   multi-commodity balance formatting width (#698); make separator lines adapt
   to `amount_width`; show the payee when it changes between sorted postings;
@@ -380,6 +393,10 @@ components with their standard-library equivalents.
 - Support nested `account` declarations (#877) and metadata tags on `account`
   directives (#1681)
 
+- Add `--strict-commodity` and `--pedantic-commodity`, which check only that
+  commodities are declared and accept undeclared accounts, payees, and tags
+  (#3200)
+
 - Return regex capture-group text from the `=~` operator (extending #664)
 
 ### Documentation
@@ -399,6 +416,11 @@ components with their standard-library equivalents.
   (#994), the contradictory documentation for `--price-db` and `--download`
   (#1210), and the `ansify_if` two-argument signature; remove documentation
   for the unimplemented `capture` directive
+
+- Describe `--strict-commodity` and `--pedantic-commodity` among the session
+  options and in "Keeping it Consistent", and drop the outdated claim that
+  `--strict` accepts every account and commodity of a cleared transaction
+  (#3265)
 
 ### Build System
 

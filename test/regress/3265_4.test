@@ -1,0 +1,40 @@
+; Issue #3265: a commodity declaration is recorded apart from the commodity
+; itself, so the lots of a declared commodity -- each a commodity of its
+; own, such as AAPL {$150} -- must count as declared under strict checking.
+
+commodity $
+commodity AAPL
+account Assets:Brokerage
+account Assets:Cash
+
+2024/01/01 Buy at a price
+    Assets:Brokerage    10 AAPL {$150}
+    Assets:Cash        $-1500
+
+2024/01/02 Buy on a date
+    Assets:Brokerage    5 AAPL [2024/01/02]
+    Assets:Cash        $-760
+
+2024/01/03 Buy with a note
+    Assets:Brokerage    2 AAPL (lot-3)
+    Assets:Cash        $-310
+
+test bal --pedantic
+              $-2570
+             17 AAPL  Assets
+             17 AAPL    Brokerage
+              $-2570    Cash
+--------------------
+              $-2570
+             17 AAPL
+end test
+
+test bal --strict-commodity
+              $-2570
+             17 AAPL  Assets
+             17 AAPL    Brokerage
+              $-2570    Cash
+--------------------
+              $-2570
+             17 AAPL
+end test

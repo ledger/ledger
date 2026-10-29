@@ -121,7 +121,7 @@ protected:
 #define COMMODITY_NOMARKET 0x010              ///< Exclude from market-price valuations (-V/-X).
 #define COMMODITY_BUILTIN 0x020               ///< Internally created (e.g., the null commodity).
 #define COMMODITY_WALKED 0x040                ///< Traversal flag for graph algorithms.
-#define COMMODITY_KNOWN 0x080                 ///< Explicitly declared via a commodity directive.
+#define COMMODITY_KNOWN 0x080                 ///< Made known by a D, N or P directive.
 #define COMMODITY_PRIMARY 0x100               ///< This commodity has appeared as a price target.
 #define COMMODITY_SAW_ANNOTATED 0x200         ///< An annotated variant has been created.
 #define COMMODITY_SAW_ANN_PRICE_FLOAT 0x400   ///< Seen with a floating lot price.
