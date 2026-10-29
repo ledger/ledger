@@ -122,6 +122,13 @@ if(Python_EXECUTABLE)
       PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}")
   endforeach()
 
+  # Regression test for GitHub issue #3277: no other entry at the top of the
+  # source tree may begin with "README" unless it also begins with "README.md",
+  # so that "README<TAB>" still completes to README.md in a shell.
+  add_test(NAME RegressPyTest_3277
+    COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/regress/3277.py
+    ${PROJECT_SOURCE_DIR})
+
   if(HAVE_BOOST_PYTHON)
     add_test(NAME demo
       COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/python/demo.py

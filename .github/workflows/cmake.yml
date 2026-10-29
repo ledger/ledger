@@ -149,6 +149,53 @@ jobs:
         continue-on-error: true
         run: cmake --build build
 
+  build-libcxx:
+    # Compile, without linking, against LLVM's own libc++.  Since LLVM 19 it
+    # has no std::char_traits base template, so std::basic_string of a
+    # non-standard character type does not compile; with ICU, Boost.Regex
+    # uses one for u32regex::str() and, before Boost 1.89, for u32regex's
+    # comparisons (#3276).  Ubuntu 24.04 is pinned for its Boost 1.83.
+    # Nothing is linked, because the distribution's Boost libraries are
+    # built against libstdc++.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        name: Check out repository code
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -y
+          sudo ./acprep dependencies --python
+          sudo apt-get install -y clang-20 libc++-20-dev libc++abi-20-dev
+
+      - name: Check that libc++ rejects std::basic_string<int>
+        run: |
+          if echo 'std::basic_string<int> s;' |
+              clang++-20 -stdlib=libc++ -include string -x c++ -fsyntax-only - 2>/dev/null; then
+            echo "::error::libc++ accepts std::basic_string<int>, so this job checks nothing"
+            exit 1
+          fi
+
+      - name: Configure CMake
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
+            -DCMAKE_C_COMPILER=clang-20 \
+            -DCMAKE_CXX_COMPILER=clang++-20 \
+            -DCMAKE_CXX_FLAGS=-stdlib=libc++ \
+            -DUSE_PYTHON=ON \
+            -DUSE_GPGME=ON
+          if ! grep -q '^#define HAVE_BOOST_REGEX_UNICODE 1' build/system.hh; then
+            echo "::error::ICU was not enabled, so its code path would go unchecked"
+            exit 1
+          fi
+
+      - name: Compile every source file
+        run: |
+          ninja -C build -t targets all | sed -n 's/^\([^:]*\.o\): .*/\1/p' > build/objects.txt
+          grep -q '/mask\.cc\.o$' build/objects.txt
+          xargs ninja -C build < build/objects.txt
+
   coverage:
     runs-on: ubuntu-latest
     steps:

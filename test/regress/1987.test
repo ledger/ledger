@@ -1,0 +1,110 @@
+; Regression test for issue #1987
+; --flat lists each account with its own amount, not its family total.
+;
+; In the flat view every account has a line of its own, but an account that
+; held postings of its own as well as sub-accounts used to be shown with the
+; total of its whole family.  The sub-accounts' amounts were then counted
+; twice, the lines of the report did not add up to the total beneath them,
+; and "bal Assets:Sub1 --flat" disagreed with "bal Assets:Sub1$ --flat" about
+; Assets:Sub1.  An account whose sub-accounts are all hidden, for example by
+; --depth, still shows its family total (issue #1020).
+
+2020-01-08 * Test
+    Assets:Current:Foo  10.00 EUR
+    Assets:Foo
+
+2020-01-08 * Test
+    Assets:Current:Bar  10.00 EUR
+    Assets:Foo
+
+2020-01-08 * Test
+    Assets:Sub1:Sub2   10.00 EUR
+    Assets:Sub1        -5.00 EUR
+    Assets:Foo
+
+2020-01-08 * Test
+    Assets:Sub1:Sub3   10.00 EUR
+    Assets:Sub1        -5.00 EUR
+    Assets:Foo
+
+2020-01-08 * Test
+    Assets:Multi:Sub2   10.00 EUR
+    Assets:Multi        -5.00 EUR
+    Assets:Foo
+
+2020-01-08 * Test
+    Assets:Multi:Sub3   10.00 GBP
+    Assets:Multi        -5.00 GBP
+    Assets:Foo
+
+; A parent without postings of its own is not listed at all.
+test bal Assets:Current --flat
+           10.00 EUR  Assets:Current:Bar
+           10.00 EUR  Assets:Current:Foo
+--------------------
+           20.00 EUR
+end test
+
+; A parent with postings of its own shows the same amount whether or not its
+; sub-accounts are part of the report.
+test bal Assets:Sub1$ --flat
+          -10.00 EUR  Assets:Sub1
+end test
+
+test bal Assets:Sub1 --flat
+          -10.00 EUR  Assets:Sub1
+           10.00 EUR  Assets:Sub1:Sub2
+           10.00 EUR  Assets:Sub1:Sub3
+--------------------
+           10.00 EUR
+end test
+
+; The tree view still shows the family total for the parent.
+test bal Assets:Sub1
+           10.00 EUR  Assets:Sub1
+           10.00 EUR    Sub2
+           10.00 EUR    Sub3
+--------------------
+           10.00 EUR
+end test
+
+; The case from the original report, with two commodities.
+test bal Assets:Multi --flat
+           -5.00 EUR
+           -5.00 GBP  Assets:Multi
+           10.00 EUR  Assets:Multi:Sub2
+           10.00 GBP  Assets:Multi:Sub3
+--------------------
+            5.00 EUR
+            5.00 GBP
+end test
+
+; The lines of a flat report add up to its total.
+test bal --flat
+           10.00 EUR  Assets:Current:Bar
+           10.00 EUR  Assets:Current:Foo
+          -35.00 EUR
+           -5.00 GBP  Assets:Foo
+           -5.00 EUR
+           -5.00 GBP  Assets:Multi
+           10.00 EUR  Assets:Multi:Sub2
+           10.00 GBP  Assets:Multi:Sub3
+          -10.00 EUR  Assets:Sub1
+           10.00 EUR  Assets:Sub1:Sub2
+           10.00 EUR  Assets:Sub1:Sub3
+--------------------
+                   0
+end test
+
+; When --depth hides every sub-account, the parent shows the family total,
+; whether or not it has postings of its own.
+test bal --flat --depth 2
+           20.00 EUR  Assets:Current
+          -35.00 EUR
+           -5.00 GBP  Assets:Foo
+            5.00 EUR
+            5.00 GBP  Assets:Multi
+           10.00 EUR  Assets:Sub1
+--------------------
+                   0
+end test

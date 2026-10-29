@@ -716,6 +716,20 @@ struct accounts_flusher {
 
 void report_t::accounts_report(
     acct_handler_ptr handler) { // NOLINT(performance-unnecessary-value-param)
+  // With --flat every account has a line of its own, so an account whose
+  // sub-accounts are listed as well shows only its own amount rather than
+  // the family total (#1987); one whose sub-accounts are all hidden, e.g. by
+  // --depth, still shows the family total (#1020), as does the grand total
+  // line.  This is only the default total of an account report, so it is
+  // installed here, after every option has been parsed, as the base of
+  // the --total chain: --round and --unround wrap it, while an explicit
+  // --total or --percent replaces it whatever the order of the options.
+  // Posting reports never see it, and is_account protects the postings
+  // that account reports evaluate along the way (#3282).
+  if (HANDLED(flat) && HANDLER(total_).expr.base_expr == "total")
+    HANDLER(total_).expr.set_base_expr(
+        "is_account & parent & has_children_to_display ? amount : total");
+
   post_handler_ptr chain = chain_post_handlers(post_handler_ptr(new ignore_posts), *this,
                                                /* for_accounts_report= */ true);
   if (HANDLED(group_by_)) {
@@ -1027,64 +1041,7 @@ value_t report_t::fn_print(call_scope_t& args) {
 }
 
 value_t report_t::fn_scrub(call_scope_t& args) {
-  value_t result = display_value(args.value());
-
-  // When --empty is active and we are in an account scope, augment the
-  // display balance with zero-amount entries for every commodity that
-  // has been visited in this account's postings but has netted to zero
-  // (and was therefore dropped from the accumulated balance).
-  // Skip this augmentation when commodity conversion is active (-X, -V)
-  // because the display commodities differ from the original posting
-  // commodities; inserting zeros for the original commodities would be
-  // misleading (e.g. showing €0.00 when -X $ converted EUR to USD).
-  if (HANDLED(empty) && !HANDLED(exchange_) && !HANDLED(market)) {
-    if (account_t* acct = search_scope<account_t>(&args)) {
-      // Build a working balance from the already-scrubbed result.
-      balance_t bal;
-      if (result.is_balance()) {
-        bal = result.as_balance();
-      } else if (result.is_amount()) {
-        const amount_t& amt = result.as_amount();
-        if (!amt.is_null())
-          bal += amt;
-      }
-
-      // Walk all postings in this account; for each commodity that was
-      // actually visited during this report run (POST_EXT_VISITED) but
-      // is not already present in the scrubbed balance, insert a zero.
-      auto augment = [&](const post_t* post) {
-        if (!post->has_xdata() || !post->xdata().has_flags(POST_EXT_VISITED))
-          return;
-        if (post->amount.is_null())
-          return;
-        // Strip annotations so the lookup key matches what display_value()
-        // produced (e.g. AAPL {$120} -> AAPL).
-        amount_t stripped = post->amount.strip_annotations(what_to_keep());
-        if (!stripped.has_commodity())
-          return;
-        commodity_t* comm = &stripped.commodity();
-        if (!bal.amounts.count(comm)) {
-          amount_t zero_amt;
-          zero_amt.set_commodity(*comm);
-          bal.amounts.insert({comm, zero_amt});
-        }
-      };
-
-      for (const post_t* post : acct->posts)
-        augment(post);
-      if (acct->has_xdata()) {
-        for (const post_t* post : acct->xdata().reported_posts)
-          augment(post);
-      }
-
-      // Only replace the result if we actually added zero entries.
-      if (!bal.is_empty() && (result.is_balance() || result.is_amount() || result.is_null() ||
-                              result.type() == value_t::INTEGER))
-        return value_t(bal);
-    }
-  }
-
-  return result;
+  return display_value(args.value());
 }
 
 value_t report_t::fn_rounded(call_scope_t& args) {
@@ -1184,11 +1141,6 @@ value_t report_t::fn_justify(call_scope_t& args) {
     flags |= AMOUNT_PRINT_RIGHT_JUSTIFY;
   if (args.has<bool>(4) && args.get<bool>(4))
     flags |= AMOUNT_PRINT_COLORIZE;
-  // When --empty is active the scrub() function may have injected zero-amount
-  // entries for commodities that netted to zero; tell balance_t::print() to
-  // emit them instead of silently skipping them.
-  if (HANDLED(empty))
-    flags |= AMOUNT_PRINT_SHOW_ZEROS;
   // Optional 6th argument: widen the first/latter widths uniformly to fit
   // the widest commodity in a multi-commodity balance (used by the balance
   // report to align amounts whose rendered form overflows the nominal
@@ -1196,8 +1148,10 @@ value_t report_t::fn_justify(call_scope_t& args) {
   if (args.has<bool>(5) && args.get<bool>(5))
     flags |= AMOUNT_PRINT_FIT_TO_WIDEST;
 
+  // Colorized negative amounts are red, or whatever color --colors makes red.
   std::ostringstream out;
-  args[0].print(out, args.get<int>(1), args.has<int>(2) ? args.get<int>(2) : -1, flags);
+  args[0].print(out, args.get<int>(1), args.has<int>(2) ? args.get<int>(2) : -1, flags,
+                (flags & AMOUNT_PRINT_COLORIZE) ? color_escape("red") : string());
 
   return string_value(out.str());
 }
@@ -1333,35 +1287,126 @@ value_t report_t::fn_format_datetime(call_scope_t& args) {
     return string_value(format_datetime(args.get<datetime_t>(0), FMT_PRINTED));
 }
 
+/*--- Terminal Colors ---*/
+
+namespace {
+
+/// The colors that formats name, such as blue for account names and red for
+/// negative amounts, with the parameters of the ANSI "Select Graphic
+/// Rendition" escape sequence (ESC [ parameters m) that renders each.
+/// --colors can make any of these names stand for another color.
+const std::pair<const char*, const char*> standard_colors[] = {
+    {"black", "30"}, {"red", "31"},      {"green", "32"}, {"yellow", "33"},
+    {"blue", "34"},  {"magenta", "35"},  {"cyan", "36"},  {"white", "37"},
+    {"bold", "1"},   {"underline", "4"}, {"blink", "5"}};
+
+/// Return the SGR parameters of the standard color @p name, or nullptr if
+/// there is no such color.
+const char* standard_color(const string& name) {
+  for (const auto& [color_name, parameters] : standard_colors)
+    if (name == color_name)
+      return parameters;
+  return nullptr;
+}
+
+/// Whether @p word is a 256-color index, a number from 0 to 255.
+bool is_color_index(const string& word) {
+  return !word.empty() && word.size() <= 3 &&
+         std::all_of(word.begin(), word.end(), [](unsigned char c) { return std::isdigit(c); }) &&
+         std::stoi(word) <= 255;
+}
+
+/// Whether @p word is a 24-bit color written #RRGGBB.
+bool is_rgb_color(const string& word) {
+  return word.size() == 7 && word[0] == '#' &&
+         std::all_of(word.begin() + 1, word.end(),
+                     [](unsigned char c) { return std::isxdigit(c); });
+}
+
+/// Translate @p color into SGR parameters.  Each of its words is a color
+/// name, which means what @p palette assigns it or else the standard color;
+/// a 256-color index from 0 to 255; or a 24-bit color written #RRGGBB.  So
+/// "bold #5f87ff" becomes "1;38;2;95;135;255", and an empty color nothing.
+string sgr_parameters(const string& color, const std::map<string, string>& palette) {
+  string parameters;
+  string::size_type end = 0;
+  for (string::size_type begin = color.find_first_not_of(" \t", end); begin != string::npos;
+       begin = color.find_first_not_of(" \t", end)) {
+    end = color.find_first_of(" \t", begin);
+    const string word = color.substr(begin, end - begin);
+
+    string parameter;
+    if (auto assigned = palette.find(word); assigned != palette.end()) {
+      parameter = assigned->second;
+    } else if (const char* standard = standard_color(word)) {
+      parameter = standard;
+    } else if (is_color_index(word)) {
+      parameter = "38;5;" + std::to_string(std::stoi(word));
+    } else if (is_rgb_color(word)) {
+      parameter = "38;2;" + std::to_string(std::stoi(word.substr(1, 2), nullptr, 16)) + ";" +
+                  std::to_string(std::stoi(word.substr(3, 2), nullptr, 16)) + ";" +
+                  std::to_string(std::stoi(word.substr(5, 2), nullptr, 16));
+    } else {
+      throw_(std::runtime_error, _f("Invalid color '%1%'; expected a color name, a number from 0 "
+                                    "to 255, or #RRGGBB") %
+                                     word);
+    }
+
+    if (!parameter.empty()) {
+      if (!parameters.empty())
+        parameters += ';';
+      parameters += parameter;
+    }
+  }
+  return parameters;
+}
+
+} // namespace
+
+string report_t::color_escape(const string& color) {
+  const string parameters = sgr_parameters(color, HANDLER(colors_).palette);
+  return parameters.empty() ? string() : "\033[" + parameters + "m";
+}
+
+void report_t::assign_colors(const string& assignments, std::map<string, string>& palette) {
+  // Assign to a copy, so that a mistake leaves the palette as it was.
+  std::map<string, string> assigned(palette);
+
+  std::istringstream in(assignments);
+  string assignment;
+  while (std::getline(in, assignment, ',')) {
+    trim(assignment);
+    if (assignment.empty())
+      continue;
+
+    const string::size_type equals = assignment.find('=');
+    if (equals == string::npos)
+      throw_(option_error, _f("Invalid color assignment '%1%'; expected NAME=COLOR") % assignment);
+
+    const string name = trim_copy(assignment.substr(0, equals));
+    if (!standard_color(name))
+      throw_(option_error, _f("Invalid color name '%1%'; expected black, red, green, yellow, "
+                              "blue, magenta, cyan, white, bold, underline or blink") %
+                               name);
+
+    // The names in the color itself mean the standard colors, so that
+    // "red=green,green=red" swaps the two rather than making both green.
+    assigned[name] = sgr_parameters(assignment.substr(equals + 1), {});
+  }
+
+  palette.swap(assigned);
+}
+
 value_t report_t::fn_ansify_if(call_scope_t& args) {
-  if (args.has<string>(1)) {
-    string color = args.get<string>(1);
-    std::ostringstream buf;
-    if (color == "black")
-      buf << "\033[30m";
-    else if (color == "red")
-      buf << "\033[31m";
-    else if (color == "green")
-      buf << "\033[32m";
-    else if (color == "yellow")
-      buf << "\033[33m";
-    else if (color == "blue")
-      buf << "\033[34m";
-    else if (color == "magenta")
-      buf << "\033[35m";
-    else if (color == "cyan")
-      buf << "\033[36m";
-    else if (color == "white")
-      buf << "\033[37m";
-    else if (color == "bold")
-      buf << "\033[1m";
-    else if (color == "underline")
-      buf << "\033[4m";
-    else if (color == "blink")
-      buf << "\033[5m";
-    buf << args[0];
-    buf << "\033[0m";
-    return string_value(buf.str());
+  // A null color, as "blue if color" yields when color is off, leaves the
+  // value alone, as does a boolean, which is a condition and not a color.
+  if (args.has<string>(1) && !args[1].is_boolean()) {
+    const string escape = color_escape(args.get<string>(1));
+    if (!escape.empty()) {
+      std::ostringstream buf;
+      buf << escape << args[0] << "\033[0m";
+      return string_value(buf.str());
+    }
   }
   return args[0];
 }
@@ -1722,6 +1767,7 @@ option_t<report_t>* report_t::lookup_option(const char* p) {
     else OPT(collapse_if_);
     else OPT(collapse_if_zero);
     else OPT(color);
+    else OPT(colors_);
     else OPT(columns_);
     else OPT_ALT(basis, cost);
     else OPT_(current);

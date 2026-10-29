@@ -54,11 +54,11 @@
 test bal --pivot-only Invoice --flat --empty
            25.00 GBP  Assets:Cash
           -25.00 GBP  Equity:Opening balance
-            0.00 GBP  Invoice:101
-            0.00 GBP  Invoice:102
-            0.00 GBP  Invoice:103
-            0.00 GBP  Invoice:104
-            0.00 GBP  Invoice:105
+                   0  Invoice:101
+                   0  Invoice:102
+                   0  Invoice:103
+                   0  Invoice:104
+                   0  Invoice:105
 --------------------
                    0
 end test
@@ -67,10 +67,10 @@ test bal --pivot-only Invoice --empty -p "until 2014-05-05"
            25.00 GBP  Assets:Cash
           -25.00 GBP  Equity:Opening balance
                    0  Invoice
-            0.00 GBP    101
-            0.00 GBP    102
-            0.00 GBP    103
-            0.00 GBP    104
+                   0    101
+                   0    102
+                   0    103
+                   0    104
 --------------------
                    0
 end test
@@ -78,10 +78,10 @@ end test
 test bal --pivot-only Customer --empty
            25.00 GBP  Assets:Cash
                    0  Customer
-            0.00 GBP    AAA
-            0.00 GBP    BBB
-            0.00 GBP    CCC
-            0.00 GBP    DDD
+                   0    AAA
+                   0    BBB
+                   0    CCC
+                   0    DDD
           -25.00 GBP  Equity:Opening balance
 --------------------
                    0
@@ -90,9 +90,9 @@ end test
 test bal --pivot-only Customer --empty -p "until 2014-05-05"
            25.00 GBP  Assets:Cash
                    0  Customer
-            0.00 GBP    AAA
-            0.00 GBP    BBB
-            0.00 GBP    CCC
+                   0    AAA
+                   0    BBB
+                   0    CCC
           -25.00 GBP  Equity:Opening balance
 --------------------
                    0

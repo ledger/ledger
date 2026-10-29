@@ -78,7 +78,7 @@ end test
 
 ; ... while the balance total nets to exactly zero (shown via --empty) ...
 test --exchange "A" --empty bal Assets:Swap
-                 0 A  Assets:Swap
+                   0  Assets:Swap
 end test
 
 ; ... and --dc shows both legs of the swap.

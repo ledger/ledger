@@ -3596,8 +3596,17 @@ BOOST_AUTO_TEST_CASE(testPrintNegativeIntegerColorize)
 {
   value_t v1(-42L);
   std::ostringstream out;
-  v1.print(out, 10, -1, AMOUNT_PRINT_COLORIZE);
-  BOOST_CHECK(!out.str().empty());
+  v1.print(out, 10, -1, AMOUNT_PRINT_COLORIZE, "\033[31m");
+  BOOST_CHECK_EQUAL(out.str(), "\033[31m-42\033[0m       ");
+
+  std::ostringstream right;
+  v1.print(right, 10, -1, AMOUNT_PRINT_COLORIZE | AMOUNT_PRINT_RIGHT_JUSTIFY, "\033[31m");
+  BOOST_CHECK_EQUAL(right.str(), "       \033[31m-42\033[0m");
+
+  // Without a color to render it in, the number is printed plainly.
+  std::ostringstream plain;
+  v1.print(plain, 10, -1, AMOUNT_PRINT_COLORIZE | AMOUNT_PRINT_RIGHT_JUSTIFY);
+  BOOST_CHECK_EQUAL(plain.str(), "       -42");
 }
 
 BOOST_AUTO_TEST_CASE(testPrintIntegerLeftJustify)
@@ -3628,8 +3637,14 @@ BOOST_AUTO_TEST_CASE(testPrintNonZeroAmountColorize)
 {
   value_t v1(amount_t("-$42.00"));
   std::ostringstream out;
-  v1.print(out, 10, -1, AMOUNT_PRINT_COLORIZE);
-  BOOST_CHECK(!out.str().empty());
+  v1.print(out, 10, -1, AMOUNT_PRINT_COLORIZE | AMOUNT_PRINT_RIGHT_JUSTIFY, "\033[38;5;196m");
+  BOOST_CHECK_EQUAL(out.str(), "   \033[38;5;196m$-42.00\033[0m");
+
+  // A positive amount is not colored.
+  value_t v2(amount_t("$42.00"));
+  std::ostringstream positive;
+  v2.print(positive, 10, -1, AMOUNT_PRINT_COLORIZE | AMOUNT_PRINT_RIGHT_JUSTIFY, "\033[38;5;196m");
+  BOOST_CHECK_EQUAL(positive.str(), "    $42.00");
 }
 
 BOOST_AUTO_TEST_CASE(testPrintNonZeroAmountRightJustify)
@@ -4475,6 +4490,29 @@ BOOST_AUTO_TEST_CASE(testIsEqualToMask)
   value_t v1(mask_t("foo.*"));
   value_t v2(mask_t("foo.*"));
   BOOST_CHECK(v1 == v2);
+}
+
+BOOST_AUTO_TEST_CASE(testMaskEquality)
+{
+  // Masks are equal when their compiled patterns and flags are.
+  BOOST_CHECK(mask_t("caf\xc3\xa9") == mask_t("caf\xc3\xa9"));
+  BOOST_CHECK(!(mask_t("caf\xc3\xa9") == mask_t("cafe")));
+  BOOST_CHECK(!(mask_t("abc") == mask_t("ABC")));
+
+  mask_t glob; // compiled case-sensitively, unlike mask_t("abc")
+  glob.assign_glob("abc");
+  BOOST_CHECK(!(glob == mask_t("abc")));
+
+  // A default mask has no pattern at all, so it differs from a compiled
+  // empty pattern even when the flags agree (an empty glob's are zero too).
+  mask_t empty_glob;
+  empty_glob.assign_glob("");
+  mask_t empty_glob2;
+  empty_glob2.assign_glob("");
+  BOOST_CHECK(mask_t() == mask_t());
+  BOOST_CHECK(empty_glob == empty_glob2);
+  BOOST_CHECK(!(mask_t() == empty_glob));
+  BOOST_CHECK(!(empty_glob == mask_t()));
 }
 
 BOOST_AUTO_TEST_CASE(testIsEqualToSequence)

@@ -172,6 +172,18 @@ components with their standard-library equivalents.
 
 ### Reporting and Display Improvements
 
+- `--flat` now lists each account with its own amount rather than the total
+  of the account and its sub-accounts (#1987), which changes the output of
+  existing reports.  An account with postings of its own as well as
+  sub-accounts used to show its family total, counting the sub-accounts'
+  amounts a second time, so the lines did not add up to the total beneath
+  them.  An account whose sub-accounts are all hidden, for example by
+  `--depth`, shows its family total instead, and is no longer left out when
+  it has no postings of its own (#1020).  This affects `balance`, `cleared`,
+  `budget`, and `select ... from accounts`, but not posting reports such as
+  `register`, and an explicit `--total` or `--percent` still takes
+  precedence.  Use the tree view, without `--flat`, to see family totals.
+
 - Optimize the `register` command for a 46% speedup on large journals (≈50K
   postings: 6.0s → 3.3s on the benchmark) by short-circuiting the trivial
   `amount` expression, exploiting `strip(A+B) = strip(A)+strip(B)` to maintain
@@ -189,16 +201,23 @@ components with their standard-library equivalents.
 - Align multi-commodity balance rows with wide decimals (#1795); fix
   multi-commodity balance formatting width (#698); make separator lines adapt
   to `amount_width`; show the payee when it changes between sorted postings;
-  show zero commodity amounts with `--empty` in the balance report (extending
-  #2204); preserve virtual posting flags in `equity` output
+  preserve virtual posting flags in `equity` output
 
 - Sort by converted value when `-X` is active (#1556); sort parent accounts by
-  family total (#723); allow `--sort` and `--sort-xacts` together; show the
-  own amount instead of the family total in `--flat` balance mode
+  family total (#723); allow `--sort` and `--sort-xacts` together
 
 - Enable ANSI color on Windows CMD/PowerShell (#2110); fix `justify()` to
-  ignore ANSI escape codes when computing width; flush stdout after each REPL
-  command (#991)
+  ignore ANSI escape codes when computing width, and to pad a negative integer
+  that it colors only once; flush stdout after each REPL command (#991)
+
+- Add `--colors NAME=COLOR,...` to change what the colors that report formats
+  name look like (#589): `--colors 'blue=#5f87ff,red=bold 196'` shows account
+  names in a lighter blue and negative amounts in a bold, bright red.  A
+  color, there or as the color argument of `ansify_if()`, can now be a
+  256-color index (0-255) or a 24-bit `#RRGGBB` value as well as a standard
+  name, and several such words combine.  Like other options, `--colors` can
+  be set in `~/.ledgerrc` or through `LEDGER_COLORS`.  `ansify_if()` now
+  reports an unknown color as an error instead of leaving the text uncolored
 
 - Fix percentage amounts to act as fractions in arithmetic; fix `width`
   options to return integers for expression arithmetic; fix the `truncated()`
@@ -237,7 +256,7 @@ components with their standard-library equivalents.
   command-line account queries (#1154), with built-in properties (#1048), and
   with tag-based grouping (#1042); fix `--group-by` combined with `--pivot`
   dropping subsequent groups (#1034); fix `--depth` interacting with
-  `--effective` and with `--flat`; fix `--only` so it applies after
+  `--effective` (#2599); fix `--only` so it applies after
   `calc_posts` and does not alter running totals (#762); compute per-account
   averages for period reports (#1950); anchor interval averages to the report
   begin date
@@ -405,6 +424,10 @@ components with their standard-library equivalents.
   `CMAKE_OSX_SYSROOT` for reproducible macOS builds; add code-coverage tools
   to the Nix development environment
 
+- Fix the build with ICU against LLVM's libc++ 19 or later, as on FreeBSD
+  15.1, which rejects the `std::basic_string<UChar32>` that Boost.Regex's
+  `u32regex` uses for `str()` and, before Boost 1.89, for comparisons (#3276)
+
 ### Testing and Coverage
 
 - Add 419 new regression tests, raising source-code coverage to 89.6%, and
@@ -440,8 +463,6 @@ components with their standard-library equivalents.
 ## 3.4.1
 
 - Fix version number in binary
-
-- Fix crash in optimized builds when exceptions are thrown (issue #693)
 
 ## 3.4.0
 
