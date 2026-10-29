@@ -1,0 +1,21 @@
+; The sales of 3301.test with the gain left for Ledger to complete.  It
+; completes each gain against the lot basis, to the figures 3301.test
+; writes out, not to the sum of per-posting gains rounded to two places
+; (-38525.83 and -262.92).
+
+2018-09-24 * Sold
+    Assets:Current                                     92836.79 EUR
+    Income:Capital gains
+    Assets:Investments       -1391 FOO {21.802871170463472 EUR} [2018-09-24] @ 37.2680 EUR
+    Assets:Investments       -1100 FOO {21.802871170463472 EUR} [2018-09-24] @ 37.2700 EUR
+
+2018-09-24 * Sold FOO
+    Assets:Current                            633.56 EUR
+    Income:Capital gains
+    Assets:Investments       -13 FOO {21.802871170463472 EUR} [2018-09-24] @ 37.2680 EUR
+    Assets:Investments        -4 FOO {21.802871170463472 EUR} [2018-09-24] @ 37.2700 EUR
+
+test reg Income
+18-Sep-24 Sold                  Income:Capital gains   -38525.84 EUR -38525.84 EUR
+18-Sep-24 Sold FOO              Income:Capital gains    -262.91 EUR -38788.75 EUR
+end test

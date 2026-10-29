@@ -1,0 +1,43 @@
+; The sales of 3301.test with each gain a cent off.  Against the lot
+; basis they are out of balance by a cent, so both are rejected; summing
+; per-posting gains already rounded to two places had accepted them.
+
+2018-09-24 * Sold
+    Assets:Current                                     92836.79 EUR
+    Income:Capital gains                              -38525.83 EUR
+    Assets:Investments       -1391 FOO {21.802871170463472 EUR} [2018-09-24] @ 37.2680 EUR
+    Assets:Investments       -1100 FOO {21.802871170463472 EUR} [2018-09-24] @ 37.2700 EUR
+
+2018-09-24 * Sold FOO
+    Assets:Current                            633.56 EUR
+    Income:Capital gains                     -262.92 EUR
+    Assets:Investments       -13 FOO {21.802871170463472 EUR} [2018-09-24] @ 37.2680 EUR
+    Assets:Investments        -4 FOO {21.802871170463472 EUR} [2018-09-24] @ 37.2700 EUR
+
+test bal -> 2
+__ERROR__
+While parsing file "$FILE", line 9:
+While balancing transaction from "$FILE", lines 5-9:
+> 2018-09-24 * Sold
+>     Assets:Current                                     92836.79 EUR
+>     Income:Capital gains                              -38525.83 EUR
+>     Assets:Investments       -1391 FOO {21.802871170463472 EUR} [2018-09-24] @ 37.2680 EUR
+>     Assets:Investments       -1100 FOO {21.802871170463472 EUR} [2018-09-24] @ 37.2700 EUR
+Unbalanced remainder is:
+            0.01 EUR
+Amount to balance against:
+        92836.79 EUR
+Error: Transaction does not balance
+While parsing file "$FILE", line 15:
+While balancing transaction from "$FILE", lines 11-15:
+> 2018-09-24 * Sold FOO
+>     Assets:Current                            633.56 EUR
+>     Income:Capital gains                     -262.92 EUR
+>     Assets:Investments       -13 FOO {21.802871170463472 EUR} [2018-09-24] @ 37.2680 EUR
+>     Assets:Investments        -4 FOO {21.802871170463472 EUR} [2018-09-24] @ 37.2700 EUR
+Unbalanced remainder is:
+           -0.01 EUR
+Amount to balance against:
+          633.56 EUR
+Error: Transaction does not balance
+end test
