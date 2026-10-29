@@ -309,7 +309,8 @@ commodity_t& commodity_t::nail_down(const expr_t& expr) {
   new_details.value_expr = expr;
   new_details.add_flags(ANNOTATION_VALUE_EXPR_CALCULATED);
 
-  return *pool().find_or_create(symbol(), new_details);
+  // The pool knows a commodity by its bare symbol; symbol() may add quotes.
+  return *pool().find_or_create(base_symbol(), new_details);
 }
 
 commodity_t::operator bool() const {
@@ -386,7 +387,9 @@ bool commodity_t::symbol_needs_quotes(const string& symbol) {
     if (invalid_chars[static_cast<unsigned char>(ch)])
       return true;
 
-  return false;
+  // parse_symbol does not read a reserved word as a bare symbol, so a
+  // commodity with such a name must be printed in quotes to be read back.
+  return is_reserved_token(symbol.c_str());
 }
 
 /**
