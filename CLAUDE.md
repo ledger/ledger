@@ -60,7 +60,8 @@ python test/RegressTests.py --ledger ./build/ledger \
 ```
 
 Python 3.10+ is required to run the test harness. All tests run with
-`TZ=America/Chicago`.
+`TZ=America/Chicago`, and `RegressTests.py` runs each test as of
+`--now 2030/06/15` unless the test passes its own `--now`.
 
 The `SemanticBisimulation` ctest replays every positive test journal
 against the Lean oracle in the `lean/` submodule
@@ -166,6 +167,11 @@ Key details:
 - `__ERROR__` marks expected stderr output within a test block
 - `$FILE` is replaced with the test file path at runtime
 - Multiple `test`/`end test` blocks can appear in one file
+- Expected output must not depend on the day the suite runs. Dates written
+  without a year, `today` and `now`, relative periods, `budget`,
+  `--forecast`, `--current` and `stats` all read the clock, so pin it in
+  the test command with `--now` (or bound the report with `--end`); the
+  harness's default date is only a fallback
 
 ### Regression Test Naming
 

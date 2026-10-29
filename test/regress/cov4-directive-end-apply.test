@@ -1,5 +1,7 @@
 ; Test end apply directive
 ; Exercise the 'end' directive through general_directive
+; 01/15 has no year, so it falls in the current year, which the test pins
+; with --now.
 
 apply account Expenses
 
@@ -13,7 +15,7 @@ end apply account
     Income:Salary    $100.00
     Assets:Cash
 
-test reg
+test reg --now 2026/03/04
 26-Jan-15 Test                  Expenses:Food                $10.00       $10.00
                                 Expenses:Assets:Cash        $-10.00            0
 24-Jan-16 Test2                 Income:Salary               $100.00      $100.00

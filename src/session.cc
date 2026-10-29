@@ -90,7 +90,8 @@ void set_session_context(session_t* session) {
 
 /*--- Construction ---*/
 
-session_t::session_t() : flush_on_next_data_file(false), journal(new journal_t) {
+session_t::session_t()
+    : flush_on_next_data_file(false), use_default_price_db(true), journal(new journal_t) {
   // Push an initial (empty) parsing context so that the stack is never
   // empty during the session's lifetime.
   parsing_context.push();
@@ -145,18 +146,20 @@ std::size_t session_t::read_data(const string& master_account) {
   else
     acct = journal->find_account(master_account);
 
-  // Resolve the price database path
+  // Resolve the price database path: the --price-db file, which must exist,
+  // or else, while use_default_price_db is set (--args-only clears it),
+  // ~/.pricedb (./.pricedb without HOME), read only if it exists.
   optional<path> price_db_path;
   if (HANDLED(price_db_)) {
     price_db_path = resolve_path(HANDLER(price_db_).str());
     if (!exists(price_db_path.get())) {
       throw_(parse_error, _f("Could not find specified price-db file %1%") % price_db_path);
     }
-  } else {
+  } else if (use_default_price_db) {
     if (const char* home_var = std::getenv("HOME")) {
       price_db_path = (path(home_var) / ".pricedb");
     } else {
-      price_db_path = ("./.ledgerrc");
+      price_db_path = ("./.pricedb");
     }
   }
 

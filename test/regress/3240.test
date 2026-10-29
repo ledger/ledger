@@ -1,0 +1,31 @@
+; Regression test for #3240: expected output that depended on the day the
+; suite ran -- a budget accruing up to today, a date written without a
+; year -- stopped matching as the calendar moved on.  Unless a test passes
+; its own --now, test/RegressTests.py runs ledger as of 2030/06/15, so each
+; of these reports is the same on every run.
+
+~ monthly
+    Expenses:Rent    $500.00
+    Assets:Cash
+
+2026/01/01 Landlord
+    Expenses:Rent    $500.00
+    Assets:Cash
+
+1/15 Grocer
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test eval today
+2030/06/15
+end test
+
+; The budget accrues every month up to the current one.
+test budget Rent
+     $500.00    $27000.00   $-26500.00    2%  Expenses:Rent
+end test
+
+; A date written without a year falls in the current year.
+test reg Food
+30-Jan-15 Grocer                Expenses:Food                $20.00       $20.00
+end test

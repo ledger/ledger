@@ -243,7 +243,7 @@ See LICENSE file included with the distribution for details and disclaimer.");
   /// "push"/"pop" pre-commands defined at the global level.
   expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 
-  OPTION(global_scope_t, args_only); ///< Skip init file and environment processing
+  OPTION(global_scope_t, args_only); ///< Skip init file, environment and default price database
   OPTION(global_scope_t, debug_);    ///< Enable debug logging for a category
 
   /// Open the ledger(1) man page via fork/exec.

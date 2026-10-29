@@ -1148,8 +1148,10 @@ value_t report_t::fn_justify(call_scope_t& args) {
   if (args.has<bool>(5) && args.get<bool>(5))
     flags |= AMOUNT_PRINT_FIT_TO_WIDEST;
 
+  // Colorized negative amounts are red, or whatever color --colors makes red.
   std::ostringstream out;
-  args[0].print(out, args.get<int>(1), args.has<int>(2) ? args.get<int>(2) : -1, flags);
+  args[0].print(out, args.get<int>(1), args.has<int>(2) ? args.get<int>(2) : -1, flags,
+                (flags & AMOUNT_PRINT_COLORIZE) ? color_escape("red") : string());
 
   return string_value(out.str());
 }
@@ -1285,35 +1287,126 @@ value_t report_t::fn_format_datetime(call_scope_t& args) {
     return string_value(format_datetime(args.get<datetime_t>(0), FMT_PRINTED));
 }
 
+/*--- Terminal Colors ---*/
+
+namespace {
+
+/// The colors that formats name, such as blue for account names and red for
+/// negative amounts, with the parameters of the ANSI "Select Graphic
+/// Rendition" escape sequence (ESC [ parameters m) that renders each.
+/// --colors can make any of these names stand for another color.
+const std::pair<const char*, const char*> standard_colors[] = {
+    {"black", "30"}, {"red", "31"},      {"green", "32"}, {"yellow", "33"},
+    {"blue", "34"},  {"magenta", "35"},  {"cyan", "36"},  {"white", "37"},
+    {"bold", "1"},   {"underline", "4"}, {"blink", "5"}};
+
+/// Return the SGR parameters of the standard color @p name, or nullptr if
+/// there is no such color.
+const char* standard_color(const string& name) {
+  for (const auto& [color_name, parameters] : standard_colors)
+    if (name == color_name)
+      return parameters;
+  return nullptr;
+}
+
+/// Whether @p word is a 256-color index, a number from 0 to 255.
+bool is_color_index(const string& word) {
+  return !word.empty() && word.size() <= 3 &&
+         std::all_of(word.begin(), word.end(), [](unsigned char c) { return std::isdigit(c); }) &&
+         std::stoi(word) <= 255;
+}
+
+/// Whether @p word is a 24-bit color written #RRGGBB.
+bool is_rgb_color(const string& word) {
+  return word.size() == 7 && word[0] == '#' &&
+         std::all_of(word.begin() + 1, word.end(),
+                     [](unsigned char c) { return std::isxdigit(c); });
+}
+
+/// Translate @p color into SGR parameters.  Each of its words is a color
+/// name, which means what @p palette assigns it or else the standard color;
+/// a 256-color index from 0 to 255; or a 24-bit color written #RRGGBB.  So
+/// "bold #5f87ff" becomes "1;38;2;95;135;255", and an empty color nothing.
+string sgr_parameters(const string& color, const std::map<string, string>& palette) {
+  string parameters;
+  string::size_type end = 0;
+  for (string::size_type begin = color.find_first_not_of(" \t", end); begin != string::npos;
+       begin = color.find_first_not_of(" \t", end)) {
+    end = color.find_first_of(" \t", begin);
+    const string word = color.substr(begin, end - begin);
+
+    string parameter;
+    if (auto assigned = palette.find(word); assigned != palette.end()) {
+      parameter = assigned->second;
+    } else if (const char* standard = standard_color(word)) {
+      parameter = standard;
+    } else if (is_color_index(word)) {
+      parameter = "38;5;" + std::to_string(std::stoi(word));
+    } else if (is_rgb_color(word)) {
+      parameter = "38;2;" + std::to_string(std::stoi(word.substr(1, 2), nullptr, 16)) + ";" +
+                  std::to_string(std::stoi(word.substr(3, 2), nullptr, 16)) + ";" +
+                  std::to_string(std::stoi(word.substr(5, 2), nullptr, 16));
+    } else {
+      throw_(std::runtime_error, _f("Invalid color '%1%'; expected a color name, a number from 0 "
+                                    "to 255, or #RRGGBB") %
+                                     word);
+    }
+
+    if (!parameter.empty()) {
+      if (!parameters.empty())
+        parameters += ';';
+      parameters += parameter;
+    }
+  }
+  return parameters;
+}
+
+} // namespace
+
+string report_t::color_escape(const string& color) {
+  const string parameters = sgr_parameters(color, HANDLER(colors_).palette);
+  return parameters.empty() ? string() : "\033[" + parameters + "m";
+}
+
+void report_t::assign_colors(const string& assignments, std::map<string, string>& palette) {
+  // Assign to a copy, so that a mistake leaves the palette as it was.
+  std::map<string, string> assigned(palette);
+
+  std::istringstream in(assignments);
+  string assignment;
+  while (std::getline(in, assignment, ',')) {
+    trim(assignment);
+    if (assignment.empty())
+      continue;
+
+    const string::size_type equals = assignment.find('=');
+    if (equals == string::npos)
+      throw_(option_error, _f("Invalid color assignment '%1%'; expected NAME=COLOR") % assignment);
+
+    const string name = trim_copy(assignment.substr(0, equals));
+    if (!standard_color(name))
+      throw_(option_error, _f("Invalid color name '%1%'; expected black, red, green, yellow, "
+                              "blue, magenta, cyan, white, bold, underline or blink") %
+                               name);
+
+    // The names in the color itself mean the standard colors, so that
+    // "red=green,green=red" swaps the two rather than making both green.
+    assigned[name] = sgr_parameters(assignment.substr(equals + 1), {});
+  }
+
+  palette.swap(assigned);
+}
+
 value_t report_t::fn_ansify_if(call_scope_t& args) {
-  if (args.has<string>(1)) {
-    string color = args.get<string>(1);
-    std::ostringstream buf;
-    if (color == "black")
-      buf << "\033[30m";
-    else if (color == "red")
-      buf << "\033[31m";
-    else if (color == "green")
-      buf << "\033[32m";
-    else if (color == "yellow")
-      buf << "\033[33m";
-    else if (color == "blue")
-      buf << "\033[34m";
-    else if (color == "magenta")
-      buf << "\033[35m";
-    else if (color == "cyan")
-      buf << "\033[36m";
-    else if (color == "white")
-      buf << "\033[37m";
-    else if (color == "bold")
-      buf << "\033[1m";
-    else if (color == "underline")
-      buf << "\033[4m";
-    else if (color == "blink")
-      buf << "\033[5m";
-    buf << args[0];
-    buf << "\033[0m";
-    return string_value(buf.str());
+  // A null color, as "blue if color" yields when color is off, leaves the
+  // value alone, as does a boolean, which is a condition and not a color.
+  if (args.has<string>(1) && !args[1].is_boolean()) {
+    const string escape = color_escape(args.get<string>(1));
+    if (!escape.empty()) {
+      std::ostringstream buf;
+      buf << escape << args[0] << "\033[0m";
+      return string_value(buf.str());
+    }
   }
   return args[0];
 }
@@ -1674,6 +1767,7 @@ option_t<report_t>* report_t::lookup_option(const char* p) {
     else OPT(collapse_if_);
     else OPT(collapse_if_zero);
     else OPT(color);
+    else OPT(colors_);
     else OPT(columns_);
     else OPT_ALT(basis, cost);
     else OPT_(current);
