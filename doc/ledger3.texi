@@ -2412,6 +2412,9 @@ usefully from a @command{balance} format string -- through the
 Tag lookups walk up the account hierarchy, so a tag declared on a
 parent account is inherited by its children unless they redeclare it.
 
+An indented line that begins with any other word is an error, so that
+a misspelled sub-directive is reported rather than ignored.
+
 @item apply account
 @findex apply account
 @c instance_t::master_account_directive
@@ -2618,6 +2621,10 @@ symbol is to use the commodity declared in this block.
 
 The @code{default} sub-directive marks this as the ``default'' commodity.
 
+Comment lines may appear among these sub-directives.  An indented line
+that begins with any other word is an error, so that a misspelled
+sub-directive is reported rather than ignored.
+
 @item define
 @findex define
 @c instance_t::define_directive in textual.cc
@@ -2683,6 +2690,10 @@ the uuid given should have the declared payee name substituted:
 
 Ledger will display the mapped payees in @command{print} and
 @command{register} reports.
+
+Comment lines may appear among these sub-directives.  An indented line
+that begins with any other word is an error, so that a misspelled
+sub-directive is reported rather than ignored.
 
 @item apply tag
 @findex apply tag
@@ -2769,6 +2780,10 @@ the context of any use of the related tag.  In such a context,
 ``value'' is bound to the value of the tag (which may be something else
 but a string if typed metadata is used!).  Such checks or assertions are
 not called if no value is given.
+
+Comment lines may appear among these sub-directives.  An indented line
+that begins with any other word is an error, so that a misspelled
+sub-directive is reported rather than ignored.
 
 @item test
 @findex test
