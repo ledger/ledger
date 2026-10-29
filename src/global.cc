@@ -327,8 +327,11 @@ int global_scope_t::execute_command_wrapper(strings_list args, bool at_repl) {
     // just type "catch throw" to find the source point of any error.
     status = 0;
   } catch (const std::exception& err) {
-    if (at_repl)
+    if (at_repl) {
+      // Failed reports can leave cached totals and display flags in the journal.
+      session().journal->clear_xdata();
       pop_report();
+    }
     report_error(err);
   }
 
