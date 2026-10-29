@@ -608,8 +608,16 @@ void instance_t::account_directive_body(char* line, account_t* parent, std::size
   std::size_t beg_linenum = context.linenum;
 
   char* p = skip_ws(line);
+  // A ';' after a hard separator begins a comment, as it does after a
+  // transaction's payee, and the account name ends before it (issue
+  // #3320).  A ';' after a single space is part of the name, as it is in
+  // a posting.  The comment carries metadata for the account, as a comment
+  // line beneath the directive does.
+  char* comment = split_inline_note(p);
   account_t* account = context.journal->register_account(p, nullptr, parent);
   account->add_flags(ACCOUNT_KNOWN);
+  if (comment)
+    account->parse_tags(skip_ws(comment), *context.scope, true);
   unique_ptr<auto_xact_t> ae;
 
   while (true) {

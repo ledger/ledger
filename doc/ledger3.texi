@@ -2412,6 +2412,27 @@ usefully from a @command{balance} format string -- through the
 Tag lookups walk up the account hierarchy, so a tag declared on a
 parent account is inherited by its children unless they redeclare it.
 
+A comment may also follow the account name on the directive's own
+line, after a hard separator (@pxref{Transaction notes}): at least two
+spaces, or a tab, as before a note on a transaction's first line.  Its
+tags are declared for the account just as a comment line's are.  A
+semicolon after a single space is part of the account name, as it is
+in a posting:
+
+@smallexample @c input:8B8AC69
+account Assets:Checking  ; type: Asset
+account Expenses:Food ; Dining
+@end smallexample
+
+@smallexample @c command:8B8AC69
+$ ledger -f declare.dat accounts
+@end smallexample
+
+@smallexample @c output:8B8AC69
+Assets:Checking
+Expenses:Food ; Dining
+@end smallexample
+
 @item apply account
 @findex apply account
 @c instance_t::master_account_directive
