@@ -106,6 +106,14 @@ if(Python_EXECUTABLE)
   set_tests_properties(CheckEnvVars
     PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}")
 
+  # Regression test for GitHub issue #3294: --args-only reads no default price
+  # database, and without HOME the default is ./.pricedb, not ./.ledgerrc.
+  # Like CheckEnvVars it runs ledger itself, because it must control HOME and
+  # the working directory, which the .test harness cannot.
+  add_test(NAME RegressPyTest_3294
+    COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/regress/3294.py
+    $<TARGET_FILE:ledger>)
+
   # CheckManpage and CheckTexinfo are disabled, since they do not work
   # reliably yet
   list(APPEND CheckOptions CheckBaselineTests)

@@ -151,6 +151,13 @@ components with their standard-library equivalents.
   `--account-value-expr` and `--commodity-value-expr` options for custom
   valuations; expose a `capital_gain` value expression variable
 
+- Stop `--args-only` from reading prices from `~/.pricedb`, which it is meant
+  to skip along with the init file and environment; pass
+  `--price-db ~/.pricedb` to keep reading it (#3294).  When `HOME` is not set,
+  look for the default price database in `./.pricedb` rather than
+  `./.ledgerrc`, which was also being parsed as price history, even under
+  `--args-only`, so that a `--file` in it replaced the journal named by `-f`
+
 ### Balance, Assertions, and Assignments
 
 - Filter balance assertions by date rather than file order; skip balance

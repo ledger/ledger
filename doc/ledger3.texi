@@ -6961,7 +6961,8 @@ sessions with multiple reports per session.
 
 @item --args-only
 Ignore all environment and init-file settings and
-use only command-line arguments to control Ledger.  Useful for debugging
+use only command-line arguments to control Ledger.  The default price
+database, @file{~/.pricedb}, is not read either.  Useful for debugging
 or testing small journal files not associated with your main financial
 database.
 
@@ -7194,7 +7195,9 @@ Accounts, tags or commodities not previously declared will cause errors.
 Quiet balance assertions.
 
 @item --price-db @var{FILE}
-Specify the location of the price entry data file.
+Specify the location of the price entry data file.  Without this option,
+@file{~/.pricedb} is read if it exists, or @file{./.pricedb} if
+@env{HOME} is not set, unless @option{--args-only} is given.
 
 @item --price-exp @var{DURATION}
 @itemx --leeway @var{DURATION}
@@ -12763,7 +12766,8 @@ use to a user trying something new.
 @ftable @option
 
 @item --args-only
-Ignore init files and environment variables for the ledger run.
+Ignore init files, environment variables and the default price database
+for the ledger run.
 
 @item --debug @var{CODE}
 If Ledger has been built with debug options this will provide extra
