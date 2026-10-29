@@ -14,9 +14,9 @@ While balancing transaction from "$FILE", lines 4-7:
 >     Expenses:Food    $10.00
 >     Assets:Cash      $-10.00
 >     [Budget:Food]    $5.00
-Unbalanced remainder is:
+Unbalanced remainder of balanced virtual postings is:
                $5.00
 Amount to balance against:
-              $15.00
+               $5.00
 Error: Transaction does not balance
 end test

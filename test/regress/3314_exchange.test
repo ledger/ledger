@@ -1,0 +1,47 @@
+; Regression test for GitHub issue #3314: the balanced virtual postings of
+; a transaction, in [brackets], balance as a transaction of their own.
+; Holding two commodities and no cost, they imply an exchange rate just
+; as real postings do, and the rate that the real postings imply depends
+; on the real postings alone.  Each group prices its own postings: the
+; real ones change money at $1.10 a euro, the bracketed ones at $1.20.
+; A cost written in one group leaves the other group to imply its own.
+
+2020-01-01 Budget in euros
+    [Budget:Travel]                   100.00 EUR
+    [Budget:Checking]                $-110.00
+
+2020-01-02 Change money
+    [Budget:Travel]                   -50.00 EUR
+    Assets:Wallet                      50.00 EUR
+    Assets:Checking                   $-55.00
+    [Budget:Checking]                  $60.00
+
+2020-01-03 Buy shares
+    Assets:Brokerage                    10 MSFT @ $200.00
+    Assets:Checking                 $-2000.00
+    [Budget:Shares]                     10 MSFT
+    [Budget:Checking]               $-2000.00
+
+test bal --flat
+             10 MSFT  Assets:Brokerage
+           $-2055.00  Assets:Checking
+           50.00 EUR  Assets:Wallet
+           $-2050.00  Budget:Checking
+             10 MSFT  Budget:Shares
+           50.00 EUR  Budget:Travel
+--------------------
+           $-4105.00
+          100.00 EUR
+             20 MSFT
+end test
+
+test bal --flat --basis
+            $2000.00  Assets:Brokerage
+           $-2055.00  Assets:Checking
+              $55.00  Assets:Wallet
+           $-2050.00  Budget:Checking
+            $2000.00  Budget:Shares
+              $50.00  Budget:Travel
+--------------------
+                   0
+end test

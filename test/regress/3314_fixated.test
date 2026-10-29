@@ -1,0 +1,24 @@
+; Regression test for GitHub issue #3314: a posting whose lot has a
+; fixated price, {=$150.00}, takes its cost from that price within its
+; own group.  Here both postings are balanced virtual ones, in
+; [brackets]; pricing the lot only when the real postings needed it left
+; this purchase unbalanced against the bracketed cash.
+
+2020-02-01 Budget for shares
+    [Budget:Shares]                     10 AAPL {=$150.00}
+    [Budget:Checking]               $-1500.00
+
+test bal --flat
+           $-1500.00  Budget:Checking
+             10 AAPL  Budget:Shares
+--------------------
+           $-1500.00
+             10 AAPL
+end test
+
+test bal --flat --basis
+           $-1500.00  Budget:Checking
+            $1500.00  Budget:Shares
+--------------------
+                   0
+end test
