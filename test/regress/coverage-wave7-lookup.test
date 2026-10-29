@@ -36,7 +36,8 @@ test reg --format "%(format_date(date, \"%Y/%m/%d\"))\n" Expenses:Food
 end test
 
 ; --- Test 5: fn_format_datetime via lookup ---
-test reg --format "%(format_datetime(now, \"%Y\"))\n" Expenses:Food
+; now is the current time, which the test pins with --now.
+test reg --format "%(format_datetime(now, \"%Y\"))\n" Expenses:Food --now 2026/02/24
 2026
 end test
 

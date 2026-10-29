@@ -39,7 +39,7 @@ class LedgerHarness:
         self.python     = python
         self.failures   = []
 
-    def run(self, command, verify=None, gmalloc=None, columns=True):
+    def run(self, command, verify=None, gmalloc=None, columns=True, now=None):
         ALLOWED_ENV_VARS = {
             'PATH', 'HOME', 'TZ', 'TZDIR', 'LANG', 'LC_ALL', 'LC_CTYPE', 'TERM',
             'TMPDIR', 'TEMP', 'TMP',
@@ -70,6 +70,8 @@ class LedgerHarness:
             cmd.append('--verify')
         if columns:
             cmd.append('--columns=80')
+        if now:
+            cmd.append(f'--now={now}')
         command = command.replace('$ledger', shlex.join(cmd))
 
         valgrind = '/usr/bin/valgrind'

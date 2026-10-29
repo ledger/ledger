@@ -13,6 +13,12 @@ from LedgerHarness import LedgerHarness
 
 harness = None
 
+# Ledger reads the clock for dates written without a year, for "today" and
+# relative periods, and for budgets, forecasts, --current and stats.  Unless
+# a test passes its own --now, run it as of this date, so that its expected
+# output does not depend on the day the suite runs (#3240).
+NOW = '2030/06/15'
+
 class RegressFile(object):
     def __init__(self, filename):
         self.filename = filename
@@ -115,7 +121,8 @@ class RegressFile(object):
             test.command = f'$ledger -f "{str(self.filename.resolve())}" {test.command}'
 
         p = harness.run(test.command,
-                        columns=(not re.search(r'--columns', test.command)))
+                        columns=(not re.search(r'--columns', test.command)),
+                        now=(None if re.search(r'--now\b', test.command) else NOW))
 
         if use_stdin:
             fd = open(self.filename, encoding='utf-8')

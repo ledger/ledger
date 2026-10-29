@@ -1,6 +1,8 @@
 ; Regression test for bug #2262: zero-amount budget posting causes crash
 ; with --exchange option due to negating an uninitialized value.
-; This is essentially the same issue as #1542.
+;
+; --end stops the monthly budget from accruing up to today, which would
+; change the expected totals every month (#3240).
 
 ~ monthly
     Income
