@@ -583,8 +583,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
         (void)post->amount.parse(stream, PARSE_NO_REDUCE);
       else
         parse_amount_expr(stream, *context.scope, *post.get(), post->amount,
-                          PARSE_NO_REDUCE | PARSE_SINGLE | PARSE_NO_ASSIGN, defer_expr,
-                          &post->amount_expr);
+                          PARSE_NO_REDUCE | PARSE_SINGLE, defer_expr, &post->amount_expr);
 
       DEBUG("textual.parse", "line " << context.linenum << ": "
                                      << "post amount = " << post->amount);
@@ -691,7 +690,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
               (void)post->cost->parse(cstream, PARSE_NO_MIGRATE);
             else
               parse_amount_expr(cstream, *context.scope, *post.get(), *post->cost,
-                                PARSE_NO_MIGRATE | PARSE_SINGLE | PARSE_NO_ASSIGN);
+                                PARSE_NO_MIGRATE | PARSE_SINGLE);
 
             if (post->cost->sign() < 0)
               throw parse_error(_("A posting's cost may not be negative"));
