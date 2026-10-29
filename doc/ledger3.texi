@@ -1829,10 +1829,75 @@ in two lines since we haven't told ledger to convert commodities.
 
 @node Naming Commodities, Buying and Selling Stock, Currency and Commodities, Currency and Commodities
 @subsection Naming Commodities
+@cindex commodity names
+@cindex quoted commodity names
 
-Commodity names can have any character, including white-space.
-However, if you include white-space or numeric characters, the
-commodity name must be enclosed in double quotes @samp{"}:
+A commodity's symbol may come before or after the number of an amount,
+with or without a space between them: @samp{$10}, @samp{EUR10} and
+@samp{10 EUR} are all amounts.  Unless it is quoted, the symbol ends at
+the first white-space character, digit, or one of these characters:
+
+@smallexample
+. , ; : ? ! - + * / ^ & | = < > ~ ( ) [ ] @{ @} @@
+@end smallexample
+
+Most of these mean something next to an amount: a digit, @samp{.} or
+@samp{,} continues its number, @samp{-} gives its sign, @samp{@@}
+begins its cost, @samp{=} a balance assertion, @samp{@{}, @samp{[} and
+@samp{(} the annotations of a lot, @samp{;} a comment, and several
+others are operators in value expressions (@pxref{Value Expressions}).
+Any other character may be part of a symbol, including letters of any
+alphabet, currency signs such as @samp{€}, and @samp{_}, so
+@samp{IBCS_DE} needs no quotes, but @samp{EXV6_DE} does.  A symbol
+also may not be one of the lower-case words @samp{and}, @samp{div},
+@samp{else}, @samp{false}, @samp{if}, @samp{not}, @samp{or} or
+@samp{true}, which belong to value expressions too.
+
+A name that breaks these rules must be enclosed in double quotes
+@samp{"}, which are not part of the name: @samp{10 "EUR"} is ten of the
+same commodity as @samp{10 EUR}.  Instead of quoting the whole name, a
+backslash may precede a single character that would otherwise end the
+symbol, so @samp{EXV\6_DE} is another way to write @samp{"EXV6_DE"}.
+
+The @code{commodity}, @code{N}, @code{P} and @code{apply fixed}
+directives name a commodity apart from any amount (@pxref{Command
+Directives}).  There a symbol ends only at white-space or at a
+@samp{;}, which begins a comment, so it may contain the other
+characters above, or be one of the words above, without quotes.  On a
+@code{P} line, though, a symbol that begins with a digit must be quoted
+unless a time of day precedes it, since Ledger would read it as the
+time, or, on a line without a date, as the date.  In this journal, two
+@code{P} lines and a posting all name @samp{EXV6_DE}:
+
+@smallexample @c input:9CEAA7F
+P 2025-04-29 EXV6_DE €48.50
+P 2025-04-30 "EXV6_DE" €48.75
+
+2025-05-02 Buy
+    Assets:Broker                   10 EXV\6_DE @@ €49.10
+    Assets:Cash
+@end smallexample
+
+When Ledger prints a symbol that an amount could not hold without
+quotes, it adds them, as @command{pricedb} does when it lists the three
+prices, the last of which comes from the posting's cost:
+
+@smallexample @c command:9CEAA7F
+$ ledger -f broker.dat pricedb
+@end smallexample
+
+@smallexample @c output:9CEAA7F
+P 2025/04/29 00:00:00 "EXV6_DE" €48.50
+P 2025/04/30 00:00:00 "EXV6_DE" €48.75
+P 2025/05/02 00:00:00 "EXV6_DE" €49.10
+@end smallexample
+
+Reports that line amounts up in columns, such as @command{balance} and
+@command{register}, leave the quotes off where a space separates a
+symbol from its number, unless the symbol consists only of digits.
+
+Between the quotes, a name may contain any of the characters above,
+and white-space too:
 
 @smallexample @c input:validate
 1999/06/09 ! Achat
@@ -2243,6 +2308,14 @@ The syntax is:
 P DATE SYMBOL PRICE
 @end smallexample
 
+A time of day, written @samp{HH:MM:SS}, may follow the @code{DATE};
+without one, the price is given as of midnight.  A line that omits the
+@code{DATE} gives the price as of the current time.  @code{SYMBOL} may
+contain characters that an amount would need to quote (@pxref{Naming
+Commodities}), but unless a time precedes it, a @code{SYMBOL} that
+begins with a digit must be quoted, or Ledger reads it as the time, or,
+on a line without a date, as the date.
+
 @code{PRICE} may also be a parenthesized expression.  If the
 expression evaluates to a single-commodity amount, that amount is
 recorded as the commodity's price on @code{DATE}.  If the expression
@@ -2587,6 +2660,17 @@ Pre-declare commodity names.  This only has an effect if
 @smallexample @c input:validate
 commodity $
 commodity CAD
+@end smallexample
+
+A semicolon after the symbol begins a comment, whether or not a space
+precedes it, just as it does after an amount in a posting; the same
+holds after the argument of the @code{alias} and @code{format}
+sub-directives described below.  A symbol that contains a semicolon
+must therefore be quoted:
+
+@smallexample @c input:validate
+commodity CAD; Canadian dollars
+commodity "Fund; Class A"  ; the quotes keep its semicolon
 @end smallexample
 
 The @code{commodity} directive supports several optional

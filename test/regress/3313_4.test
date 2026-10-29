@@ -1,0 +1,23 @@
+; Regression test for issue #3313: the directive-line commodity parser,
+; reworked for #3313 to leave its cursor at a comment, used to step two
+; characters past a quoted symbol's closing quote, assuming a space.
+; Without the space, `P 2024/01/01 "N1"1.50 EUR` lost the first digit of
+; its price and recorded 0.50 EUR.
+
+P 2024/01/01 "N1"1.50 EUR
+P 2024/01/01 "N2" 2.50 EUR
+
+2024/01/02 Test
+    Assets:Cash    10 "N1"
+    Assets:Cash    10 "N2"
+    Assets:Cash    1.00 EUR
+    Equity
+
+test prices
+2024/01/01 "N1"         1.50 EUR
+2024/01/01 "N2"         2.50 EUR
+end test
+
+test bal --flat -X EUR Assets
+           41.00 EUR  Assets:Cash
+end test

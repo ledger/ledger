@@ -151,6 +151,36 @@ components with their standard-library equivalents.
   `D`-directive formatting to bare amounts (#761), and allow apostrophe (`'`)
   as a digit-group separator
 
+- Make a semicolon end the symbol of a `commodity`, `N`, or dated `P`
+  directive and begin a comment, with or without a space before it, as it
+  does after an amount in a posting (#3313).  `commodity USD; dollars`
+  declared a commodity named `USD;`, so a `format` line for `USD` beneath it
+  was rejected and an `alias` beneath it resolved to `USD;`.  As in an
+  amount, a backslash now puts the next character into such a symbol, so
+  `commodity A\;B` names `A;B`.  An `alias` line in a `commodity` block also
+  ends at a semicolon comment instead of keeping it as part of the alias.  A
+  `P` directive no longer misreads a price written directly after a quoted
+  symbol, as in `P 2024/01/01 "N1"1.50 EUR`, and a `P` line that ends after
+  its quoted symbol is reported as missing its price instead of reading past
+  the end of the line
+
+- Read the symbol of a `P` line without a date, of `apply fixed`, and of a
+  quote that a getquote script prints without a date as a dated `P` line
+  does (#3321).  Their first word was taken verbatim, quotes and all:
+  `P "N1" $2.00` priced a commodity printed as `""N1""`, `apply fixed "N1"
+  $2.00` fixated nothing, a downloaded quote for `"N1"` went to that other
+  commodity, and a quoted name holding a space was cut at the space.  A `P`
+  line without a date whose price began with a digit, such as `P EUR 1.10
+  USD`, was also rejected as an invalid date
+
+- Keep `--historical` (`-H`) from creating a second commodity, named with
+  its quotes, for one whose symbol is printed in quotes: an amount of
+  `"EXV6_DE"` was shown as `""EXV6_DE""10` (#3321)
+
+- Quote a commodity named `and`, `div`, `else`, `false`, `if`, `not`, `or` or
+  `true` when printing it, as an amount requires, so that `print` output can
+  be read back (#3321)
+
 - Add batch commodity quote fetching to amortize the per-call cost (#588); add
   `--account-value-expr` and `--commodity-value-expr` options for custom
   valuations; expose a `capital_gain` value expression variable
@@ -410,6 +440,10 @@ components with their standard-library equivalents.
   (#994), the contradictory documentation for `--price-db` and `--download`
   (#1210), and the `ansify_if` two-argument signature; remove documentation
   for the unimplemented `capture` directive
+
+- Specify which characters a commodity symbol may contain without quotes, in
+  an amount and in a directive, and when Ledger quotes a symbol it prints
+  (#3321)
 
 ### Build System
 
