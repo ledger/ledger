@@ -1,0 +1,18 @@
+; Regression test for #3276: with ICU, mask_t::str() turns the compiled
+; pattern's UTF-32 code points back into UTF-8 itself, rather than going
+; through u32regex::str(), which fails to compile against libc++ 19 or
+; later.  Print patterns whose characters take one to four bytes in UTF-8.
+
+test eval "to_string(/Café/)"
+Café
+end test
+
+test eval "to_string(/aé日💰/)"
+aé日💰
+end test
+
+; --ignore-diacritics folds the pattern before compiling it, so str()
+; returns the folded text.
+test --ignore-diacritics eval "to_string(/Café/)"
+Cafe
+end test
