@@ -9695,11 +9695,24 @@ and locale-flavored forms with grouping (@samp{1,000.00}).  The
 result has type @code{INTEGER} when the number is a plain integer and
 @code{AMOUNT} otherwise.
 
+A comma between two digits belongs to the number, so @samp{max(1,2)}
+and @samp{max(1,234)} each pass a single amount; write
+@samp{max(1, 2)} to pass two arguments.  Outside a brace-amount literal
+(see below) a comma never begins a number, so after a name or a string
+it always separates arguments: @samp{truncated(account,10)} and
+@samp{account_skip_prefix("Assets:Bank:HSBC",2)} mean what they mean
+with a space after the comma.  A minus sign does begin a number, as in
+@samp{$-10}, so @samp{depth-1} is an amount of the commodity
+@samp{depth}; write @samp{depth - 1} to subtract.
+
 A @strong{string literal} is written in single quotes
 (@code{'hello'}) or double quotes (@code{"hello"}).  Both produce
 @code{STRING} values; if you want an amount value, write the amount
-without quotes (or wrap it in braces, see below).  Use the literal
-that does not collide with any contained quotes.
+without quotes (or wrap it in braces, see below).  The exception is a
+double-quoted string followed by a quantity, such as
+@samp{"ab cd" 17}: that is an amount of the commodity @samp{ab cd},
+written as in a journal.  Use the literal that does not collide with
+any contained quotes.
 
 A @strong{brace-amount literal} like @samp{@{$10.00@}} parses the
 contents as an amount without commodity migration, so the precision

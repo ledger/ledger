@@ -82,7 +82,15 @@ enum parse_flags_enum_t : uint16_t {
   /// observed numeric-format flags to null_commodity so that
   /// subsequent bare amounts display with the same separators.  Used
   /// by the D directive to propagate format from a bare amount.
-  PARSE_APPLY_STYLE_TO_BARE = 0x0100
+  PARSE_APPLY_STYLE_TO_BARE = 0x0100,
+  /// When set, the amount is a term of a value expression, where a comma
+  /// separates arguments and a plus sign adds.  Neither may then begin
+  /// the quantity after a prefix commodity, as journal syntax otherwise
+  /// allows (`$,50` with a leading decimal comma, `$+10`): `f(abc,1)`
+  /// and `f("abc",1)` would read as the one amount `abc0,1`, and `x+1`
+  /// as the amount `x1`.  A minus sign still begins a quantity there,
+  /// as in `$-10`.
+  PARSE_IN_EXPR = 0x0200
 };
 
 using parse_flags_t = flags::basic_t<parse_flags_enum_t, uint_least16_t>;
