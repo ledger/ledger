@@ -257,6 +257,7 @@ public:
    * Falls through to item_t::lookup() for inherited bindings (date, note, etc.).
    */
   expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
+  post_t* as_post_scope() override { return this; }
 
   /** @brief Evaluate an expression in a scope bound to this posting. */
   amount_t resolve_expr(scope_t& scope, expr_t& expr);

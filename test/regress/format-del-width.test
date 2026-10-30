@@ -1,0 +1,28 @@
+; A DEL byte (0x7F) in a payee or account still counts as -1 column when
+; Ledger pads report fields, so reg keeps the layout of 3.4.1 and earlier.
+;
+; The payee below is "Pay", DEL, "ee" and the account "Expenses:Fo", DEL,
+; "od"; the DEL bytes are invisible in most editors.  Ledger measures a
+; field by the display width of its characters, and gives DEL a width
+; of -1, so the 6-byte payee measures 4 columns and a 20-column field adds
+; 16 spaces (the 14-byte account: 12 columns, 8 spaces).  A terminal draws
+; DEL as nothing, so such a field shows one column too wide, as in 3.4.1.
+; Text that is all printable ASCII is measured by its length alone, and
+; DEL must not count as printable there: counted as one ordinary column,
+; it would cost each field holding it two spaces and move reg's later
+; columns left.  A deliberate change to the width of control characters
+; (#3291) would change these lines.
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Payee                  Expenses:Food                 $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+test reg --format '|%-20(payee)|%-20(account)|\n'
+|Payee                |Expenses:Food        |
+|Payee                |Assets:Cash         |
+end test

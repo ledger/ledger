@@ -2577,6 +2577,15 @@ string value_t::label(optional<type_t> the_type) const {
 ///                      empty renders them without color.
 void value_t::print(std::ostream& _out, const int first_width, const int latter_width,
                     const uint_least8_t flags, const string& negative_color) const {
+  // A balance lays out its own columns through justify(), which leaves the
+  // stream's adjustment flags alone but writes piecewise, so a width the
+  // caller set would pad only the first piece: hence the direct path only
+  // when no width is set, and the buffered one below otherwise.
+  if (is_balance() && _out.width() == 0) {
+    as_balance().print(_out, first_width, latter_width, flags, negative_color);
+    return;
+  }
+
   // We buffer into a local ostringstream so that width and justification
   // settings do not leak into the caller's stream.
   std::ostringstream out;
