@@ -893,6 +893,9 @@ public:
 
   void flush() override;
 
+  value_t total_as_of(post_t& post, const date_t& date);
+
+  void output_value_change(post_t& post, const date_t& date, const value_t& diff);
   void output_revaluation(post_t& post, const date_t& current);
   void output_intermediate_prices(post_t& post, const date_t& current);
 

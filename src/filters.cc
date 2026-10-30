@@ -970,14 +970,12 @@ void changed_value_posts::flush() {
 }
 
 /**
- * Generate a revaluation posting if the repriced total differs from last_total.
+ * Evaluate the total expression for @p post as though the posting fell on
+ * @p date, or on its own date when @p date is not valid.
  *
- * Temporarily overrides the posting's xdata date to @p date, evaluates the
- * total expression, and compares with last_total.  If they differ, a
- * synthetic posting is emitted to either the <Revalued> account (register
- * reports) or the equity gain/loss accounts (balance reports with --unrealized).
+ * The posting's xdata date is overridden only for the evaluation.
  */
-void changed_value_posts::output_revaluation(post_t& post, const date_t& date) {
+value_t changed_value_posts::total_as_of(post_t& post, const date_t& date) {
   // When interval_posts creates period-end synthetic postings, it sets
   // xdata.value_date = range_finish (the period-end date).  Because
   // get_value_date() checks xdata.value_date before falling back to date(),
@@ -985,74 +983,99 @@ void changed_value_posts::output_revaluation(post_t& post, const date_t& date) {
   // market(display_total, value_date, exchange) expression would still use
   // the period-end date rather than the requested revaluation date.
   // Save and restore xdata.value_date so that intermediate price dates are
-  // correctly used when called from output_intermediate_prices.
+  // correctly used when called from output_intermediate_prices.  xdata.date
+  // is restored as well, since a collapsed posting carries one of its own.
+  date_t saved_date;
   date_t saved_value_date;
   const bool date_overridden = is_valid(date);
   if (date_overridden) {
     post_t::xdata_t& xdata(post.xdata());
+    saved_date = xdata.date;
     saved_value_date = xdata.value_date;
     xdata.date = date;
     xdata.value_date = date;
   }
 
+  value_t total;
   try {
     bind_scope_t bound_scope(report, post);
-    repriced_total = total_expr.calc(bound_scope);
+    total = total_expr.calc(bound_scope);
   } catch (...) {
     if (date_overridden) {
-      post.xdata().date = date_t();
+      post.xdata().date = saved_date;
       post.xdata().value_date = saved_value_date;
     }
     throw;
   }
   if (date_overridden) {
-    post.xdata().date = date_t();
+    post.xdata().date = saved_date;
     post.xdata().value_date = saved_value_date;
   }
+  return total;
+}
+
+/**
+ * Emit @p diff, a change in the market value of the running total, as a
+ * synthetic posting dated @p date: to the <Revalued> account in a register
+ * report, or to the equity gain/loss accounts in a balance report with
+ * --unrealized.
+ */
+void changed_value_posts::output_value_change(post_t& post, const date_t& date,
+                                              const value_t& diff) {
+  DEBUG("filters.changed_value",
+        "output_value_change(strip(diff)) = " << diff.strip_annotations(report.what_to_keep()));
+
+  xact_t& xact = temps.create_xact();
+  xact.payee = _("Commodities revalued");
+  xact._date = is_valid(date) ? date : post.value_date();
+
+  // NOLINTBEGIN(bugprone-branch-clone)
+  if (!for_accounts_report) {
+    handle_value(/* value=         */ diff,
+                 /* account=       */ revalued_account,
+                 /* xact=          */ &xact,
+                 /* temps=         */ temps,
+                 /* handler=       */ handler,
+                 /* date=          */ *xact._date,
+                 /* act_date_p=    */ true,
+                 /* total=         */ repriced_total,
+                 /* direct_amount= */ false,
+                 /* mark_visited=  */ false,
+                 /* bidir_link=    */ true,
+                 /* source_post=   */ &post);
+  } else if (show_unrealized) {
+    handle_value(
+        /* value=         */ -diff,
+        /* account=       */ (diff < 0L ? losses_equity_account : gains_equity_account),
+        /* xact=          */ &xact,
+        /* temps=         */ temps,
+        /* handler=       */ handler,
+        /* date=          */ *xact._date,
+        /* act_date_p=    */ true,
+        /* total=         */ value_t(),
+        /* direct_amount= */ false,
+        /* mark_visited=  */ true,
+        /* bidir_link=    */ true,
+        /* source_post=   */ &post);
+  }
+  // NOLINTEND(bugprone-branch-clone)
+}
+
+/**
+ * Generate a revaluation posting if the repriced total differs from last_total.
+ *
+ * Evaluates the total expression as of @p date and compares it with
+ * last_total.  If they differ, output_value_change() emits the difference.
+ */
+void changed_value_posts::output_revaluation(post_t& post, const date_t& date) {
+  repriced_total = total_as_of(post, date);
 
   DEBUG("filters.changed_value", "output_revaluation(last_total)     = " << last_total);
   DEBUG("filters.changed_value", "output_revaluation(repriced_total) = " << repriced_total);
 
   if (!last_total.is_null()) {
-    if (value_t diff = repriced_total - last_total) {
-      DEBUG("filters.changed_value",
-            "output_revaluation(strip(diff)) = " << diff.strip_annotations(report.what_to_keep()));
-
-      xact_t& xact = temps.create_xact();
-      xact.payee = _("Commodities revalued");
-      xact._date = is_valid(date) ? date : post.value_date();
-
-      // NOLINTBEGIN(bugprone-branch-clone)
-      if (!for_accounts_report) {
-        handle_value(/* value=         */ diff,
-                     /* account=       */ revalued_account,
-                     /* xact=          */ &xact,
-                     /* temps=         */ temps,
-                     /* handler=       */ handler,
-                     /* date=          */ *xact._date,
-                     /* act_date_p=    */ true,
-                     /* total=         */ repriced_total,
-                     /* direct_amount= */ false,
-                     /* mark_visited=  */ false,
-                     /* bidir_link=    */ true,
-                     /* source_post=   */ &post);
-      } else if (show_unrealized) {
-        handle_value(
-            /* value=         */ -diff,
-            /* account=       */ (diff < 0L ? losses_equity_account : gains_equity_account),
-            /* xact=          */ &xact,
-            /* temps=         */ temps,
-            /* handler=       */ handler,
-            /* date=          */ *xact._date,
-            /* act_date_p=    */ true,
-            /* total=         */ value_t(),
-            /* direct_amount= */ false,
-            /* mark_visited=  */ true,
-            /* bidir_link=    */ true,
-            /* source_post=   */ &post);
-      }
-      // NOLINTEND(bugprone-branch-clone)
-    }
+    if (value_t diff = repriced_total - last_total)
+      output_value_change(post, date, diff);
   }
 }
 
