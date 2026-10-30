@@ -1,6 +1,6 @@
 ; Wave 3 coverage tests for mask.cc assign_glob
-; Tests glob pattern conversion: ?, *, [...]
-; Uses include directive with glob patterns
+; Tests * glob
+; Uses include directive with a glob pattern
 
 include glob_includes/data_*.dat
 
