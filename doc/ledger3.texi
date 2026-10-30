@@ -3932,9 +3932,10 @@ But this does not do what you might expect:
     Income:Capital Gains       $-125.00
 @end smallexample
 
-And in cases where the amounts do not divide into whole figures and
-must be rounded, the capital gains figure could be off by a cent.  Use
-with caution.
+And when the total does not divide evenly by the quantity, Ledger must
+round the per-unit price, so the basis it rebuilds from that price can
+miss the total by a tiny residue.  Ledger drops that residue, and only
+that residue, from the capital gain.  Use with caution.
 
 @node Prices versus costs, Fixated prices and costs, Commodity prices, Transactions
 @section Prices versus costs

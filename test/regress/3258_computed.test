@@ -1,0 +1,60 @@
+; Lot prices that Ledger divides out of a cost.
+;
+; $250.50 over 101 FOO does not divide evenly, so the lot price is
+; rounded to $2.480198, and the basis rebuilt from it misses $250.50 by
+; a tiny residue.  The sale drops that residue from its gain and keeps
+; the fifty cents.  No plain dollar amount with cents precedes it, so $
+; has no display precision when it is balanced; rounding the gain at
+; that precision left the whole journal fifty cents out of balance.
+;
+; 12.3457 per FUND divides evenly, so the lot price and its basis are
+; exact, and the sale keeps the sub-cent digits of its gain.
+;
+; The residue is at most half a unit in the last place of the rounded
+; price for each unit sold.  The FX lot price keeps eight places once $
+; has learned two, so on 100001 units the residue stays below a cent,
+; and the sale for whole dollars keeps its 99 cents.
+
+2025/01/01 * Buy
+    Assets:Brokerage                 101 FOO @@ $250.50
+    Equity:Opening
+
+2025/01/02 * Sell
+    Assets:Brokerage                -101 FOO {{$250.50}} [2025-01-01] @@ $500
+    Assets:Cash                      $500
+    Income:Gains:FOO
+
+2025/02/01 * Buy
+    Assets:Fund                     9999 FUND @ $12.3457
+    Equity:Opening
+
+2025/06/01 * Sell
+    Assets:Fund                    -9999 FUND {$12.3457} [2025-02-01] @@ $130000.00
+    Assets:Cash                      $130000.00
+    Income:Gains:FUND
+
+2025/07/01 * Buy
+    Assets:FX                     100001 FX @@ $125000.01
+    Equity:Opening                  $-125000.01
+
+2025/07/02 * Sell
+    Assets:FX                    -100001 FX {{$125000.01}} [2025-07-01] @@ $150000
+    Assets:Cash                      $150000
+    Income:Gains:FX
+
+test reg --format '%(account)  %(quantity(amount))\n' Income
+Income:Gains:FOO  -249.5
+Income:Gains:FUND  -6555.3457
+Income:Gains:FX  -24999.99
+end test
+
+test bal
+          $280500.00  Assets:Cash
+         $-248695.16  Equity:Opening
+          $-31804.84  Income:Gains
+            $-249.50    FOO
+           $-6555.35    FUND
+          $-24999.99    FX
+--------------------
+                   0
+end test

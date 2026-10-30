@@ -457,6 +457,7 @@ cost_breakdown_t commodity_pool_t::exchange(const amount_t& amount, const amount
   //
   // For per-unit costs (no division), the existing display_precision()
   // is used, preserving the user-typed precision (fixes #1032).
+  bool per_unit_cost_rounded = false;
   if (per_unit_cost.has_commodity() && per_unit_cost.keep_precision()) {
     int round_prec;
     if (!is_per_unit && !amount.is_zero()) {
@@ -465,7 +466,9 @@ cost_breakdown_t commodity_pool_t::exchange(const amount_t& amount, const amount
     } else {
       round_prec = boost::numeric_cast<int>(per_unit_cost.display_precision());
     }
+    amount_t exact(per_unit_cost);
     per_unit_cost.in_place_roundto(round_prec);
+    per_unit_cost_rounded = per_unit_cost != exact;
   }
 
   DEBUG("commodity.prices.add", "exchange: per-unit-cost = " << per_unit_cost);
@@ -512,6 +515,8 @@ cost_breakdown_t commodity_pool_t::exchange(const amount_t& amount, const amount
       tag);
 
   annotation.add_flags(ANNOTATION_PRICE_CALCULATED);
+  if (per_unit_cost_rounded)
+    annotation.add_flags(ANNOTATION_PRICE_ROUNDED);
   if (current_annotation && current_annotation->has_flags(ANNOTATION_PRICE_FIXATED))
     annotation.add_flags(ANNOTATION_PRICE_FIXATED);
   if (!lot_date && moment)

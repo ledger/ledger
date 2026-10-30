@@ -246,6 +246,49 @@ struct add_balancing_post {
     }
   }
 };
+
+/// How far a lot basis rebuilt as lot price x quantity can lie from the
+/// total that the price was divided out of.  Only a price that Ledger
+/// rounded in that division -- a `{{total}}` lot price, or a lot price
+/// computed from an `@@` cost -- carries any error: half a unit in its
+/// last decimal place, of which it keeps at least extend_by_digits, for
+/// each unit of the quantity.  Every other lot price is exact, and so is
+/// the basis built from it.
+amount_t lot_basis_error(const amount_t& amt) {
+  if (!amt.has_annotation() || !amt.annotation().price ||
+      !amt.annotation().has_flags(ANNOTATION_PRICE_ROUNDED))
+    return amount_t(0L);
+
+  // The price was rounded to no fewer places than it needs now.  Stopping
+  // early at the limit only loosens the bound, never tightens it.
+  const amount_t& price(*amt.annotation().price);
+  int places = static_cast<int>(amount_t::extend_by_digits);
+  const int limit = static_cast<int>(price.precision() + amount_t::extend_by_digits);
+  while (places < limit && price.roundto(places) != price)
+    ++places;
+
+  amount_t units(2L);
+  for (int i = 0; i < places; ++i)
+    units *= amount_t(10L);
+  return amt.number().abs() / units;
+}
+
+/// Round a gain or loss to the fewest decimal places that move it by no
+/// more than `error`, the most that rounded lot prices can have put into
+/// the bases behind it (#2975).  A genuine gain lies further than that
+/// from every coarser figure, so it stays exact, whatever display
+/// precision its commodity has learned (#3013, #3258).
+void drop_lot_rounding_residue(amount_t& gain_loss, const amount_t& error) {
+  if (error.is_realzero())
+    return;
+  for (int places = 0; places < static_cast<int>(gain_loss.precision()); ++places) {
+    amount_t rounded(gain_loss.roundto(places));
+    if ((gain_loss - rounded).number().abs() <= error) {
+      gain_loss = rounded;
+      return;
+    }
+  }
+}
 } // namespace
 
 /**
@@ -696,17 +739,11 @@ bool xact_base_t::finalize() {
           if (amount_t gain_loss = breakdown.basis_cost - breakdown.final_cost) {
             DEBUG("xact.finalize", "gain_loss = " << gain_loss);
             // The basis cost is reconstructed from the per-unit lot price
-            // times the quantity.  When the per-unit price was rounded
-            // during lot creation (e.g. $250 / 101 → $2.475248), the
-            // product can differ from the original total cost by a tiny
-            // rounding artifact.  Round the gain/loss to a precision
-            // that accounts for the quantity's decimal places, so
-            // genuine gains from fractional-share transactions are
-            // preserved while reconstruction artifacts are eliminated
-            // (#2975, #3013).
-            if (gain_loss.has_commodity())
-              gain_loss.in_place_roundto(static_cast<int>(gain_loss.commodity().precision()) +
-                                         static_cast<int>(post->amount.precision()));
+            // times the quantity.  That is exact unless Ledger rounded the
+            // price itself (e.g. $250 / 101 → $2.475248), in which case
+            // the product can miss the original total by a tiny artifact;
+            // drop only that, so the posting balances at its lot basis.
+            drop_lot_rounding_residue(gain_loss, lot_basis_error(post->amount));
             gain_loss.in_place_round();
             DEBUG("xact.finalize", "gain_loss rounds to = " << gain_loss);
             if (post->must_balance())
@@ -753,13 +790,12 @@ bool xact_base_t::finalize() {
 
               // Calculate gain/loss in the base commodity
               amount_t gain_loss = from_cost - to_cost;
-              if (gain_loss.has_commodity())
-                gain_loss.in_place_roundto(static_cast<int>(gain_loss.commodity().precision()) +
-                                           static_cast<int>(post->amount.precision()));
+              drop_lot_rounding_residue(gain_loss, lot_basis_error(post->amount) +
+                                                       lot_basis_error(*post->cost));
               gain_loss.in_place_round();
               DEBUG("xact.finalize", "Commodity swap gain_loss rounds to = " << gain_loss);
 
-              if (gain_loss && post->must_balance())
+              if (!gain_loss.is_realzero() && post->must_balance())
                 add_or_set_value(balance, gain_loss.reduced());
 
               // Always rewrite the posting's cost into the common base
