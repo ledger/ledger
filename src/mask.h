@@ -154,17 +154,12 @@ public:
   /// Return the number of marked subexpressions (capture groups) in the pattern.
   std::size_t mark_count() const { return expr.mark_count(); }
 
-  /// Match against @p text and return the @p n-th capture group on success.
-  /// Returns the whole match for n=0, first group for n=1, etc.
-  /// Returns boost::none if the regex does not match or the group is unmatched.
-  boost::optional<string> match_group(string_view text, std::size_t n = 1) const;
-
   /// Match against @p text and return every matched substring.
   ///
   /// On a successful match the returned vector has `mark_count() + 1`
-  /// elements: index 0 is the entire match (same as `match_group(text, 0)`),
-  /// indices 1..N are the captured groups.  An optional group that did not
-  /// participate in the match is represented as an empty string.
+  /// elements: index 0 is the entire match, indices 1..N are the captured
+  /// groups.  An optional group that did not participate in the match is
+  /// represented as an empty string.
   ///
   /// Returns boost::none if the regex does not match.
   boost::optional<std::vector<string>> match_groups(string_view text) const;
