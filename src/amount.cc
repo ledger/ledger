@@ -205,140 +205,221 @@ namespace {
  * @param comm       Optional commodity reference whose display flags
  *                   control thousands separators and decimal style.
  */
+/// Scratch integers for the exact path of stream_out_mpq(), initialized
+/// by amount_t::initialize() alongside the other GMP temporaries.
+mpz_t out_scale;
+mpz_t out_quot;
+mpz_t out_rem;
+
+/**
+ * @brief Render @p quant with exactly @p precision decimals, rounding the
+ * exact rational half away from zero, into @p digits.
+ *
+ * Returns false and leaves @p digits alone when the value is an exact tie
+ * at that precision (the discarded part is exactly one half unit).  Ties
+ * are the one case where the historical MPFR rendering can disagree with
+ * exact rounding, since it rounds a binary approximation, so the caller
+ * keeps using that rendering for them and the output stays identical to
+ * what Ledger has always printed, while every other value takes this
+ * exact, allocation-free route.  Like MPFR's "%f", a negative value that
+ * rounds to zero keeps its sign ("-0.00").
+ */
+bool format_mpq_exact(std::string& digits, mpq_t quant, amount_t::precision_t precision) {
+  mpz_ui_pow_ui(out_scale, 10, precision);
+  mpz_mul(out_quot, mpq_numref(quant), out_scale);
+  mpz_tdiv_qr(out_quot, out_rem, out_quot, mpq_denref(quant));
+  if (mpz_sgn(out_rem) != 0) {
+    mpz_abs(out_rem, out_rem);
+    mpz_mul_2exp(out_rem, out_rem, 1);
+    const int cmp = mpz_cmp(out_rem, mpq_denref(quant));
+    if (cmp == 0)
+      return false;
+    if (cmp > 0) {
+      if (mpz_sgn(mpq_numref(quant)) < 0)
+        mpz_sub_ui(out_quot, out_quot, 1);
+      else
+        mpz_add_ui(out_quot, out_quot, 1);
+    }
+  }
+
+  // mpz_get_str wants room for the digits, a sign and the terminator.
+  char stack_buf[64];
+  std::string heap_buf;
+  char* buf = stack_buf;
+  const std::size_t needed = mpz_sizeinbase(out_quot, 10) + 2;
+  if (needed > sizeof(stack_buf)) {
+    heap_buf.resize(needed);
+    buf = &heap_buf[0];
+  }
+  mpz_get_str(buf, 10, out_quot);
+
+  const char* p = buf;
+  if (*p == '-')
+    ++p; // the sign is restored from the numerator below
+  const std::size_t len = std::strlen(p);
+
+  digits.clear();
+  if (mpz_sgn(mpq_numref(quant)) < 0)
+    digits += '-';
+  if (precision == 0) {
+    digits.append(p, len);
+  } else if (len <= precision) {
+    digits += "0.";
+    digits.append(precision - len, '0');
+    digits.append(p, len);
+  } else {
+    digits.append(p, len - precision);
+    digits += '.';
+    digits.append(p + (len - precision), precision);
+  }
+  return true;
+}
+
+/**
+ * @brief The historical MPFR rendering of @p quant to @p precision
+ * decimals: convert to a floating-point value wide enough to be exact,
+ * then let MPFR round it to the requested decimals.
+ *
+ * Used for exact ties (see format_mpq_exact) and for rounding modes other
+ * than GMP_RNDN.
+ */
+std::string format_mpq_mpfr(mpq_t quant, amount_t::precision_t precision, mpfr_rnd_t rnd) {
+  mp_prec_t num_prec = static_cast<mpfr_prec_t>(mpz_sizeinbase(mpq_numref(quant), 2));
+  num_prec += amount_t::extend_by_digits * 64;
+  if (num_prec < MPFR_PREC_MIN)
+    num_prec = MPFR_PREC_MIN;
+  DEBUG("amount.convert", "num prec = " << num_prec);
+
+  mpfr_set_prec(tempfnum, num_prec);
+  mpfr_set_z(tempfnum, mpq_numref(quant), rnd);
+
+  mp_prec_t den_prec = static_cast<mpfr_prec_t>(mpz_sizeinbase(mpq_denref(quant), 2));
+  den_prec += amount_t::extend_by_digits * 64;
+  if (den_prec < MPFR_PREC_MIN)
+    den_prec = MPFR_PREC_MIN;
+  DEBUG("amount.convert", "den prec = " << den_prec);
+
+  mpfr_set_prec(tempfden, den_prec);
+  mpfr_set_z(tempfden, mpq_denref(quant), rnd);
+
+  mpfr_set_prec(tempfb, num_prec + den_prec);
+  mpfr_div(tempfb, tempfnum, tempfden, rnd);
+
+  char* buf = nullptr;
+  if (mpfr_asprintf(&buf, "%.*RNf", precision, tempfb) < 0)
+    throw_(amount_error, _("Cannot output amount to a floating-point representation"));
+  std::string result(buf);
+  mpfr_free_str(buf);
+  return result;
+}
+
 void stream_out_mpq(std::ostream& out, mpq_t quant, amount_t::precision_t precision,
                     int zeros_prec = -1, mpfr_rnd_t rnd = GMP_RNDN,
                     const optional<commodity_t&>& comm = none) {
-  char* buf = nullptr;
-  try {
 #if DEBUG_ON
-    IF_DEBUG("amount.convert") {
-      char* tbuf = mpq_get_str(nullptr, 10, quant);
-      DEBUG("amount.convert", "Rational to convert = " << tbuf);
-      std::free(tbuf);
-    }
+  IF_DEBUG("amount.convert") {
+    char* tbuf = mpq_get_str(nullptr, 10, quant);
+    DEBUG("amount.convert", "Rational to convert = " << tbuf);
+    std::free(tbuf);
+  }
 #endif
 
-    // Convert the rational number to a floating-point, extending the
-    // floating-point to a large enough size to get a precise answer.
+  std::string digits;
+  if (rnd != GMP_RNDN || !format_mpq_exact(digits, quant, precision))
+    digits = format_mpq_mpfr(quant, precision, rnd);
 
-    mp_prec_t num_prec = static_cast<mpfr_prec_t>(mpz_sizeinbase(mpq_numref(quant), 2));
-    num_prec += amount_t::extend_by_digits * 64;
-    if (num_prec < MPFR_PREC_MIN)
-      num_prec = MPFR_PREC_MIN;
-    DEBUG("amount.convert", "num prec = " << num_prec);
+  DEBUG("amount.convert", "rendered = " << digits << " (precision " << precision << ", zeros_prec "
+                                        << zeros_prec << ")");
 
-    mpfr_set_prec(tempfnum, num_prec);
-    mpfr_set_z(tempfnum, mpq_numref(quant), rnd);
-
-    mp_prec_t den_prec = static_cast<mpfr_prec_t>(mpz_sizeinbase(mpq_denref(quant), 2));
-    den_prec += amount_t::extend_by_digits * 64;
-    if (den_prec < MPFR_PREC_MIN)
-      den_prec = MPFR_PREC_MIN;
-    DEBUG("amount.convert", "den prec = " << den_prec);
-
-    mpfr_set_prec(tempfden, den_prec);
-    mpfr_set_z(tempfden, mpq_denref(quant), rnd);
-
-    mpfr_set_prec(tempfb, num_prec + den_prec);
-    mpfr_div(tempfb, tempfnum, tempfden, rnd);
-
-    if (mpfr_asprintf(&buf, "%.*RNf", precision, tempfb) < 0)
-      throw_(amount_error, _("Cannot output amount to a floating-point representation"));
-
-    DEBUG("amount.convert", "mpfr_print = " << buf << " (precision " << precision << ", zeros_prec "
-                                            << zeros_prec << ")");
-
-    if (zeros_prec >= 0) {
-      std::ptrdiff_t index = static_cast<std::ptrdiff_t>(std::strlen(buf));
-      std::ptrdiff_t point = 0;
-      for (std::ptrdiff_t i = 0; i < index; i++) {
-        if (buf[i] == '.') {
-          point = i;
-          break;
-        }
-      }
-      if (point > 0) {
-        while (--index >= (point + 1 + static_cast<std::ptrdiff_t>(zeros_prec)) &&
-               buf[index] == '0')
-          buf[index] = '\0';
-        if (index >= (point + static_cast<std::ptrdiff_t>(zeros_prec)) && buf[index] == '.')
-          buf[index] = '\0';
-      }
+  // Trim fractional zeros beyond zeros_prec digits, and the decimal point
+  // itself when nothing is left after it.
+  if (zeros_prec >= 0) {
+    const std::string::size_type point = digits.find('.');
+    if (point != std::string::npos && point > 0) {
+      std::ptrdiff_t index = static_cast<std::ptrdiff_t>(digits.size());
+      const std::ptrdiff_t limit = static_cast<std::ptrdiff_t>(point) + 1 + zeros_prec;
+      while (--index >= limit && digits[static_cast<std::size_t>(index)] == '0') {}
+      digits.resize(static_cast<std::size_t>(index + 1));
+      if (index >= static_cast<std::ptrdiff_t>(point) + zeros_prec &&
+          digits[static_cast<std::size_t>(index)] == '.')
+        digits.resize(static_cast<std::size_t>(index));
     }
-
-    if (comm) {
-      int integer_digits = 0;
-      if (comm && comm->has_flags(COMMODITY_STYLE_THOUSANDS)) {
-        // Count the number of integer digits
-        for (const char* p = buf; *p; p++) {
-          if (*p == '.')
-            break;
-          else if (*p != '-')
-            integer_digits++;
-        }
-      }
-
-      bool time_colon = (("h" == comm->symbol() || "m" == comm->symbol()) &&
-                         (commodity_t::time_colon_by_default ||
-                          (comm && comm->has_flags(COMMODITY_STYLE_TIME_COLON))));
-
-      for (const char* p = buf; *p; p++) {
-        if (*p == '.') {
-          if (time_colon) {
-            // Convert decimal fraction of hours/minutes to the next
-            // smaller time unit (e.g. 0.50h -> 0:30h, meaning 30 min).
-            out << ':';
-            // Parse the fractional digits and convert
-            const char* frac_start = p + 1;
-            int num_digits = 0;
-            long frac_val = 0;
-            long divisor = 1;
-            for (const char* q = frac_start; *q && *q >= '0' && *q <= '9'; q++) {
-              frac_val = frac_val * 10 + (*q - '0');
-              divisor *= 10;
-              num_digits++;
-            }
-            long minutes = (frac_val * 60 + divisor / 2) / divisor;
-            // Use the same number of digits as the original fraction,
-            // but at least enough to represent the minutes value.
-            int min_width = (minutes == 0) ? 1 : (minutes >= 10 ? 2 : 1);
-            int width = std::max(num_digits, min_width);
-            out << std::setw(width) << std::setfill('0') << minutes;
-            break; // fractional part fully handled
-          } else if (commodity_t::decimal_comma_by_default ||
-                     (comm && comm->has_flags(COMMODITY_STYLE_DECIMAL_COMMA)))
-            out << ',';
-          else
-            out << *p;
-          assert(integer_digits <= 3);
-        } else if (*p == '-') {
-          out << *p;
-        } else {
-          out << *p;
-
-          if (integer_digits > 3 && --integer_digits % 3 == 0) {
-            if (time_colon)
-              out << ':';
-            else if (comm && comm->has_flags(COMMODITY_STYLE_THOUSANDS_APOSTROPHE))
-              out << '\'';
-            else if (commodity_t::decimal_comma_by_default ||
-                     (comm && comm->has_flags(COMMODITY_STYLE_DECIMAL_COMMA)))
-              out << '.';
-            else
-              out << ',';
-          }
-        }
-      }
-    } else {
-      out << buf;
-    }
-  } catch (...) {
-    if (buf != nullptr)
-      mpfr_free_str(buf);
-    throw;
   }
-  if (buf != nullptr)
-    mpfr_free_str(buf);
+
+  if (!comm) {
+    out << digits;
+    return;
+  }
+
+  int integer_digits = 0;
+  if (comm->has_flags(COMMODITY_STYLE_THOUSANDS)) {
+    // Count the number of integer digits
+    for (const char c : digits) {
+      if (c == '.')
+        break;
+      else if (c != '-')
+        integer_digits++;
+    }
+  }
+
+  const bool decimal_comma =
+      commodity_t::decimal_comma_by_default || comm->has_flags(COMMODITY_STYLE_DECIMAL_COMMA);
+  const bool time_colon =
+      (("h" == comm->symbol() || "m" == comm->symbol()) &&
+       (commodity_t::time_colon_by_default || comm->has_flags(COMMODITY_STYLE_TIME_COLON)));
+
+  std::string result;
+  result.reserve(digits.size() + 8);
+
+  for (const char* p = digits.c_str(); *p; p++) {
+    if (*p == '.') {
+      if (time_colon) {
+        // Convert decimal fraction of hours/minutes to the next
+        // smaller time unit (e.g. 0.50h -> 0:30h, meaning 30 min).
+        result += ':';
+        // Parse the fractional digits and convert
+        const char* frac_start = p + 1;
+        int num_digits = 0;
+        long frac_val = 0;
+        long divisor = 1;
+        for (const char* q = frac_start; *q && *q >= '0' && *q <= '9'; q++) {
+          frac_val = frac_val * 10 + (*q - '0');
+          divisor *= 10;
+          num_digits++;
+        }
+        long minutes = (frac_val * 60 + divisor / 2) / divisor;
+        // Use the same number of digits as the original fraction,
+        // but at least enough to represent the minutes value.
+        int min_width = (minutes == 0) ? 1 : (minutes >= 10 ? 2 : 1);
+        int width = std::max(num_digits, min_width);
+        char minutes_buf[32];
+        std::snprintf(minutes_buf, sizeof(minutes_buf), "%0*ld", width, minutes);
+        result += minutes_buf;
+        break; // fractional part fully handled
+      } else if (decimal_comma) {
+        result += ',';
+      } else {
+        result += *p;
+      }
+      assert(integer_digits <= 3);
+    } else if (*p == '-') {
+      result += *p;
+    } else {
+      result += *p;
+
+      if (integer_digits > 3 && --integer_digits % 3 == 0) {
+        if (time_colon)
+          result += ':';
+        else if (comm->has_flags(COMMODITY_STYLE_THOUSANDS_APOSTROPHE))
+          result += '\'';
+        else if (decimal_comma)
+          result += '.';
+        else
+          result += ',';
+      }
+    }
+  }
+  out << result;
 }
 } // namespace
 
@@ -358,6 +439,9 @@ void amount_t::initialize() {
   if (!is_initialized) {
     mpz_init(temp);
     mpq_init(tempq);
+    mpz_init(out_scale);
+    mpz_init(out_quot);
+    mpz_init(out_rem);
     mpfr_init(tempf);
     mpfr_init(tempfb);
     mpfr_init(tempfnum);
@@ -392,6 +476,9 @@ void amount_t::shutdown() {
   if (is_initialized) {
     mpz_clear(temp);
     mpq_clear(tempq);
+    mpz_clear(out_scale);
+    mpz_clear(out_quot);
+    mpz_clear(out_rem);
     mpfr_clear(tempf);
     mpfr_clear(tempfb);
     mpfr_clear(tempfnum);
@@ -2020,8 +2107,20 @@ void amount_t::print(std::ostream& _out, const uint_least8_t flags) const {
     return;
   }
 
-  std::ostringstream out;
+  // When the caller has set a width or fill on the stream it must apply
+  // to the entire amount string, not just its first part, so the amount
+  // is rendered into a string first.  Without a width -- the common case
+  // when formatting reports -- write straight through.
+  if (_out.width() == 0) {
+    print_unpadded(_out, flags);
+  } else {
+    std::ostringstream out;
+    print_unpadded(out, flags);
+    _out << out.str();
+  }
+}
 
+void amount_t::print_unpadded(std::ostream& out, const uint_least8_t flags) const {
   commodity_t& comm(commodity());
 
   if (!comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {
@@ -2067,11 +2166,6 @@ void amount_t::print(std::ostream& _out, const uint_least8_t flags) const {
   // If there are any annotations associated with this commodity, output them
   // now.
   comm.write_annotations(out, flags & AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS, this, flags);
-
-  // Things are output to a string first, so that if anyone has specified a
-  // width or fill for _out, it will be applied to the entire amount string,
-  // and not just the first part.
-  _out << out.str();
 }
 
 /*----------------------------------------------------------------------*/

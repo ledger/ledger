@@ -518,6 +518,7 @@ struct print_amount_from_balance {
   int lwidth;
   uint_least8_t flags;
   const string& negative_color;
+  std::ostringstream buf; ///< Reused for every amount; constructing a stream is costly.
 
   explicit print_amount_from_balance(std::ostream& _out, bool& _first, int _fwidth, int _lwidth,
                                      uint_least8_t _flags, const string& _negative_color)
@@ -546,7 +547,8 @@ struct print_amount_from_balance {
       width = fwidth;
     }
 
-    std::ostringstream buf;
+    buf.str(string());
+    buf.clear();
     amount.print(buf, flags);
 
     justify(out, buf.str(), width, flags & AMOUNT_PRINT_RIGHT_JUSTIFY,

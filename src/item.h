@@ -313,6 +313,7 @@ public:
    * and fall through to item_t::lookup() for the base set.
    */
   expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
+  item_t* as_item_scope() override { return this; }
 
   bool valid() const;
 };

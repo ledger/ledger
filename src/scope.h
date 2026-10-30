@@ -120,6 +120,11 @@ struct symbol_t {
 };
 
 class empty_scope_t;
+class bind_scope_t;
+class item_t;
+class post_t;
+class xact_t;
+class report_t;
 
 /**
  * @brief Abstract base class for all scopes in the expression evaluation chain.
@@ -167,6 +172,25 @@ public:
   virtual value_t::type_t type_context() const { return value_t::VOID; }
   /// @brief Whether the type_context is a hard requirement (true) or a hint (false).
   virtual bool type_required() const { return false; }
+
+  /**
+   * @name Cheap downcasts for search_scope()
+   *
+   * Symbol resolution probes every level of a scope chain for a handful
+   * of concrete types, and most probes miss.  A failed dynamic_cast is
+   * costly -- across a shared-library boundary libstdc++ compares type
+   * names with strcmp -- and it showed up as 7% of a register report, so
+   * the types search_scope() looks for answer through these virtuals
+   * instead.  Each returns `this` only from the class in question (or,
+   * for item_t, from any item).
+   */
+  /// @{
+  virtual bind_scope_t* as_bind_scope() { return nullptr; }
+  virtual item_t* as_item_scope() { return nullptr; }
+  virtual post_t* as_post_scope() { return nullptr; }
+  virtual xact_t* as_xact_scope() { return nullptr; }
+  virtual report_t* as_report_scope() { return nullptr; }
+  /// @}
 };
 
 /**
@@ -246,6 +270,8 @@ public:
 
   string description() override { return grandchild.description(); }
 
+  bind_scope_t* as_bind_scope() override { return this; }
+
   /// @brief Propagate definitions to both parent and grandchild scopes.
   void define(const symbol_t::kind_t kind, const string& name,
               const expr_t::ptr_op_t& def) override {
@@ -299,14 +325,37 @@ public:
  * @param prefer_direct_parents If true, prioritize parent over grandchild at bind nodes.
  * @return A pointer to the found scope, or nullptr if not found.
  */
+/// @brief Downcast a scope to @p T, using the virtual downcasts of scope_t
+/// for the types search_scope() is asked for and dynamic_cast otherwise.
+template <typename T>
+inline T* scope_downcast(scope_t* ptr) {
+  return dynamic_cast<T*>(ptr);
+}
+template <>
+inline item_t* scope_downcast<item_t>(scope_t* ptr) {
+  return ptr->as_item_scope();
+}
+template <>
+inline post_t* scope_downcast<post_t>(scope_t* ptr) {
+  return ptr->as_post_scope();
+}
+template <>
+inline xact_t* scope_downcast<xact_t>(scope_t* ptr) {
+  return ptr->as_xact_scope();
+}
+template <>
+inline report_t* scope_downcast<report_t>(scope_t* ptr) {
+  return ptr->as_report_scope();
+}
+
 template <typename T>
 T* search_scope(scope_t* ptr, bool prefer_direct_parents = false) {
   DEBUG("scope.search", "Searching scope " << ptr->description());
 
-  if (T* sought = dynamic_cast<T*>(ptr))
+  if (T* sought = scope_downcast<T>(ptr))
     return sought;
 
-  if (bind_scope_t* scope = dynamic_cast<bind_scope_t*>(ptr)) {
+  if (bind_scope_t* scope = ptr->as_bind_scope()) {
     if (T* sought = search_scope<T>(prefer_direct_parents ? scope->parent : &scope->grandchild))
       return sought;
     return search_scope<T>(prefer_direct_parents ? &scope->grandchild : scope->parent);
