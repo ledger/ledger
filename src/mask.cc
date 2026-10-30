@@ -366,6 +366,7 @@ mask_t& mask_t::operator=(string_view pat) {
 #else
   expr.assign(folded_pat.c_str(), boost::regex::perl | boost::regex::icase);
 #endif
+  glob = false;
   VERIFY(valid());
   return *this;
 }
@@ -425,12 +426,15 @@ mask_t& mask_t::assign_glob(string_view pat) {
   // Filename glob matching must be case-sensitive so that !include respects
   // filesystem case-sensitivity (issue #1660).  Unlike operator= which uses
   // icase for account/payee query matching, globs are used exclusively for
-  // file name matching where case matters.
+  // file name matching where case matters.  For the same reason a glob is
+  // never folded by --ignore-diacritics: café.dat and cafe.dat are
+  // different files.
 #if HAVE_BOOST_REGEX_UNICODE
   expr = boost::make_u32regex(re_pat.c_str(), boost::regex::perl);
 #else
   expr.assign(re_pat.c_str(), boost::regex::perl);
 #endif
+  glob = true;
   VERIFY(valid());
   return *this;
 }
@@ -457,13 +461,13 @@ std::vector<string> collect_matches(const boost::smatch& what) {
 
 boost::optional<std::vector<string>> mask_t::match_groups(string_view text) const {
 #if HAVE_BOOST_REGEX_UNICODE
-  string match_text = ignore_diacritics ? fold_diacritics(text) : string(text);
+  string match_text = folds() ? fold_diacritics(text) : string(text);
   boost::smatch what;
   if (boost::u32regex_search(match_text, what, expr))
     return collect_matches(what);
   return boost::none;
 #else
-  if (ignore_diacritics) {
+  if (folds()) {
     string match_text = fold_diacritics(text);
     boost::smatch what;
     if (boost::regex_search(match_text, what, expr))

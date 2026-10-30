@@ -427,6 +427,10 @@ components with their standard-library equivalents.
   `[...]` set literally, including `$`, `^`, a character escaped with a
   backslash, and a `[` that no `]` closes
 
+- Match `include` file names exactly under `--ignore-diacritics`, which kept
+  a name with an accent from being included and let `include cafe.dat` read
+  `café.dat` as well
+
 ### Documentation
 
 - Major overhaul of the manual: rewrite of the Value Expressions chapter with

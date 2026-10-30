@@ -261,7 +261,8 @@ namespace {
 /// `mask_t::assign_glob` (which is case-sensitive) rather than a direct
 /// filesystem lookup ensures that `include FOO.dat` does not silently
 /// match a differently-cased `foo.dat` on case-insensitive filesystems
-/// (issue #1660).  Matched entries drive the next level of recursion;
+/// (issue #1660).  Nor does `--ignore-diacritics` let `include cafe.dat`
+/// match `café.dat`.  Matched entries drive the next level of recursion;
 /// the final component contributes regular files to @p results.
 ///
 /// This allows patterns with glob metacharacters in any component --

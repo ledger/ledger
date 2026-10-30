@@ -53,7 +53,8 @@
  *   both the pattern and the text are normalized to ASCII equivalents
  *   before matching, so "cafe" matches "caf\xc3\xa9".
  * - Glob-to-regex conversion via `assign_glob()` for `!include` file
- *   patterns (case-sensitive, since filesystems are).
+ *   patterns, which match exactly: case-sensitively, since filesystems
+ *   are, and without diacritics folding.
  * - Unicode-aware when built with `HAVE_BOOST_REGEX_UNICODE` (ICU).
  */
 #pragma once
@@ -78,7 +79,7 @@ string fold_diacritics(string_view text);
  * @brief Global flag to enable diacritics-insensitive matching.
  *
  * When set to true, mask_t will strip diacritics from both the
- * pattern and the text before matching.
+ * pattern and the text before matching, except in globs.
  */
 extern bool ignore_diacritics;
 
@@ -93,7 +94,8 @@ extern bool ignore_diacritics;
  *
  * When `ignore_diacritics` is true, both the pattern and match text are
  * folded to their ASCII base equivalents via `fold_diacritics()` before
- * comparison.
+ * comparison.  Globs are never folded, since a file name with an accent
+ * names a different file than one without.
  */
 class mask_t {
 public:
@@ -107,14 +109,15 @@ public:
   explicit mask_t(string_view pattern);
 
   mask_t() : expr() { TRACE_CTOR(mask_t, ""); }
-  mask_t(const mask_t& m) : expr(m.expr) { TRACE_CTOR(mask_t, "copy"); }
+  mask_t(const mask_t& m) : expr(m.expr), glob(m.glob) { TRACE_CTOR(mask_t, "copy"); }
   mask_t& operator=(const mask_t&) = default;
   ~mask_t() noexcept { TRACE_DTOR(mask_t); }
 
   /// Assign a new Perl-compatible regex pattern (case-insensitive).
   mask_t& operator=(string_view other);
   /// Assign a shell glob pattern, converting it to a regex.
-  /// Unlike operator=, this compiles case-sensitively for filesystem matching.
+  /// Unlike operator=, the result matches file names exactly: case-sensitively
+  /// and without diacritics folding.
   mask_t& assign_glob(string_view other);
 
   // Not expr == other.expr: before Boost 1.89, basic_regex::compare() calls
@@ -127,16 +130,17 @@ public:
   }
 
   /// Test whether @p text matches this mask's regex pattern.
-  /// Applies diacritics folding when `ignore_diacritics` is active.
+  /// Applies diacritics folding when `ignore_diacritics` is active,
+  /// unless this mask is a glob.
   bool match(string_view text) const {
 #if HAVE_BOOST_REGEX_UNICODE
-    string match_text = ignore_diacritics ? fold_diacritics(text) : string(text);
+    string match_text = folds() ? fold_diacritics(text) : string(text);
     DEBUG("mask.match", "Matching: \""
                             << match_text << "\" =~ /" << str() << "/ = "
                             << (boost::u32regex_search(match_text, expr) ? "true" : "false"));
     return boost::u32regex_search(match_text, expr);
 #else
-    if (ignore_diacritics) {
+    if (folds()) {
       string match_text = fold_diacritics(text);
       DEBUG("mask.match",
             "Matching: \"" << match_text << "\" =~ /" << str()
@@ -192,6 +196,12 @@ public:
     }
     return true;
   }
+
+private:
+  bool glob = false; ///< Set by assign_glob(), cleared by operator=
+
+  /// Whether match() and match_groups() fold the text they are given.
+  bool folds() const { return ignore_diacritics && !glob; }
 };
 
 inline std::ostream& operator<<(std::ostream& out, const mask_t& mask) {

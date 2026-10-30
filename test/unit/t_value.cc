@@ -4557,6 +4557,32 @@ BOOST_AUTO_TEST_CASE(testMaskGlob)
   BOOST_CHECK(matches("d[e.dat", "d[e.dat"));
 }
 
+BOOST_AUTO_TEST_CASE(testMaskGlobDiacritics)
+{
+  // --ignore-diacritics folds a query mask and the text it matches, but a
+  // glob matches file names exactly.
+  struct restore_t {
+    ~restore_t() { ignore_diacritics = false; }
+  } restore;
+  ignore_diacritics = true;
+
+  mask_t accented;
+  accented.assign_glob("caf\xc3\xa9.dat");
+  BOOST_CHECK(accented.match("caf\xc3\xa9.dat"));
+  BOOST_CHECK(!accented.match("cafe.dat"));
+  BOOST_CHECK(mask_t(accented).match("caf\xc3\xa9.dat"));
+
+  mask_t plain;
+  plain.assign_glob("cafe.dat");
+  BOOST_CHECK(plain.match("cafe.dat"));
+  BOOST_CHECK(!plain.match("caf\xc3\xa9.dat"));
+
+  // Assigning a pattern makes it a query mask again.
+  plain = "cafe";
+  BOOST_CHECK(plain.match("caf\xc3\xa9"));
+  BOOST_CHECK(mask_t("caf\xc3\xa9").match("cafe"));
+}
+
 BOOST_AUTO_TEST_CASE(testIsEqualToSequence)
 {
   value_t seq1;
