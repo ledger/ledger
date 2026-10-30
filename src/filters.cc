@@ -917,7 +917,7 @@ changed_value_posts::changed_value_posts(post_handler_ptr handler, report_t& _re
     : item_handler<post_t>(std::move(handler)), report(_report),
       total_expr(report.HANDLED(revalued_total_) ? report.HANDLER(revalued_total_).expr
                                                  : report.HANDLER(display_total_).expr),
-      display_total_expr(report.HANDLER(display_total_).expr),
+      display_total_expr(report.HANDLER(display_total_).expr), cost_expr("cost"),
       changed_values_only(report.HANDLED(revalued_only)),
       historical_prices_only(report.HANDLED(historical)), for_accounts_report(_for_accounts_report),
       show_unrealized(_show_unrealized), last_post(nullptr), display_filter(_display_filter) {
@@ -948,10 +948,14 @@ changed_value_posts::changed_value_posts(post_handler_ptr handler, report_t& _re
  *
  * After all real postings have been processed, this generates one last
  * revaluation for any price changes between the last posting and the
- * report's terminus date.
+ * report's terminus date.  A balance report that books its gains from cost
+ * basis instead books all of its unrealized gain here.
  */
 void changed_value_posts::flush() {
-  if (last_post && last_post->date() <= report.terminus.date()) {
+  if (last_post && books_from_basis()) {
+    output_unrealized_gain(*last_post);
+    last_post = nullptr;
+  } else if (last_post && last_post->date() <= report.terminus.date()) {
     if (!historical_prices_only) {
       // In plot mode (-j/-J) combined with period mode (-M/--period),
       // suppress intermediate price entries: each period already reflects
@@ -970,14 +974,12 @@ void changed_value_posts::flush() {
 }
 
 /**
- * Generate a revaluation posting if the repriced total differs from last_total.
+ * Evaluate the total expression for @p post as though the posting fell on
+ * @p date, or on its own date when @p date is not valid.
  *
- * Temporarily overrides the posting's xdata date to @p date, evaluates the
- * total expression, and compares with last_total.  If they differ, a
- * synthetic posting is emitted to either the <Revalued> account (register
- * reports) or the equity gain/loss accounts (balance reports with --unrealized).
+ * The posting's xdata date is overridden only for the evaluation.
  */
-void changed_value_posts::output_revaluation(post_t& post, const date_t& date) {
+value_t changed_value_posts::total_as_of(post_t& post, const date_t& date) {
   // When interval_posts creates period-end synthetic postings, it sets
   // xdata.value_date = range_finish (the period-end date).  Because
   // get_value_date() checks xdata.value_date before falling back to date(),
@@ -985,75 +987,218 @@ void changed_value_posts::output_revaluation(post_t& post, const date_t& date) {
   // market(display_total, value_date, exchange) expression would still use
   // the period-end date rather than the requested revaluation date.
   // Save and restore xdata.value_date so that intermediate price dates are
-  // correctly used when called from output_intermediate_prices.
+  // correctly used when called from output_intermediate_prices.  xdata.date
+  // is restored as well, since a collapsed posting carries one of its own.
+  date_t saved_date;
   date_t saved_value_date;
   const bool date_overridden = is_valid(date);
   if (date_overridden) {
     post_t::xdata_t& xdata(post.xdata());
+    saved_date = xdata.date;
     saved_value_date = xdata.value_date;
     xdata.date = date;
     xdata.value_date = date;
   }
 
+  value_t total;
   try {
     bind_scope_t bound_scope(report, post);
-    repriced_total = total_expr.calc(bound_scope);
+    total = total_expr.calc(bound_scope);
   } catch (...) {
     if (date_overridden) {
-      post.xdata().date = date_t();
+      post.xdata().date = saved_date;
       post.xdata().value_date = saved_value_date;
     }
     throw;
   }
   if (date_overridden) {
-    post.xdata().date = date_t();
+    post.xdata().date = saved_date;
     post.xdata().value_date = saved_value_date;
   }
+  return total;
+}
+
+/**
+ * Emit @p diff, a change in the market value of the running total, as a
+ * synthetic posting dated @p date: to the <Revalued> account in a register
+ * report, or to the equity gain/loss accounts in a balance report with
+ * --unrealized.
+ */
+void changed_value_posts::output_value_change(post_t& post, const date_t& date,
+                                              const value_t& diff) {
+  DEBUG("filters.changed_value",
+        "output_value_change(strip(diff)) = " << diff.strip_annotations(report.what_to_keep()));
+
+  xact_t& xact = temps.create_xact();
+  xact.payee = _("Commodities revalued");
+  xact._date = is_valid(date) ? date : post.value_date();
+
+  // NOLINTBEGIN(bugprone-branch-clone)
+  if (!for_accounts_report) {
+    handle_value(/* value=         */ diff,
+                 /* account=       */ revalued_account,
+                 /* xact=          */ &xact,
+                 /* temps=         */ temps,
+                 /* handler=       */ handler,
+                 /* date=          */ *xact._date,
+                 /* act_date_p=    */ true,
+                 /* total=         */ repriced_total,
+                 /* direct_amount= */ false,
+                 /* mark_visited=  */ false,
+                 /* bidir_link=    */ true,
+                 /* source_post=   */ &post);
+  } else if (show_unrealized) {
+    handle_value(
+        /* value=         */ -diff,
+        /* account=       */ (diff < 0L ? losses_equity_account : gains_equity_account),
+        /* xact=          */ &xact,
+        /* temps=         */ temps,
+        /* handler=       */ handler,
+        /* date=          */ *xact._date,
+        /* act_date_p=    */ true,
+        /* total=         */ value_t(),
+        /* direct_amount= */ false,
+        /* mark_visited=  */ true,
+        /* bidir_link=    */ true,
+        /* source_post=   */ &post);
+  }
+  // NOLINTEND(bugprone-branch-clone)
+}
+
+/**
+ * Generate a revaluation posting if the repriced total differs from last_total.
+ *
+ * Evaluates the total expression as of @p date and compares it with
+ * last_total.  If they differ, output_value_change() emits the difference.
+ */
+void changed_value_posts::output_revaluation(post_t& post, const date_t& date) {
+  repriced_total = total_as_of(post, date);
 
   DEBUG("filters.changed_value", "output_revaluation(last_total)     = " << last_total);
   DEBUG("filters.changed_value", "output_revaluation(repriced_total) = " << repriced_total);
 
   if (!last_total.is_null()) {
-    if (value_t diff = repriced_total - last_total) {
-      DEBUG("filters.changed_value",
-            "output_revaluation(strip(diff)) = " << diff.strip_annotations(report.what_to_keep()));
-
-      xact_t& xact = temps.create_xact();
-      xact.payee = _("Commodities revalued");
-      xact._date = is_valid(date) ? date : post.value_date();
-
-      // NOLINTBEGIN(bugprone-branch-clone)
-      if (!for_accounts_report) {
-        handle_value(/* value=         */ diff,
-                     /* account=       */ revalued_account,
-                     /* xact=          */ &xact,
-                     /* temps=         */ temps,
-                     /* handler=       */ handler,
-                     /* date=          */ *xact._date,
-                     /* act_date_p=    */ true,
-                     /* total=         */ repriced_total,
-                     /* direct_amount= */ false,
-                     /* mark_visited=  */ false,
-                     /* bidir_link=    */ true,
-                     /* source_post=   */ &post);
-      } else if (show_unrealized) {
-        handle_value(
-            /* value=         */ -diff,
-            /* account=       */ (diff < 0L ? losses_equity_account : gains_equity_account),
-            /* xact=          */ &xact,
-            /* temps=         */ temps,
-            /* handler=       */ handler,
-            /* date=          */ *xact._date,
-            /* act_date_p=    */ true,
-            /* total=         */ value_t(),
-            /* direct_amount= */ false,
-            /* mark_visited=  */ true,
-            /* bidir_link=    */ true,
-            /* source_post=   */ &post);
-      }
-      // NOLINTEND(bugprone-branch-clone)
-    }
+    if (value_t diff = repriced_total - last_total)
+      output_value_change(post, date, diff);
   }
+}
+
+/**
+ * Whether the report books its unrealized gain from cost basis.
+ *
+ * A balance report does, unless it uses historical prices, or its total has
+ * several columns, such as the market value and cost pairs of --gain or the
+ * totals of cleared and budget reports, which leave no basis to compare.
+ * Those are revalued by output_revaluation() alone, as they were before.
+ */
+bool changed_value_posts::books_from_basis() const {
+  return for_accounts_report && !historical_prices_only && !last_total.is_sequence();
+}
+
+/**
+ * Book a balance report's unrealized gain or loss, revaluing the running
+ * total at its last posting, @p post, to the report's terminus date.
+ *
+ * The gain is the running total's market value at the terminus less the
+ * cost basis of its postings, booked as one posting: to the gains account
+ * when it is a gain, and to the losses account when a loss.  Booked at each
+ * date instead, it would be split between the two accounts according to
+ * when unrelated transactions happened to fall.  The report values its
+ * accounts at the terminus, so the total is revalued to it even from a
+ * posting dated after it.
+ */
+void changed_value_posts::output_unrealized_gain(post_t& post) {
+  const date_t terminus(report.terminus.date());
+  if (!last_total.is_null())
+    unrealized_gain += total_as_of(post, terminus) - last_total;
+
+  DEBUG("filters.changed_value", "output_unrealized_gain = " << unrealized_gain);
+
+  if (unrealized_gain)
+    output_value_change(post, terminus, unrealized_gain);
+  unrealized_gain = value_t();
+}
+
+namespace {
+/// Whether @p value holds an amount of @p commodity.  A market valuation
+/// leaves in place any amount it has no price for.
+bool holds_commodity(const value_t& value, const commodity_t& commodity) {
+  if (value.is_amount())
+    return value.as_amount().has_commodity() &&
+           value.as_amount().commodity().referent() == commodity.referent();
+  if (value.is_balance()) {
+    for (const balance_t::amounts_map::value_type& pair : value.as_balance().amounts)
+      if (pair.first->referent() == commodity.referent())
+        return true;
+  }
+  return false;
+}
+} // namespace
+
+/**
+ * Return the gain that @p post brings into a balance report's running total
+ * by entering it at a market value other than its cost basis.
+ *
+ * Revaluing the running total measures how its market value moves, but a
+ * posting whose cost basis differs from its market value moves it too,
+ * with no price changing.  A lot sold above its basis takes out more market
+ * value than basis, the difference now being a realized gain.  And a stock
+ * split's own prices value the shares held before it at the split's new
+ * price, though the split exchanges them at their basis (#1821).  The gain
+ * returned, the posting's market value less its basis on its own date,
+ * takes such a change back out of the unrealized gain.
+ *
+ * A posting's basis is its cost, as --basis reports it.  A posting that sums
+ * others, such as a --period subtotal of several commodities, keeps their
+ * lots but not their costs, so each of its lots is valued at its lot price.
+ */
+value_t changed_value_posts::basis_gain(post_t& post) {
+  const value_t& value(post.xdata().visited_value);
+  value_t gain;
+  if (value.is_amount()) {
+    bind_scope_t bound_scope(report, post);
+    gain = basis_gain(post, value.as_amount(), cost_expr.calc(bound_scope));
+  } else if (value.is_balance()) {
+    for (const balance_t::amounts_map::value_type& pair : value.as_balance().amounts)
+      if (std::optional<amount_t> price = pair.second.price())
+        gain += basis_gain(post, pair.second, *price);
+  }
+  return gain;
+}
+
+/**
+ * Return what @p amount, entering the running total at @p post, is worth
+ * over its cost basis @p basis.
+ *
+ * An amount that does not differ from its basis brings no gain, and neither
+ * does one whose commodity the report has no price for: its basis cannot be
+ * compared, so it keeps the value it entered at.
+ */
+value_t changed_value_posts::basis_gain(post_t& post, const amount_t& amount, value_t basis) {
+  // A cost may keep its full precision, but the gain is judged at display
+  // precision, as revaluations are, so that no residue below it is booked.
+  basis.in_place_round();
+  if (basis == amount)
+    return value_t();
+
+  // Value the difference by standing it in for the posting's running total,
+  // the way total_as_of() stands in another date.
+  post_t::xdata_t& xdata(post.xdata());
+  value_t total = value_t(amount) - basis;
+  std::swap(xdata.total, total);
+  value_t gain;
+  try {
+    bind_scope_t bound_scope(report, post);
+    gain = total_expr.calc(bound_scope);
+  } catch (...) {
+    std::swap(xdata.total, total);
+    throw;
+  }
+  std::swap(xdata.total, total);
+
+  if (holds_commodity(gain, amount.commodity()))
+    return value_t();
+  return gain;
 }
 
 namespace {
@@ -1183,15 +1328,27 @@ void changed_value_posts::output_intermediate_prices(post_t& post, const date_t&
  * 2. A direct revaluation is generated when using --historical or when
  *    postings share the same value date.
  *
+ * A balance report that books its gains from cost basis instead gathers its
+ * unrealized gain, as the revaluation of the running total to each new date
+ * plus the basis gain of each posting, and books it once, in flush().
+ *
  * The posting is then forwarded downstream, and the current total is
  * captured as last_total for the next comparison.
  */
 void changed_value_posts::operator()(post_t& post) {
   if (last_post) {
-    // Don't generate spurious revaluations when postings are from the same
-    // transaction (e.g., stock splits with multiple prices on the same date).
-    // Within a transaction, postings represent a complete operation.
-    if (last_post->xact != post.xact) {
+    if (books_from_basis()) {
+      // A day's own prices take part in both its revaluation and its basis
+      // gains: a stock split values the shares held before it at the split's
+      // new price, but exchanges them at their basis.  Only their sum is a
+      // change in unrealized gain, which is why it is booked as a whole.
+      if (last_post->value_date() != post.value_date() && !last_total.is_null())
+        unrealized_gain += total_as_of(*last_post, post.value_date()) - last_total;
+    } else if (last_post->xact != post.xact) {
+      // Don't generate spurious revaluations when postings are from the same
+      // transaction (e.g., stock splits with multiple prices on the same
+      // date).  Within a transaction, postings represent a complete operation.
+
       // In plot mode (-j/-J) combined with period mode (-M/--period),
       // suppress intermediate price entries between periods so that each
       // period produces exactly one data point for gnuplot (issue #984).
@@ -1218,6 +1375,9 @@ void changed_value_posts::operator()(post_t& post) {
   bind_scope_t bound_scope(report, post);
   last_total = total_expr.calc(bound_scope);
   last_post = &post;
+
+  if (books_from_basis())
+    unrealized_gain += basis_gain(post);
 }
 
 /*--- Subtotaling ---*/

@@ -853,12 +853,17 @@ public:
  * commodity price database for price points between posting dates and
  * generating a revaluation for each.
  *
+ * A balance report instead books its unrealized gain or loss once, as the
+ * running total's market value at the report's terminus less the cost basis
+ * of its postings.
+ *
  * @note Requires calc_posts somewhere downstream in the chain.
  */
 class changed_value_posts : public item_handler<post_t> {
   report_t& report;   ///< Report context.
   expr_t& total_expr; ///< Expression for computing the total to compare (may be revalued_total_).
   expr_t& display_total_expr; ///< Expression for computing display totals.
+  expr_t cost_expr;           ///< A posting's cost basis, as --basis reports it.
   bool changed_values_only; ///< If true, only show postings where value changed (--revalued-only).
   bool historical_prices_only; ///< If true, skip intermediate price lookups (--historical).
   bool for_accounts_report;    ///< Whether this is an accounts (balance) report.
@@ -866,6 +871,7 @@ class changed_value_posts : public item_handler<post_t> {
   post_t* last_post;           ///< Previous posting for comparison.
   value_t last_total;          ///< Total after the previous posting.
   value_t repriced_total;      ///< Total after repricing (set by output_revaluation).
+  value_t unrealized_gain;     ///< Unrealized gain gathered so far (balance reports).
   temporaries_t temps;         ///< Temporary storage for synthetic revaluation postings.
   account_t* revalued_account; ///< The <Revalued> account for register revaluations.
   account_t* gains_equity_account;  ///< Equity account for unrealized gains.
@@ -893,7 +899,14 @@ public:
 
   void flush() override;
 
+  bool books_from_basis() const;
+  value_t total_as_of(post_t& post, const date_t& date);
+  value_t basis_gain(post_t& post);
+  value_t basis_gain(post_t& post, const amount_t& amount, value_t basis);
+
+  void output_value_change(post_t& post, const date_t& date, const value_t& diff);
   void output_revaluation(post_t& post, const date_t& current);
+  void output_unrealized_gain(post_t& post);
   void output_intermediate_prices(post_t& post, const date_t& current);
 
   void operator()(post_t& post) override;
@@ -901,9 +914,11 @@ public:
   void clear() override {
     total_expr.mark_uncompiled();
     display_total_expr.mark_uncompiled();
+    cost_expr.mark_uncompiled();
 
     last_post = nullptr;
     last_total = value_t();
+    unrealized_gain = value_t();
 
     temps.clear();
     item_handler<post_t>::clear();

@@ -2092,6 +2092,34 @@ BOOST_AUTO_TEST_CASE(testAmountPriceNulloptW7)
   BOOST_CHECK(!p2);
 }
 
+BOOST_AUTO_TEST_CASE(testAmountPriceKeepsPriceCommodity)
+{
+  // price() totals a lot in the commodity of its lot price
+  amount_t x1("100 AAPL");
+  annotation_t ann1;
+  ann1.price = amount_t("$50.00");
+  x1.annotate(ann1);
+
+  std::optional<amount_t> p1 = x1.price();
+  BOOST_CHECK(p1);
+  BOOST_CHECK_EQUAL(*p1, amount_t("$5000.00"));
+
+  // A lot price with no commodity gives a total with none, rather than
+  // taking the commodity of the lot itself
+  amount_t x2("100 CAD");
+  annotation_t ann2;
+  ann2.price = amount_t("1.50");
+  x2.annotate(ann2);
+
+  std::optional<amount_t> p2 = x2.price();
+  BOOST_CHECK(p2);
+  BOOST_CHECK(!p2->has_commodity());
+  BOOST_CHECK_EQUAL(*p2, amount_t("150"));
+
+  BOOST_CHECK(x1.valid());
+  BOOST_CHECK(x2.valid());
+}
+
 // -----------------------------------------------------------------------
 // Coverage W7: parse with PARSE_NO_ANNOT (lines 1034, 1047)
 // -----------------------------------------------------------------------

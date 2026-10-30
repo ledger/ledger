@@ -1,0 +1,67 @@
+; Regression test for issue #3327: a stock split is not an unrealized
+; gain or loss, but a later price change is.
+;
+; The split's own prices put AAPL at $5 on the day of the split, which
+; values the 10 shares held before it at $50.  That $450 drop is offset
+; by the split itself, which exchanges those shares at their $500 cost
+; basis (#1821).  The rise from $5 to $6 that follows is a gain of $100
+; on the 100 shares, and is booked even though the next transaction is
+; on a later date.
+
+2024-01-01 Opening balance
+    Assets:Vault     10 XYZ {$10.00}
+    Equity:Opening
+
+2024-01-01 Buy
+    Assets:Broker    10 AAPL @ $50
+    Assets:Cash
+
+2024-01-02 Stock split
+    Assets:Broker   -10 AAPL @ $50
+    Assets:Broker   100 AAPL @ $5
+
+P 2024-02-01 AAPL $6
+
+2024-03-01 Interest
+    Assets:Cash       $10
+    Income:Interest
+
+test bal -V --unrealized --now 2024/06/01
+                $110
+              10 XYZ  Assets
+                $600    Broker
+               $-490    Cash
+              10 XYZ    Vault
+               $-100
+             -10 XYZ  Equity
+             -10 XYZ    Opening
+               $-100    Unrealized Gains
+                $-10  Income:Interest
+--------------------
+                   0
+end test
+
+; XYZ has no price, so the report cannot value it: it carries no gain or
+; loss, whatever its lot price.
+test bal -V --unrealized --now 2024/06/01 Vault
+              10 XYZ  Assets:Vault
+end test
+
+; --gain pairs each total's market value with its cost, which leaves no
+; basis to compare, so it books only the revaluation since the last
+; posting, the rise from $5 to $6, and never the fall at the split.
+test bal -G --unrealized --now 2024/06/01 Broker
+                $100  Assets:Broker
+               $-100  Equity:Unrealized Gains
+--------------------
+                   0
+end test
+
+; cleared keeps two totals for each account, which leave no basis to compare,
+; so it too books only the revaluation since the last posting.
+test cleared -V --unrealized --now 2024/06/01 Broker
+            $600                   0                 Assets:Broker
+           $-100                                     Equity:Unrealized Gains
+----------------  ------------------    ---------
+            $500                   0             
+end test

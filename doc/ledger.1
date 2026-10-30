@@ -1315,6 +1315,16 @@ Use only uncleared transactions in calculations and reports.
 .It Fl \-unrealized
 Show generated unrealized gain and loss accounts in the balance
 report.
+With
+.Fl \-market
+or
+.Fl \-exchange ,
+but not
+.Fl \-historical ,
+they hold the market value of the commodities reported on less their
+cost basis, as
+.Fl \-basis
+reports it.
 .It Fl \-unrealized-gains
 Allow the user to specify what account name should be used for
 unrealized gains.  Defaults to
