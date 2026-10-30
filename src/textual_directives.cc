@@ -277,7 +277,7 @@ void expand_glob_path(const path& base, const std::vector<path>& components, std
 
   const string comp = components[index].string();
   mask_t glob;
-  glob.assign_glob('^' + comp + '$');
+  glob.assign_glob(comp);
 
   std::vector<path> sorted_entries;
   std::copy(std::filesystem::directory_iterator(base), std::filesystem::directory_iterator(),

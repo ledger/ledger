@@ -423,6 +423,10 @@ components with their standard-library equivalents.
 
 - Return regex capture-group text from the `=~` operator (extending #664)
 
+- Treat every character of an `include` file name other than `*`, `?` and a
+  `[...]` set literally, including `$`, `^`, a character escaped with a
+  backslash, and a `[` that no `]` closes
+
 ### Documentation
 
 - Major overhaul of the manual: rewrite of the Value Expressions chapter with

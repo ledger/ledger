@@ -4504,15 +4504,57 @@ BOOST_AUTO_TEST_CASE(testMaskEquality)
   BOOST_CHECK(!(glob == mask_t("abc")));
 
   // A default mask has no pattern at all, so it differs from a compiled
-  // empty pattern even when the flags agree (an empty glob's are zero too).
-  mask_t empty_glob;
-  empty_glob.assign_glob("");
-  mask_t empty_glob2;
-  empty_glob2.assign_glob("");
+  // empty pattern even when the flags agree (perl's are zero).
+  mask_t empty_pattern;
+#if HAVE_BOOST_REGEX_UNICODE
+  empty_pattern.expr = boost::make_u32regex("", boost::regex::perl);
+#else
+  empty_pattern.expr.assign("", boost::regex::perl);
+#endif
+  mask_t empty_pattern2(empty_pattern);
   BOOST_CHECK(mask_t() == mask_t());
-  BOOST_CHECK(empty_glob == empty_glob2);
-  BOOST_CHECK(!(mask_t() == empty_glob));
-  BOOST_CHECK(!(empty_glob == mask_t()));
+  BOOST_CHECK(empty_pattern == empty_pattern2);
+  BOOST_CHECK(!(mask_t() == empty_pattern));
+  BOOST_CHECK(!(empty_pattern == mask_t()));
+}
+
+BOOST_AUTO_TEST_CASE(testMaskGlob)
+{
+  auto matches = [](const char* glob, const char* name) {
+    mask_t mask;
+    mask.assign_glob(glob);
+    return mask.match(name);
+  };
+
+  // A glob matches whole names.
+  BOOST_CHECK(matches("data_?.dat", "data_a.dat"));
+  BOOST_CHECK(!matches("data_?.dat", "old_data_a.dat"));
+  BOOST_CHECK(!matches("data_?.dat", "data_a.dat.bak"));
+  BOOST_CHECK(matches("*.dat", "data_a.dat"));
+  BOOST_CHECK(matches("data_[ab].dat", "data_b.dat"));
+  BOOST_CHECK(!matches("data_[ab].dat", "data_c.dat"));
+  BOOST_CHECK(matches("[[:digit:]].dat", "1.dat"));
+
+  // Every other character matches only itself, regex metacharacters
+  // included.
+  BOOST_CHECK(matches("a$b.dat", "a$b.dat"));
+  BOOST_CHECK(matches("^c.dat", "^c.dat"));
+  BOOST_CHECK(!matches("^c.dat", "c.dat"));
+  BOOST_CHECK(!matches("a.dat", "axdat"));
+  BOOST_CHECK(matches("x]y+(z){1}|w", "x]y+(z){1}|w"));
+
+  // So does a character escaped with a backslash, and a [ that no ]
+  // closes.
+  BOOST_CHECK(matches("\\[f].dat", "[f].dat"));
+  BOOST_CHECK(!matches("\\[f].dat", "f.dat"));
+  BOOST_CHECK(matches("g\\*.dat", "g*.dat"));
+  BOOST_CHECK(!matches("g\\*.dat", "gg.dat"));
+  BOOST_CHECK(matches("h\\?.dat", "h?.dat"));
+  BOOST_CHECK(!matches("h\\?.dat", "hh.dat"));
+  BOOST_CHECK(matches("i\\$", "i$"));
+  BOOST_CHECK(matches("j\\\\k", "j\\k"));
+  BOOST_CHECK(matches("l\\", "l\\"));
+  BOOST_CHECK(matches("d[e.dat", "d[e.dat"));
 }
 
 BOOST_AUTO_TEST_CASE(testIsEqualToSequence)
