@@ -257,11 +257,13 @@ commodity_t* commodity_pool_t::find_or_create(commodity_t& comm, const annotatio
  * more precision than a user who then references the lot by its displayed
  * value (e.g. {1.026087 EUR}).
  *
- * To merge such references with their originating lot, this helper scans
- * entries with the same base symbol and identical non-price details
- * (date, tag, value expression, and ANNOTATION_PRICE_FIXATED), and
- * accepts a candidate whose price matches @p details.price after both are
- * rounded to the lesser of their quantity precisions.  The fuzzy match is
+ * To merge such references with their originating lot, this helper looks
+ * at the entries with the same base symbol and identical non-price details
+ * (date, tag, value expression, and ANNOTATION_PRICE_FIXATED) -- one
+ * contiguous range of annotated_commodities, found with equal_range on
+ * the annotation's shape (see annotated_key_less) -- and accepts a
+ * candidate whose price matches @p details.price after both are rounded
+ * to the lesser of their quantity precisions.  The fuzzy match is
  * restricted to crossing the computed/user boundary (one side has
  * ANNOTATION_PRICE_CALCULATED, the other does not) so that two distinct
  * user-typed lots remain separate even when their prices would coincide
@@ -281,12 +283,8 @@ commodity_t* commodity_pool_t::find_annotation_fuzzy(const string& symbol,
   annotated_commodity_t* match = nullptr;
   bool ambiguous = false;
 
-  for (auto it = annotated_commodities.lower_bound(
-           annotated_commodities_map::key_type(symbol, annotation_t()));
-       it != annotated_commodities.end(); ++it) {
-    if (it->first.first != symbol)
-      break;
-
+  const auto candidates = annotated_commodities.equal_range(annotation_shape_t{symbol, details});
+  for (auto it = candidates.first; it != candidates.second; ++it) {
     const annotation_t& existing = it->first.second;
     if (!existing.price || !existing.price->has_commodity())
       continue;
@@ -610,12 +608,12 @@ commodity_pool_t::parse_price_directive(char* line, bool do_not_add_price, bool 
       std::ostringstream expr_text;
       expr_text << '(';
       bool first = true;
-      for (const auto& pair : result.as_balance().amounts) {
+      result.as_balance().map_sorted_amounts([&](const amount_t& component) {
         if (!first)
           expr_text << " + ";
-        pair.second.print(expr_text);
+        component.print(expr_text);
         first = false;
-      }
+      });
       expr_text << ')';
       if (commodity_t* commodity = find_or_create(symbol)) {
         commodity->set_value_expr(expr_t(expr_text.str()));

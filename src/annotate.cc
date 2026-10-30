@@ -58,74 +58,71 @@ namespace ledger {
 /// @{
 
 /**
- * @brief Strict weak ordering for annotations.
+ * @brief Compare the non-price part of two annotations.
  *
- * Annotations are ordered lexicographically by (price, date, tag, value_expr,
- * semantic flags).  Within each field, "absent" sorts before "present"; when
- * both are present, the field values are compared normally.  For prices the
- * commodity symbol is compared first (alphabetically), then the numeric value,
- * so that annotations in different currencies sort predictably.
- *
- * This ordering is the key comparator for the pool's annotated_commodities
- * map, ensuring that each unique annotation is stored exactly once.
+ * Fields are compared in the order price presence, price commodity, date,
+ * tag, value expression; within each field "absent" sorts before
+ * "present".  Price commodities are compared by symbol, and two distinct
+ * commodity objects with the same symbol (an annotated price commodity)
+ * are kept apart by identity, mirroring operator== which compares them
+ * with commodity_t::operator==.
  */
-bool annotation_t::operator<(const annotation_t& rhs) const {
-  if (!price && rhs.price)
-    return true;
-  if (price && !rhs.price)
-    return false;
-  if (!date && rhs.date)
-    return true;
-  if (date && !rhs.date)
-    return false;
-  if (!tag && rhs.tag)
-    return true;
-  if (tag && !rhs.tag)
-    return false;
-
-  if (!value_expr && rhs.value_expr)
-    return true;
-  if (value_expr && !rhs.value_expr)
-    return false;
-
-  if (price) {
-    if (price->commodity().symbol() < rhs.price->commodity().symbol())
-      return true;
-    if (price->commodity().symbol() > rhs.price->commodity().symbol())
-      return false;
-
-    if (*price < *rhs.price)
-      return true;
-    if (*price > *rhs.price)
-      return false;
+int annotation_t::compare_shape(const annotation_t& lhs, const annotation_t& rhs) {
+  if (lhs.price.has_value() != rhs.price.has_value())
+    return lhs.price ? 1 : -1;
+  if (lhs.price) {
+    const commodity_t& lcomm(lhs.price->commodity());
+    const commodity_t& rcomm(rhs.price->commodity());
+    if (&lcomm != &rcomm) {
+      if (int cmp = lcomm.base_symbol().compare(rcomm.base_symbol()))
+        return cmp;
+      return std::less<const commodity_t*>()(&lcomm, &rcomm) ? -1 : 1;
+    }
   }
-  if (date) {
-    if (*date < *rhs.date)
-      return true;
-    if (*date > *rhs.date)
-      return false;
-  }
-  if (tag) {
-    if (*tag < *rhs.tag)
-      return true;
-    if (*tag > *rhs.tag)
-      return false;
-  }
-  if (value_expr) {
+
+  if (lhs.date.has_value() != rhs.date.has_value())
+    return lhs.date ? 1 : -1;
+  if (lhs.date && *lhs.date != *rhs.date)
+    return *lhs.date < *rhs.date ? -1 : 1;
+
+  if (lhs.tag.has_value() != rhs.tag.has_value())
+    return lhs.tag ? 1 : -1;
+  if (lhs.tag)
+    if (int cmp = lhs.tag->compare(*rhs.tag))
+      return cmp;
+
+  if (lhs.value_expr.has_value() != rhs.value_expr.has_value())
+    return lhs.value_expr ? 1 : -1;
+  if (lhs.value_expr) {
     DEBUG("annotate.less",
-          "Comparing (" << value_expr->text() << ") < (" << rhs.value_expr->text());
-    if (value_expr->text() < rhs.value_expr->text())
-      return true;
-    // if (value_expr->text() > rhs.value_expr->text()) return false;
+          "Comparing (" << lhs.value_expr->text() << ") with (" << rhs.value_expr->text());
+    if (int cmp = lhs.value_expr->text().compare(rhs.value_expr->text()))
+      return cmp;
   }
+  return 0;
+}
 
-  // Compare semantic flags last
+/**
+ * @brief Total order on annotations: shape, then price value, then the
+ * semantic flags.
+ *
+ * This is the key comparator for the pool's annotated_commodities map (via
+ * commodity_pool_t::annotated_key_less).  Because the shape is compared
+ * first, all lots of a symbol that differ only in price value occupy one
+ * contiguous range of that map, which find_annotation_fuzzy() exploits.
+ */
+int annotation_t::compare(const annotation_t& rhs) const {
+  if (int cmp = compare_shape(*this, rhs))
+    return cmp;
+
+  // Equal shapes share the price commodity, so the prices are comparable.
+  if (price)
+    if (int cmp = price->compare(*rhs.price))
+      return cmp;
+
   unsigned int lhs_flags = flags() & ANNOTATION_SEMANTIC_FLAGS;
   unsigned int rhs_flags = rhs.flags() & ANNOTATION_SEMANTIC_FLAGS;
-  if (lhs_flags < rhs_flags)
-    return true;
-
-  return false;
+  return lhs_flags < rhs_flags ? -1 : lhs_flags > rhs_flags ? 1 : 0;
 }
 
 /**
