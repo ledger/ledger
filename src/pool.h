@@ -81,8 +81,48 @@ public:
    * implicitly by parsing a commoditized amount.
    */
   using commodities_map = std::map<string, std::shared_ptr<commodity_t>>;
+  /**
+   * @brief Lookup key for the lots of one symbol that share a shape (see
+   * annotation_t::compare_shape) with a given annotation.
+   */
+  struct annotation_shape_t {
+    const string& symbol;
+    const annotation_t& details;
+  };
+
+  /**
+   * @brief Ordering of annotated_commodities: base symbol, then the
+   * annotation's shape, then its price value, then its semantic flags.
+   *
+   * Lots that differ only in price value are therefore adjacent, and the
+   * transparent overloads let find_annotation_fuzzy() fetch exactly that
+   * range with equal_range(annotation_shape_t) in logarithmic time rather
+   * than scanning every lot of the symbol.
+   */
+  struct annotated_key_less {
+    using is_transparent = void;
+    using key_type = std::pair<string, annotation_t>;
+
+    bool operator()(const key_type& lhs, const key_type& rhs) const {
+      if (int cmp = lhs.first.compare(rhs.first))
+        return cmp < 0;
+      return lhs.second.compare(rhs.second) < 0;
+    }
+    bool operator()(const key_type& lhs, const annotation_shape_t& rhs) const {
+      if (int cmp = lhs.first.compare(rhs.symbol))
+        return cmp < 0;
+      return annotation_t::compare_shape(lhs.second, rhs.details) < 0;
+    }
+    bool operator()(const annotation_shape_t& lhs, const key_type& rhs) const {
+      if (int cmp = lhs.symbol.compare(rhs.first))
+        return cmp < 0;
+      return annotation_t::compare_shape(lhs.details, rhs.second) < 0;
+    }
+  };
+
   using annotated_commodities_map =
-      std::map<std::pair<string, annotation_t>, std::shared_ptr<annotated_commodity_t>>;
+      std::map<std::pair<string, annotation_t>, std::shared_ptr<annotated_commodity_t>,
+               annotated_key_less>;
 
   /// All known base (unannotated) commodities, keyed by symbol string.
   /// Commodity aliases also live here, mapping the alias name to the same

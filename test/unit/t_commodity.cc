@@ -564,6 +564,66 @@ BOOST_AUTO_TEST_CASE(testAnnotationComparison)
   BOOST_CHECK(! (ann6 == ann7));
 }
 
+BOOST_AUTO_TEST_CASE(testAnnotationOrdering)
+{
+  // compare() is the strict weak ordering behind the pool's lot index:
+  // antisymmetric, transitive, zero exactly when operator== holds, and a
+  // refinement of compare_shape(), which ignores the price's value and
+  // the flags so that lots differing only in price are adjacent.
+  std::vector<annotation_t> anns;
+  anns.push_back(annotation_t());
+  anns.push_back(annotation_t(amount_t("$5")));
+  anns.push_back(annotation_t(amount_t("$5.00")));
+  anns.push_back(annotation_t(amount_t("$6")));
+  anns.push_back(annotation_t(amount_t("5 EUR")));
+  anns.push_back(annotation_t(amount_t("$5"), parse_date("2024/01/15")));
+  anns.push_back(annotation_t(amount_t("$5"), parse_date("2024/02/15")));
+  anns.push_back(annotation_t(amount_t("$5"), parse_date("2024/01/15"), string("lot1")));
+  anns.push_back(annotation_t(amount_t("$5"), parse_date("2024/01/15"), string("lot2")));
+  anns.push_back(annotation_t(std::nullopt, parse_date("2024/01/15")));
+  anns.push_back(annotation_t(std::nullopt, std::nullopt, string("lot1")));
+  anns.push_back(annotation_t(amount_t("$5"), std::nullopt, std::nullopt, expr_t("a")));
+  anns.push_back(annotation_t(amount_t("$5"), std::nullopt, std::nullopt, expr_t("b")));
+  annotation_t fixated(amount_t("$5"));
+  fixated.add_flags(ANNOTATION_PRICE_FIXATED);
+  anns.push_back(fixated);
+  annotation_t calculated(amount_t("$5"));
+  calculated.add_flags(ANNOTATION_PRICE_CALCULATED);
+  anns.push_back(calculated);
+
+  for (const annotation_t& a : anns) {
+    BOOST_CHECK_EQUAL(a.compare(a), 0);
+    for (const annotation_t& b : anns) {
+      const int ab = a.compare(b);
+      const int ba = b.compare(a);
+      BOOST_CHECK_EQUAL(ab == 0, ba == 0);
+      BOOST_CHECK_EQUAL(ab < 0, ba > 0);
+      BOOST_CHECK_EQUAL(ab == 0, a == b);
+      if (ab == 0)
+        BOOST_CHECK_EQUAL(annotation_t::compare_shape(a, b), 0);
+      if (annotation_t::compare_shape(a, b) < 0)
+        BOOST_CHECK(ab < 0);
+      for (const annotation_t& c : anns) {
+        if (ab < 0 && b.compare(c) < 0)
+          BOOST_CHECK(a.compare(c) < 0);
+        if (ab == 0 && b.compare(c) == 0)
+          BOOST_CHECK_EQUAL(a.compare(c), 0);
+      }
+    }
+  }
+
+  // "$5" and "$5.00" are one price, so one lot; a fixated price is another
+  // lot; whether the price was calculated does not tell lots apart.
+  BOOST_CHECK_EQUAL(anns[1].compare(anns[2]), 0);
+  BOOST_CHECK(anns[1].compare(fixated) != 0);
+  BOOST_CHECK_EQUAL(anns[1].compare(calculated), 0);
+  // Lots that differ only in price value, or only in flags, share a shape;
+  // a price in another commodity does not.
+  BOOST_CHECK_EQUAL(annotation_t::compare_shape(anns[1], anns[3]), 0);
+  BOOST_CHECK_EQUAL(annotation_t::compare_shape(anns[1], fixated), 0);
+  BOOST_CHECK(annotation_t::compare_shape(anns[1], anns[4]) != 0);
+}
+
 BOOST_AUTO_TEST_CASE(testKeepDetails)
 {
   // Default: keep nothing
