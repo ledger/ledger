@@ -53,6 +53,28 @@ directives, and commands.
 - Fix `--invert` to work correctly with composite reports (#1908) and with the
   `equity` command (#1645)
 
+### Performance
+
+- Performance: reports no longer slow down or exhaust memory as lots
+  accumulate, and the common reports are substantially faster.  Creating a
+  lot during parsing scanned every lot of the same commodity (quadratic
+  parsing, introduced after 3.4.1); adding a lot to a balance scanned the
+  balance (quadratic account totals); and every posting of a register or
+  print report kept a full copy of the running total (memory proportional
+  to postings times lots: 4 GB for a 10k-transaction journal).  Balances
+  are now stored in a persistent map (the vendored `immer` library under
+  lib/), amounts are formatted with exact integer arithmetic instead of
+  MPFR except on exact ties, symbol lookup no longer uses `dynamic_cast`,
+  and the printing path allocates far less.  On hledger's 100k-transaction
+  benchmark journal the flat balance report went from 16s to 0.7s, `print`
+  from 23 GB to 0.3 GB and `register` from 32s to 7.6s; the 1M-transaction
+  journal, previously unusable, is read in 4s, balanced in 7s and printed in
+  8s.  `print` no longer computes running totals it never displays.  Output
+  is unchanged, except that XML balances, `top_amount()` and commodity
+  value expressions now list components in commodity sort order (the
+  documented order) instead of hash order.  A benchmark and profiling kit
+  lives in tools/bench and a `perf` development shell in flake.nix.
+
 ### Code Modernization
 
 This release migrates the codebase to C++17 and replaces several Boost utility

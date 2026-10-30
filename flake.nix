@@ -222,6 +222,35 @@
           echo "  - llvm-cov: $(llvm-cov --version | head -1)"
         '';
       };
+
+      # Profiling shell: the default shell plus the tools used for
+      # performance work (recipes in tools/bench/README.md).  Kept apart
+      # from the default shell because heaptrack and valgrind bring large
+      # closures.  perf needs kernel.perf_event_paranoid <= 2 to sample our
+      # own processes (the NixOS default, 2, suffices); on macOS the
+      # equivalents are `sample`, `xctrace record --template 'Time
+      # Profiler'` from Xcode, or samply.
+      perf = self.devShells.${system}.default.overrideAttrs (old: {
+        name = "ledger-perf";
+        nativeBuildInputs = (old.nativeBuildInputs or []) ++ [
+          samply      # Sampling profiler with the Firefox Profiler UI (macOS and Linux)
+          flamegraph  # Brendan Gregg's FlameGraph scripts (stackcollapse-sample.awk reads `sample`)
+          inferno     # Flame graph rendering (inferno-flamegraph, inferno-diff-folded)
+        ] ++ lib.optionals stdenv.hostPlatform.isLinux [
+          linuxPackages.perf  # perf record/report/stat/annotate
+          heaptrack           # Heap allocation profiler (heaptrack_print for the CLI)
+          valgrind            # callgrind, cachegrind, massif, DHAT
+          gperftools          # libprofiler.so CPU profiler via LD_PRELOAD (tcmalloc crashes on macOS)
+          pprof               # Reads gperftools profiles: -top, -peek, flame graphs
+          bloaty              # Binary size profiler
+          poop                # Hardware-counter A/B comparison of two commands
+        ];
+        shellHook = old.shellHook + ''
+          echo "Profiling tools: samply, flamegraph, inferno${
+            lib.optionalString stdenv.hostPlatform.isLinux
+              ", perf, heaptrack, valgrind, gperftools, pprof, bloaty, poop"}"
+        '';
+      });
     });
 
   };
