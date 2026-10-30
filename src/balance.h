@@ -50,6 +50,9 @@
 
 #include "amount.h"
 
+#include <immer/map.hpp>
+#include <immer/map_transient.hpp>
+
 namespace ledger {
 
 class balance_error : public std::runtime_error {
@@ -96,7 +99,33 @@ class balance_t
                                                                              balance_t,
                                                                              long>>>>>>>>>>>>>> {
 public:
-  using amounts_map = std::unordered_map<commodity_t*, amount_t>;
+  /**
+   * Memory policy for the component map: plain new/delete and non-atomic
+   * reference counts.  Balances are never shared between threads, and the
+   * default free-list heap would keep global state alive across sessions.
+   */
+  using amounts_memory_policy =
+      immer::memory_policy<immer::heap_policy<immer::cpp_heap>, immer::unsafe_refcount_policy,
+                           immer::no_lock_policy>;
+
+  /**
+   * The component amounts, keyed by commodity identity (the pool holds
+   * exactly one commodity_t per distinct symbol or lot, see
+   * commodity_pool_t::annotated_commodities).
+   *
+   * This is a persistent, structurally shared hash map: copying a balance
+   * is O(1), and adding an amount yields a new version sharing all but
+   * O(log K) of its nodes with the previous one.  Every posting of a
+   * register keeps its own complete running total (calc_posts stores one
+   * in each post's xdata), so with K components the former
+   * std::unordered_map cost O(K) time and memory per posting; this map
+   * costs O(log K).  Iteration order is unspecified, as it was before;
+   * display goes through sorted_amounts().  The map is immutable: use
+   * set()/update()/erase(), which return the new version, or
+   * transform_amounts() to rewrite every component.
+   */
+  using amounts_map = immer::map<commodity_t*, amount_t, std::hash<commodity_t*>,
+                                 std::equal_to<commodity_t*>, amounts_memory_policy>;
   using amounts_array = std::vector<const amount_t*>;
 
   enum class lot_sort_order : std::uint8_t { by_commodity, fifo, lifo };
@@ -129,7 +158,7 @@ public:
     if (amt.is_null())
       throw_(balance_error, _("Cannot initialize a balance from an uninitialized amount"));
     if (!amt.is_realzero())
-      amounts.insert(amounts_map::value_type(&amt.commodity(), amt));
+      amounts = std::move(amounts).set(&amt.commodity(), amt);
     TRACE_CTOR(balance_t, "const amount_t&");
   }
   balance_t(const double val);
@@ -138,12 +167,12 @@ public:
 
   explicit balance_t(const string& val) {
     amount_t temp(val);
-    amounts.insert(amounts_map::value_type(&temp.commodity(), temp));
+    amounts = std::move(amounts).set(&temp.commodity(), temp);
     TRACE_CTOR(balance_t, "const string&");
   }
   explicit balance_t(const char* val) {
     amount_t temp(val);
-    amounts.insert(amounts_map::value_type(&temp.commodity(), temp));
+    amounts = std::move(amounts).set(&temp.commodity(), temp);
     TRACE_CTOR(balance_t, "const char *");
   }
 
@@ -171,9 +200,9 @@ public:
     if (amt.is_null())
       throw_(balance_error, _("Cannot assign an uninitialized amount to a balance"));
 
-    amounts.clear();
+    amounts = amounts_map();
     if (!amt.is_realzero())
-      amounts.insert(amounts_map::value_type(&amt.commodity(), amt));
+      amounts = std::move(amounts).set(&amt.commodity(), amt);
 
     return *this;
   }
@@ -273,14 +302,30 @@ public:
    * in_place_reduce()
    * in_place_unreduce()
    */
+  /**
+   * Rewrite every component amount in place by applying @p fn to a copy of
+   * it, rebuilding the persistent map in one pass.  Used by the in_place_*
+   * operations; @p fn must not change the amount's commodity (reduce and
+   * unreduce, which may, re-accumulate through a temporary instead).
+   */
+  template <typename Fn>
+  void transform_amounts(Fn&& fn) {
+    amounts_map::transient_type result;
+    for (const amounts_map::value_type& pair : amounts) {
+      amount_t amt(pair.second);
+      fn(amt);
+      result.set(pair.first, std::move(amt));
+    }
+    amounts = std::move(result).persistent();
+  }
+
   [[nodiscard]] balance_t negated() const {
     balance_t temp(*this);
     temp.in_place_negate();
     return temp;
   }
   void in_place_negate() {
-    for (amounts_map::value_type& pair : amounts)
-      pair.second.in_place_negate();
+    transform_amounts([&](amount_t& amt) { amt.in_place_negate(); });
   }
   balance_t operator-() const { return negated(); }
 
@@ -298,8 +343,7 @@ public:
     return temp;
   }
   void in_place_round() {
-    for (amounts_map::value_type& pair : amounts)
-      pair.second.in_place_round();
+    transform_amounts([&](amount_t& amt) { amt.in_place_round(); });
   }
 
   balance_t roundto(int places) const {
@@ -309,8 +353,7 @@ public:
   }
 
   void in_place_roundto(int places) {
-    for (amounts_map::value_type& pair : amounts)
-      pair.second.in_place_roundto(places);
+    transform_amounts([&](amount_t& amt) { amt.in_place_roundto(places); });
   }
 
   [[nodiscard]] balance_t truncated() const {
@@ -319,8 +362,7 @@ public:
     return temp;
   }
   void in_place_truncate() {
-    for (amounts_map::value_type& pair : amounts)
-      pair.second.in_place_truncate();
+    transform_amounts([&](amount_t& amt) { amt.in_place_truncate(); });
   }
 
   [[nodiscard]] balance_t display_rounded() const {
@@ -329,8 +371,7 @@ public:
     return temp;
   }
   void in_place_display_round() {
-    for (amounts_map::value_type& pair : amounts)
-      pair.second.in_place_roundto(pair.second.display_precision());
+    transform_amounts([&](amount_t& amt) { amt.in_place_roundto(amt.display_precision()); });
   }
 
   [[nodiscard]] balance_t rounded_to_commodity_precision() const {
@@ -339,8 +380,7 @@ public:
     return temp;
   }
   void in_place_round_to_commodity_precision() {
-    for (amounts_map::value_type& pair : amounts)
-      pair.second.in_place_round_to_commodity_precision();
+    transform_amounts([&](amount_t& amt) { amt.in_place_round_to_commodity_precision(); });
   }
 
   [[nodiscard]] balance_t floored() const {
@@ -349,8 +389,7 @@ public:
     return temp;
   }
   void in_place_floor() {
-    for (amounts_map::value_type& pair : amounts)
-      pair.second.in_place_floor();
+    transform_amounts([&](amount_t& amt) { amt.in_place_floor(); });
   }
 
   [[nodiscard]] balance_t ceilinged() const {
@@ -359,8 +398,7 @@ public:
     return temp;
   }
   void in_place_ceiling() {
-    for (amounts_map::value_type& pair : amounts)
-      pair.second.in_place_ceiling();
+    transform_amounts([&](amount_t& amt) { amt.in_place_ceiling(); });
   }
 
   [[nodiscard]] balance_t unrounded() const {
@@ -369,8 +407,7 @@ public:
     return temp;
   }
   void in_place_unround() {
-    for (amounts_map::value_type& pair : amounts)
-      pair.second.in_place_unround();
+    transform_amounts([&](amount_t& amt) { amt.in_place_unround(); });
   }
 
   balance_t reduced() const {
