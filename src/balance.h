@@ -499,9 +499,6 @@ public:
 
   optional<amount_t> commodity_amount(const optional<const commodity_t&>& commodity = none) const;
 
-  amounts_map::iterator find_by_name(const commodity_t& comm);
-  amounts_map::const_iterator find_by_name(const commodity_t& comm) const;
-
   balance_t number() const {
     balance_t temp;
     for (const amounts_map::value_type& pair : amounts)

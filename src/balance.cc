@@ -108,11 +108,14 @@ balance_t& balance_t::operator+=(const balance_t& bal) {
 /// @brief Add a single amount into the balance.
 ///
 /// If the amount's commodity already exists in the balance, its value is
-/// accumulated.  For annotated commodities (e.g., shares purchased at a
-/// specific price or date), lookup is done by commodity name rather than
-/// pointer identity, so that @c AAPL {$120} and @c AAPL {$130} are
-/// recognized as the same underlying commodity.  Amounts that are
-/// precisely zero are silently ignored to keep the map sparse.
+/// accumulated.  Commodities are compared by identity: the commodity pool
+/// holds exactly one commodity_t per distinct symbol and per distinct
+/// (symbol, annotation) pair (commodity_pool_t::annotated_commodities), so
+/// two amounts of the same lot -- say @c AAPL {$120} [2024/01/02] -- always
+/// share a pointer, and a hash lookup replaces the former linear scan by
+/// name (which made balances holding K lots cost O(K) per addition).
+/// Amounts that are precisely zero are silently ignored to keep the map
+/// sparse.
 ///
 /// @throws balance_error if @p amt is uninitialized (null).
 balance_t& balance_t::operator+=(const amount_t& amt) {
@@ -122,8 +125,7 @@ balance_t& balance_t::operator+=(const amount_t& amt) {
   if (amt.is_realzero())
     return *this;
 
-  amounts_map::iterator i = amt.commodity().has_annotation() ? find_by_name(amt.commodity())
-                                                             : amounts.find(&amt.commodity());
+  amounts_map::iterator i = amounts.find(&amt.commodity());
   if (i != amounts.end())
     i->second += amt;
   else
@@ -162,8 +164,7 @@ balance_t& balance_t::operator-=(const amount_t& amt) {
   if (amt.is_realzero())
     return *this;
 
-  amounts_map::iterator i = amt.commodity().has_annotation() ? find_by_name(amt.commodity())
-                                                             : amounts.find(&amt.commodity());
+  amounts_map::iterator i = amounts.find(&amt.commodity());
   if (i != amounts.end()) {
     i->second -= amt;
     if (i->second.is_realzero())
@@ -308,34 +309,6 @@ optional<balance_t> balance_t::value(const datetime_t& moment,
 /*  Commodity lookup by name                                            */
 /*----------------------------------------------------------------------*/
 
-/// @brief Find a commodity entry by name equality rather than pointer identity.
-///
-/// Annotated commodities (e.g., @c AAPL {$120} vs. @c AAPL {$130})
-/// have distinct commodity_t pointers even though they share the same
-/// base symbol.  This helper performs a linear scan comparing via
-/// operator== on the commodity, which checks the underlying symbol.
-/// It is used by operator+= and operator-= when the incoming amount
-/// has an annotated commodity.
-///
-/// @return An iterator to the matching entry, or amounts.end() if not found.
-balance_t::amounts_map::iterator balance_t::find_by_name(const commodity_t& comm) {
-  for (amounts_map::iterator i = amounts.begin(); i != amounts.end(); i++) {
-    if (*(*i).first == comm)
-      return i;
-  }
-  return amounts.end();
-}
-
-/// @brief Const overload of find_by_name.
-/// @see find_by_name(const commodity_t&)
-balance_t::amounts_map::const_iterator balance_t::find_by_name(const commodity_t& comm) const {
-  for (amounts_map::const_iterator i = amounts.begin(); i != amounts.end(); i++) {
-    if (*(*i).first == comm)
-      return i;
-  }
-  return amounts.end();
-}
-
 /*----------------------------------------------------------------------*/
 /*  Single-commodity extraction                                         */
 /*----------------------------------------------------------------------*/
@@ -374,9 +347,7 @@ balance_t::commodity_amount(const optional<const commodity_t&>& commodity) const
              _f("Requested amount of a balance with multiple commodities: %1%") % temp);
     }
   } else if (amounts.size() > 0) {
-    amounts_map::const_iterator i = commodity->has_annotation()
-                                        ? find_by_name(*commodity)
-                                        : amounts.find(const_cast<commodity_t*>(&*commodity));
+    amounts_map::const_iterator i = amounts.find(const_cast<commodity_t*>(&*commodity));
     if (i != amounts.end())
       return i->second;
   }
