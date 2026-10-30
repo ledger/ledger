@@ -101,6 +101,13 @@ public:
 
   enum class lot_sort_order : std::uint8_t { by_commodity, fifo, lifo };
 
+  /**
+   * The component amounts, keyed by commodity identity (the pool holds
+   * exactly one commodity_t per distinct symbol or lot, see
+   * commodity_pool_t::annotated_commodities; component_key() covers the
+   * lots the pool has had to give equal annotations, and a lot whose
+   * annotation the Python bindings edit in place is not followed).
+   */
   amounts_map amounts;
   lot_sort_order sort_order = lot_sort_order::by_commodity;
 
@@ -228,6 +235,14 @@ public:
   balance_t& operator-=(const double val) { return *this -= amount_t(val); }
   balance_t& operator-=(const unsigned long val) { return *this -= amount_t(val); }
   balance_t& operator-=(const long val) { return *this -= amount_t(val); }
+
+  /**
+   * The key under which amounts of @p comm are kept: @p comm itself, unless
+   * @p comm is one of the lots the pool has had to give equal annotations
+   * (see commodity_pool_t::reannotate): then the one of them this balance
+   * already holds, else the one that carried the annotation first.
+   */
+  commodity_t* component_key(const commodity_t& comm) const;
 
   balance_t& operator*=(const amount_t& amt);
   balance_t& operator*=(const double val) { return *this *= amount_t(val); }
@@ -498,9 +513,6 @@ public:
   std::size_t commodity_count() const { return amounts.size(); }
 
   optional<amount_t> commodity_amount(const optional<const commodity_t&>& commodity = none) const;
-
-  amounts_map::iterator find_by_name(const commodity_t& comm);
-  amounts_map::const_iterator find_by_name(const commodity_t& comm) const;
 
   balance_t number() const {
     balance_t temp;
