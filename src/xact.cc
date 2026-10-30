@@ -352,6 +352,10 @@ bool xact_base_t::finalize() {
   value_t virtual_balance;
   post_t* null_post = nullptr;
   post_t* virtual_null_post = nullptr;
+  // The commodity that enters `balance` first once it holds two: Phase 3
+  // prices that one when its reference posting's commodity is not among them
+  // (top_post there: the last posting with a lot annotation, else the first).
+  const commodity_t* first_component = nullptr;
 
   for (post_t* post : posts) {
     if (!post->must_balance())
@@ -373,7 +377,23 @@ bool xact_base_t::finalize() {
       // is ignored when displaying the amount.  We never want this set
       // for the balance, so we must clear the flag in a temporary to
       // avoid it propagating into the balance.
-      add_or_set_value(cur_balance, p.keep_precision() ? p.rounded().reduced() : p.reduced());
+      const amount_t reduced(p.keep_precision() ? p.rounded().reduced() : p.reduced());
+      if (!is_balanced_virtual && !first_component) {
+        // A balance_t comes into being at the first posting in a second
+        // commodity, holding the amount summed so far unless that is zero,
+        // and a zero amount never enters one.
+        if (cur_balance.is_balance()) {
+          if (!reduced.is_realzero())
+            first_component = &reduced.commodity();
+        } else if (cur_balance.is_amount() &&
+                   cur_balance.as_amount().commodity() != reduced.commodity()) {
+          if (!cur_balance.as_amount().is_realzero())
+            first_component = &cur_balance.as_amount().commodity();
+          else if (!reduced.is_realzero())
+            first_component = &reduced.commodity();
+        }
+      }
+      add_or_set_value(cur_balance, reduced);
     } else if (cur_null_post) {
       bool post_account_bad = account_ends_with_special_char(post->account->fullname());
       bool null_post_account_bad =
@@ -448,10 +468,28 @@ bool xact_base_t::finalize() {
 
       DEBUG("xact.finalize", "there were no costs, and a valid top_post");
 
-      balance_t::amounts_map::const_iterator a = bal.amounts.begin();
+      // The primary commodity, x, is top_post's when that is one of the two
+      // components, and otherwise the component that entered the balance
+      // first (first_component), which is what the former unordered map's
+      // two-entry order amounted to.  The persistent map's order is a hash
+      // order, and the direction of the inferred price must not depend on
+      // it.
+      balance_t::amounts_array sorted;
+      bal.sorted_amounts(sorted);
+      assert(sorted.size() == 2);
 
-      const amount_t* x = &(*a++).second;
-      const amount_t* y = &(*a++).second;
+      const amount_t* x = sorted[0];
+      const amount_t* y = sorted[1];
+      auto component_of = [x, y](const commodity_t& comm) -> const amount_t* {
+        if (comm == x->commodity())
+          return x;
+        if (comm == y->commodity())
+          return y;
+        return nullptr;
+      };
+      const amount_t* primary = component_of(top_post->amount.commodity());
+      if (!primary && first_component)
+        primary = component_of(*first_component);
 
       // Use is_realzero() rather than operator bool() here: the latter tests
       // is_nonzero() which respects the commodity's display precision, so an
@@ -462,7 +500,7 @@ bool xact_base_t::finalize() {
       // matters -- a divide-by-zero is only possible when the amount is
       // exactly zero.
       if (!x->is_realzero() && !y->is_realzero()) {
-        if (x->commodity() != top_post->amount.commodity())
+        if (primary == y)
           std::swap(x, y);
 
         // If one commodity is already marked COMMODITY_PRIMARY (e.g. from a

@@ -1,0 +1,36 @@
+; Comparing an account total that holds several commodities with an
+; amount is an error whichever of its components Ledger meets first,
+; including the order in which Ledger used to answer.
+;
+; Assets:Mixed received 10 EUR before it received $5.00.  Ledger used to
+; compare the components one at a time and stop at the first that settled
+; the answer; for this account that was the $5.00, so
+; `total >= $3` listed the account and `total < $3` left it out, with no
+; error, while the same comparisons on an account that had received the
+; dollars first failed (value-compare-mixed-balance-error.test).  Every
+; component's commodity is now checked before any is compared, so both
+; comparisons fail here too, naming the euros.
+
+2024/01/01 Euros
+    Assets:Mixed     10 EUR
+    Equity
+
+2024/01/02 Dollars
+    Assets:Mixed     $5.00
+    Equity
+
+test bal Assets -d 'total >= $3' -> 1
+__ERROR__
+While evaluating value expression:
+  (total >= $3.00)
+  ^^^^^^^^^^^^^^^^
+Error: Cannot compare amounts with different commodities: 'EUR' and '$'
+end test
+
+test bal Assets -d 'total < $3' -> 1
+__ERROR__
+While evaluating value expression:
+  (total < $3.00)
+  ^^^^^^^^^^^^^^^
+Error: Cannot compare amounts with different commodities: 'EUR' and '$'
+end test

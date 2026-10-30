@@ -5709,7 +5709,7 @@ BOOST_AUTO_TEST_CASE(testBalanceMultiplyByRealzero)
 }
 
 // ---------------------------------------------------------------------------
-// Wave 4: balance_t::find_by_name returns end (balance.cc lines 191-192)
+// Wave 4: commodity_amount() of a commodity the balance does not hold
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testBalanceFindByNameNotFound)
@@ -8430,6 +8430,138 @@ BOOST_AUTO_TEST_CASE(testAsAnyLval)
   // as_any_lval<T>()
   v.as_any_lval<int>() = 100;
   BOOST_CHECK(v.as_any<int>() == 100);
+}
+
+// =======================================================================
+// Comparing a balance with an amount or a number: every component decides
+// (one that netted to zero in another commodity is left out), and a
+// non-zero component in another commodity is an error
+// =======================================================================
+
+BOOST_AUTO_TEST_CASE(testBalanceLessThanAmountByComponent)
+{
+  // A plain number among the components is compared by its value, as it
+  // would be on its own, not counted as another commodity: 500 is not less
+  // than $200, so neither is the balance.
+  balance_t mixed;
+  mixed += amount_t("$100.00");
+  mixed += amount_t("500");
+  value_t v_mixed(mixed);
+  BOOST_REQUIRE(v_mixed.is_balance());
+  BOOST_CHECK(!v_mixed.is_less_than(value_t(amount_t("$200.00"))));
+  BOOST_CHECK(v_mixed.is_less_than(value_t(amount_t("$600.00"))));
+
+  balance_t single;
+  single += amount_t("$100.00");
+  value_t v_single(single);
+  BOOST_REQUIRE(v_single.is_balance());
+  BOOST_CHECK(v_single.is_less_than(value_t(amount_t("$200.00"))));
+  BOOST_CHECK(!v_single.is_less_than(value_t(amount_t("$50.00"))));
+}
+
+BOOST_AUTO_TEST_CASE(testBalanceCompareLeavesOutNettedComponent)
+{
+  // A component that netted to zero in another commodity (a balance keeps
+  // it) is no holding in the amount's: it does not make the comparison an
+  // error, and it takes no part in it, so the $100 decides alone.
+  balance_t netted;
+  netted += amount_t("$100.00");
+  netted += amount_t("10 EUR");
+  netted += amount_t("-10 EUR");
+  BOOST_REQUIRE_EQUAL(netted.amounts.size(), 2U);
+  value_t v(netted);
+
+  bool less = false;
+  BOOST_CHECK_NO_THROW(less = v.is_less_than(value_t(amount_t("$200.00"))));
+  BOOST_CHECK(less);
+  BOOST_CHECK(!v.is_less_than(value_t(amount_t("$50.00"))));
+  BOOST_CHECK(v.is_greater_than(value_t(amount_t("$50.00"))));
+  BOOST_CHECK(!v.is_greater_than(value_t(amount_t("$200.00"))));
+  BOOST_CHECK(v.is_greater_than(value_t(amount_t("$-1.00"))));
+
+  // Neither the commodity that sorts first nor the sign matters: a netted
+  // dollar beside 10 EUR, and a netted EUR beside $-5.
+  balance_t euros;
+  euros += amount_t("10 EUR");
+  euros += amount_t("$5.00");
+  euros += amount_t("$-5.00");
+  BOOST_CHECK(value_t(euros).is_greater_than(value_t(amount_t("5 EUR"))));
+  BOOST_CHECK(!value_t(euros).is_less_than(value_t(amount_t("5 EUR"))));
+  balance_t debt;
+  debt += amount_t("$-5.00");
+  debt += amount_t("10 EUR");
+  debt += amount_t("-10 EUR");
+  BOOST_CHECK(value_t(debt).is_less_than(value_t(amount_t("$0.00"))));
+  BOOST_CHECK(value_t(debt).is_greater_than(value_t(amount_t("$-10.00"))));
+}
+
+BOOST_AUTO_TEST_CASE(testBalanceCompareForeignCommodityThrows)
+{
+  // A component held in another commodity makes the comparison an error,
+  // whichever component is met first; the error names the foreign
+  // commodity that the display order lists first, and then the amount's.
+  balance_t mixed;
+  mixed += amount_t("$100.00");
+  mixed += amount_t("10 EUR");
+  value_t v(mixed);
+  auto names = [](const string& text) {
+    return [text](const amount_error& err) { return string(err.what()) == text; };
+  };
+  BOOST_CHECK_EXCEPTION(
+      v.is_less_than(value_t(amount_t("$200.00"))), amount_error,
+      names("Cannot compare amounts with different commodities: 'EUR' and '$'"));
+  BOOST_CHECK_EXCEPTION(
+      v.is_greater_than(value_t(amount_t("$50.00"))), amount_error,
+      names("Cannot compare amounts with different commodities: 'EUR' and '$'"));
+
+  // Among many foreign components, the one named is the first in display
+  // order, not the first the component map happens to visit.
+  balance_t many;
+  many += amount_t("$100.00");
+  for (char c = 'Z'; c >= 'A'; --c)
+    many += amount_t(string("1 FX") + c);
+  value_t v_many(many);
+  BOOST_CHECK_EXCEPTION(
+      v_many.is_less_than(value_t(amount_t("$200.00"))), amount_error,
+      names("Cannot compare amounts with different commodities: 'FXA' and '$'"));
+}
+
+BOOST_AUTO_TEST_CASE(testEmptyBalanceComparesFalse)
+{
+  // An empty balance is neither less nor greater than anything.
+  value_t empty((balance_t()));
+  BOOST_REQUIRE(empty.is_balance());
+  for (const value_t& rhs : {value_t(5L), value_t(-5L), value_t(0L),
+                             value_t(amount_t("$200.00")), value_t(amount_t("$-200.00"))}) {
+    BOOST_CHECK(!empty.is_less_than(rhs));
+    BOOST_CHECK(!empty.is_greater_than(rhs));
+  }
+}
+
+BOOST_AUTO_TEST_CASE(testNettedBalanceComparesAsZero)
+{
+  // A balance whose only components netted to zero compares as zero: less
+  // than 5 and not greater, greater than -5 and not less, and neither less
+  // nor greater than 0.  Against an amount in another commodity the netted
+  // component is left out, and a balance of nothing else compares as zero.
+  balance_t netted;
+  netted += amount_t("10 EUR");
+  netted += amount_t("-10 EUR");
+  BOOST_REQUIRE_EQUAL(netted.amounts.size(), 1U);
+  BOOST_REQUIRE(netted.is_realzero());
+  value_t v(netted);
+
+  BOOST_CHECK(v.is_less_than(value_t(5L)));
+  BOOST_CHECK(!v.is_greater_than(value_t(5L)));
+  BOOST_CHECK(v.is_greater_than(value_t(-5L)));
+  BOOST_CHECK(!v.is_less_than(value_t(-5L)));
+  BOOST_CHECK(!v.is_less_than(value_t(0L)));
+  BOOST_CHECK(!v.is_greater_than(value_t(0L)));
+
+  BOOST_CHECK(v.is_less_than(value_t(amount_t("$5.00"))));
+  BOOST_CHECK(!v.is_greater_than(value_t(amount_t("$5.00"))));
+  BOOST_CHECK(v.is_greater_than(value_t(amount_t("$-5.00"))));
+  BOOST_CHECK(!v.is_less_than(value_t(amount_t("$-5.00"))));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

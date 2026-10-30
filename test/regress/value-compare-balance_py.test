@@ -1,0 +1,98 @@
+; In Python, a Value that holds a balance is below an Amount when each
+; amount of the balance is below it, and above it when each is above it;
+; <= asks whether it is not above, and >= whether it is not below.  An
+; amount in another commodity makes the comparison an error,
+; ArithmeticError, whichever operator asks: <, <=, >, >=, an Amount on
+; the left, or Value.is_greater_than().  A balance of $5 cannot be
+; compared with 3 EUR, nor one of $5 and 10 EUR with $3, while $5 is
+; above $3.  The plain number 3 has no commodity and compares with every
+; amount by quantity, as it always has, so a comparison with it never
+; fails: $5 and 10 EUR are above 3.
+;
+; An amount that netted to zero in another commodity is left out of the
+; comparison.  A balance that received $5, then 10 EUR, then -10 EUR
+; holds two amounts and prints as $5; compared with $3 it answers as $5
+; does, without an error; compared with the plain number 3 the zero takes
+; part like any amount, so the balance is neither below 3 (the $5 is not)
+; nor above it (the zero is not), and <= and >= both hold.
+;
+; Ledger used to raise only for < and >=, and only when it met the amount
+; in another commodity before one that settled the answer; >, <=, an
+; Amount on the left and Value.is_greater_than() ordered amounts in
+; different commodities by their symbols, so the $5 balance was not above
+; 3 EUR, while $5 with 10 EUR was above $3.
+
+python
+    import ledger
+    def answer(label, compare):
+        try:
+            print(label + ":", compare())
+        except Exception as e:
+            print(label + ":", type(e).__name__ + ":",
+                  str(e).strip().splitlines()[-1])
+    def compare_all(name, val, rhs):
+        r = str(rhs)
+        answer(name + " < " + r, lambda: val < rhs)
+        answer(name + " <= " + r, lambda: val <= rhs)
+        answer(name + " > " + r, lambda: val > rhs)
+        answer(name + " >= " + r, lambda: val >= rhs)
+        answer(r + " < " + name, lambda: rhs < val)
+        answer(name + ".is_greater_than(" + r + ")",
+               lambda: val.is_greater_than(ledger.Value(rhs)))
+    def show(unused):
+        dollars = ledger.Balance(ledger.Amount("$5"))
+        mixed = ledger.Balance(ledger.Amount("$5"))
+        mixed += ledger.Amount("10 EUR")
+        netted = ledger.Balance(ledger.Amount("$5"))
+        netted += ledger.Amount("10 EUR")
+        netted += ledger.Amount("-10 EUR")
+        print("{$5, 0 EUR} holds", len(netted), "amounts and prints as",
+              netted)
+        compare_all("{$5}", ledger.Value(dollars), ledger.Amount("3 EUR"))
+        compare_all("{$5}", ledger.Value(dollars), ledger.Amount("$3"))
+        compare_all("{$5, 10 EUR}", ledger.Value(mixed), ledger.Amount("$3"))
+        compare_all("{$5, 10 EUR}", ledger.Value(mixed), ledger.Amount("3"))
+        compare_all("{$5, 0 EUR}", ledger.Value(netted), ledger.Amount("$3"))
+        compare_all("{$5, 0 EUR}", ledger.Value(netted), ledger.Amount("3"))
+
+eval show(0)
+
+test reg
+{$5, 0 EUR} holds 2 amounts and prints as $5
+{$5} < 3 EUR: ArithmeticError: Cannot compare amounts with different commodities: '$' and 'EUR'
+{$5} <= 3 EUR: ArithmeticError: Cannot compare amounts with different commodities: '$' and 'EUR'
+{$5} > 3 EUR: ArithmeticError: Cannot compare amounts with different commodities: '$' and 'EUR'
+{$5} >= 3 EUR: ArithmeticError: Cannot compare amounts with different commodities: '$' and 'EUR'
+3 EUR < {$5}: ArithmeticError: Cannot compare amounts with different commodities: '$' and 'EUR'
+{$5}.is_greater_than(3 EUR): ArithmeticError: Cannot compare amounts with different commodities: '$' and 'EUR'
+{$5} < $3: False
+{$5} <= $3: False
+{$5} > $3: True
+{$5} >= $3: True
+$3 < {$5}: True
+{$5}.is_greater_than($3): True
+{$5, 10 EUR} < $3: ArithmeticError: Cannot compare amounts with different commodities: 'EUR' and '$'
+{$5, 10 EUR} <= $3: ArithmeticError: Cannot compare amounts with different commodities: 'EUR' and '$'
+{$5, 10 EUR} > $3: ArithmeticError: Cannot compare amounts with different commodities: 'EUR' and '$'
+{$5, 10 EUR} >= $3: ArithmeticError: Cannot compare amounts with different commodities: 'EUR' and '$'
+$3 < {$5, 10 EUR}: ArithmeticError: Cannot compare amounts with different commodities: 'EUR' and '$'
+{$5, 10 EUR}.is_greater_than($3): ArithmeticError: Cannot compare amounts with different commodities: 'EUR' and '$'
+{$5, 10 EUR} < 3: False
+{$5, 10 EUR} <= 3: False
+{$5, 10 EUR} > 3: True
+{$5, 10 EUR} >= 3: True
+3 < {$5, 10 EUR}: True
+{$5, 10 EUR}.is_greater_than(3): True
+{$5, 0 EUR} < $3: False
+{$5, 0 EUR} <= $3: False
+{$5, 0 EUR} > $3: True
+{$5, 0 EUR} >= $3: True
+$3 < {$5, 0 EUR}: True
+{$5, 0 EUR}.is_greater_than($3): True
+{$5, 0 EUR} < 3: False
+{$5, 0 EUR} <= 3: True
+{$5, 0 EUR} > 3: False
+{$5, 0 EUR} >= 3: True
+3 < {$5, 0 EUR}: False
+{$5, 0 EUR}.is_greater_than(3): False
+end test

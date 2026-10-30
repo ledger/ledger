@@ -143,16 +143,16 @@ test xml bal Expenses | sed -E 's/ (id|ref)="[0-9a-f]+"/ \1="XXXX"/g; s/ version
           <total>
             <balance>
               <amount>
-                <commodity flags="S">
-                  <symbol>EUR</symbol>
-                </commodity>
-                <quantity>5</quantity>
-              </amount>
-              <amount>
                 <commodity flags="P">
                   <symbol>$</symbol>
                 </commodity>
                 <quantity>10</quantity>
+              </amount>
+              <amount>
+                <commodity flags="S">
+                  <symbol>EUR</symbol>
+                </commodity>
+                <quantity>5</quantity>
               </amount>
             </balance>
           </total>

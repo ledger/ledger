@@ -1,0 +1,80 @@
+; Comparing an account total with an amount compares each of its
+; components with the amount, and a component in another commodity makes
+; the comparison an error.  Neither a plain number nor a component that
+; netted to zero counts as one.
+;
+; A plain number has no commodity, and compares with an amount by
+; quantity, as an amount without a commodity always has.  Assets holds
+; $100.00 and 500 points written as a plain number: `total < $200` is
+; false for Assets (500 is not below 200) and for Assets:Points, and true
+; for Assets:Cash; `total >= $50` holds at both postings of the register.
+;
+; A component that netted to zero in another commodity is left out of a
+; comparison with an amount.  Wallet received 10 EUR and spent them, so
+; it prints only $5.00, and it compares as $5.00 does: `total < $10`
+; holds and `total < $3` does not, while Tips, which holds $1.00, is
+; below $3; Card, at $-10.00 after the same euros, is below $-5.  Ledger
+; used to compare the zero EUR with the amount as well, and failed with
+; "Cannot compare amounts with different commodities: 'EUR' and '$'":
+; always for `total < $10` and `total < $-5`, and for `total < $3`
+; whenever it met the EUR before the $5.00 that settles the answer, as
+; 3.4.1 did here.  (Against a plain number every component takes part,
+; a netted zero included, as it always has.)
+
+2024/01/01 Opening
+    Assets:Cash     $100.00
+    Equity
+
+2024/01/02 Loyalty points
+    Assets:Points   500
+    Income:Points
+
+2024/01/03 Pocket money
+    Wallet          $5.00
+    Equity
+
+2024/01/04 Euros from a friend
+    Wallet          10 EUR
+    Income:Gifts
+
+2024/01/05 Dinner
+    Expenses:Food   10 EUR
+    Wallet
+
+2024/01/06 Tip
+    Tips            $1.00
+    Equity
+
+2024/01/07 Card payment
+    Card            $-10.00
+    Equity
+
+2024/01/08 Euros on the card
+    Card            10 EUR
+    Income:Gifts
+
+2024/01/09 Dinner on the card
+    Expenses:Food   10 EUR
+    Card
+
+test bal Assets -d 'total < $200'
+             $100.00  Assets:Cash
+end test
+
+test reg Assets -d 'total >= $50'
+24-Jan-01 Opening               Assets:Cash                 $100.00      $100.00
+24-Jan-02 Loyalty points        Assets:Points                   500          500
+                                                                         $100.00
+end test
+
+test bal Wallet -d 'total < $10'
+               $5.00  Wallet
+end test
+
+test bal Wallet Tips -d 'total < $3'
+               $1.00  Tips
+end test
+
+test bal Card -d 'total < $-5'
+             $-10.00  Card
+end test

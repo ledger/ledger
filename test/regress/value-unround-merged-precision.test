@@ -1,0 +1,90 @@
+; With --unround, an amount that a valuation merges from several
+; components keeps full precision when any of its parts did, on every run,
+; whether -V or -X merges it.
+;
+; Assets:Broker holds 10 AAPL and 86.66667 EUR (100.00 EUR less the
+; 13.33333 EUR paid for the AAPL at 1.333333 EUR), which --unround keeps
+; at full precision.  -V values the AAPL at the later price of 1.5 EUR,
+; and -X EUR,USD converts it to EUR, the first commodity named, at the
+; same price: 15 EUR, a new amount that prints at EUR's two decimals.
+; Either way the two euro amounts merge into 101.66667 EUR.  Adding two
+; amounts keeps only the left one's full-precision flag, and Ledger used
+; to add the components in the order in which the balance happened to keep
+; them: -V printed 101.66667 EUR here, but -X with several commodities,
+; which merges by a route of its own, printed 101.67 EUR and left out the
+; <Adjustment> that -V's register shows.  That order changes from run to
+; run, so a merge now keeps full precision whenever one of its parts did,
+; whichever is added first.  Without --unround the total prints as
+; 101.67 EUR, as it always did.
+;
+; In the register the purchase's 10 AAPL, converted at the price its cost
+; set, is 13.33333 EUR and prints as 13.33 EUR, while the running total
+; keeps full precision, 113.33333 EUR: the <Adjustment> of 0.00333 EUR
+; makes the column add up, as under -V.
+;
+; The second journal is cmd-pricemap.test's; -p 2012 picks it, and the
+; Assets query the first.  -X '$,AAA' keeps the AAA and H's $-10.00 and
+; converts the euros and pounds to dollars, so the dollar total merges
+; $-10.00, kept at full precision, with converted amounts that are not:
+; $-10.17494, where Ledger used to drop the extra digits on some runs and
+; not on others.
+
+2024/01/01 Opening
+    Assets:Broker     100.00 EUR
+    Equity
+
+2024/01/02 Buy
+    Assets:Broker      10 AAPL @ 1.333333 EUR
+    Assets:Broker
+
+P 2024/02/01 AAPL 1.5 EUR
+
+; The journal of cmd-pricemap.test.
+P 2012-03-25 EUR 0.83 GBP
+P 2012-03-25 EUR 1.32 $
+P 2012-03-25 USD 0.75 EUR
+P 2012-03-25 AAA $10.00
+
+2012-03-23 * Test 1
+    C               20.00 EUR @@ 16.71 GBP
+    D
+
+2012-03-24 * Test 2
+    E               30.00 GBP
+    F
+
+2012-03-25 * Test 3
+    G          1 AAA @ $10.00
+    H
+
+test bal -V --unround Assets
+       101.66667 EUR  Assets:Broker
+end test
+
+test bal -X EUR,USD --unround Assets
+       101.66667 EUR  Assets:Broker
+end test
+
+test reg -X EUR,USD --unround Assets
+24-Jan-01 Opening               Assets:Broker            100.00 EUR   100.00 EUR
+24-Jan-02 Buy                   <Adjustment>            0.00333 EUR 100.00333 EUR
+                                Assets:Broker             13.33 EUR 113.33333 EUR
+                                Assets:Broker          -13.33333 EUR   100.00 EUR
+24-Feb-01 Commodities revalued  <Revalued>              1.66667 EUR 101.66667 EUR
+end test
+
+test bal -X EUR,USD Assets
+          101.67 EUR  Assets:Broker
+end test
+
+test bal -X '$,AAA' --unround -p 2012
+              $26.40  C
+             $-26.57  D
+              $47.71  E
+             $-47.71  F
+               1 AAA  G
+             $-10.00  H
+--------------------
+          $-10.17494
+               1 AAA
+end test

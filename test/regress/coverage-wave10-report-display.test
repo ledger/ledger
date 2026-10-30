@@ -14,5 +14,5 @@ end test
 ; Test top_amount with multi-commodity total - covers and fn_top_amount
 test reg --format '%(top_amount(total))\n' Expenses
 $50.00
-30 EUR
+$50.00
 end test

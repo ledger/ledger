@@ -841,8 +841,14 @@ value_t report_t::display_value(const value_t& val) {
 namespace {
 value_t top_amount(const value_t& val) {
   switch (val.type()) {
-  case value_t::BALANCE:
-    return (*val.as_balance().amounts.begin()).second;
+  case value_t::BALANCE: {
+    // The component map is unordered; the "top" amount is the first one in
+    // the display order of balance_t::print() (counting a zero component,
+    // which print() would skip), found without sorting the whole balance.
+    if (const amount_t* top = val.as_balance().first_sorted_amount())
+      return *top;
+    return value_t();
+  }
 
   case value_t::SEQUENCE: {
     return top_amount(*val.as_sequence().begin());

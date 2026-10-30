@@ -1724,14 +1724,24 @@ BOOST_AUTO_TEST_CASE(testCompareByCommdityValueExprW7)
   amount_t a2(1L);
   a2.set_commodity(*c2);
 
-  // Exercises line 474-476: both have value_expr, text comparison
+  // Both have value_expr: a three-way comparison of their text, so that
+  // sorted_amounts() is a total order over such lots.
   int cmp = commodity_t::compare_by_commodity()(&a1, &a2);
-  // "amount" < "total" is true, so returns 1
-  BOOST_CHECK(cmp == 1);
+  BOOST_CHECK(cmp < 0); // "amount" < "total"
 
-  // Reverse comparison: "total" < "amount" is false, returns 0
   int cmp2 = commodity_t::compare_by_commodity()(&a2, &a1);
-  BOOST_CHECK(cmp2 == 0);
+  BOOST_CHECK(cmp2 > 0);
+
+  BOOST_CHECK_EQUAL(commodity_t::compare_by_commodity()(&a1, &a1), 0);
+
+  // Equal expressions fall through to the semantic flags.
+  annotation_t ann3;
+  ann3.value_expr = expr_t("amount");
+  ann3.add_flags(ANNOTATION_PRICE_FIXATED);
+  amount_t a3(1L);
+  a3.set_commodity(*commodity_pool_t::current_pool->find_or_create("VEXPR", ann3));
+  BOOST_CHECK(commodity_t::compare_by_commodity()(&a1, &a3) < 0);
+  BOOST_CHECK(commodity_t::compare_by_commodity()(&a3, &a1) > 0);
 }
 
 // -----------------------------------------------------------------------

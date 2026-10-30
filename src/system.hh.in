@@ -82,6 +82,11 @@
 
 #include "utf8.h"
 
+// immer's headers use the C assert(), so they are included here, ahead of
+// utils.h, whose throwing assert() is meant for the Ledger code that follows.
+#include <immer/map.hpp>
+#include <immer/map_transient.hpp>
+
 #include <algorithm>
 #include <exception>
 #include <typeinfo>
@@ -116,6 +121,7 @@
 #include <cstring>
 #include <csignal>
 #include <cstddef> /* needed for gcc 4.9 */
+#include <cstdint>
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 #include <io.h>

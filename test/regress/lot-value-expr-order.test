@@ -1,0 +1,48 @@
+; Lots that differ only in their valuation expression, ((...)), are listed
+; in the order of the expressions' text, and two lots with the same
+; expression are listed floating {$5} before fixated {=$5}, as lots
+; without an expression are.  top_amount() gives the first amount in that
+; order, so from the second posting on, the top amount of Assets:Broker's
+; running total is the lot with the smallest expression.
+;
+; Ledger used to treat such lots as equal when sorting, whatever their
+; expressions and fixation, so it listed them, and top_amount() picked
+; one, in the order in which the balance happened to keep them, which
+; changed from run to run.
+
+2024/01/01 Buy
+    Assets:Broker    4 AAPL {$5} ((4 + 4))
+    Assets:Broker    1 AAPL {$5} ((1 + 1))
+    Assets:Broker    6 AAPL {$5} ((6 + 6))
+    Assets:Broker    3 AAPL {$5} ((3 + 3))
+    Assets:Broker    5 AAPL {$5} ((5 + 5))
+    Assets:Broker    2 AAPL {$5} ((2 + 2))
+    Assets:Cash
+
+2024/01/02 Buy
+    Assets:Fixed     1 AAPL {=$5} ((1 + 1))
+    Assets:Fixed     2 AAPL {$5} ((1 + 1))
+    Assets:Cash
+
+test bal --lots --flat --no-total Assets:Broker
+1 AAPL {$5} ((({1} + {1})))
+2 AAPL {$5} ((({2} + {2})))
+3 AAPL {$5} ((({3} + {3})))
+4 AAPL {$5} ((({4} + {4})))
+5 AAPL {$5} ((({5} + {5})))
+6 AAPL {$5} ((({6} + {6})))  Assets:Broker
+end test
+
+test reg --lots --format "%(top_amount(total))\n" Assets:Broker
+4 AAPL {$5} ((({4} + {4})))
+1 AAPL {$5} ((({1} + {1})))
+1 AAPL {$5} ((({1} + {1})))
+1 AAPL {$5} ((({1} + {1})))
+1 AAPL {$5} ((({1} + {1})))
+1 AAPL {$5} ((({1} + {1})))
+end test
+
+test bal --lots --flat --no-total Assets:Fixed
+ 2 AAPL {$5} ((({1} + {1})))
+1 AAPL {=$5} ((({1} + {1})))  Assets:Fixed
+end test

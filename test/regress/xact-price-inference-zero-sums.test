@@ -1,0 +1,65 @@
+; When a transaction exchanges two commodities without a cost, and its
+; first posting holds neither of them, Ledger prices the commodity that
+; entered the transaction's balance first.  Ledger adds up the real
+; postings in order; at the first posting in a second commodity, the sum
+; of the postings before it enters first unless it is zero, and a zero
+; sum leaves the choice to the first non-zero posting from there on.
+; These transactions pin the edges of that rule that
+; xact-price-inference-cancel-first.test does not.
+;
+; The first bills ten hours after a two-hour correction.  Hours are kept
+; as seconds, so its first posting, in hours, holds neither commodity;
+; the correction sums to zero before the dollars arrive, so the dollars
+; enter first and are priced in time, at 24s, as a lot on
+; Income:Consulting.  The second reaches its first AUD posting, a zero
+; fee, when the ZAR transfer has summed to zero: nothing enters there,
+; and the first non-zero posting after it is in ZAR, so ZAR is priced in
+; AUD although an AUD posting came before it.  The third reaches its first
+; NOK posting, again a zero fee, before the SEK transfer has cancelled:
+; the 50 SEK enter first and stay first after the transfer cancels, so
+; SEK is priced in NOK.  ZAR and SEK sort after the other currency, so a
+; fixed order of the two commodities would price AUD and NOK.  Each
+; transaction uses its own pair, so that no commodity is already a price
+; target (#1130).  Ledger 3.4.1 made the same three choices.
+
+2024/01/05 Billing after a correction
+    Assets:Time               2h
+    Expenses:Time            -2h
+    Income:Consulting     $-1500
+    Assets:Billable          10h
+
+2024/01/06 Exchange after a transfer and a zero fee
+    [Budget:Travel]          $100
+    [Budget:Available]      $-100
+    Assets:Wallet:ZAR        50 ZAR
+    Assets:Bank:ZAR         -50 ZAR
+    Expenses:Fees             0 AUD
+    Assets:Bank:ZAR        -115 ZAR
+    Assets:AUD              100 AUD
+
+2024/01/07 Exchange with a fee posted between the transfer legs
+    [Budget:Travel]          $100
+    [Budget:Available]      $-100
+    Assets:Wallet:SEK        50 SEK
+    Expenses:Fees             0 NOK
+    Assets:Bank:SEK         -50 SEK
+    Assets:NOK              100 NOK
+    Assets:Bank:SEK        -115 SEK
+
+test pricedb
+P 2024/01/05 00:00:00 $ 24s
+P 2024/01/06 00:00:00 ZAR 0.869565 AUD
+P 2024/01/07 00:00:00 SEK 0.869565 NOK
+end test
+
+test bal --lots --flat --no-total Assets Income
+             100 AUD  Assets:AUD
+-165 SEK {0.869565 NOK} [2024/01/07]  Assets:Bank:SEK
+-165 ZAR {0.869565 AUD} [2024/01/06]  Assets:Bank:ZAR
+              10.00h  Assets:Billable
+             100 NOK  Assets:NOK
+               2.00h  Assets:Time
+50 SEK {0.869565 NOK} [2024/01/07]  Assets:Wallet:SEK
+50 ZAR {0.869565 AUD} [2024/01/06]  Assets:Wallet:ZAR
+$-1500 {24s} [2024/01/05]  Income:Consulting
+end test
