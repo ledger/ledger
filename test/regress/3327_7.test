@@ -1,0 +1,22 @@
+; Regression test for issue #3327: a lot bought and sold on the same day
+; books no unrealized gain or loss.
+;
+; Prices are kept by the day, so both trades are valued at the day's last
+; price, $12.00.  The 10 ABC bought at $10.00 are sold the same day, which
+; realizes their $20 gain in Income:Gains and leaves nothing unrealized.
+
+2024-01-02 Buy
+    Assets:Broker    10 ABC @ $10.00
+    Assets:Cash
+
+2024-01-02 Sell
+    Assets:Broker   -10 ABC {$10.00} @ $12.00
+    Assets:Cash      $120.00
+    Income:Gains
+
+test bal -V --unrealized --now 2024/06/01
+              $20.00  Assets:Cash
+             $-20.00  Income:Gains
+--------------------
+                   0
+end test

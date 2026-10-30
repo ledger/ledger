@@ -1,0 +1,31 @@
+; Regression test for issue #3327: a commodity bought at other than the
+; day's market price is measured from its cost.
+;
+; The 10 ABC cost $100, but the day's price, recorded after the purchase,
+; makes them worth $120.  A report valued at its terminus books the $20 as
+; an unrealized gain, which 3.4.1 did not.  --historical, which values
+; each posting at the price of its own day, keeps the revaluations it made
+; before, and does not book the $20.
+
+2024/01/02 Buy
+    Assets:Broker    10 ABC @ $10
+    Assets:Cash
+
+P 2024/01/02 ABC $12
+
+test bal -V --unrealized --now 2024/06/01
+                 $20  Assets
+                $120    Broker
+               $-100    Cash
+                $-20  Equity:Unrealized Gains
+--------------------
+                   0
+end test
+
+test bal -H -V --unrealized --now 2024/06/01
+                 $20  Assets
+                $120    Broker
+               $-100    Cash
+--------------------
+                 $20
+end test

@@ -1,0 +1,35 @@
+; Regression test for issue #3327: a lot price rounded from its cost books
+; no residue.
+;
+; 3 ABC bought for $10.00 have a lot price of $3.333333, so on the day they
+; were bought they are worth $9.999999.  The missing millionth of a dollar
+; is rounding, not a loss, and is not booked.  The rise to $4.00 that
+; follows is a gain of 3 x $4.00 - $10.00 = $2.00.
+
+2024-01-01 Buy
+    Assets:Broker    3 ABC @@ $10.00
+    Assets:Cash
+
+P 2024-02-01 ABC $4.00
+
+2024-03-01 Interest
+    Assets:Cash       $1.00
+    Income:Interest
+
+test bal -V --unrealized --end 2024/02/01
+                   0  Assets
+              $10.00    Broker
+             $-10.00    Cash
+--------------------
+                   0
+end test
+
+test bal -V --unrealized --now 2024/06/01
+               $3.00  Assets
+              $12.00    Broker
+              $-9.00    Cash
+              $-2.00  Equity:Unrealized Gains
+              $-1.00  Income:Interest
+--------------------
+                   0
+end test

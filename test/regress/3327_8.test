@@ -1,0 +1,43 @@
+; Regression test for issue #3327: a total of several columns is revalued
+; only up to the report's terminus, as before.
+;
+; The salary is dated after --now, when ABC is worth $25 rather than the
+; $20 it is worth at the terminus.  A balance report values its accounts at
+; the terminus, so it revalues its running total back to the terminus and
+; books the $100 gain over the $10 cost.  The market value and cost pairs
+; of --gain, and the totals that cleared keeps, gather no gain from cost
+; basis, so revaluing them back would book only the $50 fall from $25.
+
+2024/01/01 * Buy
+    Assets:Broker    10 ABC @ $10
+    Assets:Cash
+
+P 2024/02/01 ABC $20
+P 2024/03/15 ABC $25
+
+2024/04/01 * Salary
+    Assets:Cash    $50
+    Income:Salary
+
+test bal -V --unrealized --now 2024/03/01
+                $150  Assets
+                $200    Broker
+                $-50    Cash
+               $-100  Equity:Unrealized Gains
+                $-50  Income:Salary
+--------------------
+                   0
+end test
+
+test bal -G --unrealized --now 2024/03/01
+                $100  Assets:Broker
+end test
+
+test cleared -V --unrealized --now 2024/03/01
+            $150                $150                 Assets
+            $200                $200    24-Jan-01      Broker
+            $-50                $-50    24-Apr-01      Cash
+            $-50                $-50    24-Apr-01    Income:Salary
+----------------  ------------------    ---------
+            $100                $100             
+end test
