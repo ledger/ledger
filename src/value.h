@@ -151,13 +151,11 @@ public:
     friend class value_t;
 
     /**
-     * The `data' member holds the actual bytes relating to whatever
-     * has been stuffed into this storage object.  There is a set of
-     * asserts in value.cc to guarantee that the sizeof expression
-     * used here is indeed at least as big as the largest object that
-     * will ever be copied into `data'.
+     * The `data` member holds the stored object itself, as one
+     * alternative of a std::variant, which is sized for the largest of
+     * them.
      *
-     * The `type' member holds the value_t::type_t value representing
+     * The `type` member holds the value_t::type_t value representing
      * the type of the object stored.
      */
     std::variant<bool,               // BOOLEAN
@@ -178,7 +176,7 @@ public:
     type_t type;
 
     /**
-     * `refc' holds the current reference count for each storage_t
+     * `refc` holds the current reference count for each storage_t
      * object.
      */
     mutable int refc;
@@ -192,11 +190,11 @@ public:
      */
     explicit storage_t() : type(VOID), refc(0) { TRACE_CTOR(value_t::storage_t, ""); }
 
-  public: // so `checked_delete' can access it
+  public: // so `checked_delete` can access it
     /**
      * Destructor.  Must only be called when the reference count has
-     * reached zero.  The `destroy' method is used to do the actual
-     * cleanup of the data, since it's quite possible for `destroy' to
+     * reached zero.  The `destroy` method is used to do the actual
+     * cleanup of the data, since it's quite possible for `destroy` to
      * be called while the object is still active -- to clear the
      * stored data for subsequent reuse of the storage_t object.
      */
@@ -845,13 +843,13 @@ public:
   /**
    * Dynamic typing conversion methods.
    *
-   * `cast(type_t)' returns a new value whose type has been cast to
+   * `cast(type_t)` returns a new value whose type has been cast to
    * the given type, but whose value is based on the original value.
    * For example, the uncommoditized AMOUNT "100.00" could be cast to
    * an INTEGER value.  If a cast would lose information or is not
    * meaningful, an exception is thrown.
    *
-   * `simplify()' is an automatic cast to the simplest type that can
+   * `simplify()` is an automatic cast to the simplest type that can
    * still represent the original value.
    *
    * There are also "in-place" versions of these two methods:
