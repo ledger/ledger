@@ -1,6 +1,22 @@
 #!/usr/bin/env python3
 """Suite-wide oracle bisimulation: balances and balance rejections.
 
+With --gross, every compared file is additionally compared on its
+gross debit and credit totals against C++
+`balance --flat --no-total --amount '(amount > 0 ? amount : 0)'` and
+its negative counterpart (the column sums of the --dc option's
+report expression, src/report.h at 76b9dc2b2:752-754), binned
+GROSS:PASS, GROSS:FAIL or GROSS:SKIP:<reason>, with the refusal
+ratchet of gross-refusals.txt and a telescoping detector whose net
+rows are equal while its gross rows differ.  The gross comparison
+has a blind spot of its own: an error the net rows hide stays hidden
+under it only when it cancels in every account it touches and within
+each account's debits and within its credits (lean/README.md, the
+--gross paragraph of "The oracle"); the refusal reason
+lot-annotated-completion, whose conditions Journal.Result.lotFanout
+in the oracle records, is the known shape that cannot be reproduced
+in column sums at all.
+
 For EVERY positive `.test` file in test/baseline, test/regress, and
 test/manual — positive meaning no test block expects a nonzero exit
 (`-> N`) or an `__ERROR__` section — the journal portion (everything
@@ -67,8 +83,19 @@ neg_line_check_skipped and in details.  Missing contexts fail the
 comparison.  An include skip confirms only rejection for imbalance,
 not agreement on the rejected entry.
 
+The oracle's extension lines are part of its opt-in output protocol
+(lean/README.md, "Building and testing").  Lines beginning `>> dr `,
+`>> cr ` or `?? gross ` are gross-comparison output, which the oracle
+prints only for a file whose arguments carry `--gross`; the harness
+requests it, per file, exactly when running with --gross.  Such a
+line in any other file's output is a FAIL ("unrequested protocol
+extension line"): a leak into the default output must never be
+dropped silently, because a comparator running without the flag
+would read it as part of the balance rows.
+
 Exit codes: 0 all comparisons pass and the ratchet bins are empty;
-1 any FAIL, or any entry in SKIP:out-of-scope or SKIP:cpp-parse (both
+1 any FAIL, any GROSS:FAIL, or any entry in SKIP:out-of-scope or
+SKIP:cpp-parse (both
 reached zero against the full suite and are held there — an entry
 reappearing means one side stopped reading a journal it used to read,
 which is a regression, not a skip); 77 the Lean toolchain or a built
@@ -112,6 +139,19 @@ CPP_CONTEXT_RE = re.compile(
 NO_CONTEXT_REASON = ("C++ rejection context not found; the rejected"
                      " entry cannot be confirmed")
 
+# The oracle's gross output (lean/README.md, the --gross flag), and the
+# C++ value expressions whose column sums the two sides agree on
+# (src/report.h, the --dc option's amount expression at
+# 76b9dc2b2:752-754).
+GROSS_DR_EXPR = "(amount > 0 ? amount : 0)"
+GROSS_CR_EXPR = "(amount < 0 ? -amount : 0)"
+EXTENSION_PREFIXES = (">> dr ", ">> cr ", "?? gross ")
+# gross-refusals.txt: REASON<TAB>repo-relative path, one per line;
+# '#' opens a comment.  The ratchet holds the measured refusal set.
+GROSS_REFUSALS = os.path.join(HERE, "gross-refusals.txt")
+GROSS = {"PASS": [], "FAIL": [], "SKIP": []}
+GROSS_ROWS = {"dr": 0, "cr": 0, "files": 0}
+
 
 def command_flags(line, cpp_flags):
     """Fold the input-affecting flags of one `test` command line into
@@ -149,6 +189,17 @@ def has_python_block(journal):
     """A python block anywhere makes a journal non-comparable."""
     return any(ln == "python" or ln.startswith("python ")
                for ln in (l.strip() for l in journal.splitlines()))
+
+
+def has_eval_preamble(journal):
+    """C++ prints the value of eval/expr directives at the head of
+    every report; the balance comparison strips that preamble by
+    parsing, the gross one must strip it by offset.  The text passed
+    here is the journal plus its copied include closure, since a
+    directive inside an include prints into the report head just the
+    same; over-approximating is harmless, because the no-limit probe
+    then prints nothing and no strip is applied."""
+    return re.search(r"^(?:eval|expr)\s", journal, re.M) is not None
 
 
 def classify_negative_test(path):
@@ -363,9 +414,12 @@ INCLUDE_RE = re.compile(r"^\s*\ufeff?[@!]{0,2}include\s+(.+?)\s*$", re.M)
 
 def copy_includes(journal, src_dir, dst_dir, depth=4):
     """Copy files referenced by include lines (globs included) next to
-    the extracted journal so both sides resolve them identically."""
+    the extracted journal so both sides resolve them identically.
+    Returns the texts of the copied files and of their own includes,
+    for callers that need the include closure's content."""
     if depth == 0:
-        return
+        return ""
+    texts = []
     import glob as _glob
     # A relative include may step above the journal's own directory
     # (test/regress does this), which lands the copy in the shared
@@ -384,16 +438,27 @@ def copy_includes(journal, src_dir, dst_dir, depth=4):
                 with open(src, "rb") as fi, open(dst, "wb") as fo:
                     fo.write(fi.read())
                 with open(src, encoding="utf-8", errors="replace") as fh:
-                    copy_includes(fh.read(), src_dir, dst_dir, depth - 1)
+                    inc = fh.read()
+                texts.append(inc)
+                texts.append(copy_includes(inc, src_dir, dst_dir,
+                                           depth - 1))
+    return "".join(texts)
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--ledger", default=None)
     ap.add_argument("--source", default=None)
+    ap.add_argument("--gross", action="store_true",
+                    help="also compare each file's gross debit and "
+                         "credit totals (oracle --gross; off by default, "
+                         "D27)")
+    ap.add_argument("--gross-refusals", default=GROSS_REFUSALS,
+                    help="the ratchet file holding the expected "
+                         "GROSS:SKIP set (for the self-test)")
     ap.add_argument("dirs", nargs="*")
     args = ap.parse_args()
-
+    gross_on = args.gross
     repo = os.path.abspath(args.source) if args.source else sweep.REPO
     ledger = args.ledger or os.path.join(repo, "build", "ledger")
     env = {**os.environ, "TZ": os.environ.get("TZ", "America/Chicago")}
@@ -449,6 +514,11 @@ def main():
     with tempfile.TemporaryDirectory() as tmp:
         candidates = []  # (test_path, dat_path, cpp_flags, dc)
         neg_candidates = []  # the same, for NEG:unbalanced files
+        journal_text_of = {}  # dat_path -> journal text plus its copied
+        # include closure, for the gross comparison's eval/expr
+        # preamble strip
+        detector_inputs = []  # fixtures that ride the oracle batch but
+        # are never live candidates, like neg_fixtures
         for i, tpath in enumerate(tests):
             journal, skip, cpp_flags, dc = classify_test_file(tpath)
             if journal is not None and has_python_block(journal):
@@ -483,10 +553,14 @@ def main():
                 dat = os.path.join(fdir, os.path.basename(tpath))
                 with open(dat, "w", encoding="utf-8") as fh:
                     fh.write(journal)
-                copy_includes(journal, os.path.dirname(tpath), fdir)
+                inc_texts = copy_includes(journal,
+                                          os.path.dirname(tpath), fdir)
                 candidates.append((tpath, dat, cpp_flags, dc))
+                journal_text_of[dat] = journal + inc_texts
 
-        # Detector fixtures ride the same batch: a planted one-sided
+        # Detector fixtures ride the oracle batch through
+        # detector_inputs, never the live candidate loop: a planted
+        # one-sided
         # defect must FAIL, and the pristine control must PASS, on
         # every run — a comparator that has never been observed to
         # fail provides no evidence when it passes.  Perturbing the
@@ -507,8 +581,37 @@ def main():
         p2 = os.path.join(tmp, "selftest-perturbed.dat")
         with open(p2, "w") as fh:
             fh.write(j.replace("$150.00", "$151.00"))
-        candidates.append(("__selftest__", p1, [], False))
+        detector_inputs.append(("__selftest__", p1, [], False))
         selftest = (p1, p2)
+
+        # Gross detector fixture (--gross only): a telescoping journal
+        # whose balance assignments C++ resolves and the oracle turns
+        # into plain amounts.  The perturbation (dropping the second
+        # assignment's '= ') must leave every net row equal (that is
+        # the blind spot the net comparison cannot see) and move a
+        # gross row.  Both fixtures ride the oracle batch; the
+        # fixture is mandatory when --gross runs (S40's draft).
+        tele = None
+        if gross_on:
+            tele_src = os.path.join(HERE, "telescope.dat")
+            if not os.path.isfile(tele_src):
+                print(f"gross detector fixture missing: {tele_src}",
+                      file=sys.stderr)
+                sys.exit(2)
+            with open(tele_src, encoding="utf-8") as fh:
+                tj = fh.read()
+            if "= $300" not in tj:
+                print("gross detector fixture lacks its planted site"
+                      " '= $300'", file=sys.stderr)
+                sys.exit(2)
+            t1 = os.path.join(tmp, "telescope.dat")
+            with open(t1, "w") as fh:
+                fh.write(tj)
+            t2 = os.path.join(tmp, "telescope-perturbed.dat")
+            with open(t2, "w") as fh:
+                fh.write(tj.replace("= $300", "$300"))
+            detector_inputs.append(("__telescope__", t1, [], False))
+            tele = (t1, t2)
 
         # NEG detector fixtures, derived from the same journal: the
         # control (the Grocer transaction given a wrong counter-amount)
@@ -580,8 +683,13 @@ def main():
         # Batched oracle runs (chunked argv).
         oracle = {}  # dat_path -> set(rows) | ("ERROR", msg)
         styles = {}  # dat_path -> set of decimal-comma commodities
+        gdr, gcr = {}, {}  # dat_path -> set of gross debit/credit rows
+        gref = {}  # dat_path -> '?? gross' refusal reason
+        unreq = {}  # dat_path -> an extension line in a file that
+        # was not given --gross: a leak into the default output
         CHUNK = 800
-        oracle_inputs = candidates + neg_candidates + neg_fixtures
+        oracle_inputs = candidates + neg_candidates + neg_fixtures \
+            + detector_inputs
         for lo in range(0, len(oracle_inputs), CHUNK):
             chunk = oracle_inputs[lo:lo + CHUNK]
             argv = []
@@ -595,6 +703,8 @@ def main():
                 if "--input-date-format" in fl:
                     argv.extend(["--input-date-format",
                                  fl[fl.index("--input-date-format") + 1]])
+                if gross_on:
+                    argv.append("--gross")
                 argv.append(d)
             # Oracle invocation.  When LEDGER_LEAN_DIR is set (the Nix
             # build points it at the semantics flake's oracle output and
@@ -633,13 +743,95 @@ def main():
                 elif line.startswith("%% dc ") and cur:
                     c = line[len("%% dc "):]
                     styles[cur].add("" if c == "*" else c)
+                elif cur and line.startswith(EXTENSION_PREFIXES):
+                    # Gross-comparison output.  Diverted when this file
+                    # was given --gross; a leak when it was not.
+                    if not gross_on:
+                        unreq.setdefault(cur, line)
+                    elif line.startswith(">> dr "):
+                        gdr.setdefault(cur, set()).add(
+                            line[len(">> dr "):].strip())
+                    elif line.startswith(">> cr "):
+                        gcr.setdefault(cur, set()).add(
+                            line[len(">> cr "):].strip())
+                    else:
+                        gref[cur] = line[len("?? gross "):].strip()
                 elif cur and line.strip():
                     if isinstance(oracle[cur], set):
                         oracle[cur].add(line.strip())
 
+        def cpp_gross(dat, cpp_flags, dc, dc_comms, journal):
+            """C++'s gross debit and credit rows for one journal, as
+            parse_cpp_balance sees them, or (None, why).  Each column
+            is the report's own --dc column: the value expression
+            keeps the positive (negative) part of every posting amount
+            and zeroes the rest, so the column sums posting by posting
+            as the oracle's --gross totals do."""
+            pre = ""
+            if has_eval_preamble(journal):
+                # eval/expr directives print their value at the head of
+                # every report.  A no-limit balance reproduces that
+                # preamble exactly, so the gross columns can be parsed
+                # at a common offset past it (S40's draft located the
+                # strip); without it the preamble's bare amount line
+                # would fold into the first account row as a phantom
+                # posting (regress/1883's "-30.00 GBP").
+                pr = subprocess.run(
+                    [ledger, *cpp_flags, "--permissive", "-f", dat,
+                     "balance", "--flat", "--no-total", "--limit",
+                     "false"],
+                    capture_output=True, text=True, env=env)
+                if pr.returncode != 0:
+                    return None, (f"eval preamble probe: C++ exit"
+                                  f" {pr.returncode}:"
+                                  f" {pr.stderr.strip()[-200:]}")
+                pre = pr.stdout
+            out = {}
+            for tag, expr in (("dr", GROSS_DR_EXPR), ("cr", GROSS_CR_EXPR)):
+                g = subprocess.run(
+                    [ledger, *cpp_flags, "--permissive", "-f", dat,
+                     "balance", "--flat", "--no-total", "--amount", expr],
+                    capture_output=True, text=True, env=env)
+                if g.returncode != 0:
+                    return None, f"{tag}: C++ exit {g.returncode}: " \
+                                 f"{g.stderr.strip()[-200:]}"
+                text = g.stdout
+                if pre:
+                    if not text.startswith(pre):
+                        return None, (f"{tag}: eval preamble not found"
+                                      " at the head of the output")
+                    text = text[len(pre):]
+                try:
+                    out[tag] = sweep.parse_cpp_balance(
+                        text, decimal_comma=dc, dc_comms=dc_comms)
+                except ValueError as e:
+                    return None, f"{tag}: unparseable C++ output: {e}"
+            return out, None
+
+        def gross_compare(rel, dat, cpp_flags, dc, dc_comms, journal):
+            """One file's gross comparison into the GROSS bins."""
+            if dat in gref:
+                GROSS["SKIP"].append((gref[dat], rel))
+                return
+            cpp, err = cpp_gross(dat, cpp_flags, dc, dc_comms, journal)
+            if err:
+                GROSS["FAIL"].append((rel, err))
+                return
+            diffs = []
+            for tag, o in (("dr", gdr.get(dat, set())),
+                           ("cr", gcr.get(dat, set()))):
+                GROSS_ROWS[tag] += len(cpp[tag])
+                if cpp[tag] != o:
+                    diffs.append((tag, sorted(o - cpp[tag])[:6],
+                                  sorted(cpp[tag] - o)[:6]))
+            if cpp["dr"] or cpp["cr"]:
+                GROSS_ROWS["files"] += 1
+            if diffs:
+                GROSS["FAIL"].append((rel, repr(diffs)))
+            else:
+                GROSS["PASS"].append(rel)
+
         for tpath, dat, cpp_flags, dc in candidates:
-            if tpath == "__selftest__":
-                continue
             rel = os.path.relpath(tpath, repo)
             res = oracle.get(dat)
             if res is None:
@@ -677,6 +869,15 @@ def main():
                 details.append({"file": rel, "status": "FAIL",
                                 "why": f"unparseable C++ output: {e}"})
                 continue
+            if dat in unreq:
+                bins["FAIL"].append(rel)
+                details.append({"file": rel, "status": "FAIL",
+                                "why": "unrequested protocol extension line: "
+                                       + unreq[dat]})
+                continue
+            if gross_on:
+                gross_compare(rel, dat, cpp_flags, dc, dc_comms,
+                              journal_text_of.get(dat, ""))
             if cpp_rows == res:
                 bins["PASS"].append(rel)
             else:
@@ -704,6 +905,35 @@ def main():
                     "file": "<selftest>", "status": "FAIL",
                     "why": f"detector fixtures: control_ok={control_ok} "
                            f"fired_on_planted_defect={fired}"})
+
+        if tele:
+            t1, t2 = tele
+            tres = oracle.get(t1)
+
+            def cpp_net(path):
+                out = subprocess.run(
+                    [ledger, "-f", path, "balance", "--flat", "--no-total"],
+                    capture_output=True, text=True, env=env)
+                return sweep.parse_cpp_balance(out.stdout)
+
+            og = {"dr": gdr.get(t1, set()), "cr": gcr.get(t1, set())}
+            gross1, err1 = cpp_gross(t1, [], False, frozenset(), "")
+            gross2, err2 = cpp_gross(t2, [], False, frozenset(), "")
+            control_ok = (isinstance(tres, set) and t1 not in gref
+                          and cpp_net(t1) == tres
+                          and err1 is None and gross1 == og)
+            net_blind = isinstance(tres, set) and cpp_net(t2) == cpp_net(t1)
+            # A C++ error on the perturbed fixture is not a firing:
+            # the detector must see gross rows that differ, not an
+            # error standing in for them.
+            fired = err2 is None and gross2 != og
+            if control_ok and net_blind and fired:
+                print("gross selftest: telescoping detector green"
+                      " (net rows equal, gross rows differ)")
+            else:
+                GROSS["FAIL"].append(("<gross-selftest>",
+                                      f"control_ok={control_ok} "
+                                      f"net_blind={net_blind} fired={fired}"))
 
         def cpp_reject(path, flags):
             return subprocess.run([ledger, *flags, "-f", path, "balance"],
@@ -880,6 +1110,43 @@ def main():
         "details": details,
         "bins": {k: v for k, v in bins.items() if k != "PASS"},
     }
+    # The gross refusal ratchet (D29): gross-refusals.txt holds the
+    # measured refusal set as REASON<TAB>path.  An unlisted refusal
+    # means the lot-annotated-completion test now fires where it did
+    # not, and a stale entry means a refused file now compares; the
+    # file must change deliberately with the rule that forced it.
+    gratchet = []
+    if gross_on:
+        listed = set()
+        if os.path.isfile(args.gross_refusals):
+            with open(args.gross_refusals, encoding="utf-8") as fh:
+                for ln in fh:
+                    ln = ln.rstrip("\n")
+                    if ln and not ln.startswith("#"):
+                        reason, path = ln.split("\t", 1)
+                        listed.add((reason, path.strip()))
+        else:
+            print(f"gross refusal ratchet missing: {args.gross_refusals}",
+                  file=sys.stderr)
+            gratchet.append("missing")
+        seen = set(GROSS["SKIP"])
+        for r, pth in sorted(seen - listed):
+            GROSS["FAIL"].append((pth, f"refusal not in the ratchet: {r}"))
+        for r, pth in sorted(listed - seen):
+            GROSS["FAIL"].append((pth, f"stale ratchet entry: {r}"))
+
+    # The gross bins ride the artifact's details so the record stays
+    # reviewable; PASS lists are the harness's own evidence of how
+    # much each comparison covered.
+    if gross_on:
+        artifact["counts"]["GROSS:PASS"] = len(GROSS["PASS"])
+        artifact["counts"]["GROSS:FAIL"] = len(GROSS["FAIL"])
+        artifact["gross_rows"] = dict(GROSS_ROWS)
+        artifact["gross_refusals"] = [f"{r}\t{rel}"
+                                      for r, rel in sorted(GROSS["SKIP"])]
+        for rel, why in GROSS["FAIL"]:
+            artifact["details"].append({"file": rel, "status": "GROSS:FAIL",
+                                        "why": why})
     stamp = datetime.datetime.now(datetime.timezone.utc).strftime(
         "%Y%m%dT%H%M%SZ")
     try:
@@ -909,6 +1176,19 @@ def main():
             for k in ("why", "only_oracle", "only_cpp"):
                 if k in d:
                     print(f"       {k}: {d[k]}")
+    if gross_on:
+        print(f"  gross rows compared: dr {GROSS_ROWS['dr']},"
+              f" cr {GROSS_ROWS['cr']}, in {GROSS_ROWS['files']} files"
+              " with a nonempty C++ column")
+        print(f"  GROSS:PASS          {len(GROSS['PASS'])}")
+        print(f"  GROSS:FAIL          {len(GROSS['FAIL'])}")
+        for r in sorted(set(r for r, _ in GROSS["SKIP"])):
+            print(f"  GROSS:SKIP:{r}"
+                  f" {sum(1 for x, _ in GROSS['SKIP'] if x == r)}")
+        for r, rel in sorted(GROSS["SKIP"]):
+            print(f"  refused {r}\t{rel}")
+        for rel, why in GROSS["FAIL"]:
+            print(f"  GROSS:FAIL {rel}: {why}")
     print(f"artifact: {os.path.relpath(apath, repo)}")
     # Ratchet: both bins below reached zero against the full suite,
     # and gates only tighten.  An entry here means one side stopped
@@ -920,7 +1200,8 @@ def main():
     if ratchet and not bins["FAIL"]:
         print("ratchet: SKIP:out-of-scope and SKIP:cpp-parse must stay"
               " empty; a comparable journal is no longer compared")
-    sys.exit(1 if (bins["FAIL"] or ratchet) else 0)
+    sys.exit(1 if (bins["FAIL"] or ratchet or gratchet
+                   or (gross_on and GROSS["FAIL"])) else 0)
 
 
 if __name__ == "__main__":

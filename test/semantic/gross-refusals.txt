@@ -1,0 +1,10 @@
+# The oracle's gross refusals over the compared corpus, as
+# test/semantic/check_all.py --gross measured them (reason TAB
+# repo-relative path).  The ratchet: an unlisted refusal or a stale
+# entry fails the run, so the set changes only with the rule that
+# forced it (decision D29; Journal.Result.lotFanout records the
+# conditions and the known cases).
+lot-annotated-completion	test/regress/1217.test
+lot-annotated-completion	test/regress/1638.test
+lot-annotated-completion	test/regress/1998.test
+lot-annotated-completion	test/regress/coverage-wave7-xact-edge.test
