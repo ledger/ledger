@@ -732,7 +732,8 @@ bool xact_base_t::finalize() {
           post->amount, *post->cost, false, !post->has_flags(POST_COST_VIRTUAL),
           datetime_t(post->date(), time_duration(0, 0, 0, 0)), std::nullopt, lot_date);
 
-      if (post->amount.has_annotation() && post->amount.annotation().price) {
+      const bool named_lot = post->amount.has_annotation() && post->amount.annotation().price;
+      if (named_lot) {
         if (breakdown.basis_cost.commodity() == breakdown.final_cost.commodity()) {
           DEBUG("xact.finalize", "breakdown.basis_cost = " << breakdown.basis_cost);
           DEBUG("xact.finalize", "breakdown.final_cost = " << breakdown.final_cost);
@@ -849,10 +850,22 @@ bool xact_base_t::finalize() {
         DEBUG("xact.finalize", "added breakdown, balance = " << balance);
       }
 
-      if (post->has_flags(POST_COST_FIXATED) && post->amount.has_annotation() &&
-          post->amount.annotation().price) {
+      // `@ =price` fixates the lot this cost creates, as writing `{=price}`
+      // would have.  The annotation belongs to the pooled lot, which every
+      // other amount of the lot shares and which the pool indexes by these
+      // very details, so fixate a copy and look it up exactly, not through
+      // the fuzzy price match, which must not fold a computed price into a
+      // typed one that merely rounds alike.  A lot the user named is left as
+      // named: `{$5}` and `{=$5}` are two lots (#1454), so `-10 AAPL {$5} @
+      // =$6` sells from the `{$5}` lot, as `10 AAPL {$5} @ =$5` buys into it.
+      if (!named_lot && post->has_flags(POST_COST_FIXATED) && post->amount.has_annotation() &&
+          post->amount.annotation().price &&
+          !post->amount.annotation().has_flags(ANNOTATION_PRICE_FIXATED)) {
         DEBUG("xact.finalize", "fixating annotation price");
-        post->amount.annotation().add_flags(ANNOTATION_PRICE_FIXATED);
+        annotation_t fixated(post->amount.annotation());
+        fixated.add_flags(ANNOTATION_PRICE_FIXATED);
+        post->amount.set_commodity(*commodity_pool_t::current_pool->find_or_create(
+            post->amount.commodity().base_symbol(), fixated));
       }
     }
   }

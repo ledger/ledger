@@ -1,0 +1,29 @@
+; Selling part of an unfixated lot at a fixated cost leaves the rest of
+; the lot floating: the sale, `-10 AAPL {$5} [2020/01/01] @ =$6`, names a
+; lot its account holds, so it sells from that lot, and `@ =price`
+; fixates only a lot it creates, never one the posting names.  The
+; 10 AAPL left keep the lot {$5} [2020/01/01], and -V values them at the
+; latest price, 10 x $7 = $70.
+;
+; 3.4.1 fixated the named lot itself, for every holder and from its
+; purchase on, so the shares left showed as {=$5} [2020/01/01] and -V
+; held them at their $5 lot price, $50, whatever the market did.
+
+P 2020/03/01 AAPL $7
+
+2020/01/01 Buy
+    Assets:Broker    20 AAPL @ $5
+    Assets:Cash
+
+2020/02/01 Sell
+    Assets:Broker   -10 AAPL {$5} [2020/01/01] @ =$6
+    Assets:Cash      $60
+    Income:Gains
+
+test bal --lots Assets:Broker
+10 AAPL {$5} [2020/01/01]  Assets:Broker
+end test
+
+test bal -V Assets:Broker
+                 $70  Assets:Broker
+end test

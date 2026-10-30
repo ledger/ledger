@@ -360,9 +360,18 @@ void anonymize_posts::operator()(post_t& post) {
 
   render_commodity(temp.amount);
   if (temp.amount.has_annotation()) {
-    temp.amount.annotation().tag = std::nullopt;
-    if (temp.amount.annotation().price)
-      render_commodity(*temp.amount.annotation().price);
+    // The annotation is the pooled lot's own, shared by every amount of
+    // the lot, so anonymize a copy and look the result up rather than edit
+    // it.  The lookup is exact: the fuzzy price matching behind
+    // amount_t::annotate(), which merges a user-typed lot price with a
+    // computed one, must not merge two lots whose rendered prices merely
+    // round alike.
+    annotation_t anonymized(temp.amount.annotation());
+    anonymized.tag = std::nullopt;
+    if (anonymized.price)
+      render_commodity(*anonymized.price);
+    temp.amount.set_commodity(*commodity_pool_t::current_pool->find_or_create(
+        temp.amount.commodity().base_symbol(), anonymized));
   }
 
   if (temp.cost)

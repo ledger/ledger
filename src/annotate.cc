@@ -456,17 +456,22 @@ commodity_t& annotated_commodity_t::strip_annotations(const keep_details_t& what
                                                            << "  keep tag " << keep_tag);
 
   if ((keep_price && details.price) || (keep_date && details.date) || (keep_tag && details.tag)) {
-    new_comm =
-        pool().find_or_create(referent(), annotation_t(keep_price ? details.price : std::nullopt,
-                                                       keep_date ? details.date : std::nullopt,
-                                                       keep_tag ? details.tag : std::nullopt));
+    annotation_t kept(keep_price ? details.price : std::nullopt,
+                      keep_date ? details.date : std::nullopt,
+                      keep_tag ? details.tag : std::nullopt);
+    // A fixated price is part of a lot's identity (the pool keys on it), so
+    // it has to be in the details the pool is asked for; the *_CALCULATED
+    // flags are not, and are merged below as before.
+    if (keep_price)
+      kept.add_flags(details.flags() & ANNOTATION_PRICE_FIXATED);
+
+    new_comm = pool().find_or_create(referent(), kept);
 
     // Transfer over any relevant annotation flags, as they still apply.
     if (new_comm->annotated) {
       annotation_t& new_details(as_annotated_commodity(*new_comm).details);
       if (keep_price)
-        new_details.add_flags(details.flags() &
-                              (ANNOTATION_PRICE_CALCULATED | ANNOTATION_PRICE_FIXATED));
+        new_details.add_flags(details.flags() & ANNOTATION_PRICE_CALCULATED);
       if (keep_date)
         new_details.add_flags(details.flags() & ANNOTATION_DATE_CALCULATED);
       if (keep_tag)

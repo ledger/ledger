@@ -690,6 +690,8 @@ void put_balance(property_tree::ptree& st, const balance_t& bal) {
 /// 3. Accumulates the total cost (price * quantity) for each group.
 /// 4. Divides total cost by total quantity to get the average price.
 /// 5. Uses the earliest lot date as the annotation date.
+/// 6. Marks the average fixated when every non-zero holding in the group
+///    is a lot with a fixated price (plain units keep it floating).
 ///
 /// This is invoked by the @c --average-lot-prices option to simplify
 /// multi-lot displays into a single line per commodity.
@@ -700,7 +702,12 @@ void put_balance(property_tree::ptree& st, const balance_t& bal) {
 balance_t average_lot_prices(const balance_t& bal) {
   // First, we split the balance into multiple balances by underlying
   // commodity.
-  typedef std::map<optional<std::string>, std::pair<amount_t, annotation_t>> balance_map;
+  struct group_t {
+    amount_t quantity;
+    annotation_t ann;
+    bool all_fixated = true; ///< Every holding so far is a lot with a fixated price.
+  };
+  typedef std::map<optional<std::string>, group_t> balance_map;
   balance_map bycomm;
 
   for (const balance_t::amounts_map::value_type& pair : bal.amounts) {
@@ -708,38 +715,51 @@ balance_t average_lot_prices(const balance_t& bal) {
     amount_t quant(pair.second.strip_annotations(keep_details_t()));
 
     auto [i, inserted] =
-        bycomm.insert(balance_map::value_type(sym, std::make_pair(quant, annotation_t())));
+        bycomm.insert(balance_map::value_type(sym, group_t{quant, annotation_t()}));
+    group_t& group(i->second);
     if (!inserted)
-      i->second.first += quant;
+      group.quantity += quant;
 
-    if (pair.first->has_annotation()) {
-      annotated_commodity_t& acomm(static_cast<annotated_commodity_t&>(*pair.first));
-      annotation_t& ann((*i).second.second);
+    const annotated_commodity_t* acomm =
+        pair.first->has_annotation() ? &static_cast<const annotated_commodity_t&>(*pair.first)
+                                     : nullptr;
+    if (acomm && acomm->details.price) {
+      if (group.ann.price)
+        group.ann.price = *group.ann.price + (*acomm->details.price * quant);
+      else
+        group.ann.price = *acomm->details.price * quant;
+      if (!acomm->details.has_flags(ANNOTATION_PRICE_FIXATED) && !quant.is_realzero())
+        group.all_fixated = false;
+    } else if (!quant.is_realzero()) {
+      // Units without a price dilute the average; a fixated average would
+      // value them at nothing.  (A component that netted to zero is no
+      // holding: it still counts for the date and the price's commodity,
+      // as it always has, but not against the fixation.)
+      group.all_fixated = false;
+    }
 
-      if (acomm.details.price) {
-        if (ann.price)
-          ann.price = *ann.price + (*acomm.details.price * quant);
-        else
-          ann.price = *acomm.details.price * quant;
-      }
-
-      if (acomm.details.date) {
-        if (!ann.date || *acomm.details.date < *ann.date)
-          ann.date = *acomm.details.date;
-      }
+    if (acomm && acomm->details.date) {
+      if (!group.ann.date || *acomm->details.date < *group.ann.date)
+        group.ann.date = *acomm->details.date;
     }
   }
 
   balance_t result;
 
   for (balance_map::value_type& pair : bycomm) {
-    amount_t amt(pair.second.first);
+    group_t& group(pair.second);
+    amount_t amt(group.quantity);
     if (!amt.is_realzero()) {
-      if (pair.second.second.price)
-        pair.second.second.price = *pair.second.second.price / amt;
+      if (group.ann.price) {
+        group.ann.price = *group.ann.price / amt;
+        // Lots that were all fixated average to a fixated lot: their price
+        // is not a market price to be revalued.
+        if (group.all_fixated)
+          group.ann.add_flags(ANNOTATION_PRICE_FIXATED);
+      }
 
       commodity_t* acomm =
-          commodity_pool_t::current_pool->find_or_create(amt.commodity(), pair.second.second);
+          commodity_pool_t::current_pool->find_or_create(amt.commodity(), group.ann);
       amt.set_commodity(*acomm);
 
       result += amt;

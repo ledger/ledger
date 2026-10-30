@@ -1,0 +1,40 @@
+; A Value:: tag on one posting values every other amount of the same lot
+; too: Assets:Retirement, whose purchase carries no tag, is worth $70
+; under -V, at the $7 a unit of Assets:Broker's tag ($70 for 10 units),
+; not the $50 its own purchase price gives.
+;
+; This is Ledger's long-standing behaviour, kept on purpose: a valuation
+; belongs to the lot rather than to the posting that brings it, and every
+; amount of the lot, in any account, carries it.  The same sharing lets a
+; balance assertion, an automated transaction and a sale see the lot
+; whole (the other lot-value-expr-*.test files).  3.4.1 shared the
+; valuation the same way but read the tag's $70 as $70 a unit (#2399),
+; so each account's 10 AAPL was worth $700 under -V.
+
+2020/01/01 Buy
+    Assets:Broker        10 AAPL {$5} [2020/01/01]  ; Value:: $70
+    Assets:Cash         $-50
+
+2020/01/01 Buy
+    Assets:Retirement    10 AAPL {$5} [2020/01/01]
+    Assets:Cash         $-50
+
+test bal --lots
+                             $-100
+20 AAPL {$5} [2020/01/01] (({$7}))  Assets
+10 AAPL {$5} [2020/01/01] (({$7}))    Broker
+               $-100    Cash
+10 AAPL {$5} [2020/01/01] (({$7}))    Retirement
+--------------------
+                             $-100
+20 AAPL {$5} [2020/01/01] (({$7}))
+end test
+
+test bal -V
+                 $40  Assets
+                 $70    Broker
+               $-100    Cash
+                 $70    Retirement
+--------------------
+                 $40
+end test

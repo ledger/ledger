@@ -1,0 +1,32 @@
+; An automated transaction still balances when its posting of a lot is
+; valued by that posting's account (`value` on Assets:Tracked), and the
+; valuation reaches every holder of the lot.
+;
+; Ledger applies valuations to the postings an automated transaction
+; adds before it checks that the transaction still balances, and to the
+; transaction's own postings only after that.  Assets:Tracked's valuation
+; goes to the lot itself, which every amount of the lot shares, so the
+; added Equity:Tracked posting and the parsed postings hold the same
+; valued lot and the check passes.  3.4.1 did the same.
+
+account Assets:Tracked
+    value $7
+
+= /^Assets:Broker/
+    Assets:Tracked       1
+    Equity:Tracked      -1
+
+2020/01/01 Opening
+    Assets:Broker    10 AAPL {$5} [2020/01/01]
+    Equity:Opening
+
+test bal --lots
+20 AAPL {$5} [2020/01/01] (({$7}))  Assets
+10 AAPL {$5} [2020/01/01] (({$7}))    Broker
+10 AAPL {$5} [2020/01/01] (({$7}))    Tracked
+-20 AAPL {$5} [2020/01/01] (({$7}))  Equity
+-10 AAPL {$5} [2020/01/01] (({$7}))    Opening
+-10 AAPL {$5} [2020/01/01] (({$7}))    Tracked
+--------------------
+                   0
+end test

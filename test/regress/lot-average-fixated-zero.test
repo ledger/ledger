@@ -1,0 +1,54 @@
+; --average-lot-prices keeps the fixation of an account's lots when every
+; lot it still holds is fixated, even if the account also held units that
+; are gone.  Both accounts hold only 2 ETF bought at the fixated cost
+; `@ =EUR10`.  Assets:Sold also bought 1 ETF at a floating EUR11 and sold
+; that lot again; Assets:Moved received 1 plain ETF and gave it back.
+; Neither leftover is a holding (`bal --lots` lists only the fixated lot),
+; so each account averages to 2 ETF {=EUR10}, and -V values it at the
+; fixated EUR20 rather than at the later market price of EUR12 a unit.
+;
+; A unit bought and sold again, or moved in and out, is not a floating or
+; unpriced part of the average; counting it as one would drop the fixation
+; and revalue the lot at market (EUR24).  3.4.1 kept the fixation here
+; too.
+
+2024/01/01 Buy fixated
+    Assets:Sold     2 ETF @ =EUR10
+    Assets:Cash
+
+2024/01/02 Buy floating
+    Assets:Sold     1 ETF @ EUR11
+    Assets:Cash
+
+2024/01/03 Sell the floating lot
+    Assets:Sold    -1 ETF {EUR11} [2024/01/02] @ EUR11
+    Assets:Cash
+
+2024/01/01 Buy fixated
+    Assets:Moved    2 ETF @ =EUR10
+    Assets:Cash
+
+2024/01/02 Units moved in
+    Assets:Moved    1 ETF
+    Equity:Transfer
+
+2024/01/03 Units moved out
+    Assets:Moved   -1 ETF
+    Equity:Transfer
+
+P 2024/03/01 ETF EUR12
+
+test bal --lots --flat --no-total Assets:Sold Assets:Moved
+2 ETF {=EUR10} [2024/01/01]  Assets:Moved
+2 ETF {=EUR10} [2024/01/01]  Assets:Sold
+end test
+
+test bal --average-lot-prices --flat --no-total Assets:Sold Assets:Moved
+      2 ETF {=EUR10}  Assets:Moved
+      2 ETF {=EUR10}  Assets:Sold
+end test
+
+test bal --average-lot-prices -V --flat --no-total Assets:Sold Assets:Moved
+               EUR20  Assets:Moved
+               EUR20  Assets:Sold
+end test

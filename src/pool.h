@@ -130,10 +130,27 @@ public:
   commodities_map commodities;
 
   /// Annotated variants of commodities, keyed by (base symbol, annotation)
-  /// pairs.  Each unique combination of lot price, date, and tag produces
-  /// a distinct entry, so that identity comparison is sufficient to
-  /// determine whether two amounts share the same annotated commodity.
+  /// pairs.  Each unique combination of lot price, date, tag, value
+  /// expression and fixation (`{=price}`) produces a distinct entry, so
+  /// that identity comparison is sufficient to determine whether two
+  /// amounts share the same annotated commodity, except for the lots in
+  /// duplicate_lots (and for a lot whose annotation the Python bindings
+  /// edit in place, which the index does not follow).  A lot whose
+  /// annotation reannotate() has changed stays reachable under its previous
+  /// key as well.
   annotated_commodities_map annotated_commodities;
+
+  /// The lots that carry one annotation because reannotate() gave it to a
+  /// lot while another lot already carried it (see duplicate_lots), the one
+  /// that carried it first leading.
+  using duplicate_class_t = std::vector<const commodity_t*>;
+
+  /// Every member of such a class, its leader included, mapped to its
+  /// class.  A balance keys such a lot under whichever member it already
+  /// holds, else under the leader (balance_t::component_key), so the class
+  /// is one component wherever it is held; every other lot is found by
+  /// identity.
+  std::unordered_map<const commodity_t*, std::shared_ptr<duplicate_class_t>> duplicate_lots;
 
   /// Commodities that were once registered under a symbol but have been
   /// replaced (e.g., when an `alias` directive remaps a symbol that was
@@ -261,6 +278,18 @@ public:
   /// Flags on the base commodity are updated to track which kinds of
   /// annotations have been seen (fixated vs. floating prices, etc.).
   annotated_commodity_t* create(commodity_t& comm, const annotation_t& details);
+
+  /// @brief Give the pooled lot @p comm the annotation @p details.
+  ///
+  /// Every amount of a lot shares one annotated_commodity_t, so this
+  /// changes what all of them carry, which is what a `value` expression
+  /// applying to a lot asks for (see extend_post()).  The lot gains an
+  /// index entry under the new annotation and keeps the old one as an
+  /// alias, so that a lookup by either finds it.  If another lot already
+  /// carries @p details, the two lots come to carry equal annotations and
+  /// both join duplicate_lots; an entry that is only the alias of a lot
+  /// whose annotation has since changed again passes to this lot.
+  void reannotate(annotated_commodity_t& comm, const annotation_t& details);
 
   /// @}
 

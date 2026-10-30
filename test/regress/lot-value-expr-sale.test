@@ -1,0 +1,62 @@
+; Selling a valued lot closes it, whether the sale carries no valuation
+; of its own (AAPL: a Value:: tag on the purchase only, $70 for 10
+; units) or a different one (VTI: the manual's automated VALUE:: tag
+; comes to $5 a unit at the purchase and to $6 at the sale).
+;
+; A valuation belongs to the lot, which every amount of it shares, and a
+; lot keeps the first valuation it is given: each sale names the lot its
+; purchase valued, the sale's own valuation is not applied, and print
+; shows each sale carrying the purchase's.  3.4.1 closed both lots too,
+; but it read the amount a Value:: tag comes to as the value of each
+; unit (#2399), so print showed (({$70})) and (({$50})), and it left the
+; VTI sale's lot price and date out.
+
+= /^Assets:Fund/
+    ; VALUE:: market(amount, post.date, exchange)
+
+2020/01/01 Buy
+    Assets:Broker    10 AAPL {$5} [2020/01/01]  ; Value:: $70
+    Assets:Cash     $-50
+
+2020/01/01 Buy
+    Assets:Fund      10 VTI @ $5
+    Assets:Cash
+
+2020/02/01 Sell
+    Assets:Broker   -10 AAPL {$5} [2020/01/01] @ $6
+    Assets:Cash      $60
+    Income:Gains
+
+2020/02/01 Sell
+    Assets:Fund     -10 VTI {$5} [2020/01/01] @ $6
+    Assets:Cash      $60
+    Income:Gains
+
+test bal --lots
+                 $20  Assets:Cash
+                $-20  Income:Gains
+--------------------
+                   0
+end test
+
+test print
+2020/01/01 Buy
+    Assets:Broker                       10 AAPL {$5} [2020/01/01] (({$7}))  ; Value:: $70
+    Assets:Cash                                 $-50
+
+2020/01/01 Buy
+    Assets:Fund                         10 VTI (({$5})) @ $5
+    ; VALUE:: market(amount, post.date, exchange)
+    Assets:Cash
+
+2020/02/01 Sell
+    Assets:Broker                       -10 AAPL {$5} [2020/01/01] (({$7})) @ $6
+    Assets:Cash                                  $60
+    Income:Gains
+
+2020/02/01 Sell
+    Assets:Fund                         -10 VTI {$5} [2020/01/01] (({$5})) @ $6
+    ; VALUE:: market(amount, post.date, exchange)
+    Assets:Cash                                  $60
+    Income:Gains
+end test

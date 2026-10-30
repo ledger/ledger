@@ -374,6 +374,94 @@ annotated_commodity_t* commodity_pool_t::create(commodity_t& comm, const annotat
   return commodity.get();
 }
 
+/**
+ * @brief Give the pooled lot @p comm the annotation @p details.
+ *
+ * Every amount of a lot shares one annotated_commodity_t, so changing its
+ * annotation changes every holder of the lot, which is what a `value`
+ * expression applying to a lot asks for (see extend_post()).  The pool's
+ * index follows: the lot gains an entry under its new annotation and keeps
+ * its old one as an alias, so that a lookup by either annotation finds it
+ * (while annotations were edited behind the index, only the old key did).
+ *
+ * When another lot already carries @p details -- a posting may spell out
+ * the very expression an account's `value` gives its lot -- the holders of
+ * neither lot can be re-pointed, so the two lots come to carry equal
+ * annotations, as they did before the index was kept consistent, and both
+ * join duplicate_lots, the class a balance keeps as one component
+ * (balance_t::component_key).  An entry that is only the alias of a lot
+ * whose annotation has since changed again passes to this lot, which does
+ * carry the annotation; a lot whose annotation changes once more leaves
+ * its class (the components balances already key under it stay there).
+ */
+void commodity_pool_t::reannotate(annotated_commodity_t& comm, const annotation_t& details) {
+  DEBUG("pool.commodities", "commodity_pool_t::reannotate " << "symbol " << comm.base_symbol()
+                                                            << '\n'
+                                                            << details);
+  assert(details);
+
+  if (comm.details.compare(details) == 0)
+    return;
+
+  // This lot's own entry: the one keyed by its current annotation, unless
+  // something edited the annotation in place (the Python bindings can), in
+  // which case it is found by identity.
+  auto current = annotated_commodities.find(
+      annotated_commodities_map::key_type(comm.base_symbol(), comm.details));
+  if (current == annotated_commodities.end() || current->second.get() != &comm) {
+    current = std::find_if(annotated_commodities.begin(), annotated_commodities.end(),
+                           [&comm](const annotated_commodities_map::value_type& entry) {
+                             return entry.second.get() == &comm;
+                           });
+    if (current == annotated_commodities.end())
+      throw_(std::logic_error, _f("Annotated commodity %1% is missing from its pool") % comm);
+  }
+  const std::shared_ptr<annotated_commodity_t> self(current->second);
+
+  const annotated_commodities_map::key_type new_key(comm.base_symbol(), details);
+  auto existing = annotated_commodities.find(new_key);
+  if (existing == annotated_commodities.end()) {
+    // Share this lot's ownership under the new key; the old key stays as an
+    // alias.
+    annotated_commodities.insert(annotated_commodities_map::value_type(new_key, self));
+  } else if (existing->second.get() != &comm) {
+    annotated_commodity_t& other(as_annotated_commodity(*existing->second));
+    if (other.details.compare(details) == 0) {
+      DEBUG("pool.commodities", "commodity_pool_t::reannotate: another lot carries these details");
+      // Both lots join one class, led by the lot that carried the
+      // annotation first.  Only this lot changes annotation, so it leaves
+      // any class it was in (a class of one is no class).
+      std::shared_ptr<duplicate_class_t> cls;
+      if (auto found = duplicate_lots.find(&other); found != duplicate_lots.end()) {
+        cls = found->second;
+      } else {
+        cls = std::make_shared<duplicate_class_t>();
+        cls->push_back(&other);
+        duplicate_lots[&other] = cls;
+      }
+      if (auto mine = duplicate_lots.find(&comm); mine == duplicate_lots.end()) {
+        cls->push_back(&comm);
+        duplicate_lots[&comm] = cls;
+      } else if (mine->second != cls) {
+        const std::shared_ptr<duplicate_class_t> leaving(mine->second);
+        leaving->erase(std::find(leaving->begin(), leaving->end(), &comm));
+        if (leaving->size() == 1)
+          duplicate_lots.erase(leaving->front());
+        cls->push_back(&comm);
+        mine->second = cls;
+      }
+    } else {
+      // The entry is the alias of a lot whose annotation has changed again:
+      // this lot carries the annotation now.
+      existing->second = self;
+    }
+  }
+  // Otherwise the entry under the new key is this lot's own alias, left by
+  // an earlier reannotation, and its annotation changes back to it.
+
+  comm.details = details;
+}
+
 /// @}
 
 /// @name Exchange and price operations
