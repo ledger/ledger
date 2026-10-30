@@ -1,0 +1,25 @@
+; With --ignore-diacritics, include globs were compiled as written but
+; matched against folded file names, so café.dat could not be included,
+; while cafe.dat brought in café.dat as well.  File names now match
+; exactly, whatever the option says.
+
+include include-glob-diacritics/café.dat
+include include-glob-diacritics/cafe.dat
+
+test --ignore-diacritics bal
+              $-8.00  Assets:Cash
+               $8.00  Expenses
+               $5.00    Cafe
+               $3.00    Café
+--------------------
+                   0
+end test
+
+; The option still folds report queries.
+test --ignore-diacritics bal cafe
+               $8.00  Expenses
+               $5.00    Cafe
+               $3.00    Café
+--------------------
+               $8.00
+end test

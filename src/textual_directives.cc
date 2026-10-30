@@ -261,7 +261,8 @@ namespace {
 /// `mask_t::assign_glob` (which is case-sensitive) rather than a direct
 /// filesystem lookup ensures that `include FOO.dat` does not silently
 /// match a differently-cased `foo.dat` on case-insensitive filesystems
-/// (issue #1660).  Matched entries drive the next level of recursion;
+/// (issue #1660).  Nor does `--ignore-diacritics` let `include cafe.dat`
+/// match `café.dat`.  Matched entries drive the next level of recursion;
 /// the final component contributes regular files to @p results.
 ///
 /// This allows patterns with glob metacharacters in any component --
@@ -277,7 +278,7 @@ void expand_glob_path(const path& base, const std::vector<path>& components, std
 
   const string comp = components[index].string();
   mask_t glob;
-  glob.assign_glob('^' + comp + '$');
+  glob.assign_glob(comp);
 
   std::vector<path> sorted_entries;
   std::copy(std::filesystem::directory_iterator(base), std::filesystem::directory_iterator(),
