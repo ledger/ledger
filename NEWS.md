@@ -87,6 +87,20 @@ components with their standard-library equivalents.
 
 ### Commodity Prices, Lots, and Annotations
 
+- `balance --unrealized` now books the market value of the commodities
+  reported on less their cost basis, which changes the output of existing
+  reports (#3327).  Selling part of a lot after its price had moved booked the
+  gain realized by the sale as unrealized as well, and buying at other than the
+  day's market price booked nothing, so neither report balanced.  Now only the
+  gain on the commodities still held, measured from their lot price or `@`
+  cost, is unrealized, and it is booked as one net gain or loss rather than as
+  each rise and fall since the last posting.  The `<Revalued>` postings of
+  register reports are unchanged.
+
+- Total a lot whose lot price has no commodity, such as `C$100.00 {1.50}`,
+  without a commodity (150) rather than in the lot's own (`C$150.00`), as
+  `--basis`, `--price` and the `cost` and `price` value expressions report it
+
 - Implement automatic FIFO/LIFO commodity lot matching (issue #164): selling a
   commodity without an explicit `{cost}` annotation can now pair the sale with
   open lots automatically and compute gain/loss from the matched basis

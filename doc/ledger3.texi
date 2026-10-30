@@ -8371,7 +8371,13 @@ Use only uncleared transactions in calculations and reports.
 
 @item --unrealized
 Show generated unrealized gain and loss accounts in the balance
-report.
+report.  With @option{--market} or @option{--exchange}, but not
+@option{--historical}, they hold the market value of the commodities
+reported on less their cost basis, as @option{--basis} reports it.  A
+gain realized by selling part of a lot is therefore not counted as
+unrealized too, and a commodity posted without a cost is measured from
+its market value on the day it was posted.  A net gain is shown in the
+gains account, and a net loss in the losses account.
 
 @item --unrealized-gains @var{STR}
 Allow the user to specify what account name should be used for
