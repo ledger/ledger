@@ -1829,10 +1829,75 @@ in two lines since we haven't told ledger to convert commodities.
 
 @node Naming Commodities, Buying and Selling Stock, Currency and Commodities, Currency and Commodities
 @subsection Naming Commodities
+@cindex commodity names
+@cindex quoted commodity names
 
-Commodity names can have any character, including white-space.
-However, if you include white-space or numeric characters, the
-commodity name must be enclosed in double quotes @samp{"}:
+A commodity's symbol may come before or after the number of an amount,
+with or without a space between them: @samp{$10}, @samp{EUR10} and
+@samp{10 EUR} are all amounts.  Unless it is quoted, the symbol ends at
+the first white-space character, digit, or one of these characters:
+
+@smallexample
+. , ; : ? ! - + * / ^ & | = < > ~ ( ) [ ] @{ @} @@
+@end smallexample
+
+Most of these mean something next to an amount: a digit, @samp{.} or
+@samp{,} continues its number, @samp{-} gives its sign, @samp{@@}
+begins its cost, @samp{=} a balance assertion, @samp{@{}, @samp{[} and
+@samp{(} the annotations of a lot, @samp{;} a comment, and several
+others are operators in value expressions (@pxref{Value Expressions}).
+Any other character may be part of a symbol, including letters of any
+alphabet, currency signs such as @samp{€}, and @samp{_}, so
+@samp{IBCS_DE} needs no quotes, but @samp{EXV6_DE} does.  A symbol
+also may not be one of the lower-case words @samp{and}, @samp{div},
+@samp{else}, @samp{false}, @samp{if}, @samp{not}, @samp{or} or
+@samp{true}, which belong to value expressions too.
+
+A name that breaks these rules must be enclosed in double quotes
+@samp{"}, which are not part of the name: @samp{10 "EUR"} is ten of the
+same commodity as @samp{10 EUR}.  Instead of quoting the whole name, a
+backslash may precede a single character that would otherwise end the
+symbol, so @samp{EXV\6_DE} is another way to write @samp{"EXV6_DE"}.
+
+The @code{commodity}, @code{N}, @code{P} and @code{apply fixed}
+directives name a commodity apart from any amount (@pxref{Command
+Directives}).  There a symbol ends only at white-space or at a
+@samp{;}, which begins a comment, so it may contain the other
+characters above, or be one of the words above, without quotes.  On a
+@code{P} line, though, a symbol that begins with a digit must be quoted
+unless a time of day precedes it, since Ledger would read it as the
+time, or, on a line without a date, as the date.  In this journal, two
+@code{P} lines and a posting all name @samp{EXV6_DE}:
+
+@smallexample @c input:9CEAA7F
+P 2025-04-29 EXV6_DE €48.50
+P 2025-04-30 "EXV6_DE" €48.75
+
+2025-05-02 Buy
+    Assets:Broker                   10 EXV\6_DE @@ €49.10
+    Assets:Cash
+@end smallexample
+
+When Ledger prints a symbol that an amount could not hold without
+quotes, it adds them, as @command{pricedb} does when it lists the three
+prices, the last of which comes from the posting's cost:
+
+@smallexample @c command:9CEAA7F
+$ ledger -f broker.dat pricedb
+@end smallexample
+
+@smallexample @c output:9CEAA7F
+P 2025/04/29 00:00:00 "EXV6_DE" €48.50
+P 2025/04/30 00:00:00 "EXV6_DE" €48.75
+P 2025/05/02 00:00:00 "EXV6_DE" €49.10
+@end smallexample
+
+Reports that line amounts up in columns, such as @command{balance} and
+@command{register}, leave the quotes off where a space separates a
+symbol from its number, unless the symbol consists only of digits.
+
+Between the quotes, a name may contain any of the characters above,
+and white-space too:
 
 @smallexample @c input:validate
 1999/06/09 ! Achat
@@ -2243,6 +2308,14 @@ The syntax is:
 P DATE SYMBOL PRICE
 @end smallexample
 
+A time of day, written @samp{HH:MM:SS}, may follow the @code{DATE};
+without one, the price is given as of midnight.  A line that omits the
+@code{DATE} gives the price as of the current time.  @code{SYMBOL} may
+contain characters that an amount would need to quote (@pxref{Naming
+Commodities}), but unless a time precedes it, a @code{SYMBOL} that
+begins with a digit must be quoted, or Ledger reads it as the time, or,
+on a line without a date, as the date.
+
 @code{PRICE} may also be a parenthesized expression.  If the
 expression evaluates to a single-commodity amount, that amount is
 recorded as the commodity's price on @code{DATE}.  If the expression
@@ -2587,6 +2660,17 @@ Pre-declare commodity names.  This only has an effect if
 @smallexample @c input:validate
 commodity $
 commodity CAD
+@end smallexample
+
+A semicolon after the symbol begins a comment, whether or not a space
+precedes it, just as it does after an amount in a posting; the same
+holds after the argument of the @code{alias} and @code{format}
+sub-directives described below.  A symbol that contains a semicolon
+must therefore be quoted:
+
+@smallexample @c input:validate
+commodity CAD; Canadian dollars
+commodity "Fund; Class A"  ; the quotes keep its semicolon
 @end smallexample
 
 The @code{commodity} directive supports several optional
@@ -6962,7 +7046,8 @@ sessions with multiple reports per session.
 
 @item --args-only
 Ignore all environment and init-file settings and
-use only command-line arguments to control Ledger.  Useful for debugging
+use only command-line arguments to control Ledger.  The default price
+database, @file{~/.pricedb}, is not read either.  Useful for debugging
 or testing small journal files not associated with your main financial
 database.
 
@@ -7195,7 +7280,9 @@ Accounts, tags or commodities not previously declared will cause errors.
 Quiet balance assertions.
 
 @item --price-db @var{FILE}
-Specify the location of the price entry data file.
+Specify the location of the price entry data file.  Without this option,
+@file{~/.pricedb} is read if it exists, or @file{./.pricedb} if
+@env{HOME} is not set, unless @option{--args-only} is given.
 
 @item --price-exp @var{DURATION}
 @itemx --leeway @var{DURATION}
@@ -7454,6 +7541,22 @@ Collapse the account display only if it has a zero balance.
 @item --color
 @itemx --ansi
 Use color if the terminal supports it.
+
+@item --colors @var{NAME=COLOR,...}
+Change what the color @var{NAME} looks like, where @var{NAME} is one of
+the color names that formats use (@pxref{Colors}), such as @code{blue}
+for account names or @code{red} for negative amounts.  @var{COLOR} is a
+color name, a number from 0 to 255 for one of a terminal's 256 colors,
+or a 24-bit color written @samp{#RRGGBB}, or several of these separated
+by spaces; names within @var{COLOR} mean the standard ANSI colors.  For
+example, @samp{--colors 'blue=#5f87ff,red=bold 196'} shows account
+names in a lighter blue and negative amounts in a bold, bright red.  An
+empty @var{COLOR} leaves text of that color uncolored.  The assignments
+of every use of the option add up, a later assignment to a name
+replacing an earlier one, so that colors set in an init file can be
+adjusted on the command line.  This option does not turn color on or
+off: that is still up to @option{--color}, @option{--force-color} and
+@option{--no-color}.
 
 @item --columns @var{INT}
 Specify the width of the @command{register} report in characters.
@@ -10765,8 +10868,11 @@ $ ledger reg --limit 'any(account =~ /Assets:/)'
 
 @defun ansify_if value color
 Render the given @var{value} as a string, applying the proper ANSI escape
-codes to display it in the given @var{color}.  If @var{color} is not
-provided, the value is returned unchanged.  The condition is typically
+codes to display it in the given @var{color}: a color name such as
+@code{blue}, a number from 0 to 255, a 24-bit color written
+@samp{#RRGGBB}, or several of these separated by spaces
+(@pxref{Colors}).  If @var{color} is not provided, or is null, empty or
+a boolean, the value is returned unchanged.  The condition is typically
 embedded in the color argument using an @code{if} expression, e.g.,
 @code{blue if color}, which checks the value of the option
 @option{--color}.  Since ANSI escape codes include non-printable character
@@ -11706,8 +11812,12 @@ options:
 @node Colors, Quantities and Calculations, Field Widths, Formatting Functions and Codes
 @subsection Colors
 
-The character-based formatting ledger can do is limited to the ANSI
-terminal character colors and font highlights in a normal TTY session.
+When it writes to a terminal, or when @option{--force-color} is given,
+ledger colors its reports with ANSI escape sequences.  Formats refer to
+colors by name: the default formats show account names in @code{blue},
+negative amounts in @code{red}, future dates in @code{green} and the
+payees of uncleared transactions in @code{bold}.  These are the names
+that formats can use:
 
 @multitable @columnfractions .3 .3 .3
 @item @code{red}    @tab @code{magenta} @tab @code{bold}
@@ -11715,6 +11825,27 @@ terminal character colors and font highlights in a normal TTY session.
 @item @code{yellow} @tab @code{white}   @tab @code{blink}
 @item @code{blue}   @tab @code{black}
 @end multitable
+
+Where a format gives a color, such as the second argument of
+@code{ansify_if}, it can also give a number from 0 to 255, for one of the
+256 colors that most terminals offer, or a 24-bit color written
+@samp{#RRGGBB} in hexadecimal, for terminals that support those.
+Several of these separated by spaces combine, so that
+@samp{bold #5f87ff} is a bold light blue.
+
+The option @option{--colors} changes what a color name looks like,
+wherever it is used.  This makes account names a lighter blue:
+
+@smallexample @c command:043BAC8,with_input:3406FC1
+$ ledger -f expr.dat --colors blue=#5f87ff --format "%(ansify_if(account, blue))\n" reg
+@end smallexample
+@smallexample @c output:043BAC8
+[38;2;95;135;255mAssets:Cash[0m
+[38;2;95;135;255mExpenses:Office Supplies[0m
+@end smallexample
+
+Set @option{--colors} in your @file{~/.ledgerrc}, or in the environment
+variable @env{LEDGER_COLORS}, to have every report use your colors.
 
 @node Quantities and Calculations, Date Functions, Colors, Formatting Functions and Codes
 @subsection Quantities and Calculations
@@ -11953,7 +12084,8 @@ The following format functions allow you limited formatting of text:
 
 @item ansify_if(value, color)
 Surrounds the string representing value with ANSI codes to give it
-@code{color} on a TTY display.  Has no effect if directed to a file.
+@code{color} (@pxref{Colors}) on a TTY display.  Has no effect if
+directed to a file.
 
 @item justify(value, first_width, latter_width, right_justify, colorize)
 Right or left justify the string representing @code{value}.  The width
@@ -12719,7 +12851,8 @@ use to a user trying something new.
 @ftable @option
 
 @item --args-only
-Ignore init files and environment variables for the ledger run.
+Ignore init files, environment variables and the default price database
+for the ledger run.
 
 @item --debug @var{CODE}
 If Ledger has been built with debug options this will provide extra

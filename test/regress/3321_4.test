@@ -1,0 +1,22 @@
+; A commodity named "and", "div", "else", "false", "if", "not", "or" or
+; "true" must be quoted in an amount, where a bare word like these is
+; read as part of a value expression.  Ledger must keep the quotes when
+; it prints such a commodity, or it cannot read its own output back.  A
+; price directive names its commodity outside of any amount, so there the
+; word needs no quotes (#3321).
+
+P 2025/01/01 true $2.00
+
+2025/01/01 Test
+    Assets:A                                10 "and"
+    Assets:B                               -10 "and"
+
+test print
+2025/01/01 Test
+    Assets:A                                10 "and"
+    Assets:B
+end test
+
+test pricedb
+P 2025/01/01 00:00:00 "true" $2.00
+end test

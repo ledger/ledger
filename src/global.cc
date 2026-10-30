@@ -64,7 +64,8 @@
 namespace ledger {
 
 /// Set by handle_debug_options when --args-only is present.
-/// When true, the constructor skips environment variables and the init file.
+/// When true, the constructor skips environment variables and the init file,
+/// and keeps the session from reading the default price database.
 static bool args_only = false;
 
 /// Path to the init file, captured early by handle_debug_options.
@@ -114,7 +115,7 @@ global_scope_t::global_scope_t(char** envp) {
     session().set_flush_on_next_data_file(true);
     read_init();
   } else {
-    session().HANDLER(price_db_).off();
+    session().use_default_price_db = false;
   }
 
   TRACE_CTOR(global_scope_t, "");
@@ -327,8 +328,11 @@ int global_scope_t::execute_command_wrapper(strings_list args, bool at_repl) {
     // just type "catch throw" to find the source point of any error.
     status = 0;
   } catch (const std::exception& err) {
-    if (at_repl)
+    if (at_repl) {
+      // Failed reports can leave cached totals and display flags in the journal.
+      session().journal->clear_xdata();
       pop_report();
+    }
     report_error(err);
   }
 
@@ -555,7 +559,7 @@ void global_scope_t::visit_man_page() const {
  * This function runs before global_scope_t is constructed.  It handles
  * options that must take effect immediately:
  *
- *   --args-only      : skip init file and environment (testing aid)
+ *   --args-only      : skip init file, environment and ~/.pricedb (testing aid)
  *   --verify-memory  : enable memory tracing with debug logging
  *   --verify         : enable runtime verification checks
  *   --verbose / -v   : set log level to LOG_INFO

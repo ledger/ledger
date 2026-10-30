@@ -1,0 +1,15 @@
+; A getquote script may print its price line without a date, naming the
+; commodity as Ledger passed it to the script: in double quotes, when its
+; symbol needs them.  Ledger reads the symbol of such a line as it reads
+; that of a dated one, so the price goes to the commodity it asked about,
+; not to one whose name includes the quotes, and a space before the line
+; is ignored (#3321).
+
+2025/04/29 Buy
+    Assets:Broker                   10 "EXV6_DE" @ $48.50
+    Assets:Broker                    2 "Fund A" @ $30.00
+    Assets:Cash
+
+test bal --market --download --getquote $sourcepath/test/scripts/mock-getquote-dateless.sh Broker
+             $582.00  Assets:Broker
+end test

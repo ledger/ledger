@@ -980,10 +980,12 @@ public:
   [[nodiscard]] string label(optional<type_t> the_type = none) const;
 
   /**
-   * Printing methods.
+   * Printing methods.  With AMOUNT_PRINT_COLORIZE, print renders negative
+   * amounts with the ANSI escape sequence negative_color, if it is given.
    */
   void print(std::ostream& out, const int first_width = -1, const int latter_width = -1,
-             const uint_least8_t flags = AMOUNT_PRINT_NO_FLAGS) const;
+             const uint_least8_t flags = AMOUNT_PRINT_NO_FLAGS,
+             const string& negative_color = empty_string) const;
 
   void dump(std::ostream& out, const bool relaxed = true) const;
 

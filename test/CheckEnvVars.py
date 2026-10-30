@@ -146,6 +146,82 @@ with tempfile.TemporaryDirectory() as tmpdir:
         expected_exit=0
     )
 
+# Test 4: LEDGER_COLORS sets --colors (issue #589)
+with tempfile.TemporaryDirectory() as tmpdir:
+    journal_file = os.path.join(tmpdir, 'journal.dat')
+
+    with open(journal_file, 'w') as f:
+        f.write('2024/01/01 Test payee\n')
+        f.write('    Expenses:Food    $25.00\n')
+        f.write('    Assets:Checking\n')
+
+    run_test(
+        'LEDGER_COLORS is honored (issue #589)',
+        {'LEDGER_COLORS': 'blue=#5f87ff,red=196'},
+        ['-f', journal_file, 'bal', '--force-color', '--columns=80'],
+            '             \033[38;5;196m$-25.00\033[0m'
+            '  \033[38;2;95;135;255mAssets:Checking\033[0m\n'
+            '              $25.00  \033[38;2;95;135;255mExpenses:Food\033[0m\n'
+            '--------------------\n'
+            '                   0',
+        expected_exit=0
+    )
+
+# Test 5: --colors in an init file, where '#' does not start a comment,
+# adds up with --colors on the command line, which wins for red (#589)
+with tempfile.TemporaryDirectory() as tmpdir:
+    journal_file = os.path.join(tmpdir, 'journal.dat')
+    init_file = os.path.join(tmpdir, 'ledgerrc')
+
+    with open(journal_file, 'w') as f:
+        f.write('2024/01/01 Test payee\n')
+        f.write('    Expenses:Food    $25.00\n')
+        f.write('    Assets:Checking\n')
+
+    with open(init_file, 'w') as f:
+        f.write('--colors blue=#5f87ff\n')
+        f.write('--colors red=bold 33\n')
+
+    run_test(
+        '--colors in an init file is honored (issue #589)',
+        {'LEDGER_INIT_FILE': init_file},
+        ['-f', journal_file, 'bal', '--force-color', '--colors=red=196',
+         '--columns=80'],
+            '             \033[38;5;196m$-25.00\033[0m'
+            '  \033[38;2;95;135;255mAssets:Checking\033[0m\n'
+            '              $25.00  \033[38;2;95;135;255mExpenses:Food\033[0m\n'
+            '--------------------\n'
+            '                   0',
+        expected_exit=0
+    )
+
+# Test 6: a double-quoted format in ~/.ledgerrc, where \" writes the
+# expression's empty string "" (issue #1884)
+with tempfile.TemporaryDirectory() as tmpdir:
+    journal_file = os.path.join(tmpdir, 'journal.dat')
+
+    with open(journal_file, 'w') as f:
+        f.write('2024/01/01 Test payee\n')
+        f.write('    Expenses:Food    $25.00\n')
+        f.write('    Assets:Checking\n')
+
+    with open(os.path.join(tmpdir, '.ledgerrc'), 'w') as f:
+        f.write(r'--balance-format "%(justify(scrub(display_total), 20, -1, true, color))'
+                r'  %(!options.flat ? depth_spacer : \"\")'
+                r'%-(ansify_if(partial_account(options.flat), yellow if color))'
+                r'\n%/%$1\n%/--------------------\n"' '\n')
+
+    run_test(
+        'A quoted format in ~/.ledgerrc is honored (issue #1884)',
+        {'HOME': tmpdir},
+        ['-f', journal_file, 'bal', '--force-color', '--columns=80'],
+            '             \033[31m$-25.00\033[0m  \033[33mAssets:Checking\033[0m\n'
+            '              $25.00  \033[33mExpenses:Food\033[0m\n'
+            '--------------------\n'
+            '                   0',
+        expected_exit=0
+    )
+
 print()
 if succeeded > 0:
     print(f'OK ({succeeded})')
