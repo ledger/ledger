@@ -852,7 +852,12 @@ bool xact_base_t::finalize() {
       if (post->has_flags(POST_COST_FIXATED) && post->amount.has_annotation() &&
           post->amount.annotation().price) {
         DEBUG("xact.finalize", "fixating annotation price");
-        post->amount.annotation().add_flags(ANNOTATION_PRICE_FIXATED);
+        // The annotation belongs to the pooled commodity, which every other
+        // amount of this lot shares and which the pool indexes by these very
+        // details, so fixate a copy and re-intern it instead of editing it.
+        annotation_t fixated(post->amount.annotation());
+        fixated.add_flags(ANNOTATION_PRICE_FIXATED);
+        post->amount.annotate(fixated);
       }
     }
   }

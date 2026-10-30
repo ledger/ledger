@@ -360,9 +360,13 @@ void anonymize_posts::operator()(post_t& post) {
 
   render_commodity(temp.amount);
   if (temp.amount.has_annotation()) {
-    temp.amount.annotation().tag = std::nullopt;
-    if (temp.amount.annotation().price)
-      render_commodity(*temp.amount.annotation().price);
+    // The annotation is the pooled lot's own, shared by every amount of
+    // the lot, so anonymize a copy and re-intern it rather than edit it.
+    annotation_t anonymized(temp.amount.annotation());
+    anonymized.tag = std::nullopt;
+    if (anonymized.price)
+      render_commodity(*anonymized.price);
+    temp.amount.annotate(anonymized);
   }
 
   if (temp.cost)

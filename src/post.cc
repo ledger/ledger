@@ -1092,15 +1092,15 @@ void extend_post(post_t& post, journal_t& journal) {
       value_expr = journal.value_expr;
 
     if (value_expr) {
-      if (!details) {
-        annotation_t new_details;
-        new_details.value_expr = value_expr;
+      // Either way the result is looked up in the pool: the value expression
+      // is part of an annotation's identity, and the existing annotation is
+      // the pooled commodity's own, shared by every amount of the lot.
+      annotation_t new_details(details ? *details : annotation_t());
+      new_details.value_expr = value_expr;
 
-        commodity_t* new_comm = commodity_pool_t::current_pool->find_or_create(comm, new_details);
-        post.amount.set_commodity(*new_comm);
-      } else {
-        details->value_expr = value_expr;
-      }
+      commodity_t* new_comm =
+          commodity_pool_t::current_pool->find_or_create(comm.referent(), new_details);
+      post.amount.set_commodity(*new_comm);
     }
   }
 }
