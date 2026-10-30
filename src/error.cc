@@ -61,9 +61,13 @@ thread_local std::ostringstream _desc_buffer;
 
 string error_context() {
   string context = _ctxt_buffer.str(); // NOLINT(bugprone-unused-local-non-trivial-variable)
+  discard_error_context();
+  return context;
+}
+
+void discard_error_context() {
   _ctxt_buffer.clear();
   _ctxt_buffer.str("");
-  return context;
 }
 
 string file_context(const path& file, const std::size_t line) {

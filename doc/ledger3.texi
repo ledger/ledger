@@ -2382,8 +2382,11 @@ Command directives must occur at the beginning of a line.  Use of
 @item account
 @findex account
 @cindex pre-declare account
-Pre-declare valid account names.  This only has an effect if
-@option{--strict} or @option{--pedantic} is used (see below).  The
+Pre-declare valid account names.  Postings to undeclared accounts are
+only reported if @option{--strict} or @option{--pedantic} is used (see
+below).  Declared accounts are also listed by the @command{accounts}
+command, and by the @command{balance} report under @option{--empty},
+even when no posting uses them.  The
 @code{account} directive supports several optional sub-directives, if
 they immediately follow the account directive and if they begin with
 whitespace:
@@ -8648,7 +8651,12 @@ Report subtotals by payee.
 
 @item --empty
 @itemx -E
-Include even empty accounts in the @command{balance} report.
+Include even empty accounts in the @command{balance} report, including
+accounts declared with an @code{account} directive that no posting in
+the report uses.  The report query can exclude such an account only by
+the terms that test the account itself, such as its name or depth;
+conditions on postings, such as their date, payee or commodity, never
+exclude a declared account.
 
 @item --weekly
 @itemx -W

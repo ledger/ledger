@@ -107,6 +107,11 @@ extern thread_local std::ostringstream _ctxt_buffer;
 /// Retrieve and clear the accumulated error context string.
 string error_context();
 
+/// Clear the accumulated error context, for a caller that recovers from an
+/// exception instead of reporting it.  The context describes an error that
+/// will never be shown, so it must not be printed with the next one.
+void discard_error_context();
+
 /// Format a "file:line:" context string for error messages.
 string file_context(const path& file, std::size_t line);
 
