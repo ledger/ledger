@@ -229,6 +229,7 @@ public:
    * Falls through to item_t::lookup() for base properties.
    */
   expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
+  xact_t* as_xact_scope() override { return this; }
 
   bool valid() const override;
 

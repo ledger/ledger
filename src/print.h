@@ -101,6 +101,9 @@ public:
   }
   ~print_xacts() override { TRACE_DTOR(print_xacts); }
 
+  /// print reproduces transactions; it never reads running totals.
+  bool wants_running_total() const override { return false; }
+
   /// @brief Print a blank line between report groups.
   void title(const string&) override;
 

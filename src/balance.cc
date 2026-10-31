@@ -73,19 +73,19 @@ namespace ledger {
 
 /// @brief Construct a balance from a double, stored under the null commodity.
 balance_t::balance_t(const double val) {
-  amounts.insert(amounts_map::value_type(commodity_pool_t::current_pool->null_commodity, val));
+  amounts = std::move(amounts).set(commodity_pool_t::current_pool->null_commodity, val);
   TRACE_CTOR(balance_t, "const double");
 }
 
 /// @brief Construct a balance from an unsigned long, stored under the null commodity.
 balance_t::balance_t(const unsigned long val) {
-  amounts.insert(amounts_map::value_type(commodity_pool_t::current_pool->null_commodity, val));
+  amounts = std::move(amounts).set(commodity_pool_t::current_pool->null_commodity, val);
   TRACE_CTOR(balance_t, "const unsigned long");
 }
 
 /// @brief Construct a balance from a signed long, stored under the null commodity.
 balance_t::balance_t(const long val) {
-  amounts.insert(amounts_map::value_type(commodity_pool_t::current_pool->null_commodity, val));
+  amounts = std::move(amounts).set(commodity_pool_t::current_pool->null_commodity, val);
   TRACE_CTOR(balance_t, "const long");
 }
 
@@ -108,11 +108,14 @@ balance_t& balance_t::operator+=(const balance_t& bal) {
 /// @brief Add a single amount into the balance.
 ///
 /// If the amount's commodity already exists in the balance, its value is
-/// accumulated.  For annotated commodities (e.g., shares purchased at a
-/// specific price or date), lookup is done by commodity name rather than
-/// pointer identity, so that @c AAPL {$120} and @c AAPL {$130} are
-/// recognized as the same underlying commodity.  Amounts that are
-/// precisely zero are silently ignored to keep the map sparse.
+/// accumulated.  Commodities are compared by identity: the commodity pool
+/// holds exactly one commodity_t per distinct symbol and per distinct
+/// (symbol, annotation) pair (commodity_pool_t::annotated_commodities), so
+/// two amounts of the same lot -- say @c AAPL {$120} [2024/01/02] -- always
+/// share a pointer, and a hash lookup replaces the former linear scan by
+/// name (which made balances holding K lots cost O(K) per addition).
+/// Amounts that are precisely zero are silently ignored to keep the map
+/// sparse.
 ///
 /// @throws balance_error if @p amt is uninitialized (null).
 balance_t& balance_t::operator+=(const amount_t& amt) {
@@ -122,12 +125,14 @@ balance_t& balance_t::operator+=(const amount_t& amt) {
   if (amt.is_realzero())
     return *this;
 
-  amounts_map::iterator i = amt.commodity().has_annotation() ? find_by_name(amt.commodity())
-                                                             : amounts.find(&amt.commodity());
-  if (i != amounts.end())
-    i->second += amt;
-  else
-    amounts.insert(amounts_map::value_type(&amt.commodity(), amt));
+  // One traversal: update() hands us the existing component, or a null
+  // amount when the commodity is new.
+  amounts = std::move(amounts).update(&amt.commodity(), [&amt](amount_t current) {
+    if (current.is_null())
+      return amt;
+    current += amt;
+    return current;
+  });
 
   return *this;
 }
@@ -162,14 +167,16 @@ balance_t& balance_t::operator-=(const amount_t& amt) {
   if (amt.is_realzero())
     return *this;
 
-  amounts_map::iterator i = amt.commodity().has_annotation() ? find_by_name(amt.commodity())
-                                                             : amounts.find(&amt.commodity());
-  if (i != amounts.end()) {
-    i->second -= amt;
-    if (i->second.is_realzero())
-      amounts.erase(i);
+  commodity_t* comm = &amt.commodity();
+  if (const amount_t* existing = amounts.find(comm)) {
+    amount_t difference(*existing);
+    difference -= amt;
+    if (difference.is_realzero())
+      amounts = std::move(amounts).erase(comm);
+    else
+      amounts = std::move(amounts).set(comm, std::move(difference));
   } else {
-    amounts.insert(amounts_map::value_type(&amt.commodity(), amt.negated()));
+    amounts = std::move(amounts).set(comm, amt.negated());
   }
   return *this;
 }
@@ -206,14 +213,13 @@ balance_t& balance_t::operator*=(const amount_t& amt) {
   } else if (!amt.commodity()) {
     // Multiplying by an amount with no commodity causes all the
     // component amounts to be increased by the same factor.
-    for (amounts_map::value_type& pair : amounts)
-      pair.second *= amt;
+    transform_amounts([&amt](amount_t& component) { component *= amt; });
   } else if (amounts.size() == 1) {
     // Multiplying by a commoditized amount is only valid if the sole
     // commodity in the balance is of the same kind as the amount's
     // commodity.
     if (*amounts.begin()->first == amt.commodity())
-      amounts.begin()->second *= amt;
+      transform_amounts([&amt](amount_t& component) { component *= amt; });
     else
       throw_(balance_error,
              _("Cannot multiply a balance with annotated commodities by a commoditized amount"));
@@ -244,14 +250,13 @@ balance_t& balance_t::operator/=(const amount_t& amt) {
   } else if (!amt.commodity()) {
     // Dividing by an amount with no commodity causes all the
     // component amounts to be divided by the same factor.
-    for (amounts_map::value_type& pair : amounts)
-      pair.second /= amt;
+    transform_amounts([&amt](amount_t& component) { component /= amt; });
   } else if (amounts.size() == 1) {
     // Dividing by a commoditized amount is only valid if the sole
     // commodity in the balance is of the same kind as the amount's
     // commodity.
     if (*amounts.begin()->first == amt.commodity())
-      amounts.begin()->second /= amt;
+      transform_amounts([&amt](amount_t& component) { component /= amt; });
     else
       throw_(balance_error,
              _("Cannot divide a balance with annotated commodities by a commoditized amount"));
@@ -308,34 +313,6 @@ optional<balance_t> balance_t::value(const datetime_t& moment,
 /*  Commodity lookup by name                                            */
 /*----------------------------------------------------------------------*/
 
-/// @brief Find a commodity entry by name equality rather than pointer identity.
-///
-/// Annotated commodities (e.g., @c AAPL {$120} vs. @c AAPL {$130})
-/// have distinct commodity_t pointers even though they share the same
-/// base symbol.  This helper performs a linear scan comparing via
-/// operator== on the commodity, which checks the underlying symbol.
-/// It is used by operator+= and operator-= when the incoming amount
-/// has an annotated commodity.
-///
-/// @return An iterator to the matching entry, or amounts.end() if not found.
-balance_t::amounts_map::iterator balance_t::find_by_name(const commodity_t& comm) {
-  for (amounts_map::iterator i = amounts.begin(); i != amounts.end(); i++) {
-    if (*(*i).first == comm)
-      return i;
-  }
-  return amounts.end();
-}
-
-/// @brief Const overload of find_by_name.
-/// @see find_by_name(const commodity_t&)
-balance_t::amounts_map::const_iterator balance_t::find_by_name(const commodity_t& comm) const {
-  for (amounts_map::const_iterator i = amounts.begin(); i != amounts.end(); i++) {
-    if (*(*i).first == comm)
-      return i;
-  }
-  return amounts.end();
-}
-
 /*----------------------------------------------------------------------*/
 /*  Single-commodity extraction                                         */
 /*----------------------------------------------------------------------*/
@@ -374,11 +351,8 @@ balance_t::commodity_amount(const optional<const commodity_t&>& commodity) const
              _f("Requested amount of a balance with multiple commodities: %1%") % temp);
     }
   } else if (amounts.size() > 0) {
-    amounts_map::const_iterator i = commodity->has_annotation()
-                                        ? find_by_name(*commodity)
-                                        : amounts.find(const_cast<commodity_t*>(&*commodity));
-    if (i != amounts.end())
-      return i->second;
+    if (const amount_t* found = amounts.find(const_cast<commodity_t*>(&*commodity)))
+      return *found;
   }
   return none;
 }
@@ -429,7 +403,7 @@ balance_t balance_t::strip_annotations(const keep_details_t& what_to_keep) const
 
 /// @brief Populate an array of amount pointers sorted for deterministic display.
 ///
-/// The amounts_map is an unordered_map, so its iteration order is
+/// The amounts_map is a hash map, so its iteration order is
 /// non-deterministic.  This method collects all non-null amounts into
 /// @p sorted and then sorts them so that @c ledger @c bal always prints
 /// commodities in a stable, predictable order.
@@ -544,6 +518,7 @@ struct print_amount_from_balance {
   int lwidth;
   uint_least8_t flags;
   const string& negative_color;
+  std::ostringstream buf; ///< Reused for every amount; constructing a stream is costly.
 
   explicit print_amount_from_balance(std::ostream& _out, bool& _first, int _fwidth, int _lwidth,
                                      uint_least8_t _flags, const string& _negative_color)
@@ -572,7 +547,8 @@ struct print_amount_from_balance {
       width = fwidth;
     }
 
-    std::ostringstream buf;
+    buf.str(string());
+    buf.clear();
     amount.print(buf, flags);
 
     justify(out, buf.str(), width, flags & AMOUNT_PRINT_RIGHT_JUSTIFY,
@@ -664,13 +640,16 @@ void balance_t::print(std::ostream& out, const int first_width, const int latter
 /// @brief Serialize a balance into a Boost property tree for XML/JSON output.
 ///
 /// Each component amount is added as a child "amount" node, enabling
-/// structured output via @c ledger @c xml or @c ledger @c json.
+/// structured output via @c ledger @c xml or @c ledger @c json.  Amounts
+/// are emitted in the same order balance_t::print() uses (see
+/// sorted_amounts()), so the output does not depend on the hash order of
+/// the component map.
 ///
 /// @param st   The property tree node to populate.
 /// @param bal  The balance to serialize.
 void put_balance(property_tree::ptree& st, const balance_t& bal) {
-  for (const balance_t::amounts_map::value_type& pair : bal.amounts)
-    put_amount(st.add("amount", ""), pair.second);
+  bal.map_sorted_amounts(
+      [&st](const amount_t& amount) { put_amount(st.add("amount", ""), amount); });
 }
 
 /*----------------------------------------------------------------------*/

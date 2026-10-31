@@ -227,6 +227,24 @@ inline std::string strip_ansi_escapes(const std::string& input) {
 /// @param right  If true, right-justify (pad on the left).
 /// @param color  If not empty, the ANSI escape sequence that renders the
 ///               text in a color (used for negative amounts).
+/// @brief True when every byte of @p str is printable ASCII, so that its
+/// code points, its bytes and its display columns all coincide.
+inline bool is_plain_ascii(const std::string& str) {
+  for (const unsigned char c : str)
+    if (c >= 0x80 || c < 0x20)
+      return false;
+  return true;
+}
+
+/// @brief Display width of @p str in terminal columns, ignoring ANSI
+/// escapes.  Printable ASCII, by far the common case for amounts and
+/// account names, is measured without decoding.
+inline std::size_t display_width(const std::string& str) {
+  if (is_plain_ascii(str))
+    return str.size();
+  return unistring(strip_ansi_escapes(str)).width();
+}
+
 inline void justify(std::ostream& out, const std::string& str, int width, bool right = false,
                     const std::string& color = std::string()) {
   if (!right) {
@@ -237,11 +255,15 @@ inline void justify(std::ostream& out, const std::string& str, int width, bool r
       out << "\033[0m";
   }
 
-  unistring temp(strip_ansi_escapes(str));
-
-  int spacing = width - int(temp.width());
-  while (spacing-- > 0)
+  // The first space is inserted on its own so that a width the caller set
+  // on the stream applies to it, as it did when the spaces were written one
+  // by one (value_t::print relies on this when right-justifying).
+  int spacing = width - int(display_width(str));
+  if (spacing > 0) {
     out << ' ';
+    if (--spacing > 0)
+      out << std::string(static_cast<std::size_t>(spacing), ' ');
+  }
 
   if (right) {
     if (!color.empty())

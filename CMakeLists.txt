@@ -498,6 +498,15 @@ else()
     )
 endif()
 
+include(FindImmer)
+if(IMMER_FOUND)
+  include_directories(SYSTEM "${IMMER_INCLUDE_DIR}")
+else()
+  message(FATAL_ERROR "Missing required header file: immer/map.hpp\n"
+    "Define IMMER_PATH or install immer locally into the source tree below lib/immer/."
+    )
+endif()
+
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 

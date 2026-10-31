@@ -125,6 +125,22 @@ public:
     if (handler)
       handler->clear();
   }
+
+  /**
+   * @brief Whether this handler, or anything downstream of it, reads the
+   * running totals that calc_posts stores in every posting's xdata
+   * (`total`, `display_total`, `count`).
+   *
+   * Computing them costs a balance update per posting and keeps every
+   * version of the running total alive until the report ends.  An output
+   * handler that never looks at them (print_xacts) returns false, and
+   * chain_post_handlers() then skips calc_posts' running total unless an
+   * option expression asks for it.  Filters defer to their downstream
+   * handler; terminal handlers say yes unless they know better.
+   */
+  virtual bool wants_running_total() const {
+    return handler ? handler->wants_running_total() : true;
+  }
 };
 
 /// Convenience alias for a shared pointer to a posting handler.

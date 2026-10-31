@@ -528,6 +528,7 @@ public:
   /// First checks session scope, then searches report-local functions by name,
   /// then options (which double as value expression variables), then commands.
   expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
+  report_t* as_report_scope() override { return this; }
 
   /**
    * @name Option Handlers

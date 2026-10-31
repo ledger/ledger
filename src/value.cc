@@ -2485,6 +2485,13 @@ string value_t::label(optional<type_t> the_type) const {
 ///                      empty renders them without color.
 void value_t::print(std::ostream& _out, const int first_width, const int latter_width,
                     const uint_least8_t flags, const string& negative_color) const {
+  // A balance lays out its own columns and never touches the stream's
+  // width, so unless the caller set one it can be written directly.
+  if (is_balance() && _out.width() == 0) {
+    as_balance().print(_out, first_width, latter_width, flags, negative_color);
+    return;
+  }
+
   // We buffer into a local ostringstream so that width and justification
   // settings do not leak into the caller's stream.
   std::ostringstream out;

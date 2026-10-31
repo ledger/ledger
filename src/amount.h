@@ -733,6 +733,8 @@ public:
 #define AMOUNT_PRINT_FIT_TO_WIDEST 0x40
 
   void print(std::ostream& out, const uint_least8_t flags = AMOUNT_PRINT_NO_FLAGS) const;
+  /// @brief The body of print(): the amount without regard to the stream's width.
+  void print_unpadded(std::ostream& out, uint_least8_t flags) const;
 
   /*@}*/
 

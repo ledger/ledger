@@ -486,12 +486,15 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
 
 string format_t::real_calc(scope_t& scope) {
   std::ostringstream out_str;
+  std::ostringstream out; // reused for every element; constructing a stream is costly
 
   // Walk each element in the linked list, rendering it into a per-element
-  // ostringstream, then applying width constraints before appending to the
-  // final output.
+  // buffer, then applying width constraints before appending to the final
+  // output.
   for (element_t* elem = elements.get(); elem; elem = elem->next.get()) {
-    std::ostringstream out;
+    out.str(string());
+    out.clear();
+    out.width(0);
 
     // Step 1: Set alignment for this element.
     if (elem->has_flags(ELEMENT_ALIGN_LEFT))
@@ -548,18 +551,27 @@ string format_t::real_calc(scope_t& scope) {
     // Step 3: Apply width constraints.  If the rendered text is wider than
     // max_width, truncate it.  If it is narrower than min_width, pad it.
     if (elem->max_width > 0 || elem->min_width > 0) {
-      unistring temp(out.str());
-      string result;
+      const string rendered(out.str());
 
-      if (elem->max_width > 0 && elem->max_width < temp.length()) {
-        result = truncate(temp, elem->max_width);
+      // Printable ASCII needs no decoding: bytes are code points.
+      if (is_plain_ascii(rendered) && !(elem->max_width > 0 && elem->max_width < rendered.size())) {
+        out_str << rendered;
+        if (elem->min_width > rendered.size())
+          out_str << string(elem->min_width - rendered.size(), ' ');
       } else {
-        result = temp.extract();
-        if (elem->min_width > temp.length())
-          for (std::size_t i = 0; i < elem->min_width - temp.length(); i++)
-            result += " ";
+        unistring temp(rendered);
+        string result;
+
+        if (elem->max_width > 0 && elem->max_width < temp.length()) {
+          result = truncate(temp, elem->max_width);
+        } else {
+          result = temp.extract();
+          if (elem->min_width > temp.length())
+            for (std::size_t i = 0; i < elem->min_width - temp.length(); i++)
+              result += " ";
+        }
+        out_str << result;
       }
-      out_str << result;
     } else {
       out_str << out.str();
     }

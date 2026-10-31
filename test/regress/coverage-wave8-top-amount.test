@@ -10,7 +10,7 @@ P 2024/01/01 EUR $1.10
 
 test reg --format "%(top_amount(total))\n" Expenses
 $10.00
-5 EUR
+$10.00
 end test
 
 test prices

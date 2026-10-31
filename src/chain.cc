@@ -203,6 +203,10 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t
  */
 post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& report,
                                      bool for_accounts_report) {
+  // Ask the output handler, before it is wrapped, whether it reads the
+  // running totals calc_posts would store in every posting (see
+  // item_handler::wants_running_total).
+  const bool output_wants_total = base_handler->wants_running_total();
   post_handler_ptr handler(std::move(base_handler));
   predicate_t display_predicate;
   predicate_t only_predicate;
@@ -310,8 +314,30 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
   // for example, whether filtered posts are included or excluded from the
   // running total.
   {
+    // A running total costs a balance update per posting and keeps every
+    // version of the total alive for the whole report, so compute it only
+    // when something reads it: the output handler itself (register, csv,
+    // xml, the Python collectors), an option that works from totals or
+    // counts (--average, --percent, --revalued), or an option expression
+    // that names `total` or `count` (--sort total, --display 'total > 0').
+    // The textual test errs on the side of computing: a false positive
+    // merely restores the old behaviour.
+    auto mentions_total = [](const option_t<report_t>& option) {
+      // option.value is read directly: str() throws for an option that
+      // was never given (operator bool tests whether it was).
+      return static_cast<bool>(option) && (option.value.find("total") != string::npos ||
+                                           option.value.find("count") != string::npos);
+    };
+    bool totals_requested =
+        output_wants_total || report.HANDLED(average) || report.HANDLED(deviation) ||
+        report.HANDLED(percent) || report.HANDLED(revalued) ||
+        mentions_total(report.HANDLER(sort_)) || mentions_total(report.HANDLER(sort_xacts_)) ||
+        mentions_total(report.HANDLER(display_)) || mentions_total(report.HANDLER(only_)) ||
+        mentions_total(report.HANDLER(group_by_)) || mentions_total(report.HANDLER(total_));
+
     bool calc_running =
-        (!for_accounts_report || (report.HANDLED(revalued) && report.HANDLED(unrealized)));
+        (!for_accounts_report || (report.HANDLED(revalued) && report.HANDLED(unrealized))) &&
+        totals_requested;
 
     // Enable incremental stripped total maintenance when the display_total
     // and total expressions are unmodified (default "total" accumulation)
