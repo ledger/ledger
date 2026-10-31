@@ -1307,7 +1307,11 @@ string xact_t::hash(const string& nonce, hash_type_t hash_type) const {
   std::ostringstream repr;
 
   repr << nonce;
-  repr << date();
+  // The hash identifies the transaction as written, so it takes the primary
+  // date rather than date(): --effective is in force while the journal is
+  // parsed (#2071), and date() would then return the auxiliary date, making
+  // the hash, and with it --hashes verification, depend on that option.
+  repr << primary_date();
   repr << aux_date();
   if (code)
     repr << ' ' << *code;

@@ -1,0 +1,83 @@
+; Regression test for reading the journal again in a session, found while
+; fixing #3253.
+; https://github.com/ledger/ledger/issues/3253
+;
+; An interactive or --script session keeps its journal from command to
+; command, and reads it again for reload and source.  Reading it again used
+; to start from what the last reading left behind, where a fresh process
+; starts clean:
+;
+; - the price history kept the prices the old journal recorded, so after
+;   source a journal of other prices, pricedb showed the old journal's too;
+; - the year a year directive set stayed set, so a transaction with no
+;   year, before the directive, was dated in the directive's year (and the
+;   default commodity of a D directive stayed set likewise, which
+;   test/regress/3253.py covers);
+; - a define like the one below was compiled in the scope of the command
+;   that read the journal, and then evaluated after that command's report
+;   was freed, a use after free;
+; - a journal read from standard input came back empty.
+;
+; The script prints mytoday, the Food register and the prices; reads the
+; journal again (reload) and prints them again; then reads another
+; journal (source) and prints its prices.  --now fixes the year that the
+; undated transaction falls in, before the year directive.
+
+define mytoday = today
+
+07/04 Undated
+    Expenses:Food                         $5.00
+    Assets:Cash
+
+year 2020
+
+2021/12/31 Opening
+    Assets:Broker                         1 AGGY
+    Equity:Opening Balances
+
+2021/12/31=2022/01/04 Later
+    Assets:Broker                         1 AGGY @@ $2.00
+    Assets:Cash
+
+P 2022/01/01 ZZZ $2
+P 2022/01/03 ZZZ 3 EUR
+
+test --now 2026/01/15 --script test/regress/3253_reload.dat
+2026/01/15
+25-Jul-04 Undated               Expenses:Food                 $5.00        $5.00
+P 2021/12/31 00:00:00 AGGY $2.00
+P 2022/01/01 00:00:00 ZZZ $2.00
+P 2022/01/03 00:00:00 ZZZ EUR3
+2026/01/15
+25-Jul-04 Undated               Expenses:Food                 $5.00        $5.00
+P 2021/12/31 00:00:00 AGGY $2.00
+P 2022/01/01 00:00:00 ZZZ $2.00
+P 2022/01/03 00:00:00 ZZZ EUR3
+P 2020/01/01 00:00:00 XYZ $9.00
+end test
+
+; The same, with the journal read from standard input.
+
+test -f - --now 2026/01/15 --script test/regress/3253_reload.dat
+2026/01/15
+25-Jul-04 Undated               Expenses:Food                 $5.00        $5.00
+P 2021/12/31 00:00:00 AGGY $2.00
+P 2022/01/01 00:00:00 ZZZ $2.00
+P 2022/01/03 00:00:00 ZZZ EUR3
+2026/01/15
+25-Jul-04 Undated               Expenses:Food                 $5.00        $5.00
+P 2021/12/31 00:00:00 AGGY $2.00
+P 2022/01/01 00:00:00 ZZZ $2.00
+P 2022/01/03 00:00:00 ZZZ EUR3
+P 2020/01/01 00:00:00 XYZ $9.00
+end test
+
+; mytoday is today's date in the scope it was compiled in.  Compiled anew by
+; a reload given its own --now, it must still be the session's date, not
+; that of the reload's report: once freed, that report's memory went to the
+; next command's, and mytoday took that command's --now.
+
+test --now 2026/01/15 --script test/regress/3253_define.dat
+2026/01/15
+2026/01/15
+end test

@@ -1,0 +1,12 @@
+--no-pager --columns=80 pricedb --effective
+--no-pager --columns=80 register --exchange $ --effective Assets
+--no-pager --columns=80 balance --lots --effective Broker
+--no-pager --columns=80 pricedb
+--no-pager --columns=80 register --exchange $ Assets
+--no-pager --columns=80 balance --lots Broker
+--no-pager --columns=80 pricedb --aux-date
+--no-pager --columns=80 pricedb --effective --primary-date
+--no-pager --columns=80 push --effective
+--no-pager --columns=80 pricedb
+--no-pager --columns=80 pop
+--no-pager --columns=80 pricedb

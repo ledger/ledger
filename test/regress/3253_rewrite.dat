@@ -1,0 +1,8 @@
+--no-pager --columns=80 balance
+--no-pager --columns=80 balance --account-rewrite Broker=Holdings
+--no-pager --columns=80 balance
+--no-pager --columns=80 balance --account-rewrite Cash=Purse
+--no-pager --columns=80 reload
+--no-pager --columns=80 balance
+--no-pager --columns=80 register --payee-rewrite Later=Purchase Broker
+--no-pager --columns=80 register Broker
