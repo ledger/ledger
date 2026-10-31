@@ -203,6 +203,10 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t
  */
 post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& report,
                                      bool for_accounts_report) {
+  // Ask the output handler, before it is wrapped, whether it reads the
+  // running totals calc_posts would store in every posting (see
+  // item_handler::wants_running_total).
+  const bool output_wants_total = base_handler->wants_running_total();
   post_handler_ptr handler(std::move(base_handler));
   predicate_t display_predicate;
   predicate_t only_predicate;
@@ -310,8 +314,28 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
   // for example, whether filtered posts are included or excluded from the
   // running total.
   {
+    // A running total costs a balance update per posting and keeps every
+    // version of the total alive for the whole report, so compute it only
+    // when something downstream of calc_posts can read it: the output
+    // handler itself (register, csv, xml, the Python collectors; print
+    // declines), an option that works from totals (--average, --deviation,
+    // --percent, --revalued), or an expression evaluated from calc_posts
+    // on: the predicates of --display, --only and --forecast-while
+    // (--forecast), and the --amount and --display-amount expressions,
+    // which calc_posts and display_filter_posts evaluate for every posting.
+    // Such an expression may reach the total under any of its names or
+    // through a function of its own, so its presence alone decides.  A
+    // false positive merely restores the old behaviour.  Sorting and
+    // grouping run upstream of calc_posts and never see a running total.
+    bool totals_requested = output_wants_total || report.HANDLED(average) ||
+                            report.HANDLED(deviation) || report.HANDLED(percent) ||
+                            report.HANDLED(revalued) || report.HANDLED(display_) ||
+                            report.HANDLED(only_) || report.HANDLED(forecast_while_) ||
+                            report.HANDLED(amount_) || report.HANDLED(display_amount_);
+
     bool calc_running =
-        (!for_accounts_report || (report.HANDLED(revalued) && report.HANDLED(unrealized)));
+        (!for_accounts_report || (report.HANDLED(revalued) && report.HANDLED(unrealized))) &&
+        totals_requested;
 
     // Enable incremental stripped total maintenance when the display_total
     // and total expressions are unmodified (default "total" accumulation)

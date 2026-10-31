@@ -1,0 +1,31 @@
+; print --display-amount EXPR leaves out each posting whose EXPR is zero
+; (unless --empty is given), and EXPR may read the running total: `total`
+; is the sum of the postings up to and including this one.  B brings the
+; total back to $0, so print leaves B out; A, C and D are printed with
+; their own amounts, D's although its running total is $8.  print
+; computes running totals only when an option that can read them is
+; given, as --display-amount and --amount can, since it never displays
+; them itself.
+
+2024/01/01 A
+    (Budget:Food)    $-10
+
+2024/01/02 B
+    (Budget:Food)    $10
+
+2024/01/03 C
+    (Budget:Food)    $5
+
+2024/01/04 D
+    (Budget:Food)    $3
+
+test print --display-amount total
+2024/01/01 A
+    (Budget:Food)                               $-10
+
+2024/01/03 C
+    (Budget:Food)                                 $5
+
+2024/01/04 D
+    (Budget:Food)                                 $3
+end test

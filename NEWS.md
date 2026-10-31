@@ -68,20 +68,24 @@ directives, and commands.
   no longer use `dynamic_cast`, and the printing path allocates far less.  On
   hledger's 100k-transaction benchmark journal the flat balance report went
   from 16s to 0.7s, and `print` and `register`, which needed 4 GB at 10k
-  transactions and could not finish at 100k within 23 GB, now take 0.6 GB,
-  `register` in about 8s; the 1M-transaction journal, previously unusable, is
-  read in 4s and balanced in 7s.  A journal with more than about 32,000 lots
-  valued by one `value` expression no longer aborts.  Two costs remain:
-  creating a lot still examines the lots that share its day, or like it have
-  none, one by one (the price matching added after 3.4.1), so many such lots of
-  one commodity take time quadratic in their number; and a report that visits
-  every lot of the running total at every posting still takes time proportional
-  to postings times lots: one that revalues the total (`-V`, `-X`, `-G`, and
-  `--unrealized` with them), `--invert`, `--round`, `--unround`, `--average`,
-  `--deviation`, `--average-lot-prices`, `top_amount()`, and `register --lots`,
-  `--lot-prices`, `--lot-dates` and `xml`, whose output lists them.  A
-  benchmark and profiling kit lives in tools/bench and a `perf` development
-  shell in flake.nix.
+  transactions and could not finish at 100k within 23 GB, now take 0.3 GB and
+  0.6 GB, `register` in about 8s; the 1M-transaction journal, previously
+  unusable, is read in 4s, balanced in 7s and printed in 8s.  `print` no longer
+  computes running totals it never displays, unless an option that may read
+  them is given: `--amount` or `--display-amount` (which `-V`, `-X`, `-G` and
+  `--unround` set), `--revalued` (`-B`), `--display`, `--only`, `--forecast`,
+  `--average`, `--deviation` or `--percent`.  A journal with more than about
+  32,000 lots valued by one `value` expression no longer aborts.  Two costs
+  remain: creating a lot still examines the lots that share its day, or like it
+  have none, one by one (the price matching added after 3.4.1), so many such
+  lots of one commodity take time quadratic in their number; and a report that
+  visits every lot of the running total at every posting still takes time
+  proportional to postings times lots: one that revalues the total (`-V`, `-X`,
+  `-G`, and `--unrealized` with them), `--invert`, `--round`, `--unround`,
+  `--average`, `--deviation`, `--average-lot-prices`, `top_amount()`, and
+  `register --lots`, `--lot-prices`, `--lot-dates` and `xml`, whose output
+  lists them.  A benchmark and profiling kit lives in tools/bench and a `perf`
+  development shell in flake.nix.
 
   Output is unchanged, with these exceptions.  XML balances, `top_amount()`
   (whose documented meaning this is), the commodity list in a basket

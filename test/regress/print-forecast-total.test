@@ -1,0 +1,131 @@
+; print --forecast lists only the months whose running total passes the
+; predicate, so print must compute the running total when --forecast is
+; given.
+;
+; print shows no running total, so to save its cost calc_posts computes
+; one for print only when an option can read it.  The --forecast
+; (--forecast-while) predicate can: besides deciding when forecast_posts
+; stops, it filters every posting after calc_posts, just before the
+; output.  Without the running total the filter would see each forecast
+; posting's own amount, $-100, which always passes, and print would list
+; every month up to the five-year forecast limit: 61 transactions instead
+; of 9.  So --forecast turns the running total on by its presence alone,
+; whatever the predicate calls the total (`T`, `total`, `O`).
+;
+; Each periodic posting is forecast in a transaction of its own, and the
+; query keeps the Assets:Checking ones.  print passes on every posting of
+; a matching transaction, so Opening adds $250 and $-250 and the total is
+; $0 when the forecast begins.  The forecast starts with the current
+; month, January 2024, and lowers the total by $100 a month; in the tenth
+; month, October 2024, the total reaches $-1000, which fails the
+; predicate, so nine forecast transactions are printed, January to
+; September 2024.  print holds postings back until the forecast is
+; complete, so it is this filter, not forecast_posts, that ends the list.
+; Without --generated, print leaves out the generated postings and shows
+; only their transactions' headers; the second test shows them, and
+; spells the option and the total out in full.
+
+~ monthly
+    Assets:Checking   $-100
+    Expenses:Rent
+
+2024/01/01 Opening
+    Assets:Checking   $250
+    Equity:Opening
+
+test print --now 2024/01/15 --forecast 'T>{$-1000.00}' Assets:Checking
+2024/01/01 Opening
+    Assets:Checking                             $250
+    Equity:Opening
+
+2024/01/01 Forecast transaction
+
+2024/02/01 Forecast transaction
+
+2024/03/01 Forecast transaction
+
+2024/04/01 Forecast transaction
+
+2024/05/01 Forecast transaction
+
+2024/06/01 Forecast transaction
+
+2024/07/01 Forecast transaction
+
+2024/08/01 Forecast transaction
+
+2024/09/01 Forecast transaction
+end test
+
+test print --now 2024/01/15 --generated --forecast-while 'total>{$-1000.00}' Assets:Checking
+2024/01/01 Opening
+    Assets:Checking                             $250
+    Equity:Opening                             $-250
+
+2024/01/01 Forecast transaction
+    Assets:Checking                            $-100
+
+2024/02/01 Forecast transaction
+    Assets:Checking                            $-100
+
+2024/03/01 Forecast transaction
+    Assets:Checking                            $-100
+
+2024/04/01 Forecast transaction
+    Assets:Checking                            $-100
+
+2024/05/01 Forecast transaction
+    Assets:Checking                            $-100
+
+2024/06/01 Forecast transaction
+    Assets:Checking                            $-100
+
+2024/07/01 Forecast transaction
+    Assets:Checking                            $-100
+
+2024/08/01 Forecast transaction
+    Assets:Checking                            $-100
+
+2024/09/01 Forecast transaction
+    Assets:Checking                            $-100
+end test
+
+; select ... from xacts prints through print's printer, but without
+; print's --related-all nothing holds the postings back: each forecast
+; posting reaches the running total as it is generated, and only those
+; matching the where clause count.  The total starts at Opening's $250 in
+; Assets:Checking and drops by $100 a month: December 2024 leaves $-950,
+; and January 2025 would leave $-1050, which fails the predicate, so the
+; forecast stops after twelve transactions.  Without the running total
+; the predicate would see each posting's own $-100, and the forecast
+; would run to the five-year limit again: 61 transactions.
+
+test select payee from xacts where account =~ /Assets:Checking/ --now 2024/01/15 --forecast 'T>{$-1000.00}'
+2024/01/01 Opening
+    Assets:Checking                             $250
+    Equity:Opening
+
+2024/01/01 Forecast transaction
+
+2024/02/01 Forecast transaction
+
+2024/03/01 Forecast transaction
+
+2024/04/01 Forecast transaction
+
+2024/05/01 Forecast transaction
+
+2024/06/01 Forecast transaction
+
+2024/07/01 Forecast transaction
+
+2024/08/01 Forecast transaction
+
+2024/09/01 Forecast transaction
+
+2024/10/01 Forecast transaction
+
+2024/11/01 Forecast transaction
+
+2024/12/01 Forecast transaction
+end test
