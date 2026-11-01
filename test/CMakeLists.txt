@@ -62,7 +62,16 @@ if(Python_EXECUTABLE)
     add_test(NAME SemanticBisimulation
       COMMAND ${Python_EXECUTABLE}
         ${PROJECT_SOURCE_DIR}/test/semantic/check_all.py
-        --ledger $<TARGET_FILE:ledger> --source ${PROJECT_SOURCE_DIR})
+        --ledger $<TARGET_FILE:ledger> --source ${PROJECT_SOURCE_DIR}
+        --gross --value)
+    # --gross and --value turn on the harness's two opt-in comparisons
+    # (test/semantic/check_all.py, D27 and D30): the oracle and the
+    # harness have supported both since C14 and C15, and the pinned
+    # oracle has since PR B's opening pin bump, so CI compares gross
+    # totals and market-valued balances from this commit on.  The
+    # flags stay off in check_all.py itself, so a developer running
+    # the script by hand, or any earlier commit of this branch, keeps
+    # the net comparison alone.
     # Bake the oracle location seen at configure time into the test,
     # so the oracle that runs is the one whose presence registered the
     # test, not whatever happens to be in the environment later.
