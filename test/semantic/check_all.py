@@ -17,6 +17,28 @@ lot-annotated-completion, whose conditions Journal.Result.lotFanout
 in the oracle records, is the known shape that cannot be reproduced
 in column sums at all.
 
+With --value, every compared file whose own `bal`, `balance` or `b`
+command lines name one exchange target T (`-X T`, `-XT`, `--exchange
+T`, `--exchange=T`) is additionally compared on its market-valued
+balances: the oracle receives `--exchange T` for that file and its
+`>> value` rows are compared with C++
+`balance --flat --no-total -X T`, binned VALUE:PASS, VALUE:FAIL or
+VALUE:SKIP:<reason>, with the refusal ratchet of value-refusals.txt
+and a detector whose net rows are equal while a planted C++-only
+price move changes its value rows.  A file whose commands name the
+target in any other form (several targets, or one written with a
+comma, colon or equals sign, as the list and conversion forms read)
+is binned VALUE:SKIP:spec-form and not compared; the ratchet holds
+those files as well, so every skip the comparison reports is one
+the ratchet records.  When the oracle
+cannot value the file as C++ does it prints one line
+`?? exchange REASON [COMM]` instead of its value rows, keeping its
+net rows (lean/README.md, the --exchange paragraph of "The
+oracle"); an announced REASON is a visible skip by reason, an
+unannounced one a FAIL.  A file whose commands carry --value-expr
+and the related options is refused by the oracle (value-expression;
+the oracle models no value expression, S46) and so never compared.
+
 For EVERY positive `.test` file in test/baseline, test/regress, and
 test/manual — positive meaning no test block expects a nonzero exit
 (`-> N`) or an `__ERROR__` section — the journal portion (everything
@@ -87,21 +109,25 @@ The oracle's extension lines are part of its opt-in output protocol
 (lean/README.md, "Building and testing").  Lines beginning `>> dr `,
 `>> cr ` or `?? gross ` are gross-comparison output, which the oracle
 prints only for a file whose arguments carry `--gross`; the harness
-requests it, per file, exactly when running with --gross.  Such a
-line in any other file's output is a FAIL ("unrequested protocol
-extension line"): a leak into the default output must never be
-dropped silently, because a comparator running without the flag
-would read it as part of the balance rows.
+requests it, per file, exactly when running with --gross.  Lines
+beginning `>> value ` or `?? exchange ` are value-comparison output,
+which the oracle prints only for a file whose arguments carry
+`--exchange`; the harness requests it, per file, exactly when
+--value runs and the file's own commands name one target.  Any such
+line in a file whose arguments do not request it is a FAIL
+("unrequested protocol extension line"): a leak into the default
+output must never be dropped silently, because a comparator running
+without the flag would read it as part of the balance rows.
 
 Exit codes: 0 all comparisons pass and the ratchet bins are empty;
-1 any FAIL, any GROSS:FAIL, or any entry in SKIP:out-of-scope or
-SKIP:cpp-parse (both
-reached zero against the full suite and are held there — an entry
-reappearing means one side stopped reading a journal it used to read,
-which is a regression, not a skip); 77 the Lean toolchain or a built
-oracle is unavailable (ctest SKIP_RETURN_CODE — skipped, visibly);
-2 the harness itself cannot run (missing binary, missing fixtures,
-oracle invocation failure).
+1 any FAIL, any GROSS:FAIL, any VALUE:FAIL, or any entry in
+SKIP:out-of-scope or SKIP:cpp-parse (both reached zero against the
+full suite and are held there — an entry reappearing means one side
+stopped reading a journal it used to read, which is a regression,
+not a skip); 77 the Lean toolchain or a built oracle is unavailable
+(ctest SKIP_RETURN_CODE — skipped, visibly); 2 the harness itself
+cannot run (missing binary, missing fixtures, a missing value
+refusal ratchet, oracle invocation failure).
 """
 
 import argparse
@@ -145,12 +171,70 @@ NO_CONTEXT_REASON = ("C++ rejection context not found; the rejected"
 # 76b9dc2b2:752-754).
 GROSS_DR_EXPR = "(amount > 0 ? amount : 0)"
 GROSS_CR_EXPR = "(amount < 0 ? -amount : 0)"
-EXTENSION_PREFIXES = (">> dr ", ">> cr ", "?? gross ")
+# The oracle's value output (lean/README.md, the --exchange flag).
+EXTENSION_PREFIXES = (">> dr ", ">> cr ", ">> value ",
+                      "?? gross ", "?? exchange ")
 # gross-refusals.txt: REASON<TAB>repo-relative path, one per line;
 # '#' opens a comment.  The ratchet holds the measured refusal set.
 GROSS_REFUSALS = os.path.join(HERE, "gross-refusals.txt")
 GROSS = {"PASS": [], "FAIL": [], "SKIP": []}
 GROSS_ROWS = {"dr": 0, "cr": 0, "files": 0}
+# value-refusals.txt: the same ratchet shape, for the `?? exchange`
+# refusals of the value comparison.
+VALUE_REFUSALS = os.path.join(HERE, "value-refusals.txt")
+# The reasons of `?? exchange REASON [COMM]` that the oracle announces
+# (ledger-semantics S48: Ledger/Driver.lean, README.md, AGENTS.md).
+# Any other reason is a FAIL.
+VALUE_REASONS = frozenset({
+    "no-terminus", "price-expr", "unread-price", "exchange-order",
+    "value-expression", "posting-date", "fixated-lot", "equivalence",
+    "commodity-alias", "price-precision", "null-commodity", "percent",
+    "time-unit", "no-price-path", "alternative-price-path",
+    "zero-inverse-price", "rounds-to-zero"})
+# Report commands a `test` line may name; only `bal`, `balance` and
+# `b` lines name exchange targets the comparison follows.
+REPORT_COMMANDS = {"bal", "balance", "b", "reg", "register", "r",
+                   "print", "p", "budget", "equity", "cleared", "stats",
+                   "prices", "pricedb", "pricemap", "xact", "entry",
+                   "source", "csv", "accounts", "payees", "commodities",
+                   "tags", "select", "convert", "emacs", "xml", "json",
+                   "lisp", "echo", "script", "python", "server", "org"}
+VALUE = {"PASS": [], "FAIL": [], "SKIP": []}
+VALUE_ROWS = {"rows": 0, "files": 0}
+
+
+def value_targets(path):
+    """The exchange targets named on the file's own `bal`, `balance`
+    or `b` command lines (`-X T`, `-XT`, `--exchange T`,
+    `--exchange=T`), in order of appearance; [] when none."""
+    targets = []
+    try:
+        with open(path, encoding="utf-8") as fh:
+            lines = fh.read().splitlines()
+    except UnicodeDecodeError:
+        return targets
+    for line in lines:
+        m = TEST_RE.match(line.rstrip("\r"))
+        if not m:
+            continue
+        try:
+            toks = shlex.split(m.group(1))
+        except ValueError:
+            toks = m.group(1).split()
+        cmd = next((t for t in toks if t in REPORT_COMMANDS), None)
+        if cmd not in ("bal", "balance", "b"):
+            continue
+        for i, tk in enumerate(toks):
+            t = None
+            if tk in ("-X", "--exchange") and i + 1 < len(toks):
+                t = toks[i + 1]
+            elif tk.startswith("--exchange="):
+                t = tk.split("=", 1)[1]
+            elif tk.startswith("-X") and len(tk) > 2:
+                t = tk[2:]
+            if t is not None:
+                targets.append(t.replace("\\", "").strip())
+    return targets
 
 
 def command_flags(line, cpp_flags):
@@ -383,7 +467,10 @@ def classify_test_file(path):
             if m and m.group(2) and m.group(2) != "0":
                 negative = True
             # input-affecting flags of the test's own command become
-            # part of the comparison tuple for this file
+            # part of the comparison tuple for this file (report
+            # options such as -X stay out: the net comparison runs
+            # the default report, and the value comparison reads its
+            # targets from these lines separately)
             dc = command_flags(line, cpp_flags) or dc
 
         elif in_journal:
@@ -456,9 +543,18 @@ def main():
     ap.add_argument("--gross-refusals", default=GROSS_REFUSALS,
                     help="the ratchet file holding the expected "
                          "GROSS:SKIP set (for the self-test)")
+    ap.add_argument("--value", action="store_true",
+                    help="also compare each file's market-valued "
+                         "balances, where its own bal lines name one "
+                         "exchange target (oracle --exchange; off by "
+                         "default, D30)")
+    ap.add_argument("--value-refusals", default=VALUE_REFUSALS,
+                    help="the ratchet file holding the expected "
+                         "VALUE:SKIP set (for the self-test)")
     ap.add_argument("dirs", nargs="*")
     args = ap.parse_args()
     gross_on = args.gross
+    value_on = args.value
     repo = os.path.abspath(args.source) if args.source else sweep.REPO
     ledger = args.ledger or os.path.join(repo, "build", "ledger")
     env = {**os.environ, "TZ": os.environ.get("TZ", "America/Chicago")}
@@ -517,6 +613,7 @@ def main():
         journal_text_of = {}  # dat_path -> journal text plus its copied
         # include closure, for the gross comparison's eval/expr
         # preamble strip
+        vtarget, spec_form = {}, {}  # dat_path -> target / off-form set
         detector_inputs = []  # fixtures that ride the oracle batch but
         # are never live candidates, like neg_fixtures
         for i, tpath in enumerate(tests):
@@ -557,6 +654,19 @@ def main():
                                           os.path.dirname(tpath), fdir)
                 candidates.append((tpath, dat, cpp_flags, dc))
                 journal_text_of[dat] = journal + inc_texts
+                if value_on:
+                    ts = value_targets(tpath)
+                    if ts:
+                        uniq = sorted(set(ts))
+                        if (len(uniq) > 1
+                                or any(c in uniq[0] for c in ",:=")
+                                or uniq[0].endswith("!") or not uniq[0]):
+                            # several targets, or one written in a
+                            # form the harness does not read: not
+                            # comparable, and visibly so
+                            spec_form[dat] = uniq
+                        else:
+                            vtarget[dat] = uniq[0]
 
         # Detector fixtures ride the oracle batch through
         # detector_inputs, never the live candidate loop: a planted
@@ -612,6 +722,36 @@ def main():
                 fh.write(tj.replace("= $300", "$300"))
             detector_inputs.append(("__telescope__", t1, [], False))
             tele = (t1, t2)
+
+        # Value detector fixture (--value only): the valuation-footing
+        # journal, whose dated AAPL price the oracle reads and the
+        # planted copy moves $170 to $171 on the C++ side only, so
+        # every net row stays equal and a value row moves.  The
+        # fixture is mandatory when --value runs (S48's draft).
+        vdet = None
+        if value_on:
+            fsrc = os.path.join(HERE, "footing.dat")
+            if not os.path.isfile(fsrc):
+                print(f"value detector fixture missing: {fsrc}",
+                      file=sys.stderr)
+                sys.exit(2)
+            with open(fsrc, encoding="utf-8") as fh:
+                fj = fh.read()
+            if "P 2024/03/01 AAPL $170" not in fj:
+                print("value detector fixture lacks its planted site"
+                      " 'P 2024/03/01 AAPL $170'", file=sys.stderr)
+                sys.exit(2)
+            v1 = os.path.join(tmp, "value-detector.dat")
+            with open(v1, "w") as fh:
+                fh.write(fj)
+            v2 = os.path.join(tmp, "value-detector-perturbed.dat")
+            with open(v2, "w") as fh:
+                fh.write(fj.replace("P 2024/03/01 AAPL $170",
+                                    "P 2024/03/01 AAPL $171"))
+            detector_inputs.append(("__valuedet__", v1,
+                                    ["--now", "2026/08/26"], False))
+            vtarget[v1] = "$"
+            vdet = (v1, v2)
 
         # NEG detector fixtures, derived from the same journal: the
         # control (the Grocer transaction given a wrong counter-amount)
@@ -685,8 +825,10 @@ def main():
         styles = {}  # dat_path -> set of decimal-comma commodities
         gdr, gcr = {}, {}  # dat_path -> set of gross debit/credit rows
         gref = {}  # dat_path -> '?? gross' refusal reason
+        vrows = {}  # dat_path -> set of `>> value` rows
+        vref = {}  # dat_path -> '?? exchange' refusal reason
         unreq = {}  # dat_path -> an extension line in a file that
-        # was not given --gross: a leak into the default output
+        # did not request its flag: a leak into the default output
         CHUNK = 800
         oracle_inputs = candidates + neg_candidates + neg_fixtures \
             + detector_inputs
@@ -705,6 +847,8 @@ def main():
                                  fl[fl.index("--input-date-format") + 1]])
                 if gross_on:
                     argv.append("--gross")
+                if value_on and d in vtarget:
+                    argv.extend(["--exchange", vtarget[d]])
                 argv.append(d)
             # Oracle invocation.  When LEDGER_LEAN_DIR is set (the Nix
             # build points it at the semantics flake's oracle output and
@@ -744,18 +888,29 @@ def main():
                     c = line[len("%% dc "):]
                     styles[cur].add("" if c == "*" else c)
                 elif cur and line.startswith(EXTENSION_PREFIXES):
-                    # Gross-comparison output.  Diverted when this file
-                    # was given --gross; a leak when it was not.
-                    if not gross_on:
-                        unreq.setdefault(cur, line)
-                    elif line.startswith(">> dr "):
-                        gdr.setdefault(cur, set()).add(
-                            line[len(">> dr "):].strip())
-                    elif line.startswith(">> cr "):
-                        gcr.setdefault(cur, set()).add(
-                            line[len(">> cr "):].strip())
+                    # Comparison output of --gross and --exchange.
+                    # Each kind is diverted only for a file whose
+                    # arguments requested it; in any other file it is
+                    # a leak into the default output.
+                    if line.startswith((">> dr ", ">> cr ", "?? gross ")):
+                        if not gross_on:
+                            unreq.setdefault(cur, line)
+                        elif line.startswith(">> dr "):
+                            gdr.setdefault(cur, set()).add(
+                                line[len(">> dr "):].strip())
+                        elif line.startswith(">> cr "):
+                            gcr.setdefault(cur, set()).add(
+                                line[len(">> cr "):].strip())
+                        else:
+                            gref[cur] = line[len("?? gross "):].strip()
+                    elif value_on and cur in vtarget:
+                        if line.startswith(">> value "):
+                            vrows.setdefault(cur, set()).add(
+                                line[len(">> value "):].strip())
+                        else:
+                            vref[cur] = line[len("?? exchange "):].strip()
                     else:
-                        gref[cur] = line[len("?? gross "):].strip()
+                        unreq.setdefault(cur, line)
                 elif cur and line.strip():
                     if isinstance(oracle[cur], set):
                         oracle[cur].add(line.strip())
@@ -831,6 +986,75 @@ def main():
             else:
                 GROSS["PASS"].append(rel)
 
+        def cpp_value(dat, cpp_flags, dc, dc_comms, journal, target):
+            """C++'s valued rows for one journal, as parse_cpp_balance
+            sees them, or (None, why)."""
+            pre = ""
+            if has_eval_preamble(journal):
+                # eval/expr directives print their value at the head of
+                # every report; the same strip as for the gross
+                # columns applies (regress/1883's "-30.00 GBP").
+                pr = subprocess.run(
+                    [ledger, *cpp_flags, "--permissive", "-f", dat,
+                     "balance", "--flat", "--no-total", "--limit",
+                     "false"],
+                    capture_output=True, text=True, env=env)
+                if pr.returncode != 0:
+                    return None, (f"eval preamble probe: C++ exit"
+                                  f" {pr.returncode}:"
+                                  f" {pr.stderr.strip()[-200:]}")
+                pre = pr.stdout
+            g = subprocess.run(
+                [ledger, *cpp_flags, "--permissive", "-f", dat,
+                 "balance", "--flat", "--no-total", "-X", target],
+                capture_output=True, text=True, env=env)
+            if g.returncode != 0:
+                return None, f"C++ exit {g.returncode}: " \
+                             f"{g.stderr.strip()[-200:]}"
+            text = g.stdout
+            if pre:
+                if not text.startswith(pre):
+                    return None, ("eval preamble not found"
+                                  " at the head of the output")
+                text = text[len(pre):]
+            try:
+                return sweep.parse_cpp_balance(
+                    text, decimal_comma=dc, dc_comms=dc_comms), None
+            except ValueError as e:
+                return None, f"unparseable C++ output: {e}"
+
+        def value_compare(rel, dat, cpp_flags, dc, dc_comms, journal):
+            """One file's value comparison into the VALUE bins."""
+            if dat in spec_form:
+                VALUE["SKIP"].append(("spec-form", rel))
+                return
+            if dat not in vtarget:
+                return
+            if dat in vref:
+                reason = vref[dat].split()[0] if vref[dat] else ""
+                if reason in VALUE_REASONS:
+                    VALUE["SKIP"].append((reason, rel))
+                else:
+                    VALUE["FAIL"].append(
+                        (rel, "unannounced refusal: ?? exchange "
+                         + vref[dat]))
+                return
+            cpp, err = cpp_value(dat, cpp_flags, dc, dc_comms, journal,
+                                 vtarget[dat])
+            if err:
+                VALUE["FAIL"].append((rel, err))
+                return
+            o = vrows.get(dat, set())
+            VALUE_ROWS["rows"] += len(cpp)
+            if cpp:
+                VALUE_ROWS["files"] += 1
+            if cpp != o:
+                VALUE["FAIL"].append(
+                    (rel, repr((sorted(o - cpp)[:6],
+                                sorted(cpp - o)[:6]))))
+            else:
+                VALUE["PASS"].append(rel)
+
         for tpath, dat, cpp_flags, dc in candidates:
             rel = os.path.relpath(tpath, repo)
             res = oracle.get(dat)
@@ -877,6 +1101,9 @@ def main():
                 continue
             if gross_on:
                 gross_compare(rel, dat, cpp_flags, dc, dc_comms,
+                              journal_text_of.get(dat, ""))
+            if value_on:
+                value_compare(rel, dat, cpp_flags, dc, dc_comms,
                               journal_text_of.get(dat, ""))
             if cpp_rows == res:
                 bins["PASS"].append(rel)
@@ -934,6 +1161,26 @@ def main():
                 GROSS["FAIL"].append(("<gross-selftest>",
                                       f"control_ok={control_ok} "
                                       f"net_blind={net_blind} fired={fired}"))
+
+        if vdet:
+            v1, v2 = vdet
+            ores = vrows.get(v1, set())
+            c1, e1 = cpp_value(v1, ["--now", "2026/08/26"], False,
+                               frozenset(), "", "$")
+            c2, e2 = cpp_value(v2, ["--now", "2026/08/26"], False,
+                               frozenset(), "", "$")
+            vctl = ((not e1) and v1 not in vref and bool(ores)
+                    and c1 == ores)
+            # A C++ error on the perturbed fixture is not a firing:
+            # the detector must see value rows that differ, not an
+            # error standing in for them.
+            vfired = (not e2) and c2 != ores
+            if vctl and vfired:
+                print("value selftest: detector green (control agrees,"
+                      " planted price fired)")
+            else:
+                VALUE["FAIL"].append(("<value-selftest>",
+                                      f"control_ok={vctl} fired={vfired}"))
 
         def cpp_reject(path, flags):
             return subprocess.run([ledger, *flags, "-f", path, "balance"],
@@ -1135,6 +1382,31 @@ def main():
         for r, pth in sorted(listed - seen):
             GROSS["FAIL"].append((pth, f"stale ratchet entry: {r}"))
 
+    # The value refusal ratchet: the same ratchet shape as the gross
+    # one, holding the measured `?? exchange` set over this corpus.
+    # A missing ratchet file is a harness error (exit 2), not a run
+    # whose refusals went unchecked: S48's draft read one as an empty
+    # list, and its resumed verification repaired the draft there.
+    vratchet = []
+    if value_on:
+        listed = set()
+        if os.path.isfile(args.value_refusals):
+            with open(args.value_refusals, encoding="utf-8") as fh:
+                for ln in fh:
+                    ln = ln.rstrip("\n")
+                    if ln and not ln.startswith("#"):
+                        reason, path = ln.split("\t", 1)
+                        listed.add((reason, path.strip()))
+        else:
+            print(f"value refusal ratchet missing: {args.value_refusals}",
+                  file=sys.stderr)
+            sys.exit(2)
+        seen = set(VALUE["SKIP"])
+        for r, pth in sorted(seen - listed):
+            VALUE["FAIL"].append((pth, f"refusal not in the ratchet: {r}"))
+        for r, pth in sorted(listed - seen):
+            VALUE["FAIL"].append((pth, f"stale ratchet entry: {r}"))
+
     # The gross bins ride the artifact's details so the record stays
     # reviewable; PASS lists are the harness's own evidence of how
     # much each comparison covered.
@@ -1146,6 +1418,15 @@ def main():
                                       for r, rel in sorted(GROSS["SKIP"])]
         for rel, why in GROSS["FAIL"]:
             artifact["details"].append({"file": rel, "status": "GROSS:FAIL",
+                                        "why": why})
+    if value_on:
+        artifact["counts"]["VALUE:PASS"] = len(VALUE["PASS"])
+        artifact["counts"]["VALUE:FAIL"] = len(VALUE["FAIL"])
+        artifact["value_rows"] = dict(VALUE_ROWS)
+        artifact["value_refusals"] = [f"{r}\t{rel}"
+                                      for r, rel in sorted(VALUE["SKIP"])]
+        for rel, why in VALUE["FAIL"]:
+            artifact["details"].append({"file": rel, "status": "VALUE:FAIL",
                                         "why": why})
     stamp = datetime.datetime.now(datetime.timezone.utc).strftime(
         "%Y%m%dT%H%M%SZ")
@@ -1189,6 +1470,18 @@ def main():
             print(f"  refused {r}\t{rel}")
         for rel, why in GROSS["FAIL"]:
             print(f"  GROSS:FAIL {rel}: {why}")
+    if value_on:
+        print(f"  value rows compared: {VALUE_ROWS['rows']} in"
+              f" {VALUE_ROWS['files']} files with a nonempty C++ side")
+        print(f"  VALUE:PASS          {len(VALUE['PASS'])}")
+        print(f"  VALUE:FAIL          {len(VALUE['FAIL'])}")
+        for r in sorted(set(r for r, _ in VALUE["SKIP"])):
+            print(f"  VALUE:SKIP:{r}"
+                  f" {sum(1 for x, _ in VALUE['SKIP'] if x == r)}")
+        for r, rel in sorted(VALUE["SKIP"]):
+            print(f"  refused {r}\t{rel}")
+        for rel, why in VALUE["FAIL"]:
+            print(f"  VALUE:FAIL {rel}: {why}")
     print(f"artifact: {os.path.relpath(apath, repo)}")
     # Ratchet: both bins below reached zero against the full suite,
     # and gates only tighten.  An entry here means one side stopped
@@ -1200,8 +1493,9 @@ def main():
     if ratchet and not bins["FAIL"]:
         print("ratchet: SKIP:out-of-scope and SKIP:cpp-parse must stay"
               " empty; a comparable journal is no longer compared")
-    sys.exit(1 if (bins["FAIL"] or ratchet or gratchet
-                   or (gross_on and GROSS["FAIL"])) else 0)
+    sys.exit(1 if (bins["FAIL"] or ratchet or gratchet or vratchet
+                   or (gross_on and GROSS["FAIL"])
+                   or (value_on and VALUE["FAIL"])) else 0)
 
 
 if __name__ == "__main__":

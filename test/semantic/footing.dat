@@ -1,12 +1,11 @@
-; Valuation-footing detector fixture (test/semantic/footing.py).
-; Two lots of AAPL bought on different dates, then a later price.  At
-; the fixed --now, bal -V --unrealized and bal -X $ --unrealized must
-; each total zero with <Unrealized> at $-300, minus the $300 of bal -G
-; and of bal -G -X $.  The detector limits the -V report, and then the
-; -X report, to Assets:Brokerage, which omits the other side of each
-; purchase so that the total is $3100, and perturbs the final price in
-; the copy that bal -G, and then bal -G -X $, reads alone, so that the
-; gain is $320.
+; Value-comparison detector fixture (test/semantic/check_all.py
+; --value), on the journal that test/semantic/footing.py also rides:
+; two lots of AAPL bought on different dates, then a dated price.  The
+; harness's planted defect moves that price $170 to $171
+; in the copy that C++ reads alone, so every net row stays equal and
+; each `>> value` row of Assets:Brokerage moves by 20 dollars, which
+; the oracle's --exchange lines show and the planted C++ side no
+; longer matches.
 
 2024/01/01 Buy
     Assets:Brokerage        10 AAPL @ $150
