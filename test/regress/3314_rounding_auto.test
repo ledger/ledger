@@ -1,0 +1,23 @@
+; A balanced automated rule must preserve each group's per-unit rounding
+; allowance (#3314, #1125).  The rule adds to both balancing groups.
+
+= /Checking/
+    Memo:Real         1
+    Memo:Real        -1
+    [Memo:Virtual]    1
+    [Memo:Virtual]   -1
+
+2015-07-02 Real bread
+    Expenses:Bread      0.50 bread @ $3.99
+    Expenses:Bread      1.50 bread @ $4.99
+    Assets:Checking          -$9.49
+
+2015-07-03 Budget bread
+    [Budget:Bread]      0.50 bread @ $3.99
+    [Budget:Bread]      1.50 bread @ $4.99
+    [Budget:Checking]         -$9.49
+
+test bal --flat --no-total Bread
+          2.00 bread  Budget:Bread
+          2.00 bread  Expenses:Bread
+end test

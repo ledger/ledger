@@ -3458,11 +3458,11 @@ The bracketed postings balance only against one another, never against
 the real postings of their transaction: here the real postings,
 @samp{Expenses:Food} and @samp{Assets:Cash}, balance each other, and
 the two bracketed postings do the same.  The real postings of every
-transaction therefore add up to zero, and so does a report made with
-@option{--real}.  Each of the two groups may have one posting without
-an amount, which takes whatever amount balances the rest of its own
-group---zero, if only the other group has amounts.  Above,
-@samp{Assets:Cash} receives @samp{$-20.00}, and nothing from the
+transaction must therefore satisfy Ledger's balancing rules independently,
+with costs and commodity conversions taken into account.  Each group may
+have one posting without an amount, which takes whatever amount balances
+the rest of its own group---zero, if only the other group has amounts.
+Above, @samp{Assets:Cash} receives @samp{$-20.00}, and nothing from the
 bracketed postings.
 
 So a bracketed posting cannot balance a real one, and this transaction
@@ -3491,10 +3491,13 @@ Error: Transaction does not balance
 @end smallexample
 
 Versions of Ledger before 3.5 added the two groups together, and
-accepted transactions like this one.  To correct one, write a bracketed
-posting that moves real money as a real posting, balance it against
-other bracketed postings, or surround its account with parentheses, so
-that it need not balance at all.
+accepted transactions like this one.  To correct this example, remove the
+brackets from @samp{Assets:Cash}, so it balances the real
+@samp{Expenses:Food} posting.  For virtual postings, use brackets when they
+should balance against other bracketed postings, or parentheses when they
+need not balance.  In either case, the real postings must balance
+separately: adding balancing virtual postings or using parentheses does
+not repair the unmatched real posting above.
 
 The rules by which Ledger balances a transaction apply to each group by
 itself.  Each group implies its own exchange rate when it holds two
