@@ -1,0 +1,33 @@
+; Regression test for issue #3243: xact fails to identify exact-match
+;
+; `xact bundt` drafted its transaction from "Lowes: flapper-seal and
+; light-bulbs" although only "Nothing Bundt" matches the payee pattern
+; "bundt".  draft_t::insert took whatever transaction the probabilistic
+; payee lookup ranked highest, and consulted the payee pattern only when
+; the lookup found nothing at all.  The lookup scored the Lowes payee 35,
+; since b, u, n, d and t all occur in it, and "Nothing Bundt" below its
+; threshold of 30.  Payees matching the pattern now outrank payees that
+; merely resemble it, whatever their scores.
+
+2026-06-25 * Lowes: flapper-seal and light-bulbs
+    Expenses:Household:Home:Lowes          31.87 USD
+    Liabilities:CC:American Express
+
+2026-06-26 ! Nothing Bundt
+    Expenses:Household:Food:Takeout:Nothing Bundt  5.99 USD
+    Liabilities:CC:American Express
+
+test --now 2026/06/30 xact bundt
+2026/06/30 Nothing Bundt
+    Expenses:Household:Food:Takeout:Nothing Bundt    5.99 USD
+    Liabilities:CC:American Express
+end test
+
+; When no payee matches the pattern, the lookup still settles for the
+; payee that most resembles it: the colon keeps "lowes flapper" from
+; matching "Lowes: flapper-seal and light-bulbs".
+test --now 2026/06/30 xact "lowes flapper"
+2026/06/30 Lowes: flapper-seal and light-bulbs
+    Expenses:Household:Home:Lowes          31.87 USD
+    Liabilities:CC:American Express
+end test

@@ -44,12 +44,17 @@
  *      against the search identifier.  The score reflects how closely
  *      the characters of the identifier appear (in order, in sequence,
  *      at similar positions) within the payee string.  Scores below 30
- *      are discarded.  An exact match scores 100 and stops the search.
+ *      are discarded.  Some kinds of match outrank any score: an exact
+ *      match, which also stops the search; then a payee equal to the
+ *      identifier but for case; then, when the caller supplies a payee
+ *      pattern, the payees matching it, whatever their scores.
  *
- *   2. **Account ranking**: The top five scoring transactions are
- *      examined.  For each posting in those transactions, the account's
- *      usage count is incremented by the transaction's score (with a
- *      small recency decay).  The account with the highest total wins.
+ *   2. **Account ranking**: The top five scoring transactions of the
+ *      strongest kind of match found are examined.  For each posting in
+ *      those transactions (in one that matched through a Payee tag,
+ *      each posting carrying that tag), the account's usage count is
+ *      incremented by the transaction's score (with a small recency
+ *      decay).  The account with the highest total wins.
  *      Temporary/generated accounts and the reference account are
  *      excluded.
  */
@@ -66,15 +71,32 @@ namespace ledger {
 
 namespace {
 
-using score_entry_t = std::pair<xact_t*, int>; ///< (transaction, match score)
+/// How a payee matched the search identifier, weakest first.  A stronger
+/// kind of match outranks a weaker one whatever their scores.
+enum match_kind_t : uint8_t {
+  SIMILAR_MATCH, ///< Resembles the identifier, as measured by its score
+  PATTERN_MATCH, ///< Matches the caller's payee pattern
+  NOCASE_MATCH,  ///< Equals the identifier but for case
+  EXACT_MATCH    ///< Equals the identifier
+};
+
+/// A transaction with the kind and score of its best-matching payee.
+struct score_entry_t {
+  xact_t* xact;
+  match_kind_t kind;
+  int score;
+  string tag_payee; ///< The Payee tag that matched, or empty for the payee
+};
 using scorecard_t = std::deque<score_entry_t>; ///< Collected match scores
 using char_positions_map =
     std::map<uint32_t, std::size_t>; ///< Tracks last matched position per character
 
-/// Sort score entries by descending score.
+/// Sort score entries by descending kind of match, then descending score.
 struct score_sorter {
   bool operator()(const score_entry_t& left, const score_entry_t& right) const {
-    return left.second > right.second;
+    if (left.kind != right.kind)
+      return left.kind > right.kind;
+    return left.score > right.score;
   }
 };
 
@@ -87,6 +109,23 @@ struct usage_sorter {
     return left.second < right.second;
   }
 };
+
+/// Fold the case of @p ch the way case-insensitive payee patterns do.
+boost::uint32_t fold_case(boost::uint32_t ch) {
+#if HAVE_BOOST_REGEX_UNICODE
+  return static_cast<boost::uint32_t>(u_foldCase(static_cast<UChar32>(ch), U_FOLD_CASE_DEFAULT));
+#else
+  return ch >= 'A' && ch <= 'Z' ? ch + ('a' - 'A') : ch;
+#endif
+}
+
+/// Whether @p left and @p right are the same string when case is ignored.
+bool equal_ignoring_case(const unistring& left, const unistring& right) {
+  return std::equal(left.utf32chars.begin(), left.utf32chars.end(), right.utf32chars.begin(),
+                    right.utf32chars.end(), [](boost::uint32_t l, boost::uint32_t r) {
+                      return fold_case(l) == fold_case(r);
+                    });
+}
 } // namespace
 
 /*--- Fuzzy Matching Algorithm ---*/
@@ -94,7 +133,8 @@ struct usage_sorter {
 std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
                                                        xacts_list::reverse_iterator iter,
                                                        const xacts_list::reverse_iterator& end,
-                                                       account_t* ref_account) {
+                                                       account_t* ref_account,
+                                                       const mask_t* payee_mask) {
   scorecard_t scores;
 
   // Normalize the search identifier to lowercase for case-insensitive
@@ -137,13 +177,18 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
         payee_candidates.push_back(tag_payee);
     }
 
-    int best_score = 0;
+    score_entry_t best{xact, SIMILAR_MATCH, 0, string()};
 
     for (const string& candidate : payee_candidates) {
+      // Each candidate after the payee itself is a Payee tag
+      bool from_tag = &candidate != &payee_candidates.front();
+
       // An exact match is worth a score of 100 and terminates the search
       if (ident == candidate) {
         DEBUG("lookup", "  we have an exact match, score = 100");
-        best_score = 100;
+        best.kind = EXACT_MATCH;
+        best.score = 100;
+        best.tag_payee = from_tag ? candidate : string();
         found_exact = true;
         break;
       }
@@ -158,6 +203,18 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
 #endif
 
       DEBUG("lookup", "Considering payee: " << value_key.extract());
+
+      // A payee equal to the identifier but for case outranks everything
+      // except an exact match, which an older transaction may yet supply.
+      // Fold case for the comparison: only builds without ICU fold the
+      // strings that the score below is computed from.
+      if (equal_ignoring_case(value_key, lowered_ident)) {
+        DEBUG("lookup", "  we have a match ignoring case, score = 100");
+        best.kind = NOCASE_MATCH;
+        best.score = 100;
+        best.tag_payee = from_tag ? candidate : string();
+        continue;
+      }
 
       std::size_t index = 0;
       std::size_t last_match_pos = unistring::npos;
@@ -282,39 +339,60 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
         index++;
       }
 
-      best_score = std::max(best_score, score);
+      // A payee matching the caller's pattern outranks every payee that
+      // merely resembles the identifier.  Its score orders it among the
+      // other matches only from 30, where a resemblance starts to count:
+      // lower scores are raised to 29, so that recency alone ranks those
+      // matches while each still votes for its accounts.
+      match_kind_t kind = SIMILAR_MATCH;
+      if (payee_mask != nullptr && payee_mask->match(candidate)) {
+        kind = PATTERN_MATCH;
+        score = std::max(score, 29);
+      }
+      if (kind > best.kind || (kind == best.kind && score > best.score)) {
+        best.kind = kind;
+        best.score = score;
+        best.tag_payee = from_tag ? candidate : string();
+      }
     }
 
-    // Only consider payees with a score of 30 or greater
-    if (best_score >= 30)
-      scores.push_back(score_entry_t(xact, best_score));
+    // Only consider resembling payees with a score of 30 or greater; the
+    // stronger kinds of match count whatever their scores
+    if (best.kind != SIMILAR_MATCH || best.score >= 30)
+      scores.push_back(best);
   }
 
   /*--- Stage 2: Rank accounts by usage among top matches ---*/
 
-  // Sort the results by descending score, then look at every account ever
-  // used among the top five.  Rank these by number of times used.  Lastly,
-  // "decay" any latter accounts, so that we give recently used accounts a
-  // slightly higher rating in case of a tie.
+  // Sort the results by descending kind of match and score, then look at
+  // every account ever used among the top five of the strongest kind, so
+  // that payees merely resembling the identifier cannot outvote one equal
+  // to it, whose score their own can exceed: fuzzy scores grow with the
+  // length of the identifier.  Rank these by number of times used.
+  // Lastly, "decay" any latter accounts, so that we give recently used
+  // accounts a slightly higher rating in case of a tie.
 
   std::stable_sort(scores.begin(), scores.end(), score_sorter());
 
   scorecard_t::iterator si = scores.begin();
   int decay = 0;
-  xact_t* best_xact = si != scores.end() ? (*si).first : NULL;
+  xact_t* best_xact = si != scores.end() ? si->xact : nullptr;
   account_use_map account_usage;
 
-  for (int i = 0; i < 5 && si != scores.end(); i++, si++) {
+  for (int i = 0; i < 5 && si != scores.end() && si->kind == scores.front().kind; i++, si++) {
     DEBUG("lookup.account",
-          "Payee: " << std::setw(5) << std::right << (*si).second << " - " << (*si).first->payee);
+          "Payee: " << std::setw(5) << std::right << si->score << " - " << si->xact->payee);
 
-    for (post_t* post : (*si).first->posts) {
+    // A transaction that matched through a Payee tag votes only with the
+    // postings carrying it
+    for (post_t* post : si->xact->posts) {
       if (!post->has_flags(ITEM_TEMP | ITEM_GENERATED) && post->account != ref_account &&
-          !post->account->has_flags(ACCOUNT_TEMP | ACCOUNT_GENERATED)) {
+          !post->account->has_flags(ACCOUNT_TEMP | ACCOUNT_GENERATED) &&
+          (si->tag_payee.empty() || post->payee_from_tag() == si->tag_payee)) {
         if (auto x = account_usage.find(post->account); x == account_usage.end())
-          account_usage.insert(account_use_pair(post->account, ((*si).second - decay)));
+          account_usage.insert(account_use_pair(post->account, (si->score - decay)));
         else
-          (*x).second += ((*si).second - decay);
+          (*x).second += (si->score - decay);
       }
       decay++;
     }

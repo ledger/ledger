@@ -1,0 +1,52 @@
+; Regression test for issue #3243: how payees matching the xact payee
+; pattern rank against the other candidates.
+;
+; A Payee tag that matches the pattern counts like a matching payee, and
+; an exact match still outranks every pattern match, even when regex
+; metacharacters keep the payee from matching itself as a pattern:
+; "SQ *COFFEE" matches "SQ COFFEE" but not "SQ *COFFEE".  Below the
+; threshold of 30, recency alone ranks the matches, as it did when
+; draft_t::insert fell back to the most recent payee matching the pattern.
+
+2026-06-20 * Union Hardware
+    Expenses:Household:Home:Hardware       14.99 USD
+    Liabilities:CC:American Express
+
+2026-06-25 * Lowes: flapper-seal and light-bulbs
+    Expenses:Household:Home:Lowes          31.87 USD
+    Liabilities:CC:American Express
+
+2026-06-26 * Costco
+    ; Payee: Nothing Bundt
+    Expenses:Household:Food:Takeout         5.99 USD
+    Liabilities:CC:American Express
+
+2026-06-27 * SQ *COFFEE
+    Expenses:Household:Food:Coffee          4.50 USD
+    Liabilities:CC:American Express
+
+2026-06-28 * SQ COFFEE
+    Expenses:Household:Food:Cafe            6.25 USD
+    Liabilities:CC:American Express
+
+test --now 2026/06/30 xact bundt
+2026/06/30 Costco
+    ; Payee: Nothing Bundt
+    Expenses:Household:Food:Takeout         5.99 USD
+    Liabilities:CC:American Express
+end test
+
+test --now 2026/06/30 xact "SQ *COFFEE"
+2026/06/30 SQ *COFFEE
+    Expenses:Household:Food:Coffee          4.50 USD
+    Liabilities:CC:American Express
+end test
+
+; "Union Hardware" resembles "Un" more than the Payee tag "Nothing Bundt"
+; does, but neither reaches 30, so the more recent Costco transaction wins.
+test --now 2026/06/30 xact Un
+2026/06/30 Costco
+    ; Payee: Nothing Bundt
+    Expenses:Household:Food:Takeout         5.99 USD
+    Liabilities:CC:American Express
+end test

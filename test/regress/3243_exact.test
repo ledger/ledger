@@ -1,0 +1,48 @@
+; Regression test for issue #3243: an exact payee match outranks every
+; other candidate.
+;
+; lookup_probable_account() gave an exact match a fixed score of 100 and
+; stopped searching, but the more recent payees it had already scored
+; stayed in the running, and the fuzzy score grows with the length of
+; the identifier: "Nothing Bundt Cakes" scores 107 against "Nothing
+; Bundt", so `xact "Nothing Bundt"` drafted from the Cakes transaction.
+; In `convert --auto-match` those payees also outvoted the exact match
+; when choosing the account: three visits to "Shell Beach Cafe" filed a
+; "Shell" purchase under Expenses:Dining.  An exact match now outranks
+; every merely similar payee and alone chooses the account.
+
+2026-06-01 * Shell
+    Expenses:Auto:Fuel                    40.00 USD
+    Assets:Checking
+
+2026-06-05 * Shell Beach Cafe
+    Expenses:Dining                       20.00 USD
+    Assets:Checking
+
+2026-06-12 * Shell Beach Cafe
+    Expenses:Dining                       22.00 USD
+    Assets:Checking
+
+2026-06-19 * Shell Beach Cafe
+    Expenses:Dining                       18.00 USD
+    Assets:Checking
+
+2026-06-20 * Nothing Bundt
+    Expenses:Takeout                       5.99 USD
+    Assets:Checking
+
+2026-06-25 * Nothing Bundt Cakes
+    Expenses:Bakery                       31.87 USD
+    Assets:Checking
+
+test --now 2026/06/30 xact "Nothing Bundt"
+2026/06/30 Nothing Bundt
+    Expenses:Takeout                        5.99 USD
+    Assets:Checking
+end test
+
+test --auto-match --account Assets:Checking convert $sourcepath/test/input/3243_exact.csv
+2026/07/01 * Shell
+    Expenses:Auto:Fuel                           -45
+    Assets:Checking
+end test
