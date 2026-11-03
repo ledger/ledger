@@ -520,9 +520,11 @@ bool xact_base_t::finalize() {
           DEBUG("xact.finalize", "per_unit_cost = " << per_unit_cost);
 
           for (post_t* post : posts) {
+            if (!balances_in_group(post, group.is_virtual))
+              continue;
             const amount_t& amt(post->amount.reduced());
 
-            if (balances_in_group(post, group.is_virtual) && amt.commodity() == comm) {
+            if (amt.commodity() == comm) {
               group.balance -= amt;
               post->cost = per_unit_cost * amt;
               post->add_flags(POST_COST_CALCULATED);
