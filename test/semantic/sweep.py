@@ -98,6 +98,15 @@ def norm_amount(s: str, decimal_comma: bool = False, dc_comms=frozenset()):
             if m.group(2) == "-":
                 neg = not neg
     if comm is None:
+        # 'N2 1,234.500': a prefix symbol that needs quotes, here for its
+        # digit, prints without them when a space sets it off from the
+        # number (commodity_t::print elides them; regress/3312)
+        m = re.match(r"^([^\d\s-].*?)\s+(-?)\s*(" + NUM + r")$", s)
+        if m:
+            comm, num = m.group(1), m.group(3)
+            if m.group(2) == "-":
+                neg = not neg
+    if comm is None:
         m = re.match(r"^(-?)\s*(" + NUM + r")\s*(.*)$", s)
         if not m:
             raise ValueError(f"unparseable amount: {s!r}")

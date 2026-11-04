@@ -168,6 +168,11 @@ components with their standard-library equivalents.
   `D`-directive formatting to bare amounts (#761), and allow apostrophe (`'`)
   as a digit-group separator
 
+- Accept a `commodity` block's own symbol unquoted in its `format`
+  sub-directive (#3312): `commodity N1` declares the commodity that amounts
+  write as `"N1"`, but `format 1,000.00 N1` stopped the symbol at its digit
+  and was rejected
+
 - Make a semicolon end the symbol of a `commodity`, `N`, or dated `P`
   directive and begin a comment, with or without a space before it, as it
   does after an amount in a posting (#3313).  `commodity USD; dollars`
