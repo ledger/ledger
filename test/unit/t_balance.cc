@@ -717,6 +717,24 @@ BOOST_AUTO_TEST_CASE(testBalancePrint)
   BOOST_CHECK(b4.valid());
 }
 
+BOOST_AUTO_TEST_CASE(testBalancePrintColorizesNegativeAmounts)
+{
+  // Only the negative amount takes the color, and only when asked to.
+  balance_t b1;
+  b1 += amount_t("$-1.00");
+  b1 += amount_t("EUR 50");
+
+  std::ostringstream colored;
+  b1.print(colored, 8, -1, AMOUNT_PRINT_RIGHT_JUSTIFY | AMOUNT_PRINT_COLORIZE, "\033[38;5;196m");
+  BOOST_CHECK_EQUAL(colored.str(), "  \033[38;5;196m$-1.00\033[0m\n  EUR 50");
+
+  std::ostringstream uncolored;
+  b1.print(uncolored, 8, -1, AMOUNT_PRINT_RIGHT_JUSTIFY, "\033[38;5;196m");
+  BOOST_CHECK_EQUAL(uncolored.str(), "  $-1.00\n  EUR 50");
+
+  BOOST_CHECK(b1.valid());
+}
+
 BOOST_AUTO_TEST_CASE(testToAmount)
 {
   // Single-commodity balance converts to amount_t

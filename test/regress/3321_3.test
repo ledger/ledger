@@ -1,0 +1,16 @@
+; --historical (-H) gives each amount the value its commodity had when
+; the amount was acquired, through nail_down(), which looked up the
+; commodity by the symbol it prints.  For a commodity printed in quotes
+; that found nothing, so nail_down() created another commodity whose
+; name held the quotes, and the amount was printed as ""EXV6_DE""10
+; (#3321).
+
+P 2025/04/29 EXV6_DE $50.00
+
+2025/04/30 Buy
+    Assets:Broker                   10 "EXV6_DE" @ $48.50
+    Assets:Cash
+
+test reg -H --format '%(amount_expr)\n' Broker
+10 "EXV6_DE"
+end test

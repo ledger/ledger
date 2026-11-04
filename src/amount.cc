@@ -1337,13 +1337,14 @@ std::optional<amount_t> amount_t::value(const datetime_t& moment,
  * @brief Return the total cost implied by this amount's price annotation.
  *
  * If this amount is annotated with a per-unit price (e.g. 100 AAPL @
- * $150), returns the total cost (100 * $150 = $15000).  Returns
- * std::nullopt if no price annotation is present.
+ * $150), returns the total cost (100 * $150 = $15000), in the price's
+ * commodity: a price with none, such as 1.50 in C$100 {1.50}, gives a total
+ * with none (150).  Returns std::nullopt if no price annotation is present.
  */
 std::optional<amount_t> amount_t::price() const {
   if (has_annotation() && annotation().price) {
     amount_t tmp(*annotation().price);
-    tmp *= *this;
+    tmp.multiply(*this, true);
     DEBUG("amount.price", "Returning price of " << *this << " = " << tmp);
     return tmp;
   }
@@ -1919,7 +1920,10 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
       if (details.price->has_commodity() && details.price->keep_precision()) {
         int round_prec = boost::numeric_cast<int>(
             this->precision() + details.price->commodity().precision() + extend_by_digits);
+        amount_t exact(*details.price);
         details.price->in_place_roundto(round_prec);
+        if (*details.price != exact)
+          details.add_flags(ANNOTATION_PRICE_ROUNDED);
       }
     }
     set_commodity(*commodity_pool_t::current_pool->find_or_create(*commodity_, details));

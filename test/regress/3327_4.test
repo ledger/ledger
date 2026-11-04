@@ -1,0 +1,35 @@
+; Regression test for issue #3327: a report that sums postings, as -M does,
+; books the same unrealized gain as one that does not.
+;
+; Summed by month, the postings to Assets:Broker become one posting of
+; several commodities, which keeps the lots but not their costs, so each lot
+; is measured from its lot price instead.  ABC rose from $10 to $30, and
+; selling 5 of the 10 ABC realized $100 of the gain, which leaves $100
+; unrealized on the 5 still held.
+
+2024-01-01 Buy
+    Assets:Broker    10 ABC @ $10.00
+    Assets:Broker
+
+P 2024-03-01 ABC $30.00
+
+2024-04-01 Sell
+    Assets:Broker   -5 ABC {$10.00} @ $30.00
+    Assets:Broker    $150.00
+    Income:Gains
+
+test bal -V --unrealized --now 2024/06/01
+             $200.00  Assets:Broker
+            $-100.00  Equity:Unrealized Gains
+            $-100.00  Income:Gains
+--------------------
+                   0
+end test
+
+test bal -V --unrealized --now 2024/06/01 -M
+             $200.00  Assets:Broker
+            $-100.00  Equity:Unrealized Gains
+            $-100.00  Income:Gains
+--------------------
+                   0
+end test
