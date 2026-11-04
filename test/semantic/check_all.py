@@ -47,6 +47,7 @@ import argparse
 import datetime
 import json
 import os
+import posixpath
 import re
 import subprocess
 import shutil
@@ -129,21 +130,80 @@ def classify_test_file(path):
 
 INCLUDE_RE = re.compile(r"^\s*!?include\s+(.+?)\s*$", re.M)
 
+# The characters mask_t::assign_glob() (src/mask.cc) escapes when it
+# reads an include path component as a regex.
+GLOB_META = "\\^$.|?*+()[{}"
+
+
+def glob_regex(comp):
+    """The regex mask_t::assign_glob() builds for one include path
+    component.  `?` and `*` are wildcards, a `[` opens a set that runs
+    to the next `]` and is an ordinary character when no `]` follows, a
+    backslash makes the next character literal, and every other
+    character is literal."""
+    out = []
+    i = 0
+    while i < len(comp):
+        c = comp[i]
+        close = comp.find("]", i + 1) if c == "[" else -1
+        if c == "?":
+            out.append(".")
+        elif c == "*":
+            out.append(".*")
+        elif close != -1:
+            out.append(comp[i:close + 1])
+            i = close
+        else:
+            if c == "\\" and i + 1 < len(comp):
+                i += 1
+                c = comp[i]
+            out.append("\\" + c if c in GLOB_META else c)
+        i += 1
+    return "".join(out)
+
+
+def include_matches(src_dir, pattern):
+    """The files `include PATTERN` reads, resolved against src_dir the
+    way include_directive() resolves it: the path is normalized, then
+    each component is matched against the entries of the directories
+    reached so far, descending only into directories and keeping only
+    regular files."""
+    pattern = posixpath.normpath(pattern)
+    found = [src_dir]
+    if pattern.startswith("/"):
+        found, pattern = ["/"], pattern.lstrip("/")
+    comps = pattern.split("/")
+    for k, comp in enumerate(comps):
+        if comp in (os.curdir, os.pardir):
+            found = [os.path.join(d, comp) for d in found]
+        else:
+            try:
+                rx = re.compile(glob_regex(comp), re.DOTALL)
+            except re.error:
+                return []
+            found = [os.path.join(d, name)
+                     for d in found if os.path.isdir(d)
+                     for name in sorted(os.listdir(d)) if rx.fullmatch(name)]
+        keep = os.path.isfile if k == len(comps) - 1 else os.path.isdir
+        found = [p for p in found if keep(p)]
+    return found
+
 
 def copy_includes(journal, src_dir, dst_dir, depth=4):
     """Copy files referenced by include lines (globs included) next to
     the extracted journal so both sides resolve them identically."""
     if depth == 0:
         return
-    import glob as _glob
     # A relative include may step above the journal's own directory
     # (test/regress does this), which lands the copy in the shared
     # session directory one level up.  That is allowed; escaping the
     # session directory itself is not.
     session_root = os.path.dirname(os.path.abspath(dst_dir))
     for m in INCLUDE_RE.finditer(journal):
-        name = m.group(1).strip("'\"").replace("\\", "")
-        for src in sorted(_glob.glob(os.path.join(src_dir, name))):
+        name = m.group(1)
+        if len(name) >= 2 and name[0] in "'\"" and name[-1] == name[0]:
+            name = name[1:-1]
+        for src in include_matches(src_dir, name):
             rel = os.path.relpath(src, src_dir)
             dst = os.path.join(dst_dir, rel)
             if not os.path.abspath(dst).startswith(session_root + os.sep):
