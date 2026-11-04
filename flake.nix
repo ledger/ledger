@@ -9,8 +9,11 @@
     # the bisimulation section of the ledger-semantics README).  This
     # input is the oracle's only pin: `nix build` and CI run the
     # bisimulation against it, and `nix build .#oracle` gives the same
-    # tree to a development build's LEDGER_LEAN_DIR.
-    ledger-semantics.url = "github:ledger/ledger-semantics";
+    # tree to a development build's LEDGER_LEAN_DIR.  The URL names the
+    # revision so that `nix flake update` never moves the oracle; to
+    # move it, change the revision here and run `nix flake lock`.
+    ledger-semantics.url =
+      "github:ledger/ledger-semantics/5376d299acad3711c79465dbccafe3017f13d1ca";
   };
 
   outputs = { self, nixpkgs, ledger-semantics }: let

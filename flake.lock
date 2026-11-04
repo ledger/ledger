@@ -15,6 +15,7 @@
       "original": {
         "owner": "ledger",
         "repo": "ledger-semantics",
+        "rev": "5376d299acad3711c79465dbccafe3017f13d1ca",
         "type": "github"
       }
     },

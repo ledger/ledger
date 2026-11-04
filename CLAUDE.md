@@ -66,7 +66,9 @@ Python 3.10+ is required to run the test harness. All tests run with
 The `SemanticBisimulation` ctest replays every positive test journal
 against the Lean oracle from github.com/ledger/ledger-semantics. The
 flake's `ledger-semantics` input is the oracle's only pin, and `nix
-build` always runs the test against it. A development build opts in
+build` always runs the test against it. Its URL in flake.nix names
+the revision; to move the pin, change that revision and run `nix
+flake lock`. A development build opts in
 by naming an oracle tree when it configures, from the dev shell,
 which supplies the matching `lake`:
 
