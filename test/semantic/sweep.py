@@ -151,6 +151,26 @@ def manifest():
     return entries
 
 
+def oracle_env(env):
+    """`env` for git and lake runs in an oracle tree.
+
+    Git's repository variables are dropped: a git hook exports GIT_DIR
+    and GIT_INDEX_FILE for the ledger repository, and lake, which checks
+    the oracle's dependencies through git, takes them for its own, finds
+    Mathlib's URL changed, and deletes and re-clones it (in the
+    read-only Nix store, a permission error).  safe.directory admits a
+    tree that another user owns, such as a store path."""
+    try:
+        local = subprocess.run(["git", "rev-parse", "--local-env-vars"],
+                               capture_output=True, text=True).stdout.split()
+    except OSError:
+        local = []
+    return {**{k: v for k, v in env.items() if k not in local},
+            "GIT_CONFIG_COUNT": "1",
+            "GIT_CONFIG_KEY_0": "safe.directory",
+            "GIT_CONFIG_VALUE_0": "*"}
+
+
 def main():
     ledger = os.environ.get("LEDGER", os.path.join(REPO, "build", "ledger"))
     env = {**os.environ, "TZ": "America/Chicago"}
@@ -178,13 +198,10 @@ def main():
     else:
         cmd = ["nix", "develop", "--command", "lake", "env", "lean",
                "--run", "Ledger/Driver.lean"]
-    oracle_env = {**env, "GIT_CONFIG_COUNT": "1",
-                  "GIT_CONFIG_KEY_0": "safe.directory",
-                  "GIT_CONFIG_VALUE_0": "*"}
     drv = subprocess.run(
         [*cmd, *abs_paths],
         cwd=lean_dir, capture_output=True, text=True,
-        timeout=1800, env=oracle_env,
+        timeout=1800, env=oracle_env(env),
     )
     if drv.returncode != 0:
         print("driver invocation failed:", file=sys.stderr)

@@ -302,12 +302,9 @@ def main():
             else:
                 cmd = ["nix", "develop", "--command", "lake", "env", "lean",
                        "--run", "Ledger/Driver.lean", *argv]
-            oracle_env = {**env, "GIT_CONFIG_COUNT": "1",
-                          "GIT_CONFIG_KEY_0": "safe.directory",
-                          "GIT_CONFIG_VALUE_0": "*"}
             drv = subprocess.run(
                 cmd, cwd=lean_dir, capture_output=True,
-                text=True, timeout=3600, env=oracle_env)
+                text=True, timeout=3600, env=sweep.oracle_env(env))
             if drv.returncode != 0:
                 msg = (drv.stderr or drv.stdout)[-500:]
                 print("oracle driver invocation failed:\n" + msg,
@@ -407,9 +404,12 @@ def main():
     ledger_version = run_line([ledger, "--version"], env=env)
     git_rev = run_line(["git", "rev-parse", "HEAD"], cwd=repo)
     # In the Nix build the oracle is a store path with no repository;
-    # the flake passes the semantics revision in LEDGER_LEAN_REV.
+    # the flake passes the semantics revision in LEDGER_LEAN_REV.  In
+    # a git hook, GIT_DIR would make git answer for the ledger
+    # repository instead.
     oracle_rev = (os.environ.get("LEDGER_LEAN_REV")
-                  or run_line(["git", "-C", lean_dir, "rev-parse", "HEAD"]))
+                  or run_line(["git", "-C", lean_dir, "rev-parse", "HEAD"],
+                              env=sweep.oracle_env(env)))
     artifact = {
         "tuple": {
             "oracle_rev": oracle_rev,
