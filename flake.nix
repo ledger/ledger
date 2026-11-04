@@ -6,12 +6,10 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     # The machine-checked semantics and its bisimulation oracle (see
-    # the bisimulation section of lean/README.md).  The same repository is also
-    # the `lean/` git submodule, which serves interactive development
-    # (`nix develop ./lean`, warm .lake caches, ctest against a
-    # checkout).  Two pins therefore exist: this flake input drives
-    # `nix build` and CI, the submodule drives the working tree.
-    # Update them together.
+    # the bisimulation section of the ledger-semantics README).  This
+    # input is the oracle's only pin: `nix build` and CI run the
+    # bisimulation against it, and `nix build .#oracle` gives the same
+    # tree to a development build's LEDGER_LEAN_DIR.
     ledger-semantics.url = "github:ledger/ledger-semantics";
   };
 
@@ -132,6 +130,10 @@
           maintainers = with maintainers; [ jwiegley ];
         };
       };
+
+      # The oracle that this flake pins, for a development build's
+      # LEDGER_LEAN_DIR (CLAUDE.md).
+      oracle = semantics.oracle;
     });
 
     defaultPackage = forAllSystems (system: self.packages.${system}.ledger);

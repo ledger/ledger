@@ -144,3 +144,8 @@ tasks/
 # Semantic-bisimulation artifacts (regenerable, tuple-pinned)
 test/semantic/artifacts/
 test/semantic/generated/
+
+# The old lean/ submodule's checkout: git leaves a populated submodule's
+# directory behind when the submodule goes, and `git add -A` would
+# record it as a gitlink again.  The flake pins the oracle now.
+/lean/

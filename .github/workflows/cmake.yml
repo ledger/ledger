@@ -46,11 +46,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         name: Check out repository code
-        with:
-          # The lean/ submodule registers SemanticBisimulation; these
-          # runners have no Lean toolchain, so it reports SKIPPED --
-          # visibly, never as a silent pass.
-          submodules: true
 
       - if: runner.os == 'Linux'
         name: Linux dependencies

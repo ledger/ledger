@@ -8,7 +8,7 @@ ctest entry point, imports this module for the normalization and
 C++-balance parsing; running this file directly is a developer tool
 for sweeping the manifest (and any generated journals) by hand.
 
-Discipline (see the bisimulation section of lean/README.md):
+Discipline (see the bisimulation section of the ledger-semantics README):
   - every run writes an artifact (absence of output is never silent
     success) into test/semantic/artifacts/, embedding the comparison
     tuple: git revision, ledger --version, file digest, TZ;
@@ -185,19 +185,13 @@ def main():
     # One batched driver invocation: single olean load for all files.
     entries = manifest()
     abs_paths = [os.path.join(REPO, p) for p, _, _ in entries]
-    lean_dir = os.environ.get("LEDGER_LEAN_DIR", os.path.join(REPO, "lean"))
-    if not os.path.isfile(os.path.join(lean_dir, "lakefile.lean")):
-        print("SKIP: Lean oracle tree not present"); sys.exit(77)
-    direct_lake = "LEDGER_LEAN_DIR" in os.environ
-    if direct_lake and not shutil.which("lake"):
+    lean_dir = os.environ.get("LEDGER_LEAN_DIR", "")
+    if not lean_dir or not os.path.isfile(
+            os.path.join(lean_dir, "lakefile.lean")):
+        print("SKIP: LEDGER_LEAN_DIR names no oracle tree"); sys.exit(77)
+    if not shutil.which("lake"):
         print("SKIP: LEDGER_LEAN_DIR set but lake not on PATH"); sys.exit(77)
-    if not direct_lake and not shutil.which("nix"):
-        print("SKIP: nix unavailable for the lean/ dev shell"); sys.exit(77)
-    if direct_lake:
-        cmd = ["lake", "env", "lean", "--run", "Ledger/Driver.lean"]
-    else:
-        cmd = ["nix", "develop", "--command", "lake", "env", "lean",
-               "--run", "Ledger/Driver.lean"]
+    cmd = ["lake", "env", "lean", "--run", "Ledger/Driver.lean"]
     drv = subprocess.run(
         [*cmd, *abs_paths],
         cwd=lean_dir, capture_output=True, text=True,
