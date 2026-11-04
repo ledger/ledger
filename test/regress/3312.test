@@ -1,0 +1,77 @@
+; Regression test for issue #3312
+; https://github.com/ledger/ledger/issues/3312
+;
+; A commodity directive reads its symbol as a whole word, so
+; "commodity N1" declares the commodity that an amount writes as "N1":
+; unquoted, the digit would end the symbol.  The format sub-directive
+; parses a sample amount, which stopped the bare N1 at its digit:
+;
+;   Error: unexpected characters '1' after commodity symbol in format directive
+;
+; The sample may now spell the commodity's symbol as the directive does,
+; with or without quotes, before or after the number.  The balance of N1
+; shows the format at work: it rounds to the declared precision.
+
+; The issue's case: the bare symbol after the number.
+commodity N1
+    format 1,000.00 N1
+
+; A quoted declaration, with the bare symbol before the number.
+commodity "N2"
+    format N2 1,000.000
+
+; The bare symbol joined to the number.
+commodity N3
+    format 1,000.0N3
+
+; A symbol with a space, which the declaration itself must quote.
+commodity "Fund A"
+    format 1,000.00 Fund A
+
+; A sample that quotes its symbol is read as written, though the bare
+; symbol 7 also begins it.
+commodity 7
+    format 7 "7"
+
+2024/01/01 Buy
+    Assets:N1               1234.567 "N1"
+    Equity
+
+2024/01/02 Buy
+    Assets:N2               "N2" 1234.5
+    Equity
+
+2024/01/03 Buy
+    Assets:N3               1234.5 "N3"
+    Equity
+
+2024/01/04 Buy
+    Assets:Fund             1234.5 "Fund A"
+    Equity
+
+2024/01/05 Buy
+    Assets:Seven            12.25 "7"
+    Equity
+
+test bal --flat --no-total Assets
+     1,234.50 Fund A  Assets:Fund
+         1,234.57 N1  Assets:N1
+        N2 1,234.500  Assets:N2
+         1,234.5"N3"  Assets:N3
+              12 "7"  Assets:Seven
+end test
+
+; print keeps the quotes a symbol needs, whichever spelling the format used.
+test print Assets:N2 Assets:N3 Assets:Fund
+2024/01/02 Buy
+    Assets:N2                           "N2" 1,234.500
+    Equity
+
+2024/01/03 Buy
+    Assets:N3                            1,234.5"N3"
+    Equity
+
+2024/01/04 Buy
+    Assets:Fund                         1,234.50 "Fund A"
+    Equity
+end test

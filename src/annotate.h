@@ -88,6 +88,8 @@ struct annotation_t : public flags::supports_flags<>, public equality_comparable
 #define ANNOTATION_TAG_CALCULATED 0x10 ///< Tag was computed, not user-supplied.
 #define ANNOTATION_VALUE_EXPR_CALCULATED                                                           \
   0x20 ///< Value expression was computed (e.g., by nail_down).
+#define ANNOTATION_PRICE_ROUNDED                                                                   \
+  0x40 ///< Price was rounded when divided out of a total, so it is inexact.
 
 /// Mask for flags that affect semantic equality of annotations.
 /// Currently only ANNOTATION_PRICE_FIXATED matters: a fixated lot at {=$5}

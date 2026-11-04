@@ -435,7 +435,8 @@ Use color if the terminal supports it.
 Alias for
 .Fl \-color
 .It Fl \-args-only
-Ignore init files and environment variables for the
+Ignore init files, environment variables and the default price database
+for the
 .Nm
 run.
 .It Fl \-auto-match
@@ -1106,6 +1107,17 @@ spaces at the beginning of each line of the output.
 .It Fl \-price Pq Fl I
 Use the price of the commodity purchase for performing calculations.
 .It Fl \-price-db Ar FILE
+Read commodity prices from
+.Ar FILE .
+Without this option,
+.Pa \[ti]/.pricedb
+is read if it exists, or
+.Pa ./.pricedb
+if
+.Ev HOME
+is not set, unless
+.Fl \-args-only
+is given.
 .It Fl \-price-exp Ar DURATION Pq Fl Z
 Set the expected freshness of price quotes.
 .Ar DURATION
@@ -1303,6 +1315,16 @@ Use only uncleared transactions in calculations and reports.
 .It Fl \-unrealized
 Show generated unrealized gain and loss accounts in the balance
 report.
+With
+.Fl \-market
+or
+.Fl \-exchange ,
+but not
+.Fl \-historical ,
+they hold the market value of the commodities reported on less their
+cost basis, as
+.Fl \-basis
+reports it.
 .It Fl \-unrealized-gains
 Allow the user to specify what account name should be used for
 unrealized gains.  Defaults to

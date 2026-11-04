@@ -74,6 +74,8 @@ enum parse_flags_enum_t : uint16_t {
   PARSE_SINGLE = 0x0002,
   PARSE_NO_MIGRATE = 0x0004,
   PARSE_NO_REDUCE = 0x0008,
+  /// Nothing reads this flag; it remains because the Python bindings
+  /// expose it as ParseFlags.NoAssign.
   PARSE_NO_ASSIGN = 0x0010,
   PARSE_NO_ANNOT = 0x0020,
   PARSE_OP_CONTEXT = 0x0040,

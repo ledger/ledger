@@ -261,7 +261,8 @@ namespace {
 /// `mask_t::assign_glob` (which is case-sensitive) rather than a direct
 /// filesystem lookup ensures that `include FOO.dat` does not silently
 /// match a differently-cased `foo.dat` on case-insensitive filesystems
-/// (issue #1660).  Matched entries drive the next level of recursion;
+/// (issue #1660).  Nor does `--ignore-diacritics` let `include cafe.dat`
+/// match `café.dat`.  Matched entries drive the next level of recursion;
 /// the final component contributes regular files to @p results.
 ///
 /// This allows patterns with glob metacharacters in any component --
@@ -277,7 +278,7 @@ void expand_glob_path(const path& base, const std::vector<path>& components, std
 
   const string comp = components[index].string();
   mask_t glob;
-  glob.assign_glob('^' + comp + '$');
+  glob.assign_glob(comp);
 
   std::vector<path> sorted_entries;
   std::copy(std::filesystem::directory_iterator(base), std::filesystem::directory_iterator(),
@@ -813,6 +814,31 @@ void instance_t::account_rewrite_directive(char* line) {
 
 /*--- Commodity Directives ---*/
 
+namespace {
+
+/// Erase a trailing comment from the argument of a sub-directive that
+/// names a commodity (`alias`, `format`).  The comment begins at the
+/// first ';' that is neither inside a quoted symbol nor escaped with a
+/// backslash, the only places a commodity symbol can hold one (issue
+/// #3313).
+void strip_commodity_comment(string& arg) {
+  bool quoted = false;
+  for (std::size_t i = 0; i < arg.length(); ++i) {
+    if (arg[i] == '"') {
+      quoted = !quoted;
+    } else if (quoted) {
+      continue;
+    } else if (arg[i] == '\\') {
+      ++i;
+    } else if (arg[i] == ';') {
+      arg.erase(i);
+      break;
+    }
+  }
+}
+
+} // namespace
+
 void instance_t::commodity_directive(char* line) {
   char* p = skip_ws(line);
   string symbol; // NOLINT(bugprone-unused-local-non-trivial-variable)
@@ -850,7 +876,12 @@ void instance_t::commodity_directive(char* line) {
 }
 
 void instance_t::commodity_alias_directive(commodity_t& comm, string alias) {
+  strip_commodity_comment(alias);
   trim(alias);
+  // A line holding only a comment names no alias; an empty name would
+  // remap the null commodity, whose symbol is empty.
+  if (alias.empty())
+    throw_(parse_error, _f("Commodity directive '%1%' requires an argument") % "alias");
   // Strip surrounding quotes if present, matching how commodity names are parsed
   if (alias.length() > 2 && alias[0] == '"' && alias[alias.length() - 1] == '"')
     alias = alias.substr(1, alias.length() - 2);
@@ -861,12 +892,58 @@ void instance_t::commodity_value_directive(commodity_t& comm, const string& expr
   comm.set_value_expr(expr_t(expr_str));
 }
 
+namespace {
+
+/// True if a bare symbol and a number that meet at characters @p a and @p b
+/// would run together: both are characters parse_quantity() reads as part of
+/// a number.
+bool runs_together(char a, char b) {
+  auto in_number = [](char c) {
+    return std::isdigit(static_cast<unsigned char>(c)) || c == '.' || c == ',' || c == '\'';
+  };
+  return in_number(a) && in_number(b);
+}
+
+/// Quote a bare @p symbol found at either end of the format sample @p format.
+///
+/// A commodity directive reads its symbol as a whole word, so `commodity N1`
+/// declares the commodity that an amount writes as "N1": unquoted, the digit
+/// would end the symbol.  Quoting the bare spelling lets the format
+/// sub-directive name the commodity as the directive did (issue #3312).
+///
+/// A sample that quotes its own symbol is left as written.  So is one in
+/// which the bare symbol meets the number between two number characters, as
+/// in `N11,000.00`, since nothing there marks where the symbol ends.
+string quote_bare_symbol(const string& format, const string& symbol) {
+  if (!commodity_t::symbol_needs_quotes(symbol) || format.find('"') != string::npos)
+    return format;
+
+  const string quoted = '"' + symbol + '"';
+  const std::size_t len = symbol.length();
+
+  if (format.compare(0, len, symbol) == 0 &&
+      (format.length() == len || !runs_together(symbol.back(), format[len])))
+    return quoted + format.substr(len);
+
+  if (format.length() > len) {
+    const std::size_t start = format.length() - len;
+    if (format.compare(start, len, symbol) == 0 &&
+        !runs_together(format[start - 1], symbol.front()))
+      return format.substr(0, start) + quoted;
+  }
+
+  return format;
+}
+
+} // namespace
+
 void instance_t::commodity_format_directive(commodity_t& comm, string format) {
   // jww (2012-02-27): A format specified this way should turn off
   // observational formatting.
+  strip_commodity_comment(format);
   trim(format);
   amount_t amt;
-  std::istringstream in(format);
+  std::istringstream in(quote_bare_symbol(format, comm.base_symbol()));
   (void)amt.parse(in, PARSE_NO_REDUCE);
   string trailing;
   if (in >> trailing)

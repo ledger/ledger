@@ -68,9 +68,10 @@ jobs:
             cmake --build build-base -- -j\$(nproc)
           "
 
-      # --- Benchmark both branches simultaneously ---
-      # Both binaries are run interleaved by hyperfine so they experience
-      # equal OS page cache conditions, avoiding warm-cache measurement bias.
+      # --- Benchmark both branches ---
+      # run_benchmark.sh alternates the two binaries run by run, so they
+      # experience equal OS page cache conditions, avoiding warm-cache
+      # measurement bias.
 
       - name: Benchmark both branches
         run: |

@@ -1,6 +1,7 @@
 ; Semantic bisimulation demo journal.
-; Mirrors lean/Ledger/Oracle.lean (namespace Ledger.Demo): three atomic
-; generators — salary, rent, groceries — whose tensor is "january".
+; Mirrors Ledger/Oracle.lean in ledger-semantics (namespace
+; Ledger.Demo): three atomic generators — salary, rent, groceries —
+; whose tensor is "january".
 ;
 ; The Lean oracle's golden balances (kernel-checked in Oracle.lean):
 ;   Assets:Checking   $2850.00

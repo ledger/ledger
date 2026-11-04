@@ -1,0 +1,31 @@
+; Regression test for issue #3313: inside a commodity block, a ';'
+; outside quotes also ends the symbol of an alias or a format and
+; begins a comment.  An alias used to keep its comment, registering
+; "POUND ; old name" rather than POUND, and since the fix for #2872 a
+; commented format line was rejected ("unexpected characters ';' after
+; commodity symbol in format directive"), although 3.4.1 accepted it.
+
+commodity GBP
+    alias POUND ; old name
+    format GBP 1,000.00 ; two decimals, thousands separated
+
+; Quotes keep a ';' in the symbol; the comment starts after them.
+commodity "N4; foo"
+    alias "N4 ALIAS";an alias with a space
+    format 1000.000 "N4; foo";three decimals
+
+; Stripping the comment leaves a multi-word alias whole.
+commodity CAD
+    alias Canadian Dollar ; no quotes needed
+
+2024/01/01 Test
+    Assets:Cash    1234.567 POUND
+    Assets:Cash    1234.5 "N4 ALIAS"
+    Assets:Cash    10 "Canadian Dollar"
+    Equity
+
+test bal --flat Assets
+              10 CAD
+        GBP 1,234.57
+    1234.500 N4; foo  Assets:Cash
+end test

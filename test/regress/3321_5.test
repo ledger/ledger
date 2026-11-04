@@ -1,0 +1,33 @@
+; In an amount, a digit ends an unquoted commodity symbol, so EXV6_DE
+; must be quoted in a posting, although a P directive takes it bare.  An
+; underscore needs no quotes.  Nor can a symbol be a word of the value
+; expression language, such as "and", unless it is quoted (#3321).
+
+P 2025/04/29 EXV6_DE 48.50 EUR
+
+2025/04/29 Buy
+    Assets:Broker                     10 IBCS_DE @ 125.38 EUR
+    Assets:Broker                    10 "EXV6_DE" @ 48.50 EUR
+    Assets:Cash
+
+2025/04/30 Buy
+    Assets:Broker                     10 EXV6_DE @ 48.50 EUR
+    Assets:Cash
+
+2025/04/30 Buy
+    Assets:Broker                          10 and
+    Assets:Cash
+
+test bal -> 2
+__ERROR__
+While parsing file "$FILE", line 14:
+While parsing posting:
+  Assets:Broker                     10 EXV6_DE @ 48.50 EUR
+                                    ^^^^^^^^^^^^^^^^^^^^^^
+Error: Unexpected char '6' (Note: inline math requires parentheses)
+While parsing file "$FILE", line 18:
+While parsing posting:
+  Assets:Broker                          10 and
+                                         ^^^^^^
+Error: Unexpected char 'a' (Note: inline math requires parentheses)
+end test
