@@ -64,18 +64,25 @@ Python 3.10+ is required to run the test harness. All tests run with
 `--now 2030/06/15` unless the test passes its own `--now`.
 
 The `SemanticBisimulation` ctest replays every positive test journal
-against the Lean oracle in the `lean/` submodule
-(github.com/ledger/ledger-semantics). Development builds enable it
-with `git submodule update --init lean`, then build the oracle once:
-`nix develop ./lean --command bash -c 'lake exe cache get && lake
-build'`. The test runs the oracle through `nix develop` in that tree;
-alternatively `LEDGER_LEAN_DIR` may name any prebuilt oracle tree,
-with the matching `lake` on PATH. Without the submodule the test is
-not registered, so release builds owe users no Lean toolchain; with
-the submodule but no `nix`, or with an oracle that has never been
-built, it exits 77 and shows as SKIPPED. `nix build` runs it
-unconditionally via the flake's `ledger-semantics` input — keep that
-input and the submodule revision in step.
+against the Lean oracle from github.com/ledger/ledger-semantics. The
+flake's `ledger-semantics` input is the oracle's only pin, and `nix
+build` always runs the test against it. Its URL in flake.nix names
+the revision; to move the pin, change that revision and run `nix
+flake lock`. A development build opts in
+by naming an oracle tree when it configures, from the dev shell,
+which supplies the matching `lake`:
+
+```bash
+export LEDGER_LEAN_DIR=$(nix build .#oracle --no-link --print-out-paths)
+cd build && cmake .. && ctest -R SemanticBisimulation
+```
+
+`LEDGER_LEAN_DIR` may name any built oracle tree; to try an unpushed
+oracle change, run `nix build .#oracle --print-out-paths` in its
+ledger-semantics checkout and use that path. Without
+`LEDGER_LEAN_DIR` the test is not registered, so release builds owe
+users no Lean toolchain; a registered test exits 77 and shows as
+SKIPPED when `lake` is not on PATH.
 
 ### Development Commands
 
