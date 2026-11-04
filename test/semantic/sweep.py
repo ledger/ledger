@@ -8,7 +8,7 @@ ctest entry point, imports this module for the normalization and
 C++-balance parsing; running this file directly is a developer tool
 for sweeping the manifest (and any generated journals) by hand.
 
-Discipline (see the bisimulation section of lean/README.md):
+Discipline (see the bisimulation section of the ledger-semantics README):
   - every run writes an artifact (absence of output is never silent
     success) into test/semantic/artifacts/, embedding the comparison
     tuple: git revision, ledger --version, file digest, TZ;
@@ -160,6 +160,26 @@ def manifest():
     return entries
 
 
+def oracle_env(env):
+    """`env` for git and lake runs in an oracle tree.
+
+    Git's repository variables are dropped: a git hook exports GIT_DIR
+    and GIT_INDEX_FILE for the ledger repository, and lake, which checks
+    the oracle's dependencies through git, takes them for its own, finds
+    Mathlib's URL changed, and deletes and re-clones it (in the
+    read-only Nix store, a permission error).  safe.directory admits a
+    tree that another user owns, such as a store path."""
+    try:
+        local = subprocess.run(["git", "rev-parse", "--local-env-vars"],
+                               capture_output=True, text=True).stdout.split()
+    except OSError:
+        local = []
+    return {**{k: v for k, v in env.items() if k not in local},
+            "GIT_CONFIG_COUNT": "1",
+            "GIT_CONFIG_KEY_0": "safe.directory",
+            "GIT_CONFIG_VALUE_0": "*"}
+
+
 def main():
     ledger = os.environ.get("LEDGER", os.path.join(REPO, "build", "ledger"))
     env = {**os.environ, "TZ": "America/Chicago"}
@@ -174,26 +194,17 @@ def main():
     # One batched driver invocation: single olean load for all files.
     entries = manifest()
     abs_paths = [os.path.join(REPO, p) for p, _, _ in entries]
-    lean_dir = os.environ.get("LEDGER_LEAN_DIR", os.path.join(REPO, "lean"))
-    if not os.path.isfile(os.path.join(lean_dir, "lakefile.lean")):
-        print("SKIP: Lean oracle tree not present"); sys.exit(77)
-    direct_lake = "LEDGER_LEAN_DIR" in os.environ
-    if direct_lake and not shutil.which("lake"):
+    lean_dir = os.environ.get("LEDGER_LEAN_DIR", "")
+    if not lean_dir or not os.path.isfile(
+            os.path.join(lean_dir, "lakefile.lean")):
+        print("SKIP: LEDGER_LEAN_DIR names no oracle tree"); sys.exit(77)
+    if not shutil.which("lake"):
         print("SKIP: LEDGER_LEAN_DIR set but lake not on PATH"); sys.exit(77)
-    if not direct_lake and not shutil.which("nix"):
-        print("SKIP: nix unavailable for the lean/ dev shell"); sys.exit(77)
-    if direct_lake:
-        cmd = ["lake", "env", "lean", "--run", "Ledger/Driver.lean"]
-    else:
-        cmd = ["nix", "develop", "--command", "lake", "env", "lean",
-               "--run", "Ledger/Driver.lean"]
-    oracle_env = {**env, "GIT_CONFIG_COUNT": "1",
-                  "GIT_CONFIG_KEY_0": "safe.directory",
-                  "GIT_CONFIG_VALUE_0": "*"}
+    cmd = ["lake", "env", "lean", "--run", "Ledger/Driver.lean"]
     drv = subprocess.run(
         [*cmd, *abs_paths],
         cwd=lean_dir, capture_output=True, text=True,
-        timeout=1800, env=oracle_env,
+        timeout=1800, env=oracle_env(env),
     )
     if drv.returncode != 0:
         print("driver invocation failed:", file=sys.stderr)

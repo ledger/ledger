@@ -1,0 +1,35 @@
+; A price line without a date reads its commodity the way a dated price
+; line does: quotes enclose the symbol and are not part of it, a quoted
+; symbol may contain spaces, and a price that begins with a digit is not
+; taken for a time of day.  `apply fixed` names its commodity the same
+; way (#3321).
+
+2025/01/01 Opening
+    Assets:Cash                           100.00 USD
+    Equity:Opening
+
+P EUR 1.10 USD
+P "N1" 2.00 USD
+P "Fund A" 3.00 USD
+
+apply fixed "Fund 2" 4.00 USD
+2025/01/02 Buy
+    Assets:Fund                           1 "Fund 2"
+    Assets:Cash
+end apply fixed
+
+test pricedb --now 2030/06/15
+P 2030/06/15 00:00:00 "Fund A" 3.00 USD
+P 2030/06/15 00:00:00 "N1" 2.00 USD
+P 2030/06/15 00:00:00 EUR 1.10 USD
+end test
+
+test print --now 2030/06/15
+2025/01/01 Opening
+    Assets:Cash                           100.00 USD
+    Equity:Opening
+
+2025/01/02 Buy
+    Assets:Fund                         1 "Fund 2" {=4.00 USD}
+    Assets:Cash
+end test

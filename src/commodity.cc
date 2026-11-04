@@ -309,7 +309,8 @@ commodity_t& commodity_t::nail_down(const expr_t& expr) {
   new_details.value_expr = expr;
   new_details.add_flags(ANNOTATION_VALUE_EXPR_CALCULATED);
 
-  return *pool().find_or_create(symbol(), new_details);
+  // The pool knows a commodity by its bare symbol; symbol() may add quotes.
+  return *pool().find_or_create(base_symbol(), new_details);
 }
 
 commodity_t::operator bool() const {
@@ -386,7 +387,9 @@ bool commodity_t::symbol_needs_quotes(const string& symbol) {
     if (invalid_chars[static_cast<unsigned char>(ch)])
       return true;
 
-  return false;
+  // parse_symbol does not read a reserved word as a bare symbol, so a
+  // commodity with such a name must be printed in quotes to be read back.
+  return is_reserved_token(symbol.c_str());
 }
 
 /**
@@ -435,21 +438,33 @@ void commodity_t::parse_symbol(std::istream& in, string& symbol) {
   }
 }
 
+/**
+ * @brief Parse a commodity symbol from a directive line.
+ *
+ * A quoted symbol runs to the closing quote.  A bare symbol runs to
+ * whitespace or to a ';', which begins a comment here just as it ends
+ * the commodity of an amount in a posting (issue #3313); unlike the
+ * stream parser, any other character is accepted, so `commodity N1`
+ * declares the commodity "N1".  As in an amount, a backslash makes the
+ * next character part of the symbol, so `A\;B` names "A;B".  On return,
+ * p points past the symbol and any whitespace after it.
+ */
 void commodity_t::parse_symbol(char*& p, string& symbol) {
   if (*p == '"') {
     char* q = std::strchr(p + 1, '"');
     if (!q)
       throw_(amount_error, _("Quoted commodity symbol lacks closing quote"));
     symbol = string(p + 1, static_cast<std::string::size_type>(q - p - 1));
-    p = q + 2;
+    p = q + 1;
   } else {
-    char* q = next_element(p);
-    symbol = p;
-    if (q)
-      p = q;
-    else
-      p += symbol.length();
+    symbol.clear();
+    while (*p && *p != ' ' && *p != '\t' && *p != ';') {
+      if (*p == '\\' && *(p + 1))
+        ++p;
+      symbol.push_back(*p++);
+    }
   }
+  p = skip_ws(p);
   if (symbol.empty())
     throw_(amount_error, _("Failed to parse commodity"));
 }

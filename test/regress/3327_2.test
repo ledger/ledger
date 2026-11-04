@@ -1,0 +1,48 @@
+; Regression test for issue #3327: selling part of a lot after its price
+; has moved.
+;
+; ABC rose from $10 to $30, and then 5 of the 10 ABC were sold at $30.
+; The sale realizes $100 of the gain, booked to Income:Gains, so only the
+; $100 gain on the 5 ABC still held is unrealized: market value less cost
+; basis, 5 x ($30 - $10).
+
+2024-01-01 Buy
+    Assets:Broker    10 ABC @ $10.00
+    Assets:Cash
+
+P 2024-03-01 ABC $30.00
+
+2024-04-01 Sell
+    Assets:Broker    -5 ABC {$10.00} @ $30.00
+    Assets:Cash      $150.00
+    Income:Gains
+
+test bal -V --unrealized --now 2024/06/01
+             $200.00  Assets
+             $150.00    Broker
+              $50.00    Cash
+            $-100.00  Equity:Unrealized Gains
+            $-100.00  Income:Gains
+--------------------
+                   0
+end test
+
+; Limited to the assets, the report totals their cost basis, which is
+; higher by the realized gain booked to Income:Gains.
+test bal -V --unrealized --now 2024/06/01 Assets
+             $200.00  Assets
+             $150.00    Broker
+              $50.00    Cash
+            $-100.00  Equity:Unrealized Gains
+--------------------
+             $100.00
+end test
+
+; Limited to the broker, the report totals the cost basis of the 5 ABC
+; still held.
+test bal -V --unrealized --now 2024/06/01 Broker
+             $150.00  Assets:Broker
+            $-100.00  Equity:Unrealized Gains
+--------------------
+              $50.00
+end test

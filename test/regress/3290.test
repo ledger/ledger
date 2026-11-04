@@ -1,0 +1,68 @@
+; Regression test for #3290: `==` in a posting's amount expression sent
+; the parser into an endless loop.  Under PARSE_NO_ASSIGN, which posting
+; amounts and costs were parsed with, parse_logic_expr rewound the `==`
+; token and stayed in its loop, so it read the same token forever.
+;
+; `==` now compares, so each expression from the issue fails in its own
+; way: (1 == 1) and (2 AZN == 1) evaluate to a boolean, which is not an
+; amount; (x == 1) names an unknown identifier; and the unclosed
+; parenthesis fails to parse.  ledger reports all four.
+
+2025-01-01 * Number
+    Expenses:Food    (1 == 1)
+    Assets:Cash
+
+2025-01-02 * Identifier
+    Expenses:Food    (x == 1)
+    Assets:Cash
+
+2025-01-03 * Unclosed parenthesis
+    Expenses:Food    (1 + x == 1
+    Assets:Cash
+
+2025-01-04 * Commodity
+    Expenses:Food    (2 AZN == 1)
+    Assets:Cash
+
+test bal -> 4
+__ERROR__
+While parsing file "$FILE", line 12:
+While parsing posting:
+  Expenses:Food    (1 == 1)
+                   ^^^^^^^^
+Error: Amount expressions must result in a simple amount
+While parsing file "$FILE", line 16:
+While evaluating value expression:
+  (x == 1)
+   ^
+While parsing posting:
+  Expenses:Food    (x == 1)
+                   ^^^^^^^^
+Error: Unknown identifier 'x'
+While parsing file "$FILE", line 20:
+While parsing posting:
+  Expenses:Food    (1 + x == 1
+                   ^^^^^^^^^^^
+Error: Invalid token '<end of input>' (wanted ')')
+While parsing file "$FILE", line 24:
+While parsing posting:
+  Expenses:Food    (2 AZN == 1)
+                   ^^^^^^^^^^^^
+Error: Amount expressions must result in a simple amount
+end test
+
+; `==` compares in an amount expression, as `!=` already did: 1 == 1
+; picks $10.00 and 1 == 2 picks $20.00.  The `=` after each expression
+; is still read as a balance assertion, and each assertion holds.
+
+test -f test/regress/3290.dat reg Food
+25-Jan-01 Equal                 Expenses:Food                $10.00       $10.00
+25-Jan-02 Unequal               Expenses:Food                $20.00       $30.00
+end test
+
+; It compares in a cost expression too: 2 == 2 picks the $50.00 per-unit
+; cost, so ten shares cost $500.00.
+
+test -f test/regress/3290.dat reg Brokerage --basis
+25-Jan-03 Broker                Assets:Brokerage            $500.00      $500.00
+end test

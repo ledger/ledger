@@ -2488,4 +2488,44 @@ BOOST_AUTO_TEST_CASE(testDraftInsertWithSession_W7)
   scope_t::default_scope = old_scope;
 }
 
+// ---------------------------------------------------------------------------
+// #3258: a lot exchanged for a lot of another commodity (a commodity swap)
+// balances at its lot basis, and the elided posting takes the gain or loss
+// exactly.  EUR appears only in lot prices, which teach no display
+// precision, so rounding the gain at that precision would lose its cents.
+// ---------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testCommoditySwapGainIsExact)
+{
+  session_t session;
+  scope_t* old_scope = scope_t::default_scope;
+  scope_t::default_scope = &session;
+
+  journal_t* j = session.read_journal_from_string(
+    "2025/04/12 Swap at a loss\n"
+    "    Assets:Coins     -10 BTC {100.00 EUR} @ 2 ETH {40.33 EUR}\n"
+    "    Assets:Coins      20 ETH {40.33 EUR}\n"
+    "    Expenses:Loss\n"
+    "\n"
+    "2025/04/13 Swap at a gain of less than one euro\n"
+    "    Assets:Coins     -10 BTC {100.00 EUR} @ 2 ETH {50.02 EUR}\n"
+    "    Assets:Coins      20 ETH {50.02 EUR}\n"
+    "    Expenses:Loss\n"
+  );
+  BOOST_REQUIRE(j != nullptr);
+  BOOST_REQUIRE_EQUAL(2, j->xacts.size());
+
+  xact_t* at_loss = j->xacts.front();
+  xact_t* at_gain = j->xacts.back();
+  BOOST_CHECK_EQUAL(0, at_loss->posts.back()->amount.commodity().precision());
+
+  // Both swaps balance at the 1000 EUR basis of the BTC given up
+  BOOST_CHECK_EQUAL(amount_t("-1000 EUR"), *at_loss->posts.front()->cost);
+  BOOST_CHECK_EQUAL(amount_t("-1000 EUR"), *at_gain->posts.front()->cost);
+  BOOST_CHECK_EQUAL(amount_t("193.4 EUR"), at_loss->posts.back()->amount);
+  BOOST_CHECK_EQUAL(amount_t("-0.4 EUR"), at_gain->posts.back()->amount);
+
+  scope_t::default_scope = old_scope;
+}
+
 BOOST_AUTO_TEST_SUITE_END()

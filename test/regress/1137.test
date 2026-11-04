@@ -3,6 +3,9 @@
 ; at the target balance), ledger must not treat the posting as null and
 ; must not produce "Only one posting with null amount allowed per
 ; transaction".
+;
+; The dates have no year, so they fall in the current year; the register
+; test pins "now" so that its output stays the same as the years pass.
 1/1 A
     a  10 p
     z
@@ -24,7 +27,7 @@ test bal --empty
                    0
 end test
 
-test reg --empty
+test reg --empty --now 2026/03/20
 26-Jan-01 A                     a                              10 p         10 p
                                 z                             -10 p            0
 26-Jan-02 B                     a                             -10 p        -10 p

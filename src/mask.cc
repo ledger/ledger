@@ -366,20 +366,33 @@ mask_t& mask_t::operator=(string_view pat) {
 #else
   expr.assign(folded_pat.c_str(), boost::regex::perl | boost::regex::icase);
 #endif
+  glob = false;
   VERIFY(valid());
   return *this;
 }
 
-/// Convert a shell-style glob pattern to a Perl-compatible regex and
-/// compile it.  Glob metacharacters are translated:
+/// Convert a shell-style glob pattern to a Perl-compatible regex that
+/// matches whole names, and compile it.  Glob metacharacters are
+/// translated:
 ///   `?` -> `.`  ,  `*` -> `.*`  ,  `[...]` -> `[...]`
-/// Other regex metacharacters are escaped.  Unlike operator=, the
+/// Every other character matches only itself, including one escaped
+/// with a backslash and a `[` that no `]` closes, so regex
+/// metacharacters among them are escaped.  Unlike operator=, the
 /// resulting regex is case-sensitive because globs are used for
 /// file path matching where case matters.
 mask_t& mask_t::assign_glob(string_view pat) {
-  string re_pat = "";
+  // A literal `]` needs no escape outside a set, and leaving it bare
+  // keeps a `]` that closes `[[:digit:]]` working.
+  const string_view meta = "\\^$.|?*+()[{}";
+  string re_pat = "\\A";
+  auto literal = [&](char c) {
+    if (meta.find(c) != string_view::npos)
+      re_pat += '\\';
+    re_pat += c;
+  };
+
   string_view::size_type len = pat.size();
-  for (string::size_type i = 0; i < len; i++) {
+  for (string_view::size_type i = 0; i < len; i++) {
     switch (pat[i]) {
     case '?':
       re_pat += '.';
@@ -387,65 +400,43 @@ mask_t& mask_t::assign_glob(string_view pat) {
     case '*':
       re_pat += ".*";
       break;
-    case '[':
-      while (i < len && pat[i] != ']')
-        re_pat += pat[i++];
-      if (i < len)
-        re_pat += pat[i];
+    case '[': {
+      string_view::size_type close = pat.find(']', i + 1);
+      if (close == string_view::npos) {
+        literal('[');
+      } else {
+        re_pat += pat.substr(i, close + 1 - i);
+        i = close;
+      }
       break;
+    }
 
     case '\\':
       if (i + 1 < len) {
-        re_pat += pat[++i];
+        literal(pat[++i]);
         break;
       }
       [[fallthrough]];
-    default: {
-      const char* meta = ".+(){}|";
-      if (std::strchr(meta, pat[i]))
-        re_pat += '\\';
-      re_pat += pat[i];
+    default:
+      literal(pat[i]);
       break;
     }
-    }
   }
+  re_pat += "\\z";
   // Filename glob matching must be case-sensitive so that !include respects
   // filesystem case-sensitivity (issue #1660).  Unlike operator= which uses
   // icase for account/payee query matching, globs are used exclusively for
-  // file name matching where case matters.
+  // file name matching where case matters.  For the same reason a glob is
+  // never folded by --ignore-diacritics: café.dat and cafe.dat are
+  // different files.
 #if HAVE_BOOST_REGEX_UNICODE
   expr = boost::make_u32regex(re_pat.c_str(), boost::regex::perl);
 #else
   expr.assign(re_pat.c_str(), boost::regex::perl);
 #endif
+  glob = true;
   VERIFY(valid());
   return *this;
-}
-
-boost::optional<string> mask_t::match_group(string_view text, std::size_t n) const {
-#if HAVE_BOOST_REGEX_UNICODE
-  string match_text = ignore_diacritics ? fold_diacritics(text) : string(text);
-  boost::smatch what;
-  if (boost::u32regex_search(match_text, what, expr) && n < what.size() && what[n].matched) {
-    return what[n].str();
-  }
-  return boost::none;
-#else
-  if (ignore_diacritics) {
-    string match_text = fold_diacritics(text);
-    boost::smatch what;
-    if (boost::regex_search(match_text, what, expr) && n < what.size() && what[n].matched) {
-      return what[n].str();
-    }
-    return boost::none;
-  }
-  string match_text(text);
-  boost::smatch what;
-  if (boost::regex_search(match_text, what, expr) && n < what.size() && what[n].matched) {
-    return what[n].str();
-  }
-  return boost::none;
-#endif
 }
 
 namespace {
@@ -470,13 +461,13 @@ std::vector<string> collect_matches(const boost::smatch& what) {
 
 boost::optional<std::vector<string>> mask_t::match_groups(string_view text) const {
 #if HAVE_BOOST_REGEX_UNICODE
-  string match_text = ignore_diacritics ? fold_diacritics(text) : string(text);
+  string match_text = folds() ? fold_diacritics(text) : string(text);
   boost::smatch what;
   if (boost::u32regex_search(match_text, what, expr))
     return collect_matches(what);
   return boost::none;
 #else
-  if (ignore_diacritics) {
+  if (folds()) {
     string match_text = fold_diacritics(text);
     boost::smatch what;
     if (boost::regex_search(match_text, what, expr))

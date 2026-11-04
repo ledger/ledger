@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Run ledger benchmarks comparing PR and base binaries.
 #
-# Both binaries are benchmarked simultaneously (interleaved runs) to ensure
-# fair comparison under equal cache conditions.
+# The two binaries take turns, one measured run at a time, and swap which
+# goes first each round, so both see the same cache conditions and any drift
+# in the machine's speed during a benchmark affects them alike.
 #
 # Usage: ./benchmark/run_benchmark.sh <pr-binary> <base-binary> <pr-output.json> <base-output.json>
 #
@@ -45,7 +46,7 @@ echo "Benchmarking PR binary:   $PR_BIN" >&2
 echo "Benchmarking base binary: $BASE_BIN" >&2
 echo "Data file: $BENCHMARK_DAT" >&2
 echo "Warmup runs: $WARMUP, Measured runs: $RUNS" >&2
-echo "Note: Both binaries are benchmarked simultaneously (interleaved) for fair comparison." >&2
+echo "Note: The binaries alternate run by run, for a fair comparison." >&2
 
 # Define benchmark command suffixes (binary path prepended per benchmark)
 declare -a NAMES=(
@@ -73,62 +74,63 @@ declare -a ARGS=(
 TMPDIR_BENCH="$(mktemp -d)"
 trap 'rm -rf "$TMPDIR_BENCH"' EXIT
 
-# Run each benchmark pair simultaneously (interleaved by hyperfine)
+# hyperfine finishes all of one command's runs before starting the next
+# command's, so it is given one run of each binary per round, PR first in
+# odd rounds and base first in even ones.  -N runs the commands without a
+# shell, which spares each round hyperfine's measurement of shell startup.
 for i in "${!NAMES[@]}"; do
     NAME="${NAMES[$i]}"
     PR_CMD="$PR_BIN ${ARGS[$i]}"
     BASE_CMD="$BASE_BIN ${ARGS[$i]}"
-    RESULT_FILE="$TMPDIR_BENCH/${NAME}.json"
 
     echo "Benchmarking: $NAME" >&2
-    hyperfine \
-        --warmup "$WARMUP" \
-        --runs "$RUNS" \
-        --export-json "$RESULT_FILE" \
-        --command-name "${NAME}-pr" \
-        --command-name "${NAME}-base" \
-        "$PR_CMD" \
-        "$BASE_CMD" >/dev/null 2>&1
+    for ((ROUND = 1; ROUND <= RUNS; ROUND++)); do
+        if ((ROUND % 2)); then
+            ORDER=(--command-name "${NAME}-pr" --command-name "${NAME}-base" "$PR_CMD" "$BASE_CMD")
+        else
+            ORDER=(--command-name "${NAME}-base" --command-name "${NAME}-pr" "$BASE_CMD" "$PR_CMD")
+        fi
+        hyperfine -N \
+            --warmup "$((ROUND == 1 ? WARMUP : 0))" \
+            --runs 1 \
+            --export-json "$TMPDIR_BENCH/${NAME}-${ROUND}.json" \
+            "${ORDER[@]}" >/dev/null 2>&1
+    done
 done
 
-# Split combined results into separate PR and base output files
+# Gather each binary's times from every round into separate PR and base
+# output files
 python3 -c "
-import json, os, sys
+import json, os, statistics, sys
 
 pr_results = []
 base_results = []
 tmpdir = sys.argv[1]
 pr_out = sys.argv[2]
 base_out = sys.argv[3]
-names = sys.argv[4:]
+runs = int(sys.argv[4])
+names = sys.argv[5:]
+
+def summary(name, times):
+    return {
+        'name': name,
+        'median': statistics.median(times),
+        'mean': statistics.fmean(times),
+        'stddev': statistics.stdev(times) if len(times) > 1 else None,
+        'min': min(times),
+        'max': max(times),
+        'times': times,
+    }
 
 for name in names:
-    path = os.path.join(tmpdir, name + '.json')
-    with open(path) as f:
-        data = json.load(f)
+    times = {name + '-pr': [], name + '-base': []}
+    for run in range(1, runs + 1):
+        with open(os.path.join(tmpdir, f'{name}-{run}.json')) as f:
+            for result in json.load(f)['results']:
+                times[result['command']].extend(result['times'])
 
-    # results[0] = PR (first command), results[1] = base (second command)
-    pr = data['results'][0]
-    base = data['results'][1]
-
-    pr_results.append({
-        'name': name,
-        'median': pr['median'],
-        'mean': pr['mean'],
-        'stddev': pr['stddev'],
-        'min': pr['min'],
-        'max': pr['max'],
-        'times': pr['times'],
-    })
-    base_results.append({
-        'name': name,
-        'median': base['median'],
-        'mean': base['mean'],
-        'stddev': base['stddev'],
-        'min': base['min'],
-        'max': base['max'],
-        'times': base['times'],
-    })
+    pr_results.append(summary(name, times[name + '-pr']))
+    base_results.append(summary(name, times[name + '-base']))
 
 with open(pr_out, 'w') as f:
     json.dump({'benchmarks': pr_results}, f, indent=2)
@@ -136,7 +138,7 @@ with open(pr_out, 'w') as f:
 with open(base_out, 'w') as f:
     json.dump({'benchmarks': base_results}, f, indent=2)
     f.write('\n')
-" "$TMPDIR_BENCH" "$PR_OUTPUT" "$BASE_OUTPUT" "${NAMES[@]}"
+" "$TMPDIR_BENCH" "$PR_OUTPUT" "$BASE_OUTPUT" "$RUNS" "${NAMES[@]}"
 
 echo "PR results written to: $PR_OUTPUT" >&2
 echo "Base results written to: $BASE_OUTPUT" >&2

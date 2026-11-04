@@ -41,24 +41,21 @@ add_subdirectory(manual)
 add_subdirectory(baseline)
 add_subdirectory(regress)
 
-# Semantic bisimulation (lean/README.md, the ledger-semantics
-# submodule): every
-# positive .test journal in baseline/regress/manual is additionally
-# replayed against the Lean oracle whenever the suite runs (`make
-# check`, `make test`, `ctest`).  One batched ctest test rather than
-# per-test oracle invocations: the oracle loads once for the whole
-# corpus.  The test registers only when an oracle can exist: either
-# the lean/ submodule is checked out (development builds) or
-# LEDGER_LEAN_DIR names a prebuilt oracle tree (the Nix build).  A
-# release build from a tarball has neither, registers nothing, and
-# owes its users no Lean toolchain.  A registered test still exits 77
-# and shows as SKIPPED when the toolchain is missing at run time, or
-# when the submodule is checked out but its oracle has never been
-# built — visibly, never as a silent pass.
+# Semantic bisimulation (the bisimulation section of the
+# ledger-semantics README): every positive .test journal in
+# baseline/regress/manual is additionally replayed against the Lean
+# oracle whenever the suite runs (`make check`, `make test`, `ctest`).
+# One batched ctest test rather than per-test oracle invocations: the
+# oracle loads once for the whole corpus.  The test registers only
+# when LEDGER_LEAN_DIR names an oracle tree at configure time.  The
+# Nix build points it at the oracle the flake pins, and a development
+# build opts in with the same tree (`nix build .#oracle`).  A release
+# build sets nothing, registers nothing, and owes its users no Lean
+# toolchain.  A registered test still exits 77 and shows as SKIPPED
+# when lake is missing at run time — visibly, never as a silent pass.
 if(Python_EXECUTABLE)
-  if(EXISTS "${PROJECT_SOURCE_DIR}/lean/lakefile.lean" OR
-     (DEFINED ENV{LEDGER_LEAN_DIR} AND
-      NOT "$ENV{LEDGER_LEAN_DIR}" STREQUAL ""))
+  if(DEFINED ENV{LEDGER_LEAN_DIR} AND
+     NOT "$ENV{LEDGER_LEAN_DIR}" STREQUAL "")
     add_test(NAME SemanticBisimulation
       COMMAND ${Python_EXECUTABLE}
         ${PROJECT_SOURCE_DIR}/test/semantic/check_all.py
@@ -67,10 +64,7 @@ if(Python_EXECUTABLE)
     # so the oracle that runs is the one whose presence registered the
     # test, not whatever happens to be in the environment later.
     set(_bisim_env "TZ=${Ledger_TEST_TIMEZONE}")
-    if(DEFINED ENV{LEDGER_LEAN_DIR} AND
-       NOT "$ENV{LEDGER_LEAN_DIR}" STREQUAL "")
-      list(APPEND _bisim_env "LEDGER_LEAN_DIR=$ENV{LEDGER_LEAN_DIR}")
-    endif()
+    list(APPEND _bisim_env "LEDGER_LEAN_DIR=$ENV{LEDGER_LEAN_DIR}")
     if(DEFINED ENV{LEDGER_LEAN_REV} AND
        NOT "$ENV{LEDGER_LEAN_REV}" STREQUAL "")
       list(APPEND _bisim_env "LEDGER_LEAN_REV=$ENV{LEDGER_LEAN_REV}")
@@ -81,8 +75,7 @@ if(Python_EXECUTABLE)
       TIMEOUT 3600)
   else()
     message(STATUS
-      "SemanticBisimulation: not registered (lean/ submodule not "
-      "initialized and LEDGER_LEAN_DIR unset)")
+      "SemanticBisimulation: not registered (LEDGER_LEAN_DIR unset)")
   endif()
 endif()
 
@@ -105,6 +98,14 @@ if(Python_EXECUTABLE)
     --ledger $<TARGET_FILE:ledger> --sourcepath ${PROJECT_SOURCE_DIR})
   set_tests_properties(CheckEnvVars
     PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}")
+
+  # Regression test for GitHub issue #3294: --args-only reads no default price
+  # database, and without HOME the default is ./.pricedb, not ./.ledgerrc.
+  # Like CheckEnvVars it runs ledger itself, because it must control HOME and
+  # the working directory, which the .test harness cannot.
+  add_test(NAME RegressPyTest_3294
+    COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/regress/3294.py
+    $<TARGET_FILE:ledger>)
 
   # CheckManpage and CheckTexinfo are disabled, since they do not work
   # reliably yet

@@ -1,0 +1,17 @@
+; Journal for the positive cases of test/regress/3290.test, whose own
+; inline journal is the failing one.  Nor can it be a .test of its own:
+; the Lean oracle that test/semantic/check_all.py runs reads no comparison
+; in an amount expression, `!=` included, and check_all.py fails on any
+; inline positive journal that the oracle cannot read.
+
+2025-01-01 Equal
+    Expenses:Food    (1 == 1 ? $10.00 : $20.00) = $10.00
+    Assets:Cash
+
+2025-01-02 Unequal
+    Expenses:Food    (1 == 2 ? $10.00 : $20.00) = $30.00
+    Assets:Cash
+
+2025-01-03 Broker
+    Assets:Brokerage    10 AAPL @ (2 == 2 ? $50.00 : $60.00) = 10 AAPL
+    Assets:Cash

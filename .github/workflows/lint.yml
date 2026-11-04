@@ -9,7 +9,9 @@ on:
 
 jobs:
   lint-check:
-    runs-on: ubuntu-latest
+    # Not ubuntu-latest: apt.llvm.org has no LLVM 18 for Ubuntu 26.04, and
+    # clang-format must stay at the dev shell's 18.1.8.
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Check out repository code

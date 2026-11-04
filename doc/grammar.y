@@ -10,13 +10,18 @@
  */
 
 /*
- * There are three special terminals in this grammar, which violate its
+ * There are four special terminals in this grammar, which violate its
  * context free nature:
  *
  * TEXT       -- consumes all characters until the next terminal
  *               or EOL (end of line)
  * WHITESPACE -- any amount of whitespace, not including EOL
  * STRING     -- characters up to the next WHITESPACE or EOL
+ * SYMBOL     -- characters up to the next WHITESPACE, EOL, digit, DEL,
+ *               or one of . , ; : ? ! - + * / ^ & | = < > ~ ( ) [ ] { } @
+ *               (a backslash puts the character after it into the
+ *               SYMBOL), other than the words and, div, else, false,
+ *               if, not, or and true
  *
  * BIGINT     -- a number of any width, matching [0-9]+
  * INT4       -- a four digit wide number
@@ -82,9 +87,9 @@ char_directive:
     'b' TEXT EOL |
     'D' amount |                /* sets display parameters for a commodity */
     'A' TEXT |                  /* sets the "default balancing account" */
-    'C' commodity '=' amount |  /* specifies a commodity conversion */
-    'P' date time commodity amount | /* a pricing history xact */
-    'N' commodity |             /* commodity's price is never downloaded */
+    'C' amount '=' amount |     /* specifies a commodity conversion */
+    'P' price_when directive_commodity amount | /* a pricing history xact */
+    'N' directive_commodity |   /* commodity's price is never downloaded */
     'Y' INT4 |                  /* sets the default year for date parsing */
     '-' '-' STRING TEXT |       /* specify command-line options in the file */
     ;
@@ -95,9 +100,25 @@ date_sep: '/' | '-' | '.' ;
 
 time: INT2 ':' INT2 ':' INT2 ;
 
+price_when:                     /* without a date, the price is current */
+    date time |
+    date |
+    /* epsilon */
+    ;
+
+/*
+ * Within an amount, an unquoted commodity ends at any character listed
+ * under SYMBOL.  Where it is not part of an amount, as in a 'P' or 'N'
+ * directive, it is a whole word instead, which may hold those characters.
+ */
+
 commodity:
     '"' TEXT '"' |
-    STRING ;
+    SYMBOL ;
+
+directive_commodity:           /* a backslash escapes, as in a SYMBOL */
+    '"' TEXT '"' |
+    STRING ;                    /* a ';' also ends it, beginning a comment */
 
 /*
  * Xacts
