@@ -1,0 +1,25 @@
+; In an include path, a backslash makes the next character literal, and a [
+; that no ] closes is an ordinary character, so each line below reads only
+; the file it spells.  f.dat and gx.dat would be read if an escaped [ opened
+; a set.  A ] right after the [ that opens a set is a member of the set, as
+; in a shell glob.
+
+include include-glob-escapes/\[f].dat
+include include-glob-escapes/\[g]*.dat
+include include-glob-escapes/\j.dat
+include include-glob-escapes/d[e.dat
+include include-glob-escapes/h[i*.dat
+include include-glob-escapes/k[]x].dat
+
+test bal
+             $-63.00  Assets:Cash
+              $63.00  Expenses
+               $1.00    Bracket
+               $2.00    BracketGlob
+               $4.00    Letter
+              $32.00    Member
+               $8.00    Unclosed
+              $16.00    UnclosedGlob
+--------------------
+                   0
+end test
