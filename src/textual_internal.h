@@ -238,7 +238,8 @@ public:
 
   /// @brief Shared body for `account` parsing that also supports nested
   ///        `account` sub-directives (issue #877).
-  /// @param line          The remainder of the "account NAME" line (just NAME, leading ws OK).
+  /// @param line          The remainder of the "account NAME" line: NAME and any comment
+  ///                      after it (leading ws OK).
   /// @param parent        Root account under which NAME is registered.
   /// @param outer_indent  Indentation column of the "account NAME" line itself;
   ///                      only sub-directives with strictly greater indentation

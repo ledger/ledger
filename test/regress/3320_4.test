@@ -1,0 +1,27 @@
+; Regression test for GitHub issue #3320: a `check` line beneath an
+; `account` directive whose own line ends in a comment applies to the
+; postings of the account named before the comment.  Before the fix it
+; applied to an account named after the whole line, which no posting
+; used, so this check never fired.  Its warning makes this file negative,
+; so it is kept apart from 3320_3.test, which the bisimulation replays.
+
+account Expenses:Food  ; closed at the end of 2023
+    check date < [2024-01-01]
+
+2023/12/31 Market
+    Expenses:Food    $5.00
+    Assets:Cash
+
+2024/01/02 Market
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal
+             $-15.00  Assets:Cash
+              $15.00  Expenses:Food
+--------------------
+                   0
+__ERROR__
+Warning: "$FILE", line 15: Transaction check failed: (date < [2024/01/01])
+  (check expression at "$FILE", line 8)
+end test

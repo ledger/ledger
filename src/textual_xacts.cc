@@ -1039,38 +1039,18 @@ xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* accou
     // tab followed by ';').  The payee is validated/rewritten through the
     // journal's payee mapping tables.
 
+    char* note = nullptr;
     if (next && *next) {
-      char* p = next;
-      std::size_t spaces = 0;
-      std::size_t tabs = 0;
-      while (*p) {
-        if (*p == ' ') {
-          ++spaces;
-        } else if (*p == '\t') {
-          ++tabs;
-        } else if (*p == ';' && (tabs > 0 || spaces > 1)) {
-          char* q = p - 1;
-          while (q > next && std::isspace(static_cast<unsigned char>(*q)))
-            --q;
-          if (q >= next)
-            *(q + 1) = '\0';
-          break;
-        } else {
-          spaces = 0;
-          tabs = 0;
-        }
-        ++p;
-      }
+      note = split_inline_note(next);
       xact->payee = context.journal->validate_payee(next);
-      next = p;
     } else {
       xact->payee = _("<Unspecified payee>");
     }
 
     // Phase 5: Parse the optional inline note on the transaction header line.
 
-    if (next && *next == ';')
-      xact->append_note(++next, *context.scope, false);
+    if (note)
+      xact->append_note(note, *context.scope, false);
 
     TRACE_STOP(xact_text, 2);
 
