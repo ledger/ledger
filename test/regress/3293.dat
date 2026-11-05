@@ -1,0 +1,5 @@
+--no-pager --columns=80 bal
+--no-pager --columns=80 pricedb
+--no-pager --columns=80 bal
+--no-pager --columns=80 prices
+--no-pager --columns=80 bal

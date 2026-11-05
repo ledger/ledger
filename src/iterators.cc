@@ -121,6 +121,12 @@ struct create_price_xact {
       : journal(_journal), account(_account), temps(_temps), xact_temps(_xact_temps) {
     TRACE_CTOR(create_price_xact, "journal_t&, account_t *, temporaries_t&, xacts_list&");
   }
+  create_price_xact(const create_price_xact& other)
+      : journal(other.journal), account(other.account), temps(other.temps),
+        xact_temps(other.xact_temps), xacts_by_commodity(other.xacts_by_commodity),
+        seen_by_commodity(other.seen_by_commodity) {
+    TRACE_CTOR(create_price_xact, "copy");
+  }
   ~create_price_xact() noexcept { TRACE_DTOR(create_price_xact); }
 
   /// Called for each historical price point; creates or reuses a synthetic xact.
