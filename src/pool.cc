@@ -87,9 +87,17 @@ commodity_pool_t::commodity_pool_t()
  * contains characters from invalid_chars (e.g., spaces or digits), inserts
  * the commodity into the commodities map, and registers it as a node in the
  * price history graph.  The caller must ensure the symbol does not already
- * exist in the pool.
+ * exist in the pool; if it does, as a commodity's own symbol or an alias,
+ * this throws std::logic_error, since the map could not keep the new
+ * commodity.
  */
 commodity_t* commodity_pool_t::create(const string& symbol) {
+  // A second commodity under a symbol in use could not be stored, and the
+  // pointer returned to it would dangle once its only owner went out of
+  // scope, so refuse it in every build (#3341).
+  if (commodities.find(symbol) != commodities.end())
+    throw_(std::logic_error, _f("Commodity %1% is already in its pool") % symbol);
+
   std::shared_ptr<commodity_t::base_t> base_commodity(new commodity_t::base_t(symbol));
   std::shared_ptr<commodity_t> commodity(new commodity_t(this, base_commodity));
 
@@ -104,13 +112,7 @@ commodity_t* commodity_pool_t::create(const string& symbol) {
 
   DEBUG("pool.commodities", "Creating commodity '" << symbol << "'");
 
-#if DEBUG_ON
-  std::pair<commodities_map::iterator, bool> result =
-#endif
-      commodities.insert(commodities_map::value_type(symbol, commodity));
-#if DEBUG_ON
-  assert(result.second);
-#endif
+  commodities.insert(commodities_map::value_type(symbol, commodity));
 
   commodity_price_history.add_commodity(*commodity.get());
 
@@ -334,10 +336,12 @@ commodity_t* commodity_pool_t::find_annotation_fuzzy(const string& symbol,
  *
  * The base commodity must not already be annotated, and the annotation
  * must be non-empty.  The new annotated commodity is inserted into the
- * annotated_commodities map keyed by (base_symbol, details).  Flags on
- * the base commodity are updated to record whether fixated or floating
- * price annotations have been seen (COMMODITY_SAW_ANN_PRICE_FIXATED,
- * COMMODITY_SAW_ANN_PRICE_FLOAT), which influences find_price() behavior.
+ * annotated_commodities map keyed by (base_symbol, details); if that key
+ * is taken, it throws std::logic_error, since the map could not keep the
+ * new commodity.  Flags on the base commodity are updated to record
+ * whether fixated or floating price annotations have been seen
+ * (COMMODITY_SAW_ANN_PRICE_FIXATED, COMMODITY_SAW_ANN_PRICE_FLOAT), which
+ * influences find_price() behavior.
  */
 annotated_commodity_t* commodity_pool_t::create(commodity_t& comm, const annotation_t& details) {
   DEBUG("pool.commodities", "commodity_pool_t::create[ann:comm] " << "symbol " << comm.base_symbol()
@@ -347,6 +351,14 @@ annotated_commodity_t* commodity_pool_t::create(commodity_t& comm, const annotat
   assert(comm);
   assert(!comm.has_annotation());
   assert(details);
+
+  // A second commodity under a key in use could not be stored, and the
+  // pointer returned to it would dangle once its only owner went out of
+  // scope, so refuse it in every build (#3341).
+  const annotated_commodities_map::key_type key(comm.base_symbol(), details);
+  if (auto existing = annotated_commodities.find(key); existing != annotated_commodities.end())
+    throw_(std::logic_error,
+           _f("Annotated commodity %1% is already in its pool") % *existing->second);
 
   std::shared_ptr<annotated_commodity_t> commodity(new annotated_commodity_t(&comm, details));
 
@@ -362,14 +374,7 @@ annotated_commodity_t* commodity_pool_t::create(commodity_t& comm, const annotat
                                                             << '\n'
                                                             << details);
 
-#if DEBUG_ON
-  std::pair<annotated_commodities_map::iterator, bool> result =
-#endif
-      annotated_commodities.insert(annotated_commodities_map::value_type(
-          annotated_commodities_map::key_type(comm.base_symbol(), details), commodity));
-#if DEBUG_ON
-  assert(result.second);
-#endif
+  annotated_commodities.insert(annotated_commodities_map::value_type(key, commodity));
 
   return commodity.get();
 }
