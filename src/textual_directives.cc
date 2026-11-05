@@ -211,6 +211,9 @@ void instance_t::nomarket_directive(char* line) {
 /*--- File and Option Directives ---*/
 
 void instance_t::option_directive(char* line) {
+  if (context.skip_options)
+    return;
+
   // Check if this is a short option (single dash) vs long option (double dash)
   if (line[0] == '-' && line[1] != '-') {
     // Short options are not supported in configuration files
@@ -248,7 +251,8 @@ void instance_t::option_directive(char* line) {
     p = const_cast<char*>(unquoted.c_str());
   }
 
-  if (!process_option(context.pathname.string(), line + 2, *context.scope, p, line))
+  scope_t& scope(context.option_scope ? *context.option_scope : *context.scope);
+  if (!process_option(context.pathname.string(), line + 2, scope, p, line))
     throw_(option_error, _f("Illegal option --%1%") % (line + 2));
 }
 
@@ -414,6 +418,8 @@ void instance_t::include_directive(char* line) {
     context_stack.get_current().journal = journal;
     context_stack.get_current().master = master;
     context_stack.get_current().scope = scope;
+    context_stack.get_current().skip_options = context.skip_options;
+    context_stack.get_current().option_scope = context.option_scope;
 
     parse_context_t* save_current_context = journal->current_context;
     journal->current_context = &context_stack.get_current();

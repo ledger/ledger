@@ -462,7 +462,8 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
 
   /*--- Payee/account rewriting and related/inject ---*/
 
-  if (!report.session.journal->payee_rewrite_mappings.empty() ||
+  if (!report.payee_rewrite_mappings.empty() || !report.account_rewrite_mappings.empty() ||
+      !report.session.journal->payee_rewrite_mappings.empty() ||
       !report.session.journal->account_rewrite_mappings.empty())
     handler = std::make_shared<rewrite_posts>(handler, report);
 

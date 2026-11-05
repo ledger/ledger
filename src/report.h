@@ -170,6 +170,15 @@ public:
       gain_from; ///< Reference date for --gain-since (compute gain from this date's market value)
   uint_least8_t budget_flags; ///< Bitmask of BUDGET_* flags controlling budget report behavior
 
+  /// Rewrite rules given by --payee-rewrite and --account-rewrite.  They
+  /// belong to the report, not to the journal with the rules its
+  /// directives declare, so that a rule given to one command in an
+  /// interactive session applies to that command alone, and a rule given
+  /// at startup survives the journal being read again.  rewrite_posts
+  /// tries them before the journal's.
+  payee_rewrite_mappings_t payee_rewrite_mappings;
+  account_rewrite_mappings_t account_rewrite_mappings;
+
   explicit report_t(session_t& _session)
       : session(_session), terminus(CURRENT_TIME()), budget_flags(BUDGET_NO_BUDGET) {
     TRACE_CTOR(report_t, "session_t&");
@@ -567,7 +576,7 @@ public:
         string::size_type eq = str.find('=');
         if (eq == string::npos)
           throw_(std::logic_error, _("--account-rewrite requires PATTERN=REPLACEMENT"));
-        parent->session.journal->account_rewrite_mappings.push_back(
+        parent->account_rewrite_mappings.push_back(
             account_rewrite_mapping_t(mask_t(str.substr(0, eq)), str.substr(eq + 1)));
       });
 
@@ -1130,7 +1139,7 @@ public:
         string::size_type eq = str.find('=');
         if (eq == string::npos)
           throw_(std::logic_error, _("--payee-rewrite requires PATTERN=REPLACEMENT"));
-        parent->session.journal->payee_rewrite_mappings.push_back(
+        parent->payee_rewrite_mappings.push_back(
             payee_rewrite_mapping_t(mask_t(str.substr(0, eq)), str.substr(eq + 1)));
       });
 

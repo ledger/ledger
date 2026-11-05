@@ -113,6 +113,43 @@ public:
   /// at the given @p date.
   void remove_price(const commodity_t& source, const commodity_t& target, const datetime_t& date);
 
+  /// A price that add_price() recorded, with the price it replaced at the
+  /// same moment, if any: enough to undo the change or to make it again.
+  /// The commodities are named by their graph vertices, which, unlike a
+  /// commodity's own graph index, never move (see alias_commodity).
+  struct price_change_t {
+    std::size_t source;               ///< Vertex of the commodity priced.
+    std::size_t target;               ///< Vertex of the price's commodity.
+    datetime_t when;                  ///< The moment of the price.
+    amount_t price;                   ///< The price recorded.
+    std::optional<amount_t> replaced; ///< The price it overwrote, if any.
+  };
+  using price_changes_t = std::vector<price_change_t>;
+
+  /// Append each price that add_price() records to @p changes from now on
+  /// (nullptr to stop), and return where it was recording them before.
+  /// This lets the prices a journal brought be taken out again when the
+  /// journal is read anew.
+  price_changes_t* record_changes(price_changes_t* changes);
+
+  /// Records in @p changes the prices added to @p history while it lives,
+  /// then returns the history to recording where it did before.
+  class recording_t : public noncopyable {
+    commodity_history_t& history;
+    price_changes_t* previous;
+
+  public:
+    recording_t(commodity_history_t& _history, price_changes_t& changes)
+        : history(_history), previous(history.record_changes(&changes)) {}
+    ~recording_t() { history.record_changes(previous); }
+  };
+
+  /// Undo @p changes, newest first, putting back the prices they replaced.
+  void undo(const price_changes_t& changes);
+
+  /// Make @p changes again, oldest first.
+  void redo(const price_changes_t& changes);
+
   /// Iterate over all prices for @p source that fall within the time range
   /// [@p _oldest, @p moment], calling @p fn for each.  When
   /// @p bidirectionally is true, also yields inverted prices (i.e., if

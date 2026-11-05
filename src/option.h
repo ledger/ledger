@@ -318,6 +318,9 @@ public:
   /// @brief Test whether this option has been activated.
   operator bool() const { return handled; }
 
+  /// @brief Return where the option was last set from (see source).
+  const optional<string>& whence() const { return source; }
+
   /// @brief Return the option's string value.  Asserts that the option is handled.
   /// @throws std::runtime_error if the value is empty (no argument was provided).
   string str() const {

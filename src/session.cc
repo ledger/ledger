@@ -55,6 +55,7 @@
 #include "journal.h"
 #include "iterators.h"
 #include "filters.h"
+#include "pool.h"
 
 namespace ledger {
 
@@ -101,6 +102,20 @@ session_t::session_t()
 
 /*--- Journal Reading ---*/
 
+namespace {
+/// Makes @p scope, if any, the default scope while it lives.
+class default_scope_guard_t : public noncopyable {
+  scope_t* saved;
+
+public:
+  explicit default_scope_guard_t(scope_t* scope) : saved(scope_t::default_scope) {
+    if (scope)
+      scope_t::default_scope = scope;
+  }
+  ~default_scope_guard_t() { scope_t::default_scope = saved; }
+};
+} // namespace
+
 /**
  * @brief Core data-loading method that reads the price database and all
  *        journal files.
@@ -117,6 +132,23 @@ session_t::session_t()
  */
 std::size_t session_t::read_data(const string& master_account) {
   bool populated_data_files = false;
+
+  // A session that may read its journal again (see reread) remembers the
+  // files it reads and the date mode it reads them in, reads in the scope
+  // it read in at startup, with the option lines of a reading after the
+  // first in a scope of their own, and records the prices the reading puts
+  // into the price history.
+  std::optional<default_scope_guard_t> in_scope;
+  std::unique_ptr<scope_t> option_scope;
+  std::optional<commodity_history_t::recording_t> recording;
+  if (reread) {
+    reread->files = HANDLER(file_).data_files;
+    reread->aux_date = item_t::use_aux_date;
+    in_scope.emplace(reread->scope);
+    if (reread->option_scope)
+      option_scope = reread->option_scope();
+    recording.emplace(commodity_pool_t::current_pool->commodity_price_history, reread->prices);
+  }
 
   // If no --file was specified, try ~/.ledger as a default
   if (HANDLER(file_).data_files.empty()) {
@@ -229,6 +261,7 @@ std::size_t session_t::read_data(const string& master_account) {
     if (exists(*price_db_path)) {
       parsing_context.push(*price_db_path);
       parsing_context.get_current().journal = journal.get();
+      parsing_context.get_current().option_scope = option_scope.get();
       try {
         if (journal->read(parsing_context, HANDLER(hashes_).hash_type) > 0)
           throw_(parse_error, _("Transactions not allowed in price history file"));
@@ -241,22 +274,35 @@ std::size_t session_t::read_data(const string& master_account) {
   }
 
   // Read each journal data file in order
+  bool read_stdin = false;
   for (const path& pathname : HANDLER(file_).data_files) {
     if (pathname == "-" || pathname == "/dev/stdin") {
       // To avoid problems with stdin and pipes, etc., we read the entire
       // file in beforehand into a memory buffer, and then parcel it out
-      // from there.
-      std::ostringstream buffer;
+      // from there.  A session keeps the text, for reading again; as when
+      // standard input itself is read twice, a second "-" gets nothing.
+      string text;
+      if (stdin_journal) {
+        if (!read_stdin)
+          text = *stdin_journal;
+      } else {
+        std::ostringstream buffer;
 
-      while (std::cin.good() && !std::cin.eof()) {
-        char line[8192];
-        std::cin.read(line, 8192);
-        std::streamsize count = std::cin.gcount();
-        buffer.write(line, count);
+        while (std::cin.good() && !std::cin.eof()) {
+          char line[8192];
+          std::cin.read(line, 8192);
+          std::streamsize count = std::cin.gcount();
+          buffer.write(line, count);
+        }
+        buffer.flush();
+
+        text = buffer.str();
+        if (reread)
+          stdin_journal = text;
       }
-      buffer.flush();
+      read_stdin = true;
 
-      std::shared_ptr<std::istream> stream(new std::istringstream(buffer.str()));
+      std::shared_ptr<std::istream> stream(new std::istringstream(text));
       parsing_context.push(stream);
     } else {
       parsing_context.push(pathname);
@@ -264,6 +310,7 @@ std::size_t session_t::read_data(const string& master_account) {
 
     parsing_context.get_current().journal = journal.get();
     parsing_context.get_current().master = acct;
+    parsing_context.get_current().option_scope = option_scope.get();
     try {
       xact_count += journal->read(parsing_context, HANDLER(hashes_).hash_type);
     } catch (...) {
@@ -310,7 +357,7 @@ journal_t* session_t::read_journal_files() {
 /*--- Programmatic API ---*/
 
 journal_t* session_t::read_journal(const path& pathname) {
-  journal.reset(new journal_t);
+  close_journal_files();
 
   HANDLER(file_).data_files.clear();
   HANDLER(file_).data_files.push_back(pathname);
@@ -340,7 +387,22 @@ journal_t* session_t::read_journal_from_string(const string& data) {
 }
 
 void session_t::close_journal_files() {
+  // In a session that may read its journal again (see reread), take the
+  // closing journal's prices out of the price history, and prepare the
+  // fresh journal as the first one was.
+  if (reread) {
+    commodity_pool_t::current_pool->undo_price_changes(reread->prices);
+    reread->prices.clear();
+  }
+
   journal.reset(new journal_t);
+
+  if (reread && reread->prepare) {
+    default_scope_guard_t in_scope(reread->scope);
+    commodity_history_t::recording_t recording(
+        commodity_pool_t::current_pool->commodity_price_history, reread->prices);
+    reread->prepare();
+  }
 }
 
 journal_t* session_t::get_journal() {

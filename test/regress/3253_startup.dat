@@ -1,0 +1,3 @@
+--no-pager --columns=80 pricedb
+--no-pager --columns=80 register --exchange $ Assets
+--no-pager --columns=80 balance --lots Broker

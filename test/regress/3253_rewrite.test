@@ -1,0 +1,79 @@
+; Regression test for --account-rewrite and --payee-rewrite in a session,
+; found while fixing #3253.
+; https://github.com/ledger/ledger/issues/3253
+;
+; The rules these options give used to be added to the journal, beside the
+; rules its account-rewrite and payee-rewrite directives declare.  In an
+; interactive or --script session, which keeps one journal for every
+; command, a rule given to one command therefore applied to every command
+; after it, and came after the journal's rules instead of before them as
+; on the command line; and reading the journal again (reload) lost the
+; rules given at startup.  The rules now belong to the report: a command's
+; own rules are tried first and apply to it alone.
+
+account-rewrite Cash  Assets:Wallet
+
+2021/12/31 Opening
+    Assets:Broker                         1 AGGY
+    Equity:Opening Balances
+
+2022/01/04 Later
+    Assets:Broker                         1 AGGY @@ $2.00
+    Assets:Cash
+
+; On the command line an option's rule is tried before a directive's.
+
+test balance --account-rewrite Cash=Purse
+              2 AGGY  Assets:Broker
+             -1 AGGY  Equity:Opening Balances
+                 $-2  Purse
+--------------------
+                 $-2
+              1 AGGY
+end test
+
+; The script gives each rule to one command, between commands that give
+; none, and reads the journal again (reload) before the last balance.
+
+test --account-rewrite Opening=Equity:Start --script test/regress/3253_rewrite.dat
+                 $-2
+              2 AGGY  Assets
+              2 AGGY    Broker
+                 $-2    Wallet
+             -1 AGGY  Equity:Start
+--------------------
+                 $-2
+              1 AGGY
+                 $-2  Assets:Wallet
+             -1 AGGY  Equity:Start
+              2 AGGY  Holdings
+--------------------
+                 $-2
+              1 AGGY
+                 $-2
+              2 AGGY  Assets
+              2 AGGY    Broker
+                 $-2    Wallet
+             -1 AGGY  Equity:Start
+--------------------
+                 $-2
+              1 AGGY
+              2 AGGY  Assets:Broker
+             -1 AGGY  Equity:Start
+                 $-2  Purse
+--------------------
+                 $-2
+              1 AGGY
+                 $-2
+              2 AGGY  Assets
+              2 AGGY    Broker
+                 $-2    Wallet
+             -1 AGGY  Equity:Start
+--------------------
+                 $-2
+              1 AGGY
+21-Dec-31 Opening               Assets:Broker                1 AGGY       1 AGGY
+22-Jan-04 Purchase              Assets:Broker                1 AGGY       2 AGGY
+21-Dec-31 Opening               Assets:Broker                1 AGGY       1 AGGY
+22-Jan-04 Later                 Assets:Broker                1 AGGY       2 AGGY
+end test

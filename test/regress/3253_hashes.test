@@ -1,0 +1,73 @@
+; Regression test for --hashes under --effective, found while fixing #3253
+; https://github.com/ledger/ledger/issues/3253
+;
+; A transaction's hash identifies it as written, so --effective (or
+; --aux-date) must not change it.  --effective is in force while the journal
+; is parsed (#2071), and the hash used to be computed from date(), which then
+; returns the auxiliary date: every hash of a transaction with an auxiliary
+; date failed verification, and a hash generated under --effective failed
+; verification without it.  These Hash values were generated without
+; --effective; the last transaction has none, so it gets one generated.
+
+2021/12/31 Opening
+    ; Hash: d9fd49921310ac715ef04df7ea2bc1be927fa4c15bf0f942c8d184ace0493765e3c9a024a53fb9e7f18cb2fb7b1b3619368e3ebc998ce83a096264c9da5ea27f
+    Assets:Broker                             1 AGGY
+    Equity:Opening Balances
+
+2021/12/31=2022/01/04 Later
+    ; Hash: 01726c6111e9f3a14bbc203d86e77d697d5d0ccb3835d71887e0df8d961cacfa380e421eaf81c6da8a8c9347bf8571440739b0ba6d6eaeeda2a4b5e823c5bf2e
+    Assets:Broker                             1 AGGY @@ $2
+    Assets:Cash
+
+2022/01/10=2022/01/12 Unhashed
+    Assets:Broker                             1 AGGY @@ $3
+    Assets:Cash
+
+test reg --hashes sha512 --effective
+21-Dec-31 Opening               Assets:Broker                1 AGGY       1 AGGY
+                                Equit:Opening Balances      -1 AGGY            0
+22-Jan-04 Later                 Assets:Broker                1 AGGY       1 AGGY
+                                Assets:Cash                     $-2          $-2
+                                                                          1 AGGY
+22-Jan-12 Unhashed              Assets:Broker                1 AGGY          $-2
+                                                                          2 AGGY
+                                Assets:Cash                     $-3          $-5
+                                                                          2 AGGY
+end test
+
+; The hash generated for the last transaction is the one generated without
+; --effective.
+
+test print --hashes sha512 --effective
+2021/12/31 Opening
+    ; Hash: d9fd49921310ac715ef04df7ea2bc1be927fa4c15bf0f942c8d184ace0493765e3c9a024a53fb9e7f18cb2fb7b1b3619368e3ebc998ce83a096264c9da5ea27f
+    Assets:Broker                             1 AGGY
+    Equity:Opening Balances
+
+2022/01/04 Later
+    ; Hash: 01726c6111e9f3a14bbc203d86e77d697d5d0ccb3835d71887e0df8d961cacfa380e421eaf81c6da8a8c9347bf8571440739b0ba6d6eaeeda2a4b5e823c5bf2e
+    Assets:Broker                             1 AGGY @@ $2
+    Assets:Cash
+
+2022/01/12 Unhashed
+    ; Hash: 3b7d6e8bdff15954941f853036c765db8189b72c6039373a83d179a9becf8ec788429dd238282c558781df5cd19f17c60a760122c7a49a9e467ab211295f9325
+    Assets:Broker                             1 AGGY @@ $3
+    Assets:Cash
+end test
+
+test print --hashes sha512
+2021/12/31 Opening
+    ; Hash: d9fd49921310ac715ef04df7ea2bc1be927fa4c15bf0f942c8d184ace0493765e3c9a024a53fb9e7f18cb2fb7b1b3619368e3ebc998ce83a096264c9da5ea27f
+    Assets:Broker                             1 AGGY
+    Equity:Opening Balances
+
+2021/12/31=2022/01/04 Later
+    ; Hash: 01726c6111e9f3a14bbc203d86e77d697d5d0ccb3835d71887e0df8d961cacfa380e421eaf81c6da8a8c9347bf8571440739b0ba6d6eaeeda2a4b5e823c5bf2e
+    Assets:Broker                             1 AGGY @@ $2
+    Assets:Cash
+
+2022/01/10=2022/01/12 Unhashed
+    ; Hash: 3b7d6e8bdff15954941f853036c765db8189b72c6039373a83d179a9becf8ec788429dd238282c558781df5cd19f17c60a760122c7a49a9e467ab211295f9325
+    Assets:Broker                             1 AGGY @@ $3
+    Assets:Cash
+end test
