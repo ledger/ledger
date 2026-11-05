@@ -1,0 +1,27 @@
+; Regression test for issue #3278 through an automated transaction.
+;
+; When an automated transaction adds postings that must balance, the
+; extended transaction is checked again by xact_base_t::verify(), which
+; widens a cost commodity of display precision 0 by the same rule as
+; finalize().  It too must honor the precision of 0 that -1 IHGfreenight
+; teaches, rather than demand that the cost of 12000 IHG equal 1
+; IHGfreenight to all 32 places of its per-unit price.
+
+= /^Expenses:Hotels$/
+    Expenses:Points:Valuation        0.5
+    Equity:Points:Valuation         -0.5
+
+2023-09-25 * IHG free night redemption
+    Expenses:Hotels         12000 IHG @ 0.00008333333333333333333333333333 IHGfreenight
+    Assets:Rewards          -1 IHGfreenight
+
+test bal
+     -1 IHGfreenight  Assets:Rewards
+           -6000 IHG  Equity:Points:Valuation
+           18000 IHG  Expenses
+           12000 IHG    Hotels
+            6000 IHG    Points:Valuation
+--------------------
+           12000 IHG
+     -1 IHGfreenight
+end test

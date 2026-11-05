@@ -1,0 +1,62 @@
+; Regression test for issue #3278: a transaction whose remainder rounds
+; to zero at the display precision of its cost commodity was rejected
+; when that precision was 0.
+;
+; The fix for issue #1114 widens a cost commodity of display precision 0
+; to the precision of the cost for the balance check, so that a commodity
+; seen only in costs, whose precision nothing has taught, does not read a
+; sub-unit remainder as zero.  It widened every precision of 0 that way,
+; including one that an amount written in the journal had taught.  The
+; cost of 12000 IHG @ 0.00008333333333333333333333333333 IHGfreenight is
+; 0.99999999999999999999999999996 IHGfreenight, and -1 IHGfreenight
+; teaches IHGfreenight a precision of 0, at which the remainder is zero;
+; widened to the 32 places of the cost, the check demanded exact equality
+; from a price that is a rounded quotient.  The same widening rejected a
+; currency without minor units paid through a fractional exchange rate.
+
+; The report's control case: -7.02 USD teaches USD two places, at which
+; the remainder of -0.00000000000000000000000000216 USD is zero.
+2023-06-15 Test
+    Expenses:Gifts     6.48 EUR @ 1.083333333333333333333333333 USD
+    Assets:Cash                -7.02 USD
+
+2023-09-25 * IHG free night redemption
+    Expenses:Hotels         12000 IHG @ 0.00008333333333333333333333333333 IHGfreenight
+    Assets:Rewards          -1 IHGfreenight
+
+; The cost of the card charge is -3000.0636 yen, against 3000 yen.
+2024/01/01 Dinner in Tokyo
+    Expenses:Food                  ¥3000
+    Liabilities:Card          -20.07 USD @ ¥149.48
+
+; Every yen figure here is a cost, so the precision of 0 that the check
+; honors is the one the transaction above taught.  The remainder is
+; 8123.5 - 8123.4216 = 0.0784 yen.
+2024/01/02 Currency exchange
+    Assets:Travel:EUR          50.00 EUR @ ¥162.47
+    Assets:Travel:USD         -54.33 USD @ ¥149.52
+
+test bal
+           50.00 EUR
+     -1 IHGfreenight
+          -61.35 USD  Assets
+           -7.02 USD    Cash
+     -1 IHGfreenight    Rewards
+           50.00 EUR
+          -54.33 USD    Travel
+           50.00 EUR      EUR
+          -54.33 USD      USD
+            6.48 EUR
+           12000 IHG
+               ¥3000  Expenses
+               ¥3000    Food
+            6.48 EUR    Gifts
+           12000 IHG    Hotels
+          -20.07 USD  Liabilities:Card
+--------------------
+           56.48 EUR
+           12000 IHG
+     -1 IHGfreenight
+          -81.42 USD
+               ¥3000
+end test
