@@ -1,3 +1,8 @@
+; The test harness runs ledger with --args-only, which reads no init file,
+; not even one named with --init-file, so this test only shows that the
+; option is accepted.  test/CheckEnvVars.py checks that each way of naming
+; an init file reads it.
+
 2012-03-17 Quick
     Expenses:Food                12,50 €
     Assets:Cash
