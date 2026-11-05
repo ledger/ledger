@@ -65,11 +65,12 @@ directives, and commands.
   Balances are now stored in a persistent map (the vendored `immer` library
   under lib/), amounts are formatted with exact integer arithmetic instead of
   MPFR except on exact ties, most of the expression evaluator's scope lookups
-  no longer use `dynamic_cast`, and the printing path allocates far less.  On
-  hledger's 100k-transaction benchmark journal the flat balance report went
-  from 16s to 0.7s, and `print` and `register`, which needed 4 GB at 10k
-  transactions and could not finish at 100k within 23 GB, now take 0.3 GB and
-  0.6 GB, `register` in about 8s; the 1M-transaction journal, previously
+  no longer use `dynamic_cast`, revaluation reads only the price points it
+  needs instead of an edge's whole history, and the printing path allocates far
+  less.  On hledger's 100k-transaction benchmark journal the flat balance
+  report went from 16s to 0.7s, and `print` and `register`, which needed 4 GB
+  at 10k transactions and could not finish at 100k within 23 GB, now take 0.3
+  GB and 0.6 GB, `register` in about 8s; the 1M-transaction journal, previously
   unusable, is read in 4s, balanced in 7s and printed in 8s.  `print` no longer
   computes running totals it never displays, unless an option that may read
   them is given: `--amount` or `--display-amount` (which `-V`, `-X`, `-G` and
