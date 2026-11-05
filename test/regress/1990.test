@@ -26,3 +26,25 @@ end test
 test bal Expenses:Fuel
            10.00 USD  Expenses:Fuel
 end test
+
+; In a value expression a plus sign after a name or a string remains the
+; addition operator: the unary plus above belongs to journal amounts.
+test eval 'x=5; x+1'
+6
+end test
+
+test eval 'x=5; x +1'
+6
+end test
+
+test eval 'x=5; (x+1)*2'
+12
+end test
+
+test eval '"abc"+1 == "abc1"'
+1
+end test
+
+test reg --format '%(depth+1)\n' Expenses:Gas
+3
+end test

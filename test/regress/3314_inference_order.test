@@ -1,0 +1,50 @@
+; Each balancing group chooses its own inferred exchange-price direction.
+; When its first posting has neither residual commodity, the fallback is
+; the first commodity that entered that group's balance, including when
+; zero amounts or a cancelled transfer delayed the first nonzero entry.
+; These are the bracketed counterparts of xact-price-inference-fallback
+; and xact-price-inference-zero-sums.  In the mixed transaction the real
+; group chooses USD, while the bracketed group independently chooses ZAR.
+
+2024/01/05 Bracketed exchange with a zero fee first
+    [Budget:Fee]              0 CHF
+    [Budget:GBP]            100 GBP
+    [Budget:EUR]           -125 EUR
+
+2024/01/06 Independent directions with interleaved postings
+    [Budget:Fee]              0 CHF
+    Assets:USD               10 USD
+    [Budget:ZAR]              3 ZAR
+    Assets:ZAR              -20 ZAR
+    [Budget:USD]             -6 USD
+
+2024/01/07 Bracketed exchange after only zero entries
+    [Budget:Fee]              0 CHF
+    [Budget:Fee:AUD]          0 AUD
+    [Budget:SEK]           -125 SEK
+    [Budget:AUD]            100 AUD
+
+2024/01/08 Bracketed billing after a cancelled transfer
+    [Budget:Time]             2h
+    [Budget:Time:Correction]  -2h
+    [Budget:Income]       -1500 CAD
+    [Budget:Billable]        10h
+
+test reg --empty --format "%(account):%(amount)\n"
+Budget:Fee:0 CHF
+Budget:GBP:100 GBP {1.25 EUR} [2024/01/05]
+Budget:EUR:-125 EUR
+Budget:Fee:0 CHF
+Assets:USD:10 USD {2 ZAR} [2024/01/06]
+Budget:ZAR:3 ZAR {2 USD} [2024/01/06]
+Assets:ZAR:-20 ZAR
+Budget:USD:-6 USD
+Budget:Fee:0 CHF
+Budget:Fee:AUD:0 AUD
+Budget:SEK:-125 SEK {0.8 AUD} [2024/01/07]
+Budget:AUD:100 AUD
+Budget:Time:7200s
+Budget:Time:Correction:-7200s
+Budget:Income:-1500 CAD {24s} [2024/01/08]
+Budget:Billable:36000s
+end test

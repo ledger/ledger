@@ -636,10 +636,12 @@ int commodity_t::compare_by_commodity::operator()(const amount_t* left,
 
   if (aleftcomm.details.value_expr && arightcomm.details.value_expr) {
     DEBUG("commodity.compare", "both have value exprs, comparing text reprs");
-    return (aleftcomm.details.value_expr->text() < arightcomm.details.value_expr->text());
+    int cmp3 = aleftcomm.details.value_expr->text().compare(arightcomm.details.value_expr->text());
+    if (cmp3 != 0)
+      return cmp3 < 0 ? -1 : 1;
   }
 
-  // Compare semantic flags (ANNOTATION_PRICE_FIXATED and ANNOTATION_PRICE_NOT_PER_UNIT)
+  // Compare the semantic flags (ANNOTATION_SEMANTIC_FLAGS: whether the price is fixated)
   unsigned int left_flags = aleftcomm.details.flags() & ANNOTATION_SEMANTIC_FLAGS;
   unsigned int right_flags = arightcomm.details.flags() & ANNOTATION_SEMANTIC_FLAGS;
   if (left_flags < right_flags) {

@@ -73,19 +73,19 @@ namespace ledger {
 
 /// @brief Construct a balance from a double, stored under the null commodity.
 balance_t::balance_t(const double val) {
-  amounts.insert(amounts_map::value_type(commodity_pool_t::current_pool->null_commodity, val));
+  amounts = std::move(amounts).set(commodity_pool_t::current_pool->null_commodity, val);
   TRACE_CTOR(balance_t, "const double");
 }
 
 /// @brief Construct a balance from an unsigned long, stored under the null commodity.
 balance_t::balance_t(const unsigned long val) {
-  amounts.insert(amounts_map::value_type(commodity_pool_t::current_pool->null_commodity, val));
+  amounts = std::move(amounts).set(commodity_pool_t::current_pool->null_commodity, val);
   TRACE_CTOR(balance_t, "const unsigned long");
 }
 
 /// @brief Construct a balance from a signed long, stored under the null commodity.
 balance_t::balance_t(const long val) {
-  amounts.insert(amounts_map::value_type(commodity_pool_t::current_pool->null_commodity, val));
+  amounts = std::move(amounts).set(commodity_pool_t::current_pool->null_commodity, val);
   TRACE_CTOR(balance_t, "const long");
 }
 
@@ -100,7 +100,11 @@ balance_t::balance_t(const long val) {
 /// commodity slot is created.  This is the core operation behind running
 /// totals in @c ledger @c register when multiple commodities are involved.
 balance_t& balance_t::operator+=(const balance_t& bal) {
-  for (const amounts_map::value_type& pair : bal.amounts)
+  // Walk a snapshot of the other map (O(1): the nodes are shared), so that
+  // when @p bal is *this the additions copy the nodes they change instead
+  // of rewriting the ones being walked.
+  const amounts_map other(bal.amounts);
+  for (const amounts_map::value_type& pair : other)
     *this += pair.second;
   return *this;
 }
@@ -108,11 +112,16 @@ balance_t& balance_t::operator+=(const balance_t& bal) {
 /// @brief Add a single amount into the balance.
 ///
 /// If the amount's commodity already exists in the balance, its value is
-/// accumulated.  For annotated commodities (e.g., shares purchased at a
-/// specific price or date), lookup is done by commodity name rather than
-/// pointer identity, so that @c AAPL {$120} and @c AAPL {$130} are
-/// recognized as the same underlying commodity.  Amounts that are
-/// precisely zero are silently ignored to keep the map sparse.
+/// accumulated.  Commodities are compared by identity: the commodity pool
+/// holds exactly one commodity_t per distinct symbol and per distinct
+/// (symbol, annotation) pair (commodity_pool_t::annotated_commodities), so
+/// two amounts of the same lot -- say @c AAPL {$120} [2024/01/02] -- share
+/// a pointer, and a hash lookup replaces the former linear scan by name
+/// (which made balances holding K lots cost O(K) per addition).  Lots the
+/// pool has had to give equal annotations are the exception, handled by
+/// component_key(); a lot whose annotation the Python bindings edit in
+/// place stays a component of its own.  Amounts that are precisely zero
+/// are silently ignored to keep the map sparse.
 ///
 /// @throws balance_error if @p amt is uninitialized (null).
 balance_t& balance_t::operator+=(const amount_t& amt) {
@@ -122,12 +131,64 @@ balance_t& balance_t::operator+=(const amount_t& amt) {
   if (amt.is_realzero())
     return *this;
 
-  amounts_map::iterator i = amt.commodity().has_annotation() ? find_by_name(amt.commodity())
-                                                             : amounts.find(&amt.commodity());
-  if (i != amounts.end())
-    i->second += amt;
-  else
-    amounts.insert(amounts_map::value_type(&amt.commodity(), amt));
+  // When this balance owns its map outright, immer hands the lambda the
+  // stored component itself (as an rvalue) and the addition happens in
+  // place; a component of a shared map arrives const and is copied first.
+  // amount_t has no move constructor, so a by-value parameter would copy
+  // either way and force operator+= to duplicate the bigint every time.
+  commodity_t* comm = component_key(amt.commodity());
+  bool found = false;
+  amounts = std::move(amounts).update_if_exists(comm, [&amt, &found](auto&& current) -> amount_t {
+    found = true;
+    if constexpr (std::is_const_v<std::remove_reference_t<decltype(current)>>) {
+      amount_t sum(current);
+      sum += amt;
+      return sum;
+    } else {
+      current += amt;
+      return current;
+    }
+  });
+  if (!found)
+    amounts = std::move(amounts).set(comm, amt);
+
+  return *this;
+}
+
+/// @brief Add @p amt onto any existing component of its commodity, keeping
+/// full precision if either part has it (see the declaration).
+///
+/// amount_t::operator+= keeps the left operand's precision flags, so the
+/// part that keeps its full precision is made the left operand; precision
+/// itself is a maximum and the cost-precision flag is cleared by any
+/// addition, so nothing else about the sum depends on the order.
+balance_t& balance_t::merge(const amount_t& amt) {
+  if (amt.is_null())
+    throw_(balance_error, _("Cannot add an uninitialized amount to a balance"));
+
+  if (amt.is_realzero())
+    return *this;
+
+  commodity_t* comm = component_key(amt.commodity());
+  bool found = false;
+  amounts = std::move(amounts).update_if_exists(comm, [&amt, &found](auto&& current) -> amount_t {
+    found = true;
+    if (amt.keep_precision() && !current.keep_precision()) {
+      amount_t sum(amt);
+      sum += current;
+      return sum;
+    }
+    if constexpr (std::is_const_v<std::remove_reference_t<decltype(current)>>) {
+      amount_t sum(current);
+      sum += amt;
+      return sum;
+    } else {
+      current += amt;
+      return current;
+    }
+  });
+  if (!found)
+    amounts = std::move(amounts).set(comm, amt);
 
   return *this;
 }
@@ -142,7 +203,8 @@ balance_t& balance_t::operator+=(const amount_t& amt) {
 /// If a commodity's amount reaches exactly zero after subtraction, the
 /// entry is removed from the map to keep the balance sparse.
 balance_t& balance_t::operator-=(const balance_t& bal) {
-  for (const amounts_map::value_type& pair : bal.amounts)
+  const amounts_map other(bal.amounts); // see operator+=
+  for (const amounts_map::value_type& pair : other)
     *this -= pair.second;
   return *this;
 }
@@ -162,15 +224,28 @@ balance_t& balance_t::operator-=(const amount_t& amt) {
   if (amt.is_realzero())
     return *this;
 
-  amounts_map::iterator i = amt.commodity().has_annotation() ? find_by_name(amt.commodity())
-                                                             : amounts.find(&amt.commodity());
-  if (i != amounts.end()) {
-    i->second -= amt;
-    if (i->second.is_realzero())
-      amounts.erase(i);
-  } else {
-    amounts.insert(amounts_map::value_type(&amt.commodity(), amt.negated()));
-  }
+  // In place when the map is uniquely owned, as in operator+=.
+  commodity_t* comm = component_key(amt.commodity());
+  bool found = false;
+  bool zero = false;
+  amounts =
+      std::move(amounts).update_if_exists(comm, [&amt, &found, &zero](auto&& current) -> amount_t {
+        found = true;
+        if constexpr (std::is_const_v<std::remove_reference_t<decltype(current)>>) {
+          amount_t difference(current);
+          difference -= amt;
+          zero = difference.is_realzero();
+          return difference;
+        } else {
+          current -= amt;
+          zero = current.is_realzero();
+          return current;
+        }
+      });
+  if (!found)
+    amounts = std::move(amounts).set(comm, amt.negated());
+  else if (zero)
+    amounts = std::move(amounts).erase(comm);
   return *this;
 }
 
@@ -206,14 +281,13 @@ balance_t& balance_t::operator*=(const amount_t& amt) {
   } else if (!amt.commodity()) {
     // Multiplying by an amount with no commodity causes all the
     // component amounts to be increased by the same factor.
-    for (amounts_map::value_type& pair : amounts)
-      pair.second *= amt;
+    transform_amounts([&amt](amount_t& component) { component *= amt; });
   } else if (amounts.size() == 1) {
     // Multiplying by a commoditized amount is only valid if the sole
     // commodity in the balance is of the same kind as the amount's
     // commodity.
     if (*amounts.begin()->first == amt.commodity())
-      amounts.begin()->second *= amt;
+      transform_amounts([&amt](amount_t& component) { component *= amt; });
     else
       throw_(balance_error,
              _("Cannot multiply a balance with annotated commodities by a commoditized amount"));
@@ -244,14 +318,13 @@ balance_t& balance_t::operator/=(const amount_t& amt) {
   } else if (!amt.commodity()) {
     // Dividing by an amount with no commodity causes all the
     // component amounts to be divided by the same factor.
-    for (amounts_map::value_type& pair : amounts)
-      pair.second /= amt;
+    transform_amounts([&amt](amount_t& component) { component /= amt; });
   } else if (amounts.size() == 1) {
     // Dividing by a commoditized amount is only valid if the sole
     // commodity in the balance is of the same kind as the amount's
     // commodity.
     if (*amounts.begin()->first == amt.commodity())
-      amounts.begin()->second /= amt;
+      transform_amounts([&amt](amount_t& component) { component /= amt; });
     else
       throw_(balance_error,
              _("Cannot divide a balance with annotated commodities by a commoditized amount"));
@@ -266,6 +339,25 @@ balance_t& balance_t::operator/=(const amount_t& amt) {
 /*----------------------------------------------------------------------*/
 /*  Market valuation                                                    */
 /*----------------------------------------------------------------------*/
+
+namespace {
+/// @brief Rebuild a balance from transformed components without depending
+/// on the component map's iteration order.
+///
+/// value() and strip_annotations() may map several components onto one
+/// commodity (lots stripped to their base, or valued in one currency);
+/// balance_t::merge() makes the result of such a collapse independent of
+/// the order the components are visited in (a cost kept at full precision
+/// and a lot of the same commodity in a register's --gain total used to
+/// print with either one's precision from one run to the next), and
+/// balance_t::visit_components() makes the error of a failed valuation
+/// name the same component on every run.
+template <typename Fn>
+void merge_components(balance_t& into, const balance_t& from, Fn&& transform) {
+  from.visit_components(
+      [&into, &transform](const amount_t& amount) { into.merge(transform(amount)); });
+}
+} // namespace
 
 /// @brief Reprice every component amount at its market value.
 ///
@@ -293,47 +385,43 @@ optional<balance_t> balance_t::value(const datetime_t& moment,
   balance_t temp;
   bool resolved = false;
 
-  for (const amounts_map::value_type& pair : amounts) {
-    if (auto val = pair.second.value(moment, in_terms_of)) {
-      temp += *val;
+  merge_components(temp, *this, [&](const amount_t& amount) {
+    if (auto val = amount.value(moment, in_terms_of)) {
       resolved = true;
-    } else {
-      temp += pair.second;
+      return *val;
     }
-  }
+    return amount;
+  });
   return resolved ? temp : optional<balance_t>();
 }
 
 /*----------------------------------------------------------------------*/
-/*  Commodity lookup by name                                            */
+/*  Component lookup                                                    */
 /*----------------------------------------------------------------------*/
 
-/// @brief Find a commodity entry by name equality rather than pointer identity.
+/// @brief The key under which amounts of @p comm are kept (see the
+/// declaration).
 ///
-/// Annotated commodities (e.g., @c AAPL {$120} vs. @c AAPL {$130})
-/// have distinct commodity_t pointers even though they share the same
-/// base symbol.  This helper performs a linear scan comparing via
-/// operator== on the commodity, which checks the underlying symbol.
-/// It is used by operator+= and operator-= when the incoming amount
-/// has an annotated commodity.
-///
-/// @return An iterator to the matching entry, or amounts.end() if not found.
-balance_t::amounts_map::iterator balance_t::find_by_name(const commodity_t& comm) {
-  for (amounts_map::iterator i = amounts.begin(); i != amounts.end(); i++) {
-    if (*(*i).first == comm)
-      return i;
-  }
-  return amounts.end();
-}
-
-/// @brief Const overload of find_by_name.
-/// @see find_by_name(const commodity_t&)
-balance_t::amounts_map::const_iterator balance_t::find_by_name(const commodity_t& comm) const {
-  for (amounts_map::const_iterator i = amounts.begin(); i != amounts.end(); i++) {
-    if (*(*i).first == comm)
-      return i;
-  }
-  return amounts.end();
+/// Identity, unless @p comm is one of the lots the pool has had to give
+/// equal annotations (commodity_pool_t::duplicate_lots): then the member of
+/// that class this balance already holds, else the lot that carried the
+/// annotation first, so that the class is one component, found by
+/// annotation equality as every lot used to be.  The lookup costs one hash
+/// probe for any other lot, and one per member of the class for these.
+commodity_t* balance_t::component_key(const commodity_t& comm) const {
+  commodity_t* key = const_cast<commodity_t*>(&comm);
+  if (!comm.has_annotation() || !commodity_pool_t::current_pool)
+    return key;
+  const auto& duplicates(commodity_pool_t::current_pool->duplicate_lots);
+  if (duplicates.empty())
+    return key;
+  auto found = duplicates.find(key);
+  if (found == duplicates.end() || amounts.find(key))
+    return key;
+  for (const commodity_t* member : *found->second)
+    if (member != key && amounts.find(const_cast<commodity_t*>(member)))
+      return const_cast<commodity_t*>(member);
+  return const_cast<commodity_t*>(found->second->front());
 }
 
 /*----------------------------------------------------------------------*/
@@ -374,11 +462,8 @@ balance_t::commodity_amount(const optional<const commodity_t&>& commodity) const
              _f("Requested amount of a balance with multiple commodities: %1%") % temp);
     }
   } else if (amounts.size() > 0) {
-    amounts_map::const_iterator i = commodity->has_annotation()
-                                        ? find_by_name(*commodity)
-                                        : amounts.find(const_cast<commodity_t*>(&*commodity));
-    if (i != amounts.end())
-      return i->second;
+    if (const amount_t* found = amounts.find(component_key(*commodity)))
+      return *found;
   }
   return none;
 }
@@ -414,8 +499,9 @@ balance_t balance_t::strip_annotations(const keep_details_t& what_to_keep) const
       // Preserve sort_order so FIFO/LIFO display preference is maintained.
       balance_t temp;
       temp.sort_order = sort_order;
-      for (const amounts_map::value_type& pair2 : amounts)
-        temp += pair2.second.strip_annotations(what_to_keep);
+      merge_components(temp, *this, [&what_to_keep](const amount_t& amount) {
+        return amount.strip_annotations(what_to_keep);
+      });
       return temp;
     }
   }
@@ -427,9 +513,50 @@ balance_t balance_t::strip_annotations(const keep_details_t& what_to_keep) const
 /*  Sorting and iteration                                               */
 /*----------------------------------------------------------------------*/
 
+namespace {
+/// The strict weak ordering behind balance_t::sorted_amounts(): lots of one
+/// commodity by annotation date when a FIFO or LIFO order is requested, and
+/// otherwise (and to break ties) commodity_t::compare_by_commodity.
+bool sorts_before(const amount_t* left, const amount_t* right, balance_t::lot_sort_order order) {
+  if (order == balance_t::lot_sort_order::fifo || order == balance_t::lot_sort_order::lifo) {
+    const bool ascending = (order == balance_t::lot_sort_order::fifo);
+    commodity_t& lc = left->commodity();
+    commodity_t& rc = right->commodity();
+
+    // Primary sort: base symbol (same as compare_by_commodity)
+    int cmp = lc.base_symbol().compare(rc.base_symbol());
+    if (cmp != 0)
+      return cmp < 0;
+
+    // Unannotated lots sort before annotated ones
+    if (!lc.has_annotation() && rc.has_annotation())
+      return true;
+    if (lc.has_annotation() && !rc.has_annotation())
+      return false;
+    if (!lc.has_annotation() && !rc.has_annotation())
+      return false;
+
+    // Both annotated: compare by date first (FIFO=ascending, LIFO=descending)
+    const annotated_commodity_t& alc = static_cast<const annotated_commodity_t&>(lc);
+    const annotated_commodity_t& arc = static_cast<const annotated_commodity_t&>(rc);
+
+    if (!alc.details.date && arc.details.date)
+      return ascending; // no date sorts first for FIFO, last for LIFO
+    if (alc.details.date && !arc.details.date)
+      return !ascending;
+    if (alc.details.date && arc.details.date && *alc.details.date != *arc.details.date)
+      return ascending ? *alc.details.date < *arc.details.date
+                       : *alc.details.date > *arc.details.date;
+
+    // Dates equal (or both absent): fall back to standard commodity ordering
+  }
+  return commodity_t::compare_by_commodity()(left, right) < 0;
+}
+} // namespace
+
 /// @brief Populate an array of amount pointers sorted for deterministic display.
 ///
-/// The amounts_map is an unordered_map, so its iteration order is
+/// The amounts_map is a hash map, so its iteration order is
 /// non-deterministic.  This method collects all non-null amounts into
 /// @p sorted and then sorts them so that @c ledger @c bal always prints
 /// commodities in a stable, predictable order.
@@ -456,46 +583,22 @@ void balance_t::sorted_amounts(amounts_array& sorted) const {
     if (!pair.second.is_null())
       sorted.push_back(&pair.second);
 
-  if (sort_order == lot_sort_order::fifo || sort_order == lot_sort_order::lifo) {
-    const bool ascending = (sort_order == lot_sort_order::fifo);
-    std::stable_sort(
-        sorted.begin(), sorted.end(), [ascending](const amount_t* left, const amount_t* right) {
-          commodity_t& lc = left->commodity();
-          commodity_t& rc = right->commodity();
+  std::stable_sort(sorted.begin(), sorted.end(),
+                   [order = sort_order](const amount_t* left, const amount_t* right) {
+                     return sorts_before(left, right, order);
+                   });
+}
 
-          // Primary sort: base symbol (same as compare_by_commodity)
-          int cmp = lc.base_symbol().compare(rc.base_symbol());
-          if (cmp != 0)
-            return cmp < 0;
-
-          // Unannotated lots sort before annotated ones
-          if (!lc.has_annotation() && rc.has_annotation())
-            return true;
-          if (lc.has_annotation() && !rc.has_annotation())
-            return false;
-          if (!lc.has_annotation() && !rc.has_annotation())
-            return false;
-
-          // Both annotated: compare by date first (FIFO=ascending, LIFO=descending)
-          const annotated_commodity_t& alc = static_cast<const annotated_commodity_t&>(lc);
-          const annotated_commodity_t& arc = static_cast<const annotated_commodity_t&>(rc);
-
-          if (!alc.details.date && arc.details.date)
-            return ascending; // no date sorts first for FIFO, last for LIFO
-          if (alc.details.date && !arc.details.date)
-            return !ascending;
-          if (alc.details.date && arc.details.date && *alc.details.date != *arc.details.date)
-            return ascending ? *alc.details.date < *arc.details.date
-                             : *alc.details.date > *arc.details.date;
-
-          // Dates equal (or both absent): fall back to standard commodity ordering
-          return commodity_t::compare_by_commodity()(left, right) < 0;
-        });
-  } else {
-    std::stable_sort(sorted.begin(), sorted.end(), [](const amount_t* left, const amount_t* right) {
-      return commodity_t::compare_by_commodity()(left, right) < 0;
-    });
-  }
+/// @brief The amount sorted_amounts() would list first, without sorting.
+///
+/// A strict scan keeps the first minimal element in iteration order, which
+/// is the element stable_sort would put first.
+const amount_t* balance_t::first_sorted_amount() const {
+  const amount_t* top = nullptr;
+  for (const amounts_map::value_type& pair : amounts)
+    if (!pair.second.is_null() && (!top || sorts_before(&pair.second, top, sort_order)))
+      top = &pair.second;
+  return top;
 }
 
 /// @brief Visit each amount in sorted commodity order via a callback.
@@ -544,6 +647,7 @@ struct print_amount_from_balance {
   int lwidth;
   uint_least8_t flags;
   const string& negative_color;
+  std::ostringstream buf; ///< Reused for every amount; constructing a stream is costly.
 
   explicit print_amount_from_balance(std::ostream& _out, bool& _first, int _fwidth, int _lwidth,
                                      uint_least8_t _flags, const string& _negative_color)
@@ -572,7 +676,8 @@ struct print_amount_from_balance {
       width = fwidth;
     }
 
-    std::ostringstream buf;
+    buf.str(string());
+    buf.clear();
     amount.print(buf, flags);
 
     justify(out, buf.str(), width, flags & AMOUNT_PRINT_RIGHT_JUSTIFY,
@@ -580,14 +685,11 @@ struct print_amount_from_balance {
   }
 
   /// @brief Emit a zero placeholder when the balance is entirely zero.
-  void close() {
-    out.width(fwidth);
-    if (flags & AMOUNT_PRINT_RIGHT_JUSTIFY)
-      out << std::right;
-    else
-      out << std::left;
-    out << 0;
-  }
+  ///
+  /// Padded by justify(), like every amount, so that the caller's stream
+  /// keeps its adjustment flags (value_t::print() hands over its own
+  /// caller's stream, and report code after it relies on the default).
+  void close() { justify(out, "0", fwidth, flags & AMOUNT_PRINT_RIGHT_JUSTIFY); }
 };
 } // namespace
 
@@ -664,13 +766,16 @@ void balance_t::print(std::ostream& out, const int first_width, const int latter
 /// @brief Serialize a balance into a Boost property tree for XML/JSON output.
 ///
 /// Each component amount is added as a child "amount" node, enabling
-/// structured output via @c ledger @c xml or @c ledger @c json.
+/// structured output via @c ledger @c xml or @c ledger @c json.  Amounts
+/// are emitted in the same order balance_t::print() uses (see
+/// sorted_amounts()), so the output does not depend on the hash order of
+/// the component map.
 ///
 /// @param st   The property tree node to populate.
 /// @param bal  The balance to serialize.
 void put_balance(property_tree::ptree& st, const balance_t& bal) {
-  for (const balance_t::amounts_map::value_type& pair : bal.amounts)
-    put_amount(st.add("amount", ""), pair.second);
+  bal.map_sorted_amounts(
+      [&st](const amount_t& amount) { put_amount(st.add("amount", ""), amount); });
 }
 
 /*----------------------------------------------------------------------*/
@@ -690,6 +795,8 @@ void put_balance(property_tree::ptree& st, const balance_t& bal) {
 /// 3. Accumulates the total cost (price * quantity) for each group.
 /// 4. Divides total cost by total quantity to get the average price.
 /// 5. Uses the earliest lot date as the annotation date.
+/// 6. Marks the average fixated when every non-zero holding in the group
+///    is a lot with a fixated price (plain units keep it floating).
 ///
 /// This is invoked by the @c --average-lot-prices option to simplify
 /// multi-lot displays into a single line per commodity.
@@ -700,46 +807,95 @@ void put_balance(property_tree::ptree& st, const balance_t& bal) {
 balance_t average_lot_prices(const balance_t& bal) {
   // First, we split the balance into multiple balances by underlying
   // commodity.
-  typedef std::map<optional<std::string>, std::pair<amount_t, annotation_t>> balance_map;
+  struct group_t {
+    amount_t quantity;
+    annotation_t ann;
+    bool all_fixated = true; ///< Every holding so far is a lot with a fixated price.
+  };
+  typedef std::map<optional<std::string>, group_t> balance_map;
   balance_map bycomm;
 
-  for (const balance_t::amounts_map::value_type& pair : bal.amounts) {
-    optional<std::string> sym(pair.first->symbol());
-    amount_t quant(pair.second.strip_annotations(keep_details_t()));
+  // Add @p part into @p sum, keeping full precision if either has it (as
+  // balance_t::merge()): amount_t's addition keeps the left operand's flags,
+  // so a part that keeps precision is added the other way round.
+  auto accumulate = [](amount_t& sum, const amount_t& part) {
+    if (part.keep_precision() && !sum.keep_precision()) {
+      amount_t total(part);
+      total += sum;
+      sum = total;
+    } else {
+      sum += part;
+    }
+  };
+
+  auto add = [&bycomm, &accumulate](const amount_t& amount) {
+    commodity_t& comm(amount.commodity());
+    optional<std::string> sym(comm.symbol());
+    amount_t quant(amount.strip_annotations(keep_details_t()));
 
     auto [i, inserted] =
-        bycomm.insert(balance_map::value_type(sym, std::make_pair(quant, annotation_t())));
+        bycomm.insert(balance_map::value_type(sym, group_t{quant, annotation_t()}));
+    group_t& group(i->second);
     if (!inserted)
-      i->second.first += quant;
+      accumulate(group.quantity, quant);
 
-    if (pair.first->has_annotation()) {
-      annotated_commodity_t& acomm(static_cast<annotated_commodity_t&>(*pair.first));
-      annotation_t& ann((*i).second.second);
-
-      if (acomm.details.price) {
-        if (ann.price)
-          ann.price = *ann.price + (*acomm.details.price * quant);
-        else
-          ann.price = *acomm.details.price * quant;
-      }
-
-      if (acomm.details.date) {
-        if (!ann.date || *acomm.details.date < *ann.date)
-          ann.date = *acomm.details.date;
-      }
+    const annotated_commodity_t* acomm =
+        comm.has_annotation() ? &static_cast<const annotated_commodity_t&>(comm) : nullptr;
+    if (acomm && acomm->details.price) {
+      amount_t cost(*acomm->details.price * quant);
+      if (group.ann.price)
+        accumulate(*group.ann.price, cost);
+      else
+        group.ann.price = cost;
+      if (!acomm->details.has_flags(ANNOTATION_PRICE_FIXATED) && !quant.is_realzero())
+        group.all_fixated = false;
+    } else if (!quant.is_realzero()) {
+      // Units without a price dilute the average; a fixated average would
+      // value them at nothing.  (A component that netted to zero is no
+      // holding: it still counts for the date, the precision and the price's
+      // commodity, as it always has, but not against the fixation.)
+      group.all_fixated = false;
     }
+
+    if (acomm && acomm->details.date) {
+      if (!group.ann.date || *acomm->details.date < *group.ann.date)
+        group.ann.date = *acomm->details.date;
+    }
+  };
+
+  // Each group's sums, earliest date and fixation come out the same in any
+  // order, so the lots are visited in the component map's order, a hash
+  // order.  Only the error for lots priced in different commodities would
+  // name a different pair from one run to the next: on an error, visit the
+  // lots in display order and let the first failure through.
+  try {
+    for (const balance_t::amounts_map::value_type& pair : bal.amounts)
+      add(pair.second);
+  } catch (...) {
+    bycomm.clear();
+    balance_t::amounts_array sorted;
+    bal.sorted_amounts(sorted);
+    for (const amount_t* amount : sorted)
+      add(*amount);
+    throw;
   }
 
   balance_t result;
 
   for (balance_map::value_type& pair : bycomm) {
-    amount_t amt(pair.second.first);
+    group_t& group(pair.second);
+    amount_t amt(group.quantity);
     if (!amt.is_realzero()) {
-      if (pair.second.second.price)
-        pair.second.second.price = *pair.second.second.price / amt;
+      if (group.ann.price) {
+        group.ann.price = *group.ann.price / amt;
+        // Lots that were all fixated average to a fixated lot: their price
+        // is not a market price to be revalued.
+        if (group.all_fixated)
+          group.ann.add_flags(ANNOTATION_PRICE_FIXATED);
+      }
 
       commodity_t* acomm =
-          commodity_pool_t::current_pool->find_or_create(amt.commodity(), pair.second.second);
+          commodity_pool_t::current_pool->find_or_create(amt.commodity(), group.ann);
       amt.set_commodity(*acomm);
 
       result += amt;

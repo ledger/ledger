@@ -1,0 +1,45 @@
+; A lot whose annotation Ledger completes after reading its posting -- a
+; valuation from its account's `value`, or the fixation of a lot bought
+; with `@ =` -- is the same lot as one that a later posting writes with
+; that annotation, so the two cancel in a balance: Assets holds only the
+; $-120 paid, with no AAPL or MSFT left.
+;
+; A posting reaches a lot by naming its annotation, and the annotation
+; Ledger completes names the lot as well: a later posting can name the
+; valued AAPL lot with its valuation or without it, and `@ =` gives the
+; purchase the fixated MSFT lot {=$7} [2024/01/03] itself, the lot that a
+; posting writing that annotation names.  Were such a lot still found only
+; by the annotation it was created with, a later posting that names its
+; completed annotation would open a second lot with the same annotation,
+; which a balance would keep apart from the first: Assets and the grand
+; total would keep 10 and -10 of both AAPL and MSFT.
+
+account Assets:B
+    value $2
+
+2024/01/01 Buy
+    Assets:B    10 AAPL {$5} [2024/01/01]
+    Assets:A    $-50
+
+2024/01/02 Other
+    Assets:C    -10 AAPL {$5} [2024/01/01] (($2))
+    Equity
+
+2024/01/03 Buy fixated
+    Assets:F    10 MSFT @ =$7
+    Assets:A
+
+2024/01/04 Other fixated
+    Assets:G    -10 MSFT {=$7} [2024/01/03]
+    Equity
+
+test bal --lots Assets
+               $-120  Assets
+               $-120    A
+10 AAPL {$5} [2024/01/01] (({$2}))    B
+-10 AAPL {$5} [2024/01/01] (({$2}))    C
+10 MSFT {=$7} [2024/01/03]    F
+-10 MSFT {=$7} [2024/01/03]    G
+--------------------
+               $-120
+end test

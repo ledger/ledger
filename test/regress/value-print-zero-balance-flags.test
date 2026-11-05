@@ -1,0 +1,86 @@
+; Printing an all-zero balance with print() or eval must leave the
+; alignment of the report's output alone: later --prepend-width columns
+; and stats counts rely on its default right alignment.
+;
+; Unless a width is set for it, Ledger writes a balance straight to the
+; report's output instead of first laying it out in a buffer of its own,
+; which was costly when done for every value.  A balance with no non-zero
+; component prints the placeholder "0", padded with spaces like every
+; amount rather than by setting a width and an alignment on the output: a
+; width lapses after one write, but an alignment stays in force.  print()
+; and eval write to the report's output without right-aligning, so a left
+; alignment left behind there would turn every later prepended account
+; name and stats count left-aligned.  The alignment is what it was when
+; Ledger laid out every balance in a buffer of its own.
+
+2024/01/01 Opening
+    Assets:Dollars      10 USD
+    Assets:Euros         5 EUR
+    Equity:Dollars     -10 USD
+    Equity:Euros        -5 EUR
+
+2024/01/02 Coffee
+    Expenses:Coffee      3 USD
+    Assets:Dollars
+
+; An unfiltered register's running total returns to zero after each
+; transaction; with two commodities it is a balance whose components are
+; all zero, which print(total) shows as "0".  The prepended account names
+; stay right-aligned after it, including on the Coffee line, whose own
+; total is not zero.
+
+test reg --prepend-format '%(account)' --prepend-width 30 -d 'print(total)'
+10 USD
+                Assets:Dollars24-Jan-01 Opening               Assets:Dollars               10 USD       10 USD
+5 EUR
+10 USD
+                  Assets:Euros                                Assets:Euros                  5 EUR        5 EUR
+                                                                                                        10 USD
+5 EUR
+                Equity:Dollars                                Equity:Dollars              -10 USD        5 EUR
+0
+                  Equity:Euros                                Equity:Euros                 -5 EUR            0
+3 USD
+               Expenses:Coffee24-Jan-02 Coffee                Expenses:Coffee               3 USD        3 USD
+0
+                Assets:Dollars                                Assets:Dollars               -3 USD            0
+end test
+
+; The same through stats, printing a constant zero balance from the limit
+; predicate (eval prints a value through the same path).  Adding the
+; negated amounts keeps a balance of zero components, where subtracting
+; them would simplify it to the number 0.  The counts stay right-aligned
+; in their six-column fields.
+
+test stats --now 2030/06/15 -l 'print(1 USD + 1 EUR + -1 USD + -1 EUR)'
+0
+0
+0
+0
+0
+0
+Time period: 24-Jan-01 to 24-Jan-02 (2 days)
+
+  Files these postings came from:
+    $FILE
+
+  Unique payees:               2
+  Unique accounts:             5
+
+  Number of postings:          6 (3 per day)
+  Uncleared postings:          6
+
+  Days since last post:     2356
+  Posts in last 7 days:        0
+  Posts in last 30 days:       0
+  Posts seen this month:       0
+end test
+
+; The placeholder itself is padded to its column like any amount:
+; right-justified in the register's total column above, left-justified
+; here.
+
+test reg --format '[%(justify(total, 8))] %(account)\n' -d 'account =~ /^Equity/'
+[5 EUR   ] Equity:Dollars
+[0       ] Equity:Euros
+end test

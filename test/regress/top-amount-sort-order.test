@@ -1,0 +1,23 @@
+; top_amount() of a balance is its first component in commodity order,
+; whatever order the commodities were posted in.
+;
+; The manual defines top_amount by commodity sort order.  $ sorts before
+; CAD and EUR, so once $10.00 is in the running total it stays on top,
+; although EUR was posted first and CAD last.  top_amount() used to take
+; whichever component the balance happened to keep first, 3 CAD or 5 EUR
+; on the last line; the order in which a balance keeps its components
+; changes from run to run, so top_amount() now picks by commodity order.
+; With three commodities neither posting order (5 EUR) nor its reverse
+; (3 CAD) can pass for commodity order on the last line.
+
+2024/01/01 Payee
+    Expenses:Food    5 EUR
+    Expenses:Food    $10.00
+    Expenses:Food    3 CAD
+    Assets:Cash
+
+test reg --format '%(top_amount(total))\n' Expenses
+5 EUR
+$10.00
+$10.00
+end test

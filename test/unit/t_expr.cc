@@ -5704,6 +5704,23 @@ BOOST_AUTO_TEST_CASE(testPrintOOr)
 }
 
 // =======================================================================
+// op.h - op_t reference count width
+// =======================================================================
+
+BOOST_AUTO_TEST_CASE(testManySharedCopies)
+{
+  // Every lot valued by one `value` expression holds a copy of the same
+  // expr_t, and a large journal shares one op_t tens of thousands of ways;
+  // the reference count was a short and overflowed at 32768 copies.
+  expr_t expr("1");
+  {
+    std::vector<expr_t> copies(70000, expr);
+    BOOST_CHECK_EQUAL(copies.size(), 70000U);
+  }
+  BOOST_CHECK_EQUAL(expr.text(), "1");
+}
+
+// =======================================================================
 // Coverage: op.cc - O_AND print (lines 706-714)
 // =======================================================================
 

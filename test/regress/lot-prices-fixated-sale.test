@@ -1,0 +1,59 @@
+; --lot-prices keeps a sale written {=price}, without the lot's date,
+; apart from the floating lot bought at that price: the "=" marker is part
+; of a lot's identity (#1454), and a posting that names a lot posts to the
+; lot it names.
+;
+; The pounds are bought "@ 1.4 EUR", which makes the floating lot
+; {1.40 EUR} [2008/01/01], and sold as {=1.4 EUR}, which names a fixated
+; lot of the same price: Assets:Pounds goes short that lot and keeps the
+; floating one.  Reports without lot details still let the sale close the
+; purchase (bal below; C0212EAC.test pins reg), and --lots lists the two
+; lots apart.  --lot-prices used to drop the sale's marker when it reduced
+; each lot to its price, so sale and purchase became one lot (which was
+; then marked fixated), the pounds cancelled and the grand total was 0.
+; It now keeps the marker and leaves the purchase's lot floating, so it
+; lists both lots as --lots does, minus the purchase date, and the grand
+; total carries them.  A sale written {1.4 EUR} closes the floating lot in
+; this report.
+
+2008/01/01 Buy pounds
+    Assets:Pounds          5.00 GBP @ 1.4 EUR
+    Assets:Euros
+
+2009/01/01 Sell the pounds bought at 1.4 EUR
+    Assets:Pounds         -5.00 GBP {=1.4 EUR} @ 1.5 EUR
+    Assets:Euros           7.50 EUR
+    Income:Gain
+
+test bal
+            0.50 EUR  Assets:Euros
+           -0.50 EUR  Income:Gain
+--------------------
+                   0
+end test
+
+test bal --lots
+                        0.50 EUR
+           -5.00 GBP {=1.40 EUR}
+5.00 GBP {1.40 EUR} [2008/01/01]  Assets
+            0.50 EUR    Euros
+           -5.00 GBP {=1.40 EUR}
+5.00 GBP {1.40 EUR} [2008/01/01]    Pounds
+           -0.50 EUR  Income:Gain
+--------------------
+           -5.00 GBP {=1.40 EUR}
+5.00 GBP {1.40 EUR} [2008/01/01]
+end test
+
+test bal --lot-prices
+             0.50 EUR
+  5.00 GBP {1.40 EUR}
+-5.00 GBP {=1.40 EUR}  Assets
+            0.50 EUR    Euros
+  5.00 GBP {1.40 EUR}
+-5.00 GBP {=1.40 EUR}    Pounds
+           -0.50 EUR  Income:Gain
+--------------------
+  5.00 GBP {1.40 EUR}
+-5.00 GBP {=1.40 EUR}
+end test

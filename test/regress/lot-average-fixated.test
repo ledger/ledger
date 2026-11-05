@@ -1,0 +1,73 @@
+; --average-lot-prices shows each commodity's lots as one lot at their
+; average price.  When every lot an account holds has a fixated price,
+; {=price} (here from buying at `@ =price`), the average is fixated too,
+; since none of those prices is a market price: -V values Assets:Same's
+; 4 ETF {=EUR10} and Assets:Spread's 4 ETF {=EUR11} at those prices, EUR40
+; and EUR44, as it values the lots themselves (EUR20 + EUR24 for
+; Assets:Spread), and not at the market price of EUR12.  One floating lot
+; among them makes the average floating, so -V values all of Assets:Mixed
+; at EUR12, and so do units that have no price at all, like the gift in
+; Assets:Unpriced: they dilute the average (EUR5 a unit), and a fixated
+; average would value them at nothing.  A lot sold off entirely is no
+; holding and does not count against the fixation
+; (lot-average-fixated-zero.test).
+;
+; Ledger used to drop the fixation when averaging, and kept it only when
+; the average price and the earliest lot's date happened to be those of a
+; fixated lot, as for Assets:Same and Assets:Mixed here: lots fixed at
+; different prices, as in Assets:Spread, averaged to a floating price that
+; -V revalued at the market.
+
+2024/01/01 Buy
+    Assets:Same      2 ETF @ =EUR10
+    Assets:Cash
+
+2024/02/01 Buy
+    Assets:Same      2 ETF @ =EUR10
+    Assets:Cash
+
+2024/01/02 Buy
+    Assets:Spread    2 ETF @ =EUR10
+    Assets:Cash
+
+2024/02/02 Buy
+    Assets:Spread    2 ETF @ =EUR12
+    Assets:Cash
+
+2024/01/03 Buy
+    Assets:Mixed     2 ETF @ =EUR10
+    Assets:Cash
+
+2024/02/03 Buy
+    Assets:Mixed     2 ETF @ EUR10
+    Assets:Cash
+
+2024/01/04 Buy
+    Assets:Unpriced  2 ETF @ =EUR10
+    Assets:Cash
+
+2024/02/04 Gift
+    Assets:Unpriced  2 ETF
+    Income:Gift
+
+P 2024/03/01 ETF EUR12
+
+test bal --average-lot-prices --flat --no-total Unpriced
+        4 ETF {EUR5}  Assets:Unpriced
+end test
+
+test bal --average-lot-prices -V --flat --no-total Unpriced
+               EUR48  Assets:Unpriced
+end test
+
+test bal --average-lot-prices --flat --no-total Same Spread Mixed
+       4 ETF {EUR10}  Assets:Mixed
+      4 ETF {=EUR10}  Assets:Same
+      4 ETF {=EUR11}  Assets:Spread
+end test
+
+test bal --average-lot-prices -V --flat --no-total Same Spread Mixed
+               EUR48  Assets:Mixed
+               EUR40  Assets:Same
+               EUR44  Assets:Spread
+end test

@@ -1,0 +1,91 @@
+; A lot written with its valuation spelled out, {$5} [2020/01/01] (($7)),
+; and the same lot written plainly and then given that valuation by the
+; `value` of an account holding it (AAPL, MSFT) or by a Value:: tag (VTI:
+; $70 for 10 units, $7 a unit) are one lot.  The balance assertions on
+; Assets:Broker pass whether they name the lot with its valuation or
+; without; the automated transaction that mirrors Assets:Fund into
+; Assets:Tracked, whose `value` reaches the lot, balances; and each
+; account holds its shares as a single lot, which -V values at $7 a unit,
+; Assets:Fund and Assets:Plain included, though neither gives the lot a
+; valuation.
+;
+; The valuation Ledger gives the plainly written lot goes to the lot
+; itself, which every amount of it shares, and gives it exactly the
+; annotations of the lot written with its valuation, so Ledger counts
+; the two as one lot.  3.4.1 stopped at the first assertion, as it
+; checked balance assertions against the account's holdings stripped of
+; their lot annotations (#2318, #2355).  Without the assertions it
+; balanced the automated transaction and kept each AAPL and MSFT holding
+; as one lot, but it read the Value:: tag's $70 as $70 a unit (#2399),
+; so Assets:Tagged held two VTI lots and -V valued Assets:Plain at $700.
+
+account Assets:Broker
+    value $7
+
+account Assets:Tracked
+    value $7
+
+= /^Assets:Fund/
+    Assets:Tracked       1
+    Equity:Tracked      -1
+
+2020/01/01 Buy, valuation written out
+    Assets:Broker     10 AAPL {$5} [2020/01/01] (($7))
+    Assets:Cash      $-50
+
+2020/01/01 Buy
+    Assets:Broker     10 AAPL {$5} [2020/01/01]
+    Assets:Cash      $-50
+
+2020/01/01 Check
+    Assets:Broker     0 AAPL = 20 AAPL {$5} [2020/01/01]
+    Assets:Broker     0 AAPL = 20 AAPL {$5} [2020/01/01] (($7))
+
+2020/01/01 Buy, valuation written out
+    Assets:Tracked    10 MSFT {$5} [2020/01/01] (($7))
+    Assets:Cash      $-50
+
+2020/01/01 Opening balance
+    Assets:Fund       10 MSFT {$5} [2020/01/01]
+    Equity:Opening
+
+2020/01/01 Buy, valuation written out
+    Assets:Tagged     10 VTI {$5} [2020/01/01] (($7))
+    Assets:Cash      $-50
+
+2020/01/01 Buy
+    Assets:Tagged     10 VTI {$5} [2020/01/01]  ; Value:: $70
+    Assets:Cash      $-50
+
+2020/01/01 Buy
+    Assets:Plain      10 VTI {$5} [2020/01/01]
+    Assets:Cash      $-50
+
+test bal --lots --flat
+20 AAPL {$5} [2020/01/01] (({$7}))  Assets:Broker
+               $-300  Assets:Cash
+10 MSFT {$5} [2020/01/01] (({$7}))  Assets:Fund
+10 VTI {$5} [2020/01/01] (({$7}))  Assets:Plain
+20 VTI {$5} [2020/01/01] (({$7}))  Assets:Tagged
+20 MSFT {$5} [2020/01/01] (({$7}))  Assets:Tracked
+-10 MSFT {$5} [2020/01/01] (({$7}))  Equity:Opening
+-10 MSFT {$5} [2020/01/01] (({$7}))  Equity:Tracked
+--------------------
+                             $-300
+20 AAPL {$5} [2020/01/01] (({$7}))
+10 MSFT {$5} [2020/01/01] (({$7}))
+ 30 VTI {$5} [2020/01/01] (({$7}))
+end test
+
+test bal -V --flat
+                $140  Assets:Broker
+               $-300  Assets:Cash
+                 $70  Assets:Fund
+                 $70  Assets:Plain
+                $140  Assets:Tagged
+                $140  Assets:Tracked
+                $-70  Equity:Opening
+                $-70  Equity:Tracked
+--------------------
+                $120
+end test

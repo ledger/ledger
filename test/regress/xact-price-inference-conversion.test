@@ -1,0 +1,66 @@
+; When both commodities of a purchase are already price targets, the
+; commodity of the first posting is the one bought.  A C directive makes
+; its smaller unit, sat, a price target, as a P directive does its price
+; commodity, $ and € here, so the rule that keeps a known price target as
+; the price (#1130) cannot choose, and the wallet takes lots of sat at
+; $0.0004 and €0.00037: its cost basis is in dollars and euros, and
+; equity --lots carries the lots forward on the wallet.  (With the C
+; directive alone, sat would be the price and the dollars and euros the
+; lots.)
+;
+; The balance holds 0.5 BTC reduced to 50000000 sat, and the posting's
+; commodity is looked for unreduced, as BTC, which matches neither
+; component and leaves the choice to the component that entered the
+; balance first, as in xact-price-inference-hours.test.  Left to the order
+; in which a balance keeps its components, which changes from run to run,
+; some runs would buy the dollars instead, as $-20000.00 {2500 sat} on
+; Assets:Dollars, and report the basis in sat.  $ sorts before sat and €
+; after it, so no fixed order of the two components can pass for the first
+; posting's commodity in both purchases.
+
+C 1.00000000 BTC = 100000000 sat
+P 2024/01/01 BTC $40000
+P 2024/01/01 BTC €37000
+
+2024/01/02 Buy with dollars
+    Assets:Wallet              0.5 BTC
+    Assets:Dollars          $-20000.00
+
+2024/01/03 Buy with euros
+    Assets:Wallet              0.1 BTC
+    Assets:Euros             €-3700.00
+
+test reg --lots
+24-Jan-02 Buy with dollars      Assets:Wallet          50000000 sat {$0.0004} [2024/01/02] 50000000 sat {$0.0004} [2024/01/02]
+                                Assets:Dollars           $-20000.00   $-20000.00
+                                             50000000 sat {$0.0004} [2024/01/02]
+24-Jan-03 Buy with euros        Assets:Wallet          10000000 sat {€0.00037} [2024/01/03]   $-20000.00
+                                             50000000 sat {$0.0004} [2024/01/02]
+                                            10000000 sat {€0.00037} [2024/01/03]
+                                Assets:Euros              €-3700.00   $-20000.00
+                                             50000000 sat {$0.0004} [2024/01/02]
+                                            10000000 sat {€0.00037} [2024/01/03]
+                                                                       €-3700.00
+end test
+
+test bal --basis
+                   0  Assets
+          $-20000.00    Dollars
+           €-3700.00    Euros
+           $20000.00
+            €3700.00    Wallet
+--------------------
+                   0
+end test
+
+test equity --lots
+2024/01/03 Opening Balances
+    Assets:Dollars                        $-20000.00
+    Assets:Euros                           €-3700.00
+    Assets:Wallet                       50000000 sat {$0.0004} [2024/01/02]
+    Assets:Wallet                       10000000 sat {€0.00037} [2024/01/03]
+    Equity:Opening Balances                $20000.00
+    Equity:Opening Balances             -50000000 sat {$0.0004} [2024/01/02]
+    Equity:Opening Balances             -10000000 sat {€0.00037} [2024/01/03]
+    Equity:Opening Balances                 €3700.00
+end test

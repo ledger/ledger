@@ -1,0 +1,133 @@
+; A posting that names a lot, {price} [date] or {=price} [date], posts to
+; exactly that lot, whatever its account holds and whatever its cost:
+; `@ =price` fixates a lot it creates, as writing {=price} would, and
+; never one the posting names.  Each story below has accounts and a lot
+; of its own.
+;
+; Manual buys 10 AAPL {=$50.00} and sells `-10 AAPL {$50.00} @ =$60.00`:
+; the sale names the floating lot, so the account keeps its fixated lot
+; and goes short the floating one, and -V values that pair at the later
+; $7 price against $50.00, $430.00; a sale written {=$50.00} would close
+; the lot.  Symmetric buys `10 AAPL {$5} [2020/01/01] @ =$5`, the floating
+; lot, and sells it naming it the same way, which closes it with a $10
+; gain.  Transfer moves such a lot with both legs written
+; `{$5} [2020/01/02] @ =$5`: the lot arrives floating.  The three Virtual
+; postings post the floating lot too, the negative [Virtual:Equity] among
+; them.  ShortOpen's short sale, `-10 AAPL {$6} [2020/01/04] @ =$6`, opens
+; the floating lot {$6}, which -V values at $7 a unit, $-70.
+; ShortCover's short sale at a plain cost, `-10 AAPL @ $6`, creates the
+; lot {$6} [2020/01/05], and the cover, which names that lot at a fixated
+; cost, `10 AAPL {$6} [2020/01/05] @ =$5`, closes it with a $10 gain.
+; Neighbour:A holds the typed lot 10 AAPL {$5} [2020/01/06] when
+; Neighbour:B buys the same lot at `@ =$5`: both hold the floating lot,
+; which -V values at $70 each.
+;
+; 3.4.1 set the fixated flag on the named lot itself whenever a cost was
+; fixated, for every account that held it: Manual's sale closed its lot,
+; Symmetric, Transfer, Virtual, ShortOpen and Neighbour's lots all showed
+; as {=...}, and -V held them at their lot prices.  Since the marker is
+; part of a lot's identity (#1454), the lot a posting names is now the
+; lot it posts to, and a fixated cost reaches no other posting's lot.
+
+P 2020/03/01 AAPL $7
+
+2012/04/10 My Broker
+    Manual:Brokerage            10 AAPL {=$50.00}
+    Manual:Brokerage:Cash      $-500.00
+
+2012/05/10 My Broker
+    Manual:Brokerage           -10 AAPL {$50.00} @ =$60.00
+    Manual:Brokerage:Cash       $600.00
+    Manual:Gains
+
+2020/01/01 Buy, naming the lot
+    Symmetric:Broker      10 AAPL {$5} [2020/01/01] @ =$5
+    Symmetric:Cash
+
+2020/02/01 Sell, naming the lot as the purchase did
+    Symmetric:Broker     -10 AAPL {$5} [2020/01/01] @ =$6
+    Symmetric:Cash        $60
+    Symmetric:Gains
+
+2020/01/02 Buy, naming the lot
+    Transfer:Broker       10 AAPL {$5} [2020/01/02] @ =$5
+    Transfer:Cash
+
+2020/02/02 Move to another broker, naming the lot on both legs
+    Transfer:NewBroker    10 AAPL {$5} [2020/01/02] @ =$5
+    Transfer:Broker      -10 AAPL {$5} [2020/01/02] @ =$5
+
+2020/01/03 Buy in virtual accounts
+    (Virtual:Tracking)    10 AAPL {$5} [2020/01/03] @ =$5
+    [Virtual:Budget]      10 AAPL {$5} [2020/01/03] @ =$5
+    [Virtual:Equity]     -10 AAPL {$5} [2020/01/03] @ =$5
+
+2020/01/04 Short sale naming its lot
+    ShortOpen:Broker     -10 AAPL {$6} [2020/01/04] @ =$6
+    ShortOpen:Cash
+
+2020/01/05 Short sale
+    ShortCover:Broker    -10 AAPL @ $6
+    ShortCover:Cash
+
+2020/02/05 Cover, naming the short lot
+    ShortCover:Broker     10 AAPL {$6} [2020/01/05] @ =$5
+    ShortCover:Cash      $-50
+    ShortCover:Gains
+
+2020/01/06 Typed floating lot
+    Neighbour:A           10 AAPL {$5} [2020/01/06]
+    Neighbour:Opening
+
+2020/01/06 Buy, naming the same lot
+    Neighbour:B           10 AAPL {$5} [2020/01/06] @ =$5
+    Neighbour:Cash
+
+test bal --lots --flat --no-total --empty
+   -10 AAPL {$50.00}
+   10 AAPL {=$50.00}  Manual:Brokerage
+             $100.00  Manual:Brokerage:Cash
+            $-100.00  Manual:Gains
+10 AAPL {$5.00} [2020/01/06]  Neighbour:A
+10 AAPL {$5.00} [2020/01/06]  Neighbour:B
+             $-50.00  Neighbour:Cash
+-10 AAPL {$5.00} [2020/01/06]  Neighbour:Opening
+                   0  ShortCover:Broker
+              $10.00  ShortCover:Cash
+             $-10.00  ShortCover:Gains
+-10 AAPL {$6.00} [2020/01/04]  ShortOpen:Broker
+              $60.00  ShortOpen:Cash
+                   0  Symmetric:Broker
+              $10.00  Symmetric:Cash
+             $-10.00  Symmetric:Gains
+                   0  Transfer:Broker
+             $-50.00  Transfer:Cash
+10 AAPL {$5.00} [2020/01/02]  Transfer:NewBroker
+10 AAPL {$5.00} [2020/01/03]  Virtual:Budget
+-10 AAPL {$5.00} [2020/01/03]  Virtual:Equity
+10 AAPL {$5.00} [2020/01/03]  Virtual:Tracking
+end test
+
+test bal -V --flat --no-total --empty
+             $430.00  Manual:Brokerage
+             $100.00  Manual:Brokerage:Cash
+            $-100.00  Manual:Gains
+              $70.00  Neighbour:A
+              $70.00  Neighbour:B
+             $-50.00  Neighbour:Cash
+             $-70.00  Neighbour:Opening
+                   0  ShortCover:Broker
+              $10.00  ShortCover:Cash
+             $-10.00  ShortCover:Gains
+             $-70.00  ShortOpen:Broker
+              $60.00  ShortOpen:Cash
+                   0  Symmetric:Broker
+              $10.00  Symmetric:Cash
+             $-10.00  Symmetric:Gains
+                   0  Transfer:Broker
+             $-50.00  Transfer:Cash
+              $70.00  Transfer:NewBroker
+              $70.00  Virtual:Budget
+             $-70.00  Virtual:Equity
+              $70.00  Virtual:Tracking
+end test
