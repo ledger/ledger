@@ -2399,4 +2399,48 @@ BOOST_AUTO_TEST_CASE(testReannotateLotMissingFromPool)
   BOOST_CHECK(pool.duplicate_lots.empty());
 }
 
+// The pool's refusal of a key in use, as opposed to the Debug-only
+// assertion that used to stand in for it (also a logic_error).
+static bool already_in_pool(const std::logic_error& err) {
+  return string(err.what()).find("is already in its pool") != string::npos;
+}
+
+BOOST_AUTO_TEST_CASE(testCreateExistingLotFails)
+{
+  // create() files a new lot under its base's symbol and its annotation.
+  // When a lot is filed there already, the new one cannot be stored, so
+  // create() refuses it with a logic_error and the pool keeps its lot.  It
+  // used to return the new lot, which its only owner freed on return, and
+  // only a Debug build's assertion stopped that (#3341).
+  commodity_pool_t& pool(*commodity_pool_t::current_pool);
+  commodity_t& base(*pool.find_or_create("CDUP"));
+  const annotation_t lot(amount_t("$3.00"));
+
+  annotated_commodity_t* pooled = pool.create(base, lot);
+  BOOST_REQUIRE(pooled != nullptr);
+  const std::size_t entries = pool.annotated_commodities.size();
+
+  BOOST_CHECK_EXCEPTION(pool.create(base, lot), std::logic_error, already_in_pool);
+  BOOST_CHECK(pool.find("CDUP", lot) == pooled);
+  BOOST_CHECK_EQUAL(pool.annotated_commodities.size(), entries);
+}
+
+BOOST_AUTO_TEST_CASE(testCreateExistingCommodityFails)
+{
+  // Likewise, create(symbol) refuses a symbol the pool already files, a
+  // commodity's own or an alias's, instead of returning a commodity that
+  // was never stored and is freed on return (#3341).
+  commodity_pool_t& pool(*commodity_pool_t::current_pool);
+  commodity_t* pooled = pool.create("CPLN");
+  BOOST_REQUIRE(pooled != nullptr);
+  pool.alias("CPLA", *pooled);
+  const std::size_t entries = pool.commodities.size();
+
+  BOOST_CHECK_EXCEPTION(pool.create("CPLN"), std::logic_error, already_in_pool);
+  BOOST_CHECK_EXCEPTION(pool.create("CPLA"), std::logic_error, already_in_pool);
+  BOOST_CHECK(pool.find("CPLN") == pooled);
+  BOOST_CHECK(pool.find("CPLA") == pooled);
+  BOOST_CHECK_EQUAL(pool.commodities.size(), entries);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

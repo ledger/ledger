@@ -211,6 +211,8 @@ public:
   ///
   /// @param symbol  The commodity symbol (e.g., "$", "AAPL", "EUR").
   /// @return Raw pointer to the newly created commodity (owned by the pool).
+  /// @throws std::logic_error if @p symbol already names a commodity or an
+  ///         alias in the pool.
   commodity_t* create(const string& symbol);
 
   /// @brief Look up an existing commodity by its symbol.
@@ -277,6 +279,8 @@ public:
   /// commodity is registered in annotated_commodities for future lookups.
   /// Flags on the base commodity are updated to track which kinds of
   /// annotations have been seen (fixated vs. floating prices, etc.).
+  /// @throws std::logic_error if a commodity with @p details is already
+  ///         filed under @p comm's symbol.
   annotated_commodity_t* create(commodity_t& comm, const annotation_t& details);
 
   /// @brief Give the pooled lot @p comm the annotation @p details.

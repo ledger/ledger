@@ -1,0 +1,37 @@
+; Regression test for issue #3341: --historical (-H) must keep an amount
+; in its own commodity.  5 OLD is parsed before "alias OLD" gives the
+; symbol OLD to NEW, so it stays in OLD, while 3 OLD, parsed after the
+; alias, is in NEW.  nail_down(), which gives -H its historical values,
+; looked the commodity up again by its symbol, which now names NEW; the
+; lookup never found what it had created, so the second lookup created a
+; duplicate, which a Debug build reported as a failed assertion and a
+; Release build turned into a crash.
+
+P 2024/01/01 OLD $10.00
+
+2024/01/15 Buy
+    Assets:Fund   5 OLD
+    Assets:Cash  $-50.00
+
+commodity NEW
+    alias OLD
+
+P 2024/02/01 NEW $12.00
+
+2024/02/15 Buy
+    Assets:Fund   3 OLD
+    Assets:Cash  $-36.00
+
+test reg Fund --now 2024/03/01 --format '%(amount_expr)|%(commodity(amount_expr))\n'
+5 OLD {$10.00} [2024/01/15]|OLD
+3 NEW {$12.00} [2024/02/15]|NEW
+end test
+
+test reg -H Fund --now 2024/03/01 --format '%(amount_expr)|%(commodity(amount_expr))|%(display_amount)\n'
+5 OLD|OLD|$50.00
+3 NEW|NEW|$36.00
+end test
+
+test bal -H Fund --now 2024/03/01
+              $86.00  Assets:Fund
+end test
