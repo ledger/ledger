@@ -309,8 +309,11 @@ commodity_t& commodity_t::nail_down(const expr_t& expr) {
   new_details.value_expr = expr;
   new_details.add_flags(ANNOTATION_VALUE_EXPR_CALCULATED);
 
-  // The pool knows a commodity by its bare symbol; symbol() may add quotes.
-  return *pool().find_or_create(base_symbol(), new_details);
+  // Annotate this commodity's own base, its referent.  Looking the base up
+  // again by its symbol can find another commodity: an alias read after this
+  // one was used may have given that symbol to a different commodity
+  // (#3341).
+  return *pool().find_or_create(referent(), new_details);
 }
 
 commodity_t::operator bool() const {
