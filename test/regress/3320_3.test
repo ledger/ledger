@@ -1,0 +1,34 @@
+; Regression test for GitHub issue #3320: the sub-directives of an
+; `account` directive whose own line ends in a comment act on the account
+; named before the comment.  Before the fix, the `alias`, `payee` and
+; `default` lines below pointed at accounts named after their whole
+; directive lines, comment included, so the postings that rely on them
+; went to those misnamed accounts.
+
+account Expenses:Food  ; groceries and restaurants
+    alias food
+    payee ^KFC$
+account Assets  ; what we own
+    account Cash	; on hand
+        default
+!account Liabilities:Card  ; the deprecated prefix
+    alias card
+
+2024/01/01 Market
+    food    $10.00
+    card
+
+2024/01/02 KFC
+    Expenses:Unknown    $5.00
+    Assets:Cash
+
+2024/01/03 Snack bar
+    Expenses:Food    $2.00
+
+test bal --flat
+              $-7.00  Assets:Cash
+              $17.00  Expenses:Food
+             $-10.00  Liabilities:Card
+--------------------
+                   0
+end test

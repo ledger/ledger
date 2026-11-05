@@ -1,3 +1,0 @@
-[submodule "lean"]
-	path = lean
-	url = https://github.com/ledger/ledger-semantics.git

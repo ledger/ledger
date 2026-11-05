@@ -145,6 +145,67 @@ BOOST_AUTO_TEST_CASE(testParseTransactionWithNote)
   BOOST_CHECK(xact->note);
 }
 
+BOOST_AUTO_TEST_CASE(testParseTransactionPayeeEndsAtNote)
+{
+  // The payee ends where a note begins, at a ';' after a hard separator (a
+  // tab here); a ';' after a single space is part of the payee
+  std::string input =
+    "2024/01/15 Grocery Store\t; This is a note\n"
+    "    Expenses:Food                $50.00\n"
+    "    Assets:Checking\n"
+    "\n"
+    "2024/01/16 Grocery ; Store\n"
+    "    Expenses:Food                $50.00\n"
+    "    Assets:Checking\n";
+
+  std::size_t count = parse_text(input);
+  BOOST_REQUIRE_EQUAL(2u, count);
+
+  xact_t* noted = session.journal->xacts.front();
+  BOOST_CHECK_EQUAL(string("Grocery Store"), noted->payee);
+  BOOST_REQUIRE(noted->note);
+  BOOST_CHECK_EQUAL(string(" This is a note"), *noted->note);
+
+  xact_t* plain = session.journal->xacts.back();
+  BOOST_CHECK_EQUAL(string("Grocery ; Store"), plain->payee);
+  BOOST_CHECK(!plain->note);
+}
+
+BOOST_AUTO_TEST_CASE(testSplitInlineNote)
+{
+  // split_inline_note() ends the text before a ';' that follows a hard
+  // separator and returns the note after that ';'; a ';' after a single
+  // space, or after none, belongs to the text
+  struct split_case {
+    const char* line;
+    const char* text;
+    const char* note; // nullptr when the line holds no note
+  };
+  const split_case cases[] = {
+    {"Name  ; note", "Name", " note"},
+    {"Name\t;note", "Name", "note"},
+    {"Name \t; note", "Name", " note"},
+    {"Name  ;", "Name", ""},
+    {"A ; B", "A ; B", nullptr},
+    {"A;B  ; C", "A;B", " C"},
+    {"A ;  ; B", "A ;", " B"},
+    {"  ; note", "", " note"},
+    {"Name", "Name", nullptr},
+  };
+
+  for (const split_case& c : cases) {
+    std::string buf(c.line);
+    char* note = split_inline_note(&buf[0]);
+    BOOST_CHECK_EQUAL(string(c.text), string(buf.c_str()));
+    if (c.note) {
+      BOOST_REQUIRE(note != nullptr);
+      BOOST_CHECK_EQUAL(string(c.note), string(note));
+    } else {
+      BOOST_CHECK(note == nullptr);
+    }
+  }
+}
+
 // ---------------------------------------------------------------------------
 // 2. Error Paths
 // ---------------------------------------------------------------------------
@@ -265,6 +326,29 @@ BOOST_AUTO_TEST_CASE(testAccountDirective)
   account_t* acct = session.journal->find_account("Expenses:Food", false);
   BOOST_CHECK(acct != nullptr);
   BOOST_CHECK(acct->has_flags(ACCOUNT_KNOWN));
+}
+
+BOOST_AUTO_TEST_CASE(testAccountDirectiveWithComment)
+{
+  // A ';' after a hard separator on the "account" line begins a comment,
+  // whose tags belong to the account; a ';' after a single space is part
+  // of the account name, as it is in a posting (#3320)
+  std::string input =
+    "account Assets:Checking  ; type: Asset\n"
+    "account Expenses:Food ; Dining\n";
+
+  parse_text(input);
+
+  account_t* acct = session.journal->find_account("Assets:Checking", false);
+  BOOST_REQUIRE(acct != nullptr);
+  BOOST_CHECK(acct->has_flags(ACCOUNT_KNOWN));
+  BOOST_CHECK(acct->accounts.empty());
+  std::optional<value_t> type = acct->get_tag("type");
+  BOOST_REQUIRE(type);
+  BOOST_CHECK_EQUAL(string("Asset"), type->to_string());
+
+  BOOST_CHECK(session.journal->find_account("Expenses:Food ; Dining", false) != nullptr);
+  BOOST_CHECK(session.journal->find_account("Expenses:Food", false) == nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(testAccountDirectiveWithNote)

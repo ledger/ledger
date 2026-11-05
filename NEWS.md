@@ -46,6 +46,10 @@ directives, and commands.
   the infinite loop produced by a self-referential `C` (commodity equivalence)
   directive (#1065)
 
+- Fix the parser looping forever on `==` in a posting's amount or cost
+  expression, such as `(1 == 1)`.  `==` now compares there, as `!=` already did
+  (#3290)
+
 - Fix `--invert` to work correctly with composite reports (#1908) and with the
   `equity` command (#1645)
 
@@ -83,6 +87,20 @@ components with their standard-library equivalents.
 
 ### Commodity Prices, Lots, and Annotations
 
+- `balance --unrealized` now books the market value of the commodities
+  reported on less their cost basis, which changes the output of existing
+  reports (#3327).  Selling part of a lot after its price had moved booked the
+  gain realized by the sale as unrealized as well, and buying at other than the
+  day's market price booked nothing, so neither report balanced.  Now only the
+  gain on the commodities still held, measured from their lot price or `@`
+  cost, is unrealized, and it is booked as one net gain or loss rather than as
+  each rise and fall since the last posting.  The `<Revalued>` postings of
+  register reports are unchanged.
+
+- Total a lot whose lot price has no commodity, such as `C$100.00 {1.50}`,
+  without a commodity (150) rather than in the lot's own (`C$150.00`), as
+  `--basis`, `--price` and the `cost` and `price` value expressions report it
+
 - Implement automatic FIFO/LIFO commodity lot matching (issue #164): selling a
   commodity without an explicit `{cost}` annotation can now pair the sale with
   open lots automatically and compute gain/loss from the matched basis
@@ -111,11 +129,14 @@ components with their standard-library equivalents.
 
 - Fix unrealized gains/losses when multiple prices are recorded on the same
   day (#1821); add `--plopen` for unrealized P&L on open positions; add
-  `--gain-since` for period-relative gain calculation; account for quantity
-  precision when rounding gain/loss; fix the rounding error in `--price` with
-  `@@` total cost notation; warn when a `getquote` script fails or returns no
-  usable price (#2335); and trigger a price download even when no prior price
-  exists (#652, #655)
+  `--gain-since` for period-relative gain calculation; drop from the gain or
+  loss on a lot only the residue that a per-unit lot price rounded out of a
+  total leaves in its basis (#2975), so a posting with a lot price and a cost
+  balances at its lot basis whatever display precision the commodity has
+  learned (#3013, #3258); fix the rounding error in `--price` with `@@` total
+  cost notation; warn when a `getquote` script fails or returns no usable
+  price (#2335); and trigger a price download even when no prior price exists
+  (#652, #655)
 
 - Set commodity precision from price records and let later transactions widen,
   but not narrow, the recorded precision (#1190, #2481)
@@ -147,9 +168,51 @@ components with their standard-library equivalents.
   `D`-directive formatting to bare amounts (#761), and allow apostrophe (`'`)
   as a digit-group separator
 
+- Accept a `commodity` block's own symbol unquoted in its `format`
+  sub-directive (#3312): `commodity N1` declares the commodity that amounts
+  write as `"N1"`, but `format 1,000.00 N1` stopped the symbol at its digit
+  and was rejected
+
+- Make a semicolon end the symbol of a `commodity`, `N`, or dated `P`
+  directive and begin a comment, with or without a space before it, as it
+  does after an amount in a posting (#3313).  `commodity USD; dollars`
+  declared a commodity named `USD;`, so a `format` line for `USD` beneath it
+  was rejected and an `alias` beneath it resolved to `USD;`.  As in an
+  amount, a backslash now puts the next character into such a symbol, so
+  `commodity A\;B` names `A;B`.  An `alias` line in a `commodity` block also
+  ends at a semicolon comment instead of keeping it as part of the alias.  A
+  `P` directive no longer misreads a price written directly after a quoted
+  symbol, as in `P 2024/01/01 "N1"1.50 EUR`, and a `P` line that ends after
+  its quoted symbol is reported as missing its price instead of reading past
+  the end of the line
+
+- Read the symbol of a `P` line without a date, of `apply fixed`, and of a
+  quote that a getquote script prints without a date as a dated `P` line
+  does (#3321).  Their first word was taken verbatim, quotes and all:
+  `P "N1" $2.00` priced a commodity printed as `""N1""`, `apply fixed "N1"
+  $2.00` fixated nothing, a downloaded quote for `"N1"` went to that other
+  commodity, and a quoted name holding a space was cut at the space.  A `P`
+  line without a date whose price began with a digit, such as `P EUR 1.10
+  USD`, was also rejected as an invalid date
+
+- Keep `--historical` (`-H`) from creating a second commodity, named with
+  its quotes, for one whose symbol is printed in quotes: an amount of
+  `"EXV6_DE"` was shown as `""EXV6_DE""10` (#3321)
+
+- Quote a commodity named `and`, `div`, `else`, `false`, `if`, `not`, `or` or
+  `true` when printing it, as an amount requires, so that `print` output can
+  be read back (#3321)
+
 - Add batch commodity quote fetching to amortize the per-call cost (#588); add
   `--account-value-expr` and `--commodity-value-expr` options for custom
   valuations; expose a `capital_gain` value expression variable
+
+- Stop `--args-only` from reading prices from `~/.pricedb`, which it is meant
+  to skip along with the init file and environment; pass
+  `--price-db ~/.pricedb` to keep reading it (#3294).  When `HOME` is not set,
+  look for the default price database in `./.pricedb` rather than
+  `./.ledgerrc`, which was also being parsed as price history, even under
+  `--args-only`, so that a `--file` in it replaced the journal named by `-f`
 
 ### Balance, Assertions, and Assignments
 
@@ -228,8 +291,17 @@ components with their standard-library equivalents.
   family total (#723); allow `--sort` and `--sort-xacts` together
 
 - Enable ANSI color on Windows CMD/PowerShell (#2110); fix `justify()` to
-  ignore ANSI escape codes when computing width; flush stdout after each REPL
-  command (#991)
+  ignore ANSI escape codes when computing width, and to pad a negative integer
+  that it colors only once; flush stdout after each REPL command (#991)
+
+- Add `--colors NAME=COLOR,...` to change what the colors that report formats
+  name look like (#589): `--colors 'blue=#5f87ff,red=bold 196'` shows account
+  names in a lighter blue and negative amounts in a bold, bright red.  A
+  color, there or as the color argument of `ansify_if()`, can now be a
+  256-color index (0-255) or a 24-bit `#RRGGBB` value as well as a standard
+  name, and several such words combine.  Like other options, `--colors` can
+  be set in `~/.ledgerrc` or through `LEDGER_COLORS`.  `ansify_if()` now
+  reports an unknown color as an error instead of leaving the text uncolored
 
 - Fix percentage amounts to act as fractions in arithmetic; fix `width`
   options to return integers for expression arithmetic; fix the `truncated()`
@@ -272,6 +344,15 @@ components with their standard-library equivalents.
   `calc_posts` and does not alter running totals (#762); compute per-account
   averages for period reports (#1950); anchor interval averages to the report
   begin date
+
+- Accept both spellings of a commodity whose symbol needs quotes, such as
+  `"ABC 3"`: `commodity == 'ABC 3'` and `commodity == '"ABC 3"'` now match
+  the same postings, and `commodity(AMOUNT)` compares the same way in every
+  report (#3241, #1097).  The quoted spelling, which the manual shows and 3.3
+  required, stopped matching in 3.4.0, so automated transactions and
+  `--limit` predicates written for 3.3 silently matched nothing.  Ordering a
+  commodity against a string now follows the bare symbol, as ordering two
+  commodities does
 
 ### Date, Period, and Time Handling
 
@@ -392,7 +473,25 @@ components with their standard-library equivalents.
 - Support nested `account` declarations (#877) and metadata tags on `account`
   directives (#1681)
 
+- End the account name on an `account` directive line at a `;` that follows
+  a hard separator (two or more spaces, or a tab), as a payee ends on a
+  transaction's first line, and read the comment after it for the account's
+  metadata tags, as on the comment lines beneath the directive (#3320).
+  `account Expenses:Food  ; groceries` declared an account named
+  `Expenses:Food  ; groceries`, which no posting could name, so `--strict`
+  reported `Expenses:Food` as unknown, and the `alias`, `payee`, `default`,
+  `check` and `assert` lines beneath it applied to the misnamed account.  A
+  `;` after a single space is still part of the name, as it is in a posting
+
 - Return regex capture-group text from the `=~` operator (extending #664)
+
+- Treat every character of an `include` file name other than `*`, `?` and a
+  `[...]` set literally, including `$`, `^`, a character escaped with a
+  backslash, and a `[` that no `]` closes
+
+- Match `include` file names exactly under `--ignore-diacritics`, which kept
+  a name with an accent from being included and let `include cafe.dat` read
+  `café.dat` as well
 
 ### Documentation
 
@@ -411,6 +510,10 @@ components with their standard-library equivalents.
   (#994), the contradictory documentation for `--price-db` and `--download`
   (#1210), and the `ansify_if` two-argument signature; remove documentation
   for the unimplemented `capture` directive
+
+- Specify which characters a commodity symbol may contain without quotes, in
+  an amount and in a directive, and when Ledger quotes a symbol it prints
+  (#3321)
 
 ### Build System
 
@@ -435,6 +538,10 @@ components with their standard-library equivalents.
   `BUILD_DOCS` is `ON`; update bundled `utfcpp` to 4.0.9; add explicit
   `CMAKE_OSX_SYSROOT` for reproducible macOS builds; add code-coverage tools
   to the Nix development environment
+
+- Fix the build with ICU against LLVM's libc++ 19 or later, as on FreeBSD
+  15.1, which rejects the `std::basic_string<UChar32>` that Boost.Regex's
+  `u32regex` uses for `str()` and, before Boost 1.89, for comparisons (#3276)
 
 ### Testing and Coverage
 

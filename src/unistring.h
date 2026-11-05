@@ -224,16 +224,16 @@ inline std::string strip_ansi_escapes(const std::string& input) {
 
 /// Write @p str to @p out, padded with spaces to fill @p width display
 /// columns.  Used by format expressions to align report columns.
-/// @param right   If true, right-justify (pad on the left).
-/// @param redden  If true, wrap the text in ANSI red escape codes
-///               (used for negative amounts).
+/// @param right  If true, right-justify (pad on the left).
+/// @param color  If not empty, the ANSI escape sequence that renders the
+///               text in a color (used for negative amounts).
 inline void justify(std::ostream& out, const std::string& str, int width, bool right = false,
-                    bool redden = false) {
+                    const std::string& color = std::string()) {
   if (!right) {
-    if (redden)
-      out << "\033[31m";
+    if (!color.empty())
+      out << color;
     out << str;
-    if (redden)
+    if (!color.empty())
       out << "\033[0m";
   }
 
@@ -244,10 +244,10 @@ inline void justify(std::ostream& out, const std::string& str, int width, bool r
     out << ' ';
 
   if (right) {
-    if (redden)
-      out << "\033[31m";
+    if (!color.empty())
+      out << color;
     out << str;
-    if (redden)
+    if (!color.empty())
       out << "\033[0m";
   }
 }

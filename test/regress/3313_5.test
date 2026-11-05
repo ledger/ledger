@@ -1,0 +1,20 @@
+; Regression test for issue #3313: a dated P directive reads its
+; commodity with the same parser as the commodity directive.  A ';'
+; written right after the symbol begins a comment there too, so the
+; first price below has no amount; it used to price a commodity named
+; "FOO;BAR".  The second line ends with its quoted symbol, so it has no
+; amount either, but the parser stepped two characters past the closing
+; quote, beyond the end of the line, into what the comment line before
+; it had left in the buffer, and priced N1 at 7.77 EUR.
+
+P 2024/01/01 FOO;BAR 10 USD
+; xxxxxxxxxxxxxxxx7.77 EUR
+P 2024/01/01 "N1"
+
+test bal -> 2
+__ERROR__
+While parsing file "$FILE", line 10:
+Error: No quantity specified for amount
+While parsing file "$FILE", line 12:
+Error: No quantity specified for amount
+end test

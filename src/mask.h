@@ -53,7 +53,8 @@
  *   both the pattern and the text are normalized to ASCII equivalents
  *   before matching, so "cafe" matches "caf\xc3\xa9".
  * - Glob-to-regex conversion via `assign_glob()` for `!include` file
- *   patterns (case-sensitive, since filesystems are).
+ *   patterns, which match exactly: case-sensitively, since filesystems
+ *   are, and without diacritics folding.
  * - Unicode-aware when built with `HAVE_BOOST_REGEX_UNICODE` (ICU).
  */
 #pragma once
@@ -78,7 +79,7 @@ string fold_diacritics(string_view text);
  * @brief Global flag to enable diacritics-insensitive matching.
  *
  * When set to true, mask_t will strip diacritics from both the
- * pattern and the text before matching.
+ * pattern and the text before matching, except in globs.
  */
 extern bool ignore_diacritics;
 
@@ -93,7 +94,8 @@ extern bool ignore_diacritics;
  *
  * When `ignore_diacritics` is true, both the pattern and match text are
  * folded to their ASCII base equivalents via `fold_diacritics()` before
- * comparison.
+ * comparison.  Globs are never folded, since a file name with an accent
+ * names a different file than one without.
  */
 class mask_t {
 public:
@@ -107,30 +109,38 @@ public:
   explicit mask_t(string_view pattern);
 
   mask_t() : expr() { TRACE_CTOR(mask_t, ""); }
-  mask_t(const mask_t& m) : expr(m.expr) { TRACE_CTOR(mask_t, "copy"); }
+  mask_t(const mask_t& m) : expr(m.expr), glob(m.glob) { TRACE_CTOR(mask_t, "copy"); }
   mask_t& operator=(const mask_t&) = default;
   ~mask_t() noexcept { TRACE_DTOR(mask_t); }
 
   /// Assign a new Perl-compatible regex pattern (case-insensitive).
   mask_t& operator=(string_view other);
   /// Assign a shell glob pattern, converting it to a regex.
-  /// Unlike operator=, this compiles case-sensitively for filesystem matching.
+  /// Unlike operator=, the result matches file names exactly: case-sensitively
+  /// and without diacritics folding.
   mask_t& assign_glob(string_view other);
 
-  bool operator<(const mask_t& other) const { return expr < other.expr; }
-  bool operator==(const mask_t& other) const { return expr == other.expr; }
+  // Not expr == other.expr: before Boost 1.89, basic_regex::compare() calls
+  // the str() that mask_t::str() below avoids.  Comparing empty() keeps a
+  // default mask unequal to an empty pattern compiled with the same (zero)
+  // flags.
+  bool operator==(const mask_t& other) const {
+    return expr.empty() == other.expr.empty() && expr.flags() == other.expr.flags() &&
+           std::equal(expr.begin(), expr.end(), other.expr.begin(), other.expr.end());
+  }
 
   /// Test whether @p text matches this mask's regex pattern.
-  /// Applies diacritics folding when `ignore_diacritics` is active.
+  /// Applies diacritics folding when `ignore_diacritics` is active,
+  /// unless this mask is a glob.
   bool match(string_view text) const {
 #if HAVE_BOOST_REGEX_UNICODE
-    string match_text = ignore_diacritics ? fold_diacritics(text) : string(text);
+    string match_text = folds() ? fold_diacritics(text) : string(text);
     DEBUG("mask.match", "Matching: \""
                             << match_text << "\" =~ /" << str() << "/ = "
                             << (boost::u32regex_search(match_text, expr) ? "true" : "false"));
     return boost::u32regex_search(match_text, expr);
 #else
-    if (ignore_diacritics) {
+    if (folds()) {
       string match_text = fold_diacritics(text);
       DEBUG("mask.match",
             "Matching: \"" << match_text << "\" =~ /" << str()
@@ -148,17 +158,12 @@ public:
   /// Return the number of marked subexpressions (capture groups) in the pattern.
   std::size_t mark_count() const { return expr.mark_count(); }
 
-  /// Match against @p text and return the @p n-th capture group on success.
-  /// Returns the whole match for n=0, first group for n=1, etc.
-  /// Returns boost::none if the regex does not match or the group is unmatched.
-  boost::optional<string> match_group(string_view text, std::size_t n = 1) const;
-
   /// Match against @p text and return every matched substring.
   ///
   /// On a successful match the returned vector has `mark_count() + 1`
-  /// elements: index 0 is the entire match (same as `match_group(text, 0)`),
-  /// indices 1..N are the captured groups.  An optional group that did not
-  /// participate in the match is represented as an empty string.
+  /// elements: index 0 is the entire match, indices 1..N are the captured
+  /// groups.  An optional group that did not participate in the match is
+  /// represented as an empty string.
   ///
   /// Returns boost::none if the regex does not match.
   boost::optional<std::vector<string>> match_groups(string_view text) const;
@@ -171,8 +176,10 @@ public:
 #if HAVE_BOOST_REGEX_UNICODE
       assert(sizeof(boost::uint32_t) == sizeof(UChar32));
       unistring ustr;
-      std::basic_string<UChar32> expr_str = expr.str();
-      std::copy(expr_str.begin(), expr_str.end(), std::back_inserter(ustr.utf32chars));
+      // Not expr.str(): it returns std::basic_string<UChar32>, and UChar32 is
+      // int32_t, for which upstream libc++ >= 19 provides no std::char_traits
+      // (boostorg/regex#247).
+      std::copy(expr.begin(), expr.end(), std::back_inserter(ustr.utf32chars));
       return ustr.extract();
 #else
       return expr.str();
@@ -189,6 +196,12 @@ public:
     }
     return true;
   }
+
+private:
+  bool glob = false; ///< Set by assign_glob(), cleared by operator=
+
+  /// Whether match() and match_groups() fold the text they are given.
+  bool folds() const { return ignore_diacritics && !glob; }
 };
 
 inline std::ostream& operator<<(std::ostream& out, const mask_t& mask) {

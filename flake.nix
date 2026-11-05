@@ -6,13 +6,14 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     # The machine-checked semantics and its bisimulation oracle (see
-    # the bisimulation section of lean/README.md).  The same repository is also
-    # the `lean/` git submodule, which serves interactive development
-    # (`nix develop ./lean`, warm .lake caches, ctest against a
-    # checkout).  Two pins therefore exist: this flake input drives
-    # `nix build` and CI, the submodule drives the working tree.
-    # Update them together.
-    ledger-semantics.url = "github:ledger/ledger-semantics";
+    # the bisimulation section of the ledger-semantics README).  This
+    # input is the oracle's only pin: `nix build` and CI run the
+    # bisimulation against it, and `nix build .#oracle` gives the same
+    # tree to a development build's LEDGER_LEAN_DIR.  The URL names the
+    # revision so that `nix flake update` never moves the oracle; to
+    # move it, change the revision here and run `nix flake lock`.
+    ledger-semantics.url =
+      "github:ledger/ledger-semantics/6c6942e9f7fcd8e6acbe07047f4427e874236a9e";
   };
 
   outputs = { self, nixpkgs, ledger-semantics }: let
@@ -97,6 +98,12 @@
           # Install the Python module into our own 'py' output rather than the
           # read-only Python store path.
           "-DLEDGER_PYTHON_INSTALL_DIR=${placeholder "py"}/${python3.sitePackages}"
+        ] ++ lib.optionals stdenv.hostPlatform.isDarwin [
+          # Apple's libc++ still has the deprecated std::char_traits base
+          # template that LLVM's own libc++ dropped in LLVM 19.  Leave it out,
+          # so that code needing it, such as std::basic_string<UChar32>
+          # (#3276), fails to build here as it does against LLVM's libc++.
+          "-DCMAKE_CXX_FLAGS=-D_LIBCPP_CHAR_TRAITS_REMOVE_BASE_SPECIALIZATION"
         ];
 
         installTargets = [ "doc" "install" ];
@@ -126,6 +133,10 @@
           maintainers = with maintainers; [ jwiegley ];
         };
       };
+
+      # The oracle that this flake pins, for a development build's
+      # LEDGER_LEAN_DIR (CLAUDE.md).
+      oracle = semantics.oracle;
     });
 
     defaultPackage = forAllSystems (system: self.packages.${system}.ledger);

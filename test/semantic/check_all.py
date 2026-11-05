@@ -17,7 +17,7 @@ lists them all — absence of output is never silent success):
   FAIL            — divergence (unadjudicated; each one either
                     exposes a C++ defect or a convention the oracle
                     has not yet recorded — see the bisimulation
-                    section of lean/README.md).
+                    section of the ledger-semantics README).
   SKIP:negative   — the test intentionally exercises errors; its
                     journal is not claimed valid.
   SKIP:no-journal — no journal text before the first test block.
@@ -169,32 +169,20 @@ def main():
     dirs = args.dirs or [os.path.join(repo, "test", d)
                          for d in ("baseline", "regress", "manual")]
 
-    lean_dir = os.environ.get("LEDGER_LEAN_DIR", os.path.join(repo, "lean"))
-    if not os.path.isfile(os.path.join(lean_dir, "lakefile.lean")):
-        print("SKIP: Lean oracle tree not present (submodule not"
-              " initialized and LEDGER_LEAN_DIR unset)"); sys.exit(77)
-    # Probe the toolchain exactly once, up front.  The Nix build sets
-    # LEDGER_LEAN_DIR to the semantics flake's oracle output and puts
-    # the matching lake on PATH; development runs use the pinned dev
-    # shell of the lean/ submodule.  Past this point a
-    # failing oracle exits 2: substring-matching error text to decide
-    # between SKIP and FAIL would let a real divergence read as green.
-    direct_lake = "LEDGER_LEAN_DIR" in os.environ
-    if direct_lake and not shutil.which("lake"):
+    lean_dir = os.environ.get("LEDGER_LEAN_DIR", "")
+    if not lean_dir or not os.path.isfile(
+            os.path.join(lean_dir, "lakefile.lean")):
+        print("SKIP: LEDGER_LEAN_DIR names no oracle tree (the pinned one"
+              " is `nix build .#oracle --no-link --print-out-paths`)")
+        sys.exit(77)
+    # Probe the toolchain exactly once, up front.  The Nix build points
+    # LEDGER_LEAN_DIR at the oracle the flake pins and puts the matching
+    # lake on PATH, and the dev shell supplies the same lake.  Past this
+    # point a failing oracle exits 2: substring-matching error text to
+    # decide between SKIP and FAIL would let a real divergence read as
+    # green.
+    if not shutil.which("lake"):
         print("SKIP: LEDGER_LEAN_DIR set but lake not on PATH")
-        sys.exit(77)
-    if not direct_lake and not shutil.which("nix"):
-        print("SKIP: nix unavailable for the lean/ dev shell")
-        sys.exit(77)
-    if not direct_lake and not os.path.isdir(os.path.join(lean_dir, ".lake")):
-        # The submodule is checked out but the oracle has never been
-        # built here; running now would make lake fetch and build the
-        # full Mathlib dependency tree as a side effect of `ctest`.
-        # That is a decision for the developer, not the test.
-        print("SKIP: oracle not built in " + lean_dir + " — run\n"
-              "  nix develop ./lean --command bash -c"
-              " 'lake exe cache get && lake build'\n"
-              "once (or set LEDGER_LEAN_DIR to a built oracle tree)")
         sys.exit(77)
 
     if not os.path.isfile(ledger):
@@ -287,27 +275,15 @@ def main():
                     argv.extend(["--input-date-format",
                                  fl[fl.index("--input-date-format") + 1]])
                 argv.append(d)
-            # Oracle invocation.  When LEDGER_LEAN_DIR is set (the Nix
-            # build points it at the semantics flake's oracle output and
-            # puts the matching lake on PATH), run lake directly in that
-            # tree; otherwise run inside the pinned dev shell of the
-            # lean/ submodule (`nix develop` with that tree as cwd), so
-            # a stray lake on PATH never bypasses the pinned toolchain.
+            # Oracle invocation: lake runs directly in the oracle tree.
             # Toolchain absence was probed once above and is the ONLY
             # skip: any failure past this point is a red result, never
             # a SKIPPED one.
-            if direct_lake:  # noqa: simple dispatch, probed above
-                cmd = ["lake", "env", "lean",
-                       "--run", "Ledger/Driver.lean", *argv]
-            else:
-                cmd = ["nix", "develop", "--command", "lake", "env", "lean",
-                       "--run", "Ledger/Driver.lean", *argv]
-            oracle_env = {**env, "GIT_CONFIG_COUNT": "1",
-                          "GIT_CONFIG_KEY_0": "safe.directory",
-                          "GIT_CONFIG_VALUE_0": "*"}
+            cmd = ["lake", "env", "lean",
+                   "--run", "Ledger/Driver.lean", *argv]
             drv = subprocess.run(
                 cmd, cwd=lean_dir, capture_output=True,
-                text=True, timeout=3600, env=oracle_env)
+                text=True, timeout=3600, env=sweep.oracle_env(env))
             if drv.returncode != 0:
                 msg = (drv.stderr or drv.stdout)[-500:]
                 print("oracle driver invocation failed:\n" + msg,
@@ -407,9 +383,12 @@ def main():
     ledger_version = run_line([ledger, "--version"], env=env)
     git_rev = run_line(["git", "rev-parse", "HEAD"], cwd=repo)
     # In the Nix build the oracle is a store path with no repository;
-    # the flake passes the semantics revision in LEDGER_LEAN_REV.
+    # the flake passes the semantics revision in LEDGER_LEAN_REV.  In
+    # a git hook, GIT_DIR would make git answer for the ledger
+    # repository instead.
     oracle_rev = (os.environ.get("LEDGER_LEAN_REV")
-                  or run_line(["git", "-C", lean_dir, "rev-parse", "HEAD"]))
+                  or run_line(["git", "-C", lean_dir, "rev-parse", "HEAD"],
+                              env=sweep.oracle_env(env)))
     artifact = {
         "tuple": {
             "oracle_rev": oracle_rev,

@@ -110,6 +110,12 @@ public:
   /// completely overrides files from environment/init-file sources.
   bool flush_on_next_data_file;
 
+  /// When false, read_data() reads a price database only if --price-db
+  /// names one, rather than falling back to ~/.pricedb.  --args-only
+  /// clears it: like the init file, the default price database is not
+  /// named on the command line.
+  bool use_default_price_db;
+
   boost::shared_ptr<journal_t> journal;  ///< The loaded journal data
   parse_context_stack_t parsing_context; ///< Stack of active parse contexts (for includes)
   optional<expr_t> value_expr;           ///< User-specified value expression (--value-expr)
