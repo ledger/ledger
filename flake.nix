@@ -13,7 +13,7 @@
     # revision so that `nix flake update` never moves the oracle; to
     # move it, change the revision here and run `nix flake lock`.
     ledger-semantics.url =
-      "github:ledger/ledger-semantics/d5c7eecea3ddfaa56f4350645501081c399fec89";
+      "github:ledger/ledger-semantics/bbd5478d270d4b7f70f8e33dd20e4d9173e51202";
   };
 
   outputs = { self, nixpkgs, ledger-semantics }: let

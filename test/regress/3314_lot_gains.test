@@ -1,0 +1,33 @@
+; Exact lot gains and commodity-swap gains belong to their posting's
+; balancing group (#3314, #3258).  Neither $ nor EUR learns fractional
+; display precision here.  Different results in the two groups expose
+; gains routed to the wrong group; quantity(amount) checks their value
+; independently of display rounding.  The last transaction also checks
+; that only the residue from a rounded total lot price is dropped.
+
+2025/01/01 Exact lot bases
+    Assets:Stock         10 GAL {$2.00} @@ $25.30
+    [Budget:Stock]       11 GAL {$2.10} @@ $25.37
+    Assets:Offset
+    [Budget:Offset]
+
+2025/01/02 Sub-unit swap gains
+    Assets:Coins        -10 BTC {100 EUR} @ 2 ETH {50.02 EUR}
+    [Budget:Coins]      -10 BTC {100 EUR} @ 2 ETH {49.97 EUR}
+    Assets:Coins         20 ETH {50.02 EUR}
+    [Budget:Coins]       20 ETH {49.97 EUR}
+    Assets:Offset
+    [Budget:Offset]
+
+2025/01/03 Rounded total lot price
+    [Budget:Fund]      -101 FOO {{$250.50}} @@ $500
+    [Budget:Cash]         $500
+    [Budget:Offset]
+
+test reg --no-rounding --format '%(account)  %(quantity(amount))\n' Offset
+Assets:Offset  -20
+Budget:Offset  -23.1
+Assets:Offset  -0.4
+Budget:Offset  0.6
+Budget:Offset  -249.5
+end test

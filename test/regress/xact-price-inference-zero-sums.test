@@ -1,26 +1,18 @@
-; When a transaction exchanges two commodities without a cost, and its
-; first posting holds neither of them, Ledger prices the commodity that
-; entered the transaction's balance first.  Ledger adds up the real
-; postings in order; at the first posting in a second commodity, the sum
-; of the postings before it enters first unless it is zero, and a zero
-; sum leaves the choice to the first non-zero posting from there on.
-; These transactions pin the edges of that rule that
-; xact-price-inference-cancel-first.test does not.
+; Price inference first uses the reference posting's commodity when it
+; remains in the group's balance, then falls back to the first commodity
+; that entered that balance.  Zero amounts do not enter the balance.
 ;
-; The first bills ten hours after a two-hour correction.  Hours are kept
-; as seconds, so its first posting, in hours, holds neither commodity;
-; the correction sums to zero before the dollars arrive, so the dollars
-; enter first and are priced in time, at 24s, as a lot on
-; Income:Consulting.  The second reaches its first AUD posting, a zero
-; fee, when the ZAR transfer has summed to zero: nothing enters there,
-; and the first non-zero posting after it is in ZAR, so ZAR is priced in
-; AUD although an AUD posting came before it.  The third reaches its first
-; NOK posting, again a zero fee, before the SEK transfer has cancelled:
-; the 50 SEK enter first and stay first after the transfer cancels, so
-; SEK is priced in NOK.  ZAR and SEK sort after the other currency, so a
-; fixed order of the two commodities would price AUD and NOK.  Each
-; transaction uses its own pair, so that no commodity is already a price
-; target (#1130).  Ledger 3.4.1 made the same three choices.
+; The first transaction bills ten hours after a two-hour correction.
+; Hours are reduced to seconds, so the first posting's commodity is absent
+; from the balance.  The correction cancels before the dollars arrive;
+; dollars enter first and are priced in time, at 24s, on Income:Consulting.
+; In the second and third transactions, balanced virtual budget lines
+; belong to a separate group.  The real reference commodities, ZAR and
+; SEK, remain in their balances and determine the direction directly,
+; despite the intervening transfers and zero fees.  Both sort after their
+; counterpart, so a fixed sorted order would incorrectly price AUD or NOK.
+; Each transaction uses its own pair, avoiding prior price targets (#1130).
+; 3314_inference_order.test exercises the fallback in bracketed groups.
 
 2024/01/05 Billing after a correction
     Assets:Time               2h

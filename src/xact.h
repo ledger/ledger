@@ -127,11 +127,11 @@ public:
   posts_list::iterator posts_end() { return posts.end(); }
 
   /**
-   * @brief Compute the absolute value of the positive side of the transaction.
+   * @brief Sum the costs or amounts of postings with positive amounts.
    *
-   * Sums the cost (or amount, if no cost) of all postings with positive
-   * amounts.  Used in error messages to give context about the
-   * transaction's overall size when reporting imbalances.
+   * Includes real and virtual postings, using each posting's cost when
+   * present and its amount otherwise. The result covers the whole
+   * transaction and is exposed through the magnitude value expression.
    */
   value_t magnitude() const;
 

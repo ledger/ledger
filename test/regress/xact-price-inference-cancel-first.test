@@ -1,8 +1,9 @@
 ; In a transaction that exchanges two commodities, without stating a cost
 ; or leaving a posting blank, Ledger normally prices the commodity of the
-; first posting in the other.  When the first posting holds neither
-; commodity, as balanced virtual budget lines in a third one do, it
-; prices the commodity that entered the transaction's balance first.
+; first real posting in the other.  Balanced virtual postings belong to
+; a separate group and cannot choose the real group's reference posting.
+; When that reference holds neither commodity, Ledger prices the
+; commodity that entered the group's balance first.
 ; Ledger adds up the real postings in order, and at the first posting in
 ; a second commodity the sum of the postings before it enters the balance
 ; first, unless it is zero: a zero sum never enters, and the first to
@@ -11,21 +12,22 @@
 ; is the price (#1130).
 ;
 ; The first transaction moves 50 EUR from the bank to the wallet before
-; buying 100 GBP for 115 EUR.  The move sums to zero, so GBP enters first
-; and is priced in EUR, at 1.15 EUR, and the lot goes on Assets:GBP.  The
-; second is the first without its budget lines, in SEK and CHF: it prices
-; SEK, the commodity of its first posting.  The third is the first in DKK
-; and NOK, with a 10 DKK fee paid before buying NOK, so the sum is 10 DKK:
+; buying 100 GBP for 115 EUR.  The move sums to zero, so GBP enters first,
+; but EUR is still the real reference posting's commodity and remains in
+; the final balance: EUR is priced in GBP, and the EUR postings become
+; lots.  The second is the first without its budget lines, in SEK and CHF:
+; it likewise prices SEK, the commodity of its first posting.  The third
+; is the first in DKK and NOK, with a 10 DKK fee paid before buying NOK,
+; so the sum is 10 DKK:
 ; DKK is priced in NOK, and the DKK postings become lots.  Each
 ; transaction exchanges its own pair of currencies, so that none is a
-; price target yet.  GBP and SEK sort after the other currency and DKK
+; price target yet.  SEK sorts after the other currency and EUR and DKK
 ; before it, so no fixed order of the two components can pass for the rule
 ; in all three transactions, and neither can the order in which a balance
 ; keeps them, which changes from run to run.
 ;
-; Ledger 3.4.1 summed the budget lines with the real postings, so the
-; dollars were the zero sum, EUR entered first, and the first transaction
-; priced EUR in GBP.
+; xact-price-inference-zero-sums.test and 3314_inference_order.test cover
+; the fallback when the reference commodity is absent from the balance.
 
 2024/01/05 Exchange after a transfer
     [Budget:Travel]          $100
@@ -51,19 +53,19 @@
     Assets:Bank:DKK        -125 DKK
 
 test pricedb
-P 2024/01/05 00:00:00 GBP 1.15 EUR
+P 2024/01/05 00:00:00 EUR 0.869565 GBP
 P 2024/01/06 00:00:00 SEK 0.869565 CHF
 P 2024/01/07 00:00:00 DKK 0.869565 NOK
 end test
 
 test bal --lots --flat --no-total Assets
 -175 DKK {0.869565 NOK} [2024/01/07]  Assets:Bank:DKK
-            -165 EUR  Assets:Bank:EUR
+-165 EUR {0.869565 GBP} [2024/01/05]  Assets:Bank:EUR
 -165 SEK {0.869565 CHF} [2024/01/06]  Assets:Bank:SEK
              100 CHF  Assets:CHF
-100 GBP {1.15 EUR} [2024/01/05]  Assets:GBP
+             100 GBP  Assets:GBP
              100 NOK  Assets:NOK
 50 DKK {0.869565 NOK} [2024/01/07]  Assets:Wallet:DKK
-              50 EUR  Assets:Wallet:EUR
+50 EUR {0.869565 GBP} [2024/01/05]  Assets:Wallet:EUR
 50 SEK {0.869565 CHF} [2024/01/06]  Assets:Wallet:SEK
 end test

@@ -1,0 +1,22 @@
+; A fractional commodity swap must preserve the inferred loss even
+; when its base currency has no display precision (#3314, #3258).
+; The cost-side total lot price divides 3.14 EUR over 4 ETH; multiplying
+; that per-unit basis by 0.48 ETH gives 0.3768 EUR, against the 1.2 EUR
+; basis of the BTC given up.  The inferred loss is therefore 0.8232 EUR.
+; A total lot on the source side likewise preserves the inferred loss:
+; 1 EUR of BTC exchanged for 0.75 EUR of ETH leaves 0.25 EUR.
+
+2025/01/04 Fractional swap with total cost-side lot price
+    Assets:Coins     -0.12 BTC {10 EUR} @ 4 ETH {{3.14 EUR}}
+    Assets:Coins      0.48 ETH {0.785 EUR}
+    Assets:CostLotOffset
+
+2025/01/05 Fractional swap with source total lot price
+    Assets:Coins     -0.1250 BTC {{1.0 EUR}} @ 2 ETH {3 EUR}
+    Assets:Coins      0.2500 ETH {3 EUR}
+    Assets:SourceLotOffset
+
+test bal --flat --no-total Offset
+       EUR0.82320000  Assets:CostLotOffset
+    EUR0.25000000000  Assets:SourceLotOffset
+end test

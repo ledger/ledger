@@ -1,22 +1,16 @@
-; A transaction that exchanges two commodities, without stating a cost or
-; leaving a posting blank, gets an inferred price, and Ledger normally
-; takes the commodity of its first posting as the one bought, priced in
-; the other.  When the first posting holds neither commodity -- a zero fee
-; in a third commodity, or balanced virtual budget lines -- the choice
-; falls to the commodity that entered the transaction's balance first.
-; Ledger adds up the real postings in order, and at the first posting in
-; a second commodity the sum of the postings before it enters the balance
-; first, unless it is zero: a zero sum never enters, and the first to
-; enter is then the commodity of the first non-zero posting from there on.
-; In the first transaction that sum is the zero fee, so the 100 GBP
-; enters first; in the second the budget lines are not real postings, and
-; the sum is the 100 GBP itself.  GBP is bought in both, so the lots go on
-; Assets:GBP and the inferred prices are GBP in $ and in EUR.  Picking the
-; other commodity would put lots of $ and of EUR, priced in GBP, on
-; Assets:USD and Assets:EUR.  The choice must not depend on the order in
-; which a balance happens to keep its two commodities, which changes from
-; run to run.  Real postings that cancel out before the second commodity
-; arrives are the subject of xact-price-inference-cancel-first.test.
+; A balancing group that exchanges two commodities without stating a cost
+; or leaving a posting blank gets an inferred price.  Ledger normally
+; prices the commodity of its first posting in the other.  If that
+; posting holds neither residual commodity, as with a zero fee in a third
+; commodity, the fallback is the first commodity to enter the balance.
+; A zero sum never enters the balance, so in the first transaction the
+; zero EUR fee leaves GBP as the first component.  In the second, the
+; balanced virtual budget lines form a separate group: GBP is the real
+; group's first posting and determines its price direction directly.
+; Both transactions put lots on Assets:GBP and infer GBP prices in $ and
+; EUR.  The choice must not depend on the balance map's iteration order.
+; xact-price-inference-cancel-first.test covers cancelled real transfers;
+; 3314_inference_order.test covers the fallback in bracketed groups.
 
 2024/01/05 Exchange with a zero fee first
     Assets:Fee              0 EUR

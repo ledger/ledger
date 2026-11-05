@@ -1,0 +1,29 @@
+; Regression test for GitHub issue #3314: under --permissive, a balance
+; assignment that leaves the balanced virtual postings, in [brackets],
+; unbalanced gives way to the amount that balances them, just as one
+; among real postings does (#2005).
+
+2021/02/14 Test transaction
+  [Liabilities:Visa]  $3141
+  [Assets:Checking]  =$12345
+
+test bal --permissive
+              $-3141  Assets:Checking
+               $3141  Liabilities:Visa
+--------------------
+                   0
+end test
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 8:
+While balancing transaction from "$FILE", lines 6-8:
+> 2021/02/14 Test transaction
+>   [Liabilities:Visa]  $3141
+>   [Assets:Checking]  =$12345
+Unbalanced remainder of balanced virtual postings is:
+              $15486
+Amount to balance against:
+              $15486
+Error: Transaction does not balance
+end test

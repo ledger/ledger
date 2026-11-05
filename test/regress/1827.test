@@ -22,9 +22,9 @@ While balancing transaction from "$FILE", lines 10-14:
 >   Expenses:Food  $11.00
 >   [Budgets:Total]  $10.00
 >   [Budgets:Food]  $-11.00
-Unbalanced remainder is:
+Unbalanced remainder of real postings is:
                $1.00
 Amount to balance against:
-              $21.00
+              $11.00
 Error: Transaction does not balance
 end test
