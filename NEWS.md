@@ -214,6 +214,10 @@ components with their standard-library equivalents.
   `./.ledgerrc`, which was also being parsed as price history, even under
   `--args-only`, so that a `--file` in it replaced the journal named by `-f`
 
+- Read the init file named by `-i FILE` or `--init-file=FILE`, which were
+  silently ignored: only `--init-file FILE` was looked for before the init
+  file is read
+
 ### Balance, Assertions, and Assignments
 
 - Filter balance assertions by date rather than file order; skip balance

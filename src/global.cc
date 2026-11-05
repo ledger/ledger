@@ -563,7 +563,8 @@ void global_scope_t::visit_man_page() const {
  *   --verify-memory  : enable memory tracing with debug logging
  *   --verify         : enable runtime verification checks
  *   --verbose / -v   : set log level to LOG_INFO
- *   --init-file PATH : override the default init file location
+ *   --init-file PATH : override the default init file location (also
+ *                      written --init-file=PATH or -i PATH)
  *   --debug CATEGORY : enable debug logging for a specific category
  *   --trace LEVEL    : enable trace logging at a numeric verbosity level
  *
@@ -589,9 +590,12 @@ void handle_debug_options(int argc, char* argv[]) {
 #endif
       } else if (std::strcmp(argv[i], "--verbose") == 0 || std::strcmp(argv[i], "-v") == 0) {
         _log_level = LOG_INFO;
-      } else if (i + 1 < argc && std::strcmp(argv[i], "--init-file") == 0) {
+      } else if (i + 1 < argc &&
+                 (std::strcmp(argv[i], "--init-file") == 0 || std::strcmp(argv[i], "-i") == 0)) {
         _init_file = argv[i + 1];
         i++;
+      } else if (std::strncmp(argv[i], "--init-file=", 12) == 0) {
+        _init_file = argv[i] + 12;
       } else if (i + 1 < argc && std::strcmp(argv[i], "--debug") == 0) {
 #if DEBUG_ON
         _log_level = LOG_DEBUG;

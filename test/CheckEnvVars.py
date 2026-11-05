@@ -222,6 +222,42 @@ with tempfile.TemporaryDirectory() as tmpdir:
         expected_exit=0
     )
 
+# Test 7: every documented way of naming an init file on the command line
+# reads it, and a missing one is an error
+with tempfile.TemporaryDirectory() as tmpdir:
+    journal_file = os.path.join(tmpdir, 'journal.dat')
+    init_file = os.path.join(tmpdir, 'ledgerrc')
+    missing_file = os.path.join(tmpdir, 'missing')
+
+    with open(journal_file, 'w') as f:
+        f.write('2024/01/01 Test payee\n')
+        f.write('    Expenses:Food    $25.00\n')
+        f.write('    Assets:Checking\n')
+
+    with open(init_file, 'w') as f:
+        f.write('--no-total\n')
+
+    for form in (['--init-file', init_file], [f'--init-file={init_file}'],
+                 ['-i', init_file]):
+        run_test(
+            f'{form[0].split("=")[0]} names the init file ({" ".join(form)})',
+            {},
+            form + ['-f', journal_file, 'bal', '--columns=80'],
+                '             $-25.00  Assets:Checking\n'
+                '              $25.00  Expenses:Food',
+            expected_exit=0
+        )
+
+    for form in (['--init-file', missing_file],
+                 [f'--init-file={missing_file}'], ['-i', missing_file]):
+        run_test(
+            f'A missing init file is an error ({" ".join(form)})',
+            {},
+            form + ['-f', journal_file, 'bal', '--columns=80'],
+            '',
+            expected_exit=1
+        )
+
 print()
 if succeeded > 0:
     print(f'OK ({succeeded})')
