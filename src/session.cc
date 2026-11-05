@@ -55,6 +55,7 @@
 #include "journal.h"
 #include "iterators.h"
 #include "filters.h"
+#include "format.h"
 
 namespace ledger {
 
@@ -69,8 +70,10 @@ namespace ledger {
  * down in reverse order.
  *
  * This function exists because several subsystems use file-scope static
- * variables.  Switching the "current session" re-points those globals so
- * that a different session's data is in scope.
+ * variables, which every session in the process shares.  Shutting down
+ * also restores the defaults that options and directives change, so that
+ * a program reading one journal after another in the same process sees
+ * each one as a new process would.
  */
 void set_session_context(session_t* session) {
   if (session) {
@@ -85,6 +88,17 @@ void set_session_context(session_t* session) {
     value_t::shutdown();
     amount_t::shutdown();
     times_shutdown();
+
+    // times_shutdown() restores the date settings.  These are set by
+    // --decimal-comma, --time-colon, --truncate, --aux-date and
+    // --ignore-diacritics, and the next session must not inherit them
+    // (#3292).
+    commodity_t::decimal_comma_by_default = false;
+    commodity_t::time_colon_by_default = false;
+    format_t::default_style = format_t::TRUNCATE_TRAILING;
+    format_t::default_style_changed = false;
+    item_t::use_aux_date = false;
+    ignore_diacritics = false;
   }
 }
 
