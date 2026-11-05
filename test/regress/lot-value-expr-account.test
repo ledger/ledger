@@ -1,0 +1,26 @@
+; A balance assertion naming a lot still matches the lot when an
+; account's `value` sub-directive has given the lot its valuation.
+;
+; Ledger gives the valuation to the lot itself, which every amount of
+; the lot shares, and the lot still answers to the name it was bought
+; under: the assertion's 10 AAPL {$5} [2020/01/01], written without the
+; valuation, names the lot Assets:Broker holds, which --lots shows as
+; {$5} [2020/01/01] (({$7})).  3.4.1 checked a balance assertion
+; against the account's holdings stripped of their lot annotations
+; (#2318, #2355), so an assertion never found the lot it names, valued
+; or not; here it stopped with "Balance assertion off by
+; 10 AAPL {$5} [2020/01/01] (({$7})) (expected to see 0)".
+
+account Assets:Broker
+    value $7
+
+2020/01/01 Buy
+    Assets:Broker    10 AAPL @ $5
+    Assets:Cash
+
+2020/01/02 Check
+    Assets:Broker    0 AAPL = 10 AAPL {$5} [2020/01/01]
+
+test bal --lots Assets:Broker
+10 AAPL {$5} [2020/01/01] (({$7}))  Assets:Broker
+end test

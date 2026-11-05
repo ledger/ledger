@@ -1,0 +1,79 @@
+; When valuing a balance fails for several of its commodities, -V and -X
+; (with one target commodity or several) report the failure of the
+; commodity the balance lists first, on every run, and report it once,
+; valuing no commodity twice.
+;
+; The `value` expressions of AAA and BBB call functions that do not exist,
+; so valuing Assets:Broker, which holds both, fails, and the error names
+; AAA's foo_aaa.  Assets:Lots holds lots of CCC and DDD whose valuations,
+; written on the lots, fail the same way, and the error names CCC's
+; foo_ccc.  Ledger used to value the components in the order in which the
+; balance happened to keep them and report the first failure it met, so
+; the function an error named followed that order rather than the
+; commodities.
+
+commodity AAA
+    value foo_aaa(amount)
+
+commodity BBB
+    value foo_bbb(amount)
+
+2024/01/01 Buy
+    Assets:Broker    1 AAA
+    Assets:Broker    1 BBB
+    Equity
+
+2024/01/01 Buy lots
+    Assets:Lots      1 CCC {$1} ((foo_ccc(amount)))
+    Assets:Lots      1 DDD {$1} ((foo_ddd(amount)))
+    Equity
+
+test bal -V --now 2030/06/15 Assets:Broker -> 1
+__ERROR__
+While evaluating value expression:
+  foo_aaa(amount)
+  ^^^^^^^^^^^^^^^
+While calling function 'market (1 AAA ((foo_aaa(amount)))
+1 BBB ((foo_bbb(amount))), 2030/06/15 00:00:00, )':
+Error: Unknown identifier 'foo_aaa'
+end test
+
+test bal -X $ --now 2030/06/15 Assets:Broker -> 1
+__ERROR__
+While evaluating value expression:
+  foo_aaa(amount)
+  ^^^^^^^^^^^^^^^
+While calling function 'market (1 AAA ((foo_aaa(amount)))
+1 BBB ((foo_bbb(amount))), 2030/06/15 00:00:00, $)':
+Error: Unknown identifier 'foo_aaa'
+end test
+
+test bal -X '$,EUR' --now 2030/06/15 Assets:Broker -> 1
+__ERROR__
+While evaluating value expression:
+  foo_aaa(amount)
+  ^^^^^^^^^^^^^^^
+While calling function 'market (1 AAA ((foo_aaa(amount)))
+1 BBB ((foo_bbb(amount))), 2030/06/15 00:00:00, $,EUR)':
+Error: Unknown identifier 'foo_aaa'
+end test
+
+test bal -V --now 2030/06/15 Assets:Lots -> 1
+__ERROR__
+While evaluating value expression:
+  foo_ccc(amount)
+  ^^^^^^^^^^^^^^^
+While calling function 'market (1 CCC {$1} ((foo_ccc(amount)))
+1 DDD {$1} ((foo_ddd(amount))), 2030/06/15 00:00:00, )':
+Error: Unknown identifier 'foo_ccc'
+end test
+
+test bal -X $ --now 2030/06/15 Assets:Lots -> 1
+__ERROR__
+While evaluating value expression:
+  foo_ccc(amount)
+  ^^^^^^^^^^^^^^^
+While calling function 'market (1 CCC {$1} ((foo_ccc(amount)))
+1 DDD {$1} ((foo_ddd(amount))), 2030/06/15 00:00:00, $)':
+Error: Unknown identifier 'foo_ccc'
+end test

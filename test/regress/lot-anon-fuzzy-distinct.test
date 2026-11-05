@@ -1,0 +1,54 @@
+; --anon must not merge two lots that only a tag tells apart, even when
+; their prices agree at the lesser precision.  The typed lot {$1.03}
+; carries the tag (lotA); the computed lot from 23 AAPL @@ $23.60 has the
+; price $1.026087 and the same date.  Rounded to the typed price's two
+; decimals both are $1.03, which is enough for a typed lot price to name a
+; computed lot (#524); only the tag keeps these two apart.  --anon drops
+; the tag and gives each posting the lot whose annotation is exactly the
+; anonymized one, without editing the lot itself
+; (lot-anon-price-rendering.test).  Had it found that lot by the rounding
+; match of #524 instead, the computed lot would have taken the typed price
+; ({B1.03}), in the other order the typed price would have become the
+; computed one ({B1.026087}), and the balance would have merged each pair
+; into one 33 A lot.
+
+; Typed lot first.
+2020/01/01 Buy
+    Assets:Broker    10 AAPL {$1.03} [2020/01/01] (lotA)
+    Assets:Cash
+
+2020/01/01 Buy more
+    Assets:Broker    23 AAPL @@ $23.60
+    Assets:Cash
+
+; Computed lot first.
+2020/02/01 Buy
+    Assets:Broker    23 AAPL @@ $23.60
+    Assets:Cash
+
+2020/02/01 Buy more
+    Assets:Broker    10 AAPL {$1.03} [2020/02/01] (lotB)
+    Assets:Cash
+
+; Without --anon: four lots.
+test reg --lots Broker --format "%(amount)\n"
+10 AAPL {$1.03} [2020/01/01] (lotA)
+23 AAPL {$1.026087} [2020/01/01]
+23 AAPL {$1.026087} [2020/02/01]
+10 AAPL {$1.03} [2020/02/01] (lotB)
+end test
+
+; With --anon: the same four lots, renamed (AAPL to A, $ to B, tags dropped).
+test reg --anon --lots Broker --format "%(amount)\n"
+10 A {B1.03} [2020/01/01]
+23 A {B1.026087} [2020/01/01]
+23 A {B1.026087} [2020/02/01]
+10 A {B1.03} [2020/02/01]
+end test
+
+test bal --anon --lots Broker --format "%(total)\n"
+23 A {B1.026087} [2020/01/01]
+23 A {B1.026087} [2020/02/01]
+10 A {B1.03} [2020/01/01]
+10 A {B1.03} [2020/02/01]
+end test

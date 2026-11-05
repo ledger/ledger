@@ -3,3 +3,9 @@
 #
 # Format: <check_name>:<pattern>
 # See https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
+
+# immer's champ::empty() (lib/immer/immer/detail/hamts/champ.hpp) constructs
+# the shared empty node in static storage sized for a node without a
+# collision buffer, which clang's object-size check reports at -O1 and above
+# on the first balance_t of a process.  Every write stays within the storage.
+object-size:*immer/detail/hamts/*

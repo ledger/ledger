@@ -1,0 +1,48 @@
+; --anon must render a lot's price commodity once, so every posting of the
+; lot shows the same anonymized price.  Every amount of a lot shares the
+; lot's annotation.  --anon used to clear the tag and re-render the price
+; in that shared annotation, so each posting of the lot re-anonymized a
+; price commodity that was already anonymized: the register below printed
+; B5, C5, D5 and E5 for its four postings, and the Broker balance printed
+; the label of its last posting ({C5}).  It now anonymizes a copy of the
+; annotation and gives each posting the lot that carries the copy, leaving
+; the original lot alone.
+
+2020/01/01 Buy
+    Assets:Broker    10 AAPL {$5.00} (lotA)
+    Assets:Cash
+
+2020/01/02 Buy more
+    Assets:Broker    10 AAPL {$5.00} (lotA)
+    Assets:Cash
+
+; All four postings carry the one lot: AAPL becomes A, its price commodity $
+; becomes B, and the tag is dropped.
+test reg --anon --lots --format "%(amount)\n"
+10 A {B5}
+-10 A {B5}
+10 A {B5}
+-10 A {B5}
+end test
+
+test bal --anon --lots Broker --format "%(total)\n"
+20 A {B5}
+end test
+
+; A lot that carries only a tag anonymizes to its bare commodity: --anon
+; drops the tag, which leaves no annotation at all, so the lot's postings
+; print as plain A.  Ledger used to fail an assertion here: clearing the
+; tag in the annotation the lot's postings share emptied it, and the lot's
+; next posting then found the lot with an empty annotation.  These
+; postings are for no shares, so that the register at the top, which
+; leaves out postings that show as zero, keeps its four lines; --empty
+; shows them here.
+
+2020/01/03 Gift
+    Gift:Received    0 AAPL (lotB)
+    Gift:Given       0 AAPL (lotB)
+
+test reg --anon --lots --empty --format "%(amount)\n" Gift
+0 A
+0 A
+end test

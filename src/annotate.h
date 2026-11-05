@@ -118,7 +118,29 @@ struct annotation_t : public flags::supports_flags<>, public equality_comparable
 
   operator bool() const { return price || date || tag || value_expr; }
 
-  bool operator<(const annotation_t& rhs) const;
+  /**
+   * @brief Three-way comparison of a lot's "shape": everything except the
+   * price's numeric value and the semantic flags, i.e. price presence and
+   * price commodity, date, tag and value expression.
+   *
+   * Two annotations of equal shape describe lots that differ at most in
+   * their price, which is exactly the set
+   * commodity_pool_t::find_annotation_fuzzy() has to examine.  Absent
+   * fields sort before present ones.
+   */
+  static int compare_shape(const annotation_t& lhs, const annotation_t& rhs);
+
+  /**
+   * @brief Three-way total order: compare_shape(), then the price value,
+   * then the semantic flags.
+   *
+   * Equivalence under this order coincides with operator==, which is what
+   * lets the pool's annotated_commodities map hold each distinct annotation
+   * exactly once.
+   */
+  int compare(const annotation_t& rhs) const;
+
+  bool operator<(const annotation_t& rhs) const { return compare(rhs) < 0; }
   bool operator==(const annotation_t& rhs) const {
     return (price == rhs.price && date == rhs.date && tag == rhs.tag &&
             (value_expr && rhs.value_expr ? value_expr->text() == rhs.value_expr->text()

@@ -1,0 +1,69 @@
+; A Python Balance indexes and iterates its amounts in display order, the
+; order in which str() prints them (by commodity, then by lot), the same
+; on every run, and reversed() lists them in the opposite order.  It
+; accepts negative indices down to -len, so -1 works on a balance of one
+; amount, and raises IndexError for len and -len - 1 (0 and -1 on an empty
+; balance).  The order in which the balance itself keeps its components
+; changes from run to run.
+;
+; Ledger used to index and iterate the amounts in the order in which the
+; balance stored them (reversed() listed that order backwards) and
+; refused the index -len.
+
+python
+    import ledger
+    def show(val):
+        two = ledger.Balance(ledger.Amount("$1"))
+        two += ledger.Amount("2 EUR")
+        print([str(a) for a in two], str(two[0]), str(two[-1]), str(two[-2]))
+        many = ledger.Balance(ledger.Amount("7 ZZZ"))
+        for s in ["6 AAPL", "8 BTC", "5 JPY", "4 CAD", "3 GBP", "2 EUR", "$1"]:
+            many += ledger.Amount(s)
+        print(len(many), [str(a) for a in many])
+        print([str(many[-i]) for i in range(1, len(many) + 1)])
+        lots = ledger.Balance(ledger.Amount("10 AAPL {$6}"))
+        for s in ["3 AAPL {$5} [2020/01/01]", "4 AAPL {=$5}", "5 AAPL", "10 AAPL {$5}"]:
+            lots += ledger.Amount(s)
+        print([str(a) for a in lots])
+        one = ledger.Balance(ledger.Amount("3 GBP"))
+        print(str(one[-1]))
+        for i in (1, -2):
+            try:
+                one[i]
+            except IndexError:
+                print("IndexError", i)
+        print([str(a) for a in reversed(two)])
+        print([str(a) for a in reversed(many)])
+        print([str(a) for a in reversed(lots)])
+        for i in (len(many), -len(many) - 1):
+            try:
+                many[i]
+            except IndexError:
+                print("IndexError", i)
+        empty = ledger.Balance()
+        print(len(empty), [str(a) for a in empty], [str(a) for a in reversed(empty)])
+        for i in (0, -1):
+            try:
+                empty[i]
+            except IndexError:
+                print("IndexError", i)
+
+eval show(1)
+
+test reg
+['$1', '2 EUR'] $1 2 EUR $1
+8 ['$1', '6 AAPL', '8 BTC', '4 CAD', '2 EUR', '3 GBP', '5 JPY', '7 ZZZ']
+['7 ZZZ', '5 JPY', '3 GBP', '2 EUR', '4 CAD', '8 BTC', '6 AAPL', '$1']
+['5 AAPL', '10 AAPL {$5}', '4 AAPL {=$5}', '3 AAPL {$5} [2020/01/01]', '10 AAPL {$6}']
+3 GBP
+IndexError 1
+IndexError -2
+['2 EUR', '$1']
+['7 ZZZ', '5 JPY', '3 GBP', '2 EUR', '4 CAD', '8 BTC', '6 AAPL', '$1']
+['10 AAPL {$6}', '3 AAPL {$5} [2020/01/01]', '4 AAPL {=$5}', '10 AAPL {$5}', '5 AAPL']
+IndexError 8
+IndexError -9
+0 [] []
+IndexError 0
+IndexError -1
+end test

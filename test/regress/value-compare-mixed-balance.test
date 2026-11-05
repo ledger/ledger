@@ -1,0 +1,34 @@
+; Comparing an account total with a number, or an account total in one
+; commodity with an amount, answers on every run.
+;
+; A number has no commodity, so `total < 100` compares every component of
+; Assets:Mixed, which holds $5.00 and 10 EUR, with it, and holds.  An
+; account in one commodity compares as its amount does: Liabilities:Card's
+; $-5.00 is below $3.00 and Expenses:Food's $5.00 is above it.
+;
+; Comparing Assets:Mixed with an amount in dollars is an error, which
+; value-compare-mixed-balance-error.test pins on this same journal; the
+; error blocks live there so that the semantic bisimulation, which skips
+; a file with any, still replays this journal.
+
+2024/01/01 Opening
+    Assets:Mixed    $5.00
+    Assets:Mixed    10 EUR
+    Equity
+
+2024/01/02 Lunch
+    Expenses:Food       $5.00
+    Liabilities:Card
+
+test bal Assets -d 'total < 100'
+               $5.00
+              10 EUR  Assets:Mixed
+end test
+
+test bal Expenses Liabilities -d 'total < $3'
+              $-5.00  Liabilities:Card
+end test
+
+test bal Expenses Liabilities -d 'total > $3'
+               $5.00  Expenses:Food
+end test

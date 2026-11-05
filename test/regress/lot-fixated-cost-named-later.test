@@ -1,0 +1,44 @@
+; A purchase at a fixated cost, `10 AAPL @ =$5`, creates the lot
+; {=$5} [2020/01/01], and a later posting that names that lot,
+; `10 AAPL {=$5} [2020/01/01]`, adds to it: the running total reaches
+; 20 AAPL {=$5} [2020/01/01] at the second Assets:Broker posting, and
+; Assets and the grand total, net of the -10 on Assets:Cash, hold 10 of
+; that one lot.
+;
+; `@ =` gives the purchase the fixated lot itself, the lot that a posting
+; writing {=$5} [2020/01/01] names, so the two postings reach one lot.
+; Were it instead to mark the lot its cost creates, {$5} [2020/01/01], as
+; fixated, that lot would print as {=$5} [2020/01/01] but still be found
+; only as {$5} [2020/01/01]: the later posting would open a second lot
+; with the same annotation, which a balance would keep apart from the
+; first, so the running total would show 10 AAPL twice, and the grand
+; total 20 and -10 AAPL.
+
+2020/01/01 Buy
+    Assets:Broker    10 AAPL @ =$5
+    Assets:Cash
+
+2020/01/02 Transfer in
+    Assets:Broker    10 AAPL {=$5} [2020/01/01]
+    Assets:Cash
+
+test reg --lots
+20-Jan-01 Buy                   Assets:Broker          10 AAPL {=$5} [2020/01/01] 10 AAPL {=$5} [2020/01/01]
+                                Assets:Cash                    $-50         $-50
+                                                      10 AAPL {=$5} [2020/01/01]
+20-Jan-02 Transfer in           Assets:Broker          10 AAPL {=$5} [2020/01/01]         $-50
+                                                      20 AAPL {=$5} [2020/01/01]
+                                Assets:Cash            -10 AAPL {=$5} [2020/01/01]         $-50
+                                                      10 AAPL {=$5} [2020/01/01]
+end test
+
+test bal --lots
+                      $-50
+10 AAPL {=$5} [2020/01/01]  Assets
+20 AAPL {=$5} [2020/01/01]    Broker
+                       $-50
+-10 AAPL {=$5} [2020/01/01]    Cash
+--------------------
+                      $-50
+10 AAPL {=$5} [2020/01/01]
+end test

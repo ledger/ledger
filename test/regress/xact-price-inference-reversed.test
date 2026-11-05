@@ -1,0 +1,44 @@
+; The transactions of xact-price-inference-hours.test with their postings
+; swapped.  The first posting's commodity is the one bought, whichever side
+; that is, so here the dollars and euros are bought at 24s each: the income
+; postings take the lots, the price history gains $ and € in seconds, and
+; -V values the income in hours.
+;
+; This case never depended on the order of the balance's map: the
+; currencies are not reduced, so the posting's commodity was always found.
+; It pins the other half of the rule, which preferring the reduced unit, or
+; the first commodity in sorted order (s before €), would break.
+
+2024/01/05 Acme
+    Income:Acme               $-1500
+    Assets:Billable              10h
+
+2024/01/20 Globex
+    Income:Globex              €-300
+    Assets:Billable               2h
+
+test reg --lots
+24-Jan-05 Acme                  Income:Acme            $-1500 {24s} [2024/01/05] $-1500 {24s} [2024/01/05]
+                                Assets:Billable              10.00h $-1500 {24s} [2024/01/05]
+                                                                          10.00h
+24-Jan-20 Globex                Income:Globex          €-300 {24s} [2024/01/20] $-1500 {24s} [2024/01/05]
+                                                                          10.00h
+                                                        €-300 {24s} [2024/01/20]
+                                Assets:Billable               2.00h $-1500 {24s} [2024/01/05]
+                                                                          12.00h
+                                                        €-300 {24s} [2024/01/20]
+end test
+
+test prices --now 2024/12/31
+2024/01/05 $                 24s
+2024/01/20 €                 24s
+end test
+
+test bal -V --now 2024/12/31
+              12.00h  Assets:Billable
+             -12.00h  Income
+             -10.00h    Acme
+              -2.00h    Globex
+--------------------
+                   0
+end test

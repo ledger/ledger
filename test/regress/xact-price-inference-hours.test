@@ -1,0 +1,58 @@
+; When Ledger infers the price in a transaction with two commodities and no
+; stated cost, the commodity of the first posting is the one bought, unless
+; only the other is already a price target.  Here that is the hours, which
+; take the cost as lots of 10h {$150} and 2h {€150}, so -V values them at
+; those prices and --basis reports what was billed.
+;
+; The balance holds 10h reduced to 36000s, but the posting's commodity is
+; looked for unreduced, as h, so neither component matches and the choice
+; falls to the component that entered the balance first, the hours, on
+; every run, as in 3.4.1.  Left to the order in which a balance keeps its
+; components, which changes from run to run, some runs would buy the
+; dollars instead, putting a lot of $-1500 {24s} on Income:Acme and
+; leaving -V and --basis in hours.  $ sorts before s and € after it, so no
+; fixed order of the two components can pass for the first posting's
+; commodity in both transactions.
+
+2024/01/05 Acme
+    Assets:Billable              10h
+    Income:Acme               $-1500
+
+2024/01/20 Globex
+    Assets:Billable               2h
+    Income:Globex              €-300
+
+test bal -V --now 2024/12/31
+               $1500
+                €300  Assets:Billable
+              $-1500
+               €-300  Income
+              $-1500    Acme
+               €-300    Globex
+--------------------
+                   0
+end test
+
+test reg --lots
+24-Jan-05 Acme                  Assets:Billable        10.00h {$150} [2024/01/05] 10.00h {$150} [2024/01/05]
+                                Income:Acme                  $-1500       $-1500
+                                                      10.00h {$150} [2024/01/05]
+24-Jan-20 Globex                Assets:Billable        2.00h {€150} [2024/01/20]       $-1500
+                                                      10.00h {$150} [2024/01/05]
+                                                       2.00h {€150} [2024/01/20]
+                                Income:Globex                 €-300       $-1500
+                                                      10.00h {$150} [2024/01/05]
+                                                       2.00h {€150} [2024/01/20]
+                                                                           €-300
+end test
+
+test bal --basis
+               $1500
+                €300  Assets:Billable
+              $-1500
+               €-300  Income
+              $-1500    Acme
+               €-300    Globex
+--------------------
+                   0
+end test

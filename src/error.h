@@ -97,6 +97,29 @@ inline void warning_func(const string& message) {
 /// an exception is reported.
 extern thread_local std::ostringstream _ctxt_buffer;
 
+/// Move the error context accumulated so far out of the buffer into @p into,
+/// so that a computation which may have to be retried after a failure (see
+/// balance_t::visit_components) starts from an empty context, and the lines
+/// its error handlers add can be set aside in turn or dropped.  Constant
+/// time: nothing moves while the buffer is empty, the usual case.
+inline void take_error_context(std::ostringstream& into) {
+  if (long(_ctxt_buffer.tellp()) != 0)
+    into.swap(_ctxt_buffer);
+}
+
+/// Put the context take_error_context() moved into @p from back, in front
+/// of whatever the buffer has gathered since (an expression's error handler
+/// puts its own lines before the context it finds, so this is the layout an
+/// uninterrupted computation leaves).  @p from is left empty.
+inline void restore_error_context(std::ostringstream& from) {
+  if (long(from.tellp()) == 0)
+    return;
+  if (long(_ctxt_buffer.tellp()) != 0)
+    from << '\n' << _ctxt_buffer.str();
+  _ctxt_buffer.swap(from);
+  from.str(std::string());
+}
+
 /// Append a context line to the error context buffer.  Multiple lines
 /// are separated by newlines.  The parser calls this as it enters
 /// nested scopes (files, transactions, postings) so that if an error

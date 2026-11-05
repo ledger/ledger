@@ -39,7 +39,7 @@ else
     export ASAN_OPTIONS="detect_leaks=1:detect_stack_use_after_return=1:check_initialization_order=1"
     export LSAN_OPTIONS="suppressions=${PROJECT_ROOT}/.lsan-suppressions"
 fi
-export UBSAN_OPTIONS="print_stacktrace=1:halt_on_error=0"
+export UBSAN_OPTIONS="print_stacktrace=1:halt_on_error=0:suppressions=${PROJECT_ROOT}/ubsan-suppressions.txt"
 
 ctest --output-on-failure
 

@@ -1,0 +1,75 @@
+; A lot bought at a fixated cost, `10 AAPL @ =$5`, is the lot
+; {=$5} [2020/01/01], and a posting that names a lot names exactly that
+; lot: {$5} [2020/01/01] is another one, the "=" marker being part of a
+; lot's identity (#1454).  Assets:Broker:Exact sells its lot as
+; {=$5} [2020/01/01] and ends empty.  Assets:Broker:Floating sells
+; `-10 AAPL {$5} [2020/01/01] @ $6`, and Assets:Broker:FixatedSale the
+; same at a fixated price, `@ =$6`: each names the floating lot, which it
+; does not hold, so each keeps its {=$5} lot and goes 10 short in the {$5}
+; one; bal nets the two to 0 AAPL, --lots shows both, and -V values the
+; pair at $50 - $70 = $-20.  A purchase that names its lot at a fixated
+; cost, `10 AAPL {$5} @ =$5`, buys into the lot it names, the floating
+; {$5}, since `@ =price` fixates only a lot it creates: Assets:Broker:Named
+; holds 10 AAPL {$5}, and -V values it at the later $7 price, $70.
+;
+; 3.4.1 closed the Floating and FixatedSale sales and fixated Named's lot
+; by setting the fixated flag on the lot {$5} [2020/01/01] itself whenever
+; a cost was fixated, which made the two spellings one lot for every
+; account that held either (lot-fixated-cost-neighbour.test shows what
+; that did to the other holders).
+
+P 2020/03/01 AAPL $7
+
+2020/01/01 Buy
+    Assets:Broker:Exact          10 AAPL @ =$5
+    Assets:Cash
+
+2020/01/01 Buy
+    Assets:Broker:Floating       10 AAPL @ =$5
+    Assets:Cash
+
+2020/01/01 Buy
+    Assets:Broker:FixatedSale    10 AAPL @ =$5
+    Assets:Cash
+
+2020/01/01 Buy, naming the lot
+    Assets:Broker:Named          10 AAPL {$5} @ =$5
+    Assets:Cash
+
+2020/02/01 Sell as {=$5}
+    Assets:Broker:Exact         -10 AAPL {=$5} [2020/01/01] @ $6
+    Assets:Cash                  $60
+    Income:Gains
+
+2020/02/01 Sell as {$5}
+    Assets:Broker:Floating      -10 AAPL {$5} [2020/01/01] @ $6
+    Assets:Cash                  $60
+    Income:Gains
+
+2020/02/01 Sell as {$5} at a fixated price
+    Assets:Broker:FixatedSale   -10 AAPL {$5} [2020/01/01] @ =$6
+    Assets:Cash                  $60
+    Income:Gains
+
+test bal --lots --flat --no-total --empty Assets:Broker
+                   0  Assets:Broker:Exact
+-10 AAPL {$5} [2020/01/01]
+10 AAPL {=$5} [2020/01/01]  Assets:Broker:FixatedSale
+-10 AAPL {$5} [2020/01/01]
+10 AAPL {=$5} [2020/01/01]  Assets:Broker:Floating
+        10 AAPL {$5}  Assets:Broker:Named
+end test
+
+test bal --flat --no-total --empty Assets:Broker
+                   0  Assets:Broker:Exact
+                   0  Assets:Broker:FixatedSale
+                   0  Assets:Broker:Floating
+             10 AAPL  Assets:Broker:Named
+end test
+
+test bal -V --flat --no-total --empty Assets:Broker
+                   0  Assets:Broker:Exact
+                $-20  Assets:Broker:FixatedSale
+                $-20  Assets:Broker:Floating
+                 $70  Assets:Broker:Named
+end test

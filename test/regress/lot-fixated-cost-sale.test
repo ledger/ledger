@@ -1,0 +1,38 @@
+; A sale at a fixated cost that names a lot its account holds,
+; `-10 AAPL {$5} [2020/01/01] @ =$6`, sells from that lot: Assets:Broker
+; is left empty, and print writes the lot as the posting names it, {$5}.
+; `@ =price` fixates the lot its own cost creates, as writing {=price}
+; would, and never a lot the posting names.
+;
+; 3.4.1 fixated the named lot itself, for every holder and from its
+; purchase on, so the purchase showed as {=$5} [2020/01/01], and print
+; wrote the sale as `-10 AAPL @ $6`, without its lot or its `=`, which
+; reads back as a sale of another lot, {$6} [2020/02/01]: Assets:Broker
+; keeps both lots, and the $10 gain is lost.
+
+2020/01/01 Buy
+    Assets:Broker    10 AAPL @ $5
+    Assets:Cash
+
+2020/02/01 Sell
+    Assets:Broker   -10 AAPL {$5} [2020/01/01] @ =$6
+    Assets:Cash      $60
+    Income:Gains
+
+test bal --lots
+                 $10  Assets:Cash
+                $-10  Income:Gains
+--------------------
+                   0
+end test
+
+test print
+2020/01/01 Buy
+    Assets:Broker                            10 AAPL @ $5
+    Assets:Cash
+
+2020/02/01 Sell
+    Assets:Broker                       -10 AAPL {$5} [2020/01/01] @= $6
+    Assets:Cash                                  $60
+    Income:Gains
+end test

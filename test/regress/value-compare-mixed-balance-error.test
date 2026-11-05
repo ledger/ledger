@@ -1,0 +1,56 @@
+; Comparing an account total that holds several commodities with an
+; amount is an error on every run, whichever component comes first.
+;
+; A balance is below an amount when each of its components is, and
+; Assets:Mixed holds $5.00 and 10 EUR: 10 EUR cannot be compared with
+; $3.00, so `total < $3` is an error, and so is `total >= $3`, its
+; negation.  Ledger used to compare the components in the order in which
+; the balance happened to keep them and stop at the first one that settled
+; the answer.  That order met 10 EUR first here, so the error was
+; reported; had it met $5.00 first, `$5.00 >= $3.00` would have made
+; `total < $3` false, and `total >= $3` true, without an error.  That
+; order changes from run to run, so every component's commodity is now
+; checked before any is compared.
+;
+; A value expression evaluates `a > b` as `b < a`, so `total > $3`
+; compares the amount with the balance, which needs the balance as a
+; single amount and fails with another message, as it always did.
+;
+; The comparisons on this journal that answer are in
+; value-compare-mixed-balance.test: the semantic bisimulation skips a
+; file with an error block, and still replays that one.
+
+2024/01/01 Opening
+    Assets:Mixed    $5.00
+    Assets:Mixed    10 EUR
+    Equity
+
+2024/01/02 Lunch
+    Expenses:Food       $5.00
+    Liabilities:Card
+
+test bal Assets -d 'total < $3' -> 1
+__ERROR__
+While evaluating value expression:
+  (total < $3.00)
+  ^^^^^^^^^^^^^^^
+Error: Cannot compare amounts with different commodities: 'EUR' and '$'
+end test
+
+test bal Assets -d 'total >= $3' -> 1
+__ERROR__
+While evaluating value expression:
+  (total >= $3.00)
+  ^^^^^^^^^^^^^^^^
+Error: Cannot compare amounts with different commodities: 'EUR' and '$'
+end test
+
+test bal Assets -d 'total > $3' -> 1
+__ERROR__
+While evaluating value expression:
+  (total > $3.00)
+  ^^^^^^^^^^^^^^^
+While converting $5.00
+10 EUR to an amount:
+Error: Cannot convert a balance with multiple commodities to an amount
+end test

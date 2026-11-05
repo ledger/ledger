@@ -1,0 +1,42 @@
+; A transaction that exchanges two commodities, without stating a cost or
+; leaving a posting blank, gets an inferred price, and Ledger normally
+; takes the commodity of its first posting as the one bought, priced in
+; the other.  When the first posting holds neither commodity -- a zero fee
+; in a third commodity, or balanced virtual budget lines -- the choice
+; falls to the commodity that entered the transaction's balance first.
+; Ledger adds up the real postings in order, and at the first posting in
+; a second commodity the sum of the postings before it enters the balance
+; first, unless it is zero: a zero sum never enters, and the first to
+; enter is then the commodity of the first non-zero posting from there on.
+; In the first transaction that sum is the zero fee, so the 100 GBP
+; enters first; in the second the budget lines are not real postings, and
+; the sum is the 100 GBP itself.  GBP is bought in both, so the lots go on
+; Assets:GBP and the inferred prices are GBP in $ and in EUR.  Picking the
+; other commodity would put lots of $ and of EUR, priced in GBP, on
+; Assets:USD and Assets:EUR.  The choice must not depend on the order in
+; which a balance happens to keep its two commodities, which changes from
+; run to run.  Real postings that cancel out before the second commodity
+; arrives are the subject of xact-price-inference-cancel-first.test.
+
+2024/01/05 Exchange with a zero fee first
+    Assets:Fee              0 EUR
+    Assets:GBP            100 GBP
+    Assets:USD           $-130
+
+2024/02/05 Exchange after budget lines
+    [Budget:Travel]       $100
+    [Budget:Available]   $-100
+    Assets:GBP            100 GBP
+    Assets:EUR           -115 EUR
+
+test bal --lots --flat --no-total Assets
+            -115 EUR  Assets:EUR
+    100 GBP {$1.3} [2024/01/05]
+100 GBP {1.15 EUR} [2024/02/05]  Assets:GBP
+               $-130  Assets:USD
+end test
+
+test prices
+2024/01/05 GBP              $1.3
+2024/02/05 GBP          1.15 EUR
+end test

@@ -1,0 +1,69 @@
+; In a transaction that exchanges two commodities, without stating a cost
+; or leaving a posting blank, Ledger normally prices the commodity of the
+; first posting in the other.  When the first posting holds neither
+; commodity, as balanced virtual budget lines in a third one do, it
+; prices the commodity that entered the transaction's balance first.
+; Ledger adds up the real postings in order, and at the first posting in
+; a second commodity the sum of the postings before it enters the balance
+; first, unless it is zero: a zero sum never enters, and the first to
+; enter is then the commodity of the first non-zero posting from there on.
+; Either way, when only one of the two is already a price target, that one
+; is the price (#1130).
+;
+; The first transaction moves 50 EUR from the bank to the wallet before
+; buying 100 GBP for 115 EUR.  The move sums to zero, so GBP enters first
+; and is priced in EUR, at 1.15 EUR, and the lot goes on Assets:GBP.  The
+; second is the first without its budget lines, in SEK and CHF: it prices
+; SEK, the commodity of its first posting.  The third is the first in DKK
+; and NOK, with a 10 DKK fee paid before buying NOK, so the sum is 10 DKK:
+; DKK is priced in NOK, and the DKK postings become lots.  Each
+; transaction exchanges its own pair of currencies, so that none is a
+; price target yet.  GBP and SEK sort after the other currency and DKK
+; before it, so no fixed order of the two components can pass for the rule
+; in all three transactions, and neither can the order in which a balance
+; keeps them, which changes from run to run.
+;
+; Ledger 3.4.1 summed the budget lines with the real postings, so the
+; dollars were the zero sum, EUR entered first, and the first transaction
+; priced EUR in GBP.
+
+2024/01/05 Exchange after a transfer
+    [Budget:Travel]          $100
+    [Budget:Available]      $-100
+    Assets:Wallet:EUR        50 EUR
+    Assets:Bank:EUR         -50 EUR
+    Assets:GBP              100 GBP
+    Assets:Bank:EUR        -115 EUR
+
+2024/01/06 Exchange after a transfer, without budget lines
+    Assets:Wallet:SEK        50 SEK
+    Assets:Bank:SEK         -50 SEK
+    Assets:CHF              100 CHF
+    Assets:Bank:SEK        -115 SEK
+
+2024/01/07 Exchange after a transfer and a fee
+    [Budget:Travel]          $100
+    [Budget:Available]      $-100
+    Assets:Wallet:DKK        50 DKK
+    Assets:Bank:DKK         -50 DKK
+    Expenses:Fees             10 DKK
+    Assets:NOK              100 NOK
+    Assets:Bank:DKK        -125 DKK
+
+test pricedb
+P 2024/01/05 00:00:00 GBP 1.15 EUR
+P 2024/01/06 00:00:00 SEK 0.869565 CHF
+P 2024/01/07 00:00:00 DKK 0.869565 NOK
+end test
+
+test bal --lots --flat --no-total Assets
+-175 DKK {0.869565 NOK} [2024/01/07]  Assets:Bank:DKK
+            -165 EUR  Assets:Bank:EUR
+-165 SEK {0.869565 CHF} [2024/01/06]  Assets:Bank:SEK
+             100 CHF  Assets:CHF
+100 GBP {1.15 EUR} [2024/01/05]  Assets:GBP
+             100 NOK  Assets:NOK
+50 DKK {0.869565 NOK} [2024/01/07]  Assets:Wallet:DKK
+              50 EUR  Assets:Wallet:EUR
+50 SEK {0.869565 CHF} [2024/01/06]  Assets:Wallet:SEK
+end test
