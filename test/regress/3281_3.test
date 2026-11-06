@@ -1,0 +1,38 @@
+; Regression test for the stray error context in issue #3281: a failure that
+; ledger deliberately ignores must not leave its error context behind.
+;
+; When a posting lacks the --pivot tag, transfer_details tries the tag name
+; as a posting property instead (as in `--pivot payee`) and ignores the
+; failure when it is not one.  But the failed evaluation had already
+; recorded "While evaluating value expression: Fund" in the global error
+; context, and nothing cleared it.  The next real error -- here an unknown
+; identifier in --limit -- was then reported under one stray frame for each
+; posting pivoted so far.
+;
+; The query parser does the same with a term that only looks like a date
+; comparison: `a<[b]` is tried as an expression first, and when that fails
+; to parse, it is matched against account names instead.
+
+2022-01-11 * Monthly fee
+    Expenses:Fees                5.00 GBP
+    Assets:Pension              -5.00 GBP
+
+test bal --pivot Fund -l 'nosuch' -> 1
+__ERROR__
+While evaluating value expression:
+  nosuch
+  ^^^^^^
+While handling posting from "$FILE", line 17:
+>     Expenses:Fees                5.00 GBP
+Error: Unknown identifier 'nosuch'
+end test
+
+test bal 'a<[b]' -l 'nosuch' -> 1
+__ERROR__
+While evaluating value expression:
+  (nosuch & (account =~ /a<[b]/))
+   ^^^^^^
+While handling posting from "$FILE", line 17:
+>     Expenses:Fees                5.00 GBP
+Error: Unknown identifier 'nosuch'
+end test

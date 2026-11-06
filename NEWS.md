@@ -421,12 +421,14 @@ components with their standard-library equivalents.
 - Rewrite the query parser as a documented recursive-descent parser with a
   published EBNF grammar in the header
 
-- Fix `--empty` to respect the query/`--limit` predicate (#3189); preserve
-  backslash escapes in regex patterns; preserve push-command positional query
-  args across REPL commands (#528); fix the query lexer that included trailing
-  whitespace before operators; handle `==` in query metadata predicates
-  (#842); honor `not` in positional queries for `print`/`xact`/`dump` (#1227);
-  evaluate the `expr any()` keyword in single-argument queries (#1185)
+- Show declared-but-unused accounts with `--empty` (#1204) and in the
+  `accounts` listing, filtered by the account terms of the query/`--limit`
+  predicate (#3189, #3212, #3281); preserve backslash escapes in regex
+  patterns; preserve push-command positional query args across REPL commands
+  (#528); fix the query lexer that included trailing whitespace before
+  operators; handle `==` in query metadata predicates (#842); honor `not` in
+  positional queries for `print`/`xact`/`dump` (#1227); evaluate the
+  `expr any()` keyword in single-argument queries (#1185)
 
 - A comma after a name now separates value expression arguments with or
   without a space after it (#3251).  It used to begin the quantity of an

@@ -1,0 +1,92 @@
+; Regression test for issue #3281: `--empty` combined with an `account`
+; directive failed with "Too few arguments to function" when the --limit
+; predicate tested a property of the posting, as in
+; `bal --empty -l 'commodity !~ /GBP/'`.
+;
+; With --empty, the balance report (#1204) and the accounts listing also
+; admit accounts that were declared but never used.  To honour the query
+; (#3189, #3212), each such account was checked by evaluating the whole
+; --limit predicate against the account itself.  But --limit is a posting
+; predicate: only the account terms (`account`, `account_base`, `depth`)
+; mean the same thing for an account.  Every other name either failed to
+; evaluate (`commodity`, `cost`, and `code` -- produced by the `#CODE` query
+; syntax) or quietly tested something unrelated: `date` became the
+; account's latest posting date, so `-b` hid declared accounts while `-e`
+; showed them.
+;
+; A declared account that no posting in the report reaches is now kept
+; unless the account terms of the predicate rule it out.  Terms about a
+; posting cannot be judged for an account without one, so they neither
+; exclude it nor raise an error.
+
+account Assets:Savings
+account Equity:Opening balance
+
+2022-01-11 * (101) Monthly fee
+    Expenses:Fees                5.00 GBP
+    Assets:Pension              -5.00 GBP
+
+2022-02-11 * Monthly fee
+    Expenses:Fees                5.00 GBP
+    Assets:Pension              -5.00 GBP
+
+; The command from the issue report.  Every posting is in GBP, so only the
+; declared accounts remain.
+test --empty bal -l 'commodity !~ /GBP/'
+                   0  Assets:Savings
+                   0  Equity:Opening balance
+--------------------
+                   0
+end test
+
+; The second command from the issue report.
+test --empty bal --pivot Fund -l 'commodity !~ /GBP/'
+                   0  Assets:Savings
+                   0  Equity:Opening balance
+--------------------
+                   0
+end test
+
+; The accounts listing admits declared accounts the same way (#3212).
+test accounts -l 'commodity !~ /GBP/'
+Assets:Savings
+Equity:Opening balance
+end test
+
+; The account term still filters declared accounts, even though the
+; posting term is evaluated first: Equity is ruled out by `Assets`.
+test --empty bal -l 'commodity !~ /GBP/' Assets
+                   0  Assets:Savings
+end test
+
+; A code query (`#CODE`) used to fail with "Unknown identifier 'code'".
+test --empty bal '#101'
+           -5.00 GBP  Assets
+           -5.00 GBP    Pension
+                   0    Savings
+                   0  Equity:Opening balance
+            5.00 GBP  Expenses:Fees
+--------------------
+                   0
+end test
+
+; A begin date used to hide declared accounts, while an end date did not.
+test --empty bal -b 2022-02-01
+           -5.00 GBP  Assets
+           -5.00 GBP    Pension
+                   0    Savings
+                   0  Equity:Opening balance
+            5.00 GBP  Expenses:Fees
+--------------------
+                   0
+end test
+
+test --empty bal -e 2022-02-01
+           -5.00 GBP  Assets
+           -5.00 GBP    Pension
+                   0    Savings
+                   0  Equity:Opening balance
+            5.00 GBP  Expenses:Fees
+--------------------
+                   0
+end test
