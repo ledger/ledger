@@ -1,0 +1,52 @@
+; An alias or an account block names its target through the
+; apply-account stack in force when the directive is read
+; (src/textual_directives.cc, instance_t::alias_directive resolving the
+; target with top_account()->find_account; account_directive registering
+; the block's account under top_account), and register_account expands a
+; posting that fired an alias without a second prefix
+; (src/journal.cc:169-177).  A `default` account, the account-block form
+; of the `bucket` directive, completes the one posting of its
+; transaction (src/xact.cc:368, posts.size() == 1, doc/ledger3.texi
+; "contain only a single posting"), and an account-block payee maps the
+; Unknown account of a matching payee (src/journal.cc:179-188).  The
+; semantic bisimulation
+; (test/semantic/check_all.py) replays this journal, so an oracle that
+; prefixed an alias expansion with the apply stack, or that resolved a
+; block account at top level, would fail here.
+
+apply account Top
+alias Foo=Foo
+alias Food=Bar
+account Fee
+    alias Fee
+account Suspense
+    default
+account Groceries
+    payee Grocer
+end apply account
+alias Rent=Housing
+apply account Home
+2024/01/01 X
+    Foo    $10
+    Food    $5
+    Fee    $1
+    Rent    $20
+    Cash
+end apply account
+2024/01/02 Solo
+    Expenses:Misc    $3
+2024/01/03 Grocer
+    Unknown    $7
+    Assets:Cash
+
+test bal --flat --no-total
+                 $-7  Assets:Cash
+                  $3  Expenses:Misc
+                $-36  Home:Cash
+                 $20  Housing
+                  $5  Top:Bar
+                  $1  Top:Fee
+                 $10  Top:Foo
+                  $7  Top:Groceries
+                 $-3  Top:Suspense
+end test

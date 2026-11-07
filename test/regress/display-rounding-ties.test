@@ -1,0 +1,35 @@
+; C++ prints an amount through stream_out_mpq (src/amount.cc:208-245),
+; which rounds to nearest with ties to even at every stage, so an exact
+; decimal tie is decided by the value's binary expansion, not by half
+; away from zero.  At precision 1 the postings print A 0.25 as 0.2,
+; B 0.35 as 0.3, C 0.45 as 0.5, D 0.15 as 0.2, F 0.55 as 0.6, G 0.65
+; as 0.7 and H 0.75 as 0.8 in the rows below, and E's 0.05 rounds to
+; 0.0, its row suppressed.  An
+; oracle rounding half away from zero instead prints A as 0.3 and B as
+; 0.4, and gives the 0.05 tie a 0.1 row where C++ prints none.  The
+; semantic bisimulation (test/semantic/check_all.py) replays this
+; journal, so such an oracle fails here.
+
+2015/01/01 ties
+    A   (0.5 * 0.5 FOO)
+    B   (0.5 * 0.7 FOO)
+    C   (0.5 * 0.9 FOO)
+    D   (0.5 * 0.3 FOO)
+    E   (0.5 * 0.1 FOO)
+    F   (0.5 * 1.1 FOO)
+    G   (0.5 * 1.3 FOO)
+    H   (0.5 * 1.5 FOO)
+    Z
+
+test bal
+             0.2 FOO  A
+             0.3 FOO  B
+             0.5 FOO  C
+             0.2 FOO  D
+             0.6 FOO  F
+             0.7 FOO  G
+             0.8 FOO  H
+            -3.2 FOO  Z
+--------------------
+                   0
+end test

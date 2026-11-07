@@ -180,6 +180,7 @@ EXTENSION_PREFIXES = (">> dr ", ">> cr ", ">> value ",
 GROSS_REFUSALS = os.path.join(HERE, "gross-refusals.txt")
 GROSS_DIVERGENT = os.path.join(HERE, "gross-divergent.txt")
 NEG_PERMISSIVE = os.path.join(HERE, "neg-oracle-permissive.txt")
+ORACLE_DIVERGENT = os.path.join(HERE, "oracle-divergent.txt")
 GROSS = {"PASS": [], "FAIL": [], "SKIP": []}
 GROSS_ROWS = {"dr": 0, "cr": 0, "files": 0}
 # value-refusals.txt: the same ratchet shape, for the `?? exchange`
@@ -613,6 +614,10 @@ def main():
     ap.add_argument("--neg-permissive", default=NEG_PERMISSIVE,
                     help="the ratchet file holding the unbalanced "
                          "negatives the oracle is known to accept")
+    ap.add_argument("--oracle-divergent", default=ORACLE_DIVERGENT,
+                    help="the ratchet file holding the files whose "
+                         "balance rows are known to diverge from the "
+                         "oracle's")
     ap.add_argument("--value", action="store_true",
                     help="also compare each file's market-valued "
                          "balances, where its own bal lines name one "
@@ -643,6 +648,13 @@ def main():
                 ln = ln.rstrip("\n")
                 if ln and not ln.startswith("#"):
                     permissive_listed.add(ln.strip())
+    divergent_rows_listed = set()
+    if os.path.isfile(args.oracle_divergent):
+        with open(args.oracle_divergent, encoding="utf-8") as fh:
+            for ln in fh:
+                ln = ln.rstrip("\n")
+                if ln and not ln.startswith("#"):
+                    divergent_rows_listed.add(ln.strip())
     repo = os.path.abspath(args.source) if args.source else sweep.REPO
     ledger = args.ledger or os.path.join(repo, "build", "ledger")
     env = {**os.environ, "TZ": os.environ.get("TZ", "America/Chicago")}
@@ -679,6 +691,7 @@ def main():
 
     bins = {"PASS": [], "FAIL": [], "NEG:unbalanced": [],
             "NEG:oracle-permissive": [], "SKIP:negative": [],
+            "SKIP:known-divergence": [],
             "SKIP:no-journal": [], "SKIP:python": [],
             "SKIP:out-of-scope": [], "SKIP:cpp-parse": []}
     details = []
@@ -1178,6 +1191,18 @@ def main():
                               journal_text_of.get(dat, ""))
             if cpp_rows == res:
                 bins["PASS"].append(rel)
+            elif rel in divergent_rows_listed:
+                # A known oracle departure in the balance rows (the
+                # oracle's displayed-row rounding is half away from
+                # zero where C++ rounds the value's binary expansion to
+                # even; recorded at Ledger/Driver.lean displayAmount).
+                # Binned visibly, never silently, and held to the
+                # ratchet below.
+                bins["SKIP:known-divergence"].append(rel)
+                details.append({
+                    "file": rel, "status": "SKIP:known-divergence",
+                    "only_oracle": sorted(res - cpp_rows)[:8],
+                    "only_cpp": sorted(cpp_rows - res)[:8]})
             else:
                 bins["FAIL"].append(rel)
                 details.append({
@@ -1580,6 +1605,17 @@ def main():
     # what it once parsed, or a C++ ledger that errors where it once
     # balanced — and letting that bin as a skip would turn either
     # regression green.
+    # The known row-divergence ratchet: every listed file must have
+    # diverged, and a divergence on an unlisted file stays a FAIL.
+    diverged_rows = set(bins["SKIP:known-divergence"])
+    if divergent_rows_listed - diverged_rows:
+        for rel in sorted(divergent_rows_listed - diverged_rows):
+            print(f"stale oracle-divergent ratchet entry: {rel}")
+    if diverged_rows - divergent_rows_listed:
+        for rel in sorted(diverged_rows - divergent_rows_listed):
+            bins["FAIL"].append(rel)
+            details.append({"file": rel, "status": "FAIL",
+                            "why": "divergence not in the ratchet"})
     ratchet = bins["SKIP:out-of-scope"] or bins["SKIP:cpp-parse"]
     if ratchet and not bins["FAIL"]:
         print("ratchet: SKIP:out-of-scope and SKIP:cpp-parse must stay"

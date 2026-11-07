@@ -415,6 +415,11 @@ EXPECTED_UNVALUED = {
         "-X", "the reversed inferred price leaves one row priced in EUR"
               " that -X $ has no price from EUR for, beside the $ rows;"
               " -V values them and foots"),
+    "test/regress/implicit-exchange-virtual-cost.test": (
+        "-V", "the inferred exchange leaves the rows in $ and EUR, and"
+              " neither report values the XYZ holding, whose cost $1"
+              " is a virtual posting's cost; -X $ values the $ rows and"
+              " foots"),
 }
 
 # The tests the check exists for: on the default corpus each must PASS,

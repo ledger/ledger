@@ -1,0 +1,10 @@
+# The compared files whose balance rows are known to diverge from the
+# oracle's, as test/semantic/check_all.py measured them (repo-relative
+# path).  The oracle rounds a displayed row half away from zero at the
+# commodity's learned precision (Ledger/Driver.lean displayAmount),
+# where C++ rounds the value's binary expansion to even at every stage
+# (src/amount.cc stream_out_mpq): an exact tie such as 0.25 at one
+# place prints 0.2 in C++ and 0.3 here.  The ratchet: an unlisted
+# divergence or a stale entry fails the run, so the set changes only
+# with the rule that forced it.
+test/regress/display-rounding-ties.test

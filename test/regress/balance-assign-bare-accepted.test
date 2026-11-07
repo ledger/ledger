@@ -1,0 +1,56 @@
+; A balance assignment whose target has no commodity posts the single
+; amount left: the euros of Netted net out, the other commodity leaves,
+; the two lots of Lots are one commodity, and Future's zero is posted
+; before its later euros (src/textual_xacts.cc, balance assignment;
+; src/balance.h:473-480, balance_t::to_amount).  The semantic
+; bisimulation (test/semantic/check_all.py) replays this journal, so an
+; oracle that fanned the difference out over the commodities, or that
+; rejected it, would fail here.
+
+2024/01/01 Open
+    Assets:Netted    $10
+    Assets:Netted    20 EUR
+    Assets:Future    $10
+    Equity:Opening
+
+2024/01/01 Buy one lot
+    Assets:Lots    10 FOO @ $1
+    Equity:Opening
+
+2024/01/01 Buy another lot
+    Assets:Lots    10 FOO @ $2
+    Equity:Opening
+
+2024/01/02 Net out the euros
+    Assets:Netted    -20 EUR
+    Equity:Opening
+
+2024/01/03 Zero an account whose other commodity nets to zero
+    Assets:Netted    = 0
+    Assets:Cleared
+
+2024/01/03 Zero an account holding two lots of one commodity
+    Assets:Lots    = 0
+    Assets:Cleared
+
+2024/01/03 Zero an account before a later posting in another commodity
+    Assets:Future    = 0
+    Assets:Cleared
+
+2024/01/05 Later euros
+    Assets:Future    20 EUR
+    Equity:Opening
+
+test bal
+                 $20
+              20 EUR
+              20 FOO  Assets
+                 $20
+              20 FOO    Cleared
+              20 EUR    Future
+                $-50
+             -20 EUR  Equity:Opening
+--------------------
+                $-30
+              20 FOO
+end test

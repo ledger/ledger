@@ -1,0 +1,90 @@
+; Transactions whose two-commodity balance finalize() accepts through
+; the implicit exchange of Phase 3, possibly with the lot-price gain
+; of Phase 6.  Each rejected counterpart has its own
+; implicit-exchange-*.test.
+
+commodity B
+    format 1000.00 B
+
+; Opposite signs: converted at the rate the residual implies.
+2024/01/01 Opposite signs
+    Assets:Fx:A      $100
+    Assets:Fx:B      -80 EUR
+
+; Same signs, top posting first: the doubled cost-side residual
+; 0.002 B rounds to zero at the precision of B.
+2024/01/02 Same signs, negligible
+    Assets:Tiny:X       1 A
+    Assets:Tiny:Y    0.001 B
+
+; A lot price in a third commodity is not a conversion rate.
+2024/01/03 Lot price in a third commodity
+    Assets:Lot:S     10 AAPL {40.00 EUR}
+    Assets:Lot:C    $-500
+
+; A lot price in the other commodity: the Phase 6 gain vanishes
+; because the price agrees with the residual.
+2024/01/04 Lot price agrees
+    Assets:Agree:S    10 MSFT {$50}
+    Assets:Agree:C   $-500
+
+; Two lots of one base priced in different commodities.
+2024/01/05 Lots priced in different commodities
+    Assets:Split:S    28 XYZ {$11}
+    Assets:Split:S    -7 XYZ {40.00 EUR}
+
+; A lot date alone is not a lot price.
+2024/01/06 Lot date only
+    Assets:Dated:S    10 GOOG [2020/01/01]
+    Assets:Dated:T   -10 GOOG
+
+; The top posting's commodity nets to zero; opposite signs balance
+; whichever side is converted.
+2024/01/07 Top commodity nets to zero
+    Assets:Net:A      $100
+    Assets:Net:B     $-100
+    Assets:Net:C      10 IBM
+    Assets:Net:D     -80 CHF
+
+test bal
+               $-900
+                 1 A
+             10 AAPL
+             -80 CHF
+             -80 EUR
+              10 IBM
+             10 MSFT
+              21 XYZ  Assets
+               $-500
+             10 MSFT    Agree
+               $-500      C
+             10 MSFT      S
+                   0    Dated
+             10 GOOG      S
+            -10 GOOG      T
+                $100
+             -80 EUR    Fx
+                $100      A
+             -80 EUR      B
+               $-500
+             10 AAPL    Lot
+               $-500      C
+             10 AAPL      S
+             -80 CHF
+              10 IBM    Net
+                $100      A
+               $-100      B
+              10 IBM      C
+             -80 CHF      D
+              21 XYZ    Split:S
+                 1 A    Tiny:X
+--------------------
+               $-900
+                 1 A
+             10 AAPL
+             -80 CHF
+             -80 EUR
+              10 IBM
+             10 MSFT
+              21 XYZ
+end test

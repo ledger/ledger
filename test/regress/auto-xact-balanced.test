@@ -1,0 +1,61 @@
+; Automated transactions whose must-balance postings keep every
+; transaction balanced (src/xact.cc, auto_xact_t::extend_xact, and
+; xact_base_t::verify).  Since #3317 each balancing group is verified
+; on its own, so a rule's postings must balance within the groups
+; their accounts put them in: the rule below books the budget pair in
+; the bracket-virtual group and the savings entry inside the real
+; group's own balance, which the elided posting completes.
+
+= /^Expenses:Food/
+    [Budget:Food]    -1
+    [Budget:Savings]  1
+
+= /^Expenses:Books/
+    (Budget:Books)    -1
+
+= /^Expenses:Snacks/
+    Assets:Savings    0.0001
+
+= /^Expenses:Energy/
+    Assets:Rebate    1
+    Income:Rebate   -72.00 EUR
+
+2026/01/01 lunch
+    Expenses:Food    10.00 USD
+    Assets:Cash
+
+2026/01/02 novel
+    Expenses:Books    20.00 USD
+    Assets:Cash
+
+2026/01/03 crisps
+    Expenses:Snacks    10.00 USD
+    Assets:Cash
+
+2026/01/04 power
+    Expenses:Energy    100 kWh @@ 72.00 EUR
+    Assets:Cash
+
+test bal
+          -72.00 EUR
+          -40.00 USD
+             100 kWh  Assets
+          -72.00 EUR
+          -40.00 USD    Cash
+             100 kWh    Rebate
+          -20.00 USD  Budget
+          -20.00 USD    Books
+          -10.00 USD    Food
+           10.00 USD    Savings
+           40.00 USD
+             100 kWh  Expenses
+           20.00 USD    Books
+             100 kWh    Energy
+           10.00 USD    Food
+           10.00 USD    Snacks
+          -72.00 EUR  Income:Rebate
+--------------------
+         -144.00 EUR
+          -20.00 USD
+             200 kWh
+end test

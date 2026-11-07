@@ -1,0 +1,21 @@
+; Phase 3 converts a two-commodity balance at |y/x|; with both
+; amounts of one sign the converted remainder is 2y, which does not
+; balance.
+
+2024/01/01 Same sign
+    Assets:A    $100
+    Assets:B    80 EUR
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 7:
+While balancing transaction from "$FILE", lines 5-7:
+> 2024/01/01 Same sign
+>     Assets:A    $100
+>     Assets:B    80 EUR
+Unbalanced remainder is:
+             160 EUR
+Amount to balance against:
+             160 EUR
+Error: Transaction does not balance
+end test

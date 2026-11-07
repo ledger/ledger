@@ -1,0 +1,24 @@
+; An explicit cost on a virtual posting disables the implicit exchange
+; of its own group alone: the (Memo) group balances at its cost, while
+; the real group's $100 and -80 EUR still infer their exchange and
+; balance (since #3317 each balancing group is priced on its own).
+; Before #3317 an explicit cost on any posting disabled the implicit
+; exchange of Phase 3 for the whole transaction, and the transaction
+; was rejected.
+
+2024/01/01 Virtual cost plus a real exchange
+    Assets:A    $100
+    Assets:B    -80 EUR
+    (Memo)      1 XYZ @ $1
+
+test bal
+                $100
+             -80 EUR  Assets
+                $100    A
+             -80 EUR    B
+               1 XYZ  Memo
+--------------------
+                $100
+             -80 EUR
+               1 XYZ
+end test

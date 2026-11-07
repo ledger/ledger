@@ -1,0 +1,25 @@
+; Balanced virtual postings form their own balancing group, whose
+; balance is checked with the same price inference as a real group's
+; (since #3317): the bracketed pair below balances at the exchange
+; rate the two amounts imply, $1 = 0.80 EUR, and the transaction is
+; accepted.  Before #3317 the virtual group's balance was checked
+; without implicit exchange, and the transaction was rejected.
+
+2024/01/01 Bracketed exchange
+    Assets:A    $100
+    Assets:B    $-100
+    [V:A]       $100
+    [V:B]       -80 EUR
+
+test bal
+                   0  Assets
+                $100    A
+               $-100    B
+                $100
+             -80 EUR  V
+                $100    A
+             -80 EUR    B
+--------------------
+                $100
+             -80 EUR
+end test
