@@ -299,6 +299,14 @@ BOOST_AUTO_TEST_CASE(testSymbolNeedsQuotes)
   BOOST_CHECK(commodity_t::symbol_needs_quotes("A(B"));
   BOOST_CHECK(commodity_t::symbol_needs_quotes("A{B"));
 
+  // A bare symbol may not be a word of the expression language, so these
+  // names must be quoted to be read back -- but only the exact words
+  BOOST_CHECK(commodity_t::symbol_needs_quotes("and"));
+  BOOST_CHECK(commodity_t::symbol_needs_quotes("div"));
+  BOOST_CHECK(commodity_t::symbol_needs_quotes("true"));
+  BOOST_CHECK(! commodity_t::symbol_needs_quotes("AND"));
+  BOOST_CHECK(! commodity_t::symbol_needs_quotes("andy"));
+
   // Empty string should not need quotes (no invalid chars)
   BOOST_CHECK(! commodity_t::symbol_needs_quotes(""));
 }
@@ -554,6 +562,66 @@ BOOST_AUTO_TEST_CASE(testAnnotationComparison)
   annotation_t ann7(amount_t("$50.00"));
   ann7.add_flags(ANNOTATION_PRICE_FIXATED);
   BOOST_CHECK(! (ann6 == ann7));
+}
+
+BOOST_AUTO_TEST_CASE(testAnnotationOrdering)
+{
+  // compare() is the strict weak ordering behind the pool's lot index:
+  // antisymmetric, transitive, zero exactly when operator== holds, and a
+  // refinement of compare_shape(), which ignores the price's value and
+  // the flags so that lots differing only in price are adjacent.
+  std::vector<annotation_t> anns;
+  anns.push_back(annotation_t());
+  anns.push_back(annotation_t(amount_t("$5")));
+  anns.push_back(annotation_t(amount_t("$5.00")));
+  anns.push_back(annotation_t(amount_t("$6")));
+  anns.push_back(annotation_t(amount_t("5 EUR")));
+  anns.push_back(annotation_t(amount_t("$5"), parse_date("2024/01/15")));
+  anns.push_back(annotation_t(amount_t("$5"), parse_date("2024/02/15")));
+  anns.push_back(annotation_t(amount_t("$5"), parse_date("2024/01/15"), string("lot1")));
+  anns.push_back(annotation_t(amount_t("$5"), parse_date("2024/01/15"), string("lot2")));
+  anns.push_back(annotation_t(std::nullopt, parse_date("2024/01/15")));
+  anns.push_back(annotation_t(std::nullopt, std::nullopt, string("lot1")));
+  anns.push_back(annotation_t(amount_t("$5"), std::nullopt, std::nullopt, expr_t("a")));
+  anns.push_back(annotation_t(amount_t("$5"), std::nullopt, std::nullopt, expr_t("b")));
+  annotation_t fixated(amount_t("$5"));
+  fixated.add_flags(ANNOTATION_PRICE_FIXATED);
+  anns.push_back(fixated);
+  annotation_t calculated(amount_t("$5"));
+  calculated.add_flags(ANNOTATION_PRICE_CALCULATED);
+  anns.push_back(calculated);
+
+  for (const annotation_t& a : anns) {
+    BOOST_CHECK_EQUAL(a.compare(a), 0);
+    for (const annotation_t& b : anns) {
+      const int ab = a.compare(b);
+      const int ba = b.compare(a);
+      BOOST_CHECK_EQUAL(ab == 0, ba == 0);
+      BOOST_CHECK_EQUAL(ab < 0, ba > 0);
+      BOOST_CHECK_EQUAL(ab == 0, a == b);
+      if (ab == 0)
+        BOOST_CHECK_EQUAL(annotation_t::compare_shape(a, b), 0);
+      if (annotation_t::compare_shape(a, b) < 0)
+        BOOST_CHECK(ab < 0);
+      for (const annotation_t& c : anns) {
+        if (ab < 0 && b.compare(c) < 0)
+          BOOST_CHECK(a.compare(c) < 0);
+        if (ab == 0 && b.compare(c) == 0)
+          BOOST_CHECK_EQUAL(a.compare(c), 0);
+      }
+    }
+  }
+
+  // "$5" and "$5.00" are one price, so one lot; a fixated price is another
+  // lot; whether the price was calculated does not tell lots apart.
+  BOOST_CHECK_EQUAL(anns[1].compare(anns[2]), 0);
+  BOOST_CHECK(anns[1].compare(fixated) != 0);
+  BOOST_CHECK_EQUAL(anns[1].compare(calculated), 0);
+  // Lots that differ only in price value, or only in flags, share a shape;
+  // a price in another commodity does not.
+  BOOST_CHECK_EQUAL(annotation_t::compare_shape(anns[1], anns[3]), 0);
+  BOOST_CHECK_EQUAL(annotation_t::compare_shape(anns[1], fixated), 0);
+  BOOST_CHECK(annotation_t::compare_shape(anns[1], anns[4]) != 0);
 }
 
 BOOST_AUTO_TEST_CASE(testKeepDetails)
@@ -1221,6 +1289,86 @@ BOOST_AUTO_TEST_CASE(testParseSymbolFromCharPtr)
     string sym;
     BOOST_CHECK_THROW(commodity_t::parse_symbol(p, sym), amount_error);
   }
+  {
+    // A ';' ends a bare symbol and begins a comment (issue #3313)
+    char buf[] = "N1; foo";
+    char* p = buf;
+    string sym;
+    commodity_t::parse_symbol(p, sym);
+    BOOST_CHECK_EQUAL(string("N1"), sym);
+    BOOST_CHECK_EQUAL(string("; foo"), string(p));
+  }
+  {
+    // p is left at the next field, past the whitespace
+    char buf[] = "USD \t 1.50 EUR";
+    char* p = buf;
+    string sym;
+    commodity_t::parse_symbol(p, sym);
+    BOOST_CHECK_EQUAL(string("USD"), sym);
+    BOOST_CHECK_EQUAL(string("1.50 EUR"), string(p));
+  }
+  {
+    // A quoted symbol keeps its ';', and a comment may follow the quote
+    char buf[] = "\"N1; foo\";bar";
+    char* p = buf;
+    string sym;
+    commodity_t::parse_symbol(p, sym);
+    BOOST_CHECK_EQUAL(string("N1; foo"), sym);
+    BOOST_CHECK_EQUAL(string(";bar"), string(p));
+  }
+  {
+    // Nothing follows the closing quote
+    char buf[] = "\"My Fund\"";
+    char* p = buf;
+    string sym;
+    commodity_t::parse_symbol(p, sym);
+    BOOST_CHECK_EQUAL(string("My Fund"), sym);
+    BOOST_CHECK(p == buf + std::strlen(buf));
+  }
+  {
+    // The field after a closing quote is not cut short when no space
+    // separates them
+    char buf[] = "\"N1\"1.50 EUR";
+    char* p = buf;
+    string sym;
+    commodity_t::parse_symbol(p, sym);
+    BOOST_CHECK_EQUAL(string("N1"), sym);
+    BOOST_CHECK_EQUAL(string("1.50 EUR"), string(p));
+  }
+  {
+    // A backslash escapes a ';' into the symbol, as in an amount
+    char buf[] = "A\\;B c";
+    char* p = buf;
+    string sym;
+    commodity_t::parse_symbol(p, sym);
+    BOOST_CHECK_EQUAL(string("A;B"), sym);
+    BOOST_CHECK_EQUAL(string("c"), string(p));
+  }
+  {
+    // ... and whitespace
+    char buf[] = "A\\ B c";
+    char* p = buf;
+    string sym;
+    commodity_t::parse_symbol(p, sym);
+    BOOST_CHECK_EQUAL(string("A B"), sym);
+    BOOST_CHECK_EQUAL(string("c"), string(p));
+  }
+  {
+    // A backslash that ends the line escapes nothing and is kept
+    char buf[] = "AB\\";
+    char* p = buf;
+    string sym;
+    commodity_t::parse_symbol(p, sym);
+    BOOST_CHECK_EQUAL(string("AB\\"), sym);
+    BOOST_CHECK(p == buf + std::strlen(buf));
+  }
+  {
+    // A ';' cannot begin a bare symbol
+    char buf[] = "; foo";
+    char* p = buf;
+    string sym;
+    BOOST_CHECK_THROW(commodity_t::parse_symbol(p, sym), amount_error);
+  }
 }
 
 BOOST_AUTO_TEST_CASE(testCommodityPrintDigitQuotedSymbol)
@@ -1576,14 +1724,24 @@ BOOST_AUTO_TEST_CASE(testCompareByCommdityValueExprW7)
   amount_t a2(1L);
   a2.set_commodity(*c2);
 
-  // Exercises line 474-476: both have value_expr, text comparison
+  // Both have value_expr: a three-way comparison of their text, so that
+  // sorted_amounts() is a total order over such lots.
   int cmp = commodity_t::compare_by_commodity()(&a1, &a2);
-  // "amount" < "total" is true, so returns 1
-  BOOST_CHECK(cmp == 1);
+  BOOST_CHECK(cmp < 0); // "amount" < "total"
 
-  // Reverse comparison: "total" < "amount" is false, returns 0
   int cmp2 = commodity_t::compare_by_commodity()(&a2, &a1);
-  BOOST_CHECK(cmp2 == 0);
+  BOOST_CHECK(cmp2 > 0);
+
+  BOOST_CHECK_EQUAL(commodity_t::compare_by_commodity()(&a1, &a1), 0);
+
+  // Equal expressions fall through to the semantic flags.
+  annotation_t ann3;
+  ann3.value_expr = expr_t("amount");
+  ann3.add_flags(ANNOTATION_PRICE_FIXATED);
+  amount_t a3(1L);
+  a3.set_commodity(*commodity_pool_t::current_pool->find_or_create("VEXPR", ann3));
+  BOOST_CHECK(commodity_t::compare_by_commodity()(&a1, &a3) < 0);
+  BOOST_CHECK(commodity_t::compare_by_commodity()(&a3, &a1) > 0);
 }
 
 // -----------------------------------------------------------------------
@@ -2015,6 +2173,274 @@ BOOST_AUTO_TEST_CASE(testPutCommodityW8)
   string flags = pt.get<string>("<xmlattr>.flags");
   BOOST_CHECK(flags.find('P') != string::npos);
   BOOST_CHECK(flags.find('T') != string::npos);
+}
+
+// -----------------------------------------------------------------------
+// commodity_pool_t::reannotate(): a `value` expression that applies to a
+// lot changes the annotation of the one pooled lot all its holders share
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testReannotateKeepsPreviousKey)
+{
+  // The lot is found under its new annotation and still under the one it
+  // was written with, and both lookups give the same object, so a later
+  // posting that names the lot as written reaches the lot its holders
+  // share.
+  commodity_pool_t& pool(*commodity_pool_t::current_pool);
+  const annotation_t written(amount_t("$5"), parse_date("2024/01/02"));
+  annotation_t valued(written);
+  valued.value_expr = expr_t("$7");
+
+  commodity_t* lot = pool.find_or_create("REAN", written);
+  BOOST_REQUIRE(lot != nullptr);
+  const std::size_t entries = pool.annotated_commodities.size();
+
+  pool.reannotate(as_annotated_commodity(*lot), valued);
+
+  BOOST_CHECK(as_annotated_commodity(*lot).details == valued);
+  BOOST_CHECK(pool.find("REAN", valued) == lot);
+  BOOST_CHECK(pool.find("REAN", written) == lot);
+  BOOST_CHECK(pool.find_or_create("REAN", valued) == lot);
+  BOOST_CHECK(pool.find_or_create("REAN", written) == lot);
+  BOOST_CHECK_EQUAL(pool.annotated_commodities.size(), entries + 1);
+  BOOST_CHECK(pool.duplicate_lots.empty());
+
+  // Giving the lot the annotation it already carries changes nothing.
+  pool.reannotate(as_annotated_commodity(*lot), valued);
+  BOOST_CHECK(as_annotated_commodity(*lot).details == valued);
+  BOOST_CHECK_EQUAL(pool.annotated_commodities.size(), entries + 1);
+  BOOST_CHECK(pool.duplicate_lots.empty());
+}
+
+BOOST_AUTO_TEST_CASE(testReannotateOntoAnotherLot)
+{
+  // A posting may spell out the very valuation that an account's `value`
+  // later gives another lot with the same price and date.  The holders of
+  // neither lot can be re-pointed, so the two lots come to carry equal
+  // annotations while each remains its own object, indexed under the key
+  // it had, and both join duplicate_lots.  A lot outside the pair does not.
+  commodity_pool_t& pool(*commodity_pool_t::current_pool);
+  const annotation_t written(amount_t("$5"), parse_date("2024/01/02"));
+  annotation_t valued(written);
+  valued.value_expr = expr_t("$7");
+
+  commodity_t* spelled = pool.find_or_create("RCOL", valued);
+  commodity_t* lot = pool.find_or_create("RCOL", written);
+  commodity_t* outsider =
+      pool.find_or_create("RCOL", annotation_t(amount_t("$6"), parse_date("2024/01/02")));
+  BOOST_REQUIRE(spelled != lot);
+  BOOST_CHECK(pool.duplicate_lots.empty());
+  const std::size_t entries = pool.annotated_commodities.size();
+
+  pool.reannotate(as_annotated_commodity(*lot), valued);
+
+  BOOST_CHECK(as_annotated_commodity(*lot).details == valued);
+  BOOST_CHECK(as_annotated_commodity(*spelled).details == valued);
+  BOOST_CHECK(*lot == *spelled);
+  BOOST_CHECK(lot != spelled);
+  BOOST_CHECK(pool.find("RCOL", valued) == spelled);
+  BOOST_CHECK(pool.find("RCOL", written) == lot);
+  BOOST_CHECK_EQUAL(pool.annotated_commodities.size(), entries);
+
+  BOOST_CHECK_EQUAL(pool.duplicate_lots.size(), 2U);
+  BOOST_CHECK_EQUAL(pool.duplicate_lots.count(spelled), 1U);
+  BOOST_CHECK_EQUAL(pool.duplicate_lots.count(lot), 1U);
+  BOOST_CHECK_EQUAL(pool.duplicate_lots.count(outsider), 0U);
+}
+
+BOOST_AUTO_TEST_CASE(testReannotateLeavesClassForAnother)
+{
+  // A lot whose annotation changes once more leaves the class it had
+  // joined, which dissolves when one lot is left in it, and joins the
+  // class of the lot that carries its newest annotation; the lot it leaves
+  // behind keeps the annotation the two had shared.
+  commodity_pool_t& pool(*commodity_pool_t::current_pool);
+  const annotation_t written(amount_t("$5"), parse_date("2024/01/02"));
+  annotation_t seven(written);
+  seven.value_expr = expr_t("$7");
+  annotation_t nine(written);
+  nine.value_expr = expr_t("$9");
+
+  commodity_t* at_seven = pool.find_or_create("RLVE", seven);
+  commodity_t* at_nine = pool.find_or_create("RLVE", nine);
+  commodity_t* lot = pool.find_or_create("RLVE", written);
+  BOOST_CHECK(pool.duplicate_lots.empty());
+
+  pool.reannotate(as_annotated_commodity(*lot), seven);
+  BOOST_REQUIRE_EQUAL(pool.duplicate_lots.size(), 2U);
+  BOOST_CHECK(pool.duplicate_lots.at(lot)->front() == at_seven);
+
+  pool.reannotate(as_annotated_commodity(*lot), nine);
+  BOOST_CHECK(as_annotated_commodity(*lot).details == nine);
+  BOOST_CHECK(as_annotated_commodity(*at_seven).details == seven);
+  BOOST_REQUIRE_EQUAL(pool.duplicate_lots.size(), 2U);
+  BOOST_CHECK_EQUAL(pool.duplicate_lots.count(at_seven), 0U);
+  BOOST_CHECK_EQUAL(pool.duplicate_lots.count(at_nine), 1U);
+  BOOST_CHECK_EQUAL(pool.duplicate_lots.count(lot), 1U);
+  BOOST_CHECK(pool.duplicate_lots.at(lot) == pool.duplicate_lots.at(at_nine));
+  BOOST_CHECK_EQUAL(pool.duplicate_lots.at(lot)->size(), 2U);
+  BOOST_CHECK(pool.duplicate_lots.at(lot)->front() == at_nine);
+  BOOST_CHECK(pool.find("RLVE", seven) == at_seven);
+  BOOST_CHECK(pool.find("RLVE", nine) == at_nine);
+  BOOST_CHECK(pool.find("RLVE", written) == lot);
+}
+
+BOOST_AUTO_TEST_CASE(testReannotateChangeBack)
+{
+  // A lot whose annotation changes back to one it carried before remains
+  // the one object under both annotations: the entry under the earlier
+  // annotation is the lot's own, so no entry is added and no lot becomes a
+  // duplicate, in either direction.
+  commodity_pool_t& pool(*commodity_pool_t::current_pool);
+  const annotation_t written(amount_t("$5"), parse_date("2024/01/02"));
+  annotation_t valued(written);
+  valued.value_expr = expr_t("$7");
+
+  commodity_t* lot = pool.find_or_create("RBCK", written);
+  pool.reannotate(as_annotated_commodity(*lot), valued);
+  const std::size_t entries = pool.annotated_commodities.size();
+
+  pool.reannotate(as_annotated_commodity(*lot), written);
+
+  BOOST_CHECK(as_annotated_commodity(*lot).details == written);
+  BOOST_CHECK(pool.find("RBCK", written) == lot);
+  BOOST_CHECK(pool.find("RBCK", valued) == lot);
+  BOOST_CHECK_EQUAL(pool.annotated_commodities.size(), entries);
+  BOOST_CHECK(pool.duplicate_lots.empty());
+
+  pool.reannotate(as_annotated_commodity(*lot), valued);
+
+  BOOST_CHECK(as_annotated_commodity(*lot).details == valued);
+  BOOST_CHECK(pool.find("RBCK", written) == lot);
+  BOOST_CHECK(pool.find("RBCK", valued) == lot);
+  BOOST_CHECK_EQUAL(pool.annotated_commodities.size(), entries);
+  BOOST_CHECK(pool.duplicate_lots.empty());
+
+  std::size_t keys = 0;
+  for (const auto& entry : pool.annotated_commodities)
+    if (entry.first.first == "RBCK") {
+      BOOST_CHECK(entry.second.get() == lot);
+      ++keys;
+    }
+  BOOST_CHECK_EQUAL(keys, 2U);
+}
+
+BOOST_AUTO_TEST_CASE(testReannotateLotEditedInPlace)
+{
+  // The Python bindings can edit a pooled lot's annotation in place, behind
+  // the pool's index.  reannotate() then finds the lot's own entry by
+  // identity, also when the edited annotation is another lot's key, and
+  // indexes the lot under its new annotation.
+  commodity_pool_t& pool(*commodity_pool_t::current_pool);
+  const annotation_t written(amount_t("$5"), parse_date("2024/01/02"));
+  const annotation_t neighbour(amount_t("$7"), parse_date("2024/01/02"));
+
+  commodity_t* lot = pool.find_or_create("REDT", written);
+  annotated_commodity_t& edited(as_annotated_commodity(*lot));
+  edited.details.price = amount_t("$6");
+  annotation_t valued(edited.details);
+  valued.value_expr = expr_t("$9");
+
+  pool.reannotate(edited, valued);
+
+  BOOST_CHECK(edited.details == valued);
+  BOOST_CHECK(pool.find("REDT", valued) == lot);
+  BOOST_CHECK(pool.find("REDT", written) == lot);
+  BOOST_CHECK(pool.duplicate_lots.empty());
+
+  commodity_t* other = pool.find_or_create("REDT", neighbour);
+  BOOST_REQUIRE(other != lot);
+  edited.details = neighbour;
+  annotation_t revalued(neighbour);
+  revalued.value_expr = expr_t("$8");
+
+  pool.reannotate(edited, revalued);
+
+  BOOST_CHECK(edited.details == revalued);
+  BOOST_CHECK(pool.find("REDT", revalued) == lot);
+  BOOST_CHECK(pool.find("REDT", neighbour) == other);
+  BOOST_CHECK(as_annotated_commodity(*other).details == neighbour);
+  BOOST_CHECK(pool.duplicate_lots.empty());
+}
+
+BOOST_AUTO_TEST_CASE(testReannotateLotMissingFromPool)
+{
+  // Only the pool creates lots.  One built outside it has no entry to share
+  // under a new annotation, so reannotate() refuses it with a logic_error
+  // and leaves the lot and the pool's index as they were, also when the
+  // pool holds a lot of its own with the same annotation.
+  struct unpooled_lot_t : public annotated_commodity_t {
+    unpooled_lot_t(commodity_t* base, const annotation_t& details)
+        : annotated_commodity_t(base, details) {}
+  };
+
+  commodity_pool_t& pool(*commodity_pool_t::current_pool);
+  const annotation_t written(amount_t("$5"), parse_date("2024/01/02"));
+  annotation_t valued(written);
+  valued.value_expr = expr_t("$7");
+
+  unpooled_lot_t stray(pool.find_or_create("RMIS"), written);
+  const std::size_t entries = pool.annotated_commodities.size();
+
+  BOOST_CHECK_THROW(pool.reannotate(stray, valued), std::logic_error);
+  BOOST_CHECK(stray.details == written);
+  BOOST_CHECK(pool.find("RMIS", valued) == nullptr);
+  BOOST_CHECK(pool.find("RMIS", written) == nullptr);
+  BOOST_CHECK_EQUAL(pool.annotated_commodities.size(), entries);
+
+  commodity_t* pooled = pool.find_or_create("RMIS", written);
+  BOOST_REQUIRE(pooled != &stray);
+
+  BOOST_CHECK_THROW(pool.reannotate(stray, valued), std::logic_error);
+  BOOST_CHECK(stray.details == written);
+  BOOST_CHECK(as_annotated_commodity(*pooled).details == written);
+  BOOST_CHECK(pool.find("RMIS", valued) == nullptr);
+  BOOST_CHECK(pool.find("RMIS", written) == pooled);
+  BOOST_CHECK(pool.duplicate_lots.empty());
+}
+
+// The pool's refusal of a key in use, as opposed to the Debug-only
+// assertion that used to stand in for it (also a logic_error).
+static bool already_in_pool(const std::logic_error& err) {
+  return string(err.what()).find("is already in its pool") != string::npos;
+}
+
+BOOST_AUTO_TEST_CASE(testCreateExistingLotFails)
+{
+  // create() files a new lot under its base's symbol and its annotation.
+  // When a lot is filed there already, the new one cannot be stored, so
+  // create() refuses it with a logic_error and the pool keeps its lot.  It
+  // used to return the new lot, which its only owner freed on return, and
+  // only a Debug build's assertion stopped that (#3341).
+  commodity_pool_t& pool(*commodity_pool_t::current_pool);
+  commodity_t& base(*pool.find_or_create("CDUP"));
+  const annotation_t lot(amount_t("$3.00"));
+
+  annotated_commodity_t* pooled = pool.create(base, lot);
+  BOOST_REQUIRE(pooled != nullptr);
+  const std::size_t entries = pool.annotated_commodities.size();
+
+  BOOST_CHECK_EXCEPTION(pool.create(base, lot), std::logic_error, already_in_pool);
+  BOOST_CHECK(pool.find("CDUP", lot) == pooled);
+  BOOST_CHECK_EQUAL(pool.annotated_commodities.size(), entries);
+}
+
+BOOST_AUTO_TEST_CASE(testCreateExistingCommodityFails)
+{
+  // Likewise, create(symbol) refuses a symbol the pool already files, a
+  // commodity's own or an alias's, instead of returning a commodity that
+  // was never stored and is freed on return (#3341).
+  commodity_pool_t& pool(*commodity_pool_t::current_pool);
+  commodity_t* pooled = pool.create("CPLN");
+  BOOST_REQUIRE(pooled != nullptr);
+  pool.alias("CPLA", *pooled);
+  const std::size_t entries = pool.commodities.size();
+
+  BOOST_CHECK_EXCEPTION(pool.create("CPLN"), std::logic_error, already_in_pool);
+  BOOST_CHECK_EXCEPTION(pool.create("CPLA"), std::logic_error, already_in_pool);
+  BOOST_CHECK(pool.find("CPLN") == pooled);
+  BOOST_CHECK(pool.find("CPLA") == pooled);
+  BOOST_CHECK_EQUAL(pool.commodities.size(), entries);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

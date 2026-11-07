@@ -80,9 +80,9 @@ end test
 ; postings).
 test bal --pivot-only commodity --empty
                    0  commodity
-               0 CAD    CAD
-               0 EUR    EUR
-               0 USD    USD
+                   0    CAD
+                   0    EUR
+                   0    USD
 --------------------
                    0
 end test

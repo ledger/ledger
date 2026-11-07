@@ -1,0 +1,27 @@
+; A basket price's commodities are written into its value expression in
+; commodity order, so the expression text is the same on every run.
+;
+; A P directive whose parenthesized price evaluates to several commodities
+; (#1101) gives the commodity a value expression rebuilt from that
+; balance's components.  Postings of the commodity carry it as a lot
+; annotation, so the text shows in print, --lots reports, emacs output and
+; -V errors.  Ledger used to write the components in the order in which
+; the balance happened to keep them: USD before EUR for bicur (1101.test's
+; basket), and CAD last for tricur.  That order changes from run to run,
+; so the text is written in commodity order instead: CAD, EUR, USD for
+; tricur, where the directive has EUR, CAD, USD.
+
+P 2015-01-01 bicur (EUR 0.45 + USD 0.55)
+P 2015-01-01 tricur (EUR 0.40 + CAD 0.25 + USD 0.35)
+
+2015/01/01 Baskets
+    Assets:Basket    1 bicur
+    Assets:Basket    1 tricur
+    Equity
+
+test print
+2015/01/01 Baskets
+    Assets:Basket                       1 bicur ((({EUR 0.45} + {USD 0.55})))
+    Assets:Basket                       1 tricur (((({CAD 0.25} + {EUR 0.40}) + {USD 0.35})))
+    Equity
+end test

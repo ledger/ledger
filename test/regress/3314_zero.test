@@ -1,0 +1,59 @@
+; Regression test for GitHub issue #3314: each group of postings -- the
+; real ones, and the balanced virtual ones in [brackets] -- may have one
+; posting without an amount, which balances that group alone.  When no
+; other posting of its group has an amount, it is zero, as long as the
+; other group has some (see 3314_elided.test).  Ledger 3.4 gave the
+; second and third transactions a zero there too, and rejected the first
+; only because it has two postings without amounts; the separate
+; balancing of #2105 had made all three "null amounts" errors.
+
+2018-10-22 Revenue
+    Revenues
+    Assets:Test                      10.00 EUR
+    [Assets:Bank]
+
+2018-10-23 Transfer
+    Assets:Test                     -10.00 EUR
+    Assets:Other                     10.00 EUR
+    [Assets:Bank]
+
+2018-10-24 Budget
+    [Budget:Food]                    50.00 EUR
+    [Equity:Budget]                 -50.00 EUR
+    Expenses:Misc
+
+test reg --empty
+18-Oct-22 Revenue               Revenues                 -10.00 EUR   -10.00 EUR
+                                Assets:Test               10.00 EUR            0
+                                [Assets:Bank]                     0            0
+18-Oct-23 Transfer              Assets:Test              -10.00 EUR   -10.00 EUR
+                                Assets:Other              10.00 EUR            0
+                                [Assets:Bank]                     0            0
+18-Oct-24 Budget                [Budget:Food]             50.00 EUR    50.00 EUR
+                                [Equity:Budget]          -50.00 EUR            0
+                                Expenses:Misc                     0            0
+end test
+
+test bal --real
+           10.00 EUR  Assets:Other
+          -10.00 EUR  Revenues
+--------------------
+                   0
+end test
+
+test print
+2018/10/22 Revenue
+    Revenues
+    Assets:Test                            10.00 EUR
+    [Assets:Bank]
+
+2018/10/23 Transfer
+    Assets:Test                           -10.00 EUR
+    Assets:Other                           10.00 EUR
+    [Assets:Bank]
+
+2018/10/24 Budget
+    [Budget:Food]                          50.00 EUR
+    [Equity:Budget]                       -50.00 EUR
+    Expenses:Misc
+end test

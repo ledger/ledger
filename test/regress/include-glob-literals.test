@@ -1,0 +1,20 @@
+; In an include glob, every character except ?, * and a [...] set matches
+; only itself.  $ and ^ used to reach the regex unescaped, as anchors, so
+; none of these files could be included, whether the name was written out
+; or matched with ?.
+
+include include-glob-literals/a$b.dat
+include include-glob-literals/^c.dat
+include include-glob-literals/d$?.dat
+include include-glob-literals/^g?.dat
+
+test bal
+             $-15.00  Assets:Cash
+              $15.00  Expenses
+               $2.00    Caret
+               $8.00    CaretGlob
+               $1.00    Dollar
+               $4.00    DollarGlob
+--------------------
+                   0
+end test

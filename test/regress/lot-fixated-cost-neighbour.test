@@ -1,0 +1,46 @@
+; `@ =price` fixates the lot its own cost creates, and no other holding
+; of it, so a fixated purchase, `10 AAPL @ =$5`, leaves the floating
+; purchases at the same price on the same day, before and after it, in
+; the unfixated lot {$5} [2020/01/01].  The Fixated account shows the
+; fixation itself still applies: its lot is {=$5}, and -V holds it at $5
+; while the others follow the later $7 price.
+;
+; All three costs describe the same lot, {$5} [2020/01/01], and the
+; fixated purchase takes the fixated lot {=$5} [2020/01/01] in its place.
+; Ledger used to mark that shared lot itself as fixated, so all three
+; purchases showed as one 30 AAPL {=$5} lot and -V valued every
+; share at $5.
+
+P 2020/03/01 AAPL $7
+
+2020/01/01 Buy floating
+    Assets:Broker:First      10 AAPL @ $5
+    Assets:Cash
+
+2020/01/01 Buy fixated
+    Assets:Broker:Fixated    10 AAPL @ =$5
+    Assets:Cash
+
+2020/01/01 Buy floating
+    Assets:Broker:Last       10 AAPL @ $5
+    Assets:Cash
+
+test bal --lots Assets:Broker
+ 20 AAPL {$5} [2020/01/01]
+10 AAPL {=$5} [2020/01/01]  Assets:Broker
+10 AAPL {$5} [2020/01/01]    First
+10 AAPL {=$5} [2020/01/01]    Fixated
+10 AAPL {$5} [2020/01/01]    Last
+--------------------
+ 20 AAPL {$5} [2020/01/01]
+10 AAPL {=$5} [2020/01/01]
+end test
+
+test bal -V Assets:Broker
+                $190  Assets:Broker
+                 $70    First
+                 $50    Fixated
+                 $70    Last
+--------------------
+                $190
+end test

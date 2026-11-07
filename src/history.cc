@@ -410,28 +410,33 @@ void commodity_history_impl_t::map_prices(const function<void(datetime_t, const 
 
     const price_map_t& prices(get(ratiomap, edge_desc));
 
-    for (const price_map_t::value_type& pair : prices) {
-      const datetime_t& when(pair.first);
+    // The prices wanted form the [oldest, moment] range of the date-ordered
+    // map; walking the whole history made every revaluation cost as much
+    // as the edge has price points.  The upper bound is tested on each key
+    // rather than taken from upper_bound(moment), so the range stays
+    // well-formed even if a caller ever passed oldest > moment.
+    for (auto it = oldest.is_not_a_date_time() ? prices.begin() : prices.lower_bound(oldest);
+         it != prices.end() && it->first <= moment; ++it) {
+      const datetime_t& when(it->first);
+      const amount_t& found(it->second);
 
-      DEBUG("history.map", "Price " << pair.second << " on " << when);
+      DEBUG("history.map", "Price " << found << " on " << when);
 
-      if ((oldest.is_not_a_date_time() || when >= oldest) && when <= moment) {
-        if (pair.second.commodity() == source) {
-          if (bidirectionally) {
-            amount_t price(pair.second);
-            price.in_place_invert();
-            if (source == *get(namemap, sv))
-              price.set_commodity(const_cast<commodity_t&>(*get(namemap, *f_vi)));
-            else
-              price.set_commodity(const_cast<commodity_t&>(*get(namemap, sv)));
-            DEBUG("history.map", "Inverted price is " << price);
-            DEBUG("history.map", "fn(" << when << ", " << price << ")");
-            fn(when, price);
-          }
-        } else {
-          DEBUG("history.map", "fn(" << when << ", " << pair.second << ")");
-          fn(when, pair.second);
+      if (found.commodity() == source) {
+        if (bidirectionally) {
+          amount_t price(found);
+          price.in_place_invert();
+          if (source == *get(namemap, sv))
+            price.set_commodity(const_cast<commodity_t&>(*get(namemap, *f_vi)));
+          else
+            price.set_commodity(const_cast<commodity_t&>(*get(namemap, sv)));
+          DEBUG("history.map", "Inverted price is " << price);
+          DEBUG("history.map", "fn(" << when << ", " << price << ")");
+          fn(when, price);
         }
+      } else {
+        DEBUG("history.map", "fn(" << when << ", " << found << ")");
+        fn(when, found);
       }
     }
   }

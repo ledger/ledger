@@ -1,0 +1,28 @@
+; --verify traces the construction and destruction of Ledger's objects
+; and, once the session has been torn down, reports on stderr any still
+; alive.  Adding a commodity that a balance does not yet hold must leave
+; none behind: the euro of the second transaction turns the totals of
+; Assets:Cash and Income:Gift, and the grand total, into balances of two
+; commodities, and the test expects nothing on stderr.  A balance that
+; built the new component from a static default value would keep that
+; value alive past the report.
+;
+; Only Debug builds trace objects.  In a Release build --verify has no
+; effect, and this test checks only the balance report.
+
+2024/01/01 Dollar
+    Assets:Cash        $1
+    Income:Gift
+
+2024/01/02 Euro
+    Assets:Cash        1 EUR
+    Income:Gift
+
+test --verify bal
+                  $1
+               1 EUR  Assets:Cash
+                 $-1
+              -1 EUR  Income:Gift
+--------------------
+                   0
+end test

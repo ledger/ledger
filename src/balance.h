@@ -96,7 +96,41 @@ class balance_t
                                                                              balance_t,
                                                                              long>>>>>>>>>>>>>> {
 public:
-  using amounts_map = std::unordered_map<commodity_t*, amount_t>;
+  /**
+   * Memory policy for the component map: plain new/delete and non-atomic
+   * reference counts.  Balances are never shared between threads, and the
+   * default free-list heap would keep global state alive across sessions.
+   * (immer's headers are included by system.hh, ahead of utils.h, so that
+   * their use of the C assert() does not displace Ledger's own.)
+   */
+  using amounts_memory_policy =
+      immer::memory_policy<immer::heap_policy<immer::cpp_heap>, immer::unsafe_refcount_policy,
+                           immer::no_lock_policy>;
+
+  /**
+   * The component amounts, keyed by commodity identity (the pool holds
+   * exactly one commodity_t per distinct symbol or lot, see
+   * commodity_pool_t::annotated_commodities; component_key() covers the
+   * lots the pool has had to give equal annotations, and a lot whose
+   * annotation the Python bindings edit in place is not followed).
+   *
+   * This is a persistent, structurally shared hash map: copying a balance
+   * is O(1), and adding an amount yields a new version sharing all but
+   * O(log K) of its nodes with the previous one.  Every posting of a
+   * register keeps its own complete running total (calc_posts stores one
+   * in each post's xdata), so with K components the former
+   * std::unordered_map cost O(K) time and memory per posting; this map
+   * costs O(log K).  Iteration order is a hash order of commodity
+   * addresses and changes from run to run, so nothing visible may depend
+   * on it: display goes through sorted_amounts(), and rebuilding a balance
+   * from transformed components through merge().  The map is immutable:
+   * use set()/update_if_exists()/erase(), which return the new version, or
+   * transform_amounts() to rewrite every component; update() is avoided
+   * because it instantiates a static default amount_t that outlives
+   * amount_t::shutdown().
+   */
+  using amounts_map = immer::map<commodity_t*, amount_t, std::hash<commodity_t*>,
+                                 std::equal_to<commodity_t*>, amounts_memory_policy>;
   using amounts_array = std::vector<const amount_t*>;
 
   enum class lot_sort_order : std::uint8_t { by_commodity, fifo, lifo };
@@ -129,7 +163,7 @@ public:
     if (amt.is_null())
       throw_(balance_error, _("Cannot initialize a balance from an uninitialized amount"));
     if (!amt.is_realzero())
-      amounts.insert(amounts_map::value_type(&amt.commodity(), amt));
+      amounts = std::move(amounts).set(&amt.commodity(), amt);
     TRACE_CTOR(balance_t, "const amount_t&");
   }
   balance_t(const double val);
@@ -138,12 +172,12 @@ public:
 
   explicit balance_t(const string& val) {
     amount_t temp(val);
-    amounts.insert(amounts_map::value_type(&temp.commodity(), temp));
+    amounts = std::move(amounts).set(&temp.commodity(), temp);
     TRACE_CTOR(balance_t, "const string&");
   }
   explicit balance_t(const char* val) {
     amount_t temp(val);
-    amounts.insert(amounts_map::value_type(&temp.commodity(), temp));
+    amounts = std::move(amounts).set(&temp.commodity(), temp);
     TRACE_CTOR(balance_t, "const char *");
   }
 
@@ -171,9 +205,9 @@ public:
     if (amt.is_null())
       throw_(balance_error, _("Cannot assign an uninitialized amount to a balance"));
 
-    amounts.clear();
+    amounts = amounts_map();
     if (!amt.is_realzero())
-      amounts.insert(amounts_map::value_type(&amt.commodity(), amt));
+      amounts = std::move(amounts).set(&amt.commodity(), amt);
 
     return *this;
   }
@@ -229,6 +263,26 @@ public:
   balance_t& operator-=(const unsigned long val) { return *this -= amount_t(val); }
   balance_t& operator-=(const long val) { return *this -= amount_t(val); }
 
+  /**
+   * Add @p amt as a component that may collapse onto an existing one of its
+   * commodity, keeping full precision if either part has it.  operator+=
+   * keeps the left operand's precision flags, so rebuilding a balance from
+   * transformed components (lots stripped to their base, components valued
+   * in one currency, units reduced) in the component map's order -- a hash
+   * order -- would print such a merged amount with either part's precision
+   * from one run to the next.  A sequence of merges gives the same result
+   * in any order.
+   */
+  balance_t& merge(const amount_t& amt);
+
+  /**
+   * The key under which amounts of @p comm are kept: @p comm itself, unless
+   * @p comm is one of the lots the pool has had to give equal annotations
+   * (see commodity_pool_t::reannotate): then the one of them this balance
+   * already holds, else the one that carried the annotation first.
+   */
+  commodity_t* component_key(const commodity_t& comm) const;
+
   balance_t& operator*=(const amount_t& amt);
   balance_t& operator*=(const double val) { return *this *= amount_t(val); }
   balance_t& operator*=(const unsigned long val) { return *this *= amount_t(val); }
@@ -238,6 +292,38 @@ public:
   balance_t& operator/=(const double val) { return *this /= amount_t(val); }
   balance_t& operator/=(const unsigned long val) { return *this /= amount_t(val); }
   balance_t& operator/=(const long val) { return *this /= amount_t(val); }
+
+  /**
+   * Rewrite every component amount with @p fn: the keys are gathered, then
+   * a transient of the map rewrites each node, in place when this balance
+   * owns the map outright (a component of a shared map is copied first).
+   * Used by the in_place_* operations and the scalar operators; @p fn must
+   * not change the amount's commodity (reduce and unreduce, which may,
+   * re-accumulate through a temporary instead).
+   */
+  template <typename Fn>
+  void transform_amounts(Fn&& fn) {
+    // The keys are gathered first, since the rewrite must not change the
+    // map being walked; a transient of a map this balance owns outright
+    // then rewrites the nodes in place.
+    std::vector<commodity_t*> keys;
+    keys.reserve(amounts.size());
+    for (const amounts_map::value_type& pair : amounts)
+      keys.push_back(pair.first);
+    amounts_map::transient_type result = std::move(amounts).transient();
+    for (commodity_t* key : keys)
+      result.update_if_exists(key, [&fn](auto&& current) -> amount_t {
+        if constexpr (std::is_const_v<std::remove_reference_t<decltype(current)>>) {
+          amount_t amt(current);
+          fn(amt);
+          return amt;
+        } else {
+          fn(current);
+          return current;
+        }
+      });
+    amounts = std::move(result).persistent();
+  }
 
   /**
    * Unary arithmetic operators.  There are only a few unary methods
@@ -279,8 +365,7 @@ public:
     return temp;
   }
   void in_place_negate() {
-    for (amounts_map::value_type& pair : amounts)
-      pair.second.in_place_negate();
+    transform_amounts([&](amount_t& amt) { amt.in_place_negate(); });
   }
   balance_t operator-() const { return negated(); }
 
@@ -298,8 +383,7 @@ public:
     return temp;
   }
   void in_place_round() {
-    for (amounts_map::value_type& pair : amounts)
-      pair.second.in_place_round();
+    transform_amounts([&](amount_t& amt) { amt.in_place_round(); });
   }
 
   balance_t roundto(int places) const {
@@ -309,8 +393,7 @@ public:
   }
 
   void in_place_roundto(int places) {
-    for (amounts_map::value_type& pair : amounts)
-      pair.second.in_place_roundto(places);
+    transform_amounts([&](amount_t& amt) { amt.in_place_roundto(places); });
   }
 
   [[nodiscard]] balance_t truncated() const {
@@ -319,8 +402,7 @@ public:
     return temp;
   }
   void in_place_truncate() {
-    for (amounts_map::value_type& pair : amounts)
-      pair.second.in_place_truncate();
+    transform_amounts([&](amount_t& amt) { amt.in_place_truncate(); });
   }
 
   [[nodiscard]] balance_t display_rounded() const {
@@ -329,8 +411,7 @@ public:
     return temp;
   }
   void in_place_display_round() {
-    for (amounts_map::value_type& pair : amounts)
-      pair.second.in_place_roundto(pair.second.display_precision());
+    transform_amounts([&](amount_t& amt) { amt.in_place_roundto(amt.display_precision()); });
   }
 
   [[nodiscard]] balance_t rounded_to_commodity_precision() const {
@@ -339,8 +420,7 @@ public:
     return temp;
   }
   void in_place_round_to_commodity_precision() {
-    for (amounts_map::value_type& pair : amounts)
-      pair.second.in_place_round_to_commodity_precision();
+    transform_amounts([&](amount_t& amt) { amt.in_place_round_to_commodity_precision(); });
   }
 
   [[nodiscard]] balance_t floored() const {
@@ -349,8 +429,7 @@ public:
     return temp;
   }
   void in_place_floor() {
-    for (amounts_map::value_type& pair : amounts)
-      pair.second.in_place_floor();
+    transform_amounts([&](amount_t& amt) { amt.in_place_floor(); });
   }
 
   [[nodiscard]] balance_t ceilinged() const {
@@ -359,8 +438,7 @@ public:
     return temp;
   }
   void in_place_ceiling() {
-    for (amounts_map::value_type& pair : amounts)
-      pair.second.in_place_ceiling();
+    transform_amounts([&](amount_t& amt) { amt.in_place_ceiling(); });
   }
 
   [[nodiscard]] balance_t unrounded() const {
@@ -369,8 +447,7 @@ public:
     return temp;
   }
   void in_place_unround() {
-    for (amounts_map::value_type& pair : amounts)
-      pair.second.in_place_unround();
+    transform_amounts([&](amount_t& amt) { amt.in_place_unround(); });
   }
 
   balance_t reduced() const {
@@ -384,7 +461,7 @@ public:
     balance_t temp;
     temp.sort_order = sort_order;
     for (const amounts_map::value_type& pair : amounts)
-      temp += pair.second.reduced();
+      temp.merge(pair.second.reduced());
     *this = temp;
   }
 
@@ -399,7 +476,7 @@ public:
     balance_t temp;
     temp.sort_order = sort_order;
     for (const amounts_map::value_type& pair : amounts)
-      temp += pair.second.unreduced();
+      temp.merge(pair.second.unreduced());
     *this = temp;
   }
 
@@ -499,13 +576,10 @@ public:
 
   optional<amount_t> commodity_amount(const optional<const commodity_t&>& commodity = none) const;
 
-  amounts_map::iterator find_by_name(const commodity_t& comm);
-  amounts_map::const_iterator find_by_name(const commodity_t& comm) const;
-
   balance_t number() const {
     balance_t temp;
     for (const amounts_map::value_type& pair : amounts)
-      temp += pair.second.number();
+      temp.merge(pair.second.number());
     return temp;
   }
 
@@ -523,6 +597,59 @@ public:
    * given amounts_array.
    */
   void sorted_amounts(amounts_array& sorted) const;
+
+  /**
+   * The amount sorted_amounts() would place first, or nullptr for an empty
+   * balance, found in linear time (top_amount() asks for this on every
+   * posting of a register).
+   */
+  const amount_t* first_sorted_amount() const;
+
+  /**
+   * Apply @p fn to every component amount, in the map's order, and should
+   * @p fn fail on one, let through the failure a visit in display order
+   * would have met first, so that an error names the same component on
+   * every run (the map's order is a hash order): the components not yet
+   * visited that precede the failing one in display order are tried, and
+   * the first of them to fail, else the first failure itself, is thrown
+   * with its own error context, as the only failure would have been.  No
+   * component is visited twice, since a valuation may run Python code or
+   * fetch a quote.
+   */
+  template <typename Fn>
+  void visit_components(Fn&& fn) const {
+    std::ostringstream earlier;
+    take_error_context(earlier);
+    std::unordered_set<const amount_t*> visited;
+    const amount_t* failing = nullptr;
+    std::exception_ptr failure;
+    try {
+      for (const amounts_map::value_type& pair : amounts) {
+        failing = &pair.second;
+        fn(pair.second);
+        visited.insert(&pair.second);
+      }
+    } catch (...) {
+      failure = std::current_exception();
+    }
+    if (!failure) {
+      restore_error_context(earlier);
+      return;
+    }
+    std::ostringstream failed;
+    take_error_context(failed);
+    restore_error_context(earlier);
+    amounts_array sorted;
+    sorted_amounts(sorted);
+    for (const amount_t* amount : sorted) {
+      if (amount == failing)
+        break;
+      if (visited.count(amount) == 0)
+        fn(*amount);
+    }
+    restore_error_context(failed);
+    std::rethrow_exception(failure);
+  }
 
   /**
    * Iteration primitives.  `map_sorted_amounts' allows one to visit
@@ -552,9 +679,13 @@ public:
    * with commodities in alphabetized order, regardless of the
    * relative amounts of those commodities.  There is no option to
    * change this behavior.
+   *
+   * With AMOUNT_PRINT_COLORIZE in flags, each negative amount is
+   * rendered with the ANSI escape sequence negative_color, if given.
    */
   void print(std::ostream& out, const int first_width = -1, const int latter_width = -1,
-             const uint_least8_t flags = AMOUNT_PRINT_NO_FLAGS) const;
+             const uint_least8_t flags = AMOUNT_PRINT_NO_FLAGS,
+             const string& negative_color = empty_string) const;
 
   /**
    * Debugging methods.  There are two methods defined to help with

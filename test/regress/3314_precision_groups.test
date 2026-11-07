@@ -1,0 +1,26 @@
+; Coarse costs in real or parenthesized postings must not hide a finer
+; remainder in the balanced virtual group (#3314, #1114).
+
+2020-01-01 Independent precision
+    Assets:One       1 USD @ 1.0 EUR
+    Assets:Two      -1 USD @ 1.0 EUR
+    (Memo)           1 USD @ 1.0 EUR
+    [Budget:One]     1 USD @ 1.002 EUR
+    [Budget:Two]    -1 USD @ 1.001 EUR
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 9:
+While balancing transaction from "$FILE", lines 4-9:
+> 2020-01-01 Independent precision
+>     Assets:One       1 USD @ 1.0 EUR
+>     Assets:Two      -1 USD @ 1.0 EUR
+>     (Memo)           1 USD @ 1.0 EUR
+>     [Budget:One]     1 USD @ 1.002 EUR
+>     [Budget:Two]    -1 USD @ 1.001 EUR
+Unbalanced remainder of balanced virtual postings is:
+                   0
+Amount to balance against:
+            EUR1.002
+Error: Transaction does not balance
+end test

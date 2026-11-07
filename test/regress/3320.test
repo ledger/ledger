@@ -1,0 +1,33 @@
+; Regression test for GitHub issue #3320
+;
+; On an `account` directive line, a semicolon that follows a hard
+; separator -- two or more spaces, or a tab -- begins a comment, as it
+; ends the payee on a transaction's first line.  The account name ends
+; before the separator.  Ledger used to take the whole rest of the line as
+; the name, so `account baz  ; bar` declared an account named "baz  ; bar",
+; which no posting could use: a posting ends its account name at the
+; first hard separator.
+;
+; A semicolon after a single space, or after no space at all, stays part
+; of the name, as it does in a posting, where `foo ; bar` names one
+; account.  Nested `account` lines follow the same rule.
+
+account foo ; bar
+account baz  ; bar
+account tabbed	; after a tab
+account spaced 	; after a space and a tab
+account bare  ;
+account semi;colon  ; only the second semicolon follows a separator
+account Parent  ; on the parent
+    account Child	; on the nested child
+
+test accounts
+Parent
+Parent:Child
+bare
+baz
+foo ; bar
+semi;colon
+spaced
+tabbed
+end test

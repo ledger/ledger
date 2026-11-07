@@ -1,0 +1,33 @@
+; Regression test for issue #3312: format samples whose bare symbol is
+; still an error (3312.test has the samples that are now read).
+;
+; A bare symbol that meets the number between two number characters is
+; not taken for the declared symbol, since nothing marks where it ends.
+; The sample is parsed as written, so "N11,000.00" names N, and
+; "1,000.001X" names X.  Quoting the symbol, or setting it off from the
+; number with a space, removes the doubt.
+commodity N1
+    format N11,000.00
+
+commodity 1X
+    format 1,000.001X
+
+; Only the declared symbol is recognized bare.
+commodity N4
+    format 1,000.00 N5
+
+; A sample with no number.
+commodity N6
+    format N6
+
+test bal -> 4
+__ERROR__
+While parsing file "$FILE", line 10:
+Error: commodity directive symbol "N1" and format directive symbol N should be the same
+While parsing file "$FILE", line 13:
+Error: commodity directive symbol "1X" and format directive symbol X should be the same
+While parsing file "$FILE", line 17:
+Error: unexpected characters '5' after commodity symbol in format directive
+While parsing file "$FILE", line 21:
+Error: No quantity specified for amount
+end test

@@ -1,0 +1,33 @@
+; A balance assertion naming a lot still matches the lot after a `value`
+; expression has been given to it, by a commodity directive (AAPL) or by
+; a Value:: tag (MSFT: $100 for 4 units, $25 a unit).
+;
+; Ledger gives the expression to the lot itself, which every amount of
+; the lot shares, and the lot still answers to the name it was bought
+; under, so each assertion, which names its lot without the valuation,
+; finds the valued lot.  3.4.1 checked a balance assertion against the
+; account's holdings stripped of their lot annotations (#2318, #2355),
+; so an assertion never found the lot it names, valued or not; here it
+; stopped at the AAPL assertion with "Balance assertion off by
+; 10 AAPL {$5} [2020/01/01] (({$7})) (expected to see 0)".  It also read
+; the tag's $100 as $100 a unit (#2399).
+
+commodity AAPL
+    value $7
+
+2020/01/01 Buy
+    Assets:Broker    10 AAPL @ $5
+    Assets:Cash
+
+2020/01/01 Buy
+    Assets:Broker    4 MSFT @ $20  ; Value:: $100
+    Assets:Cash
+
+2020/01/02 Check
+    Assets:Broker    0 AAPL = 10 AAPL {$5} [2020/01/01]
+    Assets:Broker    0 MSFT = 4 MSFT {$20} [2020/01/01]
+
+test bal --lots Assets:Broker
+ 10 AAPL {$5} [2020/01/01] (({$7}))
+4 MSFT {$20} [2020/01/01] (({$25}))  Assets:Broker
+end test

@@ -8,6 +8,7 @@
 #include "post.h"
 #include "account.h"
 #include "amount.h"
+#include "commodity.h"
 #include "journal.h"
 #include "session.h"
 #include "draft.h"
@@ -31,6 +32,18 @@ struct xact_fixture {
     root = journal.master;
     expenses = root->find_account("Expenses");
     assets = root->find_account("Assets");
+  }
+
+  post_t* add_cost_post(xact_t& xact, const char* quantity, const char* cost,
+                        post_t::flags_t flags = 0) {
+    unique_ptr<post_t> post(new post_t(expenses, amount_t(quantity)));
+    amount_t total;
+    BOOST_REQUIRE(total.parse(cost, PARSE_NO_MIGRATE));
+    post->cost = total;
+    post->add_flags(flags | POST_COST_IN_FULL);
+    post_t* result = post.get();
+    xact.add_post(post.release());
+    return result;
   }
 
   ~xact_fixture() {
@@ -2484,6 +2497,194 @@ BOOST_AUTO_TEST_CASE(testDraftInsertWithSession_W7)
   BOOST_CHECK(result != nullptr);
   if (result)
     BOOST_CHECK_EQUAL(result->payee, "Grocery Store");
+
+  scope_t::default_scope = old_scope;
+}
+
+// ---------------------------------------------------------------------------
+// Cost precision for independent balancing groups
+// ---------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testCostPrecisionIsLocalToBalancingGroup) {
+  for (const bool finalize : {false, true}) {
+    for (const bool coarse_virtual : {false, true}) {
+      BOOST_TEST_CONTEXT("finalize=" << finalize << ", coarse_virtual=" << coarse_virtual) {
+        xact_t xact;
+        xact._date = parse_date("2024/01/01");
+        xact.journal = &journal;
+        const auto coarse_flags = coarse_virtual ? POST_VIRTUAL | POST_MUST_BALANCE : 0;
+        const auto fine_flags = coarse_virtual ? 0 : POST_VIRTUAL | POST_MUST_BALANCE;
+        add_cost_post(xact, "1 USD", "1.0 EUR", coarse_flags);
+        add_cost_post(xact, "-1 USD", "-1.0 EUR", coarse_flags);
+        post_t* fine = add_cost_post(xact, "1 USD", "1.002 EUR", fine_flags);
+        add_cost_post(xact, "-1 USD", "-1.001 EUR", fine_flags);
+
+        commodity_t& eur = fine->cost->commodity();
+        BOOST_REQUIRE_EQUAL(0, eur.precision());
+        BOOST_CHECK_THROW(finalize ? xact.finalize() : xact.verify(), balance_error);
+        BOOST_CHECK_EQUAL(0, eur.precision());
+      }
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(testParenthesizedCostDoesNotSetBalancePrecision) {
+  for (const bool finalize : {false, true}) {
+    for (const bool virtual_group : {false, true}) {
+      BOOST_TEST_CONTEXT("finalize=" << finalize << ", virtual_group=" << virtual_group) {
+        xact_t xact;
+        xact._date = parse_date("2024/01/01");
+        xact.journal = &journal;
+        add_cost_post(xact, "1 USD", "1.0 EUR", POST_VIRTUAL);
+        const auto flags = virtual_group ? POST_VIRTUAL | POST_MUST_BALANCE : 0;
+        post_t* fine = add_cost_post(xact, "1 USD", "1.002 EUR", flags);
+        add_cost_post(xact, "-1 USD", "-1.001 EUR", flags);
+
+        commodity_t& eur = fine->cost->commodity();
+        BOOST_REQUIRE_EQUAL(0, eur.precision());
+        BOOST_CHECK_THROW(finalize ? xact.finalize() : xact.verify(), balance_error);
+        BOOST_CHECK_EQUAL(0, eur.precision());
+      }
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(testCostPrecisionUsesMaximumInEitherOrder) {
+  for (const bool finalize : {false, true}) {
+    for (const bool virtual_group : {false, true}) {
+      for (const bool fine_first : {false, true}) {
+        BOOST_TEST_CONTEXT("finalize=" << finalize << ", virtual_group=" << virtual_group
+                                       << ", fine_first=" << fine_first) {
+          xact_t xact;
+          xact._date = parse_date("2024/01/01");
+          xact.journal = &journal;
+          const auto flags = virtual_group ? POST_VIRTUAL | POST_MUST_BALANCE : 0;
+          post_t* first = add_cost_post(xact, fine_first ? "-1 USD" : "1 USD",
+                                        fine_first ? "-0.999 EUR" : "1.0 EUR", flags);
+          add_cost_post(xact, fine_first ? "1 USD" : "-1 USD",
+                        fine_first ? "1.0 EUR" : "-0.999 EUR", flags);
+
+          commodity_t& eur = first->cost->commodity();
+          BOOST_REQUIRE_EQUAL(0, eur.precision());
+          BOOST_CHECK_THROW(finalize ? xact.finalize() : xact.verify(), balance_error);
+          BOOST_CHECK_EQUAL(0, eur.precision());
+        }
+      }
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(testUnrelatedCostsDoNotTightenBalancePrecision) {
+  for (const bool finalize : {false, true}) {
+    for (const bool virtual_group : {false, true}) {
+      for (const int unrelated : {0, 1, 2}) {
+        BOOST_TEST_CONTEXT("finalize=" << finalize << ", virtual_group=" << virtual_group
+                                       << ", unrelated=" << unrelated) {
+          xact_t xact;
+          xact._date = parse_date("2024/01/01");
+          xact.journal = &journal;
+          const auto flags = virtual_group ? POST_VIRTUAL | POST_MUST_BALANCE : 0;
+          post_t* explicit_cost = add_cost_post(xact, "1 USD", "1.0 EUR", flags);
+          add_cost_post(xact, "-1 USD", "-0.999 EUR", flags | POST_COST_CALCULATED);
+
+          // The calculated cost's residual is zero at the explicit cost's
+          // precision. Finer costs outside this group must not tighten it.
+          if (unrelated == 1) {
+            const auto other_flags = virtual_group ? 0 : POST_VIRTUAL | POST_MUST_BALANCE;
+            add_cost_post(xact, "1 USD", "1.002 EUR", other_flags);
+            add_cost_post(xact, "-1 USD", "-1.002 EUR", other_flags);
+          } else if (unrelated == 2) {
+            add_cost_post(xact, "1 USD", "1.002 EUR", POST_VIRTUAL);
+          }
+
+          commodity_t& eur = explicit_cost->cost->commodity();
+          BOOST_REQUIRE_EQUAL(0, eur.precision());
+          BOOST_CHECK(finalize ? xact.finalize() : xact.verify());
+          BOOST_CHECK_EQUAL(0, eur.precision());
+        }
+      }
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(testCostPrecisionRestoredAfterSuccessfulChecks) {
+  for (const bool finalize : {false, true}) {
+    BOOST_TEST_CONTEXT("finalize=" << finalize) {
+      xact_t xact;
+      xact._date = parse_date("2024/01/01");
+      xact.journal = &journal;
+      add_cost_post(xact, "1 USD", "1.0 EUR");
+      add_cost_post(xact, "-1 USD", "-1.0 EUR");
+      post_t* fine = add_cost_post(xact, "1 USD", "1.002 EUR", POST_VIRTUAL | POST_MUST_BALANCE);
+      add_cost_post(xact, "-1 USD", "-1.002 EUR", POST_VIRTUAL | POST_MUST_BALANCE);
+
+      commodity_t& eur = fine->cost->commodity();
+      BOOST_REQUIRE_EQUAL(0, eur.precision());
+      BOOST_CHECK(finalize ? xact.finalize() : xact.verify());
+      BOOST_CHECK_EQUAL(0, eur.precision());
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(testEstablishedCostCommodityPrecisionIsRetained) {
+  amount_t established("1.00 EUR");
+  commodity_t& eur = established.commodity();
+  for (const bool finalize : {false, true}) {
+    for (const bool accepted : {false, true}) {
+      BOOST_TEST_CONTEXT("finalize=" << finalize << ", accepted=" << accepted) {
+        xact_t xact;
+        xact._date = parse_date("2024/01/01");
+        xact.journal = &journal;
+        add_cost_post(xact, "1 USD", accepted ? "1.001 EUR" : "1.006 EUR");
+        add_cost_post(xact, "-1 USD", "-1.000 EUR");
+
+        BOOST_REQUIRE_EQUAL(2, eur.precision());
+        if (accepted)
+          BOOST_CHECK(finalize ? xact.finalize() : xact.verify());
+        else
+          BOOST_CHECK_THROW(finalize ? xact.finalize() : xact.verify(), balance_error);
+        BOOST_CHECK_EQUAL(2, eur.precision());
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// #3258: a lot exchanged for a lot of another commodity (a commodity swap)
+// balances at its lot basis, and the elided posting takes the gain or loss
+// exactly.  EUR appears only in lot prices, which teach no display
+// precision, so rounding the gain at that precision would lose its cents.
+// ---------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testCommoditySwapGainIsExact)
+{
+  session_t session;
+  scope_t* old_scope = scope_t::default_scope;
+  scope_t::default_scope = &session;
+
+  journal_t* j = session.read_journal_from_string(
+    "2025/04/12 Swap at a loss\n"
+    "    Assets:Coins     -10 BTC {100.00 EUR} @ 2 ETH {40.33 EUR}\n"
+    "    Assets:Coins      20 ETH {40.33 EUR}\n"
+    "    Expenses:Loss\n"
+    "\n"
+    "2025/04/13 Swap at a gain of less than one euro\n"
+    "    Assets:Coins     -10 BTC {100.00 EUR} @ 2 ETH {50.02 EUR}\n"
+    "    Assets:Coins      20 ETH {50.02 EUR}\n"
+    "    Expenses:Loss\n"
+  );
+  BOOST_REQUIRE(j != nullptr);
+  BOOST_REQUIRE_EQUAL(2, j->xacts.size());
+
+  xact_t* at_loss = j->xacts.front();
+  xact_t* at_gain = j->xacts.back();
+  BOOST_CHECK_EQUAL(0, at_loss->posts.back()->amount.commodity().precision());
+
+  // Both swaps balance at the 1000 EUR basis of the BTC given up
+  BOOST_CHECK_EQUAL(amount_t("-1000 EUR"), *at_loss->posts.front()->cost);
+  BOOST_CHECK_EQUAL(amount_t("-1000 EUR"), *at_gain->posts.front()->cost);
+  BOOST_CHECK_EQUAL(amount_t("193.4 EUR"), at_loss->posts.back()->amount);
+  BOOST_CHECK_EQUAL(amount_t("-0.4 EUR"), at_gain->posts.back()->amount);
 
   scope_t::default_scope = old_scope;
 }

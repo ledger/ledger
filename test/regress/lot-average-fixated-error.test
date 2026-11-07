@@ -1,0 +1,48 @@
+; --average-lot-prices cannot average the lots of one commodity whose
+; prices are in different commodities, fixated or not: it fails with
+; "Adding amounts with different commodities", naming the first two price
+; commodities in the order `bal --lots` lists the lots, on every run.
+; Assets:Two holds ETF bought at =EUR10 and at =$11, listed {=$11} first,
+; so the error names '$' and then 'EUR'.  Assets:Three holds ETF bought
+; at the floating prices EUR10, $11 and GBP9, and the error names '$' and
+; 'EUR' again.
+;
+; Ledger used to name the first two price commodities it met in the order
+; in which the balance happened to keep its lots, which could change from
+; one run to the next: for Assets:Three, 3.4.1 named 'EUR' and '$' on most
+; runs and 'EUR' and 'GBP' on the others.
+
+2024/01/01 Buy in euros
+    Assets:Two       2 ETF @ =EUR10
+    Assets:Cash
+
+2024/02/01 Buy in dollars
+    Assets:Two       2 ETF @ =$11
+    Assets:Cash
+
+2024/01/02 Buy in euros
+    Assets:Three     2 ETF @ EUR10
+    Assets:Cash
+
+2024/02/02 Buy in dollars
+    Assets:Three     2 ETF @ $11
+    Assets:Cash
+
+2024/03/02 Buy in pounds
+    Assets:Three     2 ETF @ GBP9
+    Assets:Cash
+
+test bal --average-lot-prices Assets:Two -> 1
+__ERROR__
+While calling function 'averaged_lots 2 ETF {=$11} [2024/02/01]
+2 ETF {=EUR10} [2024/01/01]':
+Error: Adding amounts with different commodities: '$' != 'EUR'
+end test
+
+test bal --average-lot-prices Assets:Three -> 1
+__ERROR__
+While calling function 'averaged_lots 2 ETF {$11} [2024/02/02]
+2 ETF {EUR10} [2024/01/02]
+2 ETF {GBP9} [2024/03/02]':
+Error: Adding amounts with different commodities: '$' != 'EUR'
+end test

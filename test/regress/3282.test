@@ -1,0 +1,124 @@
+; Regression test for issue #3282
+; --flat changes only the totals of account reports, whatever the order of
+; the options.
+;
+; Issue #3282 asked whether the --flat change made for issue #1987 was
+; recorded in NEWS.md.  Checking that change uncovered regressions in it.
+; --flat rewrote the --total expression of every report, so register and
+; other posting reports failed with "Unknown identifier
+; 'has_children_to_display'", as did balance reports that revalue postings
+; with --unrealized.  And because the rewrite replaced whatever --total
+; expression preceded it, a -T or --percent given before --flat was silently
+; ignored.  The own-amount rule is now applied when an account report
+; starts, as the default total of each account, so an explicit --total or
+; --percent takes precedence in either order.
+
+= /Expenses:Food/
+    (Liabilities:Tax)   0.333
+
+2020-01-08 * Alpha
+    Assets:Sub1:Sub2   10.00 EUR
+    Assets:Sub1        -5.00 EUR
+    Assets:Foo
+
+2020-01-09 * Beta
+    Assets:Sub1:Sub3   10.00 EUR
+    Assets:Sub1        -5.00 EUR
+    Assets:Foo
+
+2020-01-10 * Gamma
+    Expenses:Food       1.00 EUR
+    Liabilities:Card
+
+2020-01-11 * Delta
+    Expenses:Food       1.00 EUR
+    Liabilities:Card
+
+2020-01-12 * Buy
+    Investments:Broker:AAA   10 AAA @ $10
+    Investments:Broker       $-20
+    Investments:Cash
+
+P 2020-02-01 AAA $12
+
+; Posting reports are not affected by --flat.
+test reg Assets:Sub1 --flat
+20-Jan-08 Alpha                 Assets:Sub1:Sub2          10.00 EUR    10.00 EUR
+                                Assets:Sub1               -5.00 EUR     5.00 EUR
+20-Jan-09 Beta                  Assets:Sub1:Sub3          10.00 EUR    15.00 EUR
+                                Assets:Sub1               -5.00 EUR    10.00 EUR
+end test
+
+test select account, total from posts where 'account =~ /Sub1/' --flat
+Assets:Sub1:Sub2                                                      10.00 EUR
+Assets:Sub1                                                            5.00 EUR
+Assets:Sub1:Sub3                                                      15.00 EUR
+Assets:Sub1                                                           10.00 EUR
+end test
+
+; Register adds a rounding adjustment only while the --total expression is
+; the default, so --flat must leave that expression alone in posting
+; reports.
+test reg Tax --flat
+20-Jan-10 Gamma                 (Liabilities:Tax)          0.33 EUR     0.33 EUR
+20-Jan-11 Delta                 <Adjustment>               0.01 EUR     0.34 EUR
+                                (Liabilities:Tax)          0.33 EUR     0.67 EUR
+end test
+
+; A balance report that revalues postings evaluates the total of each
+; posting along the way.
+test bal Investments Equity --flat -V --unrealized
+                $-20  Equity:Unrealized Gains
+                $-20  Investments:Broker
+                $120  Investments:Broker:AAA
+                $-80  Investments:Cash
+--------------------
+                   0
+end test
+
+; An explicit --total expression is used as given, before or after --flat.
+test bal Assets -T 'amount * 2' --flat
+          -20.00 EUR  Assets:Foo
+          -20.00 EUR  Assets:Sub1
+           20.00 EUR  Assets:Sub1:Sub2
+           20.00 EUR  Assets:Sub1:Sub3
+--------------------
+                   0
+end test
+
+test bal Assets --flat -T 'amount * 2'
+          -20.00 EUR  Assets:Foo
+          -20.00 EUR  Assets:Sub1
+           20.00 EUR  Assets:Sub1:Sub2
+           20.00 EUR  Assets:Sub1:Sub3
+--------------------
+                   0
+end test
+
+; So is --percent.
+test bal Assets -% --flat
+             100.00%  Assets:Sub1:Sub2
+             100.00%  Assets:Sub1:Sub3
+end test
+
+test bal Assets --flat -%
+             100.00%  Assets:Sub1:Sub2
+             100.00%  Assets:Sub1:Sub3
+end test
+
+; Each group of a --group-by report lists own amounts too.
+test bal Assets --flat --group-by payee
+Alpha
+           -5.00 EUR  Assets:Foo
+           -5.00 EUR  Assets:Sub1
+           10.00 EUR  Assets:Sub1:Sub2
+--------------------
+                   0
+
+Beta
+           -5.00 EUR  Assets:Foo
+           -5.00 EUR  Assets:Sub1
+           10.00 EUR  Assets:Sub1:Sub3
+--------------------
+                   0
+end test

@@ -276,6 +276,13 @@ EXPECTED_REFUSALS = {
         "reason": "a lot price that is itself a two-commodity balance"
                   " cannot be valued (market() in bal -V and bal -G)",
     },
+    "test/regress/value-expr-basket-order.test": {
+        "stderr": "Cannot convert a balance with multiple commodities"
+                  " to an amount",
+        "reason": "the basket's value expression is a balance of two"
+                  " commodities, which market() cannot convert to one"
+                  " amount (bal -V)",
+    },
 }
 
 # Journals that C++ leaves unfooted: every report that fails, with its
@@ -386,6 +393,28 @@ EXPECTED_UNVALUED = {
     "test/regress/unrealized-unpriced-holding.test": (
         "-V", "ACME is declared with N, so -V leaves it unvalued, as the"
               " test pins; -X $ values it"),
+    "test/regress/3314_inference_order.test": (
+        "-V", "the journal's brackets exchange among several commodities"
+              " at inferred prices, and -V values each holding into the"
+              " commodity it is priced in, USD and ZAR; -X USD values"
+              " them and foots"),
+    "test/regress/3314_swap_total.test": (
+        "-V -X", "BTC and ETH are swapped against EUR through lot prices,"
+                 " which record no market price, so -V leaves the"
+                 " holdings unvalued and -X EUR has no price from BTC or"
+                 " ETH into EUR"),
+    "test/regress/3327_3.test": (
+        "-V -X", "the split's XYZ shares record no price, so -V leaves"
+                 " the holdings in $ and XYZ, and -X $ has no price from"
+                 " XYZ into $"),
+    "test/regress/lot-strip-keeps-fixated.test": (
+        "-V -X", "the lots' {=$5} and {$5} are lot prices, which record"
+                 " no market price, so -V leaves AAPL unvalued and -X $"
+                 " values only the $ rows"),
+    "test/regress/xact-price-inference-reversed.test": (
+        "-X", "the reversed inferred price leaves one row priced in EUR"
+              " that -X $ has no price from EUR for, beside the $ rows;"
+              " -V values them and foots"),
 }
 
 # The tests the check exists for: on the default corpus each must PASS,

@@ -257,6 +257,7 @@ public:
    * Falls through to item_t::lookup() for inherited bindings (date, note, etc.).
    */
   expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
+  post_t* as_post_scope() override { return this; }
 
   /** @brief Evaluate an expression in a scope bound to this posting. */
   amount_t resolve_expr(scope_t& scope, expr_t& expr);
@@ -395,8 +396,10 @@ class journal_t;
  * valuation expression to attach.  Priority order:
  *   1. `Value:` metadata tag on the posting
  *   2. The account's value_expr
- *   3. The commodity's value_expr
- *   4. The journal's value_expr
+ *   3. The journal's account value expression (--account-value-expr)
+ *   4. The commodity's value_expr
+ *   5. The journal's commodity value expression (--commodity-value-expr)
+ *   6. The journal's value_expr (--value-expr)
  *
  * If the commodity already has a valuation expression in its annotation,
  * this function does nothing (the existing expression takes precedence).

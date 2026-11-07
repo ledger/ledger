@@ -89,8 +89,9 @@ public:
   using ptr_op_t = expr_t::ptr_op_t;
 
 private:
-  mutable short refc; ///< Intrusive reference count for boost::intrusive_ptr.
-  ptr_op_t left_;     ///< Left child (operand) or compiled definition for IDENT nodes.
+  mutable int refc; ///< Intrusive reference count for boost::intrusive_ptr (every lot valued
+                    ///< by one `value` expression shares its op_t, so a short overflowed).
+  ptr_op_t left_;   ///< Left child (operand) or compiled definition for IDENT nodes.
 
   /// Polymorphic payload -- the active alternative depends on @c kind:
   ///  - monostate: no payload yet (also used to detect "no right child")

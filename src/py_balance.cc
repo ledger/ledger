@@ -38,7 +38,8 @@
  * holds amounts in multiple commodities simultaneously, making it the natural
  * result of summing postings across different currencies.  This binding
  * provides arithmetic operators, rounding, commodity-specific extraction,
- * market valuation, and sequence-style access (__len__, __getitem__).
+ * market valuation, and sequence-style access (__len__, __getitem__,
+ * __iter__, __reversed__).
  */
 
 #include <system.hh>
@@ -105,25 +106,48 @@ std::optional<amount_t> py_commodity_amount_1(const balance_t& balance,
 
 /*--- Sequence Protocol ---*/
 
-/// Support __len__ and __getitem__ so Balance behaves as a sequence of amounts.
+/// Sequence protocol, so that Balance behaves as a sequence of amounts:
+/// __len__ here; __iter__, __reversed__ and __getitem__ follow.
 long balance_len(balance_t& bal) {
   return static_cast<long>(bal.amounts.size());
 }
 
-amount_t balance_getitem(balance_t& bal, long i) {
-  long len = static_cast<long>(bal.amounts.size());
+/// Iterate the amounts in display order from one snapshot: Python would
+/// otherwise fall back to __getitem__, sorting the balance once per index.
+object balance_iter(balance_t& bal) {
+  balance_t::amounts_array sorted;
+  bal.sorted_amounts(sorted);
+  list items;
+  for (const amount_t* amount : sorted)
+    items.append(*amount);
+  return items.attr("__iter__")();
+}
 
-  if (labs(i) >= len) {
+/// reversed() would otherwise call __getitem__ for every index, sorting
+/// the balance each time.
+object balance_reversed(balance_t& bal) {
+  balance_t::amounts_array sorted;
+  bal.sorted_amounts(sorted);
+  list items;
+  for (auto i = sorted.rbegin(); i != sorted.rend(); ++i)
+    items.append(**i);
+  return items.attr("__iter__")();
+}
+
+amount_t balance_getitem(balance_t& bal, long i) {
+  // Index the display order (balance_t::sorted_amounts), not the component
+  // map's own hash order, which differs from one run to the next.
+  balance_t::amounts_array sorted;
+  bal.sorted_amounts(sorted);
+  long len = static_cast<long>(sorted.size());
+
+  if (i >= len || i < -len) {
     PyErr_SetString(PyExc_IndexError, _("Index out of range"));
     throw_error_already_set();
   }
 
   long x = i < 0 ? len + i : i;
-  balance_t::amounts_map::iterator elem = bal.amounts.begin();
-  while (--x >= 0)
-    elem++;
-
-  return (*elem).second;
+  return *sorted[static_cast<std::size_t>(x)];
 }
 
 /*--- Annotation Stripping and String Conversion ---*/
@@ -198,6 +222,8 @@ void export_balance() {
 
       .def("__len__", balance_len)
       .def("__getitem__", balance_getitem)
+      .def("__iter__", balance_iter)
+      .def("__reversed__", balance_reversed)
 
       .def("rounded", &balance_t::rounded)
       .def("in_place_round", &balance_t::in_place_round, return_internal_reference<>())

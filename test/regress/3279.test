@@ -1,0 +1,120 @@
+; Regression test for issue #3279:
+;   "Regression: `--empty` shows `0.00 CURRENCY`, before it was just `0`"
+;
+; --empty selects which accounts a report shows; it does not change how an
+; amount is printed.  A zero balance prints as "0", and a commodity whose
+; balance nets to zero is left out, exactly as without --empty.  The #2204
+; change broke this by having --empty print a zero row for every commodity
+; an account had posted in, which also put phantom zero rows into every
+; report that formats account totals through scrub().
+;
+; One journal covers the three cases from the issue: through January only
+; PHP is posted and it nets to zero; on 2023-02-09 the account also takes
+; 100.00 THB; by 2023-02-10 both commodities net to zero.
+
+2023-01-09 * Bought credit
+    Assets:Cards:Joyride                                         200.00 PHP
+    Assets:Current:GCash                                        -200.00 PHP
+
+2023-01-10 * Motorbike taxi
+    Expenses:Travel:Taxi                                         200.00 PHP
+    Assets:Cards:Joyride                                        -200.00 PHP
+
+2023-02-09 * Bought credit
+    Assets:Cards:Joyride                                         100.00 THB
+    Assets:Current:GCash                                        -100.00 THB
+
+2023-02-10 * Motorbike taxi
+    Expenses:Travel:Taxi                                         100.00 THB
+    Assets:Cards:Joyride                                        -100.00 THB
+
+; A single commodity netting to zero prints "0", not "0.00 PHP" ...
+test bal joyr --empty --end 2023-02-01
+                   0  Assets:Cards:Joyride
+end test
+
+; ... and so do several, not one zero row per commodity.
+test bal joyr --empty
+                   0  Assets:Cards:Joyride
+end test
+
+; Beside a non-zero commodity, one that nets to zero is left out, with or
+; without --empty.
+test bal joyr --empty --end 2023-02-10
+          100.00 THB  Assets:Cards:Joyride
+end test
+
+test bal joyr --end 2023-02-10
+          100.00 THB  Assets:Cards:Joyride
+end test
+
+; --average turns on --empty, so the zero rows reached plain `bal -A` too.
+test bal -A joyr --end 2023-02-10
+           33.33 THB  Assets:Cards:Joyride
+end test
+
+test bal --empty
+         -200.00 PHP
+         -100.00 THB  Assets
+                   0    Cards:Joyride
+         -200.00 PHP
+         -100.00 THB    Current:GCash
+          200.00 PHP
+          100.00 THB  Expenses:Travel:Taxi
+--------------------
+                   0
+end test
+
+test bal --flat --empty --end 2023-02-10
+          100.00 THB  Assets:Cards:Joyride
+         -200.00 PHP
+         -100.00 THB  Assets:Current:GCash
+          200.00 PHP  Expenses:Travel:Taxi
+--------------------
+                   0
+end test
+
+; Other reports that format account totals through scrub() agree: no zero
+; rows in the cleared report or its total ...
+test cleared --empty
+     -200.00 PHP
+     -100.00 THB         -200.00 PHP
+                         -100.00 THB                 Assets
+               0                   0    23-Feb-10      Cards:Joyride
+     -200.00 PHP
+     -100.00 THB         -200.00 PHP
+                         -100.00 THB    23-Feb-09      Current:GCash
+      200.00 PHP
+      100.00 THB          200.00 PHP
+                          100.00 THB    23-Feb-10    Expenses:Travel:Taxi
+----------------  ------------------    ---------
+               0                   0             
+end test
+
+; ... none in the --dc credit column for commodities that were never
+; credited ...
+test bal --dc --empty --end 2023-02-10
+    200.00 PHP
+    100.00 THB     400.00 PHP
+                 100.00 THB    -200.00 PHP  Assets
+    200.00 PHP
+    100.00 THB     200.00 PHP     100.00 THB    Cards:Joyride
+             0     200.00 PHP
+                 100.00 THB    -200.00 PHP
+                             -100.00 THB    Current:GCash
+    200.00 PHP              0     200.00 PHP  Expenses:Travel:Taxi
+-------------- -------------- --------------
+    400.00 PHP
+    100.00 THB     400.00 PHP
+                 100.00 THB              0
+end test
+
+; ... and none for accounts in which -G finds no gain.
+test bal -G --empty
+                   0  Assets
+                   0    Cards:Joyride
+                   0    Current:GCash
+                   0  Expenses:Travel:Taxi
+--------------------
+                   0
+end test

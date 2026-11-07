@@ -1,0 +1,32 @@
+; Regression test for issue #3327: a lot price with no commodity totals a
+; lot in no commodity.
+;
+; amount_t::price() multiplied a lot price by its lot, which gave the total
+; the lot's commodity when the price had none.  So --basis reported
+; C$100.00 held at a lot price of 1.50 as costing C$150.00 rather than
+; 150.00.  And a report summed with -M, which measures its lots from their
+; lot price, booked the difference as an unrealized loss.
+
+2009/06/03 Opening
+    Assets:Wallet                  C$100.00 {1.50}
+    Equity:Opening
+
+2009/06/04 Westjet
+    Expenses:Transportation:Air    C$429.80 @ 1.572865
+    Liabilities:Mastercard
+
+test reg -B
+09-Jun-03 Opening               Assets:Wallet                   150          150
+                                Equity:Opening                 -150            0
+09-Jun-04 Westjet               Expe:Transportatio:Air   676.017377   676.017377
+                                Liabilities:Mastercard  -676.017377            0
+end test
+
+test bal -V --unrealized -M
+            157.2865  Assets:Wallet
+           -157.2865  Equity:Opening
+          676.017377  Expenses:Transportation:Air
+         -676.017377  Liabilities:Mastercard
+--------------------
+                   0
+end test

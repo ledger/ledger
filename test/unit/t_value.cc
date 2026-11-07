@@ -179,6 +179,15 @@ BOOST_AUTO_TEST_CASE(testEquality)
   BOOST_CHECK(v17 != string_value("EUR"));
   BOOST_CHECK(string_value("EUR") != v17);
 
+  // A symbol that a journal must quote is named by the bare symbol and by
+  // the quoted spelling alike (#3241).
+  value_t quoted(amount_t("1 \"ABC3\"").commodity());
+  BOOST_CHECK(quoted == string_value("ABC3"));
+  BOOST_CHECK(quoted == string_value("\"ABC3\""));
+  BOOST_CHECK(string_value("\"ABC3\"") == quoted);
+  BOOST_CHECK(quoted != string_value("\"ABC\""));
+  BOOST_CHECK(v17 != string_value("\"ABC3\""));
+
   BOOST_CHECK_THROW(v8 == v10, value_error);
   BOOST_CHECK_THROW(v17 == v8, value_error);
   BOOST_CHECK_THROW(v8 == v17, value_error);
@@ -253,6 +262,16 @@ BOOST_AUTO_TEST_CASE(testOrder)
   BOOST_CHECK(string_value("V") >= v1);
   BOOST_CHECK_THROW(v1 >= value_t(amount_t("USD1")), value_error);
   BOOST_CHECK_THROW(value_t(amount_t("USD1")) >= v1, value_error);
+
+  // Order follows the bare symbol, as equality does, under either spelling
+  // of a symbol that a journal must quote (#3241).
+  value_t v2(amount_t("1 \"ABC3\"").commodity());
+  BOOST_CHECK((v2 < string_value("ABC3")) == false);
+  BOOST_CHECK((v2 > string_value("ABC3")) == false);
+  BOOST_CHECK((v2 < string_value("\"ABC3\"")) == false);
+  BOOST_CHECK((v2 > string_value("\"ABC3\"")) == false);
+  BOOST_CHECK(value_t(amount_t("$1").commodity()) < string_value("ABC3"));
+  BOOST_CHECK(v2 < string_value("\"ABD\""));
 
   BOOST_CHECK(v1.valid());
 }
@@ -917,6 +936,8 @@ BOOST_AUTO_TEST_CASE(testConversion)
   BOOST_CHECK(string_value("$").to_commodity() == usd);
   BOOST_CHECK(string_value("USD").to_commodity() == usd);
   BOOST_CHECK_THROW(string_value("A").to_commodity(), value_error);
+  auto& abc3 = amount_t("1 \"ABC3\"").commodity();
+  BOOST_CHECK(string_value("\"ABC3\"").to_commodity() == abc3);
 
   BOOST_CHECK(v1.casted(value_t::type_t::COMMODITY) == v1);
   BOOST_CHECK(value_t(amount_t("USD1").commodity()).casted(value_t::type_t::COMMODITY) == v1);
@@ -3596,8 +3617,17 @@ BOOST_AUTO_TEST_CASE(testPrintNegativeIntegerColorize)
 {
   value_t v1(-42L);
   std::ostringstream out;
-  v1.print(out, 10, -1, AMOUNT_PRINT_COLORIZE);
-  BOOST_CHECK(!out.str().empty());
+  v1.print(out, 10, -1, AMOUNT_PRINT_COLORIZE, "\033[31m");
+  BOOST_CHECK_EQUAL(out.str(), "\033[31m-42\033[0m       ");
+
+  std::ostringstream right;
+  v1.print(right, 10, -1, AMOUNT_PRINT_COLORIZE | AMOUNT_PRINT_RIGHT_JUSTIFY, "\033[31m");
+  BOOST_CHECK_EQUAL(right.str(), "       \033[31m-42\033[0m");
+
+  // Without a color to render it in, the number is printed plainly.
+  std::ostringstream plain;
+  v1.print(plain, 10, -1, AMOUNT_PRINT_COLORIZE | AMOUNT_PRINT_RIGHT_JUSTIFY);
+  BOOST_CHECK_EQUAL(plain.str(), "       -42");
 }
 
 BOOST_AUTO_TEST_CASE(testPrintIntegerLeftJustify)
@@ -3628,8 +3658,14 @@ BOOST_AUTO_TEST_CASE(testPrintNonZeroAmountColorize)
 {
   value_t v1(amount_t("-$42.00"));
   std::ostringstream out;
-  v1.print(out, 10, -1, AMOUNT_PRINT_COLORIZE);
-  BOOST_CHECK(!out.str().empty());
+  v1.print(out, 10, -1, AMOUNT_PRINT_COLORIZE | AMOUNT_PRINT_RIGHT_JUSTIFY, "\033[38;5;196m");
+  BOOST_CHECK_EQUAL(out.str(), "   \033[38;5;196m$-42.00\033[0m");
+
+  // A positive amount is not colored.
+  value_t v2(amount_t("$42.00"));
+  std::ostringstream positive;
+  v2.print(positive, 10, -1, AMOUNT_PRINT_COLORIZE | AMOUNT_PRINT_RIGHT_JUSTIFY, "\033[38;5;196m");
+  BOOST_CHECK_EQUAL(positive.str(), "    $42.00");
 }
 
 BOOST_AUTO_TEST_CASE(testPrintNonZeroAmountRightJustify)
@@ -4475,6 +4511,97 @@ BOOST_AUTO_TEST_CASE(testIsEqualToMask)
   value_t v1(mask_t("foo.*"));
   value_t v2(mask_t("foo.*"));
   BOOST_CHECK(v1 == v2);
+}
+
+BOOST_AUTO_TEST_CASE(testMaskEquality)
+{
+  // Masks are equal when their compiled patterns and flags are.
+  BOOST_CHECK(mask_t("caf\xc3\xa9") == mask_t("caf\xc3\xa9"));
+  BOOST_CHECK(!(mask_t("caf\xc3\xa9") == mask_t("cafe")));
+  BOOST_CHECK(!(mask_t("abc") == mask_t("ABC")));
+
+  mask_t glob; // compiled case-sensitively, unlike mask_t("abc")
+  glob.assign_glob("abc");
+  BOOST_CHECK(!(glob == mask_t("abc")));
+
+  // A default mask has no pattern at all, so it differs from a compiled
+  // empty pattern even when the flags agree (perl's are zero).
+  mask_t empty_pattern;
+#if HAVE_BOOST_REGEX_UNICODE
+  empty_pattern.expr = boost::make_u32regex("", boost::regex::perl);
+#else
+  empty_pattern.expr.assign("", boost::regex::perl);
+#endif
+  mask_t empty_pattern2(empty_pattern);
+  BOOST_CHECK(mask_t() == mask_t());
+  BOOST_CHECK(empty_pattern == empty_pattern2);
+  BOOST_CHECK(!(mask_t() == empty_pattern));
+  BOOST_CHECK(!(empty_pattern == mask_t()));
+}
+
+BOOST_AUTO_TEST_CASE(testMaskGlob)
+{
+  auto matches = [](const char* glob, const char* name) {
+    mask_t mask;
+    mask.assign_glob(glob);
+    return mask.match(name);
+  };
+
+  // A glob matches whole names.
+  BOOST_CHECK(matches("data_?.dat", "data_a.dat"));
+  BOOST_CHECK(!matches("data_?.dat", "old_data_a.dat"));
+  BOOST_CHECK(!matches("data_?.dat", "data_a.dat.bak"));
+  BOOST_CHECK(matches("*.dat", "data_a.dat"));
+  BOOST_CHECK(matches("data_[ab].dat", "data_b.dat"));
+  BOOST_CHECK(!matches("data_[ab].dat", "data_c.dat"));
+  BOOST_CHECK(matches("[[:digit:]].dat", "1.dat"));
+
+  // Every other character matches only itself, regex metacharacters
+  // included.
+  BOOST_CHECK(matches("a$b.dat", "a$b.dat"));
+  BOOST_CHECK(matches("^c.dat", "^c.dat"));
+  BOOST_CHECK(!matches("^c.dat", "c.dat"));
+  BOOST_CHECK(!matches("a.dat", "axdat"));
+  BOOST_CHECK(matches("x]y+(z){1}|w", "x]y+(z){1}|w"));
+
+  // So does a character escaped with a backslash, and a [ that no ]
+  // closes.
+  BOOST_CHECK(matches("\\[f].dat", "[f].dat"));
+  BOOST_CHECK(!matches("\\[f].dat", "f.dat"));
+  BOOST_CHECK(matches("g\\*.dat", "g*.dat"));
+  BOOST_CHECK(!matches("g\\*.dat", "gg.dat"));
+  BOOST_CHECK(matches("h\\?.dat", "h?.dat"));
+  BOOST_CHECK(!matches("h\\?.dat", "hh.dat"));
+  BOOST_CHECK(matches("i\\$", "i$"));
+  BOOST_CHECK(matches("j\\\\k", "j\\k"));
+  BOOST_CHECK(matches("l\\", "l\\"));
+  BOOST_CHECK(matches("d[e.dat", "d[e.dat"));
+}
+
+BOOST_AUTO_TEST_CASE(testMaskGlobDiacritics)
+{
+  // --ignore-diacritics folds a query mask and the text it matches, but a
+  // glob matches file names exactly.
+  struct restore_t {
+    ~restore_t() { ignore_diacritics = false; }
+  } restore;
+  ignore_diacritics = true;
+
+  mask_t accented;
+  accented.assign_glob("caf\xc3\xa9.dat");
+  BOOST_CHECK(accented.match("caf\xc3\xa9.dat"));
+  BOOST_CHECK(!accented.match("cafe.dat"));
+  BOOST_CHECK(mask_t(accented).match("caf\xc3\xa9.dat"));
+
+  mask_t plain;
+  plain.assign_glob("cafe.dat");
+  BOOST_CHECK(plain.match("cafe.dat"));
+  BOOST_CHECK(!plain.match("caf\xc3\xa9.dat"));
+
+  // Assigning a pattern makes it a query mask again.
+  plain = "cafe";
+  BOOST_CHECK(plain.match("caf\xc3\xa9"));
+  BOOST_CHECK(mask_t("caf\xc3\xa9").match("cafe"));
 }
 
 BOOST_AUTO_TEST_CASE(testIsEqualToSequence)
@@ -5582,7 +5709,7 @@ BOOST_AUTO_TEST_CASE(testBalanceMultiplyByRealzero)
 }
 
 // ---------------------------------------------------------------------------
-// Wave 4: balance_t::find_by_name returns end (balance.cc lines 191-192)
+// Wave 4: commodity_amount() of a commodity the balance does not hold
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testBalanceFindByNameNotFound)
@@ -8303,6 +8430,138 @@ BOOST_AUTO_TEST_CASE(testAsAnyLval)
   // as_any_lval<T>()
   v.as_any_lval<int>() = 100;
   BOOST_CHECK(v.as_any<int>() == 100);
+}
+
+// =======================================================================
+// Comparing a balance with an amount or a number: every component decides
+// (one that netted to zero in another commodity is left out), and a
+// non-zero component in another commodity is an error
+// =======================================================================
+
+BOOST_AUTO_TEST_CASE(testBalanceLessThanAmountByComponent)
+{
+  // A plain number among the components is compared by its value, as it
+  // would be on its own, not counted as another commodity: 500 is not less
+  // than $200, so neither is the balance.
+  balance_t mixed;
+  mixed += amount_t("$100.00");
+  mixed += amount_t("500");
+  value_t v_mixed(mixed);
+  BOOST_REQUIRE(v_mixed.is_balance());
+  BOOST_CHECK(!v_mixed.is_less_than(value_t(amount_t("$200.00"))));
+  BOOST_CHECK(v_mixed.is_less_than(value_t(amount_t("$600.00"))));
+
+  balance_t single;
+  single += amount_t("$100.00");
+  value_t v_single(single);
+  BOOST_REQUIRE(v_single.is_balance());
+  BOOST_CHECK(v_single.is_less_than(value_t(amount_t("$200.00"))));
+  BOOST_CHECK(!v_single.is_less_than(value_t(amount_t("$50.00"))));
+}
+
+BOOST_AUTO_TEST_CASE(testBalanceCompareLeavesOutNettedComponent)
+{
+  // A component that netted to zero in another commodity (a balance keeps
+  // it) is no holding in the amount's: it does not make the comparison an
+  // error, and it takes no part in it, so the $100 decides alone.
+  balance_t netted;
+  netted += amount_t("$100.00");
+  netted += amount_t("10 EUR");
+  netted += amount_t("-10 EUR");
+  BOOST_REQUIRE_EQUAL(netted.amounts.size(), 2U);
+  value_t v(netted);
+
+  bool less = false;
+  BOOST_CHECK_NO_THROW(less = v.is_less_than(value_t(amount_t("$200.00"))));
+  BOOST_CHECK(less);
+  BOOST_CHECK(!v.is_less_than(value_t(amount_t("$50.00"))));
+  BOOST_CHECK(v.is_greater_than(value_t(amount_t("$50.00"))));
+  BOOST_CHECK(!v.is_greater_than(value_t(amount_t("$200.00"))));
+  BOOST_CHECK(v.is_greater_than(value_t(amount_t("$-1.00"))));
+
+  // Neither the commodity that sorts first nor the sign matters: a netted
+  // dollar beside 10 EUR, and a netted EUR beside $-5.
+  balance_t euros;
+  euros += amount_t("10 EUR");
+  euros += amount_t("$5.00");
+  euros += amount_t("$-5.00");
+  BOOST_CHECK(value_t(euros).is_greater_than(value_t(amount_t("5 EUR"))));
+  BOOST_CHECK(!value_t(euros).is_less_than(value_t(amount_t("5 EUR"))));
+  balance_t debt;
+  debt += amount_t("$-5.00");
+  debt += amount_t("10 EUR");
+  debt += amount_t("-10 EUR");
+  BOOST_CHECK(value_t(debt).is_less_than(value_t(amount_t("$0.00"))));
+  BOOST_CHECK(value_t(debt).is_greater_than(value_t(amount_t("$-10.00"))));
+}
+
+BOOST_AUTO_TEST_CASE(testBalanceCompareForeignCommodityThrows)
+{
+  // A component held in another commodity makes the comparison an error,
+  // whichever component is met first; the error names the foreign
+  // commodity that the display order lists first, and then the amount's.
+  balance_t mixed;
+  mixed += amount_t("$100.00");
+  mixed += amount_t("10 EUR");
+  value_t v(mixed);
+  auto names = [](const string& text) {
+    return [text](const amount_error& err) { return string(err.what()) == text; };
+  };
+  BOOST_CHECK_EXCEPTION(
+      v.is_less_than(value_t(amount_t("$200.00"))), amount_error,
+      names("Cannot compare amounts with different commodities: 'EUR' and '$'"));
+  BOOST_CHECK_EXCEPTION(
+      v.is_greater_than(value_t(amount_t("$50.00"))), amount_error,
+      names("Cannot compare amounts with different commodities: 'EUR' and '$'"));
+
+  // Among many foreign components, the one named is the first in display
+  // order, not the first the component map happens to visit.
+  balance_t many;
+  many += amount_t("$100.00");
+  for (char c = 'Z'; c >= 'A'; --c)
+    many += amount_t(string("1 FX") + c);
+  value_t v_many(many);
+  BOOST_CHECK_EXCEPTION(
+      v_many.is_less_than(value_t(amount_t("$200.00"))), amount_error,
+      names("Cannot compare amounts with different commodities: 'FXA' and '$'"));
+}
+
+BOOST_AUTO_TEST_CASE(testEmptyBalanceComparesFalse)
+{
+  // An empty balance is neither less nor greater than anything.
+  value_t empty((balance_t()));
+  BOOST_REQUIRE(empty.is_balance());
+  for (const value_t& rhs : {value_t(5L), value_t(-5L), value_t(0L),
+                             value_t(amount_t("$200.00")), value_t(amount_t("$-200.00"))}) {
+    BOOST_CHECK(!empty.is_less_than(rhs));
+    BOOST_CHECK(!empty.is_greater_than(rhs));
+  }
+}
+
+BOOST_AUTO_TEST_CASE(testNettedBalanceComparesAsZero)
+{
+  // A balance whose only components netted to zero compares as zero: less
+  // than 5 and not greater, greater than -5 and not less, and neither less
+  // nor greater than 0.  Against an amount in another commodity the netted
+  // component is left out, and a balance of nothing else compares as zero.
+  balance_t netted;
+  netted += amount_t("10 EUR");
+  netted += amount_t("-10 EUR");
+  BOOST_REQUIRE_EQUAL(netted.amounts.size(), 1U);
+  BOOST_REQUIRE(netted.is_realzero());
+  value_t v(netted);
+
+  BOOST_CHECK(v.is_less_than(value_t(5L)));
+  BOOST_CHECK(!v.is_greater_than(value_t(5L)));
+  BOOST_CHECK(v.is_greater_than(value_t(-5L)));
+  BOOST_CHECK(!v.is_less_than(value_t(-5L)));
+  BOOST_CHECK(!v.is_less_than(value_t(0L)));
+  BOOST_CHECK(!v.is_greater_than(value_t(0L)));
+
+  BOOST_CHECK(v.is_less_than(value_t(amount_t("$5.00"))));
+  BOOST_CHECK(!v.is_greater_than(value_t(amount_t("$5.00"))));
+  BOOST_CHECK(v.is_greater_than(value_t(amount_t("$-5.00"))));
+  BOOST_CHECK(!v.is_less_than(value_t(amount_t("$-5.00"))));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -1,0 +1,51 @@
+; A lot written with its valuation spelled out, {$5} [2020/01/01] (($7)),
+; and the same lot written plainly in an account whose `value` gives it
+; that valuation are one lot, also once part of it is sold, as they were
+; in 3.4.1.  Assets:Broker buys 10 AAPL each way and then sells 15 by
+; naming the plain lot: the register's running total goes 10, 20, 5 in a
+; single lot, `bal --lots` and `bal` show the 5 AAPL left, and -V values
+; them at $7 a unit ($35).  Kept apart, the two spellings would show 10
+; of one and -5 of the other after the sale, with the same annotation.
+
+account Assets:Broker
+    value $7
+
+2020/01/01 Buy, valuation written out
+    Assets:Broker     10 AAPL {$5} [2020/01/01] (($7))
+    Assets:Cash      $-50
+
+2020/01/01 Buy
+    Assets:Broker     10 AAPL {$5} [2020/01/01]
+    Assets:Cash      $-50
+
+2020/02/01 Sell
+    Assets:Broker    -15 AAPL {$5} [2020/01/01] @ $6
+    Assets:Cash       $90
+    Income:Gains
+
+test reg --lots Assets:Broker
+20-Jan-01 Buy, valuation writ.. Assets:Broker          10 AAPL {$5} [2020/01/01] (({$7})) 10 AAPL {$5} [2020/01/01] (({$7}))
+20-Jan-01 Buy                   Assets:Broker          10 AAPL {$5} [2020/01/01] (({$7})) 20 AAPL {$5} [2020/01/01] (({$7}))
+20-Feb-01 Sell                  Assets:Broker          -15 AAPL {$5} [2020/01/01] (({$7})) 5 AAPL {$5} [2020/01/01] (({$7}))
+end test
+
+test bal --lots --flat
+5 AAPL {$5} [2020/01/01] (({$7}))  Assets:Broker
+                $-10  Assets:Cash
+                $-15  Income:Gains
+--------------------
+                             $-25
+5 AAPL {$5} [2020/01/01] (({$7}))
+end test
+
+test bal Assets:Broker
+              5 AAPL  Assets:Broker
+end test
+
+test bal -V --flat
+                 $35  Assets:Broker
+                $-10  Assets:Cash
+                $-15  Income:Gains
+--------------------
+                 $10
+end test

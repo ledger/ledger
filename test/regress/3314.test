@@ -1,0 +1,40 @@
+; Regression test for GitHub issue #3314: postings to [bracketed] accounts
+; balance only against one another, never against the real postings of
+; their transaction (#2105).  Ledger 3.4 summed the two groups together,
+; so it accepted both of these transactions, and their real postings
+; did not balance.  An elided posting balances only its own group, and
+; the error names the group whose postings leave a remainder.
+
+2018-10-22 Test
+    Assets:Test                      10.00 EUR
+    [Assets:Bank]
+
+2020-05-30 * Virtual
+    [Expenses:Virtual]                  2.00 EUR
+    Expenses:Food
+    Assets:Cash                       -10.00 EUR
+
+test bal -> 2
+__ERROR__
+While parsing file "$FILE", line 10:
+While balancing transaction from "$FILE", lines 8-10:
+> 2018-10-22 Test
+>     Assets:Test                      10.00 EUR
+>     [Assets:Bank]
+Unbalanced remainder of real postings is:
+           10.00 EUR
+Amount to balance against:
+           10.00 EUR
+Error: Transaction does not balance
+While parsing file "$FILE", line 15:
+While balancing transaction from "$FILE", lines 12-15:
+> 2020-05-30 * Virtual
+>     [Expenses:Virtual]                  2.00 EUR
+>     Expenses:Food
+>     Assets:Cash                       -10.00 EUR
+Unbalanced remainder of balanced virtual postings is:
+            2.00 EUR
+Amount to balance against:
+            2.00 EUR
+Error: Transaction does not balance
+end test

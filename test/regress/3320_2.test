@@ -1,0 +1,39 @@
+; Regression test for GitHub issue #3320: the comment on an `account`
+; directive's own line declares metadata tags for the account, as a
+; comment line beneath the directive does (#1681), so the hledger idiom
+; `account NAME  ; type: Asset` declares NAME with a `type` tag.  On a
+; nested `account` line, the comment tags the nested account, which also
+; inherits its parent's tags.  Before the fix, these lines declared
+; accounts named after the whole line, so --strict reported the accounts
+; the postings use as unknown.
+
+commodity $
+
+account Assets  ; :Owned:
+    account Checking  ; type: Bank
+    account Wallet	; type: Cash
+account Expenses:Food  ; :Dining:
+    ; Budget: 100
+
+2024/01/01 Grocer
+    Expenses:Food    $10.00
+    Assets:Checking  $-8.00
+    Assets:Wallet
+
+test bal --no-total --balance-format "%(partial_account) type=%(tag(\"type\")) owned=%(has_tag(\"Owned\"))\n" ^Assets
+Assets type= owned=true
+Checking type=Bank owned=true
+Wallet type=Cash owned=true
+end test
+
+test bal --flat --no-total --balance-format "%(account) dining=%(has_tag(\"Dining\")) budget=%(tag(\"Budget\"))\n" Food
+Expenses:Food dining=true budget=100
+end test
+
+test --strict bal --flat
+              $-8.00  Assets:Checking
+              $-2.00  Assets:Wallet
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

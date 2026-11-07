@@ -853,35 +853,36 @@ public:
  * commodity price database for price points between posting dates and
  * generating a revaluation for each.
  *
- * A balance or cleared report under -V or -X with --unrealized works
- * differently, unless it groups postings by period, weekday or payee, which
- * leaves no posting costs to start from, runs under -H, --immediate, -G,
- * --plopen, --percent, --average, --deviation or --anon, has an amount
- * expression of the user's own (--amount), names more than one commodity with
- * -X, copies postings into transactions of their own (--pivot, --pivot-only,
- * --account, --payee, --date, --inject, or a journal with account-rewrite or
- * payee-rewrite directives), or is a budget or forecast report
+ * A balance report instead books its unrealized gain or loss once, as the
+ * running total's market value at the report's terminus less the cost basis
+ * of its postings (books_from_basis()), unless it works from cost baselines
+ * (value_from_cost): a balance or cleared report under -V or -X with
+ * --unrealized works from cost baselines when it does not group postings by
+ * period, weekday or payee, which leaves no posting costs to start from, and
+ * runs under none of -H, --immediate, -G, --plopen, --percent, --average,
+ * --deviation or --anon, has no amount expression of the user's own
+ * (--amount), names no more than one commodity with -X, copies no postings
+ * into transactions of their own (--pivot, --pivot-only, --account, --payee,
+ * --date, --inject, or a journal with account-rewrite or payee-rewrite
+ * directives), and is no budget or forecast report
  * (uses_cost_baseline() in filters.cc gives the reason for each).  Its
  * baseline is the running total at cost.  Each posting contributes the
- * report's amount expression applied to its cost, valued on its transaction's
- * date or on the terminus if that is earlier, so that under --dc and in the
- * cleared report each column is compared with its own cost; where the report
- * cannot value the posting's own contribution at the terminus, or values it
- * into a commodity to which it cannot bring the cost, the posting contributes
- * that instead.  The sum is displayed at the terminus through the report's
- * total expression, and a single revaluation at the terminus books the whole
- * change in value to the equity accounts.  The report therefore foots to the
- * journal's balance at cost, except that such a holding enters at its value,
- * or in its own commodity, in place of the cost that paid for it; when every
- * transaction balances at cost and the report can value every holding and its
- * cost in one commodity, it foots to zero.  The test is made one posting at a
- * time, so a lot sold for proceeds that the report cannot bring to the
- * commodity in which it values the lot leaves the baseline at its value, and
- * the change in the price of the units sold since their purchase joins the
- * unrealized rows (cost_baseline()).  Under --invert, output_revaluation takes
- * the revaluation from the inverted total and the display inverts it again,
- * so that report is off by twice the change in value; the revaluation between
- * postings has the same defect.
+ * report's amount expression applied to its cost, valued on its
+ * transaction's date or on the terminus if that is earlier, so that under
+ * --dc and in the cleared report each column is compared with its own cost;
+ * where the report cannot value the posting's own contribution at the
+ * terminus, or values it into a commodity to which it cannot bring the cost,
+ * the posting contributes that instead.  The sum is displayed at the
+ * terminus through the report's total expression, and a single revaluation
+ * at the terminus books the whole change in value to the equity accounts.
+ * The report therefore foots to the journal's balance at cost, except that
+ * such a holding enters at its value, or in its own commodity, in place of
+ * the cost that paid for it; when every transaction balances at cost and the
+ * report can value every holding and its cost in one commodity, it foots to
+ * zero.  The test is made one posting at a time, so a lot sold for proceeds
+ * that the report cannot bring to the commodity in which it values the lot
+ * leaves the baseline at its value, and the change in the price of the units
+ * sold since their purchase joins the unrealized rows (cost_baseline()).
  *
  * @note Requires calc_posts somewhere downstream in the chain.
  */
@@ -889,19 +890,21 @@ class changed_value_posts : public item_handler<post_t> {
   report_t& report;   ///< Report context.
   expr_t& total_expr; ///< Expression for computing the total to compare (may be revalued_total_).
   expr_t& display_total_expr; ///< Expression for computing display totals.
+  expr_t cost_expr;           ///< A posting's cost basis, as --basis reports it.
   bool changed_values_only; ///< If true, only show postings where value changed (--revalued-only).
   bool historical_prices_only; ///< If true, skip intermediate price lookups (--historical).
   bool for_accounts_report;    ///< Whether this is an accounts (balance) report.
   bool show_unrealized;        ///< Whether to generate equity gain/loss postings (--unrealized).
-  bool value_from_cost;        ///< Accounts report under -V/-X with --unrealized: see class note.
+  bool value_from_cost;        ///< Accounts report under -V/-X with --unrealized working from
+                               ///< cost baselines: see the class note (uses_cost_baseline()).
   expr_t& amount_expr;         ///< The report's amount expression (value_from_cost).
-  expr_t cost_expr;            ///< A posting's cost (value_from_cost).
   expr_t held_value_expr;      ///< A substituted amount, valued (value_from_cost).
   expr_t baseline_expr;        ///< The report's amount expression, valued (value_from_cost).
   post_t* last_post;           ///< Previous posting for comparison.
   value_t last_total;          ///< Total after the previous posting.
   value_t cost_total;          ///< Sum of cost_baseline() over the postings (value_from_cost).
   value_t repriced_total;      ///< Total after repricing (set by output_revaluation).
+  value_t unrealized_gain;     ///< Unrealized gain gathered so far (balance reports).
   temporaries_t temps;         ///< Temporary storage for synthetic revaluation postings.
   account_t* revalued_account; ///< The <Revalued> account for register revaluations.
   account_t* gains_equity_account;  ///< Equity account for unrealized gains.
@@ -929,10 +932,17 @@ public:
 
   void flush() override;
 
-  void output_revaluation(post_t& post, const date_t& current);
-  void output_intermediate_prices(post_t& post, const date_t& current);
+  bool books_from_basis() const;
+  value_t total_as_of(post_t& post, const date_t& date);
+  value_t basis_gain(post_t& post);
+  value_t basis_gain(post_t& post, const amount_t& amount, value_t basis);
   value_t cost_baseline(post_t& post);
   bool incomparable_at_terminus(post_t& post, const value_t& contribution, const value_t& at_cost);
+
+  void output_value_change(post_t& post, const date_t& date, const value_t& diff);
+  void output_revaluation(post_t& post, const date_t& current);
+  void output_unrealized_gain(post_t& post);
+  void output_intermediate_prices(post_t& post, const date_t& current);
 
   void operator()(post_t& post) override;
 
@@ -940,12 +950,14 @@ public:
     total_expr.mark_uncompiled();
     display_total_expr.mark_uncompiled();
     cost_expr.mark_uncompiled();
+    amount_expr.mark_uncompiled();
     held_value_expr.mark_uncompiled();
     baseline_expr.mark_uncompiled();
 
     last_post = nullptr;
     last_total = value_t();
     cost_total = value_t();
+    unrealized_gain = value_t();
 
     temps.clear();
     item_handler<post_t>::clear();

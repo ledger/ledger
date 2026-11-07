@@ -1,0 +1,94 @@
+; Under -V --unround, a balance report's grand total adds the values -V
+; gives the lots to the other amounts at full precision, so where they do
+; not cancel exactly it shows the residue, on every run; without --unround
+; it rounds to 0, as it always did.
+;
+; The first journal is 763.test's.  Ledger keeps the price of 1 BBB,
+; bought at 2.653329339867 GBP, to six decimal places, as the lot's
+; {GBP2.653329} and as BBB's market price, so -V values the lot at
+; GBP2.653329 (printed GBP3, GBP showing no decimals) while the opening
+; balance holds the cost as written, GBP-2.653329339867: the total is
+; GBP-0.000000339867.  The euros cancel exactly.  The second journal is
+; 964.test's: -V values its lots at their fixated prices, €208.00 at
+; $1.3109 as $272.6672 and €4.16 at $1.2798689 as $5.324254624, against
+; the $-277.99 of the other two postings, which leaves $0.001454624: the
+; transaction balances only to the cent, and -B --unround shows the same
+; residue, as it did in 3.4.1.  -p picks one journal per block.
+;
+; The residue is the full-precision sum of the valued lots and the other
+; amounts.  Adding two amounts keeps only the left one's full-precision
+; flag, and a lot's value is a new amount without it, so the sum kept the
+; residue only when a part kept at full precision came first.  Ledger
+; used to add the parts in an order that could change from one run to
+; the next, and these totals printed 0 on most runs (3.4.1's on every
+; run); a total now keeps full precision whenever one of its parts did,
+; whichever is added first.
+;
+; Without --unround nothing in the total keeps full precision, so it
+; prints at the commodities' display precision, as 0.  The opening
+; balance prints all its digits either way, as an amount Ledger infers
+; from a cost does when its commodity shows no decimals (#1692), but that
+; does not carry into a sum.
+
+2011-01-01 * Opening balance
+    Assets:Investments           1 "BBB" @  2.653329339867 GBP
+    Equity:Opening balance
+
+2011-01-10 * Fee
+    Liabilities:Credit Card                         -2.83 EUR
+    Expenses:Fees                                 (2.83/2 EUR)
+    Assets:Receivable
+
+; The journal of 964.test.
+2012/08/22 Payment
+    Accrued                       €208.00  {=$1.3109}     @ $1.2798689
+    Expenses                      €4.16    {=$1.2798689}  @ $1.2798689
+    Assets                        $-271.54
+    Income:Currency Conversion    $-6.45
+
+test bal -V --unround --flat -p 2011
+                GBP3  Assets:Investments
+           1.415 EUR  Assets:Receivable
+  GBP-2.653329339867  Equity:Opening balance
+           1.415 EUR  Expenses:Fees
+           -2.83 EUR  Liabilities:Credit Card
+--------------------
+  GBP-0.000000339867
+end test
+
+test bal -V --flat -p 2011
+                GBP3  Assets:Investments
+            1.42 EUR  Assets:Receivable
+  GBP-2.653329339867  Equity:Opening balance
+            1.42 EUR  Expenses:Fees
+           -2.83 EUR  Liabilities:Credit Card
+--------------------
+                   0
+end test
+
+test bal -V --unround --flat -p 2012
+             $272.67  Accrued
+            $-271.54  Assets
+               $5.32  Expenses
+              $-6.45  Income:Currency Conversion
+--------------------
+        $0.001454624
+end test
+
+test bal -V --flat -p 2012
+             $272.67  Accrued
+            $-271.54  Assets
+               $5.32  Expenses
+              $-6.45  Income:Currency Conversion
+--------------------
+                   0
+end test
+
+test bal -B --unround --flat -p 2012
+           $272.6672  Accrued
+            $-271.54  Assets
+        $5.324254624  Expenses
+              $-6.45  Income:Currency Conversion
+--------------------
+        $0.001454624
+end test

@@ -1,0 +1,51 @@
+; print --display sees the running total under each of its names (O, T,
+; total, or a function defined in the journal), so print must compute the
+; running total whenever --display is given.
+;
+; print shows no running total, so to save its cost calc_posts computes
+; one for print only when an option can read it.  A --display predicate
+; can, and it may name the total in many ways, so --display turns the
+; running total on by its presence alone: looking for the word `total` in
+; its text would miss `O` (the total), `T` (display_total) and runbal()
+; below.  Without the running total the predicate would see each
+; posting's own amount instead, and 'O<0' would also match One's
+; Assets:Cash posting ($-20) and print One as well.
+;
+; The running total is $10, $20 and $0 through One's postings, then $-30
+; and $0 through Two's: it is below zero only at Expenses:C, so every
+; spelling prints Two alone.
+
+define runbal(x)=T
+
+2024/01/01 One
+    Expenses:A    $10.00
+    Expenses:B    $10.00
+    Assets:Cash
+
+2024/01/02 Two
+    Expenses:C   $-30.00
+    Assets:Cash
+
+test print --display 'O<0'
+2024/01/02 Two
+    Expenses:C                               $-30.00
+    Assets:Cash
+end test
+
+test print --display 'T<0'
+2024/01/02 Two
+    Expenses:C                               $-30.00
+    Assets:Cash
+end test
+
+test print --display 'runbal(0)<0'
+2024/01/02 Two
+    Expenses:C                               $-30.00
+    Assets:Cash
+end test
+
+test print --display 'total<0'
+2024/01/02 Two
+    Expenses:C                               $-30.00
+    Assets:Cash
+end test

@@ -1,0 +1,36 @@
+; Regression test for GitHub issue #3314: the postings that an automated
+; transaction adds balance by the same rule as the postings written in
+; the transaction, real ones among themselves and [bracketed] ones among
+; themselves.  Here the added real posting and the added bracketed one
+; cancel each other out, which hid that the real postings of the
+; transaction no longer balance.
+
+= /^Expenses:Food/
+    Liabilities:Budget                    -1
+    [Budget:Food]                          1
+
+2020-01-01 Grocery
+    Expenses:Food                     $10.00
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 14:
+While balancing transaction from "$FILE", lines 12-14:
+> 2020-01-01 Grocery
+>     Expenses:Food                     $10.00
+>     Assets:Cash
+Unbalanced remainder of real postings is:
+             $-10.00
+Amount to balance against:
+              $10.00
+While applying automated transaction from "$FILE", lines 8-10:
+> = /^Expenses:Food/
+>     Liabilities:Budget                    -1
+>     [Budget:Food]                          1
+While extending transaction from "$FILE", lines 12-14:
+> 2020-01-01 Grocery
+>     Expenses:Food                     $10.00
+>     Assets:Cash
+Error: Transaction does not balance
+end test

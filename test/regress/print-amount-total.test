@@ -1,0 +1,36 @@
+; print --amount EXPR leaves out each posting whose EXPR is zero (unless
+; --empty is given), and EXPR may read the running total.  Zero's own
+; amount is $0, but `total` is not zero there: the register shows it
+; reaching $20 (the --amount values $10 and $10 summed), so print keeps
+; Zero.  select's COLLECT clause sets --amount, so `select ... from xacts
+; collect total` keeps Zero too.  print computes running totals only when
+; an option that can read them is given, since it never displays them
+; itself; --amount is one, so `total` here is the running total and not
+; Zero's own $0.
+
+2024/01/01 Seed
+    (Budget:Food)    $10
+
+2024/01/02 Zero
+    (Budget:Food)    $0
+
+test reg --amount total
+24-Jan-01 Seed                  (Budget:Food)                   $10          $10
+24-Jan-02 Zero                  (Budget:Food)                   $20          $20
+end test
+
+test print --amount total
+2024/01/01 Seed
+    (Budget:Food)                                $10
+
+2024/01/02 Zero
+    (Budget:Food)                                 $0
+end test
+
+test select "date, payee from xacts collect total"
+2024/01/01 Seed
+    (Budget:Food)                                $10
+
+2024/01/02 Zero
+    (Budget:Food)                                 $0
+end test

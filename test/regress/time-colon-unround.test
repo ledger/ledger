@@ -1,0 +1,62 @@
+; With --time-colon and --unround, the minutes are 60 times the hour
+; fraction as shown, rounded half up and zero-padded to that fraction's
+; width, computed exactly and printed in full whatever its length.
+;
+; 102.5m is 6150 seconds, 1 17/24 hours.  At the display precision of h
+; the balance is 1.71h, and .71 * 60 = 42.6 rounds to 1:43h, as before.
+; --unround shows the value at its internal precision, 34 decimals:
+; 1.7083333333333333333333333333333333h.  60 times that fraction is
+; 42.4999...98 (the fraction stops just short of 17/24), which rounds to
+; 42, padded to 34 digits.  The minutes used to be computed in a long,
+; which overflows from 18 digits on: Ledger printed
+; 1:0000000000000000000000000000000001h here.  They are now computed in
+; GMP and appended whole.
+;
+; The timeclock sessions put 2:17:40 on Work:A, 2.294444...h shown to 27
+; decimals: 17.666... minutes, so 18.  Work:B's 1:30:36 is exactly 1.51h,
+; 30.6 minutes, so 31.  Their total, 3:48:16, is 3.804444...h: 48.2666...
+; minutes, so 48.  Ledger used to print 0 minutes for all three
+; repeating fractions.
+
+2024/01/01 x
+    Assets:Minutes    102.5m
+    Equity
+
+i 2024/02/01 09:00:00 Work:A
+o 2024/02/01 10:20:30
+i 2024/02/02 08:00:00 Work:B
+o 2024/02/02 09:30:36
+i 2024/02/03 13:00:00 Work:A
+o 2024/02/03 13:57:10
+
+test bal --time-colon Assets
+               1:43h  Assets:Minutes
+end test
+
+test bal --time-colon --unround Assets
+1:0000000000000000000000000000000042h  Assets:Minutes
+end test
+
+test bal --time-colon --unround Work
+3:000000000000000000000000048h  Work
+2:000000000000000000000000018h    A
+               1:31h    B
+--------------------
+3:000000000000000000000000048h
+end test
+
+; Without --unround the part after the colon is worked out the same way,
+; so a display precision of 18 decimals or more prints correctly too.
+; Ledger used to overflow there as well: Phone's 1.500000000000000000m, a
+; minute and a half at 18 decimals, printed as 1:0000000000000000-6m.  It
+; now prints 30 (seconds, the amount being in minutes), zero-padded to the
+; fraction's 18 digits.  The amount is in minutes because teaching h 18
+; decimals would change every hour amount in the blocks above.
+
+2024/03/01 Call
+    Phone    1.500000000000000000m
+    Equity
+
+test bal --time-colon Phone
+1:000000000000000030m  Phone
+end test

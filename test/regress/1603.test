@@ -12,7 +12,7 @@
     Assets  = 0 STOCK {$1}
 
 test balance --empty assets
-             0 STOCK  Assets
+                   0  Assets
            100 STOCK  Assets2
 --------------------
            100 STOCK

@@ -1,0 +1,88 @@
+; Regression test for issue #3268
+; --start-of-week accepts day names and abbreviations, case-insensitively.
+;
+; The manual documents the argument as "day names, their abbreviations like
+; "Mon", or the weekday number starting at 0 for Sunday", but
+; string_to_day_of_week() compared the raw option value against lower-case
+; names only, so "Mon" and "Monday" were silently ignored and the weekly
+; report kept starting on Sunday.  Day names are now matched without regard
+; to case, and a value that names no weekday is rejected instead of being
+; silently ignored.
+
+2026/09/14 Lunch
+    Expenses:Dining          $10.00
+    Assets:Cash
+
+2026/09/20 Dinner
+    Expenses:Dining          $20.00
+    Assets:Cash
+
+2026/09/21 Breakfast
+    Expenses:Dining          $30.00
+    Assets:Cash
+
+; 2026/09/14 is a Monday and 2026/09/20 is a Sunday, so a Monday-start week
+; puts both postings in one period while a Sunday-start week splits them.
+test reg --weekly --start-of-week 1 Dining
+26-Sep-14 - 26-Sep-20  Expenses:Dining                $30.00       $30.00
+26-Sep-21 - 26-Sep-27  Expenses:Dining                $30.00       $60.00
+end test
+
+test reg --weekly --start-of-week mon Dining
+26-Sep-14 - 26-Sep-20  Expenses:Dining                $30.00       $30.00
+26-Sep-21 - 26-Sep-27  Expenses:Dining                $30.00       $60.00
+end test
+
+; The documented abbreviation, as written in the manual.
+test reg --weekly --start-of-week Mon Dining
+26-Sep-14 - 26-Sep-20  Expenses:Dining                $30.00       $30.00
+26-Sep-21 - 26-Sep-27  Expenses:Dining                $30.00       $60.00
+end test
+
+test reg --weekly --start-of-week Monday Dining
+26-Sep-14 - 26-Sep-20  Expenses:Dining                $30.00       $30.00
+26-Sep-21 - 26-Sep-27  Expenses:Dining                $30.00       $60.00
+end test
+
+test reg --weekly --start-of-week MONDAY Dining
+26-Sep-14 - 26-Sep-20  Expenses:Dining                $30.00       $30.00
+26-Sep-21 - 26-Sep-27  Expenses:Dining                $30.00       $60.00
+end test
+
+; Every other day is matched the same way: 2026/09/16 is a Wednesday.
+test reg --weekly --start-of-week Wed Dining
+26-Sep-09 - 26-Sep-15  Expenses:Dining                $10.00       $10.00
+26-Sep-16 - 26-Sep-22  Expenses:Dining                $50.00       $60.00
+end test
+
+; The default remains Sunday, and naming it explicitly changes nothing.
+test reg --weekly Dining
+26-Sep-13 - 26-Sep-19  Expenses:Dining                $10.00       $10.00
+26-Sep-20 - 26-Sep-26  Expenses:Dining                $50.00       $60.00
+end test
+
+test reg --weekly --start-of-week SUN Dining
+26-Sep-13 - 26-Sep-19  Expenses:Dining                $10.00       $10.00
+26-Sep-20 - 26-Sep-26  Expenses:Dining                $50.00       $60.00
+end test
+
+; A value that names no weekday is an error, not a silent fallback to Sunday.
+test reg --weekly --start-of-week Funday Dining -> 1
+__ERROR__
+Error: Invalid value for --start-of-week: Funday; expected a day name like Monday or Mon, or 0-6 with 0 for Sunday
+end test
+
+; The xact command's day-of-week date argument goes through the same lookup.
+; 2026/09/23 is a Wednesday, so the most recent Monday is 2026/09/21.
+test xact --now 2026/09/23 Monday Lunch
+2026/09/21 Lunch
+    Expenses:Dining                           $10.00
+    Assets:Cash
+end test
+
+; So does its relative-date keyword.
+test xact --now 2026/09/23 Today Lunch
+2026/09/23 Lunch
+    Expenses:Dining                           $10.00
+    Assets:Cash
+end test

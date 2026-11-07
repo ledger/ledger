@@ -1003,12 +1003,36 @@ value_t& value_t::operator/=(const value_t& val) {
 // Comparing incompatible types (e.g., DATE to AMOUNT) throws value_error.
 // ----------------------------------------------------------------------
 
+namespace {
+
+/// @brief Strip the double quotes that a journal writes around a symbol.
+string without_journal_quotes(const string& name) {
+  if (name.length() >= 2 && name.front() == '"' && name.back() == '"')
+    return string(name, 1, name.length() - 2);
+  return name;
+}
+
+/// @brief Find the commodity that a string names in a value expression.
+///
+/// The string may give the commodity's symbol or one of its aliases, or
+/// either of those in the double quotes that a journal writes around a
+/// symbol containing spaces, digits, or other reserved characters (issue
+/// #3241).  Returns nullptr if the string names no commodity.
+commodity_t* find_named_commodity(commodity_pool_t& pool, const string& name) {
+  if (commodity_t* commodity = pool.find(name))
+    return commodity;
+  string symbol = without_journal_quotes(name);
+  return symbol != name ? pool.find(symbol) : nullptr;
+}
+
+} // namespace
+
 /// @brief Test equality between two values, handling cross-type comparisons.
 ///
 /// VOID is only equal to VOID.  For numeric types (INTEGER, AMOUNT,
 /// BALANCE), cross-type equality is supported by promoting the simpler
-/// operand.  COMMODITY can be compared to STRING by looking up the
-/// string in the commodity pool.
+/// operand.  COMMODITY equals a STRING that names it, by symbol, alias,
+/// or quoted symbol (see find_named_commodity()).
 bool value_t::is_equal_to(const value_t& val) const {
   switch (type()) {
   case VOID:
@@ -1073,7 +1097,7 @@ bool value_t::is_equal_to(const value_t& val) const {
     case COMMODITY:
       return as_commodity() == val.as_commodity();
     case STRING: {
-      if (const auto* otherCommodity = as_commodity().pool().find(val.as_string()))
+      if (const auto* otherCommodity = find_named_commodity(as_commodity().pool(), val.as_string()))
         return as_commodity() == *otherCommodity;
       return false;
     }
@@ -1113,6 +1137,33 @@ bool value_t::is_equal_to(const value_t& val) const {
   return *this;
 }
 
+namespace {
+/// For comparing a balance with @p val: the first component in display
+/// order whose commodity is not the amount's, or null when every component
+/// is in it.  A plain number compares with any amount, as it always has,
+/// and a component that netted to zero in another commodity is left out
+/// of the comparison, so neither counts as another commodity.
+const amount_t* foreign_component(const balance_t& bal, const value_t& val) {
+  if (!val.is_amount() || !val.as_amount().has_commodity())
+    return nullptr;
+  const commodity_t& comm(val.as_amount().commodity());
+  auto foreign = [&comm](const amount_t& amount) {
+    return !amount.is_realzero() && amount.has_commodity() && amount.commodity() != comm;
+  };
+  for (const balance_t::amounts_map::value_type& pair : bal.amounts)
+    if (foreign(pair.second)) {
+      // Name the component the display order lists first: the map's own
+      // order changes from one run to the next.
+      balance_t::amounts_array sorted;
+      bal.sorted_amounts(sorted);
+      for (const amount_t* amount : sorted)
+        if (foreign(*amount))
+          return amount;
+    }
+  return nullptr;
+}
+} // namespace
+
 /// @brief Test whether this value is strictly less than another.
 ///
 /// For VOID, null is considered less than any non-null value (establishing
@@ -1120,8 +1171,12 @@ bool value_t::is_equal_to(const value_t& val) const {
 /// commodities, lexicographic commodity comparison is used as a tiebreaker
 /// so that sort output is deterministic.
 ///
-/// BALANCE comparison against scalars checks whether ALL component amounts
-/// are less than the scalar.  SEQUENCE comparison is lexicographic.
+/// A BALANCE is less than an amount or a number when every component that
+/// takes part in the comparison is (the BALANCE case below says which do,
+/// and when a component in another commodity makes the comparison an
+/// error).  SEQUENCE comparison is lexicographic.
+/// COMMODITY orders by bare symbol, against a STRING as against another
+/// COMMODITY, so it neither precedes nor follows a string that names it.
 bool value_t::is_less_than(const value_t& val) const {
   if (val.is_null())
     return false; // nothing is less than null (null sorts first)
@@ -1191,13 +1246,31 @@ bool value_t::is_less_than(const value_t& val) const {
     switch (val.type()) {
     case INTEGER:
     case AMOUNT: {
-      bool no_amounts = true;
-      for (const balance_t::amounts_map::value_type& pair : as_balance().amounts) {
-        if (pair.second >= val)
+      // A component in another commodity makes the comparison an error
+      // whichever component is met first; otherwise every component
+      // decides, in any order, except a component that netted to zero in
+      // another commodity, which is no holding in the amount's and is left
+      // out.  A balance of nothing else compares as zero; an empty one
+      // compares false, as it always has.
+      const balance_t& bal(as_balance());
+      if (const amount_t* foreign = foreign_component(bal, val))
+        throw_(amount_error,
+               _f("Cannot compare amounts with different commodities: '%1%' and '%2%'") %
+                   foreign->commodity() % val.as_amount().commodity());
+      const amount_t rhs(val.is_amount() ? val.as_amount() : amount_t(val.as_long()));
+      bool any = false;
+      bool compared = false;
+      for (const balance_t::amounts_map::value_type& pair : bal.amounts) {
+        const amount_t& component(pair.second);
+        any = true;
+        if (component.is_realzero() && component.has_commodity() && rhs.has_commodity() &&
+            component.commodity() != rhs.commodity())
+          continue;
+        compared = true;
+        if (component.compare(rhs) >= 0)
           return false;
-        no_amounts = false;
       }
-      return !no_amounts;
+      return compared || (any && rhs.sign() > 0);
     }
     case BALANCE:
       return val.to_amount() > to_amount();
@@ -1211,9 +1284,9 @@ bool value_t::is_less_than(const value_t& val) const {
     case COMMODITY:
       return to_string() < val.to_string();
     case STRING: {
-      if (const auto* otherCommodity = as_commodity().pool().find(val.as_string()))
-        return to_string() < otherCommodity->symbol();
-      return to_string() < val.as_string();
+      if (const auto* otherCommodity = find_named_commodity(as_commodity().pool(), val.as_string()))
+        return to_string() < otherCommodity->base_symbol();
+      return to_string() < without_journal_quotes(val.as_string());
     }
     default:
       break;
@@ -1273,8 +1346,9 @@ bool value_t::is_less_than(const value_t& val) const {
 /// @brief Test whether this value is strictly greater than another.
 ///
 /// Mirrors is_less_than() with reversed comparison directions.  VOID is
-/// never greater than anything.  BALANCE > scalar requires ALL components
-/// to be greater.
+/// never greater than anything.  A BALANCE is greater than an amount or a
+/// number when every component that takes part in the comparison is, as
+/// for is_less_than().
 bool value_t::is_greater_than(const value_t& val) const {
   if (val.is_null())
     return !is_null(); // non-null is greater than null
@@ -1340,13 +1414,26 @@ bool value_t::is_greater_than(const value_t& val) const {
     switch (val.type()) {
     case INTEGER:
     case AMOUNT: {
-      bool no_amounts = true;
-      for (const balance_t::amounts_map::value_type& pair : as_balance().amounts) {
-        if (pair.second <= val)
+      // As in is_less_than.
+      const balance_t& bal(as_balance());
+      if (const amount_t* foreign = foreign_component(bal, val))
+        throw_(amount_error,
+               _f("Cannot compare amounts with different commodities: '%1%' and '%2%'") %
+                   foreign->commodity() % val.as_amount().commodity());
+      const amount_t rhs(val.is_amount() ? val.as_amount() : amount_t(val.as_long()));
+      bool any = false;
+      bool compared = false;
+      for (const balance_t::amounts_map::value_type& pair : bal.amounts) {
+        const amount_t& component(pair.second);
+        any = true;
+        if (component.is_realzero() && component.has_commodity() && rhs.has_commodity() &&
+            component.commodity() != rhs.commodity())
+          continue;
+        compared = true;
+        if (component.compare(rhs) <= 0)
           return false;
-        no_amounts = false;
       }
-      return !no_amounts;
+      return compared || (any && rhs.sign() < 0);
     }
     case BALANCE:
       return val.to_amount() < to_amount();
@@ -1360,9 +1447,9 @@ bool value_t::is_greater_than(const value_t& val) const {
     case COMMODITY:
       return to_string() > val.to_string();
     case STRING: {
-      if (const auto* otherCommodity = as_commodity().pool().find(val.as_string()))
-        return to_string() > otherCommodity->symbol();
-      return to_string() > val.as_string();
+      if (const auto* otherCommodity = find_named_commodity(as_commodity().pool(), val.as_string()))
+        return to_string() > otherCommodity->base_symbol();
+      return to_string() > without_journal_quotes(val.as_string());
     }
     default:
       break;
@@ -1614,7 +1701,8 @@ void value_t::in_place_cast(type_t cast_type) {
       set_amount(amount_t(as_string()));
       return;
     case COMMODITY:
-      if (const auto* commodity = commodity_pool_t::current_pool->find(as_string())) {
+      if (const auto* commodity =
+              find_named_commodity(*commodity_pool_t::current_pool, as_string())) {
         set_commodity(*commodity);
         return;
       }
@@ -2008,33 +2096,37 @@ value_t value_t::exchange_commodities(const std::string& commodities, const bool
       bool repriced = false;
 
       DEBUG("commodity.exchange", "We have a balance: " << as_balance_lval());
-      for (const balance_t::amounts_map::value_type& pair : as_balance_lval().amounts) {
-        DEBUG("commodity.exchange", "We have a balance amount of commodity: "
-                                        << pair.first->symbol()
-                                        << " == " << pair.second.commodity().symbol());
+      auto reprice = [&](const amount_t& amount) {
+        DEBUG("commodity.exchange",
+              "We have a balance amount of commodity: " << amount.commodity().symbol());
         bool should_convert;
         if (sources[index]) {
           // A:B syntax: only convert if the amount is commodity A
-          should_convert = (&pair.first->referent() == sources[index]);
+          should_convert = (&amount.commodity().referent() == sources[index]);
         } else {
           should_convert = force[index] || std::find(comms.begin(), comms.end(),
-                                                     &pair.first->referent()) == comms.end();
+                                                     &amount.commodity().referent()) == comms.end();
         }
 
+        // Components priced into one commodity collapse: merge() keeps the
+        // result independent of the map's order.
         if (!should_convert) {
-          temp += pair.second;
+          temp.merge(amount);
         } else {
           DEBUG("commodity.exchange", "Referent doesn't match, pricing...");
-          if (auto val = pair.second.value(moment, comm)) {
+          if (auto val = amount.value(moment, comm)) {
             DEBUG("commodity.exchange", "Re-priced member amount is: " << *val);
-            temp += *val;
+            temp.merge(*val);
             repriced = true;
           } else {
             DEBUG("commodity.exchange", "Was unable to find price");
-            temp += pair.second;
+            temp.merge(amount);
           }
         }
-      }
+      };
+      // The map's order is a hash order: visit_components() makes a
+      // valuation error name the same component on every run.
+      as_balance().visit_components(reprice);
 
       if (repriced) {
         DEBUG("commodity.exchange", "Re-priced balance is: " << temp);
@@ -2480,8 +2572,20 @@ string value_t::label(optional<type_t> the_type) const {
 ///                      BALANCE which may span multiple lines).
 /// @param flags         Bitmask of AMOUNT_PRINT_* flags controlling
 ///                      right-justification, colorization, etc.
+/// @param negative_color  The ANSI escape sequence with which
+///                      AMOUNT_PRINT_COLORIZE renders negative values;
+///                      empty renders them without color.
 void value_t::print(std::ostream& _out, const int first_width, const int latter_width,
-                    const uint_least8_t flags) const {
+                    const uint_least8_t flags, const string& negative_color) const {
+  // A balance lays out its own columns through justify(), which leaves the
+  // stream's adjustment flags alone but writes piecewise, so a width the
+  // caller set would pad only the first piece: hence the direct path only
+  // when no width is set, and the buffered one below otherwise.
+  if (is_balance() && _out.width() == 0) {
+    as_balance().print(_out, first_width, latter_width, flags, negative_color);
+    return;
+  }
+
   // We buffer into a local ostringstream so that width and justification
   // settings do not leak into the caller's stream.
   std::ostringstream out;
@@ -2516,10 +2620,13 @@ void value_t::print(std::ostream& _out, const int first_width, const int latter_
     break;
 
   case INTEGER:
-    if (flags & AMOUNT_PRINT_COLORIZE && as_long() < 0)
-      justify(out, to_string(), first_width, flags & AMOUNT_PRINT_RIGHT_JUSTIFY, true);
-    else
+    if (flags & AMOUNT_PRINT_COLORIZE && as_long() < 0) {
+      // justify() pads the number itself, so drop the width set above.
+      out.width(0);
+      justify(out, to_string(), first_width, flags & AMOUNT_PRINT_RIGHT_JUSTIFY, negative_color);
+    } else {
       out << as_long();
+    }
     break;
 
   case AMOUNT: {
@@ -2529,13 +2636,14 @@ void value_t::print(std::ostream& _out, const int first_width, const int latter_
       std::ostringstream buf;
       as_amount().print(buf, flags);
       justify(out, buf.str(), first_width, flags & AMOUNT_PRINT_RIGHT_JUSTIFY,
-              flags & AMOUNT_PRINT_COLORIZE && as_amount().sign() < 0);
+              (flags & AMOUNT_PRINT_COLORIZE && as_amount().sign() < 0) ? negative_color
+                                                                        : empty_string);
     }
     break;
   }
 
   case BALANCE:
-    as_balance().print(out, first_width, latter_width, flags);
+    as_balance().print(out, first_width, latter_width, flags, negative_color);
     break;
 
   case COMMODITY:

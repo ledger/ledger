@@ -1,0 +1,57 @@
+; Price inference first uses the reference posting's commodity when it
+; remains in the group's balance, then falls back to the first commodity
+; that entered that balance.  Zero amounts do not enter the balance.
+;
+; The first transaction bills ten hours after a two-hour correction.
+; Hours are reduced to seconds, so the first posting's commodity is absent
+; from the balance.  The correction cancels before the dollars arrive;
+; dollars enter first and are priced in time, at 24s, on Income:Consulting.
+; In the second and third transactions, balanced virtual budget lines
+; belong to a separate group.  The real reference commodities, ZAR and
+; SEK, remain in their balances and determine the direction directly,
+; despite the intervening transfers and zero fees.  Both sort after their
+; counterpart, so a fixed sorted order would incorrectly price AUD or NOK.
+; Each transaction uses its own pair, avoiding prior price targets (#1130).
+; 3314_inference_order.test exercises the fallback in bracketed groups.
+
+2024/01/05 Billing after a correction
+    Assets:Time               2h
+    Expenses:Time            -2h
+    Income:Consulting     $-1500
+    Assets:Billable          10h
+
+2024/01/06 Exchange after a transfer and a zero fee
+    [Budget:Travel]          $100
+    [Budget:Available]      $-100
+    Assets:Wallet:ZAR        50 ZAR
+    Assets:Bank:ZAR         -50 ZAR
+    Expenses:Fees             0 AUD
+    Assets:Bank:ZAR        -115 ZAR
+    Assets:AUD              100 AUD
+
+2024/01/07 Exchange with a fee posted between the transfer legs
+    [Budget:Travel]          $100
+    [Budget:Available]      $-100
+    Assets:Wallet:SEK        50 SEK
+    Expenses:Fees             0 NOK
+    Assets:Bank:SEK         -50 SEK
+    Assets:NOK              100 NOK
+    Assets:Bank:SEK        -115 SEK
+
+test pricedb
+P 2024/01/05 00:00:00 $ 24s
+P 2024/01/06 00:00:00 ZAR 0.869565 AUD
+P 2024/01/07 00:00:00 SEK 0.869565 NOK
+end test
+
+test bal --lots --flat --no-total Assets Income
+             100 AUD  Assets:AUD
+-165 SEK {0.869565 NOK} [2024/01/07]  Assets:Bank:SEK
+-165 ZAR {0.869565 AUD} [2024/01/06]  Assets:Bank:ZAR
+              10.00h  Assets:Billable
+             100 NOK  Assets:NOK
+               2.00h  Assets:Time
+50 SEK {0.869565 NOK} [2024/01/07]  Assets:Wallet:SEK
+50 ZAR {0.869565 AUD} [2024/01/06]  Assets:Wallet:ZAR
+$-1500 {24s} [2024/01/05]  Income:Consulting
+end test

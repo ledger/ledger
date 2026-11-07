@@ -74,6 +74,8 @@ enum parse_flags_enum_t : uint16_t {
   PARSE_SINGLE = 0x0002,
   PARSE_NO_MIGRATE = 0x0004,
   PARSE_NO_REDUCE = 0x0008,
+  /// Nothing reads this flag; it remains because the Python bindings
+  /// expose it as ParseFlags.NoAssign.
   PARSE_NO_ASSIGN = 0x0010,
   PARSE_NO_ANNOT = 0x0020,
   PARSE_OP_CONTEXT = 0x0040,
@@ -82,7 +84,15 @@ enum parse_flags_enum_t : uint16_t {
   /// observed numeric-format flags to null_commodity so that
   /// subsequent bare amounts display with the same separators.  Used
   /// by the D directive to propagate format from a bare amount.
-  PARSE_APPLY_STYLE_TO_BARE = 0x0100
+  PARSE_APPLY_STYLE_TO_BARE = 0x0100,
+  /// When set, the amount is a term of a value expression, where a comma
+  /// separates arguments and a plus sign adds.  Neither may then begin
+  /// the quantity after a prefix commodity, as journal syntax otherwise
+  /// allows (`$,50` with a leading decimal comma, `$+10`): `f(abc,1)`
+  /// and `f("abc",1)` would read as the one amount `abc0,1`, and `x+1`
+  /// as the amount `x1`.  A minus sign still begins a quantity there,
+  /// as in `$-10`.
+  PARSE_IN_EXPR = 0x0200
 };
 
 using parse_flags_t = flags::basic_t<parse_flags_enum_t, uint_least16_t>;
@@ -722,7 +732,6 @@ public:
 #define AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS 0x04
 #define AMOUNT_PRINT_ELIDE_COMMODITY_QUOTES 0x08
 #define AMOUNT_PRINT_PRESERVE_TOTAL_COST 0x10
-#define AMOUNT_PRINT_SHOW_ZEROS 0x20
 // balance_t::print: widen the column uniformly if any single commodity's
 // rendered form overflows first_width, so all commodity lines of a
 // multi-commodity balance stay right-aligned with each other and with
@@ -732,6 +741,8 @@ public:
 #define AMOUNT_PRINT_FIT_TO_WIDEST 0x40
 
   void print(std::ostream& out, const uint_least8_t flags = AMOUNT_PRINT_NO_FLAGS) const;
+  /// @brief The body of print(): the amount without regard to the stream's width.
+  void print_unpadded(std::ostream& out, uint_least8_t flags) const;
 
   /*@}*/
 

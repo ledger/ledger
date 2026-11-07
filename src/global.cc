@@ -64,7 +64,8 @@
 namespace ledger {
 
 /// Set by handle_debug_options when --args-only is present.
-/// When true, the constructor skips environment variables and the init file.
+/// When true, the constructor skips environment variables and the init file,
+/// and keeps the session from reading the default price database.
 static bool args_only = false;
 
 /// Path to the init file, captured early by handle_debug_options.
@@ -114,7 +115,7 @@ global_scope_t::global_scope_t(char** envp) {
     session().set_flush_on_next_data_file(true);
     read_init();
   } else {
-    session().HANDLER(price_db_).off();
+    session().use_default_price_db = false;
   }
 
   TRACE_CTOR(global_scope_t, "");
@@ -327,8 +328,11 @@ int global_scope_t::execute_command_wrapper(strings_list args, bool at_repl) {
     // just type "catch throw" to find the source point of any error.
     status = 0;
   } catch (const std::exception& err) {
-    if (at_repl)
+    if (at_repl) {
+      // Failed reports can leave cached totals and display flags in the journal.
+      session().journal->clear_xdata();
       pop_report();
+    }
     report_error(err);
   }
 
@@ -555,11 +559,12 @@ void global_scope_t::visit_man_page() const {
  * This function runs before global_scope_t is constructed.  It handles
  * options that must take effect immediately:
  *
- *   --args-only      : skip init file and environment (testing aid)
+ *   --args-only      : skip init file, environment and ~/.pricedb (testing aid)
  *   --verify-memory  : enable memory tracing with debug logging
  *   --verify         : enable runtime verification checks
  *   --verbose / -v   : set log level to LOG_INFO
- *   --init-file PATH : override the default init file location
+ *   --init-file PATH : override the default init file location (also
+ *                      written --init-file=PATH or -i PATH)
  *   --debug CATEGORY : enable debug logging for a specific category
  *   --trace LEVEL    : enable trace logging at a numeric verbosity level
  *
@@ -585,9 +590,12 @@ void handle_debug_options(int argc, char* argv[]) {
 #endif
       } else if (std::strcmp(argv[i], "--verbose") == 0 || std::strcmp(argv[i], "-v") == 0) {
         _log_level = LOG_INFO;
-      } else if (i + 1 < argc && std::strcmp(argv[i], "--init-file") == 0) {
+      } else if (i + 1 < argc &&
+                 (std::strcmp(argv[i], "--init-file") == 0 || std::strcmp(argv[i], "-i") == 0)) {
         _init_file = argv[i + 1];
         i++;
+      } else if (std::strncmp(argv[i], "--init-file=", 12) == 0) {
+        _init_file = argv[i] + 12;
       } else if (i + 1 < argc && std::strcmp(argv[i], "--debug") == 0) {
 #if DEBUG_ON
         _log_level = LOG_DEBUG;

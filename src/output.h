@@ -147,6 +147,7 @@ protected:
   std::size_t prepend_width;    ///< Width reserved for the prepend column.
   predicate_t disp_pred;        ///< Display predicate from --display option.
   predicate_t collapse_pred;    ///< Collapse predicate from --collapse-if option.
+  predicate_t known_pred;       ///< Account terms of --limit, applied to declared accounts.
   bool first_report_title;      ///< True until the first group title has been printed.
   string report_title;          ///< Current group title.
 
@@ -165,7 +166,10 @@ public:
    * display if it (or its children) have been visited, it passes the
    * display predicate, and it has a non-trivial display total.  The
    * --flat flag changes the visibility logic so that intermediate
-   * parent accounts are not shown.
+   * parent accounts are not shown.  With --empty, an account declared by
+   * an `account` directive is shown even when no posting in the report
+   * reaches it, unless the account terms of the --limit predicate (those
+   * testing its name or depth) rule it out; terms about postings never do.
    *
    * When a --collapse-if predicate is active and matches an account, that
    * account becomes a collapse point: its descendants are not marked for
@@ -214,8 +218,9 @@ public:
  *
  * Used by the `accounts` command.  Collects all accounts referenced by
  * postings that pass through the filter chain, plus any accounts flagged
- * as ACCOUNT_KNOWN in the journal.  When `--count` is active, each
- * account name is prefixed with the number of postings that referenced it.
+ * as ACCOUNT_KNOWN in the journal that the account terms of the --limit
+ * predicate do not rule out.  When `--count` is active, each account name
+ * is prefixed with the number of postings that referenced it.
  */
 class report_accounts : public item_handler<post_t> {
 public:

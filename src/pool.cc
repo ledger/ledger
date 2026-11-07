@@ -87,9 +87,17 @@ commodity_pool_t::commodity_pool_t()
  * contains characters from invalid_chars (e.g., spaces or digits), inserts
  * the commodity into the commodities map, and registers it as a node in the
  * price history graph.  The caller must ensure the symbol does not already
- * exist in the pool.
+ * exist in the pool; if it does, as a commodity's own symbol or an alias,
+ * this throws std::logic_error, since the map could not keep the new
+ * commodity.
  */
 commodity_t* commodity_pool_t::create(const string& symbol) {
+  // A second commodity under a symbol in use could not be stored, and the
+  // pointer returned to it would dangle once its only owner went out of
+  // scope, so refuse it in every build (#3341).
+  if (commodities.find(symbol) != commodities.end())
+    throw_(std::logic_error, _f("Commodity %1% is already in its pool") % symbol);
+
   std::shared_ptr<commodity_t::base_t> base_commodity(new commodity_t::base_t(symbol));
   std::shared_ptr<commodity_t> commodity(new commodity_t(this, base_commodity));
 
@@ -104,13 +112,7 @@ commodity_t* commodity_pool_t::create(const string& symbol) {
 
   DEBUG("pool.commodities", "Creating commodity '" << symbol << "'");
 
-#if DEBUG_ON
-  std::pair<commodities_map::iterator, bool> result =
-#endif
-      commodities.insert(commodities_map::value_type(symbol, commodity));
-#if DEBUG_ON
-  assert(result.second);
-#endif
+  commodities.insert(commodities_map::value_type(symbol, commodity));
 
   commodity_price_history.add_commodity(*commodity.get());
 
@@ -257,11 +259,13 @@ commodity_t* commodity_pool_t::find_or_create(commodity_t& comm, const annotatio
  * more precision than a user who then references the lot by its displayed
  * value (e.g. {1.026087 EUR}).
  *
- * To merge such references with their originating lot, this helper scans
- * entries with the same base symbol and identical non-price details
- * (date, tag, value expression, and ANNOTATION_PRICE_FIXATED), and
- * accepts a candidate whose price matches @p details.price after both are
- * rounded to the lesser of their quantity precisions.  The fuzzy match is
+ * To merge such references with their originating lot, this helper looks
+ * at the entries with the same base symbol and identical non-price details
+ * (date, tag, value expression, and ANNOTATION_PRICE_FIXATED) -- one
+ * contiguous range of annotated_commodities, found with equal_range on
+ * the annotation's shape (see annotated_key_less) -- and accepts a
+ * candidate whose price matches @p details.price after both are rounded
+ * to the lesser of their quantity precisions.  The fuzzy match is
  * restricted to crossing the computed/user boundary (one side has
  * ANNOTATION_PRICE_CALCULATED, the other does not) so that two distinct
  * user-typed lots remain separate even when their prices would coincide
@@ -281,12 +285,8 @@ commodity_t* commodity_pool_t::find_annotation_fuzzy(const string& symbol,
   annotated_commodity_t* match = nullptr;
   bool ambiguous = false;
 
-  for (auto it = annotated_commodities.lower_bound(
-           annotated_commodities_map::key_type(symbol, annotation_t()));
-       it != annotated_commodities.end(); ++it) {
-    if (it->first.first != symbol)
-      break;
-
+  const auto candidates = annotated_commodities.equal_range(annotation_shape_t{symbol, details});
+  for (auto it = candidates.first; it != candidates.second; ++it) {
     const annotation_t& existing = it->first.second;
     if (!existing.price || !existing.price->has_commodity())
       continue;
@@ -336,10 +336,12 @@ commodity_t* commodity_pool_t::find_annotation_fuzzy(const string& symbol,
  *
  * The base commodity must not already be annotated, and the annotation
  * must be non-empty.  The new annotated commodity is inserted into the
- * annotated_commodities map keyed by (base_symbol, details).  Flags on
- * the base commodity are updated to record whether fixated or floating
- * price annotations have been seen (COMMODITY_SAW_ANN_PRICE_FIXATED,
- * COMMODITY_SAW_ANN_PRICE_FLOAT), which influences find_price() behavior.
+ * annotated_commodities map keyed by (base_symbol, details); if that key
+ * is taken, it throws std::logic_error, since the map could not keep the
+ * new commodity.  Flags on the base commodity are updated to record
+ * whether fixated or floating price annotations have been seen
+ * (COMMODITY_SAW_ANN_PRICE_FIXATED, COMMODITY_SAW_ANN_PRICE_FLOAT), which
+ * influences find_price() behavior.
  */
 annotated_commodity_t* commodity_pool_t::create(commodity_t& comm, const annotation_t& details) {
   DEBUG("pool.commodities", "commodity_pool_t::create[ann:comm] " << "symbol " << comm.base_symbol()
@@ -349,6 +351,14 @@ annotated_commodity_t* commodity_pool_t::create(commodity_t& comm, const annotat
   assert(comm);
   assert(!comm.has_annotation());
   assert(details);
+
+  // A second commodity under a key in use could not be stored, and the
+  // pointer returned to it would dangle once its only owner went out of
+  // scope, so refuse it in every build (#3341).
+  const annotated_commodities_map::key_type key(comm.base_symbol(), details);
+  if (auto existing = annotated_commodities.find(key); existing != annotated_commodities.end())
+    throw_(std::logic_error,
+           _f("Annotated commodity %1% is already in its pool") % *existing->second);
 
   std::shared_ptr<annotated_commodity_t> commodity(new annotated_commodity_t(&comm, details));
 
@@ -364,16 +374,97 @@ annotated_commodity_t* commodity_pool_t::create(commodity_t& comm, const annotat
                                                             << '\n'
                                                             << details);
 
-#if DEBUG_ON
-  std::pair<annotated_commodities_map::iterator, bool> result =
-#endif
-      annotated_commodities.insert(annotated_commodities_map::value_type(
-          annotated_commodities_map::key_type(comm.base_symbol(), details), commodity));
-#if DEBUG_ON
-  assert(result.second);
-#endif
+  annotated_commodities.insert(annotated_commodities_map::value_type(key, commodity));
 
   return commodity.get();
+}
+
+/**
+ * @brief Give the pooled lot @p comm the annotation @p details.
+ *
+ * Every amount of a lot shares one annotated_commodity_t, so changing its
+ * annotation changes every holder of the lot, which is what a `value`
+ * expression applying to a lot asks for (see extend_post()).  The pool's
+ * index follows: the lot gains an entry under its new annotation and keeps
+ * its old one as an alias, so that a lookup by either annotation finds it
+ * (while annotations were edited behind the index, only the old key did).
+ *
+ * When another lot already carries @p details -- a posting may spell out
+ * the very expression an account's `value` gives its lot -- the holders of
+ * neither lot can be re-pointed, so the two lots come to carry equal
+ * annotations, as they did before the index was kept consistent, and both
+ * join duplicate_lots, the class a balance keeps as one component
+ * (balance_t::component_key).  An entry that is only the alias of a lot
+ * whose annotation has since changed again passes to this lot, which does
+ * carry the annotation; a lot whose annotation changes once more leaves
+ * its class (the components balances already key under it stay there).
+ */
+void commodity_pool_t::reannotate(annotated_commodity_t& comm, const annotation_t& details) {
+  DEBUG("pool.commodities", "commodity_pool_t::reannotate " << "symbol " << comm.base_symbol()
+                                                            << '\n'
+                                                            << details);
+  assert(details);
+
+  if (comm.details.compare(details) == 0)
+    return;
+
+  // This lot's own entry: the one keyed by its current annotation, unless
+  // something edited the annotation in place (the Python bindings can), in
+  // which case it is found by identity.
+  auto current = annotated_commodities.find(
+      annotated_commodities_map::key_type(comm.base_symbol(), comm.details));
+  if (current == annotated_commodities.end() || current->second.get() != &comm) {
+    current = std::find_if(annotated_commodities.begin(), annotated_commodities.end(),
+                           [&comm](const annotated_commodities_map::value_type& entry) {
+                             return entry.second.get() == &comm;
+                           });
+    if (current == annotated_commodities.end())
+      throw_(std::logic_error, _f("Annotated commodity %1% is missing from its pool") % comm);
+  }
+  const std::shared_ptr<annotated_commodity_t> self(current->second);
+
+  const annotated_commodities_map::key_type new_key(comm.base_symbol(), details);
+  auto existing = annotated_commodities.find(new_key);
+  if (existing == annotated_commodities.end()) {
+    // Share this lot's ownership under the new key; the old key stays as an
+    // alias.
+    annotated_commodities.insert(annotated_commodities_map::value_type(new_key, self));
+  } else if (existing->second.get() != &comm) {
+    annotated_commodity_t& other(as_annotated_commodity(*existing->second));
+    if (other.details.compare(details) == 0) {
+      DEBUG("pool.commodities", "commodity_pool_t::reannotate: another lot carries these details");
+      // Both lots join one class, led by the lot that carried the
+      // annotation first.  Only this lot changes annotation, so it leaves
+      // any class it was in (a class of one is no class).
+      std::shared_ptr<duplicate_class_t> cls;
+      if (auto found = duplicate_lots.find(&other); found != duplicate_lots.end()) {
+        cls = found->second;
+      } else {
+        cls = std::make_shared<duplicate_class_t>();
+        cls->push_back(&other);
+        duplicate_lots[&other] = cls;
+      }
+      if (auto mine = duplicate_lots.find(&comm); mine == duplicate_lots.end()) {
+        cls->push_back(&comm);
+        duplicate_lots[&comm] = cls;
+      } else if (mine->second != cls) {
+        const std::shared_ptr<duplicate_class_t> leaving(mine->second);
+        leaving->erase(std::find(leaving->begin(), leaving->end(), &comm));
+        if (leaving->size() == 1)
+          duplicate_lots.erase(leaving->front());
+        cls->push_back(&comm);
+        mine->second = cls;
+      }
+    } else {
+      // The entry is the alias of a lot whose annotation has changed again:
+      // this lot carries the annotation now.
+      existing->second = self;
+    }
+  }
+  // Otherwise the entry under the new key is this lot's own alias, left by
+  // an earlier reannotation, and its annotation changes back to it.
+
+  comm.details = details;
 }
 
 /// @}
@@ -457,6 +548,7 @@ cost_breakdown_t commodity_pool_t::exchange(const amount_t& amount, const amount
   //
   // For per-unit costs (no division), the existing display_precision()
   // is used, preserving the user-typed precision (fixes #1032).
+  bool per_unit_cost_rounded = false;
   if (per_unit_cost.has_commodity() && per_unit_cost.keep_precision()) {
     int round_prec;
     if (!is_per_unit && !amount.is_zero()) {
@@ -465,7 +557,9 @@ cost_breakdown_t commodity_pool_t::exchange(const amount_t& amount, const amount
     } else {
       round_prec = boost::numeric_cast<int>(per_unit_cost.display_precision());
     }
+    amount_t exact(per_unit_cost);
     per_unit_cost.in_place_roundto(round_prec);
+    per_unit_cost_rounded = per_unit_cost != exact;
   }
 
   DEBUG("commodity.prices.add", "exchange: per-unit-cost = " << per_unit_cost);
@@ -512,6 +606,8 @@ cost_breakdown_t commodity_pool_t::exchange(const amount_t& amount, const amount
       tag);
 
   annotation.add_flags(ANNOTATION_PRICE_CALCULATED);
+  if (per_unit_cost_rounded)
+    annotation.add_flags(ANNOTATION_PRICE_ROUNDED);
   if (current_annotation && current_annotation->has_flags(ANNOTATION_PRICE_FIXATED))
     annotation.add_flags(ANNOTATION_PRICE_FIXATED);
   if (!lot_date && moment)
@@ -532,12 +628,13 @@ cost_breakdown_t commodity_pool_t::exchange(const amount_t& amount, const amount
 /// @{
 
 /**
- * @brief Parse a price directive line ("P DATE [TIME] SYMBOL AMOUNT").
+ * @brief Parse a price directive line ("P [DATE [TIME]] SYMBOL AMOUNT").
  *
- * The line is split into whitespace-separated fields.  If a time component
- * is present, it is combined with the date into a full datetime; otherwise,
- * midnight is assumed.  The commodity symbol is parsed (handling quoted
- * symbols), and the remaining text is parsed as the price amount.
+ * A line that begins with a digit begins with a date, which a time of day
+ * may follow; midnight is assumed without one.  Any other line is just
+ * "SYMBOL AMOUNT", priced at the current time.  The commodity symbol is
+ * parsed the same way in both (handling quoted symbols), and the remaining
+ * text is parsed as the price amount.
  *
  * On success, the commodity is looked up (or created) in the pool, the
  * price is optionally added to the history graph, and the commodity is
@@ -546,33 +643,39 @@ cost_breakdown_t commodity_pool_t::exchange(const amount_t& amount, const amount
  */
 std::optional<std::pair<commodity_t*, price_point_t>>
 commodity_pool_t::parse_price_directive(char* line, bool do_not_add_price, bool no_date) {
-  char* date_field_ptr = line;
-  char* time_field_ptr = next_element(date_field_ptr);
-  if (!time_field_ptr)
-    return std::nullopt;
-  string date_field = date_field_ptr; // NOLINT(bugprone-unused-local-non-trivial-variable)
-
-  char* symbol_and_price;
+  line = skip_ws(line); // a getquote script may print white-space first
+  char* symbol_and_price = line;
   datetime_t datetime;
   string symbol;
 
-  if (!no_date && std::isdigit(static_cast<unsigned char>(time_field_ptr[0]))) {
-    symbol_and_price = next_element(time_field_ptr);
-    if (!symbol_and_price)
+  if (!no_date && std::isdigit(static_cast<unsigned char>(line[0]))) {
+    char* date_field_ptr = line;
+    char* time_field_ptr = next_element(date_field_ptr);
+    if (!time_field_ptr)
       return std::nullopt;
+    string date_field = date_field_ptr; // NOLINT(bugprone-unused-local-non-trivial-variable)
 
-    datetime = parse_datetime(date_field + " " + time_field_ptr);
-  } else if (!no_date && std::isdigit(static_cast<unsigned char>(date_field_ptr[0]))) {
-    symbol_and_price = time_field_ptr;
-    datetime = datetime_t(parse_date(date_field));
+    if (std::isdigit(static_cast<unsigned char>(time_field_ptr[0]))) {
+      symbol_and_price = next_element(time_field_ptr);
+      if (!symbol_and_price)
+        return std::nullopt;
+
+      datetime = parse_datetime(date_field + " " + time_field_ptr);
+    } else {
+      symbol_and_price = time_field_ptr;
+      datetime = datetime_t(parse_date(date_field));
+    }
+    commodity_t::parse_symbol(symbol_and_price, symbol);
   } else {
-    symbol = date_field_ptr;
-    symbol_and_price = time_field_ptr;
+    // Without a date, the symbol is still read by parse_symbol, which
+    // removes its quotes; this line used to be split at its first space,
+    // so `P "Fund A" 3.00 USD` priced a commodity named `"Fund` (issue
+    // #3321).  As before, a lone word is not a price line at all.
+    commodity_t::parse_symbol(symbol_and_price, symbol);
+    if (!*symbol_and_price)
+      return std::nullopt;
     datetime = CURRENT_TIME();
   }
-
-  if (symbol.empty())
-    commodity_t::parse_symbol(symbol_and_price, symbol);
 
   price_point_t point;
   point.when = datetime;
@@ -598,12 +701,12 @@ commodity_pool_t::parse_price_directive(char* line, bool do_not_add_price, bool 
       std::ostringstream expr_text;
       expr_text << '(';
       bool first = true;
-      for (const auto& pair : result.as_balance().amounts) {
+      result.as_balance().map_sorted_amounts([&](const amount_t& component) {
         if (!first)
           expr_text << " + ";
-        pair.second.print(expr_text);
+        component.print(expr_text);
         first = false;
-      }
+      });
       expr_text << ')';
       if (commodity_t* commodity = find_or_create(symbol)) {
         commodity->set_value_expr(expr_t(expr_text.str()));

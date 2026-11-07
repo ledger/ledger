@@ -1,0 +1,81 @@
+; A lot fixated from a total cost, `23 AAPL @@ =$23.60` ($1.026087 a
+; unit), and a lot typed as 10 AAPL {=$1.03} on the same day are one lot
+; when the typed lot comes second, and two when it comes first.  -p picks
+; one order per block.
+;
+; Typed first (2020), the two stay apart, as in 3.4.1: fixating the
+; computed lot looks up its fixated annotation exactly, so a computed
+; price is never folded into a typed one that merely rounds alike.
+; Folding it would make Assets:Broker hold 23 AAPL {=$1.03}, which print
+; writes as `23 AAPL {=$1.03} [2020/01/01] @@= $23.6` and which reads
+; back as a purchase for $23.69.
+;
+; Computed first (2021), the typed lot names the computed one, so
+; Assets:Typed holds 10 AAPL {=$1.026087} and print writes it so: a typed
+; lot price names a lot computed from a cost when the two prices agree to
+; the lesser of their precisions (#524, added after 3.4.1), and that
+; matching now reaches fixated lots.  It used to miss them, and leave the
+; two lots apart in this order too, because `@ =` fixated the computed
+; lot in place, so the lot stayed filed under its unfixated annotation,
+; while the matching pairs only lots that are fixated alike.
+
+2020/01/01 Typed lot
+    Assets:Typed     10 AAPL {=$1.03} [2020/01/01]
+    Equity:Opening
+
+2020/01/01 Buy fixated
+    Assets:Broker    23 AAPL @@ =$23.60
+    Assets:Cash
+
+2021/01/01 Buy fixated
+    Assets:Broker    23 AAPL @@ =$23.60
+    Assets:Cash
+
+2021/01/01 Typed lot
+    Assets:Typed     10 AAPL {=$1.03} [2021/01/01]
+    Equity:Opening
+
+test bal --lots -p 2020
+                          $-23.60
+23 AAPL {=$1.026087} [2020/01/01]
+    10 AAPL {=$1.03} [2020/01/01]  Assets
+23 AAPL {=$1.026087} [2020/01/01]    Broker
+             $-23.60    Cash
+10 AAPL {=$1.03} [2020/01/01]    Typed
+-10 AAPL {=$1.03} [2020/01/01]  Equity:Opening
+--------------------
+                          $-23.60
+23 AAPL {=$1.026087} [2020/01/01]
+end test
+
+test print -p 2020
+2020/01/01 Typed lot
+    Assets:Typed                        10 AAPL {=$1.03} [2020/01/01]
+    Equity:Opening
+
+2020/01/01 Buy fixated
+    Assets:Broker                            23 AAPL @@= $23.6
+    Assets:Cash
+end test
+
+test bal --lots -p 2021
+                          $-23.60
+33 AAPL {=$1.026087} [2021/01/01]  Assets
+23 AAPL {=$1.026087} [2021/01/01]    Broker
+             $-23.60    Cash
+10 AAPL {=$1.026087} [2021/01/01]    Typed
+-10 AAPL {=$1.026087} [2021/01/01]  Equity:Opening
+--------------------
+                          $-23.60
+23 AAPL {=$1.026087} [2021/01/01]
+end test
+
+test print -p 2021
+2021/01/01 Buy fixated
+    Assets:Broker                            23 AAPL @@= $23.6
+    Assets:Cash
+
+2021/01/01 Typed lot
+    Assets:Typed                        10 AAPL {=$1.026087} [2021/01/01]
+    Equity:Opening
+end test

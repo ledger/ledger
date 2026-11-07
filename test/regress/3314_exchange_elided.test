@@ -1,0 +1,41 @@
+; Exchange inference must ignore elided amounts in the other group (#3314).
+; Cover a nonzero and a zero inferred amount in both group orientations.
+
+2020-01-01 Real elided amount
+    Assets:Cash       $10
+    Equity:Opening
+    [Budget:EUR]      10 EUR
+    [Budget:USD]      $-12
+
+2020-01-02 Virtual elided amount
+    [Budget:Cash]     $10
+    [Equity:Budget]
+    Assets:EUR        10 EUR
+    Assets:USD        $-12
+
+2020-01-03 Real zero amount
+    Expenses:Zero
+    [Budget:EUR]      10 EUR
+    [Budget:USD]      $-12
+
+2020-01-04 Virtual zero amount
+    [Budget:Zero]
+    Assets:EUR        10 EUR
+    Assets:USD        $-12
+
+test reg --empty --format "%(account):%(amount)\n"
+Assets:Cash:$10
+Equity:Opening:$-10
+Budget:EUR:10 EUR {$1.2} [2020/01/01]
+Budget:USD:$-12
+Budget:Cash:$10
+Equity:Budget:$-10
+Assets:EUR:10 EUR {$1.2} [2020/01/02]
+Assets:USD:$-12
+Expenses:Zero:0
+Budget:EUR:10 EUR {$1.2} [2020/01/03]
+Budget:USD:$-12
+Budget:Zero:0
+Assets:EUR:10 EUR {$1.2} [2020/01/04]
+Assets:USD:$-12
+end test

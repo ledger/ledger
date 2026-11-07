@@ -81,8 +81,48 @@ public:
    * implicitly by parsing a commoditized amount.
    */
   using commodities_map = std::map<string, std::shared_ptr<commodity_t>>;
+  /**
+   * @brief Lookup key for the lots of one symbol that share a shape (see
+   * annotation_t::compare_shape) with a given annotation.
+   */
+  struct annotation_shape_t {
+    const string& symbol;
+    const annotation_t& details;
+  };
+
+  /**
+   * @brief Ordering of annotated_commodities: base symbol, then the
+   * annotation's shape, then its price value, then its semantic flags.
+   *
+   * Lots that differ only in price value are therefore adjacent, and the
+   * transparent overloads let find_annotation_fuzzy() fetch exactly that
+   * range with equal_range(annotation_shape_t) in logarithmic time rather
+   * than scanning every lot of the symbol.
+   */
+  struct annotated_key_less {
+    using is_transparent = void;
+    using key_type = std::pair<string, annotation_t>;
+
+    bool operator()(const key_type& lhs, const key_type& rhs) const {
+      if (int cmp = lhs.first.compare(rhs.first))
+        return cmp < 0;
+      return lhs.second.compare(rhs.second) < 0;
+    }
+    bool operator()(const key_type& lhs, const annotation_shape_t& rhs) const {
+      if (int cmp = lhs.first.compare(rhs.symbol))
+        return cmp < 0;
+      return annotation_t::compare_shape(lhs.second, rhs.details) < 0;
+    }
+    bool operator()(const annotation_shape_t& lhs, const key_type& rhs) const {
+      if (int cmp = lhs.symbol.compare(rhs.first))
+        return cmp < 0;
+      return annotation_t::compare_shape(lhs.details, rhs.second) < 0;
+    }
+  };
+
   using annotated_commodities_map =
-      std::map<std::pair<string, annotation_t>, std::shared_ptr<annotated_commodity_t>>;
+      std::map<std::pair<string, annotation_t>, std::shared_ptr<annotated_commodity_t>,
+               annotated_key_less>;
 
   /// All known base (unannotated) commodities, keyed by symbol string.
   /// Commodity aliases also live here, mapping the alias name to the same
@@ -90,10 +130,27 @@ public:
   commodities_map commodities;
 
   /// Annotated variants of commodities, keyed by (base symbol, annotation)
-  /// pairs.  Each unique combination of lot price, date, and tag produces
-  /// a distinct entry, so that identity comparison is sufficient to
-  /// determine whether two amounts share the same annotated commodity.
+  /// pairs.  Each unique combination of lot price, date, tag, value
+  /// expression and fixation (`{=price}`) produces a distinct entry, so
+  /// that identity comparison is sufficient to determine whether two
+  /// amounts share the same annotated commodity, except for the lots in
+  /// duplicate_lots (and for a lot whose annotation the Python bindings
+  /// edit in place, which the index does not follow).  A lot whose
+  /// annotation reannotate() has changed stays reachable under its previous
+  /// key as well.
   annotated_commodities_map annotated_commodities;
+
+  /// The lots that carry one annotation because reannotate() gave it to a
+  /// lot while another lot already carried it (see duplicate_lots), the one
+  /// that carried it first leading.
+  using duplicate_class_t = std::vector<const commodity_t*>;
+
+  /// Every member of such a class, its leader included, mapped to its
+  /// class.  A balance keys such a lot under whichever member it already
+  /// holds, else under the leader (balance_t::component_key), so the class
+  /// is one component wherever it is held; every other lot is found by
+  /// identity.
+  std::unordered_map<const commodity_t*, std::shared_ptr<duplicate_class_t>> duplicate_lots;
 
   /// Commodities that were once registered under a symbol but have been
   /// replaced (e.g., when an `alias` directive remaps a symbol that was
@@ -154,6 +211,8 @@ public:
   ///
   /// @param symbol  The commodity symbol (e.g., "$", "AAPL", "EUR").
   /// @return Raw pointer to the newly created commodity (owned by the pool).
+  /// @throws std::logic_error if @p symbol already names a commodity or an
+  ///         alias in the pool.
   commodity_t* create(const string& symbol);
 
   /// @brief Look up an existing commodity by its symbol.
@@ -220,7 +279,21 @@ public:
   /// commodity is registered in annotated_commodities for future lookups.
   /// Flags on the base commodity are updated to track which kinds of
   /// annotations have been seen (fixated vs. floating prices, etc.).
+  /// @throws std::logic_error if a commodity with @p details is already
+  ///         filed under @p comm's symbol.
   annotated_commodity_t* create(commodity_t& comm, const annotation_t& details);
+
+  /// @brief Give the pooled lot @p comm the annotation @p details.
+  ///
+  /// Every amount of a lot shares one annotated_commodity_t, so this
+  /// changes what all of them carry, which is what a `value` expression
+  /// applying to a lot asks for (see extend_post()).  The lot gains an
+  /// index entry under the new annotation and keeps the old one as an
+  /// alias, so that a lookup by either finds it.  If another lot already
+  /// carries @p details, the two lots come to carry equal annotations and
+  /// both join duplicate_lots; an entry that is only the alias of a lot
+  /// whose annotation has since changed again passes to this lot.
+  void reannotate(annotated_commodity_t& comm, const annotation_t& details);
 
   /// @}
 
@@ -266,13 +339,16 @@ public:
    * @brief Parse a "P" price directive line from a journal or price database.
    *
    * Accepts lines in the format "DATE [TIME] SYMBOL AMOUNT" (e.g.,
-   * "2024/01/15 AAPL $185.00").  Parses the date/time, commodity symbol,
-   * and price amount, then optionally records the price in the history graph.
+   * "2024/01/15 AAPL $185.00"), or "SYMBOL AMOUNT" when the line does not
+   * begin with a digit, in which case the price takes effect now.  Parses
+   * the date/time, commodity symbol, and price amount, then optionally
+   * records the price in the history graph.
    *
    * @param line              Mutable C string to parse (modified in place).
    * @param do_not_add_price  If true, parse only -- do not add to history.
-   * @param no_date           If true, treat the line as "SYMBOL AMOUNT" without
-   *                          a leading date (used for getquote script output).
+   * @param no_date           If true, treat the line as "SYMBOL AMOUNT" even
+   *                          if it begins with a digit (used by the
+   *                          `apply fixed` and `apply rate` directives).
    * @return A pair of (commodity, price_point) on success, or nullopt.
    */
   std::optional<std::pair<commodity_t*, price_point_t>>

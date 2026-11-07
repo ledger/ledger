@@ -7,6 +7,7 @@
 #include "balance.h"
 #include "commodity.h"
 #include "annotate.h"
+#include "pool.h"
 
 using namespace ledger;
 
@@ -717,6 +718,24 @@ BOOST_AUTO_TEST_CASE(testBalancePrint)
   BOOST_CHECK(b4.valid());
 }
 
+BOOST_AUTO_TEST_CASE(testBalancePrintColorizesNegativeAmounts)
+{
+  // Only the negative amount takes the color, and only when asked to.
+  balance_t b1;
+  b1 += amount_t("$-1.00");
+  b1 += amount_t("EUR 50");
+
+  std::ostringstream colored;
+  b1.print(colored, 8, -1, AMOUNT_PRINT_RIGHT_JUSTIFY | AMOUNT_PRINT_COLORIZE, "\033[38;5;196m");
+  BOOST_CHECK_EQUAL(colored.str(), "  \033[38;5;196m$-1.00\033[0m\n  EUR 50");
+
+  std::ostringstream uncolored;
+  b1.print(uncolored, 8, -1, AMOUNT_PRINT_RIGHT_JUSTIFY, "\033[38;5;196m");
+  BOOST_CHECK_EQUAL(uncolored.str(), "  $-1.00\n  EUR 50");
+
+  BOOST_CHECK(b1.valid());
+}
+
 BOOST_AUTO_TEST_CASE(testToAmount)
 {
   // Single-commodity balance converts to amount_t
@@ -892,6 +911,310 @@ BOOST_AUTO_TEST_CASE(testTruncatedAndUnrounded)
   BOOST_CHECK(b6.valid());
   BOOST_CHECK(b7.valid());
   BOOST_CHECK(b_number.valid());
+}
+
+BOOST_AUTO_TEST_CASE(testFirstSortedAmount)
+{
+  balance_t empty;
+  BOOST_CHECK(empty.first_sorted_amount() == nullptr);
+
+  // The first amount in commodity order, whatever order the map holds.
+  balance_t b;
+  b += amount_t("5 EUR");
+  b += amount_t("$10.00");
+  b += amount_t("3 CAD");
+  balance_t::amounts_array sorted;
+  b.sorted_amounts(sorted);
+  BOOST_REQUIRE_EQUAL(sorted.size(), 3U);
+  BOOST_CHECK_EQUAL(sorted.front(), b.first_sorted_amount());
+  BOOST_CHECK_EQUAL(*b.first_sorted_amount(), amount_t("$10.00"));
+
+  // FIFO and LIFO put the oldest or the newest lot first.
+  balance_t lots;
+  lots += amount_t("10 AAPL {$5} [2024/02/01]");
+  lots += amount_t("10 AAPL {$6} [2024/01/01]");
+  lots += amount_t("10 AAPL {$4} [2024/03/01]");
+  lots.sort_order = balance_t::lot_sort_order::fifo;
+  BOOST_CHECK_EQUAL(*lots.first_sorted_amount(), amount_t("10 AAPL {$6} [2024/01/01]"));
+  lots.sort_order = balance_t::lot_sort_order::lifo;
+  BOOST_CHECK_EQUAL(*lots.first_sorted_amount(), amount_t("10 AAPL {$4} [2024/03/01]"));
+}
+
+BOOST_AUTO_TEST_CASE(testStripAnnotationsMergeOrder)
+{
+  // A plain amount kept at full precision and a lot of the same commodity
+  // merge when the lot is stripped, and the merged amount keeps full
+  // precision whichever of the two the component map lists first.  The
+  // map's order is a hash of commodity addresses, so forty commodities give
+  // forty orders: a merge that let the first part's flags win would fail
+  // here with overwhelming probability.
+  for (int i = 0; i < 40; i++) {
+    const string sym = string(1, static_cast<char>('A' + i / 26)) +
+                       string(1, static_cast<char>('A' + i % 26)) + "X";
+    amount_t plain("199.99977356 " + sym);
+    plain.set_keep_precision(true);
+    balance_t b;
+    b += plain;
+    b += amount_t("400.00 " + sym + " {$4.8799} [2010/05/19]");
+
+    balance_t stripped = b.strip_annotations(keep_details_t());
+    BOOST_REQUIRE_EQUAL(stripped.amounts.size(), 1U);
+    BOOST_CHECK(stripped.first_sorted_amount()->keep_precision());
+    BOOST_CHECK_EQUAL(*stripped.first_sorted_amount(), amount_t("599.99977356 " + sym));
+  }
+}
+
+BOOST_AUTO_TEST_CASE(testSelfAddition)
+{
+  // b += b doubles every component, also when a copy shares b's map nodes:
+  // the walk over the right-hand side must not read nodes the additions
+  // rewrite in place.  b -= b empties the balance.
+  auto symbol = [](int i) {
+    return string(1, static_cast<char>('A' + i / 26 / 26 % 26)) +
+           string(1, static_cast<char>('A' + i / 26 % 26)) +
+           string(1, static_cast<char>('A' + i % 26)) + "Q";
+  };
+  balance_t b;
+  for (int i = 0; i < 300; i++)
+    b += amount_t("1 " + symbol(i));
+  balance_t copy(b);
+
+  b += b;
+  BOOST_CHECK_EQUAL(b.amounts.size(), 300U);
+  for (const balance_t::amounts_map::value_type& pair : b.amounts)
+    BOOST_CHECK_EQUAL(pair.second.number(), amount_t(2L));
+  BOOST_CHECK_EQUAL(copy.amounts.size(), 300U);
+  for (const balance_t::amounts_map::value_type& pair : copy.amounts)
+    BOOST_CHECK_EQUAL(pair.second.number(), amount_t(1L));
+
+  balance_t shared(b);
+  b -= b;
+  BOOST_CHECK(b.amounts.empty());
+  BOOST_CHECK_EQUAL(shared.amounts.size(), 300U);
+  copy -= copy;
+  BOOST_CHECK(copy.amounts.empty());
+}
+
+BOOST_AUTO_TEST_CASE(testAssertThrows)
+{
+#if !NO_ASSERTS
+  // utils.h replaces assert() with one that throws.  A third-party header
+  // that includes <cassert> (immer, reached through system.hh) must not put
+  // the C library's assert() back in a translation unit using balance_t.
+  BOOST_CHECK_THROW(assert(false), std::logic_error);
+#endif
+}
+
+// -----------------------------------------------------------------------
+// Lots the pool has had to give equal annotations (duplicate_lots, see
+// commodity_pool_t::reannotate) are one component of a balance
+// -----------------------------------------------------------------------
+
+namespace {
+
+/// Two lots of RDUP {$5} [2024/01/02] (($7)): one written with its
+/// valuation, the other written without it and then given it, as an
+/// account's `value` does.  RDUP {$6} [2024/01/02] is a lot outside the
+/// pair.
+struct duplicate_lots_t {
+  commodity_t* spelled;
+  commodity_t* reannotated;
+  commodity_t* outsider;
+
+  duplicate_lots_t() {
+    commodity_pool_t& pool(*commodity_pool_t::current_pool);
+    const annotation_t written(amount_t("$5"), parse_date("2024/01/02"));
+    annotation_t valued(written);
+    valued.value_expr = expr_t("$7");
+    spelled = pool.find_or_create("RDUP", valued);
+    reannotated = pool.find_or_create("RDUP", written);
+    pool.reannotate(as_annotated_commodity(*reannotated), valued);
+    outsider = pool.find_or_create("RDUP", annotation_t(amount_t("$6"), parse_date("2024/01/02")));
+    BOOST_REQUIRE(spelled != reannotated);
+    BOOST_REQUIRE(*spelled == *reannotated);
+    BOOST_REQUIRE_EQUAL(pool.duplicate_lots.size(), 2U);
+  }
+
+  static amount_t of(commodity_t* lot, long quantity) {
+    amount_t amount(quantity);
+    amount.set_commodity(*lot);
+    return amount;
+  }
+};
+
+} // namespace
+
+BOOST_AUTO_TEST_CASE(testDuplicateLotsAdd)
+{
+  // Amounts of the two lots of a pair add up in one component, kept under
+  // the lot that carried the annotation first (the spelled one here) unless
+  // the balance already holds the pair under the other; a lot outside the
+  // pair keeps a component of its own.
+  duplicate_lots_t lots;
+
+  balance_t b;
+  b += duplicate_lots_t::of(lots.spelled, 10);
+  b += duplicate_lots_t::of(lots.reannotated, 5);
+  b += duplicate_lots_t::of(lots.outsider, 3);
+  BOOST_CHECK_EQUAL(b.amounts.size(), 2U);
+  BOOST_CHECK(b.component_key(*lots.reannotated) == lots.spelled);
+  BOOST_CHECK(b.component_key(*lots.outsider) == lots.outsider);
+  BOOST_REQUIRE(b.amounts.find(lots.spelled) != nullptr);
+  BOOST_CHECK_EQUAL(b.amounts.find(lots.spelled)->number(), amount_t(15L));
+  BOOST_REQUIRE(b.amounts.find(lots.outsider) != nullptr);
+  BOOST_CHECK_EQUAL(b.amounts.find(lots.outsider)->number(), amount_t(3L));
+
+  balance_t c;
+  c += duplicate_lots_t::of(lots.reannotated, 5);
+  c += duplicate_lots_t::of(lots.spelled, 10);
+  BOOST_CHECK_EQUAL(c.amounts.size(), 1U);
+  BOOST_CHECK(c.component_key(*lots.reannotated) == lots.spelled);
+  BOOST_CHECK(c.component_key(*lots.spelled) == lots.spelled);
+  BOOST_REQUIRE(c.amounts.find(lots.spelled) != nullptr);
+  BOOST_CHECK_EQUAL(c.amounts.find(lots.spelled)->number(), amount_t(15L));
+
+  // Adding a whole balance looks each component up the same way.
+  balance_t d;
+  d += duplicate_lots_t::of(lots.reannotated, 1);
+  d += b;
+  BOOST_CHECK_EQUAL(d.amounts.size(), 2U);
+  BOOST_REQUIRE(d.amounts.find(lots.spelled) != nullptr);
+  BOOST_CHECK_EQUAL(d.amounts.find(lots.spelled)->number(), amount_t(16L));
+}
+
+BOOST_AUTO_TEST_CASE(testDuplicateLotsSubtract)
+{
+  // A sale through either lot of a pair draws on the one component and,
+  // once it nets to zero, removes it; a lot outside the pair is subtracted
+  // into a component of its own.
+  duplicate_lots_t lots;
+
+  balance_t b;
+  b += duplicate_lots_t::of(lots.spelled, 10);
+  b -= duplicate_lots_t::of(lots.reannotated, 4);
+  b -= duplicate_lots_t::of(lots.outsider, 2);
+  BOOST_CHECK_EQUAL(b.amounts.size(), 2U);
+  BOOST_REQUIRE(b.amounts.find(lots.spelled) != nullptr);
+  BOOST_CHECK_EQUAL(b.amounts.find(lots.spelled)->number(), amount_t(6L));
+  BOOST_REQUIRE(b.amounts.find(lots.outsider) != nullptr);
+  BOOST_CHECK_EQUAL(b.amounts.find(lots.outsider)->number(), amount_t(-2L));
+
+  b -= duplicate_lots_t::of(lots.reannotated, 6);
+  BOOST_CHECK_EQUAL(b.amounts.size(), 1U);
+  BOOST_CHECK(b.amounts.find(lots.spelled) == nullptr);
+  BOOST_CHECK(b.amounts.find(lots.reannotated) == nullptr);
+
+  // Subtracting a whole balance looks each component up the same way.
+  balance_t held;
+  held += duplicate_lots_t::of(lots.spelled, 10);
+  balance_t sold;
+  sold += duplicate_lots_t::of(lots.reannotated, 10);
+  held -= sold;
+  BOOST_CHECK(held.is_empty());
+}
+
+BOOST_AUTO_TEST_CASE(testDuplicateLotsMerge)
+{
+  // merge(), which rebuilds a balance from transformed components, puts
+  // the two lots of a pair in one component too, and a lot outside the
+  // pair in its own.
+  duplicate_lots_t lots;
+
+  balance_t b;
+  b.merge(duplicate_lots_t::of(lots.reannotated, 7));
+  b.merge(duplicate_lots_t::of(lots.spelled, 3));
+  b.merge(duplicate_lots_t::of(lots.outsider, 1));
+  BOOST_CHECK_EQUAL(b.amounts.size(), 2U);
+  BOOST_CHECK(b.component_key(*lots.reannotated) == lots.spelled);
+  BOOST_REQUIRE(b.amounts.find(lots.spelled) != nullptr);
+  BOOST_CHECK_EQUAL(b.amounts.find(lots.spelled)->number(), amount_t(10L));
+  BOOST_REQUIRE(b.amounts.find(lots.outsider) != nullptr);
+  BOOST_CHECK_EQUAL(b.amounts.find(lots.outsider)->number(), amount_t(1L));
+}
+
+BOOST_AUTO_TEST_CASE(testDuplicateLotsCommodityAmount)
+{
+  // Asked for either lot of a pair, a balance answers with the component
+  // it holds; asked for a lot outside the pair, it has none.
+  duplicate_lots_t lots;
+
+  balance_t b;
+  b += duplicate_lots_t::of(lots.spelled, 10);
+
+  optional<amount_t> by_other = b.commodity_amount(*lots.reannotated);
+  BOOST_REQUIRE(by_other);
+  BOOST_CHECK(&by_other->commodity() == lots.spelled);
+  BOOST_CHECK_EQUAL(by_other->number(), amount_t(10L));
+
+  optional<amount_t> by_own = b.commodity_amount(*lots.spelled);
+  BOOST_REQUIRE(by_own);
+  BOOST_CHECK(&by_own->commodity() == lots.spelled);
+  BOOST_CHECK_EQUAL(by_own->number(), amount_t(10L));
+
+  BOOST_CHECK(!b.commodity_amount(*lots.outsider));
+}
+
+BOOST_AUTO_TEST_CASE(testComponentKeyOutsideDuplicateLots)
+{
+  // Even with a pair of duplicate lots in the pool, any other commodity is
+  // its own key, whatever the balance holds: only a lot of a pair is ever
+  // looked for by its annotation.
+  duplicate_lots_t lots;
+  commodity_pool_t& pool(*commodity_pool_t::current_pool);
+  commodity_t* absent =
+      pool.find_or_create("RDUP", annotation_t(amount_t("$8"), parse_date("2024/01/02")));
+  commodity_t& base(lots.outsider->referent());
+
+  balance_t one;
+  one += duplicate_lots_t::of(lots.outsider, 2);
+  BOOST_REQUIRE_EQUAL(one.amounts.size(), 1U);
+  BOOST_CHECK(one.component_key(*lots.outsider) == lots.outsider);
+  BOOST_CHECK(one.component_key(*absent) == absent);
+  BOOST_CHECK(one.component_key(base) == &base);
+
+  balance_t pair_held;
+  pair_held += duplicate_lots_t::of(lots.spelled, 1);
+  BOOST_CHECK(pair_held.component_key(*lots.outsider) == lots.outsider);
+  BOOST_CHECK(pair_held.component_key(*absent) == absent);
+  BOOST_CHECK(pair_held.component_key(base) == &base);
+}
+
+BOOST_AUTO_TEST_CASE(testUnreduceMergeKeepsPrecision)
+{
+  // Unreducing can turn two components into one commodity: 90m and 5400s
+  // are both 1.5h.  The merged amount keeps full precision when either
+  // part keeps it, whichever of the two the component map visits first;
+  // giving the flag to each part in turn exercises both orders.
+  amount_t::parse_conversion("1.0m", "60s");
+  amount_t::parse_conversion("1.00h", "60m");
+
+  for (int keeper = 0; keeper < 3; ++keeper) {
+    amount_t minutes;
+    (void)minutes.parse("90m", PARSE_NO_REDUCE);
+    amount_t seconds;
+    (void)seconds.parse("5400s", PARSE_NO_REDUCE);
+    if (keeper == 0)
+      minutes.set_keep_precision(true);
+    else if (keeper == 1)
+      seconds.set_keep_precision(true);
+
+    balance_t b;
+    b += minutes;
+    b += seconds;
+    BOOST_REQUIRE_EQUAL(b.amounts.size(), 2U);
+    BOOST_REQUIRE_EQUAL(minutes.unreduced().commodity().symbol(), "h");
+    BOOST_REQUIRE_EQUAL(seconds.unreduced().commodity().symbol(), "h");
+    BOOST_REQUIRE_EQUAL(minutes.unreduced().keep_precision(), keeper == 0);
+    BOOST_REQUIRE_EQUAL(seconds.unreduced().keep_precision(), keeper == 1);
+
+    b.in_place_unreduce();
+    BOOST_REQUIRE_EQUAL(b.amounts.size(), 1U);
+    const amount_t hours(b.amounts.begin()->second);
+    BOOST_CHECK_EQUAL(hours.commodity().symbol(), "h");
+    BOOST_CHECK_EQUAL(hours.number(), amount_t(3L));
+    // With neither part keeping full precision, neither does the sum.
+    BOOST_CHECK_EQUAL(hours.keep_precision(), keeper < 2);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

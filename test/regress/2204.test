@@ -1,5 +1,12 @@
-; Test for issue #2204: --empty should show zero commodity amounts for
-; accounts that had postings in multiple commodities where some net to zero.
+; Test for issue #2204: seeing the zero balance of a commodity that an
+; account posted in, beside the account's non-zero commodities.
+;
+; --empty admits accounts whose balance is zero; it does not print a zero
+; row for each commodity in an account's balance.  A commodity that nets to
+; zero is left out, so --empty alone shows only 5.00 EUR here (making it
+; also print "$0.00" was reverted by #3279).  --group-by commodity reports
+; each commodity separately, and with --empty it lists the account under
+; every commodity it posted in, including those that net to zero.
 
 2024/01/01 Buy EUR
     Expenses:Account1    5.00 EUR
@@ -14,10 +21,22 @@
     Assets:Cash
 
 test bal Expenses --empty
-               $0.00
             5.00 EUR  Expenses:Account1
 end test
 
 test bal Expenses
+            5.00 EUR  Expenses:Account1
+end test
+
+test bal Expenses --empty --group-by commodity
+$
+                   0  Expenses:Account1
+
+EUR
+            5.00 EUR  Expenses:Account1
+end test
+
+test bal Expenses --group-by commodity
+EUR
             5.00 EUR  Expenses:Account1
 end test

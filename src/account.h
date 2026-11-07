@@ -100,7 +100,7 @@ class account_t : public flags::supports_flags<>, public metadata_t, public scop
 public:
   account_t* parent;     ///< Parent node in the account tree (nullptr for root).
   string name;           ///< Local name of this account (e.g., "Checking", not the full path).
-  optional<string> note; ///< Optional note from the `account` directive's comment.
+  optional<string> note; ///< Optional note from the `account` directive's `note` line.
   unsigned short depth;  ///< Nesting level: root=0, Assets=1, Assets:Bank=2, etc.
   accounts_map accounts; ///< Child accounts keyed by local name.
   posts_list posts;      ///< Postings that affect this account.
@@ -228,6 +228,14 @@ public:
 
   /** @brief Remove a posting from this account and invalidate cached iterators. */
   bool remove_post(post_t* post);
+
+  /**
+   * @brief Remove several postings at once, as remove_post() removes one.
+   *
+   * The posting list is scanned once rather than once per posting, so
+   * that removing many temporaries from an account is not quadratic.
+   */
+  void remove_posts(const std::set<post_t*>& doomed);
 
   posts_list::iterator posts_begin() { return posts.begin(); }
   posts_list::iterator posts_end() { return posts.end(); }

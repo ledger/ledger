@@ -46,8 +46,95 @@ directives, and commands.
   the infinite loop produced by a self-referential `C` (commodity equivalence)
   directive (#1065)
 
+- Fix the parser looping forever on `==` in a posting's amount or cost
+  expression, such as `(1 == 1)`.  `==` now compares there, as `!=` already did
+  (#3290)
+
 - Fix `--invert` to work correctly with composite reports (#1908) and with the
   `equity` command (#1645)
+
+### Performance
+
+- Performance: the `balance`, `print` and `register` reports no longer slow
+  down or exhaust memory as lots accumulate, and the common reports are
+  substantially faster.  Creating a lot during parsing scanned every lot of the
+  same commodity (quadratic parsing, introduced after 3.4.1); adding a lot to a
+  balance scanned the balance (quadratic account totals); and every posting of
+  a register or print report kept a full copy of the running total (memory
+  proportional to postings times lots: 4 GB for a 10k-transaction journal).
+  Balances are now stored in a persistent map (the vendored `immer` library
+  under lib/), amounts are formatted with exact integer arithmetic instead of
+  MPFR except on exact ties, most of the expression evaluator's scope lookups
+  no longer use `dynamic_cast`, revaluation reads only the price points it
+  needs instead of an edge's whole history, and the printing path allocates far
+  less.  On hledger's 100k-transaction benchmark journal the flat balance
+  report went from 16s to 0.7s, and `print` and `register`, which needed 4 GB
+  at 10k transactions and could not finish at 100k within 23 GB, now take 0.3
+  GB and 0.6 GB, `register` in about 8s; the 1M-transaction journal, previously
+  unusable, is read in 4s, balanced in 7s and printed in 8s.  `print` no longer
+  computes running totals it never displays, unless an option that may read
+  them is given: `--amount` or `--display-amount` (which `-V`, `-X`, `-G` and
+  `--unround` set), `--revalued` (`-B`), `--display`, `--only`, `--forecast`,
+  `--average`, `--deviation` or `--percent`.  A journal with more than about
+  32,000 lots valued by one `value` expression no longer aborts.  Two costs
+  remain: creating a lot still examines the lots that share its day, or like it
+  have none, one by one (the price matching added after 3.4.1), so many such
+  lots of one commodity take time quadratic in their number; and a report that
+  visits every lot of the running total at every posting still takes time
+  proportional to postings times lots: one that revalues the total (`-V`, `-X`,
+  `-G`, and `--unrealized` with them), `--invert`, `--round`, `--unround`,
+  `--average`, `--deviation`, `--average-lot-prices`, `top_amount()`, and
+  `register --lots`, `--lot-prices`, `--lot-dates` and `xml`, whose output
+  lists them.  A benchmark and profiling kit lives in tools/bench and a `perf`
+  development shell in flake.nix.
+
+  Output is unchanged, with these exceptions.  XML balances, `top_amount()`
+  (whose documented meaning this is), the commodity list in a basket
+  commodity's value expression, and a Python `Balance`'s indexing and iteration
+  list components in commodity order rather than in an accidental one (each
+  index sorts the balance, iteration and `reversed()` sort it once, and indices
+  down to -len work), and lots that differ only in their value expression sort
+  by the expression's text.  An amount merged from several components (lots
+  stripped to their commodity, components valued in one currency, units
+  reduced, lots averaged by `--average-lot-prices`) keeps full precision when
+  any of its parts did, where it used to depend on their order, so `--unround`
+  and `--gain` can show more digits, and an `--unround` report can show a
+  residue where a total used to be zero, a register also gaining or losing an
+  `<Adjustment>` row; comparing a balance with an amount in a commodity that
+  one of its components is not in is an error whichever component comes first,
+  in Python's `>` and `<=` too (and with an Amount on the left), which used to
+  answer there (a plain number among the components compares with any amount,
+  as it always has; a component that netted to zero in another commodity is
+  left out, a balance of nothing else comparing as zero and an empty balance
+  false either way, as before; against a plain number every component takes
+  part, as it always has, and `<` or `>=` never fails; `>` and `<=` in a value
+  expression are unchanged and still need the balance to be a single amount);
+  and an error that names a component, or a pair of commodities, names the one
+  the display order lists first.  Ledger no longer edits lot annotations in
+  place behind the pool's index (a `value` expression still applies to every
+  holder of its lot; the Python `Annotation` setters still edit in place, and a
+  lot so edited no longer merges in a balance with a lot of the same
+  annotation): a fixated cost, `@ =price`, fixates the lot it creates, as
+  `{=price}` would, and never a lot the posting names, so `-10 AAPL {$5} @ =$6`
+  sells from the `{$5}` lot instead of fixating it for every holder (and a
+  later sale from that lot at a cost records the cost as a market price, as a
+  sale from any floating lot does; none was recorded once the lot had been
+  fixated), `10 AAPL {$5} @ =$5` buys into that lot, and a lot bought with
+  `@ =price` is `{=price} [date]`, the lot a later posting must name to post to
+  it (`{$5}` and `{=$5}` are two lots, #1454); `--lot-prices` and
+  `--lots-actual` keep a lot's `=` marker, so lots bought at `{$5}` and at
+  `{=$5}` stay apart in those reports as they do under `--lots`; a typed
+  fixated lot price merges with a computed one it rounds to (#524's matching)
+  when the computed lot came first, as does a typed lot written with the
+  valuation its account's `value` gives it; `--average-lot-prices` fixates the
+  average of lots that were all fixated, and only then (it used to depend on
+  whether a lot with the averaged price and the earliest date happened to be
+  fixated); and `--anon` renders each lot's price commodity once instead of
+  re-anonymizing it for every posting, and no longer fails on a lot that has
+  only a tag.  Time amounts shown with `--time-colon` at eighteen or more
+  decimal places (as with `--unround`) no longer overflow their minutes, and
+  values shown with more than about 230 decimal places print their exact
+  digits.
 
 ### Code Modernization
 
@@ -83,6 +170,20 @@ components with their standard-library equivalents.
 
 ### Commodity Prices, Lots, and Annotations
 
+- `balance --unrealized` now books the market value of the commodities
+  reported on less their cost basis, which changes the output of existing
+  reports (#3327).  Selling part of a lot after its price had moved booked the
+  gain realized by the sale as unrealized as well, and buying at other than the
+  day's market price booked nothing, so neither report balanced.  Now only the
+  gain on the commodities still held, measured from their lot price or `@`
+  cost, is unrealized, and it is booked as one net gain or loss rather than as
+  each rise and fall since the last posting.  The `<Revalued>` postings of
+  register reports are unchanged.
+
+- Total a lot whose lot price has no commodity, such as `C$100.00 {1.50}`,
+  without a commodity (150) rather than in the lot's own (`C$150.00`), as
+  `--basis`, `--price` and the `cost` and `price` value expressions report it
+
 - Implement automatic FIFO/LIFO commodity lot matching (issue #164): selling a
   commodity without an explicit `{cost}` annotation can now pair the sale with
   open lots automatically and compute gain/loss from the matched basis
@@ -111,11 +212,14 @@ components with their standard-library equivalents.
 
 - Fix unrealized gains/losses when multiple prices are recorded on the same
   day (#1821); add `--plopen` for unrealized P&L on open positions; add
-  `--gain-since` for period-relative gain calculation; account for quantity
-  precision when rounding gain/loss; fix the rounding error in `--price` with
-  `@@` total cost notation; warn when a `getquote` script fails or returns no
-  usable price (#2335); and trigger a price download even when no prior price
-  exists (#652, #655)
+  `--gain-since` for period-relative gain calculation; drop from the gain or
+  loss on a lot only the residue that a per-unit lot price rounded out of a
+  total leaves in its basis (#2975), so a posting with a lot price and a cost
+  balances at its lot basis whatever display precision the commodity has
+  learned (#3013, #3258); fix the rounding error in `--price` with `@@` total
+  cost notation; warn when a `getquote` script fails or returns no usable
+  price (#2335); and trigger a price download even when no prior price exists
+  (#652, #655)
 
 - Make `balance` and `cleared` with `-V` or `-X` and `--unrealized` foot to
   zero for a journal that balances at cost, when the report can value each
@@ -169,15 +273,87 @@ components with their standard-library equivalents.
   (#739), report errors for self-referential price directives, and add
   `--latest` to `prices`/`pricedb`
 
+- Fix `prices` and `pricedb` leaking the postings they synthesize from the
+  price history (#3293).  The postings stayed in the account named after each
+  priced commodity, so a later report in the same REPL or `--script` session
+  added the prices into that account's balance
+
 - Fix the `D` directive to lock the commodity display format (#1197), apply
   `D`-directive formatting to bare amounts (#761), and allow apostrophe (`'`)
   as a digit-group separator
+
+- Accept a `commodity` block's own symbol unquoted in its `format`
+  sub-directive (#3312): `commodity N1` declares the commodity that amounts
+  write as `"N1"`, but `format 1,000.00 N1` stopped the symbol at its digit
+  and was rejected
+
+- Make a semicolon end the symbol of a `commodity`, `N`, or dated `P`
+  directive and begin a comment, with or without a space before it, as it
+  does after an amount in a posting (#3313).  `commodity USD; dollars`
+  declared a commodity named `USD;`, so a `format` line for `USD` beneath it
+  was rejected and an `alias` beneath it resolved to `USD;`.  As in an
+  amount, a backslash now puts the next character into such a symbol, so
+  `commodity A\;B` names `A;B`.  An `alias` line in a `commodity` block also
+  ends at a semicolon comment instead of keeping it as part of the alias.  A
+  `P` directive no longer misreads a price written directly after a quoted
+  symbol, as in `P 2024/01/01 "N1"1.50 EUR`, and a `P` line that ends after
+  its quoted symbol is reported as missing its price instead of reading past
+  the end of the line
+
+- Read the symbol of a `P` line without a date, of `apply fixed`, and of a
+  quote that a getquote script prints without a date as a dated `P` line
+  does (#3321).  Their first word was taken verbatim, quotes and all:
+  `P "N1" $2.00` priced a commodity printed as `""N1""`, `apply fixed "N1"
+  $2.00` fixated nothing, a downloaded quote for `"N1"` went to that other
+  commodity, and a quoted name holding a space was cut at the space.  A `P`
+  line without a date whose price began with a digit, such as `P EUR 1.10
+  USD`, was also rejected as an invalid date
+
+- Keep `--historical` (`-H`) from creating a second commodity, named with
+  its quotes, for one whose symbol is printed in quotes: an amount of
+  `"EXV6_DE"` was shown as `""EXV6_DE""10` (#3321)
+
+- Quote a commodity named `and`, `div`, `else`, `false`, `if`, `not`, `or` or
+  `true` when printing it, as an amount requires, so that `print` output can
+  be read back (#3321)
 
 - Add batch commodity quote fetching to amortize the per-call cost (#588); add
   `--account-value-expr` and `--commodity-value-expr` options for custom
   valuations; expose a `capital_gain` value expression variable
 
+- Stop `--args-only` from reading prices from `~/.pricedb`, which it is meant
+  to skip along with the init file and environment; pass
+  `--price-db ~/.pricedb` to keep reading it (#3294).  When `HOME` is not set,
+  look for the default price database in `./.pricedb` rather than
+  `./.ledgerrc`, which was also being parsed as price history, even under
+  `--args-only`, so that a `--file` in it replaced the journal named by `-f`
+
+- Read the init file named by `-i FILE` or `--init-file=FILE`, which were
+  silently ignored: only `--init-file FILE` was looked for before the init
+  file is read
+
 ### Balance, Assertions, and Assignments
+
+- Balanced virtual postings, whose accounts are written in `[brackets]`, now
+  balance only against one another, apart from the real postings of their
+  transaction, as the manual describes them (#563, #1827, #2105).  Ledger 3.4
+  added both kinds into a single sum, so a bracketed posting could balance a
+  real one, or an elided real posting take up what the bracketed ones left,
+  and the real postings, which `--real` reports, did not have to balance
+  independently.  Such transactions are now errors, which changes the outcome
+  for existing journals that contain them; the error names the group whose
+  postings leave a remainder, and measures it against that group alone
+  (#3314).  The rules that balance a transaction apply to each group by
+  itself: each may have one posting without an amount, which is zero if only
+  the other group has amounts; each implies its own exchange rate between two
+  commodities, prices its own postings at their fixated lot prices, books its
+  own lot gains and losses, and gets its own allowances for rounded per-unit
+  costs and, under `--permissive`, for balance assignments; and the postings
+  that automated transactions or `--lot-matching` add balance within their
+  own group.  To correct a rejected transaction, write a bracketed posting
+  that moves real money as a real posting.  If it is meant to remain virtual,
+  balance it against other bracketed postings or use parentheses so that it
+  need not balance; the real postings must still balance separately.
 
 - Filter balance assertions by date rather than file order; skip balance
   assertions on UUID-duplicate transactions; check account assertions on
@@ -198,6 +374,23 @@ components with their standard-library equivalents.
 
 ### Reporting and Display Improvements
 
+- `--flat` now lists each account with its own amount rather than the total
+  of the account and its sub-accounts (#1987), which changes the output of
+  existing reports.  An account with postings of its own as well as
+  sub-accounts used to show its family total, counting the sub-accounts'
+  amounts a second time, so the lines did not add up to the total beneath
+  them.  An account whose sub-accounts are all hidden, for example by
+  `--depth`, shows its family total instead, and is no longer left out when
+  it has no postings of its own (#1020).  This affects `balance`, `cleared`,
+  `budget`, and `select ... from accounts`, but not posting reports such as
+  `register`, and an explicit `--total` or `--percent` still takes
+  precedence.  Use the tree view, without `--flat`, to see family totals.
+  `bal --flat -V --unrealized` and `reg --flat` aborted since #1020's own
+  change asked the total expression for `has_children_to_display`, which
+  means what it means in the balance report but is undefined in posting
+  scope (#3345); both now run, and `--flat` still leaves posting reports'
+  figures unchanged.
+
 - Optimize the `register` command for a 46% speedup on large journals (≈50K
   postings: 6.0s → 3.3s on the benchmark) by short-circuiting the trivial
   `amount` expression, exploiting `strip(A+B) = strip(A)+strip(B)` to maintain
@@ -215,17 +408,23 @@ components with their standard-library equivalents.
 - Align multi-commodity balance rows with wide decimals (#1795); fix
   multi-commodity balance formatting width (#698); make separator lines adapt
   to `amount_width`; show the payee when it changes between sorted postings;
-  show zero commodity amounts with `--empty` in the balance report (extending
-  #2204); preserve virtual posting flags in `equity` output
+  preserve virtual posting flags in `equity` output
 
 - Sort by converted value when `-X` is active (#1556); sort parent accounts by
-  family total (#723); allow `--sort` and `--sort-xacts` together; show the
-  own amount instead of the family total in `--flat` balance mode, also under
-  `--unrealized`, while `--flat` leaves register reports unchanged
+  family total (#723); allow `--sort` and `--sort-xacts` together
 
 - Enable ANSI color on Windows CMD/PowerShell (#2110); fix `justify()` to
-  ignore ANSI escape codes when computing width; flush stdout after each REPL
-  command (#991)
+  ignore ANSI escape codes when computing width, and to pad a negative integer
+  that it colors only once; flush stdout after each REPL command (#991)
+
+- Add `--colors NAME=COLOR,...` to change what the colors that report formats
+  name look like (#589): `--colors 'blue=#5f87ff,red=bold 196'` shows account
+  names in a lighter blue and negative amounts in a bold, bright red.  A
+  color, there or as the color argument of `ansify_if()`, can now be a
+  256-color index (0-255) or a 24-bit `#RRGGBB` value as well as a standard
+  name, and several such words combine.  Like other options, `--colors` can
+  be set in `~/.ledgerrc` or through `LEDGER_COLORS`.  `ansify_if()` now
+  reports an unknown color as an error instead of leaving the text uncolored
 
 - Fix percentage amounts to act as fractions in arithmetic; fix `width`
   options to return integers for expression arithmetic; fix the `truncated()`
@@ -253,21 +452,40 @@ components with their standard-library equivalents.
 - Rewrite the query parser as a documented recursive-descent parser with a
   published EBNF grammar in the header
 
-- Fix `--empty` to respect the query/`--limit` predicate (#3189); preserve
-  backslash escapes in regex patterns; preserve push-command positional query
-  args across REPL commands (#528); fix the query lexer that included trailing
-  whitespace before operators; handle `==` in query metadata predicates
-  (#842); honor `not` in positional queries for `print`/`xact`/`dump` (#1227);
-  evaluate the `expr any()` keyword in single-argument queries (#1185)
+- Show declared-but-unused accounts with `--empty` (#1204) and in the
+  `accounts` listing, filtered by the account terms of the query/`--limit`
+  predicate (#3189, #3212, #3281); preserve backslash escapes in regex
+  patterns; preserve push-command positional query args across REPL commands
+  (#528); fix the query lexer that included trailing whitespace before
+  operators; handle `==` in query metadata predicates (#842); honor `not` in
+  positional queries for `print`/`xact`/`dump` (#1227); evaluate the
+  `expr any()` keyword in single-argument queries (#1185)
+
+- A comma after a name now separates value expression arguments with or
+  without a space after it (#3251).  It used to begin the quantity of an
+  amount whose commodity was the name, so `truncated(account,10)` produced
+  the amount `account0,10` and `justify(account,20)` failed with "Too few
+  arguments to function".  As a result, a comma can no longer begin a
+  quantity in a value expression outside a braced amount literal, including
+  in a parenthesized posting amount: write `($0,50 * 2)`, not `($,50 * 2)`.
 
 - Expand account aliases in CLI query arguments; fix `--pivot` with
   command-line account queries (#1154), with built-in properties (#1048), and
   with tag-based grouping (#1042); fix `--group-by` combined with `--pivot`
   dropping subsequent groups (#1034); fix `--depth` interacting with
-  `--effective` and with `--flat`; fix `--only` so it applies after
+  `--effective` (#2599); fix `--only` so it applies after
   `calc_posts` and does not alter running totals (#762); compute per-account
   averages for period reports (#1950); anchor interval averages to the report
   begin date
+
+- Accept both spellings of a commodity whose symbol needs quotes, such as
+  `"ABC 3"`: `commodity == 'ABC 3'` and `commodity == '"ABC 3"'` now match
+  the same postings, and `commodity(AMOUNT)` compares the same way in every
+  report (#3241, #1097).  The quoted spelling, which the manual shows and 3.3
+  required, stopped matching in 3.4.0, so automated transactions and
+  `--limit` predicates written for 3.3 silently matched nothing.  Ordering a
+  commodity against a string now follows the bare symbol, as ordering two
+  commodities does
 
 ### Date, Period, and Time Handling
 
@@ -388,7 +606,25 @@ components with their standard-library equivalents.
 - Support nested `account` declarations (#877) and metadata tags on `account`
   directives (#1681)
 
+- End the account name on an `account` directive line at a `;` that follows
+  a hard separator (two or more spaces, or a tab), as a payee ends on a
+  transaction's first line, and read the comment after it for the account's
+  metadata tags, as on the comment lines beneath the directive (#3320).
+  `account Expenses:Food  ; groceries` declared an account named
+  `Expenses:Food  ; groceries`, which no posting could name, so `--strict`
+  reported `Expenses:Food` as unknown, and the `alias`, `payee`, `default`,
+  `check` and `assert` lines beneath it applied to the misnamed account.  A
+  `;` after a single space is still part of the name, as it is in a posting
+
 - Return regex capture-group text from the `=~` operator (extending #664)
+
+- Treat every character of an `include` file name other than `*`, `?` and a
+  `[...]` set literally, including `$`, `^`, a character escaped with a
+  backslash, and a `[` that no `]` closes
+
+- Match `include` file names exactly under `--ignore-diacritics`, which kept
+  a name with an accent from being included and let `include cafe.dat` read
+  `café.dat` as well
 
 ### Documentation
 
@@ -407,6 +643,10 @@ components with their standard-library equivalents.
   (#994), the contradictory documentation for `--price-db` and `--download`
   (#1210), and the `ansify_if` two-argument signature; remove documentation
   for the unimplemented `capture` directive
+
+- Specify which characters a commodity symbol may contain without quotes, in
+  an amount and in a directive, and when Ledger quotes a symbol it prints
+  (#3321)
 
 ### Build System
 
@@ -431,6 +671,10 @@ components with their standard-library equivalents.
   `BUILD_DOCS` is `ON`; update bundled `utfcpp` to 4.0.9; add explicit
   `CMAKE_OSX_SYSROOT` for reproducible macOS builds; add code-coverage tools
   to the Nix development environment
+
+- Fix the build with ICU against LLVM's libc++ 19 or later, as on FreeBSD
+  15.1, which rejects the `std::basic_string<UChar32>` that Boost.Regex's
+  `u32regex` uses for `str()` and, before Boost 1.89, for comparisons (#3276)
 
 ### Testing and Coverage
 
@@ -467,8 +711,6 @@ components with their standard-library equivalents.
 ## 3.4.1
 
 - Fix version number in binary
-
-- Fix crash in optimized builds when exceptions are thrown (issue #693)
 
 ## 3.4.0
 

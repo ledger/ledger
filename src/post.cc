@@ -1027,7 +1027,7 @@ void post_t::set_reported_account(account_t* acct) {
 /*--- Valuation Expression Cascade ---*/
 // extend_post attaches a valuation expression to the posting's commodity
 // annotation.  This is the mechanism behind --market, --exchange, and the
-// Value: metadata tag.  The cascade checks four sources in priority order,
+// Value: metadata tag.  The cascade checks six sources in priority order,
 // stopping at the first one found.
 
 /**
@@ -1035,20 +1035,24 @@ void post_t::set_reported_account(account_t* acct) {
  *
  * When the user runs `--market` or uses a `Value:` tag, this function
  * determines which valuation expression to attach to the commodity
- * annotation.  The cascade checks four sources:
+ * annotation.  The cascade checks six sources:
  *
  *   1. `Value:` metadata tag on the posting (or inherited from the
  *      transaction).  When a typed expression (`Value::`) returns an
  *      amount, it is divided by the posting quantity to convert from
  *      total value to per-unit price.
  *   2. The account's value_expr.
- *   3. The commodity's value_expr.
- *   4. The journal's value_expr.
+ *   3. The journal's account value expression (--account-value-expr).
+ *   4. The commodity's value_expr.
+ *   5. The journal's commodity value expression (--commodity-value-expr).
+ *   6. The journal's value_expr (--value-expr).
  *
  * If the commodity already has a valuation expression in its annotation,
  * this function does nothing.  Otherwise, the selected expression is
- * either set on the existing annotation or wrapped into a new annotated
- * commodity created via the commodity pool.
+ * either given to the existing lot through commodity_pool_t::reannotate()
+ * (a lot's annotation is one object, so every amount of the lot then
+ * carries it) or wrapped into a new annotated commodity created via the
+ * commodity pool.
  *
  * @param post     The posting whose commodity should be annotated.
  * @param journal  The journal providing the fallback value_expr.
@@ -1092,14 +1096,19 @@ void extend_post(post_t& post, journal_t& journal) {
       value_expr = journal.value_expr;
 
     if (value_expr) {
-      if (!details) {
+      if (details) {
+        // The annotation is the pooled lot's own, shared by every amount of
+        // the lot, and a valuation applies to the lot rather than to this
+        // posting alone, so the lot itself is reannotated; the pool keeps
+        // its index in step.
+        annotation_t new_details(*details);
+        new_details.value_expr = value_expr;
+        commodity_pool_t::current_pool->reannotate(as_annotated_commodity(comm), new_details);
+      } else {
         annotation_t new_details;
         new_details.value_expr = value_expr;
-
-        commodity_t* new_comm = commodity_pool_t::current_pool->find_or_create(comm, new_details);
-        post.amount.set_commodity(*new_comm);
-      } else {
-        details->value_expr = value_expr;
+        post.amount.set_commodity(
+            *commodity_pool_t::current_pool->find_or_create(comm, new_details));
       }
     }
   }

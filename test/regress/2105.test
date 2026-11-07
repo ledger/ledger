@@ -14,7 +14,7 @@ While balancing transaction from "$FILE", lines 6-8:
 > 2024/08/11 Example
 >     Income                                     $1.00
 >     [Expenses]                                $-1.00
-Unbalanced remainder is:
+Unbalanced remainder of real postings is:
                $1.00
 Amount to balance against:
                $1.00

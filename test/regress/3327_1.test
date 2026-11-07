@@ -1,0 +1,61 @@
+; Regression test for issue #3327: bal -V --unrealized lost a price change
+; that fell between two transactions on different dates.
+;
+; The fix for #1821 stopped revaluing between transactions on different
+; dates, so a balance report folded the change in value into the running
+; total and never booked it as an unrealized gain or loss.
+
+2024-01-01 Buy
+    Assets:Broker    10 ABC @ $10.00
+    Assets:Cash
+
+P 2024-03-01 ABC $30.00
+
+2024-04-01 Salary
+    Assets:Cash      $1000.00
+    Income:Salary
+
+P 2024-05-01 ABC $5.00
+
+2024-05-01 Rent
+    Expenses:Rent     $500.00
+    Assets:Cash
+
+; The report from the issue: ABC rose from $10 to $30 before the salary
+; arrived, a gain of $200 on the 10 ABC held.
+test bal -V --unrealized --end 2024/05/01
+            $1200.00  Assets
+             $300.00    Broker
+             $900.00    Cash
+            $-200.00  Equity:Unrealized Gains
+           $-1000.00  Income:Salary
+--------------------
+                   0
+end test
+
+; Dated before the last two transactions, the report still values ABC as of
+; its own date, at $30, and books the gain as of then.
+test bal -V --unrealized --now 2024/03/15
+             $700.00  Assets
+             $300.00    Broker
+             $400.00    Cash
+            $-200.00  Equity:Unrealized Gains
+             $500.00  Expenses:Rent
+           $-1000.00  Income:Salary
+--------------------
+                   0
+end test
+
+; ABC then fell to $5, below its cost, on the day the rent was paid.  The
+; report books the net loss of 10 x ($10 - $5) = $50, not the earlier gain
+; as well.
+test bal -V --unrealized --now 2024/06/01
+             $450.00  Assets
+              $50.00    Broker
+             $400.00    Cash
+              $50.00  Equity:Unrealized Losses
+             $500.00  Expenses:Rent
+           $-1000.00  Income:Salary
+--------------------
+                   0
+end test

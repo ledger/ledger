@@ -1,0 +1,27 @@
+; Coverage for textual_xacts.cc: an `=` after a posting's amount
+; expression or cost expression begins a balance assertion.  Both
+; expressions are parsed with PARSE_SINGLE, which stops at the closing
+; parenthesis, so the expression parser never reads the `=`.
+
+2024/01/01 Opening
+    Assets:Cash    = $100.00
+    Equity:Opening
+
+2024/01/02 Deposit
+    Assets:Cash    ($50.00 * 2) = $200.00
+    Equity:Opening
+
+2024/01/03 Broker
+    Assets:Brokerage    10 AAPL @ ($500.00 / 10) = 10 AAPL
+    Assets:Cash
+
+test bal
+            $-300.00
+             10 AAPL  Assets
+             10 AAPL    Brokerage
+            $-300.00    Cash
+            $-200.00  Equity:Opening
+--------------------
+            $-500.00
+             10 AAPL
+end test

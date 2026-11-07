@@ -1,0 +1,31 @@
+; Assets:Broker's `value $7` gives its lot {$5} [2020/01/01] the valuation
+; (($7)), and a later posting that names the valued lot,
+; `-10 AAPL {$5} [2020/01/01] (($7))`, takes from that same lot, so the
+; Assets total is $-50 alone.
+;
+; Ledger adds the valuation to the lot itself, and a posting can then name
+; the lot with the valuation or without it, so the later posting reaches
+; the lot Assets:Broker holds.  Were the valued lot still found only by
+; the annotation it was bought with, the later posting would open a second
+; lot with the same annotation, which a balance would keep apart from the
+; first, and the Assets total would keep 10 and -10 AAPL.
+
+account Assets:Broker
+    value $7
+
+2020/01/01 Buy
+    Assets:Broker    10 AAPL {$5} [2020/01/01]
+    Assets:Cash     $-50
+
+2020/01/02 Transfer out
+    Assets:Other    -10 AAPL {$5} [2020/01/01] (($7))
+    Equity:Transfers
+
+test bal --lots Assets
+                $-50  Assets
+10 AAPL {$5} [2020/01/01] (({$7}))    Broker
+                $-50    Cash
+-10 AAPL {$5} [2020/01/01] (({$7}))    Other
+--------------------
+                $-50
+end test

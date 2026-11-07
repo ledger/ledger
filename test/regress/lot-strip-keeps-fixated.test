@@ -1,0 +1,40 @@
+; Stripping lot details keeps a lot's "=" marker, part of the lot's identity.
+;
+; A fixated lot {=$5} and a floating lot {$5} bought on the same day are
+; different lots (#1454), and --lots lists them apart.  --lot-prices
+; (price only) and --lots-actual (only details written in the journal)
+; show each lot as the lot that has only those details.  Ledger used to
+; leave the marker out of them, so both lots became one lot, which was
+; marked fixated: both reports showed a single 20 AAPL {=$5} lot, and the
+; register showed the floating purchase as {=$5}.  Ledger now keeps the
+; marker and leaves the floating lot unfixated, so the two lots stay apart
+; in these reports, as they do under --lots.
+
+2020/01/01 Fixated lot
+    Assets:Broker               10 AAPL {=$5} [2020/01/01]
+    Equity:Opening Balances
+
+2020/01/01 Floating lot
+    Assets:Broker               10 AAPL {$5} [2020/01/01]
+    Equity:Opening Balances
+
+test bal --lots Broker
+ 10 AAPL {$5} [2020/01/01]
+10 AAPL {=$5} [2020/01/01]  Assets:Broker
+end test
+
+test bal --lot-prices Broker
+        10 AAPL {$5}
+       10 AAPL {=$5}  Assets:Broker
+end test
+
+test bal --lots-actual Broker
+ 10 AAPL {$5} [2020/01/01]
+10 AAPL {=$5} [2020/01/01]  Assets:Broker
+end test
+
+test reg --lot-prices Broker
+20-Jan-01 Fixated lot           Assets:Broker          10 AAPL {=$5} 10 AAPL {=$5}
+20-Jan-01 Floating lot          Assets:Broker          10 AAPL {$5} 10 AAPL {$5}
+                                                                   10 AAPL {=$5}
+end test

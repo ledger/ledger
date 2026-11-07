@@ -194,22 +194,6 @@ public:
   /// If the period has no duration component (just begin/end), turns off --period.
   void normalize_period();
 
-  /// @brief The total expression that --flat appends.  It is an account's own
-  /// amount when the account has a parent and a displayed sub-account, and
-  /// the account's total otherwise, so that the root still yields the grand
-  /// total.  The is_account guard makes it plain total in posting scope,
-  /// where parent names the transaction and has_children_to_display is
-  /// undefined; the register report, and the revaluation filter that
-  /// --unrealized adds to the balance report, evaluate the total there.
-  static constexpr const char* flat_total_expr =
-      "is_account & parent ? (has_children_to_display ? amount : total) : total";
-
-  /// @brief True when the total expression is the running total of the
-  /// postings: "total" with nothing appended, or with only the --flat
-  /// expression, which is total in posting scope.  The register's rounding
-  /// adjustments and its incrementally stripped running total depend on it.
-  bool total_is_running_total() const;
-
   /// @brief Parse positional query arguments into --limit, --only, --display, etc.
   /// Uses the query_t parser to decompose structured query expressions.
   /// @param args    The positional arguments as a value_t sequence.
@@ -243,6 +227,18 @@ public:
   /// @brief Strip annotations from a value according to what_to_keep() settings.
   /// Called as "scrub()" in format strings to clean lot info before display.
   value_t display_value(const value_t& val);
+
+  /// @brief Return the ANSI escape sequence that renders @p color, or ""
+  /// if it renders none.  @p color is a color as ansify_if() accepts it:
+  /// names such as "blue", 256-color indexes and #RRGGBB values, where a
+  /// name means the color that --colors assigns it, if any.
+  string color_escape(const string& color);
+
+  /// @brief Apply the NAME=COLOR assignments of a --colors argument to
+  /// @p palette, which maps color names to the SGR parameters of the ANSI
+  /// escape sequences that render them (e.g. "blue" to "38;5;33").
+  /// @throws option_error for a malformed assignment or unknown name.
+  static void assign_colors(const string& assignments, std::map<string, string>& palette);
 
   /*--- Built-in Value Expression Functions ---*/
   // These methods implement the functions callable from format strings and
@@ -307,7 +303,7 @@ public:
   value_t fn_percent(call_scope_t& scope);   ///< Compute percentage: percent(part, whole)
 
   // Commodity and lot inspection
-  value_t fn_commodity(call_scope_t& scope);       ///< Return the commodity symbol of an amount
+  value_t fn_commodity(call_scope_t& scope);       ///< Return the commodity of an amount
   value_t fn_commodity_price(call_scope_t& scope); ///< Look up a commodity's price at a given date
   value_t fn_set_commodity_price(call_scope_t& scope); ///< Inject a price into the price history
   value_t fn_nail_down(call_scope_t& scope); ///< Fix an amount's per-unit cost via annotation
@@ -396,6 +392,7 @@ public:
     HANDLER(cleared).report(out);
     HANDLER(cleared_format_).report(out);
     HANDLER(color).report(out);
+    HANDLER(colors_).report(out);
     HANDLER(collapse).report(out);
     HANDLER(collapse_if_).report(out);
     HANDLER(collapse_if_zero).report(out);
@@ -531,6 +528,7 @@ public:
   /// First checks session scope, then searches report-local functions by name,
   /// then options (which double as value expression variables), then commands.
   expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
+  report_t* as_report_scope() override { return this; }
 
   /**
    * @name Option Handlers
@@ -710,6 +708,15 @@ public:
       });
 
   OPTION(report_t, color);
+
+  OPTION_(
+      report_t, colors_, std::map<string, string> palette; DO_() {
+        // Each use adds to the colors that earlier ones assigned, such as
+        // those from ~/.ledgerrc, rather than replacing them.
+        assign_colors(str, palette);
+        if (handled)
+          value += "," + str;
+      });
 
   OPTION_(
       report_t, collapse, DO() { // -n
@@ -924,15 +931,7 @@ public:
         OTHER(market).on(whence);
       });
 
-  OPTION_(
-      report_t, flat, DO() {
-        // In flat mode, each account is listed independently, so show only
-        // the account's own amount rather than the family total (which
-        // includes sub-accounts).  The root account (where parent is null)
-        // still uses total for the grand total line.  In posting scope the
-        // expression is total (see flat_total_expr).
-        OTHER(total_).on(whence, flat_total_expr);
-      });
+  OPTION(report_t, flat); // see report_t::accounts_report()
   OPTION(report_t, force_color);
   OPTION(report_t, force_pager);
   OPTION(report_t, forecast_while_);

@@ -1,8 +1,12 @@
-; Regression test for issue #589: Add ability to control color output (BZ#589)
+; Regression test for issue #589: Add ability to control color output
 ; https://github.com/ledger/ledger/issues/589
 ;
-; Tests that --no-color flag is available and works correctly.
-; --no-color suppresses ANSI color codes in output
+; Report formats name the colors they use: account names are blue,
+; negative amounts red, the payees of uncleared transactions bold, and
+; so on.  --colors NAME=COLOR[,NAME=COLOR...] changes what a name looks
+; like, and a color -- in --colors or as the color argument of
+; ansify_if() -- may be a 256-color index (0-255) or a 24-bit #RRGGBB
+; value as well as a standard name.  `cat -v` shows ESC as ^[.
 
 2024/01/01 Test
     Expenses:Food    $10.00
@@ -12,9 +16,126 @@
     Expenses:Food    $-5.00
     Assets:Cash
 
-test bal --no-color
+; The user chooses the RGB value used for "blue" (account names).
+test bal --force-color --colors 'blue=#5f87ff' | cat -v
+              ^[[31m$-5.00^[[0m  ^[[38;2;95;135;255mAssets:Cash^[[0m
+               $5.00  ^[[38;2;95;135;255mExpenses:Food^[[0m
+--------------------
+                   0
+end test
+
+; Negative amounts take whatever color is assigned to "red".
+test bal --force-color --colors red=196 | cat -v
+              ^[[38;5;196m$-5.00^[[0m  ^[[34mAssets:Cash^[[0m
+               $5.00  ^[[34mExpenses:Food^[[0m
+--------------------
+                   0
+end test
+
+; Attributes can be reassigned too, and a color can combine several
+; words.  A name used inside a color means the standard ANSI color, so
+; "bold" in blue's color is still bold, though bold itself is now yellow.
+test reg --force-color --colors 'bold=yellow,blue=bold 33' | cat -v
+24-Jan-01 ^[[33mTest                 ^[[0m ^[[1;38;5;33mExpenses:Food         ^[[0m       $10.00       $10.00
+                                ^[[1;38;5;33mAssets:Cash           ^[[0m      ^[[31m$-10.00^[[0m            0
+24-Feb-01 ^[[33mTest2                ^[[0m ^[[1;38;5;33mExpenses:Food         ^[[0m       ^[[31m$-5.00^[[0m       ^[[31m$-5.00^[[0m
+                                ^[[1;38;5;33mAssets:Cash           ^[[0m        $5.00            0
+end test
+
+; Repeated --colors options add up, and a later assignment replaces an
+; earlier one for the same name.  Spaces around names are ignored.
+test bal --force-color --colors 'blue = 33, red = 1' --colors red=196 | cat -v
+              ^[[38;5;196m$-5.00^[[0m  ^[[38;5;33mAssets:Cash^[[0m
+               $5.00  ^[[38;5;33mExpenses:Food^[[0m
+--------------------
+                   0
+end test
+
+; Assigning nothing to a name turns its color off.
+test bal --force-color --colors red= | cat -v
+              $-5.00  ^[[34mAssets:Cash^[[0m
+               $5.00  ^[[34mExpenses:Food^[[0m
+--------------------
+                   0
+end test
+
+test bal --force-color --colors blue= | cat -v
+              ^[[31m$-5.00^[[0m  Assets:Cash
+               $5.00  Expenses:Food
+--------------------
+                   0
+end test
+
+; --colors only says what colors look like; output is still uncolored
+; without a terminal or with --no-color.
+test bal --colors 'blue=#5f87ff'
               $-5.00  Assets:Cash
                $5.00  Expenses:Food
 --------------------
                    0
+end test
+
+test bal --no-color --colors 'blue=#5f87ff'
+              $-5.00  Assets:Cash
+               $5.00  Expenses:Food
+--------------------
+                   0
+end test
+
+; ansify_if() accepts 24-bit and 256-color values directly, and several
+; words at once.
+test eval 'ansify_if("a", "#FF8700") + ansify_if("b", 208) + ansify_if("c", "bold underline red")' | cat -v
+^[[38;2;255;135;0ma^[[0m^[[38;5;208mb^[[0m^[[1;4;31mc^[[0m
+end test
+
+test eval 'ansify_if("a", "0") + ansify_if("b", "255")' | cat -v
+^[[38;5;0ma^[[0m^[[38;5;255mb^[[0m
+end test
+
+; The names ansify_if() is given take the colors that --colors assigns.
+test eval --colors 'blue=33' 'ansify_if("a", "bold blue")' | cat -v
+^[[1;38;5;33ma^[[0m
+end test
+
+test eval --colors 'red=green,green=red' 'ansify_if("r", "red") + ansify_if("g", "green")' | cat -v
+^[[32mr^[[0m^[[31mg^[[0m
+end test
+
+; A color that is empty, or a condition rather than a color, leaves the
+; value unchanged.
+test eval 'ansify_if("a", "") + ansify_if("b", 3 > 2) + ansify_if("c", 1 > 2)' | cat -v
+abc
+end test
+
+test bal --colors purple=red -> 1
+__ERROR__
+While parsing option '--colors'
+Error: Invalid color name 'purple'; expected black, red, green, yellow, blue, magenta, cyan, white, bold, underline or blink
+end test
+
+test bal --colors blue -> 1
+__ERROR__
+While parsing option '--colors'
+Error: Invalid color assignment 'blue'; expected NAME=COLOR
+end test
+
+test bal --colors 'blue=#5f87f' -> 1
+__ERROR__
+While parsing option '--colors'
+Error: Invalid color '#5f87f'; expected a color name, a number from 0 to 255, or #RRGGBB
+end test
+
+test bal --colors blue=256 -> 1
+__ERROR__
+While parsing option '--colors'
+Error: Invalid color '256'; expected a color name, a number from 0 to 255, or #RRGGBB
+end test
+
+test eval 'ansify_if("a", "purple")' -> 1
+__ERROR__
+While evaluating value expression:
+  ansify_if("a", "purple")
+  ^^^^^^^^^^^^^^^^^^^^^^^^
+While calling function 'ansify_if (<#EXPR "a">, purple)':
+Error: Invalid color 'purple'; expected a color name, a number from 0 to 255, or #RRGGBB
 end test

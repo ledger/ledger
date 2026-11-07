@@ -153,14 +153,6 @@ if(USE_SANITIZERS)
   add_link_options(-fsanitize=address,undefined)
 endif()
 
-# Fix for issue #693: Ensure frame pointers are kept in Release builds
-# to support proper stack unwinding during exception handling.
-# Without this, optimized builds (-O2/-O3) enable -fomit-frame-pointer
-# by default, which can cause crashes when exceptions are thrown.
-if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-  add_compile_options(-fno-omit-frame-pointer -fasynchronous-unwind-tables)
-endif()
-
 option(USE_CLANG_PROFILING "Enable Clang instrumentation profiling (-fprofile-instr-generate)" OFF)
 set(CLANG_PROFILE_DATA "" CACHE FILEPATH "Path to .profdata file for profile-guided optimization")
 
@@ -503,6 +495,15 @@ if(UTFCPP_FOUND)
 else()
   message(FATAL_ERROR "Missing required header file: utf8.h\n"
     "Define UTFCPP_PATH or install utfcpp locally into the source tree below lib/utfcpp/."
+    )
+endif()
+
+include(FindImmer)
+if(IMMER_FOUND)
+  include_directories(SYSTEM "${IMMER_INCLUDE_DIR}")
+else()
+  message(FATAL_ERROR "Missing required header file: immer/map.hpp\n"
+    "Define IMMER_PATH or install immer locally into the source tree below lib/immer/."
     )
 endif()
 

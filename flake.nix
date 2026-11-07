@@ -6,13 +6,14 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     # The machine-checked semantics and its bisimulation oracle (see
-    # the bisimulation section of lean/README.md).  The same repository is also
-    # the `lean/` git submodule, which serves interactive development
-    # (`nix develop ./lean`, warm .lake caches, ctest against a
-    # checkout).  Two pins therefore exist: this flake input drives
-    # `nix build` and CI, the submodule drives the working tree.
-    # Update them together.
-    ledger-semantics.url = "github:ledger/ledger-semantics";
+    # the bisimulation section of the ledger-semantics README).  This
+    # input is the oracle's only pin: `nix build` and CI run the
+    # bisimulation against it, and `nix build .#oracle` gives the same
+    # tree to a development build's LEDGER_LEAN_DIR.  The URL names the
+    # revision so that `nix flake update` never moves the oracle; to
+    # move it, change the revision here and run `nix flake lock`.
+    ledger-semantics.url =
+      "github:ledger/ledger-semantics/368d027";
   };
 
   outputs = { self, nixpkgs, ledger-semantics }: let
@@ -97,6 +98,12 @@
           # Install the Python module into our own 'py' output rather than the
           # read-only Python store path.
           "-DLEDGER_PYTHON_INSTALL_DIR=${placeholder "py"}/${python3.sitePackages}"
+        ] ++ lib.optionals stdenv.hostPlatform.isDarwin [
+          # Apple's libc++ still has the deprecated std::char_traits base
+          # template that LLVM's own libc++ dropped in LLVM 19.  Leave it out,
+          # so that code needing it, such as std::basic_string<UChar32>
+          # (#3276), fails to build here as it does against LLVM's libc++.
+          "-DCMAKE_CXX_FLAGS=-D_LIBCPP_CHAR_TRAITS_REMOVE_BASE_SPECIALIZATION"
         ];
 
         installTargets = [ "doc" "install" ];
@@ -126,6 +133,10 @@
           maintainers = with maintainers; [ jwiegley ];
         };
       };
+
+      # The oracle that this flake pins, for a development build's
+      # LEDGER_LEAN_DIR (CLAUDE.md).
+      oracle = semantics.oracle;
     });
 
     defaultPackage = forAllSystems (system: self.packages.${system}.ledger);
@@ -216,6 +227,35 @@
           echo "  - llvm-cov: $(llvm-cov --version | head -1)"
         '';
       };
+
+      # Profiling shell: the default shell plus the tools used for
+      # performance work (recipes in tools/bench/README.md).  Kept apart
+      # from the default shell because heaptrack and valgrind bring large
+      # closures.  perf needs kernel.perf_event_paranoid <= 2 to sample our
+      # own processes (the NixOS default, 2, suffices); on macOS the
+      # equivalents are `sample`, `xctrace record --template 'Time
+      # Profiler'` from Xcode, or samply.
+      perf = self.devShells.${system}.default.overrideAttrs (old: {
+        name = "ledger-perf";
+        nativeBuildInputs = (old.nativeBuildInputs or []) ++ [
+          samply      # Sampling profiler with the Firefox Profiler UI (macOS and Linux)
+          flamegraph  # Brendan Gregg's FlameGraph scripts (stackcollapse-sample.awk reads `sample`)
+          inferno     # Flame graph rendering (inferno-flamegraph, inferno-diff-folded)
+        ] ++ lib.optionals stdenv.hostPlatform.isLinux [
+          perf                # perf record/report/stat/annotate
+          heaptrack           # Heap allocation profiler (heaptrack_print for the CLI)
+          valgrind            # callgrind, cachegrind, massif, DHAT
+          gperftools          # libprofiler.so CPU profiler via LD_PRELOAD (tcmalloc crashes on macOS)
+          pprof               # Reads gperftools profiles: -top, -peek, flame graphs
+          bloaty              # Binary size profiler
+          poop                # Hardware-counter A/B comparison of two commands
+        ];
+        shellHook = old.shellHook + ''
+          echo "Profiling tools: samply, flamegraph, inferno${
+            lib.optionalString stdenv.hostPlatform.isLinux
+              ", perf, heaptrack, valgrind, gperftools, pprof, bloaty, poop"}"
+        '';
+      });
     });
 
   };

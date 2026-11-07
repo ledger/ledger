@@ -41,36 +41,37 @@ add_subdirectory(manual)
 add_subdirectory(baseline)
 add_subdirectory(regress)
 
-# Semantic bisimulation (lean/README.md, the ledger-semantics
-# submodule): every
-# positive .test journal in baseline/regress/manual is additionally
-# replayed against the Lean oracle whenever the suite runs (`make
-# check`, `make test`, `ctest`).  One batched ctest test rather than
-# per-test oracle invocations: the oracle loads once for the whole
-# corpus.  The test registers only when an oracle can exist: either
-# the lean/ submodule is checked out (development builds) or
-# LEDGER_LEAN_DIR names a prebuilt oracle tree (the Nix build).  A
-# release build from a tarball has neither, registers nothing, and
-# owes its users no Lean toolchain.  A registered test still exits 77
-# and shows as SKIPPED when the toolchain is missing at run time, or
-# when the submodule is checked out but its oracle has never been
-# built — visibly, never as a silent pass.
+# Semantic bisimulation (the bisimulation section of the
+# ledger-semantics README): every positive .test journal in
+# baseline/regress/manual is additionally replayed against the Lean
+# oracle whenever the suite runs (`make check`, `make test`, `ctest`).
+# One batched ctest test rather than per-test oracle invocations: the
+# oracle loads once for the whole corpus.  The test registers only
+# when LEDGER_LEAN_DIR names an oracle tree at configure time.  The
+# Nix build points it at the oracle the flake pins, and a development
+# build opts in with the same tree (`nix build .#oracle`).  A release
+# build sets nothing, registers nothing, and owes its users no Lean
+# toolchain.  A registered test still exits 77 and shows as SKIPPED
+# when lake is missing at run time — visibly, never as a silent pass.
 if(Python_EXECUTABLE)
-  if(EXISTS "${PROJECT_SOURCE_DIR}/lean/lakefile.lean" OR
-     (DEFINED ENV{LEDGER_LEAN_DIR} AND
-      NOT "$ENV{LEDGER_LEAN_DIR}" STREQUAL ""))
+  if(DEFINED ENV{LEDGER_LEAN_DIR} AND
+     NOT "$ENV{LEDGER_LEAN_DIR}" STREQUAL "")
     add_test(NAME SemanticBisimulation
       COMMAND ${Python_EXECUTABLE}
         ${PROJECT_SOURCE_DIR}/test/semantic/check_all.py
-        --ledger $<TARGET_FILE:ledger> --source ${PROJECT_SOURCE_DIR})
+        --ledger $<TARGET_FILE:ledger> --source ${PROJECT_SOURCE_DIR}
+        --gross --value)
+    # --gross and --value turn on the harness's two opt-in comparisons
+    # (test/semantic/check_all.py): the oracle supports both, so CI
+    # compares gross totals and market-valued balances as well as the
+    # net comparison.  The flags stay off in check_all.py itself, so a
+    # developer running the script by hand keeps the net comparison
+    # alone.
     # Bake the oracle location seen at configure time into the test,
     # so the oracle that runs is the one whose presence registered the
     # test, not whatever happens to be in the environment later.
     set(_bisim_env "TZ=${Ledger_TEST_TIMEZONE}")
-    if(DEFINED ENV{LEDGER_LEAN_DIR} AND
-       NOT "$ENV{LEDGER_LEAN_DIR}" STREQUAL "")
-      list(APPEND _bisim_env "LEDGER_LEAN_DIR=$ENV{LEDGER_LEAN_DIR}")
-    endif()
+    list(APPEND _bisim_env "LEDGER_LEAN_DIR=$ENV{LEDGER_LEAN_DIR}")
     if(DEFINED ENV{LEDGER_LEAN_REV} AND
        NOT "$ENV{LEDGER_LEAN_REV}" STREQUAL "")
       list(APPEND _bisim_env "LEDGER_LEAN_REV=$ENV{LEDGER_LEAN_REV}")
@@ -81,8 +82,7 @@ if(Python_EXECUTABLE)
       TIMEOUT 3600)
   else()
     message(STATUS
-      "SemanticBisimulation: not registered (lean/ submodule not "
-      "initialized and LEDGER_LEAN_DIR unset)")
+      "SemanticBisimulation: not registered (LEDGER_LEAN_DIR unset)")
   endif()
 
   # Valuation footing (test/semantic/footing.py): on each positive
@@ -122,6 +122,14 @@ if(Python_EXECUTABLE)
   set_tests_properties(CheckEnvVars
     PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}")
 
+  # Regression test for GitHub issue #3294: --args-only reads no default price
+  # database, and without HOME the default is ./.pricedb, not ./.ledgerrc.
+  # Like CheckEnvVars it runs ledger itself, because it must control HOME and
+  # the working directory, which the .test harness cannot.
+  add_test(NAME RegressPyTest_3294
+    COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/regress/3294.py
+    $<TARGET_FILE:ledger>)
+
   # CheckManpage and CheckTexinfo are disabled, since they do not work
   # reliably yet
   list(APPEND CheckOptions CheckBaselineTests)
@@ -137,6 +145,13 @@ if(Python_EXECUTABLE)
     set_tests_properties(${_class}
       PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}")
   endforeach()
+
+  # Regression test for GitHub issue #3277: no other entry at the top of the
+  # source tree may begin with "README" unless it also begins with "README.md",
+  # so that "README<TAB>" still completes to README.md in a shell.
+  add_test(NAME RegressPyTest_3277
+    COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/regress/3277.py
+    ${PROJECT_SOURCE_DIR})
 
   if(HAVE_BOOST_PYTHON)
     add_test(NAME demo

@@ -123,12 +123,11 @@ void xact_base_t::clear_xdata() {
 }
 
 /**
- * @brief Compute the absolute value of the positive (debit) side.
+ * @brief Sum the costs or amounts of postings with positive amounts.
  *
- * Sums the cost (or amount if no cost) of every posting with a
- * positive amount.  This gives the "size" of the transaction for
- * display in error messages about imbalances, helping users understand
- * the scale of the discrepancy relative to the transaction total.
+ * Includes real and virtual postings, using each posting's cost when
+ * present and its amount otherwise. The result covers the whole
+ * transaction and is exposed through the magnitude value expression.
  */
 value_t xact_base_t::magnitude() const {
   value_t halfbal = 0L;
@@ -246,6 +245,152 @@ struct add_balancing_post {
     }
   }
 };
+
+/// The postings that must balance form two groups, and each group must
+/// balance by itself: the real postings, and the balanced virtual
+/// postings, whose accounts are written in [brackets] (#2105, #3314).
+/// Virtual postings in (parentheses) need not balance and belong to
+/// neither group.
+inline bool balances_in_group(const post_t* post, bool virtual_group) {
+  return post->must_balance() && post->has_flags(POST_VIRTUAL) == virtual_group;
+}
+
+// Widen precision-zero cost commodities to this group's greatest explicit
+// cost precision, so fractional remainders cannot round away (#1114).
+// Restore their precision even if the check throws.
+class cost_precision_scope_t : noncopyable {
+  std::map<commodity_t*, amount_t::precision_t> precisions;
+
+public:
+  cost_precision_scope_t(const posts_list& posts, bool virtual_group) {
+    for (const post_t* post : posts) {
+      if (!balances_in_group(post, virtual_group) || !post->cost ||
+          post->has_flags(POST_COST_CALCULATED) || !post->cost->has_commodity())
+        continue;
+
+      commodity_t& comm = post->cost->commodity().referent();
+      if (comm.precision() == 0 && post->cost->precision() > 0) {
+        auto& precision = precisions[&comm];
+        precision = std::max(precision, post->cost->precision());
+      }
+    }
+
+    // Finish allocating and collecting maxima before changing shared state.
+    for (const auto& entry : precisions)
+      entry.first->set_precision(entry.second);
+  }
+
+  ~cost_precision_scope_t() noexcept {
+    for (const auto& entry : precisions)
+      entry.first->set_precision(0);
+  }
+};
+
+// Finalization and automated-posting verification use the same zero test
+// and per-unit cost rounding allowance, without changing any postings.
+bool group_balances(const posts_list& posts, const value_t& balance, bool virtual_group) {
+  if (balance.is_null())
+    return true;
+
+  cost_precision_scope_t precision_scope(posts, virtual_group);
+  if (balance.is_zero())
+    return true;
+
+  // Independently round each explicit @ cost to the price's decimal
+  // precision (#1125): balance + sum(roundedCost - exactCost) must be zero.
+  value_t rounding_adj;
+  for (const post_t* post : posts) {
+    if (!balances_in_group(post, virtual_group) || !post->cost || !post->cost->keep_precision() ||
+        post->has_flags(POST_COST_IN_FULL | POST_COST_CALCULATED))
+      continue;
+
+    amount_t exact(post->cost->rounded());
+    const int price_prec = exact.precision() - post->amount.precision();
+    if (price_prec > 0 && exact.precision() > price_prec)
+      add_or_set_value(rounding_adj, (exact.roundto(price_prec) - exact).reduced());
+  }
+  if (rounding_adj.is_null())
+    return false;
+
+  value_t adjusted = balance;
+  adjusted += rounding_adj;
+  return adjusted.is_null() || adjusted.is_zero();
+}
+
+/// Report that a group of a transaction's postings leaves a remainder,
+/// measured against the group's own magnitude, and named by its group
+/// wherever the transaction has balanced virtual postings.
+[[noreturn]] void throw_unbalanced(const xact_base_t& xact, const value_t& remainder,
+                                   bool virtual_group) {
+  value_t halfbal = 0L;
+  bool has_virtual_group = false;
+  for (const post_t* post : xact.posts) {
+    if (balances_in_group(post, true))
+      has_virtual_group = true;
+    if (balances_in_group(post, virtual_group) && !post->amount.is_null() &&
+        post->amount.sign() > 0) {
+      if (post->cost)
+        halfbal += *post->cost;
+      else
+        halfbal += post->amount;
+    }
+  }
+
+  add_error_context(item_context(xact, _("While balancing transaction")));
+  if (virtual_group)
+    add_error_context(_("Unbalanced remainder of balanced virtual postings is:"));
+  else if (has_virtual_group)
+    add_error_context(_("Unbalanced remainder of real postings is:"));
+  else
+    add_error_context(_("Unbalanced remainder is:"));
+  add_error_context(value_context(remainder));
+  add_error_context(_("Amount to balance against:"));
+  add_error_context(value_context(halfbal));
+  throw_(balance_error, _("Transaction does not balance"));
+}
+
+/// How far a lot basis rebuilt as lot price x quantity can lie from the
+/// total that the price was divided out of.  Only a price that Ledger
+/// rounded in that division -- a `{{total}}` lot price, or a lot price
+/// computed from an `@@` cost -- carries any error: half a unit in its
+/// last decimal place, of which it keeps at least extend_by_digits, for
+/// each unit of the quantity.  Every other lot price is exact, and so is
+/// the basis built from it.
+amount_t lot_basis_error(const amount_t& amt) {
+  if (!amt.has_annotation() || !amt.annotation().price ||
+      !amt.annotation().has_flags(ANNOTATION_PRICE_ROUNDED))
+    return amount_t(0L);
+
+  // The price was rounded to no fewer places than it needs now.  Stopping
+  // early at the limit only loosens the bound, never tightens it.
+  const amount_t& price(*amt.annotation().price);
+  int places = static_cast<int>(amount_t::extend_by_digits);
+  const int limit = static_cast<int>(price.precision() + amount_t::extend_by_digits);
+  while (places < limit && price.roundto(places) != price)
+    ++places;
+
+  amount_t units(2L);
+  for (int i = 0; i < places; ++i)
+    units *= amount_t(10L);
+  return amt.number().abs() / units;
+}
+
+/// Round a gain or loss to the fewest decimal places that move it by no
+/// more than `error`, the most that rounded lot prices can have put into
+/// the bases behind it (#2975).  A genuine gain lies further than that
+/// from every coarser figure, so it stays exact, whatever display
+/// precision its commodity has learned (#3013, #3258).
+void drop_lot_rounding_residue(amount_t& gain_loss, const amount_t& error) {
+  if (error.is_realzero())
+    return;
+  for (int places = 0; places < static_cast<int>(gain_loss.precision()); ++places) {
+    amount_t rounded(gain_loss.roundto(places));
+    if ((gain_loss - rounded).number().abs() <= error) {
+      gain_loss = rounded;
+      return;
+    }
+  }
+}
 } // namespace
 
 /**
@@ -253,23 +398,25 @@ struct add_balancing_post {
  *
  * This is the most important function in Ledger.  It implements the
  * double-entry accounting invariant: every transaction's debits must
- * equal its credits.  The function proceeds in several phases:
+ * equal its credits.  The postings that must balance form two groups,
+ * each balanced by itself: the real postings, and the balanced virtual
+ * postings ([Account]).  The function proceeds in several phases:
  *
  * **Phase 1 -- Scan postings and accumulate the balance.**
  * Iterate over all must-balance postings.  For each one that has an
- * amount (or cost), add it to the running balance.  Track whether any
- * posting has a null amount (meaning it should be auto-filled).  Real
- * and balanced-virtual postings ([Account]) are tracked separately.
+ * amount (or cost), add it to the running balance of its group.  Track
+ * whether a posting of each group has a null amount (meaning it should
+ * be auto-filled).
  *
  * **Phase 2 -- Handle single-posting transactions.**
  * If only one posting exists and a default "bucket" account is
  * configured, create a second posting to that account.
  *
- * **Phase 3 -- Infer conversion prices for two-commodity transactions.**
- * When the balance contains exactly two commodities and no explicit
- * costs were given, compute the exchange rate by dividing one
- * commodity's total by the other's, and set computed costs on all
- * postings of the primary commodity.
+ * **Phase 3 -- Infer conversion prices for two-commodity groups.**
+ * When a group's balance contains exactly two commodities and the group
+ * gave no explicit costs, compute the exchange rate by dividing one
+ * commodity's total by the other's, and set computed costs on the
+ * group's postings of the primary commodity.
  *
  * **Phase 4 -- Apply fixated price annotations.**
  * For postings with {=price} annotations that have not yet had costs
@@ -285,13 +432,14 @@ struct add_balancing_post {
  * annotated commodities, and compute capital gains/losses.
  *
  * **Phase 7 -- Infer null-amount postings.**
- * If exactly one posting has a null amount, set it to the negation
- * of the accumulated balance.  If multiple commodities are in the
+ * If exactly one posting of a group has a null amount, set it to the
+ * negation of the group's balance.  If multiple commodities are in the
  * balance, generate additional postings (one per extra commodity).
  *
  * **Phase 8 -- Verify final balance.**
- * Check that the balance is zero.  If not, check whether per-unit
- * rounding explains the discrepancy.  Throw balance_error if not.
+ * Check that each group's balance is zero.  If not, check whether
+ * per-unit rounding explains the discrepancy.  Throw balance_error if
+ * not.
  *
  * **Phase 9 -- Register postings with accounts.**
  * Add each posting to its account's post list and mark it as visited.
@@ -309,6 +457,11 @@ bool xact_base_t::finalize() {
   value_t virtual_balance;
   post_t* null_post = nullptr;
   post_t* virtual_null_post = nullptr;
+  // The commodity that enters each group's balance first once it holds two:
+  // Phase 3 prices that one when its reference posting's commodity is not
+  // among them (top_post there: the last lot-annotated posting, else the first).
+  const commodity_t* first_component = nullptr;
+  const commodity_t* virtual_first_component = nullptr;
 
   for (post_t* post : posts) {
     if (!post->must_balance())
@@ -321,6 +474,8 @@ bool xact_base_t::finalize() {
     bool is_balanced_virtual = post->has_flags(POST_VIRTUAL);
     value_t& cur_balance = is_balanced_virtual ? virtual_balance : balance;
     post_t*& cur_null_post = is_balanced_virtual ? virtual_null_post : null_post;
+    const commodity_t*& cur_first_component =
+        is_balanced_virtual ? virtual_first_component : first_component;
 
     amount_t& p(post->cost ? *post->cost : post->amount);
     if (!p.is_null()) {
@@ -330,7 +485,23 @@ bool xact_base_t::finalize() {
       // is ignored when displaying the amount.  We never want this set
       // for the balance, so we must clear the flag in a temporary to
       // avoid it propagating into the balance.
-      add_or_set_value(cur_balance, p.keep_precision() ? p.rounded().reduced() : p.reduced());
+      const amount_t reduced(p.keep_precision() ? p.rounded().reduced() : p.reduced());
+      if (!cur_first_component) {
+        // A balance_t comes into being at the first posting in a second
+        // commodity, holding the amount summed so far unless that is zero,
+        // and a zero amount never enters one.
+        if (cur_balance.is_balance()) {
+          if (!reduced.is_realzero())
+            cur_first_component = &reduced.commodity();
+        } else if (cur_balance.is_amount() &&
+                   cur_balance.as_amount().commodity() != reduced.commodity()) {
+          if (!cur_balance.as_amount().is_realzero())
+            cur_first_component = &cur_balance.as_amount().commodity();
+          else if (!reduced.is_realzero())
+            cur_first_component = &reduced.commodity();
+        }
+      }
+      add_or_set_value(cur_balance, reduced);
     } else if (cur_null_post) {
       bool post_account_bad = account_ends_with_special_char(post->account->fullname());
       bool null_post_account_bad =
@@ -341,6 +512,9 @@ bool xact_base_t::finalize() {
                _f("Posting with null amount's account may be misspelled:\n  \"%1%\"") %
                    (post_account_bad ? post->account->fullname()
                                      : cur_null_post->account->fullname()));
+      else if (is_balanced_virtual)
+        throw_(std::logic_error,
+               _("Only one balanced virtual posting with null amount allowed per transaction"));
       else
         throw_(std::logic_error, _("Only one posting with null amount allowed per transaction"));
     } else {
@@ -371,13 +545,29 @@ bool xact_base_t::finalize() {
     add_post(null_post);
   }
 
+  // The groups of postings that must balance, each by itself as though it
+  // were a transaction of its own, with each group's balance and its
+  // posting without an amount, if any.
+  struct balancing_group_t {
+    bool is_virtual;
+    value_t& balance;
+    post_t*& null_post;
+    const commodity_t* first_component;
+  };
+  const balancing_group_t groups[] = {
+      {false, balance, null_post, first_component},
+      {true, virtual_balance, virtual_null_post, virtual_first_component}};
+
   // Phase 3: Two-commodity conversion price inference.
-  // When the balance has exactly two commodities and no null posting,
-  // compute the implied exchange rate.  For example, if the balance
-  // is {$100, -80 EUR}, the per-unit cost of EUR in $ is computed as
-  // $100/80 = $1.25 per EUR.  This price is assigned as a computed
-  // cost on all postings of the primary commodity.
-  if (!null_post && balance.is_balance() && balance.as_balance().amounts.size() == 2) {
+  // When a group's balance has exactly two commodities and the group has
+  // no null posting, compute the implied exchange rate.  For example, if
+  // the balance is {$100, -80 EUR}, the per-unit cost of EUR in $ is
+  // computed as $100/80 = $1.25 per EUR.  This price is assigned as a
+  // computed cost on the group's postings of the primary commodity.
+  for (const balancing_group_t& group : groups) {
+    if (group.null_post || !group.balance.is_balance() ||
+        group.balance.as_balance().amounts.size() != 2)
+      continue;
 
     DEBUG("xact.finalize", "there were exactly two commodities, and no null post");
 
@@ -385,7 +575,10 @@ bool xact_base_t::finalize() {
     post_t* top_post = nullptr;
 
     for (post_t* post : posts) {
-      if (!post->amount.is_null() && post->must_balance()) {
+      if (!balances_in_group(post, group.is_virtual))
+        continue;
+
+      if (!post->amount.is_null()) {
         if (post->amount.has_annotation())
           top_post = post; // NOLINT(bugprone-branch-clone)
         else if (!top_post)
@@ -401,14 +594,32 @@ bool xact_base_t::finalize() {
     if (!saw_cost && top_post &&
         !(top_post->amount.has_annotation() && top_post->amount.annotation().price &&
           top_post->amount.annotation().has_flags(ANNOTATION_PRICE_FIXATED))) {
-      const balance_t& bal(balance.as_balance());
+      const balance_t& bal(group.balance.as_balance());
 
       DEBUG("xact.finalize", "there were no costs, and a valid top_post");
 
-      balance_t::amounts_map::const_iterator a = bal.amounts.begin();
+      // The primary commodity, x, is top_post's when that is one of the two
+      // components, and otherwise the component that entered the balance
+      // first (first_component), which is what the former unordered map's
+      // two-entry order amounted to.  The persistent map's order is a hash
+      // order, and the direction of the inferred price must not depend on
+      // it.
+      balance_t::amounts_array sorted;
+      bal.sorted_amounts(sorted);
+      assert(sorted.size() == 2);
 
-      const amount_t* x = &(*a++).second;
-      const amount_t* y = &(*a++).second;
+      const amount_t* x = sorted[0];
+      const amount_t* y = sorted[1];
+      auto component_of = [x, y](const commodity_t& comm) -> const amount_t* {
+        if (comm == x->commodity())
+          return x;
+        if (comm == y->commodity())
+          return y;
+        return nullptr;
+      };
+      const amount_t* primary = component_of(top_post->amount.commodity());
+      if (!primary && group.first_component)
+        primary = component_of(*group.first_component);
 
       // Use is_realzero() rather than operator bool() here: the latter tests
       // is_nonzero() which respects the commodity's display precision, so an
@@ -419,7 +630,7 @@ bool xact_base_t::finalize() {
       // matters -- a divide-by-zero is only possible when the amount is
       // exactly zero.
       if (!x->is_realzero() && !y->is_realzero()) {
-        if (x->commodity() != top_post->amount.commodity())
+        if (primary == y)
           std::swap(x, y);
 
         // If one commodity is already marked COMMODITY_PRIMARY (e.g. from a
@@ -456,13 +667,15 @@ bool xact_base_t::finalize() {
           DEBUG("xact.finalize", "per_unit_cost = " << per_unit_cost);
 
           for (post_t* post : posts) {
+            if (!balances_in_group(post, group.is_virtual))
+              continue;
             const amount_t& amt(post->amount.reduced());
 
-            if (post->must_balance() && amt.commodity() == comm) {
-              balance -= amt;
+            if (amt.commodity() == comm) {
+              group.balance -= amt;
               post->cost = per_unit_cost * amt;
               post->add_flags(POST_COST_CALCULATED);
-              balance += *post->cost;
+              group.balance += *post->cost;
 
               DEBUG("xact.finalize", "set post->cost to = " << *post->cost);
             }
@@ -473,17 +686,22 @@ bool xact_base_t::finalize() {
   }
 
   // Phase 4: Fixated price annotation cost derivation.
-  // If the balance still has 2+ commodities and no null post, check for
-  // fixated price annotations ({=price}).  These lock the per-unit cost
-  // regardless of market prices.  For each posting with a fixated price
-  // and no explicit cost, compute the cost from the annotation and
-  // recalculate the balance.  This handles the case where multiple
-  // postings have different fixated prices for the same base commodity
-  // (e.g., EUR {=$1.32} and EUR {=$1.33}).
-  if (!null_post && balance.is_balance() && balance.as_balance().amounts.size() >= 2) {
+  // If a group's balance still has 2+ commodities and the group has no
+  // null post, check its postings for fixated price annotations
+  // ({=price}).  These lock the per-unit cost regardless of market
+  // prices.  For each posting with a fixated price and no explicit cost,
+  // compute the cost from the annotation and recalculate the group's
+  // balance.  This handles the case where multiple postings have
+  // different fixated prices for the same base commodity (e.g., EUR
+  // {=$1.32} and EUR {=$1.33}).
+  for (const balancing_group_t& group : groups) {
+    if (group.null_post || !group.balance.is_balance() ||
+        group.balance.as_balance().amounts.size() < 2)
+      continue;
+
     bool recompute = false;
     for (post_t* post : posts) {
-      if (!post->cost && !post->amount.is_null() && post->must_balance() &&
+      if (!post->cost && !post->amount.is_null() && balances_in_group(post, group.is_virtual) &&
           post->amount.has_annotation() && post->amount.annotation().price &&
           post->amount.annotation().has_flags(ANNOTATION_PRICE_FIXATED)) {
         const annotation_t& ann(post->amount.annotation());
@@ -504,15 +722,13 @@ bool xact_base_t::finalize() {
     }
 
     if (recompute) {
-      balance = NULL_VALUE;
+      group.balance = NULL_VALUE;
       for (post_t* post : posts) {
-        if (!post->must_balance())
-          continue;
-        if (post->has_flags(POST_VIRTUAL)) // skip balanced-virtual postings
+        if (!balances_in_group(post, group.is_virtual))
           continue;
         amount_t& p(post->cost ? *post->cost : post->amount);
         if (!p.is_null())
-          add_or_set_value(balance, p.keep_precision() ? p.rounded().reduced() : p.reduced());
+          add_or_set_value(group.balance, p.keep_precision() ? p.rounded().reduced() : p.reduced());
       }
     }
   }
@@ -629,10 +845,11 @@ bool xact_base_t::finalize() {
             first_consumed = consumed;
             first = false;
           } else {
-            // Create a new posting for this lot
+            // Create a new posting for this lot, in the posting's group
             post_t* split = new post_t(post->account, sale_amt);
             split->set_state(post->state());
-            split->add_flags(ITEM_GENERATED | POST_CALCULATED);
+            split->add_flags(ITEM_GENERATED | POST_CALCULATED |
+                             (post->flags() & (POST_VIRTUAL | POST_MUST_BALANCE)));
             if (original_cost) {
               // Split cost proportionally: this lot's share of total
               split->cost = *original_cost * (consumed / total_sale);
@@ -656,7 +873,8 @@ bool xact_base_t::finalize() {
           remainder_amt.set_commodity(post->amount.commodity().referent());
           post_t* remainder = new post_t(post->account, remainder_amt);
           remainder->set_state(post->state());
-          remainder->add_flags(ITEM_GENERATED | POST_CALCULATED);
+          remainder->add_flags(ITEM_GENERATED | POST_CALCULATED |
+                               (post->flags() & (POST_VIRTUAL | POST_MUST_BALANCE)));
           if (original_cost) {
             remainder->cost = *original_cost * (remaining / total_sale);
           }
@@ -689,28 +907,25 @@ bool xact_base_t::finalize() {
           post->amount, *post->cost, false, !post->has_flags(POST_COST_VIRTUAL),
           datetime_t(post->date(), time_duration(0, 0, 0, 0)), std::nullopt, lot_date);
 
-      if (post->amount.has_annotation() && post->amount.annotation().price) {
+      const bool named_lot = post->amount.has_annotation() && post->amount.annotation().price;
+      if (named_lot) {
         if (breakdown.basis_cost.commodity() == breakdown.final_cost.commodity()) {
           DEBUG("xact.finalize", "breakdown.basis_cost = " << breakdown.basis_cost);
           DEBUG("xact.finalize", "breakdown.final_cost = " << breakdown.final_cost);
           if (amount_t gain_loss = breakdown.basis_cost - breakdown.final_cost) {
             DEBUG("xact.finalize", "gain_loss = " << gain_loss);
             // The basis cost is reconstructed from the per-unit lot price
-            // times the quantity.  When the per-unit price was rounded
-            // during lot creation (e.g. $250 / 101 → $2.475248), the
-            // product can differ from the original total cost by a tiny
-            // rounding artifact.  Round the gain/loss to a precision
-            // that accounts for the quantity's decimal places, so
-            // genuine gains from fractional-share transactions are
-            // preserved while reconstruction artifacts are eliminated
-            // (#2975, #3013).
-            if (gain_loss.has_commodity())
-              gain_loss.in_place_roundto(static_cast<int>(gain_loss.commodity().precision()) +
-                                         static_cast<int>(post->amount.precision()));
+            // times the quantity.  That is exact unless Ledger rounded the
+            // price itself (e.g. $250 / 101 → $2.475248), in which case
+            // the product can miss the original total by a tiny artifact;
+            // drop only that, so the posting balances at its lot basis.
+            drop_lot_rounding_residue(gain_loss, lot_basis_error(post->amount));
             gain_loss.in_place_round();
             DEBUG("xact.finalize", "gain_loss rounds to = " << gain_loss);
+            // The gain balances within the posting's own group.
             if (post->must_balance())
-              add_or_set_value(balance, gain_loss.reduced());
+              add_or_set_value(post->has_flags(POST_VIRTUAL) ? virtual_balance : balance,
+                               gain_loss.reduced());
 #if 0
             account_t * account;
             if (gain_loss.sign() > 0)
@@ -753,14 +968,14 @@ bool xact_base_t::finalize() {
 
               // Calculate gain/loss in the base commodity
               amount_t gain_loss = from_cost - to_cost;
-              if (gain_loss.has_commodity())
-                gain_loss.in_place_roundto(static_cast<int>(gain_loss.commodity().precision()) +
-                                           static_cast<int>(post->amount.precision()));
+              drop_lot_rounding_residue(gain_loss, lot_basis_error(post->amount) +
+                                                       lot_basis_error(*post->cost));
               gain_loss.in_place_round();
               DEBUG("xact.finalize", "Commodity swap gain_loss rounds to = " << gain_loss);
 
-              if (gain_loss && post->must_balance())
-                add_or_set_value(balance, gain_loss.reduced());
+              if (!gain_loss.is_realzero() && post->must_balance())
+                add_or_set_value(post->has_flags(POST_VIRTUAL) ? virtual_balance : balance,
+                                 gain_loss.reduced());
 
               // Always rewrite the posting's cost into the common base
               // currency, even when the gain/loss is zero (i.e. both
@@ -813,126 +1028,72 @@ bool xact_base_t::finalize() {
         DEBUG("xact.finalize", "added breakdown, balance = " << balance);
       }
 
-      if (post->has_flags(POST_COST_FIXATED) && post->amount.has_annotation() &&
-          post->amount.annotation().price) {
+      // `@ =price` fixates the lot this cost creates, as writing `{=price}`
+      // would have.  The annotation belongs to the pooled lot, which every
+      // other amount of the lot shares and which the pool indexes by these
+      // very details, so fixate a copy and look it up exactly, not through
+      // the fuzzy price match, which must not fold a computed price into a
+      // typed one that merely rounds alike.  A lot the user named is left as
+      // named: `{$5}` and `{=$5}` are two lots (#1454), so `-10 AAPL {$5} @
+      // =$6` sells from the `{$5}` lot, as `10 AAPL {$5} @ =$5` buys into it.
+      if (!named_lot && post->has_flags(POST_COST_FIXATED) && post->amount.has_annotation() &&
+          post->amount.annotation().price &&
+          !post->amount.annotation().has_flags(ANNOTATION_PRICE_FIXATED)) {
         DEBUG("xact.finalize", "fixating annotation price");
-        post->amount.annotation().add_flags(ANNOTATION_PRICE_FIXATED);
+        annotation_t fixated(post->amount.annotation());
+        fixated.add_flags(ANNOTATION_PRICE_FIXATED);
+        post->amount.set_commodity(*commodity_pool_t::current_pool->find_or_create(
+            post->amount.commodity().base_symbol(), fixated));
       }
     }
   }
 
   // Phase 7: Infer null-amount postings.
-  // If exactly one real posting has no amount, its value becomes the
-  // negation of the accumulated balance.  If the balance involves
-  // multiple commodities, additional generated postings are created
-  // (one per extra commodity) on the same account.
-  if (null_post != nullptr) {
+  // If exactly one posting of a group has no amount, its value becomes
+  // the negation of the group's accumulated balance.  If the balance
+  // involves multiple commodities, additional generated postings are
+  // created (one per extra commodity) on the same account.  A posting
+  // whose group has no other amounts balances nothing, and is zero,
+  // provided the other group has amounts: in a transaction with none at
+  // all it keeps no amount, as before, for Phase 9 to report or ignore.
+  const bool has_amounts = !balance.is_null() || !virtual_balance.is_null();
+  for (const balancing_group_t& group : groups) {
+    if (group.null_post == nullptr)
+      continue;
 
-    DEBUG("xact.finalize", "there was a null posting");
-    add_balancing_post post_adder(*this, null_post);
+    DEBUG("xact.finalize", (group.is_virtual ? "there was a null balanced-virtual posting"
+                                             : "there was a null posting"));
+    add_balancing_post post_adder(*this, group.null_post);
 
-    if (balance.is_balance())
-      balance.as_balance_lval().map_sorted_amounts(post_adder);
-    else if (balance.is_amount())
-      post_adder(balance.as_amount_lval());
-    else if (balance.is_long())
-      post_adder(balance.to_amount());
-    else if (!balance.is_null() && !balance.is_realzero())
+    if (group.balance.is_null() && has_amounts)
+      group.balance = 0L;
+
+    if (group.balance.is_balance())
+      group.balance.as_balance_lval().map_sorted_amounts(post_adder);
+    else if (group.balance.is_amount())
+      post_adder(group.balance.as_amount_lval());
+    else if (group.balance.is_long())
+      post_adder(group.balance.to_amount());
+    else if (!group.balance.is_null() && !group.balance.is_realzero())
       throw_(balance_error, _("Transaction does not balance"));
 
-    balance = NULL_VALUE;
-  }
-
-  // Same null-amount inference, but for balanced-virtual postings
-  // ([Account] syntax).  These balance independently from real postings.
-  if (virtual_null_post != nullptr) {
-
-    DEBUG("xact.finalize", "there was a null balanced-virtual posting");
-    add_balancing_post post_adder(*this, virtual_null_post);
-
-    if (virtual_balance.is_balance())
-      virtual_balance.as_balance_lval().map_sorted_amounts(post_adder);
-    else if (virtual_balance.is_amount())
-      post_adder(virtual_balance.as_amount_lval());
-    else if (virtual_balance.is_long())
-      post_adder(virtual_balance.to_amount());
-    else if (!virtual_balance.is_null() && !virtual_balance.is_realzero())
-      throw_(balance_error, _("Transaction does not balance"));
-
-    virtual_balance = NULL_VALUE;
+    group.balance = NULL_VALUE;
   }
 
   DEBUG("xact.finalize", "resolved balance = " << balance);
   DEBUG("xact.finalize", "resolved virtual_balance = " << virtual_balance);
 
   // Phase 8: Final balance verification.
-  // The balance should be zero (or null).  If it is not, check whether
-  // the discrepancy can be explained by per-unit cost rounding before
-  // reporting an error.
-  //
-  // Cost amounts are parsed with PARSE_NO_MIGRATE, so their precision
-  // is not propagated to the commodity.  If the cost commodity still
-  // has its default precision of 0, the is_zero() check would render
-  // a sub-integer remainder like 0.01 EUR as "0" and falsely treat it
-  // as zero.  Temporarily widen such commodities to the cost amount's
-  // precision for the balance check, then restore (issue #1114).
-  std::vector<std::pair<commodity_t*, int>> saved_precisions;
-  for (post_t* post : posts) {
-    if (post->cost && !post->has_flags(POST_COST_CALCULATED) && post->cost->has_commodity() &&
-        post->cost->commodity().precision() == 0 && post->cost->precision() > 0) {
-      commodity_t& comm = post->cost->commodity();
-      // Only save once per commodity
-      bool already_saved = false;
-      for (auto& sp : saved_precisions)
-        if (sp.first == &comm) {
-          already_saved = true;
-          break;
-        }
-      if (!already_saved) {
-        saved_precisions.push_back({&comm, 0});
-        comm.set_precision(post->cost->precision());
-      }
-    }
-  }
+  // Each group's balance should be zero (or null).  If one is not, check
+  // whether the discrepancy can be explained by per-unit cost rounding
+  // before reporting an error.
 
-  if (!balance.is_null() && !balance.is_zero()) {
-    // Check whether the imbalance is fully explained by independently rounding
-    // each per-unit (@) annotated cost to the price's decimal precision (issue
-    // #1125).  When a posting has 0.50 bread @ $3.99, the exact cost $1.995 is
-    // kept at full precision during accumulation.  If the user supplies the
-    // rounded total $9.49 instead of the exact $9.480, we accept the
-    // transaction by verifying: balance + Σ(roundedCost - exactCost) == 0.
-    // This only fires when there is no null posting (null posting filling
-    // already cleared balance to NULL_VALUE above).
-    {
-      value_t rounding_adj;
-      for (post_t* post : posts) {
-        if (!post->must_balance() || post->has_flags(POST_VIRTUAL))
-          continue;
-        if (!post->cost || !post->cost->keep_precision())
-          continue;
-        // Only @ (per-unit) costs, not @@ (total) or internally-calculated
-        if (post->has_flags(POST_COST_IN_FULL | POST_COST_CALCULATED))
-          continue;
-        // price_prec = cost_prec - amount_prec (cost = price * amount,
-        // so cost.prec = price.prec + amount.prec after multiply())
-        amount_t exact(post->cost->rounded());
-        const int price_prec = exact.precision() - post->amount.precision();
-        if (price_prec > 0 && exact.precision() > price_prec)
-          add_or_set_value(rounding_adj, (exact.roundto(price_prec) - exact).reduced());
-      }
-      if (!rounding_adj.is_null()) {
-        value_t test = balance;
-        test += rounding_adj;
-        if (test.is_null() || test.is_zero())
-          goto balanced;
-      }
-    }
-
+  // Only finalization may adjust an assigned amount under --permissive.
+  auto adjust_balance_assignment = [&](const balancing_group_t& group) {
     // Under --permissive, if the imbalance was caused by a balance
     // assignment that computed the posting amount (= $target with no
     // explicit amount), revert to auto-balancing by adjusting the
-    // assigned posting so the transaction balances.  This lets users
+    // assigned posting so the group balances.  This lets users
     // write `Account = $target` and have --permissive accept the
     // transaction even when the assigned amount conflicts with the
     // other postings.  Balance assignments that DO balance (issue
@@ -940,43 +1101,26 @@ bool xact_base_t::finalize() {
     // the balance.
     if (journal && journal->checking_style == journal_t::CHECK_PERMISSIVE) {
       for (post_t* post : posts) {
-        if (post->has_flags(POST_CALCULATED) && post->assigned_amount && post->must_balance() &&
-            !post->has_flags(POST_VIRTUAL)) {
-          if (balance.is_amount())
-            post->amount -= balance.as_amount();
-          else if (balance.is_long())
-            post->amount -= balance.to_amount();
+        if (post->has_flags(POST_CALCULATED) && post->assigned_amount &&
+            balances_in_group(post, group.is_virtual)) {
+          if (group.balance.is_amount())
+            post->amount -= group.balance.as_amount();
+          else if (group.balance.is_long())
+            post->amount -= group.balance.to_amount();
           else
             break; // multi-commodity imbalance; let it error normally
-          balance = NULL_VALUE;
-          goto balanced;
+          group.balance = NULL_VALUE;
+          return true;
         }
       }
     }
+    return false;
+  };
 
-    // Restore before throwing so commodity state is clean.
-    for (auto& sp : saved_precisions)
-      sp.first->set_precision(sp.second);
-    add_error_context(item_context(*this, _("While balancing transaction")));
-    add_error_context(_("Unbalanced remainder is:"));
-    add_error_context(value_context(balance));
-    add_error_context(_("Amount to balance against:"));
-    add_error_context(value_context(magnitude()));
-    throw_(balance_error, _("Transaction does not balance"));
-  balanced:;
-  }
-
-  // Restore commodity precisions widened for the balance check above.
-  for (auto& sp : saved_precisions)
-    sp.first->set_precision(sp.second);
-
-  if (!virtual_balance.is_null() && !virtual_balance.is_zero()) {
-    add_error_context(item_context(*this, _("While balancing transaction")));
-    add_error_context(_("Unbalanced remainder is:"));
-    add_error_context(value_context(virtual_balance));
-    add_error_context(_("Amount to balance against:"));
-    add_error_context(value_context(magnitude()));
-    throw_(balance_error, _("Transaction does not balance"));
+  for (const balancing_group_t& group : groups) {
+    if (!group_balances(posts, group.balance, group.is_virtual) &&
+        !adjust_balance_assignment(group))
+      throw_unbalanced(*this, group.balance, group.is_virtual);
   }
 
   // Phase 9: Register postings with their accounts.
@@ -1034,13 +1178,17 @@ bool xact_base_t::finalize() {
  * Called by auto_xact_t::extend_xact() after adding generated postings
  * to ensure the transaction still satisfies the double-entry invariant.
  * Unlike finalize(), this method does not infer null amounts, compute
- * costs, or perform lot matching -- it simply sums all must-balance
- * postings and checks the result is zero.
+ * costs, or perform lot matching -- it simply sums the must-balance
+ * postings of each group, real and balanced virtual, and checks that
+ * each sum is zero, allowing for independently rounded per-unit costs.
  */
 bool xact_base_t::verify() {
-  // Scan through and compute the total balance for the xact.
+  // Scan through and compute the total balance for the xact, keeping the
+  // real postings and the balanced virtual postings ([Account]) apart, as
+  // each group must balance by itself.
 
   value_t balance;
+  value_t virtual_balance;
 
   for (post_t* post : posts) {
     if (!post->must_balance())
@@ -1053,9 +1201,11 @@ bool xact_base_t::verify() {
     // set, meaning commodity display precision is ignored when displaying the
     // amount.  We never want this set for the balance, so we must clear the
     // flag in a temporary to avoid it propagating into the balance.
-    add_or_set_value(balance, p.keep_precision() ? p.rounded().reduced() : p.reduced());
+    add_or_set_value(post->has_flags(POST_VIRTUAL) ? virtual_balance : balance,
+                     p.keep_precision() ? p.rounded().reduced() : p.reduced());
   }
   VERIFY(balance.valid());
+  VERIFY(virtual_balance.valid());
 
   // Now that the post list has its final form, calculate the balance once
   // more in terms of total cost, accounting for any possible gain/loss
@@ -1069,41 +1219,11 @@ bool xact_base_t::verify() {
       throw_(amount_error, _("A posting's cost must be of a different commodity than its amount"));
   }
 
-  // Cost amounts are parsed with PARSE_NO_MIGRATE, so their precision
-  // is not propagated to the commodity.  Temporarily widen precision-0
-  // cost commodities for the balance check (see finalize, issue #1114).
-  std::vector<std::pair<commodity_t*, int>> saved_precisions;
-  for (post_t* post : posts) {
-    if (post->cost && !post->has_flags(POST_COST_CALCULATED) && post->cost->has_commodity() &&
-        post->cost->commodity().precision() == 0 && post->cost->precision() > 0) {
-      commodity_t& comm = post->cost->commodity();
-      bool already_saved = false;
-      for (auto& sp : saved_precisions)
-        if (sp.first == &comm) {
-          already_saved = true;
-          break;
-        }
-      if (!already_saved) {
-        saved_precisions.push_back({&comm, 0});
-        comm.set_precision(post->cost->precision());
-      }
-    }
+  for (const bool virtual_group : {false, true}) {
+    const value_t& group_balance = virtual_group ? virtual_balance : balance;
+    if (!group_balances(posts, group_balance, virtual_group))
+      throw_unbalanced(*this, group_balance, virtual_group);
   }
-
-  if (!balance.is_null() && !balance.is_zero()) {
-    // Restore before throwing so commodity state is clean.
-    for (auto& sp : saved_precisions)
-      sp.first->set_precision(sp.second);
-    add_error_context(item_context(*this, _("While balancing transaction")));
-    add_error_context(_("Unbalanced remainder is:"));
-    add_error_context(value_context(balance));
-    add_error_context(_("Amount to balance against:"));
-    add_error_context(value_context(magnitude()));
-    throw_(balance_error, _("Transaction does not balance"));
-  }
-
-  for (auto& sp : saved_precisions)
-    sp.first->set_precision(sp.second);
 
   VERIFY(valid());
 

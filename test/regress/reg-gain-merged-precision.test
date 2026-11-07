@@ -1,0 +1,134 @@
+; reg --gain adds a cost kept at full precision to a lot of the same
+; commodity and prints the sum at full precision, on every run.
+;
+; --gain shows each posting's market value less its cost.  The bare amount
+; -100 has no commodity, hence no market value, so its gain holds its cost
+; negated, 33.3333 EUR (100 at 0.333333 EUR), kept at full precision as
+; costs are; the lot 100.00 EUR {5} is not revalued either, EUR being a
+; price commodity here.  --lots shows both in the running total, and the
+; default display strips the lot's annotation and adds them into
+; 133.3333 EUR.  Adding two amounts keeps only the left one's
+; full-precision flag, so with the lot first the sum would print as
+; 133.33 EUR.  Ledger used to add the components in the order in which the
+; balance kept them, which put the cost first here on every run.  That
+; order now changes from run to run, so a merged amount keeps full
+; precision whenever one of its parts did, whichever is added first.
+;
+; The second journal, where this was found, is 1E192DF6.test's with a
+; neutral payee: line 9 of its reg --gain adds 199,99977356 GBP to the lot
+; 400,00 GBP {4.8799} and prints 599,99977356 GBP, as it always did
+; (600,00 GBP would be the lot-first sum).  --lot-notes keeps only lot
+; notes, which these lots lack, so it merges the same way.  -p picks one
+; journal per block.  Each block runs Ledger afresh, so adding in the
+; order in which the balance keeps its components would pass all four
+; merging blocks on about one run in sixteen.
+
+2024/01/01 Buy euros
+    Assets:Euros          100.00 EUR @ 5
+    Assets:Cash
+
+2024/01/02 Pay cash
+    Assets:Cash             -100 @ 0.333333 EUR
+    Assets:Euros           33.33 EUR
+
+; The journal of 1E192DF6.test, with a neutral payee.
+D 1000,00 PLN
+N $
+N h
+N PLN
+N zł
+C 1,00 PLN = 1,00
+
+2010-05-19 * Currency exchange
+    Assets:Checking:Konto24 GBP               200,00 GBP @ 4,8799 PLN  ; fikimiki
+    Assets:Checking:Konto<30                 -975,98 PLN
+
+2010-05-19 * Currency exchange
+    Assets:Checking:Konto24 GBP               200,00 GBP @ 4,8799 PLN  ; fikimiki
+    Assets:Checking:Konto<30                 -975,98 PLN
+
+2010-05-19 * Currency exchange
+   Assets:Checking:Konto<30                 -975,98 PLN @ 0,204922 GBP
+   Assets:Checking:Konto24 GBP               200,00 GBP ; fikimiki
+
+2010-05-19 * Currency exchange
+   Assets:Checking:Konto<30                 -975,98 PLN @ 0,204922 GBP
+   Assets:Checking:Konto24 GBP               200,00 GBP ; fikimiki
+
+2010-05-19 * Currency exchange
+   Assets:Checking:Konto24 GBP               200,00 GBP @ 4,8799 PLN  ; fikimiki
+   Assets:Checking:Konto<30                 -975,98 PLN
+
+2010-05-19 * Currency exchange
+   Assets:Checking:Konto24 GBP               200,00 GBP @ 4,8799 PLN  ; fikimiki
+   Assets:Checking:Konto<30                 -975,98 PLN
+
+test reg --gain --lots -p 2024
+24-Jan-01 Buy euros             Assets:Euros                   -500
+                                        100.00 EUR {5} [2024/01/01]         -500
+                                                     100.00 EUR {5} [2024/01/01]
+24-Jan-02 Pay cash              Assets:Cash                    -100
+                                                        33.3333 EUR         -600
+                                                                     33.3333 EUR
+                                                     100.00 EUR {5} [2024/01/01]
+end test
+
+test reg --gain -p 2024
+24-Jan-01 Buy euros             Assets:Euros                   -500
+                                                         100.00 EUR         -500
+                                                                      100.00 EUR
+24-Jan-02 Pay cash              Assets:Cash                    -100
+                                                        33.3333 EUR         -600
+                                                                    133.3333 EUR
+end test
+
+test reg --gain --lot-notes -p 2024
+24-Jan-01 Buy euros             Assets:Euros                   -500
+                                                         100.00 EUR         -500
+                                                                      100.00 EUR
+24-Jan-02 Pay cash              Assets:Cash                    -100
+                                                        33.3333 EUR         -600
+                                                                    133.3333 EUR
+end test
+
+test reg --gain -p 2010
+10-May-19 Currency exchange     As:Checkin:Konto24 GBP      -975.98
+                                                         200,00 GBP      -975.98
+                                                                      200,00 GBP
+10-May-19 Currency exchange     As:Checkin:Konto24 GBP      -975.98
+                                                         200,00 GBP     -1951.96
+                                                                      400,00 GBP
+10-May-19 Currency exchange     Asse:Checking:Konto<30      -975.98
+                                                   199,99977356 GBP     -2927.94
+                                                                599,99977356 GBP
+10-May-19 Currency exchange     Asse:Checking:Konto<30      -975.98
+                                                   199,99977356 GBP     -3903.92
+                                                                      800,00 GBP
+10-May-19 Currency exchange     As:Checkin:Konto24 GBP      -975.98
+                                                         200,00 GBP      -4879.9
+                                                                     1000,00 GBP
+10-May-19 Currency exchange     As:Checkin:Konto24 GBP      -975.98
+                                                         200,00 GBP     -5855.88
+                                                                     1200,00 GBP
+end test
+
+test reg --gain --lot-notes -p 2010
+10-May-19 Currency exchange     As:Checkin:Konto24 GBP      -975.98
+                                                         200,00 GBP      -975.98
+                                                                      200,00 GBP
+10-May-19 Currency exchange     As:Checkin:Konto24 GBP      -975.98
+                                                         200,00 GBP     -1951.96
+                                                                      400,00 GBP
+10-May-19 Currency exchange     Asse:Checking:Konto<30      -975.98
+                                                   199,99977356 GBP     -2927.94
+                                                                599,99977356 GBP
+10-May-19 Currency exchange     Asse:Checking:Konto<30      -975.98
+                                                   199,99977356 GBP     -3903.92
+                                                                      800,00 GBP
+10-May-19 Currency exchange     As:Checkin:Konto24 GBP      -975.98
+                                                         200,00 GBP      -4879.9
+                                                                     1000,00 GBP
+10-May-19 Currency exchange     As:Checkin:Konto24 GBP      -975.98
+                                                         200,00 GBP     -5855.88
+                                                                     1200,00 GBP
+end test

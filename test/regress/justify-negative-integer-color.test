@@ -1,0 +1,22 @@
+; justify() pads a negative integer that it colors to the width asked for.
+; value_t::print() used to set the stream's width for the integer before
+; handing it to justify(), which pads by itself, so the first thing
+; justify() wrote -- a padding space, or the color's escape sequence --
+; was padded to the full width as well.  `cat -v` shows ESC as ^[.
+
+test eval '"[" + justify(to_int(-42), 10, -1, true, true) + "]"' | cat -v
+[       ^[[31m-42^[[0m]
+end test
+
+test eval '"[" + justify(to_int(-42), 10, -1, false, true) + "]"' | cat -v
+[^[[31m-42^[[0m       ]
+end test
+
+; Without color, and for amounts, the width was always right.
+test eval '"[" + justify(to_int(-42), 10, -1, true, false) + "]"' | cat -v
+[       -42]
+end test
+
+test eval '"[" + justify(-42, 10, -1, true, true) + "]"' | cat -v
+[       ^[[31m-42^[[0m]
+end test
