@@ -1056,9 +1056,9 @@ bool report_revalues_between_postings(const report_t& report) {
   // as every non-accounts report does.
   const journal_t& journal(*report.session.journal);
   return !report.HANDLED(historical) && !report.HANDLED(immediate) &&
-         !report.HANDLED(revalued_total_) && !report.HANDLED(plopen) &&
-         !report.HANDLED(percent) && !report.HANDLED(average) && !report.HANDLED(deviation) &&
-         !report.HANDLED(period_) && !report.HANDLED(dow) && !report.HANDLED(by_payee) &&
+         !report.HANDLED(revalued_total_) && !report.HANDLED(plopen) && !report.HANDLED(percent) &&
+         !report.HANDLED(average) && !report.HANDLED(deviation) && !report.HANDLED(period_) &&
+         !report.HANDLED(dow) && !report.HANDLED(by_payee) &&
          report.budget_flags == BUDGET_NO_BUDGET && !report.HANDLED(forecast_while_) &&
          !report.HANDLED(anon) && !report.HANDLED(pivot_) && !report.HANDLED(pivot_only_) &&
          !report.HANDLED(account_) && !report.HANDLED(payee_) && !report.HANDLED(date_) &&
@@ -1180,8 +1180,8 @@ void changed_value_posts::flush() {
           report.HANDLED(period_) && (report.HANDLED(amount_data) || report.HANDLED(total_data));
       if (!for_accounts_report && !suppress_for_plot)
         output_intermediate_prices(*last_post, report.terminus.date());
-      last_total = calc_as_of(report, *last_post, report.terminus.date(), total_expr, nullptr,
-                              &cost_total);
+      last_total =
+          calc_as_of(report, *last_post, report.terminus.date(), total_expr, nullptr, &cost_total);
       output_revaluation(*last_post, report.terminus.date());
     }
     last_post = nullptr;
