@@ -1,0 +1,26 @@
+; A bucket account completes only a transaction with exactly one posting
+; (src/xact.cc, xact_base_t::finalize: "posts.size() == 1"), and
+; bracket-virtual postings count.  One real posting beside a balanced
+; bracket pair is therefore not completed, and its residual is rejected.
+
+bucket Assets:Cash
+
+2024/01/01 Real posting with a balanced bracket pair
+    Expenses:Food     $10
+    [Budget:Food]    $-10
+    [Budget:Cash]     $10
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 11:
+While balancing transaction from "$FILE", lines 8-11:
+> 2024/01/01 Real posting with a balanced bracket pair
+>     Expenses:Food     $10
+>     [Budget:Food]    $-10
+>     [Budget:Cash]     $10
+Unbalanced remainder is:
+                 $10
+Amount to balance against:
+                 $20
+Error: Transaction does not balance
+end test

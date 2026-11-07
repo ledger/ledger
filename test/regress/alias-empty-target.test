@@ -1,0 +1,17 @@
+; An alias target must name an account, and find_account rejects an empty
+; component (src/account.cc:79-131, "Account name contains an empty
+; sub-account name"), so "alias Checking = " is rejected at the directive
+; (src/textual_directives.cc, instance_t::alias_directive passing the
+; empty target to account_alias_directive via top_account()->find_account).
+
+alias Checking = 
+
+2024/01/01 x
+    Checking    $10
+    Equity
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 7:
+Error: Account name contains an empty sub-account name
+end test

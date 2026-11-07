@@ -1,0 +1,35 @@
+; Each rule re-verifies the transaction as it extends it, so the first
+; rule already rejects the entry, even though a second rule would cancel
+; the residual of the first (src/xact.cc:1677-1684,
+; xact_base_t::verify at src/xact.cc:1040-1110).
+
+= /Food/
+    Assets:Savings    0.1
+
+= /Food/
+    Assets:Savings    -0.1
+
+2026/01/01 lunch
+    Expenses:Food    10.00 USD
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 14:
+While balancing transaction from "$FILE", lines 12-14:
+> 2026/01/01 lunch
+>     Expenses:Food    10.00 USD
+>     Assets:Cash
+Unbalanced remainder is:
+            1.00 USD
+Amount to balance against:
+           11.00 USD
+While applying automated transaction from "$FILE", lines 6-7:
+> = /Food/
+>     Assets:Savings    0.1
+While extending transaction from "$FILE", lines 12-14:
+> 2026/01/01 lunch
+>     Expenses:Food    10.00 USD
+>     Assets:Cash
+Error: Transaction does not balance
+end test

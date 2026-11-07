@@ -1,0 +1,21 @@
+; A fixated lot price on the top posting disables the implicit
+; exchange; Phase 4 then costs the lot at its fixated price, which
+; disagrees with the other side.
+
+2024/01/01 Fixated price disagrees
+    Assets:S    10 AAPL {=$50}
+    Assets:C    $-400
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 7:
+While balancing transaction from "$FILE", lines 5-7:
+> 2024/01/01 Fixated price disagrees
+>     Assets:S    10 AAPL {=$50}
+>     Assets:C    $-400
+Unbalanced remainder is:
+                $100
+Amount to balance against:
+                $500
+Error: Transaction does not balance
+end test

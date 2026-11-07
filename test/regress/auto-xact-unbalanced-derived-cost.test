@@ -1,0 +1,33 @@
+; The cost of the matched posting is derived per unit onto the generated
+; posting (src/xact.cc:1613-1624, "derive the cost from the annotation"),
+; so the rule leaves a EUR residual on top of the imbalance that the top
+; posting's cost already carried, and verify() rejects the transaction
+; (src/xact.cc:1677-1684, verify at src/xact.cc:1040-1110).
+
+= /Energy/
+    Assets:Rebate    1
+
+2026/01/01 power
+    Expenses:Energy    100 kWh @@ 72.00 EUR
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 12:
+While balancing transaction from "$FILE", lines 10-12:
+> 2026/01/01 power
+>     Expenses:Energy    100 kWh @@ 72.00 EUR
+>     Assets:Cash
+Unbalanced remainder is:
+               EUR72
+Amount to balance against:
+              EUR144
+While applying automated transaction from "$FILE", lines 7-8:
+> = /Energy/
+>     Assets:Rebate    1
+While extending transaction from "$FILE", lines 10-12:
+> 2026/01/01 power
+>     Expenses:Energy    100 kWh @@ 72.00 EUR
+>     Assets:Cash
+Error: Transaction does not balance
+end test

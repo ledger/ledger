@@ -1,0 +1,25 @@
+; Balanced virtual postings are never price-inferred: their balance
+; is checked without the implicit exchange of Phase 3.
+
+2024/01/01 Bracketed exchange
+    Assets:A    $100
+    Assets:B    $-100
+    [V:A]       $100
+    [V:B]       -80 EUR
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 8:
+While balancing transaction from "$FILE", lines 4-8:
+> 2024/01/01 Bracketed exchange
+>     Assets:A    $100
+>     Assets:B    $-100
+>     [V:A]       $100
+>     [V:B]       -80 EUR
+Unbalanced remainder is:
+                $100
+             -80 EUR
+Amount to balance against:
+                $200
+Error: Transaction does not balance
+end test

@@ -1,0 +1,23 @@
+; A bucket account completes only a transaction with exactly one posting
+; (src/xact.cc, xact_base_t::finalize: "posts.size() == 1").  An
+; unbalanced two-posting transaction is rejected even under a bucket.
+
+bucket Assets:Cash
+
+2024/01/01 Two postings, unbalanced
+    Expenses:Food    $10
+    Expenses:Gas     $5
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 9:
+While balancing transaction from "$FILE", lines 7-9:
+> 2024/01/01 Two postings, unbalanced
+>     Expenses:Food    $10
+>     Expenses:Gas     $5
+Unbalanced remainder is:
+                 $15
+Amount to balance against:
+                 $15
+Error: Transaction does not balance
+end test

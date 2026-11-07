@@ -1,0 +1,22 @@
+; The earlier postings an assignment subtracts include the transaction's
+; own (src/textual_xacts.cc, compute_balance_diff), so a commodity first
+; posted earlier in the same transaction also leaves a second commodity,
+; and to_amount rejects the difference (src/balance.h:473-480).
+
+2024/01/01 Open
+    Assets:A    $10
+    Equity:O
+
+2024/01/02 Intra xact second commodity then bare zero
+    Assets:A    5 EUR
+    Assets:A    = 0
+    Assets:B
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 12:
+While parsing posting:
+  Assets:A    = 0
+                ^
+Error: Cannot convert a balance with multiple commodities to an amount
+end test
