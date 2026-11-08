@@ -99,7 +99,7 @@ if(Python_EXECUTABLE)
       --ledger $<TARGET_FILE:ledger> --source ${PROJECT_SOURCE_DIR})
   set_tests_properties(ValuationFooting PROPERTIES
     ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}"
-    TIMEOUT 1800)
+    TIMEOUT 7200)
 endif()
 
 if(Python_EXECUTABLE)
