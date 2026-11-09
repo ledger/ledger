@@ -1,0 +1,28 @@
+; At precision 7 the balancing check reads the residual through
+; amount_t::is_zero, which prints it with stream_out_mpq
+; (src/amount.cc:1417-1425) and finds the exact remainder 0.00000005
+; rendered as 0.0000001, a nonzero digit, so the transaction does not
+; balance.  The semantic bisimulation (test/semantic/check_all.py)
+; replays this journal, so an oracle that read a remainder of exactly
+; half a unit as zero accepts what C++ rejects.
+
+commodity XAU
+    format 1.0000000 XAU
+
+2024/01/01 half unit p7
+    A    1.0000000 XAU
+    B    -0.99999995 XAU
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 14:
+While balancing transaction from "$FILE", lines 12-14:
+> 2024/01/01 half unit p7
+>     A    1.0000000 XAU
+>     B    -0.99999995 XAU
+Unbalanced remainder is:
+       0.0000001 XAU
+Amount to balance against:
+       1.0000000 XAU
+Error: Transaction does not balance
+end test

@@ -1,0 +1,24 @@
+; A lot and plain units of one commodity are separate balance
+; entries: with cash that makes three, so Phase 3 does not apply.
+
+2024/01/01 Lot plus plain units of one commodity
+    Assets:S    10 AAPL {$50}
+    Assets:T    -5 AAPL
+    Assets:C    $-250
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 7:
+While balancing transaction from "$FILE", lines 4-7:
+> 2024/01/01 Lot plus plain units of one commodity
+>     Assets:S    10 AAPL {$50}
+>     Assets:T    -5 AAPL
+>     Assets:C    $-250
+Unbalanced remainder is:
+               $-250
+             -5 AAPL
+       10 AAPL {$50}
+Amount to balance against:
+       10 AAPL {$50}
+Error: Transaction does not balance
+end test

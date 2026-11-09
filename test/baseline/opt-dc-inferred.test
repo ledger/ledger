@@ -1,0 +1,23 @@
+; Under --dc the debit and credit columns are summed per posting.  An
+; inferred amount keeps its recovered cost precision (BIGINT_COST_PREC,
+; issue #1692) when it is the only posting in a column, even though the
+; account holds other postings in the same commodity: Assets:B credits
+; the inferred 0.4 Y, which its net total of 1 Y does not show.  The
+; semantic bisimulation's gross comparison (test/semantic/check_all.py
+; --gross) replays this journal through the oracle's opt-in --gross
+; flag and C++'s --amount column reports, where the lone-inferred
+; display rule must reproduce the 0.4 Y credit line.
+
+2018-01-01 * Foo
+    Assets:A                    2 X @ 0.2 Y
+    Assets:B
+
+2018-01-02 * Bar
+    Assets:B                    1 Y
+    Equity
+
+test bal --dc --flat --no-total
+           2 X              0            2 X  Assets:A
+           1 Y          0.4 Y            1 Y  Assets:B
+             0            1 Y           -1 Y  Equity
+end test

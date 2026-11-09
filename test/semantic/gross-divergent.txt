@@ -1,8 +1,10 @@
 # The compared files whose gross debit and credit rows are known to
 # diverge, as test/semantic/check_all.py --gross measured them
-# (repo-relative path).  On each the oracle books an automated rule's
-# memo postings once where C++'s column sums book them once per
-# matched posting.  The ratchet: an unlisted divergence or a stale
-# entry fails the run, so the set changes only with the rule that
-# forced it.
+# (repo-relative path).  On 3314_rounding_auto the oracle books an
+# automated rule's memo postings once where C++'s column sums book
+# them once per matched posting; on display-rounding-ties the tie
+# rounding of the rows differs (see oracle-divergent.txt).  The
+# ratchet: an unlisted divergence or a stale entry fails the run, so
+# the set changes only with the rule that forced it.
 test/regress/3314_rounding_auto.test
+test/regress/display-rounding-ties.test

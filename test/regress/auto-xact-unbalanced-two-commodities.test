@@ -1,0 +1,35 @@
+; A rule that generates postings in two commodities leaves a residual in
+; both after the re-verification (src/xact.cc:1677-1684,
+; xact_base_t::verify at src/xact.cc:1040-1110).
+
+= /Food/
+    Assets:Points    1 PTS
+    Income:Rebate    -0.10 USD
+
+2026/01/01 lunch
+    Expenses:Food    10.00 USD
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 11:
+While balancing transaction from "$FILE", lines 9-11:
+> 2026/01/01 lunch
+>     Expenses:Food    10.00 USD
+>     Assets:Cash
+Unbalanced remainder is:
+               1 PTS
+           -0.10 USD
+Amount to balance against:
+               1 PTS
+           10.00 USD
+While applying automated transaction from "$FILE", lines 5-7:
+> = /Food/
+>     Assets:Points    1 PTS
+>     Income:Rebate    -0.10 USD
+While extending transaction from "$FILE", lines 9-11:
+> 2026/01/01 lunch
+>     Expenses:Food    10.00 USD
+>     Assets:Cash
+Error: Transaction does not balance
+end test

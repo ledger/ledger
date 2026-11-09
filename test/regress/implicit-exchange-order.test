@@ -1,0 +1,25 @@
+; With no annotated posting the first posting is the top one, so the
+; cost side is 1 A and the doubled remainder 2 A does not round away.
+; Compare the same postings in the other order in
+; implicit-exchange-accepted.test.
+
+commodity B
+    format 1000.00 B
+
+2024/01/01 Same signs, top posting last
+    Assets:Tiny:Y    0.001 B
+    Assets:Tiny:X       1 A
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 11:
+While balancing transaction from "$FILE", lines 9-11:
+> 2024/01/01 Same signs, top posting last
+>     Assets:Tiny:Y    0.001 B
+>     Assets:Tiny:X       1 A
+Unbalanced remainder is:
+                 2 A
+Amount to balance against:
+                 2 A
+Error: Transaction does not balance
+end test
