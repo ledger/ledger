@@ -1,0 +1,20 @@
+; Gross-comparison detector fixture (test/semantic/check_all.py --gross).
+; The balance assignments telescope to the same net total either way,
+; so the net comparison cannot see how the assignments resolve; the
+; gross columns can.  The harness's planted defect drops the first
+; assignment's '= ' (reading it as a plain $300 amount instead of
+; adjusting to $300, then to $50): every net row stays equal and the
+; debit column of Assets:Cash moves from $300 to $400, which the
+; oracle's --gross lines show and the planted C++ side no longer
+; matches.
+2012-01-01 Opening
+    Assets:Cash  $100
+    Equity:Opening
+
+2012-01-02 Adjust
+    Assets:Cash  = $300
+    Equity:Adjustments
+
+2012-01-03 Adjust
+    Assets:Cash  = $50
+    Equity:Adjustments

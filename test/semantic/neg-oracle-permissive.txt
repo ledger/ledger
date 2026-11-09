@@ -1,0 +1,10 @@
+# The unbalanced negatives the oracle is known to accept, as
+# test/semantic/check_all.py measured them over the compared corpus
+# (repo-relative path).  The oracle's transaction extension books an
+# automated rule's postings without C++'s per-group balance check, so
+# a journal whose imbalance appears only after the extension balances
+# in the oracle.  The ratchet: an unlisted acceptance or a stale entry
+# fails the run, so the set changes only with the rule that forced it.
+test/regress/3314_auto.test
+test/regress/3314_precision.test
+test/regress/3314_precision_groups.test

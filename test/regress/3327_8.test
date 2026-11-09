@@ -33,11 +33,15 @@ test bal -G --unrealized --now 2024/03/01
                 $100  Assets:Broker
 end test
 
+; Since #3344 the cleared report books its columns' unrealized gain and
+; foots, as bal does (regress/unrealized-footing-two-lots); the gain here
+; is the $100 over cost that bal books, and the totals are zero.
 test cleared -V --unrealized --now 2024/03/01
             $150                $150                 Assets
             $200                $200    24-Jan-01      Broker
             $-50                $-50    24-Apr-01      Cash
+           $-100               $-100                 Equity:Unrealized Gains
             $-50                $-50    24-Apr-01    Income:Salary
 ----------------  ------------------    ---------
-            $100                $100             
+               0                   0             
 end test

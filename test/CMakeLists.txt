@@ -59,7 +59,14 @@ if(Python_EXECUTABLE)
     add_test(NAME SemanticBisimulation
       COMMAND ${Python_EXECUTABLE}
         ${PROJECT_SOURCE_DIR}/test/semantic/check_all.py
-        --ledger $<TARGET_FILE:ledger> --source ${PROJECT_SOURCE_DIR})
+        --ledger $<TARGET_FILE:ledger> --source ${PROJECT_SOURCE_DIR}
+        --gross --value)
+    # --gross and --value turn on the harness's two opt-in comparisons
+    # (test/semantic/check_all.py): the oracle supports both, so CI
+    # compares gross totals and market-valued balances as well as the
+    # net comparison.  The flags stay off in check_all.py itself, so a
+    # developer running the script by hand keeps the net comparison
+    # alone.
     # Bake the oracle location seen at configure time into the test,
     # so the oracle that runs is the one whose presence registered the
     # test, not whatever happens to be in the environment later.
@@ -77,6 +84,22 @@ if(Python_EXECUTABLE)
     message(STATUS
       "SemanticBisimulation: not registered (LEDGER_LEAN_DIR unset)")
   endif()
+
+  # Valuation footing (test/semantic/footing.py): on each positive
+  # .test journal that balances at cost in one commodity C, bal -V
+  # --unrealized, where its rows are in one commodity, and bal -X C
+  # --unrealized, where its rows are in C, must total zero, and their
+  # unrealized rows must equal minus the matching bal -G total.  The
+  # script bins every journal it cannot compare and records why.  It
+  # compares C++ with C++ and needs no Lean oracle, so it registers
+  # wherever Python is found, outside the condition above.
+  add_test(NAME ValuationFooting
+    COMMAND ${Python_EXECUTABLE}
+      ${PROJECT_SOURCE_DIR}/test/semantic/footing.py
+      --ledger $<TARGET_FILE:ledger> --source ${PROJECT_SOURCE_DIR})
+  set_tests_properties(ValuationFooting PROPERTIES
+    ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}"
+    TIMEOUT 7200)
 endif()
 
 if(Python_EXECUTABLE)

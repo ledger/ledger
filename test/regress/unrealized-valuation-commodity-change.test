@@ -1,0 +1,42 @@
+; bal -V --unrealized --dc books no unrealized gain on a holding whose
+; most recent price is in another commodity at the report date than on
+; its transaction's date.  -V converts a commodity into the commodity of
+; its most recent price, so the euros bought on 2024/01/10 are valued in
+; dollars on that date and in pounds from 2024/01/15.  The report cannot
+; bring the dollar value to pounds, so each posting of the purchase
+; contributes itself to the baseline and adds nothing to the unrealized
+; rows, and the report prints what it printed before the balance report
+; valued postings at cost.  Booking each column at its value on the
+; transaction's date printed an Equity:Unrealized Gains row of "$110.00 /
+; 85.00 GBP" in both columns and column totals of "$110.00 / 50.00 GBP",
+; although the net column still totalled zero.  The shape is that of
+; regress/coverage-history-prices.
+
+P 2024/01/01 EUR 1.10 $
+P 2024/01/15 EUR 0.85 GBP
+
+2024/01/10 Buy euros
+    Assets:Euros            100 EUR
+    Assets:Cash
+
+2024/01/20 Buy pounds
+    Assets:Pounds           50 GBP
+    Assets:Cash
+
+test bal -V --unrealized --now 2024/04/01
+                   0  Assets
+         -135.00 GBP    Cash
+           85.00 GBP    Euros
+           50.00 GBP    Pounds
+--------------------
+                   0
+end test
+
+test bal -V --unrealized --dc --now 2024/04/01
+    135.00 GBP     135.00 GBP              0  Assets
+             0     135.00 GBP    -135.00 GBP    Cash
+     85.00 GBP              0      85.00 GBP    Euros
+     50.00 GBP              0      50.00 GBP    Pounds
+-------------- -------------- --------------
+    135.00 GBP     135.00 GBP              0
+end test

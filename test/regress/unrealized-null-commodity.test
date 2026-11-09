@@ -1,0 +1,52 @@
+; bal -V --unrealized books no unrealized gain on an amount with no
+; commodity.  The -1000 in Assets:Checking has no commodity and a cost of
+; -200 GBP; the report cannot value it, so it contributes itself to the
+; baseline and adds nothing to the unrealized rows, while the AAPL lot is
+; revalued as usual.  Booking it at its cost instead printed an
+; Equity:Unrealized Gains row of "1000 / $-200 / -200 GBP", which made the
+; report total zero only by setting the pounds against the amount that paid
+; for them.
+; Under --dc the amount stays in the credit column and the one unrealized
+; row is again the AAPL revaluation.
+
+2024/01/01 Buy pounds
+    Assets:GBP              200 GBP
+    Assets:Checking       -1000 @ 0.2 GBP
+
+2024/02/01 Buy shares
+    Assets:Brokerage        10 AAPL @ $150
+    Assets:Cash
+
+P 2024/03/01 AAPL $170
+
+test bal -V --unrealized --now 2024/04/01
+               -1000
+                $200
+             200 GBP  Assets
+               $1700    Brokerage
+              $-1500    Cash
+               -1000    Checking
+             200 GBP    GBP
+               $-200  Equity:Unrealized Gains
+--------------------
+               -1000
+             200 GBP
+end test
+
+test bal -V --unrealized --dc --now 2024/04/01
+         $1700
+       200 GBP           1000
+                      $1500          -1000
+                                    $200
+                                 200 GBP  Assets
+         $1700              0          $1700    Brokerage
+             0          $1500         $-1500    Cash
+             0           1000          -1000    Checking
+       200 GBP              0        200 GBP    GBP
+          $200              0          $-200  Equity:Unrealized Gains
+-------------- -------------- --------------
+         $1500
+       200 GBP           1000
+                      $1500          -1000
+                                 200 GBP
+end test

@@ -5,17 +5,17 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1793859072,
-        "narHash": "sha256-JAleLBux+c4Mqq85LypOLtIGyIC8ACq9Tbuc9CbP5Jk=",
+        "lastModified": 1794033337,
+        "narHash": "sha256-CQNDW6g0kuCedv3dX74HzyZYwvD6BJQo8chNZF/SRmM=",
         "owner": "ledger",
         "repo": "ledger-semantics",
-        "rev": "bbd5478d270d4b7f70f8e33dd20e4d9173e51202",
+        "rev": "368d027f4cc17c8b9576454a5ce11997300b433b",
         "type": "github"
       },
       "original": {
         "owner": "ledger",
+        "ref": "368d027",
         "repo": "ledger-semantics",
-        "rev": "bbd5478d270d4b7f70f8e33dd20e4d9173e51202",
         "type": "github"
       }
     },

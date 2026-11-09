@@ -1,0 +1,19 @@
+; Valuation-footing detector fixture (test/semantic/footing.py).
+; Two lots of AAPL bought on different dates, then a later price.  At
+; the fixed --now, bal -V --unrealized and bal -X $ --unrealized must
+; each total zero with <Unrealized> at $-300, minus the $300 of bal -G
+; and of bal -G -X $.  The detector limits the -V report, and then the
+; -X report, to Assets:Brokerage, which omits the other side of each
+; purchase so that the total is $3100, and perturbs the final price in
+; the copy that bal -G, and then bal -G -X $, reads alone, so that the
+; gain is $320.
+
+2024/01/01 Buy
+    Assets:Brokerage        10 AAPL @ $150
+    Assets:Checking
+
+2024/02/01 Buy
+    Assets:Brokerage        10 AAPL @ $160
+    Assets:Checking
+
+P 2024/03/01 AAPL $170

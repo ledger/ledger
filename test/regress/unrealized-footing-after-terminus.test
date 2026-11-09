@@ -1,0 +1,29 @@
+; bal -V --unrealized must foot to zero when a posting is dated after the
+; report terminus.  Under --unrealized the terminus revaluation is the only
+; one a balance report books, so it must not be skipped because the second
+; purchase of 2030/01/01 follows the --now date.  Both lots are valued at
+; the terminus price of $120; the report used to total $300 with no
+; Equity:Unrealized Gains row.
+
+2024/01/01 Buy
+    Assets:Broker        10 AAPL @ $50
+    Assets:Cash
+
+P 2024/03/01 AAPL $120
+
+2030/01/01 Buy again
+    Assets:Broker         5 AAPL @ $200
+    Assets:Cash
+
+test bal -V --unrealized --now 2024/04/01
+                $300  Assets
+               $1800    Broker
+              $-1500    Cash
+               $-300  Equity:Unrealized Gains
+--------------------
+                   0
+end test
+
+test bal -G --now 2024/04/01
+                $300  Assets:Broker
+end test

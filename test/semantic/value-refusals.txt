@@ -1,0 +1,58 @@
+# The value comparison's visible skips over the compared corpus, as
+# test/semantic/check_all.py --value measured them (reason TAB
+# repo-relative path).  spec-form is the harness's own bin: the
+# file's bal lines name the target in a form the comparison does not
+# read.  The ratchet: an unlisted skip or a stale entry fails the
+# run, so the set changes only with the rule that forced it
+# (decisions D30, D31, D34; Ledger/Driver.lean's exchangeRows records
+# the refusal reasons and their witnesses).
+alternative-price-path	test/regress/unrealized-unconvertible-proceeds.test
+equivalence	test/regress/1066.test
+equivalence	test/regress/1793.test
+equivalence	test/regress/2017.test
+fixated-lot	test/regress/1122.test
+fixated-lot	test/regress/1190.test
+fixated-lot	test/regress/1638.test
+fixated-lot	test/regress/964.test
+fixated-lot	test/regress/CAE63F5C-b.test
+fixated-lot	test/regress/CAE63F5C-c.test
+fixated-lot	test/regress/coverage-apply-fixed.test
+fixated-lot	test/regress/unrealized-anonymized.test
+no-price-path	test/regress/1612.test
+no-price-path	test/regress/1692.test
+no-price-path	test/regress/3220.test
+no-price-path	test/regress/96A8E4A1.test
+no-price-path	test/regress/coverage-history-empty-prices.test
+no-price-path	test/regress/coverage-history-no-path.test
+no-price-path	test/regress/coverage-history-nopath.test
+no-price-path	test/regress/coverage-history-noprice.test
+no-price-path	test/regress/unrealized-basis-exchange.test
+no-price-path	test/regress/unrealized-lot-price-fallback.test
+posting-date	test/regress/unrealized-account-rewrite.test
+posting-date	test/regress/unrealized-footing-posting-date.test
+posting-date	test/regress/unrealized-payee-rewrite.test
+price-precision	test/baseline/opt-exchange-bal.test
+price-precision	test/regress/1130.test
+price-precision	test/regress/3FE26304.test
+price-precision	test/regress/cov6-history-find-3way.test
+price-precision	test/regress/coverage-history-findprice.test
+price-precision	test/regress/coverage-history-pricemap.test
+price-precision	test/regress/coverage-history-reverse-path.test
+price-precision	test/regress/coverage-history-triangle.test
+price-precision	test/regress/coverage-wave8-history.test
+price-precision	test/regress/coverage_history_filtered.test
+price-precision	test/regress/3313_4.test
+spec-form	test/baseline/opt-exchange-inline.test
+spec-form	test/regress/1101.test
+spec-form	test/regress/1142.test
+spec-form	test/regress/2115.test
+spec-form	test/regress/3231.test
+spec-form	test/regress/cov3-value-balance-exchange.test
+spec-form	test/regress/cov3-value-exchange-selective.test
+spec-form	test/regress/coverage-value-cc-exchange-src.test
+spec-form	test/regress/coverage-value-exchange-bal-unknown-source.test
+spec-form	test/regress/coverage-value-exchange-unknown-source.test
+spec-form	test/regress/unrealized-unconvertible-cost.test
+time-unit	test/regress/1018.test
+value-expression	test/baseline/opt-value-expr.test
+spec-form	test/regress/value-unround-merged-precision.test

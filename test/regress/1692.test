@@ -77,3 +77,23 @@ test print
     Assets:C                                     2 M @ 0.0002 N
     Assets:D
 end test
+
+; A balance report under -H with --unrealized does not value postings at
+; their cost (regress/unrealized-excluded-reports).  Valuing them from cost
+; there omitted the balancing -0.0004 N from Assets:D and from the total
+; under -X, the omission this issue describes.
+test bal -X '$' --unrealized -H
+                    2 M
+-0.000400000000000000 N
+                    2 X
+          Y-0.400000000  Assets
+                 2 X    A
+       Y-0.400000000    B
+                 2 M    C
+-0.000400000000000000 N    D
+--------------------
+                    2 M
+-0.000400000000000000 N
+                    2 X
+          Y-0.400000000
+end test

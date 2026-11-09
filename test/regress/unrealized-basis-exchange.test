@@ -1,0 +1,74 @@
+; bal -X EUR --unrealized values each posting's cost in euros on its
+; transaction's date, or on the terminus when the transaction is dated
+; after it, and bal -B -X EUR --unrealized foots as it did before the
+; balance report valued postings at cost.
+;
+; At the earlier report date neither ACME, bought at a virtual cost, which
+; records no price, nor MSFT, bought after that date, has a price, so -X
+; leaves both in their own commodities and they add nothing to the
+; unrealized rows.  The dollars paid for MSFT are valued at the terminus
+; rate, EUR0.90, the rate at which the report displays them, and not at
+; the EUR0.80 of the purchase, a price later than the report's valuation
+; date.  The one unrealized row is then the gain on the AAPL lot, its $1,700
+; value less its $1,500 cost at EUR0.90, or EUR180.00; valuing the MSFT
+; purchase at EUR0.80 would take EUR30.00 off it.
+;
+; Under --basis the running total holds the dollar cost of each posting,
+; which -X converts at the terminus.  The report can value those dollars
+; although it cannot value ACME or MSFT, so each posting is booked at its
+; cost and the report foots at both dates.  Testing whether the report can
+; value the holding itself, instead of the dollars the posting contributes,
+; left the $500 paid for ACME in the baseline at the terminus rate while
+; the Checking leg that paid it was valued at the January rate, and printed
+; the difference as an unrealized row (EUR-75.00 at the later date).
+
+P 2024/01/01 $ EUR0.90
+P 2024/06/01 $ EUR0.80
+P 2024/09/01 $ EUR0.75
+
+2024/01/01 Buy
+    Assets:Brokerage        10 AAPL @ $150
+    Assets:Checking
+
+2024/01/01 Buy at a virtual cost
+    Assets:Private          10 ACME (@) $50
+    Assets:Checking
+
+P 2024/03/01 AAPL $170
+
+2024/07/01 Buy after the earlier report date
+    Assets:Brokerage        3 MSFT @ $100
+    Assets:Checking
+
+test bal -X EUR --unrealized --now 2024/04/01
+             10 ACME
+          EUR-540.00
+              3 MSFT  Assets
+          EUR1530.00
+              3 MSFT    Brokerage
+         EUR-2070.00    Checking
+             10 ACME    Private
+          EUR-180.00  Equity:Unrealized Gains
+--------------------
+             10 ACME
+          EUR-720.00
+              3 MSFT
+end test
+
+test bal -B -X EUR --unrealized --now 2024/04/01
+                   0  Assets
+          EUR1620.00    Brokerage
+         EUR-2070.00    Checking
+           EUR450.00    Private
+--------------------
+                   0
+end test
+
+test bal -B -X EUR --unrealized --now 2024/12/01
+                   0  Assets
+          EUR1350.00    Brokerage
+         EUR-1725.00    Checking
+           EUR375.00    Private
+--------------------
+                   0
+end test

@@ -1,0 +1,85 @@
+; bal -V --unrealized must foot to zero when a price change precedes the
+; report's last posting.  Two lots of AAPL are bought on different dates;
+; the second purchase records AAPL at $160, which revalues the first lot
+; before the last posting.  Since 75c9c37a5 the balance report dropped
+; that revaluation (src/filters.cc, changed_value_posts::operator()),
+; showing Equity:Unrealized Gains $-200 and a total of $100, while
+; bal -G reports a gain of $300.  The parent commit 5e9504404 footed.
+; Under --dc the revaluation keeps the report's debit and credit columns:
+; the unrealized row sits in the debit column, beside the revalued lots,
+; and both columns total $3100.  Under --round the amount expression values
+; each posting at the market price before it rounds it, so each lot
+; contributes dollars that a second valuation leaves as they are; the lots
+; are still booked at their cost, and the report foots.  Only the first
+; purchase is cleared, and the cleared report revalues each of its columns
+; against its own cost: the cleared column books $-200, as bal --cleared
+; does, and both columns total zero.  The report used to book $-200 in the
+; total column and $-100 in the cleared column, and to total $100 in each.
+
+2024/01/01 * Buy
+    Assets:Brokerage        10 AAPL @ $150
+    Assets:Checking
+
+2024/02/01 Buy
+    Assets:Brokerage        10 AAPL @ $160
+    Assets:Checking
+
+P 2024/03/01 AAPL $170
+
+test bal -V --unrealized
+                $300  Assets
+               $3400    Brokerage
+              $-3100    Checking
+               $-300  Equity:Unrealized Gains
+--------------------
+                   0
+end test
+
+test bal --exchange $ --unrealized
+                $300  Assets
+               $3400    Brokerage
+              $-3100    Checking
+               $-300  Equity:Unrealized Gains
+--------------------
+                   0
+end test
+
+test bal -V --unrealized --dc
+         $3400          $3100           $300  Assets
+         $3400              0          $3400    Brokerage
+             0          $3100         $-3100    Checking
+          $300              0          $-300  Equity:Unrealized Gains
+-------------- -------------- --------------
+         $3100          $3100              0
+end test
+
+test bal -G
+                $300  Assets:Brokerage
+end test
+
+test bal -V --unrealized --round
+                $300  Assets
+               $3400    Brokerage
+              $-3100    Checking
+               $-300  Equity:Unrealized Gains
+--------------------
+                   0
+end test
+
+test cleared -V --unrealized
+            $300                $200                 Assets
+           $3400               $1700    24-Jan-01      Brokerage
+          $-3100              $-1500    24-Jan-01      Checking
+           $-300               $-200                 Equity:Unrealized Gains
+----------------  ------------------    ---------
+               0                   0             
+end test
+
+test bal -V --unrealized --cleared
+                $200  Assets
+               $1700    Brokerage
+              $-1500    Checking
+               $-200  Equity:Unrealized Gains
+--------------------
+                   0
+end test

@@ -1,0 +1,46 @@
+; bal -V and -X with --unrealized keep the revaluation between postings for
+; a journal with a payee-rewrite directive, and print what they printed
+; before the balance report valued postings at cost.  rewrite_posts copies
+; every posting of a transaction whose payee it rewrites into a transaction
+; of its own, dated by the posting, so the Brokerage posting, dated
+; 2024/01/15, no longer shares its transaction's date, 2024/01/01, with the
+; Checking posting.  A baseline that valued each cost on the date of its
+; transaction converted the $1500 at EUR 0.80 on one side and at EUR 0.90
+; on the other, and the -X EUR report printed Equity:Unrealized Gains
+; EUR-310.00 and a total of EUR-150.00, while bal -G -X EUR reports a gain
+; of EUR160.00.  Under -V the report books no unrealized gain and totals
+; $200, as it did before.  The journal is that of
+; unrealized-footing-posting-date.test with the directive added;
+; unrealized-account-rewrite.test covers account-rewrite.
+
+payee-rewrite Buy  Purchase
+
+P 2024/01/01 $ 0.90 EUR
+P 2024/01/10 $ 0.80 EUR
+
+2024/01/01 Buy
+    Assets:Brokerage        10 AAPL @ $150  ; [2024/01/15]
+    Assets:Checking
+
+P 2024/03/05 AAPL $170
+
+test bal -X EUR --unrealized
+           EUR160.00  Assets
+          EUR1360.00    Brokerage
+         EUR-1200.00    Checking
+          EUR-150.00  Equity:Unrealized Gains
+--------------------
+            EUR10.00
+end test
+
+test bal -V --unrealized
+                $200  Assets
+               $1700    Brokerage
+              $-1500    Checking
+--------------------
+                $200
+end test
+
+test bal -G -X EUR
+           EUR160.00  Assets:Brokerage
+end test
