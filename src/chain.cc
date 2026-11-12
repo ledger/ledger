@@ -441,8 +441,7 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
     // rather than from the first transaction's date.
     optional<date_t> begin_of_report;
     if (report.HANDLED(begin_) && !interval.begin()) {
-      date_interval_t begin_interval(report.HANDLER(begin_).str());
-      begin_of_report = begin_interval.begin();
+      begin_of_report = report.report_begin;
     }
 
     // When -e is specified and the period string has no explicit range end,
@@ -453,8 +452,7 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
     optional<date_t> end_of_report;
     if (report.HANDLED(end_) && !interval.end() && report.HANDLED(empty) &&
         !report.HANDLED(average)) {
-      date_interval_t end_interval(report.HANDLER(end_).str());
-      end_of_report = end_interval.begin();
+      end_of_report = report.report_end;
     }
 
     handler = std::make_shared<interval_posts>(

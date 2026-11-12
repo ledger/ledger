@@ -166,6 +166,10 @@ public:
   datetime_t
       terminus; ///< Valuation date for market prices (defaults to now, adjusted by --end/--now)
   optional<date_t> origin; ///< Report begin date for budget period initialization (from -p/--begin)
+  optional<date_t>
+      report_begin; ///< Date the last -b/--begin resolved to (empty leading periods start here)
+  optional<date_t>
+      report_end; ///< Date the last -e/--end resolved to (empty trailing periods stop here)
   optional<datetime_t>
       gain_from; ///< Reference date for --gain-since (compute gain from this date's market value)
   uint_least8_t budget_flags; ///< Bitmask of BUDGET_* flags controlling budget report behavior
@@ -634,6 +638,7 @@ public:
           date_t begin_date = begin_dt->date();
           if (!parent->origin || begin_date < *parent->origin)
             parent->origin = begin_date;
+          parent->report_begin = begin_date;
           return;
         }
 
@@ -645,6 +650,7 @@ public:
           // date rather than a future one.
           if (!interval.begin_has_year() && *begin > CURRENT_DATE())
             begin = clamped_date(begin->year() - 1, begin->month(), begin->day());
+          parent->report_begin = begin;
           OTHER(limit_).on(whence, "date>=[" + to_iso_extended_string(*begin) + "]");
           if (!parent->origin || *begin < *parent->origin)
             parent->origin = begin;
@@ -898,6 +904,7 @@ public:
                                        format_datetime(*end_dt, FMT_WRITTEN) + "\")");
           // The instant itself is excluded, so value prices one second earlier.
           parent->terminus = *end_dt - seconds(1);
+          parent->report_end = end_dt->date();
           return;
         }
 
@@ -907,6 +914,7 @@ public:
         date_interval_t interval(str);
         if (optional<date_t> end = interval.begin()) {
           OTHER(limit_).on(whence, "date<[" + to_iso_extended_string(*end) + "]");
+          parent->report_end = end;
 
           // Set terminus to the day before --end so that price lookups do not
           // use prices from the (exclusive) end date itself.  This makes

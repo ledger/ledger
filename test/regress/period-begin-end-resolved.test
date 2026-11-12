@@ -1,0 +1,44 @@
+; With a period report, -b/-e bound the empty leading and trailing
+; periods.  Those bounds must be the dates the -b/-e handlers resolved
+; (datetimes accepted, yearless dates rolled back a year), not a second
+; parse of the raw option text.
+
+2024/01/20 Jan
+    Expenses:Food    $10
+    Assets:Cash
+
+2024/03/05 Mar
+    Expenses:Food    $20
+    Assets:Cash
+
+2024/09/05 Sep
+    Expenses:Food    $30
+    Assets:Cash
+
+test reg Expenses -M -b "2024/01/15 10:00:00"
+24-Jan-01 - 24-Jan-31  Expenses:Food                     $10          $10
+24-Mar-01 - 24-Mar-31  Expenses:Food                     $20          $30
+24-Sep-01 - 24-Sep-30  Expenses:Food                     $30          $60
+end test
+
+test reg Expenses -M -E -e "2024/06/15 10:00:00"
+24-Jan-01 - 24-Jan-31  Expenses:Food                     $10          $10
+24-Feb-01 - 24-Feb-29  <None>                              0          $10
+24-Mar-01 - 24-Mar-31  Expenses:Food                     $20          $30
+24-Apr-01 - 24-Apr-30  <None>                              0          $30
+24-May-01 - 24-May-31  <None>                              0          $30
+24-Jun-01 - 24-Jun-30  <None>                              0          $30
+end test
+
+test reg Expenses -M -E -b 12/01 --now 2024/06/15
+23-Dec-01 - 23-Dec-31  <None>                              0            0
+24-Jan-01 - 24-Jan-31  Expenses:Food                     $10          $10
+24-Feb-01 - 24-Feb-29  <None>                              0          $10
+24-Mar-01 - 24-Mar-31  Expenses:Food                     $20          $30
+24-Apr-01 - 24-Apr-30  <None>                              0          $30
+24-May-01 - 24-May-31  <None>                              0          $30
+24-Jun-01 - 24-Jun-30  <None>                              0          $30
+24-Jul-01 - 24-Jul-31  <None>                              0          $30
+24-Aug-01 - 24-Aug-31  <None>                              0          $30
+24-Sep-01 - 24-Sep-30  Expenses:Food                     $30          $60
+end test
