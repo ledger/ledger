@@ -32,7 +32,7 @@ cmake-build-and-test:
     - name: build
       run: cmake --build build
     - name: test
-      run: cd build && ctest --output-on-failure || ctest --rerun-failed --output-on-failure
+      run: cd build && ctest --output-on-failure
 
 cmake-doxygen:
   piped: true
@@ -76,7 +76,7 @@ pre-commit:
           - name: build
             run: cmake --build build --parallel
           - name: test
-            run: cd build && ctest --output-on-failure || ctest --rerun-failed --output-on-failure
+            run: cd build && ctest --output-on-failure
           - name: doxygen
             run: cmake --build build --target doc.doxygen
           - name: manual
