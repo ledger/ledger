@@ -4,6 +4,8 @@
 
 #include <system.hh>
 
+#include <clocale>
+
 #include "format.h"
 #include "session.h"
 #include "report.h"
@@ -119,6 +121,106 @@ BOOST_AUTO_TEST_CASE(testTruncateAbbreviate)
   BOOST_CHECK_EQUAL(format_t::truncate(ustr, 10, 1), ".:中.:中文");
   BOOST_CHECK_EQUAL(format_t::truncate(ustr, 9, 1), ".:中:中文");
   BOOST_CHECK_EQUAL(format_t::truncate(ustr, 8, 1), ".:.:中文");
+}
+
+// -----------------------------------------------------------------------
+// Control characters occupy zero columns (#3291)
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testDisplayWidthControlCharacters)
+{
+  // mk_wcwidth() keeps wcwidth()'s -1 for control characters, which
+  // display_width() counts as zero columns.
+  BOOST_CHECK_EQUAL(mk_wcwidth(0x15), -1);
+  BOOST_CHECK_EQUAL(display_width(0x15), 0U); // NAK
+  BOOST_CHECK_EQUAL(display_width(0x0C), 0U); // form feed
+  BOOST_CHECK_EQUAL(display_width(0x7F), 0U); // DEL
+  BOOST_CHECK_EQUAL(display_width(0x85), 0U); // NEL, a C1 control
+  BOOST_CHECK_EQUAL(display_width(0x00), 0U);
+  BOOST_CHECK_EQUAL(display_width('a'), 1U);
+  BOOST_CHECK_EQUAL(display_width(0x0301), 0U); // combining acute accent
+  BOOST_CHECK_EQUAL(display_width(0x4E2D), 2U); // 中
+}
+
+BOOST_AUTO_TEST_CASE(testUnistringWidthControlCharacters)
+{
+  // Eight printable characters and 43 control characters: summing -1 for
+  // each control character used to wrap the width around to nearly 2^64.
+  const string naks(43, '\x15');
+  unistring segment("DemoBa" + naks + "nk");
+  BOOST_CHECK_EQUAL(segment.length(), 51U);
+  BOOST_CHECK_EQUAL(segment.width(), 8U);
+
+  // Zero-width characters are kept along with the text that follows them,
+  // and left out when the range ends just before them.
+  BOOST_CHECK_EQUAL(segment.extract_by_width(0, 7), "DemoBa" + naks + "n");
+  BOOST_CHECK_EQUAL(segment.extract_by_width(0, 6), "DemoBa");
+  BOOST_CHECK_EQUAL(segment.extract_by_width(6, 2), naks + "nk");
+
+  // "\025" is NAK; the padding counts it as zero columns.
+  std::ostringstream out;
+  justify(out, "a\025b", 5);
+  BOOST_CHECK_EQUAL(out.str(), "a\025b   ");
+}
+
+BOOST_AUTO_TEST_CASE(testTruncateAbbreviateControlCharacters)
+{
+  // The account name from #3291 is 29 columns wide.
+  format_t::default_style = format_t::ABBREVIATE;
+  const string naks(43, '\x15');
+  unistring acct("Assets:Bank:DemoBa" + naks + "nk:Checking");
+  BOOST_CHECK_EQUAL(acct.width(), 29U);
+
+  BOOST_CHECK_EQUAL(format_t::truncate(acct, 29, 2), "Assets:Bank:DemoBa" + naks + "nk:Checking");
+  BOOST_CHECK_EQUAL(format_t::truncate(acct, 23, 2), "As:Ba:DemoBa" + naks + "nk:Checking");
+  BOOST_CHECK_EQUAL(format_t::truncate(acct, 22, 2), "As:Ba:DemoBa" + naks + "n:Checking");
+  BOOST_CHECK_EQUAL(format_t::truncate(acct, 20, 2), "As:Ba:DemoB:Checking");
+}
+
+BOOST_AUTO_TEST_CASE(testTruncateAbbreviateZeroWidthSegments)
+{
+  // When every segment but the last is zero columns wide, the weight that
+  // shares out the overflow used to divide by zero, and converting the
+  // infinite result to size_t is undefined; clang's UBSan reports it.
+  // There is nothing to take from those segments, so the name is truncated
+  // at the beginning instead.
+  format_t::default_style = format_t::ABBREVIATE;
+  BOOST_CHECK_EQUAL(format_t::truncate(unistring("::Checking"), 5, 2), "..ing");
+  BOOST_CHECK_EQUAL(format_t::truncate(unistring("\025:\025:Checking"), 5, 2), "..ing");
+}
+
+BOOST_AUTO_TEST_CASE(testTruncateAbbreviateTrailingWhitespace)
+{
+  // A shortened segment may not end in whitespace.  The test for it used
+  // to index the segment's UTF-8 bytes by display column, reading the byte
+  // before the segment once only whitespace was left, and looking at the
+  // wrong character when the segment held control or wide characters.
+  format_t::default_style = format_t::ABBREVIATE;
+
+  BOOST_CHECK_EQUAL(format_t::truncate(unistring("A: XYZ:Checking"), 13, 1), "A: X:Checking");
+  BOOST_CHECK_EQUAL(format_t::truncate(unistring("A: XYZ:Checking"), 12, 1), "A::Checking");
+  BOOST_CHECK_EQUAL(format_t::truncate(unistring("A: \f\fXYZ:Checking"), 13, 1),
+                    "A: \f\fX:Checking");
+
+  BOOST_CHECK_EQUAL(format_t::truncate(unistring("日 abc:Checking"), 13, 2), "日 a:Checking");
+  BOOST_CHECK_EQUAL(format_t::truncate(unistring("日 xyz:Checking"), 12, 2), "日:Checking");
+}
+
+BOOST_AUTO_TEST_CASE(testTruncateAbbreviateTrailingWhitespaceUtf8Locale)
+{
+  // The embedded Python interpreter sets LC_CTYPE from the environment, and
+  // in a UTF-8 locale isspace() on macOS claims 0xA0, the byte that ends "Р"
+  // and "à".  Neither character is whitespace, so neither may be trimmed.
+  format_t::default_style = format_t::ABBREVIATE;
+  const string saved = std::setlocale(LC_CTYPE, nullptr);
+  if (!std::setlocale(LC_CTYPE, "en_US.UTF-8"))
+    std::setlocale(LC_CTYPE, "C.UTF-8");
+  const string cyrillic = format_t::truncate(unistring("Расходы:Еда"), 5, 1);
+  const string latin = format_t::truncate(unistring("Bànk:Checking"), 11, 2);
+  std::setlocale(LC_CTYPE, saved.c_str());
+
+  BOOST_CHECK_EQUAL(cyrillic, "Р:Еда");
+  BOOST_CHECK_EQUAL(latin, "Bà:Checking");
 }
 
 // -----------------------------------------------------------------------
