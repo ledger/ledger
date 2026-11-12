@@ -180,7 +180,7 @@ if(BUILD_WEB_DOCS)
       COMMAND ${CMAKE_COMMAND} -E env
         PYTHONPATH=${CMAKE_BINARY_DIR}
         ${Python_EXECUTABLE} -m pydoc -w ledger
-      DEPENDS ${CMAKE_BINARY_DIR}/${_ledger_python_module_name}
+      DEPENDS libledger
       VERBATIM)
     list(APPEND ledger_doc_files ledger.html)
   endif()
