@@ -153,6 +153,19 @@ if(USE_SANITIZERS)
   add_link_options(-fsanitize=address,undefined)
 endif()
 
+# Fuzz testing (requires Clang with libFuzzer).  Instrument every target,
+# libledger included, so libFuzzer sees the parser's edges and the
+# sanitizers check the parser itself; journal_fuzzer alone adds
+# -fsanitize=fuzzer, which links libFuzzer's main().
+option(ENABLE_FUZZING "Build fuzz testing targets (requires Clang)" OFF)
+if(ENABLE_FUZZING)
+  if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    message(FATAL_ERROR "Fuzzing requires Clang compiler")
+  endif()
+  add_compile_options(-fsanitize=fuzzer-no-link,address,undefined -fno-sanitize-recover=all)
+  add_link_options(-fsanitize=address,undefined)
+endif()
+
 option(USE_CLANG_PROFILING "Enable Clang instrumentation profiling (-fprofile-instr-generate)" OFF)
 set(CLANG_PROFILE_DATA "" CACHE FILEPATH "Path to .profdata file for profile-guided optimization")
 
@@ -542,17 +555,10 @@ add_subdirectory(test)
 ########################################################################
 
 # Fuzz testing target (requires Clang with libFuzzer)
-option(ENABLE_FUZZING "Build fuzz testing targets (requires Clang)" OFF)
 if(ENABLE_FUZZING)
-  if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    message(FATAL_ERROR "Fuzzing requires Clang compiler")
-  endif()
-
   add_executable(journal_fuzzer test/fuzz/journal_fuzzer.cc)
-  target_compile_options(journal_fuzzer PRIVATE
-    -fsanitize=fuzzer,address,undefined -fno-sanitize-recover=all)
-  target_link_options(journal_fuzzer PRIVATE
-    -fsanitize=fuzzer,address,undefined)
+  target_compile_options(journal_fuzzer PRIVATE -fsanitize=fuzzer)
+  target_link_options(journal_fuzzer PRIVATE -fsanitize=fuzzer)
   target_include_directories(journal_fuzzer PRIVATE
     ${CMAKE_SOURCE_DIR}/src ${PROJECT_BINARY_DIR})
   target_link_libraries(journal_fuzzer libledger)

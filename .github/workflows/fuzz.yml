@@ -26,6 +26,18 @@ jobs:
       - name: Build fuzzer
         run: cmake --build ${{github.workspace}}/build --target journal_fuzzer
 
+      - name: Check that libledger is instrumented
+        working-directory: ${{github.workspace}}/build
+        run: |
+          # The parser lives in libledger; without SanitizerCoverage and ASan
+          # hooks there, libFuzzer sees only the harness's own edges.
+          for sym in __sanitizer_cov_ __asan_report_; do
+            if ! nm -D libledger.so | grep -q "$sym"; then
+              echo "::error::libledger.so has no $sym* references; it was built without fuzzer instrumentation"
+              exit 1
+            fi
+          done
+
       - name: Run fuzzer
         working-directory: ${{github.workspace}}/build
         run: |
@@ -39,16 +51,21 @@ jobs:
             2>&1 | tee fuzz-output.log
         continue-on-error: true
 
-      - name: Check for crashes
+      - name: Check for fuzzer findings
         working-directory: ${{github.workspace}}/build
         run: |
-          if ls fuzz-findings/crash-* 1>/dev/null 2>&1; then
-            echo "::error::Fuzzer found crashes"
+          shopt -s nullglob
+          findings=(fuzz-findings/{crash,leak,timeout,oom}-*)
+          if (( ${#findings[@]} )); then
+            echo "::error::Fuzzer found failures: ${findings[*]}"
             ls -la fuzz-findings/
             exit 1
-          else
-            echo "No crashes found"
           fi
+          if ! grep -q '^Done [0-9]* runs in' fuzz-output.log; then
+            echo "::error::Fuzzer did not finish its run; see fuzz-output.log"
+            exit 1
+          fi
+          echo "No findings"
 
       - uses: actions/upload-artifact@v7
         if: always()
