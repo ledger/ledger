@@ -53,4 +53,4 @@ if __name__ == "__main__":
                                  parents=[CheckOptions.parser()]).parse_args()
   script = CheckBaselineTests(args)
   status = script.main()
-  sys.exit(status)
+  sys.exit(1 if status else 0)

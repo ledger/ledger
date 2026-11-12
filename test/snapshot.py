@@ -607,7 +607,11 @@ def mine_combos(source_root: Path) -> list[Combo]:
 # ---------------------------------------------------------------------------
 
 def discover_options(ledger_binary: Path) -> set[str]:
-    """Discover all options the ledger binary supports via --debug option.names."""
+    """Discover the options the ledger binary supports via --debug option.names.
+
+    Only a Debug build (CMAKE_BUILD_TYPE=Debug) prints these names; any other
+    build yields an empty set, and validate_coverage then covers OPTION_MATRIX alone.
+    """
     try:
         result = subprocess.run(
             [str(ledger_binary), "--debug", "option.names", "parse", "true"],

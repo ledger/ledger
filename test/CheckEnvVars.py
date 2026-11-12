@@ -265,4 +265,4 @@ if failed > 0:
     print(f'FAILED ({failed})')
 print()
 
-sys.exit(failed)
+sys.exit(1 if failed else 0)

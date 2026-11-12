@@ -132,6 +132,9 @@ if(Python_EXECUTABLE)
 
   # CheckManpage and CheckTexinfo are disabled, since they do not work
   # reliably yet
+  # Every script in CheckOptions reads ledger's option list from
+  # "ledger --debug option.names", which prints only in a Debug build; on any
+  # other build the script exits 77 and ctest shows it as SKIPPED.
   list(APPEND CheckOptions CheckBaselineTests)
   if(BUILD_DEBUG)
     # CheckManpage and CheckTexinfo require ledger to have been
@@ -143,8 +146,19 @@ if(Python_EXECUTABLE)
       COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/${_class}.py
       --ledger $<TARGET_FILE:ledger> --source ${PROJECT_SOURCE_DIR})
     set_tests_properties(${_class}
-      PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}")
+      PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}" SKIP_RETURN_CODE 77)
   endforeach()
+
+  # The checks above, DocTests and CheckEnvVars must exit 0, 1 or 77 only: a
+  # failure count would wrap modulo 256, and a ledger without debug support
+  # must make the option checks skip, not pass.  The stub ledgers are /bin/sh
+  # scripts.
+  if(UNIX)
+    add_test(NAME RegressPyTest_check_scripts_exit_status
+      COMMAND ${Python_EXECUTABLE}
+        ${PROJECT_SOURCE_DIR}/test/regress/check-scripts-exit-status.py
+        ${PROJECT_SOURCE_DIR})
+  endif()
 
   # Regression test for GitHub issue #3277: no other entry at the top of the
   # source tree may begin with "README" unless it also begins with "README.md",

@@ -8,8 +8,6 @@ import pathlib
 import argparse
 import subprocess
 
-from subprocess import Popen, PIPE
-
 class CheckOptions (object):
   @staticmethod
   def parser():
@@ -65,10 +63,18 @@ class CheckOptions (object):
     return alternates
 
   def ledger_options(self):
-    pipe = Popen([str(self.ledger), '--debug', 'option.names', 'parse', 'true'],
-                 shell=False, stdout=PIPE, stderr=PIPE)
+    result = subprocess.run([str(self.ledger), '--args-only', '--debug', 'option.names',
+                             'parse', 'true'],
+                            stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+    if result.returncode != 0:
+      print('%s exited with status %d while listing its options' % (self.ledger, result.returncode))
+      print(result.stderr.decode())
+      sys.exit(1)
     regex = re.compile(r'\[DEBUG\]\s+Option:\s+(.*?)_?$')
-    ledger_options = {match.group(1).replace('_', '-') for match in {regex.search(line.decode()) for line in pipe.stderr.readlines()} if match}
+    ledger_options = {match.group(1).replace('_', '-') for match in {regex.search(line) for line in result.stderr.decode().splitlines()} if match}
+    if not ledger_options:
+      print('%s lists no options: --debug option.names prints only in a Debug build (CMAKE_BUILD_TYPE=Debug); skipping' % self.ledger)
+      sys.exit(77)
     return ledger_options
 
   def ledger_functions(self):

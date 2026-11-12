@@ -273,4 +273,4 @@ if __name__ == "__main__":
   args = getargs()
   script = DocTests(args)
   status = script.main()
-  sys.exit(status)
+  sys.exit(1 if status else 0)
