@@ -95,9 +95,8 @@ int day_of_period = 0;
 /**
  * The temporal_io_t template wraps strptime/strftime for a single format
  * string, paired with date_traits_t that record which date components
- * the format can express.  Two specializations of parse() exist: one for
- * datetime_t and one for date_t, because date_t needs default-year logic
- * (using the year directive or current date when the format lacks %Y).
+ * the format can express.  parse() has two specializations, for datetime_t
+ * and for date_t; the date_t one picks the year of a format without one.
  *
  * Instances are kept in shared_ptrs and organized into:
  *   - input_datetime_io / timelog_datetime_io: the two built-in datetime readers
@@ -105,38 +104,80 @@ int day_of_period = 0;
  *   - readers: a deque of date_io_t tried in order by parse_date_mask()
  */
 namespace {
-template <typename T, typename InputFacetType, typename OutputFacetType>
+/// @brief The date parts a strftime/strptime format carries, read
+/// case-sensitively from its conversion specifiers.
+date_traits_t traits_of(const string& fmt) {
+  date_traits_t traits;
+  for (std::size_t i = 0; i + 1 < fmt.size(); ++i) {
+    if (fmt[i] != '%')
+      continue;
+    char c = fmt[++i];
+    if ((c == 'E' || c == 'O') && i + 1 < fmt.size()) // POSIX modifiers: %Ey, %Om
+      c = fmt[++i];
+    switch (c) {
+    case 'D': // %m/%d/%y
+    case 'F': // %Y-%m-%d
+    case 'x': // the locale's date (%m/%d/%y in the C locale)
+    case 'c': // the locale's date and time
+      traits.has_year = traits.has_month = traits.has_day = true;
+      break;
+    case 'Y':
+    case 'y':
+      traits.has_year = true;
+      break;
+    case 'm':
+    case 'b':
+    case 'B':
+    case 'h':
+      traits.has_month = true;
+      break;
+    case 'd':
+    case 'e':
+      traits.has_day = true;
+      break;
+    default: // includes "%%", a literal percent sign
+      break;
+    }
+  }
+  return traits;
+}
+
+template <typename T>
 class temporal_io_t : public noncopyable {
   string fmt_str; ///< The strptime/strftime format string.
 
 public:
   date_traits_t traits; ///< Which date components this format can express.
-  bool input;           ///< True if this is an input (parsing) format.
 
-  temporal_io_t(const char* _fmt_str, bool _input)
-      : fmt_str(_fmt_str),
-        traits(icontains(fmt_str, "%F") || icontains(fmt_str, "%y"),
-               icontains(fmt_str, "%F") || icontains(fmt_str, "%m") || icontains(fmt_str, "%b"),
-               icontains(fmt_str, "%F") || icontains(fmt_str, "%d")),
-        input(_input) {}
+  explicit temporal_io_t(const char* fmt) { set_format(fmt); }
 
   /// @brief Replace the format string and recompute traits.
   void set_format(const char* fmt) {
     fmt_str = fmt;
-    traits = date_traits_t(icontains(fmt_str, "%F") || icontains(fmt_str, "%y"),
-                           icontains(fmt_str, "%F") || icontains(fmt_str, "%m") ||
-                               icontains(fmt_str, "%b"),
-                           icontains(fmt_str, "%F") || icontains(fmt_str, "%d"));
+    traits = traits_of(fmt_str);
   }
 
-  T parse(const char*) {}
+  T parse(const char* str);
 
   /// @brief Format a temporal value using strftime.
   std::string format(const T& when) {
     std::tm data(to_tm(when));
     char buf[128];
-    std::strftime(buf, 127, fmt_str.c_str(), &data);
-    return buf;
+    std::size_t len = std::strftime(buf, sizeof(buf), fmt_str.c_str(), &data);
+    if (len != 0 || fmt_str.empty())
+      return std::string(buf, len);
+    // strftime returns 0 when the output does not fit (or is empty, e.g. a
+    // lone %p in a locale without AM/PM): retry with larger buffers, bounded
+    // well above any output this format can produce.
+    for (std::size_t size = 256; size <= 128 * fmt_str.size() + 128; size *= 2) {
+      std::string out(size, '\0');
+      len = std::strftime(out.data(), size, fmt_str.c_str(), &data);
+      if (len != 0) {
+        out.resize(len);
+        return out;
+      }
+    }
+    return std::string();
   }
 };
 
@@ -147,8 +188,7 @@ public:
  * a Boost ptime.  Returns a not-a-date-time sentinel on failure.
  */
 template <>
-datetime_t temporal_io_t<datetime_t, posix_time::time_input_facet, posix_time::time_facet>::parse(
-    const char* str) {
+datetime_t temporal_io_t<datetime_t>::parse(const char* str) {
   std::tm data;
   std::memset(&data, 0, sizeof(std::tm));
   if (strptime(str, fmt_str.c_str(), &data))
@@ -166,8 +206,7 @@ datetime_t temporal_io_t<datetime_t, posix_time::time_input_facet, posix_time::t
  * Also pre-fills tm_mday=1 for formats without %d (like "%Y/%m").
  */
 template <>
-date_t
-temporal_io_t<date_t, gregorian::date_input_facet, gregorian::date_facet>::parse(const char* str) {
+date_t temporal_io_t<date_t>::parse(const char* str) {
   std::tm data;
   std::memset(&data, 0, sizeof(std::tm));
   // When year_directive_year is set (from "apply year" or "year" directive),
@@ -184,9 +223,8 @@ temporal_io_t<date_t, gregorian::date_input_facet, gregorian::date_facet>::parse
     return date_t();
 }
 
-using datetime_io_t =
-    temporal_io_t<datetime_t, posix_time::time_input_facet, posix_time::time_facet>;
-using date_io_t = temporal_io_t<date_t, gregorian::date_input_facet, gregorian::date_facet>;
+using datetime_io_t = temporal_io_t<datetime_t>;
+using date_io_t = temporal_io_t<date_t>;
 
 std::shared_ptr<datetime_io_t> input_datetime_io; ///< Reader for "YYYY/MM/DD HH:MM:SS".
 std::shared_ptr<datetime_io_t>
@@ -259,9 +297,12 @@ date_t parse_date_mask_routine(const char* date_str, date_io_t& io,
     const char* p = when_str.c_str();
     const char* q = buf;
     for (; *p && *q; p++, q++) {
-      if (*p != *q && *p == '0')
+      if (std::tolower(static_cast<unsigned char>(*p)) !=
+              std::tolower(static_cast<unsigned char>(*q)) &&
+          *p == '0')
         p++;
-      if (!*p || *p != *q)
+      if (!*p || std::tolower(static_cast<unsigned char>(*p)) !=
+                     std::tolower(static_cast<unsigned char>(*q)))
         break;
     }
     if (*p != '\0' || *q != '\0')
@@ -2428,7 +2469,7 @@ std::string format_datetime(const datetime_t& when, const format_type_t format_t
     if (auto i = temp_datetime_io.find(*format); i != temp_datetime_io.end()) {
       return (*i).second->format(when);
     } else {
-      auto& stored = (temp_datetime_io[*format] = std::make_unique<datetime_io_t>(*format, false));
+      auto& stored = (temp_datetime_io[*format] = std::make_unique<datetime_io_t>(*format));
       return stored->format(when);
     }
   } else if (format_type == FMT_PRINTED) {
@@ -2456,7 +2497,7 @@ std::string format_date(const date_t& when, const format_type_t format_type,
     if (auto i = temp_date_io.find(*format); i != temp_date_io.end()) {
       return (*i).second->format(when);
     } else {
-      auto& stored = (temp_date_io[*format] = std::make_unique<date_io_t>(*format, false));
+      auto& stored = (temp_date_io[*format] = std::make_unique<date_io_t>(*format));
       return stored->format(when);
     }
   } else if (format_type == FMT_PRINTED) {
@@ -2504,7 +2545,7 @@ bool datetime_format_is_set() {
  * normalization, since custom formats may use '.' or '-' literally.
  */
 void set_input_date_format(const char* format) {
-  readers.push_front(std::shared_ptr<date_io_t>(new date_io_t(format, true)));
+  readers.push_front(std::shared_ptr<date_io_t>(new date_io_t(format)));
   convert_separators_to_slashes = false;
 }
 
@@ -2534,21 +2575,21 @@ void times_initialize() {
     explicit_date_format = false;
     explicit_datetime_format = false;
 
-    input_datetime_io.reset(new datetime_io_t("%Y/%m/%d %H:%M:%S", true));
-    timelog_datetime_io.reset(new datetime_io_t("%m/%d/%Y %H:%M:%S", true));
+    input_datetime_io.reset(new datetime_io_t("%Y/%m/%d %H:%M:%S"));
+    timelog_datetime_io.reset(new datetime_io_t("%m/%d/%Y %H:%M:%S"));
 
-    written_datetime_io.reset(new datetime_io_t("%Y/%m/%d %H:%M:%S", false));
-    written_date_io.reset(new date_io_t("%Y/%m/%d", false));
+    written_datetime_io.reset(new datetime_io_t("%Y/%m/%d %H:%M:%S"));
+    written_date_io.reset(new date_io_t("%Y/%m/%d"));
 
-    printed_datetime_io.reset(new datetime_io_t("%y-%b-%d %H:%M:%S", false));
-    printed_date_io.reset(new date_io_t("%y-%b-%d", false));
+    printed_datetime_io.reset(new datetime_io_t("%y-%b-%d %H:%M:%S"));
+    printed_date_io.reset(new date_io_t("%y-%b-%d"));
 
-    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%m/%d", true)));
-    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%Y/%m/%d", true)));
-    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%Y/%m", true)));
-    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%y/%m/%d", true)));
-    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%Y-%m-%d", true)));
-    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%m-%d", true)));
+    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%m/%d")));
+    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%Y/%m/%d")));
+    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%Y/%m")));
+    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%y/%m/%d")));
+    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%Y-%m-%d")));
+    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%m-%d")));
 
     is_initialized = true;
   }

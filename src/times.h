@@ -297,12 +297,14 @@ inline void put_date(property_tree::ptree& pt, const date_t& when) {
  * has_year flag is false, signalling the parser to infer the year from
  * context (year directive, epoch, or current date).  The traits travel
  * alongside parsed dates so that date_specifier_t knows which of its
- * optional fields were genuinely specified by the user.
+ * optional fields were genuinely specified by the user.  The traits are
+ * read case-sensitively from the format's conversion specifiers by
+ * traits_of() in times.cc.
  */
 struct date_traits_t {
-  bool has_year;  ///< Format contains %Y, %y, or %F (which expands to include a year).
-  bool has_month; ///< Format contains %m, %b, or %F.
-  bool has_day;   ///< Format contains %d or %F.
+  bool has_year;  ///< Format has %Y, %y, %D, %F, %x or %c (also as %EY, %Ey).
+  bool has_month; ///< Format has %m, %b, %B, %h, %D, %F, %x or %c.
+  bool has_day;   ///< Format has %d, %e, %D, %F, %x or %c.
 
   date_traits_t(bool _has_year = false, bool _has_month = false, bool _has_day = false)
       : has_year(_has_year), has_month(_has_month), has_day(_has_day) {
