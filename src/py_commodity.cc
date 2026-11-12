@@ -207,6 +207,26 @@ void py_add_price_3(commodity_t& commodity, const datetime_t& date, const amount
   commodity.add_price(date, price, reflexive);
 }
 
+// A conversion link names a commodity, as parse_conversion() requires of
+// a C directive (issue #3261); unreducing an annotated amount through a
+// link to a bare amount dereferenced the commodity it lacks.
+void py_check_conversion_link(const boost::optional<amount_t>& link) {
+  if (link && !link->has_commodity()) {
+    PyErr_SetString(PyExc_ValueError, _("Commodity conversion requires a commodity on each side"));
+    throw_error_already_set();
+  }
+}
+
+void py_set_smaller(commodity_t& commodity, const boost::optional<amount_t>& smaller) {
+  py_check_conversion_link(smaller);
+  commodity.set_smaller(smaller);
+}
+
+void py_set_larger(commodity_t& commodity, const boost::optional<amount_t>& larger) {
+  py_check_conversion_link(larger);
+  commodity.set_larger(larger);
+}
+
 bool py_keep_all_0(keep_details_t& details) {
   return details.keep_all();
 }
@@ -370,8 +390,8 @@ void export_commodity() {
       .add_property("name", &commodity_t::name, &commodity_t::set_name)
       .add_property("note", &commodity_t::note, &commodity_t::set_note)
       .add_property("precision", &commodity_t::precision, &commodity_t::set_precision)
-      .add_property("smaller", &commodity_t::smaller, &commodity_t::set_smaller)
-      .add_property("larger", &commodity_t::larger, &commodity_t::set_larger)
+      .add_property("smaller", &commodity_t::smaller, py_set_smaller)
+      .add_property("larger", &commodity_t::larger, py_set_larger)
 
       .def("add_price", py_add_price_2)
       .def("add_price", py_add_price_3)
