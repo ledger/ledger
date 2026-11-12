@@ -5,6 +5,7 @@
 # harness breaks it.
 
 import argparse
+import ast
 import hashlib
 import os
 import pathlib
@@ -14,17 +15,26 @@ import tempfile
 import time
 
 HERE = pathlib.Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE / 'semantic'))  # for sweep
 
 parser = argparse.ArgumentParser(prog='HarnessSelfTest')
 parser.add_argument('-l', '--ledger', type=pathlib.Path, required=True)
 parser.add_argument('-s', '--sourcepath', type=pathlib.Path, required=True)
 args = parser.parse_args()
+# The harnesses run in a scratch directory, so relative paths must not
+# reach them.
+args.ledger = args.ledger.resolve()
+args.sourcepath = args.sourcepath.resolve()
 
 JOURNAL = """2024/01/01 Payee
     Expenses:Food    $10.00
     Assets:Cash
 
 """
+
+# The environment a clean C++ run sees, and one that an init file and a
+# LEDGER_* variable would change (see bisimulation_args_only).
+CLEAN = {'PATH': os.environ.get('PATH', ''), 'TZ': 'America/Chicago'}
 
 failures = []
 
@@ -191,8 +201,52 @@ def doctests_ids(tmp):
         check(name, rc == want, 'rc=%d\n%s' % (rc, out))
 
 
+def bisimulation_args_only(tmp):
+    """The bisimulation's C++ side sees only the journal: neither an init
+    file nor a LEDGER_* variable, which the oracle never reads."""
+    import sweep
+    demo = str(HERE / 'semantic' / 'demo.dat')
+    home = tmp / 'home'
+    home.mkdir()
+    (home / '.ledgerrc').write_text('--depth 1\n')
+    clean = {**CLEAN, 'HOME': str(tmp / 'no-home')}
+    hostile = {**clean, 'HOME': str(home), 'LEDGER_INVERT': '1'}
+    argv = ['-f', demo, 'balance', '--flat', '--no-total']
+    plain = subprocess.run([str(args.ledger), *argv], capture_output=True,
+                           text=True, env=clean)
+    plain_hostile = subprocess.run([str(args.ledger), *argv],
+                                   capture_output=True, text=True,
+                                   env=hostile)
+    check('the hostile environment changes a plain ledger run',
+          plain.stdout != plain_hostile.stdout,
+          plain.stdout + plain_hostile.stdout)
+    want = sweep.run_cpp(str(args.ledger), argv, clean)
+    got = sweep.run_cpp(str(args.ledger), argv, hostile)
+    check('sweep.run_cpp ignores init files and LEDGER_* variables',
+          want.returncode == 0 and want.stdout != ''
+          and got.stdout == want.stdout,
+          want.stdout + got.stdout + got.stderr)
+
+    # Every argv the bisimulation scripts build for the C++ ledger
+    # starts LEDGER, "--args-only".
+    def names_ledger(node):
+        return ((isinstance(node, ast.Name) and node.id == 'ledger')
+                or (isinstance(node, ast.Attribute) and node.attr == 'ledger'))
+
+    for name in ('check_all.py', 'sweep.py', 'footing.py'):
+        tree = ast.parse((HERE / 'semantic' / name).read_text('utf-8'))
+        bare = [node.lineno for node in ast.walk(tree)
+                if isinstance(node, ast.List) and node.elts
+                and names_ledger(node.elts[0])
+                and not (len(node.elts) > 1
+                         and isinstance(node.elts[1], ast.Constant)
+                         and node.elts[1].value == '--args-only')]
+        check('every C++ run in semantic/%s passes --args-only' % name,
+              bare == [], 'argv without --args-only at lines %s' % bare)
+
+
 SECTIONS = [regress_empty_block, regress_timeout, harness_wait,
-            doctests_ids]
+            doctests_ids, bisimulation_args_only]
 POSIX_ONLY = {regress_timeout, harness_wait}
 
 with tempfile.TemporaryDirectory() as tmpdir:

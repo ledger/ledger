@@ -180,13 +180,20 @@ def oracle_env(env):
             "GIT_CONFIG_VALUE_0": "*"}
 
 
+def run_cpp(ledger, args, env):
+    """Run the C++ side of a comparison: LEDGER with ARGS, output captured
+    as text.  --args-only keeps the caller's init file, LEDGER_* variables
+    and default price database away from it, since the oracle reads none
+    of them."""
+    return subprocess.run([ledger, "--args-only", *args],
+                          capture_output=True, text=True, env=env)
+
+
 def main():
     ledger = os.environ.get("LEDGER", os.path.join(REPO, "build", "ledger"))
     env = {**os.environ, "TZ": "America/Chicago"}
 
-    ledger_version = subprocess.run(
-        [ledger, "--version"], capture_output=True, text=True, env=env
-    ).stdout.splitlines()[0]
+    ledger_version = run_cpp(ledger, ["--version"], env).stdout.splitlines()[0]
     git_rev = subprocess.run(
         ["git", "rev-parse", "HEAD"], capture_output=True, text=True, cwd=REPO
     ).stdout.strip()
@@ -237,10 +244,10 @@ def main():
         drv_error = next((l for l in block if l.startswith("!! ERROR")), None)
 
         if scope == "cpp-rejects":
-            cpp = subprocess.run(
-                [ledger, "-f", os.path.join(REPO, path),
-                 "balance", "--flat", "--no-total"],
-                capture_output=True, text=True, env=env)
+            cpp = run_cpp(
+                ledger, ["-f", os.path.join(REPO, path),
+                         "balance", "--flat", "--no-total"],
+                env)
             if cpp.returncode != 0:
                 entry["status"] = "CPP-REJECTS (as documented)"
                 entry["cpp_stderr"] = cpp.stderr.strip()[-160:]
@@ -262,11 +269,10 @@ def main():
                 failures += 1
             else:
                 oracle_rows = set(l for l in block if l.strip())
-                cpp = subprocess.run(
-                    [ledger, "-f", os.path.join(REPO, path),
-                     "balance", "--flat", "--no-total"],
-                    capture_output=True, text=True, env=env,
-                )
+                cpp = run_cpp(
+                    ledger, ["-f", os.path.join(REPO, path),
+                             "balance", "--flat", "--no-total"],
+                    env)
                 if cpp.returncode != 0:
                     entry["status"] = "FAIL: C++ ledger errored"
                     entry["cpp_stderr"] = cpp.stderr[-500:]

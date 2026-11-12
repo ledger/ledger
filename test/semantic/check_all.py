@@ -1009,11 +1009,11 @@ def main():
                 # strip); without it the preamble's bare amount line
                 # would fold into the first account row as a phantom
                 # posting (regress/1883's "-30.00 GBP").
-                pr = subprocess.run(
-                    [ledger, *cpp_flags, "--permissive", "-f", dat,
-                     "balance", "--flat", "--no-total", "--limit",
-                     "false"],
-                    capture_output=True, text=True, env=env)
+                pr = sweep.run_cpp(
+                    ledger, [*cpp_flags, "--permissive", "-f", dat,
+                             "balance", "--flat", "--no-total", "--limit",
+                             "false"],
+                    env)
                 if pr.returncode != 0:
                     return None, (f"eval preamble probe: C++ exit"
                                   f" {pr.returncode}:"
@@ -1021,10 +1021,10 @@ def main():
                 pre = pr.stdout
             out = {}
             for tag, expr in (("dr", GROSS_DR_EXPR), ("cr", GROSS_CR_EXPR)):
-                g = subprocess.run(
-                    [ledger, *cpp_flags, "--permissive", "-f", dat,
-                     "balance", "--flat", "--no-total", "--amount", expr],
-                    capture_output=True, text=True, env=env)
+                g = sweep.run_cpp(
+                    ledger, [*cpp_flags, "--permissive", "-f", dat,
+                             "balance", "--flat", "--no-total", "--amount", expr],
+                    env)
                 if g.returncode != 0:
                     return None, f"{tag}: C++ exit {g.returncode}: " \
                                  f"{g.stderr.strip()[-200:]}"
@@ -1078,20 +1078,20 @@ def main():
                 # eval/expr directives print their value at the head of
                 # every report; the same strip as for the gross
                 # columns applies (regress/1883's "-30.00 GBP").
-                pr = subprocess.run(
-                    [ledger, *cpp_flags, "--permissive", "-f", dat,
-                     "balance", "--flat", "--no-total", "--limit",
-                     "false"],
-                    capture_output=True, text=True, env=env)
+                pr = sweep.run_cpp(
+                    ledger, [*cpp_flags, "--permissive", "-f", dat,
+                             "balance", "--flat", "--no-total", "--limit",
+                             "false"],
+                    env)
                 if pr.returncode != 0:
                     return None, (f"eval preamble probe: C++ exit"
                                   f" {pr.returncode}:"
                                   f" {pr.stderr.strip()[-200:]}")
                 pre = pr.stdout
-            g = subprocess.run(
-                [ledger, *cpp_flags, "--permissive", "-f", dat,
-                 "balance", "--flat", "--no-total", "-X", target],
-                capture_output=True, text=True, env=env)
+            g = sweep.run_cpp(
+                ledger, [*cpp_flags, "--permissive", "-f", dat,
+                         "balance", "--flat", "--no-total", "-X", target],
+                env)
             if g.returncode != 0:
                 return None, f"C++ exit {g.returncode}: " \
                              f"{g.stderr.strip()[-200:]}"
@@ -1160,10 +1160,10 @@ def main():
             # already test assertion behavior, and what is compared
             # here is the computed balances, which --permissive does
             # not alter.
-            cpp = subprocess.run(
-                [ledger, *cpp_flags, "--permissive", "-f", dat,
-                 "balance", "--flat", "--no-total"],
-                capture_output=True, text=True, env=env)
+            cpp = sweep.run_cpp(
+                ledger, [*cpp_flags, "--permissive", "-f", dat,
+                         "balance", "--flat", "--no-total"],
+                env)
             if cpp.returncode != 0:
                 bins["SKIP:cpp-parse"].append(rel)
                 details.append({"file": rel, "status": "SKIP:cpp-parse",
@@ -1214,9 +1214,9 @@ def main():
             p1, p2 = selftest
             res = oracle.get(p1)
             def cpp_rows_of(path):
-                out = subprocess.run(
-                    [ledger, "-f", path, "balance", "--flat", "--no-total"],
-                    capture_output=True, text=True, env=env)
+                out = sweep.run_cpp(
+                    ledger, ["-f", path, "balance", "--flat", "--no-total"],
+                    env)
                 return sweep.parse_cpp_balance(out.stdout)
             control_ok = isinstance(res, set) and cpp_rows_of(p1) == res
             fired = (not isinstance(res, set)) or cpp_rows_of(p2) != res
@@ -1234,9 +1234,9 @@ def main():
             tres = oracle.get(t1)
 
             def cpp_net(path):
-                out = subprocess.run(
-                    [ledger, "-f", path, "balance", "--flat", "--no-total"],
-                    capture_output=True, text=True, env=env)
+                out = sweep.run_cpp(
+                    ledger, ["-f", path, "balance", "--flat", "--no-total"],
+                    env)
                 return sweep.parse_cpp_balance(out.stdout)
 
             og = {"dr": gdr.get(t1, set()), "cr": gcr.get(t1, set())}
@@ -1279,8 +1279,7 @@ def main():
                                       f"control_ok={vctl} fired={vfired}"))
 
         def cpp_reject(path, flags):
-            return subprocess.run([ledger, *flags, "-f", path, "balance"],
-                                  capture_output=True, text=True, env=env)
+            return sweep.run_cpp(ledger, [*flags, "-f", path, "balance"], env)
 
         for tpath, dat, nflags, _ in neg_candidates:
             rel = os.path.relpath(tpath, repo)
@@ -1438,7 +1437,7 @@ def main():
         except OSError:
             return "unknown"
 
-    ledger_version = run_line([ledger, "--version"], env=env)
+    ledger_version = run_line([ledger, "--args-only", "--version"], env=env)
     git_rev = run_line(["git", "rev-parse", "HEAD"], cwd=repo)
     # In the Nix build the oracle is a store path with no repository;
     # the flake passes the semantics revision in LEDGER_LEAN_REV.
@@ -1450,13 +1449,13 @@ def main():
             "utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "git_rev": git_rev, "ledger_version": ledger_version,
             "tz": env["TZ"], "capture": "test/semantic/check_all.py",
-            "cpp_flags_common": ["--permissive", "balance", "--flat",
-                                 "--no-total"],
+            "cpp_flags_common": ["--args-only", "--permissive", "balance",
+                                 "--flat", "--no-total"],
             "cpp_flags_note": ("per-file flags (--now, --decimal-comma,"
                                " --recursive-aliases,"
                                " --input-date-format) are derived from"
                                " each test's own command lines"),
-            "neg_cpp_flags_common": ["balance"],
+            "neg_cpp_flags_common": ["--args-only", "balance"],
             "neg_reason_pattern": NEG_REASON_RE.pattern},
         "counts": {k: len(v) for k, v in bins.items()},
         "neg_line_check_skipped": neg_skipped,
