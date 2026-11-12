@@ -1,0 +1,27 @@
+; A misspelled block header is reported once, and the indented lines
+; beneath it are skipped along with it rather than reported one by one,
+; as the remaining postings of a transaction that fails to parse are
+; (issue #3260).  The journal is rejected either way, so nothing in the
+; skipped block takes effect unnoticed; once the header is corrected, its
+; sub-directives are read and checked.  --permissive does not change
+; this: it quiets balance assertions, not syntax errors.
+
+acount Assets:Cash
+    note    Petty cash
+    check   amount > 0
+
+2024-01-01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 9:
+Error: Unrecognized source line 'acount Assets:Cash'
+end test
+
+test --permissive bal -> 1
+__ERROR__
+While parsing file "$FILE", line 9:
+Error: Unrecognized source line 'acount Assets:Cash'
+end test
