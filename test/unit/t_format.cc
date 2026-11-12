@@ -268,6 +268,15 @@ BOOST_AUTO_TEST_CASE(testFormatParsePercent)
   times_shutdown();
 }
 
+// The parsed element list as format_t::dump() prints it; the `format`
+// precommand shows the same text under "--- Format elements ---".
+static string dumped_elements(const format_t& fmt)
+{
+  std::ostringstream out;
+  fmt.dump(out);
+  return out.str();
+}
+
 BOOST_AUTO_TEST_CASE(testFormatParseMinMaxWidth)
 {
   // Cover format.cc lines 200-217: min/max width parsing
@@ -279,8 +288,8 @@ BOOST_AUTO_TEST_CASE(testFormatParseMinMaxWidth)
 
   // Format with min.max width: %-20.40(account)
   format_t fmt("%-20.40(account)");
-  // Just exercise the parsing, no real scope needed
-  (void)fmt;
+  BOOST_CHECK_EQUAL(dumped_elements(fmt),
+                    "Element:    EXPR  flags: 0x1  min: 20  max: 40  expr: account\n");
 
   amount_t::shutdown();
   times_shutdown();
@@ -301,8 +310,14 @@ BOOST_AUTO_TEST_CASE(testFormatSingleLetterMapping)
   format_t fmta("%a");
   format_t fmtN("%N");
 
-  // Just ensure parsing doesn't throw
-  BOOST_CHECK(true);
+  BOOST_CHECK_EQUAL(dumped_elements(fmtD),
+                    "Element:    EXPR  flags: 0x0  min:  0  max:  0  expr: date\n");
+  BOOST_CHECK_EQUAL(dumped_elements(fmtP),
+                    "Element:    EXPR  flags: 0x0  min:  0  max:  0  expr: payee\n");
+  BOOST_CHECK_EQUAL(dumped_elements(fmta),
+                    "Element:    EXPR  flags: 0x0  min:  0  max:  0  expr: account\n");
+  BOOST_CHECK_EQUAL(dumped_elements(fmtN),
+                    "Element:    EXPR  flags: 0x0  min:  0  max:  0  expr: note\n");
 
   // Unrecognized format character
   BOOST_CHECK_THROW(format_t("%(bad stuff"), parse_error);
@@ -793,6 +808,9 @@ BOOST_AUTO_TEST_CASE(testFormatSubstitutionKeywordsW8)
 {
   times_initialize();
   amount_t::initialize();
+  // The true/false that $left expands to parse into value_t's shared
+  // boolean storage, which set_session_context() creates in ledger itself
+  value_t::initialize();
 
   session_t session;
   report_t report(session);
@@ -802,9 +820,17 @@ BOOST_AUTO_TEST_CASE(testFormatSubstitutionKeywordsW8)
   // The $min, $max, $left substitutions happen in lines 230-237.
   // We exercise this via %-20.40D which maps %D with min=20, max=40
   format_t fmt("%-20.40D");
-  // Just ensure it parses without error
-  BOOST_CHECK(true);
+  // %D's expansion has no keywords, so only the widths and the flag change
+  BOOST_CHECK_EQUAL(dumped_elements(fmt),
+                    "Element:    EXPR  flags: 0x1  min: 20  max: 40  expr: date\n");
 
+  // %t's expansion substitutes $min, $max and $left
+  format_t fmtt("%-20.40t");
+  BOOST_CHECK_EQUAL(dumped_elements(fmtt),
+                    "Element:    EXPR  flags: 0x1  min: 20  max: 40  expr: "
+                    "justify(scrub(display_amount), {20}, {40}, false, color)\n");
+
+  value_t::shutdown();
   amount_t::shutdown();
   times_shutdown();
 }
@@ -1000,6 +1026,9 @@ BOOST_AUTO_TEST_CASE(testFormatSingleLetterAllW11)
 {
   times_initialize();
   amount_t::initialize();
+  // The true/false that $left expands to parse into value_t's shared
+  // boolean storage, which set_session_context() creates in ledger itself
+  value_t::initialize();
 
   session_t session;
   report_t report(session);
@@ -1019,8 +1048,34 @@ BOOST_AUTO_TEST_CASE(testFormatSingleLetterAllW11)
   format_t fmttw("%15t");
   format_t fmtTw("%15T");
 
-  BOOST_CHECK(true);
+  BOOST_CHECK_EQUAL(dumped_elements(fmtD),
+                    "Element:    EXPR  flags: 0x0  min:  0  max:  0  expr: date\n");
+  BOOST_CHECK_EQUAL(dumped_elements(fmtP),
+                    "Element:    EXPR  flags: 0x0  min:  0  max:  0  expr: payee\n");
+  BOOST_CHECK_EQUAL(dumped_elements(fmta),
+                    "Element:    EXPR  flags: 0x0  min:  0  max:  0  expr: account\n");
+  BOOST_CHECK_EQUAL(dumped_elements(fmtt),
+                    "Element:    EXPR  flags: 0x0  min:  0  max:  0  expr: "
+                    "justify(scrub(display_amount), {-1}, {-1}, true, color)\n");
+  BOOST_CHECK_EQUAL(dumped_elements(fmtT),
+                    "Element:    EXPR  flags: 0x0  min:  0  max:  0  expr: "
+                    "justify(scrub(display_total), {-1}, {-1}, true, color)\n");
+  BOOST_CHECK_EQUAL(dumped_elements(fmtN),
+                    "Element:    EXPR  flags: 0x0  min:  0  max:  0  expr: note\n");
+  BOOST_CHECK_EQUAL(dumped_elements(fmtDw),
+                    "Element:    EXPR  flags: 0x1  min: 10  max: 20  expr: date\n");
+  BOOST_CHECK_EQUAL(dumped_elements(fmtPw),
+                    "Element:    EXPR  flags: 0x0  min: 20  max:  0  expr: payee\n");
+  BOOST_CHECK_EQUAL(dumped_elements(fmtaw),
+                    "Element:    EXPR  flags: 0x1  min: 30  max:  0  expr: account\n");
+  BOOST_CHECK_EQUAL(dumped_elements(fmttw),
+                    "Element:    EXPR  flags: 0x0  min: 15  max:  0  expr: "
+                    "justify(scrub(display_amount), {15}, {-1}, true, color)\n");
+  BOOST_CHECK_EQUAL(dumped_elements(fmtTw),
+                    "Element:    EXPR  flags: 0x0  min: 15  max:  0  expr: "
+                    "justify(scrub(display_total), {15}, {-1}, true, color)\n");
 
+  value_t::shutdown();
   amount_t::shutdown();
   times_shutdown();
 }

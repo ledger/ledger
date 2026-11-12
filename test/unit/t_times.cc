@@ -18,6 +18,13 @@ struct times_fixture {
   }
 };
 
+// Pins CURRENT_DATE() (as --now does) for cases that parse relative
+// dates, and restores the system clock when the case ends.
+struct pinned_today {
+  explicit pinned_today(const char* when) { epoch = parse_datetime(when); }
+  ~pinned_today() { epoch = none; }
+};
+
 BOOST_FIXTURE_TEST_SUITE(times, times_fixture)
 
 BOOST_AUTO_TEST_CASE(testConstructors)
@@ -876,13 +883,13 @@ BOOST_AUTO_TEST_CASE(testFormatDatetimeCustomW7)
 
 BOOST_AUTO_TEST_CASE(testParseDateExpressionsSinceUntilW7)
 {
-  // Parse interval with "since"
   date_interval_t interval1("since 2024/01/01");
-  BOOST_CHECK(true);  // Just testing it doesn't crash
+  BOOST_CHECK(interval1.begin() == parse_date("2024/01/01"));
+  BOOST_CHECK(!interval1.end());
 
-  // Parse interval with "until"
   date_interval_t interval2("until 2024/12/31");
-  BOOST_CHECK(true);
+  BOOST_CHECK(!interval2.begin());
+  BOOST_CHECK(interval2.end() == parse_date("2024/12/31"));
 }
 
 // -----------------------------------------------------------------------
@@ -904,14 +911,19 @@ BOOST_AUTO_TEST_CASE(testParseDateInW7)
 
 BOOST_AUTO_TEST_CASE(testParseDateRelativeW7)
 {
+  pinned_today pin("2024/06/15 00:00:00");
+
   date_interval_t interval1("today");
-  BOOST_CHECK(true);
+  BOOST_CHECK(interval1.begin() == parse_date("2024/06/15"));
+  BOOST_CHECK(interval1.end() == parse_date("2024/06/16"));
 
   date_interval_t interval2("tomorrow");
-  BOOST_CHECK(true);
+  BOOST_CHECK(interval2.begin() == parse_date("2024/06/16"));
+  BOOST_CHECK(interval2.end() == parse_date("2024/06/17"));
 
   date_interval_t interval3("yesterday");
-  BOOST_CHECK(true);
+  BOOST_CHECK(interval3.begin() == parse_date("2024/06/14"));
+  BOOST_CHECK(interval3.end() == parse_date("2024/06/15"));
 }
 
 // -----------------------------------------------------------------------
@@ -981,17 +993,19 @@ BOOST_AUTO_TEST_CASE(testDateSpecifierW7)
 
 BOOST_AUTO_TEST_CASE(testDateParserRelativeW7)
 {
-  // "next month" - exercises handle_relative_token
+  pinned_today pin("2024/06/15 00:00:00");
+
   date_interval_t interval1("next month");
-  BOOST_CHECK(true);
+  BOOST_CHECK(interval1.begin() == parse_date("2024/07/01"));
+  BOOST_CHECK(interval1.end() == parse_date("2024/08/01"));
 
-  // "last month" - exercises adjust = -1
   date_interval_t interval2("last month");
-  BOOST_CHECK(true);
+  BOOST_CHECK(interval2.begin() == parse_date("2024/05/01"));
+  BOOST_CHECK(interval2.end() == parse_date("2024/06/01"));
 
-  // "this month"
   date_interval_t interval3("this month");
-  BOOST_CHECK(true);
+  BOOST_CHECK(interval3.begin() == parse_date("2024/06/01"));
+  BOOST_CHECK(interval3.end() == parse_date("2024/07/01"));
 }
 
 // -----------------------------------------------------------------------
@@ -1001,23 +1015,14 @@ BOOST_AUTO_TEST_CASE(testDateParserRelativeW7)
 
 BOOST_AUTO_TEST_CASE(testDateParserDaysAgoHenceW7)
 {
-  date_interval_t interval1("3 days ago");
-  BOOST_CHECK(true);
+  pinned_today pin("2024/06/15 00:00:00");
 
-  date_interval_t interval2("5 days hence");
-  BOOST_CHECK(true);
-
-  date_interval_t interval3("2 weeks ago");
-  BOOST_CHECK(true);
-
-  date_interval_t interval4("1 month ago");
-  BOOST_CHECK(true);
-
-  date_interval_t interval5("1 year ago");
-  BOOST_CHECK(true);
-
-  date_interval_t interval6("2 quarters ago");
-  BOOST_CHECK(true);
+  BOOST_CHECK(date_interval_t("3 days ago").begin() == parse_date("2024/06/12"));
+  BOOST_CHECK(date_interval_t("5 days hence").begin() == parse_date("2024/06/20"));
+  BOOST_CHECK(date_interval_t("2 weeks ago").begin() == parse_date("2024/06/01"));
+  BOOST_CHECK(date_interval_t("1 month ago").begin() == parse_date("2024/05/15"));
+  BOOST_CHECK(date_interval_t("1 year ago").begin() == parse_date("2023/06/15"));
+  BOOST_CHECK(date_interval_t("2 quarters ago").begin() == parse_date("2023/12/15"));
 }
 
 // -----------------------------------------------------------------------
@@ -1026,14 +1031,16 @@ BOOST_AUTO_TEST_CASE(testDateParserDaysAgoHenceW7)
 
 BOOST_AUTO_TEST_CASE(testDateParserEveryW7)
 {
-  date_interval_t interval1("every month");
   date_t today = parse_date("2024/06/15");
-  interval1.stabilize(today);
-  BOOST_CHECK(true);
 
+  date_interval_t interval1("every month");
+  interval1.stabilize(today);
+  BOOST_CHECK(interval1.start == parse_date("2024/06/01"));
+
+  // Weeks begin on start_of_week, Sunday by default
   date_interval_t interval2("every week");
   interval2.stabilize(today);
-  BOOST_CHECK(true);
+  BOOST_CHECK(interval2.start == parse_date("2024/06/09"));
 }
 
 // -----------------------------------------------------------------------
@@ -1329,10 +1336,10 @@ BOOST_AUTO_TEST_CASE(testIncrementEdgeCasesW8)
   date_interval_t empty_interval("monthly");
   // Need to stabilize first to avoid the unstarted error
   empty_interval.stabilize(parse_date("2020/01/15"));
-  if (empty_interval.start) {
-    ++empty_interval;
-    BOOST_CHECK(true); // just exercising the path
-  }
+  BOOST_REQUIRE(empty_interval.start);
+  BOOST_CHECK(*empty_interval.start == parse_date("2020/01/01"));
+  ++empty_interval;
+  BOOST_CHECK(*empty_interval.start == parse_date("2020/02/01"));
 
   // Line 1545: increment without duration
   date_interval_t no_dur("since 2020/01/01");

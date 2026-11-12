@@ -1228,9 +1228,10 @@ BOOST_AUTO_TEST_CASE(testCompareByCommdityDifferentPriceCommodities)
   amount_t a2(base2, ann2);
 
   commodity_t::compare_by_commodity cmp;
-  // Different commodities in the price, should still produce a comparison
-  int result = cmp(&a1, &a2);
-  (void)result; // just exercise the code path
+  // Lots priced in different commodities order by the price commodity
+  // symbol: "$" sorts before "EUR".
+  BOOST_CHECK(cmp(&a1, &a2) < 0);
+  BOOST_CHECK(cmp(&a2, &a1) > 0);
 }
 
 BOOST_AUTO_TEST_CASE(testPutCommodity)

@@ -882,11 +882,21 @@ BOOST_AUTO_TEST_CASE(testIntervalPostsWithDuration)
   account_t* acct = make_account("Expenses:Food");
   xact_t* xact = make_xact("Store", date_t(2024, 1, 15));
   post_t* p1 = make_post(xact, acct, amount_t("$10.00"));
+  xact_t* xact2 = make_xact("Store", date_t(2024, 2, 10));
+  post_t* p2 = make_post(xact2, acct, amount_t("$5.00"));
 
   ip(*p1);
+  ip(*p2);
   ip.flush();
 
-  BOOST_CHECK(true);
+  // One subtotal per month, dated at the period start, as
+  // `reg --period "monthly from 2024/01/01"` shows
+  BOOST_REQUIRE_EQUAL(2u, collector->length());
+  BOOST_CHECK(collector->posts[0]->account == acct);
+  BOOST_CHECK(collector->posts[0]->amount == amount_t("$10.00"));
+  BOOST_CHECK(collector->posts[0]->date() == date_t(2024, 1, 1));
+  BOOST_CHECK(collector->posts[1]->amount == amount_t("$5.00"));
+  BOOST_CHECK(collector->posts[1]->date() == date_t(2024, 2, 1));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -931,10 +941,12 @@ BOOST_AUTO_TEST_CASE(testTransferDetailsClear)
     acct, make_account("Assets:Cash"), amount_t("$10.00"));
 
   td(*xwp.debit);
-  td.clear();
+  BOOST_REQUIRE_EQUAL(1u, collector->length());
+  BOOST_CHECK_EQUAL(collector->posts[0]->xact->payee, "Transferred");
+  BOOST_CHECK_EQUAL(xwp.xact->payee, "Store"); // the original is untouched
 
-  // After clear, no crash
-  BOOST_CHECK(true);
+  td.clear();
+  BOOST_CHECK_EQUAL(0u, collector->length()); // clear() reaches the collector
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -955,8 +967,10 @@ BOOST_AUTO_TEST_CASE(testDayOfWeekPostsClear)
 
   dowp(*p1);
   dowp.clear();
+  dowp.flush();
 
-  BOOST_CHECK(true);
+  // Without clear(), flush() would emit one subtotal (see testDayOfWeekPostsW8)
+  BOOST_CHECK_EQUAL(0u, collector->length());
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -970,8 +984,17 @@ BOOST_AUTO_TEST_CASE(testGeneratePostsClear)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   budget_posts bp(collector, date_t(2025, 1, 1));
 
+  account_t* acct = make_account("Expenses:Food");
+  xact_t* xact = make_xact("Budget", date_t(2024, 1, 1));
+  post_t* p1 = make_post(xact, acct, amount_t("$10.00"));
+  bp.add_post(date_interval_t("monthly from 2024/01/01"), *p1);
+
   bp.clear();
-  BOOST_CHECK(true);
+  bp.flush();
+
+  // Without clear(), flush() would report 13 monthly budget postings
+  // (2024/01 through 2025/01); clear() drops the pending one
+  BOOST_CHECK_EQUAL(0u, collector->length());
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -986,9 +1009,21 @@ BOOST_AUTO_TEST_CASE(testForecastPostsClear)
   predicate_t pred("1", keep_details_t());
   forecast_posts fp(collector, pred, report, 5);
 
+  xact_with_posts xwp = make_balanced_xact(
+    "Store", date_t(2024, 10, 1),
+    make_account("Expenses:Food"), make_account("Assets:Cash"), amount_t("$10.00"));
+  (*collector)(*xwp.debit);
+  BOOST_REQUIRE_EQUAL(1u, collector->length());
+
   fp.clear();
-  BOOST_CHECK(true);
+  BOOST_CHECK_EQUAL(0u, collector->length()); // clear() reaches the collector
 }
+
+// Records whether clear() reached the end of an account handler chain
+struct clear_recording_account_handler : public item_handler<account_t> {
+  bool cleared = false;
+  void clear() override { cleared = true; }
+};
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -1008,14 +1043,15 @@ BOOST_AUTO_TEST_CASE(testPassDownAccountsClear)
   acct2->xdata().add_flags(ACCOUNT_EXT_VISITED);
 
   // Use basic_accounts_iterator
-  std::shared_ptr<item_handler<account_t>> collector(new item_handler<account_t>());
+  std::shared_ptr<clear_recording_account_handler> recorder(new clear_recording_account_handler);
   basic_accounts_iterator iter(*root);
   predicate_t pred("total", keep_details_t());
 
-  pass_down_accounts<basic_accounts_iterator> pda(collector, iter, pred, report);
+  pass_down_accounts<basic_accounts_iterator> pda(recorder, iter, pred, report);
 
+  BOOST_CHECK(!recorder->cleared);
   pda.clear();
-  BOOST_CHECK(true);
+  BOOST_CHECK(recorder->cleared);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1030,8 +1066,17 @@ BOOST_AUTO_TEST_CASE(testPostsAsEquityClear)
   expr_t amount_expr("amount");
   posts_as_equity pae(collector, report, amount_expr, false);
 
+  xact_with_posts xwp = make_balanced_xact(
+    "Store", date_t(2024, 10, 1),
+    make_account("Expenses:Food"), make_account("Assets:Cash"), amount_t("$10.00"));
+  pae(*xwp.debit);
+
   pae.clear();
-  BOOST_CHECK(true);
+  pae.flush();
+
+  // Without clear(), flush() would emit Expenses:Food $10.00 and
+  // Equity:Opening Balances $-10.00
+  BOOST_CHECK_EQUAL(0u, collector->length());
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1298,9 +1343,14 @@ BOOST_AUTO_TEST_CASE(testBudgetPostsClearW7)
   date_t terminus = parse_date("2024/12/31");
   budget_posts budget(collector, terminus, BUDGET_BUDGETED);
 
-  // Just exercise clear
+  xact_with_posts xwp = make_balanced_xact(
+    "Store", date_t(2024, 10, 1),
+    make_account("Expenses:Food"), make_account("Assets:Cash"), amount_t("$10.00"));
+  (*collector)(*xwp.debit);
+  BOOST_REQUIRE_EQUAL(1u, collector->length());
+
   budget.clear();
-  BOOST_CHECK(true);
+  BOOST_CHECK_EQUAL(0u, collector->length()); // clear() reaches the collector
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1313,8 +1363,14 @@ BOOST_AUTO_TEST_CASE(testInjectPostsClearW7)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   inject_posts inject(collector, "amount", root);
 
+  xact_with_posts xwp = make_balanced_xact(
+    "Store", date_t(2024, 10, 1),
+    make_account("Expenses:Food"), make_account("Assets:Cash"), amount_t("$10.00"));
+  (*collector)(*xwp.debit);
+  BOOST_REQUIRE_EQUAL(1u, collector->length());
+
   inject.clear();
-  BOOST_CHECK(true);
+  BOOST_CHECK_EQUAL(0u, collector->length()); // clear() reaches the collector
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1455,9 +1511,13 @@ BOOST_AUTO_TEST_CASE(testIntervalPostsNoDurationW8)
   ival(*result.debit);
   ival.flush();
 
-  // The post may or may not be collected depending on find_period behavior;
-  // the key coverage target is the non-duration code path itself.
-  BOOST_CHECK(true);
+  // Without a duration, find_period() has no end_of_duration and answers
+  // false (times.cc find_period), so nothing passes.  The CLI never builds
+  // this filter without a duration: report_t::normalize_period() turns
+  // --period off and moves its range into --limit.  (The comment in
+  // interval_posts::operator() says a bare range forwards the postings
+  // inside it; this case pins what the code does today.)
+  BOOST_CHECK_EQUAL(0u, collector->length());
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1476,7 +1536,7 @@ BOOST_AUTO_TEST_CASE(testIntervalPostsFlushNoDurationW8)
 
   // Just flush with no posts
   ival.flush();
-  BOOST_CHECK(true);
+  BOOST_CHECK_EQUAL(0u, collector->length());
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1514,10 +1574,20 @@ BOOST_AUTO_TEST_CASE(testGeneratePostsAddPeriodXactsW8)
   date_t terminus = parse_date("2024/12/31");
   budget_posts budget(collector, terminus, BUDGET_BUDGETED);
 
-  // With empty period_xacts list, nothing should crash
-  period_xacts_list empty_list;
-  budget.add_period_xacts(empty_list);
-  BOOST_CHECK(true);
+  period_xact_t pxact("monthly from 2024/01/01");
+  pxact.add_post(new post_t(make_account("Expenses:Food"), amount_t("$10.00")));
+  period_xacts_list period_xacts;
+  period_xacts.push_back(&pxact);
+
+  budget.add_period_xacts(period_xacts);
+  budget.flush();
+
+  // One negated budget posting per month through the 2024/12/31 terminus
+  BOOST_REQUIRE_EQUAL(12u, collector->length());
+  BOOST_CHECK_EQUAL(collector->posts.front()->xact->payee, "Budget transaction");
+  BOOST_CHECK(collector->posts.front()->amount == amount_t("$-10.00"));
+  BOOST_CHECK(collector->posts.front()->date() == date_t(2024, 1, 1));
+  BOOST_CHECK(collector->posts.back()->date() == date_t(2024, 12, 1));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1674,8 +1744,9 @@ BOOST_AUTO_TEST_CASE(testPostsAsEquityZeroW8)
   equity_posts(*result2.debit);
   equity_posts.flush();
 
-  // Should still produce output (at least the credit postings)
-  BOOST_CHECK(true);
+  // The account nets to $0, so equity emits neither a posting for it nor a
+  // balancing Equity:Opening Balances posting (`ledger equity` prints nothing)
+  BOOST_CHECK_EQUAL(0u, collector->length());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

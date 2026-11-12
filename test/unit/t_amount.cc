@@ -1277,11 +1277,8 @@ BOOST_AUTO_TEST_CASE(testCommodityTruth)
   amount_t x1("$1234");
   amount_t x2("$1234.56");
 
-  if (x1)
-    BOOST_CHECK(true);
-
-  if (x2)
-    BOOST_CHECK(true);
+  BOOST_CHECK(x1);
+  BOOST_CHECK(x2);
 
   BOOST_CHECK(x1.valid());
   BOOST_CHECK(x2.valid());

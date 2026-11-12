@@ -4649,20 +4649,6 @@ BOOST_AUTO_TEST_CASE(testIsLessThanSequences)
   BOOST_CHECK(seq1 < seq2);
 }
 
-// ---------------------------------------------------------------------------
-// destroy for VOID (value.h line 222)
-// ---------------------------------------------------------------------------
-
-BOOST_AUTO_TEST_CASE(testDestroyVoid)
-{
-  // Creating and destroying a void value exercises the VOID return path
-  {
-    value_t v1;
-    // v1 is VOID - destructor calls destroy which hits VOID return
-  }
-  BOOST_CHECK(true); // just verify no crash
-}
-
 // ===========================================================================
 // Wave 5: Additional coverage tests for remaining uncovered lines
 // ===========================================================================
@@ -4678,8 +4664,7 @@ BOOST_AUTO_TEST_CASE(testIsLessThanCommodityVsString)
   value_t v_comm(a1.commodity());
   value_t v_str(string_value("ZZZ"));
 
-  bool result = v_comm.is_less_than(v_str);
-  (void)result;
+  BOOST_CHECK(v_comm.is_less_than(v_str)); // "$" < "ZZZ"
 }
 
 BOOST_AUTO_TEST_CASE(testIsLessThanCommodityVsStringNotFound)
@@ -4688,9 +4673,7 @@ BOOST_AUTO_TEST_CASE(testIsLessThanCommodityVsStringNotFound)
   value_t v_comm(a1.commodity());
   value_t v_str(string_value("NONEXISTENT_COMMODITY_XYZ"));
 
-  // Exercises the fallback path at line 944
-  bool result = v_comm.is_less_than(v_str);
-  (void)result;
+  BOOST_CHECK(v_comm.is_less_than(v_str)); // "$" < "NONEXISTENT_COMMODITY_XYZ"
 }
 
 // ---------------------------------------------------------------------------
@@ -4748,8 +4731,7 @@ BOOST_AUTO_TEST_CASE(testIsGreaterThanCommodityVsString)
   value_t v_comm(a1.commodity());
   value_t v_str(string_value("A"));
 
-  bool result = v_comm.is_greater_than(v_str);
-  (void)result;
+  BOOST_CHECK(!v_comm.is_greater_than(v_str)); // "$" sorts before "A"
 }
 
 BOOST_AUTO_TEST_CASE(testIsGreaterThanCommodityVsStringNotFound)
@@ -4758,8 +4740,7 @@ BOOST_AUTO_TEST_CASE(testIsGreaterThanCommodityVsStringNotFound)
   value_t v_comm(a1.commodity());
   value_t v_str(string_value("NONEXISTENT_THING_XYZ"));
 
-  bool result = v_comm.is_greater_than(v_str);
-  (void)result;
+  BOOST_CHECK(!v_comm.is_greater_than(v_str)); // "$" sorts before "N..."
 }
 
 // ---------------------------------------------------------------------------
@@ -4772,8 +4753,7 @@ BOOST_AUTO_TEST_CASE(testIsGreaterThanStringVsCommodity)
   value_t v_comm(a1.commodity());
   value_t v_str(string_value("ZZZ"));
 
-  bool result = v_str.is_greater_than(v_comm);
-  (void)result;
+  BOOST_CHECK(v_str.is_greater_than(v_comm)); // "ZZZ" > "$"
 }
 
 // ---------------------------------------------------------------------------
@@ -4880,8 +4860,7 @@ BOOST_AUTO_TEST_CASE(testIsEqualToCommodityVsString)
   value_t v_comm(a1.commodity());
   value_t v_str(string_value("$"));
 
-  bool result = (v_comm == v_str);
-  (void)result;
+  BOOST_CHECK(v_comm == v_str); // "$" names the dollar commodity
 }
 
 BOOST_AUTO_TEST_CASE(testIsEqualToCommodityVsStringNotFound)
@@ -4996,8 +4975,7 @@ BOOST_AUTO_TEST_CASE(testIsLessThanStringVsCommodity)
   value_t v_comm(a1.commodity());
   value_t v_str(string_value("A"));
 
-  bool result = v_str.is_less_than(v_comm);
-  (void)result;
+  BOOST_CHECK(!v_str.is_less_than(v_comm)); // "A" sorts after "$"
 }
 
 // ---------------------------------------------------------------------------
@@ -5484,8 +5462,7 @@ BOOST_AUTO_TEST_CASE(testIsLessThanCommodityVsCommodity)
   value_t v1(a1.commodity());
   value_t v2(a2.commodity());
 
-  bool result = v1.is_less_than(v2);
-  (void)result;
+  BOOST_CHECK(v1.is_less_than(v2)); // "$" < "EUR"
 }
 
 // ---------------------------------------------------------------------------
@@ -5499,8 +5476,7 @@ BOOST_AUTO_TEST_CASE(testIsGreaterThanCommodityVsCommodityW5)
   value_t v1(a1.commodity());
   value_t v2(a2.commodity());
 
-  bool result = v1.is_greater_than(v2);
-  (void)result;
+  BOOST_CHECK(!v1.is_greater_than(v2)); // "$" < "EUR"
 }
 
 // ---------------------------------------------------------------------------
@@ -7922,7 +7898,6 @@ BOOST_AUTO_TEST_CASE(testVoidDestroyPath)
     BOOST_CHECK(v.is_null());
     // v goes out of scope, destroying VOID storage
   }
-  BOOST_CHECK(true); // just confirm no crash
 }
 
 // =======================================================================
