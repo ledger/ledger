@@ -1,0 +1,22 @@
+; A periodic transaction whose range starts after the calendar period
+; that contains today is clamped to its own start.  Its forecast
+; boundaries are the transaction's own, whatever --period-shift says:
+; the shift belongs to the reporting periods, not to the clamped start.
+
+~ monthly in 2031
+    Expenses:Rent    $1
+    Assets:Cash
+
+test reg Expenses:Rent --now 2030/06/15 --forecast-while 'date<[2031/05/01]' --columns 80
+31-Jan-01 Forecast transaction  Expenses:Rent                    $1           $1
+31-Feb-01 Forecast transaction  Expenses:Rent                    $1           $2
+31-Mar-01 Forecast transaction  Expenses:Rent                    $1           $3
+31-Apr-01 Forecast transaction  Expenses:Rent                    $1           $4
+end test
+
+test reg Expenses:Rent --now 2030/06/15 --forecast-while 'date<[2031/05/01]' --columns 80 --period-shift 14
+31-Jan-01 Forecast transaction  Expenses:Rent                    $1           $1
+31-Feb-01 Forecast transaction  Expenses:Rent                    $1           $2
+31-Mar-01 Forecast transaction  Expenses:Rent                    $1           $3
+31-Apr-01 Forecast transaction  Expenses:Rent                    $1           $4
+end test

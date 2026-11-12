@@ -776,6 +776,10 @@ public:
   optional<date_duration_t> duration; ///< The step size for periodic iteration.
   optional<date_t> end_of_duration;   ///< One past the last date of the current period.
   bool since_specified = false;       ///< True if the user gave an explicit `since`/`from` date.
+  unsigned short anchor_day = 1;      ///< Day of month that month, quarter and year boundaries keep
+                                      ///< (clamped to short months).
+  int anchor_shift = 0;               ///< Days each such boundary lies past its anchor day
+                                      ///< (--period-shift).
 
   explicit date_interval_t() : aligned(false) { TRACE_CTOR(date_interval_t, ""); }
 
@@ -787,7 +791,8 @@ public:
   date_interval_t(const date_interval_t& other)
       : range(other.range), start(other.start), finish(other.finish), aligned(other.aligned),
         next(other.next), duration(other.duration), end_of_duration(other.end_of_duration),
-        since_specified(other.since_specified) {
+        since_specified(other.since_specified), anchor_day(other.anchor_day),
+        anchor_shift(other.anchor_shift) {
     TRACE_CTOR(date_interval_t, "copy");
   }
   date_interval_t& operator=(const date_interval_t&) = default;
@@ -823,6 +828,9 @@ public:
    * end would exceed it, end_of_duration is clamped to finish.
    */
   void resolve_end();
+
+  /// @brief The start of the period after the one starting at boundary.
+  date_t next_boundary(const date_t& boundary) const;
 
   /**
    * @brief Align the interval to a reference date, initializing iteration state.

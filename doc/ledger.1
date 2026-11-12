@@ -1253,7 +1253,17 @@ days.  For example,
 .Fl \-period-shift
 .Ar 15
 makes monthly periods run from the 16th of one month to the 15th of the
-next.  Does not affect weekly or daily periods.  See also
+next.  Does not affect weekly or daily periods.
+Each period starts exactly
+.Ar INT
+days after the first day of its calendar month, quarter or year, so a
+shift of 28 days or more can carry a boundary into the following month:
+in 2024,
+.Fl \-monthly
+.Fl \-period-shift
+.Ar 30
+starts periods on January 31, March 2, March 31 and May 1.
+See also
 .Fl \-start-of-week .
 .It Fl \-start-of-week Ar STR
 Use

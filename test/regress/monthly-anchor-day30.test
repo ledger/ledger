@@ -1,0 +1,110 @@
+; A monthly or quarterly period anchored on day 29-31 keeps that day in
+; every month long enough to hold it and the month's last day otherwise.
+; Each boundary is computed from the anchor day, so a short month does
+; not drag later boundaries to the end of the month.
+
+2023/02/28 A
+    Expenses:A    $1
+    Assets:Cash
+
+2023/03/30 B
+    Expenses:A    $1
+    Assets:Cash
+
+2023/03/31 C
+    Expenses:A    $1
+    Assets:Cash
+
+2023/04/29 D
+    Expenses:A    $1
+    Assets:Cash
+
+2023/04/30 E
+    Expenses:A    $1
+    Assets:Cash
+
+test period --now 2023/06/15 "every month from 2023/01/30"
+--- Period expression tokens ---
+TOK_EVERY: every
+TOK_MONTH: month
+TOK_SINCE: since
+TOK_DATE:  year 2023 month Jan day 30
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2023 month Jan day 30
+duration: 1 month
+
+--- After stabilization ---
+   range: from year 2023 month Jan day 30
+   start: 23-Jan-30
+duration: 1 month
+
+--- Sample dates in range (max. 20) ---
+ 1: 23-Jan-30 -- 23-Feb-27
+ 2: 23-Feb-28 -- 23-Mar-29
+ 3: 23-Mar-30 -- 23-Apr-29
+ 4: 23-Apr-30 -- 23-May-29
+ 5: 23-May-30 -- 23-Jun-29
+ 6: 23-Jun-30 -- 23-Jul-29
+ 7: 23-Jul-30 -- 23-Aug-29
+ 8: 23-Aug-30 -- 23-Sep-29
+ 9: 23-Sep-30 -- 23-Oct-29
+10: 23-Oct-30 -- 23-Nov-29
+11: 23-Nov-30 -- 23-Dec-29
+12: 23-Dec-30 -- 24-Jan-29
+13: 24-Jan-30 -- 24-Feb-28
+14: 24-Feb-29 -- 24-Mar-29
+15: 24-Mar-30 -- 24-Apr-29
+16: 24-Apr-30 -- 24-May-29
+17: 24-May-30 -- 24-Jun-29
+18: 24-Jun-30 -- 24-Jul-29
+19: 24-Jul-30 -- 24-Aug-29
+20: 24-Aug-30 -- 24-Sep-29
+end test
+
+test period --now 2024/06/15 "every quarter from 2023/11/30"
+--- Period expression tokens ---
+TOK_EVERY: every
+TOK_QUARTER: quarter
+TOK_SINCE: since
+TOK_DATE:  year 2023 month Nov day 30
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2023 month Nov day 30
+duration: 1 quarter
+
+--- After stabilization ---
+   range: from year 2023 month Nov day 30
+   start: 23-Nov-30
+duration: 1 quarter
+
+--- Sample dates in range (max. 20) ---
+ 1: 23-Nov-30 -- 24-Feb-28
+ 2: 24-Feb-29 -- 24-May-29
+ 3: 24-May-30 -- 24-Aug-29
+ 4: 24-Aug-30 -- 24-Nov-29
+ 5: 24-Nov-30 -- 25-Feb-27
+ 6: 25-Feb-28 -- 25-May-29
+ 7: 25-May-30 -- 25-Aug-29
+ 8: 25-Aug-30 -- 25-Nov-29
+ 9: 25-Nov-30 -- 26-Feb-27
+10: 26-Feb-28 -- 26-May-29
+11: 26-May-30 -- 26-Aug-29
+12: 26-Aug-30 -- 26-Nov-29
+13: 26-Nov-30 -- 27-Feb-27
+14: 27-Feb-28 -- 27-May-29
+15: 27-May-30 -- 27-Aug-29
+16: 27-Aug-30 -- 27-Nov-29
+17: 27-Nov-30 -- 28-Feb-28
+18: 28-Feb-29 -- 28-May-29
+19: 28-May-30 -- 28-Aug-29
+20: 28-Aug-30 -- 28-Nov-29
+end test
+
+test reg -M -p "every month from 2023/01/30" Expenses
+23-Feb-28 - 23-Mar-29  Expenses:A                         $1           $1
+23-Mar-30 - 23-Apr-29  Expenses:A                         $3           $4
+23-Apr-30 - 23-May-29  Expenses:A                         $1           $5
+end test

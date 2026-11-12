@@ -1764,7 +1764,7 @@ date_t date_interval_t::subtract_duration(const date_t& date, const date_duratio
  */
 void date_interval_t::resolve_end() {
   if (start && !end_of_duration) {
-    end_of_duration = duration->add(*start);
+    end_of_duration = next_boundary(*start);
     DEBUG("times.interval", "stabilize: end_of_duration = " << *end_of_duration);
   }
 
@@ -1779,6 +1779,34 @@ void date_interval_t::resolve_end() {
   }
 }
 
+/**
+ * @brief The start of the period after the one starting at boundary.
+ *
+ * Days and weeks step by the duration.  Months, quarters and years step
+ * from the first day of the calendar month the boundary belongs to (a
+ * first of the month never snaps), then keep anchor_day, clamped to the
+ * month's length, and add anchor_shift days.
+ */
+date_t date_interval_t::next_boundary(const date_t& boundary) const {
+  int months;
+  switch (duration->quantum) {
+  case date_duration_t::MONTHS:
+    months = duration->length;
+    break;
+  case date_duration_t::QUARTERS:
+    months = 3 * duration->length;
+    break;
+  case date_duration_t::YEARS:
+    months = 12 * duration->length;
+    break;
+  default:
+    return duration->add(boundary);
+  }
+  const date_t base = boundary - gregorian::days(anchor_shift);
+  const date_t first = date_t(base.year(), base.month(), 1) + gregorian::months(months);
+  return clamped_date(first.year(), first.month(), anchor_day) + gregorian::days(anchor_shift);
+}
+
 /*--- Period Boundary Alignment ---*/
 
 /**
@@ -1791,6 +1819,8 @@ void date_interval_t::resolve_end() {
  *   - MONTHS: first day of the same month
  *   - WEEKS: most recent start_of_week day
  *   - DAYS: the date itself
+ *
+ * With --period-shift N the boundary is the calendar boundary plus N days.
  */
 date_t date_duration_t::find_nearest(const date_t& date, skip_quantum_t skip) {
   date_t result;
@@ -1819,22 +1849,18 @@ date_t date_duration_t::find_nearest(const date_t& date, skip_quantum_t skip) {
   }
 
   if (day_of_period != 0 && skip != date_duration_t::WEEKS && skip != date_duration_t::DAYS) {
-    result += gregorian::days(day_of_period);
-    // If the shifted boundary is past the input date, back up one period
-    if (result > date) {
-      switch (skip) {
-      case date_duration_t::YEARS:
-        result -= gregorian::years(1);
-        break;
-      case date_duration_t::QUARTERS:
-        result -= gregorian::months(3);
-        break;
-      case date_duration_t::MONTHS:
-        result -= gregorian::months(1);
-        break;
-      default:
-        break;
-      }
+    // Each period starts day_of_period days after its calendar start.
+    // Back up whole calendar periods (whose first day never snaps) until
+    // that boundary is on or before date; for a shift of 28 days or more
+    // one step may not be enough.
+    const int months = skip == date_duration_t::YEARS      ? 12
+                       : skip == date_duration_t::QUARTERS ? 3
+                                                           : 1;
+    date_t base = result;
+    result = base + gregorian::days(day_of_period);
+    while (result > date) {
+      base -= gregorian::months(months);
+      result = base + gregorian::days(day_of_period);
     }
   }
 
@@ -1898,69 +1924,36 @@ void date_interval_t::stabilize(const optional<date_t>& date, bool align_interva
 
       date_t when = start ? *start : *date;
 
-      // Phase 1: Choose a starting point based on the duration quantum
-      switch (duration->quantum) {
-      case date_duration_t::MONTHS:
-      case date_duration_t::QUARTERS:
-      case date_duration_t::YEARS:
-        // These start on most recent period start quantum before when.
-        DEBUG("times.interval", "stabilize: monthly, quarterly or yearly duration");
-        if (align_intervals && since_specified) { // NOLINT(bugprone-branch-clone)
-          start = when;
-        } else if (since_specified && initial_start) {
-          // When the user specified an explicit start date (e.g.
-          // "every 1 months from 2023-01-15"), preserve the day-of-period
-          // rather than snapping to the first of the month.  Advance from
-          // the range begin by whole intervals until we reach the interval
-          // that contains or immediately precedes 'when'.
-          start = *initial_start;
-          {
-            date_t next = duration->add(*start);
-            while (next <= when) {
-              start = next;
-              next = duration->add(*start);
-            }
-          }
-        } else {
-          start = date_duration_t::find_nearest(when, duration->quantum);
-        }
-        break;
-      case date_duration_t::WEEKS:
-        // Weeks start on the beginning of week prior to 400 remainder period length
-        // Either the first quanta of the period or the last quanta of the period seems more
-        // sensible implies period is never less than 400 days not too unreasonable
-        DEBUG("times.interval", "stabilize: weekly duration");
-        {
-          if (align_intervals && since_specified) {
-            start = when;
-          } else if (since_specified && initial_start) {
-            // When the user specified an explicit start date (e.g.
-            // "every 2 weeks from 2010-03-01"), preserve the offset from
-            // that date rather than snapping to a calendar week boundary.
-            // Advance from the range begin by whole intervals until we
-            // reach the interval that contains or immediately precedes
-            // 'when'.
-            start = *initial_start;
-            {
-              date_t next = duration->add(*start);
-              while (next <= when) {
-                start = next;
-                next = duration->add(*start);
-              }
-            }
-          } else {
-            int period = duration->length * 7;
-            start = date_duration_t::find_nearest(when - gregorian::days(period + 400 % period),
-                                                  duration->quantum);
-          }
-        }
-        break;
-      default:
-        // multiples of days have a quanta of 1 day so should not have the start date adjusted to a
-        // quanta
-        DEBUG("times.interval", "stabilize: daily duration - stable by definition");
+      // Phase 1: Choose the first period start and the anchor later
+      // boundaries keep.
+      DEBUG("times.interval", "stabilize: quantum = " << *duration);
+      if (duration->quantum == date_duration_t::DAYS) {
+        // Days are their own quantum: the reference date is a boundary.
         start = when;
-        break;
+      } else if (align_intervals && since_specified) {
+        start = when;
+        anchor_day = when.day();
+      } else if (since_specified && initial_start) {
+        // An explicit since/from date (e.g. "every 1 months from
+        // 2023-01-15") anchors the periods: advance from it by whole
+        // intervals to the one containing or immediately preceding when.
+        start = *initial_start;
+        anchor_day = initial_start->day();
+        for (date_t next = next_boundary(*start); next <= when; next = next_boundary(*start))
+          start = next;
+      } else if (duration->quantum == date_duration_t::WEEKS) {
+        // Back up one period plus (400 mod period) days and snap to the
+        // week start; the forward scan below then finds the period that
+        // contains the date.
+        int period = duration->length * 7;
+        start = date_duration_t::find_nearest(when - gregorian::days(period + 400 % period),
+                                              duration->quantum);
+      } else {
+        // Months, quarters and years start on their calendar boundary,
+        // shifted by --period-shift.
+        start = date_duration_t::find_nearest(when, duration->quantum);
+        anchor_day = 1;
+        anchor_shift = day_of_period;
       }
 
       DEBUG("times.interval", "stabilize: beginning start date = " << *start);
@@ -1996,6 +1989,9 @@ void date_interval_t::stabilize(const optional<date_t>& date, bool align_interva
         if (end_of_duration && *end_of_duration <= *start) {
           end_of_duration = none;
           next = none;
+          // The clamped start is off the period grid: later periods step from it.
+          anchor_day = start->day();
+          anchor_shift = 0;
           resolve_end();
         }
 
@@ -2112,8 +2108,8 @@ bool date_interval_t::find_period(const date_t& date, const bool align_intervals
       break;
     }
 
-    scan = duration->add(scan);
-    end_of_scan = duration->add(scan);
+    scan = next_boundary(scan);
+    end_of_scan = next_boundary(scan);
 
     DEBUG("times.interval", "scan        = " << scan);
     DEBUG("times.interval", "end_of_scan = " << end_of_scan);
@@ -2150,7 +2146,7 @@ date_interval_t& date_interval_t::operator++() {
     start = none;
   } else {
     start = *next;
-    end_of_duration = duration->add(*start);
+    end_of_duration = next_boundary(*start);
   }
   next = none;
 
