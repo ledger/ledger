@@ -46,13 +46,13 @@ Useful CMake flags:
 # Run all tests
 cd build && ctest
 
-# Run specific test categories
-cd build && ctest -R baseline     # Run baseline tests
-cd build && ctest -R regress      # Run regression tests
-cd build && ctest -R manual       # Run manual tests
+# Run specific test categories (-R is a case-sensitive regex)
+cd build && ctest -R BaselineTest_   # Run baseline tests
+cd build && ctest -R RegressTest_    # Run regression tests
+cd build && ctest -R ManualTest_     # Run manual tests
 
-# Run a single test by name
-cd build && ctest -R 2413         # Run regression test for issue #2413
+# Run a single test by name (tests are named <Class>Test_<file>)
+cd build && ctest -R '^RegressTest_2413$'  # Run regression test for issue #2413
 
 # Run a .test file directly via the harness
 python test/RegressTests.py --ledger ./build/ledger \
