@@ -188,6 +188,20 @@ if(Python_EXECUTABLE)
     set_tests_properties(RegressPyTest_513
       PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE};PYTHONPATH=.")
 
+    # The unittest suites for the Python bindings, one interpreter per
+    # test/python/*Test.py file.  The commodity pool outlives
+    # close_journal_files() (#978), so suites that share an interpreter see
+    # one another's commodities, aliases and learned display precisions.
+    file(GLOB _py_suites ${PROJECT_SOURCE_DIR}/test/python/*Test.py)
+    foreach(_py_suite ${_py_suites})
+      get_filename_component(_py_suite_name ${_py_suite} NAME_WE)
+      add_test(NAME PyUnitTest_${_py_suite_name}
+        COMMAND ${Python_EXECUTABLE} ${_py_suite}
+        WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
+      set_tests_properties(PyUnitTest_${_py_suite_name}
+        PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE};PYTHONPATH=.")
+    endforeach()
+
     # Regression test for GitHub issue #3229 (Debian #1138597): the ledger
     # Python extension module must not carry an RPATH/RUNPATH with empty
     # elements, which ELF dynamic linkers treat as the current working
