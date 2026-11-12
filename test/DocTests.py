@@ -18,6 +18,7 @@ class DocTests:
     self.tests      = args.examples
 
     self.examples       = dict()
+    self.bad_ids        = 0
     self.test_files     = list()
     self.testin_token   = 'command'
     self.testout_token  = 'output'
@@ -70,11 +71,13 @@ class DocTests:
         test_end_line = self.current_line
 
         if not test_id:
+          self.bad_ids += 1
           print('Example', test_kind, 'in line', test_begin_line, 'is missing id.', file=sys.stderr)
           test_id = self.test_id(example)
           if test_kind == self.testin_token:
             print('Use', self.test_id(example), file=sys.stderr)
         elif test_kind == self.testin_token and test_id != self.validate_token and test_id != self.test_id(example):
+          self.bad_ids += 1
           print('Expected test id', test_id, 'for example' \
               , test_kind, 'on line', test_begin_line, 'to be', self.test_id(example), file=sys.stderr)
 
@@ -240,7 +243,7 @@ class DocTests:
     self.find_examples()
     failed_examples = self.test_examples()
     self.file.close()
-    return failed_examples
+    return failed_examples + self.bad_ids
 
 if __name__ == "__main__":
   def getargs():

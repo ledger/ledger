@@ -5,6 +5,7 @@
 # harness breaks it.
 
 import argparse
+import hashlib
 import os
 import pathlib
 import subprocess
@@ -161,7 +162,37 @@ def harness_wait(tmp):
           pids != [] and all(gone(pid) for pid in pids), 'pids: %s' % pids)
 
 
-SECTIONS = [regress_empty_block, regress_timeout, harness_wait]
+def doctests_ids(tmp):
+    """DocTests.py: an example whose id is missing or does not match the
+    hash of its command is a failure.  Each failing fixture has exactly
+    one such id, so DocTests.py exits 1 for it whether it exits with the
+    count of failures or with 1 for any."""
+    command = '$ ledger bal Food'
+    good = hashlib.sha1(command.encode('utf-8')).hexdigest()[0:7].upper()
+
+    def texi(input_id, command_id, output_id):
+        return ('@smallexample @c input:%s\n%s@end smallexample\n\n'
+                '@smallexample @c command:%s\n%s\n@end smallexample\n\n'
+                '@smallexample @c output:%s\n'
+                '              $10.00  Expenses:Food\n'
+                '@end smallexample\n'
+                % (input_id, JOURNAL, command_id, command, output_id))
+
+    for name, text, want in (
+            ('a matching doc example id passes', texi(good, good, good), 0),
+            ('a mismatched doc example id fails',
+             texi('0000000', '0000000', '0000000'), 1),
+            ('a missing doc example id fails', texi(good, '', good), 1)):
+        path = tmp / 'example.texi'
+        path.write_text(text, encoding='utf-8')
+        rc, out, _ = run_harness('DocTests.py',
+                                 ['--ledger', str(args.ledger),
+                                  '--file', str(path)], tmp)
+        check(name, rc == want, 'rc=%d\n%s' % (rc, out))
+
+
+SECTIONS = [regress_empty_block, regress_timeout, harness_wait,
+            doctests_ids]
 POSIX_ONLY = {regress_timeout, harness_wait}
 
 with tempfile.TemporaryDirectory() as tmpdir:

@@ -4566,7 +4566,7 @@ reached a certain level.  In the example below, an automated posting
 adds $60.00 to @samp{Assets:Budget} for each income posting, but only
 fires while the budget balance is below $50.00:
 
-@smallexample @c input:04D8BC7
+@smallexample @c input:1ADE429
 = expr account =~ /^Income/ and account("Assets:Budget").total < $50.00
     [Assets:Budget]             $60.00
     [Assets:Savings]           -$60.00
@@ -4585,11 +4585,11 @@ zero, bringing it to $60.00.  The second posting finds the budget
 already at $60.00, which is not below the threshold, so the rule does
 not fire again.
 
-@smallexample @c command:04D8BC7
+@smallexample @c command:1ADE429
 $ ledger balance Assets:Budget
 @end smallexample
 
-@smallexample @c output:04D8BC7
+@smallexample @c output:1ADE429
               $60.00  Assets:Budget
 @end smallexample
 
@@ -7439,10 +7439,25 @@ with the @option{--time-colon} option they will be displayed as 2:15.
 Round timelog durations up to the next multiple of @var{INT} minutes.
 This is useful for billing in fixed increments.  For example, with
 @option{--time-round 15}, a 7-minute checkin is rounded up to 15 minutes
-and a 31-minute checkin is rounded up to 45 minutes.
+and a 31-minute checkin is rounded up to 45 minutes:
 
-@smallexample @c command:
+@smallexample @c input:7036D60
+i 2024/01/01 09:00:00 Projects:Alpha
+o 2024/01/01 09:07:00
+i 2024/01/01 10:00:00 Projects:Beta
+o 2024/01/01 10:31:00
+@end smallexample
+
+@smallexample @c command:7036D60
 $ ledger bal --time-round 15
+@end smallexample
+
+@smallexample @c output:7036D60
+               1.00h  Projects
+               15.0m    Alpha
+               45.0m    Beta
+--------------------
+               1.00h
 @end smallexample
 
 @item --value-expr @var{VEXPR}
