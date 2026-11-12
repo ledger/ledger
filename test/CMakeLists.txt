@@ -135,7 +135,7 @@ if(Python_EXECUTABLE)
   # Every script in CheckOptions reads ledger's option list from
   # "ledger --debug option.names", which prints only in a Debug build; on any
   # other build the script exits 77 and ctest shows it as SKIPPED.
-  list(APPEND CheckOptions CheckBaselineTests)
+  list(APPEND CheckOptions CheckBaselineTests CheckCompletion)
   if(BUILD_DEBUG)
     # CheckManpage and CheckTexinfo require ledger to have been
     # built with debug support

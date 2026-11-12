@@ -31,7 +31,7 @@ y
 @end smallexample
 """
 
-OPTION_CHECKS = ('CheckBaselineTests.py', 'CheckManpage.py', 'CheckTexinfo.py')
+OPTION_CHECKS = ('CheckBaselineTests.py', 'CheckCompletion.py', 'CheckManpage.py', 'CheckTexinfo.py')
 
 failures = []
 
