@@ -104,6 +104,17 @@ int day_of_period = 0;
  *   - readers: a deque of date_io_t tried in order by parse_date_mask()
  */
 namespace {
+/// @brief The year of a date written without one: the year directive's year
+/// when one is active, otherwise today's year, or the year before when the
+/// month is still ahead of today's.
+int yearless_year(int month) {
+  if (year_directive_year)
+    return *year_directive_year;
+  const date_t today = CURRENT_DATE();
+  const int year = today.year();
+  return month > today.month() ? year - 1 : year;
+}
+
 /// @brief The date parts a strftime/strptime format carries, read
 /// case-sensitively from its conversion specifiers.
 date_traits_t traits_of(const string& fmt) {
@@ -200,27 +211,22 @@ datetime_t temporal_io_t<datetime_t>::parse(const char* str) {
 /**
  * @brief date_t parsing specialization.
  *
- * Before calling strptime, pre-fills tm_year with a sensible default:
- * the year directive year if active, otherwise the current year.  This
- * ensures formats without %Y (like "%m/%d") still produce a valid date.
- * Also pre-fills tm_mday=1 for formats without %d (like "%Y/%m").
+ * Pre-fills tm_mday=1 for formats without %d (like "%Y/%m").  After
+ * parsing, picks the year of a format without one (like "%m/%d"): the
+ * year directive's year if active, otherwise today's year, or the
+ * previous year when the month is still ahead.  The date is built once,
+ * in that year, so a Feb 29 in a year without one is an error.
  */
 template <>
 date_t temporal_io_t<date_t>::parse(const char* str) {
   std::tm data;
   std::memset(&data, 0, sizeof(std::tm));
-  // When year_directive_year is set (from "apply year" or "year" directive),
-  // use that instead of CURRENT_DATE() to avoid issues with leap year dates
-  if (year_directive_year) {
-    data.tm_year = *year_directive_year - 1900;
-  } else {
-    data.tm_year = CURRENT_DATE().year() - 1900;
-  }
   data.tm_mday = 1; // some formats have no day
-  if (strptime(str, fmt_str.c_str(), &data))
-    return gregorian::date_from_tm(data);
-  else
+  if (!strptime(str, fmt_str.c_str(), &data))
     return date_t();
+  if (!traits.has_year)
+    data.tm_year = yearless_year(data.tm_mon + 1) - 1900;
+  return gregorian::date_from_tm(data);
 }
 
 using datetime_io_t = temporal_io_t<datetime_t>;
@@ -255,9 +261,8 @@ bool convert_separators_to_slashes = true;
  *   3. Round-trip validates: formats the parsed date back to a string
  *      and verifies it matches the input (catching invalid dates like
  *      "02/30").
- *   4. When the format lacks a year component, infers the year from
- *      the year directive, epoch, or current date -- with month-rollback
- *      logic to avoid dates in the future.
+ *   4. Reports the format's traits; the parse itself has already chosen
+ *      the year of a yearless format (see temporal_io_t<date_t>::parse).
  *
  * @param date_str  The date string to parse.
  * @param io        The format-specific IO object.
@@ -310,37 +315,6 @@ date_t parse_date_mask_routine(const char* date_str, date_io_t& io,
 
     if (traits)
       *traits = io.traits;
-
-    // Year inference: when the format lacks a year component, we must
-    // choose a year.  Priority: year directive > epoch (--now) > current date.
-    // Month rollback prevents inferring a future date when the parsed
-    // month is later than the reference month.
-    if (!io.traits.has_year) {
-      // First check if we have a year directive year to use
-      if (year_directive_year) {
-        // Use the year from the year directive
-        when = date_t(*year_directive_year, when.month(), when.day());
-        DEBUG("times.parse", "Using year directive year: " << *year_directive_year);
-      } else if (epoch) {
-        // When using the epoch (e.g., from --now), use it for the year
-        date_t reference_date = epoch->date();
-        when = date_t(reference_date.year(), when.month(), when.day());
-
-        // Apply month rollback if the parsed month is after the epoch's month
-        if (when.month() > reference_date.month())
-          when -= gregorian::years(1);
-
-        DEBUG("times.parse", "Using epoch year: " << reference_date.year()
-                                                  << ", epoch month: " << reference_date.month()
-                                                  << ", parsed month: " << when.month()
-                                                  << ", final year: " << when.year());
-      } else {
-        // When no epoch, use current date and handle month rollback
-        when = date_t(CURRENT_DATE().year(), when.month(), when.day());
-        if (when.month() > CURRENT_DATE().month())
-          when -= gregorian::years(1);
-      }
-    }
   }
   return when;
 }
@@ -520,6 +494,13 @@ optional<datetime_t> try_parse_datetime(const std::string& str) {
 /// @brief Parse a date string using the registered format cascade.
 date_t parse_date(const char* str) {
   return parse_date_mask(str);
+}
+
+date_t clamped_date(int year, int month, int day) {
+  const int last = gregorian::gregorian_calendar::end_of_month_day(
+      static_cast<unsigned short>(year), static_cast<unsigned short>(month));
+  return date_t(static_cast<unsigned short>(year), static_cast<unsigned short>(month),
+                static_cast<unsigned short>(std::min(day, last)));
 }
 
 /**

@@ -644,7 +644,7 @@ public:
           // The user most likely wants the most recent past occurrence of that
           // date rather than a future one.
           if (!interval.begin_has_year() && *begin > CURRENT_DATE())
-            begin = *begin - gregorian::years(1);
+            begin = clamped_date(begin->year() - 1, begin->month(), begin->day());
           OTHER(limit_).on(whence, "date>=[" + to_iso_extended_string(*begin) + "]");
           if (!parent->origin || *begin < *parent->origin)
             parent->origin = begin;

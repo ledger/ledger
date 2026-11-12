@@ -1,0 +1,21 @@
+; A yearless 02/29 read in January 2028 belongs to 2027 (February is
+; still ahead), and 2027 has no Feb 29: the date is an error, not a
+; silent 2027/02/28, in the journal and in a -b option alike.
+
+02/29 leap day
+    Expenses:Food    $1
+    Assets:Cash
+
+test print --now 2028/01/15 -> 1
+__ERROR__
+While parsing file "$FILE", line 5:
+While parsing transaction:
+> 02/29 leap day
+Error: Day of month is not valid for year
+end test
+
+test reg --now 2028/01/15 -b 02/29 -> 1
+__ERROR__
+While parsing option '-b'
+Error: Day of month is not valid for year
+end test

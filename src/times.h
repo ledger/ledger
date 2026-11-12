@@ -216,6 +216,10 @@ inline date_t parse_date(const std::string& str) {
   return parse_date(str.c_str());
 }
 
+/// @brief The date year/month/day, or the month's last day when the month
+/// has fewer than day days.
+date_t clamped_date(int year, int month, int day);
+
 /**
  * @brief Parse a date string that may be either a standard date format or a
  *        relative date expression (e.g. "yesterday", "last month", "3 days ago").

@@ -283,6 +283,13 @@ EXPECTED_REFUSALS = {
                   " commodities, which market() cannot convert to one"
                   " amount (bal -V)",
     },
+    "test/regress/yearless-feb29-rollback.test": {
+        "stderr": "Day of month is not valid for year",
+        "reason": "the journal's one transaction is dated 02/29 without"
+                  " a year, which the test reads with --now 2029/01/15"
+                  " as 2028/02/29; under this check's --now 2026/08/26"
+                  " it falls in 2026, which has no Feb 29",
+    },
 }
 
 # Journals that C++ leaves unfooted: every report that fails, with its
