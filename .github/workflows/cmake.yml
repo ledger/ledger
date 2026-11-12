@@ -11,12 +11,12 @@ env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Debug
   # Minimum coverage thresholds required. Raise these as coverage improves.
-  # Measured by LLVM instrumentation across all instrumented binaries.
-  # Current measured values: lines ~81%, functions ~85%.
+  # Measured by LLVM instrumentation over ledger, libledger and the unit-test binaries.
+  # Current measured values: lines ~92.3%, functions ~89.6% (2026-11-12).
   # Thresholds are set slightly below measured values to absorb minor
-  # variation between CI (Ubuntu/gcc) and local (Nix/Clang) environments.
-  MIN_LINE_COVERAGE: 80
-  MIN_FUNC_COVERAGE: 84
+  # variation between CI (Ubuntu/system clang) and local (Nix/Clang) environments.
+  MIN_LINE_COVERAGE: 91
+  MIN_FUNC_COVERAGE: 88
 
 jobs:
   build:

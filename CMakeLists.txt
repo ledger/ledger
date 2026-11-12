@@ -130,8 +130,13 @@ if(USE_LLVM_COV)
       "${CMAKE_BINARY_DIR}/RunCoverage.cmake"
       @ONLY
     )
+    set(_coverage_defs)
+    if(BUILD_LIBRARY)
+      # All of src/ except main.cc and global.cc is in the shared libledger.
+      set(_coverage_defs "-DLIBLEDGER_FILE=$<TARGET_FILE:libledger>")
+    endif()
     add_custom_target(coverage
-      COMMAND "${CMAKE_COMMAND}" -P "${CMAKE_BINARY_DIR}/RunCoverage.cmake"
+      COMMAND "${CMAKE_COMMAND}" ${_coverage_defs} -P "${CMAKE_BINARY_DIR}/RunCoverage.cmake"
       WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
       COMMENT "Generating LLVM code coverage report in coverage_html/"
       VERBATIM
