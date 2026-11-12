@@ -1,0 +1,10 @@
+2024/01/01 Grocery Store
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test python test/regress/xact-str.py
+<ledger.Transaction object at 0x>
+<ledger.Transaction object at 0x>
+<ledger.Transaction object at 0x>
+<ledger.Transaction object at 0x>
+end test
