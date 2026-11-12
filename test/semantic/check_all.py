@@ -39,9 +39,11 @@ unannounced one a FAIL.  A file whose commands carry --value-expr
 and the related options is refused by the oracle (value-expression;
 the oracle models no value expression, S46) and so never compared.
 
-For EVERY positive `.test` file in test/baseline, test/regress, and
-test/manual — positive meaning no test block expects a nonzero exit
-(`-> N`) or an `__ERROR__` section — the journal portion (everything
+For EVERY `.test` file in test/baseline, test/regress, and
+test/manual whose journal is valid — valid meaning no test block
+expects a nonzero exit (`-> N`) or an `__ERROR__` section, or C++
+ledger reads the journal without error, so that the expected error
+belongs to a command — the journal portion (everything
 before the first `test` block, exactly as RegressTests.py delineates
 it) is replayed through BOTH the C++ ledger (`balance --flat
 --no-total`) and the Lean oracle driver, and the normalized balance
@@ -65,7 +67,8 @@ lists them all — absence of output is never silent success):
                     NEG:unbalanced file on which either side disagrees
                     is a FAIL.
   SKIP:negative   : any other test that intentionally exercises
-                    errors; its journal is not claimed valid.
+                    errors and whose journal C++ ledger rejects; its
+                    journal is not claimed valid.
   SKIP:no-journal — no journal text before the first test block.
   SKIP:out-of-scope — the oracle parser rejected the journal, with
                     the construct named; the goal state, reached by
@@ -145,7 +148,9 @@ import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
+sys.path.append(os.path.dirname(HERE))
 import sweep  # normalization + C++ balance parsing
+from RegressTests import NOW  # the clock RegressTests.py runs the tests at
 
 TEST_RE = re.compile(r"^test\s+(.*?)(?:\s*->\s*([0-9]+))?\s*$")
 # The only expected error a NEG:unbalanced test may carry
@@ -350,7 +355,7 @@ def classify_negative_test(path):
         if not matches or not all(os.path.isfile(p) for p in matches):
             return None
     if "--now" not in cpp_flags:
-        cpp_flags.extend(["--now", "2026/08/26"])  # as for positives
+        cpp_flags.extend(["--now", NOW])  # as for positives
     return journal, cpp_flags, dc
 
 
@@ -453,7 +458,12 @@ def neg_failures(oracle_res, cpp, cpp_path, journal):
 
 
 def classify_test_file(path):
-    """-> (journal_text or None, skip_reason or None, cpp_flags, dc)"""
+    """-> (journal_text or None, skip_reason or None, cpp_flags, dc).
+
+    A test some block of which expects a nonzero exit or an __ERROR__
+    section comes back with its journal and the skip reason "negative":
+    the error may belong to a command rather than to the journal, which
+    main() decides by reading the journal."""
     try:
         with open(path, encoding="utf-8") as fh:
             text = fh.read()
@@ -482,8 +492,6 @@ def classify_test_file(path):
             journal_lines.append(line)
         elif line.startswith("__ERROR__"):
             negative = True
-    if negative:
-        return None, "negative", [], False
     if not any(l.strip() and not l.lstrip().startswith(";")
                for l in journal_lines):
         return None, "no-journal", [], False
@@ -491,12 +499,24 @@ def classify_test_file(path):
         # Deterministic "current time", passed identically to BOTH
         # sides: dangling timeclock check-ins auto-close at --now
         # (timelog.cc close()), so an unpinned clock would make the
-        # comparison depend on the day it runs.  The value itself is
-        # arbitrary; any fixed date later than every journal date in
-        # the corpus behaves the same, and this one is kept only
-        # because the zero-divergence baseline was measured with it.
-        cpp_flags.extend(["--now", "2026/08/26"])
-    return "\n".join(journal_lines) + "\n", None, cpp_flags, dc
+        # comparison depend on the day it runs.  It is the date
+        # RegressTests.py runs the same tests as of.
+        cpp_flags.extend(["--now", NOW])
+    return ("\n".join(journal_lines) + "\n", "negative" if negative else None,
+            cpp_flags, dc)
+
+
+def admit_negative(ledger, dat, cpp_flags, env):
+    """-> the C++ balance run over DAT, the extracted journal of a test
+    that expects an error, when C++ reads that journal without error, so
+    that the error belongs to a command and the journal is compared like
+    a positive one; else None.  The run has no --permissive, which would
+    admit a journal whose balance assignment leaves a transaction
+    unbalanced (src/xact.cc, xact_base_t::finalize), and the oracle
+    rejects such a journal."""
+    cpp = sweep.run_cpp(ledger, [*cpp_flags, "-f", dat, "balance", "--flat",
+                                 "--no-total"], env)
+    return cpp if cpp.returncode == 0 else None
 
 
 # src/textual.cc:read_line/read_next_directive and
@@ -699,6 +719,8 @@ def main():
 
     with tempfile.TemporaryDirectory() as tmp:
         candidates = []  # (test_path, dat_path, cpp_flags, dc)
+        admitted = {}  # dat_path -> the C++ run that admitted a negative
+        # test's journal (see the classification loop)
         neg_candidates = []  # the same, for NEG:unbalanced files
         journal_text_of = {}  # dat_path -> journal text plus its copied
         # include closure, for the gross comparison's eval/expr
@@ -723,8 +745,6 @@ def main():
                     fh.write(njournal)
                 copy_includes(njournal, os.path.dirname(tpath), fdir)
                 neg_candidates.append((tpath, dat, nflags, ndc))
-            elif skip == "negative":
-                bins["SKIP:negative"].append(rel)
             elif skip == "no-journal":
                 bins["SKIP:no-journal"].append(rel)
             elif skip == "python":
@@ -742,6 +762,12 @@ def main():
                     fh.write(journal)
                 inc_texts = copy_includes(journal,
                                           os.path.dirname(tpath), fdir)
+                if skip == "negative":
+                    run = admit_negative(ledger, dat, cpp_flags, env)
+                    if run is None:
+                        bins["SKIP:negative"].append(rel)
+                        continue
+                    admitted[dat] = run
                 candidates.append((tpath, dat, cpp_flags, dc))
                 journal_text_of[dat] = journal + inc_texts
                 if value_on:
@@ -839,7 +865,7 @@ def main():
                 fh.write(fj.replace("P 2024/03/01 AAPL $170",
                                     "P 2024/03/01 AAPL $171"))
             detector_inputs.append(("__valuedet__", v1,
-                                    ["--now", "2026/08/26"], False))
+                                    ["--now", NOW], False))
             vtarget[v1] = "$"
             vdet = (v1, v2)
 
@@ -1159,11 +1185,14 @@ def main():
             # relax those assertions, the suite's own expectations
             # already test assertion behavior, and what is compared
             # here is the computed balances, which --permissive does
-            # not alter.
-            cpp = sweep.run_cpp(
-                ledger, [*cpp_flags, "--permissive", "-f", dat,
-                         "balance", "--flat", "--no-total"],
-                env)
+            # not alter.  An admitted negative test's journal is compared
+            # on the run that admitted it, without --permissive.
+            cpp = admitted.get(dat)
+            if cpp is None:
+                cpp = sweep.run_cpp(
+                    ledger, [*cpp_flags, "--permissive", "-f", dat,
+                             "balance", "--flat", "--no-total"],
+                    env)
             if cpp.returncode != 0:
                 bins["SKIP:cpp-parse"].append(rel)
                 details.append({"file": rel, "status": "SKIP:cpp-parse",
@@ -1261,9 +1290,9 @@ def main():
         if vdet:
             v1, v2 = vdet
             ores = vrows.get(v1, set())
-            c1, e1 = cpp_value(v1, ["--now", "2026/08/26"], False,
+            c1, e1 = cpp_value(v1, ["--now", NOW], False,
                                frozenset(), "", "$")
-            c2, e2 = cpp_value(v2, ["--now", "2026/08/26"], False,
+            c2, e2 = cpp_value(v2, ["--now", NOW], False,
                                frozenset(), "", "$")
             vctl = ((not e1) and v1 not in vref and bool(ores)
                     and c1 == ores)

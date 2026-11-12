@@ -15,7 +15,7 @@ import tempfile
 import time
 
 HERE = pathlib.Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE / 'semantic'))  # for sweep
+sys.path.insert(0, str(HERE / 'semantic'))  # for sweep and check_all
 
 parser = argparse.ArgumentParser(prog='HarnessSelfTest')
 parser.add_argument('-l', '--ledger', type=pathlib.Path, required=True)
@@ -245,8 +245,48 @@ def bisimulation_args_only(tmp):
               bare == [], 'argv without --args-only at lines %s' % bare)
 
 
+def bisimulation_negative_journals(tmp):
+    """check_all.py compares the journal of a test that expects an error
+    when C++ reads that journal without error (so the error belongs to a
+    command), and runs it as of the clock RegressTests.py uses."""
+    import check_all
+    from RegressTests import NOW
+
+    path = tmp / 'command_error.test'
+    path.write_text(JOURNAL + 'test bal --bogus -> 1\n__ERROR__\n'
+                    'Error: Illegal option --bogus\nend test\n',
+                    encoding='utf-8')
+    got = check_all.classify_test_file(str(path))
+    check('a test whose error belongs to a command keeps its journal',
+          got == (JOURNAL, 'negative', ['--now', NOW], False), repr(got))
+
+    path.write_text('; only a comment\n\ntest bal -> 1\n__ERROR__\n'
+                    'Error: x\nend test\n', encoding='utf-8')
+    got = check_all.classify_test_file(str(path))
+    check('a negative test without a journal has no journal',
+          got == (None, 'no-journal', [], False), repr(got))
+
+    demo = str(HERE / 'semantic' / 'demo.dat')
+    env = {**CLEAN, 'HOME': str(tmp / 'no-home')}
+    run = check_all.admit_negative(str(args.ledger), demo, [], env)
+    check('a journal C++ reads cleanly is admitted',
+          run is not None and run.returncode == 0 and run.stdout != '',
+          repr(run))
+    # The balance assignment leaves the second transaction unbalanced:
+    # only --permissive would accept it.
+    assign = tmp / 'assign.dat'
+    assign.write_text('2024/01/01 Opening\n    Assets:Cash    $100.00\n'
+                      '    Equity:Opening\n\n2024/01/02 Count\n'
+                      '    Assets:Cash    = $90.00\n'
+                      '    Expenses:Food    $20.00\n', encoding='utf-8')
+    run = check_all.admit_negative(str(args.ledger), str(assign), [], env)
+    check('a journal only --permissive accepts is not admitted',
+          run is None, repr(run))
+
+
 SECTIONS = [regress_empty_block, regress_timeout, harness_wait,
-            doctests_ids, bisimulation_args_only]
+            doctests_ids, bisimulation_args_only,
+            bisimulation_negative_journals]
 POSIX_ONLY = {regress_timeout, harness_wait}
 
 with tempfile.TemporaryDirectory() as tmpdir:

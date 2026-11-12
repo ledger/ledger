@@ -56,3 +56,4 @@ spec-form	test/regress/unrealized-unconvertible-cost.test
 time-unit	test/regress/1018.test
 value-expression	test/baseline/opt-value-expr.test
 spec-form	test/regress/value-unround-merged-precision.test
+spec-form	test/regress/value-valuation-error-order.test
