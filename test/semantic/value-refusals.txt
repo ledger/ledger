@@ -7,6 +7,7 @@
 # (decisions D30, D31, D34; Ledger/Driver.lean's exchangeRows records
 # the refusal reasons and their witnesses).
 alternative-price-path	test/regress/unrealized-unconvertible-proceeds.test
+commodity-alias	test/regress/1678.test
 equivalence	test/regress/1066.test
 equivalence	test/regress/1793.test
 equivalence	test/regress/2017.test
@@ -47,6 +48,7 @@ spec-form	test/regress/1101.test
 spec-form	test/regress/1142.test
 spec-form	test/regress/2115.test
 spec-form	test/regress/3231.test
+spec-form	test/regress/alias-after-price.test
 spec-form	test/regress/cov3-value-balance-exchange.test
 spec-form	test/regress/cov3-value-exchange-selective.test
 spec-form	test/regress/coverage-value-cc-exchange-src.test

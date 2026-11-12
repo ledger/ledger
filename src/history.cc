@@ -339,13 +339,41 @@ void commodity_history_impl_t::alias_commodity(commodity_t& old_comm, commodity_
   std::size_t old_index = *old_comm.graph_index();
   if (old_index >= num_vertices(price_graph))
     return;
-  // Update the vertex name to point to new_comm
+
+  // Every price on the alias's vertex is recorded again on the referent's,
+  // through add_price(), so it joins the referent's own history (a price
+  // at the same moment is replaced, as a later P directive replaces an
+  // earlier one).  A price stated in the alias's commodity is re-stated
+  // in the referent's; a price between the two names is dropped, since
+  // they now name one commodity.  The alias's vertex keeps its name and
+  // is left without edges.
+  vertex_descriptor old_v = vertex(old_index, price_graph);
+  vertex_descriptor new_v = vertex(*new_comm.graph_index(), price_graph);
   NameMap namemap = get(vertex_name, price_graph);
-  vertex_descriptor v = vertex(old_index, price_graph);
-  namemap[v] = &new_comm;
-  // Transfer the graph index to new_comm
-  // (new_comm's previous vertex, if any, becomes orphaned but had no edges)
-  new_comm.set_graph_index(old_index);
+
+  struct moved_price_t {
+    vertex_descriptor other; // the vertex at the edge's far end
+    datetime_t when;
+    amount_t price;
+    bool in_old; // the price is stated in old_comm (its vertex is old_v)
+  };
+  std::vector<moved_price_t> moved;
+  graph_traits<Graph>::out_edge_iterator ei, ei_end;
+  for (boost::tuples::tie(ei, ei_end) = out_edges(old_v, price_graph); ei != ei_end; ++ei) {
+    vertex_descriptor w = target(*ei, price_graph);
+    if (w == new_v)
+      continue;
+    for (const auto& [when, price] : get(ratiomap, *ei))
+      moved.push_back({w, when, price, *price.commodity().graph_index() == old_index});
+  }
+  clear_vertex(old_v, price_graph);
+
+  for (const moved_price_t& m : moved) {
+    if (m.in_old)
+      add_price(*namemap[m.other], m.when, m.price.with_commodity(new_comm));
+    else
+      add_price(new_comm, m.when, m.price);
+  }
 }
 
 void commodity_history_impl_t::add_price(const commodity_t& source, const datetime_t& when,
@@ -422,14 +450,11 @@ void commodity_history_impl_t::map_prices(const function<void(datetime_t, const 
 
       DEBUG("history.map", "Price " << found << " on " << when);
 
-      if (found.commodity() == source) {
+      if (found.commodity() == *get(namemap, sv)) {
         if (bidirectionally) {
           amount_t price(found);
           price.in_place_invert();
-          if (source == *get(namemap, sv))
-            price.set_commodity(const_cast<commodity_t&>(*get(namemap, *f_vi)));
-          else
-            price.set_commodity(const_cast<commodity_t&>(*get(namemap, sv)));
+          price.set_commodity(const_cast<commodity_t&>(*get(namemap, *f_vi)));
           DEBUG("history.map", "Inverted price is " << price);
           DEBUG("history.map", "fn(" << when << ", " << price << ")");
           fn(when, price);
@@ -483,12 +508,9 @@ std::optional<price_point_t> commodity_history_impl_t::find_price(const commodit
 
     DEBUG("history.find", "price was = " << price.unrounded());
 
-    if (price.commodity() == source) {
+    if (price.commodity() == *get(namemap, sv)) {
       price.in_place_invert();
-      if (source == *get(namemap, sv))
-        price.set_commodity(const_cast<commodity_t&>(*get(namemap, *f_vi)));
-      else
-        price.set_commodity(const_cast<commodity_t&>(*get(namemap, sv)));
+      price.set_commodity(const_cast<commodity_t&>(*get(namemap, *f_vi)));
     }
 
     DEBUG("history.find", "price is  = " << price.unrounded());
@@ -522,6 +544,13 @@ std::optional<price_point_t> commodity_history_impl_t::find_price(const commodit
   if (!target.graph_index() || *target.graph_index() >= n)
     return std::nullopt;
 
+  // A retired commodity shares its referent's vertex (commodity_pool_t::
+  // alias): the two are one commodity, so one unit of either is one of
+  // the other.  A commodity of another pool may carry the same index by
+  // chance (see the guard above) and is no such pair.
+  if (&source.pool() == &target.pool() && *source.graph_index() == *target.graph_index())
+    return price_point_t(moment, amount_t(1L).with_commodity(target));
+
   vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
   vertex_descriptor tv = vertex(*target.graph_index(), price_graph);
 
@@ -554,7 +583,7 @@ std::optional<price_point_t> commodity_history_impl_t::find_price(const commodit
   datetime_t least_recent = moment;
   amount_t price;
 
-  const commodity_t* last_target = &target;
+  const commodity_t* last_target = get(namemap, tv);
 
   vertex_descriptor v = tv;
   for (vertex_descriptor u = predecessorMap[v]; u != v; v = u, u = predecessorMap[v]) {

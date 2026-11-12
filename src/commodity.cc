@@ -65,17 +65,19 @@ bool commodity_t::time_colon_by_default = false;
  *
  * Adds an edge from this commodity to the price's commodity in the price
  * history graph.  When @p reflexive is true (the default for parsed P
- * directives), the price's commodity is marked COMMODITY_PRIMARY, which
- * tells -V/-X to convert into it.  The memoized price cache is
- * invalidated because a new price may change future lookup results.
+ * directives), the price's commodity is marked COMMODITY_PRIMARY
+ * (commodity_pool_t::mark_primary, which also marks the commodities
+ * retired into it), which tells -V/-X to convert into it.  The memoized
+ * price cache is invalidated because a new price may change future lookup
+ * results.
  */
 void commodity_t::add_price(const datetime_t& date, const amount_t& price, const bool reflexive) {
   if (reflexive) {
     DEBUG("history.find", "Marking " << price.commodity().symbol() << " as a primary commodity");
-    price.commodity().add_flags(COMMODITY_PRIMARY);
+    pool().mark_primary(price.commodity());
   } else {
     DEBUG("history.find", "Marking " << symbol() << " as a primary commodity");
-    add_flags(COMMODITY_PRIMARY);
+    pool().mark_primary(*this);
   }
 
   DEBUG("history.find", "Adding price: " << symbol() << " for " << price << " on " << date);

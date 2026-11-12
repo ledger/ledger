@@ -144,8 +144,16 @@ commodity_t* commodity_pool_t::find_or_create(const string& symbol) {
  * mapped to a different commodity (e.g., created implicitly by a pricedb
  * parse before the alias directive was seen), the old commodity is moved to
  * retired_commodities to keep it alive -- existing amount_t objects may still
- * hold raw pointers to it.  Any price history on the old commodity is
- * transferred to the referent via commodity_history::alias_commodity.
+ * hold raw pointers to it.
+ *
+ * When @p name was the old commodity's own symbol, its prices join the
+ * referent's (commodity_history_t::alias_commodity) and the referent keeps
+ * its own.  The old commodity and any commodity retired into it value
+ * through the referent's graph vertex, and they share its
+ * COMMODITY_PRIMARY status (mark_primary).  Every other name of the old
+ * commodity moves to the referent as well.  Memoized price lookups are
+ * forgotten.  When @p name was only another commodity's alias, that
+ * commodity keeps its prices and @p name simply moves.
  *
  * Aliasing the same name to the same referent is idempotent.
  */
@@ -159,19 +167,56 @@ commodity_t* commodity_pool_t::alias(const string& name, commodity_t& referent) 
       // The alias is already registered with the same referent; this is idempotent.
       return iter->second.get();
     }
-    // The name was previously used for a different commodity (e.g., created implicitly
-    // by pricedb parsing before the alias directive was processed, or an include file
-    // with commodity aliases was included multiple times).
-    //
-    // Keep the old commodity alive (to prevent dangling raw pointers held by existing
-    // amount_t objects in the price history), transfer price history to the referent,
-    // then remap the commodities map entry.
-    retired_commodities.push_back(iter->second);
-    commodity_price_history.alias_commodity(*iter->second.get(), referent);
+    // The name was in use for a different commodity (created by a price or
+    // a posting read before this alias, or by an earlier alias).
+    const std::shared_ptr<commodity_t> displaced(iter->second);
+    // Only a commodity created under this name retires.  When the name was
+    // merely another commodity's alias, that commodity keeps its own name,
+    // and so its prices; the name just moves to the referent.
+    if (displaced->base_symbol() == name) {
+      // Keep the commodity alive: amounts parsed before the alias still
+      // point at it.
+      retired_commodities.push_back(displaced);
+      const auto old_index = displaced->graph_index();
+      commodity_price_history.alias_commodity(*displaced, referent);
+      // Every retired commodity that shared the emptied vertex, the
+      // displaced one and any retired into it earlier, now values through
+      // the referent's.
+      for (const auto& retired : retired_commodities)
+        if (retired->graph_index() == old_index)
+          retired->set_graph_index(referent.graph_index());
+      // Being a price target is part of the identity they now share: if
+      // either name was one, -V must not revalue any of them.
+      if (displaced->has_flags(COMMODITY_PRIMARY) || referent.has_flags(COMMODITY_PRIMARY))
+        mark_primary(referent);
+      // Every other name of the retired commodity names the referent too,
+      // so nothing read from here on is stated in a retired commodity.
+      for (auto& entry : commodities)
+        if (entry.second == displaced)
+          entry.second = (*i).second;
+      // Lookups made before the alias were memoized against the old graph.
+      forget_price_lookups();
+    }
     iter->second = (*i).second;
   }
 
   return (*iter).second.get();
+}
+
+void commodity_pool_t::mark_primary(commodity_t& comm) {
+  comm.add_flags(COMMODITY_PRIMARY);
+  for (const auto& retired : retired_commodities)
+    if (retired->graph_index() == comm.graph_index())
+      retired->add_flags(COMMODITY_PRIMARY);
+}
+
+void commodity_pool_t::forget_price_lookups() {
+  // Annotated commodities share the base of the commodity they annotate, so
+  // the base commodities' memos are all there are.
+  for (const auto& pair : commodities)
+    pair.second->base->price_map.clear();
+  for (const std::shared_ptr<commodity_t>& commodity : retired_commodities)
+    commodity->base->price_map.clear();
 }
 
 /// @name Annotated commodity operations

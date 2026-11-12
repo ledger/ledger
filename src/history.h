@@ -100,9 +100,12 @@ public:
   /// Must be called before any prices involving this commodity are added.
   void add_commodity(commodity_t& comm);
 
-  /// Transfer the graph vertex from @p old_comm to @p new_comm, so that
-  /// all existing price edges now reference @p new_comm.  Used when a
-  /// commodity is redefined or merged.
+  /// Merge @p old_comm's price history into @p new_comm's: each price on
+  /// @p old_comm's vertex is recorded again on @p new_comm's (re-stated in
+  /// @p new_comm when it was stated in @p old_comm; dropped when it is
+  /// between the two), then @p old_comm's vertex loses its edges.  Neither
+  /// commodity's graph_index changes; the caller (commodity_pool_t::alias)
+  /// re-points the retired commodity.
   void alias_commodity(commodity_t& old_comm, commodity_t& new_comm);
 
   /// Record a price: at time @p when, one unit of @p source costs @p price
@@ -130,6 +133,8 @@ public:
   /// Find the exchange rate from @p source to @p target at @p moment,
   /// possibly through intermediate commodities using shortest-path search.
   /// Returns nullopt if no path exists or all prices are out of range.
+  /// Two commodities on one vertex (a retired commodity and its referent)
+  /// convert at rate 1.  The price is stated in @p target as passed.
   std::optional<price_point_t> find_price(const commodity_t& source, const commodity_t& target,
                                           const datetime_t& moment,
                                           const datetime_t& oldest = datetime_t());

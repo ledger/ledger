@@ -1,6 +1,7 @@
-; Coverage for history.cc alias_commodity early return (no graph_index)
+; Coverage for history.cc alias_commodity on a commodity with no prices
 ; "E" is used before the commodity alias maps it to EUR
-; The alias collision calls alias_commodity, but "E" has no price graph index
+; The alias collision calls alias_commodity; "E" has a graph vertex
+; (create() gives every commodity one) but no prices to merge
 
 2024/01/01 Test
     Expenses:Travel    500 E

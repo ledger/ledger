@@ -1,0 +1,231 @@
+; An `alias` directive may name a commodity that a price (P directive,
+; price db or @ cost) already created under that name.  The alias then
+; retires that commodity, and its price history must join the
+; referent's, so every valuation reads as if the alias had come first.
+; Amounts posted before the alias keep the retired commodity's name, but
+; value as the referent: at rate 1 into it, and not at all under -V
+; when the referent is a price target (COMMODITY_PRIMARY).
+
+; $ learns its prices under USD before `alias USD`.
+P 2024/01/01 GBP 3.00 USD
+
+; Both names of EUR are priced before `alias Euro`.
+P 2024/01/01 EUR 1.10 CAD
+P 2024/01/02 Euro 1.20 CAD
+P 2024/01/03 EUR 0.9 CHF
+
+; A cost records AUD in NOK before `alias NOK`; C:Cash holds NOK.
+2024/01/01 Cost
+    C:Lot      1 AUD @ 2 NOK
+    C:Cash
+
+; A posting in Yen made before `alias Yen` values as JPY, which is a
+; price target before the alias.
+P 2024/01/01 Yen 0.05 SEK
+
+2024/01/01 Before the alias
+    R    10 Yen
+    B
+
+P 2024/01/02 NZD 0.5 JPY
+
+; A posting in Dong made before `alias Dong` values as VND, which
+; becomes a price target only after the alias.
+P 2024/01/01 Dong 0.10 THB
+
+2024/01/01 Before the Dong alias
+    D    10 Dong
+    B
+
+; A price between the two names of one commodity is dropped.
+P 2024/01/01 Rand 1.00 ZAR
+
+; Re-aliasing XX away from AAA leaves AAA's prices with AAA.
+P 2024/01/01 AAA 2.00 DKK
+
+; Both names price HUF at one moment; the alias's price, read later,
+; wins, as it would had the alias come first.
+P 2024/01/01 HUF 0.10 CZK
+P 2024/01/01 HUF 0.20 Koruna
+
+; Lv retires into BGN, and BGN later into Leva.
+P 2024/01/01 Lv 0.50 PLN
+
+2024/01/01 Before both aliases
+    L    10 Lv
+    B
+
+commodity $
+    alias USD
+
+commodity EUR
+    alias Euro
+
+commodity Kr
+    alias NOK
+
+commodity JPY
+    alias Yen
+    format 1000 JPY
+
+commodity VND
+    alias Dong
+    format 1000 VND
+
+commodity ZAR
+    alias Rand
+
+commodity CZK
+    alias Koruna
+
+commodity AAA
+    alias XX
+
+commodity BBB
+    alias XX
+
+commodity BGN
+    alias Lv
+
+2024/01/02 Before the second alias
+    L2    1 BGN
+    B
+
+commodity Leva
+    alias BGN
+
+P 2024/01/02 MYR 0.5 VND
+
+; Mark is a second name of DEM.  When DEM retires into DM, Mark names
+; DM as well, so a later price stated in Mark is a price in DM.
+commodity DEM
+    alias Mark
+
+commodity DM
+    alias DEM
+
+P 2024/01/03 ATS 2 Mark
+
+2024/01/04 n
+    N    1 ATS
+    B
+
+2024/01/02 a
+    A    1 GBP
+    A    $1.00
+    B
+
+2024/01/05 e
+    E    10 EUR
+    B
+
+2024/01/06 x
+    X    1 AAA
+    X    1 XX
+    B
+
+test bal ^A$ -X $ --now 2024/02/01
+               $4.00  A
+end test
+
+test bal ^A$ -V --now 2024/02/01
+               $4.00  A
+end test
+
+test prices GBP --now 2024/02/01
+2024/01/01 GBP             $3.00
+end test
+
+test prices EUR --now 2024/02/01
+2024/01/01 EUR           CAD1.10
+2024/01/02 EUR           CAD1.20
+2024/01/03 EUR            CHF0.9
+end test
+
+test bal ^E$ -X CHF --now 2024/02/01
+              CHF9.0  E
+end test
+
+test bal ^E$ -V --now 2024/02/01
+              CHF9.0  E
+end test
+
+test bal ^C -X Kr --now 2024/02/01
+                   0  C
+                Kr-2    Cash
+                 Kr2    Lot
+--------------------
+                   0
+end test
+
+test bal ^C -V --now 2024/02/01
+                   0  C
+               NOK-2    Cash
+                NOK2    Lot
+--------------------
+                   0
+end test
+
+test prices AUD --now 2024/02/01
+2024/01/01 AUD               Kr2
+end test
+
+test bal ^R$ -V --now 2024/02/01
+              10 Yen  R
+end test
+
+test bal ^R$ -X JPY --now 2024/02/01
+              10 JPY  R
+end test
+
+test bal ^R$ -X NZD --now 2024/02/01
+               NZD20  R
+end test
+
+test prices Yen --now 2024/02/01
+2024/01/01 Yen           SEK0.05
+end test
+
+test bal ^D$ -V --now 2024/02/01
+             10 Dong  D
+end test
+
+test bal ^D$ -X VND --now 2024/02/01
+              10 VND  D
+end test
+
+test prices AAA BBB ZAR Rand --now 2024/02/01
+2024/01/01 AAA           DKK2.00
+end test
+
+test -f test/regress/alias-after-price-lookup.dat prices QQQ --now 2024/02/01
+2024/01/06 QQQ           BRL2.00
+end test
+
+test prices HUF --now 2024/02/01
+2024/01/01 HUF           CZK0.20
+end test
+
+test bal ^X$ -X DKK --now 2024/02/01
+               1 BBB
+             DKK2.00  X
+end test
+
+test bal ^L -X PLN --now 2024/02/01
+             PLN5.00  L
+             PLN0.50  L2
+--------------------
+             PLN5.50
+end test
+
+test prices ATS --now 2024/02/01
+2024/01/03 ATS               DM2
+end test
+
+test bal ^N$ -X DM --now 2024/02/01
+                 DM2  N
+end test
+
+test bal ^N$ -X Mark --now 2024/02/01
+                 DM2  N
+end test

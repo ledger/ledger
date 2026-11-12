@@ -156,7 +156,9 @@ public:
   /// replaced (e.g., when an `alias` directive remaps a symbol that was
   /// created earlier by price-db parsing).  Keeping them alive here
   /// prevents dangling raw pointers in amount_t objects that still
-  /// reference the old commodity.
+  /// reference the old commodity.  Each one's graph_index names its
+  /// referent's vertex, it shares the referent's COMMODITY_PRIMARY
+  /// status, and no name in `commodities` maps to it.
   std::vector<std::shared_ptr<commodity_t>> retired_commodities;
 
   /// The directed price graph used for commodity conversions (--market,
@@ -229,13 +231,18 @@ public:
   /// used for a different commodity (e.g., created implicitly by
   /// price-db parsing before an `alias` directive was processed),
   /// the old commodity is moved to retired_commodities to keep any
-  /// existing raw pointers valid, and its price history is transferred
-  /// to the referent.
+  /// existing raw pointers valid, and its prices join the referent's
+  /// own, which are kept.
   ///
   /// @param name     The alias symbol.
   /// @param referent The commodity that @p name should resolve to.
   /// @return Raw pointer to the aliased commodity.
   commodity_t* alias(const string& name, commodity_t& referent);
+
+  /// @brief Mark @p comm a price target (COMMODITY_PRIMARY), together with
+  /// every retired commodity that shares its graph vertex, so that amounts
+  /// posted before an alias value as the referent's do.
+  void mark_primary(commodity_t& comm);
 
   /// @}
 
@@ -381,6 +388,9 @@ public:
    * invocations during the report (issue #588).
    */
   void prefetch_quotes();
+
+private:
+  void forget_price_lookups();
 };
 
 } // namespace ledger
