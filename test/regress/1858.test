@@ -28,4 +28,8 @@ commodity $
     Income:Salary
 
 test bal
+              $75.26  Assets:Checking
+             $-75.26  Income:Salary
+--------------------
+                   0
 end test

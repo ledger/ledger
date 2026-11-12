@@ -81,5 +81,9 @@ test bal -E --flat --no-total
 end test
 
 test bal -n --flat
+                  10  Assets
+                 -10  Equity
+--------------------
+                   0
 end test
 

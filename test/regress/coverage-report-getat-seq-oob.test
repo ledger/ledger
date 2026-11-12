@@ -11,4 +11,5 @@
     Assets:Checking
 
 test budget --begin 2024/01/01 --end 2024/02/01 --format '%(get_at(amount, 5))\n' Expenses
+
 end test

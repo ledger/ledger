@@ -45,6 +45,27 @@ end test
 ; Test format precommand with simple format (report.cc format_command, )
 ; format precommand shows parsing details - output includes context from sample transaction
 test format '%P\n' -> 0
+--- Context is first posting of the following transaction ---
+2004/05/27 Book Store
+    ; This note applies to all postings. :SecondTag:
+    Expenses:Books                 20 BOOK @ $10
+    ; Metadata: Some Value
+    ; Typed:: $100 + $200
+    ; :ExampleTag:
+    ; Here follows a note describing the posting.
+    Liabilities:MasterCard        $-200.00
+
+--- Input format string ---
+%P\n
+
+--- Format elements ---
+Element:    EXPR  flags: 0x0  min:  0  max:  0  expr: payee
+Element:  STRING  flags: 0x0  min:  0  max:  0   str: '
+'
+
+--- Formatted string ---
+"Book Store
+"
 end test
 
 ; Test register with --average option

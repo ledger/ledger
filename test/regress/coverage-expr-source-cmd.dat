@@ -1,0 +1,9 @@
+; Script read by coverage-expr-source-cmd.test.  script_command skips
+; comment lines and blank lines, evaluates every other line as a value
+; expression, and keeps definitions from one line to the next.
+   ; an indented comment is skipped too
+
+print("one")
+x = 2 + 3
+print(x * 2)
+print(x, "-", x)

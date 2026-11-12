@@ -6,14 +6,24 @@
     Expenses:Food            $10.00
     Assets:Cash
 
+2026/06/10 Current Transaction
+    Expenses:Food            $15.00
+    Assets:Cash
+
 2027/01/01 Future Transaction
     Expenses:Food            $20.00
     Assets:Cash
 
+; As of 2026/06/15 the transaction of June 10 lies after last month and
+; before next month, so each block excludes it; reading "next" as "last"
+; or the reverse would include it.
+
 ; "next month" exercises TOK_NEXT + TOK_A_MONTH path
-test reg Expenses --begin "next month"
+test reg Expenses --begin "next month" --now 2026/06/15
+27-Jan-01 Future Transaction    Expenses:Food                $20.00       $20.00
 end test
 
 ; "last month" exercises TOK_LAST + TOK_A_MONTH path
-test reg Expenses --end "last month"
+test reg Expenses --end "last month" --now 2026/06/15
+20-Jan-01 Old Transaction       Expenses:Food                $10.00       $10.00
 end test

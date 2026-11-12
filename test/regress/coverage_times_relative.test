@@ -1,18 +1,49 @@
 ; Coverage test for times.cc
 ; Test TOK_A_WDAY via handle_date_token and TOK_LAST via handle_relative_token
+;
+; Each block prints how the period expression resolves as of the --now
+; it names: the stabilized range, start, finish and duration, and the
+; first interval the report would use.
 
-2020/01/01 Old Transaction
-    Expenses:Food    $10.00
-    Assets:Cash
+; 2029/01/01 is a Monday, so this block does not say which Monday a bare
+; weekday names when today is another day; the weekday tests do
+; (coverage-times-standalone-wday.test).
+test period "monday" --now 2029/01/01 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   range: in wday Mon
+   start: 29-Jan-01
+  finish: 29-Jan-02
 
-test reg --period "monday"
+--- Sample dates in range (max. 20) ---
+ 1: 29-Jan-01
 end test
 
-test reg --period "last month"
+test period "last month" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   range: in year 2030 month May
+   start: 30-May-01
+  finish: 30-Jun-01
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-May-01
 end test
 
-test reg --period "next year"
+test period "next year" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   range: in year 2031
+   start: 31-Jan-01
+  finish: 32-Jan-01
+
+--- Sample dates in range (max. 20) ---
+ 1: 31-Jan-01
 end test
 
-test reg --period "this week"
+test period "this week" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   range: from year 2030 month Jun day 9 to year 2030 month Jun day 16
+   start: 30-Jun-09
+  finish: 30-Jun-16
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-Jun-09
 end test

@@ -1,16 +1,37 @@
 ; Coverage test for times.cc
 ; Test TOK_TODAY/TOK_TOMORROW/TOK_YESTERDAY dispatching to
 ; handle_simple_period_token
+;
+; Each block prints how the period expression resolves as of 2030/06/15:
+; the stabilized range, start, finish and duration, and the first
+; interval the report would use.
 
-2020/01/01 Old Transaction
-    Expenses:Food    $10.00
-    Assets:Cash
+test period "today" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   range: in year 2030 month Jun day 15
+   start: 30-Jun-15
+  finish: 30-Jun-16
 
-test reg --period "today"
+--- Sample dates in range (max. 20) ---
+ 1: 30-Jun-15
 end test
 
-test reg --period "tomorrow"
+test period "tomorrow" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   range: in year 2030 month Jun day 16
+   start: 30-Jun-16
+  finish: 30-Jun-17
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-Jun-16
 end test
 
-test reg --period "yesterday"
+test period "yesterday" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   range: in year 2030 month Jun day 14
+   start: 30-Jun-14
+  finish: 30-Jun-15
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-Jun-14
 end test

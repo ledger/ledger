@@ -10,6 +10,7 @@
 
 ; Bug: print --raw from stdin produces no output instead of the original source text.
 ; Normal 'print' from stdin works, but '--raw' requires re-reading the source bytes.
-; The current (broken) behavior is empty stdout with exit 0.
+; The current (broken) behavior is a single empty line with exit 0.
 test -f - print --raw
+
 end test

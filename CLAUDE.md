@@ -172,6 +172,9 @@ Key details:
 - `test <command> -> <exit_code>` tests for a specific exit code
 - `end test` closes the block
 - `__ERROR__` marks expected stderr output within a test block
+- A block with neither expected output nor an `__ERROR__` section asserts
+  empty stdout; a block with only an `__ERROR__` section leaves stdout
+  unchecked
 - `$FILE` is replaced with the test file path at runtime
 - Multiple `test`/`end test` blocks can appear in one file
 - Expected output must not depend on the day the suite runs. Dates written

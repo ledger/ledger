@@ -122,6 +122,15 @@ if(Python_EXECUTABLE)
   set_tests_properties(CheckEnvVars
     PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}")
 
+  # HarnessSelfTest checks the rules of the test harnesses themselves,
+  # which no .test file can check (see the sections of the script).
+  add_test(NAME HarnessSelfTest
+    COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/HarnessSelfTest.py
+    --ledger $<TARGET_FILE:ledger> --sourcepath ${PROJECT_SOURCE_DIR})
+  set_tests_properties(HarnessSelfTest PROPERTIES
+    ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}"
+    TIMEOUT 300)
+
   # Regression test for GitHub issue #3294: --args-only reads no default price
   # database, and without HOME the default is ./.pricedb, not ./.ledgerrc.
   # Like CheckEnvVars it runs ledger itself, because it must control HOME and

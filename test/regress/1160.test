@@ -32,4 +32,5 @@ end test
 
 ; Test that zero-argument forms return empty for non-annotated amounts
 test reg --format "%(lot_price)%(lot_date)%(lot_tag)\n" Expenses:Food
+
 end test

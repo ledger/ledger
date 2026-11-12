@@ -46,6 +46,10 @@ end test
 
 ; "since this week" → determine_when TOK_THIS + TOK_WEEK
 test reg --now 2024/06/15 --period "since this week"
+24-Jun-10 Payee C               Expenses:Transport           $75.00       $75.00
+                                Assets:Checking             $-75.00            0
+24-Aug-05 Payee D               Expenses:Utilities          $120.00      $120.00
+                                Assets:Checking            $-120.00            0
 end test
 
 ; "since this day" → determine_when TOK_THIS + TOK_DAY

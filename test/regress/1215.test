@@ -255,5 +255,5 @@
     Assets:Checking                $1.00
     Equity:Opening balance
 
-test print --raw -> 0
+test print --raw > /dev/null -> 0
 end test

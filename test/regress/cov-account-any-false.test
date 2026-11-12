@@ -6,5 +6,5 @@
     Assets:Cash
 
 ; any() in account context returns false when no post matches
-test bal --display "any(amount > $1000)"
+test bal --display 'any(amount > $1000)'
 end test

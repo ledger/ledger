@@ -7,5 +7,5 @@
     Assets:Cash
 
 ; Query for non-existent data produces void values
-test reg Expenses --display "amount > $100"
+test reg Expenses --display 'amount > $100'
 end test

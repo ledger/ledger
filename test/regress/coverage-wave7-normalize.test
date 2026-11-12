@@ -39,6 +39,7 @@ end test
 
 ; --- Test 6: fn_get_at error - index > 0 on non-sequence ---
 test reg --format "%(get_at(amount, 1))\n" Expenses:Food
+
 end test
 
 ; --- Test 7: --meta option with width ---

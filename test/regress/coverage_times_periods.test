@@ -1,31 +1,87 @@
 ; Coverage test for times.cc
 ; Exercise handle_relative_token and handle_simple_period_token
 ; with various period expressions
+;
+; Each block prints how the period expression resolves as of 2030/06/15:
+; the stabilized range, start, finish and duration, and the first
+; interval the report would use.
 
-2000/01/01 Ancient Transaction
-    Expenses:Food    $10.00
-    Assets:Cash
+test period "last year" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   range: in year 2029
+   start: 29-Jan-01
+  finish: 30-Jan-01
 
-test reg --period "last year"
+--- Sample dates in range (max. 20) ---
+ 1: 29-Jan-01
 end test
 
-test reg --period "last quarter"
+test period "last quarter" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   range: from year 2030 month Jan day 1 to year 2030 month Apr day 1
+   start: 30-Jan-01
+  finish: 30-Apr-01
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-Jan-01
 end test
 
-test reg --period "last week"
+test period "last week" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   range: from year 2030 month Jun day 2 to year 2030 month Jun day 9
+   start: 30-Jun-02
+  finish: 30-Jun-09
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-Jun-02
 end test
 
-test reg --period "last day"
+test period "last day" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   range: in year 2030 month Jun day 14
+   start: 30-Jun-14
+  finish: 30-Jun-15
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-Jun-14
 end test
 
-test reg --period "next month"
+test period "next month" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   range: in year 2030 month Jul
+   start: 30-Jul-01
+  finish: 30-Aug-01
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-Jul-01
 end test
 
-test reg --period "this year"
+test period "this year" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   range: in year 2030
+   start: 30-Jan-01
+  finish: 31-Jan-01
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-Jan-01
 end test
 
-test reg --period "this month"
+test period "this month" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   range: in year 2030 month Jun
+   start: 30-Jun-01
+  finish: 30-Jul-01
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-Jun-01
 end test
 
-test reg --period "this week"
+test period "this week" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   range: from year 2030 month Jun day 9 to year 2030 month Jun day 16
+   start: 30-Jun-09
+  finish: 30-Jun-16
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-Jun-09
 end test

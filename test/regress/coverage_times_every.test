@@ -1,36 +1,96 @@
 ; Coverage test for times.cc handle_every_token paths
 ; and "N units ago/hence" in determine_when
+;
+; Each block prints how the period expression resolves as of 2030/06/15:
+; the stabilized range, start, finish and duration, and the first
+; interval the report would use.
 
-2000/01/01 Ancient Transaction
-    Expenses:Food    $10.00
-    Assets:Cash
+test period "every 2 years" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   start: 30-Jan-01
+duration: 2 years
 
-test reg --period "every 2 years"
+--- Sample dates in range (max. 20) ---
+ 1: 30-Jan-01 -- 31-Dec-31
 end test
 
-test reg --period "every 3 quarters"
+test period "every 3 quarters" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   start: 30-Apr-01
+duration: 3 quarters
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-Apr-01 -- 30-Dec-31
 end test
 
-test reg --period "every 2 months"
+test period "every 2 months" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   start: 30-Jun-01
+duration: 2 months
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-Jun-01 -- 30-Jul-31
 end test
 
-test reg --period "every 2 weeks"
+test period "every 2 weeks" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   start: 30-Jun-02
+duration: 2 weeks
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-Jun-02 -- 30-Jun-15
 end test
 
-test reg --period "every 3 days"
+test period "every 3 days" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   start: 30-Jun-15
+duration: 3 days
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-Jun-15 -- 30-Jun-17
 end test
 
-test reg --period "every year"
+test period "every year" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   start: 30-Jan-01
+duration: 1 year
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-Jan-01 -- 30-Dec-31
 end test
 
-test reg --period "every quarter"
+test period "every quarter" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   start: 30-Apr-01
+duration: 1 quarter
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-Apr-01 -- 30-Jun-30
 end test
 
-test reg --period "every month"
+test period "every month" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   start: 30-Jun-01
+duration: 1 month
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-Jun-01 -- 30-Jun-30
 end test
 
-test reg --period "every week"
+test period "every week" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   start: 30-Jun-09
+duration: 1 week
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-Jun-09 -- 30-Jun-15
 end test
 
-test reg --period "every day"
+test period "every day" --now 2030/06/15 | sed -n '/^--- After/,/^ 1:/p'
+--- After stabilization ---
+   start: 30-Jun-15
+duration: 1 day
+
+--- Sample dates in range (max. 20) ---
+ 1: 30-Jun-15 -- 30-Jun-15
 end test

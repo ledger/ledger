@@ -17,7 +17,8 @@ parser.add_argument('tests', type=pathlib.Path)
 parser.add_argument('beg_range', nargs='?', type=int, default=1)
 parser.add_argument('end_range', nargs='?', type=int, default=20)
 args = parser.parse_args()
-harness = LedgerHarness(args.ledger, args.sourcepath, args.verify, args.gmalloc, args.python)
+harness = LedgerHarness(args.ledger, args.sourcepath, args.verify, args.gmalloc, args.python,
+                        args.timeout)
 
 if not os.path.isdir(args.tests) and not os.path.isfile(args.tests):
     print(f'{args.tests} is not a directory or file (cwd: {os.getcwd()})'
@@ -41,18 +42,14 @@ if not os.path.isdir(args.tests) and not os.path.isfile(args.tests):
 
 def generation_test(seed):
     p_gen = harness.run('$ledger --seed=%d generate' % seed)
-
-    cout = harness.read(p_gen.stdout)
-
-    if not harness.wait(p_gen, msg=("Generation for seed %d failed:" % seed)):
+    cout = harness.wait(p_gen, msg=("Generation for seed %d failed:" % seed))
+    if cout is None:
         return False
 
     p_print = harness.run('$ledger --actual -f - print')
-    p_print.stdin.write(cout)
-    p_print.stdin.close()
-    p_print_out = p_print.stdout.read()
-
-    if not harness.wait(p_print, msg=("Print for seed %d failed:" % seed)):
+    p_print_out = harness.wait(p_print, msg=("Print for seed %d failed:" % seed),
+                               input=cout)
+    if p_print_out is None:
         return False
 
     #p_cerr_bal = Popen("%s --args-only -f - bal" % ledger, shell=True,
@@ -70,27 +67,23 @@ def generation_test(seed):
     #del p_cerr_bal
 
     p_cout_bal = harness.run('$ledger -f - bal')
-    p_cout_bal.stdin.write(cout)
-    p_cout_bal.stdin.close()
-
-    cout_lines = harness.readlines(p_cout_bal.stdout)
+    cout_bal = harness.wait(p_cout_bal, msg=("Stdout balance for seed %d failed:" % seed),
+                            input=cout)
+    if cout_bal is None:
+        return False
+    cout_lines = harness.lines(cout_bal)
     if len(cout_lines) == 0:
       return False
     #norm_cout_lines = [normalize(line) for line in cout_lines]
 
-    if not harness.wait(p_cout_bal, msg=("Stdout balance for seed %d failed:" % seed)):
-        return False
-
     p_print_bal = harness.run('$ledger -f - bal')
-    p_print_bal.stdin.write(p_print_out)
-    p_print_bal.stdin.close()
-
-    print_lines = harness.readlines(p_print_bal.stdout)
+    print_bal = harness.wait(p_print_bal, msg=("Print balance for seed %d failed:" % seed),
+                             input=p_print_out)
+    if print_bal is None:
+        return False
+    print_lines = harness.lines(print_bal)
     if len(print_lines) == 0:
       return False
-
-    if not harness.wait(p_print_bal, msg=("Print balance for seed %d failed:" % seed)):
-        return False
 
     success = True
     #printed = False
