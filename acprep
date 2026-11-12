@@ -863,13 +863,12 @@ class PrepareBuild(CommandLineApp):
 
     def setup_flavor_opt(self):
         self.configure_args.append('-DCMAKE_BUILD_TYPE=Release')
-        self.configure_args.append('-DNO_ASSERTS=1')
 
     def setup_flavor_gcov(self):
-        # NO_ASSERTS is set so that branch coverage ignores the never-taken
+        # DISABLE_ASSERTS is set so that branch coverage ignores the never-taken
         # else branch inside assert statements.
         self.configure_args.append('-DCMAKE_BUILD_TYPE=Debug')
-        self.configure_args.append('-DNO_ASSERTS=1')
+        self.configure_args.append('-DDISABLE_ASSERTS=ON')
         self.configure_args.append('-DCLANG_GCOV=1')
 
         self.CXXFLAGS.append('-fprofile-arcs')
@@ -884,7 +883,7 @@ class PrepareBuild(CommandLineApp):
         # Uses LLVM's native instrumentation coverage (no -lgcov needed).
         # After building, run tests, then: cd build && make coverage
         self.configure_args.append('-DCMAKE_BUILD_TYPE=Debug')
-        self.configure_args.append('-DNO_ASSERTS=1')
+        self.configure_args.append('-DDISABLE_ASSERTS=ON')
         self.configure_args.append('-DUSE_LLVM_COV=ON')
 
     def setup_flavor_gprof(self):
