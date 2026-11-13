@@ -1,0 +1,24 @@
+; Errors and warnings from convert name the CSV line they come from.
+; The line count used to cover data rows only, so the header and any
+; "#" comment lines were left out: the bad row in the first block, on
+; line 5, was reported as line 2.  The second block's row has a cost
+; but no amount; it still fails at finalization (now naming line 2),
+; which also pins that the cost-sign rule leaves a null amount alone.
+
+test -f /dev/null convert test/regress/csv-error-line-number.csv --account Assets:Bank -> 1
+__ERROR__
+While parsing file "$sourcepath/test/regress/csv-error-line-number.csv", line 5:
+While parsing CSV line:
+  bogus,Cafe,$5
+
+Error: Invalid date: bogus
+end test
+
+test -f /dev/null convert test/regress/csv-cost-only.csv --account Assets:Bank -> 1
+__ERROR__
+While parsing file "$sourcepath/test/regress/csv-cost-only.csv", line 2:
+While parsing CSV line:
+  2024/01/03,Broker,,$12
+
+Error: Cannot determine if an uninitialized amount is zero
+end test

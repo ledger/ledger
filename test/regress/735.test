@@ -4,7 +4,7 @@
 
 test -f /dev/null convert test/regress/735-no-date.csv -> 1
 __ERROR__
-While parsing file "$sourcepath/test/regress/735-no-date.csv", line 1:
+While parsing file "$sourcepath/test/regress/735-no-date.csv", line 2:
 While parsing CSV line:
   $10,
 

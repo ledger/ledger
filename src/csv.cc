@@ -114,13 +114,18 @@ string csv_reader::read_field(std::istream& in) {
 }
 
 char* csv_reader::next_line(std::istream& in) {
-  while (in.good() && !in.eof() && in.peek() == '#')
+  // Count every physical line read, comments included, so that
+  // context.linenum is the 1-based line number of context.linebuf.
+  while (in.good() && !in.eof() && in.peek() == '#') {
     std::getline(in, context.linebuf);
+    context.linenum++;
+  }
 
   if (!in.good() || in.eof() || in.peek() == -1)
     return nullptr;
 
   std::getline(in, context.linebuf);
+  context.linenum++;
 
   return context.linebuf.data();
 }
@@ -154,7 +159,6 @@ xact_t* csv_reader::read_xact(bool rich_data) {
   char* line = next_line(*context.stream.get());
   if (!line || index.empty())
     return nullptr;
-  context.linenum++;
 
   std::istringstream instr(line);
 

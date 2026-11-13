@@ -1,0 +1,5 @@
+date,payee,amount
+# exported by the bank
+2024/01/01,Shop,$10
+# a second comment
+bogus,Cafe,$5
