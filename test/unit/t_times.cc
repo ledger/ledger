@@ -1631,7 +1631,7 @@ BOOST_AUTO_TEST_CASE(testDateDurationOutputYearsW11)
   date_duration_t dy(date_duration_t::YEARS, 3);
   std::ostringstream out;
   out << dy;
-  BOOST_CHECK_EQUAL(out.str(), "3 year(s)");
+  BOOST_CHECK_EQUAL(out.str(), "3 years");
 }
 
 // -----------------------------------------------------------------------

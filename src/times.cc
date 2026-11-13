@@ -603,19 +603,7 @@ date_t date_specifier_t::end() const {
 
 /// @brief Stream insertion operator for date_duration_t.
 std::ostream& operator<<(std::ostream& out, const date_duration_t& duration) {
-  if (duration.quantum == date_duration_t::DAYS)
-    out << duration.length << " day(s)";
-  else if (duration.quantum == date_duration_t::WEEKS)
-    out << duration.length << " week(s)";
-  else if (duration.quantum == date_duration_t::MONTHS)
-    out << duration.length << " month(s)";
-  else if (duration.quantum == date_duration_t::QUARTERS)
-    out << duration.length << " quarter(s)";
-  else {
-    assert(duration.quantum == date_duration_t::YEARS);
-    out << duration.length << " year(s)";
-  }
-  return out;
+  return out << duration.to_string();
 }
 
 /*--- Period Expression Parser ---*/
