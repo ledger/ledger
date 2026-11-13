@@ -291,6 +291,13 @@ components with their standard-library equivalents.
   `D`-directive formatting to bare amounts (#761), and allow apostrophe (`'`)
   as a digit-group separator
 
+- Report an amount whose comma only its digits make a decimal comma, such as
+  `$0,075` or `$1,5`, as an error ("Ambiguous decimal comma") once the
+  commodity has been written with a decimal period.  Such an amount used to
+  switch the commodity to the decimal comma for the rest of the journal.  A
+  `format` sub-directive or `D` directive still declares the decimal comma,
+  and a cost or price still reads the comma locally
+
 - Accept a `commodity` block's own symbol unquoted in its `format`
   sub-directive (#3312): `commodity N1` declares the commodity that amounts
   write as `"N1"`, but `format 1,000.00 N1` stopped the symbol at its digit

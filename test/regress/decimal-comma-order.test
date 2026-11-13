@@ -1,0 +1,75 @@
+; A comma whose meaning the digits cannot settle ("1,075") is read by
+; what the commodity has learned so far, so the EUR and GBP orders below
+; give values 1000x apart.  This file pins that order dependence for
+; commodities with no established decimal style, and the cases that
+; must keep parsing as they do: a period that confirms a decimal comma
+; (even after a decimal period), a declared format, and a precision
+; learned only from a price directive.  A guessed decimal comma on a
+; commodity already written with a decimal period is an error: see
+; decimal-comma-conflict.test.
+
+; EUR: the thousands reading comes first, so "1,075 EUR" is 1075 and
+; "0,075 EUR" then teaches EUR the decimal comma.
+2024/01/01 EUR thousands first
+    EUR    1,075 EUR
+    Equity
+
+2024/01/02 EUR zero integer part second
+    EUR    0,075 EUR
+    Equity
+
+; GBP: the same two amounts in the other order; "0,075 GBP" teaches the
+; decimal comma first, so "1,075 GBP" is 1.075.
+2024/01/03 GBP zero integer part first
+    GBP    0,075 GBP
+    Equity
+
+2024/01/04 GBP thousands second
+    GBP    1,075 GBP
+    Equity
+
+; CHF: a period before the comma confirms the decimal comma, so a
+; commodity first seen with a thousands comma still accepts it.
+2024/01/05 CHF thousands comma
+    CHF    1,000 CHF
+    Equity
+
+2024/01/06 CHF period confirms decimal comma
+    CHF    1.000,50 CHF
+    Equity
+
+; CAD: a commodity already written with a decimal period still accepts
+; a comma that a period confirms; only a guessed comma is an error.
+2024/01/07 CAD decimal period
+    CAD    1,000.50 CAD
+    Equity
+
+2024/01/08 CAD period confirms decimal comma
+    CAD    1.000,50 CAD
+    Equity
+
+; NOK: a declared format never migrates, so the heuristic stays local to
+; the number and "0,07 NOK" is 0.07.
+commodity NOK
+    format 1,000.00 NOK
+
+2024/01/09 NOK declared period style
+    NOK    0,07 NOK
+    Equity
+
+; SEK: a precision learned only from a price directive does not
+; establish a decimal period.
+P 2024/01/10 XAU 1.10 SEK
+
+2024/01/11 SEK precision from a price only
+    SEK    0,075 SEK
+    Equity
+
+test bal --flat --no-total CAD CHF EUR GBP NOK SEK
+        2.001,00 CAD  CAD
+        2.000,50 CHF  CHF
+       1.075,075 EUR  EUR
+           1,150 GBP  GBP
+            0.07 NOK  NOK
+           0,075 SEK  SEK
+end test

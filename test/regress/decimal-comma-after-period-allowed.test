@@ -1,0 +1,47 @@
+; A commodity already written with a decimal period may still meet a
+; comma that only its digits call decimal, without error, where the
+; amount does not teach the commodity its style.  A format sub-directive
+; or a D directive declares the style, so "1000,00" there switches the
+; commodity to the decimal comma, as it always has.  A cost (and a P
+; price) never teaches the style, so "$0,075" there is read as 0.075
+; locally.  Only an amount that teaches the commodity its style is an
+; error in that case: see decimal-comma-conflict.test.
+
+2024/01/01 EUR written with a decimal period
+    A:EUR    1.50 EUR
+    B
+
+commodity EUR
+    format 1000,00 EUR
+
+2024/01/02 EUR after its declared format
+    A:EUR    2,25 EUR
+    B
+
+2024/01/03 SEK written with a decimal period
+    A:SEK    1.50 SEK
+    B
+
+D 1000,00 SEK
+
+2024/01/04 SEK after its D directive
+    A:SEK    2,25 SEK
+    B
+
+test bal --flat --no-total ^A:
+            3,75 EUR  A:EUR
+            3,75 SEK  A:SEK
+end test
+
+2024/01/05 Dollars written with a decimal period
+    C:USD    $1,000.50
+    D
+
+2024/01/06 A cost whose comma only a guess reads
+    C:XAU    10 XAU @ $0,075
+    D
+
+test bal -B --flat --no-total ^C:
+           $1,000.50  C:USD
+               $0.75  C:XAU
+end test

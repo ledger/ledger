@@ -1,0 +1,44 @@
+; Once a commodity has been written with a decimal period ($1,000.50),
+; a comma that only a guess reads as a decimal comma -- a zero integer
+; part, a group other than three digits, or a single comma with more
+; than three digits after it -- contradicts that style.  Ledger used to
+; switch $ to the decimal comma for the rest of the journal (the order
+; reversed failed on $1,000.50 instead); each such amount is now an
+; error naming the commodity.  The positive cases live in
+; decimal-comma-order.test and decimal-comma-after-period-allowed.test,
+; since an error block keeps this file out of the semantic bisimulation.
+
+2024/01/01 Established decimal period
+    A    $1,000.50
+    B
+
+2024/01/02 Zero integer part
+    A    $0,075
+    B
+
+2024/01/03 Not a group of three
+    A    $1,5
+    B
+
+2024/01/04 One comma, more than three digits
+    A    $1,075500
+    B
+
+test bal -> 3
+__ERROR__
+While parsing file "$FILE", line 16:
+While parsing posting:
+  A    $0,075
+       ^^^^^^
+Error: Ambiguous decimal comma: commodity $ uses a decimal period
+While parsing file "$FILE", line 20:
+While parsing posting:
+  A    $1,5
+       ^^^^
+Error: Ambiguous decimal comma: commodity $ uses a decimal period
+While parsing file "$FILE", line 24:
+While parsing posting:
+  A    $1,075500
+       ^^^^^^^^^
+Error: Ambiguous decimal comma: commodity $ uses a decimal period
+end test

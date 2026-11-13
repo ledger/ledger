@@ -12902,7 +12902,13 @@ Another feature of commoditized amounts is that they are reported back
 in the same form as parsed.  If you specify dollar amounts using
 @samp{$100}, they will print the same; likewise with @samp{100 $} or
 @samp{$100.000}.  You may even use decimal commas, such as
-@samp{$100,00}, or thousand-marks, as in @samp{$10,000.00}.
+@samp{$100,00}, or thousand-marks, as in @samp{$10,000.00}.  Once a
+commodity has been written with a decimal period, though, an amount
+whose comma only its digits could make a decimal comma (such as
+@samp{$0,075} or @samp{$1,5}) is an error, since Ledger cannot tell
+which style is meant; write a period that settles it
+(@samp{$1.000,50}) or declare the decimal comma with a @code{format}
+sub-directive.
 
 These display characteristics become associated with the commodity,
 with the result being that all amounts of the same commodity are

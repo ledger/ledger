@@ -1830,6 +1830,9 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
   bool no_migrate_style = commodity().has_flags(COMMODITY_STYLE_NO_MIGRATE);
   bool decimal_comma_style = (commodity_t::decimal_comma_by_default ||
                               commodity().has_flags(COMMODITY_STYLE_DECIMAL_COMMA));
+  // Set when the decimal comma came only from the comma heuristics below,
+  // not from the commodity, --decimal-comma, or a period.
+  bool decimal_comma_guessed = false;
 #if 0
   bool time_colon_style
     = (commodity_t::time_colon_by_default ||
@@ -1914,6 +1917,7 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
             throw_(amount_error, _("Incorrect use of thousand-mark comma"));
           } else {
             decimal_comma_style = true;
+            decimal_comma_guessed = true;
             no_more_commas = true;
             new_quantity->prec = decimal_offset;
             decimal_offset = 0;
@@ -1951,6 +1955,16 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
     // is non-NULL.
     new_quantity->add_flags(BIGINT_KEEP_PREC);
   } else if (commodity_ && !no_migrate_style) {
+    // A decimal comma guessed from the digits alone must not overturn the
+    // decimal period this commodity has already been written with, unless
+    // the amount declares the style; a precision learned only from a price
+    // directive establishes nothing.
+    if (decimal_comma_guessed && last_period == string::npos &&
+        !flags.has_flags(PARSE_DECLARES_STYLE) && commodity().precision() > 0 &&
+        !commodity().has_flags(COMMODITY_PRECISION_FROM_PRICE))
+      throw_(amount_error, _f("Ambiguous decimal comma: commodity %1% uses a decimal period") %
+                               commodity().symbol());
+
     commodity().add_flags(comm_flags);
 
     if (commodity().has_flags(COMMODITY_PRECISION_FROM_PRICE) && new_quantity->prec > 0) {

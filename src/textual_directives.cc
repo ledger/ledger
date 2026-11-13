@@ -132,10 +132,12 @@ void instance_t::default_commodity_directive(char* line) {
   // like "D 1.000,00" (no commodity symbol) transfers its format
   // (thousands separator, decimal comma) and precision to
   // null_commodity.  This makes subsequent bare amounts display with
-  // the same format (issue #761).
+  // the same format (issue #761).  PARSE_DECLARES_STYLE says the
+  // directive declares the style, so a decimal comma that only its
+  // digits suggest is no conflict with an earlier decimal period.
   amount_t amt;
   std::istringstream stream(skip_ws(line + 1));
-  (void)amt.parse(stream, PARSE_APPLY_STYLE_TO_BARE);
+  (void)amt.parse(stream, PARSE_APPLY_STYLE_TO_BARE | PARSE_DECLARES_STYLE);
   VERIFY(amt.valid());
   commodity_pool_t::current_pool->default_commodity = &amt.commodity();
   amt.commodity().add_flags(COMMODITY_KNOWN);
@@ -969,12 +971,14 @@ string quote_bare_symbol(const string& format, const string& symbol) {
 
 void instance_t::commodity_format_directive(commodity_t& comm, string format) {
   // jww (2012-02-27): A format specified this way should turn off
-  // observational formatting.
+  // observational formatting.  The format declares the style
+  // (PARSE_DECLARES_STYLE), so a decimal comma that only its digits
+  // suggest is no conflict with an earlier decimal period.
   strip_commodity_comment(format);
   trim(format);
   amount_t amt;
   std::istringstream in(quote_bare_symbol(format, comm.base_symbol()));
-  (void)amt.parse(in, PARSE_NO_REDUCE);
+  (void)amt.parse(in, PARSE_NO_REDUCE | PARSE_DECLARES_STYLE);
   string trailing;
   if (in >> trailing)
     throw_(parse_error,

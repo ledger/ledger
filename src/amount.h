@@ -92,7 +92,12 @@ enum parse_flags_enum_t : uint16_t {
   /// and `f("abc",1)` would read as the one amount `abc0,1`, and `x+1`
   /// as the amount `x1`.  A minus sign still begins a quantity there,
   /// as in `$-10`.
-  PARSE_IN_EXPR = 0x0200
+  PARSE_IN_EXPR = 0x0200,
+  /// The amount declares its commodity's display style (the D directive
+  /// and the `format` sub-directive), so a decimal comma that only its
+  /// digits suggest is the declared style, not a conflict with a decimal
+  /// period the commodity has been written with.
+  PARSE_DECLARES_STYLE = 0x0400
 };
 
 using parse_flags_t = flags::basic_t<parse_flags_enum_t, uint_least16_t>;
