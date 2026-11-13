@@ -41,3 +41,8 @@ end test
 test eval "id(x) = x; id(42)"
 42
 end test
+
+; Fewer arguments than parameters is not an error: the missing ones are null
+test eval 'myg(x, y)=x; myg(4)'
+4
+end test

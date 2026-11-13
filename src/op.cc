@@ -691,8 +691,8 @@ value_t call_lambda(const expr_t::ptr_op_t& func, scope_t& scope, call_scope_t& 
   }
 
   if (args_index < args_count)
-    throw_(calc_error, _f("Too few arguments in function call (saw %1%, wanted %2%)") % args_count %
-                           args_index);
+    throw_(calc_error, _f("Too many arguments in function call (saw %1%, wanted %2%)") %
+                           args_count % args_index);
 
   if (func->right()->is_scope()) {
     bind_scope_t outer_scope(scope, *func->right()->as_scope());
