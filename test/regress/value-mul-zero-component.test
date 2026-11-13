@@ -1,0 +1,31 @@
+; A balance whose one component floors to zero still comes to that one
+; amount: multiplying or dividing it by a scalar keeps the commodity, in
+; either operand order, instead of failing with bad_variant_access.
+
+P 2024/01/01 EUR $1
+
+2024/01/15 Test
+    Expenses:E    0.4 EUR
+    Expenses:E    $0.1
+    Assets:Cash    -0.4 EUR
+    Assets:Cash    $-0.1
+
+test bal Expenses:E --format '%(account): %(floor(market(total, [2024/06/01], "$")) * 2)\n'
+Expenses:E: $0.0
+end test
+
+test bal Expenses:E --format '%(account): %(2 * floor(market(total, [2024/06/01], "$")))\n'
+Expenses:E: $0.0
+end test
+
+test bal Expenses:E --format '%(account): %(floor(market(total, [2024/06/01], "$")) / $2)\n'
+Expenses:E: $0.0
+end test
+
+test bal Expenses:E --format '%(account): %(market(total, [2024/06/01], "$") * 2)\n'
+Expenses:E: $1.0
+end test
+
+test bal Expenses:E --format '%(account): %(2 * market(total, [2024/06/01], "$"))\n'
+Expenses:E: $1.0
+end test

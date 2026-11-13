@@ -1,0 +1,12 @@
+; Equality with a null value gives the same answer with the operands
+; swapped.  aux_date is null for a posting that has no auxiliary date;
+; with the date on the left, == and != used to fail with "Cannot compare
+; a date to an uninitialized value".
+
+2024/01/01 Payee
+    A    $5.00
+    B
+
+test reg A --format '%(aux_date == [2024/01/01])|%([2024/01/01] == aux_date)|%([2024/01/01] != aux_date)\n'
+false|false|true
+end test

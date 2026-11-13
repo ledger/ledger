@@ -101,9 +101,9 @@ end test
 
 test bal -V --unrealized --deviation --now 2024/04/01
             $-149.50  Assets
-                 -60  Equity
-                 -10  Expenses
-                  40  Income
+             $-60.00  Equity
+             $-10.50  Expenses
+              $40.00  Income
 --------------------
             $-180.00
 end test

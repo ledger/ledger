@@ -1,0 +1,59 @@
+; An INTEGER operand -- int(), depth, count, or a zero that a subtraction
+; simplified to the integer 0 -- combines with an amount or a balance
+; exactly as the same bare amount does.  INTEGER - $5 used to drop the
+; commodity, INTEGER / AMOUNT divided the operands the other way round,
+; and a scalar on the left of a balance was an error although the
+; balance on the left worked.
+
+test eval 'int(1) - $5'
+1
+$-5
+end test
+
+test eval 'int(10) - $2.50'
+10
+$-2.50
+end test
+
+test eval '($5 - $5) - $3'
+$-3
+end test
+
+test eval 'int(10) / 2.5'
+4
+end test
+
+test eval 'int(10) / 4.0'
+2.5
+end test
+
+test eval 'int(1) / 4.0'
+0.25
+end test
+
+test eval 'int(10) / $2.5'
+$4.0
+end test
+
+test eval '(1 USD + 1 EUR) * 2'
+2 EUR
+2 USD
+end test
+
+test eval '2 * (1 USD + 1 EUR)'
+2 EUR
+2 USD
+end test
+
+test eval 'int(2) * (1 USD + 1 EUR)'
+2 EUR
+2 USD
+end test
+
+test eval '2 * (1 USD + 1 EUR + -1 EUR + -1 USD)'
+0
+end test
+
+test eval 'int(10) / ((1 USD + 1 EUR) + -1 EUR)'
+10 USD
+end test

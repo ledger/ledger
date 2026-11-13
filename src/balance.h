@@ -537,6 +537,17 @@ public:
   [[nodiscard]] bool single_amount() const { return amounts.size() == 1; }
 
   /**
+   * sole_amount() returns the one amount the balance comes to: its only
+   * component that is not exactly zero or, if every component is exactly
+   * zero, its lone component (which keeps its commodity).  It returns
+   * nullptr for several non-zero components, several zero ones, or none.
+   * Unlike single_amount(), it skips a component that operator+= kept
+   * after cancelling it, so {$10, 0 EUR} comes to $10.  The entry stays
+   * in the map: xact.cc and fn_nail_down read it.
+   */
+  [[nodiscard]] const amount_t* sole_amount() const;
+
+  /**
    * Conversion methods.  A balance can be converted to an amount, but
    * only if contains a single component amount.
    */

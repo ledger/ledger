@@ -479,12 +479,15 @@ value_t value_t::number() const {
 // commodity may reduce to a single-commodity result.
 //
 // Multiplication and division are more restrictive:
-//   - Only numeric types (INTEGER, AMOUNT, BALANCE) are supported.
+//   - Numeric types (INTEGER, AMOUNT, BALANCE), plus STRING and
+//     SEQUENCE multiplied by an integer.
 //   - BALANCE * BALANCE is not defined (what would it mean in accounting?).
-//   - STRING * INTEGER repeats the string.
+//   - STRING * INTEGER repeats the string; SEQUENCE * INTEGER scales
+//     each element (repeated element-wise addition).
 //   - BALANCE can only be multiplied/divided by a scalar (INTEGER or
 //     uncommoditized AMOUNT), distributing the operation across all
-//     commodity components.
+//     commodity components, unless it comes to one amount
+//     (balance_t::sole_amount()), which then stands in for it.
 // ----------------------------------------------------------------------
 
 /// @brief Add a value to this one, promoting types as necessary.
@@ -723,9 +726,7 @@ value_t& value_t::operator-=(const value_t& val) {
       return *this;
     case AMOUNT:
       in_place_cast(AMOUNT);
-      as_amount_lval() -= val.as_amount();
-      in_place_simplify();
-      return *this;
+      return *this -= val; // as the same bare amount does, keeping val's commodity
     case BALANCE:
       in_place_cast(BALANCE);
       as_balance_lval() -= val.as_balance();
@@ -814,16 +815,19 @@ value_t& value_t::operator-=(const value_t& val) {
 ///   - BALANCE * INTEGER -> BALANCE (each component scaled)
 ///   - BALANCE * AMOUNT(bare) -> BALANCE (scale by uncommoditized factor)
 ///   - STRING  * INTEGER -> string repetition ("ab" * 3 = "ababab")
-///   - SEQUENCE * INTEGER -> sequence repetition
+///   - SEQUENCE * INTEGER -> each element scaled (repeated element-wise addition)
+///   - INTEGER/AMOUNT(bare) * BALANCE -> BALANCE (as BALANCE * the scalar)
 ///
-/// BALANCE * AMOUNT(commoditized) is only allowed when the balance has
-/// a single commodity (it is simplified to AMOUNT first).
+/// A BALANCE that comes to one amount (balance_t::sole_amount(), which skips a
+/// component that addition cancelled) acts as that amount, so it can also be
+/// multiplied by a commoditized amount.
 value_t& value_t::operator*=(const value_t& val) {
   if (is_string()) {
     const string& s = as_string();
     long count = val.to_long();
     string temp;
-    temp.reserve(s.size() * static_cast<std::size_t>(count));
+    if (count > 0)
+      temp.reserve(s.size() * static_cast<std::size_t>(count));
     for (long i = 0; i < count; i++)
       temp += s;
     set_string(temp);
@@ -848,6 +852,9 @@ value_t& value_t::operator*=(const value_t& val) {
     case AMOUNT:
       set_amount(val.as_amount() * as_long());
       return *this;
+    case BALANCE:
+      in_place_cast(AMOUNT);
+      return *this *= val; // as the same bare amount does
     default:
       break;
     }
@@ -862,8 +869,14 @@ value_t& value_t::operator*=(const value_t& val) {
       as_amount_lval() *= val.as_amount();
       return *this;
     case BALANCE:
-      if (val.as_balance().single_amount()) {
-        as_amount_lval() *= val.simplified().as_amount();
+      // A bare factor scales a balance of several components, as
+      // BALANCE * AMOUNT does; otherwise the balance stands for the one
+      // amount it comes to, a zero one included.
+      if (!val.as_balance().single_amount() && !as_amount().has_commodity()) {
+        set_balance(val.as_balance() * as_amount());
+        return *this;
+      } else if (const amount_t* sole = val.as_balance().sole_amount()) {
+        as_amount_lval() *= *sole;
         return *this;
       }
       break;
@@ -878,12 +891,12 @@ value_t& value_t::operator*=(const value_t& val) {
       as_balance_lval() *= val.as_long();
       return *this;
     case AMOUNT:
-      if (as_balance().single_amount()) {
-        in_place_simplify();
-        as_amount_lval() *= val.as_amount();
-        return *this;
-      } else if (!val.as_amount().has_commodity()) {
+      if (!as_balance().single_amount() && !val.as_amount().has_commodity()) {
         as_balance_lval() *= val.as_amount();
+        return *this;
+      } else if (as_balance().sole_amount()) {
+        in_place_cast(AMOUNT); // the one amount it comes to
+        as_amount_lval() *= val.as_amount();
         return *this;
       }
       break;
@@ -907,10 +920,12 @@ value_t& value_t::operator*=(const value_t& val) {
 /// Division follows the same restrictions as multiplication: only
 /// numeric types are supported, and BALANCE can only be divided by
 /// scalars.  The supported combinations mirror operator*= with
-/// division substituted.
+/// division substituted, except that a scalar can be divided only by a
+/// BALANCE that comes to one amount.
 ///
 /// Note: INTEGER / AMOUNT produces AMOUNT (not INTEGER), preserving
 /// the precision of the amount's decimal representation.
+///   - INTEGER / BALANCE -> as the bare amount divided by the balance's one amount
 value_t& value_t::operator/=(const value_t& val) {
   switch (type()) {
   case INTEGER:
@@ -919,8 +934,9 @@ value_t& value_t::operator/=(const value_t& val) {
       as_long_lval() /= val.as_long();
       return *this;
     case AMOUNT:
-      set_amount(val.as_amount() / as_long());
-      return *this;
+    case BALANCE:
+      in_place_cast(AMOUNT);
+      return *this /= val; // as the same bare amount does
     default:
       break;
     }
@@ -936,19 +952,8 @@ value_t& value_t::operator/=(const value_t& val) {
       as_amount_lval() /= val.as_amount();
       return *this;
     case BALANCE:
-      if (val.as_balance().single_amount()) {
-        value_t simpler(val.simplified());
-        switch (simpler.type()) {
-        case INTEGER:
-          as_amount_lval() /= simpler.as_long();
-          break;
-        case AMOUNT:
-          as_amount_lval() /= simpler.as_amount();
-          break;
-        default:
-          assert(false);
-          break;
-        }
+      if (const amount_t* sole = val.as_balance().sole_amount()) {
+        as_amount_lval() /= *sole;
         return *this;
       }
       break;
@@ -963,12 +968,12 @@ value_t& value_t::operator/=(const value_t& val) {
       as_balance_lval() /= val.as_long();
       return *this;
     case AMOUNT:
-      if (as_balance().single_amount()) {
-        in_place_cast(AMOUNT);
-        as_amount_lval() /= val.as_amount();
-        return *this;
-      } else if (!val.as_amount().has_commodity()) {
+      if (!as_balance().single_amount() && !val.as_amount().has_commodity()) {
         as_balance_lval() /= val.as_amount();
+        return *this;
+      } else if (as_balance().sole_amount()) {
+        in_place_cast(AMOUNT); // the one amount it comes to
+        as_amount_lval() /= val.as_amount();
         return *this;
       }
       break;
@@ -996,7 +1001,7 @@ value_t& value_t::operator/=(const value_t& val) {
 // to a common type:
 //   - INTEGER can be compared to AMOUNT and BALANCE (via to_amount())
 //   - AMOUNT can be compared to INTEGER and BALANCE
-//   - BALANCE values are compared via to_amount() (single-commodity only)
+//   - BALANCE values are compared via to_amount() (a balance that comes to one amount)
 //   - COMMODITY and STRING can be compared to each other (by symbol name)
 //   - Same-type comparisons use the type's native operator
 //
@@ -1025,15 +1030,36 @@ commodity_t* find_named_commodity(commodity_pool_t& pool, const string& name) {
   return symbol != name ? pool.find(symbol) : nullptr;
 }
 
+/// Whether @p bal comes to exactly @p amt.  A component that
+/// balance_t::operator+= kept after cancelling it has no value, so it
+/// is left out, as is_less_than leaves it out.
+bool balance_equals(const balance_t& bal, const amount_t& amt) {
+  if (amt.is_null())
+    throw_(balance_error, _("Cannot compare a balance to an uninitialized amount"));
+  if (amt.is_realzero())
+    return bal.is_realzero();
+  const amount_t* sole = bal.sole_amount();
+  return sole && *sole == amt;
+}
+
+/// Whether two balances hold the same components, apart from exact zeros.
+bool balances_equal(const balance_t& lhs, const balance_t& rhs) {
+  return lhs == rhs || (lhs - rhs).is_realzero();
+}
+
 } // namespace
 
 /// @brief Test equality between two values, handling cross-type comparisons.
 ///
-/// VOID is only equal to VOID.  For numeric types (INTEGER, AMOUNT,
-/// BALANCE), cross-type equality is supported by promoting the simpler
-/// operand.  COMMODITY equals a STRING that names it, by symbol, alias,
-/// or quoted symbol (see find_named_commodity()).
+/// A null value is equal only to a null value, on either side.  For
+/// numeric types (INTEGER, AMOUNT, BALANCE), cross-type equality is
+/// supported by promoting the simpler operand.  A BALANCE compares as its
+/// components that are not exactly zero.  COMMODITY equals a STRING that
+/// names it, by symbol, alias, or quoted symbol (see find_named_commodity()).
 bool value_t::is_equal_to(const value_t& val) const {
+  if (val.is_null())
+    return is_null();
+
   switch (type()) {
   case VOID:
     return val.type() == VOID;
@@ -1060,7 +1086,7 @@ bool value_t::is_equal_to(const value_t& val) const {
     case AMOUNT:
       return val.as_amount() == to_amount();
     case BALANCE:
-      return val.as_balance() == to_amount();
+      return balance_equals(val.as_balance(), to_amount());
     default:
       break;
     }
@@ -1073,7 +1099,7 @@ bool value_t::is_equal_to(const value_t& val) const {
     case AMOUNT:
       return as_amount() == val.as_amount();
     case BALANCE:
-      return val.as_balance() == as_amount();
+      return balance_equals(val.as_balance(), as_amount());
     default:
       break;
     }
@@ -1082,11 +1108,11 @@ bool value_t::is_equal_to(const value_t& val) const {
   case BALANCE:
     switch (val.type()) {
     case INTEGER:
-      return as_balance() == val.to_amount();
+      return balance_equals(as_balance(), val.to_amount());
     case AMOUNT:
-      return as_balance() == val.as_amount();
+      return balance_equals(as_balance(), val.as_amount());
     case BALANCE:
-      return as_balance() == val.as_balance();
+      return balances_equal(as_balance(), val.as_balance());
     default:
       break;
     }
@@ -1650,13 +1676,13 @@ void value_t::in_place_cast(type_t cast_type) {
     const balance_t& bal(as_balance());
     switch (cast_type) {
     case AMOUNT: {
-      if (bal.amounts.size() == 1) {
+      if (const amount_t* sole = bal.sole_amount()) {
         // Because we are changing the current balance value to an amount
         // value, and because set_amount takes a reference (and that memory is
         // about to be repurposed), we must pass in a copy.
-        set_amount(amount_t((*bal.amounts.begin()).second));
+        set_amount(amount_t(*sole));
         return;
-      } else if (bal.amounts.size() == 0) {
+      } else if (bal.is_realzero()) {
         set_amount(0L);
         return;
       } else {

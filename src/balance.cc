@@ -428,6 +428,22 @@ commodity_t* balance_t::component_key(const commodity_t& comm) const {
 /*  Single-commodity extraction                                         */
 /*----------------------------------------------------------------------*/
 
+/// @brief The one amount the balance comes to, if there is one (see the
+/// declaration).
+const amount_t* balance_t::sole_amount() const {
+  const amount_t* sole = nullptr;
+  for (const amounts_map::value_type& pair : amounts) {
+    if (pair.second.is_realzero())
+      continue;
+    if (sole)
+      return nullptr;
+    sole = &pair.second;
+  }
+  if (!sole && amounts.size() == 1)
+    sole = &amounts.begin()->second;
+  return sole;
+}
+
 /// @brief Extract the amount for a specific commodity from the balance.
 ///
 /// If no commodity is specified and the balance contains exactly one

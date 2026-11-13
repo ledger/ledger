@@ -1,0 +1,25 @@
+; STRING * INTEGER repeats the string; a count of zero or less gives the
+; empty string.  A negative count used to fail with "Error: basic_string"
+; because the result's storage was reserved from the count unchecked.
+; SEQUENCE * INTEGER scales each element (it is repeated element-wise
+; addition), it does not repeat the sequence.
+
+test eval '"[" + ("ab" * 3) + "]"'
+[ababab]
+end test
+
+test eval '"[" + ("ab" * 0) + "]"'
+[]
+end test
+
+test eval '"[" + ("ab" * -1) + "]"'
+[]
+end test
+
+test eval '(1, 2) * 2'
+(2, 4)
+end test
+
+test eval '(1, 2, 3) * 2'
+(2, 4, 6)
+end test

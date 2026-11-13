@@ -674,6 +674,46 @@ BOOST_AUTO_TEST_CASE(testSingleAmount)
   BOOST_CHECK(b2.valid());
 }
 
+BOOST_AUTO_TEST_CASE(testSoleAmount)
+{
+  balance_t b0;
+  BOOST_CHECK(b0.sole_amount() == nullptr);
+
+  // {$1.00, EUR 0}: operator+= keeps the cancelled EUR component
+  balance_t b1;
+  b1 += amount_t("$1.00");
+  b1 += amount_t("EUR 1");
+  b1 += amount_t("EUR -1");
+  BOOST_CHECK(!b1.single_amount());
+  BOOST_REQUIRE(b1.sole_amount() != nullptr);
+  BOOST_CHECK_EQUAL(*b1.sole_amount(), amount_t("$1.00"));
+
+  // two non-zero components: no sole amount
+  balance_t b2;
+  b2 += amount_t("$1.00");
+  b2 += amount_t("EUR 1");
+  BOOST_CHECK(b2.sole_amount() == nullptr);
+
+  // a lone zero is its own sole amount, so it keeps its commodity
+  // (operator+= keeps the realzero sum); the single-amount arms of *=
+  // and /= read it, so {$0} * 2 is $0
+  balance_t b3;
+  b3 += amount_t("$1.00");
+  b3 += amount_t("$-1.00");
+  BOOST_CHECK(b3.single_amount());
+  BOOST_REQUIRE(b3.sole_amount() != nullptr);
+  BOOST_CHECK(b3.sole_amount()->is_realzero());
+  BOOST_CHECK(b3.sole_amount()->has_commodity());
+
+  // several zero components: no sole amount
+  balance_t b4(b1);
+  b4 += amount_t("$-1.00");
+  BOOST_CHECK(b4.sole_amount() == nullptr);
+
+  BOOST_CHECK(b1.valid());
+  BOOST_CHECK(b4.valid());
+}
+
 BOOST_AUTO_TEST_CASE(testBalancePrint)
 {
   // Test printing a single-commodity balance

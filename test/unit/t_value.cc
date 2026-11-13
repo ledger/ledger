@@ -665,11 +665,11 @@ BOOST_AUTO_TEST_CASE(testDivision)
   v5 /= value_t(2L);
   BOOST_CHECK_EQUAL(v5, value_t(4L));
   v5 /= value_t(amount_t("8"));
-  BOOST_CHECK_EQUAL(v5, value_t(amount_t("2")));
+  BOOST_CHECK_EQUAL(v5, value_t(amount_t("0.5"))); // 4 / 8, not 8 / 4
 
   v16 /= value_t(2L);
-  v16 /= value_t(amount_t("2"));
-  BOOST_CHECK_EQUAL(v5, v16);
+  v16 /= value_t(amount_t("8"));
+  BOOST_CHECK_EQUAL(v5, v16); // 8 / 2 / 8
 
   v8 /= v9;
   v8 /= value_t(balance_t(2L));
@@ -8537,6 +8537,169 @@ BOOST_AUTO_TEST_CASE(testNettedBalanceComparesAsZero)
   BOOST_CHECK(!v.is_greater_than(value_t(amount_t("$5.00"))));
   BOOST_CHECK(v.is_greater_than(value_t(amount_t("$-5.00"))));
   BOOST_CHECK(!v.is_less_than(value_t(amount_t("$-5.00"))));
+}
+
+BOOST_AUTO_TEST_CASE(testStringRepeatNonPositiveCount)
+{
+  value_t s(string("ab"), true);
+  BOOST_CHECK_EQUAL(s * value_t(3L), value_t(string("ababab"), true));
+  BOOST_CHECK_EQUAL(s * value_t(0L), value_t(string(""), true));
+  BOOST_CHECK_EQUAL(s * value_t(-1L), value_t(string(""), true));
+}
+
+BOOST_AUTO_TEST_CASE(testSubtractCommodityAmountFromIntegerKeepsCommodity)
+{
+  value_t v1(1L);
+  v1 -= value_t(amount_t("$5"));
+  BOOST_REQUIRE(v1.is_balance());
+  balance_t expected;
+  expected += amount_t(1L);
+  expected += amount_t("$-5");
+  BOOST_CHECK_EQUAL(v1.as_balance(), expected);
+
+  value_t v2(0L);
+  v2 -= value_t(amount_t("$3"));
+  BOOST_REQUIRE(v2.is_amount());
+  BOOST_CHECK_EQUAL(v2.as_amount(), amount_t("$-3"));
+}
+
+BOOST_AUTO_TEST_CASE(testDivideIntegerByAmount)
+{
+  value_t v1(10L);
+  v1 /= value_t(amount_t("2.5"));
+  BOOST_REQUIRE(v1.is_amount());
+  BOOST_CHECK_EQUAL(v1.as_amount(), amount_t("4"));
+
+  value_t v2(10L);
+  v2 /= value_t(amount_t("$2.5"));
+  BOOST_CHECK_EQUAL(v2, value_t(amount_t("10")) / value_t(amount_t("$2.5")));
+
+  BOOST_CHECK_THROW(value_t(10L) / value_t(amount_t(0L)), amount_error);
+}
+
+BOOST_AUTO_TEST_CASE(testMultiplyScalarByBalance)
+{
+  balance_t bal;
+  bal += amount_t("1 USD");
+  bal += amount_t("1 EUR");
+
+  value_t v1(2L);
+  v1 *= value_t(bal);
+  BOOST_CHECK_EQUAL(v1, value_t(bal) * value_t(2L));
+
+  value_t v2(amount_t("2"));
+  v2 *= value_t(bal);
+  BOOST_CHECK_EQUAL(v2, value_t(bal) * value_t(amount_t("2")));
+
+  // a commoditized amount still cannot scale a multi-commodity balance
+  BOOST_CHECK_THROW(value_t(amount_t("$2")) * value_t(bal), value_error);
+
+  // INTEGER / BALANCE acts as the bare amount: it divides by a balance
+  // that comes to one amount, and is an error otherwise
+  balance_t one_usd(bal);
+  one_usd += amount_t("-1 EUR"); // {1 USD, 0 EUR}
+  value_t v3(10L);
+  v3 /= value_t(one_usd);
+  BOOST_CHECK_EQUAL(v3, value_t(amount_t("10")) / value_t(amount_t("1 USD")));
+  BOOST_CHECK_THROW(value_t(10L) / value_t(bal), value_error);
+
+  // {0 USD, 0 EUR} has no sole amount: a bare scalar scales it, as the
+  // balance on the left does, but a commoditized amount still cannot
+  balance_t zeros(one_usd);
+  zeros += amount_t("-1 USD");
+  BOOST_REQUIRE(zeros.sole_amount() == nullptr);
+  BOOST_CHECK_EQUAL(value_t(2L) * value_t(zeros), value_t(zeros) * value_t(2L));
+  BOOST_CHECK_THROW(value_t(amount_t("$2")) * value_t(zeros), value_error);
+
+  // an empty balance: a bare scalar on the left leaves it empty, as the
+  // balance on the left always did
+  BOOST_CHECK_EQUAL(value_t(amount_t("2")) * value_t(balance_t()),
+                    value_t(balance_t()) * value_t(amount_t("2")));
+}
+
+BOOST_AUTO_TEST_CASE(testBalanceZeroComponentActsAsAbsent)
+{
+  // {1 USD, 0 EUR}: balance_t::operator+= keeps the cancelled EUR
+  balance_t bal;
+  bal += amount_t("1 USD");
+  bal += amount_t("1 EUR");
+  bal += amount_t("-1 EUR");
+  BOOST_REQUIRE(!bal.single_amount());
+  value_t v(bal);
+
+  BOOST_CHECK(v == value_t(amount_t("1 USD")));
+  BOOST_CHECK(value_t(amount_t("1 USD")) == v);
+  BOOST_CHECK(!(v == value_t(amount_t("1 EUR"))));
+  BOOST_CHECK(v == value_t(balance_t(amount_t("1 USD"))));
+  BOOST_CHECK_EQUAL(v.to_amount(), amount_t("1 USD"));
+  BOOST_CHECK(value_t(amount_t("0.5 USD")) < v); // what v > 0.5 USD runs
+
+  BOOST_CHECK_EQUAL(v * value_t(amount_t("2 USD")), value_t(amount_t("2 USD")));
+  BOOST_CHECK_EQUAL(value_t(amount_t("2 USD")) * v, value_t(amount_t("2 USD")));
+  BOOST_CHECK_EQUAL(v / value_t(amount_t("2 USD")), value_t(amount_t("0.5 USD")));
+  BOOST_CHECK_EQUAL(value_t(amount_t("2 USD")) / v, value_t(amount_t("2 USD")));
+
+  // {0 USD, 0 EUR} equals zero, as its value says
+  balance_t zeros(bal);
+  zeros += amount_t("-1 USD");
+  BOOST_CHECK(value_t(zeros) == value_t(0L));
+  BOOST_CHECK(value_t(zeros) == value_t(amount_t(0L)));
+  BOOST_CHECK_EQUAL(value_t(zeros).to_amount(), amount_t(0L));
+  BOOST_CHECK(value_t(amount_t("-1 USD")) < value_t(zeros)); // zeros > -1 USD
+
+  // balance_t itself still compares its entries structurally
+  // (t_balance.cc testEqaulity pins balance_t("0.00") != "0")
+  BOOST_CHECK(!(bal == amount_t("1 USD")));
+  BOOST_CHECK(!(balance_t("0.00") == amount_t("0")));
+  BOOST_CHECK(value_t(balance_t("0.00")) == value_t(0L));
+}
+
+BOOST_AUTO_TEST_CASE(testMultiplyDivideSingleZeroComponentBalance)
+{
+  // floor() rewrites components in place and keeps a zero one, so this is a
+  // BALANCE holding exactly {$0}.  simplified() would collapse it to INTEGER 0.
+  value_t zero(balance_t(amount_t("$0.50")));
+  zero.in_place_floor();
+  BOOST_REQUIRE(zero.is_balance());
+  BOOST_REQUIRE(zero.as_balance().single_amount());
+  BOOST_REQUIRE(zero.is_realzero());
+
+  value_t product(zero);
+  product *= value_t(amount_t("2"));
+  BOOST_CHECK(product.is_amount());
+  BOOST_CHECK(product.as_amount().is_realzero());
+  BOOST_CHECK_EQUAL(product.as_amount().commodity().symbol(), string("$"));
+
+  value_t reversed(amount_t("2"));
+  reversed *= zero;
+  BOOST_CHECK(reversed.is_amount());
+  BOOST_CHECK(reversed.as_amount().is_realzero());
+  BOOST_CHECK_EQUAL(reversed.as_amount().commodity().symbol(), string("$"));
+
+  value_t quotient(zero);
+  quotient /= value_t(amount_t("$2"));
+  BOOST_CHECK(quotient.is_amount());
+  BOOST_CHECK(quotient.as_amount().is_realzero());
+  BOOST_CHECK_EQUAL(quotient.as_amount().commodity().symbol(), string("$"));
+
+  value_t dividend(amount_t("$2"));
+  BOOST_CHECK_THROW(dividend /= zero, amount_error);
+
+  // A nonzero single component is unchanged by the rewrite.
+  value_t half(balance_t(amount_t("$0.50")));
+  value_t doubled(amount_t("2"));
+  doubled *= half;
+  BOOST_CHECK(doubled.is_amount());
+  BOOST_CHECK_EQUAL(doubled.as_amount(), amount_t("$1.00"));
+}
+
+BOOST_AUTO_TEST_CASE(testEqualityWithNullRightOperand)
+{
+  value_t date(date_t(parse_date("2024/01/01")));
+  BOOST_CHECK(!(date == value_t()));
+  BOOST_CHECK(!(value_t() == date));
+  BOOST_CHECK(value_t() == value_t());
+  BOOST_CHECK(!(value_t(amount_t("$1")) == value_t()));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
