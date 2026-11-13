@@ -223,12 +223,20 @@ public:
   [[nodiscard]] std::vector<account_t*> find_accounts_re(const string& regexp);
 
   /**
+   * @brief True when an account name can be rewritten by an alias: aliases
+   * are not suppressed by --no-aliases and at least one is declared.
+   */
+  [[nodiscard]] bool has_aliases() const { return !no_aliases && !account_aliases.empty(); }
+
+  /**
    * @brief Expand account aliases, returning the resolved account or nullptr.
    *
    * Checks the account_aliases map for a full-name match first, then
    * tries matching just the first colon-separated segment.  When
    * recursive_aliases is true, expansion repeats until no more aliases
-   * match.  An already_seen set prevents infinite loops.
+   * match.  An already_seen set prevents infinite loops.  Returns nullptr,
+   * before copying the name for cycle detection, when has_aliases() is
+   * false.
    */
   account_t* expand_aliases(string name);
 

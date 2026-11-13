@@ -172,7 +172,7 @@ account_t* journal_t::register_account(string_view name, post_t* post, account_t
                                        bool template_post) {
   // If there are any account aliases, substitute before creating an account
   // object.
-  account_t* result = expand_aliases(string(name));
+  account_t* result = has_aliases() ? expand_aliases(string(name)) : nullptr;
 
   // Create the account object and associate it with the journal; this
   // is registering the account.
@@ -264,7 +264,7 @@ account_t* journal_t::expand_aliases(string name) {
   // prevent infinite excursion. Each alias may only be expanded at most once.
   account_t* result = nullptr;
 
-  if (no_aliases)
+  if (!has_aliases())
     return result;
 
   const string original_name = name;
@@ -272,73 +272,69 @@ account_t* journal_t::expand_aliases(string name) {
   std::unordered_set<string> already_seen;
   // loop until no expansion can be found
   do {
-    if (account_aliases.size() > 0) {
-      if (auto i = account_aliases.find(name); i != account_aliases.end()) {
-        if (already_seen.count(name) > 0) {
-          throw_(std::runtime_error, _f("Infinite recursion on alias expansion for %1%") % name);
-        }
-        // there is an alias for the full account name, including colons
-        already_seen.insert(name);
-        result = (*i).second;
-        name = result->fullname();
-      } else {
-        // Walk colon-separated components looking for an alias match.
-        // In the default (non-recursive) mode only the first component
-        // is considered; with --recursive-aliases every component is
-        // eligible (#836).  The first match is expanded.
-        size_t pos = 0;
-        bool found = false;
-        while (pos < name.size()) {
-          size_t colon = name.find(':', pos);
-          size_t component_end = (colon != string::npos) ? colon : name.size();
-          string component = name.substr(pos, component_end - pos);
+    if (auto i = account_aliases.find(name); i != account_aliases.end()) {
+      if (already_seen.count(name) > 0) {
+        throw_(std::runtime_error, _f("Infinite recursion on alias expansion for %1%") % name);
+      }
+      // there is an alias for the full account name, including colons
+      already_seen.insert(name);
+      result = (*i).second;
+      name = result->fullname();
+    } else {
+      // Walk colon-separated components looking for an alias match.
+      // In the default (non-recursive) mode only the first component
+      // is considered; with --recursive-aliases every component is
+      // eligible (#836).  The first match is expanded.
+      size_t pos = 0;
+      bool found = false;
+      while (pos < name.size()) {
+        size_t colon = name.find(':', pos);
+        size_t component_end = (colon != string::npos) ? colon : name.size();
+        string component = name.substr(pos, component_end - pos);
 
-          if (auto j = account_aliases.find(component);
-              j != account_aliases.end() && already_seen.count(component) == 0) {
-            // Skip the expansion when the name already contains the
-            // alias target as a colon-aligned prefix ending at this
-            // component.  This prevents #3132's duplication:
-            // "Expenses:Dining:Coffee" must not be rewritten using
-            // "alias Dining=Expenses:Dining" just because its middle
-            // component matches.
-            const string& target = (*j).second->fullname();
-            bool already_there = false;
-            if (component_end >= target.size()) {
-              size_t start = component_end - target.size();
-              if ((start == 0 || name[start - 1] == ':') &&
-                  name.compare(start, target.size(), target) == 0) {
-                already_there = true;
-              }
-            }
-
-            if (!already_there) {
-              already_seen.insert(component);
-
-              string new_name;
-              if (pos > 0)
-                new_name = name.substr(0, pos); // prefix including trailing ':'
-              new_name += target;
-              if (colon != string::npos)
-                new_name += name.substr(colon); // suffix including leading ':'
-              result = find_account(new_name);
-              name = result->fullname();
-              found = true;
-              break;
+        if (auto j = account_aliases.find(component);
+            j != account_aliases.end() && already_seen.count(component) == 0) {
+          // Skip the expansion when the name already contains the
+          // alias target as a colon-aligned prefix ending at this
+          // component.  This prevents #3132's duplication:
+          // "Expenses:Dining:Coffee" must not be rewritten using
+          // "alias Dining=Expenses:Dining" just because its middle
+          // component matches.
+          const string& target = (*j).second->fullname();
+          bool already_there = false;
+          if (component_end >= target.size()) {
+            size_t start = component_end - target.size();
+            if ((start == 0 || name[start - 1] == ':') &&
+                name.compare(start, target.size(), target) == 0) {
+              already_there = true;
             }
           }
 
-          // Only walk past the first component when recursive alias
-          // expansion is enabled; otherwise stop here to preserve the
-          // pre-#836 default behavior.
-          if (!recursive_aliases || colon == string::npos)
+          if (!already_there) {
+            already_seen.insert(component);
+
+            string new_name;
+            if (pos > 0)
+              new_name = name.substr(0, pos); // prefix including trailing ':'
+            new_name += target;
+            if (colon != string::npos)
+              new_name += name.substr(colon); // suffix including leading ':'
+            result = find_account(new_name);
+            name = result->fullname();
+            found = true;
             break;
-          pos = colon + 1;
+          }
         }
-        if (!found)
-          keep_expanding = false;
+
+        // Only walk past the first component when recursive alias
+        // expansion is enabled; otherwise stop here to preserve the
+        // pre-#836 default behavior.
+        if (!recursive_aliases || colon == string::npos)
+          break;
+        pos = colon + 1;
       }
-    } else {
-      keep_expanding = false;
+      if (!found)
+        keep_expanding = false;
     }
   } while (keep_expanding && recursive_aliases);
 

@@ -390,6 +390,9 @@ components with their standard-library equivalents.
 
 ### Reporting and Display Improvements
 
+- Parsing a journal that declares no account aliases no longer copies each
+  posting's account name twice.
+
 - `--strict` and `--pedantic` check the account of every posting in an
   ordinary transaction, even one whose name contains `$name` or `%(`; only
   automated and periodic transactions may use such template names unchecked.
