@@ -1,0 +1,23 @@
+; An include lists each directory once per parse and serves later includes
+; from that listing.  Which files match must not depend on that: a literal
+; include repeated, a glob over the same directory, a literal after the
+; glob, and a glob in a middle component all see the same files as before.
+; a.dat is read three times (twice by name, once by the glob), b.dat twice
+; (glob and name), c.dat twice (glob in the middle component and name).
+
+include include-listing-cache/a.dat
+include include-listing-cache/a.dat
+include include-listing-cache/*.dat
+include include-listing-cache/b.dat
+include include-listing-cache/s*/c.dat
+include include-listing-cache/sub/c.dat
+
+test bal
+             $-15.00  Assets:Cash
+              $15.00  Expenses
+               $3.00    A
+               $4.00    B
+               $8.00    C
+--------------------
+                   0
+end test

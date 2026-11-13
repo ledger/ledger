@@ -77,6 +77,8 @@
 namespace ledger {
 
 using detail::application_t;
+using detail::directory_cache_t;
+using detail::directory_listing_t;
 using detail::fixed_rate_t;
 using detail::instance_t;
 
@@ -237,21 +239,71 @@ void instance_t::option_directive(char* line) {
 
 namespace {
 
+/// A listing taken this soon after its directory's modification time
+/// cannot be trusted: a file created within the same clock tick leaves the
+/// time unchanged, and some filesystems store it in two-second steps.
+const auto racy_window = std::chrono::seconds(2);
+
+/// Return the listing of @p dir, listing it when the cache has no
+/// listing that can be trusted.
+///
+/// A listing is reused while the directory's modification time is
+/// unchanged and old enough to be trusted; a parse-time writer (a `python`
+/// block) that adds a file changes the time, so the next include sees it.
+/// The time is read before the directory is listed, so a change that lands
+/// in between costs one extra listing, never a stale one.  The entries are
+/// full paths, sorted.  A directory that cannot be listed (one that may be
+/// searched but not read, say) is cached with its error and no entries; an
+/// error part-way through a listing counts as a failed listing.
+const directory_listing_t& list_directory(directory_cache_t& cache, const path& dir) {
+  std::error_code ec;
+  const auto stamp = std::filesystem::last_write_time(dir, ec);
+
+  directory_listing_t& element = cache[dir];
+  if (!ec && !element.racy && element.stamp == stamp)
+    return element;
+
+  element.entries.clear();
+  element.error.clear();
+  element.stamp = ec ? std::filesystem::file_time_type::min() : stamp;
+  element.racy = ec || std::filesystem::file_time_type::clock::now() - stamp < racy_window;
+
+  std::error_code list_ec;
+  std::filesystem::directory_iterator it(dir, list_ec);
+  for (; !list_ec && it != std::filesystem::directory_iterator(); it.increment(list_ec))
+    element.entries.push_back(it->path());
+  if (list_ec) {
+    element.entries.clear();
+    element.error = list_ec;
+  } else {
+    std::sort(element.entries.begin(), element.entries.end());
+  }
+  return element;
+}
+
 /// Recursively expand a glob path by walking its components.
 ///
-/// For each component we enumerate the current base directory and match
-/// entries against the component interpreted as a shell glob.  Using
-/// `mask_t::assign_glob` (which is case-sensitive) rather than a direct
-/// filesystem lookup ensures that `include FOO.dat` does not silently
-/// match a differently-cased `foo.dat` on case-insensitive filesystems
-/// (issue #1660).  Nor does `--ignore-diacritics` let `include cafe.dat`
-/// match `café.dat`.  Matched entries drive the next level of recursion;
-/// the final component contributes regular files to @p results.
+/// Each directory on the path is listed at most once per parse (see
+/// list_directory).  A component holding a glob metacharacter is matched
+/// against every entry of its directory as a shell glob; a component
+/// without one is looked up by exact name in that listing instead.  Both
+/// compare names exactly, using `mask_t::assign_glob` (which is
+/// case-sensitive) rather than a filesystem lookup, so `include FOO.dat`
+/// does not silently match a differently-cased `foo.dat` on
+/// case-insensitive filesystems (issue #1660).  Nor does
+/// `--ignore-diacritics` let `include cafe.dat` match `café.dat`.  A
+/// directory that cannot be listed (searchable but unreadable) still lets
+/// a component without glob characters through by direct lookup, so
+/// case-exactness is enforced only for directories ledger can list; a glob
+/// component under such a directory is a parse error.  Matched entries
+/// drive the next level of recursion; the final component contributes
+/// regular files to @p results.
 ///
 /// This allows patterns with glob metacharacters in any component --
 /// not just the filename -- to match across multiple directory levels
 /// (issue #1214).
-void expand_glob_path(const path& base, const std::vector<path>& components, std::size_t index,
+void expand_glob_path(directory_cache_t& cache, const path& base,
+                      const std::vector<path>& components, std::size_t index,
                       std::vector<path>& results) {
   if (index == components.size())
     return;
@@ -263,14 +315,28 @@ void expand_glob_path(const path& base, const std::vector<path>& components, std
   mask_t glob;
   glob.assign_glob(comp);
 
-  std::vector<path> sorted_entries;
-  std::copy(std::filesystem::directory_iterator(base), std::filesystem::directory_iterator(),
-            std::back_inserter(sorted_entries));
-  std::sort(sorted_entries.begin(), sorted_entries.end());
+  const directory_listing_t& listing = list_directory(cache, base);
+
+  // The characters mask_t::assign_glob treats specially.
+  const bool literal = comp.find_first_of("*?[\\") == string::npos;
+  std::vector<path> single;
+  const std::vector<path>* candidates = &listing.entries;
+  if (literal) {
+    // No glob character: the pattern matches exactly this name, so look it up
+    // instead of matching every entry.  A directory that could not be listed
+    // gets the same one candidate, which the loop below confirms on disk.
+    path wanted = base / comp;
+    if (listing.error || std::binary_search(listing.entries.begin(), listing.entries.end(), wanted))
+      single.push_back(wanted);
+    candidates = &single;
+  } else if (listing.error) {
+    throw_(parse_error, _f("Cannot list directory %1% to expand include pattern '%2%': %3%") %
+                            base.string() % comp % listing.error.message());
+  }
 
   const bool is_last = (index + 1 == components.size());
 
-  for (const path& entry : sorted_entries) {
+  for (const path& entry : *candidates) {
     string name = entry.filename().string();
     if (!utf8::is_valid(name.begin(), name.end())) {
       DEBUG("textual.include", "Skipping file with invalid UTF-8 name: " << name);
@@ -283,7 +349,7 @@ void expand_glob_path(const path& base, const std::vector<path>& components, std
       if (is_regular_file(entry))
         results.push_back(entry);
     } else if (is_directory(entry)) {
-      expand_glob_path(entry, components, index + 1, results);
+      expand_glob_path(cache, entry, components, index + 1, results);
     }
   }
 }
@@ -373,7 +439,7 @@ void instance_t::include_directive(char* line) {
   split_glob_path(filename, base, components);
 
   std::vector<path> matched_files;
-  expand_glob_path(base, components, 0, matched_files);
+  expand_glob_path(listing_cache(), base, components, 0, matched_files);
 
   bool files_found = false;
   for (const path& matched : matched_files) {

@@ -114,6 +114,17 @@ struct application_t {
   application_t(string _label, fixed_rate_t rate) : label(std::move(_label)), value(rate) {}
 };
 
+/// One directory's entries, as include_directive's glob expansion saw them.
+struct directory_listing_t {
+  std::vector<path> entries; ///< Full paths `dir / name`, sorted; empty when @c error is set
+  std::error_code error;     ///< Set when the directory could not be listed
+  std::filesystem::file_time_type stamp; ///< The directory's modification time, read before listing
+  bool racy = true; ///< Listed too soon after @c stamp to trust, or @c stamp is unknown
+};
+
+/// Directory listings taken during one parse, keyed by directory path.
+using directory_cache_t = std::map<path, directory_listing_t>;
+
 /**
  * @brief The parser instance for a single journal file.
  *
@@ -143,6 +154,7 @@ public:
 #if TIMELOG_SUPPORT
   time_log_t timelog; ///< Accumulates clock-in/out events for time tracking
 #endif
+  directory_cache_t directory_cache; ///< Include directory listings (only the root's is used)
 
   instance_t(parse_context_stack_t& _context_stack, parse_context_t& _context,
              instance_t* _parent = nullptr, const bool _no_assertions = false,
@@ -175,6 +187,10 @@ public:
     }
     return parent ? parent->get_application<T>() : none;
   }
+
+  /// @brief The directory listing cache shared by every file of this parse:
+  ///        the one owned by the instance that began it.
+  directory_cache_t& listing_cache() { return parent ? parent->listing_cache() : directory_cache; }
 
   /// @brief Return the innermost `apply account` target, or nullptr if none.
   account_t* top_account() {

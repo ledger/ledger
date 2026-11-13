@@ -139,6 +139,38 @@ if(Python_EXECUTABLE)
     COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/regress/3294.py
     $<TARGET_FILE:ledger>)
 
+  # An include through a directory that may be searched but not listed reads
+  # the file, as -f does.  Like 3294.py it runs ledger itself, because it must
+  # set directory permissions, which the .test harness cannot.
+  add_test(NAME RegressPyTest_include-unlistable-dir
+    COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/regress/include-unlistable-dir.py
+    $<TARGET_FILE:ledger>)
+  set_tests_properties(RegressPyTest_include-unlistable-dir PROPERTIES
+    SKIP_RETURN_CODE 77
+    ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}")
+
+  # Includes list a directory once per parse, not once per include: 500
+  # includes in a directory of 5,000 files stay within a small factor of the
+  # same transactions in one file.  A timing comparison, so it runs ledger
+  # itself, and alone, so that other tests neither load the machine nor
+  # modify build/test while it measures.
+  add_test(NAME RegressPyTest_include-listing-speed
+    COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/regress/include-listing-speed.py
+    $<TARGET_FILE:ledger>)
+  set_tests_properties(RegressPyTest_include-listing-speed PROPERTIES
+    ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}"
+    RUN_SERIAL TRUE
+    TIMEOUT 900)
+
+  # The per-parse listing cache must notice a file a `python` block writes
+  # between two includes.  Skips (77) when ledger has no Python support.
+  add_test(NAME RegressPyTest_include-after-generate
+    COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/regress/include-after-generate.py
+    $<TARGET_FILE:ledger>)
+  set_tests_properties(RegressPyTest_include-after-generate PROPERTIES
+    SKIP_RETURN_CODE 77
+    ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}")
+
   # CheckManpage and CheckTexinfo are disabled, since they do not work
   # reliably yet
   # Every script in CheckOptions reads ledger's option list from
