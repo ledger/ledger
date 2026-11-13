@@ -45,6 +45,7 @@
 #include <system.hh>
 
 #include "pyinterp.h"
+#include "pyutils.h"
 #include "post.h"
 #include "xact.h"
 
@@ -110,14 +111,7 @@ void export_post() {
   scope().attr("POST_EXT_CONSIDERED") = POST_EXT_CONSIDERED;
 
   class_<post_t::xdata_t>("PostingXData")
-#if 1
-      .add_property("flags", &supports_flags<uint_least16_t>::flags,
-                    &supports_flags<uint_least16_t>::set_flags)
-      .def("has_flags", &supports_flags<uint_least16_t>::has_flags)
-      .def("clear_flags", &supports_flags<uint_least16_t>::clear_flags)
-      .def("add_flags", &supports_flags<uint_least16_t>::add_flags)
-      .def("drop_flags", &supports_flags<uint_least16_t>::drop_flags)
-#endif
+      .def(python::flags_visitor<supports_flags<uint_least16_t>>())
 
       .add_property("visited_value", make_getter(&post_t::xdata_t::visited_value),
                     make_setter(&post_t::xdata_t::visited_value))

@@ -128,14 +128,7 @@ void export_item() {
 #else
   class_<item_t, noncopyable>("JournalItem", no_init)
 #endif
-#if 1
-      .add_property("flags", &supports_flags<uint_least16_t>::flags,
-                    &supports_flags<uint_least16_t>::set_flags)
-      .def("has_flags", &supports_flags<uint_least16_t>::has_flags)
-      .def("clear_flags", &supports_flags<uint_least16_t>::clear_flags)
-      .def("add_flags", &supports_flags<uint_least16_t>::add_flags)
-      .def("drop_flags", &supports_flags<uint_least16_t>::drop_flags)
-#endif
+      .def(flags_visitor<supports_flags<uint_least16_t>>())
 
       .add_property("note", make_getter(&item_t::note, return_value_policy<return_by_value>()),
                     make_setter(&item_t::note, return_value_policy<return_by_value>()))

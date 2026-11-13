@@ -158,6 +158,26 @@ struct map_value_type_converter {
   }
 };
 
+/// Binds the flags API -- the flags property and has_flags, clear_flags,
+/// add_flags and drop_flags -- through Flags, the flags base the wrapped C++
+/// class derives from.  Naming any other instantiation fails to compile,
+/// instead of raising ArgumentError on every call from Python.
+template <typename Flags>
+class flags_visitor : public boost::python::def_visitor<flags_visitor<Flags>> {
+  friend class boost::python::def_visitor_access;
+
+  template <typename Class>
+  void visit(Class& c) const {
+    static_assert(std::is_base_of_v<Flags, typename Class::wrapped_type>,
+                  "flags_visitor must name a flags base of the wrapped class");
+    c.add_property("flags", &Flags::flags, &Flags::set_flags)
+        .def("has_flags", &Flags::has_flags)
+        .def("clear_flags", &Flags::clear_flags)
+        .def("add_flags", &Flags::add_flags)
+        .def("drop_flags", &Flags::drop_flags);
+  }
+};
+
 template <typename T>
 PyObject* str_to_py_unicode(const T& str) {
   return PyUnicode_FromString(str.c_str());

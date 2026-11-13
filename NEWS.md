@@ -648,6 +648,10 @@ components with their standard-library equivalents.
   utfcpp functions for Python string conversion; restore terminal settings
   after `ledger python` exits (#774)
 
+- Make `Commodity.flags` and the `AccountXData` flag methods work (both raised
+  `ArgumentError`): every class's flag methods are now bound through the flags
+  base it really derives from, checked when the bindings compile
+
 ### New Commands and Directives
 
 - Add `payee-rewrite` and `account-rewrite` directives for report-time

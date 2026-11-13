@@ -332,14 +332,7 @@ void export_commodity() {
   scope().attr("COMMODITY_PRIMARY") = COMMODITY_PRIMARY;
 
   class_<commodity_t, boost::noncopyable>("Commodity", no_init)
-#if 1
-      .add_property("flags", &supports_flags<uint_least16_t>::flags,
-                    &supports_flags<uint_least16_t>::set_flags)
-      .def("has_flags", &delegates_flags<uint_least16_t>::has_flags)
-      .def("clear_flags", &delegates_flags<uint_least16_t>::clear_flags)
-      .def("add_flags", &delegates_flags<uint_least16_t>::add_flags)
-      .def("drop_flags", &delegates_flags<uint_least16_t>::drop_flags)
-#endif
+      .def(flags_visitor<delegates_flags<uint_least16_t>>())
 
       .add_static_property("decimal_comma_by_default",
                            make_getter(&commodity_t::decimal_comma_by_default),
@@ -388,13 +381,7 @@ void export_commodity() {
   register_optional_to_python<price_point_t>();
 
   class_<annotation_t>("Annotation")
-#if 1
-      .add_property("flags", &supports_flags<>::flags, &supports_flags<>::set_flags)
-      .def("has_flags", &supports_flags<>::has_flags)
-      .def("clear_flags", &supports_flags<>::clear_flags)
-      .def("add_flags", &supports_flags<>::add_flags)
-      .def("drop_flags", &supports_flags<>::drop_flags)
-#endif
+      .def(flags_visitor<supports_flags<>>())
 
       .add_property("price", py_price, py_set_price)
       .add_property("date",

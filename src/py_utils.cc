@@ -176,23 +176,13 @@ void export_utils() {
       .def(init<supports_flags<uint_least8_t>>())
       .def(init<uint_least8_t>())
 
-      .add_property("flags", &supports_flags<uint_least8_t>::flags,
-                    &supports_flags<uint_least8_t>::set_flags)
-      .def("has_flags", &supports_flags<uint_least8_t>::has_flags)
-      .def("clear_flags", &supports_flags<uint_least8_t>::clear_flags)
-      .def("add_flags", &supports_flags<uint_least8_t>::add_flags)
-      .def("drop_flags", &supports_flags<uint_least8_t>::drop_flags);
+      .def(flags_visitor<supports_flags<uint_least8_t>>());
 
   class_<supports_flags<uint_least16_t>>("SupportFlags16")
       .def(init<supports_flags<uint_least16_t>>())
       .def(init<uint_least16_t>())
 
-      .add_property("flags", &supports_flags<uint_least16_t>::flags,
-                    &supports_flags<uint_least16_t>::set_flags)
-      .def("has_flags", &supports_flags<uint_least16_t>::has_flags)
-      .def("clear_flags", &supports_flags<uint_least16_t>::clear_flags)
-      .def("add_flags", &supports_flags<uint_least16_t>::add_flags)
-      .def("drop_flags", &supports_flags<uint_least16_t>::drop_flags);
+      .def(flags_visitor<supports_flags<uint_least16_t>>());
 
 #if 0
   class_< basic_flags_t<uint_least8_t>,
@@ -205,12 +195,7 @@ void export_utils() {
 #endif
 
   class_<delegates_flags<uint_least16_t>, boost::noncopyable>("DelegatesFlags16", no_init)
-      .add_property("flags", &delegates_flags<uint_least16_t>::flags,
-                    &delegates_flags<uint_least16_t>::set_flags)
-      .def("has_flags", &delegates_flags<uint_least16_t>::has_flags)
-      .def("clear_flags", &delegates_flags<uint_least16_t>::clear_flags)
-      .def("add_flags", &delegates_flags<uint_least16_t>::add_flags)
-      .def("drop_flags", &delegates_flags<uint_least16_t>::drop_flags);
+      .def(flags_visitor<delegates_flags<uint_least16_t>>());
 
   bool_python_conversion();
   string_python_conversion();

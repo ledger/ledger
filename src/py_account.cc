@@ -166,14 +166,7 @@ void export_account() {
       .def("update", &account_t::xdata_t::details_t::update);
 
   class_<account_t::xdata_t>("AccountXData")
-#if 1
-      .add_property("flags", &supports_flags<uint_least16_t>::flags,
-                    &supports_flags<uint_least16_t>::set_flags)
-      .def("has_flags", &supports_flags<uint_least16_t>::has_flags)
-      .def("clear_flags", &supports_flags<uint_least16_t>::clear_flags)
-      .def("add_flags", &supports_flags<uint_least16_t>::add_flags)
-      .def("drop_flags", &supports_flags<uint_least16_t>::drop_flags)
-#endif
+      .def(flags_visitor<supports_flags<>>())
 
       .def_readonly("self_details", &account_t::xdata_t::self_details)
       .def_readonly("family_details", &account_t::xdata_t::family_details)
@@ -185,13 +178,7 @@ void export_account() {
   scope().attr("ACCOUNT_TEMP") = ACCOUNT_TEMP;
 
   class_<account_t>("Account")
-#if 1
-      .add_property("flags", &supports_flags<>::flags, &supports_flags<>::set_flags)
-      .def("has_flags", &supports_flags<>::has_flags)
-      .def("clear_flags", &supports_flags<>::clear_flags)
-      .def("add_flags", &supports_flags<>::add_flags)
-      .def("drop_flags", &supports_flags<>::drop_flags)
-#endif
+      .def(flags_visitor<supports_flags<>>())
 
       .add_property("parent", make_getter(&account_t::parent, return_internal_reference<>()))
 
