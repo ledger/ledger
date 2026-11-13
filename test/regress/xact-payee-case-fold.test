@@ -1,0 +1,28 @@
+; xact (and convert) score historical payees against the identifier with
+; case folded, in every build: ICU builds used to compare raw case.
+
+2024/01/15 WHOLE FOODS MARKET
+    Expenses:Groceries    $50.00
+    Assets:Cash
+
+2024/01/20 corner hardware
+    Expenses:Hardware    $20.00
+    Assets:Checking
+
+test --now 2024/02/01 xact 2024/02/01 'wholefoods mkt' '$5'
+2024/02/01 WHOLE FOODS MARKET
+    Expenses:Groceries                         $5.00
+    Assets:Cash
+end test
+
+test --now 2024/02/01 xact 2024/02/01 CORNERHARDWR '$5'
+2024/02/01 corner hardware
+    Expenses:Hardware                          $5.00
+    Assets:Checking
+end test
+
+test --now 2024/02/01 xact 2024/02/01 'WHOLEFOODS MKT' '$5'
+2024/02/01 WHOLE FOODS MARKET
+    Expenses:Groceries                         $5.00
+    Assets:Cash
+end test

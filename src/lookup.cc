@@ -97,17 +97,13 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
                                                        account_t* ref_account) {
   scorecard_t scores;
 
-  // Normalize the search identifier to lowercase for case-insensitive
-  // matching.  Unicode-aware lowering is not yet implemented when
-  // Boost.Regex unicode support is unavailable.
-#if !HAVE_BOOST_REGEX_UNICODE
+  // Fold the identifier and each candidate payee to lowercase so that
+  // scoring ignores case.  to_lower() folds ASCII letters only (the C
+  // locale) and leaves UTF-8 bytes intact; the exact-match test below still
+  // compares the raw strings.
   string lident = ident;
   to_lower(lident);
   unistring lowered_ident(lident);
-#else
-  // jww (2010-03-07): Not yet implemented
-  unistring lowered_ident(ident);
-#endif
 
   DEBUG("lookup.account", "Looking up identifier '" << lowered_ident.extract() << "'");
 #if DEBUG_ON
@@ -148,14 +144,9 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
         break;
       }
 
-#if !HAVE_BOOST_REGEX_UNICODE
       string payee = candidate;
       to_lower(payee);
       unistring value_key(payee);
-#else
-      // jww (2010-03-07): Not yet implemented
-      unistring value_key(candidate);
-#endif
 
       DEBUG("lookup", "Considering payee: " << value_key.extract());
 
@@ -181,8 +172,8 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
         // matches.
 
         char_positions_map::iterator pi = positions.find(ch);
-        while (pi != positions.end() && pos != unistring::npos && pos <= (*pi).second &&
-               (*pi).second + 1 < value_len)
+        if (pi != positions.end() && pos != unistring::npos && pos <= (*pi).second &&
+            (*pi).second + 1 < value_len)
           pos = value_key.find(ch, (*pi).second + 1);
 
         if (pos != unistring::npos) {
