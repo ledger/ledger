@@ -100,12 +100,19 @@ public:
   ///        (file path, line number, date, code, payee).
   virtual void write_xact(xact_t& xact);
 
-  /// @brief Close the outermost list and flush the stream.
+  /// @brief Close the outermost list and flush the stream.  Under
+  ///        --group-by this runs once per group, so forget the last
+  ///        transaction: the next group opens a list of its own.
   void flush() override {
-    if (last_xact)
+    if (last_xact) {
       out << "))\n";
+      last_xact = nullptr;
+    }
     out.flush();
   }
+
+  /// The lisp output reads amount, cost and note only, never running totals.
+  bool wants_running_total() const override { return false; }
 
   /// @brief Format a single posting as an s-expression list element.
   void operator()(post_t& post) override;
