@@ -88,16 +88,16 @@ public:
 
 /**
  * When -X (exchange) is active, convert any amount or balance sort
- * values to the target commodity so that cross-commodity comparisons
- * sort by converted value rather than raw quantity.
+ * values to the target commodity at @p moment -- the moment the report
+ * values that row -- so that the order matches the values displayed.
  */
-static void convert_sort_values_for_exchange(std::list<sort_value_t>& sort_values,
-                                             report_t& report) {
+static void convert_sort_values_for_exchange(std::list<sort_value_t>& sort_values, report_t& report,
+                                             const datetime_t& moment) {
   if (report.HANDLED(exchange_)) {
     string comm = report.HANDLER(exchange_).str();
     for (auto& sv : sort_values) {
       if (sv.value.is_amount() || sv.value.is_balance()) {
-        sv.value = sv.value.exchange_commodities(comm, false, datetime_t());
+        sv.value = sv.value.exchange_commodities(comm, false, moment);
       }
     }
   }
@@ -168,7 +168,7 @@ bool compare_items<post_t>::operator()(post_t* left, post_t* right) {
     } else {
       find_sort_values(lxdata.sort_values, *left);
     }
-    convert_sort_values_for_exchange(lxdata.sort_values, report);
+    convert_sort_values_for_exchange(lxdata.sort_values, report, datetime_t(left->value_date()));
     lxdata.add_flags(POST_EXT_SORT_CALC);
   }
 
@@ -180,7 +180,7 @@ bool compare_items<post_t>::operator()(post_t* left, post_t* right) {
     } else {
       find_sort_values(rxdata.sort_values, *right);
     }
-    convert_sort_values_for_exchange(rxdata.sort_values, report);
+    convert_sort_values_for_exchange(rxdata.sort_values, report, datetime_t(right->value_date()));
     rxdata.add_flags(POST_EXT_SORT_CALC);
   }
 
@@ -225,7 +225,7 @@ bool compare_items<account_t>::operator()(account_t* left, account_t* right) {
         find_sort_values(xdata.sort_values, acct);
       }
     }
-    convert_sort_values_for_exchange(xdata.sort_values, report);
+    convert_sort_values_for_exchange(xdata.sort_values, report, report.terminus);
     xdata.add_flags(ACCOUNT_EXT_SORT_CALC);
   };
 

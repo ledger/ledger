@@ -8492,6 +8492,8 @@ Used as part of development testing.
 @itemx -S @var{VEXPR}
 Sort the @command{register} report based on the value expression given
 to sort.
+With @option{--exchange}, amounts in @var{VEXPR} are converted at the
+date the report values each line.
 
 @item --sort-all
 Sort all accounts and commodities.
