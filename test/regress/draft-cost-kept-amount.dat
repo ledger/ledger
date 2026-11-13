@@ -1,0 +1,5 @@
+xact 2024/06/15 Broker to Assets:Brokerage @ $6.00 from Assets:Cash
+xact 2024/06/16 Grocery to Expenses:Food @@ $70.00 from Assets:Cash
+xact 2024/06/17 Fund to Assets:Fund @ $4.00 from Assets:Cash
+reg --format '%(date) %(account) %(amount) %(cost)\n'
+bal --flat --no-total --format '%(account) %(count)\n'

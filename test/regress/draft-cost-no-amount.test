@@ -1,0 +1,18 @@
+; A cost given to the xact command needs an amount to apply to.  When
+; neither the command line nor the account's history supplies one, the
+; command reports invalid arguments instead of failing inside the amount
+; arithmetic.
+
+2024/01/01 Grocery Store
+    Expenses:Food    10 AAPL @ $5.00
+    Assets:Cash   $-50.00
+
+test xact 2024/06/15 Nobody to Expenses:Misc '@' '$6.00' from Assets:Cash -> 1
+__ERROR__
+Error: Invalid xact command arguments
+end test
+
+test xact 2024/06/15 Nobody to Expenses:Misc '@@' '$6.00' from Assets:Cash -> 1
+__ERROR__
+Error: Invalid xact command arguments
+end test

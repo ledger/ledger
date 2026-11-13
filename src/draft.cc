@@ -295,6 +295,24 @@ void draft_t::parse_args(const value_t& args) {
 
 namespace {
 /**
+ * @brief Give a posting copied from history a new amount (null to let
+ *        finalize infer it), discarding what described the old one.
+ *
+ * The copy carries the history's cost, balance assertion and the flags
+ * that say how that amount and cost were written or computed.  Kept
+ * beside a new amount they would print or book something the draft
+ * never said: a hidden amount, a stale assertion, a stale @@ or (@)=.
+ */
+void replace_copied_amount(post_t& post, const amount_t& amount) {
+  post.amount = amount;
+  post.cost = std::nullopt;
+  post.given_cost = std::nullopt;
+  post.assigned_amount = std::nullopt;
+  post.drop_flags(POST_CALCULATED | POST_COST_CALCULATED | POST_COST_IN_FULL | POST_COST_FIXATED |
+                  POST_COST_VIRTUAL | POST_AMOUNT_USER_ANNOTATED | POST_AMOUNT_USER_DATE);
+}
+
+/**
  * @brief Remove any `UUID: ...` tag lines from a note copied off a
  *        matched transaction.
  *
@@ -594,10 +612,10 @@ xact_t* draft_t::insert(journal_t& journal) {
 
       // Handle amount and commodity assignment
       if (new_post.get() && !new_post->amount.is_null()) {
-        found_commodity = &new_post->amount.commodity();
+        found_commodity = &new_post->amount.commodity().strip_annotations(keep_details_t());
 
         if (any_post_has_amount) {
-          new_post->amount = amount_t();
+          replace_copied_amount(*new_post, amount_t());
           DEBUG("draft.xact", "New posting has an amount, but we cleared it");
         } else {
           any_post_has_amount = true;
@@ -606,35 +624,13 @@ xact_t* draft_t::insert(journal_t& journal) {
       }
 
       if (post.amount) {
-        new_post->amount = *post.amount;
+        replace_copied_amount(*new_post, *post.amount);
         DEBUG("draft.xact", "Copied over posting amount");
 
         if (post.from) {
           new_post->amount.in_place_negate();
           DEBUG("draft.xact", "Negated new posting amount");
         }
-      }
-
-      // Handle cost assignment (@ per-unit or @@ total)
-      if (post.cost) {
-        if (post.cost->sign() < 0)
-          throw parse_error(_("A posting's cost may not be negative"));
-
-        post.cost->in_place_unround();
-
-        if (*post.cost_operator == "@") {
-          // For the sole case where the cost might be uncommoditized,
-          // guarantee that the commodity of the cost after multiplication
-          // is the same as it was before.
-          commodity_t& cost_commodity(post.cost->commodity());
-          *post.cost *= new_post->amount;
-          post.cost->set_commodity(cost_commodity);
-        } else if (new_post->amount.sign() < 0) {
-          new_post->cost->in_place_negate();
-        }
-
-        new_post->cost = *post.cost;
-        DEBUG("draft.xact", "Copied over posting cost");
       }
 
       // If the posting has a commodity from history but the template
@@ -661,8 +657,19 @@ xact_t* draft_t::insert(journal_t& journal) {
         }
       }
 
+      // Apply the template cost (@ per unit, @@ in full) as the parser does.
+      if (post.cost) {
+        if (new_post->amount.is_null())
+          throw std::runtime_error(_("Invalid xact command arguments"));
+        // An amount kept from history (no template amount) still carries
+        // how that posting's cost was written or computed, and its lot.
+        if (!post.amount)
+          replace_copied_amount(*new_post, new_post->amount.strip_annotations(keep_details_t()));
+        new_post->set_given_cost(*post.cost, *post.cost_operator == "@@");
+        DEBUG("draft.xact", "Set posting cost: " << *new_post->cost);
+      }
+
       added->add_post(new_post.release());
-      added->posts.back()->account->add_post(added->posts.back());
       added->posts.back()->set_state(item_t::UNCLEARED);
 
       DEBUG("draft.xact", "Added new posting to derived entry");

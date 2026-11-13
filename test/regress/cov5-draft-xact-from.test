@@ -7,5 +7,5 @@
 test xact 2024/02/01 at Transfer from Savings '$200.00'
 2024/02/01 Transfer
     Assets:Checking
-    Assets:Savings
+    Assets:Savings                          $-200.00
 end test

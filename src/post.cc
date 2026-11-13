@@ -910,6 +910,29 @@ std::size_t post_t::account_id() const {
   return 0;
 }
 
+void post_t::set_given_cost(amount_t written, bool in_full) {
+  if (written.sign() < 0)
+    throw parse_error(_("A posting's cost may not be negative"));
+
+  written.in_place_unround();
+
+  if (in_full) {
+    add_flags(POST_COST_IN_FULL);
+    if (amount.sign() < 0)
+      written.in_place_negate();
+  } else {
+    // For the sole case where the cost might be uncommoditized,
+    // guarantee that the commodity of the cost after multiplication
+    // is the same as it was before.
+    commodity_t& cost_commodity(written.commodity());
+    written *= amount;
+    written.set_commodity(cost_commodity);
+  }
+
+  given_cost = written;
+  cost = std::move(written);
+}
+
 /**
  * @brief Validate the internal consistency of this posting.
  *

@@ -267,6 +267,17 @@ public:
   /** @brief 1-based index of this posting within its account's posting list. */
   std::size_t account_id() const;
 
+  /**
+   * @brief Set the cost written after `@` (per unit) or `@@` (in full).
+   *
+   * Applies the journal's cost rules against this posting's amount, which
+   * must not be null: a negative cost is an error; a per-unit cost is
+   * multiplied by the amount, keeping the cost's commodity; a total cost is
+   * negated when the amount is negative.  Sets both `cost` and
+   * `given_cost`, and POST_COST_IN_FULL for `@@`.
+   */
+  void set_given_cost(amount_t written, bool in_full);
+
   void copy_details(const item_t& item) override {
     const post_t& post(dynamic_cast<const post_t&>(item));
     xdata_ = post.xdata_;

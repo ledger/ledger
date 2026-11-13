@@ -666,7 +666,6 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
           bool per_unit = true;
           if (*++next == '@') {
             per_unit = false;
-            post->add_flags(POST_COST_IN_FULL);
             DEBUG("textual.parse", "line " << context.linenum << ": "
                                            << "And it's for a total price");
             next++;
@@ -696,26 +695,10 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
               parse_amount_expr(cstream, *context.scope, *post.get(), *post->cost,
                                 PARSE_NO_MIGRATE | PARSE_SINGLE);
 
-            if (post->cost->sign() < 0)
-              throw parse_error(_("A posting's cost may not be negative"));
-
-            post->cost->in_place_unround();
-
-            if (per_unit) {
-              // For the sole case where the cost might be uncommoditized,
-              // guarantee that the commodity of the cost after multiplication
-              // is the same as it was before.
-              commodity_t& cost_commodity(post->cost->commodity());
-              *post->cost *= post->amount;
-              post->cost->set_commodity(cost_commodity);
-            } else if (post->amount.sign() < 0) {
-              post->cost->in_place_negate();
-            }
+            post->set_given_cost(*post->cost, !per_unit);
 
             if (fixed_cost)
               post->add_flags(POST_COST_FIXATED);
-
-            post->given_cost = post->cost;
 
             DEBUG("textual.parse", "line " << context.linenum << ": "
                                            << "Total cost is " << *post->cost);
