@@ -1,4 +1,5 @@
-; Coverage tests for xact.cc fn_any and fn_all
+; Coverage tests for xact_t::lookup's any() and all() (post.cc fn_post_any
+; and fn_post_all)
 
 2024/01/01 Test Payee
     Expenses:Food            $10.00

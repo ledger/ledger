@@ -390,6 +390,10 @@ components with their standard-library equivalents.
 
 ### Reporting and Display Improvements
 
+- `xact.any()` and `xact.all()` now honor an optional second argument of
+  `false`, which leaves the current posting out of the test, as `any()` and
+  `all()` already did.
+
 - A transaction that misses balancing by less than one unit of a cost
   commodity whose display precision is still 0 now reports its remainder at
   the precision of the costs instead of as `0`.

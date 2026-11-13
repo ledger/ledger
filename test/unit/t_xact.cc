@@ -934,7 +934,7 @@ BOOST_AUTO_TEST_CASE(testXactLookupMagnitude)
 
 BOOST_AUTO_TEST_CASE(testXactLookupAnyAll)
 {
-  // Cover xact.cc fn_any (lines 608-618) and fn_all (620-630)
+  // Cover xact_t::lookup's any() and all(), post.cc fn_post_any/fn_post_all
   xact_t xact;
   xact.add_flags(ITEM_TEMP);
   xact._date = parse_date("2024/01/01");

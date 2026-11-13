@@ -410,6 +410,15 @@ class journal_t;
 void extend_post(post_t& post, journal_t& journal);
 
 /**
+ * @brief Expression functions any(EXPR[, INCLUDE_SELF]) and
+ * all(EXPR[, INCLUDE_SELF]) over the postings of the context posting's
+ * transaction, shared by post_t::lookup and xact_t::lookup; INCLUDE_SELF
+ * false skips the context posting.
+ */
+value_t fn_post_any(call_scope_t& args);
+value_t fn_post_all(call_scope_t& args);
+
+/**
  * @brief Serialize a posting to an XML property tree.
  *
  * Emits the posting's state, flags, dates, payee override, account

@@ -1210,34 +1210,6 @@ template <value_t (*Func)(xact_t&)>
 value_t get_wrapper(call_scope_t& scope) {
   return (*Func)(find_scope<xact_t>(scope));
 }
-
-/// Expression function: `any(expr)` -- returns true if any posting in the
-/// transaction satisfies the given expression.
-value_t fn_any(call_scope_t& args) {
-  post_t& post(args.context<post_t>());
-  expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
-
-  for (post_t* p : post.xact->posts) {
-    bind_scope_t bound_scope(args, *p);
-    if (expr->calc(bound_scope, args.locus, args.depth).to_boolean())
-      return true;
-  }
-  return false;
-}
-
-/// Expression function: `all(expr)` -- returns true if every posting in
-/// the transaction satisfies the given expression.
-value_t fn_all(call_scope_t& args) {
-  post_t& post(args.context<post_t>());
-  expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
-
-  for (post_t* p : post.xact->posts) {
-    bind_scope_t bound_scope(args, *p);
-    if (!expr->calc(bound_scope, args.locus, args.depth).to_boolean())
-      return false;
-  }
-  return true;
-}
 } // namespace
 
 /**
@@ -1247,8 +1219,8 @@ value_t fn_all(call_scope_t& args) {
  *   - `payee` / `p` -- the payee string
  *   - `code` -- the check number or transaction code
  *   - `magnitude` -- absolute value of the positive (debit) side
- *   - `any(expr)` -- existential quantifier over postings
- *   - `all(expr)` -- universal quantifier over postings
+ *   - `any(expr[, include_self])` -- existential quantifier over postings
+ *   - `all(expr[, include_self])` -- universal quantifier over postings
  *
  * Unrecognized names fall through to item_t::lookup().
  */
@@ -1260,9 +1232,9 @@ expr_t::ptr_op_t xact_t::lookup(const symbol_t::kind_t kind, const string& name)
   switch (name[0]) {
   case 'a':
     if (name == "any")
-      return WRAP_FUNCTOR(&fn_any);
+      return WRAP_FUNCTOR(&fn_post_any);
     else if (name == "all")
-      return WRAP_FUNCTOR(&fn_all);
+      return WRAP_FUNCTOR(&fn_post_all);
     break;
 
   case 'c':

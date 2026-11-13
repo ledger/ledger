@@ -639,6 +639,8 @@ value_t get_wrapper(call_scope_t& scope) {
   return (*Func)(find_scope<post_t>(scope));
 }
 
+} // namespace
+
 /**
  * @brief Test whether any posting in the same transaction satisfies an expression.
  *
@@ -650,7 +652,7 @@ value_t get_wrapper(call_scope_t& scope) {
  * consideration, which is useful for queries like "does any *other*
  * posting in this transaction match?"
  */
-value_t fn_any(call_scope_t& args) {
+value_t fn_post_any(call_scope_t& args) {
   post_t& post(args.context<post_t>());
   expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
 
@@ -673,13 +675,13 @@ value_t fn_any(call_scope_t& args) {
 /**
  * @brief Test whether all postings in the same transaction satisfy an expression.
  *
- * Like fn_any, but returns false as soon as any posting fails the test.
+ * Like fn_post_any, but returns false as soon as any posting fails the test.
  * Returns true if no transaction exists (vacuous truth).
  *
  * An optional second argument (false) excludes the current posting from
  * consideration.
  */
-value_t fn_all(call_scope_t& args) {
+value_t fn_post_all(call_scope_t& args) {
   post_t& post(args.context<post_t>());
   expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
 
@@ -698,7 +700,6 @@ value_t fn_all(call_scope_t& args) {
   }
   return true;
 }
-} // namespace
 
 /**
  * @brief Map expression names to getter implementations for the posting scope.
@@ -732,9 +733,9 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind, const string& name)
     else if (name == "account_id")
       return WRAP_FUNCTOR(get_wrapper<&get_account_id>);
     else if (name == "any")
-      return WRAP_FUNCTOR(&fn_any);
+      return WRAP_FUNCTOR(&fn_post_any);
     else if (name == "all")
-      return WRAP_FUNCTOR(&fn_all);
+      return WRAP_FUNCTOR(&fn_post_all);
     break;
 
   case 'b':

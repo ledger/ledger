@@ -1,6 +1,5 @@
-; Coverage for xact.cc (fn_any) and (fn_all)
-; These are the xact_t::lookup versions of any() and all()
-; which differ from the post_t versions in post.cc
+; Coverage for xact_t::lookup's any() and all(), which are the posting
+; scope's fn_post_any and fn_post_all (post.cc).
 
 2024/01/01 Test1
     Expenses:Food    $10.00
