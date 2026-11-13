@@ -1,0 +1,58 @@
+; A timeclock posting is registered with its account once, as every
+; other posting is, so %(count), any() and all() over an account's
+; postings see it once.  With a bucket account the bucket posting is
+; registered once as well, and a balance assertion on the bucket
+; still sees the timeclock amount, whether assertions run in date
+; order (the default) or in file order.
+
+bucket Equity:Time
+
+i 2013/03/28 10:00:00 Projects:Consulting
+o 2013/03/28 14:00:00
+
+2013/03/29 Check
+    Equity:Time            0s = -14400s
+    Projects:Consulting    0s
+
+i 2013/03/30 22:00:00 Projects:Admin
+o 2013/03/31 02:00:00
+
+test bal --format "%(account) %(to_int(count))\n"
+Equity:Time 3
+Projects 3
+Projects:Admin 1
+Projects:Consulting 2
+ 6
+end test
+
+test bal --check-in-file-order --format "%(account) %(to_int(count))\n"
+Equity:Time 3
+Projects 3
+Projects:Admin 1
+Projects:Consulting 2
+ 6
+end test
+
+test bal --day-break --format "%(account) %(to_int(count))\n"
+Equity:Time 4
+Projects 4
+Projects:Admin 2
+Projects:Consulting 2
+ 8
+end test
+
+test reg
+13-Mar-28                       Projects:Consulting           4.00h        4.00h
+                                Equity:Time                  -4.00h            0
+13-Mar-30                       Projects:Admin                4.00h        4.00h
+                                Equity:Time                  -4.00h            0
+end test
+
+test bal
+              -8.00h  Equity:Time
+               8.00h  Projects
+               4.00h    Admin
+               4.00h    Consulting
+--------------------
+                   0
+end test
