@@ -170,6 +170,10 @@ public:
   /// an amount has no explicit commodity.
   commodity_t* null_commodity;
 
+  /// The built-in "%" commodity, set by amount_t::initialize(); value
+  /// expressions read amounts in it as fractions (op.cc).
+  commodity_t* percent_commodity = nullptr;
+
   /// The commodity implied by the `D` directive.  When set, amounts
   /// without an explicit commodity are displayed using this commodity's
   /// formatting (decimal places, thousands separator, etc.).

@@ -609,6 +609,11 @@ public:
     return temp;
   }
 
+  /** The fraction a percentage denotes: 19% is 0.19.  Returns the
+      quantity divided by 100, without a commodity, at two more decimal
+      places; value expressions use it to read "%" (expr_t::op_t::calc). */
+  amount_t percent_fraction() const;
+
   /*@}*/
 
   /** @name Commodity annotations

@@ -1211,16 +1211,24 @@ Ledger treats @samp{%} as a built-in commodity with special arithmetic
 semantics.  Amounts written with a @samp{%} suffix---such as
 @samp{19%} or @samp{2.5%}---are percentage values.  Unlike ordinary
 commodities, which simply label a quantity, a @samp{%} amount is
-automatically treated as its fractional equivalent whenever it appears
-as the operand of multiplication or division.
+treated as its fractional equivalent whenever it is an operand of
+multiplication or division in a value expression (an amount expression
+such as @samp{($100.00 * 19%)}, a format, or an automated transaction).
+
+Everywhere else @samp{%} is an ordinary commodity: a posting of
+@samp{10% @@ $5} costs @samp{$50}, and @samp{10 BOND @@ 98.5%} costs
+@samp{985%}.
 
 @table @asis
 @item Multiplication
-The percentage is divided by 100 before the product is formed, so the
-result has the commodity of the other operand rather than @samp{%}:
+The percentage may be either operand, and the other operand may be an
+amount or a balance of several commodities.  The percentage is divided
+by 100 before the product is formed, so the result has the commodity of
+the other operand rather than @samp{%}:
 
 @example
 $1000.00 * 19%  @result{}  $190.00    (not $19000.00)
+19% * $1000.00  @result{}  $190.00
 @end example
 
 @item Division
@@ -1237,6 +1245,15 @@ takes place, preserving the natural percentage convention:
 
 @example
 10% * 10%  @result{}  1%   (i.e., 0.10 × 0.10 = 0.01 = 1%)
+@end example
+
+@item Percentage × number
+A bare number has no commodity for the product to take, so the
+percentage is not divided; the product stays a percentage, in either
+order:
+
+@example
+10 * 19%  @result{}  190%   (i.e., 10 × 0.19 = 1.9 = 190%)
 @end example
 
 @item Addition and subtraction

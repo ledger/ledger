@@ -442,7 +442,7 @@ components with their standard-library equivalents.
   be set in `~/.ledgerrc` or through `LEDGER_COLORS`.  `ansify_if()` now
   reports an unknown color as an error instead of leaving the text uncolored
 
-- Fix percentage amounts to act as fractions in arithmetic; fix `width`
+- Fix percentage amounts to act as fractions in value expressions; fix `width`
   options to return integers for expression arithmetic; fix the `truncated()`
   function to work with amounts in value expressions; expose
   `find_accounts_re()` for full regex-matched account lookup

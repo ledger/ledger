@@ -351,6 +351,20 @@ expr_t::ptr_op_t lookup_ident(const expr_t::ptr_op_t& op, scope_t& scope) {
     throw_(calc_error, _f("Unknown identifier '%1%'") % op->as_ident());
   return def;
 }
+
+/// @brief Whether @p val is an amount in the built-in "%" commodity.
+///
+/// The referent keeps an annotated "%" counting as "%".
+bool is_percent(const value_t& val) {
+  return val.is_amount() && val.as_amount().has_commodity() &&
+         &val.as_amount().commodity().referent() ==
+             val.as_amount().commodity().pool().percent_commodity;
+}
+
+/// @brief Whether @p val carries a commodity: an amount in one, or a balance.
+bool carries_commodity(const value_t& val) {
+  return val.is_balance() || (val.is_amount() && val.as_amount().has_commodity());
+}
 } // namespace
 
 value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t* locus, const int depth) {
@@ -505,12 +519,39 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t* locus, const int depth) {
     case O_SUB:
       result = (left()->calc(scope, locus, depth + 1) - right()->calc(scope, locus, depth + 1));
       break;
-    case O_MUL:
-      result = (left()->calc(scope, locus, depth + 1) * right()->calc(scope, locus, depth + 1));
+    case O_MUL: {
+      // In a value expression a "%" amount is a fraction of an operand that
+      // carries a commodity (an amount in one, or a balance), on either
+      // side: "$1000 * 19%" and "19% * $1000" are both "$190", and
+      // "19% * 19%" is "3.61%".  The product is that other operand scaled by
+      // the fraction, whichever side the "%" stands on, so the two orders
+      // are one computation.  Times a bare number "%" stays a percentage
+      // ("10 * 19%" is "190%"), which the budget format's
+      // "100% * quantity(...)" relies on.  Amount arithmetic treats "%" as a
+      // plain commodity, so a price or a quantity in "%" multiplies at face
+      // value.
+      value_t lhs(left()->calc(scope, locus, depth + 1));
+      value_t rhs(right()->calc(scope, locus, depth + 1));
+      if (is_percent(lhs) && carries_commodity(rhs))
+        result = rhs * value_t(lhs.as_amount().percent_fraction());
+      else if (is_percent(rhs) && carries_commodity(lhs))
+        result = lhs * value_t(rhs.as_amount().percent_fraction());
+      else
+        result = lhs * rhs;
       break;
-    case O_DIV:
-      result = (left()->calc(scope, locus, depth + 1) / right()->calc(scope, locus, depth + 1));
+    }
+    case O_DIV: {
+      // Dividing by N% divides by N/100, whatever the dividend.  Dividing by
+      // N and then multiplying by 100 keeps the quotient's precision what it
+      // was when amount_t::operator/= did this.
+      value_t lhs(left()->calc(scope, locus, depth + 1));
+      value_t rhs(right()->calc(scope, locus, depth + 1));
+      if (is_percent(rhs))
+        result = (lhs / value_t(rhs.as_amount().number())) * value_t(amount_t(100L));
+      else
+        result = lhs / rhs;
       break;
+    }
 
     case O_NEG:
       result = left()->calc(scope, locus, depth + 1).negated();
