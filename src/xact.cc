@@ -830,7 +830,7 @@ bool xact_base_t::finalize() {
         bool first = true;
 
         for (const lot_info& lot : lots) {
-          if (remaining.is_zero())
+          if (remaining.is_realzero())
             break;
 
           amount_t consumed = (remaining <= lot.quantity) ? remaining : lot.quantity;
@@ -868,7 +868,7 @@ bool xact_base_t::finalize() {
 
         // If there's unmatched remainder (oversell), create an unannotated
         // posting for it so accounting remains correct
-        if (!remaining.is_zero() && !first) {
+        if (!remaining.is_realzero() && !first) {
           amount_t remainder_amt(remaining.negated());
           remainder_amt.set_commodity(post->amount.commodity().referent());
           post_t* remainder = new post_t(post->account, remainder_amt);
