@@ -96,6 +96,8 @@ protected:
   xact_t* last_xact;          ///< Tracks the previous transaction to detect boundaries.
   post_t* last_post;          ///< Tracks the previous posting to detect date changes.
   bool first_report_title;    ///< True until the first group title has been printed.
+  bool next_lines_use_first;  ///< True when the format has no %/: later postings reuse
+                              ///< first_line_format (and its accumulators).
   string report_title;        ///< Current group title (set by upstream grouping filters).
 
 public:

@@ -164,7 +164,7 @@ format_posts::format_posts(report_t& _report, const string& format,
                            const optional<string>& _prepend_format, std::size_t _prepend_width,
                            const optional<string>& _append_format)
     : report(_report), prepend_width(_prepend_width), last_xact(nullptr), last_post(nullptr),
-      first_report_title(true) {
+      first_report_title(true), next_lines_use_first(false) {
   // Split the format string on "%/" into up to three sub-formats:
   //   first_line_format %/ next_lines_format %/ between_format
   // The next_lines and between formats can use %$N to back-reference
@@ -184,8 +184,10 @@ format_posts::format_posts(report_t& _report, const string& format,
     }
     // NOLINTEND(bugprone-branch-clone)
   } else {
+    // Parse once: every posting shares first_line_format's expressions,
+    // so an accumulator (O_DEFINE) keeps one state across postings.
     first_line_format.parse_format(format);
-    next_lines_format.parse_format(format);
+    next_lines_use_first = true;
   }
 
   if (_prepend_format)
@@ -248,7 +250,9 @@ void format_posts::operator()(post_t& post) {
     } else {
       if (last_post && last_post->payee() != post.payee())
         post.xdata().add_flags(POST_EXT_PAYEE_CHANGED);
-      write_with_append(out, next_lines_format(bound_scope), &append_format, bound_scope);
+      write_with_append(out,
+                        (next_lines_use_first ? first_line_format : next_lines_format)(bound_scope),
+                        &append_format, bound_scope);
     }
     // NOLINTEND(bugprone-branch-clone)
 

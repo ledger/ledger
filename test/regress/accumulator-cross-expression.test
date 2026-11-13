@@ -41,9 +41,9 @@ end test
 
 test reg --format '%(account) %(shown; shown = shown + 1; shown)\n'
 Expenses:Food 1
-Assets:Checking 1
-Expenses:Food 2
 Assets:Checking 2
+Expenses:Food 3
+Assets:Checking 4
 end test
 
 test eval 'n; n = n + 1; n'

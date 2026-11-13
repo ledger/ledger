@@ -1,0 +1,32 @@
+; A --format without %/ used to be parsed twice, once for the first
+; posting of each transaction and once for the rest, so an accumulator
+; such as the running maximum documented in the manual kept two
+; separate copies of its variable.  The format is now parsed once and
+; every posting is printed with that one copy.
+
+2024/01/01 Fill-up and groceries
+    Expenses:Food    $50.00
+    Expenses:Gas     $900.00
+    Assets:Cash
+
+2024/01/02 Snack
+    Expenses:Food    $5.00
+    Assets:Cash
+
+test reg Expenses --format "%(biggest = max(amount, biggest); biggest)\n"
+$50.00
+$900.00
+$900.00
+end test
+
+test reg Expenses --format "%(cnt = cnt + 1; cnt) %(account)\n"
+1 Expenses:Food
+2 Expenses:Gas
+3 Expenses:Food
+end test
+
+test reg Expenses --format "%(cnt = cnt + 1; cnt) %(account)\n%/  %(cnt = cnt + 1; cnt) %(account)\n"
+1 Expenses:Food
+  1 Expenses:Gas
+2 Expenses:Food
+end test
