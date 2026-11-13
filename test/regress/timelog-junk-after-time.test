@@ -1,0 +1,13 @@
+; A clock line whose time is followed directly by a byte that is not
+; whitespace ("o 2024/01/15 17:00:00X", 22 characters) names an empty
+; account.  That is an error; the byte is not dropped to make the line
+; a bare check-out.
+
+i 2024/01/15 09:00:00 Alpha
+o 2024/01/15 17:00:00X
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 7:
+Error: Account name contains an empty sub-account name
+end test

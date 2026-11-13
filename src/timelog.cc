@@ -199,6 +199,9 @@ void time_log_t::close() {
 }
 
 void time_log_t::clock_in(const time_xact_t& event) {
+  if (!event.account)
+    throw parse_error(_("Clock-in directive requires an account"));
+
   if (!time_xacts.empty()) {
     for (time_xact_t& time_xact : time_xacts) {
       if (event.account == time_xact.account)

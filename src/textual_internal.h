@@ -221,6 +221,8 @@ public:
   xact_t* read_next_directive(bool& error_flag, xact_t* previous_xact);
 
 #if TIMELOG_SUPPORT
+  /// Parse "i|o DATE TIME[ ACCOUNT[  PAYEE][  ; NOTE]]"; account is null when the line names none.
+  time_xact_t parse_clock_event(char* line, bool capitalized);
   void clock_in_directive(char* line, bool capitalized);
   void clock_out_directive(char* line, bool capitalized);
 #endif

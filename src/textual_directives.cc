@@ -84,12 +84,15 @@ using detail::instance_t;
 
 #if TIMELOG_SUPPORT
 
-void instance_t::clock_in_directive(char* line, bool capitalized) {
+time_xact_t instance_t::parse_clock_event(char* line, bool capitalized) {
   if (std::strlen(line) < 21)
     throw_(parse_error, _("Clock-in/out directive is too short"));
   string datetime(line, 2, 19); // NOLINT(bugprone-unused-local-non-trivial-variable)
 
-  char* p = skip_ws(line + 22);
+  // line[21] ends the time: either the NUL of a bare "o DATE TIME" line or the
+  // separator before the account.  Never read past the NUL: the bytes beyond it
+  // belong to an earlier line in the reused line buffer.
+  char* p = line[21] != '\0' ? skip_ws(line + 22) : line + 21;
   char* n = next_element(p, true);
   char* end = n ? next_element(n, true) : nullptr;
 
@@ -107,39 +110,17 @@ void instance_t::clock_in_directive(char* line, bool capitalized) {
   position.sequence = context.sequence++;
 
   datetime_t when = parse_datetime(datetime);
-  time_xact_t event(position, when, capitalized, p ? top_account()->find_account(p) : nullptr,
-                    n ? n : "", end ? end : "");
+  return time_xact_t(position, when, capitalized,
+                     line[21] != '\0' ? top_account()->find_account(p) : nullptr, n ? n : "",
+                     end ? end : "");
+}
 
-  timelog.clock_in(event);
+void instance_t::clock_in_directive(char* line, bool capitalized) {
+  timelog.clock_in(parse_clock_event(line, capitalized));
 }
 
 void instance_t::clock_out_directive(char* line, bool capitalized) {
-  if (std::strlen(line) < 21)
-    throw_(parse_error, _("Clock-in/out directive is too short"));
-  string datetime(line, 2, 19); // NOLINT(bugprone-unused-local-non-trivial-variable)
-
-  char* p = skip_ws(line + 22);
-  char* n = next_element(p, true);
-  char* end = n ? next_element(n, true) : nullptr;
-
-  if (end && *end == ';')
-    end = skip_ws(end + 1);
-  else
-    end = nullptr;
-
-  position_t position;
-  position.pathname = context.pathname_ref;
-  position.beg_pos = context.line_beg_pos;
-  position.beg_line = context.linenum;
-  position.end_pos = context.curr_pos;
-  position.end_line = context.linenum;
-  position.sequence = context.sequence++;
-
-  datetime_t when = parse_datetime(datetime);
-  time_xact_t event(position, when, capitalized, p ? top_account()->find_account(p) : nullptr,
-                    n ? n : "", end ? end : "");
-
-  context.count += timelog.clock_out(event);
+  context.count += timelog.clock_out(parse_clock_event(line, capitalized));
 }
 
 #endif // TIMELOG_SUPPORT
