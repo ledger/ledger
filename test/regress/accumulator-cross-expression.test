@@ -1,0 +1,80 @@
+; Definitions that do not refer to themselves are shared between option
+; expressions; accumulators keep working inside the expression that
+; declares them, including when they are read before their first
+; assignment has run and when the expression is recompiled between
+; groups.
+
+define step = 5
+define step = step + 1
+
+2024/01/05 * Grocery
+    Expenses:Food                  $50.00
+    Assets:Checking
+
+2024/01/10 * Coffee
+    Expenses:Food                   $5.00
+    Assets:Checking
+
+test reg -l 'foo=1;true' -d 'foo==1' --format '%(account)\n'
+Expenses:Food
+Assets:Checking
+Expenses:Food
+Assets:Checking
+end test
+
+test reg -l 'foo=1;true' --format '[%(foo)]\n'
+[1]
+[1]
+[1]
+[1]
+end test
+
+test reg -d 'cnt=cnt+1; cnt<3' --format '%(account)\n'
+Expenses:Food
+Assets:Checking
+end test
+
+test reg -d 'k < 2 & (k = k + 1; true)' --format '%(account)\n'
+Expenses:Food
+Assets:Checking
+end test
+
+test reg --format '%(account) %(shown; shown = shown + 1; shown)\n'
+Expenses:Food 1
+Assets:Checking 1
+Expenses:Food 2
+Assets:Checking 2
+end test
+
+test eval 'n; n = n + 1; n'
+1
+end test
+
+test reg Food --format '%(biggest = max(amount, biggest); biggest)\n'
+$50.00
+$50.00
+end test
+
+test reg --format '%(step)\n'
+6
+6
+6
+6
+end test
+
+test reg --group-by payee -d 'cnt=cnt+1; cnt<3' --format '%(account)\n'
+Coffee
+Expenses:Food
+Assets:Checking
+end test
+
+test reg --group-by payee --only 'cnt=cnt+1; cnt<3' --format '%(account)\n'
+Coffee
+Expenses:Food
+Assets:Checking
+end test
+
+test bal --group-by payee -d 'cnt=cnt+1; cnt<3'
+Coffee
+              $-5.00  Assets:Checking
+end test

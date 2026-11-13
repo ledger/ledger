@@ -103,6 +103,9 @@ expr_t& expr_t::operator=(const expr_t& _expr) {
     ptr = _expr.ptr;
     fast_path_ = _expr.fast_path_;
     accumulator_scope_.reset();
+    // The copy owns a fresh accumulator scope, so it must recompile to
+    // declare its accumulators there again.
+    compiled = false;
   }
   return *this;
 }
@@ -141,11 +144,50 @@ void expr_t::parse(std::istream& in, const parse_flags_t& flags,
 
 /*--- Compilation ---*/
 
+namespace {
+
+/// @brief The scope an expr_t compiles through: every lookup and every
+/// ordinary definition goes to the caller's scope, but an accumulator's
+/// PLUG sentinel goes to the expression's own accumulator scope.
+///
+/// op_t::compile defines a PLUG through its compile scope only for a
+/// self-referential O_DEFINE (an accumulator such as n=n+1); lambda
+/// parameters get theirs in a private scope.  So the PLUG kind is what
+/// tells an accumulator's declaration apart from a definition that other
+/// expressions may share.  The accumulator scope is deliberately not
+/// searched here: after mark_uncompiled() it holds the running value,
+/// which a compile-time lookup would inline as a constant.  For the same
+/// reason a PLUG never replaces a value already there.
+class accumulator_compile_scope_t : public child_scope_t {
+  scope_t& accumulators;
+
+public:
+  accumulator_compile_scope_t(scope_t& caller, scope_t& _accumulators)
+      : child_scope_t(caller), accumulators(_accumulators) {}
+
+  string description() override { return parent->description(); }
+
+  void define(const symbol_t::kind_t kind, const string& name,
+              const expr_t::ptr_op_t& def) override {
+    if (def && def->kind == expr_t::op_t::PLUG) {
+      if (!accumulators.lookup(kind, name))
+        accumulators.define(kind, name, def);
+    } else {
+      child_scope_t::define(kind, name, def);
+    }
+  }
+};
+
+} // namespace
+
 void expr_t::compile(scope_t& scope) {
   if (!compiled) {
     if (ptr) {
       fast_path_ = fast_path_t::NONE;
-      ptr = ptr->compile(scope);
+      if (!accumulator_scope_)
+        accumulator_scope_ = std::make_unique<symbol_scope_t>();
+      accumulator_compile_scope_t sentinels(scope, *accumulator_scope_);
+      ptr = ptr->compile(sentinels);
       detect_fast_path();
     }
     base_type::compile(scope);
@@ -357,7 +399,11 @@ void merged_expr_t::compile(scope_t& scope) {
   // PLUG sentinels and runtime values in the persistent accumulator_scope_
   // rather than propagating them up to report/session.  This prevents
   // accumulator variables from shadowing report-level functions such as
-  // fn_display_amount and fn_amount_expr in subsequent lookups.
+  // fn_display_amount and fn_amount_expr in subsequent lookups.  The
+  // context recorded for a later no-argument calc() is the caller's scope,
+  // never this stack-local wrapper.
+  if (!context)
+    context = &scope;
   lexical_scope_t wrapped(scope, *accumulator_scope_);
   expr_t::compile(wrapped);
 }

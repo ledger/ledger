@@ -1,0 +1,60 @@
+; A self-referential definition (an accumulator) belongs to the
+; expression that declares it: no other option, format or journal
+; expression can see its name, so reading it elsewhere is an error
+; rather than a silent null.
+
+define c = c + 1
+
+2024/01/05 * Grocery
+    Expenses:Food                  $50.00
+    Assets:Checking
+
+2024/01/10 * Coffee
+    Expenses:Food                   $5.00
+    Assets:Checking
+
+test reg -d 'qq=max(amount,qq);1' --format '[%(qq)]\n' -> 1
+__ERROR__
+While calculating format expression:
+  qq
+While evaluating value expression:
+  qq
+  ^^
+While handling posting from "$FILE", line 9:
+>     Expenses:Food                  $50.00
+Error: Unknown identifier 'qq'
+end test
+
+test reg -l 'foo=(foo+1);true' --format '[%(foo)]\n' -> 1
+__ERROR__
+While calculating format expression:
+  foo
+While evaluating value expression:
+  foo
+  ^^^
+While handling posting from "$FILE", line 9:
+>     Expenses:Food                  $50.00
+Error: Unknown identifier 'foo'
+end test
+
+test reg -l 'foo=(foo+1);true' -d 'foo==1' --format '%(account)\n' -> 1
+__ERROR__
+While evaluating value expression:
+  (foo == 1)
+   ^^^
+While handling posting from "$FILE", line 9:
+>     Expenses:Food                  $50.00
+Error: Unknown identifier 'foo'
+end test
+
+test reg --format '[%(c)]\n' -> 1
+__ERROR__
+While calculating format expression:
+  c
+While evaluating value expression:
+  c
+  ^
+While handling posting from "$FILE", line 9:
+>     Expenses:Food                  $50.00
+Error: Unknown identifier 'c'
+end test

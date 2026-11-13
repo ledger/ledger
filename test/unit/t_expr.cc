@@ -4813,6 +4813,69 @@ BOOST_AUTO_TEST_CASE(testMergedExprSemicolonOperator)
   BOOST_CHECK_NO_THROW(merged.compile(scope));
 }
 
+BOOST_AUTO_TEST_CASE(testSelfReferentialDefineStaysInExpression)
+{
+  symbol_scope_t scope(*scope_t::empty_scope);
+
+  expr_t counter("n = n + 1; n");
+  BOOST_CHECK(counter.calc(scope) == value_t(1L));
+  BOOST_CHECK(counter.calc(scope) == value_t(2L));
+  // The accumulator lives in counter's own scope, not in the caller's.
+  BOOST_CHECK(!scope.lookup(symbol_t::FUNCTION, "n"));
+
+  // A definition that does not mention itself is still shared.
+  expr_t shared("m = 5; true");
+  shared.calc(scope);
+  BOOST_CHECK(scope.lookup(symbol_t::FUNCTION, "m"));
+}
+
+BOOST_AUTO_TEST_CASE(testAssignedCompiledExprReadsAccumulatorAsNull)
+{
+  symbol_scope_t scope(*scope_t::empty_scope);
+
+  expr_t original("n = n + 1; n");
+  BOOST_CHECK(original.calc(scope) == value_t(1L));
+
+  // A copy has a fresh accumulator and must declare it again: its first
+  // read of n is null, not an unknown identifier.
+  expr_t assigned;
+  assigned = original;
+  BOOST_CHECK(assigned.calc(scope) == value_t(1L));
+  BOOST_CHECK(assigned.calc(scope) == value_t(2L));
+  BOOST_CHECK(original.calc(scope) == value_t(2L));
+}
+
+BOOST_AUTO_TEST_CASE(testRecompileKeepsRunningAccumulator)
+{
+  symbol_scope_t scope(*scope_t::empty_scope);
+
+  expr_t counter("n = n + 1; n");
+  BOOST_CHECK(counter.calc(scope) == value_t(1L));
+  BOOST_CHECK(counter.calc(scope) == value_t(2L));
+
+  // journal_t::check_tag and the --group-by filters recompile a plain
+  // expression between uses; the running value must survive and the name
+  // must still not reach the caller's scope.
+  counter.mark_uncompiled();
+  BOOST_CHECK(counter.calc(scope) == value_t(3L));
+  BOOST_CHECK(counter.calc(scope) == value_t(4L));
+  counter.mark_uncompiled();
+  BOOST_CHECK(counter.calc(scope) == value_t(5L));
+  BOOST_CHECK(!scope.lookup(symbol_t::FUNCTION, "n"));
+}
+
+BOOST_AUTO_TEST_CASE(testMergedExprCompileKeepsCallerContext)
+{
+  merged_expr_t merged("total", "amount", ";");
+  merged.append("amount * 3");
+
+  symbol_scope_t scope(*scope_t::empty_scope);
+  merged.compile(scope);
+  // compile() must record the caller's scope, never its own stack-local
+  // lexical wrapper.
+  BOOST_CHECK(merged.get_context() == &scope);
+}
+
 // =======================================================================
 // Coverage: exprbase.h - context_to_str base class (line 189)
 // =======================================================================

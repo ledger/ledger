@@ -1,0 +1,27 @@
+; A tag assertion is re-marked uncompiled before every check, so its
+; accumulator must keep counting across the checks: the third tagged
+; transaction is the first to see n = 3 and fails the assertion.
+
+tag Seq
+    assert (n = n + 1; n < 3)
+
+2024/01/05 * Grocery
+    ; Seq: a
+    Expenses:Food                  $50.00
+    Assets:Checking
+
+2024/01/10 * Coffee
+    ; Seq: b
+    Expenses:Food                   $5.00
+    Assets:Checking
+
+2024/01/12 * Tea
+    ; Seq: c
+    Expenses:Food                   $3.00
+    Assets:Checking
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 18:
+Error: Metadata assertion failed for (Seq: c): (n = (n + {1}); (n < {3}))
+end test

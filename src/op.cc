@@ -173,13 +173,14 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth, scope_t*
     if (def && def->kind != PLUG) {
       // Identifier references are first looked up at the point of
       // definition, and then at the point of every use if they could
-      // not be found there.  We skip PLUG sentinels here so that
-      // identifiers declared by O_DEFINE (which temporarily store PLUG
-      // during compilation to prevent recursion) remain as dynamic
-      // IDENT nodes that do a fresh scope lookup at runtime.  This
-      // allows accumulator patterns like biggest=max(amount,biggest);biggest
-      // to read the running accumulated value each time rather than
-      // always returning NULL (the value of PLUG).
+      // not be found there.  We skip PLUG sentinels here -- the ones
+      // declared for lambda parameters and for accumulators (a
+      // self-referential O_DEFINE) -- so that those identifiers remain
+      // dynamic IDENT nodes that do a fresh scope lookup at runtime.
+      // This allows accumulator patterns like
+      // biggest=max(amount,biggest);biggest to read the running
+      // accumulated value each time rather than always returning NULL
+      // (the value of PLUG).
       //
       // When compiling inside a lambda/function body (param_scope is
       // non-null), only inline identifiers found in the parameter scope.
@@ -229,7 +230,11 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth, scope_t*
         // IDENT.  This is the accumulator pattern (e.g. biggest=max(a,biggest)).
         // Store a PLUG sentinel so that first-use returns NULL (pre-accumulation)
         // and keep the O_DEFINE node alive so it evaluates the RHS and stores
-        // the updated value each time this expression is evaluated.
+        // the updated value each time this expression is evaluated.  The
+        // PLUG goes wherever the compile scope sends a sentinel:
+        // expr_t::compile hands over a scope that sends it to the
+        // expression's own accumulator scope, so it never reaches the
+        // caller's scope and no other expression can see the name.
         DEBUG("expr.compile",
               "Declaring (PLUG, self-referential) " << var_name << " in " << scope_ptr);
         scope_ptr->define(symbol_t::FUNCTION, var_name, new op_t(PLUG));
@@ -238,8 +243,8 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth, scope_t*
         // Non-self-referential: standard define.  Store the compiled RHS as
         // the variable definition so that subsequent IDENT references to this
         // variable can be resolved (and potentially inlined) at compile time.
-        // The O_DEFINE node is replaced by NULL_VALUE at runtime (no side
-        // effect needed since the value is captured at compile time).
+        // The O_DEFINE node is replaced by NULL_VALUE here at compile time;
+        // the definition is the side effect.
         DEBUG("expr.compile", "Defining " << var_name << " in " << scope_ptr);
         scope_ptr->define(symbol_t::FUNCTION, var_name, rhs);
         // result stays null -> will be wrapped as NULL_VALUE at the end
