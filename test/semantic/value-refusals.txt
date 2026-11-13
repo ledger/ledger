@@ -56,6 +56,8 @@ spec-form	test/regress/cov3-value-exchange-selective.test
 spec-form	test/regress/coverage-value-cc-exchange-src.test
 spec-form	test/regress/coverage-value-exchange-bal-unknown-source.test
 spec-form	test/regress/coverage-value-exchange-unknown-source.test
+spec-form	test/regress/exchange-forced-single-target.test
+spec-form	test/regress/exchange-spec-entries.test
 spec-form	test/regress/unrealized-unconvertible-cost.test
 time-unit	test/regress/1018.test
 value-expression	test/baseline/opt-value-expr.test

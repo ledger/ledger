@@ -1,8 +1,8 @@
-; Coverage for value.cc
-; When --exchange specifies source:target and the source commodity is
-; not found, sources[index] is nullptr. For a BALANCE value this
-; exercises the nullptr source branch where should_convert falls through
-; to the non-source path
+; --exchange with a source:target entry whose source the commodity pool
+; does not know leaves a balance unconverted: FAKE names no commodity,
+; so the entry matches none of the balance's components.  An unknown
+; source used to lift the entry's restriction and convert every
+; component of the balance to EUR.
 
 2024/01/01 Test
     Expenses:Food    $100.00
@@ -12,10 +12,12 @@
 P 2024/01/01 $ 0.90 EUR
 
 test bal --exchange FAKE:EUR
-         -140.00 EUR  Assets:Cash
-          140.00 EUR  Expenses
+            $-100.00
+          -50.00 EUR  Assets:Cash
+             $100.00
+           50.00 EUR  Expenses
            50.00 EUR    Drink
-           90.00 EUR    Food
+             $100.00    Food
 --------------------
                    0
 end test

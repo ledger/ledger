@@ -1,0 +1,120 @@
+; -X/--exchange with several entries converts each component of a
+; balance with the first entry that matches it and can price it, so a
+; balance's total agrees with its rows and a register needs no
+; <Adjustment> to reconcile them.  An A:B entry whose source A the
+; commodity pool does not know (a typo such as XYZ or Eur) converts
+; nothing; its target B still counts as a listed target.  Spaces around
+; a source name are ignored, as they are around a target name.
+
+commodity CHF
+    format 1.00 CHF
+
+P 2024/01/01 EUR $2
+P 2024/01/01 GBP $3
+P 2024/01/01 CCC $5
+P 2024/01/01 DDD 4 CHF
+
+2024/01/05 Opening
+    Assets:A                  10 EUR
+    Assets:B                  10 GBP
+    Equity
+
+2024/01/06 Other
+    Other:C                   10 CCC
+    Other:D                   10 DDD
+    Equity
+
+2024/01/07 Mixed
+    Mixed                     $5
+    Mixed                     10 EUR
+    Equity
+
+test bal Assets -X 'XYZ:$'
+              10 EUR
+              10 GBP  Assets
+              10 EUR    A
+              10 GBP    B
+--------------------
+              10 EUR
+              10 GBP
+end test
+
+test bal Assets -X 'Eur:$'
+              10 EUR
+              10 GBP  Assets
+              10 EUR    A
+              10 GBP    B
+--------------------
+              10 EUR
+              10 GBP
+end test
+
+test bal Assets -X 'EUR:$'
+                 $20
+              10 GBP  Assets
+                 $20    A
+              10 GBP    B
+--------------------
+                 $20
+              10 GBP
+end test
+
+test bal Assets -X 'EUR:$,GBP:$'
+                 $50  Assets
+                 $20    A
+                 $30    B
+--------------------
+                 $50
+end test
+
+test bal Assets -X 'GBP:$,EUR:$'
+                 $50  Assets
+                 $20    A
+                 $30    B
+--------------------
+                 $50
+end test
+
+test bal Assets -X 'EUR:$, GBP:$'
+                 $50  Assets
+                 $20    A
+                 $30    B
+--------------------
+                 $50
+end test
+
+test reg Assets -X 'EUR:$,GBP:$'
+24-Jan-05 Opening               Assets:A                        $20          $20
+                                Assets:B                        $30          $50
+end test
+
+test bal Other -X '$,CHF'
+                 $50
+           40.00 CHF  Other
+                 $50    C
+           40.00 CHF    D
+--------------------
+                 $50
+           40.00 CHF
+end test
+
+test bal Other -X 'CHF,$'
+                 $50
+           40.00 CHF  Other
+                 $50    C
+           40.00 CHF    D
+--------------------
+                 $50
+           40.00 CHF
+end test
+
+test reg Other -X '$,CHF'
+24-Jan-06 Other                 Other:C                         $50          $50
+                                Other:D                   40.00 CHF          $50
+                                                                       40.00 CHF
+end test
+
+test bal Mixed -X 'XYZ:$,EUR'
+                  $5
+              10 EUR  Mixed
+end test

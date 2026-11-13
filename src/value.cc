@@ -2019,42 +2019,21 @@ value_t value_t::value(const datetime_t& moment, const commodity_t* in_terms_of)
   return NULL_VALUE;
 }
 
-/// @brief Convert commodities according to a comma-separated exchange spec.
-///
-/// This implements the `--exchange COMM1,COMM2` command-line option.  The
-/// @p commodities string is parsed as a comma-separated list where each
-/// entry may be:
-///   - "USD"     -- convert everything to USD
-///   - "EUR:USD" -- convert only EUR to USD, leave other commodities alone
-///   - "USD!"    -- force conversion even if the value is already in USD
-///   - "=expr"   -- use a price expression instead of a commodity name
-///
-/// For a simple single-commodity target with no special syntax (no comma,
-/// colon, or equals sign), this method shortcuts to value() for efficiency.
-///
-/// For BALANCE values, each component amount is examined individually:
-/// amounts matching a source specifier (or not matching any target
-/// commodity) are repriced; others are kept as-is.
-value_t value_t::exchange_commodities(const std::string& commodities, const bool add_prices,
-                                      const datetime_t& moment) {
-  if (type() == SEQUENCE) {
-    value_t temp;
-    for (value_t& value : as_sequence_lval())
-      temp.push_back(value.exchange_commodities(commodities, add_prices, moment));
-    return temp;
-  }
+namespace {
 
-  // If we are repricing to just a single commodity, with no price
-  // expression, skip the expensive logic below.
-  if (commodities.find(',') == string::npos && commodities.find('=') == string::npos &&
-      commodities.find(':') == string::npos)
-    return value(moment, commodity_pool_t::current_pool->find_or_create(commodities));
+/// One entry of an `--exchange` specification.
+struct exchange_entry_t {
+  const commodity_t* target; ///< The referent of the entry's target commodity B.
+  bool selective;            ///< True when the entry was written `A:B` with a non-empty A.
+  const commodity_t* source; ///< The referent of A; nullptr (matching nothing) when unknown.
+  bool forced;               ///< True when the target carried a trailing `!`.
+};
 
-  // Phase 1: Parse the comma-separated commodity spec into parallel vectors
-  // of target commodities, optional source commodities, and force flags.
-  std::vector<commodity_t*> comms;
-  std::vector<commodity_t*> sources;
-  std::vector<bool> force;
+/// Parse a comma-separated exchange spec into its entries.  An entry whose
+/// target parse_price_expression() rejects is skipped.
+std::vector<exchange_entry_t> parse_exchange_spec(const string& commodities, const bool add_prices,
+                                                  const datetime_t& moment) {
+  std::vector<exchange_entry_t> entries;
 
   std::vector<string> tokens;
   boost::split(tokens, commodities, boost::is_any_of(","));
@@ -2066,9 +2045,10 @@ value_t value_t::exchange_commodities(const std::string& commodities, const bool
     // Handle A:B syntax for selective conversion (convert A to B only)
     string::size_type colon_pos = name.find(':');
     if (colon_pos != string::npos) {
-      source_name = string(name, 0, colon_pos);
+      source_name = boost::trim_copy(string(name, 0, colon_pos));
       target_name = string(name, colon_pos + 1);
     }
+    bool selective = !source_name.empty();
 
     string::size_type name_len = target_name.length();
     bool is_forced = name_len > 0 && target_name[name_len - 1] == '!';
@@ -2077,94 +2057,118 @@ value_t value_t::exchange_commodities(const std::string& commodities, const bool
     if (commodity_t* commodity =
             commodity_pool_t::current_pool->parse_price_expression(expr_name, add_prices, moment)) {
       DEBUG("commodity.exchange", "Pricing for commodity: " << commodity->symbol());
-      comms.push_back(&commodity->referent());
-      force.push_back(is_forced);
-
-      if (!source_name.empty()) {
-        if (commodity_t* src = commodity_pool_t::current_pool->find(source_name))
-          sources.push_back(&src->referent());
-        else
-          sources.push_back(nullptr);
-      } else {
-        sources.push_back(nullptr);
-      }
+      commodity_t* src = selective ? commodity_pool_t::current_pool->find(source_name) : nullptr;
+      entries.push_back(
+          {&commodity->referent(), selective, src ? &src->referent() : nullptr, is_forced});
     }
   }
 
-  // Phase 2: Apply each target commodity to this value.  For AMOUNT, we
-  // reprice directly.  For BALANCE, we iterate over each component amount
-  // and selectively reprice based on the source/force constraints.
-  std::size_t index = 0;
-  for (commodity_t* comm : comms) {
-    switch (type()) {
-    case AMOUNT:
-      DEBUG("commodity.exchange", "We have an amount: " << as_amount_lval());
-      if (sources[index]) {
-        // A:B syntax: only convert if the amount is commodity A
-        if (&as_amount_lval().commodity().referent() != sources[index])
-          break;
-      } else if (!force[index] &&
-                 std::find(comms.begin(), comms.end(), &as_amount_lval().commodity().referent()) !=
-                     comms.end()) {
-        break;
-      }
+  return entries;
+}
 
-      DEBUG("commodity.exchange", "Referent doesn't match, pricing...");
-      if (auto val = as_amount_lval().value(moment, comm)) {
-        DEBUG("commodity.exchange", "Re-priced amount is: " << *val);
-        return *val;
-      }
-      DEBUG("commodity.exchange", "Was unable to find a price");
-      break;
+/// Price @p amount with the first entry that matches it and can price it.
+/// An `A:B` entry matches only amounts whose referent is A; any other entry
+/// matches an amount not already in a listed target, or any amount when
+/// forced.
+std::optional<amount_t> exchange_amount(const amount_t& amount,
+                                        const std::vector<exchange_entry_t>& entries,
+                                        const datetime_t& moment) {
+  const commodity_t* referent = &amount.commodity().referent();
+  bool in_a_target = std::any_of(entries.begin(), entries.end(),
+                                 [&](const exchange_entry_t& e) { return e.target == referent; });
+  for (const exchange_entry_t& entry : entries) {
+    bool matches = entry.selective ? entry.source == referent : entry.forced || !in_a_target;
+    if (!matches)
+      continue;
+    if (auto val = amount.value(moment, entry.target))
+      return val;
+  }
+  return std::nullopt;
+}
 
-    case BALANCE: {
-      balance_t temp;
-      bool repriced = false;
+} // namespace
 
-      DEBUG("commodity.exchange", "We have a balance: " << as_balance_lval());
-      auto reprice = [&](const amount_t& amount) {
-        DEBUG("commodity.exchange",
-              "We have a balance amount of commodity: " << amount.commodity().symbol());
-        bool should_convert;
-        if (sources[index]) {
-          // A:B syntax: only convert if the amount is commodity A
-          should_convert = (&amount.commodity().referent() == sources[index]);
-        } else {
-          should_convert = force[index] || std::find(comms.begin(), comms.end(),
-                                                     &amount.commodity().referent()) == comms.end();
-        }
+/// @brief Convert commodities according to a comma-separated exchange spec.
+///
+/// This implements the `--exchange COMM1,COMM2` command-line option.  The
+/// @p commodities string is parsed as a comma-separated list where each
+/// entry may be:
+///   - "USD"     -- convert everything to USD
+///   - "EUR:USD" -- convert only EUR to USD, leave other commodities alone
+///   - "USD!"    -- force conversion even if the value is already in USD
+///   - "=expr"   -- use a price expression instead of a commodity name
+///
+/// For a simple single-commodity target with no special syntax (no comma,
+/// colon, or equals sign), this method drops a trailing `!` (forcing a lone
+/// target changes nothing) and shortcuts to value() for efficiency.
+///
+/// Each AMOUNT, and each component of a BALANCE, is converted by the first
+/// entry that matches it and can price it.  An `A:B` entry matches only
+/// amounts in commodity A, and matches nothing when the commodity pool does
+/// not know A; any other entry matches an amount that is not already in one
+/// of the listed target commodities, or any amount when it is forced.
+/// Components no entry converts are kept as they are.
+value_t value_t::exchange_commodities(const std::string& commodities, const bool add_prices,
+                                      const datetime_t& moment) const {
+  if (type() == SEQUENCE) {
+    value_t temp;
+    for (const value_t& value : as_sequence())
+      temp.push_back(value.exchange_commodities(commodities, add_prices, moment));
+    return temp;
+  }
 
-        // Components priced into one commodity collapse: merge() keeps the
-        // result independent of the map's order.
-        if (!should_convert) {
-          temp.merge(amount);
-        } else {
-          DEBUG("commodity.exchange", "Referent doesn't match, pricing...");
-          if (auto val = amount.value(moment, comm)) {
-            DEBUG("commodity.exchange", "Re-priced member amount is: " << *val);
-            temp.merge(*val);
-            repriced = true;
-          } else {
-            DEBUG("commodity.exchange", "Was unable to find price");
-            temp.merge(amount);
-          }
-        }
-      };
-      // The map's order is a hash order: visit_components() makes a
-      // valuation error name the same component on every run.
-      as_balance().visit_components(reprice);
+  // If we are repricing to just a single commodity, with no price
+  // expression, skip the expensive logic below.  With one target, forcing
+  // changes nothing: an amount already in the target converts to itself.
+  if (commodities.find_first_of(",=:") == string::npos) {
+    string target(commodities);
+    if (!target.empty() && target.back() == '!')
+      target.pop_back();
+    return value(moment, commodity_pool_t::current_pool->find_or_create(target));
+  }
 
-      if (repriced) {
-        DEBUG("commodity.exchange", "Re-priced balance is: " << temp);
-        return temp;
-      }
+  // Parse whatever the value's type: a caller may convert a plain integer
+  // only to record the spec's `=price` entries.
+  std::vector<exchange_entry_t> entries = parse_exchange_spec(commodities, add_prices, moment);
+
+  switch (type()) {
+  case AMOUNT:
+    DEBUG("commodity.exchange", "We have an amount: " << as_amount());
+    if (auto val = exchange_amount(as_amount(), entries, moment)) {
+      DEBUG("commodity.exchange", "Re-priced amount is: " << *val);
+      return *val;
     }
+    break;
 
-    default:
-      break;
+  case BALANCE: {
+    balance_t temp;
+    bool repriced = false;
+
+    DEBUG("commodity.exchange", "We have a balance: " << as_balance());
+    // Components priced into one commodity collapse: merge() keeps the
+    // result independent of the map's order.
+    auto reprice = [&](const amount_t& amount) {
+      if (auto val = exchange_amount(amount, entries, moment)) {
+        DEBUG("commodity.exchange", "Re-priced member amount is: " << *val);
+        temp.merge(*val);
+        repriced = true;
+      } else {
+        temp.merge(amount);
+      }
+    };
+    // The map's order is a hash order: visit_components() makes a
+    // valuation error name the same component on every run.
+    as_balance().visit_components(reprice);
+
+    if (repriced) {
+      DEBUG("commodity.exchange", "Re-priced balance is: " << temp);
+      return temp;
     }
+    break;
+  }
 
-    ++index;
+  default:
+    break;
   }
 
   return *this;

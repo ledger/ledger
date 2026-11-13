@@ -3182,6 +3182,16 @@ BOOST_AUTO_TEST_CASE(testExchangeCommoditiesStringThrows)
   BOOST_CHECK_THROW(v1.exchange_commodities("EUR"), value_error);
 }
 
+BOOST_AUTO_TEST_CASE(testExchangeCommoditiesForcedLoneTarget)
+{
+  value_t v1(amount_t("2 AAPL"));
+  // No price exists, so the plain target yields NULL_VALUE; a lone
+  // forced target must yield the same and must not create "USD!".
+  BOOST_CHECK(v1.exchange_commodities("USD").is_null());
+  BOOST_CHECK(v1.exchange_commodities("USD!").is_null());
+  BOOST_CHECK(commodity_pool_t::current_pool->find("USD!") == nullptr);
+}
+
 // ---------------------------------------------------------------------------
 // put_value XML output tests (covering lines 2192-2237 of value.cc)
 // ---------------------------------------------------------------------------

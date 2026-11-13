@@ -547,10 +547,11 @@ public:
   /// conversion even when the amount is already in one of the listed target
   /// commodities.
   ///
-  /// For a simple single-commodity target with no special syntax, this
-  /// delegates to value() for efficiency.  For complex expressions, it
-  /// parses the specification and reprices each component of an AMOUNT or
-  /// BALANCE individually.
+  /// For a single target with no comma, colon or equals sign, this drops a
+  /// trailing `!` (forcing a lone target changes nothing) and delegates to
+  /// value() for efficiency.  Otherwise it parses the specification and
+  /// converts an AMOUNT, or each component of a BALANCE, with the first
+  /// entry that matches it and can price it.
   ///
   /// @param commodities  Comma-separated exchange specification string.
   /// @param add_prices   If true, record discovered prices in the price
@@ -558,7 +559,7 @@ public:
   /// @param moment       The point in time for price lookup.
   /// @return The repriced value.
   value_t exchange_commodities(const std::string& commodities, const bool add_prices = false,
-                               const datetime_t& moment = datetime_t());
+                               const datetime_t& moment = datetime_t()) const;
 
   /**
    * Truth tests.
