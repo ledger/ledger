@@ -239,18 +239,26 @@ string query_t::lexer_t::scan_identifier(token_t::kind_t tok_context, bool consu
 
 /// Match a completed identifier string against known query keywords.
 /// If the identifier is a keyword, return the corresponding token;
-/// otherwise return a TERM token containing the identifier text.
+/// otherwise return a TERM token containing the identifier text.  When
+/// multiple_args is true and the identifier holds whitespace, only its
+/// first word is matched: if that word is a keyword, the keyword is
+/// returned and the rest of the identifier is scanned again as though it
+/// were the next argument.
 query_t::lexer_t::token_t query_t::lexer_t::match_keyword(const string& ident,
                                                           string::const_iterator ident_start) {
-  // When multiple_args is true, whitespace is included in identifiers, so
-  // "expr foo" may be read as a single token instead of recognizing "expr"
-  // as a keyword.  Detect this case and rewind arg_i to after the keyword
-  // so the remainder is consumed as the expression argument.
-  if (multiple_args && ident.size() > 4 && ident.substr(0, 4) == "expr" &&
-      (ident[4] == ' ' || ident[4] == '\t')) {
-    arg_i = ident_start + 4;
-    consume_next_arg = true;
-    return token_t(token_t::TOK_EXPR);
+  // When multiple_args is true, whitespace is part of an identifier, so a
+  // single argument such as "payee Book" arrives whole.  If its first word
+  // is a keyword, return that keyword and rewind arg_i to just after it so
+  // the rest is scanned as though it were the next argument.
+  if (multiple_args) {
+    const std::size_t word_end = ident.find_first_of(" \t\r\n");
+    if (word_end != string::npos) {
+      token_t tok = match_keyword(ident.substr(0, word_end), ident_start);
+      if (tok.kind != token_t::TERM) {
+        arg_i = ident_start + static_cast<std::ptrdiff_t>(word_end);
+        return tok;
+      }
+    }
   }
 
   // NOLINTBEGIN(bugprone-branch-clone)

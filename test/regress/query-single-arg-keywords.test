@@ -1,0 +1,59 @@
+; A query given as one shell argument recognises a keyword at its start,
+; just as it does when the keyword is a separate argument; a pattern
+; whose first word is not a keyword keeps its whitespace.
+
+2024/01/01 Book Store
+    Expenses:Books               $20.00
+    Assets:Petty Cash
+
+2024/01/02 Grocer
+    Expenses:Food                $10.00
+    Assets:Checking
+
+test reg "payee Book"
+24-Jan-01 Book Store            Expenses:Books               $20.00       $20.00
+                                Assets:Petty Cash           $-20.00            0
+end test
+
+test reg "payee  Book"
+24-Jan-01 Book Store            Expenses:Books               $20.00       $20.00
+                                Assets:Petty Cash           $-20.00            0
+end test
+
+test reg "not Books"
+24-Jan-01 Book Store            Assets:Petty Cash           $-20.00      $-20.00
+24-Jan-02 Grocer                Expenses:Food                $10.00      $-10.00
+                                Assets:Checking             $-10.00      $-20.00
+end test
+
+test reg "since 2024/01/02"
+24-Jan-02 Grocer                Expenses:Food                $10.00       $10.00
+                                Assets:Checking             $-10.00            0
+end test
+
+test reg "payee 'Book Store'"
+24-Jan-01 Book Store            Expenses:Books               $20.00       $20.00
+                                Assets:Petty Cash           $-20.00            0
+end test
+
+test reg "expr 'Book Store' == payee"
+24-Jan-01 Book Store            Expenses:Books               $20.00       $20.00
+                                Assets:Petty Cash           $-20.00            0
+end test
+
+test reg 'expr "Grocer" == payee'
+24-Jan-02 Grocer                Expenses:Food                $10.00       $10.00
+                                Assets:Checking             $-10.00            0
+end test
+
+test reg "expr payee=~/Book/"
+24-Jan-01 Book Store            Expenses:Books               $20.00       $20.00
+                                Assets:Petty Cash           $-20.00            0
+end test
+
+test reg "Petty Cash"
+24-Jan-01 Book Store            Assets:Petty Cash           $-20.00      $-20.00
+end test
+
+test reg "payee Book or Food"
+end test
