@@ -150,7 +150,7 @@ value_t select_command(call_scope_t& args) {
 
   // Pre-check whether this is an accounts report, because the "account"
   // column formatting differs for account-oriented vs. posting-oriented output.
-  boost::regex from_accounts_re("from\\s+accounts\\>");
+  boost::regex from_accounts_re("from\\s+accounts\\>", boost::regex::perl | boost::regex::icase);
   bool accounts_report = boost::regex_search(text, from_accounts_re);
 
   boost::sregex_iterator m1(text.begin(), text.end(), select_re);
@@ -164,7 +164,10 @@ value_t select_command(call_scope_t& args) {
   while (m1 != m2) {
     const boost::match_results<string::const_iterator>& match(*m1);
 
-    string keyword(match[1]);
+    // select_re accepts any case and any whitespace run inside "group by";
+    // normalize so the dispatch below sees one spelling.
+    const string keyword = boost::regex_replace(boost::algorithm::to_lower_copy(string(match[1])),
+                                                boost::regex("\\s+"), string(" "));
     string arg(match[2]);
 
     DEBUG("select.parse", "keyword: " << keyword);
@@ -412,21 +415,22 @@ value_t select_command(call_scope_t& args) {
     } else if (keyword == "from") {
       /*--- FROM clause: select the data source and report functor ---*/
 
+      const string source = boost::algorithm::to_lower_copy(arg);
       // NOLINTBEGIN(bugprone-branch-clone)
-      if (arg == "xacts" || arg == "txns" || arg == "transactions") {
+      if (source == "xacts" || source == "txns" || source == "transactions") {
         report_functor = expr_t::op_t::wrap_functor(
             reporter<>(post_handler_ptr(new print_xacts(report, report.HANDLED(raw))), report,
                        string("#select")));
-      } else if (arg == "posts" || arg == "postings") {
+      } else if (source == "posts" || source == "postings") {
         report_functor = expr_t::op_t::wrap_functor(
             reporter<>(post_handler_ptr(new format_posts(report, formatter.str())), report,
                        string("#select")));
-      } else if (arg == "accounts") {
+      } else if (source == "accounts") {
         report_functor = expr_t::op_t::wrap_functor(
             reporter<account_t, acct_handler_ptr, &report_t::accounts_report>(
                 acct_handler_ptr(new format_accounts(report, formatter.str())), report,
                 string("#select")));
-      } else if (arg == "commodities") {
+      } else if (source == "commodities") {
         report_functor = expr_t::op_t::wrap_functor(
             reporter<post_t, post_handler_ptr, &report_t::commodities_report>(
                 post_handler_ptr(new format_posts(report, formatter.str())), report,

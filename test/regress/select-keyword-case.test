@@ -1,0 +1,61 @@
+; select matches its clause keywords case-insensitively and allows any
+; run of whitespace inside GROUP BY, but used to dispatch on the exact
+; lower-case spelling: WHERE, FROM, DISPLAY, COLLECT and "group  by"
+; were recognized and then silently ignored.  Every spelling the
+; keyword pattern accepts now takes its clause, and FROM's argument is
+; matched without regard to case.
+
+2024/01/01 Landlord
+    Expenses:Rent    $500.00
+    Assets:Checking
+
+2024/01/02 Grocer
+    Expenses:Food    $40.00
+    Assets:Checking
+
+test select 'account, amount from posts WHERE account =~ /Rent/'
+Expenses:Rent                                                           $500.00
+end test
+
+test select 'account, amount FROM posts Where account =~ /Rent/'
+Expenses:Rent                                                           $500.00
+end test
+
+test select 'account FROM ACCOUNTS'
+Assets:Checking
+Expenses
+Food
+Rent
+
+end test
+
+test select 'account, amount from postings DISPLAY account =~ /Food/'
+Expenses:Food                                                            $40.00
+end test
+
+test select 'account, amount COLLECT amount * 2'
+Expenses:Rent                                                          $1000.00
+Assets:Checking                                                       $-1000.00
+Expenses:Food                                                            $80.00
+Assets:Checking                                                         $-80.00
+end test
+
+test select 'payee, amount GROUP BY payee'
+Grocer
+Grocer                                                                   $40.00
+Grocer                                                                  $-40.00
+
+Landlord
+Landlord                                                                $500.00
+Landlord                                                               $-500.00
+end test
+
+test select 'payee, amount group  by payee'
+Grocer
+Grocer                                                                   $40.00
+Grocer                                                                  $-40.00
+
+Landlord
+Landlord                                                                $500.00
+Landlord                                                               $-500.00
+end test
