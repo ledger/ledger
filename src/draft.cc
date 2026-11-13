@@ -566,32 +566,17 @@ xact_t* draft_t::insert(journal_t& journal) {
         if (post.account_mask) {
           DEBUG("draft.xact", "The template has an account mask");
 
-          account_t* acct = nullptr;
-          if (!acct) {
-            acct = journal.find_account_re(post.account_mask->str());
-#if DEBUG_ON
-            if (acct)
-              DEBUG("draft.xact", "Found account as a regular expression");
-#endif
-          }
-          if (!acct) {
+          account_t* acct = journal.find_account_re(post.account_mask->str());
+          if (!acct)
             acct = journal.find_account(post.account_mask->str());
-#if DEBUG_ON
-            if (acct)
-              DEBUG("draft.xact", "Found (or created) account by name");
-#endif
-          }
 
-          // Find out the default commodity to use by looking at the last
-          // commodity used in that account
-          for (xacts_list::reverse_iterator j = journal.xacts.rbegin(); j != journal.xacts.rend();
-               j++) {
-            for (post_t* x : (*j)->posts) {
-              if (x->account == acct && !x->amount.is_null()) {
-                new_post.reset(new post_t(*x));
-                DEBUG("draft.xact", "Found account in journal postings, setting new posting");
-                break;
-              }
+          // Take the default commodity (and, with no amount given, the
+          // amount) from the newest posting to that account.
+          for (auto j = acct->posts.rbegin(); j != acct->posts.rend(); ++j) {
+            if (!(*j)->amount.is_null()) {
+              new_post.reset(new post_t(**j));
+              DEBUG("draft.xact", "Found account in journal postings, setting new posting");
+              break;
             }
           }
 
@@ -611,7 +596,7 @@ xact_t* draft_t::insert(journal_t& journal) {
       assert(new_post->account);
 
       // Handle amount and commodity assignment
-      if (new_post.get() && !new_post->amount.is_null()) {
+      if (!new_post->amount.is_null()) {
         found_commodity = &new_post->amount.commodity().strip_annotations(keep_details_t());
 
         if (any_post_has_amount) {

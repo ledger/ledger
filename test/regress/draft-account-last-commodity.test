@@ -1,0 +1,27 @@
+; When the xact command names an account that the matched transaction
+; does not use, the drafted posting takes the commodity (and, with no
+; amount given, the amount) of the account's most recent posting.
+
+2024/01/01 Lunch
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/02/01 Dinner
+    Expenses:Food    20.00 EUR
+    Assets:Cash
+
+2024/02/15 Zebra Imports
+    Expenses:Misc    5 GBP
+    Assets:Cash
+
+test xact 2024/03/01 Zebra Food 7
+2024/03/01 Zebra Imports
+    Expenses:Food                           7.00 EUR
+    Assets:Cash
+end test
+
+test xact 2024/03/01 Zebra Expenses:Food
+2024/03/01 Zebra Imports
+    Expenses:Food                          20.00 EUR
+    Assets:Cash
+end test
