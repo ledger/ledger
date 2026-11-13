@@ -238,10 +238,14 @@ public:
    * This is the main entry point for registering an account name seen
    * during parsing.  Steps: (1) expand aliases, (2) find/create the
    * account in the tree, (3) map "Unknown" accounts to payee-based
-   * targets, (4) check against known_accounts for --strict/--pedantic,
-   * skipping template variables like $var and %(expr).
+   * targets, (4) check against known_accounts for --strict/--pedantic.
+   * Template variables ($var, %(expr)) are accepted in the postings of
+   * automated and periodic transactions (@p template_post), which resolve
+   * them when applied; any other posting's account is checked whatever its
+   * name.
    */
-  account_t* register_account(string_view name, post_t* post, account_t* master = nullptr);
+  account_t* register_account(string_view name, post_t* post, account_t* master = nullptr,
+                              bool template_post = false);
 
   /** @brief Register a payee name as known (for --strict validation). */
   string register_payee(const string& name);

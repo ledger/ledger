@@ -1,0 +1,31 @@
+; Automated and periodic transaction templates may name accounts with
+; $name or %(expr), which are resolved when the template is applied, so
+; --strict accepts them.  A literal unknown account in a template is
+; still reported.
+
+commodity $
+account Expenses:Groceries
+account Assets:Checking
+
+= /^Expenses:Groceries/
+    (Budget:$account)    -1.0
+    (Budget:Typo)         1.0
+
+~ Monthly
+    (Budget:$account)    $50.00
+
+2024/01/01 Store
+    Expenses:Groceries    $100.00
+    Assets:Checking
+
+test bal --strict
+            $-100.00  Assets:Checking
+                   0  Budget
+            $-100.00    Expenses:Groceries
+             $100.00    Typo
+             $100.00  Expenses:Groceries
+--------------------
+                   0
+__ERROR__
+Warning: "$FILE", line 12: Unknown account 'Budget:Typo'
+end test

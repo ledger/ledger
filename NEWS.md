@@ -390,6 +390,10 @@ components with their standard-library equivalents.
 
 ### Reporting and Display Improvements
 
+- `--strict` and `--pedantic` check the account of every posting in an
+  ordinary transaction, even one whose name contains `$name` or `%(`; only
+  automated and periodic transactions may use such template names unchecked.
+
 - `xact.any()` and `xact.all()` now honor an optional second argument of
   `false`, which leaves the current posting out of the test, as `any()` and
   `all()` already did.

@@ -568,7 +568,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
     DEBUG("textual.parse", "line " << context.linenum << ": "
                                    << "Parsed account name " << name);
 
-    post->account = context.journal->register_account(name, post.get(), account);
+    post->account = context.journal->register_account(name, post.get(), account, xact == nullptr);
 
     // Step 3: Parse the optional amount.
     // The amount may be a literal number (parsed by amount_t::parse) or a

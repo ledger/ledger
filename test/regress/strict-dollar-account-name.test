@@ -1,0 +1,33 @@
+; A posting in an ordinary transaction is checked under --strict and
+; --pedantic whatever its account name contains: only automated and
+; periodic transaction templates may name an account with $name or
+; %(expr), which is resolved when the template is applied.
+
+commodity $
+account Assets:Checking
+
+2024/01/01 Store
+    Expenses:$food    $10.00
+    Expenses:%(x)     $5.00
+    Assets:Checking
+
+test bal --strict
+             $-15.00  Assets:Checking
+              $15.00  Expenses
+              $10.00    $food
+               $5.00    %(x)
+--------------------
+                   0
+__ERROR__
+Warning: "$FILE", line 10: Unknown account 'Expenses:$food'
+Warning: "$FILE", line 11: Unknown account 'Expenses:%(x)'
+end test
+
+test bal --pedantic -> 1
+__ERROR__
+While parsing file "$FILE", line 10:
+While parsing posting:
+  Expenses:$food    $10.00
+
+Error: Unknown account 'Expenses:$food'
+end test

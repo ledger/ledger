@@ -163,10 +163,13 @@ std::vector<account_t*> journal_t::find_accounts_re(const string& regexp) {
  *   3. If the account is named "Unknown", check payees_for_unknown_accounts
  *      for a payee-based mapping to a real account.
  *   4. When --strict or --pedantic is active, verify the account is known.
- *      Template variables ($var, %(expr)) are silently accepted because they
- *      will be resolved at runtime by automated transactions.
+ *      Template variables ($var, %(expr)) are accepted in the postings of
+ *      automated and periodic transactions (@p template_post), which resolve
+ *      them when applied; any other posting's account is checked whatever
+ *      its name.
  */
-account_t* journal_t::register_account(string_view name, post_t* post, account_t* master_account) {
+account_t* journal_t::register_account(string_view name, post_t* post, account_t* master_account,
+                                       bool template_post) {
   // If there are any account aliases, substitute before creating an account
   // object.
   account_t* result = expand_aliases(string(name));
@@ -199,12 +202,13 @@ account_t* journal_t::register_account(string_view name, post_t* post, account_t
       else if (post->has_flags(ITEM_GENERATED)) {
         result->add_flags(ACCOUNT_KNOWN);
       } else {
-        // If the account name contains template variable references ($variable
-        // or %(expr)) used in automated transactions, it will be resolved at
-        // runtime, so mark it as known without warning (see issue #545).
+        // If a template posting's account name contains template variable
+        // references ($variable or %(expr)), it will be resolved when the
+        // automated or periodic transaction is applied, so mark it as known
+        // without warning (see issue #545).
         const string& fn = result->fullname();
-        bool has_template_var = contains(fn, "%(");
-        if (!has_template_var) {
+        bool has_template_var = template_post && contains(fn, "%(");
+        if (template_post && !has_template_var) {
           for (size_t i = 0; i + 1 < fn.size(); ++i) {
             if (fn[i] == '$' && (std::isalpha((unsigned char)fn[i + 1]) || fn[i + 1] == '_')) {
               has_template_var = true;
