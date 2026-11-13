@@ -1,0 +1,62 @@
+; --time-colon prints the fraction of an h or m amount in the next
+; smaller unit, rounded half up and zero-padded to the width of the
+; fraction.  A fraction of .9917 or more rounds to 60 of that unit, which
+; must carry into the integer part: 1.995h is 2:000h, never 1:060h.
+; The carry happens before the integer digits are counted and grouped,
+; so 999.995h becomes 1:000:000h (the ':' group separator is the
+; time-colon style pinned by cov9-time-colon-thousands.test), and it
+; keeps the sign and ripples through nines: -9.995h is -10:000h.
+
+2024/01/01 Work
+    Hours:One         1.995h
+    Hours:Two         2.999h
+    Equity
+
+2024/01/02 Refund
+    Hours:Three      -1.995h
+    Equity
+
+2024/01/03 Long
+    Big:Long        999.995h
+    Big:Mark      1,000.000h
+    Equity
+
+2024/01/04 Back
+    Neg:Nine         -9.995h
+    Equity
+
+test reg --time-colon Hours
+24-Jan-01 Work                  Hours:One                    2:000h       2:000h
+                                Hours:Two                    3:000h       5:000h
+24-Jan-02 Refund                Hours:Three                 -2:000h       3:000h
+end test
+
+test bal --time-colon Hours
+              3:000h  Hours
+              2:000h    One
+             -2:000h    Three
+              3:000h    Two
+--------------------
+              3:000h
+end test
+
+test bal --time-colon Big
+          2:000:000h  Big
+          1:000:000h    Long
+          1:000:000h    Mark
+--------------------
+          2:000:000h
+end test
+
+test bal --time-colon Neg
+            -10:000h  Neg:Nine
+end test
+
+test bal --flat --no-total Hours Big Neg
+            999.995h  Big:Long
+          1,000.000h  Big:Mark
+              1.995h  Hours:One
+             -1.995h  Hours:Three
+              2.999h  Hours:Two
+             -9.995h  Neg:Nine
+end test

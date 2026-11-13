@@ -355,6 +355,51 @@ void stream_out_mpq(std::ostream& out, mpq_t quant, amount_t::precision_t precis
     return;
   }
 
+  const bool decimal_comma =
+      commodity_t::decimal_comma_by_default || comm->has_flags(COMMODITY_STYLE_DECIMAL_COMMA);
+  const bool time_colon =
+      (("h" == comm->symbol() || "m" == comm->symbol()) &&
+       (commodity_t::time_colon_by_default || comm->has_flags(COMMODITY_STYLE_TIME_COLON)));
+
+  // Under time-colon notation the fraction becomes the next smaller time
+  // unit (0.50h -> 0:30h, meaning 30 min), rounded half up and padded with
+  // zeros to the width of the fraction.  This is done in GMP: --unround can
+  // show dozens of digits, which used to overflow a machine word.  The
+  // scratch integers of format_mpq_exact() are free again by now.  A
+  // fraction that rounds to 60 carries into the integer digits, which must
+  // happen before they are counted for digit grouping.
+  std::string minutes;
+  if (time_colon) {
+    const std::string::size_type point = digits.find('.');
+    if (point != std::string::npos) {
+      const std::string frac(digits, point + 1);
+      if (frac.empty())
+        mpz_set_ui(out_quot, 0);
+      else
+        mpz_set_str(out_quot, frac.c_str(), 10);
+      mpz_mul_ui(out_quot, out_quot, 60);
+      mpz_ui_pow_ui(out_scale, 10, frac.size());
+      mpz_fdiv_q_ui(out_rem, out_scale, 2);
+      mpz_add(out_quot, out_quot, out_rem);
+      mpz_fdiv_q(out_quot, out_quot, out_scale);
+      if (mpz_cmp_ui(out_quot, 60) == 0) {
+        mpz_set_ui(out_quot, 0);
+        std::string::size_type i = point;
+        while (i > 0 && digits[i - 1] == '9')
+          digits[--i] = '0';
+        if (i == 0 || digits[i - 1] == '-')
+          digits.insert(i, 1, '1');
+        else
+          ++digits[i - 1];
+      }
+      char* minutes_buf = mpz_get_str(nullptr, 10, out_quot);
+      minutes = minutes_buf;
+      std::free(minutes_buf);
+      if (minutes.size() < frac.size())
+        minutes.insert(0, frac.size() - minutes.size(), '0');
+    }
+  }
+
   int integer_digits = 0;
   if (comm->has_flags(COMMODITY_STYLE_THOUSANDS)) {
     // Count the number of integer digits
@@ -366,47 +411,14 @@ void stream_out_mpq(std::ostream& out, mpq_t quant, amount_t::precision_t precis
     }
   }
 
-  const bool decimal_comma =
-      commodity_t::decimal_comma_by_default || comm->has_flags(COMMODITY_STYLE_DECIMAL_COMMA);
-  const bool time_colon =
-      (("h" == comm->symbol() || "m" == comm->symbol()) &&
-       (commodity_t::time_colon_by_default || comm->has_flags(COMMODITY_STYLE_TIME_COLON)));
-
   std::string result;
   result.reserve(digits.size() + 8);
 
   for (const char* p = digits.c_str(); *p; p++) {
     if (*p == '.') {
       if (time_colon) {
-        // Convert decimal fraction of hours/minutes to the next
-        // smaller time unit (e.g. 0.50h -> 0:30h, meaning 30 min).
         result += ':';
-        // Parse the fractional digits and convert them to minutes, rounding
-        // half up, in GMP: --unround can show dozens of digits, which used
-        // to overflow a machine word.  The scratch integers of
-        // format_mpq_exact() are free again by now.
-        const char* frac_start = p + 1;
-        const char* frac_end = frac_start;
-        while (*frac_end >= '0' && *frac_end <= '9')
-          frac_end++;
-        const std::string frac(frac_start, frac_end);
-        if (frac.empty())
-          mpz_set_ui(out_quot, 0);
-        else
-          mpz_set_str(out_quot, frac.c_str(), 10);
-        mpz_mul_ui(out_quot, out_quot, 60);
-        mpz_ui_pow_ui(out_scale, 10, frac.size());
-        mpz_fdiv_q_ui(out_rem, out_scale, 2);
-        mpz_add(out_quot, out_quot, out_rem);
-        mpz_fdiv_q(out_quot, out_quot, out_scale);
-        char* minutes_buf = mpz_get_str(nullptr, 10, out_quot);
-        const std::string minutes_str(minutes_buf);
-        std::free(minutes_buf);
-        // Use the same number of digits as the original fraction, but at
-        // least enough to represent the minutes value.
-        if (minutes_str.size() < frac.size())
-          result.append(frac.size() - minutes_str.size(), '0');
-        result += minutes_str;
+        result += minutes;
         break; // fractional part fully handled
       } else if (decimal_comma) {
         result += ',';
