@@ -341,24 +341,30 @@ void instance_t::period_xact_directive(char* line) {
 
 xact_t* instance_t::xact_directive(char* line, std::streamsize len, xact_t* previous_xact) {
   TRACE_START(xacts, 2, "Time spent handling transactions:");
+  xact_t* added = nullptr;
 
-  if (xact_t* xact = parse_xact(line, len, top_account(), previous_xact)) {
-    unique_ptr<xact_t> manager(xact);
+  try {
+    if (xact_t* xact = parse_xact(line, len, top_account(), previous_xact)) {
+      unique_ptr<xact_t> manager(xact);
 
-    if (context.journal->add_xact(xact)) {
-      context.count++;
-      return manager.release(); // it's owned by the journal now
+      if (context.journal->add_xact(xact)) {
+        context.count++;
+        added = manager.release(); // it's owned by the journal now
+      }
+      // It's perfectly valid for the journal to reject the xact, which it
+      // will do if the xact has no substantive effect (for example, a
+      // checking xact, all of whose postings have null amounts).
+    } else {
+      throw parse_error(_("Failed to parse transaction"));
     }
-    // It's perfectly valid for the journal to reject the xact, which it
-    // will do if the xact has no substantive effect (for example, a
-    // checking xact, all of whose postings have null amounts).
-  } else {
-    throw parse_error(_("Failed to parse transaction"));
+  } catch (...) {
+    TRACE_STOP(xacts, 2);
+    throw;
   }
 
   TRACE_STOP(xacts, 2);
 
-  return nullptr;
+  return added;
 }
 
 /*--- Amount Expression Parsing ---*/
@@ -483,8 +489,6 @@ static balance_t compute_balance_diff(const amount_t& amt, post_t* post, xact_t*
 
 post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* account, xact_t* xact,
                                bool defer_expr) {
-  TRACE_START(post_details, 2, "Time spent parsing postings:");
-
   unique_ptr<post_t> post(new post_t);
 
   post->xact = xact; // this could be NULL (for automated/period xacts)
@@ -921,8 +925,6 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
     string post_payee = post->payee_from_tag();
     if (post_payee != "")
       post->set_payee(context.journal->validate_payee(post_payee));
-
-    TRACE_STOP(post_details, 2);
 
     return post.release();
 
