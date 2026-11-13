@@ -127,7 +127,10 @@ void output_stream_t::initialize(const optional<path>& output_file,
 
   // NOLINTBEGIN(bugprone-branch-clone)
   if (output_file && *output_file != "-") {
-    os = new ofstream(*output_file);
+    auto file = std::make_unique<ofstream>(*output_file);
+    if (!file->is_open())
+      throw_(std::runtime_error, _f("Cannot write to output file %1%") % *output_file);
+    os = file.release();
   } else if (pager_path && pager_path->string().find_first_not_of(" \t\r\n") != string::npos) {
 #if !defined(_WIN32) && !defined(__CYGWIN__)
     pipe_to_pager_fd = do_fork(&os, *pager_path, &pager_pid);
@@ -139,14 +142,14 @@ void output_stream_t::initialize(const optional<path>& output_file,
 }
 
 void output_stream_t::close() {
-  if (os == &std::cout)
+  if (os == &std::cout) {
     os->flush();
-#if !defined(_WIN32) && !defined(__CYGWIN__)
-  if (os != &std::cout) {
+  } else {
     checked_delete(os);
     os = &std::cout;
   }
 
+#if !defined(_WIN32) && !defined(__CYGWIN__)
   if (pipe_to_pager_fd != -1) {
     ::close(pipe_to_pager_fd);
     pipe_to_pager_fd = -1;

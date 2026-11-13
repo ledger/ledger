@@ -495,6 +495,10 @@ components with their standard-library equivalents.
   quoted arguments, a variable assignment or a pipe works; a blank pager now
   means no pager instead of discarding the report
 
+- Make `--output` to a file that cannot be opened an error (exit status 1) that
+  names the file, instead of silently discarding the report; close the
+  `--output` file on Windows too
+
 ### Filtering, Queries, and Aggregation
 
 - Rewrite the query parser as a documented recursive-descent parser with a
