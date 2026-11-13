@@ -38,7 +38,8 @@
  * registry of commodities), Commodity (individual currency/stock symbols),
  * AnnotatedCommodity (commodity with price/date/tag annotation), Annotation,
  * KeepDetails, and PricePoint.  CommodityPool supports dict-like access
- * (__getitem__, __contains__, keys, iteritems) and commodity exchange/pricing.
+ * (__getitem__, __contains__, has_key, keys, iteration over symbols,
+ * iterkeys, itervalues, iteritems) and commodity exchange/pricing.
  * This is the most complex binding file due to the breadth of the commodity
  * and annotation type system.
  */
@@ -152,13 +153,6 @@ bool py_pool_contains(commodity_pool_t& pool, const string& symbol) {
   return pool.commodities.find(symbol) != pool.commodities.end();
 }
 
-commodity_pool_t::commodities_map::iterator py_pool_commodities_begin(commodity_pool_t& pool) {
-  return pool.commodities.begin();
-}
-commodity_pool_t::commodities_map::iterator py_pool_commodities_end(commodity_pool_t& pool) {
-  return pool.commodities.end();
-}
-
 /*--- Pool Iterator Helpers ---*/
 
 /// Transform iterators that project the keys or values from the commodities
@@ -194,6 +188,26 @@ commodities_map_seconds_iterator py_pool_commodities_values_end(commodity_pool_t
       pool.commodities.end(),
       boost::bind(&std::shared_ptr<commodity_t>::get,
                   boost::bind(&commodity_pool_t::commodities_map::value_type::second, _1)));
+}
+
+/// (symbol, commodity) pairs for iteritems().  The Commodity in each tuple is
+/// a plain non-owning reference: unlike itervalues(), whose
+/// return_internal_reference keeps the pool alive, nothing ties it to the
+/// pool.  That is safe because the pool, commodity_pool_t::current_pool,
+/// lives for the whole session and so outlives any Python script.
+boost::python::tuple py_pool_item(commodity_pool_t::commodities_map::value_type& pair) {
+  return boost::python::make_tuple(pair.first, boost::python::ptr(pair.second.get()));
+}
+
+using commodities_map_items_iterator = transform_iterator<
+    function<boost::python::tuple(commodity_pool_t::commodities_map::value_type&)>,
+    commodity_pool_t::commodities_map::iterator>;
+
+commodities_map_items_iterator py_pool_commodities_items_begin(commodity_pool_t& pool) {
+  return commodities_map_items_iterator(pool.commodities.begin(), py_pool_item);
+}
+commodities_map_items_iterator py_pool_commodities_items_end(commodity_pool_t& pool) {
+  return commodities_map_items_iterator(pool.commodities.end(), py_pool_item);
 }
 
 /*--- Commodity Method Wrappers ---*/
@@ -306,16 +320,14 @@ void export_commodity() {
       .def("keys", py_pool_keys)
       .def("has_key", py_pool_contains)
       .def("__contains__", py_pool_contains)
-      .def("__iter__", boost::python::range<return_internal_reference<>>(py_pool_commodities_begin,
-                                                                         py_pool_commodities_end))
-      .def("iteritems", boost::python::range<return_internal_reference<>>(py_pool_commodities_begin,
-                                                                          py_pool_commodities_end))
+      .def("__iter__",
+           boost::python::range<>(py_pool_commodities_keys_begin, py_pool_commodities_keys_end))
+      .def("iteritems",
+           boost::python::range<>(py_pool_commodities_items_begin, py_pool_commodities_items_end))
       .def("iterkeys",
            boost::python::range<>(py_pool_commodities_keys_begin, py_pool_commodities_keys_end))
       .def("itervalues", boost::python::range<return_internal_reference<>>(
                              py_pool_commodities_values_begin, py_pool_commodities_values_end));
-
-  map_value_type_converter<commodity_pool_t::commodities_map>();
 
   scope().attr("commodities") = commodity_pool_t::current_pool;
 

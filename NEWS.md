@@ -658,6 +658,10 @@ components with their standard-library equivalents.
   gone from `Amount`, `Balance`, `Value`, `Expr`, `Annotation` and `Commodity`;
   use `bool(x)` or `x.is_nonzero()`
 
+- Make `ledger.commodities` iterable over its symbols, like a dict, and make
+  `ledger.commodities.iteritems()` yield `(symbol, Commodity)` pairs; both
+  raised `TypeError`
+
 ### New Commands and Directives
 
 - Add `payee-rewrite` and `account-rewrite` directives for report-time

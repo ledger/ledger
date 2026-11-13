@@ -45,9 +45,10 @@ def assertEqual(pat, candidate):
 # $123.56, while stock options could be output as 10.113 AAPL.
 #
 # Your program can access the known set of commodities using the global
-# `ledger.commodities'.  This object behaves like a dict, and support all of
-# the non-modifying dict protocol methods.  If you wish to create a new
-# commodity without parsing an amount, you can use the method
+# `ledger.commodities'.  This object behaves like a read-only dict keyed by
+# symbol: it supports `in', indexing, has_key(), keys(), iteration over the
+# symbols, iterkeys(), itervalues() and iteritems().  If you wish to create a
+# new commodity without parsing an amount, you can use the method
 # `find_or_create':
 
 comms = ledger.commodities
@@ -89,10 +90,10 @@ for symbol in comms.iterkeys():
     pass
 for commodity in comms.itervalues():
     pass
-#for symbol, commodity in comms.iteritems():
-#    pass
-#for symbol, commodity in comms:
-#    pass
+for symbol, commodity in comms.iteritems():
+    pass
+for symbol in comms:
+    pass
 
 # Another important thing about commodities is that they remember if they've
 # been exchanged for another commodity, and what the conversion rate was on
