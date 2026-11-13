@@ -808,7 +808,7 @@ bool print_cons(std::ostream& out, const expr_t::const_ptr_op_t& op,
   if (op->has_right()) {
     out << ", ";
     if (op->right()->kind == expr_t::op_t::O_CONS)
-      found = print_cons(out, op->right(), context);
+      found = print_cons(out, op->right(), context) || found;
     else if (op->right()->print(out, context))
       found = true;
   }
@@ -827,7 +827,7 @@ bool print_seq(std::ostream& out, const expr_t::const_ptr_op_t& op,
   if (op->has_right()) {
     out << "; ";
     if (op->right()->kind == expr_t::op_t::O_SEQ)
-      found = print_seq(out, op->right(), context);
+      found = print_seq(out, op->right(), context) || found;
     else if (op->right()->print(out, context))
       found = true;
   }
