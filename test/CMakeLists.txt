@@ -176,6 +176,12 @@ if(Python_EXECUTABLE)
     COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/regress/3277.py
     ${PROJECT_SOURCE_DIR})
 
+  # Every src/ header that an installed header includes must be installed too
+  # (LEDGER_INCLUDES in src/CMakeLists.txt), or the installed tree cannot compile.
+  add_test(NAME RegressPyTest_installed_headers
+    COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/regress/installed-headers.py
+    ${PROJECT_SOURCE_DIR})
+
   # An encrypted journal must parse exactly like its plain copy; the test
   # encrypts fixtures with gpg under a throwaway GNUPGHOME and exits 77
   # (skipped) when gpg is not installed.

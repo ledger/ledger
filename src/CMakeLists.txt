@@ -135,6 +135,7 @@ set(LEDGER_INCLUDES
   timelog.h
   times.h
   token.h
+  types.h
   unistring.h
   utils.h
   value.h

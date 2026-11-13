@@ -755,6 +755,10 @@ components with their standard-library equivalents.
   15.1, which rejects the `std::basic_string<UChar32>` that Boost.Regex's
   `u32regex` uses for `str()` and, before Boost 1.89, for comparisons (#3276)
 
+- Install `types.h` with the other headers; the installed `account.h`,
+  `journal.h` and `xact.h` include it, so the installed header tree could not
+  be compiled
+
 ### Testing and Coverage
 
 - Add 419 new regression tests, raising source-code coverage to 89.6%, and
