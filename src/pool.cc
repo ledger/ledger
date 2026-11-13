@@ -742,19 +742,22 @@ commodity_pool_t::parse_price_directive(char* line, bool do_not_add_price, bool 
     if (result.is_balance() && result.as_balance().amounts.size() > 1) {
       // Store the literal balance as the commodity's value expression so
       // that find_price_from_expr can reprice it to whatever target
-      // commodity is requested at query time.
+      // commodity is requested at query time.  Each component is written at
+      // its full precision, not its commodity's display precision, and the
+      // text is read back with PARSE_NO_MIGRATE so those digits do not teach
+      // the commodity a wider display style.
       std::ostringstream expr_text;
       expr_text << '(';
       bool first = true;
       result.as_balance().map_sorted_amounts([&](const amount_t& component) {
         if (!first)
           expr_text << " + ";
-        component.print(expr_text);
+        component.unrounded().print(expr_text);
         first = false;
       });
       expr_text << ')';
       if (commodity_t* commodity = find_or_create(symbol)) {
-        commodity->set_value_expr(expr_t(expr_text.str()));
+        commodity->set_value_expr(expr_t(expr_text.str(), PARSE_NO_MIGRATE));
         commodity->add_flags(COMMODITY_KNOWN);
         return std::pair<commodity_t*, price_point_t>(commodity, point);
       }

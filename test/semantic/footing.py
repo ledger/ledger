@@ -276,6 +276,14 @@ EXPECTED_REFUSALS = {
         "reason": "a lot price that is itself a two-commodity balance"
                   " cannot be valued (market() in bal -V and bal -G)",
     },
+    "test/regress/basket-price-precision.test": {
+        "stderr": "Cannot convert a balance with multiple commodities"
+                  " to an amount",
+        "reason": "each basket's value expression is a balance of two"
+                  " commodities, which market() cannot convert to one"
+                  " amount (bal -V and bal -G), as on"
+                  " value-expr-basket-order.test",
+    },
     "test/regress/value-expr-basket-order.test": {
         "stderr": "Cannot convert a balance with multiple commodities"
                   " to an amount",
