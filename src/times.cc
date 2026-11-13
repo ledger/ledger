@@ -551,7 +551,10 @@ date_t parse_date_expr(const std::string& str) {
  *   - month defaults to January
  *   - day defaults to the 1st
  *
- * Day and weekday are mutually exclusive (asserted).
+ * Day and weekday are mutually exclusive (asserted).  A weekday alone (no
+ * year, month or day) names its most recent occurrence on or before
+ * CURRENT_DATE(), which honours --now; a weekday with a year or a month is
+ * not consulted.
  */
 date_t date_specifier_t::begin() const {
   year_type the_year = year ? *year : year_type(CURRENT_DATE().year());
@@ -563,8 +566,12 @@ date_t date_specifier_t::begin() const {
   else if (wday)
     assert(!day);
 
-  // jww (2009-11-16): Handle wday.  If a month is set, find the most recent
-  // wday in that month; if the year is set, then in that year.
+  if (wday && !year && !month && !day) {
+    date_t when = CURRENT_DATE();
+    while (when.day_of_week() != *wday)
+      when -= gregorian::days(1);
+    return when;
+  }
 
   return gregorian::date(static_cast<date_t::year_type>(the_year),
                          static_cast<date_t::month_type>(the_month),

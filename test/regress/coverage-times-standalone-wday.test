@@ -1,5 +1,5 @@
-; Coverage for times.cc handle_date_token for standalone TOK_A_WDAY
-; A bare weekday name "monday" used as a period filter
+; A bare weekday name used as a period names the most recent such weekday
+; on or before today (handle_date_token, standalone TOK_A_WDAY).
 
 2024/01/01 Monday Entry
     Expenses:Food    $10.00
@@ -18,6 +18,35 @@
     Assets:Cash
 
 test reg --now 2024/01/10 --period "monday"
-24-Jan-01 Monday Entry          Expenses:Food                $10.00       $10.00
-                                Assets:Cash                 $-10.00            0
+24-Jan-08 Next Monday           Expenses:Food                $25.00       $25.00
+                                Assets:Cash                 $-25.00            0
+end test
+
+; Today itself counts when it is that weekday.
+test reg --now 2024/01/08 --period "monday"
+24-Jan-08 Next Monday           Expenses:Food                $25.00       $25.00
+                                Assets:Cash                 $-25.00            0
+end test
+
+test reg --now 2024/01/07 --period "tuesday"
+24-Jan-02 Tuesday Entry         Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test
+
+; --begin resolves a weekday the same way.
+test reg Expenses --now 2024/01/10 --begin monday
+24-Jan-08 Next Monday           Expenses:Food                $25.00       $25.00
+end test
+
+; Both ends of a range resolve on their own: on Friday 2024/01/12 this is
+; Monday 01/08 up to (not including) Friday 01/12.
+test reg --now 2024/01/12 --period "from monday to friday"
+24-Jan-08 Next Monday           Expenses:Food                $25.00       $25.00
+                                Assets:Cash                 $-25.00            0
+end test
+
+; On Wednesday 2024/01/10 the most recent Friday (01/05) precedes the most
+; recent Monday (01/08): the range is inverted and selects nothing, as an
+; explicit inverted range does; it is not an error.
+test reg --now 2024/01/10 --period "from monday to friday"
 end test
