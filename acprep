@@ -416,7 +416,7 @@ class PrepareBuild(CommandLineApp):
         if not self.current_ver:
             major, minor, patch, date = None, None, None, None
 
-            version_m4 = open('CMakeLists.txt', 'r')
+            version_m4 = open(join(self.source_dir, 'doc', 'LedgerVersion.cmake'), 'r')
             for line in version_m4.readlines():
                 match = re.match(r'^set\(Ledger_VERSION_MAJOR ([0-9]+)\)', line)
                 if match:
@@ -427,7 +427,7 @@ class PrepareBuild(CommandLineApp):
                 match = re.match(r'^set\(Ledger_VERSION_PATCH ([0-9]+)\)', line)
                 if match:
                     patch = match.group(1)
-                match = re.match(r'^set\(Ledger_VERSION_DATE ([0-9]+)\)', line)
+                match = re.match(r'^set\(Ledger_VERSION_DATE\s+([0-9]+)\)', line)
                 if match:
                     date = match.group(1)
                     break

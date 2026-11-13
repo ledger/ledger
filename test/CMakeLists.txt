@@ -102,6 +102,25 @@ if(Python_EXECUTABLE)
     TIMEOUT 7200)
 endif()
 
+# Build-tooling checks: the source-package ignore list (cmake/Packaging.cmake),
+# the configure-time guards in CMakeLists.txt, and "acprep info".  They test
+# the build scripts rather than ledger, so none of them runs the binary.
+add_test(NAME CheckCPackSourceIgnore
+  COMMAND ${CMAKE_COMMAND}
+    -DCONFIG=${CMAKE_BINARY_DIR}/CPackSourceConfig.cmake
+    -DSOURCE_DIR=${PROJECT_SOURCE_DIR}
+    -P ${PROJECT_SOURCE_DIR}/test/CheckCPackSourceIgnore.cmake)
+if(Python_EXECUTABLE)
+  # Each configure-guard case reconfigures a scratch copy of this build.
+  add_test(NAME CheckConfigureErrors
+    COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/CheckConfigureErrors.py
+    --cmake ${CMAKE_COMMAND} --source ${PROJECT_SOURCE_DIR}
+    --cache ${CMAKE_BINARY_DIR}/CMakeCache.txt)
+  add_test(NAME CheckAcprepInfo
+    COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/CheckAcprepInfo.py
+    ${PROJECT_SOURCE_DIR})
+endif()
+
 if(Python_EXECUTABLE)
   set(_class DocTests)
   file(GLOB ${_class}_TESTS ${PROJECT_SOURCE_DIR}/doc/*.texi)

@@ -38,8 +38,26 @@ set(CPACK_PACKAGE_VERSION_PATCH
 set(CPACK_SOURCE_GENERATOR "TBZ2")
 set(CPACK_SOURCE_PACKAGE_FILE_NAME
   "${CMAKE_PROJECT_NAME}-${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
+
+# CPack matches each entry as a regular expression against the absolute path
+# of every file under the source tree, so anchor all but the editor-backup
+# pattern at the source root, whose path is escaped to match literally.
+# CPACK_VERBATIM_VARIABLES keeps the backslashes intact when CPack writes
+# these into CPackSourceConfig.cmake and reads them back.
+set(CPACK_VERBATIM_VARIABLES TRUE)
+string(REGEX REPLACE "([][+.*()^$?|\\\\])" "\\\\\\1" _ledger_source_re "${CMAKE_SOURCE_DIR}")
 set(CPACK_SOURCE_IGNORE_FILES
-  "/.git*;/.dir-locals.el;~$;/doc/website/;/doc/wiki/;/lib/*.sh;/lib/Makefile;/tools/;${CPACK_SOURCE_IGNORE_FILES}")
+  "^${_ledger_source_re}/(.*/)?\\.git"
+  "^${_ledger_source_re}/\\.dir-locals\\.el$"
+  "~$"
+  "^${_ledger_source_re}/doc/website/"
+  "^${_ledger_source_re}/doc/wiki/"
+  "^${_ledger_source_re}/lib/[^/]*\\.sh$"
+  "^${_ledger_source_re}/lib/Makefile$"
+  "^${_ledger_source_re}/tools/"
+  "^${_ledger_source_re}/build[^/]*/"
+  ${CPACK_SOURCE_IGNORE_FILES})
+unset(_ledger_source_re)
 
 # ── Binary packages ────────────────────────────────────────────────────────
 
