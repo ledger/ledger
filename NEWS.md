@@ -499,6 +499,9 @@ components with their standard-library equivalents.
   names the file, instead of silently discarding the report; close the
   `--output` file on Windows too
 
+- Make the `--trace` timing lines count the time a timer accumulated before it
+  was last restarted, instead of only the final running stretch
+
 ### Filtering, Queries, and Aggregation
 
 - Rewrite the query parser as a documented recursive-descent parser with a

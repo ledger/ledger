@@ -738,13 +738,14 @@ void finish_timer(const char* name) {
 
   time_duration spent = (*i).second.spent;
   if ((*i).second.active) {
-    spent = TRUE_CURRENT_TIME() - (*i).second.begin;
+    spent += TRUE_CURRENT_TIME() - (*i).second.begin;
     (*i).second.active = false;
   }
 
-  _log_buffer << (*i).second.description << ' ';
+  const std::string& description = (*i).second.description;
+  _log_buffer << description << ' ';
 
-  bool need_paren = (*i).second.description[(*i).second.description.size() - 1] != ':';
+  bool need_paren = description.empty() || description.back() != ':';
 
   if (need_paren)
     _log_buffer << '(';
