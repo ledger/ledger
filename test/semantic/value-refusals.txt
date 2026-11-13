@@ -32,6 +32,7 @@ no-price-path	test/regress/unrealized-lot-price-fallback.test
 posting-date	test/regress/unrealized-account-rewrite.test
 posting-date	test/regress/unrealized-footing-posting-date.test
 posting-date	test/regress/unrealized-payee-rewrite.test
+posting-date	test/regress/unrealized-rewrite-option.test
 price-expr	test/regress/basket-price-precision.test
 price-precision	test/baseline/opt-exchange-bal.test
 price-precision	test/regress/1130.test

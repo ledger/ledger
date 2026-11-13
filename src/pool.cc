@@ -514,6 +514,34 @@ void commodity_pool_t::reannotate(annotated_commodity_t& comm, const annotation_
 
 /// @}
 
+/// @name Report precision cap
+/// @{
+
+void commodity_pool_t::cap_precision(amount_t::precision_t places) {
+  for (auto& pair : commodities) {
+    commodity_t& comm(*pair.second);
+    // emplace: a base reached again through an alias key keeps the state
+    // recorded before its first lowering.
+    uncapped_styles.emplace(
+        comm.base.get(),
+        std::make_pair(comm.precision(), comm.has_flags(COMMODITY_STYLE_NO_MIGRATE)));
+    if (comm.precision() > places)
+      comm.set_precision(places);
+    comm.add_flags(COMMODITY_STYLE_NO_MIGRATE);
+  }
+}
+
+void commodity_pool_t::uncap_precision() {
+  for (auto& [base, style] : uncapped_styles) {
+    base->precision = style.first;
+    if (!style.second)
+      base->drop_flags(COMMODITY_STYLE_NO_MIGRATE);
+  }
+  uncapped_styles.clear();
+}
+
+/// @}
+
 /// @name Exchange and price operations
 /// @{
 

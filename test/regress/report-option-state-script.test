@@ -1,0 +1,117 @@
+; --payee-rewrite, --account-rewrite and --decimal-places hold for the
+; command that gives them and no longer leak into later --script or REPL
+; commands; given before --script, they reach every command.  The EUR
+; alias checks that --decimal-places restores a commodity reached through
+; two symbols to its own precision.  The last block checks that a
+; command's options are parsed, and a precommand runs, under the
+; --ignore-diacritics of the options before --script, not under the
+; previous command's.
+
+commodity EUR
+    alias €
+
+2024/01/01 Foo
+    Expenses:Café                            $10.555
+    Assets:Cash
+
+2024/01/10 Bookshop
+    Expenses:Books:Paperbacks                 $20.00
+    Assets:Cash
+
+2024/03/01 Exchange
+    Assets:Euro                             12.345 €
+    Assets:Cash                              -12 EUR
+    Equity:Rounding
+
+test --script test/regress/report-option-state-script.dat
+24-Jan-01 Bar                   Assets:Cash                $-10.555     $-10.555
+24-Jan-10 Bookshop              Assets:Cash                $-20.000     $-30.555
+24-Mar-01 Exchange              Assets:Cash             -12.000 EUR     $-30.555
+                                                                     -12.000 EUR
+24-Jan-01 Foo                   Assets:Cash                $-10.555     $-10.555
+24-Jan-10 Bookshop              Assets:Cash                $-20.000     $-30.555
+24-Mar-01 Exchange              Assets:Cash             -12.000 EUR     $-30.555
+                                                                     -12.000 EUR
+          12.345 EUR  Assets:Euro
+          -0.345 EUR  Equity:Rounding
+             $20.000  Expenses:Books:Paperbacks
+             $10.555  Expenses:Café
+            $-30.555
+         -12.000 EUR  Wallet
+--------------------
+                   0
+            $-30.555
+         -12.000 EUR  Assets:Cash
+          12.345 EUR  Assets:Euro
+          -0.345 EUR  Equity:Rounding
+             $20.000  Expenses:Books:Paperbacks
+             $10.555  Expenses:Café
+--------------------
+                   0
+              $-30.6
+             0.3 EUR  Assets
+              $-30.6
+           -12.0 EUR    Cash
+            12.3 EUR    Euro
+            -0.3 EUR  Equity:Rounding
+               $30.6  Expenses
+               $20.0    Books:Paperbacks
+               $10.6    Café
+--------------------
+                   0
+            $-30.555
+           0.345 EUR  Assets
+            $-30.555
+         -12.000 EUR    Cash
+          12.345 EUR    Euro
+          -0.345 EUR  Equity:Rounding
+             $30.555  Expenses
+             $20.000    Books:Paperbacks
+             $10.555    Café
+--------------------
+                   0
+end test
+
+test --payee-rewrite Foo=Bar --decimal-places 1 --script test/regress/report-option-state-script-outer.dat
+24-Jan-01 Bar                   Assets:Cash                  $-10.6       $-10.6
+24-Jan-10 Bookshop              Assets:Cash                  $-20.0       $-30.6
+24-Mar-01 Exchange              Assets:Cash               -12.0 EUR       $-30.6
+                                                                       -12.0 EUR
+24-Jan-01 Bar                   Assets:Cash                  $-10.6       $-10.6
+24-Jan-10 Shop                  Assets:Cash                  $-20.0       $-30.6
+24-Mar-01 Exchange              Assets:Cash               -12.0 EUR       $-30.6
+                                                                       -12.0 EUR
+24-Jan-01 Bar                   Assets:Cash                  $-10.6       $-10.6
+24-Jan-10 Bookshop              Assets:Cash                  $-20.0       $-30.6
+24-Mar-01 Exchange              Assets:Cash               -12.0 EUR       $-30.6
+                                                                       -12.0 EUR
+              $-30.6
+           -12.0 EUR  Assets:Cash
+             $-30.56
+          -12.00 EUR  Assets:Cash
+              $-30.6
+           -12.0 EUR  Assets:Cash
+end test
+
+test --script test/regress/report-option-state-parse.dat
+24-Jan-01 Foo                   Expenses:Café               $10.555      $10.555
+            $-30.555
+         -12.000 EUR  Assets:Cash
+          12.345 EUR  Assets:Euro
+          -0.345 EUR  Equity:Rounding
+             $20.000  Expenses:Books:Paperbacks
+             $10.555  Wallet
+--------------------
+                   0
+24-Jan-01 Foo                   Expenses:Café               $10.555      $10.555
+            $-30.555
+         -12.000 EUR  Assets:Cash
+          12.345 EUR  Assets:Euro
+          -0.345 EUR  Equity:Rounding
+             $20.000  Expenses:Books:Paperbacks
+             $10.555  Expenses:Café
+--------------------
+                   0
+24-Jan-01 Foo                   Expenses:Café               $10.555      $10.555
+0
+end test

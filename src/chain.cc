@@ -484,8 +484,7 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
 
   /*--- Payee/account rewriting and related/inject ---*/
 
-  if (!report.session.journal->payee_rewrite_mappings.empty() ||
-      !report.session.journal->account_rewrite_mappings.empty())
+  if (rewrite_posts::has_rules(report))
     handler = std::make_shared<rewrite_posts>(handler, report);
 
   // related_posts will pass along all posts related to the post received.  If

@@ -1,0 +1,35 @@
+; bal -X EUR --unrealized keeps the revaluation between postings when an
+; --account-rewrite or --payee-rewrite option, rather than a directive,
+; gives the rewrite rule: rewrite_posts copies the rewritten posting into a
+; transaction of its own, dated by the posting, whichever gives the rule,
+; so the report must not value the costs at the transaction's date.  The
+; journal is that of unrealized-footing-posting-date.test; the output is
+; that of unrealized-account-rewrite.test and unrealized-payee-rewrite.test,
+; which give the same rules by directive.
+
+P 2024/01/01 $ 0.90 EUR
+P 2024/01/10 $ 0.80 EUR
+
+2024/01/01 Buy
+    Assets:Brokerage        10 AAPL @ $150  ; [2024/01/15]
+    Assets:Checking
+
+P 2024/03/05 AAPL $170
+
+test bal -X EUR --unrealized --account-rewrite Brokerage=Assets:Broker
+           EUR160.00  Assets
+          EUR1360.00    Broker
+         EUR-1200.00    Checking
+          EUR-150.00  Equity:Unrealized Gains
+--------------------
+            EUR10.00
+end test
+
+test bal -X EUR --unrealized --payee-rewrite Buy=Purchase
+           EUR160.00  Assets
+          EUR1360.00    Brokerage
+         EUR-1200.00    Checking
+          EUR-150.00  Equity:Unrealized Gains
+--------------------
+            EUR10.00
+end test

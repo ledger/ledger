@@ -122,6 +122,23 @@ class xact_t;
 //    iterated.  This does not happen for the commodities iteration, however.
 
 /**
+ * @brief Puts ledger::epoch back, when it goes out of scope, to the value it
+ * had when the object was made.
+ *
+ * --now assigns epoch (report_t::now_), and epoch is a process global, so a
+ * session command or Python query that gives --now would otherwise set the
+ * clock for every later command.  An epoch the session itself set (--now
+ * before --script, or the constructor's clock) is the value restored.
+ */
+class epoch_scope_t : public noncopyable {
+  optional<datetime_t> saved;
+
+public:
+  epoch_scope_t() : saved(epoch) {}
+  ~epoch_scope_t() { epoch = saved; }
+};
+
+/**
  * @brief Central report configuration and command dispatch scope.
  *
  * report_t inherits from scope_t and serves as the primary evaluation context
@@ -165,6 +182,8 @@ public:
 
   datetime_t
       terminus; ///< Valuation date for market prices (defaults to now, adjusted by --end/--now)
+  optional<datetime_t>
+      now_epoch; ///< Instant the last --now assigned to ledger::epoch (copied with the report)
   optional<date_t> origin; ///< Report begin date for budget period initialization (from -p/--begin)
   optional<date_t>
       report_begin; ///< Date the last -b/--begin resolved to (empty leading periods start here)
@@ -173,6 +192,15 @@ public:
   optional<datetime_t>
       gain_from; ///< Reference date for --gain-since (compute gain from this date's market value)
   uint_least8_t budget_flags; ///< Bitmask of BUDGET_* flags controlling budget report behavior
+
+  /// Rewrite rules given by --payee-rewrite and --account-rewrite.  They
+  /// belong to the report, not to the journal with the rules its
+  /// directives declare, so that a rule given to one command in an
+  /// interactive session applies to that command alone, and a rule given
+  /// at startup survives the journal being read again.  rewrite_posts
+  /// tries them before the journal's.
+  payee_rewrite_mappings_t payee_rewrite_mappings;
+  account_rewrite_mappings_t account_rewrite_mappings;
 
   explicit report_t(session_t& _session)
       : session(_session), terminus(CURRENT_TIME()), budget_flags(BUDGET_NO_BUDGET) {
@@ -193,6 +221,19 @@ public:
   /// normalization, and command-specific defaults (e.g., --related-all for print).
   /// @param verb  The command name (e.g., "balance", "register", "print").
   void normalize_options(const string& verb);
+
+  /// Set the process globals through which report options reach lower
+  /// layers (start_of_week, day_of_period, ledger::ignore_diacritics,
+  /// format_t::default_style and default_style_changed, and the clock
+  /// ledger::epoch when this report holds a --now) from this report's
+  /// options alone: each takes its option's value when the option is
+  /// HANDLED and its default otherwise, as item_t::use_aux_date does.
+  /// normalize_options calls it for every command.  A session also calls
+  /// it when it pushes a command's report, before that command's options
+  /// are parsed, so that the masks those options build (--account-rewrite,
+  /// --payee-rewrite) and precommands see the options given before
+  /// --script, not the previous command's.
+  void apply_option_globals();
 
   /// @brief Extract begin/end dates from --period and propagate to --limit.
   /// If the period has no duration component (just begin/end), turns off --period.
@@ -572,7 +613,7 @@ public:
         string::size_type eq = str.find('=');
         if (eq == string::npos)
           throw_(std::logic_error, _("--account-rewrite requires PATTERN=REPLACEMENT"));
-        parent->session.journal->account_rewrite_mappings.push_back(
+        parent->account_rewrite_mappings.push_back(
             account_rewrite_mapping_t(mask_t(str.substr(0, eq)), str.substr(eq + 1)));
       });
 
@@ -1086,12 +1127,12 @@ public:
         // "2018/12/16@08:12:33") so that the report epoch can be pinned to a
         // precise instant -- useful with sub-daily price entries.
         if (optional<datetime_t> when = try_parse_datetime(str)) {
-          ledger::epoch = parent->terminus = *when;
+          ledger::epoch = parent->now_epoch = parent->terminus = *when;
           return;
         }
         date_interval_t interval(str);
         if (optional<date_t> begin = interval.begin()) {
-          ledger::epoch = parent->terminus = datetime_t(*begin);
+          ledger::epoch = parent->now_epoch = parent->terminus = datetime_t(*begin);
         } else {
           throw_(std::invalid_argument, _f("Could not determine beginning of period '%1%'") % str);
         }
@@ -1139,7 +1180,7 @@ public:
         string::size_type eq = str.find('=');
         if (eq == string::npos)
           throw_(std::logic_error, _("--payee-rewrite requires PATTERN=REPLACEMENT"));
-        parent->session.journal->payee_rewrite_mappings.push_back(
+        parent->payee_rewrite_mappings.push_back(
             payee_rewrite_mapping_t(mask_t(str.substr(0, eq)), str.substr(eq + 1)));
       });
 

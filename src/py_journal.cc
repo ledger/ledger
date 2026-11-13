@@ -204,11 +204,15 @@ shared_ptr<collector_wrapper> py_query(boost::shared_ptr<journal_t> journal_sp,
 
   report_t& current_report(downcast<report_t>(*scope_t::default_scope));
   shared_ptr<collector_wrapper> coll(new collector_wrapper(journal_sp, current_report));
+  epoch_scope_t clock; // A --now given to this Journal.query ends with it.
 
   boost::shared_ptr<journal_t> save_journal = coll->report.session.journal;
   coll->report.session.journal = journal_sp;
 
   try {
+    // Parse this query's options under the globals of the report it copies,
+    // not those the previous query's options left.
+    coll->report.apply_option_globals();
     strings_list remaining = process_arguments(split_arguments(query.c_str()), coll->report);
     coll->report.normalize_options("register");
 

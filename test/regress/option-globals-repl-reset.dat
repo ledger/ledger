@@ -1,0 +1,14 @@
+reg --ignore-diacritics cafe
+reg cafe
+reg -W --start-of-week monday Books
+reg -W Books
+reg -M --period-shift 5 Books
+reg -M Books
+reg --truncate leading --payee-width 6 Books
+reg --payee-width 6 Books
+reg --now 2024/01/20 --current Books
+reg --current Books
+push --now 2024/01/20
+reg --current Books
+pop
+reg --current Books

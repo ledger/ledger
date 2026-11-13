@@ -1,0 +1,26 @@
+; Python Journal.query derives the option globals from the running
+; report and the query's own options alone: a query's --ignore-diacritics
+; no longer folds the pattern the next query's --account-rewrite compiles,
+; and a query's --account-rewrite rule no longer applies to later queries.
+; A query's --now does not move the clock of later queries: the first of the
+; last two ends before the posting (--current finds nothing), the second runs
+; at the session clock (2030/06/15, given on the test line because --current
+; reads the clock), after it.
+
+2024/01/01 Foo
+    Expenses:Café                            $10.555
+    Assets:Cash
+
+test --now 2030/06/15 python test/regress/report-option-state-query.py
+--ignore-diacritics cafe
+  Expenses:Café $10.555
+--account-rewrite Café=Wallet Expenses
+  Wallet $10.555
+Expenses
+  Expenses:Café $10.555
+--account-rewrite Cafe=Wallet Expenses
+  Expenses:Café $10.555
+--now 2020/01/20 --current Expenses
+--current Expenses
+  Expenses:Café $10.555
+end test

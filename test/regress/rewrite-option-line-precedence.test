@@ -1,0 +1,16 @@
+; An --account-rewrite or --payee-rewrite option line in a journal file
+; belongs to the report, like the same option given on the command line,
+; so its rule is tried before the rules that account-rewrite and
+; payee-rewrite directives declare, even when the directives come first.
+; The journal is in the .dat file, which each command names with -f.
+
+test -f test/regress/rewrite-option-line-precedence.dat bal --flat
+              $12.00  Expenses:Food
+             $-12.00  Purse
+--------------------
+                   0
+end test
+
+test -f test/regress/rewrite-option-line-precedence.dat reg Food
+24-Jan-05 Market                Expenses:Food                $12.00       $12.00
+end test

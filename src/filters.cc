@@ -1020,8 +1020,9 @@ bool exchange_names_one_commodity(const report_t& report) {
  *   regress/1190 the cost is in B and the fixated price in C), so the cost is
  *   not in the terms in which the lot is valued.
  * - --pivot, --pivot-only, --account, --payee and --date (transfer_details),
- *   the account-rewrite and payee-rewrite directives (rewrite_posts, which
- *   chain_post_handlers adds under the same condition) and --inject
+ *   a rewrite rule, from an account-rewrite or payee-rewrite directive or
+ *   option (rewrite_posts, which chain_post_handlers adds when
+ *   rewrite_posts::has_rules holds) and --inject
  *   (inject_posts) copy a posting into a transaction of its own, dated by
  *   the posting.  A posting that carries its own date then no longer shares
  *   the date on which cost_baseline values the costs of the rest of its
@@ -1054,7 +1055,6 @@ bool report_revalues_between_postings(const report_t& report) {
   // note above.  A balance report in one of these shapes keeps the
   // revaluation between postings (and books no whole-report unrealized gain),
   // as every non-accounts report does.
-  const journal_t& journal(*report.session.journal);
   return !report.HANDLED(historical) && !report.HANDLED(immediate) &&
          !report.HANDLED(revalued_total_) && !report.HANDLED(plopen) && !report.HANDLED(percent) &&
          !report.HANDLED(average) && !report.HANDLED(deviation) && !report.HANDLED(period_) &&
@@ -1062,8 +1062,7 @@ bool report_revalues_between_postings(const report_t& report) {
          report.budget_flags == BUDGET_NO_BUDGET && !report.HANDLED(forecast_while_) &&
          !report.HANDLED(anon) && !report.HANDLED(pivot_) && !report.HANDLED(pivot_only_) &&
          !report.HANDLED(account_) && !report.HANDLED(payee_) && !report.HANDLED(date_) &&
-         !report.HANDLED(inject_) && journal.payee_rewrite_mappings.empty() &&
-         journal.account_rewrite_mappings.empty();
+         !report.HANDLED(inject_) && !rewrite_posts::has_rules(report);
 }
 
 bool uses_cost_baseline(const report_t& report, bool for_accounts_report, bool show_unrealized) {
@@ -2764,11 +2763,32 @@ void inject_posts::operator()(post_t& post) {
 
 /*--- Payee/account rewriting ---*/
 
+namespace {
+/// The replacement given by the first rule, in @p first and then in
+/// @p second, whose pattern matches @p text; empty if none matches.
+string rewrite_of(const string& text, const std::list<std::pair<mask_t, string>>& first,
+                  const std::list<std::pair<mask_t, string>>& second) {
+  for (const auto* rules : {&first, &second})
+    for (const auto& rule : *rules)
+      if (rule.first.match(text))
+        return rule.second;
+  return string();
+}
+} // namespace
+
+bool rewrite_posts::has_rules(const report_t& report) {
+  return !report.payee_rewrite_mappings.empty() || !report.account_rewrite_mappings.empty() ||
+         !report.session.journal->payee_rewrite_mappings.empty() ||
+         !report.session.journal->account_rewrite_mappings.empty();
+}
+
 /**
- * Apply payee and account rewrite rules from the journal to each posting.
+ * Apply payee and account rewrite rules to each posting: the report's,
+ * from --payee-rewrite and --account-rewrite, before the journal's, from
+ * its directives.
  *
- * Checks the posting against all payee_rewrite_mappings (matching on the
- * transaction payee) and account_rewrite_mappings (matching on the account
+ * Checks the posting against all payee rewrite rules (matching on the
+ * transaction payee) and account rewrite rules (matching on the account
  * fullname).  If either matches, a temporary copy is created with the
  * rewritten payee and/or account.  Non-matching postings pass through
  * unchanged.
@@ -2777,21 +2797,10 @@ void rewrite_posts::operator()(post_t& post) {
   journal_t* journal = report.session.journal.get();
 
   // Check whether any payee or account rewrite rule matches this posting.
-  string new_payee;
-  for (const payee_rewrite_mapping_t& pair : journal->payee_rewrite_mappings) {
-    if (pair.first.match(post.xact->payee)) {
-      new_payee = pair.second;
-      break;
-    }
-  }
-
-  string new_account;
-  for (const account_rewrite_mapping_t& pair : journal->account_rewrite_mappings) {
-    if (pair.first.match(post.account->fullname())) {
-      new_account = pair.second;
-      break;
-    }
-  }
+  string new_payee =
+      rewrite_of(post.xact->payee, report.payee_rewrite_mappings, journal->payee_rewrite_mappings);
+  string new_account = rewrite_of(post.account->fullname(), report.account_rewrite_mappings,
+                                  journal->account_rewrite_mappings);
 
   // If neither rule matched, forward the original posting unchanged.
   if (new_payee.empty() && new_account.empty()) {

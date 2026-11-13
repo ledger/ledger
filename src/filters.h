@@ -863,8 +863,8 @@ public:
  * --deviation or --anon, has no amount expression of the user's own
  * (--amount), names no more than one commodity with -X, copies no postings
  * into transactions of their own (--pivot, --pivot-only, --account, --payee,
- * --date, --inject, or a journal with account-rewrite or payee-rewrite
- * directives), and is no budget or forecast report
+ * --date, --inject, or an account-rewrite or payee-rewrite rule, given by
+ * directive or option), and is no budget or forecast report
  * (uses_cost_baseline() in filters.cc gives the reason for each).  Its
  * baseline is the running total at cost.  Each posting contributes the
  * report's amount expression applied to its cost, valued on its
@@ -1417,15 +1417,15 @@ public:
 };
 
 /**
- * @brief Applies payee and account rewrite rules from the journal.
+ * @brief Applies the payee and account rewrite rules of the report and of the journal.
  *
- * When the journal contains `payee` or `account` rewrite mapping directives,
- * this handler checks each posting against those rules.  If a rule matches,
- * the posting is copied and the payee or account is replaced according to
- * the mapping.  Non-matching postings pass through unchanged.
+ * When a --payee-rewrite or --account-rewrite option, or a payee-rewrite or account-rewrite
+ * directive, gives a rule, this handler checks each posting against the report's rules and then
+ * the journal's.  If a rule matches, the posting is copied and the payee or account is replaced
+ * according to the mapping.  Non-matching postings pass through unchanged.
  */
 class rewrite_posts : public item_handler<post_t> {
-  report_t& report;    ///< Report context (provides access to the journal's rewrite mappings).
+  report_t& report;    ///< Report context (its own rewrite rules and the journal's).
   temporaries_t temps; ///< Temporary storage for rewritten xacts/posts.
 
   rewrite_posts();
@@ -1441,6 +1441,12 @@ public:
   }
 
   void operator()(post_t& post) override;
+
+  /// Whether @p report or its journal holds any payee or account rewrite
+  /// rule: chain_post_handlers adds a rewrite_posts exactly when this
+  /// holds, and every other reader that asks whether postings are rewritten
+  /// calls it.
+  static bool has_rules(const report_t& report);
 
   void clear() override {
     temps.clear();

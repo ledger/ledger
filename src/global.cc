@@ -315,10 +315,13 @@ void global_scope_t::execute_command(strings_list args, bool at_repl) {
 
 int global_scope_t::execute_command_wrapper(strings_list args, bool at_repl) {
   int status = 1;
+  epoch_scope_t clock; // A --now given to this command ends with it.
 
   try {
-    if (at_repl)
+    if (at_repl) {
       push_report();
+      report().apply_option_globals();
+    }
     execute_command(std::move(args), at_repl);
     if (at_repl)
       pop_report();

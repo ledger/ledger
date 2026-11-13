@@ -1,0 +1,6 @@
+reg Cash
+reg --payee-rewrite Bookshop=Shop Cash
+reg Cash
+bal --flat Cash
+bal --flat --decimal-places 2 Cash
+bal --flat Cash

@@ -304,6 +304,28 @@ public:
 
   /// @}
 
+  /// @name Report precision cap
+  /// @{
+
+  /// Lower every commodity's display precision to at most @p places and
+  /// stop parsed amounts from widening it (--decimal-places), recording
+  /// first the state each one had so that uncap_precision() can give it
+  /// back.
+  void cap_precision(amount_t::precision_t places);
+
+  /// Give every commodity cap_precision() lowered back the precision and
+  /// COMMODITY_STYLE_NO_MIGRATE state it had, and forget them.
+  void uncap_precision();
+
+  /// @}
+
+private:
+  /// Precision and NO_MIGRATE flag of each commodity base (where both live,
+  /// shared by a commodity's aliases and annotated forms) before
+  /// cap_precision() changed it.
+  std::map<commodity_t::base_t*, std::pair<amount_t::precision_t, bool>> uncapped_styles;
+
+public:
   /**
    * @brief Record a simple commodity exchange as a price in the history graph.
    *

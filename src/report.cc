@@ -206,33 +206,12 @@ void report_t::normalize_options(const string& verb) {
   else
     commodity_pool_t::current_pool->price_db = none;
 
-  if (HANDLED(decimal_places_)) {
-    auto places =
-        static_cast<amount_t::precision_t>(lexical_cast<int>(HANDLER(decimal_places_).value));
-    for (auto& pair : commodity_pool_t::current_pool->commodities) {
-      if (pair.second->precision() > places)
-        pair.second->set_precision(places);
-      pair.second->add_flags(COMMODITY_STYLE_NO_MIGRATE);
-    }
-  }
-
   if (HANDLED(date_format_))
     set_date_format(HANDLER(date_format_).str().c_str());
   if (HANDLED(datetime_format_))
     set_datetime_format(HANDLER(datetime_format_).str().c_str());
-  if (HANDLED(start_of_week_)) {
-    const string value = HANDLER(start_of_week_).str();
-    if (optional<date_time::weekdays> weekday = string_to_day_of_week(value))
-      start_of_week = *weekday;
-    else
-      throw_(option_error, _f("Invalid value for --start-of-week: %1%; expected a day name "
-                              "like Monday or Mon, or 0-6 with 0 for Sunday") %
-                               value);
-  }
 
-  if (HANDLED(period_shift_)) {
-    day_of_period = std::stoi(HANDLER(period_shift_).str());
-  }
+  apply_option_globals();
 
   long meta_width = -1;
 
@@ -430,6 +409,45 @@ void report_t::normalize_options(const string& verb) {
     if (!HANDLED(total_width_))
       HANDLER(total_width_).value = to_string(total_width);
   }
+}
+
+void report_t::apply_option_globals() {
+  if (HANDLED(start_of_week_)) {
+    const string value = HANDLER(start_of_week_).str();
+    if (optional<date_time::weekdays> weekday = string_to_day_of_week(value))
+      start_of_week = *weekday;
+    else
+      throw_(option_error, _f("Invalid value for --start-of-week: %1%; expected a day name "
+                              "like Monday or Mon, or 0-6 with 0 for Sunday") %
+                               value);
+  } else {
+    start_of_week = gregorian::Sunday;
+  }
+
+  day_of_period = HANDLED(period_shift_) ? std::stoi(HANDLER(period_shift_).str()) : 0;
+
+  ledger::ignore_diacritics = HANDLED(ignore_diacritics);
+
+  // A report that kept a --now (push --now DATE, options before --script)
+  // runs its commands at that instant.  Not the handler: on a report copy it
+  // has a null parent (option_t's copy constructor) and would overwrite a
+  // terminus that --end moved.
+  if (HANDLED(now_) && now_epoch)
+    ledger::epoch = *now_epoch;
+
+  // Re-running the handler re-applies this report's --truncate style (its
+  // value was checked when the option was given, so it cannot throw here).
+  if (HANDLED(truncate_)) {
+    HANDLER(truncate_).handler_thunk(none, HANDLER(truncate_).value);
+  } else {
+    format_t::default_style = format_t::TRUNCATE_TRAILING;
+    format_t::default_style_changed = false;
+  }
+
+  commodity_pool_t::current_pool->uncap_precision();
+  if (HANDLED(decimal_places_))
+    commodity_pool_t::current_pool->cap_precision(
+        static_cast<amount_t::precision_t>(lexical_cast<int>(HANDLER(decimal_places_).value)));
 }
 
 void report_t::normalize_period() {
