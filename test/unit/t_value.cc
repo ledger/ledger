@@ -997,9 +997,9 @@ BOOST_AUTO_TEST_CASE(testLogging)
   log.str("");
 
   BOOST_CHECK(value_context(v1) ==
-    "                                      $");
+    "                   $");
   BOOST_CHECK(value_context(value_t(amount_t("USD1").commodity())) ==
-    "                                      $");
+    "                   $");
 
   BOOST_CHECK(v1.valid());
 }

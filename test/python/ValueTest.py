@@ -288,9 +288,9 @@ class ValueTestCase(unittest.TestCase):
         self.assertTrue(v1.__repr__() == "$")
         self.assertTrue(Value(Amount("USD1").commodity).__repr__() == "$")
         self.assertTrue(value_context(v1) ==
-            "                                      $")
+            "                   $")
         self.assertTrue(value_context(Value(Amount("USD1").commodity)) ==
-            "                                      $")
+            "                   $")
 
         self.assertTrue(v1.valid())
 

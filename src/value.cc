@@ -2616,10 +2616,11 @@ void value_t::print(std::ostream& _out, const int first_width, const int latter_
   // settings do not leak into the caller's stream.
   std::ostringstream out;
 
-  // Set column width for simple scalar types.  AMOUNT, BALANCE, and STRING
-  // handle their own justification via the justify() helper so they are
-  // excluded here.
-  if (first_width > 0 && (!is_amount() || as_amount().is_zero()) && !is_balance() && !is_string()) {
+  // Set column width for simple scalar types.  AMOUNT, BALANCE, COMMODITY
+  // and STRING handle their own justification via the justify() helper so
+  // they are excluded here.
+  if (first_width > 0 && (!is_amount() || as_amount().is_zero()) && !is_balance() &&
+      !is_commodity() && !is_string()) {
     out.width(first_width);
 
     if (flags & AMOUNT_PRINT_RIGHT_JUSTIFY)
@@ -2695,7 +2696,7 @@ void value_t::print(std::ostream& _out, const int first_width, const int latter_
       else
         out << ", ";
 
-      value.print(out, first_width, latter_width, flags);
+      value.print(out, first_width, latter_width, flags, negative_color);
     }
     out << ')';
     break;
