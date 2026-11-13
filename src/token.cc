@@ -76,7 +76,7 @@ int expr_t::token_t::parse_reserved_word(std::istream& in) {
     length = 0;
 
     string buf;
-    READ_INTO_(in, buf, c, length, std::isalpha(static_cast<unsigned char>(c)));
+    READ_INTO_(in, buf, c, length, std::isalpha(static_cast<unsigned char>(c)) || c == '_');
 
     switch (buf[0]) {
     case 'a':
