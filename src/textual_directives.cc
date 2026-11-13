@@ -469,9 +469,6 @@ void instance_t::apply_directive(char* line) {
 }
 
 void instance_t::apply_account_directive(char* line) {
-  if (!line)
-    throw_(parse_error, _("Directive 'apply account' requires an argument"));
-
   if (account_t* acct = top_account()->find_account(line))
     apply_stack.push_front(application_t("account", acct));
   else
@@ -479,9 +476,6 @@ void instance_t::apply_account_directive(char* line) {
 }
 
 void instance_t::apply_tag_directive(char* line) {
-  if (!line)
-    throw_(parse_error, _("Directive 'apply tag' requires an argument"));
-
   string tag(trim_ws(line));
 
   // Register the tag name(s) as known so that --strict mode does not warn
@@ -520,9 +514,6 @@ void instance_t::apply_tag_directive(char* line) {
 }
 
 void instance_t::apply_rate_directive(char* line) {
-  if (!line)
-    throw_(parse_error, _("Directive 'apply fixed/rate' requires an argument"));
-
   if (std::optional<std::pair<commodity_t*, price_point_t>> price_point =
           commodity_pool_t::current_pool->parse_price_directive(trim_ws(line), true, true)) {
     apply_stack.push_front(
@@ -533,9 +524,6 @@ void instance_t::apply_rate_directive(char* line) {
 }
 
 void instance_t::apply_year_directive(char* line, bool use_apply_stack) {
-  if (!line)
-    throw_(parse_error, _("Directive 'apply year' requires an argument"));
-
   try {
     unsigned short year(lexical_cast<unsigned short>(skip_ws(line)));
     if (use_apply_stack) {
@@ -565,8 +553,23 @@ void instance_t::pop_application() {
 }
 
 void instance_t::end_apply_directive(char* kind) {
-  char* b = kind ? next_element(kind) : nullptr;
-  string name(b ? b : "");
+  // `kind` is the text after `end`.  Three forms close a block: `end`,
+  // `end apply [NAME]` and the older `end KEYWORD [NAME]`, which is
+  // checked like `end apply KEYWORD`.  NAME, when given, is the name the
+  // block is checked against.
+  string name;
+  if (kind && *kind) {
+    char* rest = next_element(kind);
+    string word(kind);
+    if (word == "apply") {
+      name = rest ? rest : "";
+    } else if (word == "account" || word == "tag" || word == "fixed" || word == "rate" ||
+               word == "year") {
+      name = rest && *rest ? rest : word;
+    } else {
+      throw_(parse_error, _f("Unrecognized directive 'end %1%'") % word);
+    }
+  }
 
   if (apply_stack.size() <= 1) {
     if (name.empty()) {
@@ -578,7 +581,9 @@ void instance_t::end_apply_directive(char* kind) {
     }
   }
 
-  if (!name.empty() && name != apply_stack.front().label)
+  // apply_rate_directive records both `apply rate` and `apply fixed` as
+  // "fixed", so either spelling closes either block.
+  if (!name.empty() && (name == "rate" ? string("fixed") : name) != apply_stack.front().label)
     throw_(std::runtime_error,
            _f("'end apply %1%' directive does not match 'apply %2%' directive") % name %
                apply_stack.front().label);

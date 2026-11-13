@@ -1,0 +1,17 @@
+; In the older `end <keyword> <rest>` form the text after the keyword is
+; the name the block is checked against, as in `end apply <rest>`; it is
+; not ignored.  `end tag foo` cannot close `apply tag`.
+
+apply tag Trip
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+end tag foo
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 11:
+Error: 'end apply foo' directive does not match 'apply tag' directive
+end test

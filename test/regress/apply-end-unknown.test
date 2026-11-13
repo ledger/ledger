@@ -1,0 +1,18 @@
+; `end` closes an apply block only when followed by nothing, by `apply`
+; (optionally with the block's keyword), or by an apply keyword alone, as
+; in the older `end tag`.  Any other word used to close the newest block
+; silently; it is now an error.
+
+apply account Personal
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+end bogus
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 12:
+Error: Unrecognized directive 'end bogus'
+end test
