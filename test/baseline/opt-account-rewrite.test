@@ -4,6 +4,6 @@
 
 test reg --account-rewrite "Assets:Investments:Vanguard:VMMXX=My:Portfolio"
 07-Feb-02 RD VMMXX              My:Portfolio            0.350 VMMXX  0.350 VMMXX
-07-Feb-02 RD VMMXX              In:Divid:Vanguar:VMMXX       $-0.35       $-0.35
+                                In:Divid:Vanguar:VMMXX       $-0.35       $-0.35
                                                                      0.350 VMMXX
 end test

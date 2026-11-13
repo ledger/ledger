@@ -111,7 +111,8 @@ public:
   0x0200 ///< Cost is fixated with = indicator ({=...}), locking the lot price.
 #define POST_COST_VIRTUAL                                                                          \
   0x0400 ///< Cost was virtualized via (@), meaning the cost is informational only.
-#define POST_ANONYMIZED 0x0800 ///< Temporary anonymous posting created during anonymization.
+#define POST_ANONYMIZED                                                                            \
+  0x0800 ///< Copy standing in for a journal posting (--anon, rewrite rules); print shows it.
 #define POST_DEFERRED 0x1000 ///< Account was specified with <angle brackets> for deferred posting.
 #define POST_IS_TIMELOG 0x2000 ///< Posting was generated from timeclock check-in/check-out data.
 #define POST_AMOUNT_USER_ANNOTATED                                                                 \

@@ -112,9 +112,9 @@ account_t& temporaries_t::create_account(const string& name, account_t* parent) 
 
 void temporaries_t::clear() {
   if (post_temps) {
-    // account_t::remove_post scans the account's whole posting list, so
-    // calling it for each temporary is quadratic in how many an account
-    // holds, and posts_commodities_iterator gives a commodity's account one
+    // account_t::remove_post searches the account's posting list for one
+    // posting, so calling it for each temporary is quadratic in how many an
+    // account holds, and posts_commodities_iterator gives a commodity's account one
     // per price point.  Detach each account's temporaries in a single pass.
     std::map<account_t*, std::set<post_t*>> account_posts;
 

@@ -1,0 +1,36 @@
+; --anon builds its copy of a transaction one posting at a time, upstream
+; of the rewrite rules.  Every posting of a rewritten transaction must join
+; the one copy the rules made for it, so register shows the payee once and
+; print shows each transaction once with all its postings.  The rules match
+; every hashed name, so the output does not depend on the hashes.  The
+; expected output is the output of the same command, without --anon and
+; the rules, on this journal with payee Shop, every account X and the
+; commodity $ written A.
+
+2024/01/01 Grocer
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Landlord
+    Expenses:Rent    $500.00
+    Expenses:Fees      $5.00
+    Assets:Cash
+
+test reg --anon --payee-rewrite .=Shop --account-rewrite .=X
+24-Jan-01 Shop                  X                            A10.00       A10.00
+                                X                           A-10.00            0
+24-Jan-02 Shop                  X                           A500.00      A500.00
+                                X                             A5.00      A505.00
+                                X                          A-505.00            0
+end test
+
+test print --anon --payee-rewrite .=Shop --account-rewrite .=X
+2024/01/01 Shop
+    X                                         A10.00
+    X
+
+2024/01/02 Shop
+    X                                        A500.00
+    X                                          A5.00
+    X
+end test

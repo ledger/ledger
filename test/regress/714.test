@@ -16,9 +16,9 @@ account-rewrite Assets:Receivable:AdSense  Income:AdSense
 
 test reg
 12-Jan-31 AdSense earnings (1.. Income:AdSense             0.01 EUR     0.01 EUR
-12-Jan-31 AdSense earnings (1.. Income:AdSense            -0.01 EUR            0
+                                Income:AdSense            -0.01 EUR            0
 12-Mar-01 AdSense earnings      Assets:Bank                0.01 EUR     0.01 EUR
-12-Mar-01 AdSense earnings      Income:AdSense            -0.01 EUR            0
+                                Income:AdSense            -0.01 EUR            0
 end test
 
 test bal

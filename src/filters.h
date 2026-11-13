@@ -863,8 +863,7 @@ public:
  * --deviation or --anon, has no amount expression of the user's own
  * (--amount), names no more than one commodity with -X, copies no postings
  * into transactions of their own (--pivot, --pivot-only, --account, --payee,
- * --date, --inject, or an account-rewrite or payee-rewrite rule, given by
- * directive or option), and is no budget or forecast report
+ * --date or --inject), and is no budget or forecast report
  * (uses_cost_baseline() in filters.cc gives the reason for each).  Its
  * baseline is the running total at cost.  Each posting contributes the
  * report's amount expression applied to its cost, valued on its
@@ -1417,18 +1416,32 @@ public:
 };
 
 /**
- * @brief Applies the payee and account rewrite rules of the report and of the journal.
+ * @brief Applies payee and account rewrite rules, the report's (--payee-rewrite,
+ * --account-rewrite) before the journal's (directives).
  *
- * When a --payee-rewrite or --account-rewrite option, or a payee-rewrite or account-rewrite
- * directive, gives a rule, this handler checks each posting against the report's rules and then
- * the journal's.  If a rule matches, the posting is copied and the payee or account is replaced
- * according to the mapping.  Non-matching postings pass through unchanged.
+ * A transaction whose payee, or any of whose postings' accounts, matches a rule is copied once,
+ * with every posting and with the transaction's own date, under the replacement names, and each
+ * of its postings that reaches this filter is forwarded as its copy.  A posting an upstream
+ * filter adds to such a transaction later (--anon builds its copies one posting at a time) joins
+ * the same copy.  Other postings pass through unchanged.
  */
 class rewrite_posts : public item_handler<post_t> {
+  /// The copy made for a transaction, once a rule matched it, and how many
+  /// of its postings have been examined.
+  struct xact_state_t {
+    xact_t* copy = nullptr;
+    std::size_t seen = 0;
+  };
+
   report_t& report;    ///< Report context (its own rewrite rules and the journal's).
   temporaries_t temps; ///< Temporary storage for rewritten xacts/posts.
+  std::unordered_map<const xact_t*, xact_state_t> xacts;
+  /// Posting of a rewritten transaction -> its copy.
+  std::unordered_map<const post_t*, post_t*> copies;
 
   rewrite_posts();
+
+  void rewrite_xact(xact_t& xact, xact_state_t& state);
 
 public:
   rewrite_posts(post_handler_ptr handler, report_t& _report)
@@ -1449,6 +1462,8 @@ public:
   static bool has_rules(const report_t& report);
 
   void clear() override {
+    xacts.clear();
+    copies.clear();
     temps.clear();
     item_handler<post_t>::clear();
   }

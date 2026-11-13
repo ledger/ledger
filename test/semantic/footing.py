@@ -303,21 +303,7 @@ EXPECTED_REFUSALS = {
 # Journals that C++ leaves unfooted: every report that fails, with its
 # total, unrealized row and gain, and the reason.  On regress/999-a the
 # -X report prints a total that leaves unconverted what its rows
-# convert, as before the G7 fix.  The rewrite journals are unfooted by
-# design: uses_cost_baseline (src/filters.cc) keeps the revaluation
-# between postings for a journal with an account-rewrite or
-# payee-rewrite directive, because rewrite_posts copies each posting
-# that a rule matches (for payee-rewrite, every posting of a
-# transaction whose payee it matches) into a transaction of its own,
-# dated by the posting.  On these journals that revaluation books no
-# gain under -V or -X.
-_REWRITE = ("{} directive: uses_cost_baseline keeps the revaluation"
-            " between postings, and bal -V --unrealized and bal -X $"
-            " --unrealized each total $200 with no unrealized row while"
-            " bal -G and bal -G -X $ report $200; the test pins the -V"
-            " report")
-_REWRITE_FAILS = {"total": {"$": "200"}, "unrealized": {},
-                  "gain": {"$": "200"}}
+# convert, as before the G7 fix.
 EXPECTED_NONFOOTING = {
     "test/regress/999-a.test": {
         "failures": {"-X": {"total": {"$": "-1000", "AAPL": "1000"},
@@ -328,12 +314,6 @@ EXPECTED_NONFOOTING = {
                    " unconverted, $-1000 and 1000 AAPL, with no"
                    " unrealized row, and bal -G -X $ prints nothing, as"
                    " on 3.4.1 and on the build before the G7 fix")},
-    "test/regress/unrealized-account-rewrite.test": {
-        "failures": {"-V": _REWRITE_FAILS, "-X": _REWRITE_FAILS},
-        "reason": _REWRITE.format("an account-rewrite")},
-    "test/regress/unrealized-payee-rewrite.test": {
-        "failures": {"-V": _REWRITE_FAILS, "-X": _REWRITE_FAILS},
-        "reason": _REWRITE.format("a payee-rewrite")},
 }
 
 # Journals on which a valuation report is not compared because its rows
@@ -443,6 +423,7 @@ EXPECTED_COMPARED = {
     "test/baseline/opt-unrealized-gains.test": "-V -X",
     "test/regress/coverage-report-unrealized.test": "-V -X",
     "test/regress/flat-unrealized.test": "-V -X",
+    "test/regress/unrealized-account-rewrite.test": "-V -X",
     "test/regress/unrealized-excluded-reports.test": "-V -X",
     "test/regress/unrealized-footing-after-terminus.test": "-V -X",
     "test/regress/unrealized-footing-debit-credit.test": "-V -X",
@@ -451,6 +432,7 @@ EXPECTED_COMPARED = {
     "test/regress/unrealized-footing-same-day-lots.test": "-V -X",
     "test/regress/unrealized-footing-two-lots.test": "-V -X",
     "test/regress/unrealized-footing-unfiltered.test": "-V -X",
+    "test/regress/unrealized-payee-rewrite.test": "-V -X",
     "test/regress/unrealized-unpriced-holding.test": "-X",
 }
 
@@ -703,10 +685,14 @@ def classify_selftest():
     -> the cases that land in another bin than they must."""
     other = "test/regress/not-in-any-table.test"
     ref_rel, ref = sorted(EXPECTED_REFUSALS.items())[0]
-    nf_rel, nf = next((rel, e) for rel, e in
-                      sorted(EXPECTED_NONFOOTING.items())
-                      if sorted(e["failures"]) == ["-V", "-X"]
-                      and rel not in EXPECTED_UNVALUED)
+    # No journal of the corpus is recorded as unfooted under both reports
+    # (regress/999-a fails under -X alone), so the cases that need one
+    # record a journal of their own for the length of the selftest.
+    nf_rel = "test/regress/selftest-nonfooting.test"
+    nf_fails = {"total": {"$": "200"}, "unrealized": {},
+                "gain": {"$": "200"}}
+    nf = {"failures": {"-V": nf_fails, "-X": nf_fails},
+          "reason": "made up for classify_selftest"}
     nfu_rel, nfu = next((rel, e) for rel, e in
                         sorted(EXPECTED_NONFOOTING.items())
                         if EXPECTED_UNVALUED.get(rel, ("",))[0] == "-V")
@@ -770,10 +756,14 @@ def classify_selftest():
          {"dropped": {"-V": mixed, "-X": outside}}, fail),
     ]
     faults = []
-    for label, rel, b, why, want in cases:
-        got = classify(rel, b, why)[0]
-        if got != want:
-            faults.append(f"{label}: {got}, not {want}")
+    EXPECTED_NONFOOTING[nf_rel] = nf
+    try:
+        for label, rel, b, why, want in cases:
+            got = classify(rel, b, why)[0]
+            if got != want:
+                faults.append(f"{label}: {got}, not {want}")
+    finally:
+        del EXPECTED_NONFOOTING[nf_rel]
     return faults
 
 

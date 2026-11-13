@@ -234,7 +234,11 @@ public:
   /** @brief Flush all deferred postings into their target accounts, recursively. */
   void apply_deferred_posts();
 
-  /** @brief Remove a posting from this account and invalidate cached iterators. */
+  /**
+   * @brief Remove a posting, which is in this account's list at most once,
+   * searching from the end where report-time copies sit, and invalidate
+   * cached iterators.
+   */
   bool remove_post(post_t* post);
 
   /**

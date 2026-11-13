@@ -67,6 +67,31 @@
 
 namespace ledger {
 
+namespace {
+/// Whether @p name is a value of a posting: a name the posting scope
+/// resolves (item_t::lookup, post_t::lookup) that is called without
+/// arguments and yields a value.  The metadata accessors and any/all take
+/// arguments, and post, xact and parent yield a scope; a name added to those
+/// lookups that does either belongs in this list.
+bool is_posting_value(const string& name) {
+  static const std::set<string> not_values = {"all",    "any",  "has_meta", "has_tag", "meta",
+                                              "parent", "post", "tag",      "xact"};
+  return post_t().lookup(symbol_t::FUNCTION, name) && not_values.count(name) == 0;
+}
+
+/// The account expression for --pivot and --pivot-only on @p name: the
+/// tag's value, or, for postings without the tag, the posting's value
+/// @p name when there is one (#1048).  The choice is made once here, not by
+/// re-reading each posting's result.
+string pivot_account_expr(const string& name) {
+  string quoted = string("\"") + name + "\"";
+  string tag_value = "tag(" + quoted + ")";
+  if (is_posting_value(name))
+    tag_value = "(has_tag(" + quoted + ") ? " + tag_value + " : " + name + ")";
+  return string("\"") + name + ":\" + " + tag_value;
+}
+} // namespace
+
 /*--- Pre-post handlers (outermost filters) ---*/
 
 /**
@@ -105,10 +130,9 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t
   // stays in chain_post_handlers because it does not interact with query
   // filtering.
   if (report.HANDLED(pivot_only_) && !report.HANDLED(account_)) {
-    string pivot = report.HANDLER(pivot_only_).str();
-    pivot = string("\"") + pivot + ":\" + tag(\"" + pivot + "\")";
-    handler = std::make_shared<transfer_details>(handler, transfer_details::SET_ACCOUNT_REPLACE,
-                                                 report.session.journal->master, pivot, report);
+    handler = std::make_shared<transfer_details>(
+        handler, transfer_details::SET_ACCOUNT_REPLACE, report.session.journal->master,
+        pivot_account_expr(report.HANDLER(pivot_only_).str()), report);
   }
 
   // This filter_posts will only pass through posts matching the `predicate'.
@@ -134,10 +158,9 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t
   // `bal --pivot Project Expenses` still matches the original "Expenses"
   // segment, so the same filter works for both pivoted and unpivoted names.
   if (report.HANDLED(pivot_) && !report.HANDLED(account_)) {
-    string pivot = report.HANDLER(pivot_).str();
-    pivot = string("\"") + pivot + ":\" + tag(\"" + pivot + "\")";
-    handler = std::make_shared<transfer_details>(handler, transfer_details::SET_ACCOUNT,
-                                                 report.session.journal->master, pivot, report);
+    handler = std::make_shared<transfer_details>(
+        handler, transfer_details::SET_ACCOUNT, report.session.journal->master,
+        pivot_account_expr(report.HANDLER(pivot_).str()), report);
   }
 
   if (report.budget_flags != BUDGET_NO_BUDGET) {

@@ -1,0 +1,131 @@
+; --account, --pivot and --pivot-only share one account-rewriting filter.
+; --pivot NAME falls back to the posting property NAME (payee, code, ...)
+; for postings without the tag NAME.  That choice is made once, when the
+; report is built: an --account expression whose value merely ends in ':'
+; is not reinterpreted, a name that is no posting property (such as now)
+; is not evaluated, a name that takes arguments or yields a scope (meta,
+; any, xact) pivots on the tag alone, and a posting carrying the tag, even
+; with no value, pivots on the tag.
+
+2024/01/01 Grocer
+    ; Proj: P0
+    ; meta: M1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 (42) Other
+    Expenses:Food    $5.00
+    Assets:Cash
+
+2024/01/03 Kiosk
+    ; :payee:
+    Expenses:Snacks    $1.00
+    Assets:Cash
+
+; A value ending in ':' names no account, so postings keep their own.
+
+test bal --flat --account '"payee:"'
+             $-16.00  Assets:Cash
+              $15.00  Expenses:Food
+               $1.00  Expenses:Snacks
+--------------------
+                   0
+end test
+
+; The expression sees the copy while it is still in its journal account.
+
+test bal --flat --account 'str(account_id)'
+               $1.00  2:Expenses:Snacks
+              $15.00  3:Expenses:Food
+             $-16.00  4:Assets:Cash
+--------------------
+                   0
+end test
+
+test bal --flat --pivot Proj
+              $-6.00  Assets:Cash
+               $5.00  Expenses:Food
+               $1.00  Expenses:Snacks
+             $-10.00  Proj:P0:Assets:Cash
+              $10.00  Proj:P0:Expenses:Food
+--------------------
+                   0
+end test
+
+; Kiosk carries the tag payee without a value, so it is not pivoted.
+
+test bal --flat --pivot payee
+              $-1.00  Assets:Cash
+               $1.00  Expenses:Snacks
+             $-10.00  payee:Grocer:Assets:Cash
+              $10.00  payee:Grocer:Expenses:Food
+              $-5.00  payee:Other:Assets:Cash
+               $5.00  payee:Other:Expenses:Food
+--------------------
+                   0
+end test
+
+test bal --flat --pivot-only payee Food
+              $10.00  payee:Grocer
+               $5.00  payee:Other
+--------------------
+              $15.00
+end test
+
+test bal --flat --pivot code
+             $-11.00  Assets:Cash
+              $10.00  Expenses:Food
+               $1.00  Expenses:Snacks
+              $-5.00  code:42:Assets:Cash
+               $5.00  code:42:Expenses:Food
+--------------------
+                   0
+end test
+
+test bal --flat --pivot now
+             $-16.00  Assets:Cash
+              $15.00  Expenses:Food
+               $1.00  Expenses:Snacks
+--------------------
+                   0
+end test
+
+; meta takes a tag name: postings without the tag keep their accounts.
+
+test bal --flat --pivot meta
+              $-6.00  Assets:Cash
+               $5.00  Expenses:Food
+               $1.00  Expenses:Snacks
+             $-10.00  meta:M1:Assets:Cash
+              $10.00  meta:M1:Expenses:Food
+--------------------
+                   0
+end test
+
+; xact yields a scope, any takes an expression: neither is a value.
+
+test bal --flat --pivot xact
+             $-16.00  Assets:Cash
+              $15.00  Expenses:Food
+               $1.00  Expenses:Snacks
+--------------------
+                   0
+end test
+
+test bal --flat --pivot any
+             $-16.00  Assets:Cash
+              $15.00  Expenses:Food
+               $1.00  Expenses:Snacks
+--------------------
+                   0
+end test
+
+; Copies made by --payee are counted once in the account totals.
+
+test bal --flat --payee '"X"'
+             $-16.00  Assets:Cash
+              $15.00  Expenses:Food
+               $1.00  Expenses:Snacks
+--------------------
+                   0
+end test

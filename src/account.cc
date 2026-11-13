@@ -241,7 +241,9 @@ bool account_t::remove_post(post_t* post) {
   // remove it anyway.  This can happen if there is an error during
   // parsing, when the posting knows what its account is, but
   // xact_t::finalize has not yet added that posting to the account.
-  posts.remove(post);
+  auto found = std::find(posts.rbegin(), posts.rend(), post);
+  if (found != posts.rend())
+    posts.erase(std::next(found).base());
   post->account = nullptr;
 
   if (deferred_posts) {

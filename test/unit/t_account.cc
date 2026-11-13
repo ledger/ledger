@@ -221,6 +221,43 @@ BOOST_AUTO_TEST_CASE(testAddAndRemovePost)
   BOOST_CHECK(root.valid());
 }
 
+BOOST_AUTO_TEST_CASE(testRemovePostKeepsOthersInOrder)
+{
+  account_t root;
+  account_t* expenses = root.find_account("Expenses");
+  post_t post1(expenses);
+  post_t post2(expenses);
+  post_t post3(expenses);
+  expenses->add_post(&post1);
+  expenses->add_post(&post2);
+  expenses->add_post(&post3);
+
+  // The posting appended last, as a report-time copy is, goes; the rest stay.
+  BOOST_CHECK(expenses->remove_post(&post3));
+  BOOST_CHECK_EQUAL(2, expenses->posts.size());
+  BOOST_CHECK(expenses->posts.front() == &post1);
+  BOOST_CHECK(expenses->posts.back() == &post2);
+  BOOST_CHECK(post3.account == nullptr);
+
+  // A posting in the middle is found as well.
+  expenses->add_post(&post3);
+  BOOST_CHECK(expenses->remove_post(&post2));
+  BOOST_CHECK_EQUAL(2, expenses->posts.size());
+  BOOST_CHECK(expenses->posts.front() == &post1);
+  BOOST_CHECK(expenses->posts.back() == &post3);
+
+  // A posting not in the list leaves it as it was.
+  post_t stranger(expenses);
+  BOOST_CHECK(expenses->remove_post(&stranger));
+  BOOST_CHECK_EQUAL(2, expenses->posts.size());
+  BOOST_CHECK(stranger.account == nullptr);
+
+  expenses->remove_post(&post1);
+  expenses->remove_post(&post3);
+  BOOST_CHECK(expenses->posts.empty());
+  BOOST_CHECK(root.valid());
+}
+
 BOOST_AUTO_TEST_CASE(testXdata)
 {
   account_t root;

@@ -268,6 +268,21 @@ void transfer_account_flags(account_t& account, account_t& original) {
   if (original.has_xdata())
     account.xdata().add_flags(original.xdata().flags());
 }
+
+/// Move the report-time copy @p temp from its account to the temporary
+/// account @p path under @p master, which takes the old account's flags as
+/// transfer_account_flags gives them.
+void retarget_temp_post(post_t& temp, const string& path, temporaries_t& temps, account_t* master) {
+  account_t* prev_account = temp.account;
+  prev_account->remove_post(&temp);
+
+  std::list<string> names;
+  split_string(path, ':', names);
+  temp.account = create_temp_account_from_path(names, temps, master);
+  temp.account->add_post(&temp);
+
+  transfer_account_flags(*temp.account, *prev_account);
+}
 } // namespace
 
 /*--- Anonymization ---*/
@@ -1021,17 +1036,18 @@ bool exchange_names_one_commodity(const report_t& report) {
  *   its lot annotation separately and can give one commodity two labels (in
  *   regress/1190 the cost is in B and the fixated price in C), so the cost is
  *   not in the terms in which the lot is valued.
- * - --pivot, --pivot-only, --account, --payee and --date (transfer_details),
- *   a rewrite rule, from an account-rewrite or payee-rewrite directive or
- *   option (rewrite_posts, which chain_post_handlers adds when
- *   rewrite_posts::has_rules holds) and --inject
- *   (inject_posts) copy a posting into a transaction of its own, dated by
- *   the posting.  A posting that carries its own date then no longer shares
- *   the date on which cost_baseline values the costs of the rest of its
- *   transaction, so under -X the two sides of a balanced transaction are
- *   converted at different rates (regress/unrealized-footing-posting-date,
- *   regress/unrealized-account-rewrite and regress/unrealized-payee-rewrite).
- *   regress/unrealized-excluded-reports runs the --inject report.
+ * - --pivot, --pivot-only, --account, --payee and --date (transfer_details)
+ *   and --inject (inject_posts) copy a posting into a transaction of its
+ *   own, dated by the posting.  A posting that carries its own date then no
+ *   longer shares the date on which cost_baseline values the costs of the
+ *   rest of its transaction, so under -X the two sides of a balanced
+ *   transaction are converted at different rates
+ *   (regress/unrealized-footing-posting-date).
+ *   regress/unrealized-excluded-reports runs the --inject report.  A rewrite
+ *   rule is no such case: rewrite_posts copies a rewritten transaction
+ *   whole, under the transaction's own date
+ *   (regress/unrealized-account-rewrite, regress/unrealized-payee-rewrite
+ *   and regress/unrealized-rewrite-option).
  * - An amount expression of the user's own (--amount or -t, or the collect
  *   clause of select), and any other than those that amount_expr_reads_cost
  *   accepts: cost_baseline reads the cost in place of the amount, which gives
@@ -1063,7 +1079,7 @@ bool report_revalues_between_postings(const report_t& report) {
          report.budget_flags == BUDGET_NO_BUDGET && !report.HANDLED(forecast_while_) &&
          !report.HANDLED(anon) && !report.HANDLED(pivot_) && !report.HANDLED(pivot_only_) &&
          !report.HANDLED(account_) && !report.HANDLED(payee_) && !report.HANDLED(date_) &&
-         !report.HANDLED(inject_) && !rewrite_posts::has_rules(report);
+         !report.HANDLED(inject_);
 }
 
 bool uses_cost_baseline(const report_t& report, bool for_accounts_report, bool show_unrealized) {
@@ -1480,12 +1496,13 @@ struct insert_prices_in_map {
  * valuation date enters the baseline.  Valuing every posting of a
  * transaction on one date converts them all at the same rates, so a
  * transaction that balances at cost contributes zero even when a posting
- * carries its own date.  That holds because every posting seen here still
- * belongs to its journal transaction: uses_cost_baseline excludes the reports
+ * carries its own date.  That holds because every posting seen here belongs
+ * to its journal transaction, or to the copy rewrite_posts makes of the whole
+ * transaction under the same date: uses_cost_baseline excludes the reports
  * whose handlers copy a posting into a transaction of its own, dated by the
- * posting.  Evaluating the amount expression gives the
- * contribution the shape of the posting's own contribution to the running
- * total: a debit and credit pair under --dc, a plain amount otherwise.
+ * posting.  Evaluating the amount expression gives the contribution the shape
+ * of the posting's own contribution to the running total: a debit and credit
+ * pair under --dc, a plain amount otherwise.
  *
  * Where the report cannot compare the posting's own contribution with its
  * cost at the terminus (incomparable_at_terminus), because it leaves the
@@ -2243,44 +2260,15 @@ void transfer_details::operator()(post_t& post) {
     case SET_ACCOUNT_REPLACE: {
       string account_name = substitute.to_string();
 
-      // When the expression result ends with ':', the tag was not found.
-      // Try evaluating the prefix as a built-in property (e.g., payee,
-      // commodity) so that --pivot works with properties, not just tags.
-      if (!account_name.empty() && account_name.back() == ':') {
-        string prop_name = account_name.substr(0, account_name.length() - 1);
-        try {
-          expr_t prop_expr(prop_name);
-          value_t prop_val = prop_expr.calc(bound_scope);
-          if (!prop_val.is_null()) {
-            string prop_str = prop_val.to_string();
-            if (!prop_str.empty())
-              account_name = prop_name + ":" + prop_str;
-          }
-        } catch (...) {
-          // Not a built-in property; leave account_name as-is so the
-          // posting passes through unchanged.
-          discard_error_context();
-        }
-      }
-
       if (!account_name.empty() && account_name[account_name.length() - 1] != ':') {
-        account_t* prev_account = temp.account;
-        temp.account->remove_post(&temp);
-
         // SET_ACCOUNT prepends the expression result to the original account
         // hierarchy, while SET_ACCOUNT_REPLACE drops the original account
         // entirely (for --pivot-only, issue #1153).
         if (which_element == SET_ACCOUNT) {
           account_name += ':';
-          account_name += prev_account->fullname();
+          account_name += temp.account->fullname();
         }
-
-        std::list<string> account_names;
-        split_string(account_name, ':', account_names);
-        temp.account = create_temp_account_from_path(account_names, temps, xact.journal->master);
-        temp.account->add_post(&temp);
-
-        transfer_account_flags(*temp.account, *prev_account);
+        retarget_temp_post(temp, account_name, temps, xact.journal->master);
       }
       break;
     }
@@ -2786,54 +2774,65 @@ bool rewrite_posts::has_rules(const report_t& report) {
          !report.session.journal->account_rewrite_mappings.empty();
 }
 
-/**
- * Apply payee and account rewrite rules to each posting: the report's,
- * from --payee-rewrite and --account-rewrite, before the journal's, from
- * its directives.
- *
- * Checks the posting against all payee rewrite rules (matching on the
- * transaction payee) and account rewrite rules (matching on the account
- * fullname).  If either matches, a temporary copy is created with the
- * rewritten payee and/or account.  Non-matching postings pass through
- * unchanged.
- */
+/// Forward @p post, or its copy when a rule matched its transaction.
 void rewrite_posts::operator()(post_t& post) {
+  xact_t& xact = *post.xact;
+  xact_state_t& state = xacts[&xact];
+  if (xact.posts.size() > state.seen)
+    rewrite_xact(xact, state);
+
+  auto copy = copies.find(&post);
+  item_handler<post_t>::operator()(copy == copies.end() ? post : *copy->second);
+}
+
+/// Examine the postings added to @p xact since the last call; once its payee
+/// or any posting's account matches a rule, copy every posting of it,
+/// rewritten, into one copy.
+void rewrite_posts::rewrite_xact(xact_t& xact, xact_state_t& state) {
   journal_t* journal = report.session.journal.get();
+  auto new_account_of = [&](const post_t& post) {
+    return rewrite_of(post.account->fullname(), report.account_rewrite_mappings,
+                      journal->account_rewrite_mappings);
+  };
 
-  // Check whether any payee or account rewrite rule matches this posting.
-  string new_payee =
-      rewrite_of(post.xact->payee, report.payee_rewrite_mappings, journal->payee_rewrite_mappings);
-  string new_account = rewrite_of(post.account->fullname(), report.account_rewrite_mappings,
-                                  journal->account_rewrite_mappings);
-
-  // If neither rule matched, forward the original posting unchanged.
-  if (new_payee.empty() && new_account.empty()) {
-    item_handler<post_t>::operator()(post);
-    return;
+  // The postings added since the last call: all of them the first time,
+  // then those an upstream filter (--anon) appended since.
+  auto first_new =
+      std::prev(xact.posts.end(), static_cast<std::ptrdiff_t>(xact.posts.size() - state.seen));
+  if (!state.copy) {
+    string new_payee;
+    if (state.seen == 0)
+      new_payee =
+          rewrite_of(xact.payee, report.payee_rewrite_mappings, journal->payee_rewrite_mappings);
+    bool matched = !new_payee.empty();
+    for (auto i = first_new; !matched && i != xact.posts.end(); ++i)
+      matched = !new_account_of(**i).empty();
+    if (!matched) {
+      state.seen = xact.posts.size();
+      return;
+    }
+    // One copy of the whole transaction, as anonymize_posts makes, so that
+    // print shows it once with all its postings and register shows its
+    // payee once.
+    state.copy = &temps.copy_xact(xact);
+    if (!new_payee.empty())
+      state.copy->payee = new_payee;
+    first_new = xact.posts.begin();
   }
 
-  // At least one rule matched: create a temporary copy and apply rewrites.
-  xact_t& xact = temps.copy_xact(*post.xact);
-  xact._date = post.date();
-  post_t& temp = temps.copy_post(post, xact);
-  temp.set_state(post.state());
-
-  if (!new_payee.empty())
-    xact.payee = new_payee;
-
-  if (!new_account.empty()) {
-    account_t* prev_account = temp.account;
-    temp.account->remove_post(&temp);
-
-    std::list<string> account_names;
-    split_string(new_account, ':', account_names);
-    temp.account = create_temp_account_from_path(account_names, temps, journal->master);
-    temp.account->add_post(&temp);
-
-    transfer_account_flags(*temp.account, *prev_account);
+  for (auto i = first_new; i != xact.posts.end(); ++i) {
+    post_t& temp = temps.copy_post(**i, *state.copy);
+    // Retarget the copy at once, while it is the last posting of its account.
+    string new_account = new_account_of(**i);
+    if (!new_account.empty())
+      retarget_temp_post(temp, new_account, temps, journal->master);
+    // A copy of a journal posting stands in for it in print; a copy of one
+    // ledger made up (temporary or generated) keeps that posting's flags.
+    if (!(*i)->has_flags(ITEM_TEMP | ITEM_GENERATED))
+      temp.add_flags(POST_ANONYMIZED);
+    copies.emplace(*i, &temp);
   }
-
-  item_handler<post_t>::operator()(temp);
+  state.seen = xact.posts.size();
 }
 
 } // namespace ledger

@@ -4,6 +4,6 @@
 
 test reg --payee-rewrite "RD VMMXX=My Investment"
 07-Feb-02 My Investment         As:Inves:Vanguar:VMMXX  0.350 VMMXX  0.350 VMMXX
-07-Feb-02 My Investment         In:Divid:Vanguar:VMMXX       $-0.35       $-0.35
+                                In:Divid:Vanguar:VMMXX       $-0.35       $-0.35
                                                                      0.350 VMMXX
 end test

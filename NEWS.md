@@ -251,10 +251,8 @@ components with their standard-library equivalents.
   `--plopen`, reports with an `--amount` expression of their own or with an
   `-X` that names more than one commodity, reports that copy each posting into
   a transaction of its own (under `--account`, `--date`, `--inject`,
-  `--payee`, `--pivot` or `--pivot-only`, or for a journal with
-  `account-rewrite` or `payee-rewrite` directives), budget and forecast
-  reports, and reports grouped by period, weekday or payee keep the earlier
-  revaluation
+  `--payee`, `--pivot` or `--pivot-only`), budget and forecast reports, and
+  reports grouped by period, weekday or payee keep the earlier revaluation
 
 - Set commodity precision from price records and let later transactions widen,
   but not narrow, the recorded precision (#1190, #2481)
@@ -602,9 +600,9 @@ components with their standard-library equivalents.
   #1161, #1576, #1605, plus crash #2043)
 
 - Add `payee-rewrite` and `account-rewrite` directives (with matching
-  `--payee-rewrite` and `--account-rewrite` CLI flags) that apply regex
-  substitutions to payee and account names at report time without modifying
-  the journal
+  `--payee-rewrite` and `--account-rewrite` CLI flags) that, at report time,
+  replace the whole payee or account name of postings whose payee or account
+  matches the rule's regex, without modifying the journal
 
 - Add directives to enable and disable automatic transactions
 
@@ -685,8 +683,8 @@ components with their standard-library equivalents.
 
 ### New Commands and Directives
 
-- Add `payee-rewrite` and `account-rewrite` directives for report-time
-  transformation
+- Add `payee-rewrite` and `account-rewrite` directives, which replace
+  matching payee and account names at report time
 
 - Add directives to enable and disable automatic transactions
 
