@@ -1,0 +1,24 @@
+; --begin/--end accept "<date> <time>" or "<date>@<time>", but only with a
+; time of day in [00:00, 24:00).  A larger or negative time used to move
+; the boundary silently by whole days.
+
+2023/12/31 Before
+    Expenses:Food    $1.00
+    Assets:Cash
+
+2024/01/01 Morning
+    Expenses:Food    $2.00
+    Assets:Cash
+
+2024/01/03 Later
+    Expenses:Food    $3.00
+    Assets:Cash
+
+test reg Expenses --begin "2024/01/01 00:00"
+24-Jan-01 Morning               Expenses:Food                 $2.00        $2.00
+24-Jan-03 Later                 Expenses:Food                 $3.00        $5.00
+end test
+
+test reg Expenses --begin "2024/01/01 23:59"
+24-Jan-03 Later                 Expenses:Food                 $3.00        $3.00
+end test

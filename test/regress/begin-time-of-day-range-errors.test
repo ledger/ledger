@@ -1,0 +1,45 @@
+; --begin/--end accept "<date> <time>" or "<date>@<time>", but only with a
+; time of day in [00:00, 24:00).  A larger or negative time used to move
+; the boundary silently by whole days.
+
+2023/12/31 Before
+    Expenses:Food    $1.00
+    Assets:Cash
+
+2024/01/01 Morning
+    Expenses:Food    $2.00
+    Assets:Cash
+
+2024/01/03 Later
+    Expenses:Food    $3.00
+    Assets:Cash
+
+test reg Expenses --begin "2024/01/01 99:00" -> 1
+__ERROR__
+While parsing option '--begin'
+Error: Invalid char ':'
+end test
+
+test reg Expenses --begin "2024/01/01 24:00" -> 1
+__ERROR__
+While parsing option '--begin'
+Error: Invalid char ':'
+end test
+
+test reg Expenses --begin "2024/01/01 -48:00" -> 1
+__ERROR__
+While parsing option '--begin'
+Error: Invalid char ':'
+end test
+
+test reg Expenses --end "2024/01/01 99:00" -> 1
+__ERROR__
+While parsing option '--end'
+Error: Invalid char ':'
+end test
+
+test reg Expenses --end "2024/01/01@25:00" -> 1
+__ERROR__
+While parsing option '--end'
+Error: Invalid date: 2024/01/01@25:00
+end test

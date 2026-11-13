@@ -438,7 +438,9 @@ optional<date_t> string_to_relative_date(const std::string& str) {
  *
  * Tries "YYYY/MM/DD HH:MM:SS" first, then "MM/DD/YYYY HH:MM:SS"
  * (the timeclock format).  Separators `.` and `-` are normalized to `/`
- * before parsing.
+ * before parsing.  Command-line options (--begin, --end, --now) use
+ * try_parse_datetime() instead, which also accepts HH:MM and an '@'
+ * separator.
  */
 datetime_t parse_datetime(const char* str) {
   if (std::strlen(str) > 127) {
@@ -469,10 +471,18 @@ datetime_t parse_datetime(const char* str) {
  * Non-throwing parser for inputs that may carry a time component.  A datetime
  * is recognized structurally as `<date><sep><time>`, where `sep` is a space
  * or `@` (the latter avoids shell quoting in forms like "2018/12/16@08:12").
- * Strings without such a separator -- plain dates, period expressions, and
- * relative-date keywords -- return none immediately, sparing the common case
- * a wasted parse-and-throw cycle.  When a separator is present, the date and
- * time portions are parsed independently and combined.
+ * Strings without such a separator -- plain dates, one-word period
+ * expressions and relative-date keywords -- return none at once; a
+ * multi-word period expression such as "last month" has a space, fails the
+ * date parse and returns none through the catch.  The time of day must lie
+ * in [00:00, 24:00): duration_from_string accepts any duration, and a
+ * larger or negative one would shift the date.  When a separator is
+ * present, the date and time portions are parsed independently and
+ * combined.
+ *
+ * This grammar serves command-line options only; journal and expression
+ * datetimes (the P directive, timeclock entries, to_datetime()) go through
+ * parse_datetime(), which accepts just its two fixed formats.
  */
 optional<datetime_t> try_parse_datetime(const std::string& str) {
   if (str.size() > 127)
@@ -485,6 +495,8 @@ optional<datetime_t> try_parse_datetime(const std::string& str) {
   try {
     date_t day = parse_date(str.substr(0, sep).c_str());
     time_duration_t tod = posix_time::duration_from_string(str.substr(sep + 1));
+    if (tod.is_negative() || tod >= posix_time::hours(24))
+      return none;
     return datetime_t(day, tod);
   } catch (const std::exception&) { // NOLINT(bugprone-empty-catch)
     return none;
