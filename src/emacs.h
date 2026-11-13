@@ -80,8 +80,6 @@ class report_t;
  * double-quoted string literals.
  */
 class format_emacs_posts : public item_handler<post_t> {
-  format_emacs_posts(); ///< Disabled default constructor (output stream is required).
-
 protected:
   report_t& report;  ///< The report context (provides date format options).
   std::ostream& out; ///< The output stream for s-expression output.
@@ -98,7 +96,7 @@ public:
 
   /// @brief Write the transaction header portion of the s-expression
   ///        (file path, line number, date, code, payee).
-  virtual void write_xact(xact_t& xact);
+  void write_xact(xact_t& xact);
 
   /// @brief Close the outermost list and flush the stream.  Under
   ///        --group-by this runs once per group, so forget the last
@@ -118,7 +116,7 @@ public:
   void operator()(post_t& post) override;
 
   /// @brief Escape backslashes and double quotes for Lisp string literals.
-  virtual string escape_string(string raw);
+  string escape_string(string raw);
 };
 
 } // namespace ledger

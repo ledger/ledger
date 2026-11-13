@@ -196,7 +196,7 @@ public:
    *        hierarchical (non-flat) mode.
    * @return 1 if the account was displayed, 0 otherwise.
    */
-  virtual std::size_t post_account(account_t& account, const bool flat);
+  std::size_t post_account(account_t& account, const bool flat);
 
   /// @brief Mark accounts, render all queued accounts, and print the total.
   void flush() override;
@@ -297,7 +297,7 @@ public:
   /// @brief Output all collected tag names.
   void flush() override;
   /// @brief Extract metadata tags from a single item (transaction or posting).
-  virtual void gather_metadata(item_t& item);
+  void gather_metadata(item_t& item);
   /// @brief Gather tags from both the transaction and the posting.
   void operator()(post_t& post) override;
 

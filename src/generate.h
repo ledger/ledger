@@ -101,9 +101,9 @@ class generate_posts_iterator
 public:
   generate_posts_iterator(session_t& _session, unsigned int _seed = 0, std::size_t _quantity = 100);
 
-  virtual ~generate_posts_iterator() noexcept { TRACE_DTOR(generate_posts_iterator); }
+  ~generate_posts_iterator() noexcept { TRACE_DTOR(generate_posts_iterator); }
 
-  virtual void increment();
+  void increment();
 
 protected:
   void generate_string(std::ostream& out, int len, bool only_alpha = false);
