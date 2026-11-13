@@ -94,9 +94,9 @@ namespace {
 /**
  * @brief Functor that creates synthetic transactions from commodity price data.
  *
- * Called by commodity_t::map_prices for each (datetime, price) pair in a
- * commodity's price history.  It groups price postings into one transaction
- * per commodity symbol, avoiding duplicates.  The resulting temporary
+ * Called for each price point kept from a commodity's price history (see
+ * posts_commodities_iterator::reset).  It groups price postings into one
+ * transaction per commodity symbol, avoiding duplicates.  The resulting temporary
  * transactions and postings are allocated via a temporaries_t arena and
  * stored in an xacts_list so they persist for the iterator's lifetime.
  */
@@ -210,85 +210,44 @@ void posts_commodities_iterator::reset(journal_t& journal) {
       commodities.insert(base);
   }
 
-  // Phase 2: For each commodity, walk its price history and create
-  // synthetic transactions with postings representing each price point.
-  // When latest_only is set, scan the full history but emit only the
-  // most recently-dated price for each commodity.
-  // When interval is set with a duration, keep only the last price per
-  // commodity per period (e.g. monthly), so that interval_posts does not
-  // sum multiple prices within the same period.
-  if (latest_only) {
-    for (commodity_t* comm : commodities) {
-      datetime_t best_when;
-      amount_t best_price;
-
-      // map_prices emits prices in ascending datetime order (price_map_t is
-      // a std::map<datetime_t, amount_t>), so the last callback gives the
-      // most recent price.  We overwrite best_when/best_price on each call
-      // so only the final (latest) entry survives.
-      comm->map_prices(
-          [&best_when, &best_price](const datetime_t& when, const amount_t& price) {
-            best_when = when;
-            best_price = price;
-          },
-          datetime_t(), datetime_t(), bidirectional);
-
-      if (best_when.is_not_a_date_time())
-        continue; // no price history for this commodity
-
-      xact_t& xact = temps.create_xact();
-      xact_temps.push_back(&xact);
-      xact.payee = best_price.commodity().symbol();
-      xact._date = best_when.date();
-      xact._state = item_t::CLEARED;
-      xact.journal = &journal;
-
-      account_t* account = journal.master->find_account(comm->symbol());
-      post_t& post = temps.create_post(xact, account);
-      post._date = best_when.date();
-      post.amount = best_price;
-      post._state = item_t::CLEARED;
-      post.xdata().datetime = best_when;
+  // Phase 2: For each commodity, walk its price history once and create
+  // synthetic transactions with postings representing each price point
+  // kept.  Without selection every point is kept.  When latest_only is
+  // set, only the newest point of each commodity is kept; when interval is
+  // set with a duration, only the newest point of each period (e.g.
+  // monthly), so that interval_posts does not sum multiple prices within
+  // the same period.  map_prices yields the prices of each price commodity
+  // in date order, but not across price commodities, so "newest" is chosen
+  // by comparing the dates explicitly.
+  const bool select_newest = latest_only || (interval && interval->duration);
+  for (commodity_t* comm : commodities) {
+    create_price_xact add_price_post(journal, journal.master->find_account(comm->symbol()), temps,
+                                     xact_temps);
+    if (!select_newest) {
+      comm->map_prices(std::ref(add_price_post), datetime_t(), datetime_t(), bidirectional);
+      continue;
     }
-  } else if (interval && interval->duration) {
-    for (commodity_t* comm : commodities) {
-      // Use a map from period start date to (latest_when, latest_price).
-      // Since map_prices emits in ascending datetime order, the last
-      // assignment per period keeps the latest price in that period.
-      std::map<date_t, std::pair<datetime_t, amount_t>> period_prices;
-      date_interval_t working(*interval);
 
-      comm->map_prices([&](const datetime_t& when, const amount_t& price) {
-        date_t d = when.date();
-        date_interval_t probe(working);
-        if (probe.find_period(d)) {
-          date_t period_start = *probe.start;
-          period_prices[period_start] = {when, price};
-        }
-      });
-
-      // Create one synthetic posting per period with the last price.
-      account_t* account = journal.master->find_account(comm->symbol());
-      for (const auto& pp : period_prices) {
-        xact_t& xact = temps.create_xact();
-        xact_temps.push_back(&xact);
-        xact.payee = pp.second.second.commodity().symbol();
-        xact._date = pp.second.first.date();
-        xact._state = item_t::CLEARED;
-        xact.journal = &journal;
-
-        post_t& post = temps.create_post(xact, account);
-        post._date = pp.second.first.date();
-        post.amount = pp.second.second;
-        post._state = item_t::CLEARED;
-        post.xdata().datetime = pp.second.first;
-      }
-    }
-  } else {
-    for (commodity_t* comm : commodities)
-      comm->map_prices(create_price_xact(journal, journal.master->find_account(comm->symbol()),
-                                         temps, xact_temps),
-                       datetime_t(), datetime_t(), bidirectional);
+    std::map<date_t, std::pair<datetime_t, amount_t>> newest; // key: period start
+    optional<date_interval_t> working;
+    if (!latest_only)
+      working = *interval;
+    comm->map_prices(
+        [&](const datetime_t& when, const amount_t& price) {
+          date_t key(boost::gregorian::min_date_time); // --latest: one bucket
+          if (working) {
+            date_interval_t probe(*working);
+            if (!probe.find_period(when.date()))
+              return;
+            key = *probe.start;
+          }
+          auto [i, inserted] = newest.try_emplace(key, when, price);
+          if (!inserted && when >= i->second.first) // ties: the later yielded, as before
+            i->second = {when, price};
+        },
+        datetime_t(), datetime_t(), bidirectional);
+    for (const auto& [start, point] : newest)
+      add_price_post(point.first, point.second);
   }
 
   // Phase 3: Sort synthetic transactions by date for deterministic output,

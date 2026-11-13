@@ -390,6 +390,11 @@ components with their standard-library equivalents.
 
 ### Reporting and Display Improvements
 
+- `prices` and `pricedb` with `--latest` report each commodity's newest
+  price, and with `--monthly` (or any `--period` interval) the newest price of
+  each period, also for a commodity quoted in several currencies;
+  `--both-directions` now adds the inverted prices to interval reports too.
+
 - The `xml` report now writes `<balance-assertion>` for a posting written
   `AMOUNT = BALANCE` and `<balance-assignment>` for one written `= BALANCE`;
   it used to swap the two labels.
