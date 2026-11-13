@@ -538,7 +538,8 @@ void check_all_metadata(journal_t& journal, std::variant<int, xact_t*, post_t*> 
 
 /*--- Transaction Management ---*/
 
-/** @brief Compare postings by account pointer for sorting during UUID dedup. */
+namespace {
+/** @brief Order postings by account for UUID dedup, so equal copies share a prefix. */
 bool lt_posting_account(post_t* left, post_t* right) {
   return left->account < right->account;
 }
@@ -553,6 +554,7 @@ bool is_equivalent_posting(post_t* left, post_t* right) {
 
   return true;
 }
+} // namespace
 
 /**
  * @brief Add a parsed transaction to the journal.
@@ -611,17 +613,17 @@ bool journal_t::add_xact(xact_t* xact) {
 
       xact_t* other = iter->second;
 
-      // Copy the two lists of postings (which should be relatively
-      // short), and make sure that the intersection is the empty set
-      // (i.e., that they are the same list).
+      // The two copies are the same transaction when they hold the same
+      // multiset of (account, amount) postings, in any order.  Sorting by
+      // account lets is_permutation pass over the common prefix in one step;
+      // it compares the sizes before it reads either list.
       std::vector<post_t*> this_posts(xact->posts.begin(), xact->posts.end());
       std::sort(this_posts.begin(), this_posts.end(), lt_posting_account);
       std::vector<post_t*> other_posts(other->posts.begin(), other->posts.end());
       std::sort(other_posts.begin(), other_posts.end(), lt_posting_account);
-      bool match = std::equal(this_posts.begin(), this_posts.end(), other_posts.begin(),
-                              is_equivalent_posting);
 
-      if (!match || this_posts.size() != other_posts.size()) {
+      if (!std::is_permutation(this_posts.begin(), this_posts.end(), other_posts.begin(),
+                               other_posts.end(), is_equivalent_posting)) {
         // A transaction that was not parsed from a file -- one built by a
         // caller of add_xact such as the Python bindings -- has no source
         // position; fall back to the standard "<no source context>" text

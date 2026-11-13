@@ -1,0 +1,35 @@
+; A later transaction with an already-seen UUID that carries more
+; postings than the earlier one is not a duplicate: reading it reports
+; the mismatch instead of comparing past the end of the shorter list.
+
+2024/01/15 Store
+    ; UUID: extra-1
+    Expenses:Food       $50.00
+    Assets:Cash
+
+2024/01/15 Store
+    ; UUID: extra-1
+    Expenses:Food       $50.00
+    Assets:Cash
+    (Zzz:V1)             $1.00
+    (Zzz:V2)             $2.00
+    (Zzz:V3)             $3.00
+
+test bal --columns=80 -> 1
+__ERROR__
+While parsing file "$FILE", line 16:
+While comparing this previously seen transaction:
+> 2024/01/15 Store
+>     ; UUID: extra-1
+>     Expenses:Food       $50.00
+>     Assets:Cash
+to this later transaction:
+> 2024/01/15 Store
+>     ; UUID: extra-1
+>     Expenses:Food       $50.00
+>     Assets:Cash
+>     (Zzz:V1)             $1.00
+>     (Zzz:V2)             $2.00
+>     (Zzz:V3)             $3.00
+Error: Transactions with the same UUID must have equivalent postings
+end test

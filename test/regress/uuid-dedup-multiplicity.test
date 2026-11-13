@@ -1,0 +1,34 @@
+; Two transactions with the same UUID, the same postings count and the
+; same accounts and amounts, but different multiplicities: the earlier
+; one posts $1.00 twice, the later one posts $2.00 twice.  They are not
+; the same multiset of postings, so the later one is rejected.
+
+2024/01/15 Store
+    ; UUID: mult-1
+    (Zzz:V)              $1.00
+    (Zzz:V)              $1.00
+    (Zzz:V)              $2.00
+
+2024/01/15 Store
+    ; UUID: mult-1
+    (Zzz:V)              $2.00
+    (Zzz:V)              $1.00
+    (Zzz:V)              $2.00
+
+test bal --columns=80 -> 1
+__ERROR__
+While parsing file "$FILE", line 16:
+While comparing this previously seen transaction:
+> 2024/01/15 Store
+>     ; UUID: mult-1
+>     (Zzz:V)              $1.00
+>     (Zzz:V)              $1.00
+>     (Zzz:V)              $2.00
+to this later transaction:
+> 2024/01/15 Store
+>     ; UUID: mult-1
+>     (Zzz:V)              $2.00
+>     (Zzz:V)              $1.00
+>     (Zzz:V)              $2.00
+Error: Transactions with the same UUID must have equivalent postings
+end test
