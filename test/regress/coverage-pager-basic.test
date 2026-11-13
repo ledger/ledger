@@ -1,10 +1,10 @@
-; Test --pager option (exercises stream.cc do_fork and pager pipe)
+; Test --force-pager --pager (exercises stream.cc do_fork and pager pipe)
 
 2024/01/15 * Grocery Store
     Expenses:Food              $50.00
     Assets:Checking
 
-test bal --pager cat -> 0
+test bal --force-pager --pager cat -> 0
              $-50.00  Assets:Checking
               $50.00  Expenses:Food
 --------------------

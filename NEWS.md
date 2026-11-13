@@ -490,6 +490,11 @@ components with their standard-library equivalents.
   boundaries (#954); add `--group-by-cumulative` for balance sheets
   accumulating over time
 
+- Run the pager named by `--pager`, `LEDGER_PAGER` or `PAGER` through
+  `/bin/sh -c`, as 3.4.1 did and as git and man do, so a pager command with
+  quoted arguments, a variable assignment or a pipe works; a blank pager now
+  means no pager instead of discarding the report
+
 ### Filtering, Queries, and Aggregation
 
 - Rewrite the query parser as a documented recursive-descent parser with a
