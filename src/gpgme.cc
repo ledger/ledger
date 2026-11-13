@@ -79,20 +79,26 @@ streambuf::pos_type data_streambuffer_t::seekpos(streambuf::pos_type sp,
 
 streambuf::pos_type data_streambuffer_t::seekoff(streambuf::off_type off, ios_base::seekdir dir,
                                                  ios_base::openmode which = ios_base::in) {
-  streamoff pos = -1;
-  if (dir == ios::beg)
-    pos = static_cast<streambuf::pos_type>(data.seek(static_cast<streamoff>(off), SEEK_SET));
-  else if (dir == ios::end)
-    pos = static_cast<streambuf::pos_type>(data.seek(static_cast<streamoff>(off), SEEK_END));
-  else if (dir == ios::cur)
-    pos = static_cast<streambuf::pos_type>(data.seek(static_cast<streamoff>(off), SEEK_CUR));
+  if (dir == ios::cur) {
+    // data has already been read up to egptr(); the reader is behind it by
+    // the bytes still unread in the get area.
+    const streamoff ahead = data.seek(0, SEEK_CUR);
+    if (ahead == -1)
+      throw runtime_error("Unable to seek to position");
+    const streambuf::off_type here = ahead - (this->egptr() - this->gptr());
+    if (off == 0)
+      return here; // tellg(): keep the buffered bytes
+    off += here;
+    dir = ios::beg;
+  }
 
+  const streamoff pos =
+      data.seek(static_cast<streamoff>(off), dir == ios::beg ? SEEK_SET : SEEK_END);
   if (pos == -1)
     throw runtime_error("Unable to seek to position");
 
   auto buf = cbuf.get();
-  // Trigger underflow on next read
-  this->setg(buf, buf + 1, buf + 1);
+  this->setg(buf, buf, buf); // empty get area: the next read underflows here
   return pos;
 }
 

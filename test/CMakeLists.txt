@@ -176,6 +176,20 @@ if(Python_EXECUTABLE)
     COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/regress/3277.py
     ${PROJECT_SOURCE_DIR})
 
+  # An encrypted journal must parse exactly like its plain copy; the test
+  # encrypts fixtures with gpg under a throwaway GNUPGHOME and exits 77
+  # (skipped) when gpg is not installed.
+  if(HAVE_GPGME)
+    add_test(NAME RegressPyTest_gpg_encrypted_journal
+      COMMAND ${Python_EXECUTABLE}
+        ${PROJECT_SOURCE_DIR}/test/regress/gpg-encrypted-journal.py
+        $<TARGET_FILE:ledger>)
+    set_tests_properties(RegressPyTest_gpg_encrypted_journal PROPERTIES
+      ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}"
+      SKIP_RETURN_CODE 77
+      TIMEOUT 120)
+  endif()
+
   if(HAVE_BOOST_PYTHON)
     add_test(NAME demo
       COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/python/demo.py

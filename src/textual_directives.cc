@@ -708,7 +708,7 @@ void instance_t::account_directive_body(char* line, account_t* parent, std::size
 
   if (ae.get()) {
     ae->journal = context.journal;
-    ae->pos->end_pos = in.tellg();
+    ae->pos->end_pos = context.curr_pos;
     ae->pos->end_line = context.linenum;
     // Mark this auto_xact as scoped to `account` and index it so that
     // journal_t::extend_xact() can dispatch it via O(1) account lookup
