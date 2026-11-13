@@ -1,0 +1,33 @@
+; The xml command labels `Account  AMOUNT = BALANCE` a balance assertion
+; and `Account  = BALANCE`, whose amount is calculated, a balance
+; assignment, as the print command does.
+
+2024/01/01 Open
+    Assets:Cash        $100
+    Equity:Opening
+
+2024/01/02 Assert
+    Assets:Cash        $10 = $110
+    Income:Gift
+
+2024/01/03 Assign
+    Assets:Cash        = $200
+    Income:Gift
+
+test xml | sed -n -e '/<payee>/p' -e '/<balance-a/,/<\/balance-a/p'
+      <payee>Open</payee>
+      <payee>Assert</payee>
+          <balance-assertion>
+            <commodity flags="P">
+              <symbol>$</symbol>
+            </commodity>
+            <quantity>110</quantity>
+          </balance-assertion>
+      <payee>Assign</payee>
+          <balance-assignment>
+            <commodity flags="P">
+              <symbol>$</symbol>
+            </commodity>
+            <quantity>200</quantity>
+          </balance-assignment>
+end test

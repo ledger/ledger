@@ -1173,10 +1173,11 @@ void put_post(property_tree::ptree& st, const post_t& post) {
     put_amount(st.put("cost", ""), *post.cost);
 
   if (post.assigned_amount) {
+    // A calculated amount came from "= BALANCE", as print.cc decides.
     if (post.has_flags(POST_CALCULATED))
-      put_amount(st.put("balance-assertion", ""), *post.assigned_amount);
-    else
       put_amount(st.put("balance-assignment", ""), *post.assigned_amount);
+    else
+      put_amount(st.put("balance-assertion", ""), *post.assigned_amount);
   }
 
   if (post.note)

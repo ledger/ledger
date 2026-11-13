@@ -390,6 +390,10 @@ components with their standard-library equivalents.
 
 ### Reporting and Display Improvements
 
+- The `xml` report now writes `<balance-assertion>` for a posting written
+  `AMOUNT = BALANCE` and `<balance-assignment>` for one written `= BALANCE`;
+  it used to swap the two labels.
+
 - Parsing a journal that declares no account aliases no longer copies each
   posting's account name twice.
 

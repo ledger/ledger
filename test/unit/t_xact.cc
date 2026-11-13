@@ -2286,7 +2286,7 @@ BOOST_AUTO_TEST_CASE(testPutPostStates_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-28: post.cc lines 735-740: put_post with assigned_amount
+// W7-28: put_post with assigned_amount
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPutPostAssignedAmount_W7)
@@ -2296,7 +2296,8 @@ BOOST_AUTO_TEST_CASE(testPutPostAssignedAmount_W7)
   xact._date = parse_date("2024/01/01");
   xact.payee = "Test";
 
-  // Balance assertion (POST_CALCULATED + assigned_amount)
+  // Balance assignment (POST_CALCULATED + assigned_amount): the amount was
+  // calculated from "= BALANCE"
   {
     post_t* post = new post_t(expenses, amount_t("$10.00"));
     post->add_flags(ITEM_TEMP | POST_CALCULATED);
@@ -2306,14 +2307,14 @@ BOOST_AUTO_TEST_CASE(testPutPostAssignedAmount_W7)
     property_tree::ptree pt;
     put_post(pt, *post);
 
-    auto ba = pt.get_child_optional("balance-assertion");
-    BOOST_CHECK(ba);
+    BOOST_CHECK(pt.get_child_optional("balance-assignment"));
+    BOOST_CHECK(!pt.get_child_optional("balance-assertion"));
 
     delete post;
     xact.posts.clear();
   }
 
-  // Balance assignment (no POST_CALCULATED + assigned_amount)
+  // Balance assertion (explicit amount + assigned_amount)
   {
     post_t* post = new post_t(expenses, amount_t("$10.00"));
     post->add_flags(ITEM_TEMP);
@@ -2323,8 +2324,8 @@ BOOST_AUTO_TEST_CASE(testPutPostAssignedAmount_W7)
     property_tree::ptree pt;
     put_post(pt, *post);
 
-    auto ba = pt.get_child_optional("balance-assignment");
-    BOOST_CHECK(ba);
+    BOOST_CHECK(pt.get_child_optional("balance-assertion"));
+    BOOST_CHECK(!pt.get_child_optional("balance-assignment"));
 
     delete post;
     xact.posts.clear();
