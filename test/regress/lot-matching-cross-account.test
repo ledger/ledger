@@ -1,0 +1,45 @@
+; --lot-matching matches a sale against the selling account's lots
+; only.  The lot Assets:B2 acquires earlier in the same transaction
+; is not Assets:B1's to sell, so B1's sale takes its own $50 lot.
+
+2024/01/01 Buy
+    Assets:B1                 5 AAPL {$50} [2024/01/01]
+    Assets:Cash            $-250
+
+2024/06/01 Gift and sale
+    Assets:B2                 5 AAPL {$10} [2023/01/01]
+    Assets:B1                -5 AAPL @ $100
+    Income:Gift              -5 AAPL {$10} [2023/01/01]
+    Assets:Cash             $500
+    Income:Gains
+
+test --lot-matching fifo print
+2024/01/01 Buy
+    Assets:B1                           5 AAPL {$50} [2024/01/01]
+    Assets:Cash                                $-250
+
+2024/06/01 Gift and sale
+    Assets:B2                           5 AAPL {$10} [2023/01/01]
+    Assets:B1                           -5 AAPL {$50} [2024/01/01] @ $100
+    Income:Gift                         -5 AAPL {$10} [2023/01/01]
+    Assets:Cash                                 $500
+    Income:Gains
+end test
+
+test --lot-matching fifo bal Assets --lots --flat
+5 AAPL {$10} [2023/01/01]  Assets:B2
+                $250  Assets:Cash
+--------------------
+                     $250
+5 AAPL {$10} [2023/01/01]
+end test
+
+test --lot-matching fifo bal Income
+               $-250
+             -5 AAPL  Income
+               $-250    Gains
+             -5 AAPL    Gift
+--------------------
+               $-250
+             -5 AAPL
+end test

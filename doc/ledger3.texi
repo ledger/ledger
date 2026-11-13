@@ -4301,10 +4301,12 @@ BTC with FIFO matching:
     Income:Capital Gains
 @end smallexample
 
-Ledger splits this into two postings internally: @code{-2 BTC} matched
-against Lot A (fully consumed) and @code{-0.5 BTC} matched against
-Lot B.  The sale cost is split proportionally across the generated
-postings.
+Ledger splits this into two postings: @code{-2 BTC} matched against
+Lot A (fully consumed) and @code{-0.5 BTC} matched against Lot B.
+Each keeps the original posting's note, tags and state, and takes its
+proportional share of the sale cost; @command{print} writes both, so
+its output reads back to the same lots.  A sale larger than all of the
+account's lots books the rest as a posting of its own, with no lot.
 
 @subsection Gain and Loss Calculation
 
@@ -4333,8 +4335,12 @@ price @samp{@{@dots{}@}} or lot date @samp{[@dots{}]}.
 The commodity has been seen with annotations in prior postings (that is,
 there are existing lots to match against).
 @item
-The account holds lots with acquisition dates; only dated lots
-participate in FIFO/LIFO ordering.
+The selling account holds lots with acquisition dates; only dated lots
+participate in FIFO/LIFO ordering.  A lot without a date annotation is
+dated by the account's first posting of it.  Only the selling account's
+own lots count, including those it acquired earlier in the same
+transaction.  Lots of the same date are consumed in the order the
+account acquired them under FIFO, and in the reverse order under LIFO.
 @end enumerate
 
 If any of these conditions are not met, the posting is left as-is and no

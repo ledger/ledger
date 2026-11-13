@@ -49,6 +49,7 @@
 #include "account.h"
 #include "post.h"
 #include "xact.h"
+#include "annotate.h"
 
 namespace ledger {
 
@@ -256,6 +257,7 @@ bool account_t::remove_post(post_t* post) {
     invalidate_xdata_cache(this);
   }
 
+  lot_inventory.reset();
   return true;
 }
 
@@ -278,6 +280,76 @@ void account_t::remove_posts(const std::set<post_t*>& doomed) {
     xdata_->self_details.last_reported_post = none;
     invalidate_xdata_cache(this);
   }
+  lot_inventory.reset();
+}
+
+static void record_lot(account_t::lot_inventory_t& inventory, const post_t& post) {
+  const amount_t& amt(post.amount);
+  if (!amt.has_commodity() || !amt.has_annotation())
+    return;
+  commodity_t* lot = &amt.commodity();
+  const std::size_t next = inventory.seen.size();
+  auto& seen =
+      inventory.seen.try_emplace(lot, account_t::lot_inventory_t::seen_t{std::nullopt, next})
+          .first->second;
+  if (post.has_date() || (post.xact && post.xact->has_date())) {
+    const date_t when = post.primary_date();
+    if (!seen.first_date || when < *seen.first_date)
+      seen.first_date = when;
+  }
+  auto& held = inventory.open[&lot->referent()];
+  auto [it, fresh] = held.try_emplace(lot, amt);
+  if (!fresh)
+    it->second += amt;
+  if (it->second.is_realzero())
+    held.erase(it);
+}
+
+std::vector<account_lot_t> account_t::held_lots(const commodity_t& referent,
+                                                const std::vector<const post_t*>& pending) {
+  if (!lot_inventory)
+    lot_inventory.emplace();
+  lot_inventory_t& inventory(*lot_inventory);
+  // add_post() only appends, and remove_post()/remove_posts() drop the
+  // inventory, so the posts not yet folded in are the last ones.
+  assert(inventory.counted <= posts.size());
+  auto unseen = posts.end();
+  std::advance(unseen, -static_cast<std::ptrdiff_t>(posts.size() - inventory.counted));
+  for (; unseen != posts.end(); ++unseen)
+    record_lot(inventory, **unseen);
+  inventory.counted = posts.size();
+
+  std::unordered_map<commodity_t*, amount_t> holdings;
+  if (auto it = inventory.open.find(&referent); it != inventory.open.end())
+    holdings = it->second;
+  std::unordered_map<commodity_t*, std::size_t> pending_sequence;
+  for (std::size_t i = 0; i < pending.size(); ++i) {
+    const amount_t& amt(pending[i]->amount);
+    if (!amt.has_commodity() || !amt.has_annotation() || &amt.commodity().referent() != &referent)
+      continue;
+    auto [it, fresh] = holdings.try_emplace(&amt.commodity(), amt);
+    if (!fresh)
+      it->second += amt;
+    pending_sequence.try_emplace(&amt.commodity(), inventory.seen.size() + i);
+  }
+  std::vector<account_lot_t> lots;
+  for (auto& [lot, quantity] : holdings) {
+    if (quantity.sign() <= 0)
+      continue;
+    auto seen = inventory.seen.find(lot);
+    std::optional<date_t> date = as_annotated_commodity(*lot).details.date;
+    if (!date && seen != inventory.seen.end())
+      date = seen->second.first_date;
+    if (!date)
+      continue;
+    lots.push_back(
+        {lot, quantity.strip_annotations(keep_details_t()), *date,
+         seen != inventory.seen.end() ? seen->second.sequence : pending_sequence.at(lot)});
+  }
+  std::sort(lots.begin(), lots.end(), [](const account_lot_t& a, const account_lot_t& b) {
+    return a.date != b.date ? a.date < b.date : a.sequence < b.sequence;
+  });
+  return lots;
 }
 
 /*--- Name Formatting ---*/

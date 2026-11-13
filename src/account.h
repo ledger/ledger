@@ -72,6 +72,14 @@ using namespace boost::placeholders;
 /// Map from UUID strings to lists of deferred postings awaiting that UUID.
 using deferred_posts_map_t = std::map<string, posts_list>;
 
+/// A lot an account holds, as --lot-matching sees it (xact.cc, match_lots()).
+struct account_lot_t {
+  commodity_t* commodity; ///< The lot: an annotated commodity.
+  amount_t quantity;      ///< Quantity held, lot annotation stripped; always positive.
+  date_t date;            ///< The lot's own date, else the account's first posting of it.
+  std::size_t sequence;   ///< Order in which the account first posted the lot.
+};
+
 /**
  * @brief A node in the hierarchical chart of accounts.
  *
@@ -236,6 +244,40 @@ public:
    * that removing many temporaries from an account is not quadratic.
    */
   void remove_posts(const std::set<post_t*>& doomed);
+
+  /**
+   * @brief The lots of @p referent this account holds a positive quantity of, oldest first.
+   *
+   * @p pending are postings of the transaction being finalized, not yet
+   * registered with the account, counted as though they were.  A lot is
+   * dated by its annotation, else by the earliest dated posting of it in
+   * the account; a lot with neither is left out.  Ties keep the order in
+   * which the account first posted the lots.  The first call builds
+   * lot_inventory from posts, and each call first folds in the posts
+   * appended since the last one.
+   */
+  std::vector<account_lot_t> held_lots(const commodity_t& referent,
+                                       const std::vector<const post_t*>& pending);
+
+  /// Lot holdings for --lot-matching, as held_lots() keeps them.
+  struct lot_inventory_t {
+    struct seen_t {
+      std::optional<date_t> first_date; ///< Earliest dated posting of the lot.
+      std::size_t sequence;             ///< Order in which the lot was first posted.
+    };
+    /// Every lot ever posted to the account, keyed by lot commodity.
+    std::unordered_map<const commodity_t*, seen_t> seen;
+    /// The nonzero holdings, keyed by referent, then by lot.
+    std::unordered_map<const commodity_t*, std::unordered_map<commodity_t*, amount_t>> open;
+    /// How many entries of posts, from the front, are folded in.
+    std::size_t counted = 0;
+  };
+
+  /// Lot holdings for --lot-matching, kept by held_lots();
+  /// remove_post() and remove_posts() drop them.  The copy constructor
+  /// leaves them empty, as it leaves posts; the defaulted operator=
+  /// copies them together with posts, so counted stays true.
+  std::optional<lot_inventory_t> lot_inventory;
 
   posts_list::iterator posts_begin() { return posts.begin(); }
   posts_list::iterator posts_end() { return posts.end(); }

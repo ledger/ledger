@@ -255,6 +255,86 @@ inline bool balances_in_group(const post_t* post, bool virtual_group) {
   return post->must_balance() && post->has_flags(POST_VIRTUAL) == virtual_group;
 }
 
+/// Add to @p xact, just before @p where, a part of @p sale that sells
+/// @p quantity: a copy of the sale's details (flags, state, note, tags,
+/// position and dates) with @p share of its cost and of its written
+/// cost.  The part is a real posting, as the sale was.
+post_t* add_sale_leg(xact_base_t& xact, posts_list::iterator where, const post_t& sale,
+                     const amount_t& quantity, const amount_t& share) {
+  auto* leg = new post_t(sale.account, quantity);
+  leg->copy_details(sale);
+  if (sale.cost)
+    leg->cost = *sale.cost * share;
+  if (sale.given_cost)
+    leg->given_cost = *sale.given_cost * share;
+  xact.add_post(leg);
+  xact.posts.splice(where, xact.posts, std::prev(xact.posts.end()));
+  return leg;
+}
+
+/// Phase 5 of finalize(): match each unannotated sale in @p copy
+/// against the lots its own account holds, ordered by @p policy, and
+/// split it across them.  The first lot takes the sale itself; each
+/// further lot, and any quantity no lot covers, gets a part of its own
+/// (add_sale_leg()), placed after the sale and appended to @p copy.
+void match_lots(xact_base_t& xact, std::vector<post_t*>& copy, lot_policy_t policy) {
+  const std::size_t unmatched_end = copy.size(); // legs are appended past this
+  for (std::size_t idx = 0; idx < unmatched_end; ++idx) {
+    post_t* post = copy[idx];
+
+    // Only match unannotated negative amounts for commodities with lots
+    if (post->amount.is_null() || post->amount.sign() >= 0 || post->amount.has_annotation() ||
+        !post->amount.has_commodity() ||
+        !post->amount.commodity().has_flags(COMMODITY_SAW_ANNOTATED))
+      continue;
+
+    // This account's postings already passed in this transaction, and
+    // every leg added so far.
+    std::vector<const post_t*> pending;
+    for (std::size_t j = 0; j < copy.size(); ++j)
+      if ((j < idx || j >= unmatched_end) && copy[j]->account == post->account)
+        pending.push_back(copy[j]);
+    std::vector<account_lot_t> lots =
+        post->account->held_lots(post->amount.commodity().referent(), pending);
+    if (lots.empty())
+      continue;
+    if (policy == lot_policy_t::lifo)
+      std::reverse(lots.begin(), lots.end());
+
+    const amount_t total_sale = post->amount.abs(); // positive total to sell
+    amount_t remaining = total_sale;
+    amount_t first_consumed;
+    const auto where = std::next(std::find(xact.posts.begin(), xact.posts.end(), post));
+    for (const account_lot_t& lot : lots) {
+      if (remaining.is_realzero())
+        break;
+      amount_t consumed = (remaining <= lot.quantity) ? remaining : lot.quantity;
+      amount_t sale_amt(consumed.negated());
+      sale_amt.set_commodity(*lot.commodity);
+      if (first_consumed.is_null()) {
+        first_consumed = consumed;
+        post->amount = sale_amt;
+        post->amount_expr.reset(); // print must show the lot, not the expression
+      } else {
+        copy.push_back(add_sale_leg(xact, where, *post, sale_amt, consumed / total_sale));
+      }
+      remaining -= consumed;
+    }
+    if (!remaining.is_realzero()) { // oversold: book the rest without a lot
+      amount_t rest(remaining.negated());
+      rest.set_commodity(post->amount.commodity().referent());
+      copy.push_back(add_sale_leg(xact, where, *post, rest, remaining / total_sale));
+    }
+    if (first_consumed != total_sale) {
+      const amount_t share = first_consumed / total_sale;
+      if (post->cost)
+        *post->cost *= share;
+      if (post->given_cost)
+        *post->given_cost *= share;
+    }
+  }
+}
+
 // Widen precision-zero cost commodities to this group's greatest explicit
 // cost precision, so fractional remainders cannot round away (#1114).
 // Restore their precision even if the check throws.
@@ -423,8 +503,9 @@ void drop_lot_rounding_residue(amount_t& gain_loss, const amount_t& error) {
  * computed, derive their costs from the fixated price.
  *
  * **Phase 5 -- Lot matching (FIFO/LIFO).**
- * For unannotated sales (negative amounts), match against the
- * account's lot holdings to split the sale across specific lots.
+ * For unannotated sales (negative amounts), match against the selling
+ * account's lots (match_lots()) and split the sale across them; each
+ * part keeps the sale's details and its share of the cost.
  *
  * **Phase 6 -- Exchange amounts through the commodity pool.**
  * Process postings with explicit costs (@ or @@), converting them
@@ -736,153 +817,9 @@ bool xact_base_t::finalize() {
   std::vector<post_t*> copy(posts.begin(), posts.end());
 
   if (has_date()) {
-    // Phase 5: Lot matching (FIFO/LIFO) for commodity sales.
-    // When a posting sells a commodity (negative unannotated amount) and
-    // the journal has a lot matching policy, find the account's lot
-    // holdings and split the sale across specific lots.  Each lot gets
-    // its own annotated posting so cost basis is tracked correctly.
-    if (journal && journal->lot_matching_policy != lot_policy_t::none) {
-      for (std::size_t idx = 0; idx < copy.size(); ++idx) {
-        post_t* post = copy[idx];
-
-        // Only match unannotated negative amounts for commodities with lots
-        if (post->amount.is_null() || post->amount.sign() >= 0 || post->amount.has_annotation() ||
-            !post->amount.has_commodity() ||
-            !post->amount.commodity().has_flags(COMMODITY_SAW_ANNOTATED))
-          continue;
-
-        const string& base_symbol = post->amount.commodity().base_symbol();
-
-        // Collect lot holdings from account's prior postings
-        // account->posts contains all posts from prior transactions (not current)
-        std::map<commodity_t*, amount_t> lot_holdings;
-        for (const post_t* prior : post->account->posts) {
-          if (prior->amount.has_commodity() && prior->amount.has_annotation() &&
-              prior->amount.commodity().base_symbol() == base_symbol) {
-            auto [it, inserted] =
-                lot_holdings.try_emplace(&prior->amount.commodity(), prior->amount);
-            if (!inserted)
-              it->second += prior->amount;
-          }
-        }
-
-        // Also account for earlier postings in this same transaction that were
-        // already matched (they modify the effective lot balance)
-        for (std::size_t j = 0; j < idx; ++j) {
-          post_t* earlier = copy[j];
-          if (earlier->amount.has_commodity() && earlier->amount.has_annotation() &&
-              earlier->amount.commodity().base_symbol() == base_symbol) {
-            auto [it, inserted] =
-                lot_holdings.try_emplace(&earlier->amount.commodity(), earlier->amount);
-            if (!inserted)
-              it->second += earlier->amount;
-          }
-        }
-
-        // Build sorted vector of lots with positive holdings
-        // For lots without explicit dates, use the earliest transaction date
-        // from the account's postings for that lot as a fallback.
-        struct lot_info {
-          commodity_t* commodity;
-          amount_t quantity; // stripped (unannotated) for comparison
-          date_t date;
-        };
-        std::vector<lot_info> lots;
-        for (auto& [comm, qty] : lot_holdings) {
-          if (qty.sign() > 0 && comm->has_annotation()) {
-            const annotation_t& ann = as_annotated_commodity(*comm).details;
-            if (ann.date) {
-              lots.push_back({comm, qty.strip_annotations(keep_details_t()), *ann.date});
-            } else {
-              // Fallback: find the earliest transaction date for this lot
-              std::optional<date_t> earliest;
-              for (const post_t* prior : post->account->posts) {
-                if (&prior->amount.commodity() == comm &&
-                    (prior->has_date() || (prior->xact && prior->xact->has_date()))) {
-                  date_t d = prior->primary_date();
-                  if (!earliest || d < *earliest)
-                    earliest = d;
-                }
-              }
-              if (earliest)
-                lots.push_back({comm, qty.strip_annotations(keep_details_t()), *earliest});
-            }
-          }
-        }
-
-        if (lots.empty())
-          continue;
-
-        // Sort by date according to policy
-        if (journal->lot_matching_policy == lot_policy_t::fifo) {
-          std::sort(lots.begin(), lots.end(),
-                    [](const lot_info& a, const lot_info& b) { return a.date < b.date; });
-        } else {
-          std::sort(lots.begin(), lots.end(),
-                    [](const lot_info& a, const lot_info& b) { return a.date > b.date; });
-        }
-
-        // Consume lots in order
-        const amount_t total_sale = post->amount.abs(); // positive total to sell
-        const std::optional<amount_t> original_cost = post->cost;
-        amount_t remaining = total_sale;
-        amount_t first_consumed;
-        bool first = true;
-
-        for (const lot_info& lot : lots) {
-          if (remaining.is_realzero())
-            break;
-
-          amount_t consumed = (remaining <= lot.quantity) ? remaining : lot.quantity;
-
-          // Create the annotated sale amount (NEGATIVE - it's a sale)
-          amount_t sale_amt(consumed.negated());
-          sale_amt.set_commodity(*lot.commodity);
-
-          if (first) {
-            // Modify the original posting
-            post->amount = sale_amt;
-            first_consumed = consumed;
-            first = false;
-          } else {
-            // Create a new posting for this lot, in the posting's group
-            post_t* split = new post_t(post->account, sale_amt);
-            split->set_state(post->state());
-            split->add_flags(ITEM_GENERATED | POST_CALCULATED |
-                             (post->flags() & (POST_VIRTUAL | POST_MUST_BALANCE)));
-            if (original_cost) {
-              // Split cost proportionally: this lot's share of total
-              split->cost = *original_cost * (consumed / total_sale);
-            }
-            add_post(split);
-            copy.push_back(split);
-          }
-
-          remaining -= consumed;
-        }
-
-        // Adjust the first posting's cost to its proportional share
-        if (!first && original_cost && !first_consumed.is_null() && first_consumed != total_sale) {
-          post->cost = *original_cost * (first_consumed / total_sale);
-        }
-
-        // If there's unmatched remainder (oversell), create an unannotated
-        // posting for it so accounting remains correct
-        if (!remaining.is_realzero() && !first) {
-          amount_t remainder_amt(remaining.negated());
-          remainder_amt.set_commodity(post->amount.commodity().referent());
-          post_t* remainder = new post_t(post->account, remainder_amt);
-          remainder->set_state(post->state());
-          remainder->add_flags(ITEM_GENERATED | POST_CALCULATED |
-                               (post->flags() & (POST_VIRTUAL | POST_MUST_BALANCE)));
-          if (original_cost) {
-            remainder->cost = *original_cost * (remaining / total_sale);
-          }
-          add_post(remainder);
-          copy.push_back(remainder);
-        }
-      }
-    }
+    // Phase 5: Lot matching (FIFO/LIFO) for commodity sales; see match_lots().
+    if (journal && journal->lot_matching_policy != lot_policy_t::none)
+      match_lots(*this, copy, journal->lot_matching_policy);
 
     // Phase 6: Exchange amounts through the commodity pool.
     // For every posting with an explicit or computed cost, pass it

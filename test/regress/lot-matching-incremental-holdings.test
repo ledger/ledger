@@ -1,0 +1,57 @@
+; An account's lots stay current after its first lot-matched sale:
+; a lot an automated transaction adds to Assets:B1 after that sale is
+; matched by the next one, and B2's undated $5 lot, closed and then
+; bought again, is still dated by the account's first posting of it.
+
+= /^Income:Dividends$/
+    (Assets:B1)               1 AAPL {$5} [2023/06/01]
+
+2024/01/01 Buy B1
+    Assets:B1                 2 AAPL {$50} [2024/01/01]
+    Assets:Cash            $-100
+
+2024/01/01 Buy B2
+    Assets:B2                 1 AAPL {$5}
+    Assets:Cash              $-5
+
+2024/01/15 Sell B1 and B2
+    Assets:B1                -1 AAPL @ $70
+    Assets:B2                -1 AAPL @ $7
+    Assets:Cash              $77
+    Income:Gains
+
+2024/02/15 Dividend in kind
+    Income:Dividends         $-10
+    Assets:Cash               $10
+
+2024/03/01 Buy B2
+    Assets:B2                 1 AAPL {$6}
+    Assets:Cash              $-6
+
+2024/05/01 Buy B2 again
+    Assets:B2                 1 AAPL {$5}
+    Assets:Cash              $-5
+
+2024/06/01 Sell B1 and B2
+    Assets:B1                -2 AAPL @ $80
+    Assets:B2                -1 AAPL @ $10
+    Assets:Cash             $170
+    Income:Gains
+
+test --lot-matching fifo reg Assets:B1 --lots
+24-Jan-01 Buy B1                Assets:B1              2 AAPL {$50} [2024/01/01] 2 AAPL {$50} [2024/01/01]
+24-Jan-15 Sell B1 and B2        Assets:B1              -1 AAPL {$50} [2024/01/01] 1 AAPL {$50} [2024/01/01]
+24-Feb-15 Dividend in kind      (Assets:B1)            1 AAPL {$5} [2023/06/01] 1 AAPL {$5} [2023/06/01]
+                                                       1 AAPL {$50} [2024/01/01]
+24-Jun-01 Sell B1 and B2        Assets:B1              -1 AAPL {$5} [2023/06/01] 1 AAPL {$50} [2024/01/01]
+                                Assets:B1              -1 AAPL {$50} [2024/01/01]            0
+end test
+
+test --lot-matching fifo bal Assets:B Income --lots --flat
+         1 AAPL {$6}  Assets:B2
+                $-10  Income:Dividends
+               $-132  Income:Gains
+--------------------
+               $-142
+         1 AAPL {$6}
+end test

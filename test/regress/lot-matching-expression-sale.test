@@ -1,0 +1,27 @@
+; A sale written as an amount expression that a single lot covers is
+; printed as the lot it sold, not as the expression, so print's output
+; reads back to the same gain.
+
+2024/01/01 Buy
+    Assets:B1                 2 AAPL {$50} [2024/01/01]
+    Assets:Cash            $-100
+
+2024/03/03 Sell by expression
+    Assets:B1        (-1 AAPL * 2) @@ $200
+    Assets:Cash             $200
+    Income:Gains
+
+test --lot-matching fifo print
+2024/01/01 Buy
+    Assets:B1                           2 AAPL {$50} [2024/01/01]
+    Assets:Cash                                $-100
+
+2024/03/03 Sell by expression
+    Assets:B1                           -2 AAPL {$50} [2024/01/01] @@ $200
+    Assets:Cash                                 $200
+    Income:Gains
+end test
+
+test -f $FILE --lot-matching fifo print | $ledger -f - bal Assets:B1 Income --lots --flat
+               $-100  Income:Gains
+end test
