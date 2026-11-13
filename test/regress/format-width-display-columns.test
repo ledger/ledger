@@ -1,0 +1,37 @@
+; %N.M(...) field widths count display columns, as truncate() and
+; justify() do: a CJK character is two columns, a combining mark and an
+; ANSI escape sequence none.
+
+2024/01/01 日本語テスト
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Café Bleu
+    Expenses:Food    $5.00
+    Assets:Cash
+
+2024/01/03 Grocer
+    Expenses:Food    $1.00
+    Assets:Cash
+
+test reg Expenses --format '[%.8(payee)]\n'
+[日本語..]
+[Café B..]
+[  Grocer]
+end test
+
+test reg Expenses --format '[%-14(payee)]|\n'
+[日本語テスト  ]|
+[Café Bleu     ]|
+[Grocer        ]|
+end test
+
+test reg Expenses --format '[%14(payee)]|\n'
+[  日本語テスト]|
+[     Café Bleu]|
+[        Grocer]|
+end test
+
+test reg Expenses and @Grocer --format '[%.8(ansify_if(payee, red))]|[%.12(ansify_if(payee, red))]|[%-12(ansify_if(payee, red))]|\n' | cat -v
+[  ^[[31mGrocer^[[0m]|[      ^[[31mGrocer^[[0m]|[^[[31mGrocer^[[0m      ]|
+end test

@@ -547,27 +547,18 @@ string format_t::real_calc(scope_t& scope) {
 
     // Step 3: Apply width constraints.  If the rendered text is wider than
     // max_width, truncate it.  If it is narrower than min_width, pad it.
+    // Both are measured in display columns, ignoring ANSI escapes, as
+    // justify() measures them in step 2.
     if (elem->max_width > 0 || elem->min_width > 0) {
       const string rendered(out.str());
+      const std::size_t cols = display_width(rendered);
 
-      // Printable ASCII needs no decoding: bytes are code points.
-      if (is_plain_ascii(rendered) && !(elem->max_width > 0 && elem->max_width < rendered.size())) {
-        out_str << rendered;
-        if (elem->min_width > rendered.size())
-          out_str << string(elem->min_width - rendered.size(), ' ');
+      if (elem->max_width > 0 && elem->max_width < cols) {
+        out_str << truncate(unistring(rendered), elem->max_width);
       } else {
-        unistring temp(rendered);
-        string result;
-
-        if (elem->max_width > 0 && elem->max_width < temp.length()) {
-          result = truncate(temp, elem->max_width);
-        } else {
-          result = temp.extract();
-          if (elem->min_width > temp.length())
-            for (std::size_t i = 0; i < elem->min_width - temp.length(); i++)
-              result += " ";
-        }
-        out_str << result;
+        out_str << rendered;
+        if (elem->min_width > cols)
+          out_str << string(elem->min_width - cols, ' ');
       }
     } else {
       out_str << out.str();
