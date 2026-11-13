@@ -119,8 +119,8 @@ public:
 
   mutable string _fullname; ///< Cached colon-joined full name, computed lazily by fullname().
 
-  account_t(account_t* _parent = nullptr, const string& _name = "",
-            const optional<string>& _note = none)
+  explicit account_t(account_t* _parent = nullptr, const string& _name = "",
+                     const optional<string>& _note = none)
       : supports_flags<>(), metadata_t(), scope_t(), parent(_parent), name(_name), note(_note),
         depth(static_cast<unsigned short>(parent ? parent->depth + 1 : 0)) {
     if (parent && parent->depth == std::numeric_limits<unsigned short>::max())
@@ -527,10 +527,11 @@ std::ostream& operator<<(std::ostream& out, const account_t& account);
 void put_account(property_tree::ptree& pt, const account_t& acct,
                  const function<bool(const account_t&)>& pred);
 
-/// Comparator for ordering accounts by full name in std::map/std::set.
+/// Orders account pointers by full name, for std::map/std::set keyed by
+/// account_t*.
 struct account_compare {
-  bool operator()(const account_t& lhs, const account_t& rhs) const {
-    return (lhs.fullname().compare(rhs.fullname()) < 0);
+  bool operator()(const account_t* lhs, const account_t* rhs) const {
+    return lhs->fullname() < rhs->fullname();
   }
 };
 

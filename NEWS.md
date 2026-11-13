@@ -390,6 +390,9 @@ components with their standard-library equivalents.
 
 ### Reporting and Display Improvements
 
+- `accounts` lists accounts in the byte order of their full names, so `Foo`
+  now precedes `Foo Bar`, `Foo-Baz` and `Foo:Sub`.
+
 - `prices` and `pricedb` with `--latest` report each commodity's newest
   price, and with `--monthly` (or any `--period` interval) the newest price of
   each period, also for a commodity quoted in several currencies;
