@@ -111,13 +111,8 @@ value_t convert_command(call_scope_t& args) {
       // Step 1: Optionally negate amounts (--invert), useful for
       // credit-card CSVs where debits are positive.
       if (report.HANDLED(invert)) {
-        for (post_t* post : xact->posts) {
-          post->amount.in_place_negate();
-          if (post->cost)
-            post->cost->in_place_negate();
-          if (post->given_cost)
-            post->given_cost->in_place_negate();
-        }
+        for (post_t* post : xact->posts)
+          post->in_place_negate();
       }
 
       // Step 2: Compute a unique reference for duplicate detection.

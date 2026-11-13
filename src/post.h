@@ -145,11 +145,13 @@ public:
       : item_t(_flags, _note), xact(nullptr), account(_account), amount(_amount) {
     TRACE_CTOR(post_t, "account_t *, amount_t, flags_t, optional<string>");
   }
+  // amount_expr is not copied: it is the source text of the original
+  // amount, and the filters that copy postings negate, replace or
+  // anonymize the amount, so a copy reports its amount, not stale text.
   post_t(const post_t& post)
       : item_t(post), xact(post.xact), account(post.account), amount(post.amount), cost(post.cost),
-        assigned_amount(post.assigned_amount), checkin(post.checkin), checkout(post.checkout),
-        xdata_(post.xdata_) {
-    copy_details(post);
+        given_cost(post.given_cost), assigned_amount(post.assigned_amount), checkin(post.checkin),
+        checkout(post.checkout), _payee(post._payee), xdata_(post.xdata_) {
     TRACE_CTOR(post_t, "copy");
   }
   post_t& operator=(const post_t&) = default;
@@ -278,6 +280,15 @@ public:
    */
   void set_given_cost(amount_t written, bool in_full);
 
+  /** @brief Negate the amount and the costs that scale with it (cost, given_cost). */
+  void in_place_negate() {
+    amount.in_place_negate();
+    if (cost)
+      cost->in_place_negate();
+    if (given_cost)
+      given_cost->in_place_negate();
+  }
+
   void copy_details(const item_t& item) override {
     const post_t& post(dynamic_cast<const post_t&>(item));
     xdata_ = post.xdata_;
@@ -329,7 +340,8 @@ public:
         : supports_flags<uint_least16_t>(other.flags()), visited_value(other.visited_value),
           compound_value(other.compound_value), total(other.total),
           display_total(other.display_total), count(other.count), date(other.date),
-          account(other.account), sort_values(other.sort_values) {
+          value_date(other.value_date), datetime(other.datetime), account(other.account),
+          sort_values(other.sort_values) {
       TRACE_CTOR(post_t::xdata_t, "copy");
     }
     xdata_t& operator=(const xdata_t&) = default;

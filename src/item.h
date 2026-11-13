@@ -176,9 +176,9 @@ public:
     TRACE_CTOR(item_t, "flags_t, const string&");
   }
   item_t(const item_t& item)
-      : supports_flags<uint_least16_t>(item), metadata_t(item), scope_t(), parent(nullptr),
-        defining_(false) {
-    copy_details(item);
+      : supports_flags<uint_least16_t>(item), metadata_t(item), scope_t(), parent(item.parent),
+        _state(item.state()), _date(item._date), _date_aux(item._date_aux), note(item.note),
+        pos(item.pos), defining_(false) {
     TRACE_CTOR(item_t, "copy");
   }
   item_t& operator=(const item_t&) = default;
@@ -186,9 +186,10 @@ public:
 
   /** @brief Copy all mutable fields from another item.
    *
-   * Used by the copy constructor and by post_t when duplicating
-   * postings for automated transactions.  Does not copy the parent
-   * pointer (which is set separately by the owning transaction).
+   * Used by post_t when duplicating postings for automated
+   * transactions; the copy constructors initialize these fields
+   * directly.  Does not copy the parent pointer (which is set
+   * separately by the owning transaction).
    */
   /// Backwards-compatible aliases.  metadata storage and types now live on
   /// metadata_t; keeping these names available avoids touching every call

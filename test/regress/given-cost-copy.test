@@ -1,0 +1,153 @@
+; A posting copied by a report filter (--pivot, --budget, --forecast,
+; --inject, --anon) must keep the cost as written (given_cost) and the
+; per-posting payee, so -I/--price reports the @ price, not the lot
+; basis, and filters that negate or replace the amount keep the costs in
+; step with it.
+
+payee Grocery
+    alias Groc
+
+~ monthly
+    Assets:Broker       1 OPT {$100.00} @ $105.00
+    Assets:Cash
+
+2024/01/02 Sell
+    Assets:Broker      -1 OPT {{$1,294.20}} @ $1,295.00
+    ; Kind: opt
+    Assets:Cash         $1,294.20
+
+2024/01/05 Buy
+    Assets:Broker       1 OPT {{$1,294.20}} @ $1,200.00
+    ; Kind: opt
+    Assets:Cash        $-1,200.00
+    Income:Gains          $-94.20
+
+2024/01/08 Shop
+    Expenses:Food       $10.00  ; Payee: Groc
+    ; Kind: food
+    ; Fee:: $1.50
+    Assets:Cash
+
+2024/01/10 Buy stock
+    Assets:Stock        10 AAPL @ $150.00
+    ; Charge:: $5.00
+    Assets:Cash
+
+2024/01/12 Store
+    Expenses:Books      ($10.00 / 3)
+    Assets:Cash
+
+; Control: the journal posting itself reports the @ price under -I.
+test reg -I Broker
+24-Jan-02 Sell                  Assets:Broker            $-1,295.00   $-1,295.00
+24-Jan-05 Buy                   Assets:Broker             $1,200.00      $-95.00
+end test
+
+; --pivot copies the posting; the copy must keep given_cost, so -I
+; still reports the @ price ($1,295.00 / $1,200.00), not the lot basis.
+test reg -I --pivot Kind Broker
+24-Jan-02 Sell                  Kind:opt:Assets:Broker   $-1,295.00   $-1,295.00
+24-Jan-05 Buy                   Kind:opt:Assets:Broker    $1,200.00      $-95.00
+end test
+
+; The copy keeps the per-posting payee resolved through the payee alias.
+test reg --pivot Kind Food
+24-Jan-08 Grocery               Kin:food:Expenses:Food       $10.00       $10.00
+end test
+
+; --anon copies the posting and must anonymize given_cost as well: -I
+; shows the @ price in the anonymized commodity, never in `$`.
+test reg --anon -I Broker --format '%(display_amount)\n'
+B-1,295.00
+B1,200.00
+end test
+
+; print --anon keeps the @ cost, in the anonymized commodity.
+test print --anon Broker | sed -E 's/[0-9a-f]{8}/XXXXXXXX/g'
+2024/01/02 XXXXXXXX
+    XXXXXXXX:XXXXXXXX                   -1 A {{B1,294.20}} @ B1,295.00
+    XXXXXXXX:XXXXXXXX                      B1,294.20
+
+2024/01/05 XXXXXXXX
+    XXXXXXXX:XXXXXXXX                   1 A {{B1,294.20}} @ B1,200.00
+    XXXXXXXX:XXXXXXXX                     B-1,200.00
+    XXXXXXXX:XXXXXXXX                        B-94.20
+end test
+
+; The copy carries no amount expression, so print --anon shows the
+; anonymized amount, not the expression text `($10.00 / 3)`.
+test print --anon Books | sed -E 's/[0-9a-f]{8}/XXXXXXXX/g'
+2024/01/12 XXXXXXXX
+    XXXXXXXX:XXXXXXXX                          A3.33
+    XXXXXXXX:XXXXXXXX
+end test
+
+; --budget negates the copied periodic posting; its costs must flip with
+; the amount, so the budget row is $-105.00 under -I and -B alike.
+test reg --budget -I Broker --now 2024/03/01 --end 2024/02/01
+24-Jan-01 Budget transaction    Assets:Broker              $-105.00     $-105.00
+24-Jan-02 Sell                  Assets:Broker            $-1,295.00   $-1,400.00
+24-Jan-05 Buy                   Assets:Broker             $1,200.00     $-200.00
+end test
+
+test reg --budget -B Broker --now 2024/03/01 --end 2024/02/01
+24-Jan-01 Budget transaction    Assets:Broker              $-105.00     $-105.00
+24-Jan-02 Sell                  Assets:Broker            $-1,294.20   $-1,399.20
+24-Jan-05 Buy                   Assets:Broker             $1,294.20     $-105.00
+end test
+
+; --forecast copies the periodic posting; -I reports its @ price ($105.00).
+test reg --forecast 'd<[2024/03/01]' -I Broker --now 2024/01/20
+24-Jan-02 Sell                  Assets:Broker            $-1,295.00   $-1,295.00
+24-Jan-05 Buy                   Assets:Broker             $1,200.00      $-95.00
+24-Jan-01 Forecast transaction  Assets:Broker               $105.00       $10.00
+24-Feb-01 Forecast transaction  Assets:Broker               $105.00      $115.00
+end test
+
+; --inject replaces the amount with the tag value; the copy must not keep
+; the source posting's cost, so -B reports $5.00, not $1,500.00.
+test reg -B --inject Charge Stock
+24-Jan-10 Buy stock             Charge                        $5.00        $5.00
+24-Jan-10 Buy stock             Assets:Stock              $1,500.00    $1,505.00
+end test
+
+; The injected copy keeps the per-posting payee too.
+test reg --inject Fee Food
+24-Jan-08 Grocery               Fee                           $1.50        $1.50
+24-Jan-08 Grocery               Expenses:Food                $10.00       $11.50
+end test
+
+; The injected posting prints with no stale @ cost.
+test print --generated --inject Charge Stock
+2024/01/10 Buy stock
+    Charge                                     $5.00
+    ; Charge:: $5.00
+
+2024/01/10 Buy stock
+    Assets:Stock                        10 AAPL {$150.00} [2024/01/10] @ $150.00
+    ; Charge:: $5.00
+    Assets:Cash                           $-1,500.00
+end test
+
+; The negated budget posting prints its @ cost as a positive unit price.
+test print --generated --budget Broker --now 2024/03/01 --end 2024/02/01
+2024/01/01 Budget transaction
+    Assets:Broker                       -1 OPT {$100.00} @ $105.00
+
+2024/01/02 Sell
+    Assets:Broker                       -1 OPT {{$1,294.20}} @ $1,295.00
+    ; Kind: opt
+    Assets:Cash                            $1,294.20
+
+2024/01/05 Buy
+    Assets:Broker                       1 OPT {{$1,294.20}} @ $1,200.00
+    ; Kind: opt
+    Assets:Cash                           $-1,200.00
+    Income:Gains                             $-94.20
+end test
+
+; The copy carries the posting's metadata (copied once, by item_t's
+; copy constructor), so tags read on the copy resolve on the posting.
+test reg --pivot Kind Food --format '%(tag("Fee")) %(tag("Kind"))\n'
+$1.50 food
+end test

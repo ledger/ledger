@@ -1,6 +1,8 @@
 ; Coverage test for draft.cc xact_command with complex transactions
 ; Exercises draft.cc: 'at' keyword, matching multi-post xacts
-; and account mask lookup in matching transaction posts
+; and account mask lookup in matching transaction posts.
+; A draft that keeps a copied posting's amount keeps its written @ cost
+; too, so the printed draft parses back to the same transaction.
 
 2024/01/15 * Stock Purchase
     Assets:Brokerage         10 AAPL @ $150.00
@@ -14,6 +16,12 @@ end test
 
 test xact 2024/03/01 'Stock Purchase'
 2024/03/01 Stock Purchase
-    Assets:Brokerage                         10 AAPL
+    Assets:Brokerage                         10 AAPL @ $150.00
     Assets:Checking                        $-1500.00
+end test
+
+test xact 2024/03/01 'Stock Purchase' Brokerage
+2024/03/01 Stock Purchase
+    Assets:Brokerage                         10 AAPL @ $150.00
+    Assets:Checking
 end test

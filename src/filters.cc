@@ -386,6 +386,8 @@ void anonymize_posts::operator()(post_t& post) {
 
   if (temp.cost)
     render_commodity(*temp.cost);
+  if (temp.given_cost)
+    render_commodity(*temp.given_cost);
   if (temp.assigned_amount)
     render_commodity(*temp.assigned_amount);
 
@@ -1009,8 +1011,8 @@ bool exchange_names_one_commodity(const report_t& report) {
  * - --period (and -M and the rest), --dow and --by-payee pass on subtotals
  *   that carry no cost; valuing them books the gain that regress/1821_2
  *   realizes a second time under -M.
- * - Budget reports receive generated budget postings whose amount
- *   budget_posts negates while their cost keeps its sign, and the budget
+ * - Budget reports add generated budget postings to the running total,
+ *   which is then no sum over the journal's postings, and the budget
  *   command pairs each amount with its budget.
  * - Under --forecast the forecast-while filter sits downstream of this
  *   handler (chain_post_handlers), so the forecast posting that ends the
@@ -1029,8 +1031,7 @@ bool exchange_names_one_commodity(const report_t& report) {
  *   transaction, so under -X the two sides of a balanced transaction are
  *   converted at different rates (regress/unrealized-footing-posting-date,
  *   regress/unrealized-account-rewrite and regress/unrealized-payee-rewrite).
- *   --inject also leaves on the posting it generates the cost of the posting
- *   it copies (regress/unrealized-excluded-reports).
+ *   regress/unrealized-excluded-reports runs the --inject report.
  * - An amount expression of the user's own (--amount or -t, or the collect
  *   clause of select), and any other than those that amount_expr_reads_cost
  *   accepts: cost_baseline reads the cost in place of the amount, which gives
@@ -2412,7 +2413,7 @@ void budget_posts::report_budget_items(const date_t& date) {
 
         post_t& temp = temps.copy_post(post, xact);
         temp.add_flags(ITEM_GENERATED);
-        temp.amount.in_place_negate();
+        temp.in_place_negate();
 
         if (flags & BUDGET_WRAP_VALUES) {
           value_t seq;
@@ -2752,6 +2753,9 @@ void inject_posts::operator()(post_t& post) {
 
       temp.account = pair.second.first;
       temp.amount = tag_value->to_amount();
+      // The injected amount is the tag's value; the source posting's cost does not apply to it.
+      temp.cost = std::nullopt;
+      temp.given_cost = std::nullopt;
       temp.add_flags(ITEM_GENERATED);
 
       item_handler<post_t>::operator()(temp);
