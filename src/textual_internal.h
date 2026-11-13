@@ -304,7 +304,9 @@ public:
       char* line, bool use_apply_stack =
                       false); ///< Set the default year (optionally via apply stack for `end apply`)
   void end_apply_directive(
-      char* line); ///< Pop the most recent apply-stack entry, verifying the keyword matches
+      char* line);        ///< Pop the most recent apply-stack entry, verifying the keyword matches
+  void pop_application(); ///< Pop apply_stack.front(), restoring the year state an `apply year`
+                          ///< entry saved
 
   /*--- Transaction Directives ---*/
 

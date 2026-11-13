@@ -116,15 +116,12 @@ void instance_t::parse() {
     }
   }
 
-  // After the file is fully parsed, propagate any epoch/year changes made
-  // by year/Y directives back to the global state so that subsequent files
-  // see the updated year.
-  if (std::holds_alternative<boost::optional<datetime_t>>(apply_stack.front().value)) {
-    epoch = std::get<boost::optional<datetime_t>>(apply_stack.front().value);
-    year_directive_year = apply_stack.front().saved_year_directive;
-  }
-
-  apply_stack.pop_front();
+  // Undo every apply left open at end of file, newest first, as `end apply`
+  // would, so that an unclosed `apply year` does not leak into later files.
+  // The last entry popped is the account the caller seeded.  Plain `year`
+  // and `Y` directives never push an entry: they are permanent changes.
+  while (!apply_stack.empty())
+    pop_application();
 
 #if TIMELOG_SUPPORT
   timelog.close();

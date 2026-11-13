@@ -554,6 +554,16 @@ void instance_t::apply_year_directive(char* line, bool use_apply_stack) {
   }
 }
 
+void instance_t::pop_application() {
+  const application_t& entry = apply_stack.front();
+  if (std::holds_alternative<boost::optional<datetime_t>>(entry.value)) {
+    epoch = std::get<boost::optional<datetime_t>>(entry.value);
+    year_directive_year = entry.saved_year_directive;
+  }
+
+  apply_stack.pop_front();
+}
+
 void instance_t::end_apply_directive(char* kind) {
   char* b = kind ? next_element(kind) : nullptr;
   string name(b ? b : "");
@@ -573,12 +583,7 @@ void instance_t::end_apply_directive(char* kind) {
            _f("'end apply %1%' directive does not match 'apply %2%' directive") % name %
                apply_stack.front().label);
 
-  if (std::holds_alternative<boost::optional<datetime_t>>(apply_stack.front().value)) {
-    epoch = std::get<boost::optional<datetime_t>>(apply_stack.front().value);
-    year_directive_year = apply_stack.front().saved_year_directive;
-  }
-
-  apply_stack.pop_front();
+  pop_application();
 }
 
 /*--- Directive Blocks ---*/

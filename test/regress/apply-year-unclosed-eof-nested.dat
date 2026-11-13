@@ -1,0 +1,8 @@
+; Ends inside two nested `apply year` blocks; see
+; apply-year-unclosed-eof.test.
+apply year 2020
+apply year 2021
+
+01/05 A
+    Expenses:Food    $10.00
+    Assets:Cash
