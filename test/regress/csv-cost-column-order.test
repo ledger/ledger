@@ -1,0 +1,41 @@
+; convert used one scratch amount for the amount, debit/credit and cost
+; columns, and balanced each row with whichever it parsed last.  A cost
+; column that came before the amount column therefore balanced the row
+; against the amount and convert stopped with "Transaction does not
+; balance"; a debit column with a cost produced "-10 EUR @@ $12"
+; against "$-12", which does not re-read.  Each column now has its own
+; value, a cost takes the sign of the amount it prices (as "@@" does in
+; a journal), and the balancing posting carries the negated cost.  A
+; cost in the amount's own commodity is still dropped.
+
+test -f /dev/null convert test/regress/csv-cost-after-amount.csv --account Assets:Bank
+2024/01/01 * Broker
+    Expenses:Unknown                          10 EUR @@ $12
+    Assets:Bank                                 $-12
+
+2024/01/02 * Exchange
+    Expenses:Unknown                           5 EUR
+    Assets:Bank
+end test
+
+test -f /dev/null convert test/regress/csv-cost-before-amount.csv --account Assets:Bank
+2024/01/01 * Broker
+    Expenses:Unknown                          10 EUR @@ $12
+    Assets:Bank                                 $-12
+
+2024/01/02 * Exchange
+    Expenses:Unknown                           5 EUR
+    Assets:Bank
+end test
+
+test -f /dev/null convert test/regress/csv-debit-cost.csv --account Assets:Bank
+2024/01/01 * Broker
+    Expenses:Unknown                         -10 EUR @@ $12
+    Assets:Bank                                  $12
+end test
+
+test -f /dev/null convert test/regress/csv-debit-cost.csv --account Assets:Bank --invert
+2024/01/01 * Broker
+    Expenses:Unknown                          10 EUR @@ $12
+    Assets:Bank                                 $-12
+end test

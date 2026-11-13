@@ -186,7 +186,6 @@ xact_t* csv_reader::read_xact(bool rich_data) {
   // Phase 2: Walk the CSV columns and populate transaction fields
   // according to the header index built during construction.
   std::vector<int>::size_type n = 0;
-  amount_t amt;
   string total;
   string field;
 
@@ -228,6 +227,7 @@ xact_t* csv_reader::read_xact(bool rich_data) {
     case FIELD_CREDIT: {
       if (field.length() == 0)
         break;
+      amount_t amt;
       std::istringstream amount_str(field); // NOLINT(bugprone-unused-local-non-trivial-variable)
       (void)amt.parse(amount_str, PARSE_NO_REDUCE);
       if (!amt.has_commodity() && commodity_pool_t::current_pool->default_commodity)
@@ -249,12 +249,13 @@ xact_t* csv_reader::read_xact(bool rich_data) {
     case FIELD_COST: {
       if (field.length() == 0)
         break;
+      amount_t cost;
       std::istringstream amount_str(field); // NOLINT(bugprone-unused-local-non-trivial-variable)
-      (void)amt.parse(amount_str, PARSE_NO_REDUCE);
-      if (!amt.has_commodity() && commodity_pool_t::current_pool->default_commodity)
-        amt.set_commodity(*commodity_pool_t::current_pool->default_commodity);
-      post->cost = amt;
-      post->given_cost = amt;
+      (void)cost.parse(amount_str, PARSE_NO_REDUCE);
+      if (!cost.has_commodity() && commodity_pool_t::current_pool->default_commodity)
+        cost.set_commodity(*commodity_pool_t::current_pool->default_commodity);
+      post->cost = cost;
+      post->given_cost = cost;
       post->add_flags(POST_COST_IN_FULL);
       break;
     }
@@ -288,8 +289,17 @@ xact_t* csv_reader::read_xact(bool rich_data) {
     post->cost = std::nullopt;
     post->given_cost = std::nullopt;
     post->drop_flags(POST_COST_IN_FULL);
-    amt = post->amount;
   }
+
+  // A cost column holds the price of the whole amount; like "@@" in a
+  // journal it carries the amount's sign, so a debit with a cost balances.
+  if (post->cost && !post->amount.is_null() &&
+      (post->cost->sign() < 0) != (post->amount.sign() < 0)) {
+    post->cost->in_place_negate();
+    post->given_cost = post->cost;
+  }
+  // The master-account posting balances the cost when there is one.
+  const amount_t balance = post->cost ? *post->cost : post->amount;
 
   // Phase 3: Attach rich metadata if requested (import timestamp and
   // the original CSV line for auditability).
@@ -327,15 +337,16 @@ xact_t* csv_reader::read_xact(bool rich_data) {
   post->set_state(item_t::CLEARED);
   post->account = context.master;
 
-  if (!amt.is_null())
-    post->amount = -amt;
+  if (!balance.is_null())
+    post->amount = -balance;
 
   if (!total.empty()) {
+    amount_t assigned;
     std::istringstream assigned_amount_str(total);
-    (void)amt.parse(assigned_amount_str, PARSE_NO_REDUCE);
-    if (!amt.has_commodity() && commodity_pool_t::current_pool->default_commodity)
-      amt.set_commodity(*commodity_pool_t::current_pool->default_commodity);
-    post->assigned_amount = amt;
+    (void)assigned.parse(assigned_amount_str, PARSE_NO_REDUCE);
+    if (!assigned.has_commodity() && commodity_pool_t::current_pool->default_commodity)
+      assigned.set_commodity(*commodity_pool_t::current_pool->default_commodity);
+    post->assigned_amount = assigned;
   }
 
   xact->add_post(post.release());
