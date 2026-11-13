@@ -1,0 +1,35 @@
+; A CSV header such as "Amount Debit" or "Debit Amount" names a debit
+; column, but it used to match the "credit|amount" pattern first, so an
+; unsigned debit was imported as a positive amount.  "debit" is now
+; tried before the bare "amount", while any header containing "credit"
+; (including a signed "Debit/Credit" column) keeps its meaning.
+
+test -f /dev/null convert test/regress/csv-debit-amount-header.csv --account Assets:Bank
+2024/01/01 * Shop
+    Expenses:Unknown                          -70.55
+    Assets:Bank
+
+2024/01/02 * Payroll
+    Expenses:Unknown                             100
+    Assets:Bank
+end test
+
+test -f /dev/null convert test/regress/csv-debit-amount-header-swapped.csv --account Assets:Bank
+2024/01/01 * Shop
+    Expenses:Unknown                          -70.55
+    Assets:Bank
+
+2024/01/02 * Payroll
+    Expenses:Unknown                             100
+    Assets:Bank
+end test
+
+test -f /dev/null convert test/regress/csv-signed-debit-credit-column.csv --account Assets:Bank
+2024/01/01 * Shop
+    Expenses:Unknown                          -70.55
+    Assets:Bank
+
+2024/01/02 * Payroll
+    Expenses:Unknown                             100
+    Assets:Bank
+end test

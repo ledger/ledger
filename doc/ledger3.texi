@@ -5839,6 +5839,9 @@ line of the file.  The fields ledger can recognize contain these
 case-insensitive strings @code{date}, @code{posted}, @code{code},
 @code{payee} or @code{desc} or @code{description}, @code{amount} or
 @code{credit}, @code{debit}, @code{cost}, @code{total}, and @code{note}.
+A header containing @code{credit} names a credit column; otherwise one
+containing @code{debit} names a debit column, so headers such as
+@samp{Amount Debit} and @samp{Amount Credit} are recognized as they are.
 
 Delete the account description lines at the top, and replace the first
 line in the data above with:
