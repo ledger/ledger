@@ -119,8 +119,11 @@ void draft_t::xact_template_t::dump(std::ostream& out) const {
  *
  * The parser processes arguments left-to-right using the following rules:
  *
- *   - The first argument that looks like a date (digits with separators)
- *     or a day-of-week name becomes the transaction date.
+ *   - A date is recognized only before the payee: the first argument
+ *     that looks like a date (digits with separators), a relative date
+ *     ("today", "yesterday", ...) or a day-of-week name becomes the
+ *     transaction date.  After the payee such a token is an amount or
+ *     an account; "on DATE" gives the date anywhere.
  *   - Prepositions ("at", "to", "from", "on", "code", "note", "@", "@@")
  *     introduce their respective fields.
  *   - Without a preposition, the first non-date token becomes the payee.
@@ -181,6 +184,7 @@ void draft_t::parse_args(const value_t& args) {
           if (++begin == end)
             throw std::runtime_error(_("Invalid xact command arguments"));
           tmpl->payee_mask = (*begin).to_string();
+          check_for_date = false;
         } else if (arg == "to" || arg == "from") {
           if (!post || post->account_mask) {
             tmpl->posts.push_back(xact_template_t::post_template_t());
@@ -224,6 +228,7 @@ void draft_t::parse_args(const value_t& args) {
 
           if (tmpl->payee_mask.empty()) {
             tmpl->payee_mask = arg;
+            check_for_date = false;
           } else {
             amount_t amt;
             optional<mask_t> account;
