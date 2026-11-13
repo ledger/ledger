@@ -442,15 +442,31 @@ mask_t& mask_t::assign_glob(string_view pat) {
 namespace {
 
 /// Collect every matched substring (whole match + all capture groups) from
-/// a `boost::smatch`, representing unmatched optional groups as empty
-/// strings so the resulting vector has the same length as the pattern's
-/// mark count + 1.
-std::vector<string> collect_matches(const boost::smatch& what) {
+/// @p what, representing unmatched optional groups as empty strings so the
+/// resulting vector has the same length as the pattern's mark count + 1.
+///
+/// @p what locates its groups in @p searched, which is either @p text itself
+/// or its diacritic-folded copy; each group is returned as the substring of
+/// @p text that it names.  When the two have the same content the byte
+/// offsets carry over.  Otherwise both are valid UTF-8 and folding mapped
+/// one code point to one, so a group's code-point offsets in @p searched
+/// name the same characters in @p text.
+std::vector<string> collect_matches(const boost::cmatch& what, string_view searched,
+                                    string_view text) {
+  const bool same = searched == text;
+  auto in_text = [&](const char* p) {
+    if (same)
+      return text.data() + (p - searched.data());
+    const char* q = text.data();
+    utf8::unchecked::advance(q, utf8::unchecked::distance(searched.data(), p));
+    return q;
+  };
+
   std::vector<string> result;
   result.reserve(what.size());
   for (std::size_t i = 0; i < what.size(); ++i) {
     if (what[i].matched)
-      result.emplace_back(what[i].str());
+      result.emplace_back(in_text(what[i].first), in_text(what[i].second));
     else
       result.emplace_back();
   }
@@ -460,26 +476,17 @@ std::vector<string> collect_matches(const boost::smatch& what) {
 } // namespace
 
 boost::optional<std::vector<string>> mask_t::match_groups(string_view text) const {
-#if HAVE_BOOST_REGEX_UNICODE
-  string match_text = folds() ? fold_diacritics(text) : string(text);
-  boost::smatch what;
-  if (boost::u32regex_search(match_text, what, expr))
-    return collect_matches(what);
-  return boost::none;
-#else
-  if (folds()) {
-    string match_text = fold_diacritics(text);
-    boost::smatch what;
-    if (boost::regex_search(match_text, what, expr))
-      return collect_matches(what);
+  boost::cmatch what;
+  if (!folds()) {
+    if (search(text, what))
+      return collect_matches(what, text, text);
     return boost::none;
   }
-  string match_text(text);
-  boost::smatch what;
-  if (boost::regex_search(match_text, what, expr))
-    return collect_matches(what);
+
+  const string folded = fold_diacritics(text);
+  if (search(folded, what))
+    return collect_matches(what, folded, text);
   return boost::none;
-#endif
 }
 
 } // namespace ledger

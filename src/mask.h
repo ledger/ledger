@@ -133,26 +133,10 @@ public:
   /// Applies diacritics folding when `ignore_diacritics` is active,
   /// unless this mask is a glob.
   bool match(string_view text) const {
-#if HAVE_BOOST_REGEX_UNICODE
-    string match_text = folds() ? fold_diacritics(text) : string(text);
-    DEBUG("mask.match", "Matching: \""
-                            << match_text << "\" =~ /" << str() << "/ = "
-                            << (boost::u32regex_search(match_text, expr) ? "true" : "false"));
-    return boost::u32regex_search(match_text, expr);
-#else
-    if (folds()) {
-      string match_text = fold_diacritics(text);
-      DEBUG("mask.match",
-            "Matching: \"" << match_text << "\" =~ /" << str()
-                           << "/ = " << (boost::regex_search(match_text, expr) ? "true" : "false"));
-      return boost::regex_search(match_text, expr);
-    }
-    DEBUG("mask.match", "Matching: \""
-                            << text << "\" =~ /" << str() << "/ = "
-                            << (boost::regex_search(text.begin(), text.end(), expr) ? "true"
-                                                                                    : "false"));
-    return boost::regex_search(text.begin(), text.end(), expr);
-#endif
+    const bool result = folds() ? search(fold_diacritics(text)) : search(text);
+    DEBUG("mask.match",
+          "Matching: \"" << text << "\" =~ /" << str() << "/ = " << (result ? "true" : "false"));
+    return result;
   }
 
   /// Return the number of marked subexpressions (capture groups) in the pattern.
@@ -163,7 +147,8 @@ public:
   /// On a successful match the returned vector has `mark_count() + 1`
   /// elements: index 0 is the entire match, indices 1..N are the captured
   /// groups.  An optional group that did not participate in the match is
-  /// represented as an empty string.
+  /// represented as an empty string.  Captures are substrings of @p text,
+  /// also when the search ran on its diacritic-folded copy.
   ///
   /// Returns boost::none if the regex does not match.
   boost::optional<std::vector<string>> match_groups(string_view text) const;
@@ -202,6 +187,25 @@ private:
 
   /// Whether match() and match_groups() fold the text they are given.
   bool folds() const { return ignore_diacritics && !glob; }
+
+  /// Search @p subject (UTF-8) for this mask's regex, with the regex
+  /// flavour of this build; the only place that chooses between them.
+  bool search(string_view subject) const {
+#if HAVE_BOOST_REGEX_UNICODE
+    return boost::u32regex_search(subject.data(), subject.data() + subject.size(), expr);
+#else
+    return boost::regex_search(subject.data(), subject.data() + subject.size(), expr);
+#endif
+  }
+
+  /// As search(string_view), recording the match and its groups in @p what.
+  bool search(string_view subject, boost::cmatch& what) const {
+#if HAVE_BOOST_REGEX_UNICODE
+    return boost::u32regex_search(subject.data(), subject.data() + subject.size(), what, expr);
+#else
+    return boost::regex_search(subject.data(), subject.data() + subject.size(), what, expr);
+#endif
+  }
 };
 
 inline std::ostream& operator<<(std::ostream& out, const mask_t& mask) {

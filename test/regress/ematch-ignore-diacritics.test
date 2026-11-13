@@ -1,0 +1,31 @@
+; ==~ yields substrings of the text it matched, also when --ignore-diacritics
+; folds that text for the search: folding maps one code point to one, so
+; captures are re-sliced from the original by code-point offset.
+
+2024/01/01 Café Bleu
+    Assets:Bánk:Chécking    $10
+    Equity
+
+2024/01/02 日本 Café
+    Assets:Bánk:Chécking    $5
+    Equity
+
+test reg --ignore-diacritics Bánk --format '%(account ==~ /(.*)/)|%(payee ==~ /Caf./)\n'
+(Assets:Bánk:Chécking, Assets:Bánk:Chécking)|Café
+(Assets:Bánk:Chécking, Assets:Bánk:Chécking)|Café
+end test
+
+test reg Bánk --format '%(account ==~ /(.*)/)|%(payee ==~ /Caf./)\n'
+(Assets:Bánk:Chécking, Assets:Bánk:Chécking)|Café
+(Assets:Bánk:Chécking, Assets:Bánk:Chécking)|Café
+end test
+
+test reg --ignore-diacritics Bank --format '%(account ==~ /B.nk:(Ch.cking)/)|%(payee ==~ /(..) (Cafe)?/)\n'
+(Bánk:Chécking, Chécking)|(fé , fé, )
+(Bánk:Chécking, Chécking)|(日本 Café, 日本, Café)
+end test
+
+test reg --ignore-diacritics Bank --format '%(payee ==~ /cafe/)|%(payee =~ /Cafe/)\n'
+Café|true
+Café|true
+end test
