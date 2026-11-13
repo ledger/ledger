@@ -1,0 +1,125 @@
+; stats prints the posting rate with two significant digits.  At 100
+; or more postings per day that used to come out in scientific notation
+; ("1e+02 per day"); rates of ten and above now print as whole numbers.
+; The 99 identical Expenses:Food postings below make 100 postings on a
+; single day.
+
+2024/01/01 Shop
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Expenses:Food    $1
+    Assets:Cash
+
+test stats --now 2024/01/05
+Time period: 24-Jan-01 to 24-Jan-01 (1 days)
+
+  Files these postings came from:
+    $FILE
+
+  Unique payees:               1
+  Unique accounts:             2
+
+  Number of postings:        100 (100 per day)
+  Uncleared postings:        100
+
+  Days since last post:        4
+  Posts in last 7 days:      100
+  Posts in last 30 days:     100
+  Posts seen this month:     100
+end test

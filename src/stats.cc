@@ -83,9 +83,17 @@ void report_statistics::flush() {
   out.width(6);
   out << statistics.posts_count;
 
-  out << " (";
-  out.precision(2);
-  out << (double(statistics.posts_count) / double(period_days)) << _(" per day)") << '\n';
+  // Format the rate on its own stream so the report stream's precision
+  // is untouched.  Two significant digits suit small rates (0.018, 0.17,
+  // 2); from ten upward print whole numbers, never scientific notation.
+  const double per_day = double(statistics.posts_count) / double(period_days);
+  std::ostringstream rate;
+  if (per_day >= 10)
+    rate << std::fixed << std::setprecision(0);
+  else
+    rate << std::setprecision(2);
+  rate << per_day;
+  out << " (" << rate.str() << _(" per day)") << '\n';
 
   out << _("  Uncleared postings:     ");
   out.width(6);
