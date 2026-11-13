@@ -544,7 +544,7 @@ components with their standard-library equivalents.
 
 - Add directives to enable and disable automatic transactions
 
-- Allow `$expr` in automated-transaction account names in addition to
+- Allow `$name` in automated-transaction account names in addition to
   `$account`; honor effective dates in automated transactions; fix payee-based
   `Unknown` account resolution; fix date comparison operators in
   automated-transaction predicates; include auto-transaction postings in

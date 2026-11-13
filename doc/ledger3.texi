@@ -4619,6 +4619,38 @@ Becomes:
     Assets:Cash                 $-20.00
 @end smallexample
 
+More generally, @samp{$@var{name}} is replaced by the value of the
+identifier @var{name}, evaluated against the matched posting's
+account, whenever that value is a string.  For instance,
+@samp{$account_base} gives the last component of the matched
+account's name:
+
+@smallexample @c input:0AD27EC
+= /^Expenses:Food/
+    (Budget:$account_base)           1
+
+2012-03-10 KFC
+    Expenses:Food:Dining          $20.00
+    Assets:Cash
+@end smallexample
+
+@smallexample @c command:0AD27EC
+$ ledger balance --flat Budget
+@end smallexample
+
+@smallexample @c output:0AD27EC
+              $20.00  Budget:Dining
+@end smallexample
+
+Each @samp{$@var{name}} in an account is replaced by its own value.  A
+name that is not defined, or whose value is not a string, is left in
+the account name as written, so an account such as
+@samp{Savings:$Jar} needs no escaping.  A defined function that needs
+arguments, such as @samp{$abs}, is an error.  Any @samp{%(@var{VEXPR})},
+described next, is expanded first; in an account that also contains a
+@samp{$@var{name}}, a @samp{$@var{name}} in that expansion is replaced
+like one written in the account.
+
 It is possible to refer to information within the posting using a @var{VEXPR}.  Note that the syntax for using a @var{VEXPR} is "%(@var{VEXPR})".
 
 @smallexample

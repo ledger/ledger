@@ -1507,6 +1507,35 @@ static string apply_format(const string& str, scope_t& scope) {
   }
 }
 
+/// Replace each `$name` in an automated posting's account name with
+/// the string value of `name`, evaluated against the matched posting's
+/// account.  A name the scope does not define, or whose value is not a
+/// string, is kept as written, as v3.4.1 kept every `$word` other than
+/// `$account`; a defined name whose evaluation fails (a function that
+/// needs arguments, such as `$abs`) reports that error, as on base.
+/// Substituted text is not rescanned.
+static string expand_account_variables(const string& name, scope_t& parent, account_t& matched) {
+  static const boost::regex var_re("\\$([A-Za-z_]+)");
+  bind_scope_t scope(parent, matched);
+  string result;
+  string::const_iterator rest = name.begin();
+  for (boost::sregex_iterator i(name.begin(), name.end(), var_re), end; i != end; ++i) {
+    const boost::smatch& match(*i);
+    result.append(rest, match[0].first);
+    const string ident(match[1]);
+    value_t value;
+    if (scope.lookup(symbol_t::FUNCTION, ident))
+      value = expr_t(ident).calc(scope);
+    if (value.is_string())
+      result += value.as_string();
+    else
+      result.append(match[0].first, match[0].second);
+    rest = match[0].second;
+  }
+  result.append(rest, name.end());
+  return result;
+}
+
 /**
  * @brief Apply this automated transaction's rules to a regular transaction.
  *
@@ -1533,8 +1562,10 @@ static string apply_format(const string& str, scope_t& scope) {
  *       - Compute the amount: if the template's amount has no commodity,
  *         it is treated as a multiplier (e.g., `0.10` means 10% of the
  *         matched posting's amount); otherwise it is used as-is.
- *       - Resolve `$variable` and `%(format)` expressions in the account
- *         name against the matched posting's scope.
+ *       - Expand `%(format)` expressions in the account name against the
+ *         matched posting; then, if the template contains `$`, replace
+ *         each `$name` with that name's string value against the matched
+ *         posting's account (unknown or non-string names stay as written).
  *       - Clone the template posting with the computed amount and account.
  *       - Inherit the parent transaction's clearing state.
  *       - Apply deferred notes targeted at this template posting.
@@ -1544,10 +1575,10 @@ static string apply_format(const string& str, scope_t& scope) {
  *    generated, call verify() to ensure the transaction still balances.
  */
 void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
-  posts_list initial_posts(xact.posts.begin(), xact.posts.end());
-
   if (!enabled)
     return;
+
+  posts_list initial_posts(xact.posts.begin(), xact.posts.end());
 
   try {
 
@@ -1691,28 +1722,15 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
 #endif // DEBUG_ON
 
           account_t* account = post->account;
-          string fullname = account->fullname();
-          assert(!fullname.empty());
-
-          const regex re("\\$([A-Za-z_]+)");
-          smatch matches;
-          if (regex_search(fullname, matches, re)) {
-            bind_scope_t bound_scope(*context.scope, *initial_post->account);
-            const string subexpr = matches[1];
-            value_t result = expr_t(subexpr).calc(bound_scope);
-            if (result.is_string()) {
-              fullname = regex_replace(fullname, re, result.as_string());
-              while (account->parent)
-                account = account->parent;
-              account = account->find_account(fullname);
-            }
-          } else if (contains(fullname, "%(")) {
-            format_t account_name(fullname);
-            std::ostringstream buf;
-            buf << account_name(bound_scope);
+          const string template_name = account->fullname();
+          assert(!template_name.empty());
+          string fullname = apply_format(template_name, bound_scope);
+          if (template_name.find('$') != string::npos)
+            fullname = expand_account_variables(fullname, *context.scope, *initial_post->account);
+          if (fullname != template_name) {
             while (account->parent)
               account = account->parent;
-            account = account->find_account(buf.str());
+            account = account->find_account(fullname);
           }
 
           // Copy over details so that the resulting post is a mirror of
