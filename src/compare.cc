@@ -49,37 +49,25 @@
 
 namespace ledger {
 
-/*--- Scope wrapper for account sort ---*/
+/*--- Account sort key: the figure the row shows ---*/
 
-/**
- * A thin scope wrapper that redirects 'amount' lookups to 'total'.
- *
- * When sorting accounts (e.g. balance -S t), the sort expression may
- * evaluate 'amount', which for parent accounts with no direct postings
- * returns zero.  However the balance report displays the family total
- * for these accounts, so sorting by 'amount' produces an ordering that
- * doesn't match the displayed values.
- *
- * By wrapping the account scope and intercepting only the 'amount'
- * lookup, we make the sort see the family total without affecting any
- * other expression evaluation context (format strings, select queries,
- * etc.).
- */
 namespace {
 
-class account_amount_as_total_scope_t : public child_scope_t {
+/**
+ * Marks an account, for one evaluation of its sort key, as one whose
+ * balance row shows its family total, so that 'amount' (get_amount in
+ * account.cc) returns that total.  The mark is cleared on every exit,
+ * exceptions included, so no other expression ever sees it.
+ */
+class sort_amount_as_total_t {
+  bool& as_total;
+
 public:
-  explicit account_amount_as_total_scope_t(scope_t& account) : child_scope_t(account) {}
-
-  string description() override {
-    return parent ? parent->description() : _("<account sort scope>");
+  sort_amount_as_total_t(account_t::xdata_t& xdata, const bool active)
+      : as_total(xdata.sort_amount_as_total) {
+    as_total = active;
   }
-
-  expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override {
-    if (kind == symbol_t::FUNCTION && name == "amount")
-      return child_scope_t::lookup(kind, "total");
-    return child_scope_t::lookup(kind, name);
-  }
+  ~sort_amount_as_total_t() { as_total = false; }
 };
 
 } // anonymous namespace
@@ -190,10 +178,8 @@ bool compare_items<post_t>::operator()(post_t* left, post_t* right) {
 /**
  * Account comparison with xdata caching.  The ACCOUNT_EXT_SORT_CALC flag
  * prevents redundant evaluation, analogous to POST_EXT_SORT_CALC for postings.
- *
- * For parent accounts with no direct postings, 'amount' is redirected to
- * 'total' during sort evaluation so that -S t sorts by the family total
- * (which is the value the balance report actually displays).
+ * While an account's key is evaluated, sort_amount_as_total_t makes 'amount'
+ * the figure the balance report shows for it (see the rule beside its use).
  */
 template <>
 bool compare_items<account_t>::operator()(account_t* left, account_t* right) {
@@ -205,25 +191,19 @@ bool compare_items<account_t>::operator()(account_t* left, account_t* right) {
     if (xdata.has_flags(ACCOUNT_EXT_SORT_CALC))
       return;
 
-    // Parent accounts with no direct postings have amount() == NULL_VALUE.
-    // Redirect 'amount' -> 'total' so the sort matches the displayed value.
-    bool redirect = acct.amount().is_null() && !acct.accounts.empty();
-
-    if (redirect) {
-      account_amount_as_total_scope_t wrapped(acct);
-      if (sort_order.get_context()) {
-        bind_scope_t bound_scope(*sort_order.get_context(), wrapped);
-        find_sort_values(xdata.sort_values, bound_scope);
-      } else {
-        find_sort_values(xdata.sort_values, wrapped);
-      }
+    // A row shows the family total when the account has no postings of its
+    // own, or in the account tree while --total is still plain 'total' (the
+    // test accounts_report() makes before installing the --flat rule).
+    // Otherwise it shows the account's own amount.
+    const bool shows_total =
+        acct.amount().is_null() ||
+        (!report.HANDLED(flat) && report.HANDLER(total_).expr.base_expr == "total");
+    sort_amount_as_total_t as_total(xdata, shows_total);
+    if (sort_order.get_context()) {
+      bind_scope_t bound_scope(*sort_order.get_context(), acct);
+      find_sort_values(xdata.sort_values, bound_scope);
     } else {
-      if (sort_order.get_context()) {
-        bind_scope_t bound_scope(*sort_order.get_context(), acct);
-        find_sort_values(xdata.sort_values, bound_scope);
-      } else {
-        find_sort_values(xdata.sort_values, acct);
-      }
+      find_sort_values(xdata.sort_values, acct);
     }
     convert_sort_values_for_exchange(xdata.sort_values, report, report.terminus);
     xdata.add_flags(ACCOUNT_EXT_SORT_CALC);

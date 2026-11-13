@@ -462,12 +462,17 @@ value_t get_account_base(account_t& account) {
   return string_value(account.name);
 }
 
-value_t get_amount(account_t& account) {
-  return SIMPLIFIED_VALUE_OR_ZERO(account.amount());
-}
-
 value_t get_total(account_t& account) {
   return SIMPLIFIED_VALUE_OR_ZERO(account.total());
+}
+
+value_t get_amount(account_t& account) {
+  // While compare_items<account_t> evaluates a sort key for an account whose
+  // row shows its family total, 'amount' -- and so a, t and display_amount,
+  // which reach it through amount_expr -- is that total.
+  if (account.has_xdata() && account.xdata().sort_amount_as_total)
+    return get_total(account);
+  return SIMPLIFIED_VALUE_OR_ZERO(account.amount());
 }
 
 value_t get_subcount(account_t& account) {

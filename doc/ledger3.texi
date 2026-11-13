@@ -8492,6 +8492,11 @@ Used as part of development testing.
 @itemx -S @var{VEXPR}
 Sort the @command{register} report based on the value expression given
 to sort.
+In the @command{balance} report @code{amount} in @var{VEXPR} is the
+figure an account's line shows: in the account tree the total of the
+account and its sub-accounts, unless @option{--total} names another
+expression; with @option{--flat} the account's own amount.  An
+account with no postings of its own sorts by its total.
 With @option{--exchange}, amounts in @var{VEXPR} are converted at the
 date the report values each line.
 

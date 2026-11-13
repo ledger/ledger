@@ -429,6 +429,10 @@ public:
                                ///< display filters).
 
     std::list<sort_value_t> sort_values; ///< Cached sort-key values for the accounts report.
+    /// True only while compare_items<account_t> evaluates this account's
+    /// sort key and its balance row shows the family total; get_amount()
+    /// then returns that total.
+    bool sort_amount_as_total = false;
 
     xdata_t() : supports_flags<>() { TRACE_CTOR(account_t::xdata_t, ""); }
     xdata_t(const xdata_t& other)
