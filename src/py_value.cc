@@ -307,7 +307,6 @@ void export_value() {
       //.def("value", &value_t::value, value_overloads())
       .def("exchange_commodities", &value_t::exchange_commodities, exchange_commodities_overloads())
 
-      .def("__nonzero__", &value_t::is_nonzero)
       .def("is_nonzero", &value_t::is_nonzero)
       .def("is_realzero", &value_t::is_realzero)
       .def("is_zero", &value_t::is_zero)

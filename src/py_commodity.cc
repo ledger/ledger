@@ -340,7 +340,7 @@ void export_commodity() {
 
       .def("__str__", &commodity_t::symbol)
       .def("__unicode__", py_commodity_unicode)
-      .def("__nonzero__", &commodity_t::operator bool)
+      .def("__bool__", &commodity_t::operator bool)
 
       .def(self == self)
       .def(self == other<string>())
@@ -390,7 +390,7 @@ void export_commodity() {
       .add_property("tag", make_getter(&annotation_t::tag, return_value_policy<return_by_value>()),
                     make_setter(&annotation_t::tag, return_value_policy<return_by_value>()))
 
-      .def("__nonzero__", &annotation_t::operator bool)
+      .def("__bool__", &annotation_t::operator bool)
 
       .def(self == self)
 

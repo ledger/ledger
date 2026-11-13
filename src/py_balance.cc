@@ -251,7 +251,6 @@ void export_balance() {
       .def("value", py_value_2, args("in_terms_of", "moment"))
       .def("value", py_value_2d, args("in_terms_of", "moment"))
 
-      .def("__nonzero__", &balance_t::is_nonzero)
       .def("is_nonzero", &balance_t::is_nonzero)
       .def("is_zero", &balance_t::is_zero)
       .def("is_realzero", &balance_t::is_realzero)

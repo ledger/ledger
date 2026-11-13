@@ -62,7 +62,7 @@ void export_expr() {
   class_<expr_t>("Expr")
       .def(init<string>())
 
-      .def("__nonzero__", &expr_t::operator bool)
+      .def("__bool__", &expr_t::operator bool)
       .def("text", &expr_t::text)
       .def("set_text", &expr_t::set_text)
 

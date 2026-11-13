@@ -652,6 +652,12 @@ components with their standard-library equivalents.
   `ArgumentError`): every class's flag methods are now bound through the flags
   base it really derives from, checked when the bindings compile
 
+- Make `bool()` of an `Expr`, `Annotation` or `Commodity` follow its C++ truth
+  value; the bindings registered it only as Python 2's `__nonzero__`, which
+  Python 3 ignores, so it was always `True`.  The `__nonzero__` attribute is
+  gone from `Amount`, `Balance`, `Value`, `Expr`, `Annotation` and `Commodity`;
+  use `bool(x)` or `x.is_nonzero()`
+
 ### New Commands and Directives
 
 - Add `payee-rewrite` and `account-rewrite` directives for report-time

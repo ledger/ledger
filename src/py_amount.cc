@@ -259,7 +259,6 @@ internal precision."))
       .def("price", &amount_t::price)
 
       .def("sign", &amount_t::sign)
-      .def("__nonzero__", &amount_t::is_nonzero)
       .def("is_nonzero", &amount_t::is_nonzero)
       .def("is_zero", &amount_t::is_zero)
       .def("is_realzero", &amount_t::is_realzero)
