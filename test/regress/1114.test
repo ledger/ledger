@@ -22,7 +22,7 @@ While balancing transaction from "$FILE", lines 13-15:
 >     Expenses:Food   (1/9 FOO) @ 200 EUR
 >     Assets:Cash     -22 EUR
 Unbalanced remainder is:
-                   0
+        0.222222 EUR
 Amount to balance against:
        22.222222 EUR
 Error: Transaction does not balance

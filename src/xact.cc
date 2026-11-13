@@ -368,11 +368,13 @@ public:
 
 // Finalization and automated-posting verification use the same zero test
 // and per-unit cost rounding allowance, without changing any postings.
+// The caller holds a cost_precision_scope_t for the group around this test
+// and around any report of its failure, so that the remainder prints at the
+// precision the test used (#1114).
 bool group_balances(const posts_list& posts, const value_t& balance, bool virtual_group) {
   if (balance.is_null())
     return true;
 
-  cost_precision_scope_t precision_scope(posts, virtual_group);
   if (balance.is_zero())
     return true;
 
@@ -1055,6 +1057,7 @@ bool xact_base_t::finalize() {
   };
 
   for (const balancing_group_t& group : groups) {
+    cost_precision_scope_t precision_scope(posts, group.is_virtual);
     if (!group_balances(posts, group.balance, group.is_virtual) &&
         !adjust_balance_assignment(group))
       throw_unbalanced(*this, group.balance, group.is_virtual);
@@ -1144,20 +1147,18 @@ bool xact_base_t::verify() {
   VERIFY(balance.valid());
   VERIFY(virtual_balance.valid());
 
-  // Now that the post list has its final form, calculate the balance once
-  // more in terms of total cost, accounting for any possible gain/loss
-  // amounts.
-
+  // A cost must be in another commodity than its amount, as finalize() requires.
   for (post_t* post : posts) {
     if (!post->cost)
       continue;
 
     if (post->amount.commodity() == post->cost->commodity())
-      throw_(amount_error, _("A posting's cost must be of a different commodity than its amount"));
+      throw_(balance_error, _("A posting's cost must be of a different commodity than its amount"));
   }
 
   for (const bool virtual_group : {false, true}) {
     const value_t& group_balance = virtual_group ? virtual_balance : balance;
+    cost_precision_scope_t precision_scope(posts, virtual_group);
     if (!group_balances(posts, group_balance, virtual_group))
       throw_unbalanced(*this, group_balance, virtual_group);
   }

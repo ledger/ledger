@@ -19,7 +19,7 @@ While balancing transaction from "$FILE", lines 4-9:
 >     [Budget:One]     1 USD @ 1.002 EUR
 >     [Budget:Two]    -1 USD @ 1.001 EUR
 Unbalanced remainder of balanced virtual postings is:
-                   0
+            EUR0.001
 Amount to balance against:
             EUR1.002
 Error: Transaction does not balance

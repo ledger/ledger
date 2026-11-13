@@ -2528,6 +2528,17 @@ BOOST_AUTO_TEST_CASE(testCostPrecisionIsLocalToBalancingGroup) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(testVerifySameCommodityCostIsBalanceError) {
+  // verify() rejects a cost in the amount's own commodity with the
+  // balance_error that finalize() Phase 6 throws for it.
+  xact_t xact;
+  xact._date = parse_date("2024/01/01");
+  xact.journal = &journal;
+  add_cost_post(xact, "1 FOO", "10 FOO");
+  add_cost_post(xact, "-1 FOO", "-10 FOO");
+  BOOST_CHECK_THROW(xact.verify(), balance_error);
+}
+
 BOOST_AUTO_TEST_CASE(testParenthesizedCostDoesNotSetBalancePrecision) {
   for (const bool finalize : {false, true}) {
     for (const bool virtual_group : {false, true}) {

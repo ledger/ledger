@@ -390,6 +390,10 @@ components with their standard-library equivalents.
 
 ### Reporting and Display Improvements
 
+- A transaction that misses balancing by less than one unit of a cost
+  commodity whose display precision is still 0 now reports its remainder at
+  the precision of the costs instead of as `0`.
+
 - `--flat` now lists each account with its own amount rather than the total
   of the account and its sub-accounts (#1987), which changes the output of
   existing reports.  An account with postings of its own as well as

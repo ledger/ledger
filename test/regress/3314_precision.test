@@ -3,7 +3,7 @@
 ; EUR appears here only in costs, so it has no display precision of its
 ; own, and the 0.01 EUR left over would round away to nothing; the check
 ; widens EUR to the precision of the costs (#1114) for these postings as
-; it does for real ones.  The remainder still prints at EUR's precision.
+; it does for real ones, and reports the remainder at that precision.
 
 2015/03/05 * Payee
     [Budget:Bank]                              $1.00 @  1.02 EUR
@@ -17,8 +17,8 @@ While balancing transaction from "$FILE", lines 8-10:
 >     [Budget:Bank]                              $1.00 @  1.02 EUR
 >     [Budget:Revenue]                          -$1.00 @  1.01 EUR
 Unbalanced remainder of balanced virtual postings is:
-                   0
+           EUR0.0100
 Amount to balance against:
-             EUR1.02
+           EUR1.0200
 Error: Transaction does not balance
 end test
