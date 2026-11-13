@@ -3712,7 +3712,7 @@ BOOST_AUTO_TEST_CASE(testMergedExprSemicolonW7)
 {
   empty_scope_t parent;
   symbol_scope_t scope(parent);
-  merged_expr_t merged(";", "t");
+  merged_expr_t merged("t", "1");
   merged.set_base_expr("1");
   // Use a non-identifier expression so check_for_single_identifier returns false
   merged.prepend("2 + 3");

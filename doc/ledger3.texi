@@ -10355,6 +10355,20 @@ shorthand was rewritten to a value expression.  When a
 postings, @command{ledger query food and not %tax} reveals exactly
 which value expression is being applied.
 
+A bare term that holds @code{<}, @code{<=}, @code{>} or @code{>=} and
+reads as a comparison, such as @code{amount>20} or
+@code{d>=[2024/01/01]}, is that value expression rather than an
+account regex (so is an @code{and} or @code{or} that has such a
+comparison as an operand, or a @code{not} of one, written as one
+argument, such as @code{"date>[2024/01/10] and date<[2024/01/21]"};
+any other operand is then an ordinary value expression, so
+@code{"amount>20 and Books"} reports the unknown identifier), also
+after the @code{@@}, @code{#} and @code{=} prefixes (a @code{%}
+metadata term is unchanged); quote it, as in @code{"'a>b'"}, to match
+it as a pattern.  An operator that ends one command-line argument does
+not take the next argument as its right-hand side; write the
+comparison as one argument.
+
 A common workflow is to build up a query incrementally with
 @command{query} until it picks the right postings, then move it to
 @option{--limit} where the same value expression is consumed

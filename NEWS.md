@@ -542,6 +542,24 @@ components with their standard-library equivalents.
   commodity against a string now follows the bare symbol, as ordering two
   commodities does
 
+- A query term holding `<`, `<=`, `>` or `>=` that reads as a comparison (or
+  as an `and`/`or` with a comparison as an operand, or a `not` of one, as in
+  `'amount>20 and amount<100'`) is a value expression whatever the
+  operator's spelling: `amount>20` now filters by amount as `amount>=20`
+  already did, instead of being the account regex /amount>20/, and the same
+  holds after `@`, `#` and `=` (`@Foo>Bar` was the payee regex /Foo>Bar/); a
+  `%tag>=value` metadata term keeps its meaning. Quote such a term
+  (`"'a>b'"`) to match it as a pattern. A term that fails to parse as an
+  expression still falls back to a pattern. The one form that is no longer a
+  comparison is an operator ending one command-line argument with its
+  right-hand side in the next (`reg 'amount>=' 25`,
+  `query 'd>=' '[2004/06/01]'`); write it as one argument (`'amount>=25'`).
+  In an automated-transaction predicate, whitespace after `<`, `>`, `<=` or
+  `>=` no longer ends the term (`= amount>= 20` still filters by amount, and
+  `= amount> 25` now does too). A value expression must now use up its whole
+  input: `eval '1 2'`, `--limit ') junk'` and `assert 1 2` are parse errors
+  instead of silently dropping the leftover text.
+
 ### Date, Period, and Time Handling
 
 - Accept a time component for `--begin`/`--end`/`--now` (#1696): the parser

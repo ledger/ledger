@@ -1,0 +1,14 @@
+; A query term that fails to parse as an expression falls back to a pattern
+; and leaves no "While parsing value expression" context behind for a later,
+; unrelated error.
+
+2024/01/10 Bookshop
+    Expenses:Books                $25.00
+    Assets:Cash
+
+test reg Books 'x>[zz]' --amount nosuch -> 1
+__ERROR__
+While handling posting from "$FILE", line 6:
+>     Expenses:Books                $25.00
+Error: Unknown identifier 'nosuch'
+end test

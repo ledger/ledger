@@ -172,12 +172,14 @@ public:
       } kind;
 
       optional<string> value; ///< The literal text for TERM tokens; none for operators/keywords.
+      bool quoted = false;    ///< True for a TERM read from a '...', "..." or /.../ pattern.
 
-      explicit token_t(kind_t _kind = UNKNOWN, const optional<string>& _value = none)
-          : kind(_kind), value(_value) {
+      explicit token_t(kind_t _kind = UNKNOWN, const optional<string>& _value = none,
+                       bool _quoted = false)
+          : kind(_kind), value(_value), quoted(_quoted) {
         TRACE_CTOR(query_t::lexer_t::token_t, "");
       }
-      token_t(const token_t& tok) : kind(tok.kind), value(tok.value) {
+      token_t(const token_t& tok) : kind(tok.kind), value(tok.value), quoted(tok.quoted) {
         TRACE_CTOR(query_t::lexer_t::token_t, "copy");
       }
       ~token_t() noexcept { TRACE_DTOR(query_t::lexer_t::token_t); }
@@ -186,6 +188,7 @@ public:
         if (this != &tok) {
           kind = tok.kind;
           value = tok.value;
+          quoted = tok.quoted;
         }
         return *this;
       }
@@ -446,9 +449,11 @@ protected:
     /// @param val_str The string on the right-hand side of the `==`.
     static expr_t::ptr_op_t make_meta_eq_node(const expr_t::ptr_op_t& mask_arg,
                                               const string& val_str);
-    /// @brief Try to parse a term as a comparison expression (e.g., "d>=[date]").
+    /// @brief A term holding '<' or '>' that parses as a whole into a comparison tree (O_LT,
+    /// O_LTE, O_GT, O_GTE, an O_AND/O_OR with such an operand, or an O_NOT of one) becomes that
+    /// expression; anything else is a pattern (nullptr).
     /// @return The expression node if the term is a comparison, nullptr otherwise.
-    expr_t::ptr_op_t try_parse_comparison(const string& term, lexer_t::token_t::kind_t tok_context);
+    static expr_t::ptr_op_t try_parse_comparison(const string& term);
     /// @brief Build an O_MATCH node that regex-matches a pattern against the given field.
     static expr_t::ptr_op_t make_match_node(lexer_t::token_t::kind_t tok_context,
                                             const string& pattern);

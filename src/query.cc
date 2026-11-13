@@ -85,8 +85,8 @@
  *   (* TERM interpretation depends on the current context: *)
  *   (*   TOK_ACCOUNT / TOK_PAYEE / TOK_CODE / TOK_NOTE: *)
  *   (*     pattern → field =~ /pattern/  (O_MATCH node)  *)
- *   (*     except: if pattern contains ">["/"<[" or ends with ">","<" *)
- *   (*       followed by "=", it is parsed as a comparison expression.   *)
+ *   (*     except: an unquoted pattern holding "<" or ">" that parses as a *)
+ *   (*       whole <, <=, >, >= value expression, or an and/or/not of such, is that comparison. *)
  *   (*   TOK_META:                                                       *)
  *   (*     pattern                → has_tag(/pattern/)         (O_CALL node) *)
  *   (*     pattern TOK_EQ   value → has_tag(/pattern/, /value/) (O_CALL node) *)
@@ -159,7 +159,18 @@ query_t::lexer_t::token_t query_t::lexer_t::scan_quoted_pattern() {
   if (pat.empty())
     throw_(parse_error, _("Match pattern is empty"));
 
-  return token_t(token_t::TERM, pat);
+  return token_t(token_t::TERM, pat, true);
+}
+
+/// True when a term read so far, ignoring trailing blanks, ends in a
+/// comparison operator: <, >, <= or >=.
+static bool ends_with_comparison(const string& ident) {
+  string::size_type end = ident.find_last_not_of(" \t\r\n");
+  if (end == string::npos)
+    return false;
+  if (ident[end] == '<' || ident[end] == '>')
+    return true;
+  return ident[end] == '=' && end > 0 && (ident[end - 1] == '<' || ident[end - 1] == '>');
 }
 
 /// Accumulate a bare-word identifier from arg_i until an operator boundary
@@ -185,7 +196,8 @@ string query_t::lexer_t::scan_identifier(token_t::kind_t tok_context, bool consu
     case '\t':
     case '\n':
     case '\r':
-      if (!multiple_args && !consume_whitespace && !consume_next_arg)
+      if (!multiple_args && !consume_whitespace && !consume_next_arg &&
+          !(tok_context != token_t::TOK_META && ends_with_comparison(ident)))
         hit_boundary = true;
       else
         ident.push_back(*arg_i);
@@ -208,8 +220,21 @@ string query_t::lexer_t::scan_identifier(token_t::kind_t tok_context, bool consu
     case '@':
     case '#':
     case '%':
-    case '=':
       if (!consume_next && tok_context != token_t::TOK_EXPR) {
+        hit_boundary = true;
+      } else {
+        ident.push_back(*arg_i);
+      }
+      break;
+
+    case '=':
+      // In a pattern term, '=' after '<' or '>' belongs to the comparison
+      // operator ("amount>=20").  A metadata term never becomes a
+      // comparison, so there '=' always separates the tag from its value
+      // ("%Rate>=5" is tag /Rate>/ with value /5/).
+      if (!consume_next && tok_context != token_t::TOK_EXPR &&
+          (tok_context == token_t::TOK_META || ident.empty() ||
+           (ident.back() != '<' && ident.back() != '>'))) {
         hit_boundary = true;
       } else {
         ident.push_back(*arg_i);
@@ -456,7 +481,10 @@ expr_t::ptr_op_t query_t::parser_t::make_meta_node(const string& tag_pattern,
   expr_t::ptr_op_t mask_arg = new expr_t::op_t(expr_t::op_t::VALUE);
   mask_arg->set_value(mask_t(tag_pattern));
 
-  lexer_t::token_t tok = lexer.peek_token(tok_context);
+  // The token after a metadata term belongs to whatever follows it, not to
+  // the metadata term: lex it in a pattern context so that a comparison
+  // such as "amount>=500" arrives whole (TOK_META would end it at the '=').
+  lexer_t::token_t tok = lexer.peek_token(lexer_t::token_t::TOK_ACCOUNT);
 
   if (tok.kind == lexer_t::token_t::TOK_EQEQ) {
     // `%name==value` -- exact string equality against tag value.
@@ -494,41 +522,54 @@ expr_t::ptr_op_t query_t::parser_t::make_meta_node(const string& tag_pattern,
 }
 
 /**
- * Try to parse a term as a comparison expression.
- *
- * Supports two forms:
- * - "d>" followed by TOK_EQ and a term → parse "d>=[date]" as expression
- * - "d>[date]" with embedded comparison → parse the whole term as expression
- *
- * @return The expression node, or nullptr if the term is not a comparison.
+ * True when @p op is <, <=, > or >=, or an and/or with at least one operand
+ * that is such a comparison tree, or a not of one.  An identifier, a lambda
+ * (the "->" of an account name) or any other root is not.  The other operand
+ * of an and/or may be any expression ("date>[2024/01/10] and cleared").
  */
-expr_t::ptr_op_t
-query_t::parser_t::try_parse_comparison(const string& term,
-                                        query_t::lexer_t::token_t::kind_t tok_context) {
-  bool ends_with_cmp = !term.empty() && (term.back() == '>' || term.back() == '<');
-
-  if (ends_with_cmp && lexer.peek_token(tok_context).kind == lexer_t::token_t::TOK_EQ) {
-    lexer.next_token(tok_context); // consume the '='
-    lexer_t::token_t rhs = lexer.next_token(tok_context);
-    if (rhs.kind == lexer_t::token_t::TERM && rhs.value) {
-      try {
-        string expr_str = term + "=" + *rhs.value;
-        return expr_t(expr_str).get_op();
-      } catch (...) {
-        discard_error_context();
-        return nullptr;
-      }
-    }
-  } else if (!ends_with_cmp &&
-             (term.find(">[") != string::npos || term.find("<[") != string::npos)) {
-    try {
-      return expr_t(term).get_op();
-    } catch (...) {
-      discard_error_context();
-      return nullptr;
-    }
+static bool is_comparison_tree(const expr_t::ptr_op_t& op) {
+  if (!op)
+    return false;
+  switch (op->kind) {
+  case expr_t::op_t::O_LT:
+  case expr_t::op_t::O_LTE:
+  case expr_t::op_t::O_GT:
+  case expr_t::op_t::O_GTE:
+    return true;
+  case expr_t::op_t::O_AND:
+  case expr_t::op_t::O_OR:
+    return is_comparison_tree(op->left()) || is_comparison_tree(op->right());
+  case expr_t::op_t::O_NOT:
+    return is_comparison_tree(op->left());
+  default:
+    return false;
   }
-  return nullptr;
+}
+
+/**
+ * A query term is a comparison when it holds '<' or '>' and parses, as a
+ * whole, into a comparison tree (see is_comparison_tree).  Any other term,
+ * including one the expression parser rejects (with any exception but
+ * bad_alloc), is a pattern.
+ *
+ * @return The comparison node, or nullptr if the term is a pattern.
+ */
+expr_t::ptr_op_t query_t::parser_t::try_parse_comparison(const string& term) {
+  if (term.find_first_of("<>") == string::npos)
+    return nullptr;
+
+  expr_t::ptr_op_t op;
+  try {
+    op = expr_t(term).get_op();
+  } catch (const std::bad_alloc&) {
+    throw;
+  } catch (const std::exception&) { // whatever the expression parser rejects the term with
+    // A rejected term is a pattern, not an error: its "While parsing value
+    // expression" context must not reach the next, unrelated error.
+    discard_error_context();
+    return nullptr;
+  }
+  return is_comparison_tree(op) ? op : nullptr;
 }
 
 /**
@@ -581,7 +622,8 @@ expr_t::ptr_op_t query_t::parser_t::make_match_node(query_t::lexer_t::token_t::k
  *   - An O_MATCH node (`account =~ /pattern/`) for account/payee/code/note.
  *   - An O_CALL to `has_tag()` for metadata, optionally with a value match.
  *   - A raw expression parse for `expr` context.
- *   - A comparison expression for terms containing `>[` or `<[` syntax.
+ *   - A comparison expression (or an and/or of which one operand is a comparison, or a not
+ *     of one) for an unquoted term holding `<`, `<=`, `>` or `>=`.
  * - **Parenthesized sub-expressions**: Recurse into parse_query_expr, or in
  *   TOK_META context, consume a single pattern so `tag(name) == value`
  *   flows through make_meta_node like the unparenthesized form.
@@ -628,7 +670,8 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
       break;
 
     default:
-      node = try_parse_comparison(*tok.value, tok_context);
+      if (!tok.quoted)
+        node = try_parse_comparison(*tok.value);
       if (!node)
         node = make_match_node(tok_context, *tok.value);
       break;

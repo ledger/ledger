@@ -182,11 +182,14 @@ public:
    *
    * This is the main public entry point.  It invokes parse_value_expr (the
    * lowest-precedence level) to parse the complete expression, then cleans
-   * up the lookahead state.  On failure, the original expression text is
+   * up the lookahead state.  Unless @p flags has PARSE_PARTIAL or
+   * PARSE_SINGLE, the expression must use up the input; a token left after
+   * it is a parse_error.  On failure, the original expression text is
    * included in the error context for user-friendly diagnostics.
    *
    * @param in               The input stream containing the expression text.
-   * @param flags            Parse flags (e.g., PARSE_SINGLE, PARSE_PARTIAL).
+   * @param flags            Parse flags; PARSE_PARTIAL or PARSE_SINGLE lets the
+   *                         caller read on past the expression.
    * @param original_string  If provided, the full expression text for error
    *                         context display.
    * @return Root node of the parsed AST, or nullptr if the stream is empty.

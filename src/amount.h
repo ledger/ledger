@@ -70,6 +70,9 @@ public:
 
 enum parse_flags_enum_t : uint16_t {
   PARSE_DEFAULT = 0x0000,
+  /// The caller reads on past the expression: expr_t::parser_t::parse()
+  /// leaves any text after it unread instead of rejecting it as a parse
+  /// error.  PARSE_SINGLE implies the same.
   PARSE_PARTIAL = 0x0001,
   PARSE_SINGLE = 0x0002,
   PARSE_NO_MIGRATE = 0x0004,

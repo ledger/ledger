@@ -1,0 +1,26 @@
+; A compound that holds a comparison next to an identifier is an expression,
+; so the unknown identifier is an error, not a silent pattern.
+
+2024/01/10 Bookshop
+    Expenses:Books                $25.00
+    Assets:Cash
+
+test reg 'amount>= 20 and Books' -> 1
+__ERROR__
+While evaluating value expression:
+  ((amount >= 20) & Books)
+                    ^^^^^
+While handling posting from "$FILE", line 5:
+>     Expenses:Books                $25.00
+Error: Unknown identifier 'Books'
+end test
+
+test reg 'amount>20 and Books' -> 1
+__ERROR__
+While evaluating value expression:
+  ((amount > 20) & Books)
+                   ^^^^^
+While handling posting from "$FILE", line 5:
+>     Expenses:Books                $25.00
+Error: Unknown identifier 'Books'
+end test

@@ -89,7 +89,7 @@ expr_t::ptr_op_t expr_t::parser_t::parse_value_term(std::istream& in,
   case token_t::LPAREN:
     if (++parse_depth > MAX_PARSE_DEPTH)
       throw_(parse_error, _("Expression nesting depth limit exceeded"));
-    node = parse_value_expr(in, tflags.plus_flags(PARSE_PARTIAL).minus_flags(PARSE_SINGLE));
+    node = parse_value_expr(in, tflags.minus_flags(PARSE_SINGLE));
     --parse_depth;
     tok = next_token(in, tflags, token_t::RPAREN);
     break;
@@ -566,6 +566,16 @@ expr_t::ptr_op_t expr_t::parser_t::parse(std::istream& in, const parse_flags_t& 
                                          const optional<string>& original_string) {
   try {
     ptr_op_t top_node = parse_value_expr(in, flags);
+
+    // A caller that reads on past the expression says so with PARSE_PARTIAL
+    // or PARSE_SINGLE; for every other caller the expression is the whole
+    // input, and anything left over is a mistake to report, not to drop.
+    if (!flags.has_flags(PARSE_PARTIAL) && !flags.has_flags(PARSE_SINGLE)) {
+      token_t& tok = next_token(in, flags.plus_flags(PARSE_OP_CONTEXT));
+      if (tok.kind != token_t::TOK_EOF)
+        tok.unexpected();
+      push_token(tok);
+    }
 
     if (use_lookahead) {
       use_lookahead = false;

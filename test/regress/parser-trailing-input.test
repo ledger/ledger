@@ -1,0 +1,38 @@
+; A value expression must consume its whole input: text left over after a
+; complete expression is a parse error, not silently dropped.
+
+2024/01/05 Grocer
+    Expenses:Food                 $15.00
+    Assets:Cash
+
+test eval '1 2' -> 1
+__ERROR__
+While parsing value expression:
+  1 2
+    ^
+Error: Unexpected value '2'
+end test
+
+test eval ') 1' -> 1
+__ERROR__
+While parsing value expression:
+  ) 1
+
+Error: Unexpected expression token ')'
+end test
+
+test reg --limit ') junk' -> 1
+__ERROR__
+While parsing value expression:
+  ) junk
+
+Error: Unexpected expression token ')'
+end test
+
+test reg --display 'and' -> 1
+__ERROR__
+While parsing value expression:
+  and
+
+Error: Unexpected expression token '&'
+end test
