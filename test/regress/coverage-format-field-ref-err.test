@@ -8,5 +8,5 @@
 ; Test: %$0 is invalid (must be 1-9 or A-F)
 test reg --format '%(amount)\n%/%$0\n' -> 1
 __ERROR__
-Error: %$ field reference must be a digit from 1-9
+Error: %$ field reference must be a digit from 1-9 or a letter A-F
 end test

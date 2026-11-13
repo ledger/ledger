@@ -1,0 +1,16 @@
+; %$N names the Nth expression element of the first-line format; literal
+; text before the first expression does not count.
+
+2024/01/01 Payee
+    Expenses:Food  $10
+    Equity
+
+test reg --format 'X>%(payee)|%(account)\n%/[%$1][%$2]\n'
+X>Payee|Expenses:Food
+[Payee][Equity]
+end test
+
+test reg --format '%(payee)|%(account)\n%/[%$1][%$2]\n'
+Payee|Expenses:Food
+[Payee][Equity]
+end test

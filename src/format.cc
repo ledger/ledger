@@ -338,16 +338,13 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
         p++;
         if (*p == '0' || (!std::isdigit(static_cast<unsigned char>(*p)) && *p != 'A' && *p != 'B' &&
                           *p != 'C' && *p != 'D' && *p != 'E' && *p != 'F'))
-          throw_(format_error, _("%$ field reference must be a digit from 1-9"));
+          throw_(format_error, _("%$ field reference must be a digit from 1-9 or a letter A-F"));
 
         int index = std::isdigit(static_cast<unsigned char>(*p)) ? *p - '0' : (*p - 'A' + 10);
         element_t* tmpl_elem = tmpl->elements.get();
-
-        for (int i = 1; i < index && tmpl_elem; i++) {
-          tmpl_elem = tmpl_elem->next.get();
-          while (tmpl_elem && tmpl_elem->type != element_t::EXPR)
-            tmpl_elem = tmpl_elem->next.get();
-        }
+        for (int seen = 0; tmpl_elem; tmpl_elem = tmpl_elem->next.get())
+          if (tmpl_elem->type == element_t::EXPR && ++seen == index)
+            break;
 
         if (!tmpl_elem)
           throw_(format_error, _("%$ reference to a non-existent prior field"));
