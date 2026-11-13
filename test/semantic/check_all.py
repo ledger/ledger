@@ -249,10 +249,14 @@ def value_targets(path):
 def command_flags(line, cpp_flags):
     """Fold the input-affecting flags of one `test` command line into
     cpp_flags (first occurrence wins); True if it names
-    --decimal-comma."""
+    --decimal-comma.  Tokens after a bare "--" are query terms and are
+    not read."""
     dc = False
     toks = line.split()
     for i, tk in enumerate(toks):
+        # After "--" every token is a query term, never an option.
+        if tk == "--":
+            break
         if tk == "--now" and i + 1 < len(toks):
             pair = [tk, toks[i + 1].strip("'\"")]
             if pair[0] not in cpp_flags:

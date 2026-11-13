@@ -1,0 +1,36 @@
+; A `year` directive names the year for dates written without one; it
+; must not change what "now" is.  xact and template hide the directive
+; while drafting so the new transaction is dated against --now (#707),
+; but they used to also discard --now whenever it fell on December 31
+; of the directive's year, guessing that the year directive had set it,
+; and drafted against the wall clock instead.
+
+year 2024
+
+01/05 Grocer
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test --now 2024/12/31 xact 03/20 Grocer
+2024/03/20 Grocer
+    Expenses:Food                             $10.00
+    Assets:Cash
+end test
+
+test --now 2024/12/31 xact today Grocer
+2024/12/31 Grocer
+    Expenses:Food                             $10.00
+    Assets:Cash
+end test
+
+test --now 2024/12/31 xact Grocer
+2024/12/31 Grocer
+    Expenses:Food                             $10.00
+    Assets:Cash
+end test
+
+test --now 2024/12/30 xact 03/20 Grocer
+2024/03/20 Grocer
+    Expenses:Food                             $10.00
+    Assets:Cash
+end test

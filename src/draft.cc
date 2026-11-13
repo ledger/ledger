@@ -676,6 +676,22 @@ xact_t* draft_t::insert(journal_t& journal) {
   return added.release();
 }
 
+namespace {
+
+/// Hides the journal's year directive while a command drafts a
+/// transaction, so that its dates resolve against now (--now or the
+/// clock), not the directive's year (#707), and puts it back on every
+/// exit path, including a throw from draft_t or insert().
+class year_directive_suspension_t : public noncopyable {
+  optional<int> saved_;
+
+public:
+  year_directive_suspension_t() : saved_(year_directive_year) { year_directive_year = none; }
+  ~year_directive_suspension_t() { year_directive_year = saved_; }
+};
+
+} // namespace
+
 /*--- Command Handlers ---*/
 
 value_t template_command(call_scope_t& args) {
@@ -686,20 +702,8 @@ value_t template_command(call_scope_t& args) {
   args.value().dump(out);
   out << '\n' << '\n';
 
-  // Suppress year directive state, same as xact_command.  (#707)
-  optional<int> saved_year_directive = year_directive_year;
-  optional<datetime_t> saved_epoch;
-  year_directive_year = none;
-  if (saved_year_directive && epoch && epoch->date() == date_t(*saved_year_directive, 12, 31)) {
-    saved_epoch = epoch;
-    epoch = none;
-  }
-
+  year_directive_suspension_t suspension; // Draft against now, not the year directive (#707).
   draft_t draft(args.value());
-
-  year_directive_year = saved_year_directive;
-  if (saved_epoch)
-    epoch = saved_epoch;
 
   out << _("--- Transaction template ---") << '\n';
   draft.dump(out);
@@ -710,30 +714,19 @@ value_t template_command(call_scope_t& args) {
 value_t xact_command(call_scope_t& args) {
   report_t& report(find_scope<report_t>(args));
 
-  // The xact command drafts a new transaction whose date should be
-  // relative to "now" (--now or the wall clock), not to any year
-  // directive in the journal.  Temporarily suppress the year
-  // directive state so that CURRENT_DATE() and parse_date() use the
-  // intended date context.  (#707)
-  optional<int> saved_year_directive = year_directive_year;
-  optional<datetime_t> saved_epoch;
-  year_directive_year = none;
-  if (saved_year_directive && epoch && epoch->date() == date_t(*saved_year_directive, 12, 31)) {
-    saved_epoch = epoch;
-    epoch = none;
+  // The drafted transaction is dated against now (--now or the clock),
+  // not against any year directive in the journal (#707).
+  xact_t* new_xact;
+  {
+    year_directive_suspension_t suspension;
+    draft_t draft(args.value());
+
+    // Once insert() succeeds the generated transaction lives in the journal,
+    // which owns it (and destroys it in ~journal_t); deleting it here as well
+    // freed it out from under the journal, crashing later commands in the
+    // REPL and the --verify teardown (issue #3244).
+    new_xact = draft.insert(*report.session.journal.get());
   }
-
-  draft_t draft(args.value());
-
-  // Once insert() succeeds the generated transaction lives in the journal,
-  // which owns it (and destroys it in ~journal_t); deleting it here as well
-  // freed it out from under the journal, crashing later commands in the
-  // REPL and the --verify teardown (issue #3244).
-  xact_t* new_xact = draft.insert(*report.session.journal.get());
-
-  year_directive_year = saved_year_directive;
-  if (saved_epoch)
-    epoch = saved_epoch;
 
   if (new_xact) {
     // Only consider actual postings for the "xact" command

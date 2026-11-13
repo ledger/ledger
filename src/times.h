@@ -112,30 +112,36 @@ inline bool is_valid(const date_t& moment) {
   return !moment.is_not_a_date();
 }
 
-/// If set (via --now), overrides the system clock for CURRENT_TIME/CURRENT_DATE.
-/// This allows reproducible reports and testing with a fixed "now".
+/// Set by the --now option (on the command line, or as an option line
+/// inside a journal) and by global_scope_t at startup; overrides the clock
+/// for CURRENT_TIME/CURRENT_DATE.  No directive sets it: the apply-stack
+/// restores (`end apply` after `apply year`, the end of an included file,
+/// the end of a journal) and session teardown only put back a value saved
+/// earlier.
 extern optional<datetime_t> epoch;
 
 /// Tracks the year established by a `year` or `apply year` directive.
 /// When set, date parsing uses this year instead of the current calendar
 /// year for dates whose format lacks a year component (e.g., `01/15`).
+/// When no --now clock is set, CURRENT_TIME/CURRENT_DATE report December
+/// 31 of this year, so that `today` falls in the year the journal names.
 extern optional<int> year_directive_year;
 
 #ifdef BOOST_DATE_TIME_HAS_HIGH_PRECISION_CLOCK
 #define TRUE_CURRENT_TIME()                                                                        \
   (boost::posix_time::microsec_clock::local_time()) ///< Wall-clock time (microsecond precision).
-#define CURRENT_TIME()                                                                             \
-  (epoch ? *epoch : TRUE_CURRENT_TIME()) ///< Effective "now", respecting --now override.
 #else
 #define TRUE_CURRENT_TIME()                                                                        \
   (boost::posix_time::second_clock::local_time()) ///< Wall-clock time (second precision).
-#define CURRENT_TIME()                                                                             \
-  (epoch ? *epoch : TRUE_CURRENT_TIME()) ///< Effective "now", respecting --now override.
 #endif
+#define CURRENT_TIME()                                                                             \
+  (epoch                 ? *epoch                                                                  \
+   : year_directive_year ? datetime_t(date_t(*year_directive_year, 12, 31))                        \
+                         : TRUE_CURRENT_TIME()) ///< Effective "now".
 #define CURRENT_DATE()                                                                             \
-  (epoch ? epoch->date()                                                                           \
-         : boost::gregorian::day_clock::local_day()) ///< Effective "today", respecting --now
-                                                     ///< override.
+  (epoch                 ? epoch->date()                                                           \
+   : year_directive_year ? date_t(*year_directive_year, 12, 31)                                    \
+                         : boost::gregorian::day_clock::local_day()) ///< Effective "today".
 
 /// The day that starts each week for period alignment (default: Sunday).
 /// Configurable so that `weekly` reports can begin on Monday, etc.

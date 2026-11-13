@@ -14,6 +14,7 @@
 #include "error.h"
 #include "pool.h"
 #include "utils.h"
+#include "times.h"
 
 using namespace ledger;
 
@@ -504,6 +505,35 @@ BOOST_AUTO_TEST_CASE(testYearDirective)
 
   xact_t* xact = session.journal->xacts.front();
   BOOST_CHECK_EQUAL(date_t(2023, 6, 15), xact->date());
+}
+
+BOOST_AUTO_TEST_CASE(testYearDirectiveDatesTodayWithoutNow)
+{
+  // Without --now (as when ledger is embedded), a year directive dates
+  // "today" to December 31 of its year.  It must do so without writing
+  // the --now clock (epoch), which xact and template leave alone while
+  // they hide the directive, and the latest directive decides.
+  const optional<datetime_t> saved_epoch = epoch;
+  const optional<int> saved_year = year_directive_year;
+  epoch = none;
+  year_directive_year = none;
+
+  parse_text("year 2020\n");
+  BOOST_CHECK(!epoch);
+  BOOST_CHECK_EQUAL(date_t(2020, 12, 31), CURRENT_DATE());
+  BOOST_CHECK_EQUAL(datetime_t(date_t(2020, 12, 31)), CURRENT_TIME());
+  BOOST_CHECK_EQUAL(date_t(2020, 12, 31), *date_interval_t("today").begin());
+
+  parse_text("year 2021\n");
+  BOOST_CHECK(!epoch);
+  BOOST_CHECK_EQUAL(date_t(2021, 12, 31), CURRENT_DATE());
+
+  // A --now clock wins over the directive.
+  epoch = datetime_t(date_t(2019, 6, 1));
+  BOOST_CHECK_EQUAL(date_t(2019, 6, 1), CURRENT_DATE());
+
+  epoch = saved_epoch;
+  year_directive_year = saved_year;
 }
 
 // ---------------------------------------------------------------------------
