@@ -149,6 +149,7 @@ using post_handler_ptr = std::shared_ptr<item_handler<post_t>>;
 using acct_handler_ptr = std::shared_ptr<item_handler<account_t>>;
 
 class report_t;
+class predicate_t;
 
 /**
  * @brief Build the outer (upstream) portion of the posting filter chain.
@@ -182,9 +183,52 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t
  *                            because the accounts report handles those concerns
  *                            differently.
  * @return The new outermost handler in the chain.
+ *
+ * The selection filters (truncation, --display, --only) are built by
+ * chain_selection_handlers() and the outermost transfer/rewrite/related/inject
+ * filters by chain_transfer_handlers(); posts_report_quick() runs only those
+ * two stages.
  */
 post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& report,
                                      bool for_accounts_report = false);
+
+/**
+ * @brief Wrap @p base_handler with the posting selection filters.
+ *
+ * In inside-out order: truncate_xacts (--head/--tail), filter_posts for the
+ * --display predicate, then filter_posts for the --only predicate, so that
+ * postings meet --only first and truncation last.
+ *
+ * @param base_handler       The handler chain built so far.
+ * @param report             The report_t holding all parsed command-line options.
+ * @param has_collapse_stage True when the caller runs collapse_posts upstream,
+ *                           which alone limits postings by depth, so the
+ *                           --display predicate gains --depth's `depth<=N` term
+ *                           only then.
+ * @param display_predicate  Receives the --display predicate; untouched when
+ *                           --display is off.
+ * @param only_predicate     Receives the --only predicate; untouched when
+ *                           --only is off.
+ * @return The new outermost handler in the chain.
+ */
+post_handler_ptr chain_selection_handlers(post_handler_ptr base_handler, report_t& report,
+                                          bool has_collapse_stage, predicate_t& display_predicate,
+                                          predicate_t& only_predicate);
+
+/**
+ * @brief Wrap @p base_handler with the filters that rename, relate or inject
+ * postings.
+ *
+ * In inside-out order: transfer_details for --date, --account and --payee,
+ * rewrite_posts (payee-rewrite/account-rewrite directives and options),
+ * related_posts (--related/--related-all), then inject_posts (--inject), so
+ * that postings meet --inject first.
+ *
+ * @param base_handler  The handler chain built so far.
+ * @param report        The report_t holding all parsed command-line options.
+ * @return The new outermost handler in the chain.
+ */
+post_handler_ptr chain_transfer_handlers(post_handler_ptr base_handler, report_t& report);
 
 /**
  * @brief Construct a complete posting filter chain from command-line options.

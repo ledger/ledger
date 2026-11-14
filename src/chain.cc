@@ -37,7 +37,7 @@
  *
  * @brief Pipeline construction -- translating command-line options into filter chains.
  *
- * This file implements the two builder functions that assemble the posting
+ * This file implements the builder functions that assemble the posting
  * filter pipeline at report time:
  *
  * - **chain_pre_post_handlers()** adds the outermost filters: anonymization,
@@ -47,7 +47,16 @@
  *   posts, transfer_details, interval grouping, aggregation (subtotal,
  *   by-payee, day-of-week, equity), collapse, sorting, calc_posts,
  *   revaluation, the --only predicate, display filtering, truncation, and
- *   the forecast-while predicate.
+ *   the forecast-while predicate.  It delegates two stages:
+ *
+ *   - **chain_selection_handlers()** adds truncation (--head/--tail) and the
+ *     --display and --only predicates, next to the output.
+ *
+ *   - **chain_transfer_handlers()** adds the outermost of the inner filters:
+ *     transfer_details (--date, --account, --payee), payee/account
+ *     rewrites, related posts and injection.
+ *
+ *   posts_report_quick() (the listing commands) runs only those two stages.
  *
  * Both functions build the chain from the inside out: each new handler wraps
  * the previous one, so the last handler added is the first to receive
@@ -212,6 +221,61 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t
   return handler;
 }
 
+/*--- Selection handlers (--head/--tail, --display, --only) ---*/
+
+/**
+ * @brief Wrap the chain with the stages that select which postings reach
+ * the output: truncation (--head/--tail), the --display predicate and the
+ * --only predicate.  Shared by chain_post_handlers() and
+ * posts_report_quick().
+ */
+post_handler_ptr chain_selection_handlers(post_handler_ptr base_handler, report_t& report,
+                                          bool has_collapse_stage, predicate_t& display_predicate,
+                                          predicate_t& only_predicate) {
+  post_handler_ptr handler(std::move(base_handler));
+
+  // truncate_xacts cuts off a certain number of _xacts_ from being
+  // displayed.  It does not affect calculation.
+  if (report.HANDLED(head_) || report.HANDLED(tail_))
+    handler = std::make_shared<truncate_xacts>(
+        handler, report.HANDLED(head_) ? lexical_cast<int>(report.HANDLER(head_).value) : 0,
+        report.HANDLED(tail_) ? lexical_cast<int>(report.HANDLER(tail_).value) : 0);
+
+  // filter_posts will only pass through posts matching the
+  // `display_predicate'.
+  //
+  // --depth N limits accounts through display_ (`post|depth<=N`, see
+  // report.h).  Postings are limited by collapse_posts, so the depth term
+  // applies to postings only where that stage runs.  There it also hides
+  // the uncollapsed postings that --collapse-if-zero passes through, and it
+  // keeps collapse_posts' single-post shortcut off under --depth 0 (#3198).
+  // The listing commands have no collapse stage, and their postings keep
+  // their journal accounts.
+  if (report.HANDLED(display_)) {
+    string display_expr = report.HANDLER(display_).str();
+    if (has_collapse_stage && report.HANDLED(depth_))
+      display_expr = "(" + display_expr + ")&(depth<=" + report.HANDLER(depth_).str() + ")";
+    display_predicate = predicate_t(display_expr, report.what_to_keep());
+    handler = std::make_shared<filter_posts>(handler, display_predicate, report);
+  }
+
+  // filter_posts will only pass through posts matching the `only' (a.k.a.
+  // "secondary") predicate.  Placed downstream of calc_posts, revaluation,
+  // and display_filter_posts so that running totals (and the rounding
+  // adjustments fed by display_filter_posts' incremental accumulator)
+  // reflect ALL postings; --only then suppresses non-matching posts from
+  // the displayed output without altering the accumulated total.  This is
+  // what distinguishes --only from --limit: --limit excludes postings
+  // from calculation entirely, while --only keeps them in the running
+  // total but hides them from the report.  See #762.
+  if (report.HANDLED(only_)) {
+    only_predicate = predicate_t(report.HANDLER(only_).str(), report.what_to_keep());
+    handler = std::make_shared<filter_posts>(handler, only_predicate, report);
+  }
+
+  return handler;
+}
+
 /*--- Post handlers (inner/downstream filters) ---*/
 
 /**
@@ -262,33 +326,8 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
   }
 
   if (!for_accounts_report) {
-    // truncate_xacts cuts off a certain number of _xacts_ from being
-    // displayed.  It does not affect calculation.
-    if (report.HANDLED(head_) || report.HANDLED(tail_))
-      handler = std::make_shared<truncate_xacts>(
-          handler, report.HANDLED(head_) ? lexical_cast<int>(report.HANDLER(head_).value) : 0,
-          report.HANDLED(tail_) ? lexical_cast<int>(report.HANDLER(tail_).value) : 0);
-
-    // filter_posts will only pass through posts matching the
-    // `display_predicate'.
-    if (report.HANDLED(display_)) {
-      display_predicate = predicate_t(report.HANDLER(display_).str(), report.what_to_keep());
-      handler = std::make_shared<filter_posts>(handler, display_predicate, report);
-    }
-
-    // filter_posts will only pass through posts matching the `only' (a.k.a.
-    // "secondary") predicate.  Placed downstream of calc_posts, revaluation,
-    // and display_filter_posts so that running totals (and the rounding
-    // adjustments fed by display_filter_posts' incremental accumulator)
-    // reflect ALL postings; --only then suppresses non-matching posts from
-    // the displayed output without altering the accumulated total.  This is
-    // what distinguishes --only from --limit: --limit excludes postings
-    // from calculation entirely, while --only keeps them in the running
-    // total but hides them from the report.  See #762.
-    if (report.HANDLED(only_)) {
-      only_predicate = predicate_t(report.HANDLER(only_).str(), report.what_to_keep());
-      handler = std::make_shared<filter_posts>(handler, only_predicate, report);
-    }
+    handler = chain_selection_handlers(handler, report, /*has_collapse_stage=*/true,
+                                       display_predicate, only_predicate);
 
     // display_filter_posts adds virtual posts to the list to account
     // for changes in value of commodities, which otherwise would affect
@@ -489,6 +528,17 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
         handler, expr, interval, report.HANDLED(exact), report.HANDLED(empty),
         report.HANDLED(align_intervals), begin_of_report, end_of_report);
   }
+
+  return chain_transfer_handlers(handler, report);
+}
+
+/**
+ * @brief Wrap the chain with the stages that rename, relate or inject
+ * postings: --date/--account/--payee, payee/account rewrites, --related and
+ * --inject.  Shared by chain_post_handlers() and posts_report_quick().
+ */
+post_handler_ptr chain_transfer_handlers(post_handler_ptr base_handler, report_t& report) {
+  post_handler_ptr handler(std::move(base_handler));
 
   /*--- Detail transfer (--date, --account, --payee, --pivot) ---*/
 

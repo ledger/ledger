@@ -1,0 +1,43 @@
+; The listing commands (accounts, payees, tags, commodities, stats) must
+; report the names that payee-rewrite and account-rewrite directives give
+; postings, exactly as register and balance do.
+
+payee-rewrite Grocer  Supermarket
+account-rewrite Expenses:Food  Expenses:Groceries
+
+2024/01/05 Grocer
+    Expenses:Food              $10.00
+    Assets:Cash
+
+2024/02/10 Landlord
+    Expenses:Rent             $500.00
+    Assets:Checking
+
+test accounts
+Assets:Cash
+Assets:Checking
+Expenses:Groceries
+Expenses:Rent
+end test
+
+test payees
+Landlord
+Supermarket
+end test
+
+test bal --flat
+             $-10.00  Assets:Cash
+            $-500.00  Assets:Checking
+              $10.00  Expenses:Groceries
+             $500.00  Expenses:Rent
+--------------------
+                   0
+end test
+
+test accounts Food
+Expenses:Groceries
+end test
+
+test payees Food
+Supermarket
+end test

@@ -625,6 +625,12 @@ void report_t::posts_report(post_handler_ptr handler, post_handler_ptr& saved_ch
 }
 
 void report_t::posts_report_quick(post_handler_ptr handler) {
+  predicate_t display_predicate;
+  predicate_t only_predicate;
+  handler = chain_selection_handlers(handler, *this, /*has_collapse_stage=*/false,
+                                     display_predicate, only_predicate);
+  handler = chain_transfer_handlers(handler, *this);
+
   if (HANDLED(group_by_)) {
     unique_ptr<post_splitter> splitter(new post_splitter(handler, *this, HANDLER(group_by_).expr));
     splitter->set_postflush_func(posts_flusher(handler, *this));

@@ -252,11 +252,14 @@ public:
   void posts_report(post_handler_ptr handler);
   /// @brief Overload that preserves the handler chain in @a saved_chain for later use.
   void posts_report(post_handler_ptr handler, post_handler_ptr& saved_chain);
-  /// @brief Run a posting-based report that only needs query filtering (e.g. stats).
-  /// Applies only the pre-post filter chain (--limit, --begin, --end, -p, account
-  /// queries, budget/forecast synthesis) and skips the calc/display/sort chain
-  /// used by register-style reports.  Suitable for handlers that consume filtered
-  /// posts directly without needing running totals or amount expressions.
+  /// @brief Run a posting report for the listing commands (accounts, payees,
+  /// tags, commodities, stats).  Applies the pre-post chain (--limit,
+  /// budget/forecast, pivot), the name-changing stage (chain_transfer_handlers:
+  /// --date/--account/--payee, rewrites, --related, --inject) and the selection
+  /// stage (chain_selection_handlers: --head/--tail, --display, --only), but not
+  /// calc_posts, grouping, collapsing or display rounding.  Without calc_posts,
+  /// a --display or --only predicate that reads `total` (or the --total
+  /// expression) sees each posting's own amount, not a running total.
   void posts_report_quick(post_handler_ptr handler);
   /// @brief Run a report using randomly generated postings (for testing).
   void generate_report(post_handler_ptr handler);
@@ -902,7 +905,9 @@ public:
                       "%(quoted(join(note | xact.note)))\n");
       });
 
-  OPTION_(report_t, depth_, DO_() { OTHER(display_).on(whence, string("depth<=") + str); });
+  // Like --collapse, limit only account rows through display_;
+  // chain_selection_handlers() limits the postings of a collapsing chain.
+  OPTION_(report_t, depth_, DO_() { OTHER(display_).on(whence, string("post|depth<=") + str); });
 
   OPTION_(
       report_t, deviation,
