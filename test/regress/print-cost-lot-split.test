@@ -1,0 +1,104 @@
+; A FIFO lot split sells each lot in a part of the sale, and each part
+; keeps its share of the cost the journal gave.  print writes a part's
+; cost with the decimals the journal would have given that part: a
+; per-unit cost keeps its own (@ $170.00 stays @ $170.00 on every
+; part), and a share of a total keeps the total's when it is exact at
+; them (@@ $720.00 sold as 3.0 and 1 AAPL gives @@ $540.00 and
+; @@ $180.00), or the fewest more that it needs (@@ $10.01 sold as
+; 3.0 and 1 AAPL gives @@ $7.5075 and @@ $2.5025, not $7.50750000).
+; A share that does not terminate (a third of $100.00) keeps the
+; digits of its division, so the parts still add up.
+
+2024/01/10 Buy first lot
+    Assets:Broker                  10 AAPL {$150.00} [2024/01/10]
+    Assets:Cash
+
+2024/01/15 Buy second lot
+    Assets:Broker                  5 AAPL {$160.00} [2024/01/15]
+    Assets:Cash
+
+2024/02/01 Sell across both lots
+    Assets:Broker                  -12.0 AAPL @ $170.00
+    Assets:Cash
+
+2024/03/01 Buy third lot
+    Assets:Broker                  1 AAPL {$175.00} [2024/03/01]
+    Assets:Cash
+
+2024/03/15 Sell for a total across two lots
+    Assets:Broker                  -4 AAPL @@ $720.00
+    Assets:Cash
+
+2024/04/01 Buy fourth lot
+    Assets:Broker                  2 AAPL {$180.00} [2024/04/01]
+    Assets:Cash
+
+2024/04/02 Buy fifth lot
+    Assets:Broker                  1 AAPL {$181.00} [2024/04/02]
+    Assets:Cash
+
+2024/04/15 Sell for a total split in thirds
+    Assets:Broker                  -3 AAPL @@ $100.00
+    Assets:Cash
+
+2024/05/01 Buy sixth lot
+    Assets:Broker                  3 AAPL {$190.00} [2024/05/01]
+    Assets:Cash
+
+2024/05/02 Buy seventh lot
+    Assets:Broker                  1 AAPL {$191.00} [2024/05/02]
+    Assets:Cash
+
+2024/05/15 Sell for a total whose shares need more decimals
+    Assets:Broker                  -4 AAPL @@ $10.01
+    Assets:Cash
+
+test print --lot-matching fifo
+2024/01/10 Buy first lot
+    Assets:Broker                       10.0 AAPL {$150} [2024/01/10]
+    Assets:Cash
+
+2024/01/15 Buy second lot
+    Assets:Broker                       5.0 AAPL {$160} [2024/01/15]
+    Assets:Cash
+
+2024/02/01 Sell across both lots
+    Assets:Broker                       -10.0 AAPL {$150} [2024/01/10] @ $170.00
+    Assets:Broker                       -2.0 AAPL {$160} [2024/01/15] @ $170.00
+    Assets:Cash
+
+2024/03/01 Buy third lot
+    Assets:Broker                       1.0 AAPL {$175} [2024/03/01]
+    Assets:Cash
+
+2024/03/15 Sell for a total across two lots
+    Assets:Broker                       -3.0 AAPL {$160} [2024/01/15] @@ $540.00
+    Assets:Broker                       -1.0 AAPL {$175} [2024/03/01] @@ $180.00
+    Assets:Cash
+
+2024/04/01 Buy fourth lot
+    Assets:Broker                       2.0 AAPL {$180} [2024/04/01]
+    Assets:Cash
+
+2024/04/02 Buy fifth lot
+    Assets:Broker                       1.0 AAPL {$181} [2024/04/02]
+    Assets:Cash
+
+2024/04/15 Sell for a total split in thirds
+    Assets:Broker                       -2.0 AAPL {$180} [2024/04/01] @@ $66.66666667
+    Assets:Broker                       -1.0 AAPL {$181} [2024/04/02] @@ $33.33333333
+    Assets:Cash
+
+2024/05/01 Buy sixth lot
+    Assets:Broker                       3.0 AAPL {$190} [2024/05/01]
+    Assets:Cash
+
+2024/05/02 Buy seventh lot
+    Assets:Broker                       1.0 AAPL {$191} [2024/05/02]
+    Assets:Cash
+
+2024/05/15 Sell for a total whose shares need more decimals
+    Assets:Broker                       -3.0 AAPL {$190} [2024/05/01] @@ $7.5075
+    Assets:Broker                       -1.0 AAPL {$191} [2024/05/02] @@ $2.5025
+    Assets:Cash
+end test

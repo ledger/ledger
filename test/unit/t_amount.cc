@@ -2805,4 +2805,39 @@ BOOST_AUTO_TEST_CASE(testAmountCompareW11)
   BOOST_CHECK_THROW(x7.compare(x8), amount_error);
 }
 
+// set_precision_if_exact() gives an amount the precision of the written
+// amount it stands for, and never rounds: a share of a written cost.
+
+BOOST_AUTO_TEST_CASE(testSetPrecisionIfExact)
+{
+  amount_t x1("$2040.000");
+  x1.in_place_unround();
+  x1 *= amount_t("10") / amount_t("12.0");  // 10/12 of the total: 1700
+  BOOST_CHECK(x1.precision() > 3);
+
+  BOOST_CHECK(x1.set_precision_if_exact(2));
+  BOOST_CHECK_EQUAL(2, x1.precision());
+  BOOST_CHECK_EQUAL(amount_t("$1700"), x1);
+  BOOST_CHECK(x1.set_precision_if_exact(0)); // 1700 is exact at no decimals
+  BOOST_CHECK_EQUAL(0, x1.precision());
+
+  amount_t x2("$100.00");
+  x2.in_place_unround();
+  x2 /= amount_t("3");
+  const amount_t::precision_t prec = x2.precision();
+  const amount_t value(x2);
+  BOOST_CHECK(!x2.set_precision_if_exact(2)); // a third of $100 is not exact
+  BOOST_CHECK_EQUAL(prec, x2.precision());
+  BOOST_CHECK_EQUAL(value, x2);
+
+  amount_t x3("1.25");
+  BOOST_CHECK(!x3.set_precision_if_exact(1));
+  BOOST_CHECK_EQUAL(2, x3.precision());
+  BOOST_CHECK(x3.set_precision_if_exact(4)); // raising it is exact too
+  BOOST_CHECK_EQUAL(4, x3.precision());
+
+  amount_t x4;
+  BOOST_CHECK_THROW(x4.set_precision_if_exact(2), amount_error);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

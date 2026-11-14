@@ -322,6 +322,13 @@ public:
       trailing zeros are preserved to that precision during output. */
   void set_cost_precision(precision_t prec);
 
+  /** Set the internal precision to @a prec when the value has no nonzero
+      digit past @a prec decimals, and return true; otherwise change
+      nothing and return false.  The value is never rounded.  This gives
+      an amount derived by arithmetic the precision of the written amount
+      it stands for, such as a share of a written cost. */
+  bool set_precision_if_exact(precision_t prec);
+
   /** Returns the negated value of an amount.
       @see operator-()
   */
@@ -755,7 +762,10 @@ public:
 
   void print(std::ostream& out, const uint_least8_t flags = AMOUNT_PRINT_NO_FLAGS) const;
   /// @brief The body of print(): the amount without regard to the stream's width.
-  void print_unpadded(std::ostream& out, uint_least8_t flags) const;
+  /// @p min_decimals keeps trailing zeros through that many decimals even past
+  /// the commodity's precision (print uses it to write a cost as the journal
+  /// gave it); it never rounds and never adds digits past display_precision().
+  void print_unpadded(std::ostream& out, uint_least8_t flags, precision_t min_decimals = 0) const;
 
   /*@}*/
 

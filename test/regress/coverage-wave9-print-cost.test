@@ -7,6 +7,6 @@
 
 test print
 2024/01/01 Stock Buy
-    Assets:Brokerage                         10 AAPL @ $150
+    Assets:Brokerage                         10 AAPL @ $150.00
     Assets:Cash
 end test

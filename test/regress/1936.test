@@ -26,14 +26,14 @@ end test
 ; through print.  Transaction 1 must emit (@) while transactions 2 and 3 must emit (@@).
 test print
 2020/06/22 * Virtual per-unit price with lot note
-    Assets:Test                         10.00 EUR {USD1.23} (this is a note) (@) USD1.3
+    Assets:Test                         10.00 EUR {USD1.23} (this is a note) (@) USD1.30
     Assets:Bank
 
 2020/06/22 * Virtual total price with lot note
-    Assets:Test                         10.00 EUR {USD1.23} (this is a note) (@@) USD13
+    Assets:Test                         10.00 EUR {USD1.23} (this is a note) (@@) USD13.00
     Assets:Bank
 
 2020/06/22 * Virtual total price without lot note
-    Assets:Test                         10.00 EUR {USD1.23} (@@) USD13
+    Assets:Test                         10.00 EUR {USD1.23} (@@) USD13.00
     Assets:Bank
 end test

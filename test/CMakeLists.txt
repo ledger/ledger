@@ -133,6 +133,16 @@ if(Python_EXECUTABLE)
       PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}")
   endforeach()
 
+  # GenerateTests round-trips "ledger generate" for seeds 1-20: bal of each
+  # generated journal must equal bal of its print output.  The script's range
+  # end is exclusive, so "1 21" runs seeds 1 through 20.
+  add_test(NAME GenerateTests
+    COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/GenerateTests.py
+    --ledger $<TARGET_FILE:ledger> --sourcepath ${PROJECT_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/test 1 21)
+  set_tests_properties(GenerateTests
+    PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}")
+
   # CheckEnvVars tests that LEDGER_* environment variables are honored
   # (requires running ledger without --args-only, so uses a separate script)
   add_test(NAME CheckEnvVars

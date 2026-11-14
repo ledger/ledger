@@ -7,7 +7,7 @@
 ; computed lot looks up its fixated annotation exactly, so a computed
 ; price is never folded into a typed one that merely rounds alike.
 ; Folding it would make Assets:Broker hold 23 AAPL {=$1.03}, which print
-; writes as `23 AAPL {=$1.03} [2020/01/01] @@= $23.6` and which reads
+; writes as `23 AAPL {=$1.03} [2020/01/01] @@= $23.60` and which reads
 ; back as a purchase for $23.69.
 ;
 ; Computed first (2021), the typed lot names the computed one, so
@@ -54,7 +54,7 @@ test print -p 2020
     Equity:Opening
 
 2020/01/01 Buy fixated
-    Assets:Broker                            23 AAPL @@= $23.6
+    Assets:Broker                            23 AAPL @@= $23.60
     Assets:Cash
 end test
 
@@ -72,7 +72,7 @@ end test
 
 test print -p 2021
 2021/01/01 Buy fixated
-    Assets:Broker                            23 AAPL @@= $23.6
+    Assets:Broker                            23 AAPL @@= $23.60
     Assets:Cash
 
 2021/01/01 Typed lot

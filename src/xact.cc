@@ -255,18 +255,55 @@ inline bool balances_in_group(const post_t* post, bool virtual_group) {
   return post->must_balance() && post->has_flags(POST_VIRTUAL) == virtual_group;
 }
 
+/// Give @p part the fewest decimals, at least @p least, at which it is
+/// exact.  The arithmetic that made it left it more, which print would
+/// write as zeros; a value that does not terminate within its decimals
+/// keeps them.
+void settle_decimals(amount_t& part, const amount_t::precision_t least) {
+  const int last = std::max(least, part.precision());
+  for (int prec = least; prec <= last; ++prec)
+    if (part.set_precision_if_exact(static_cast<amount_t::precision_t>(prec)))
+      return;
+}
+
+/// The written cost of the part of a sale that sells @p quantity, which
+/// is @p share of the sale: @p given, the sale's written cost, times
+/// @p share, with the decimals the journal would have written for that
+/// part (print writes them, #1151).  A per-unit cost was multiplied by
+/// the sale's amount, @p total_sale, so it has the price's decimals plus
+/// the amount's; the part's has the price's plus @p quantity's.  A share
+/// of a total has the total's decimals, or the fewest more that it
+/// needs ($10.01 in halves is $5.005 each).
+amount_t part_of_given_cost(const amount_t& given, const bool in_full, const amount_t& total_sale,
+                            const amount_t& quantity, const amount_t& share) {
+  amount_t part(given * share);
+  if (in_full) {
+    settle_decimals(part, given.precision());
+  } else {
+    const amount_t::precision_t sale_prec = total_sale.precision();
+    const amount_t::precision_t price_prec =
+        given.precision() > sale_prec
+            ? static_cast<amount_t::precision_t>(given.precision() - sale_prec)
+            : 0;
+    settle_decimals(part, static_cast<amount_t::precision_t>(price_prec + quantity.precision()));
+  }
+  return part;
+}
+
 /// Add to @p xact, just before @p where, a part of @p sale that sells
 /// @p quantity: a copy of the sale's details (flags, state, note, tags,
 /// position and dates) with @p share of its cost and of its written
-/// cost.  The part is a real posting, as the sale was.
+/// cost (part_of_given_cost(); @p total_sale is the sale's whole
+/// quantity).  The part is a real posting, as the sale was.
 post_t* add_sale_leg(xact_base_t& xact, posts_list::iterator where, const post_t& sale,
-                     const amount_t& quantity, const amount_t& share) {
+                     const amount_t& total_sale, const amount_t& quantity, const amount_t& share) {
   auto* leg = new post_t(sale.account, quantity);
   leg->copy_details(sale);
   if (sale.cost)
     leg->cost = *sale.cost * share;
   if (sale.given_cost)
-    leg->given_cost = *sale.given_cost * share;
+    leg->given_cost = part_of_given_cost(*sale.given_cost, sale.has_flags(POST_COST_IN_FULL),
+                                         total_sale, quantity, share);
   xact.add_post(leg);
   xact.posts.splice(where, xact.posts, std::prev(xact.posts.end()));
   return leg;
@@ -316,21 +353,23 @@ void match_lots(xact_base_t& xact, std::vector<post_t*>& copy, lot_policy_t poli
         post->amount = sale_amt;
         post->amount_expr.reset(); // print must show the lot, not the expression
       } else {
-        copy.push_back(add_sale_leg(xact, where, *post, sale_amt, consumed / total_sale));
+        copy.push_back(
+            add_sale_leg(xact, where, *post, total_sale, sale_amt, consumed / total_sale));
       }
       remaining -= consumed;
     }
     if (!remaining.is_realzero()) { // oversold: book the rest without a lot
       amount_t rest(remaining.negated());
       rest.set_commodity(post->amount.commodity().referent());
-      copy.push_back(add_sale_leg(xact, where, *post, rest, remaining / total_sale));
+      copy.push_back(add_sale_leg(xact, where, *post, total_sale, rest, remaining / total_sale));
     }
     if (first_consumed != total_sale) {
       const amount_t share = first_consumed / total_sale;
       if (post->cost)
         *post->cost *= share;
       if (post->given_cost)
-        *post->given_cost *= share;
+        post->given_cost = part_of_given_cost(*post->given_cost, post->has_flags(POST_COST_IN_FULL),
+                                              total_sale, post->amount, share);
     }
   }
 }

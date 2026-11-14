@@ -25,21 +25,6 @@ if not os.path.isdir(args.tests) and not os.path.isfile(args.tests):
           , file=sys.stderr)
     sys.exit(1)
 
-#def normalize(line):
-#    match = re.match(r'((\s*)([A-Za-z]+)?(\s*)([-0-9.]+)(\s*)([A-Za-z]+)?)(  (.+))?$', line)
-#    if match:
-#        if match.group(3):
-#            prefix = match.group(3) + " " + match.group(5)
-#            if match.group(8):
-#                return prefix + match.group(8)
-#            return prefix
-#        elif match.group(7):
-#            prefix = match.group(7) + " " + match.group(5)
-#            if match.group(8):
-#                return prefix + match.group(8)
-#            return prefix
-#    return line
-
 def generation_test(seed):
     p_gen = harness.run('$ledger --seed=%d generate' % seed)
     cout = harness.wait(p_gen, msg=("Generation for seed %d failed:" % seed))
@@ -52,20 +37,6 @@ def generation_test(seed):
     if p_print_out is None:
         return False
 
-    #p_cerr_bal = Popen("%s --args-only -f - bal" % ledger, shell=True,
-    #                   stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
-    #p_cerr_bal.stdin.write(cerr)
-    #p_cerr_bal.stdin.close()
-    #
-    #cerr_lines = [normalize(line) for line in p_cerr_bal.stdout.readlines()]
-    #
-    #if p_cerr_bal.wait() != 0:
-    #    print("Stderr balance for seed %d failed due to error:" % seed)
-    #    print(p_cerr_bal.stderr.read())
-    #    del p_cerr_bal
-    #    return False
-    #del p_cerr_bal
-
     p_cout_bal = harness.run('$ledger -f - bal')
     cout_bal = harness.wait(p_cout_bal, msg=("Stdout balance for seed %d failed:" % seed),
                             input=cout)
@@ -74,7 +45,6 @@ def generation_test(seed):
     cout_lines = harness.lines(cout_bal)
     if len(cout_lines) == 0:
       return False
-    #norm_cout_lines = [normalize(line) for line in cout_lines]
 
     p_print_bal = harness.run('$ledger -f - bal')
     print_bal = harness.wait(p_print_bal, msg=("Print balance for seed %d failed:" % seed),
@@ -86,18 +56,6 @@ def generation_test(seed):
       return False
 
     success = True
-    #printed = False
-    #for line in ndiff(cerr_lines, norm_cout_lines, charjunk=None):
-    #    if line[:2] == "  ":
-    #        continue
-    #    if not printed:
-    #        if success: print()
-    #        print("Generation failure in output from seed %d (cerr vs. cout):" % seed)
-    #        if success: failed += 1
-    #        success = False
-    #        printed = True
-    #    print(" ", line)
-
     printed = False
     for line in ndiff(cout_lines, print_lines, charjunk=None):
         if line[:2] == "  ":

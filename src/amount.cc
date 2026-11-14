@@ -967,6 +967,21 @@ void amount_t::set_cost_precision(precision_t prec) {
   quantity->add_flags(BIGINT_COST_PREC);
 }
 
+bool amount_t::set_precision_if_exact(precision_t prec) {
+  if (!quantity)
+    throw_(amount_error, _("Cannot set precision of an uninitialized amount"));
+
+  // The canonical value is exact at prec decimals when its denominator
+  // divides 10^prec.
+  mpz_ui_pow_ui(temp, 10, prec);
+  if (!mpz_divisible_p(temp, mpq_denref(MP(quantity))))
+    return false;
+
+  _dup();
+  quantity->prec = prec;
+  return true;
+}
+
 /**
  * @brief Return the precision used for display output.
  *
@@ -2149,7 +2164,8 @@ void amount_t::print(std::ostream& _out, const uint_least8_t flags) const {
   }
 }
 
-void amount_t::print_unpadded(std::ostream& out, const uint_least8_t flags) const {
+void amount_t::print_unpadded(std::ostream& out, const uint_least8_t flags,
+                              const precision_t min_decimals) const {
   commodity_t& comm(commodity());
 
   if (!comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {
@@ -2184,6 +2200,7 @@ void amount_t::print_unpadded(std::ostream& out, const uint_least8_t flags) cons
       zeros_prec = quantity->prec;
     }
   }
+  zeros_prec = std::max(zeros_prec, static_cast<int>(min_decimals));
   stream_out_mpq(out, MP(quantity), disp_prec, zeros_prec, GMP_RNDN, comm);
 
   if (comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {

@@ -424,10 +424,34 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
         if (post->has_flags(POST_COST_FIXATED))
           cost_op += "=";
 
-        if (post->has_flags(POST_COST_IN_FULL))
-          amtbuf << " " << cost_op << " " << post->given_cost->abs();
-        else
-          amtbuf << " " << cost_op << " " << (*post->given_cost / post->amount).abs();
+        // Write the cost with the decimals the journal gave it, trailing
+        // zeros included: they are the cost's precision, to which an
+        // inferred amount is displayed (#1151), so dropping them changes
+        // what the printed journal reports.  A per-unit cost was multiplied
+        // by the amount, which added the amount's decimals to the price's.
+        //
+        // A cost in a unit that a conversion reduces into (a `C` directive
+        // or the built-in h/m/s) may have been written in a larger unit
+        // (`@ 1.5h` is held as 5400s), and parsing multiplied it by each
+        // conversion step, whose decimals its precision then carries.  It
+        // holds no written decimals, so its zeros are trimmed as before.
+        // A bare cost counts as one: a `C` directive with a bare side
+        // reduces into no commodity, which records no larger unit.
+        const amount_t& given(*post->given_cost);
+        const commodity_t& cost_comm(given.commodity().referent());
+        const bool prec_is_written = cost_comm && !cost_comm.larger();
+        amtbuf << " " << cost_op << " ";
+        if (post->has_flags(POST_COST_IN_FULL)) {
+          given.abs().print_unpadded(amtbuf, AMOUNT_PRINT_NO_FLAGS,
+                                     prec_is_written ? given.precision() : 0);
+        } else {
+          const amount_t::precision_t amt_prec = post->amount.precision();
+          const amount_t::precision_t price_prec =
+              prec_is_written && given.precision() > amt_prec
+                  ? static_cast<amount_t::precision_t>(given.precision() - amt_prec)
+                  : 0;
+          (given / post->amount).abs().print_unpadded(amtbuf, AMOUNT_PRINT_NO_FLAGS, price_prec);
+        }
       }
 
       if (post->assigned_amount && !is_balance_assignment)
