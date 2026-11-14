@@ -160,6 +160,37 @@ account_t* py_register_account(journal_t& journal, const string& name, post_t* p
 
 /*--- Query Result Collection ---*/
 
+/// The chain a grouped Journal.query() flushes each --group-by group
+/// through.  post_splitter clears its chain after every group; here that
+/// retires the group's chain, still alive with the postings it collected
+/// and the synthetic postings its filters own, and starts the next group
+/// on a fresh chain.  Chains are released newest first.
+class group_chains : public item_handler<post_t> {
+  std::function<post_handler_ptr()> make_chain;
+  std::vector<post_handler_ptr> retired;
+
+public:
+  explicit group_chains(std::function<post_handler_ptr()> _make_chain)
+      : item_handler<post_t>(_make_chain()), make_chain(std::move(_make_chain)) {}
+
+  /// A later group's chain adopts the temporary accounts (--account,
+  /// --inject) that an earlier chain registered under journal->master and
+  /// owns, and each chain's ~temporaries_t reads its postings' accounts.
+  /// Release the newest chain first so that no chain outlives the chain
+  /// whose accounts it points into; destroying a std::vector's elements
+  /// is left to the library's own order (front to back with libstdc++).
+  ~group_chains() override {
+    handler.reset();
+    while (!retired.empty())
+      retired.pop_back();
+  }
+
+  void clear() override {
+    retired.push_back(std::move(handler));
+    handler = make_chain();
+  }
+};
+
 /// Wraps a report_t and a collect_posts filter to hold query results.
 /// Owns the full filter chain (handler_chain) so that any synthetic posts
 /// created by interval or period filters remain valid while Python iterates.
@@ -189,7 +220,31 @@ struct collector_wrapper {
   std::vector<post_t*>::iterator end() {
     return dynamic_cast<collect_posts*>(posts_collector.get())->end();
   }
+
+  void capture_display_amounts();
 };
+
+// Evaluate the report's display_amount_ expression for each collected
+// posting while xdata is still intact.  This captures any commodity
+// exchange (-X), market valuation (-V), or other display transformations
+// so that Python callers can access the report-converted amounts rather
+// than just the raw journal amounts (issue #2158).  The loop moved here
+// unchanged from py_query, so that a grouped query can capture each
+// group's amounts while that group's xdata is intact; it starts at the
+// first posting not yet captured.
+void collector_wrapper::capture_display_amounts() {
+  expr_t& display_amount_expr(report.HANDLER(display_amount_).expr);
+  collect_posts* collector = dynamic_cast<collect_posts*>(posts_collector.get());
+  for (std::size_t i = display_amounts.size(); i < collector->posts.size(); ++i) {
+    post_t* post = collector->posts[i];
+    bind_scope_t bound_scope(report, *post);
+    try {
+      display_amounts.push_back(display_amount_expr.calc(bound_scope));
+    } catch (...) {
+      display_amounts.push_back(value_t(post->amount));
+    }
+  }
+}
 
 /// Runs a Ledger query string against the journal, building the full
 /// report filter chain and collecting matching posts into a
@@ -225,13 +280,28 @@ shared_ptr<collector_wrapper> py_query(boost::shared_ptr<journal_t> journal_sp,
     // This is essential: filters like interval_posts create synthetic posts
     // stored in their temporaries_t. By keeping handler_chain alive in
     // collector_wrapper, we ensure those synthetic posts remain valid while
-    // Python iterates the collected results.
-    coll->handler_chain = chain_post_handlers(coll->posts_collector, coll->report);
-
-    if (coll->report.HANDLED(group_by_)) {
-      unique_ptr<post_splitter> splitter(new post_splitter(coll->handler_chain, coll->report,
-                                                           coll->report.HANDLER(group_by_).expr));
-      splitter->set_postflush_func([journal_sp](const value_t&) { journal_sp->clear_xdata(); });
+    // Python iterates the collected results.  Under --group-by it keeps
+    // every group's chain alive (see group_chains).
+    if (!coll->report.HANDLED(group_by_)) {
+      coll->handler_chain = chain_post_handlers(coll->posts_collector, coll->report);
+    } else {
+      collector_wrapper* c = coll.get();
+      unique_ptr<post_splitter> splitter(
+          new post_splitter(std::make_shared<group_chains>(
+                                [c] { return chain_post_handlers(c->posts_collector, c->report); }),
+                            coll->report, coll->report.HANDLER(group_by_).expr));
+      // Capture the group's display amounts before its xdata is cleared.
+      // Under --group-by-cumulative the one chain's calc_posts carries its
+      // running total from the previous group's last posting, so only the
+      // accounts' xdata is cleared; their flags decide whether a row
+      // prints as virtual, and they must not carry over.
+      splitter->set_postflush_func([c](const value_t&) {
+        c->capture_display_amounts();
+        if (c->report.HANDLED(group_by_cumulative))
+          c->journal_sp->master->clear_xdata();
+        else
+          c->journal_sp->clear_xdata();
+      });
       coll->handler_chain = post_handler_ptr(splitter.release());
     }
 
@@ -240,26 +310,10 @@ shared_ptr<collector_wrapper> py_query(boost::shared_ptr<journal_t> journal_sp,
     journal_posts_iterator walker(*coll->report.session.journal.get());
     pass_down_posts<journal_posts_iterator>(coll->handler_chain, walker);
 
-    // Evaluate the report's display_amount_ expression for each collected
-    // posting while xdata is still intact.  This captures any commodity
-    // exchange (-X), market valuation (-V), or other display transformations
-    // so that Python callers can access the report-converted amounts rather
-    // than just the raw journal amounts (issue #2158).
-    {
-      expr_t& display_amount_expr(coll->report.HANDLER(display_amount_).expr);
-      collect_posts* collector = dynamic_cast<collect_posts*>(coll->posts_collector.get());
-      for (post_t* post : collector->posts) {
-        bind_scope_t bound_scope(coll->report, *post);
-        try {
-          coll->display_amounts.push_back(display_amount_expr.calc(bound_scope));
-        } catch (...) {
-          coll->display_amounts.push_back(value_t(post->amount));
-        }
-      }
-    }
+    // Capture display amounts while xdata is intact (see capture_display_amounts).
+    coll->capture_display_amounts();
 
-    if (!coll->report.HANDLED(group_by_))
-      coll->report.session.journal->clear_xdata();
+    coll->report.session.journal->clear_xdata();
   } catch (...) {
     coll->report.session.journal = save_journal;
     throw;

@@ -1,0 +1,62 @@
+; Journal.query() with --group-by returns the postings of every group, in
+; group order, and runs each group through a report chain of its own, as
+; `reg --group-by` does: -M subtotals Electric Company's February
+; utilities apart from the Grocer's, and a compound subtotal keeps its
+; display amount.  It used to return no postings at all, and with
+; --group-by-cumulative it aborted.
+
+2012/01/15 Electric Company
+    Expenses:Utilities          $50.00
+    Assets:Checking
+
+2012/02/03 Grocer
+    Expenses:Food               $20.00
+    Expenses:Utilities           $5.00
+    Assets:Checking
+
+2012/02/15 Electric Company
+    Expenses:Utilities          $55.00
+    Assets:Checking
+
+2012/02/20 Electric Company
+    Expenses:Utilities          10 EUR
+    Assets:Checking
+
+test python test/regress/py-query-group-by.py
+--group-by payee Expenses: 5 posts, 5 amounts
+  2012-01-15 Expenses:Utilities $50.00
+  2012-02-15 Expenses:Utilities $55.00
+  2012-02-20 Expenses:Utilities 10 EUR
+  2012-02-03 Expenses:Food $20.00
+  2012-02-03 Expenses:Utilities $5.00
+--group-by payee -M Expenses: 4 posts, 4 amounts
+  2012-01-01 Expenses:Utilities $50.00
+  2012-02-01 Expenses:Utilities $55.00 + 10 EUR
+  2012-02-01 Expenses:Food $20.00
+  2012-02-01 Expenses:Utilities $5.00
+--group-by payee Income: 0 posts, 0 amounts
+--group-by payee --account "'X'" Expenses: 5 posts, 5 amounts
+  2012-01-15 X:Expenses:Utilities $50.00
+  2012-02-15 X:Expenses:Utilities $55.00
+  2012-02-20 X:Expenses:Utilities 10 EUR
+  2012-02-03 X:Expenses:Food $20.00
+  2012-02-03 X:Expenses:Utilities $5.00
+--group-by payee --group-by-cumulative Expenses: 5 posts, 5 amounts
+  2012-01-15 Expenses:Utilities $50.00
+  2012-02-15 Expenses:Utilities $55.00
+  2012-02-20 Expenses:Utilities 10 EUR
+  2012-02-03 Expenses:Food $20.00
+  2012-02-03 Expenses:Utilities $5.00
+Expenses: 5 posts, 5 amounts
+  2012-01-15 Expenses:Utilities $50.00
+  2012-02-03 Expenses:Food $20.00
+  2012-02-03 Expenses:Utilities $5.00
+  2012-02-15 Expenses:Utilities $55.00
+  2012-02-20 Expenses:Utilities 10 EUR
+-M Expenses: 3 posts, 3 amounts
+  2012-01-01 Expenses:Utilities $50.00
+  2012-02-01 Expenses:Food $20.00
+  2012-02-01 Expenses:Utilities $60.00 + 10 EUR
+held: 4 posts: Expenses:Utilities $50.00, Expenses:Utilities $55.00 + 10 EUR, Expenses:Food $20.00, Expenses:Utilities $5.00
+held cumulative: 5 posts: Expenses:Utilities $50.00, Expenses:Utilities $55.00, Expenses:Utilities 10 EUR, Expenses:Food $20.00, Expenses:Utilities $5.00
+end test

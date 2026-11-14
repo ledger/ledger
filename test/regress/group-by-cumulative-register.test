@@ -1,0 +1,116 @@
+; reg --group-by-cumulative carries the running total from one group into
+; the next, as bal --group-by-cumulative carries account totals.  It used
+; to abort (Assertion `last_post->has_xdata()'): the register's per-group
+; flush cleared the journal's xdata between groups, while the chain kept
+; pointing at the last posting of the previous group.  The --script block
+; checks that the report still clears xdata when it ends, so the next
+; command in the session starts from zero.  The --depth 1 and --dow
+; blocks are characterization: those cumulative reports complete on the
+; unfixed tree (their upstream filters emit only temporaries, which
+; clear_xdata skips) and must print the same after the fix.
+
+2012/01/15 Electric Company
+    Expenses:Utilities          $50.00
+    Assets:Checking
+
+2012/02/03 Grocer
+    Expenses:Food               $20.00
+    Expenses:Utilities           $5.00
+    Assets:Checking
+
+2012/02/15 Electric Company
+    Expenses:Utilities          $55.00
+    Assets:Checking
+
+2012/02/20 Electric Company
+    Expenses:Utilities          10 EUR
+    Assets:Checking
+
+test reg --group-by payee --group-by-cumulative Expenses
+Electric Company
+12-Jan-15 Electric Company      Expenses:Utilities           $50.00       $50.00
+12-Feb-15 Electric Company      Expenses:Utilities           $55.00      $105.00
+12-Feb-20 Electric Company      Expenses:Utilities           10 EUR      $105.00
+                                                                          10 EUR
+
+Grocer
+12-Feb-03 Grocer                Expenses:Food                $20.00      $125.00
+                                                                          10 EUR
+                                Expenses:Utilities            $5.00      $130.00
+                                                                          10 EUR
+end test
+
+test reg --group-by payee --group-by-cumulative -S -amount Expenses
+Electric Company
+12-Feb-20 Electric Company      Expenses:Utilities           10 EUR       10 EUR
+12-Feb-15 Electric Company      Expenses:Utilities           $55.00       $55.00
+                                                                          10 EUR
+12-Jan-15 Electric Company      Expenses:Utilities           $50.00      $105.00
+                                                                          10 EUR
+
+Grocer
+12-Feb-03 Grocer                Expenses:Food                $20.00      $125.00
+                                                                          10 EUR
+                                Expenses:Utilities            $5.00      $130.00
+                                                                          10 EUR
+end test
+
+test reg --group-by payee --group-by-cumulative --depth 1 Expenses
+Electric Company
+12-Jan-15 Electric Company      Expenses                     $50.00       $50.00
+12-Feb-15 Electric Company      Expenses                     $55.00      $105.00
+12-Feb-20 Electric Company      Expenses                     10 EUR      $105.00
+                                                                          10 EUR
+
+Grocer
+12-Feb-03 Grocer                Expenses                     $25.00      $130.00
+                                                                          10 EUR
+end test
+
+test reg --group-by payee --group-by-cumulative --depth 1 -S -amount Expenses
+Electric Company
+12-Feb-20 Electric Company      Expenses                     10 EUR       10 EUR
+12-Feb-15 Electric Company      Expenses                     $55.00       $55.00
+                                                                          10 EUR
+12-Jan-15 Electric Company      Expenses                     $50.00      $105.00
+                                                                          10 EUR
+
+Grocer
+12-Feb-03 Grocer                Expenses                     $25.00      $130.00
+                                                                          10 EUR
+end test
+
+test reg --group-by payee --group-by-cumulative --dow Expenses
+Electric Company
+12-Jan-15 Sundays               Expenses:Utilities           $50.00       $50.00
+12-Feb-20 Mondays               Expenses:Utilities           10 EUR       $50.00
+                                                                          10 EUR
+12-Feb-15 Wednesdays            Expenses:Utilities           $55.00      $105.00
+                                                                          10 EUR
+
+Grocer
+12-Feb-03 Fridays               Expenses:Food                $20.00      $125.00
+                                                                          10 EUR
+                                Expenses:Utilities            $5.00      $130.00
+                                                                          10 EUR
+end test
+
+test --script test/regress/group-by-cumulative-register.dat
+Electric Company
+12-Jan-15 Electric Company      Expenses:Utilities           $50.00       $50.00
+12-Feb-15 Electric Company      Expenses:Utilities           $55.00      $105.00
+12-Feb-20 Electric Company      Expenses:Utilities           10 EUR      $105.00
+                                                                          10 EUR
+
+Grocer
+12-Feb-03 Grocer                Expenses:Food                $20.00      $125.00
+                                                                          10 EUR
+                                Expenses:Utilities            $5.00      $130.00
+                                                                          10 EUR
+12-Jan-15 Electric Company      Expenses:Utilities           $50.00       $50.00
+12-Feb-03 Grocer                Expenses:Food                $20.00       $70.00
+                                Expenses:Utilities            $5.00       $75.00
+12-Feb-15 Electric Company      Expenses:Utilities           $55.00      $130.00
+12-Feb-20 Electric Company      Expenses:Utilities           10 EUR      $130.00
+                                                                          10 EUR
+end test

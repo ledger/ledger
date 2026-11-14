@@ -580,7 +580,12 @@ void report_t::parse_query_args(const value_t& args, const string& whence) {
 /*--- Report Drivers ---*/
 
 namespace {
-/// @brief Functor that clears extended data from journal after a posting report completes.
+/// @brief Functor run by post_splitter after each --group-by group: clears the
+/// journal's extended data so that the next group starts fresh.  Under
+/// --group-by-cumulative the postings' extended data stays, because calc_posts
+/// carries the running total from the previous group's last posting, but the
+/// accounts' is still cleared, since their display flags decide whether a row
+/// prints as virtual.
 struct posts_flusher {
   post_handler_ptr handler;
   report_t& report;
@@ -591,7 +596,12 @@ struct posts_flusher {
   }
   ~posts_flusher() noexcept { TRACE_DTOR(posts_flusher); }
 
-  void operator()(const value_t&) { report.session.journal->clear_xdata(); }
+  void operator()(const value_t&) {
+    if (report.HANDLED(group_by_cumulative))
+      report.session.journal->master->clear_xdata();
+    else
+      report.session.journal->clear_xdata();
+  }
 };
 } // namespace
 
@@ -607,8 +617,7 @@ void report_t::posts_report(post_handler_ptr handler) {
   journal_posts_iterator walker(*session.journal.get());
   pass_down_posts<journal_posts_iterator>(handler, walker); // NOLINT(bugprone-unused-raii)
 
-  if (!HANDLED(group_by_))
-    posts_flusher(handler, *this)(value_t());
+  session.journal->clear_xdata();
 }
 
 void report_t::posts_report(post_handler_ptr handler, post_handler_ptr& saved_chain) {
@@ -625,8 +634,7 @@ void report_t::posts_report(post_handler_ptr handler, post_handler_ptr& saved_ch
   journal_posts_iterator walker(*session.journal.get());
   pass_down_posts<journal_posts_iterator>(handler, walker); // NOLINT(bugprone-unused-raii)
 
-  if (!HANDLED(group_by_))
-    posts_flusher(handler, *this)(value_t());
+  session.journal->clear_xdata();
 }
 
 void report_t::posts_report_quick(post_handler_ptr handler) {
@@ -646,8 +654,7 @@ void report_t::posts_report_quick(post_handler_ptr handler) {
   journal_posts_iterator walker(*session.journal.get());
   pass_down_posts<journal_posts_iterator>(handler, walker); // NOLINT(bugprone-unused-raii)
 
-  if (!HANDLED(group_by_))
-    posts_flusher(handler, *this)(value_t());
+  session.journal->clear_xdata();
 }
 
 void report_t::generate_report(post_handler_ptr handler) {
