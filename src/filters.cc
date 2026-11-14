@@ -426,33 +426,40 @@ void anonymize_posts::operator()(post_t& post) {
 void calc_posts::operator()(post_t& post) {
   post_t::xdata_t& xdata(post.xdata());
 
-  // When --average is active with an interval report (e.g. --monthly),
-  // interval_posts emits one ITEM_GENERATED posting per account per period,
-  // all sharing the same synthetic xact.  Two adjustments are needed:
+  // A grouping filter (subtotal_posts and its subclasses, including
+  // posts_as_equity, and collapse_posts) emits one row per account per
+  // group, flagged POST_EXT_SUBTOTAL_ROW, all sharing the same synthetic
+  // xact.  Two adjustments are needed for those rows:
   //
-  // 1. Count stability: keep the period counter the same for all accounts
-  //    within the same period group, so --average divides by the number of
-  //    elapsed intervals rather than the number of account rows.
+  // 1. Count stability: keep the counter the same for all accounts within
+  //    the same group, so --average divides by the number of groups (for
+  //    example, elapsed intervals) rather than the number of account rows.
   //
   // 2. Per-account total (only when period_average_ is enabled): seed each
   //    account's running total from its own accumulator rather than from the
   //    global running total.  Without this, the second and later accounts in
-  //    a period inherit the blended total of all preceding accounts, making
+  //    a group inherit the blended total of all preceding accounts, making
   //    each account's average wrong.
-  bool same_generated_group = false;
+  //
+  // Budget, forecast, automated-transaction and balance-split postings are
+  // ITEM_GENERATED too, but they are ordinary register rows and continue the
+  // global running total and count.
+  const bool subtotal_row = xdata.has_flags(POST_EXT_SUBTOTAL_ROW);
+  bool same_subtotal_group = false;
   if (last_post) {
     assert(last_post->has_xdata());
-    same_generated_group = (post.has_flags(ITEM_GENERATED) &&
-                            last_post->has_flags(ITEM_GENERATED) && post.xact == last_post->xact);
-    if (same_generated_group)
+    same_subtotal_group = (subtotal_row && last_post->xdata().has_flags(POST_EXT_SUBTOTAL_ROW) &&
+                           post.xact == last_post->xact);
+    if (same_subtotal_group)
       xdata.count = last_post->xdata().count;
     else
       xdata.count = last_post->xdata().count + 1;
     if (calc_running_total) {
-      if (period_average_ && post.has_flags(ITEM_GENERATED)) {
+      if (period_average_ && subtotal_row) {
         // Seed each account's running total from its own per-account
-        // accumulator so that multi-account period groups (from
-        // interval_posts) each show their own independent average.
+        // accumulator so that multi-account groups (rows flagged
+        // POST_EXT_SUBTOTAL_ROW by a grouping filter) each show their own
+        // independent average.
         // When the account has no prior history (first appearance), leave
         // xdata.total unset so add_or_set_value() below initialises it
         // to just this post's value, giving the account a clean running
@@ -476,9 +483,10 @@ void calc_posts::operator()(post_t& post) {
 
   if (calc_running_total) {
     add_or_set_value(xdata.total, xdata.visited_value);
-    // Update the per-account accumulator for ITEM_GENERATED postings so that
-    // subsequent periods for the same account carry the correct baseline.
-    if (period_average_ && post.has_flags(ITEM_GENERATED))
+    // Update the per-account accumulator for rows flagged
+    // POST_EXT_SUBTOTAL_ROW by a grouping filter so that subsequent groups
+    // for the same account carry the correct baseline.
+    if (period_average_ && subtotal_row)
       account_period_totals_[post.account] = xdata.total;
 
     // Incrementally maintain a stripped display total alongside the
@@ -529,13 +537,15 @@ namespace {
  * @param source_post      Optional source posting to copy metadata from.
  * @param force_virtual    If true, force the posting to be virtual.
  * @param force_must_balance If true, force virtual posting to require balance.
+ * @param subtotal_row     If true, mark as POST_EXT_SUBTOTAL_ROW (one row of a grouped report).
  */
 void handle_value(const value_t& value, account_t* account, xact_t* xact, temporaries_t& temps,
                   const post_handler_ptr& handler, const date_t& date = date_t(),
                   const bool act_date_p = true, const value_t& total = value_t(),
                   const bool direct_amount = false, const bool mark_visited = false,
                   const bool bidir_link = true, post_t* source_post = nullptr,
-                  const bool force_virtual = false, const bool force_must_balance = false) {
+                  const bool force_virtual = false, const bool force_must_balance = false,
+                  const bool subtotal_row = false) {
   post_t& post = temps.create_post(*xact, account, bidir_link);
   post.add_flags(ITEM_GENERATED);
 
@@ -600,6 +610,8 @@ void handle_value(const value_t& value, account_t* account, xact_t* xact, tempor
 
   if (direct_amount)
     xdata.add_flags(POST_EXT_DIRECT_AMT);
+  if (subtotal_row)
+    xdata.add_flags(POST_EXT_SUBTOTAL_ROW);
 
   DEBUG("filters.changed_value.rounding", "post.amount = " << post.amount);
 
@@ -690,13 +702,21 @@ void collapse_posts::report_subtotal() {
         xact.payee = last_xact->payee;
         xact._date = d;
 
-        handle_value(/* value=      */ entry.second,
-                     /* account=    */ acct,
-                     /* xact=       */ &xact,
-                     /* temps=      */ temps,
-                     /* handler=    */ handler,
-                     /* date=       */ d,
-                     /* act_date_p= */ true);
+        handle_value(/* value=              */ entry.second,
+                     /* account=            */ acct,
+                     /* xact=               */ &xact,
+                     /* temps=              */ temps,
+                     /* handler=            */ handler,
+                     /* date=               */ d,
+                     /* act_date_p=         */ true,
+                     /* total=              */ value_t(),
+                     /* direct_amount=      */ false,
+                     /* mark_visited=       */ false,
+                     /* bidir_link=         */ true,
+                     /* source_post=        */ nullptr,
+                     /* force_virtual=      */ false,
+                     /* force_must_balance= */ false,
+                     /* subtotal_row=       */ true);
       }
     } else {
       date_t earliest_date;
@@ -720,13 +740,21 @@ void collapse_posts::report_subtotal() {
       DEBUG("filters.collapse", "latest date      = " << latest_date);
 
       for (totals_map::value_type& pat : totals) {
-        handle_value(/* value=      */ pat.second,
-                     /* account=    */ pat.first,
-                     /* xact=       */ &xact,
-                     /* temps=      */ temps,
-                     /* handler=    */ handler,
-                     /* date=       */ latest_date,
-                     /* act_date_p= */ false);
+        handle_value(/* value=              */ pat.second,
+                     /* account=            */ pat.first,
+                     /* xact=               */ &xact,
+                     /* temps=              */ temps,
+                     /* handler=            */ handler,
+                     /* date=               */ latest_date,
+                     /* act_date_p=         */ false,
+                     /* total=              */ value_t(),
+                     /* direct_amount=      */ false,
+                     /* mark_visited=       */ false,
+                     /* bidir_link=         */ true,
+                     /* source_post=        */ nullptr,
+                     /* force_virtual=      */ false,
+                     /* force_must_balance= */ false,
+                     /* subtotal_row=       */ true);
       }
     }
   }
@@ -981,10 +1009,10 @@ bool exchange_names_one_commodity(const report_t& report) {
  * - --percent shows each account's share of its parent, not a running total,
  *   and never values a holding; valuing one here could evaluate a lot's value
  *   expression that fails (regress/cov9-annotate-value-expr).
- * - --average shows a running average, and calc_posts seeds the total of a
- *   generated posting (an automated transaction's, for instance) from a
- *   per-account accumulator, so the running total is not the sum over the
- *   postings seen here.  --deviation shows each amount less the total.
+ * - --average shows a running average: it sets the display total to
+ *   display_total/count, and the revaluation prices that display total, so
+ *   the total revalued is not the sum over the postings seen here.
+ *   --deviation shows each amount less the total.
  * - --period (and -M and the rest), --dow and --by-payee pass on subtotals
  *   that carry no cost; valuing them books the gain that regress/1821_2
  *   realizes a second time under -M.
@@ -1828,7 +1856,8 @@ void subtotal_posts::report_subtotal(const char* spec_fmt,
                  /* bidir_link=         */ true,
                  /* source_post=        */ nullptr,
                  /* force_virtual=      */ pair.second.is_virtual,
-                 /* force_must_balance= */ pair.second.must_balance);
+                 /* force_must_balance= */ pair.second.must_balance,
+                 /* subtotal_row=       */ true);
 
   values.clear();
 }
@@ -2126,7 +2155,8 @@ void posts_as_equity::report_subtotal() {
                          /* bidir_link=         */ true,
                          /* source_post=        */ nullptr,
                          /* force_virtual=      */ pair.second.is_virtual,
-                         /* force_must_balance= */ pair.second.must_balance);
+                         /* force_must_balance= */ pair.second.must_balance,
+                         /* subtotal_row=       */ true);
         });
       } else {
         handle_value(/* value=              */ value.to_amount(),
@@ -2142,7 +2172,8 @@ void posts_as_equity::report_subtotal() {
                      /* bidir_link=         */ true,
                      /* source_post=        */ nullptr,
                      /* force_virtual=      */ pair.second.is_virtual,
-                     /* force_must_balance= */ pair.second.must_balance);
+                     /* force_must_balance= */ pair.second.must_balance,
+                     /* subtotal_row=       */ true);
       }
     }
 

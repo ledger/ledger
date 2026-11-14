@@ -628,8 +628,9 @@ class calc_posts : public item_handler<post_t> {
   bool maintain_stripped_total; ///< Whether to incrementally maintain a stripped display total.
   keep_details_t what_to_keep;  ///< Annotation details to preserve when stripping.
 
-  /// When true, use per-account running totals for synthetic (ITEM_GENERATED)
-  /// postings instead of the global running total.
+  /// When true, use per-account running totals for rows flagged
+  /// POST_EXT_SUBTOTAL_ROW (one row per account per group, emitted by
+  /// subtotal_posts and its subclasses) instead of the global running total.
   ///
   /// This is enabled when --average (-A) is active.  Without it, a period
   /// report with multiple accounts per interval (e.g. --monthly with two

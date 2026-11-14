@@ -321,6 +321,7 @@ public:
 /// xdata.display_total holds the annotation-stripped display total.
 #define POST_EXT_DISPLAY_TOTAL_CACHED 0x0200
 #define POST_EXT_PAYEE_CHANGED 0x0400 ///< Payee differs from previous posting in display order.
+#define POST_EXT_SUBTOTAL_ROW 0x0800  ///< One account's row of a group from a grouping filter.
 
     value_t visited_value;  ///< Value recorded when the posting was visited.
     value_t compound_value; ///< Compound value set by filters (overrides amount when
