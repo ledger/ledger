@@ -123,7 +123,7 @@ end test
 test eval 'unknown_thing ? 1 : 2' -> 1
 __ERROR__
 While evaluating value expression:
-  (unknown_thing ? (1 : 2))
+  (unknown_thing ? 1 : 2)
    ^^^^^^^^^^^^^
 Error: Unknown identifier 'unknown_thing'
 end test
@@ -196,8 +196,8 @@ end test
 test eval 'unknown_thing if true else 0' -> 1
 __ERROR__
 While evaluating value expression:
-  (true ? (unknown_thing : 0))
-           ^^^^^^^^^^^^^
+  (true ? unknown_thing : 0)
+          ^^^^^^^^^^^^^
 Error: Unknown identifier 'unknown_thing'
 end test
 
@@ -205,7 +205,7 @@ end test
 test eval '0 if false else unknown_thing' -> 1
 __ERROR__
 While evaluating value expression:
-  (false ? (0 : unknown_thing))
-                ^^^^^^^^^^^^^
+  (false ? 0 : unknown_thing)
+               ^^^^^^^^^^^^^
 Error: Unknown identifier 'unknown_thing'
 end test

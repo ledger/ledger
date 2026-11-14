@@ -1,0 +1,62 @@
+; A ternary in an expression must survive being printed and parsed again.
+; prices and pricedb reprint --limit after dropping the terms a state
+; option adds, reg and print reprint a query's "expr" term, and select
+; reprints its columns into a format, so a printer that wrapped the
+; "a : b" half of "c ? a : b" in its own parentheses made each of them
+; fail with "Invalid token ':'".
+2024/01/01 Buy AAPL
+    Assets:AAPL        1 AAPL @ $10
+    Assets:Cash
+
+2024/01/02 Buy MSFT
+    Assets:MSFT        1 MSFT @ $20
+    Assets:Cash
+
+2024/01/03 * Buy XYZ
+    Assets:XYZ         1 XYZ @ $30
+    Assets:Cash
+
+test prices -C -l 'amount > 15 ? 1 : 0'
+2024/01/02 MSFT              $20
+2024/01/03 XYZ               $30
+end test
+
+test pricedb --pending -l 'amount > 15 ? 1 : 0'
+P 2024/01/02 00:00:00 MSFT $20
+P 2024/01/03 00:00:00 XYZ $30
+end test
+
+test prices -R -l '1 if amount > 15 else 0'
+2024/01/02 MSFT              $20
+2024/01/03 XYZ               $30
+end test
+
+test reg expr 'amount > 0 ? 1 : 0'
+24-Jan-01 Buy AAPL              Assets:AAPL                  1 AAPL       1 AAPL
+24-Jan-02 Buy MSFT              Assets:MSFT                  1 MSFT       1 AAPL
+                                                                          1 MSFT
+24-Jan-03 Buy XYZ               Assets:XYZ                    1 XYZ       1 AAPL
+                                                                          1 MSFT
+                                                                           1 XYZ
+end test
+
+test reg expr 'account =~ /Cash/ if amount < 0'
+24-Jan-01 Buy AAPL              Assets:Cash                    $-10         $-10
+24-Jan-02 Buy MSFT              Assets:Cash                    $-20         $-30
+24-Jan-03 Buy XYZ               Assets:Cash                    $-30         $-60
+end test
+
+test print --related-all expr 'account =~ /MSFT/ ? true : false'
+2024/01/02 Buy MSFT
+    Assets:MSFT                               1 MSFT @ $20
+    Assets:Cash
+end test
+
+test select 'account, amount > 0 ? 1 : 0' from posts
+Assets:AAPL                                                                   1
+Assets:Cash                                                                   0
+Assets:MSFT                                                                   1
+Assets:Cash                                                                   0
+Assets:XYZ                                                                    1
+Assets:Cash                                                                   0
+end test

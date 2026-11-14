@@ -767,49 +767,66 @@ void report_t::accounts_report(
     accounts_flusher(handler, *this)(value_t());
 }
 
+namespace {
+
+/// @brief Whether @p op is a term that a transaction-state option appends
+/// to --limit: -C "cleared", --pending "pending", -L "actual", -R "real",
+/// or -U "uncleared|pending".  These literals mirror the OTHER(limit_).on
+/// calls in the option handlers in report.h (actual, cleared, pending,
+/// real, uncleared); a new state option must be added here as well.
+bool is_state_conjunct(const expr_t::ptr_op_t& op) {
+  using op_t = expr_t::op_t;
+  if (op->is_ident()) {
+    const string& name(op->as_ident());
+    return name == "cleared" || name == "pending" || name == "actual" || name == "real";
+  }
+  return op->kind == op_t::O_OR && op->left()->is_ident() &&
+         op->left()->as_ident() == "uncleared" && op->right()->is_ident() &&
+         op->right()->as_ident() == "pending";
+}
+
+/// @brief Remove the transaction-state conjuncts from a --limit AST.
+///
+/// Returns @p op itself when it holds none, a null pointer when nothing
+/// but state terms remain, and otherwise a rebuilt O_AND tree sharing the
+/// untouched subtrees.  Only operands of the top-level conjunction are
+/// examined; a state term under O_OR or O_NOT is the user's and stays.
+expr_t::ptr_op_t strip_state_conjuncts(const expr_t::ptr_op_t& op) {
+  using op_t = expr_t::op_t;
+  if (is_state_conjunct(op))
+    return nullptr;
+  if (op->kind != op_t::O_AND)
+    return op;
+  expr_t::ptr_op_t left = strip_state_conjuncts(op->left());
+  expr_t::ptr_op_t right = strip_state_conjuncts(op->right());
+  if (!left)
+    return right;
+  if (!right)
+    return left;
+  if (left == op->left() && right == op->right())
+    return op;
+  return op_t::new_node(op_t::O_AND, left, right);
+}
+
+} // namespace
+
 void report_t::commodities_report(post_handler_ptr handler) {
   // Transaction state predicates (--cleared, --pending, --uncleared,
-  // --actual, --real) don't apply to commodity prices.  Strip them
-  // from the limit before building the handler chain.
-
+  // --actual, --real) don't apply to commodity prices.  Drop them from
+  // the parsed limit, as wrap_xact_predicate rewrites it for print,
+  // before building the handler chain.
   string saved_limit;
   bool had_limit = HANDLED(limit_);
-  if (had_limit)
-    saved_limit = HANDLER(limit_).str();
-
   if (had_limit) {
-    // Decompose the compound limit expression into individual terms.
-    // The limit is built as nested "(old)&(new)" conjunctions, so
-    // we peel terms from the right to flatten it into a list.
-    std::set<string> state_preds = {"cleared", "pending", "uncleared|pending", "actual", "real"};
-
-    std::vector<string> terms;
-    string rest = saved_limit;
-    while (!rest.empty()) {
-      string::size_type sep = rest.rfind(")&(");
-      if (sep == string::npos) {
-        terms.push_back(rest);
-        break;
-      }
-      terms.push_back(rest.substr(sep + 3, rest.length() - sep - 4));
-      rest = rest.substr(1, sep - 1);
+    saved_limit = HANDLER(limit_).str();
+    expr_t limit_expr(saved_limit);
+    expr_t::ptr_op_t limit_op = limit_expr.get_op();
+    expr_t::ptr_op_t stripped = limit_op ? strip_state_conjuncts(limit_op) : limit_op;
+    if (stripped != limit_op) {
+      HANDLER(limit_).off();
+      if (stripped)
+        HANDLER(limit_).on(none, predicate_t(stripped, what_to_keep()).print_to_str());
     }
-
-    // Rebuild the limit without state predicates.
-    string new_limit;
-    for (const auto& term : terms) {
-      if (state_preds.find(term) == state_preds.end()) {
-        if (new_limit.empty())
-          new_limit = term;
-        else
-          // NOLINTNEXTLINE(performance-inefficient-string-concatenation)
-          new_limit = "(" + new_limit + ")&(" + term + ")";
-      }
-    }
-
-    HANDLER(limit_).off();
-    if (!new_limit.empty())
-      HANDLER(limit_).on(none, new_limit);
   }
 
   // The walker owns the synthetic xacts and posts that it passes down the

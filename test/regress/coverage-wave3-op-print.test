@@ -153,7 +153,7 @@ end test
 test reg --limit "undefined_var ? 1 : 0" -> 1
 __ERROR__
 While evaluating value expression:
-  (undefined_var ? (1 : 0))
+  (undefined_var ? 1 : 0)
    ^^^^^^^^^^^^^
 While handling posting from "$FILE", line 6:
 >     Expenses:Food    $10.00
@@ -164,8 +164,8 @@ end test
 test reg --limit "1 ? undefined_var : 0" -> 1
 __ERROR__
 While evaluating value expression:
-  (1 ? (undefined_var : 0))
-        ^^^^^^^^^^^^^
+  (1 ? undefined_var : 0)
+       ^^^^^^^^^^^^^
 While handling posting from "$FILE", line 6:
 >     Expenses:Food    $10.00
 Error: Unknown identifier 'undefined_var'

@@ -847,7 +847,12 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const {
 
   string symbol; // NOLINT(bugprone-unused-local-non-trivial-variable)
 
-  if (kind > TERMINALS && (kind != O_CALL && kind != O_DEFINE))
+  // O_COLON is printed bare: it only ever appears as the right child of
+  // O_QUERY, whose own parentheses already enclose "cond ? a : b", and
+  // the parser does not accept a parenthesized "(a : b)" there.
+  const bool parenthesize =
+      kind > TERMINALS && kind != O_CALL && kind != O_DEFINE && kind != O_COLON;
+  if (parenthesize)
     out << '(';
 
   switch (kind) {
@@ -1050,7 +1055,7 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const {
     break;
   }
 
-  if (kind > TERMINALS && (kind != O_CALL && kind != O_DEFINE))
+  if (parenthesize)
     out << ')';
 
   if (!symbol.empty()) {

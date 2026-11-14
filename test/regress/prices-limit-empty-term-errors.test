@@ -1,0 +1,55 @@
+; prices and pricedb parse the composed --limit exactly as every other
+; report does, so an empty or blank term is the same parse error there
+; as in reg and bal.  The old text peel dropped or reordered such terms.
+2024/01/01 Buy AAPL
+    Assets:AAPL        1 AAPL @ $10
+    Assets:Cash
+
+2024/01/02 Buy MSFT
+    Assets:MSFT        1 MSFT @ $20
+    Assets:Cash
+
+; An empty term after a state option.
+test prices -C -l '' -> 1
+__ERROR__
+While parsing value expression:
+  (cleared)&()
+             ^
+Error: ) operator not followed by argument
+end test
+
+test pricedb -U -l '' -> 1
+__ERROR__
+While parsing value expression:
+  (uncleared|pending)&()
+                       ^
+Error: ) operator not followed by argument
+end test
+
+; A trailing empty term, no state option.
+test prices -l 'account=~/AAPL/' -l '' -> 1
+__ERROR__
+While parsing value expression:
+  (account=~/AAPL/)&()
+                     ^
+Error: ) operator not followed by argument
+end test
+
+; A trailing blank term.
+test prices -l 'account=~/AAPL/' -l ' ' -> 1
+__ERROR__
+While parsing value expression:
+  (account=~/AAPL/)&( )
+                      ^
+Error: ) operator not followed by argument
+end test
+
+; A leading empty term: the parser stops after "()" and reports the
+; rest of the text as left over.
+test prices -l '' -l 'account=~/AAPL/' -> 1
+__ERROR__
+While parsing value expression:
+  ()&(account=~/AAPL/)
+    ^
+Error: Unexpected expression token '&'
+end test
