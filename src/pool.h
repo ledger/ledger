@@ -406,9 +406,10 @@ public:
    * @brief Pre-fetch price quotes for all eligible commodities in batch.
    *
    * Collects commodities that are candidates for downloading (not builtin,
-   * not flagged NOMARKET, and without a recent last_quote), groups them
-   * by their exchange commodity (inferred from the most recent price in the
-   * history graph), and invokes the batch quote callback once per group.
+   * not flagged NOMARKET or PRIMARY, listed once even when aliased, and
+   * without a recent last_quote), groups them by their exchange commodity
+   * (inferred from the most recent price in the history graph), and invokes
+   * the batch quote callback once per group.
    *
    * This is called before report generation to avoid per-commodity script
    * invocations during the report (issue #588).

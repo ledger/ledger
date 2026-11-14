@@ -5,7 +5,9 @@
 # Single mode: $1 = commodity symbol, $2 = exchange commodity
 # Batch mode:  $1 = --batch, $2 = exchange commodity, $3.. = commodity symbols
 #
-# Returns one price directive line per commodity.
+# Returns one price directive line per commodity.  Single mode answers one
+# dollar more than batch mode, so a report shows which call priced each
+# commodity.
 
 if [ "$1" = "--batch" ]; then
   shift
@@ -32,16 +34,16 @@ else
   EXCHANGE="$2"
   case "$SYMBOL" in
     AAPL)
-      echo "2024/06/15 AAPL \$150.00"
+      echo "2024/06/15 AAPL \$151.00"
       ;;
     GOOG)
-      echo "2024/06/15 GOOG \$180.00"
+      echo "2024/06/15 GOOG \$181.00"
       ;;
     MSFT)
-      echo "2024/06/15 MSFT \$420.00"
+      echo "2024/06/15 MSFT \$421.00"
       ;;
     *)
-      echo "2024/06/15 $SYMBOL \$100.00"
+      echo "2024/06/15 $SYMBOL \$101.00"
       ;;
   esac
 fi

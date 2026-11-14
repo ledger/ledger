@@ -868,11 +868,12 @@ commodity_t* commodity_pool_t::parse_price_expression(const std::string& str, co
  * @brief Pre-fetch price quotes for all eligible commodities in batch.
  *
  * Collects every commodity that might need a fresh quote (not builtin,
- * not flagged NOMARKET, and without a last_quote within quote_leeway
- * seconds of the wall clock).  For each candidate, the exchange commodity
- * is inferred from the most recent price in the history graph.  Candidates
- * are grouped by exchange commodity and each group is passed to the batch
- * quote callback in a single invocation.
+ * not flagged NOMARKET or PRIMARY (a commodity others are priced in),
+ * listed once even when aliased, and without a last_quote within
+ * quote_leeway seconds of the wall clock).  For each candidate, the
+ * exchange commodity is inferred from the most recent price in the history
+ * graph.  Candidates are grouped by exchange commodity and each group is
+ * passed to the batch quote callback in a single invocation.
  *
  * On success, last_quote is set to the wall-clock time so that
  * per-commodity check_for_updated_price() calls during the report skip
@@ -885,25 +886,21 @@ void commodity_pool_t::prefetch_quotes() {
 
   DEBUG("commodity.download", "prefetch_quotes: scanning commodities for batch download");
 
-  // Two-pass grouping: first collect each commodity's candidate exchange,
-  // then exclude commodities that are themselves used as an exchange for
-  // other commodities.  Without this, a currency like "$" would be grouped
-  // for download because the price graph has reverse edges from posting
-  // exchanges (e.g. "10 AAPL / $-1000" creates a $ -> AAPL edge).
-
-  struct candidate_t {
-    commodity_t* comm;
-    const commodity_t* exchange;
-  };
-  std::vector<candidate_t> candidates;
-  std::set<const commodity_t*> exchange_set;
+  std::map<const commodity_t*, std::vector<std::reference_wrapper<commodity_t>>> groups;
 
   for (auto& [symbol, comm_ptr] : commodities) {
     commodity_t& comm = *comm_ptr;
 
+    // An alias is listed under its own name too; request each commodity once.
+    if (symbol != comm.base_symbol())
+      continue;
     if (&comm == null_commodity)
       continue;
-    if (comm.has_flags(COMMODITY_NOMARKET) || comm.has_flags(COMMODITY_BUILTIN))
+    // A commodity other commodities are priced in ($ when stocks are priced
+    // in dollars) is marked PRIMARY by add_price.  -V never revalues it, and
+    // -X, which can, fetches its quote lazily in single mode, so it is left
+    // out of the batch, as the old exchange_set exclusion left it out.
+    if (comm.has_flags(COMMODITY_NOMARKET | COMMODITY_BUILTIN | COMMODITY_PRIMARY))
       continue;
 
     // Skip commodities that already have a recent quote this session.
@@ -916,25 +913,9 @@ void commodity_pool_t::prefetch_quotes() {
 
     // Only consider commodities that have existing price history.
     if (std::optional<price_point_t> point =
-            commodity_price_history.find_price(comm.referent(), CURRENT_TIME())) {
-      const commodity_t* exchange = nullptr;
-      if (point->price.has_commodity())
-        exchange = point->price.commodity_ptr();
-      candidates.push_back({&comm, exchange});
-      if (exchange)
-        exchange_set.insert(exchange);
-    }
-  }
-
-  // Build groups, skipping any commodity that is itself an exchange
-  // commodity for other commodities (e.g. "$" when stocks are priced
-  // in dollars).
-  std::map<const commodity_t*, std::vector<std::reference_wrapper<commodity_t>>> groups;
-
-  for (auto& [comm, exchange] : candidates) {
-    if (exchange_set.count(&comm->referent()))
-      continue;
-    groups[exchange].push_back(std::ref(*comm));
+            commodity_price_history.find_price(comm.referent(), CURRENT_TIME()))
+      groups[point->price.has_commodity() ? point->price.commodity_ptr() : nullptr].push_back(
+          std::ref(comm));
   }
 
   if (groups.empty()) {

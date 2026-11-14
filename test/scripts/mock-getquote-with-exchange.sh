@@ -12,6 +12,9 @@
 SYMBOL="$1"
 EXCHANGE="$2"
 
+# Batch mode is refused, so Ledger asks for one quote at a time.
+if [ "$SYMBOL" = "--batch" ]; then exit 1; fi
+
 if [ -z "$EXCHANGE" ]; then
   # Bug: called without an exchange commodity -- signal failure so the
   # test balance does not match the expected (fixed) output.

@@ -1,0 +1,32 @@
+; A single-mode getquote answer is recorded under the commodity the script
+; named, never under the commodity Ledger asked for.
+;
+; test/scripts/getquote-other-symbol.sh refuses batch mode, answers a request
+; for AAPL with a price for GOOG only, and answers a request for MSFT with a
+; price for GOOG followed by a price for MSFT.  The GOOG prices are written
+; to the price database as GOOG prices, AAPL keeps its $10.00 cost (with a
+; warning that the script gave no price for it), and MSFT is valued at the
+; $40.00 the script's second line gave it.
+
+2030/06/01 Buy
+    Assets:Brokerage        1 AAPL @ $10.00
+    Assets:Brokerage        1 MSFT @ $30.00
+    Assets:Checking
+
+test bal --market --download --now 2030/06/15 --getquote $sourcepath/test/scripts/getquote-other-symbol.sh
+              $10.00  Assets
+              $50.00    Brokerage
+             $-40.00    Checking
+--------------------
+              $10.00
+__ERROR__
+Warning: Price quote script returned no usable price for commodity 'AAPL'
+end test
+
+test -f $FILE bal --market --download --now 2030/06/15 --getquote $sourcepath/test/scripts/getquote-other-symbol.sh --price-db "${PDB:=$(mktemp)}" > /dev/null && LC_ALL=C sort "$PDB" && rm -f "$PDB"
+P 2030/06/15 00:00:00 GOOG $100.00
+P 2030/06/15 00:00:00 GOOG $101.00
+P 2030/06/15 00:00:00 MSFT $40.00
+__ERROR__
+Warning: Price quote script returned no usable price for commodity 'AAPL'
+end test

@@ -1,0 +1,28 @@
+; A batch getquote call that exits non-zero has fetched nothing: Ledger
+; falls back to single-mode calls, and none of the prices the failed batch
+; printed reach the price history or the price database.
+;
+; test/scripts/mock-batch-getquote-fail.sh prints a $999.00 price dated
+; 2024/06/16 for every symbol in batch mode and then exits 1; single mode
+; answers AAPL $150.00 and GOOG $180.00, dated 2024/06/15.
+
+2024/01/15 Buy Stock A
+    Assets:Brokerage        10 AAPL
+    Assets:Checking        $-1000.00
+
+2024/01/15 Buy Stock B
+    Assets:Brokerage        20 GOOG
+    Assets:Checking        $-2000.00
+
+test bal --market --download --now 2030/06/15 --getquote $sourcepath/test/scripts/mock-batch-getquote-fail.sh
+            $2100.00  Assets
+            $5100.00    Brokerage
+           $-3000.00    Checking
+--------------------
+            $2100.00
+end test
+
+test -f $FILE bal --market --download --now 2030/06/15 --getquote $sourcepath/test/scripts/mock-batch-getquote-fail.sh --price-db "${PDB:=$(mktemp)}" > /dev/null && LC_ALL=C sort "$PDB" && rm -f "$PDB"
+P 2024/06/15 00:00:00 AAPL $150.00
+P 2024/06/15 00:00:00 GOOG $180.00
+end test

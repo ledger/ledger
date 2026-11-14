@@ -8,10 +8,10 @@ P 2024/01/01 AAPL $150.00
     Assets:Brokerage    10 AAPL
     Assets:Checking    $-1500.00
 
-test bal -Q Assets:Brokerage
+test bal -Q --getquote $sourcepath/test/scripts/mock-getquote.sh Assets:Brokerage
              10 AAPL  Assets:Brokerage
 end test
 
-test bal --download Assets:Brokerage
+test bal --download --getquote $sourcepath/test/scripts/mock-getquote.sh Assets:Brokerage
              10 AAPL  Assets:Brokerage
 end test
