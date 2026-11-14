@@ -303,6 +303,50 @@ string format_amount(const string& prefix, const amount_t& amount, uint_least8_t
   return out.str();
 }
 
+/**
+ * @brief The report options that lay out a print, read once per report.
+ *
+ * hides() is the one test of which postings print leaves out, used both
+ * by the account-width scan and by the posting loop, so a hidden posting
+ * never widens the column of the ones shown.
+ */
+struct print_layout_t {
+  std::size_t columns;
+  std::size_t account_width;
+  std::size_t amount_width;
+  bool show_generated;
+  format_type_t format_type;
+  string format_str;
+
+  explicit print_layout_t(report_t& report)
+      : columns(report.HANDLED(columns_) ? lexical_cast<std::size_t>(report.HANDLER(columns_).str())
+                                         : 80),
+        account_width(report.HANDLED(account_width_)
+                          ? lexical_cast<std::size_t>(report.HANDLER(account_width_).str())
+                          : 36),
+        amount_width(report.HANDLED(amount_width_)
+                         ? lexical_cast<std::size_t>(report.HANDLER(amount_width_).str())
+                         : 12),
+        show_generated(report.HANDLED(generated)),
+        format_type(report.HANDLED(date_format_) ? FMT_CUSTOM : FMT_WRITTEN),
+        format_str(report.HANDLED(date_format_) ? report.HANDLER(date_format_).str() : string()) {}
+
+  /// The custom date format, when --date-format gave one.
+  optional<const char*> date_format() const {
+    if (format_type == FMT_CUSTOM)
+      return format_str.c_str();
+    return none;
+  }
+
+  /// Whether print leaves this posting out: a generated or temporary
+  /// posting, unless --generated was given or it stands in for a journal
+  /// posting.
+  bool hides(const post_t& post) const {
+    return !show_generated && post.has_flags(ITEM_TEMP | ITEM_GENERATED) &&
+           !post.has_flags(POST_ANONYMIZED);
+  }
+};
+
 /*--- Transaction Reconstruction ---*/
 
 /**
@@ -317,20 +361,13 @@ string format_amount(const string& prefix, const amount_t& amount, uint_least8_t
  * simple amounts of the same commodity and both must balance, the second
  * posting's amount is omitted since Ledger can infer it.
  *
- * @param report  The report context (provides column widths, flags).
+ * @param layout  The report's layout options (column widths, flags).
  * @param out     The output stream.
  * @param xact    The transaction to print.
  */
-void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
-  format_type_t format_type = FMT_WRITTEN;
-  string format_str;
-  optional<const char*> format;
-
-  if (report.HANDLED(date_format_)) {
-    format_type = FMT_CUSTOM;
-    format_str = report.HANDLER(date_format_).str();
-    format = format_str.c_str();
-  }
+void print_xact(const print_layout_t& layout, std::ostream& out, xact_t& xact) {
+  const format_type_t format_type = layout.format_type;
+  const optional<const char*> format = layout.date_format();
 
   // Phase 1: Build the transaction header line (date, state, code, payee).
   std::ostringstream buf;
@@ -350,8 +387,7 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
   string leader = buf.str(); // NOLINT(bugprone-unused-local-non-trivial-variable)
   out << leader;
 
-  std::size_t columns =
-      (report.HANDLED(columns_) ? lexical_cast<std::size_t>(report.HANDLER(columns_).str()) : 80);
+  const std::size_t columns = layout.columns;
 
   if (xact.note)
     print_note(out, rewrite_note_dates(*xact.note, xact, format_type, format),
@@ -376,42 +412,41 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
   std::size_t count = xact.posts.size();
   std::size_t index = 0;
 
-  std::size_t account_width = (report.HANDLED(account_width_)
-                                   ? lexical_cast<std::size_t>(report.HANDLER(account_width_).str())
-                                   : 36);
+  std::size_t account_width = layout.account_width;
 
-  // Find the longest account name to line up all amounts when account names
-  // are long
-  for (post_t* post : xact.posts) {
-    unistring name = format_account_name(xact, post).str();
-    if (account_width < name.length())
-      account_width = name.length();
+  // Format each shown posting's account name once, and widen the account
+  // column to the longest of them so that all amounts line up.
+  std::vector<unistring> names(xact.posts.size());
+  {
+    std::size_t i = 0;
+    for (post_t* post : xact.posts) {
+      if (!layout.hides(*post)) {
+        names[i] = unistring(format_account_name(xact, post).str());
+        if (account_width < names[i].length())
+          account_width = names[i].length();
+      }
+      ++i;
+    }
   }
 
+  std::size_t i = 0;
   for (post_t* post : xact.posts) {
     index++;
+    const unistring& name(names[i++]);
 
-    if (!report.HANDLED(generated) &&
-        (post->has_flags(ITEM_TEMP | ITEM_GENERATED) && !post->has_flags(POST_ANONYMIZED)))
+    if (layout.hides(*post))
       continue;
 
     out << "    ";
 
-    std::ostringstream pbuf = format_account_name(xact, post);
-
-    unistring name(pbuf.str());
-
     bool is_balance_assignment = post->has_flags(POST_CALCULATED) && post->assigned_amount;
 
-    if (!post->has_flags(POST_CALCULATED) || is_balance_assignment || report.HANDLED(generated)) {
+    if (!post->has_flags(POST_CALCULATED) || is_balance_assignment || layout.show_generated) {
       out << name.extract();
       std::string::size_type slip = (static_cast<std::string::size_type>(account_width) -
                                      static_cast<std::string::size_type>(name.length()));
 
-      std::size_t amount_width =
-          (report.HANDLED(amount_width_)
-               ? lexical_cast<std::size_t>(report.HANDLER(amount_width_).str())
-               : 12);
+      const std::size_t amount_width = layout.amount_width;
       string amt;
       if (is_balance_assignment) {
         // For balance assignments, format the = assignment right-justified
@@ -431,7 +466,7 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
         // inverse of the first.
       } else {
         bool suppress_computed =
-            !report.HANDLED(generated) && !post->has_flags(POST_AMOUNT_USER_ANNOTATED);
+            !layout.show_generated && !post->has_flags(POST_AMOUNT_USER_ANNOTATED);
         uint_least8_t flags = AMOUNT_PRINT_RIGHT_JUSTIFY |
                               (suppress_computed ? AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS : 0);
         // A user-annotated amount prints the {{total}} lot price the posting
@@ -510,7 +545,7 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
         out << trailer;
       }
     } else {
-      out << pbuf.str();
+      out << name.extract();
     }
 
     if (post->note)
@@ -535,6 +570,12 @@ void print_xacts::title(const string&) {
 void print_xacts::flush() {
   std::ostream& out(report.output_stream);
 
+  // The layout options are read once, and only for a structured print:
+  // --raw and an empty report parse no width options.
+  std::optional<print_layout_t> layout;
+  if (!print_raw && !xacts.empty())
+    layout.emplace(report);
+
   bool first = true;
   for (xact_t* xact : xacts) {
     if (first)
@@ -546,7 +587,7 @@ void print_xacts::flush() {
       print_item(out, *xact);
       out << '\n';
     } else {
-      print_xact(report, out, *xact);
+      print_xact(*layout, out, *xact);
     }
   }
 
