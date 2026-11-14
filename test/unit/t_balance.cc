@@ -1257,4 +1257,124 @@ BOOST_AUTO_TEST_CASE(testUnreduceMergeKeepsPrecision)
   }
 }
 
+BOOST_AUTO_TEST_CASE(testVisitComponentsSuccessKeepsContext)
+{
+  // A visit in which nothing fails visits every component once and leaves
+  // the error context gathered before it as it was.
+  balance_t b;
+  for (const char* text : {"1 HHH", "1 CCC", "1 AAA", "1 EEE", "1 BBB"})
+    b += amount_t(text);
+
+  (void)error_context();
+  add_error_context("outer");
+  std::map<string, int> visits;
+  b.visit_components(
+      [&visits](const amount_t& amount) { ++visits[amount.commodity().symbol()]; });
+  BOOST_CHECK_EQUAL(visits.size(), 5U);
+  for (const auto& [symbol, count] : visits)
+    BOOST_CHECK_MESSAGE(count == 1, symbol << " visited " << count << " times");
+  BOOST_CHECK_EQUAL(error_context(), "outer");
+
+  // With no context before the visit, none is left after it.
+  visits.clear();
+  b.visit_components(
+      [&visits](const amount_t& amount) { ++visits[amount.commodity().symbol()]; });
+  BOOST_CHECK_EQUAL(visits.size(), 5U);
+  BOOST_CHECK_EQUAL(error_context(), "");
+}
+
+BOOST_AUTO_TEST_CASE(testVisitComponentsFailureOrder)
+{
+  // Whichever two components fail, and whichever of them the map happens
+  // to reach first, the failure thrown is the one display order meets
+  // first, no component is visited twice, every component display order
+  // lists before it is visited, and the error context reads as an
+  // uninterrupted visit in display order would leave it.
+  const std::vector<string> symbols{"AAA", "BBB", "CCC", "DDD", "EEE", "FFF",
+                                    "GGG", "HHH", "III", "JJJ", "KKK", "LLL"};
+  // Create the commodities out of display order, so that a map order that
+  // follows allocation addresses is still not monotone in display order.
+  const std::size_t creation[] = {7, 2, 10, 0, 5, 11, 3, 8, 1, 6, 9, 4};
+  balance_t b;
+  for (std::size_t index : creation)
+    b += amount_t("1 " + symbols[index]);
+  BOOST_REQUIRE_EQUAL(b.amounts.size(), symbols.size());
+
+  // pos[d] is where the map's iteration reaches the commodity whose
+  // display rank is d.
+  std::map<string, std::size_t> rank;
+  for (std::size_t d = 0; d < symbols.size(); ++d)
+    rank[symbols[d]] = d;
+  std::vector<std::size_t> pos(symbols.size());
+  std::size_t at = 0;
+  for (const auto& pair : b.amounts)
+    pos[rank.at(pair.second.commodity().symbol())] = at++;
+
+  std::size_t reversed_pairs = 0;     // map reaches the display-later failure first
+  std::size_t skip_pairs = 0;         // replay must skip an already visited component
+  std::size_t replay_call_pairs = 0;  // replay must call a component not yet visited
+  for (std::size_t i = 0; i < symbols.size(); ++i) {
+    for (std::size_t j = i + 1; j < symbols.size(); ++j) {
+      // The map stops at whichever failure it reaches first; the replay
+      // then tries the display ranks below i (it throws at i at the latest).
+      const std::size_t stop = std::min(pos[i], pos[j]);
+      if (pos[j] < pos[i])
+        ++reversed_pairs;
+      bool skips = false;
+      bool calls = false;
+      for (std::size_t k = 0; k < i; ++k)
+        (pos[k] < stop ? skips : calls) = true;
+      skip_pairs += skips;
+      replay_call_pairs += calls;
+    }
+  }
+  BOOST_REQUIRE_MESSAGE(reversed_pairs > 0 && skip_pairs > 0 && replay_call_pairs > 0,
+                        "map order exercises no replay: reversed " << reversed_pairs
+                            << ", skip " << skip_pairs << ", call " << replay_call_pairs);
+
+  for (const bool outer : {true, false}) {
+    for (std::size_t i = 0; i < symbols.size(); ++i) {
+      for (std::size_t j = i + 1; j < symbols.size(); ++j) {
+        const string& first = symbols[i]; // display order: first < second
+        const string& second = symbols[j];
+        std::map<string, int> visits;
+
+        (void)error_context();
+        if (outer)
+          add_error_context("outer");
+        string thrown;
+        try {
+          b.visit_components([&](const amount_t& amount) {
+            const string& symbol = amount.commodity().symbol();
+            ++visits[symbol];
+            if (symbol == first || symbol == second) {
+              // Lay out context as expr_t's handler does: own lines first,
+              // then the context it found.
+              const string found = error_context();
+              add_error_context("failed " + symbol);
+              if (!found.empty())
+                add_error_context(found);
+              throw std::runtime_error(symbol);
+            }
+          });
+        } catch (const std::runtime_error& err) {
+          thrown = err.what();
+        }
+
+        BOOST_CHECK_EQUAL(thrown, first);
+        // With no context before the visit (the saved context is never
+        // taken), only the failure's own line is left.
+        BOOST_CHECK_EQUAL(error_context(), outer ? "failed " + first + "\nouter" : "failed " + first);
+        for (const auto& [symbol, count] : visits)
+          BOOST_CHECK_MESSAGE(count == 1, symbol << " visited " << count << " times (pair "
+                                                 << first << ", " << second << ")");
+        for (std::size_t k = 0; k <= i; ++k)
+          BOOST_CHECK_MESSAGE(visits[symbols[k]] == 1,
+                              symbols[k] << " not visited (pair " << first << ", " << second
+                                         << ")");
+      }
+    }
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()

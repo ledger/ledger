@@ -629,27 +629,36 @@ public:
    */
   template <typename Fn>
   void visit_components(Fn&& fn) const {
-    std::ostringstream earlier;
-    take_error_context(earlier);
-    std::unordered_set<const amount_t*> visited;
+    std::optional<std::ostringstream> earlier;
+    if (long(_ctxt_buffer.tellp()) != 0)
+      take_error_context(earlier.emplace());
     const amount_t* failing = nullptr;
     std::exception_ptr failure;
     try {
       for (const amounts_map::value_type& pair : amounts) {
         failing = &pair.second;
         fn(pair.second);
-        visited.insert(&pair.second);
       }
     } catch (...) {
       failure = std::current_exception();
     }
     if (!failure) {
-      restore_error_context(earlier);
+      if (earlier)
+        restore_error_context(*earlier);
       return;
     }
     std::ostringstream failed;
     take_error_context(failed);
-    restore_error_context(earlier);
+    if (earlier)
+      restore_error_context(*earlier);
+    // The first loop finished exactly the components that precede the
+    // failing one in the map's order, which is fixed for one map object.
+    std::unordered_set<const amount_t*> visited;
+    for (const amounts_map::value_type& pair : amounts) {
+      if (&pair.second == failing)
+        break;
+      visited.insert(&pair.second);
+    }
     amounts_array sorted;
     sorted_amounts(sorted);
     for (const amount_t* amount : sorted) {
