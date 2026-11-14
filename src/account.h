@@ -522,7 +522,14 @@ public:
 
   bool has_xflags(xdata_t::flags_t flags) const { return xdata_ && xdata_->has_flags(flags); }
   bool children_with_xdata() const;
-  std::size_t children_with_flags(xdata_t::flags_t flags) const;
+  /**
+   * @brief Count the children that carry @p flags or have a descendant that
+   * does, stopping once the count reaches @p limit (pass 1 to ask whether
+   * any does).
+   */
+  std::size_t
+  children_with_flags(xdata_t::flags_t flags,
+                      std::size_t limit = std::numeric_limits<std::size_t>::max()) const;
 };
 
 std::ostream& operator<<(std::ostream& out, const account_t& account);

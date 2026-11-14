@@ -376,14 +376,24 @@ string account_t::fullname() const {
   }
 }
 
+namespace {
+/// An ancestor stays visible in an indented account report when it is
+/// displayed itself or when more than one child leads to a displayed
+/// account; otherwise its name is folded into its one displayed
+/// descendant's.
+bool is_display_branch(const account_t& acct) {
+  return acct.has_xflags(ACCOUNT_EXT_TO_DISPLAY) ||
+         acct.children_with_flags(ACCOUNT_EXT_TO_DISPLAY, 2) > 1;
+}
+} // namespace
+
 string account_t::partial_name(bool flat) const {
   string pname = name;
 
   for (const account_t* acct = parent; acct && acct->parent; acct = acct->parent) {
     if (!flat) {
-      std::size_t count = acct->children_with_flags(ACCOUNT_EXT_TO_DISPLAY);
-      assert(count > 0);
-      if (count > 1 || acct->has_xflags(ACCOUNT_EXT_TO_DISPLAY))
+      assert(acct->children_with_flags(ACCOUNT_EXT_TO_DISPLAY, 1) > 0);
+      if (is_display_branch(*acct))
         break;
     }
     pname = acct->name + ":" + pname; // NOLINT(performance-inefficient-string-concatenation)
@@ -487,14 +497,10 @@ value_t get_subcount(account_t& account) {
 }
 
 value_t get_count(account_t& account) {
-  std::size_t count = 0;
-  for (const post_t* post : account.posts) {
-    if (post->has_xdata() && post->xdata().has_flags(POST_EXT_VISITED))
-      count++;
-  }
+  long count = get_subcount(account).to_long();
   for (const accounts_map::value_type& pair : account.accounts)
     count += get_count(*pair.second).to_long();
-  return long(count);
+  return count;
 }
 value_t get_cost(account_t&) {
   throw_(calc_error, _("An account does not have a 'cost' value"));
@@ -532,32 +538,20 @@ value_t get_addr(account_t& account) {
 value_t get_depth_parent(account_t& account) {
   std::size_t depth = 0;
   for (const account_t* acct = account.parent; acct && acct->parent; acct = acct->parent) {
-    std::size_t count = acct->children_with_flags(ACCOUNT_EXT_TO_DISPLAY);
-    assert(count > 0);
-    if (count > 1 || acct->has_xflags(ACCOUNT_EXT_TO_DISPLAY))
+    assert(acct->children_with_flags(ACCOUNT_EXT_TO_DISPLAY, 1) > 0);
+    if (is_display_branch(*acct))
       depth++;
   }
   return long(depth);
 }
 
 value_t get_depth_spacer(account_t& account) {
-  std::size_t depth = 0;
-  for (const account_t* acct = account.parent; acct && acct->parent; acct = acct->parent) {
-    std::size_t count = acct->children_with_flags(ACCOUNT_EXT_TO_DISPLAY);
-    assert(count > 0);
-    if (count > 1 || acct->has_xflags(ACCOUNT_EXT_TO_DISPLAY))
-      depth++;
-  }
-
-  std::ostringstream out;
-  for (std::size_t i = 0; i < depth; i++)
-    out << "  ";
-
-  return string_value(out.str());
+  return string_value(
+      string(2 * static_cast<std::size_t>(get_depth_parent(account).to_long()), ' '));
 }
 
 value_t get_has_children_to_display(account_t& account) {
-  return account.children_with_flags(ACCOUNT_EXT_TO_DISPLAY) > 0;
+  return account.children_with_flags(ACCOUNT_EXT_TO_DISPLAY, 1) > 0;
 }
 
 value_t get_latest_cleared(account_t& account) {
@@ -605,8 +599,7 @@ value_t get_display_parent_account(account_t& account) {
   // If all ancestors are elided (e.g., account is at display depth 0),
   // falls back to the direct structural parent to preserve existing behavior.
   for (account_t* acct = account.parent; acct && acct->parent; acct = acct->parent) {
-    std::size_t count = acct->children_with_flags(ACCOUNT_EXT_TO_DISPLAY);
-    if (count > 1 || acct->has_xflags(ACCOUNT_EXT_TO_DISPLAY))
+    if (is_display_branch(*acct))
       return scope_value(acct);
   }
   // All ancestors were elided; fall back to direct parent
@@ -801,11 +794,11 @@ bool account_t::children_with_xdata() const {
   return false;
 }
 
-std::size_t account_t::children_with_flags(xdata_t::flags_t flags) const {
+std::size_t account_t::children_with_flags(xdata_t::flags_t flags, std::size_t limit) const {
   std::size_t count = 0;
 
-  for (const accounts_map::value_type& pair : accounts)
-    if (pair.second->has_xflags(flags) || pair.second->children_with_flags(flags) > 0)
+  for (auto it = accounts.begin(); it != accounts.end() && count < limit; ++it)
+    if (it->second->has_xflags(flags) || it->second->children_with_flags(flags, 1) > 0)
       count++;
 
   return count;

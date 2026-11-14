@@ -372,4 +372,34 @@ BOOST_AUTO_TEST_CASE(testOutputStream)
   BOOST_CHECK_EQUAL(string("Assets:Checking"), out.str());
 }
 
+BOOST_AUTO_TEST_CASE(testChildrenWithFlagsLimit)
+{
+  // children_with_flags counts the children that carry the flag or have a
+  // descendant that does; a limit stops counting once it is reached.
+  account_t root;
+  root.find_account("A")->xdata().add_flags(ACCOUNT_EXT_TO_DISPLAY);
+  root.find_account("B:Deep")->xdata().add_flags(ACCOUNT_EXT_TO_DISPLAY);
+  root.find_account("C")->xdata().add_flags(ACCOUNT_EXT_TO_DISPLAY);
+  root.find_account("D:One"); // nothing below D is flagged
+
+  BOOST_CHECK_EQUAL(std::size_t(3), root.children_with_flags(ACCOUNT_EXT_TO_DISPLAY));
+  BOOST_CHECK_EQUAL(std::size_t(2), root.children_with_flags(ACCOUNT_EXT_TO_DISPLAY, 2));
+  BOOST_CHECK_EQUAL(std::size_t(1), root.children_with_flags(ACCOUNT_EXT_TO_DISPLAY, 1));
+  BOOST_CHECK_EQUAL(std::size_t(1),
+                    root.find_account("B")->children_with_flags(ACCOUNT_EXT_TO_DISPLAY, 2));
+  BOOST_CHECK_EQUAL(std::size_t(0),
+                    root.find_account("D")->children_with_flags(ACCOUNT_EXT_TO_DISPLAY));
+  BOOST_CHECK_EQUAL(std::size_t(0),
+                    root.find_account("D")->children_with_flags(ACCOUNT_EXT_TO_DISPLAY, 1));
+  BOOST_CHECK_EQUAL(std::size_t(0), root.children_with_flags(ACCOUNT_EXT_VISITED, 2));
+
+  // A first child that leads nowhere must not use up the limit.
+  account_t r2;
+  r2.find_account("A:Empty");
+  r2.find_account("B")->xdata().add_flags(ACCOUNT_EXT_TO_DISPLAY);
+  r2.find_account("C")->xdata().add_flags(ACCOUNT_EXT_TO_DISPLAY);
+  BOOST_CHECK_EQUAL(std::size_t(2), r2.children_with_flags(ACCOUNT_EXT_TO_DISPLAY, 2));
+  BOOST_CHECK_EQUAL(std::size_t(1), r2.children_with_flags(ACCOUNT_EXT_TO_DISPLAY, 1));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

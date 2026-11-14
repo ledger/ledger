@@ -1,0 +1,92 @@
+; An ancestor stays visible in an indented account report (it is a
+; "display branch") when it is itself displayed or when more than one
+; of its children leads to a displayed account.  partial_account,
+; depth_parent, depth_spacer and display_parent all apply that one rule;
+; count is subcount plus the children's count.
+;
+; Assets:Bank is displayed (own posting) with one displayed child.
+; Expenses:Food has two displayed children but no posting of its own.
+; Income:Job has two children (Acme, Beta) that are not displayed
+; themselves; only their Salary descendants are.
+
+2024/01/01 Opening
+    Assets:Bank:Checking                     $100.00
+    Equity:Opening
+
+2024/01/02 Fees
+    Assets:Bank                               $-5.00
+    Expenses:Fees
+
+2024/01/03 Groceries
+    Expenses:Food:Dairy                       $20.00
+    Expenses:Food:Produce                     $30.00
+    Liabilities:Card
+
+2024/01/04 Payday
+    Income:Job:Acme:Salary                $-1000.00
+    Income:Job:Beta:Salary                 $-500.00
+    Assets:Bank:Checking
+
+test bal
+            $1595.00  Assets:Bank
+            $1600.00    Checking
+            $-100.00  Equity:Opening
+              $55.00  Expenses
+               $5.00    Fees
+              $50.00    Food
+              $20.00      Dairy
+              $30.00      Produce
+           $-1500.00  Income:Job
+           $-1000.00    Acme:Salary
+            $-500.00    Beta:Salary
+             $-50.00  Liabilities:Card
+--------------------
+                   0
+end test
+
+test bal --no-total --format "%(depth_parent)|%(depth_spacer)|%(partial_account)|%(display_parent.account)|%(count)|%(subcount)|%(has_children_to_display)\n"
+0||Assets:Bank|Assets|3|1|true
+1|  |Checking|Assets:Bank|2|2|false
+0||Equity:Opening|Equity|1|1|false
+0||Expenses||3|0|true
+1|  |Fees|Expenses|1|1|false
+1|  |Food|Expenses|2|0|true
+2|    |Dairy|Expenses:Food|1|1|false
+2|    |Produce|Expenses:Food|1|1|false
+0||Income:Job|Income|2|0|true
+1|  |Acme:Salary|Income:Job|1|1|false
+1|  |Beta:Salary|Income:Job|1|1|false
+0||Liabilities:Card|Liabilities|1|1|false
+end test
+
+test bal --flat --no-total --format "%(depth_parent)|%(partial_account)|%(display_parent.account)\n"
+0|Assets:Bank|Assets
+1|Checking|Assets:Bank
+0|Equity:Opening|Equity
+1|Fees|Expenses
+2|Dairy|Expenses:Food
+2|Produce|Expenses:Food
+1|Acme:Salary|Income:Job
+1|Beta:Salary|Income:Job
+0|Liabilities:Card|Liabilities
+end test
+
+test bal Acme --no-total --format "%(depth_parent)|%(partial_account)|%(display_parent.account)\n"
+0|Income:Job:Acme:Salary|Income:Job:Acme
+end test
+
+test bal --no-total --display "display_parent.account == \"Expenses:Food\""
+              $50.00  Expenses:Food
+              $20.00    Dairy
+              $30.00    Produce
+end test
+
+test bal --depth 2 --no-total --format "%(depth_parent)|%(partial_account)|%(count)\n"
+0|Assets:Bank|3
+0|Equity:Opening|1
+0|Expenses|3
+1|Fees|1
+1|Food|2
+0|Income:Job|2
+0|Liabilities:Card|1
+end test

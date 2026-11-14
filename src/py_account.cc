@@ -58,6 +58,11 @@ using namespace boost::python;
 
 namespace {
 
+// Python keeps the one-argument form, which returns the full count.
+std::size_t py_children_with_flags(const account_t& account, account_t::xdata_t::flags_t flags) {
+  return account.children_with_flags(flags);
+}
+
 /*--- Sequence Protocol ---*/
 
 long accounts_len(account_t& account) {
@@ -227,7 +232,7 @@ void export_account() {
       .def("family_details", &account_t::family_details, return_internal_reference<>())
 
       .def("has_xflags", &account_t::has_xflags)
-      .def("children_with_flags", &account_t::children_with_flags);
+      .def("children_with_flags", py_children_with_flags);
 }
 
 } // namespace ledger

@@ -62,7 +62,7 @@ namespace {
 /// hierarchy in the XML output so that only relevant accounts appear.
 bool account_visited_p(const account_t& acct) {
   return ((acct.has_xdata() && acct.xdata().has_flags(ACCOUNT_EXT_VISITED)) ||
-          acct.children_with_flags(ACCOUNT_EXT_VISITED));
+          acct.children_with_flags(ACCOUNT_EXT_VISITED, 1));
 }
 } // namespace
 
