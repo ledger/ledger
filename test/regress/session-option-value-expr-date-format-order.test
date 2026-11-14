@@ -1,0 +1,18 @@
+; The reverse order fails at the --value-expr option, because the
+; expression is parsed when the option is given and the date format is not
+; yet set.  The base parsed it in read_data, after every option, and printed
+; 50.00 EUR in either order; --group-by, which parses at option time on the
+; base, already fails this way.
+
+2015/01/01 Buy stocks
+    Assets:Investments            2 FOO @@ 20.00 EUR
+    Assets:Cash                            -20.00 EUR
+
+test bal assets:investments -V --value-expr "date >= [15.03.2014] ? 25.00 EUR : 1.00 EUR" --input-date-format %d.%m.%Y -> 1
+__ERROR__
+While parsing value expression:
+  date >= [15.03.2014] ? 25.00 EUR : 1.00 EUR
+          ^^^^^^^^^^^^
+While parsing option '--value-expr'
+Error: Year is out of valid range: 1400..9999
+end test

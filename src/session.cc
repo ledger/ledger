@@ -107,7 +107,7 @@ session_t::session_t()
  *
  * The loading sequence is:
  *   1. Determine the data files (from --file or the default ~/.ledger).
- *   2. Apply session-level journal flags (day_break, checking_style, etc.).
+ *   2. Apply the session's journal options (configure_journal).
  *   3. Read the price database if one exists.
  *   4. Read each data file in order, accumulating transactions.
  *   5. Verify the journal's internal consistency.
@@ -163,64 +163,9 @@ std::size_t session_t::read_data(const string& master_account) {
     }
   }
 
-  // Transfer session-level option flags to the journal object before
-  // any parsing begins, because these flags affect how the parser
-  // validates input.
-  if (HANDLED(day_break))
-    journal->day_break = true;
-
-  if (HANDLED(time_round_)) {
-    int minutes = std::stoi(HANDLER(time_round_).str());
-    if (minutes > 0 && minutes <= INT_MAX / 60) {
-      journal->time_round = minutes * 60;
-    } else {
-      throw std::out_of_range("time_round value too large");
-    }
-  }
-
-  if (HANDLED(recursive_aliases))
-    journal->recursive_aliases = true;
-  if (HANDLED(no_aliases))
-    journal->no_aliases = true;
-
-  if (HANDLED(explicit)) {
-    // No-op
-  }
-  if (HANDLED(check_in_file_order))
-    journal->check_in_file_order = true;
-
-  if (HANDLED(check_payees))
-    journal->check_payees = true;
-
-  if (HANDLED(permissive))
-    journal->checking_style = journal_t::CHECK_PERMISSIVE;
-  else if (HANDLED(pedantic))
-    journal->checking_style = journal_t::CHECK_ERROR;
-  else if (HANDLED(strict))
-    journal->checking_style = journal_t::CHECK_WARNING;
-
-  // Commodity-only strictness (issue #3200): --strict and --pedantic
-  // already set both fields together via their option handlers, so by
-  // default commodity checking tracks the global checking style.  The
-  // explicit --strict-commodity / --pedantic-commodity flags are
-  // re-applied here so they win when read_journal_files runs after all
-  // options have been parsed.
-  if (HANDLED(pedantic_commodity))
-    journal->commodity_checking_style = journal_t::CHECK_ERROR;
-  else if (HANDLED(strict_commodity) && journal->commodity_checking_style != journal_t::CHECK_ERROR)
-    journal->commodity_checking_style = journal_t::CHECK_WARNING;
-
-  if (HANDLED(value_expr_))
-    journal->value_expr = HANDLER(value_expr_).str();
-
-  if (HANDLED(account_value_expr_))
-    journal->account_value_expr = HANDLER(account_value_expr_).str();
-
-  if (HANDLED(commodity_value_expr_))
-    journal->commodity_value_expr = HANDLER(commodity_value_expr_).str();
-
-  if (HANDLED(lot_matching_))
-    journal->lot_matching_policy = HANDLER(lot_matching_).policy;
+  // Apply the session's journal options before any parsing begins,
+  // because they affect how the parser validates input.
+  configure_journal();
 
   // Read the price database first so that commodity prices are available
   // during journal parsing (e.g., for balance assertions involving
@@ -320,6 +265,7 @@ journal_t* session_t::read_journal(const path& pathname) {
 
 journal_t* session_t::read_journal_from_string(const string& data) {
   journal.reset(new journal_t);
+  configure_journal();
 
   HANDLER(file_).data_files.clear();
 
@@ -422,6 +368,34 @@ value_t session_t::fn_lot_tag(call_scope_t& args) {
     return string_value(*amt.annotation().tag);
   else
     return NULL_VALUE;
+}
+
+/*--- Journal Options ---*/
+
+void session_t::configure_journal() {
+  option_t<session_t>* const journal_options[] = {
+      &HANDLER(account_value_expr_), &HANDLER(check_in_file_order),
+      &HANDLER(check_payees),        &HANDLER(commodity_value_expr_),
+      &HANDLER(day_break),           &HANDLER(lot_matching_),
+      &HANDLER(no_aliases),          &HANDLER(pedantic),
+      &HANDLER(pedantic_commodity),  &HANDLER(permissive),
+      &HANDLER(recursive_aliases),   &HANDLER(strict),
+      &HANDLER(strict_commodity),    &HANDLER(time_round_),
+      &HANDLER(value_expr_)};
+  for (option_t<session_t>* opt : journal_options) {
+    if (!*opt)
+      continue;
+    if (opt->wants_arg)
+      opt->handler_thunk(none, opt->value);
+    else
+      opt->handler_thunk(none);
+  }
+}
+
+void session_t::require_checking(journal_t::checking_style_t style) {
+  if (!HANDLED(permissive))
+    journal->checking_style = std::max(journal->checking_style, style);
+  journal->require_commodity_checking(style);
 }
 
 /*--- Option Lookup ---*/

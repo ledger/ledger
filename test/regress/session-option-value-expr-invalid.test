@@ -1,0 +1,50 @@
+; An invalid value expression is rejected when the option is given, as
+; every other option's argument is, so the error names the option.  The
+; expression parses where the option's DO_() body assigns it to the
+; journal, not later in read_data.
+
+2024/01/01 Lunch
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --value-expr "(" -> 1
+__ERROR__
+While parsing value expression:
+  (
+
+While parsing option '--value-expr'
+Error: Invalid token '<end of input>' (wanted ')')
+end test
+
+test eval 1 --value-expr "(" -> 1
+__ERROR__
+While parsing value expression:
+  (
+
+While parsing option '--value-expr'
+Error: Invalid token '<end of input>' (wanted ')')
+end test
+
+test bal --value-expr "" -> 1
+__ERROR__
+While parsing option '--value-expr'
+Error: No argument provided for --value-expr
+end test
+
+test bal --value-expr= -> 1
+__ERROR__
+While parsing option '--value-expr='
+Error: No argument provided for --value-expr
+end test
+
+test bal --account-value-expr "" -> 1
+__ERROR__
+While parsing option '--account-value-expr'
+Error: No argument provided for --account-value-expr
+end test
+
+test bal --commodity-value-expr "" -> 1
+__ERROR__
+While parsing option '--commodity-value-expr'
+Error: No argument provided for --commodity-value-expr
+end test

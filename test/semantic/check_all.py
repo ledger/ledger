@@ -1090,10 +1090,9 @@ def main():
             if cpp["dr"] or cpp["cr"]:
                 GROSS_ROWS["files"] += 1
             if diffs and rel in divergent_listed:
-                # A known gross divergence (the oracle's automated-
-                # transaction gross differs from C++'s column sums;
-                # recorded in the semantics repository), binned
-                # visibly and held to the ratchet below.
+                # A known gross divergence, binned visibly and held
+                # to the ratchet below; gross-divergent.txt gives the
+                # rule behind each entry.
                 GROSS["SKIP"].append(("known-divergence", rel))
             elif diffs:
                 GROSS["FAIL"].append((rel, repr(diffs)))
@@ -1225,12 +1224,10 @@ def main():
             if cpp_rows == res:
                 bins["PASS"].append(rel)
             elif rel in divergent_rows_listed:
-                # A known oracle departure in the balance rows (the
-                # oracle's displayed-row rounding is half away from
-                # zero where C++ rounds the value's binary expansion to
-                # even; recorded at Ledger/Driver.lean displayAmount).
-                # Binned visibly, never silently, and held to the
-                # ratchet below.
+                # A known oracle departure in the balance rows;
+                # oracle-divergent.txt gives the rule behind each
+                # entry.  Binned visibly, never silently, and held to
+                # the ratchet below.
                 bins["SKIP:known-divergence"].append(rel)
                 details.append({
                     "file": rel, "status": "SKIP:known-divergence",
@@ -1327,11 +1324,10 @@ def main():
                                     "why": "same-entry check skipped: include context"})
             elif rel in permissive_listed:
                 # A known oracle departure: the oracle accepts what C++
-                # rejects as unbalanced (the oracle's transaction
-                # extension does not run C++'s per-group balance check;
-                # recorded in the semantics repository).  Binned
-                # visibly, never silently, and the ratchet check below
-                # fails the run when the entry goes stale.
+                # rejects as unbalanced; neg-oracle-permissive.txt
+                # gives the rule behind each entry.  Binned visibly,
+                # never silently, and the ratchet check below fails
+                # the run when the entry goes stale.
                 bins["NEG:oracle-permissive"].append(rel)
                 details.append({"file": rel, "status": "NEG:oracle-permissive",
                                 "why": why})

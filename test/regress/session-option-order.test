@@ -1,0 +1,64 @@
+; --strict and --pedantic set the same checking whatever their order on
+; the command line: --pedantic makes an undeclared commodity an error even
+; when --strict follows it.
+
+account Assets:Cash
+account Expenses:Food
+
+2024/01/01 Lunch
+    Expenses:Food    10 FOO
+    Assets:Cash
+
+test bal --pedantic --strict -> 1
+__ERROR__
+While parsing file "$FILE", line 9:
+While parsing posting:
+  Expenses:Food    10 FOO
+                   ^^^^^^
+Error: Unknown commodity 'FOO'
+end test
+
+test bal --strict --pedantic -> 1
+__ERROR__
+While parsing file "$FILE", line 9:
+While parsing posting:
+  Expenses:Food    10 FOO
+                   ^^^^^^
+Error: Unknown commodity 'FOO'
+end test
+
+test bal --pedantic-commodity --strict -> 1
+__ERROR__
+While parsing file "$FILE", line 9:
+While parsing posting:
+  Expenses:Food    10 FOO
+                   ^^^^^^
+Error: Unknown commodity 'FOO'
+end test
+
+test bal --strict --pedantic-commodity -> 1
+__ERROR__
+While parsing file "$FILE", line 9:
+While parsing posting:
+  Expenses:Food    10 FOO
+                   ^^^^^^
+Error: Unknown commodity 'FOO'
+end test
+
+test bal --permissive --pedantic -> 1
+__ERROR__
+While parsing file "$FILE", line 9:
+While parsing posting:
+  Expenses:Food    10 FOO
+                   ^^^^^^
+Error: Unknown commodity 'FOO'
+end test
+
+test bal --pedantic --permissive -> 1
+__ERROR__
+While parsing file "$FILE", line 9:
+While parsing posting:
+  Expenses:Food    10 FOO
+                   ^^^^^^
+Error: Unknown commodity 'FOO'
+end test

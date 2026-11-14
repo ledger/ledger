@@ -1,0 +1,4 @@
+test --lot-matching fifo python test/regress/session-option-read-string.py
+1 Assets:Brokerage -8 AAPL {$150.00} [2024/01/15]
+2 Assets:Brokerage -8 AAPL {$150.00} [2024/01/15]
+end test

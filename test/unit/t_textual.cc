@@ -776,4 +776,46 @@ BOOST_AUTO_TEST_CASE(testParsePeriodTransaction)
   BOOST_CHECK(!session.journal->period_xacts.empty());
 }
 
+BOOST_AUTO_TEST_CASE(testDeclaredPrecisionUsesCommodityCheckingFallback)
+{
+  // The declared-precision check reads the same commodity checking level
+  // as register_commodity(): commodity_checking_style when set, else
+  // checking_style.  Only the checking levels differ between the reads.
+  std::string input =
+    "commodity XPR\n"
+    "    format 1,000.00 XPR\n"
+    "account Assets:Portfolio\n"
+    "account Assets:Cash\n"
+    "2024/01/01 Purchase\n"
+    "    Assets:Portfolio    1.12345 XPR\n"
+    "    Assets:Cash        -1.12345 XPR\n";
+
+  auto read_with = [&](journal_t::checking_style_t general,
+                       journal_t::checking_style_t commodity) {
+    session.journal.reset(new journal_t);
+    session.journal->checking_style = general;
+    session.journal->commodity_checking_style = commodity;
+
+    std::shared_ptr<std::istream> stream(new std::istringstream(input));
+    session.parsing_context.push(stream);
+    parse_context_t& ctx = session.parsing_context.get_current();
+    ctx.journal = session.journal.get();
+    ctx.master  = session.journal->master;
+    try {
+      session.journal->read(session.parsing_context, NO_HASHES);
+    } catch (...) {
+      session.parsing_context.pop();
+      throw;
+    }
+    session.parsing_context.pop();
+  };
+
+  // No checking: the excess precision is accepted.
+  BOOST_CHECK_NO_THROW(read_with(journal_t::CHECK_NORMAL, journal_t::CHECK_NORMAL));
+  // checking_style alone (commodity level left at CHECK_NORMAL) applies.
+  BOOST_CHECK_THROW(read_with(journal_t::CHECK_ERROR, journal_t::CHECK_NORMAL), error_count);
+  // The commodity level alone applies without account checking.
+  BOOST_CHECK_THROW(read_with(journal_t::CHECK_NORMAL, journal_t::CHECK_ERROR), error_count);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

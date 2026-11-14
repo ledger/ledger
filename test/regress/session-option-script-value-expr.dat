@@ -1,0 +1,2 @@
+xact --value-expr "25.00 EUR" 2015/02/01 "Buy stocks" Assets:Investments -- 1 FOO Assets:Cash
+xact 2015/02/01 "Buy stocks" Assets:Investments -- 1 FOO Assets:Cash

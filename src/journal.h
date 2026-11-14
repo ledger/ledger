@@ -194,14 +194,28 @@ public:
   /**
    * @brief Per-commodity checking style.
    *
-   * Mirrors @ref checking_style but applies only to commodity validation
-   * in register_commodity().  This lets users opt into commodity-only
-   * strictness via --strict-commodity / --pedantic-commodity without
-   * triggering warnings or errors for undeclared accounts, payees, or
-   * tags.  --strict and --pedantic continue to set both fields together
-   * for backward compatibility.
+   * Mirrors @ref checking_style but applies only to commodity validation:
+   * unknown commodities (register_commodity()) and amounts more precise
+   * than a declared format (parse_post()), both of which read it through
+   * effective_commodity_checking_style().  This lets users opt into
+   * commodity-only strictness via --strict-commodity / --pedantic-commodity
+   * without triggering warnings or errors for undeclared accounts, payees,
+   * or tags.  --strict and --pedantic raise both fields, and no option
+   * lowers either.
    */
   checking_style_t commodity_checking_style;
+
+  /// Raise commodity_checking_style to at least @a style; never lowers it.
+  void require_commodity_checking(checking_style_t style) {
+    commodity_checking_style = std::max(commodity_checking_style, style);
+  }
+
+  /// The checking style commodity validation uses: commodity_checking_style
+  /// once an option has set it, else checking_style (for callers, such as
+  /// the unit tests, that set only checking_style).
+  [[nodiscard]] checking_style_t effective_commodity_checking_style() const {
+    return commodity_checking_style != CHECK_NORMAL ? commodity_checking_style : checking_style;
+  }
 
   journal_t();
 #if 0

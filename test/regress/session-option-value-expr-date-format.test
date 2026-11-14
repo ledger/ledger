@@ -1,0 +1,12 @@
+; A value expression with a bracketed date is parsed when the option is
+; given, so --input-date-format must come before it.  In this order the
+; expression reads [15.03.2014] as 15 March 2014 and the posting is valued
+; at 25.00 EUR per unit.
+
+2015/01/01 Buy stocks
+    Assets:Investments            2 FOO @@ 20.00 EUR
+    Assets:Cash                            -20.00 EUR
+
+test bal assets:investments -V --input-date-format %d.%m.%Y --value-expr "date >= [15.03.2014] ? 25.00 EUR : 1.00 EUR"
+           50.00 EUR  Assets:Investments
+end test

@@ -1,0 +1,20 @@
+; A --lot-matching given on a --script line configures the journal that is
+; already read, as it does on the command line: the draft consumes the oldest
+; lot, and the policy stays for the lines after it.
+
+2024/01/15 Buy First Lot
+    Assets:Brokerage         10 AAPL {$150.00} [2024/01/15]
+    Assets:Cash          $-1500.00
+
+2024/02/15 Buy Second Lot
+    Assets:Brokerage          5 AAPL {$160.00} [2024/02/15]
+    Assets:Cash           $-800.00
+
+test --script test/regress/session-option-script-lot-matching.dat
+2024/04/01 Buy First Lot
+    Assets:Brokerage                    -1 AAPL {$150.00} [2024/01/15]
+    Assets:Cash
+2024/04/01 Buy First Lot
+    Assets:Brokerage                    -1 AAPL {$150.00} [2024/01/15]
+    Assets:Cash
+end test

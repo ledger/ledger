@@ -318,13 +318,21 @@ public:
   /// @brief Test whether this option has been activated.
   operator bool() const { return handled; }
 
+  /// @brief Return @a arg, throwing the "No argument provided" error when it is empty.
+  /// For DO_() bodies that must reject an empty argument at option time, the check
+  /// str() makes when the value is read later.
+  /// @throws std::runtime_error if @a arg is empty.
+  const string& require_arg(const string& arg) const {
+    if (arg.empty())
+      throw_(std::runtime_error, _f("No argument provided for %1%") % desc());
+    return arg;
+  }
+
   /// @brief Return the option's string value.  Asserts that the option is handled.
   /// @throws std::runtime_error if the value is empty (no argument was provided).
   string str() const {
     assert(handled);
-    if (value.empty())
-      throw_(std::runtime_error, _f("No argument provided for %1%") % desc());
-    return value;
+    return require_arg(value);
   }
 
   /// @brief Activate a boolean (no-argument) option.

@@ -1,0 +1,47 @@
+; An in-file --strict never lowers the commodity checking level the
+; command line asked for, so the declared-precision check still errors
+; under a command-line --pedantic or --pedantic-commodity.
+
+--strict
+
+commodity USD
+    format 1,000.00 USD
+
+account Assets:Portfolio
+account Assets:Cash
+
+2024/01/01 Investment Purchase
+    Assets:Portfolio    1.12345 USD
+    Assets:Cash        -1.12345 USD
+
+test reg --format "%(amount)\n" Assets:Portfolio
+1.12 USD
+__ERROR__
+Warning: "$FILE", line 14: Amount for commodity 'USD' has 5 decimal places but declared format only shows 2
+Warning: "$FILE", line 15: Amount for commodity 'USD' has 5 decimal places but declared format only shows 2
+end test
+
+test reg --pedantic-commodity --format "%(amount)\n" Assets:Portfolio -> 1
+__ERROR__
+While parsing file "$FILE", line 14:
+While parsing posting:
+  Assets:Portfolio    1.12345 USD
+                      ^^^^^^^^^^^
+Error: Amount for commodity 'USD' has 5 decimal places but declared format only shows 2
+end test
+
+test reg --pedantic --format "%(amount)\n" Assets:Portfolio -> 1
+__ERROR__
+While parsing file "$FILE", line 14:
+While parsing posting:
+  Assets:Portfolio    1.12345 USD
+                      ^^^^^^^^^^^
+Error: Amount for commodity 'USD' has 5 decimal places but declared format only shows 2
+end test
+
+test reg --permissive --format "%(amount)\n" Assets:Portfolio
+1.12 USD
+__ERROR__
+Warning: "$FILE", line 14: Amount for commodity 'USD' has 5 decimal places but declared format only shows 2
+Warning: "$FILE", line 15: Amount for commodity 'USD' has 5 decimal places but declared format only shows 2
+end test

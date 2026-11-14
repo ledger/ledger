@@ -395,13 +395,7 @@ string journal_t::translate_payee_name(const string& name) {
 /*--- Commodity and Metadata Registration ---*/
 
 void journal_t::register_commodity(commodity_t& comm, std::variant<int, xact_t*, post_t*> context) {
-  // Commodity validation honours the commodity-specific override when set
-  // (--strict-commodity / --pedantic-commodity, issue #3200).  When the
-  // commodity-specific level is at its default (CHECK_NORMAL), fall back
-  // to the global checking_style so that --strict / --pedantic and any
-  // direct callers that only adjust checking_style continue to work.
-  checking_style_t style =
-      commodity_checking_style != CHECK_NORMAL ? commodity_checking_style : checking_style;
+  checking_style_t style = effective_commodity_checking_style();
 
   if (style == CHECK_WARNING || style == CHECK_ERROR) {
     if (!comm.has_flags(COMMODITY_KNOWN)) {

@@ -1,0 +1,11 @@
+; --time-round written in the journal rounds the timelog entries after it,
+; as it does on the command line.
+
+--time-round 15
+
+i 2024/01/01 09:00:00 Projects:Work
+o 2024/01/01 09:07:00
+
+test bal
+               15.0m  Projects:Work
+end test

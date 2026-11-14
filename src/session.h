@@ -210,30 +210,41 @@ public:
   /// and then delegates to symbol_scope_t for user-defined symbols.
   expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 
+  /// Apply every journal option that is in effect to the current journal by
+  /// re-running each option's DO() body, the one place an option writes the
+  /// journal.  Called before each reading, on a journal that may be fresh.
+  void configure_journal();
+
+  /// --strict / --pedantic: raise commodity checking to at least @a style,
+  /// and account/payee/tag checking too unless --permissive is in effect.
+  /// Never lowers either, so the order of the options does not matter.
+  void require_checking(journal_t::checking_style_t style);
+
   /**
    * Option handlers
    */
 
-  OPTION(session_t, account_value_expr_); ///< Default account-level valuation expression
+  /// Default account-level valuation expression.
   OPTION_(
-      session_t, check_in_file_order, DO() {
-        if (parent->journal)
-          parent->journal->check_in_file_order = true;
-      });
+      session_t, account_value_expr_,
+      DO_() { parent->journal->account_value_expr = require_arg(str); });
+  OPTION_(session_t, check_in_file_order, DO() { parent->journal->check_in_file_order = true; });
+  OPTION_(session_t, check_payees, DO() { parent->journal->check_payees = true; });
+  /// Default commodity-level valuation expression.
   OPTION_(
-      session_t, check_payees, DO() {
-        if (parent->journal)
-          parent->journal->check_payees = true;
-      });
-  OPTION(session_t, commodity_value_expr_); ///< Default commodity-level valuation expression
+      session_t, commodity_value_expr_,
+      DO_() { parent->journal->commodity_value_expr = require_arg(str); });
+  OPTION_(session_t, day_break, DO() { parent->journal->day_break = true; });
+  /// Round timelog durations up to N-minute blocks.
   OPTION_(
-      session_t, day_break, DO() {
-        if (parent->journal)
-          parent->journal->day_break = true;
+      session_t, time_round_, DO_() {
+        int minutes = std::stoi(require_arg(str));
+        if (minutes <= 0 || minutes > std::numeric_limits<int>::max() / 60)
+          throw std::out_of_range("time_round value too large");
+        parent->journal->time_round = minutes * 60;
       });
-  OPTION(session_t, time_round_); ///< Round timelog durations up to N-minute blocks
-  OPTION(session_t, download);    ///< Download commodity prices (-Q)
-  OPTION(session_t, getquote_);   ///< Path to the price-fetching script
+  OPTION(session_t, download);  ///< Download commodity prices (-Q)
+  OPTION(session_t, getquote_); ///< Path to the price-fetching script
 
   /// Use comma as decimal separator for commodity amounts.
   OPTION_(session_t, decimal_comma, DO() { commodity_t::decimal_comma_by_default = true; });
@@ -282,49 +293,24 @@ public:
 
   OPTION(session_t, explicit);        ///< Only accept explicitly declared accounts/commodities
   OPTION(session_t, master_account_); ///< Parent account for all postings
-  OPTION_(
-      session_t, pedantic, DO() {
-        if (parent->journal) {
-          parent->journal->checking_style = journal_t::CHECK_ERROR;
-          parent->journal->commodity_checking_style = journal_t::CHECK_ERROR;
-        }
-      });
+  OPTION_(session_t, pedantic, DO() { parent->require_checking(journal_t::CHECK_ERROR); });
   /// Like --pedantic but applies only to commodity validation (issue #3200).
   OPTION_(
-      session_t, pedantic_commodity, DO() {
-        if (parent->journal && parent->journal->commodity_checking_style != journal_t::CHECK_ERROR)
-          parent->journal->commodity_checking_style = journal_t::CHECK_ERROR;
-      });
+      session_t, pedantic_commodity,
+      DO() { parent->journal->require_commodity_checking(journal_t::CHECK_ERROR); });
   OPTION_(
-      session_t, permissive, DO() {
-        if (parent->journal)
-          parent->journal->checking_style = journal_t::CHECK_PERMISSIVE;
-      });
+      session_t, permissive,
+      DO() { parent->journal->checking_style = journal_t::CHECK_PERMISSIVE; });
   OPTION(session_t, price_db_); ///< Path to the price history database file
-  OPTION_(
-      session_t, strict, DO() {
-        if (parent->journal) {
-          parent->journal->checking_style = journal_t::CHECK_WARNING;
-          parent->journal->commodity_checking_style = journal_t::CHECK_WARNING;
-        }
-      });
+  OPTION_(session_t, strict, DO() { parent->require_checking(journal_t::CHECK_WARNING); });
   /// Like --strict but applies only to commodity validation (issue #3200).
   OPTION_(
-      session_t, strict_commodity, DO() {
-        if (parent->journal && parent->journal->commodity_checking_style != journal_t::CHECK_ERROR)
-          parent->journal->commodity_checking_style = journal_t::CHECK_WARNING;
-      });
-  OPTION(session_t, value_expr_); ///< Expression used to compute posting values
-  OPTION_(
-      session_t, recursive_aliases, DO() {
-        if (parent->journal)
-          parent->journal->recursive_aliases = true;
-      });
-  OPTION_(
-      session_t, no_aliases, DO() {
-        if (parent->journal)
-          parent->journal->no_aliases = true;
-      });
+      session_t, strict_commodity,
+      DO() { parent->journal->require_commodity_checking(journal_t::CHECK_WARNING); });
+  /// Expression used to compute posting values.
+  OPTION_(session_t, value_expr_, DO_() { parent->journal->value_expr = require_arg(str); });
+  OPTION_(session_t, recursive_aliases, DO() { parent->journal->recursive_aliases = true; });
+  OPTION_(session_t, no_aliases, DO() { parent->journal->no_aliases = true; });
 
   /// Lot matching policy for automatic commodity disposal: "fifo", "lifo", or "none".
   OPTION_CTOR(
@@ -339,6 +325,7 @@ public:
         else
           throw_(std::invalid_argument,
                  _f("Unknown lot-matching policy '%1%': must be 'fifo', 'lifo', or 'none'") % str);
+        parent->journal->lot_matching_policy = policy;
       });
 };
 

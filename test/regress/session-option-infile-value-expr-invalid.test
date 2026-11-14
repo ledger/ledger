@@ -1,0 +1,18 @@
+; An invalid --value-expr written in the journal is an error when the
+; line is read, as on the command line; the base ignored the line.
+
+--value-expr "("
+
+2024/01/01 Lunch
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 4:
+While parsing value expression:
+  (
+
+While parsing option '--value-expr'
+Error: Invalid token '<end of input>' (wanted ')')
+end test

@@ -1,14 +1,24 @@
 # The compared files whose balance rows are known to diverge from the
 # oracle's, as test/semantic/check_all.py measured them (repo-relative
-# path).  The oracle rounds a displayed row half away from zero at the
-# commodity's learned precision (Ledger/Driver.lean displayAmount),
-# where C++ rounds the value's binary expansion to even at every stage
-# (src/amount.cc stream_out_mpq): an exact tie such as 0.25 at one
-# place prints 0.2 in C++ and 0.3 here.  On 722 a timelog entry lasts
-# 1613 seconds, which C++ displays as 26.9m and the oracle as 26.88m;
-# the oracle's display of a duration in minutes (Ledger/Driver.lean)
-# is the side to fix, a ledger-semantics follow-up.  The ratchet: an
-# unlisted divergence or a stale entry fails the run, so the set
-# changes only with the rule that forced it.
+# path).  Three rules put a file here.  The oracle rounds a displayed
+# row half away from zero at the commodity's learned precision
+# (Ledger/Driver.lean displayAmount), where C++ rounds the value's
+# binary expansion to even at every stage (src/amount.cc
+# stream_out_mpq): an exact tie such as 0.25 at one place prints 0.2
+# in C++ and 0.3 here (display-rounding-ties).  On 722 a timelog entry
+# lasts 1613 seconds, which C++ displays as 26.9m and the oracle as
+# 26.88m; the oracle's display of a duration in minutes
+# (Ledger/Driver.lean) is the side to fix, a ledger-semantics
+# follow-up.  The oracle ignores a `--time-round` option line, which
+# C++ applies as it reads the journal (Ledger/Journal.lean, the
+# in-file option branch): a seven-minute timelog entry after
+# `--time-round 15` is 15m in C++ and 7m here
+# (session-option-infile-time-round-applied, and
+# session-option-infile-time-round, whose errors come from its
+# commands, so its journal is compared).  The ratchet: an unlisted
+# divergence or a stale entry fails the run, so the set changes only
+# with the rule that forced it.
 test/regress/722.test
 test/regress/display-rounding-ties.test
+test/regress/session-option-infile-time-round-applied.test
+test/regress/session-option-infile-time-round.test

@@ -1,10 +1,16 @@
 # The unbalanced negatives the oracle is known to accept, as
 # test/semantic/check_all.py measured them over the compared corpus
-# (repo-relative path).  The oracle's transaction extension books an
-# automated rule's postings without C++'s per-group balance check, so
-# a journal whose imbalance appears only after the extension balances
-# in the oracle.  The ratchet: an unlisted acceptance or a stale entry
-# fails the run, so the set changes only with the rule that forced it.
+# (repo-relative path).  Two rules put a file here.  The oracle's
+# transaction extension books an automated rule's postings without
+# C++'s per-group balance check, so a journal whose imbalance appears
+# only after the extension balances in the oracle (the 3314 files).
+# The oracle ignores a `--lot-matching` option line, which C++ applies
+# as it reads the journal (Ledger/Journal.lean, the in-file option
+# branch), so a sale that only the lot policy leaves unbalanced
+# balances in the oracle (session-option-infile-lot-matching).  The
+# ratchet: an unlisted acceptance or a stale entry fails the run, so
+# the set changes only with the rule that forced it.
 test/regress/3314_auto.test
 test/regress/3314_precision.test
 test/regress/3314_precision_groups.test
+test/regress/session-option-infile-lot-matching.test
