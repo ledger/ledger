@@ -398,6 +398,8 @@ void anonymize_posts::operator()(post_t& post) {
     temp.amount.set_commodity(*commodity_pool_t::current_pool->find_or_create(
         temp.amount.commodity().base_symbol(), anonymized));
   }
+  if (temp.given_lot_total)
+    render_commodity(*temp.given_lot_total);
 
   if (temp.cost)
     render_commodity(*temp.cost);
@@ -1641,6 +1643,7 @@ void changed_value_posts::output_intermediate_prices(post_t& post, const date_t&
 
     case value_t::AMOUNT:
       temp.amount = last_total.as_amount();
+      temp.given_lot_total = std::nullopt;
       break;
 
     case value_t::BALANCE:
@@ -2752,6 +2755,7 @@ void inject_posts::operator()(post_t& post) {
 
       temp.account = pair.second.first;
       temp.amount = tag_value->to_amount();
+      temp.given_lot_total = std::nullopt;
       // The injected amount is the tag's value; the source posting's cost does not apply to it.
       temp.cost = std::nullopt;
       temp.given_cost = std::nullopt;

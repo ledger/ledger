@@ -280,12 +280,23 @@ std::ostringstream format_account_name(xact_t& xact, post_t* post) {
  * zero amount keeps its commodity (`$0`, never a bare `0`) wherever
  * print writes it.  @p prefix (` = ` for a balance assignment) is
  * written ahead of the amount and justified with it as one string.
+ *
+ * The amount is written as its bare quantity and commodity followed by
+ * its lot annotations, as amount_t::print writes it; a non-null
+ * @p given_lot_total, the `{{total}}` the posting wrote, prints in place
+ * of the lot's per-unit price.
  */
 string format_amount(const string& prefix, const amount_t& amount, uint_least8_t flags,
-                     std::size_t width) {
+                     std::size_t width, const amount_t* given_lot_total = nullptr) {
   std::ostringstream buf;
   buf << prefix;
-  amount.print(buf, flags);
+  if (!amount.is_null() && amount.has_annotation()) {
+    amount.strip_annotations(keep_details_t()).print(buf, flags);
+    amount.commodity().write_annotations(buf, (flags & AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS) != 0,
+                                         given_lot_total);
+  } else {
+    amount.print(buf, flags);
+  }
 
   std::ostringstream out;
   justify(out, buf.str(), static_cast<int>(width), true);
@@ -421,13 +432,16 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
       } else {
         bool suppress_computed =
             !report.HANDLED(generated) && !post->has_flags(POST_AMOUNT_USER_ANNOTATED);
-        // When printing user-annotated amounts, preserve {{total}} lot-price
-        // notation so that the output round-trips faithfully (issue #1033).
-        bool preserve_total = post->has_flags(POST_AMOUNT_USER_ANNOTATED);
         uint_least8_t flags = AMOUNT_PRINT_RIGHT_JUSTIFY |
-                              (suppress_computed ? AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS : 0) |
-                              (preserve_total ? AMOUNT_PRINT_PRESERVE_TOTAL_COST : 0);
-        amt = format_amount("", post->amount, flags, amount_width);
+                              (suppress_computed ? AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS : 0);
+        // A user-annotated amount prints the {{total}} lot price the posting
+        // wrote, so that the output round-trips faithfully (issue #1033).
+        // The lot itself keeps only the per-unit price.
+        const amount_t* lot_total =
+            post->has_flags(POST_AMOUNT_USER_ANNOTATED) && post->given_lot_total
+                ? &*post->given_lot_total
+                : nullptr;
+        amt = format_amount("", post->amount, flags, amount_width, lot_total);
       }
 
       string trimmed_amt(amt);

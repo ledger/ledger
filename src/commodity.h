@@ -197,8 +197,7 @@ public:
   bool has_annotation() const { return annotated; }
 
   virtual commodity_t& strip_annotations(const keep_details_t&) { return *this; }
-  virtual void write_annotations(std::ostream&, bool, const amount_t* = nullptr,
-                                 uint_least8_t = 0) const {}
+  virtual void write_annotations(std::ostream&, bool, const amount_t* = nullptr) const {}
 
   commodity_pool_t& pool() const { return *parent_; }
 

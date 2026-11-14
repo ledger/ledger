@@ -32,13 +32,14 @@
 
 ; The per-unit ({3 C}) and total ({{300 C}}) lot-price forms normalize to the
 ; same stored per-unit annotation, so the fix applies identically to both.
+; print still writes each posting's own form.
 test print
 2001/01/01 Per-unit lot price
     Assets:PerUnit                        100 A {C3}
     Assets:PerUnit                            -200 B
 
 2001/01/02 Total lot price
-    Assets:Total                          100 A {C3}
+    Assets:Total                        100 A {{C300}}
     Assets:Total                              -200 B
 end test
 

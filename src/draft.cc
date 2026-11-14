@@ -231,9 +231,10 @@ void draft_t::parse_args(const value_t& args) {
             check_for_date = false;
           } else {
             amount_t amt;
+            std::optional<amount_t> lot_total;
             optional<mask_t> account;
 
-            if (!amt.parse(arg, PARSE_SOFT_FAIL | PARSE_NO_MIGRATE)) {
+            if (!amt.parse(arg, PARSE_SOFT_FAIL | PARSE_NO_MIGRATE, &lot_total)) {
               // Before treating as an account, check if this argument
               // is a known commodity symbol that should attach to the
               // previous posting's uncommoditized amount (e.g., "1000
@@ -259,6 +260,7 @@ void draft_t::parse_args(const value_t& args) {
               post->account_mask = account;
             } else {
               post->amount = amt;
+              post->given_lot_total = lot_total;
               post = nullptr; // an amount concludes this posting
             }
           }
@@ -303,18 +305,26 @@ namespace {
  * @brief Give a posting copied from history a new amount (null to let
  *        finalize infer it), discarding what described the old one.
  *
- * The copy carries the history's cost, balance assertion and the flags
- * that say how that amount and cost were written or computed.  Kept
- * beside a new amount they would print or book something the draft
- * never said: a hidden amount, a stale assertion, a stale @@ or (@)=.
+ * The copy carries the history's cost, balance assertion, {{total}} lot
+ * price and the flags that say how that amount and cost were written or
+ * computed.  Kept beside a new amount they would print or book something
+ * the draft never said: a hidden amount, a stale assertion, a stale @@ or
+ * (@)=, or the history's {{total}} on the draft's lot.  The new amount
+ * takes the {{total}} it was written with, @p given_lot_total, and an
+ * annotation on it is the user's, as the parser marks one (so print
+ * writes it back as given).
  */
-void replace_copied_amount(post_t& post, const amount_t& amount) {
+void replace_copied_amount(post_t& post, const amount_t& amount,
+                           const std::optional<amount_t>& given_lot_total = std::nullopt) {
   post.amount = amount;
   post.cost = std::nullopt;
   post.given_cost = std::nullopt;
+  post.given_lot_total = given_lot_total;
   post.assigned_amount = std::nullopt;
   post.drop_flags(POST_CALCULATED | POST_COST_CALCULATED | POST_COST_IN_FULL | POST_COST_FIXATED |
                   POST_COST_VIRTUAL | POST_AMOUNT_USER_ANNOTATED | POST_AMOUNT_USER_DATE);
+  if (!amount.is_null() && amount.has_commodity() && amount.has_annotation())
+    post.add_flags(POST_AMOUNT_USER_ANNOTATED);
 }
 
 /**
@@ -614,7 +624,7 @@ xact_t* draft_t::insert(journal_t& journal) {
       }
 
       if (post.amount) {
-        replace_copied_amount(*new_post, *post.amount);
+        replace_copied_amount(*new_post, *post.amount, post.given_lot_total);
         DEBUG("draft.xact", "Copied over posting amount");
 
         if (post.from) {

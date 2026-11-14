@@ -275,20 +275,19 @@ void annotation_t::parse(std::istream& in) {
  * *_CALCULATED flags (used when printing journal output that should
  * only show user-supplied annotations).
  *
- * For total-cost prices (ANNOTATION_PRICE_NOT_PER_UNIT), the original
- * `{{total}}` form is reconstructed by multiplying the stored per-unit
- * price by abs(qty), preserving exact GMP rational arithmetic.
+ * The price prints in the `{{total}}` form from @p given_lot_total, the
+ * total as a posting wrote it, when the caller gives one, and as the
+ * per-unit `{price}` otherwise.  The stored per-unit price may have been
+ * rounded when it was divided out of the total (ANNOTATION_PRICE_ROUNDED),
+ * and this annotation is shared by every posting of the lot, whichever
+ * form each one used, so the total cannot be rebuilt from it.
  */
 void annotation_t::print(std::ostream& out, bool keep_base, bool no_computed_annotations,
-                         const amount_t* qty, uint_least8_t print_flags) const {
+                         const amount_t* given_lot_total) const {
   if (price && (!no_computed_annotations || !has_flags(ANNOTATION_PRICE_CALCULATED))) {
-    if (has_flags(ANNOTATION_PRICE_NOT_PER_UNIT) && qty != nullptr &&
-        (print_flags & AMOUNT_PRINT_PRESERVE_TOTAL_COST)) {
-      // Reconstruct original total cost: stored per-unit price * abs(quantity).
-      // Using GMP rational arithmetic this multiplication is exact (no rounding).
-      amount_t total = *price * qty->abs();
+    if (given_lot_total) {
       out << " {{" << (has_flags(ANNOTATION_PRICE_FIXATED) ? "=" : "")
-          << (keep_base ? total : total.unreduced()) << "}}";
+          << (keep_base ? *given_lot_total : given_lot_total->unreduced()) << "}}";
     } else {
       out << " {" << (has_flags(ANNOTATION_PRICE_FIXATED) ? "=" : "")
           << (keep_base ? *price : price->unreduced()) << '}';
@@ -491,9 +490,8 @@ commodity_t& annotated_commodity_t::strip_annotations(const keep_details_t& what
  * in their base or unreduced form as appropriate.
  */
 void annotated_commodity_t::write_annotations(std::ostream& out, bool no_computed_annotations,
-                                              const amount_t* qty,
-                                              uint_least8_t print_flags) const {
-  details.print(out, pool().keep_base, no_computed_annotations, qty, print_flags);
+                                              const amount_t* given_lot_total) const {
+  details.print(out, pool().keep_base, no_computed_annotations, given_lot_total);
 }
 
 /// @}

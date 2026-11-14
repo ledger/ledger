@@ -167,12 +167,16 @@ struct annotation_t : public flags::supports_flags<>, public equality_comparable
    * @brief Render annotation fields back to their textual representation.
    *
    * Outputs only the fields that are present and not suppressed by the
-   * @p no_computed_annotations flag.  When ANNOTATION_PRICE_NOT_PER_UNIT
-   * is set and a quantity is available, the total-cost form `{{...}}` is
-   * reconstructed by multiplying the stored per-unit price by abs(qty).
+   * @p no_computed_annotations flag.  The price prints as `{{total}}`
+   * from @p given_lot_total, the total as a posting wrote it, when the
+   * caller gives one, and as the per-unit `{price}` otherwise.  The
+   * total is never rebuilt from the stored per-unit price: that price
+   * may have been rounded when it was divided out
+   * (ANNOTATION_PRICE_ROUNDED), and the annotation is shared by every
+   * posting of the lot, whichever form each one used.
    */
   void print(std::ostream& out, bool keep_base = false, bool no_computed_annotations = false,
-             const amount_t* qty = nullptr, uint_least8_t print_flags = 0) const;
+             const amount_t* given_lot_total = nullptr) const;
 
   bool valid() const {
     assert(*this);
@@ -309,8 +313,7 @@ public:
   }
 
   void write_annotations(std::ostream& out, bool no_computed_annotations = false,
-                         const amount_t* qty = nullptr,
-                         uint_least8_t print_flags = 0) const override;
+                         const amount_t* given_lot_total = nullptr) const override;
 };
 
 inline annotated_commodity_t& as_annotated_commodity(commodity_t& commodity) {

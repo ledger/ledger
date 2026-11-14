@@ -1718,7 +1718,8 @@ void parse_quantity(std::istream& in, string& value, const parse_flags_t& flags)
  * @return true if an amount was successfully parsed, false only if
  *         PARSE_SOFT_FAIL is set and no quantity was found.
  */
-bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
+bool amount_t::parse(std::istream& in, const parse_flags_t& flags,
+                     std::optional<amount_t>* given_lot_total) {
   // The possible syntax for an amount is:
   //
   //   [-]NUM[ ]SYM [@ AMOUNT]
@@ -2039,6 +2040,9 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
   if (commodity_ && details) {
     if (details.has_flags(ANNOTATION_PRICE_NOT_PER_UNIT)) {
       assert(details.price);
+      // `details` is this parse's own annotation, not the pooled lot.
+      if (given_lot_total)
+        *given_lot_total = *details.price;
       *details.price /= this->abs();
       // Normalize per-unit cost to a stable precision, matching the
       // normalization in pool.cc::exchange().  The rounding precision is
@@ -2211,7 +2215,7 @@ void amount_t::print_unpadded(std::ostream& out, const uint_least8_t flags,
 
   // If there are any annotations associated with this commodity, output them
   // now.
-  comm.write_annotations(out, flags & AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS, this, flags);
+  comm.write_annotations(out, flags & AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS);
 }
 
 /*----------------------------------------------------------------------*/

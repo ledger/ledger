@@ -717,11 +717,21 @@ public:
       parse(string, flags_t) parses an amount from the given string.
 
       parse(string, flags_t) also parses an amount from a string.
+
+      A `{{total}}` lot price is divided into the lot's per-unit price,
+      which may be rounded, and that lot is shared by every amount of
+      it, however each one wrote its price.  When @p given_lot_total is
+      non-null and the amount carries a `{{...}}` lot price, the total is
+      stored there exactly as written, before the division; otherwise
+      the target is left untouched.  A posting keeps it so that print
+      can write the total back.
   */
-  [[nodiscard]] bool parse(std::istream& in, const parse_flags_t& flags = PARSE_DEFAULT);
-  [[nodiscard]] bool parse(const string& str, const parse_flags_t& flags = PARSE_DEFAULT) {
+  [[nodiscard]] bool parse(std::istream& in, const parse_flags_t& flags = PARSE_DEFAULT,
+                           std::optional<amount_t>* given_lot_total = nullptr);
+  [[nodiscard]] bool parse(const string& str, const parse_flags_t& flags = PARSE_DEFAULT,
+                           std::optional<amount_t>* given_lot_total = nullptr) {
     std::istringstream stream(str); // NOLINT(bugprone-unused-local-non-trivial-variable)
-    bool result = parse(stream, flags);
+    bool result = parse(stream, flags, given_lot_total);
     return result;
   }
 
@@ -751,7 +761,6 @@ public:
 #define AMOUNT_PRINT_COLORIZE 0x02
 #define AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS 0x04
 #define AMOUNT_PRINT_ELIDE_COMMODITY_QUOTES 0x08
-#define AMOUNT_PRINT_PRESERVE_TOTAL_COST 0x10
 // balance_t::print: widen the column uniformly if any single commodity's
 // rendered form overflows first_width, so all commodity lines of a
 // multi-commodity balance stay right-aligned with each other and with

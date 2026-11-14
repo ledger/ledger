@@ -1,0 +1,176 @@
+; print must write back the {{total}} lot price each posting wrote.  The
+; total is divided into a per-unit price, rounded when the division does
+; not terminate, and that per-unit lot is shared by every posting of the
+; same lot, however each one wrote its price.  So print takes the total,
+; and whether there was one, from the posting, never from the shared lot:
+; rebuilding it from the rounded per-unit price printed {{$99.99999999}}
+; for {{$100.00}}, and the shared lot made a later posting print an
+; earlier posting's form ({{...}} or {...}).
+
+2024/01/01 Opening
+    Assets:Cash    $5.00
+    Equity
+
+2024/01/02 Buy ABC
+    Assets:Broker    3 ABC {{$100.00}}
+    Assets:Cash
+
+2024/01/03 Buy AAPL
+    Assets:Broker    3 AAPL {{$10}}
+    Assets:Cash
+
+2024/01/04 Buy DEF
+    Assets:Broker    3 DEF {{$10.001}}
+    Assets:Cash
+
+2024/01/05 Buy GHI
+    Assets:Broker    3 GHI {{=$100.00}}
+    Assets:Cash
+
+2024/01/06 Buy JKL
+    Assets:Broker    10 JKL {{$1500}}
+    Assets:Cash
+
+2024/01/07 Buy XYZ
+    Assets:Broker    3 XYZ {{$10.00}} @@ $10.00
+    Assets:Cash
+
+2024/01/08 Buy more ABC
+    Assets:Broker    6 ABC {{$200.00}}
+    Assets:Cash
+
+2024/01/09 Buy X
+    Assets:Broker    2 X {{$1}}
+    Assets:Cash
+
+2024/01/10 Buy more X
+    Assets:Broker    1 X {{$0.5}}
+    Assets:Cash
+
+2024/01/11 Buy W
+    Assets:Broker    3 W {{$1}}
+    Assets:Cash
+
+2024/01/12 Buy more W
+    Assets:Broker    1 W {{$0.33333333}}
+    Assets:Cash
+
+2024/01/13 Buy V
+    Assets:Broker    1 V {$0.5}
+    Assets:Cash
+
+2024/01/14 Buy more V
+    Assets:Broker    2 V {{$1}}
+    Assets:Cash
+
+2024/01/15 Buy U
+    Assets:Broker    2 U {{$1}}
+    Assets:Cash
+
+2024/01/16 Buy more U
+    Assets:Broker    1 U {$0.5}
+    Assets:Cash
+
+2024/01/17 Sell ABC
+    Assets:Broker    -3 ABC {{$100.00}}
+    Assets:Cash
+
+test print
+2024/01/01 Opening
+    Assets:Cash                                $5.00
+    Equity
+
+2024/01/02 Buy ABC
+    Assets:Broker                       3 ABC {{$100.00}}
+    Assets:Cash
+
+2024/01/03 Buy AAPL
+    Assets:Broker                       3 AAPL {{$10.00}}
+    Assets:Cash
+
+2024/01/04 Buy DEF
+    Assets:Broker                       3 DEF {{$10.001}}
+    Assets:Cash
+
+2024/01/05 Buy GHI
+    Assets:Broker                       3 GHI {{=$100.00}}
+    Assets:Cash
+
+2024/01/06 Buy JKL
+    Assets:Broker                       10 JKL {{$1500.00}}
+    Assets:Cash
+
+2024/01/07 Buy XYZ
+    Assets:Broker                       3 XYZ {{$10.00}} @@ $10.00
+    Assets:Cash
+
+2024/01/08 Buy more ABC
+    Assets:Broker                       6 ABC {{$200.00}}
+    Assets:Cash
+
+2024/01/09 Buy X
+    Assets:Broker                       2 X {{$1.00}}
+    Assets:Cash
+
+2024/01/10 Buy more X
+    Assets:Broker                       1 X {{$0.50}}
+    Assets:Cash
+
+2024/01/11 Buy W
+    Assets:Broker                       3 W {{$1.00}}
+    Assets:Cash
+
+2024/01/12 Buy more W
+    Assets:Broker                       1 W {{$0.33333333}}
+    Assets:Cash
+
+2024/01/13 Buy V
+    Assets:Broker                        1 V {$0.50}
+    Assets:Cash
+
+2024/01/14 Buy more V
+    Assets:Broker                       2 V {{$1.00}}
+    Assets:Cash
+
+2024/01/15 Buy U
+    Assets:Broker                       2 U {{$1.00}}
+    Assets:Cash
+
+2024/01/16 Buy more U
+    Assets:Broker                        1 U {$0.50}
+    Assets:Cash
+
+2024/01/17 Sell ABC
+    Assets:Broker                       -3 ABC {{$100.00}}
+    Assets:Cash
+end test
+
+; --anon copies each posting; the copy carries the written total, whose
+; commodity is anonymized like the lot price's.
+test print --anon @ABC | sed -E 's/[0-9a-f]{8}/XXXXXXXX/g'
+2024/01/02 XXXXXXXX
+    XXXXXXXX:XXXXXXXX                   3 A {{B100.00}}
+    XXXXXXXX:XXXXXXXX
+
+2024/01/08 XXXXXXXX
+    XXXXXXXX:XXXXXXXX                   6 A {{B200.00}}
+    XXXXXXXX:XXXXXXXX
+
+2024/01/17 XXXXXXXX
+    XXXXXXXX:XXXXXXXX                   -3 A {{B100.00}}
+    XXXXXXXX:XXXXXXXX
+end test
+
+; The lots themselves are unchanged: per-unit, merged as before.
+test bal --lots Broker
+   3 AAPL {$3.333333}
+ 6 ABC {$33.33333333}
+  3 DEF {$3.33366667}
+3 GHI {=$33.33333333}
+     10 JKL {$150.00}
+          3 U {$0.50}
+          3 V {$0.50}
+      4 W {$0.333333}
+          3 X {$0.50}
+  3 XYZ {$3.33333333}  Assets:Broker
+end test

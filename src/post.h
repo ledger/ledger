@@ -91,6 +91,11 @@ class account_t;
  *   - cost: the total cost in the target commodity (e.g., $150 for 10 AAPL)
  *   - given_cost: the cost as originally written by the user, before
  *     per-unit conversion
+ *   - given_lot_total: the {{total}} lot price as written; the lot's
+ *     annotation, shared by every posting of the lot, keeps only the
+ *     per-unit price.  A posting that takes another posting's amount
+ *     takes its given_lot_total with it; one whose amount is assigned
+ *     afresh clears it, or sets the total its new amount was written with
  *   - assigned_amount: a balance assertion or assignment (= $500)
  *
  * Virtual postings (parenthesized accounts) and balanced virtual postings
@@ -129,6 +134,9 @@ public:
   std::optional<amount_t>
       cost; ///< Total cost in the cost commodity (e.g., $1500 for 10 AAPL @ $150).
   std::optional<amount_t> given_cost; ///< Cost as originally written, before per-unit conversion.
+  std::optional<amount_t> given_lot_total; ///< A {{total}} lot price as written, before
+                                           ///< amount_t::parse divided it into the lot's
+                                           ///< per-unit price.
   std::optional<amount_t> assigned_amount; ///< Balance assertion or assignment amount (= $500).
   optional<datetime_t> checkin;            ///< Timeclock check-in time (for timelog postings).
   optional<datetime_t> checkout;           ///< Timeclock check-out time (for timelog postings).
@@ -151,8 +159,9 @@ public:
   // anonymize the amount, so a copy reports its amount, not stale text.
   post_t(const post_t& post)
       : item_t(post), xact(post.xact), account(post.account), amount(post.amount), cost(post.cost),
-        given_cost(post.given_cost), assigned_amount(post.assigned_amount), checkin(post.checkin),
-        checkout(post.checkout), _payee(post._payee), xdata_(post.xdata_) {
+        given_cost(post.given_cost), given_lot_total(post.given_lot_total),
+        assigned_amount(post.assigned_amount), checkin(post.checkin), checkout(post.checkout),
+        _payee(post._payee), xdata_(post.xdata_) {
     TRACE_CTOR(post_t, "copy");
   }
   post_t& operator=(const post_t&) = default;
@@ -281,7 +290,11 @@ public:
    */
   void set_given_cost(amount_t written, bool in_full);
 
-  /** @brief Negate the amount and the costs that scale with it (cost, given_cost). */
+  /**
+   * @brief Negate the amount and the costs that scale with it (cost, given_cost).
+   *
+   * given_lot_total is a lot price, which is never negative, so it stays.
+   */
   void in_place_negate() {
     amount.in_place_negate();
     if (cost)

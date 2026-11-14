@@ -1695,6 +1695,10 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
           if (!post->_date_aux && initial_post->_date_aux)
             new_post->_date_aux = initial_post->_date_aux;
 
+          // copy_details copies the flags but not the cost fields; the
+          // generated amount is the template's, so it keeps the total the
+          // template wrote.
+          new_post->given_lot_total = post->given_lot_total;
           if (post->cost)
             new_post->cost = post->cost;
           else if (initial_post->cost && amt.has_annotation() && amt.annotation().price) {

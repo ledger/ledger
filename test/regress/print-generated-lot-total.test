@@ -1,0 +1,32 @@
+; An automated transaction's generated posting is built from the template
+; posting's amount plus copy_details, which copies the flags but not the
+; posting's cost fields.  Its {{total}} lot price must print as the
+; template wrote it, not as the pooled per-unit price.
+
+= /Exact/
+    (Bonus Exact)                        3 DEF {{$99.99}}
+
+= /Round/
+    (Bonus Round)                        3 GHI {{$100.00}}
+
+2024/01/01 Buy exact
+    Assets:Exact                         1 ABC {$5.00}
+    Assets:Cash                         $-5.00
+
+2024/01/02 Buy round
+    Assets:Round                         1 ABC {$5.00}
+    Assets:Cash                         $-5.00
+
+test print --generated Exact
+2024/01/01 Buy exact
+    Assets:Exact                        1 ABC {$5.00}
+    Assets:Cash                               $-5.00
+    (Bonus Exact)                       3 DEF {{$99.99}}
+end test
+
+test print --generated Round
+2024/01/02 Buy round
+    Assets:Round                        1 ABC {$5.00}
+    Assets:Cash                               $-5.00
+    (Bonus Round)                       3 GHI {{$100.00}}
+end test

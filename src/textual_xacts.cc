@@ -584,7 +584,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
       ptristream stream(next, static_cast<std::size_t>(len - beg));
 
       if (*next != '(') // indicates a value expression
-        (void)post->amount.parse(stream, PARSE_NO_REDUCE);
+        (void)post->amount.parse(stream, PARSE_NO_REDUCE, &post->given_lot_total);
       else
         parse_amount_expr(stream, *context.scope, *post.get(), post->amount,
                           PARSE_NO_REDUCE | PARSE_SINGLE, defer_expr, &post->amount_expr);
