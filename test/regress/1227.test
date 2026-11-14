@@ -68,3 +68,58 @@ test print -l 'not any(account =~ /pension/)'
     Assets:Baz                                $30.00
     Expenses:Qux
 end test
+
+; A `not` nested under `and` also means "no posting of the transaction
+; matches": the Pension transaction has an Assets:Cash posting, but it is
+; excluded because one of its postings matches :pension.
+test print not :pension and assets
+2018/01/01 Grocery
+    Assets:Foo                                $10.00
+    Expenses:Bar
+
+2018/01/03 Hardware
+    Assets:Baz                                $30.00
+    Expenses:Qux
+end test
+
+test print assets and not :pension
+2018/01/01 Grocery
+    Assets:Foo                                $10.00
+    Expenses:Bar
+
+2018/01/03 Hardware
+    Assets:Baz                                $30.00
+    Expenses:Qux
+end test
+
+test print not :pension and not qux
+2018/01/01 Grocery
+    Assets:Foo                                $10.00
+    Expenses:Bar
+end test
+
+; A `not` beneath a root `not` is rewritten too: Hardware has a Qux posting,
+; so "not (:pension or not qux)" keeps only it.
+test print not '(' :pension or not qux ')'
+2018/01/03 Hardware
+    Assets:Baz                                $30.00
+    Expenses:Qux
+end test
+
+; The rule reaches a negation inside an `expr` term as well, exactly as it
+; already does for an `expr` term at the root (`print expr 'amount != $10'`
+; drops Grocery): `!=` is `not ==`, so this asks for a transaction with no
+; $10 posting and a Bar or Qux posting.  Grocery has Assets:Foo $10.00.
+test print expr 'amount != $10' and '(' bar or qux ')'
+2018/01/03 Hardware
+    Assets:Baz                                $30.00
+    Expenses:Qux
+end test
+
+; Positive terms keep their single-posting meaning: no one posting matches
+; both :pension and cash, so only the Qux transaction prints.
+test print :pension and cash or qux
+2018/01/03 Hardware
+    Assets:Baz                                $30.00
+    Expenses:Qux
+end test

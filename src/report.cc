@@ -474,36 +474,51 @@ void report_t::normalize_period() {
 
 namespace {
 
+/// @brief Build O_CALL("any", arg) for a given argument subtree.
+expr_t::ptr_op_t make_any_call(const expr_t::ptr_op_t& arg) {
+  using op_t = expr_t::op_t;
+  expr_t::ptr_op_t ident = new op_t(op_t::IDENT);
+  ident->set_ident("any");
+  return op_t::new_node(op_t::O_CALL, ident, arg);
+}
+
+/// @brief Wrap the operand of every negation reached through and/or/not
+/// in any(); see wrap_xact_predicate().
+expr_t::ptr_op_t wrap_negations(const expr_t::ptr_op_t& op) {
+  using op_t = expr_t::op_t;
+  switch (op->kind) {
+  case op_t::O_NOT:
+    return op_t::new_node(op_t::O_NOT, make_any_call(wrap_negations(op->left())));
+  case op_t::O_AND:
+  case op_t::O_OR:
+    return op_t::new_node(op->kind, wrap_negations(op->left()), wrap_negations(op->right()));
+  default:
+    return op;
+  }
+}
+
 /// @brief Wrap a query AST for transaction-level (xact) commands.
 ///
-/// For commands that display whole transactions (print, xact, dump), the
-/// limit predicate must be evaluated at the transaction level rather than
-/// the posting level.  Without this, "not X" is treated as "any posting
-/// satisfies not-X" (nearly always true), instead of the expected
-/// "no posting satisfies X".
+/// For print, xact, dump and --related-all (report.cc
+/// `if (HANDLED(related_all))`), a `not` means "no posting of the
+/// transaction matches" (#1227) at any depth: every O_NOT(t) reached
+/// through and/or/not becomes O_NOT(any(t)), and a root that is not a
+/// negation is wrapped in any(), e.g.
+///   not food and cash  ->  any(!any(account =~ /food/) & account =~ /cash/)
+/// Positive terms joined by and/or keep their single-posting meaning
+/// (`food and cash` asks for one posting matching both).
 ///
-/// The AST is transformed so that:
-///   - O_NOT(inner) becomes O_NOT(O_CALL("any", inner))
-///   - other nodes become O_CALL("any", root)
-///
-/// This matches the documented workaround: print -l "not any(account =~ /X/)"
+/// The walk does not tell the query's own and/or/not from the same
+/// operators inside an `expr` term: `expr 'amount != $10'` is
+/// O_NOT(O_EQ) and is rewritten wherever it sits, as it already is when
+/// it is the root.  The walk stops at every other node (a function call
+/// such as any(...), a comparison, a match), so a negation inside a
+/// call's argument keeps its meaning.  A root `not` produces the same
+/// predicate as before (!any(...)), and a root without any `not`
+/// produces the same any(root) as before.
 expr_t::ptr_op_t wrap_xact_predicate(const expr_t::ptr_op_t& op) {
-  using op_t = expr_t::op_t;
-
-  // Build O_CALL("any", argument) for a given argument subtree.
-  auto make_any_call = [](const expr_t::ptr_op_t& arg) -> expr_t::ptr_op_t {
-    expr_t::ptr_op_t ident = new op_t(op_t::IDENT);
-    ident->set_ident("any");
-    return op_t::new_node(op_t::O_CALL, ident, arg);
-  };
-
-  if (op->kind == op_t::O_NOT) {
-    // NOT(inner) -> NOT(any(inner))
-    return op_t::new_node(op_t::O_NOT, make_any_call(op->left()));
-  } else {
-    // PRED -> any(PRED)
-    return make_any_call(op);
-  }
+  expr_t::ptr_op_t wrapped = wrap_negations(op);
+  return wrapped->kind == expr_t::op_t::O_NOT ? wrapped : make_any_call(wrapped);
 }
 
 } // namespace
