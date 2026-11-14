@@ -1177,7 +1177,7 @@ void date_parser_t::determine_when(date_parser_t::lexer_t::token_t& tok,
     case lexer_t::token_t::TOK_A_WDAY: {
       // "this monday" / "next friday" / "last wednesday"
       date_t temp = date_duration_t::find_nearest(today, date_duration_t::WEEKS);
-      while (temp.day_of_week() != std::get<date_time::months_of_year>(*tok.value))
+      while (temp.day_of_week() != std::get<date_time::weekdays>(*tok.value))
         temp += gregorian::days(1);
       temp += gregorian::days(static_cast<int>(7 * adjust));
       specifier = date_specifier_t(temp);
