@@ -76,6 +76,15 @@ namespace {
  * to full YYYY/MM/DD form.  Note dates must also be expanded so that
  * the output round-trips correctly (issue #622).
  *
+ * Only the spans that item_t::note_date_span recognizes are rewritten,
+ * the same rule the parser applies, and only on the line whose value
+ * the item kept: the primary date of the last line that set one, and
+ * the auxiliary date of the last line that set one.  Every other line
+ * is written verbatim, including an earlier line whose date a later
+ * line overrode.  Such a line can keep a short `[01/05]` written under
+ * `Y` unexpanded, and it still reads back the same, because the later
+ * line still wins.
+ *
  * Handles three bracket forms:
  *   - `[date]`         — primary date override
  *   - `[=auxdate]`     — auxiliary date only
@@ -83,47 +92,66 @@ namespace {
  */
 string rewrite_note_dates(const string& note, const item_t& item, format_type_t format_type,
                           const optional<const char*>& format) {
-  const char* p = note.c_str();
-  const char* b = std::strchr(p, '[');
-  if (!b || *(b + 1) == '\0' ||
-      (!std::isdigit(static_cast<unsigned char>(*(b + 1))) && *(b + 1) != '='))
-    return note;
-  const char* e = std::strchr(b, ']');
-  if (!e)
-    return note;
-
-  string result(p, static_cast<std::size_t>(b - p));
-  result += '[';
-
-  string content(b + 1, static_cast<std::size_t>(e - b - 1));
-  auto eq_pos = content.find('=');
-
-  if (content[0] == '=') {
-    result += '=';
-    if (item._date_aux)
-      result += format_date(*item._date_aux, format_type, format);
-    else
-      result += content.substr(1);
-  } else if (eq_pos != string::npos) {
-    if (item._date)
-      result += format_date(*item._date, format_type, format);
-    else
-      result += content.substr(0, eq_pos);
-    result += '=';
-    if (item._date_aux)
-      result += format_date(*item._date_aux, format_type, format);
-    else
-      result += content.substr(eq_pos + 1);
-  } else {
-    if (item._date)
-      result += format_date(*item._date, format_type, format);
-    else
-      result += content;
+  std::vector<string> lines;
+  for (std::size_t start = 0;;) {
+    std::size_t nl = note.find('\n', start);
+    lines.push_back(note.substr(start, nl == string::npos ? string::npos : nl - start));
+    if (nl == string::npos)
+      break;
+    start = nl + 1;
   }
 
-  result += ']';
-  result += string(e + 1);
+  // The parser applies lines in order, so the item kept the primary date of
+  // the last line whose span has text before any '=', and the aux date of
+  // the last line whose span contains '='.
+  std::vector<std::optional<std::pair<std::size_t, std::size_t>>> spans;
+  spans.reserve(lines.size());
+  std::optional<std::size_t> primary_line, aux_line;
+  for (std::size_t i = 0; i < lines.size(); ++i) {
+    spans.push_back(item_t::note_date_span(lines[i].c_str()));
+    if (const auto& span = spans.back()) {
+      std::size_t eq = lines[i].find('=', span->first);
+      if (eq >= span->second)
+        eq = string::npos;
+      if (eq != span->first) // npos included: a span starts with a digit or '='
+        primary_line = i;
+      if (eq != string::npos)
+        aux_line = i;
+    }
+  }
+  if (!primary_line && !aux_line)
+    return note;
 
+  string result;
+  for (std::size_t i = 0; i < lines.size(); ++i) {
+    if (i > 0)
+      result += '\n';
+    const string& line = lines[i];
+    const auto& span = spans[i];
+    if (!span || (i != primary_line && i != aux_line)) {
+      result += line;
+      continue;
+    }
+
+    std::size_t eq = line.find('=', span->first);
+    if (eq >= span->second)
+      eq = string::npos;
+    std::size_t primary_end = eq == string::npos ? span->second : eq;
+
+    result.append(line, 0, span->first);
+    if (i == primary_line && item._date)
+      result += format_date(*item._date, format_type, format);
+    else
+      result.append(line, span->first, primary_end - span->first);
+    if (eq != string::npos) {
+      result += '=';
+      if (i == aux_line && item._date_aux)
+        result += format_date(*item._date_aux, format_type, format);
+      else
+        result.append(line, eq + 1, span->second - eq - 1);
+    }
+    result.append(line, span->second, string::npos);
+  }
   return result;
 }
 

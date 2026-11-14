@@ -1,0 +1,88 @@
+; print must rewrite a bracketed date in a note only where the parser
+; read one: never past a colon on the same comment line (a `Key:` value
+; or plain text), never in a bracket too long to be a date, and only on
+; the line whose date the item kept.
+
+2024/01/01 Foo  ; Invoice: [2023/05/05]
+    Expenses:Food    $10
+    Assets:Cash
+
+2024/01/02 Bar
+    ; Note: [5] items
+    Expenses:Food    $20
+    Assets:Cash
+
+2024/01/03 Baz
+    Expenses:Food    $30
+    ; Ref: [2023/01/01]
+    ; [2020/05/05]
+    Assets:Cash
+
+2024/01/04 Qux
+    Expenses:Food    $40
+    ; [2021/02/02]
+    ; [2022/03/03=2022/04/04]
+    ; [=2022/05/05]
+    Assets:Cash
+
+2024/01/05 Long
+    ; [1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx]
+    Expenses:Food    $60
+    Assets:Cash
+
+Y 2023
+
+01/06 Short
+    Expenses:Food    $50  ; [01/05]
+    Assets:Cash
+
+test print
+2024/01/01 Foo  ; Invoice: [2023/05/05]
+    Expenses:Food                                $10
+    Assets:Cash
+
+2024/01/02 Bar
+    ; Note: [5] items
+    Expenses:Food                                $20
+    Assets:Cash
+
+2024/01/03 Baz
+    Expenses:Food                                $30
+    ; Ref: [2023/01/01]
+    ; [2020/05/05]
+    Assets:Cash
+
+2024/01/04 Qux
+    Expenses:Food                                $40
+    ; [2021/02/02]
+    ; [2022/03/03=2022/04/04]
+    ; [=2022/05/05]
+    Assets:Cash
+
+2024/01/05 Long
+    ; [1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx]
+    Expenses:Food                                $60
+    Assets:Cash
+
+2023/01/06 Short
+    Expenses:Food                                $50  ; [2023/01/05]
+    Assets:Cash
+end test
+
+test print --date-format=%Y-%m-%d @Qux
+2024-01-04 Qux
+    Expenses:Food                                $40
+    ; [2021/02/02]
+    ; [2022-03-03=2022/04/04]
+    ; [=2022-05-05]
+    Assets:Cash
+end test
+
+test reg Food
+24-Jan-01 Foo                   Expenses:Food                   $10          $10
+24-Jan-02 Bar                   Expenses:Food                   $20          $30
+20-May-05 Baz                   Expenses:Food                   $30          $60
+22-Mar-03 Qux                   Expenses:Food                   $40         $100
+24-Jan-05 Long                  Expenses:Food                   $60         $160
+23-Jan-05 Short                 Expenses:Food                   $50         $210
+end test

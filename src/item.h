@@ -235,16 +235,33 @@ public:
   std::size_t seq() const { return pos ? pos->sequence : 0L; }
 
   /**
+   * @brief Locate the `[date]` directive of one comment line.
+   *
+   * A `[date]`, `[date=auxdate]` or `[=auxdate]` bracketed override
+   * updates an item's primary and/or auxiliary date.  The override is
+   * the first bracketed group of the line and may follow free-form note
+   * text, but only while no colon precedes it: past a colon the metadata
+   * parser may own the text, as it does for the value of a `Key:` /
+   * `Key::` setting.  The group must begin with a digit or `=`, and a
+   * group of 256 characters or more is too long to be a date.  This is
+   * the one home of the rule: the parser applies it, and `print`
+   * rewrites only the spans it recognizes.
+   *
+   * @param line Raw comment text (without the leading `;`).
+   * @return The [begin, end) offsets, relative to @p line, of the text
+   *         between the brackets, or std::nullopt when the line holds no
+   *         date directive.
+   */
+  static std::optional<std::pair<std::size_t, std::size_t>> note_date_span(const char* line);
+
+  /**
    * @brief Parse metadata tags from a comment line.
    *
    * In addition to the `:tag:` and `Key:` / `Key::` forms handled by
-   * metadata_t, item_t recognizes a `[date]` or `[date=auxdate]`
-   * bracketed override that updates this item's primary and/or auxiliary
-   * date.  The override is the first bracketed group of the comment and
-   * may follow free-form note text, but only while no colon precedes it:
-   * past a colon the metadata parser may own the text, as it does for the
-   * value of a `Key:` / `Key::` setting.  Accounts do not have dates and
-   * therefore inherit metadata_t::parse_metadata_tags directly.
+   * metadata_t, item_t applies the `[date]` directive that
+   * note_date_span() recognizes, updating this item's primary and/or
+   * auxiliary date.  Accounts do not have dates and therefore inherit
+   * metadata_t::parse_metadata_tags directly.
    *
    * @param p                  Raw comment text (without the leading `;`).
    * @param scope              Scope for evaluating `Key::` expressions.

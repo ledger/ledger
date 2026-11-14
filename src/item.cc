@@ -59,15 +59,16 @@ bool item_t::use_aux_date = false;
 /*  Tag Parsing (date extension)                                        */
 /*                                                                      */
 /*  Items extend the base parser with a bracketed-date form `[date]`    */
-/*  or `[date=auxdate]`, recognized while no colon precedes it.         */
+/*  or `[date=auxdate]`, recognized by note_date_span (also used by     */
+/*  print) while no colon precedes it.                                  */
 /*  Everything else is delegated to metadata_t::parse_metadata_tags.    */
 /*----------------------------------------------------------------------*/
 
-void item_t::parse_tags(const char* p, scope_t& scope, bool overwrite_existing) {
+std::optional<std::pair<std::size_t, std::size_t>> item_t::note_date_span(const char* line) {
   // Skip any additional leading `;` characters (with interleaved whitespace)
   // before scanning for `[date]`.  `parse_metadata_tags` repeats this skip
   // so the colon parser sees the same starting position.
-  const char* d = p;
+  const char* d = line;
   while (*d == ' ' || *d == '\t' || *d == ';')
     ++d;
 
@@ -83,25 +84,28 @@ void item_t::parse_tags(const char* p, scope_t& scope, bool overwrite_existing) 
   // Before #1644 and #1968 a colon *anywhere* in the comment disabled the
   // directive, which broke the documented `; [=date] :tag:` forms; only the
   // text preceding the bracket is consulted now.
-  if (const char* b = std::strchr(d, '[')) {
-    if ((std::isdigit(static_cast<unsigned char>(*(b + 1))) || *(b + 1) == '=') &&
-        !std::memchr(d, ':', static_cast<std::size_t>(b - d))) {
-      const char* e = std::strchr(b, ']');
-      char buf[256];
-      // A span that does not fit is far too long to be a date, and copying
-      // it would overrun the buffer.
-      if (e && static_cast<std::size_t>(e - b - 1) < sizeof(buf)) {
-        std::strncpy(buf, b + 1, static_cast<std::size_t>(e - b - 1));
-        buf[e - b - 1] = '\0';
+  const char* b = std::strchr(d, '[');
+  if (!b || !(std::isdigit(static_cast<unsigned char>(*(b + 1))) || *(b + 1) == '=') ||
+      std::memchr(d, ':', static_cast<std::size_t>(b - d)))
+    return std::nullopt;
 
-        if (char* pp = std::strchr(buf, '=')) {
-          *pp++ = '\0';
-          _date_aux = parse_date(pp);
-        }
-        if (buf[0])
-          _date = parse_date(buf);
-      }
+  // A span of 256 characters or more is far too long to be a date.
+  const char* e = std::strchr(b, ']');
+  if (!e || static_cast<std::size_t>(e - b - 1) >= 256)
+    return std::nullopt;
+
+  return std::make_pair(static_cast<std::size_t>(b + 1 - line), static_cast<std::size_t>(e - line));
+}
+
+void item_t::parse_tags(const char* p, scope_t& scope, bool overwrite_existing) {
+  if (auto span = note_date_span(p)) {
+    string content(p + span->first, span->second - span->first);
+    if (auto eq = content.find('='); eq != string::npos) {
+      _date_aux = parse_date(content.substr(eq + 1));
+      content.resize(eq);
     }
+    if (!content.empty())
+      _date = parse_date(content);
   }
 
   parse_metadata_tags(p, scope, *this, overwrite_existing);
