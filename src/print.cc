@@ -273,6 +273,25 @@ std::ostringstream format_account_name(xact_t& xact, post_t* post) {
   return pbuf;
 }
 
+/**
+ * @brief Format an amount right-justified within @p width columns.
+ *
+ * Posting amounts and balance assignments share this formatter, so a
+ * zero amount keeps its commodity (`$0`, never a bare `0`) wherever
+ * print writes it.  @p prefix (` = ` for a balance assignment) is
+ * written ahead of the amount and justified with it as one string.
+ */
+string format_amount(const string& prefix, const amount_t& amount, uint_least8_t flags,
+                     std::size_t width) {
+  std::ostringstream buf;
+  buf << prefix;
+  amount.print(buf, flags);
+
+  std::ostringstream out;
+  justify(out, buf.str(), static_cast<int>(width), true);
+  return out.str();
+}
+
 /*--- Transaction Reconstruction ---*/
 
 /**
@@ -386,16 +405,7 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
       if (is_balance_assignment) {
         // For balance assignments, format the = assignment right-justified
         // within amount_width to align with regular amounts.
-        std::ostringstream amt_str;
-        amt_str << " = ";
-        value_t(*post->assigned_amount).print(amt_str, -1, -1);
-        unistring assign_str(amt_str.str());
-        int padding = amount_width - assign_str.length();
-        if (padding > 0) {
-          amt = string(padding, ' ') + amt_str.str();
-        } else {
-          amt = amt_str.str();
-        }
+        amt = format_amount(" = ", *post->assigned_amount, AMOUNT_PRINT_NO_FLAGS, amount_width);
       } else if (post->amount_expr) {
         std::ostringstream amt_str;
         justify(amt_str, post->amount_expr->text(), (int)amount_width, true);
@@ -409,7 +419,6 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
         // bother printing the second amount as it's always just an
         // inverse of the first.
       } else {
-        std::ostringstream amt_str;
         bool suppress_computed =
             !report.HANDLED(generated) && !post->has_flags(POST_AMOUNT_USER_ANNOTATED);
         // When printing user-annotated amounts, preserve {{total}} lot-price
@@ -418,14 +427,7 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
         uint_least8_t flags = AMOUNT_PRINT_RIGHT_JUSTIFY |
                               (suppress_computed ? AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS : 0) |
                               (preserve_total ? AMOUNT_PRINT_PRESERVE_TOTAL_COST : 0);
-        if (post->amount.is_zero()) {
-          std::ostringstream buf;
-          post->amount.print(buf, flags);
-          justify(amt_str, buf.str(), boost::numeric_cast<int>(amount_width), true);
-        } else {
-          value_t(post->amount).print(amt_str, boost::numeric_cast<int>(amount_width), -1, flags);
-        }
-        amt = amt_str.str();
+        amt = format_amount("", post->amount, flags, amount_width);
       }
 
       string trimmed_amt(amt);

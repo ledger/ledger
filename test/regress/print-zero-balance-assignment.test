@@ -1,0 +1,40 @@
+; print must keep the commodity of a zero balance assignment: `= $0`
+; printed as a bare `= 0` cannot be read back for an account that
+; holds more than one commodity.
+
+2024/01/01 Opening
+    Assets:Cash    $10
+    Assets:Cash    5 EUR
+    Equity
+
+2024/01/02 Spend dollars
+    Assets:Cash    = $0
+    Expenses:Misc
+
+2024/01/03 Spend euros
+    Assets:Cash    = 0 EUR
+    Expenses:Misc
+
+test print
+2024/01/01 Opening
+    Assets:Cash                                  $10
+    Assets:Cash                                5 EUR
+    Equity
+
+2024/01/02 Spend dollars
+    Assets:Cash                                 = $0
+    Expenses:Misc
+
+2024/01/03 Spend euros
+    Assets:Cash                              = 0 EUR
+    Expenses:Misc
+end test
+
+test bal
+                $-10
+              -5 EUR  Equity
+                 $10
+               5 EUR  Expenses:Misc
+--------------------
+                   0
+end test
