@@ -149,7 +149,6 @@ public:
   instance_t* parent; ///< Parent instance when parsing an included file (nullptr for top-level)
   std::list<application_t>
       apply_stack;       ///< Stack of active `apply` directives (front = most recent)
-  bool no_assertions;    ///< True when --permissive is active (skip balance assertions)
   hash_type_t hash_type; ///< Hash algorithm for transaction chaining (NO_HASHES to disable)
 #if TIMELOG_SUPPORT
   time_log_t timelog; ///< Accumulates clock-in/out events for time tracking
@@ -157,10 +156,9 @@ public:
   directory_cache_t directory_cache; ///< Include directory listings (only the root's is used)
 
   instance_t(parse_context_stack_t& _context_stack, parse_context_t& _context,
-             instance_t* _parent = nullptr, const bool _no_assertions = false,
-             const hash_type_t _hash_type = NO_HASHES)
+             instance_t* _parent = nullptr, const hash_type_t _hash_type = NO_HASHES)
       : context_stack(_context_stack), context(_context), in(*context.stream.get()),
-        parent(_parent), no_assertions(_no_assertions), hash_type(_hash_type), timelog(context) {}
+        parent(_parent), hash_type(_hash_type), timelog(context) {}
 
   string description() override { return _("textual parser"); }
 

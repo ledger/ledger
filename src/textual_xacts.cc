@@ -854,7 +854,9 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
             amount_t post_amt(strip ? post->amount.reduced().strip_annotations(keep_details_t())
                                     : post->amount.reduced());
             diff -= post_amt;
-            if (!no_assertions && !diff.is_zero()) {
+            if (!(context.journal &&
+                  context.journal->checking_style == journal_t::CHECK_PERMISSIVE) &&
+                !diff.is_zero()) {
               balance_t tot =
                   strip ? (-diff + amt).strip_annotations(keep_details_t()) : (-diff + amt);
               DEBUG("textual.parse",

@@ -399,8 +399,7 @@ expr_t::ptr_op_t instance_t::lookup(const symbol_t::kind_t kind, const string& n
 std::size_t journal_t::read_textual(parse_context_stack_t& context_stack, hash_type_t hash_type) {
   TRACE_START(parsing_total, 1, "Total time spent parsing text:");
   {
-    instance_t instance(context_stack, context_stack.get_current(), nullptr,
-                        checking_style == journal_t::CHECK_PERMISSIVE, hash_type);
+    instance_t instance(context_stack, context_stack.get_current(), nullptr, hash_type);
     instance.apply_stack.push_front(application_t("account", context_stack.get_current().master));
     instance.parse();
   }

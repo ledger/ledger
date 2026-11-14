@@ -1,0 +1,21 @@
+; A `--permissive` option line takes effect where it appears: an
+; assertion written before it is still checked.
+
+2024/01/01 Before
+    A                                      1 = 5
+    B
+
+--permissive
+
+2024/01/02 After
+    A                                      1 = 9
+    B
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 5:
+While parsing posting:
+  A                                      1 = 5
+                                             ^
+Error: Balance assertion off by 4 (expected to see 1)
+end test

@@ -475,8 +475,7 @@ void instance_t::include_directive(char* line) {
     optional<int> saved_year_directive_year = year_directive_year;
 
     try {
-      instance_t instance(context_stack, context_stack.get_current(), this, no_assertions,
-                          hash_type);
+      instance_t instance(context_stack, context_stack.get_current(), this, hash_type);
       instance.apply_stack.push_front(application_t("account", master));
       instance.parse();
     } catch (...) {
