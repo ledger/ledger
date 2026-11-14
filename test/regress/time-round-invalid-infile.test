@@ -1,0 +1,15 @@
+; An invalid --time-round on an option line in the journal is rejected
+; where it is read, with the file and line, rather than truncated: 15x
+; is not a whole number of minutes.
+
+--time-round 15x
+
+i 2024/01/01 09:00:00 Projects:Work
+o 2024/01/01 09:07:00
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 5:
+While parsing option '--time-round'
+Error: Invalid value for --time-round: 15x; expected a positive number of minutes
+end test

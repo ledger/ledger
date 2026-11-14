@@ -220,6 +220,10 @@ public:
   /// Never lowers either, so the order of the options does not matter.
   void require_checking(journal_t::checking_style_t style);
 
+  /// Parse a --time-round argument (whole minutes, 1..INT_MAX/60) into seconds; throws
+  /// option_error otherwise.
+  static int parse_time_round(const string& minutes);
+
   /**
    * Option handlers
    */
@@ -237,12 +241,8 @@ public:
   OPTION_(session_t, day_break, DO() { parent->journal->day_break = true; });
   /// Round timelog durations up to N-minute blocks.
   OPTION_(
-      session_t, time_round_, DO_() {
-        int minutes = std::stoi(require_arg(str));
-        if (minutes <= 0 || minutes > std::numeric_limits<int>::max() / 60)
-          throw std::out_of_range("time_round value too large");
-        parent->journal->time_round = minutes * 60;
-      });
+      session_t, time_round_,
+      DO_() { parent->journal->time_round = parse_time_round(require_arg(str)); });
   OPTION(session_t, download);  ///< Download commodity prices (-Q)
   OPTION(session_t, getquote_); ///< Path to the price-fetching script
 

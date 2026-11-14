@@ -4,3 +4,11 @@ o 2024/01/01 09:07:00
 test bal --time-round 15
                15.0m  Projects:Work
 end test
+
+test bal --time-round +15
+               15.0m  Projects:Work
+end test
+
+test bal --time-round 35791394
+          596523.23h  Projects:Work
+end test

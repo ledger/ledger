@@ -10,7 +10,7 @@ o 2024/01/01 09:07:00
 test bal --time-round 0 -> 1
 __ERROR__
 While parsing option '--time-round'
-Error: time_round value too large
+Error: Invalid value for --time-round: 0; expected a positive number of minutes
 end test
 
 test bal --time-round "" -> 1

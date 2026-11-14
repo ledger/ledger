@@ -398,6 +398,20 @@ void session_t::require_checking(journal_t::checking_style_t style) {
   journal->require_commodity_checking(style);
 }
 
+int session_t::parse_time_round(const string& minutes) {
+  int value = 0;
+  try {
+    value = lexical_cast<int>(minutes);
+  } catch (const bad_lexical_cast&) {
+    // Not a whole number that fits in an int; rejected below as 0.
+  }
+  if (value <= 0 || value > std::numeric_limits<int>::max() / 60)
+    throw_(option_error, _f("Invalid value for --time-round: %1%; expected a positive number "
+                            "of minutes") %
+                             minutes);
+  return value * 60;
+}
+
 /*--- Option Lookup ---*/
 
 option_t<session_t>* session_t::lookup_option(const char* p) {
