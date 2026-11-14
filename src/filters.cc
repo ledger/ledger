@@ -1805,9 +1805,11 @@ void changed_value_posts::operator()(post_t& post) {
  *
  * @param spec_fmt  Optional strftime format string for the payee date.
  * @param interval  Optional interval providing start/finish dates.
+ * @param payee     Optional payee, used verbatim instead of the date (by_payee_posts).
  */
 void subtotal_posts::report_subtotal(const char* spec_fmt,
-                                     const optional<date_interval_t>& interval) {
+                                     const optional<date_interval_t>& interval,
+                                     const optional<string>& payee) {
   if (component_posts.empty())
     return;
 
@@ -1834,18 +1836,20 @@ void subtotal_posts::report_subtotal(const char* spec_fmt,
   component_posts.clear();
 
   std::ostringstream out_date;
-  // NOLINTBEGIN(bugprone-branch-clone)
-  if (spec_fmt) {
-    out_date << format_date(*range_finish, FMT_CUSTOM, spec_fmt);
-  } else if (date_format) {
-    out_date << "- " << format_date(*range_finish, FMT_CUSTOM, date_format->c_str());
-  } else {
-    out_date << "- " << format_date(*range_finish);
+  if (!payee) {
+    // NOLINTBEGIN(bugprone-branch-clone)
+    if (spec_fmt) {
+      out_date << format_date(*range_finish, FMT_CUSTOM, spec_fmt);
+    } else if (date_format) {
+      out_date << "- " << format_date(*range_finish, FMT_CUSTOM, date_format->c_str());
+    } else {
+      out_date << "- " << format_date(*range_finish);
+    }
+    // NOLINTEND(bugprone-branch-clone)
   }
-  // NOLINTEND(bugprone-branch-clone)
 
   xact_t& xact = temps.create_xact();
-  xact.payee = out_date.str();
+  xact.payee = payee ? *payee : out_date.str();
   xact._date = *range_start;
 
   for (values_map::value_type& pair : values)
@@ -2203,7 +2207,7 @@ void posts_as_equity::report_subtotal() {
 /// Flush each payee's subtotal_posts instance and forward results downstream.
 void by_payee_posts::flush() {
   for (payee_subtotals_map::value_type& pair : payee_subtotals)
-    pair.second->report_subtotal(pair.first.c_str());
+    pair.second->report_subtotal(nullptr, none, pair.first);
 
   item_handler<post_t>::flush();
 

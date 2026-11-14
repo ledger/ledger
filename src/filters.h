@@ -1029,8 +1029,15 @@ public:
     handler.reset();
   }
 
+  /// @brief Emit the accumulated subtotal as one synthetic transaction.
+  /// @param spec_fmt A strftime format for the subtotal's date payee
+  ///        (day_of_week_posts passes "%As").
+  /// @param interval Optional interval providing start/finish dates.
+  /// @param payee When given, used verbatim as the payee; spec_fmt and
+  ///        date_format are then not consulted.
   void report_subtotal(const char* spec_fmt = nullptr,
-                       const optional<date_interval_t>& interval = none);
+                       const optional<date_interval_t>& interval = none,
+                       const optional<string>& payee = none);
 
   void flush() override {
     if (values.size() > 0)
