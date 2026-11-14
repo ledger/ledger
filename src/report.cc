@@ -1519,12 +1519,17 @@ value_t report_t::fn_nail_down(call_scope_t& args) {
   }
 
   case value_t::SEQUENCE: {
+    // A market sequence of the same length (e.g. the (amount, cost) pair
+    // of -G or --plopen under -H) pairs each element with its own value.
+    const bool paired = arg1.is_sequence() && arg1.size() == arg0.size();
     value_t tmp;
+    std::size_t i = 0;
     for (value_t& value : arg0.as_sequence_lval()) {
       call_scope_t inner_args(*args.parent);
       inner_args.push_back(value);
-      inner_args.push_back(arg1);
+      inner_args.push_back(paired ? arg1[i] : arg1);
       tmp.push_back(fn_nail_down(inner_args));
+      ++i;
     }
     return tmp;
   }
