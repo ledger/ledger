@@ -1,0 +1,110 @@
+; --options lists every option that is set, including the report options
+; --historical, --count, --bold-if, --ignore-diacritics, --no-color,
+; --no-revalued and --plopen and the session option --getquote, which the
+; hand-kept report_options() lists used to leave out.
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal --options --historical
+===============================================================================
+[Global scope options]
+             --args-only                                             --args-only
+
+[Session scope options]
+                  --file = $FILE-f
+
+[Report scope options]
+                --amount = nail_down(amount_expr, market(amount_expr, value_date, exchange))--historical
+               --columns = 80                                        --columns=80
+        --display-amount = market(display_amount, value_date, exchange)--historical
+         --display-total = market(display_total, value_date, exchange)--historical
+            --historical                                             --historical
+                --market                                             --historical
+                   --now = 2030/06/15                                --now=2030/06/15
+              --revalued                                             --historical
+===============================================================================
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test
+
+test bal --options --count --no-color --no-revalued --ignore-diacritics --bold-if 0
+===============================================================================
+[Global scope options]
+             --args-only                                             --args-only
+
+[Session scope options]
+                  --file = $FILE-f
+
+[Report scope options]
+               --bold-if = 0                                         --bold-if
+               --columns = 80                                        --columns=80
+                 --count                                             --count
+     --ignore-diacritics                                             --ignore-diacritics
+              --no-color                                             --no-color
+           --no-revalued                                             --no-revalued
+                   --now = 2030/06/15                                --now=2030/06/15
+===============================================================================
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test
+
+test bal --options --plopen
+===============================================================================
+[Global scope options]
+             --args-only                                             --args-only
+
+[Session scope options]
+                  --file = $FILE-f
+
+[Report scope options]
+               --columns = 80                                        --columns=80
+        --display-amount = use_direct_amount ? amount : (is_seq(get_at(amount_expr, 0)) ?  (get_at(get_at(amount_expr, 0), 1) ?    market(get_at(get_at(amount_expr, 0), 0), today, exchange)    - get_at(get_at(amount_expr, 0), 1) :    get_at(get_at(amount_expr, 0), 0)) :  market(get_at(amount_expr, 0), today, exchange)  - get_at(amount_expr, 1))--plopen
+         --display-total = use_direct_amount ? total_expr : market(get_at(total_expr, 0), today, exchange) - get_at(total_expr, 1)--plopen
+                   --now = 2030/06/15                                --now=2030/06/15
+                --plopen                                             --plopen
+===============================================================================
+end test
+
+test bal --options --getquote /bin/echo
+===============================================================================
+[Global scope options]
+             --args-only                                             --args-only
+
+[Session scope options]
+                  --file = $FILE-f
+              --getquote = /bin/echo                                 --getquote
+
+[Report scope options]
+               --columns = 80                                        --columns=80
+                   --now = 2030/06/15                                --now=2030/06/15
+===============================================================================
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test
+
+test bal --options --getquote=/bin/echo
+===============================================================================
+[Global scope options]
+             --args-only                                             --args-only
+
+[Session scope options]
+                  --file = $FILE-f
+              --getquote = /bin/echo                                 --getquote=/bin/echo
+
+[Report scope options]
+               --columns = 80                                        --columns=80
+                   --now = 2030/06/15                                --now=2030/06/15
+===============================================================================
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

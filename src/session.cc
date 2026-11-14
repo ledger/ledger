@@ -443,7 +443,7 @@ option_t<session_t>* session_t::lookup_option(const char* p) {
     OPT_(file_); // -f
     break;
   case 'g':
-    OPT_(getquote_);
+    OPT(getquote_);
     break;
   case 'h':
     OPT(hashes_);

@@ -186,6 +186,7 @@ public:
     HANDLER(decimal_comma).report(out);
     HANDLER(time_colon).report(out);
     HANDLER(file_).report(out);
+    HANDLER(getquote_).report(out);
     HANDLER(hashes_).report(out);
     HANDLER(input_date_format_).report(out);
     HANDLER(explicit).report(out);

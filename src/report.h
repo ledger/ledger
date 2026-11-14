@@ -452,6 +452,7 @@ public:
     HANDLER(base).report(out);
     HANDLER(basis).report(out);
     HANDLER(begin_).report(out);
+    HANDLER(bold_if_).report(out);
     HANDLER(both_directions).report(out);
     HANDLER(budget).report(out);
     HANDLER(budget_format_).report(out);
@@ -464,6 +465,7 @@ public:
     HANDLER(collapse_if_).report(out);
     HANDLER(collapse_if_zero).report(out);
     HANDLER(columns_).report(out);
+    HANDLER(count).report(out);
     HANDLER(csv_format_).report(out);
     HANDLER(csv_separator_).report(out);
     HANDLER(current).report(out);
@@ -498,6 +500,8 @@ public:
     HANDLER(group_by_cumulative).report(out);
     HANDLER(group_title_format_).report(out);
     HANDLER(head_).report(out);
+    HANDLER(historical).report(out);
+    HANDLER(ignore_diacritics).report(out);
     HANDLER(immediate).report(out);
     HANDLER(inject_).report(out);
     HANDLER(invert).report(out);
@@ -515,8 +519,10 @@ public:
     HANDLER(market).report(out);
     HANDLER(meta_).report(out);
     HANDLER(monthly).report(out);
+    HANDLER(no_color).report(out);
     HANDLER(no_group_by).report(out);
     HANDLER(no_pager).report(out);
+    HANDLER(no_revalued).report(out);
     HANDLER(no_rounding).report(out);
     HANDLER(no_titles).report(out);
     HANDLER(no_total).report(out);
@@ -532,6 +538,7 @@ public:
     HANDLER(period_shift_).report(out);
     HANDLER(pivot_).report(out);
     HANDLER(pivot_only_).report(out);
+    HANDLER(plopen).report(out);
     HANDLER(plot_amount_format_).report(out);
     HANDLER(plot_total_format_).report(out);
     HANDLER(prepend_format_).report(out);
