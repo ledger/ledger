@@ -1,0 +1,76 @@
+; display_total (and its alias T) evaluates --display-total, so lot
+; annotations survive whichever filters run: the register's stripped-total
+; cache must not leak into it.  scrub(display_total) and
+; scrubbed_display_total strip the annotations for display.
+
+P 2024/01/15 AAPL $120
+
+2024/01/01 Buy
+    Assets:Broker    10 AAPL {$100} [2024/01/01]
+    Assets:Cash
+
+2024/02/01 Buy
+    Assets:Broker    5 AAPL {$110} [2024/02/01]
+    Assets:Cash
+
+test reg Broker --format '%(display_total)\n'
+10 AAPL {$100} [2024/01/01]
+10 AAPL {$100} [2024/01/01]
+5 AAPL {$110} [2024/02/01]
+end test
+
+; Spelling out the default expression gives the same value.
+
+test reg Broker --display-total total_expr --format '%(display_total)\n'
+10 AAPL {$100} [2024/01/01]
+10 AAPL {$100} [2024/01/01]
+5 AAPL {$110} [2024/02/01]
+end test
+
+test reg Broker --format '%(T)\n'
+10 AAPL {$100} [2024/01/01]
+10 AAPL {$100} [2024/01/01]
+5 AAPL {$110} [2024/02/01]
+end test
+
+; --revalued turns on the rounding filter, which also caches the stripped
+; total; display_total still keeps the annotations.
+
+test reg Broker --revalued --format '%(display_total)\n'
+10 AAPL {$100} [2024/01/01]
+10 AAPL {$100} [2024/01/01]
+5 AAPL {$110} [2024/02/01]
+end test
+
+test reg Broker --format '%(scrub(display_total))|%(scrubbed_display_total)\n'
+10 AAPL|10 AAPL
+15 AAPL|15 AAPL
+end test
+
+test bal Broker --format '%(scrubbed_display_total)\n'
+15 AAPL
+end test
+
+; The default formats are unchanged.
+
+test reg Broker
+24-Jan-01 Buy                   Assets:Broker               10 AAPL      10 AAPL
+24-Feb-01 Buy                   Assets:Broker                5 AAPL      15 AAPL
+end test
+
+test reg Broker -V --now 2024/03/01
+24-Jan-01 Buy                   Assets:Broker               10 AAPL      10 AAPL
+24-Jan-15 Commodities revalued  <Revalued>                        0        $1200
+24-Feb-01 Buy                   Assets:Broker                  $600        $1800
+end test
+
+test reg Broker --lots
+24-Jan-01 Buy                   Assets:Broker          10 AAPL {$100} [2024/01/01] 10 AAPL {$100} [2024/01/01]
+24-Feb-01 Buy                   Assets:Broker          5 AAPL {$110} [2024/02/01] 10 AAPL {$100} [2024/01/01]
+                                                      5 AAPL {$110} [2024/02/01]
+end test
+
+test reg Broker -J
+2024-01-01 10
+2024-02-01 15
+end test

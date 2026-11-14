@@ -17,9 +17,9 @@ P 2024/01/01 AAPL $150.00
 P 2024/02/01 AAPL $155.00
 P 2024/01/01 $ 0.80 EUR
 
-; Test top_amount with multi-commodity balance (report.cc /532)
+; Test top_amount of display_total (report.cc fn_top_amount); display_total keeps lot annotations
 test reg --format '%(top_amount(display_total))\n' Assets:Brokerage
-10 AAPL
+10 AAPL {$150.00} [2024/01/20]
 end test
 
 ; Test register with --revalued (filters.h changed_value_posts)

@@ -10,6 +10,7 @@
     inc:cap.gains
 
 test reg --format "%10(date) %-.30(payee) %20(display_total)\n" ass:fidelity
-2008/10/07 fidelity                                -1200 VLKAY
-2008/10/07 fidelity                                          0
+2008/10/07 fidelity                       -1200 VLKAY {$10.9} [2008/10/07]
+2008/10/07 fidelity                       -1200 VLKAY {$10.9} [2008/10/07]
+1200 VLKAY {$76.35} [2008/10/07]
 end test

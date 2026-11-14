@@ -102,7 +102,7 @@ bool get_principal_identifiers(const expr_t::ptr_op_t& expr, string& ident,
         result = false;
       ident = name;
       if (do_transforms)
-        expr->set_ident("display_total");
+        expr->set_ident("scrubbed_display_total");
     }
   }
 

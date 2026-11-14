@@ -618,8 +618,8 @@ public:
  *
  * When maintain_stripped_total is true, a pre-stripped version of the
  * running total is maintained incrementally (O(1) per posting rather than
- * O(K) where K = number of annotated commodities), allowing
- * display_filter_posts to skip expensive full-stripping.
+ * O(K) where K = number of annotated commodities) for display_filter_posts
+ * and scrubbed_display_total.
  */
 class calc_posts : public item_handler<post_t> {
   post_t* last_post;            ///< Previous posting, for running total propagation.
@@ -793,18 +793,14 @@ public:
  * @note Requires calc_posts somewhere downstream in the chain.
  */
 class display_filter_posts : public item_handler<post_t> {
-  report_t& report;                    ///< Report context.
-  expr_t& display_amount_expr;         ///< Expression for computing the display amount.
-  expr_t& display_total_expr;          ///< Expression for computing the display total.
-  bool show_rounding;                  ///< Whether to emit rounding adjustment postings.
-  value_t last_display_total;          ///< Previous posting's display total (for diff computation).
-  value_t last_stripped_display_total; ///< Cached stripped total for incremental optimization.
-  bool has_stripped_cache;             ///< Whether the incremental stripped cache is valid.
-  bool incremental_strip_eligible; ///< Whether the O(1) incremental stripping optimization can be
-                                   ///< used.
-  keep_details_t what_to_keep;     ///< Annotation details to preserve when stripping.
-  temporaries_t temps;             ///< Temporary storage for synthetic adjustment postings.
-  account_t* rounding_account;     ///< The <Adjustment> account for rounding postings.
+  report_t& report;            ///< Report context.
+  expr_t& display_amount_expr; ///< Expression for computing the display amount.
+  expr_t& display_total_expr;  ///< Expression for computing the display total.
+  bool show_rounding;          ///< Whether to emit rounding adjustment postings.
+  value_t last_display_total;  ///< Previous posting's display total (for diff computation).
+  keep_details_t what_to_keep; ///< Annotation details to preserve when stripping.
+  temporaries_t temps;         ///< Temporary storage for synthetic adjustment postings.
+  account_t* rounding_account; ///< The <Adjustment> account for rounding postings.
 
   display_filter_posts();
 
@@ -832,8 +828,6 @@ public:
     display_total_expr.mark_uncompiled();
 
     last_display_total = value_t();
-    last_stripped_display_total = value_t();
-    has_stripped_cache = false;
 
     temps.clear();
     item_handler<post_t>::clear();

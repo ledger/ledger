@@ -1,0 +1,49 @@
+; <Adjustment> rows belong to the register display, not to --base: a
+; register run with --base still reconciles its rounded running total,
+; while -J plot data and csv output carry no rounding rows.
+
+D $1,000.00
+
+2014/06/15 Test 1
+    Expenses    $9.184
+    Assets:Checking
+
+2014/06/16 Test 2
+    Expenses    $9.184
+    Assets:Checking
+
+2014/06/17 Test 3
+    Expenses    $9.184
+    Assets:Checking
+
+test reg Expenses
+14-Jun-15 Test 1                Expenses                      $9.18        $9.18
+14-Jun-16 Test 2                <Adjustment>                  $0.01        $9.19
+                                Expenses                      $9.18       $18.37
+14-Jun-17 Test 3                Expenses                      $9.18       $27.55
+end test
+
+test reg Expenses --base
+14-Jun-15 Test 1                Expenses                      $9.18        $9.18
+14-Jun-16 Test 2                <Adjustment>                  $0.01        $9.19
+                                Expenses                      $9.18       $18.37
+14-Jun-17 Test 3                Expenses                      $9.18       $27.55
+end test
+
+test reg Expenses --base --no-rounding
+14-Jun-15 Test 1                Expenses                      $9.18        $9.18
+14-Jun-16 Test 2                Expenses                      $9.18       $18.37
+14-Jun-17 Test 3                Expenses                      $9.18       $27.55
+end test
+
+test reg Expenses -J
+2014-06-15 9.184
+2014-06-16 18.368
+2014-06-17 27.552
+end test
+
+test csv Expenses
+"2014/06/15","","Test 1","Expenses","$","9.184","",""
+"2014/06/16","","Test 2","Expenses","$","9.184","",""
+"2014/06/17","","Test 3","Expenses","$","9.184","",""
+end test

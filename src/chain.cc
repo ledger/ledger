@@ -335,26 +335,19 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
     // it sees all postings and can correctly detect rounding gaps.
     //
     // Rounding adjustments are only useful for commands that display
-    // running totals (register), not for print/csv/equity.  The --base
-    // option (auto-set for non-balance/register commands) gates this.
+    // running totals (register), not for print/csv/equity.  normalize_options
+    // decides which commands those are (report_t::show_rounding_adjustments).
     // Additionally, rounding is safe only when the display expressions
     // use simple additive accumulation (the defaults).  Non-additive
     // transforms like --average, --deviation, or user-supplied
     // --display-total/--display-amount break the assumption that
     // total == prev_total + amount, so we disable rounding for those.
-    bool default_exprs = report.HANDLER(display_total_).expr.exprs.empty() &&
-                         report.HANDLER(display_total_).expr.base_expr == "total_expr" &&
-                         report.HANDLER(total_).expr.exprs.empty() &&
-                         report.HANDLER(total_).expr.base_expr == "total" &&
-                         report.HANDLER(display_amount_).expr.exprs.empty() &&
-                         report.HANDLER(display_amount_).expr.base_expr == "amount_expr" &&
-                         report.HANDLER(amount_).expr.exprs.empty() &&
-                         report.HANDLER(amount_).expr.base_expr == "amount";
+    bool default_exprs = report.default_total_exprs() && report.default_amount_exprs();
 
     auto display_filter_sp = std::make_shared<display_filter_posts>(
         handler, report,
         !report.HANDLED(no_rounding) &&
-            (report.HANDLED(revalued) || (!report.HANDLED(base) && default_exprs)));
+            (report.HANDLED(revalued) || (report.show_rounding_adjustments && default_exprs)));
     display_filter = display_filter_sp.get();
     handler = std::move(display_filter_sp);
   }
@@ -408,14 +401,11 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
 
     // Enable incremental stripped total maintenance when the display_total
     // and total expressions are unmodified (default "total" accumulation)
-    // and annotations need stripping.  This allows the format's
-    // scrub(display_total) to use the pre-stripped value from xdata,
+    // and annotations need stripping.  This lets display_filter_posts and
+    // scrubbed_display_total use the pre-stripped value from xdata,
     // avoiding expensive O(K) GMP arithmetic per posting.
     keep_details_t wtk = report.what_to_keep();
-    bool maintain_stripped = calc_running && report.HANDLER(display_total_).expr.exprs.empty() &&
-                             report.HANDLER(display_total_).expr.base_expr == "total_expr" &&
-                             report.HANDLER(total_).expr.exprs.empty() &&
-                             report.HANDLER(total_).expr.base_expr == "total" && !wtk.keep_all();
+    bool maintain_stripped = calc_running && report.default_total_exprs() && !wtk.keep_all();
 
     // Per-account period averaging (period_average_) tracks independent
     // running totals for each account across interval periods, so that

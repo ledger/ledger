@@ -83,6 +83,9 @@ test reg --flat Expenses
 08-Oct-05 Lunch                 Expenses:Food                 $9.18       $27.55
 end test
 
-test reg --flat --no-rounding --format "%(display_total)\n" Assets:Brokerage
-10 AAPL
+; display_total keeps the lot annotation; the total column reads the
+; stripped running total through scrubbed_display_total, as reg does.
+
+test reg --flat --no-rounding --format "%(display_total)|%(scrubbed_display_total)\n" Assets:Brokerage
+10 AAPL {$20.00} [2008/10/01]|10 AAPL
 end test

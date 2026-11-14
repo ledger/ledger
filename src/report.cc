@@ -241,8 +241,13 @@ void report_t::normalize_options(const string& verb) {
     HANDLER(equity).on("?normalize");
   }
 
-  if (verb[0] != 'b' && verb[0] != 'r')
+  // Balance and register display rounded running totals; every other
+  // command reports in base units.  Only their text output, not -j/-J
+  // plot data, reconciles display rounding with <Adjustment> rows.
+  bool totals_display = verb[0] == 'b' || verb[0] == 'r';
+  if (!totals_display)
     HANDLER(base).on("?normalize");
+  show_rounding_adjustments = totals_display && !HANDLED(amount_data) && !HANDLED(total_data);
 
   // If a time period was specified with -p, check whether it also gave a
   // begin and/or end to the report period (though these can be overridden
@@ -915,18 +920,21 @@ value_t report_t::fn_display_amount(call_scope_t& scope) {
 }
 
 value_t report_t::fn_display_total(call_scope_t& scope) {
-  // Fast path: if display_filter_posts already computed and cached
-  // the stripped display total in the post's xdata, return it directly.
-  // The caller (typically fn_scrub via scrub()) will attempt to strip
-  // annotations again, but since the value is already stripped, the
-  // balance_t::strip_annotations fast-path returns *this immediately
-  // with no GMP arithmetic.
+  return HANDLER(display_total_).expr.calc(scope);
+}
+
+/// scrub(display_total), reading the register's cached stripped total when
+/// the posting has one.  calc_posts (or display_filter_posts) caches the
+/// annotation-stripped running total in xdata.display_total; display_value
+/// strips it again through balance_t's no-op fast path for a value that
+/// carries no annotations, which is exactly what scrub(display_total) did
+/// with the cache.
+value_t report_t::fn_scrubbed_display_total(call_scope_t& scope) {
   if (post_t* post = search_scope<post_t>(&scope)) {
     if (post->has_xdata() && post->xdata().has_flags(POST_EXT_DISPLAY_TOTAL_CACHED))
-      return post->xdata().display_total;
+      return display_value(post->xdata().display_total);
   }
-
-  return HANDLER(display_total_).expr.calc(scope);
+  return display_value(HANDLER(display_total_).expr.calc(scope));
 }
 
 value_t report_t::fn_display_account(call_scope_t& scope) {
@@ -2195,6 +2203,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
     case 's':
       if (is_eq(p, "scrub"))
         return MAKE_FUNCTOR(report_t::fn_scrub);
+      else if (is_eq(p, "scrubbed_display_total"))
+        return MAKE_FUNCTOR(report_t::fn_scrubbed_display_total);
       else if (is_eq(p, "strip"))
         return MAKE_FUNCTOR(report_t::fn_strip);
       else if (is_eq(p, "should_bold"))

@@ -318,14 +318,17 @@ public:
 #define POST_EXT_VISITED 0x0040    ///< Posting was visited during report traversal.
 #define POST_EXT_MATCHES 0x0080    ///< Posting matches the current query predicate.
 #define POST_EXT_CONSIDERED 0x0100 ///< Posting has already been counted toward account totals.
-#define POST_EXT_DISPLAY_TOTAL_CACHED 0x0200 ///< display_total has been computed and cached.
+/// xdata.display_total holds the annotation-stripped display total.
+#define POST_EXT_DISPLAY_TOTAL_CACHED 0x0200
 #define POST_EXT_PAYEE_CHANGED 0x0400 ///< Payee differs from previous posting in display order.
 
     value_t visited_value;  ///< Value recorded when the posting was visited.
     value_t compound_value; ///< Compound value set by filters (overrides amount when
                             ///< POST_EXT_COMPOUND).
     value_t total;          ///< Running total accumulated through the filter chain.
-    value_t display_total;  ///< Cached stripped display total for output formatting.
+    value_t display_total;  ///< Stripped display total, written by calc_posts (or
+                            ///< display_filter_posts when calc_posts kept none); read by
+                            ///< display_filter_posts and scrubbed_display_total
     std::size_t count;      ///< Posting index or count within the current report context.
     date_t date;            ///< Overridden date assigned by the reporting pipeline.
     date_t value_date;      ///< Overridden valuation date for price lookups.

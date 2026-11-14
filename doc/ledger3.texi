@@ -9053,7 +9053,7 @@ Define the output format for the @command{register} report.  The default
                  true, color),
                  bold if should_bold))
        %(ansify_if(
-         justify(scrub(display_total), int(total_width),
+         justify(scrubbed_display_total, int(total_width),
                  4 + int(meta_width) + int(date_width) + int(payee_width)
                    + int(account_width) + int(amount_width) + int(total_width)
                    + int(prepend_width), true, color),
@@ -9093,7 +9093,7 @@ Set the format for total plots, using the @option{--total-data (-J)}
 option.  The default is:
 
 @smallexample
-"%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(display_total)))\n"
+"%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrubbed_display_total))\n"
 @end smallexample
 
 @item --pricedb-format @var{FORMAT_STRING}
@@ -11570,6 +11570,13 @@ often, just the virtual accounting.
 @defun scrub value
 Clean @var{value} using various transformations such as @code{round}, stripping
 value annotations, and more.
+@end defun
+
+@defun scrubbed_display_total
+The same value as @code{scrub(display_total)}: the total column's value
+with lot annotations removed as @option{--lots} and its siblings direct.
+The default register and plot-total formats use it because the register
+caches this value as it computes the running total.
 @end defun
 
 @defun set_commodity_price commodity price

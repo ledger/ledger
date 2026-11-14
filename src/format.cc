@@ -134,7 +134,7 @@ struct format_mapping_t {
     {'a', "account"},
     {'A', "account"},
     {'t', "justify(scrub(display_amount), $min, $max, $left, color)"},
-    {'T', "justify(scrub(display_total), $min, $max, $left, color)"},
+    {'T', "justify(scrubbed_display_total, $min, $max, $left, color)"},
     {'N', "note"},
 };
 

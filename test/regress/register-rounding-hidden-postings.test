@@ -1,0 +1,82 @@
+; A posting whose amount rounds to zero at display precision is hidden
+; from the register (unless --empty), but it still belongs to the running
+; total.  The register's rounding check must read that total, not a
+; private running sum that skipped the hidden postings: the two $0.004
+; postings add $0.008, so the total after "Last" is $2.01, and the
+; <Adjustment> row reconciles the $1.00 + $1.00 column with it.
+
+D $1,000.00
+
+2024/01/01 Seed
+    Expenses:A    $1.001
+    Assets
+
+2024/01/02 Tiny
+    Expenses:A    $0.004
+    Assets
+
+2024/01/03 Tiny
+    Expenses:A    $0.004
+    Assets
+
+2024/01/04 Last
+    Expenses:A    $1.001
+    Assets
+
+2024/01/05 After
+    Expenses:A    $1.00
+    Assets
+
+test reg Expenses
+24-Jan-01 Seed                  Expenses:A                    $1.00        $1.00
+24-Jan-04 Last                  <Adjustment>                  $0.01        $1.01
+                                Expenses:A                    $1.00        $2.01
+24-Jan-05 After                 Expenses:A                    $1.00        $3.01
+end test
+
+; --empty shows the hidden postings; the total after them is unchanged.
+
+test reg Expenses --empty
+24-Jan-01 Seed                  Expenses:A                    $1.00        $1.00
+24-Jan-02 Tiny                  Expenses:A                        0        $1.00
+24-Jan-03 Tiny                  Expenses:A                        0        $1.01
+24-Jan-04 Last                  <Adjustment>                  $0.01        $1.01
+                                Expenses:A                    $1.00        $2.01
+24-Jan-05 After                 Expenses:A                    $1.00        $3.01
+end test
+
+; display_total, the cached scrubbed_display_total and total agree on
+; every row, the adjustment row included.
+
+test reg Expenses --format '%(display_total)|%(scrubbed_display_total)|%(total)\n'
+$1.00|$1.00|$1.00
+$1.01|$1.01|$1.01
+$2.01|$2.01|$2.01
+$3.01|$3.01|$3.01
+end test
+
+; Without rounding rows the totals are the same.
+
+test reg Expenses --no-rounding
+24-Jan-01 Seed                  Expenses:A                    $1.00        $1.00
+24-Jan-04 Last                  Expenses:A                    $1.00        $2.01
+24-Jan-05 After                 Expenses:A                    $1.00        $3.01
+end test
+
+; --lots keeps every annotation, so calc_posts caches no stripped total:
+; display_filter_posts computes it, and the rows match the default.
+
+test reg Expenses --lots
+24-Jan-01 Seed                  Expenses:A                    $1.00        $1.00
+24-Jan-04 Last                  <Adjustment>                  $0.01        $1.01
+                                Expenses:A                    $1.00        $2.01
+24-Jan-05 After                 Expenses:A                    $1.00        $3.01
+end test
+
+; The hidden postings come first: nothing is displayed before "Last", so
+; there is no earlier total to reconcile and no <Adjustment> row.
+
+test reg Expenses -b 2024/01/02
+24-Jan-04 Last                  Expenses:A                    $1.00        $1.01
+24-Jan-05 After                 Expenses:A                    $1.00        $2.01
+end test

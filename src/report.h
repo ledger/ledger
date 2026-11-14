@@ -192,6 +192,10 @@ public:
   optional<datetime_t>
       gain_from; ///< Reference date for --gain-since (compute gain from this date's market value)
   uint_least8_t budget_flags; ///< Bitmask of BUDGET_* flags controlling budget report behavior
+  /// Set by normalize_options: the command displays rounded running totals
+  /// (balance/register text output), so display_filter_posts may emit
+  /// <Adjustment> rows.
+  bool show_rounding_adjustments = false;
 
   /// Rewrite rules given by --payee-rewrite and --account-rewrite.  They
   /// belong to the report, not to the journal with the rules its
@@ -297,9 +301,10 @@ public:
   value_t fn_amount_expr(call_scope_t& scope);    ///< Evaluate the current --amount expression
   value_t fn_total_expr(call_scope_t& scope);     ///< Evaluate the current --total expression
   value_t fn_display_amount(call_scope_t& scope); ///< Evaluate --display-amount expression
-  value_t
-  fn_display_total(call_scope_t& scope); ///< Evaluate --display-total (with caching fast path)
-  value_t fn_display_account(call_scope_t& scope); ///< Evaluate --display-account expression
+  value_t fn_display_total(call_scope_t& scope);  ///< Evaluate --display-total
+  value_t fn_scrubbed_display_total(call_scope_t& scope); ///< scrub(display_total), reading the
+                                                          ///< cached stripped total when present
+  value_t fn_display_account(call_scope_t& scope);        ///< Evaluate --display-account expression
   value_t fn_top_amount(call_scope_t& val); ///< Extract the first amount from a balance or sequence
   value_t
   fn_should_bold(call_scope_t& scope); ///< Evaluate --bold-if expression for conditional formatting
@@ -411,6 +416,20 @@ public:
     bool lots = HANDLED(lots) || HANDLED(lots_actual);
     return keep_details_t(lots || HANDLED(lot_prices), lots || HANDLED(lot_dates),
                           lots || HANDLED(lot_notes), HANDLED(lots_actual));
+  }
+
+  /// True when --total and --display-total keep their defaults (total, total_expr).
+  bool default_total_exprs() const {
+    return HANDLER(total_).expr.exprs.empty() && HANDLER(total_).expr.base_expr == "total" &&
+           HANDLER(display_total_).expr.exprs.empty() &&
+           HANDLER(display_total_).expr.base_expr == "total_expr";
+  }
+
+  /// True when --amount and --display-amount keep their defaults (amount, amount_expr).
+  bool default_amount_exprs() const {
+    return HANDLER(amount_).expr.exprs.empty() && HANDLER(amount_).expr.base_expr == "amount" &&
+           HANDLER(display_amount_).expr.exprs.empty() &&
+           HANDLER(display_amount_).expr.base_expr == "amount_expr";
   }
 
   /// @brief Print all options that have been set, with their values and sources.
@@ -1243,7 +1262,7 @@ public:
 
   OPTION_CTOR(
       report_t, plot_total_format_, CTOR(report_t, plot_total_format_) {
-        on(none, "%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(display_total)))\n");
+        on(none, "%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrubbed_display_total))\n");
       });
 
   OPTION(report_t, prepend_format_);
@@ -1314,7 +1333,7 @@ public:
                  "           true, color),"
                  "           bold if should_bold))"
                  " %(ansify_if("
-                 "   justify(scrub(display_total), int(total_width), "
+                 "   justify(scrubbed_display_total, int(total_width), "
                  "           4 + int(meta_width) + int(date_width) + int(payee_width)"
                  "             + int(account_width) + int(amount_width) + int(total_width)"
                  "             + int(prepend_width), true, color),"

@@ -1059,7 +1059,7 @@ BOOST_AUTO_TEST_CASE(testFormatSingleLetterAllW11)
                     "justify(scrub(display_amount), {-1}, {-1}, true, color)\n");
   BOOST_CHECK_EQUAL(dumped_elements(fmtT),
                     "Element:    EXPR  flags: 0x0  min:  0  max:  0  expr: "
-                    "justify(scrub(display_total), {-1}, {-1}, true, color)\n");
+                    "justify(scrubbed_display_total, {-1}, {-1}, true, color)\n");
   BOOST_CHECK_EQUAL(dumped_elements(fmtN),
                     "Element:    EXPR  flags: 0x0  min:  0  max:  0  expr: note\n");
   BOOST_CHECK_EQUAL(dumped_elements(fmtDw),
@@ -1073,7 +1073,7 @@ BOOST_AUTO_TEST_CASE(testFormatSingleLetterAllW11)
                     "justify(scrub(display_amount), {15}, {-1}, true, color)\n");
   BOOST_CHECK_EQUAL(dumped_elements(fmtTw),
                     "Element:    EXPR  flags: 0x0  min: 15  max:  0  expr: "
-                    "justify(scrub(display_total), {15}, {-1}, true, color)\n");
+                    "justify(scrubbed_display_total, {15}, {-1}, true, color)\n");
 
   value_t::shutdown();
   amount_t::shutdown();

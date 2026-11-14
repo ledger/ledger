@@ -420,7 +420,8 @@ void anonymize_posts::operator()(post_t& post) {
  * 3. Marks the posting and its account as visited.
  * 4. If calc_running_total is true, adds the visited_value to the running total.
  * 5. If maintain_stripped_total is true, incrementally maintains a pre-stripped
- *    display total (O(1) per posting) for downstream display_filter_posts.
+ *    display total (O(1) per posting) for display_filter_posts and
+ *    scrubbed_display_total.
  */
 void calc_posts::operator()(post_t& post) {
   post_t::xdata_t& xdata(post.xdata());
@@ -814,17 +815,7 @@ display_filter_posts::display_filter_posts(post_handler_ptr handler, report_t& _
     : item_handler<post_t>(std::move(handler)), report(_report),
       display_amount_expr(report.HANDLER(display_amount_).expr),
       display_total_expr(report.HANDLER(display_total_).expr), show_rounding(_show_rounding),
-      has_stripped_cache(false), what_to_keep(report.what_to_keep()) {
-  // The incremental stripped total optimization is only safe when the
-  // display_total expression is the simple running total accumulation
-  // (i.e., display_total_ = total_expr, total_ = total).  Options like
-  // --market, --exchange, --average, etc. modify these expressions,
-  // breaking the distributive property: strip(f(total)) != f(strip(total)).
-  incremental_strip_eligible = report.HANDLER(display_total_).expr.exprs.empty() &&
-                               report.HANDLER(display_total_).expr.base_expr == "total_expr" &&
-                               report.HANDLER(total_).expr.exprs.empty() &&
-                               report.HANDLER(total_).expr.base_expr == "total" &&
-                               !what_to_keep.keep_all();
+      what_to_keep(report.what_to_keep()) {
   create_accounts();
   TRACE_CTOR(display_filter_posts, "post_handler_ptr, report_t&, bool");
 }
@@ -837,40 +828,23 @@ display_filter_posts::display_filter_posts(post_handler_ptr handler, report_t& _
  * posting to compensate.  Returns true if the posting should be displayed
  * (non-zero display amount or --empty), false otherwise.
  *
- * Uses an incremental optimization when possible: instead of stripping the
- * full running total (O(K) GMP ops), strips only this posting's contribution
- * and adds it to the cached stripped total from the previous posting.
+ * The new display total is the stripped running total calc_posts cached for
+ * the posting; when calc_posts kept none (non-default total expressions,
+ * --lots, generated <Revalued> postings) it is computed and cached here.
  */
 bool display_filter_posts::output_rounding(post_t& post) {
   bind_scope_t bound_scope(report, post);
   value_t new_display_total;
 
   if (show_rounding) {
-    // Optimization: use incremental stripped total computation when
-    // possible.  Instead of stripping the full running total (O(K) GMP
-    // operations where K = number of annotated commodities), we strip
-    // only the posting's contribution and add it to the cached stripped
-    // total from the previous posting (O(1) GMP operations).
-    //
-    // strip_annotations is distributive over balance addition:
-    //   strip(total[n]) = strip(total[n-1]) + strip(visited_value[n])
-    //
-    // We fall back to full stripping when:
-    //   - This is the first posting (no cache yet)
-    //   - The display_total_expr is non-default (--market, --exchange, etc.)
-    //   - The posting is a revalued/generated posting
-    //   - The posting doesn't have visited_value set by calc_posts
-    if (has_stripped_cache && incremental_strip_eligible && post.account != revalued_account &&
-        post.has_xdata() && post.xdata().has_flags(POST_EXT_VISITED) &&
-        !post.xdata().visited_value.is_null()) {
-      // Incremental path: strip just the posting's contribution
-      value_t stripped_delta = post.xdata().visited_value.strip_annotations(what_to_keep);
-      new_display_total = last_stripped_display_total;
-      add_or_set_value(new_display_total, stripped_delta);
-    } else {
-      // Full path: strip the entire display total from scratch
-      new_display_total = (display_total_expr.calc(bound_scope).strip_annotations(what_to_keep));
+    // calc_posts caches the stripped running total when the total
+    // expressions are the defaults; otherwise compute and cache it here.
+    post_t::xdata_t& xdata(post.xdata());
+    if (!xdata.has_flags(POST_EXT_DISPLAY_TOTAL_CACHED)) {
+      xdata.display_total = display_total_expr.calc(bound_scope).strip_annotations(what_to_keep);
+      xdata.add_flags(POST_EXT_DISPLAY_TOTAL_CACHED);
     }
+    new_display_total = xdata.display_total;
 
     DEBUG("filters.changed_value.rounding",
           "rounding.new_display_total     = " << new_display_total);
@@ -886,9 +860,6 @@ bool display_filter_posts::output_rounding(post_t& post) {
   if (post.account == revalued_account) {
     if (show_rounding)
       last_display_total = new_display_total;
-    // Revalued postings break the incremental chain since they
-    // modify the total in non-standard ways.
-    has_stripped_cache = false;
     return true;
   }
 
@@ -922,17 +893,8 @@ bool display_filter_posts::output_rounding(post_t& post) {
                      /* bidir_link=    */ false);
       }
     }
-    if (show_rounding) {
+    if (show_rounding)
       last_display_total = new_display_total;
-      // Update the incremental cache and store in xdata for the
-      // format's scrub(display_total) to reuse.
-      last_stripped_display_total = new_display_total;
-      has_stripped_cache = true;
-      if (post.has_xdata()) {
-        post.xdata().display_total = new_display_total;
-        post.xdata().add_flags(POST_EXT_DISPLAY_TOTAL_CACHED);
-      }
-    }
     return true;
   } else {
     return report.HANDLED(empty);
@@ -960,8 +922,8 @@ namespace {
  * or of --dc, and each piece appended to it is one that --round or --unround
  * appends, the valuation at today that --round appends under -V, or the pair
  * of an amount and its cleared part that the cleared command appends.  The
- * test compares the expressions as strings, as chain_post_handlers does to
- * decide whether display_filter_posts may add rounding postings.
+ * test compares the expressions as strings, as report_t::default_amount_exprs()
+ * does for the rounding decision in chain_post_handlers.
  */
 bool amount_expr_reads_cost(const report_t& report) {
   // The base expression that the --dc handler in report.h installs.

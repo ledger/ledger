@@ -1,0 +1,47 @@
+; The %T directive and select's total column show the stripped running
+; total.  They read it through scrubbed_display_total, so the register's
+; cache serves them and display_total itself may keep lot annotations.
+; The last block is the one a plain display_total read would break:
+; arithmetic on an annotated balance fails on the posting whose running
+; total is empty.
+
+P 2024/01/15 AAPL $120
+
+2024/01/01 Buy
+    Assets:Broker    10 AAPL {$100} [2024/01/01]
+    Assets:Cash
+
+2024/02/01 Buy
+    Assets:Broker    5 AAPL {$110} [2024/02/01]
+    Assets:Cash
+
+test reg Broker --format '%T|\n'
+10 AAPL|
+15 AAPL|
+end test
+
+test reg Broker --format '%-10T|\n'
+10 AAPL   |
+15 AAPL   |
+end test
+
+test bal Broker --format '%T\n'
+15 AAPL
+end test
+
+test select "date, total from posts where account =~ /Broker/"
+24-Jan-01      10 AAPL
+24-Feb-01      15 AAPL
+end test
+
+test select "date, total * 2 from posts where account =~ /Broker/"
+24-Jan-01      20 AAPL
+24-Feb-01      30 AAPL
+end test
+
+test select "date, total * 2 from posts"
+24-Jan-01      20 AAPL
+24-Jan-01            0
+24-Feb-01      10 AAPL
+24-Feb-01            0
+end test
