@@ -82,6 +82,8 @@
 
 namespace ledger {
 
+class journal_t;
+
 /**
  * @brief Parses command-line query arguments into expression predicates.
  *
@@ -421,6 +423,7 @@ protected:
     value_t args;  ///< The original argument sequence (owns the strings the lexer iterates).
     lexer_t lexer; ///< Tokenizer over the argument sequence.
     keep_details_t what_to_keep; ///< Annotation-stripping policy passed to constructed predicates.
+    journal_t* journal;          ///< Aliases for unquoted account-context terms; may be null.
     query_map_t query_map;       ///< Accumulated predicates keyed by query section.
     int parse_depth = 0;         ///< Current recursion depth for parenthesized expressions.
 
@@ -460,13 +463,14 @@ protected:
 
   public:
     parser_t(const value_t& _args, const keep_details_t& _what_to_keep = keep_details_t(),
-             bool multiple_args = true)
-        : args(_args), lexer(args.begin(), args.end(), multiple_args), what_to_keep(_what_to_keep) {
-      TRACE_CTOR(query_t::parser_t, "value_t, keep_details_t, bool");
+             bool multiple_args = true, journal_t* _journal = nullptr)
+        : args(_args), lexer(args.begin(), args.end(), multiple_args), what_to_keep(_what_to_keep),
+          journal(_journal) {
+      TRACE_CTOR(query_t::parser_t, "value_t, keep_details_t, bool, journal_t*");
     }
     parser_t(const parser_t& other)
         : args(other.args), lexer(other.lexer), what_to_keep(other.what_to_keep),
-          query_map(other.query_map), parse_depth(other.parse_depth) {
+          journal(other.journal), query_map(other.query_map), parse_depth(other.parse_depth) {
       TRACE_CTOR(query_t::parser_t, "copy");
     }
     ~parser_t() noexcept { TRACE_DTOR(query_t::parser_t); }
@@ -519,13 +523,15 @@ public:
    * @param multiple_args Whether args contains multiple separate arguments (true)
    *        or a single string with spaces (false).
    * @param subexpression If true, parse as a parenthesized sub-expression.
+   * @param journal Expands account aliases in unquoted account-context terms when given.
    * @return The expression tree for the QUERY_LIMIT section, or nullptr if empty.
    */
   expr_t::ptr_op_t parse_args(const value_t& args,
                               const keep_details_t& what_to_keep = keep_details_t(),
-                              bool multiple_args = true, bool subexpression = false) {
+                              bool multiple_args = true, bool subexpression = false,
+                              journal_t* journal = nullptr) {
     if (!parser)
-      parser = parser_t(args, what_to_keep, multiple_args);
+      parser = parser_t(args, what_to_keep, multiple_args, journal);
     return parser->parse(subexpression);
   }
 

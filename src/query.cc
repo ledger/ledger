@@ -105,6 +105,8 @@
 
 #include "query.h"
 #include "op.h"
+#include "journal.h"
+#include "account.h"
 
 namespace ledger {
 
@@ -572,6 +574,23 @@ expr_t::ptr_op_t query_t::parser_t::try_parse_comparison(const string& term) {
   return is_comparison_tree(op) ? op : nullptr;
 }
 
+namespace {
+
+/// @brief Escape every regex metacharacter in text, so that the result
+/// matches text literally.
+string quote_regex(const string& text) {
+  string result;
+  result.reserve(text.size());
+  for (char c : text) {
+    if (string_view("\\^$.|?*+()[]{}").find(c) != string_view::npos)
+      result += '\\';
+    result += c;
+  }
+  return result;
+}
+
+} // namespace
+
 /**
  * Build an O_MATCH node that regex-matches a pattern against the field
  * indicated by tok_context.  E.g., in TOK_ACCOUNT context, "food" becomes:
@@ -624,6 +643,8 @@ expr_t::ptr_op_t query_t::parser_t::make_match_node(query_t::lexer_t::token_t::k
  *   - A raw expression parse for `expr` context.
  *   - A comparison expression (or an and/or of which one operand is a comparison, or a not
  *     of one) for an unquoted term holding `<`, `<=`, `>` or `>=`.
+ *   - In account context, a literal match on the target account for an unquoted alias
+ *     name; a quoted or `/.../` pattern never expands.
  * - **Parenthesized sub-expressions**: Recurse into parse_query_expr, or in
  *   TOK_META context, consume a single pattern so `tag(name) == value`
  *   flows through make_meta_node like the unparenthesized form.
@@ -672,6 +693,9 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
     default:
       if (!tok.quoted)
         node = try_parse_comparison(*tok.value);
+      if (!node && !tok.quoted && journal && tok_context == lexer_t::token_t::TOK_ACCOUNT)
+        if (account_t* acct = journal->expand_aliases(*tok.value))
+          node = make_match_node(tok_context, quote_regex(acct->fullname()));
       if (!node)
         node = make_match_node(tok_context, *tok.value);
       break;

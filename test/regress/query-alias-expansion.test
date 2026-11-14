@@ -1,0 +1,84 @@
+; An account alias used as a query term names its account literally: the
+; target's regex metacharacters are escaped, sub-accounts still match, and
+; the alias is expanded only where a bare term matches account names (not
+; after payee/@, code/#, note/= or tag/%, and not for a quoted or /regex/
+; pattern).
+
+alias fx=Assets:A+B
+alias ebike=Expenses:Bike (Electric)
+alias Chk=Assets:Checking
+alias sl=Assets:A/B
+alias Bike=Assets:Checking:Sub
+
+2024/01/01 Shop
+    Expenses:Bike (Electric)    $10.00
+    Assets:Checking
+
+2024/01/02 Exchange
+    Assets:A+B    $5.00
+    Assets:Checking:Sub
+
+2024/01/03 Transfer
+    Assets:A/B    $1.00
+    Assets:Checking
+
+test reg fx
+24-Jan-02 Exchange              Assets:A+B                    $5.00        $5.00
+end test
+
+test bal fx
+               $5.00  Assets:A+B
+end test
+
+test reg ebike
+24-Jan-01 Shop                  Expens:Bike (Electric)       $10.00       $10.00
+end test
+
+; A '/' in the target survives the predicate's print/re-parse round trip.
+test reg sl
+24-Jan-03 Transfer              Assets:A/B                    $1.00        $1.00
+end test
+
+; "ebike" after payee or @ is a payee pattern, which no payee matches;
+; only the fx term selects a posting.
+test reg payee ebike or fx
+24-Jan-02 Exchange              Assets:A+B                    $5.00        $5.00
+end test
+
+test reg @ ebike or fx
+24-Jan-02 Exchange              Assets:A+B                    $5.00        $5.00
+end test
+
+; Sub-accounts of the alias target still match.
+test reg Chk
+24-Jan-01 Shop                  Assets:Checking             $-10.00      $-10.00
+24-Jan-02 Exchange              Assets:Checking:Sub          $-5.00      $-15.00
+24-Jan-03 Transfer              Assets:Checking              $-1.00      $-16.00
+end test
+
+; An alias inside a parenthesized group expands as well.
+test reg '(Chk)'
+24-Jan-01 Shop                  Assets:Checking             $-10.00      $-10.00
+24-Jan-02 Exchange              Assets:Checking:Sub          $-5.00      $-15.00
+24-Jan-03 Transfer              Assets:Checking              $-1.00      $-16.00
+end test
+
+test reg not Chk
+24-Jan-01 Shop                  Expens:Bike (Electric)       $10.00       $10.00
+24-Jan-02 Exchange              Assets:A+B                    $5.00       $15.00
+24-Jan-03 Transfer              Assets:A/B                    $1.00       $16.00
+end test
+
+; A bare alias name is the alias; a quoted or /regex/ pattern spelled the
+; same stays a pattern ("Bike" matches Expenses:Bike (Electric)).
+test reg Bike
+24-Jan-02 Exchange              Assets:Checking:Sub          $-5.00       $-5.00
+end test
+
+test reg /Bike/
+24-Jan-01 Shop                  Expens:Bike (Electric)       $10.00       $10.00
+end test
+
+test reg "'Bike'"
+24-Jan-01 Shop                  Expens:Bike (Electric)       $10.00       $10.00
+end test
