@@ -450,36 +450,31 @@ value_t expr_value(expr_t::ptr_op_t op) {
 /*--- Script Command ---*/
 
 value_t script_command(call_scope_t& args) {
-  std::istream* in = nullptr;
-  scoped_ptr<ifstream> stream;
-  string pathname;
+  std::istream* in = &std::cin;
+  std::ifstream file;
 
   if (args.has(0)) {
-    pathname = args.get<string>(0);
-    stream.reset(new ifstream(path(pathname)));
-    in = stream.get();
-  } else {
-    pathname = "<stdin>";
-    in = &std::cin;
+    string pathname = args.get<string>(0);
+    file.open(path(pathname));
+    if (!file)
+      throw_(std::runtime_error, _f("Could not open script file: %1%") % pathname);
+    in = &file;
   }
 
   symbol_scope_t file_locals(args);
   std::size_t linenum = 0;
-  char buf[4096];
-  std::istream::pos_type pos;
 
-  while (in->good() && !in->eof()) {
-    pos = in->tellg();
-    in->getline(buf, 4095);
+  for (string line; std::getline(*in, line);) {
     linenum++;
 
-    char* p = skip_ws(buf);
+    char* p = skip_ws(line.data());
     if (*p && *p != ';') {
       try {
         expr_t(p).calc(file_locals);
       } catch (const std::exception&) {
         add_error_context(_f("While parsing value expression on line %1%:") % linenum);
-        add_error_context(source_context(pathname, pos, in->tellg(), "> "));
+        add_error_context("> " + line);
+        throw;
       }
     }
   }

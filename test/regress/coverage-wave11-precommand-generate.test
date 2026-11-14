@@ -1,11 +1,11 @@
-; Test script precommand for report.cc coverage
-; Targets report.cc (script precommand lookup)
-; The script precommand is an alias for source
+; Coverage for report.cc: report_t::lookup finds the `script` precommand
+; (PRECOMMAND, case 's') and runs the named file as value expressions.
+; Unlike `source`, it does not parse a journal.
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00
     Assets:Checking
 
-; Script reads and re-parses a journal file (same as source)
-test script $FILE
+test script $sourcepath/test/regress/coverage-wave11-precommand-generate.dat
+script precommand ran
 end test
