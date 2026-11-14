@@ -270,6 +270,18 @@ public:
   virtual void parse_tags(const char* p, scope_t& scope, bool overwrite_existing = true);
 
   /**
+   * @brief Apply only the `[DATE]` / `[=AUXDATE]` directive of a comment.
+   *
+   * The date half of parse_tags(), as note_date_span() recognizes it.
+   * The parser calls it on a posting's note before checking a balance
+   * assertion, so that post->date() is the posting's own date; the
+   * note's tags are parsed afterwards, once.
+   *
+   * @param p  Raw comment text (without the leading `;`).
+   */
+  void parse_bracket_dates(const char* p);
+
+  /**
    * @brief Append text to this item's note and parse any embedded tags.
    *
    * If the item already has a note, the new text is appended on a new

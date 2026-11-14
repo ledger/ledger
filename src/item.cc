@@ -97,7 +97,7 @@ std::optional<std::pair<std::size_t, std::size_t>> item_t::note_date_span(const 
   return std::make_pair(static_cast<std::size_t>(b + 1 - line), static_cast<std::size_t>(e - line));
 }
 
-void item_t::parse_tags(const char* p, scope_t& scope, bool overwrite_existing) {
+void item_t::parse_bracket_dates(const char* p) {
   if (auto span = note_date_span(p)) {
     string content(p + span->first, span->second - span->first);
     if (auto eq = content.find('='); eq != string::npos) {
@@ -107,7 +107,10 @@ void item_t::parse_tags(const char* p, scope_t& scope, bool overwrite_existing) 
     if (!content.empty())
       _date = parse_date(content);
   }
+}
 
+void item_t::parse_tags(const char* p, scope_t& scope, bool overwrite_existing) {
+  parse_bracket_dates(p);
   parse_metadata_tags(p, scope, *this, overwrite_existing);
 }
 

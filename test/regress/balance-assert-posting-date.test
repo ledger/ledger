@@ -1,0 +1,32 @@
+; A balance assertion or assignment is computed as of its posting's date.
+; When that date is written as `[DATE]` in the posting's note, after the
+; amount, the parser must read it before computing the balance, so that
+; the 2021/03/15 deposit (dated after both) is left out: the assertion
+; sees 12 r, and the assignment, dated 2021/03/02, posts 20 r - 12 r.
+
+2021/01/01 Opening
+    Assets:Bank                       10 r
+    Equity:Opening
+
+2021/03/15 Deposit
+    Assets:Bank                        5 r
+    Income:Salary
+
+2021/04/01 Reconcile
+    Assets:Bank                        2 r = 12 r ; [2021/03/01]
+    Income:Interest
+
+2021/04/02 Adjust
+    Assets:Bank                            = 20 r ; [2021/03/02]
+    Equity:Adjustment
+
+test bal Assets
+                25 r  Assets:Bank
+end test
+
+test reg Assets --sort date
+21-Jan-01 Opening               Assets:Bank                    10 r         10 r
+21-Mar-01 Reconcile             Assets:Bank                     2 r         12 r
+21-Mar-02 Adjust                Assets:Bank                     8 r         20 r
+21-Mar-15 Deposit               Assets:Bank                     5 r         25 r
+end test

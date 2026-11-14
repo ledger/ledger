@@ -750,16 +750,15 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
               "line " << context.linenum << ": "
                       << "POST assign: parsed balance amount = " << *post->assigned_amount);
 
-        // Pre-parse the inline note to extract an effective date before
-        // checking the balance assertion.  The note (e.g. "[=2021-03-01]")
-        // appears after the assertion amount on the same line, but
-        // post->date() must return the effective date so that the
-        // date-filtered account balance in compute_balance_diff() is
-        // correct (fixes #2071).
-        if (item_t::use_aux_date && !stream.eof()) {
+        // A posting's own date may be written in its note, after the
+        // asserted amount (`= 10 r ; [2021/03/01]` or `[=2021/03/01]`).
+        // Read just those dates now, in every mode, so that post->date()
+        // is the posting's date when compute_balance_diff() takes it as
+        // the cutoff (#2071); Step 6 parses the whole note, tags included.
+        if (!stream.eof()) {
           const char* rest = skip_ws(p + static_cast<std::ptrdiff_t>(stream.tellg()));
           if (rest && *rest == ';')
-            post->parse_tags(rest + 1, *context.scope, true);
+            post->parse_bracket_dates(rest + 1);
         }
 
         const amount_t& amt(*post->assigned_amount);

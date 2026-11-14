@@ -1,0 +1,24 @@
+; The posting date in a note after `= AMOUNT` sets the cutoff of a
+; balance assertion.  As of 2021/03/01 the account holds 12 r, so
+; asserting 17 r (its balance on the transaction's own date) fails.
+
+2021/01/01 Opening
+    Assets:Bank                       10 r
+    Equity:Opening
+
+2021/03/15 Deposit
+    Assets:Bank                        5 r
+    Income:Salary
+
+2021/04/01 Reconcile
+    Assets:Bank                        2 r = 17 r ; [2021/03/01]
+    Income:Interest
+
+test bal Assets -> 1
+__ERROR__
+While parsing file "$FILE", line 14:
+While parsing posting:
+  Assets:Bank                        2 r = 17 r ; [2021/03/01]
+                                           ^^^^^^^^^^^^^^^^^^^
+Error: Balance assertion off by 5 r (expected to see 12 r)
+end test
