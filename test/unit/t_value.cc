@@ -8712,5 +8712,53 @@ BOOST_AUTO_TEST_CASE(testEqualityWithNullRightOperand)
   BOOST_CHECK(!(value_t(amount_t("$1")) == value_t()));
 }
 
+BOOST_AUTO_TEST_CASE(testScalarComparesWithBalanceComponentwise)
+{
+  // A number or an amount on the left of a balance compares with each
+  // component, as it does on the right; the balance is never turned into
+  // a single amount.
+  balance_t mixed;
+  mixed += amount_t("$10.00");
+  mixed += amount_t("5 EUR");
+  value_t bal(mixed);
+  value_t zero(0L);
+
+  BOOST_CHECK(zero.is_less_than(bal));
+  BOOST_CHECK(!zero.is_greater_than(bal));
+  BOOST_CHECK(value_t(20L).is_greater_than(bal));
+  BOOST_CHECK(!value_t(20L).is_less_than(bal));
+  BOOST_CHECK(zero < bal);
+  BOOST_CHECK(bal > zero);
+  BOOST_CHECK(!(bal <= zero));
+  BOOST_CHECK(!(zero >= bal));
+
+  // A component that netted to zero in another commodity is left out of
+  // a comparison with an amount, from either side.
+  balance_t netted;
+  netted += amount_t("$5.00");
+  netted += amount_t("10 EUR");
+  netted += amount_t("-10 EUR");
+  BOOST_REQUIRE_EQUAL(netted.amounts.size(), 2U);
+  value_t wallet(netted);
+  value_t three(amount_t("$3.00"));
+  BOOST_CHECK(three.is_less_than(wallet));
+  BOOST_CHECK(!three.is_greater_than(wallet));
+  BOOST_CHECK(three < wallet);
+  BOOST_CHECK(wallet > three);
+
+  // A live component in another commodity is the same error from either
+  // side.
+  BOOST_CHECK_THROW(three.is_less_than(bal), amount_error);
+  BOOST_CHECK_THROW(three.is_greater_than(bal), amount_error);
+  BOOST_CHECK_THROW(bal.is_greater_than(three), amount_error);
+
+  // An empty balance compares false either way, as it does on the left.
+  value_t empty((balance_t()));
+  BOOST_CHECK(!zero.is_less_than(empty));
+  BOOST_CHECK(!zero.is_greater_than(empty));
+  BOOST_CHECK(!empty.is_less_than(zero));
+  BOOST_CHECK(!empty.is_greater_than(zero));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 

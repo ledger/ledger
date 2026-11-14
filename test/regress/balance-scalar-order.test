@@ -1,0 +1,109 @@
+; An account total that holds several commodities, or several lots of
+; one, compares with a number or an amount component by component,
+; whichever side of the operator it is on.
+;
+; A value expression evaluates `a > b` as `b < a`, `a <= b` as
+; `not (b < a)` and `a >= b` as `not (a < b)`.  So `total > 0`,
+; `0 < total`, `total <= 0` and `0 >= total` put the number on the left
+; of the balance.  Ledger used to turn the balance into a single amount
+; there, and failed with "Cannot convert a balance with multiple
+; commodities to an amount", while `total < 0`, `0 > total` and
+; `total >= 0` compared each component.
+;
+; Assets:Mixed holds $10.00 and 5 EUR, every component above zero;
+; Liabilities:Mixed holds $-4.00 and -2 EUR, every component below it;
+; Assets:Split holds $3.00 and -1 EUR, so it is neither above nor below
+; zero.  Assets:Broker holds two lots of AAPL.  Wallet holds $5.00 and
+; Purse $2.00, each beside euros that netted to zero, which take no part
+; in a comparison with an amount in dollars.
+
+2024/01/01 Opening
+    Assets:Mixed        $10.00
+    Assets:Mixed        5 EUR
+    Assets:Split        $3.00
+    Assets:Split        -1 EUR
+    Liabilities:Mixed   $-4.00
+    Liabilities:Mixed   -2 EUR
+    Equity
+
+2024/01/02 Buy shares
+    Assets:Broker       10 AAPL {$1.00}
+    Assets:Broker       5 AAPL {$2.00}
+    Equity
+
+2024/01/03 Pocket money
+    Wallet              $5.00
+    Purse               $2.00
+    Equity
+
+2024/01/04 Euros from a friend
+    Wallet              10 EUR
+    Purse               10 EUR
+    Income:Gifts
+
+2024/01/05 Dinner
+    Expenses:Food       20 EUR
+    Wallet             -10 EUR
+    Purse              -10 EUR
+
+test bal Mixed Split --flat --no-total -d 'total > 0'
+              $10.00
+               5 EUR  Assets:Mixed
+end test
+
+test bal Mixed Split --flat --no-total -d '0 < total'
+              $10.00
+               5 EUR  Assets:Mixed
+end test
+
+test bal Mixed Split --flat --no-total -d 'total < 0'
+              $-4.00
+              -2 EUR  Liabilities:Mixed
+end test
+
+test bal Mixed Split --flat --no-total -d '0 > total'
+              $-4.00
+              -2 EUR  Liabilities:Mixed
+end test
+
+test bal Mixed --flat --no-total -d 'total <= 0'
+              $-4.00
+              -2 EUR  Liabilities:Mixed
+end test
+
+test bal Mixed --flat --no-total -d '0 >= total'
+              $-4.00
+              -2 EUR  Liabilities:Mixed
+end test
+
+test bal Mixed --flat --no-total -d 'total >= 0'
+              $10.00
+               5 EUR  Assets:Mixed
+end test
+
+test bal Mixed --flat --no-total -d '0 <= total'
+              $10.00
+               5 EUR  Assets:Mixed
+end test
+
+test bal Broker Liabilities --lots --flat --no-total -d 'total > 0'
+     10 AAPL {$1.00}
+      5 AAPL {$2.00}  Assets:Broker
+end test
+
+test bal Broker Liabilities --lots --flat --no-total -d 'total <= 0'
+              $-4.00
+              -2 EUR  Liabilities:Mixed
+end test
+
+test bal Wallet Purse --no-total -d 'total > $3'
+               $5.00  Wallet
+end test
+
+test bal Wallet Purse --no-total -d '$3 < total'
+               $5.00  Wallet
+end test
+
+test bal Wallet Purse --no-total -d 'total <= $3'
+               $2.00  Purse
+end test

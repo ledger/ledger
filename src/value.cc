@@ -1241,7 +1241,6 @@ bool value_t::is_less_than(const value_t& val) const {
     case AMOUNT:
       return val.as_amount() > as_long();
     case BALANCE:
-      return val.to_amount() > as_long();
     case SEQUENCE:
       return val.is_greater_than(*this);
     default:
@@ -1260,7 +1259,6 @@ bool value_t::is_less_than(const value_t& val) const {
       else
         return commodity_t::compare_by_commodity()(&as_amount(), &val.as_amount()) < 0;
     case BALANCE:
-      return val.to_amount() > as_amount();
     case SEQUENCE:
       return val.is_greater_than(*this);
     default:
@@ -1413,7 +1411,6 @@ bool value_t::is_greater_than(const value_t& val) const {
     case AMOUNT:
       return val.as_amount() < as_long();
     case BALANCE:
-      return val.to_amount() < as_long();
     case SEQUENCE:
       return val.is_less_than(*this);
     default:
@@ -1428,7 +1425,6 @@ bool value_t::is_greater_than(const value_t& val) const {
     case AMOUNT:
       return as_amount() > val.as_amount();
     case BALANCE:
-      return val.to_amount() < as_amount();
     case SEQUENCE:
       return val.is_less_than(*this);
     default:
