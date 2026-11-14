@@ -520,33 +520,35 @@ public:
   }
 };
 
+class transfer_details;
+
 /**
  * @brief Forwards only postings that match a predicate expression.
  *
  * Used for --limit, --display, --only, and internal filter predicates.
  * Matching postings are flagged with POST_EXT_MATCHES so downstream handlers
  * (e.g., forecast_posts) can detect which postings matched the report query.
+ * With a view (the pre-budget --limit under --pivot), the predicate is
+ * evaluated on view->transfer(post) and the original posting is forwarded.
  */
 class filter_posts : public item_handler<post_t> {
-  predicate_t pred; ///< The predicate expression to evaluate.
-  scope_t& context; ///< Scope for binding the predicate to each posting.
+  predicate_t pred;                       ///< The predicate expression to evaluate.
+  scope_t& context;                       ///< Scope for binding the predicate to each posting.
+  std::shared_ptr<transfer_details> view; ///< When set, the predicate sees view->transfer(post).
 
   filter_posts();
 
 public:
-  filter_posts(post_handler_ptr handler, const predicate_t& predicate, scope_t& _context)
-      : item_handler<post_t>(std::move(handler)), pred(predicate), context(_context) {
-    TRACE_CTOR(filter_posts, "post_handler_ptr, predicate_t, scope_t&");
+  filter_posts(post_handler_ptr handler, const predicate_t& predicate, scope_t& _context,
+               std::shared_ptr<transfer_details> _view = nullptr)
+      : item_handler<post_t>(std::move(handler)), pred(predicate), context(_context),
+        view(std::move(_view)) {
+    TRACE_CTOR(filter_posts,
+               "post_handler_ptr, predicate_t, scope_t&, std::shared_ptr<transfer_details>");
   }
   ~filter_posts() override { TRACE_DTOR(filter_posts); }
 
-  void operator()(post_t& post) override {
-    bind_scope_t bound_scope(context, post);
-    if (pred(bound_scope)) {
-      post.xdata().add_flags(POST_EXT_MATCHES);
-      (*handler)(post);
-    }
-  }
+  void operator()(post_t& post) override;
 
   void clear() override {
     pred.mark_uncompiled();
@@ -1240,6 +1242,9 @@ public:
     TRACE_DTOR(transfer_details);
     handler.reset();
   }
+
+  /// @brief Return the rewritten temporary copy of post without forwarding it.
+  post_t& transfer(post_t& post);
 
   void operator()(post_t& post) override;
 

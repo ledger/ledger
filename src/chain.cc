@@ -142,13 +142,6 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t
         handler, predicate_t(report.HANDLER(limit_).str(), report.what_to_keep()), report);
   }
 
-  // budget_posts takes a set of posts from a data file and uses them to
-  // generate "budget posts" which balance against the reported posts.
-  //
-  // forecast_posts is a lot like budget_posts, except that it adds xacts
-  // only for the future, and does not balance them against anything but the
-  // future balance.
-
   // When --pivot is active, apply the account-name transformation before the
   // --limit predicate so that command-line account queries (which become
   // --limit terms) match the pivoted account names rather than the original
@@ -157,12 +150,20 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t
   // Because --pivot keeps the original account as a suffix, a query like
   // `bal --pivot Project Expenses` still matches the original "Expenses"
   // segment, so the same filter works for both pivoted and unpivoted names.
+  std::shared_ptr<transfer_details> pivot_handler;
   if (report.HANDLED(pivot_) && !report.HANDLED(account_)) {
-    handler = std::make_shared<transfer_details>(
+    pivot_handler = std::make_shared<transfer_details>(
         handler, transfer_details::SET_ACCOUNT, report.session.journal->master,
         pivot_account_expr(report.HANDLER(pivot_).str()), report);
+    handler = pivot_handler;
   }
 
+  // budget_posts takes a set of posts from a data file and uses them to
+  // generate "budget posts" which balance against the reported posts.
+  //
+  // forecast_posts is a lot like budget_posts, except that it adds xacts
+  // only for the future, and does not balance them against anything but the
+  // future balance.
   if (report.budget_flags != BUDGET_NO_BUDGET) {
     auto budget_handler =
         std::make_shared<budget_posts>(handler, report.terminus.date(), report.budget_flags);
@@ -183,10 +184,15 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t
     // Apply this before the budget handler, so that only matching posts are
     // calculated toward the budget.  The use of filter_posts above will
     // further clean the results so that no automated posts that don't match
-    // the filter get reported.
+    // the filter get reported.  Under --pivot it evaluates the predicate on
+    // the pivoted copy (as the primary filter does) but passes the original
+    // posting on, because budget_posts matches original accounts; each
+    // posting it sees therefore gets one extra temporary copy in the pivot
+    // handler's temps, released by clear().
     if (report.HANDLED(limit_))
       handler = std::make_shared<filter_posts>(
-          handler, predicate_t(report.HANDLER(limit_).str(), report.what_to_keep()), report);
+          handler, predicate_t(report.HANDLER(limit_).str(), report.what_to_keep()), report,
+          pivot_handler);
   } else if (report.HANDLED(forecast_while_)) {
     auto forecast_handler = std::make_shared<forecast_posts>(
         handler, predicate_t(report.HANDLER(forecast_while_).str(), report.what_to_keep()), report,
@@ -199,7 +205,8 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t
     // See above, under budget_posts.
     if (report.HANDLED(limit_))
       handler = std::make_shared<filter_posts>(
-          handler, predicate_t(report.HANDLER(limit_).str(), report.what_to_keep()), report);
+          handler, predicate_t(report.HANDLER(limit_).str(), report.what_to_keep()), report,
+          pivot_handler);
   }
 
   return handler;

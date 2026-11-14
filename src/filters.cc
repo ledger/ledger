@@ -2244,7 +2244,7 @@ void by_payee_posts::operator()(post_t& post) {
  * - SET_ACCOUNT_REPLACE: the expression result replaces the account entirely.
  * - SET_PAYEE: the transaction payee is replaced.
  */
-void transfer_details::operator()(post_t& post) {
+post_t& transfer_details::transfer(post_t& post) {
   xact_t& xact = temps.copy_xact(*post.xact);
   xact._date = post.date();
 
@@ -2283,7 +2283,21 @@ void transfer_details::operator()(post_t& post) {
     }
   }
 
-  item_handler<post_t>::operator()(temp);
+  return temp;
+}
+
+void transfer_details::operator()(post_t& post) {
+  item_handler<post_t>::operator()(transfer(post));
+}
+
+/// Evaluate the predicate on the posting, or on its view->transfer() copy
+/// when a view is set, and forward the original posting when it matches.
+void filter_posts::operator()(post_t& post) {
+  bind_scope_t bound_scope(context, view ? view->transfer(post) : post);
+  if (pred(bound_scope)) {
+    post.xdata().add_flags(POST_EXT_MATCHES);
+    (*handler)(post);
+  }
 }
 
 /*--- Day-of-week subtotaling ---*/

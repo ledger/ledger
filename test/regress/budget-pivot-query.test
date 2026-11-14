@@ -1,0 +1,70 @@
+; With --budget, --add-budget or --forecast the query is applied twice: once
+; before budget_posts (so only matching postings drive the budget) and once
+; after --pivot.  Both must see the pivoted account name, as a query does
+; without a budget (test/regress/1154.test).  Budget and forecast postings
+; carry no Project tag, so they keep their original accounts and the
+; pivoted query leaves them out.
+
+~ Monthly
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/01/05 Grocer
+    ; Project: Alpha
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/06 Diner
+    Expenses:Food    $7.00
+    Assets:Cash
+
+2024/02/07 Grocer
+    ; Project: Alpha
+    Expenses:Food    $12.00
+    Assets:Cash
+
+test reg --pivot Project Alpha
+24-Jan-05 Grocer                Pro:Alph:Expenses:Food       $10.00       $10.00
+24-Jan-05 Grocer                Proj:Alpha:Assets:Cash      $-10.00            0
+24-Feb-07 Grocer                Pro:Alph:Expenses:Food       $12.00       $12.00
+24-Feb-07 Grocer                Proj:Alpha:Assets:Cash      $-12.00            0
+end test
+
+test reg --budget --pivot Project Alpha --now 2024/03/01
+24-Jan-05 Grocer                Pro:Alph:Expenses:Food       $10.00       $10.00
+24-Jan-05 Grocer                Proj:Alpha:Assets:Cash      $-10.00            0
+24-Feb-07 Grocer                Pro:Alph:Expenses:Food       $12.00       $12.00
+24-Feb-07 Grocer                Proj:Alpha:Assets:Cash      $-12.00            0
+end test
+
+test bal --budget --pivot Project Alpha --now 2024/03/01
+                   0  Project:Alpha
+             $-22.00    Assets:Cash
+              $22.00    Expenses:Food
+--------------------
+                   0
+end test
+
+test reg --add-budget --pivot Project Alpha --end 2024/03/01
+24-Jan-05 Grocer                Pro:Alph:Expenses:Food       $10.00       $10.00
+24-Jan-05 Grocer                Proj:Alpha:Assets:Cash      $-10.00            0
+24-Feb-07 Grocer                Pro:Alph:Expenses:Food       $12.00       $12.00
+24-Feb-07 Grocer                Proj:Alpha:Assets:Cash      $-12.00            0
+end test
+
+test reg --forecast 'd<[2024/04/01]' --pivot Project Alpha --now 2024/02/15
+24-Jan-05 Grocer                Pro:Alph:Expenses:Food       $10.00       $10.00
+24-Jan-05 Grocer                Proj:Alpha:Assets:Cash      $-10.00            0
+24-Feb-07 Grocer                Pro:Alph:Expenses:Food       $12.00       $12.00
+24-Feb-07 Grocer                Proj:Alpha:Assets:Cash      $-12.00            0
+end test
+
+; A term that matches the original account still matches the pivoted name,
+; so budget rows for Expenses:Food are reported as before.
+test reg --budget --pivot Project Expenses --end 2024/03/01
+24-Jan-01 Budget transaction    Expenses:Food               $-50.00      $-50.00
+24-Jan-05 Grocer                Pro:Alph:Expenses:Food       $10.00      $-40.00
+24-Jan-06 Diner                 Expenses:Food                 $7.00      $-33.00
+24-Feb-01 Budget transaction    Expenses:Food               $-50.00      $-83.00
+24-Feb-07 Grocer                Pro:Alph:Expenses:Food       $12.00      $-71.00
+end test
