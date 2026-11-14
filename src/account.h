@@ -117,6 +117,38 @@ public:
   std::optional<expr_t>
       value_expr; ///< Custom valuation expression overriding commodity-level valuation.
 
+  /**
+   * @brief Running total of `posts` that serves self_total().
+   *
+   * Sums, in file order, the posts up to and including `last`, both
+   * combined and real-only, with the latest date() among them.  It
+   * catches up lazily on the posts appended since, so add_post() pays
+   * nothing.  remove_post()/remove_posts() and a change of
+   * item_t::use_aux_date reset it.  A copy starts empty, because `last`
+   * points into another account's list.
+   */
+  struct running_total_t {
+    value_t total;                             ///< All posts' amounts.
+    value_t real_total;                        ///< Non-virtual posts' amounts.
+    optional<date_t> latest;                   ///< Greatest post->date() summed.
+    optional<posts_list::const_iterator> last; ///< Last post summed.
+    bool aux_dates = false;                    ///< item_t::use_aux_date when summed.
+
+    running_total_t() = default;
+    running_total_t(const running_total_t&) {}
+    running_total_t& operator=(const running_total_t&) {
+      reset();
+      return *this;
+    }
+    void reset() {
+      total = value_t();
+      real_total = value_t();
+      latest = none;
+      last = none;
+    }
+  };
+  mutable running_total_t running_total_;
+
   mutable string _fullname; ///< Cached colon-joined full name, computed lazily by fullname().
 
   explicit account_t(account_t* _parent = nullptr, const string& _name = "",
@@ -493,13 +525,18 @@ public:
                  const optional<expr_t&>& expr = none) const;
 
   /**
-   * @brief Unconditional sum of all posting amounts (ignores visit flags).
+   * @brief Sum of the account's own postings (ignores visit flags).
    *
    * Unlike amount(), this sums every posting in the account regardless
-   * of whether it was visited by the reporting pipeline.  Useful for
-   * balance assertions during parsing.
+   * of whether it was visited by the reporting pipeline: only the real
+   * ones when @p real_only, and only those whose date() is on or before
+   * @p cutoff when one is given.  Each entry of `posts` counts once, and
+   * every posting is registered there once.  The sum is answered from
+   * `running_total_` unless a posting dated after the cutoff exists, in
+   * which case the account is rescanned.  Balance assertions and
+   * assignments use it while parsing.
    */
-  value_t self_total(bool real_only = false) const;
+  value_t self_total(bool real_only = false, const optional<date_t>& cutoff = none) const;
 
   /**
    * @brief Recursive family total: this account's amount() plus all children's total().

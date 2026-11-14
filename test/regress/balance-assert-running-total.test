@@ -1,0 +1,85 @@
+; Balance assertions compare against a running total that the parser
+; keeps for each account.  Each section below exercises one way that
+; total could go stale; `--verify` (in builds with VERIFY_ON) also checks
+; every cached total against a full rescan of the account.
+
+; Out of date order: a later-dated posting is written first.  Assertions
+; dated before it must leave it out; assertions dated after it count it.
+2024/03/01 Future deposit
+    Assets:Bank                         $100
+    Income:Salary
+
+2024/01/01 Opening
+    Assets:Bank                          $10 = $10
+    Equity:Opening
+
+2024/01/02 Deposit
+    Assets:Bank                           $5 = $15
+    Income:Salary
+
+2024/03/02 After the future deposit
+    Assets:Bank                           $1 = $116
+    Income:Interest
+
+2024/03/03 In order again
+    Assets:Bank                           $1 = $117
+    Income:Interest
+
+; A transaction repeating a UUID is discarded after its postings were
+; registered; a later assertion must not count them.
+2024/04/01 First copy
+    ; UUID: 0123
+    Assets:Bank                          $10 = $127
+    Income:Salary
+
+2024/04/01 First copy
+    ; UUID: 0123
+    Assets:Bank                          $10 = $127
+    Income:Salary
+
+2024/04/02 After the duplicate
+    Assets:Bank                           $1 = $128
+    Income:Interest
+
+; Real and virtual postings to one account: a virtual assertion reads the
+; combined total, a real one only the real postings (#543).
+2024/05/01 Virtual
+    (Assets:Bank)                        $50 = $178
+
+2024/05/02 Real
+    Assets:Bank                           $2 = $130
+    Income:Interest
+
+2024/05/03 Virtual again
+    (Assets:Bank)                         $0 = $180
+
+; A timelog posting is registered with its account once, so an
+; assertion and an assignment after a clock pair count its hours once.
+i 2024/06/01 09:00:00 Hours:Project
+o 2024/06/01 10:30:00
+
+2024/06/02 Check hours
+    Hours:Project                          0s = 5400s
+    Equity:Hours
+
+i 2024/06/03 09:00:00 Hours:Project
+o 2024/06/03 09:30:00
+
+2024/06/04 Settle hours
+    Hours:Project                             = 0s
+    Equity:Hours
+
+test bal Assets
+                $180  Assets:Bank
+end test
+
+test bal Assets --verify
+                $180  Assets:Bank
+end test
+
+test reg Hours
+24-Jun-01                       Hours:Project                 1.50h        1.50h
+24-Jun-03                       Hours:Project                 30.0m        2.00h
+24-Jun-04 Settle hours          Hours:Project                -2.00h            0
+                                Equity:Hours                  2.00h        2.00h
+end test

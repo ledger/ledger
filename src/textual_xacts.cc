@@ -413,37 +413,22 @@ static balance_t compute_balance_diff(const amount_t& amt, post_t* post, xact_t*
   } else {
     real_only = false;
   }
-  value_t account_total;
+  // File-order accumulation counts every posting parsed so far for this
+  // account, regardless of date.  It is required in --effective mode for
+  // postings without an explicit effective date, so that assertions are
+  // not confused by other postings whose effective dates land after the
+  // current posting's primary date (fixes #2966), and is selected via
+  // --check-in-file-order to restore the pre-#1092 behaviour (#3186).
+  // Otherwise only postings dated on or before this one count, so that an
+  // assertion is not polluted by later-dated postings written earlier in
+  // the file (#847, #1092); with an explicit effective date under
+  // --effective that is effective-date order (#2071).
   bool use_file_order = (context.journal && context.journal->check_in_file_order) ||
                         (item_t::use_aux_date && !post->aux_date());
-  if (use_file_order) {
-    // File-order accumulation: sum every posting parsed so far for this
-    // account, regardless of date.  This is required in --effective mode
-    // for postings without an explicit effective date so that assertions
-    // are not confused by other postings whose effective dates land after
-    // the current posting's primary date (fixes #2966).  It is also
-    // selected via --check-in-file-order to restore the pre-#1092
-    // behaviour for users who depend on file order rather than date
-    // order (issue #3186).
-    account_total = post->account->self_total(real_only);
-  } else {
-    // Filter account posts by date so that balance assertions respect
-    // date ordering rather than file order.  In --effective mode with
-    // an explicit effective date this uses effective-date ordering
-    // (fixes #2071); otherwise it uses primary-date ordering so that
-    // an assertion dated before later-dated transactions in the file
-    // is not polluted by those future-dated posts (fixes #847, #1092).
-    date_t cutoff = post->date();
-    std::set<const post_t*> seen;
-    for (const post_t* p : post->account->posts) {
-      if (!seen.insert(p).second)
-        continue;
-      if (real_only && p->has_flags(POST_VIRTUAL))
-        continue;
-      if (!p->amount.is_null() && p->date() <= cutoff)
-        add_or_set_value(account_total, p->amount);
-    }
-  }
+  optional<date_t> cutoff;
+  if (!use_file_order)
+    cutoff = post->date();
+  value_t account_total = post->account->self_total(real_only, cutoff);
   if (strip_annotations)
     account_total = account_total.strip_annotations(keep_details_t());
 

@@ -237,6 +237,8 @@ void account_t::apply_deferred_posts() {
 }
 
 bool account_t::remove_post(post_t* post) {
+  running_total_.reset();
+
   // It's possible that 'post' wasn't yet in this account, but try to
   // remove it anyway.  This can happen if there is an error during
   // parsing, when the posting knows what its account is, but
@@ -264,6 +266,8 @@ bool account_t::remove_post(post_t* post) {
 }
 
 void account_t::remove_posts(const std::set<post_t*>& doomed) {
+  running_total_.reset();
+
   auto is_doomed = [&doomed](post_t* post) { return doomed.count(post) != 0; };
 
   posts.remove_if(is_doomed);
@@ -952,17 +956,43 @@ value_t account_t::amount(const optional<bool> real_only, const optional<expr_t&
   return real_only == true ? real_total : total;
 }
 
-value_t account_t::self_total(bool real_only) const {
+static value_t sum_posts(const posts_list& posts, bool real_only, const optional<date_t>& cutoff) {
   value_t result;
-  std::set<const post_t*> seen;
   for (const post_t* post : posts) {
-    if (!seen.insert(post).second)
-      continue;
     if (real_only && post->has_flags(POST_VIRTUAL))
       continue;
-    if (!post->amount.is_null())
+    if (!post->amount.is_null() && (!cutoff || post->date() <= *cutoff))
       add_or_set_value(result, post->amount);
   }
+  return result;
+}
+
+value_t account_t::self_total(bool real_only, const optional<date_t>& cutoff) const {
+  running_total_t& rt(running_total_);
+  if (rt.aux_dates != item_t::use_aux_date) {
+    rt.reset();
+    rt.aux_dates = item_t::use_aux_date;
+  }
+  for (auto i = rt.last ? std::next(*rt.last) : posts.begin(); i != posts.end(); ++i) {
+    const post_t* post = *i;
+    if (!post->amount.is_null()) {
+      add_or_set_value(rt.total, post->amount);
+      if (!post->has_flags(POST_VIRTUAL))
+        add_or_set_value(rt.real_total, post->amount);
+    }
+    date_t when = post->date();
+    if (!rt.latest || when > *rt.latest)
+      rt.latest = when;
+    rt.last = i;
+  }
+
+  // A post dated after the cutoff exists only when posts arrived out of
+  // date order (#847, #1092, #2071); only then rescan the account.
+  if (cutoff && rt.latest && *cutoff < *rt.latest)
+    return sum_posts(posts, real_only, cutoff);
+
+  value_t result = real_only ? rt.real_total : rt.total;
+  VERIFY(result == sum_posts(posts, real_only, cutoff));
   return result;
 }
 

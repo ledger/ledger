@@ -258,6 +258,41 @@ BOOST_AUTO_TEST_CASE(testRemovePostKeepsOthersInOrder)
   BOOST_CHECK(root.valid());
 }
 
+BOOST_AUTO_TEST_CASE(testSelfTotalRunningTotal)
+{
+  account_t root;
+  account_t* bank = root.find_account("Assets:Bank");
+
+  post_t later(bank, amount_t(100L));
+  later._date = date_t(2024, 3, 1);
+  post_t first(bank, amount_t(10L));
+  first._date = date_t(2024, 1, 1);
+  post_t virt(bank, amount_t(50L), POST_VIRTUAL);
+  virt._date = date_t(2024, 1, 2);
+
+  // A later-dated post written first: a cutoff before it leaves it out.
+  bank->add_post(&later);
+  bank->add_post(&first);
+  BOOST_CHECK(bank->self_total(false) == value_t(amount_t(110L)));
+  BOOST_CHECK(bank->self_total(false, date_t(2024, 1, 15)) == value_t(amount_t(10L)));
+
+  // Real and combined totals are kept apart.
+  bank->add_post(&virt);
+  BOOST_CHECK(bank->self_total(false, date_t(2024, 3, 1)) == value_t(amount_t(160L)));
+  BOOST_CHECK(bank->self_total(true, date_t(2024, 3, 1)) == value_t(amount_t(110L)));
+  BOOST_CHECK(bank->self_total(false, date_t(2024, 2, 1)) == value_t(amount_t(60L)));
+
+  // Removing posts the running total already counted.
+  bank->remove_post(&later);
+  BOOST_CHECK(bank->self_total(false) == value_t(amount_t(60L)));
+  BOOST_CHECK(bank->self_total(true) == value_t(amount_t(10L)));
+  bank->remove_posts(std::set<post_t*>{&virt});
+  BOOST_CHECK(bank->self_total(false) == value_t(amount_t(10L)));
+
+  bank->remove_post(&first);
+  BOOST_CHECK(bank->self_total(false).is_null());
+}
+
 BOOST_AUTO_TEST_CASE(testXdata)
 {
   account_t root;
