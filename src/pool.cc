@@ -868,12 +868,13 @@ commodity_t* commodity_pool_t::parse_price_expression(const std::string& str, co
  * @brief Pre-fetch price quotes for all eligible commodities in batch.
  *
  * Collects every commodity that might need a fresh quote (not builtin,
- * not flagged NOMARKET or PRIMARY (a commodity others are priced in),
- * listed once even when aliased, and without a last_quote within
- * quote_leeway seconds of the wall clock).  For each candidate, the
- * exchange commodity is inferred from the most recent price in the history
- * graph.  Candidates are grouped by exchange commodity and each group is
- * passed to the batch quote callback in a single invocation.
+ * not flagged NOMARKET, listed once even when aliased, and without a
+ * last_quote within quote_leeway seconds of the wall clock).  A candidate
+ * must have a price of its own (one recorded for it, not the inverted edge
+ * of another commodity's price); it is fetched in terms of the commodity of
+ * its latest such price at or before now.  Candidates are grouped by
+ * exchange commodity and each group is passed to the batch quote callback
+ * in a single invocation.
  *
  * On success, last_quote is set to the wall-clock time so that
  * per-commodity check_for_updated_price() calls during the report skip
@@ -896,11 +897,7 @@ void commodity_pool_t::prefetch_quotes() {
       continue;
     if (&comm == null_commodity)
       continue;
-    // A commodity other commodities are priced in ($ when stocks are priced
-    // in dollars) is marked PRIMARY by add_price.  -V never revalues it, and
-    // -X, which can, fetches its quote lazily in single mode, so it is left
-    // out of the batch, as the old exchange_set exclusion left it out.
-    if (comm.has_flags(COMMODITY_NOMARKET | COMMODITY_BUILTIN | COMMODITY_PRIMARY))
+    if (comm.has_flags(COMMODITY_NOMARKET | COMMODITY_BUILTIN))
       continue;
 
     // Skip commodities that already have a recent quote this session.
@@ -911,10 +908,17 @@ void commodity_pool_t::prefetch_quotes() {
         continue;
     }
 
-    // Only consider commodities that have existing price history.
-    if (std::optional<price_point_t> point =
-            commodity_price_history.find_price(comm.referent(), CURRENT_TIME()))
-      groups[point->price.has_commodity() ? point->price.commodity_ptr() : nullptr].push_back(
+    // Fetch a commodity that has a price of its own, in terms of the
+    // commodity of its latest one at or before now.  map_prices() without
+    // `bidirectionally` never yields the inverted edge that makes "$" look
+    // priced in AAPL once "P AAPL $100" has been read.
+    std::optional<price_point_t> latest;
+    comm.map_prices([&latest](datetime_t when, const amount_t& price) {
+      if (!latest || when > latest->when)
+        latest = price_point_t(when, price);
+    });
+    if (latest)
+      groups[latest->price.has_commodity() ? latest->price.commodity_ptr() : nullptr].push_back(
           std::ref(comm));
   }
 

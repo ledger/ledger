@@ -1,0 +1,23 @@
+; Every commodity with a price of its own is fetched in the batch call,
+; grouped by the commodity of that price: AAPL in terms of EUR and EUR
+; in terms of $.  EUR is not left out for also being the commodity AAPL
+; is priced in, so -X $ values AAPL with both fresh quotes:
+; 10 * 120 EUR * $1.20 = $1440.00 (the stale EUR rate gives $1320.00).
+
+P 2024/01/01 EUR $1.10
+P 2024/01/01 AAPL 100 EUR
+
+2024/01/15 Opening balance
+    Assets:Brokerage        10 AAPL
+    Equity:Opening
+
+test bal Assets:Brokerage -X $ --now 2030/06/15 --download --getquote $sourcepath/test/scripts/mock-getquote-batch-only.sh
+            $1440.00  Assets:Brokerage
+end test
+
+test pricedb --now 2030/06/15 --download --getquote $sourcepath/test/scripts/mock-getquote-batch-only.sh
+P 2024/01/01 00:00:00 AAPL EUR100
+P 2024/06/15 00:00:00 AAPL EUR120
+P 2024/01/01 00:00:00 EUR $1.10
+P 2024/06/15 00:00:00 EUR $1.20
+end test

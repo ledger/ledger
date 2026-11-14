@@ -1,0 +1,23 @@
+; A commodity priced in two commodities is fetched in terms of the
+; commodity of its latest own price at or before now ($ here).  The
+; future-dated EUR price must not count, and EUR, which has no price of
+; its own, must not be fetched "in terms of AAPL" (the inverted link),
+; which also used to drop AAPL from the batch.
+
+P 2024/01/01 AAPL 100 EUR
+P 2024/02/01 AAPL $140.00
+P 2031/01/01 AAPL 90 EUR
+
+2024/01/15 Opening balance
+    Assets:Brokerage        10 AAPL
+    Equity:Opening
+
+test bal Assets:Brokerage --market --now 2030/06/15 --download --getquote $sourcepath/test/scripts/mock-getquote-batch-only.sh
+            $1500.00  Assets:Brokerage
+end test
+
+test pricedb --now 2030/06/15 --download --getquote $sourcepath/test/scripts/mock-getquote-batch-only.sh
+P 2024/01/01 00:00:00 AAPL EUR100
+P 2024/02/01 00:00:00 AAPL $140.00
+P 2024/06/15 00:00:00 AAPL $150.00
+end test

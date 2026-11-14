@@ -1,0 +1,21 @@
+; With --download, prefetch_quotes() fetches a commodity whose only price
+; comes from a P directive in the batch call.  It used to read the
+; inverted price of "$" (priced in AAPL by the same P line) as an
+; exchange, drop AAPL as "an exchange commodity", and fetch nothing.
+; The mock script answers only --batch, so a missed prefetch shows as a
+; warning and the stale $100 price.
+
+P 2024/01/01 AAPL $100.00
+
+2024/01/15 Opening balance
+    Assets:Brokerage        10 AAPL
+    Equity:Opening
+
+test bal Assets:Brokerage --market --now 2030/06/15 --download --getquote $sourcepath/test/scripts/mock-getquote-batch-only.sh
+            $1500.00  Assets:Brokerage
+end test
+
+test pricedb --now 2030/06/15 --download --getquote $sourcepath/test/scripts/mock-getquote-batch-only.sh
+P 2024/01/01 00:00:00 AAPL $100.00
+P 2024/06/15 00:00:00 AAPL $150.00
+end test
