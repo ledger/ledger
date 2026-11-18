@@ -120,8 +120,6 @@ public:
   /// @brief Return a human-readable "file:line" string for error messages.
   string location() const { return file_context(pathname, linenum); }
 
-  /// @brief Emit a warning prefixed with the current file location.
-  void warning(const string& what) const { warning_func(location() + " " + what); }
   /// @brief Emit a warning from a boost::format, prefixed with location.
   void warning(const boost::format& what) const {
     warning_func(location() + " " + string(what.str()));
@@ -190,9 +188,6 @@ public:
   void push(const path& pathname, const path& cwd = safe_current_path()) {
     parsing_context.push_front(open_for_reading(pathname, cwd));
   }
-
-  /// Push a pre-built context (used when cloning state for sub-parsing).
-  void push(const parse_context_t& context) { parsing_context.push_front(context); }
 
   /// Pop the most recent context after an included file is fully parsed.
   void pop() {

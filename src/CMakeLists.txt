@@ -68,7 +68,6 @@ if(HAVE_BOOST_PYTHON)
     py_balance.cc
     py_commodity.cc
     py_expr.cc
-    py_format.cc
     py_item.cc
     py_journal.cc
     py_post.cc
@@ -154,18 +153,6 @@ endif()
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     add_compile_options(
-      # -Weverything
-      # -Wno-disabled-macro-expansion
-      # -Wno-padded
-      # -Wno-weak-vtables
-      # -Wno-exit-time-destructors
-      # -Wno-global-constructors
-      # -Wno-switch-enum
-      # -Wno-missing-prototypes
-      # -Wno-missing-noreturn
-      # -Wno-unused-parameter
-      # -Wno-c++98-compat
-      # -fno-limit-debug-info
       -Wno-\#pragma-messages
       -Wno-unused-local-typedef
       --system-header-prefix=include/boost/

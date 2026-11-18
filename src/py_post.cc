@@ -56,30 +56,6 @@ using namespace boost::python;
 
 namespace {
 
-/*--- Tag Query Wrappers ---*/
-
-/// Overloads for has_tag/get_tag accepting string, mask, or mask+value_mask.
-bool py_has_tag_1s(post_t& post, const string& tag) {
-  return post.has_tag(tag);
-}
-bool py_has_tag_1m(post_t& post, const mask_t& tag_mask) {
-  return post.has_tag(tag_mask);
-}
-bool py_has_tag_2m(post_t& post, const mask_t& tag_mask, const std::optional<mask_t>& value_mask) {
-  return post.has_tag(tag_mask, value_mask);
-}
-
-std::optional<value_t> py_get_tag_1s(post_t& post, const string& tag) {
-  return post.get_tag(tag);
-}
-std::optional<value_t> py_get_tag_1m(post_t& post, const mask_t& tag_mask) {
-  return post.get_tag(tag_mask);
-}
-std::optional<value_t> py_get_tag_2m(post_t& post, const mask_t& tag_mask,
-                                     const std::optional<mask_t>& value_mask) {
-  return post.get_tag(tag_mask, value_mask);
-}
-
 /*--- XData and Account Wrappers ---*/
 
 post_t::xdata_t& py_xdata(post_t& post) {
@@ -153,13 +129,6 @@ void export_post() {
       .add_property("assigned_amount",
                     make_getter(&post_t::assigned_amount, return_value_policy<return_by_value>()),
                     make_setter(&post_t::assigned_amount, return_value_policy<return_by_value>()))
-
-      .def("has_tag", py_has_tag_1s)
-      .def("has_tag", py_has_tag_1m)
-      .def("has_tag", py_has_tag_2m)
-      .def("get_tag", py_get_tag_1s)
-      .def("get_tag", py_get_tag_1m)
-      .def("get_tag", py_get_tag_2m)
 
       .add_property("date", &post_t::date)
       .add_property("aux_date", &post_t::aux_date)

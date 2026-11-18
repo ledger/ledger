@@ -54,7 +54,6 @@ void export_amount();
 void export_balance();
 void export_commodity();
 void export_expr();
-void export_format();
 void export_item();
 void export_session();
 void export_journal();
@@ -75,7 +74,6 @@ void initialize_for_python() {
   export_account();
   export_balance();
   export_expr();
-  export_format();
   export_item();
   export_post();
   export_xact();

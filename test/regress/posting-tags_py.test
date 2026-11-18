@@ -1,0 +1,19 @@
+test python test/regress/posting-tags.py
+Expenses:Food
+True True False
+from-post from-xact None
+True post-wins
+from-xact
+Assets:Cash
+False True False
+None from-xact None
+True None
+from-xact
+False None
+ArgumentError
+ArgumentError
+ArgumentError
+ArgumentError
+False False
+True
+end test
