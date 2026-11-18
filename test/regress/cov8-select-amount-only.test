@@ -1,6 +1,6 @@
 ; Coverage test for select.cc
 ; Exercise select with amount as the first (and only) column,
-; triggering the thus_far.empty() -> "-1" code path.
+; where the column offset is int(amount_width) alone (thus_far starts empty).
 
 2024/01/01 Test
     Expenses:Food    $25.00

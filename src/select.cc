@@ -71,35 +71,27 @@ namespace {
  * truncated/formatted version.
  *
  * @param expr           Expression tree to inspect.
- * @param ident          Output: the principal identifier found (if any).
+ * @param ident          Output: the last principal identifier met in a
+ *                       left-to-right walk.  A column that mixes them,
+ *                       such as `account + " " + payee`, is formatted
+ *                       as the last one (here payee).
  * @param do_transforms  If true, rewrite identifiers to display variants.
- * @return true if all identifiers are consistent (only one principal type).
  */
-bool get_principal_identifiers(const expr_t::ptr_op_t& expr, string& ident,
+void get_principal_identifiers(const expr_t::ptr_op_t& expr, string& ident,
                                bool do_transforms = false) {
-  bool result = true;
-
   if (expr->is_ident()) {
     string name(expr->as_ident());
     if (name == "date" || name == "aux_date" || name == "payee") {
-      if (!ident.empty() && !(name == "date" || name == "aux_date" || name == "payee"))
-        result = false;
       ident = name;
     } else if (name == "account") {
-      if (!ident.empty() && !(name == "account"))
-        result = false;
       ident = name;
       if (do_transforms)
         expr->set_ident("display_account");
     } else if (name == "amount") {
-      if (!ident.empty() && !(name == "amount"))
-        result = false;
       ident = name;
       if (do_transforms)
         expr->set_ident("display_amount");
     } else if (name == "total") {
-      if (!ident.empty() && !(name == "total"))
-        result = false;
       ident = name;
       if (do_transforms)
         expr->set_ident("scrubbed_display_total");
@@ -108,15 +100,11 @@ bool get_principal_identifiers(const expr_t::ptr_op_t& expr, string& ident,
 
   if (expr->kind > expr_t::op_t::TERMINALS || expr->is_scope()) {
     if (expr->left()) {
-      if (!get_principal_identifiers(expr->left(), ident, do_transforms))
-        result = false;
+      get_principal_identifiers(expr->left(), ident, do_transforms);
       if (expr->kind > expr_t::op_t::UNARY_OPERATORS && expr->has_right())
-        if (!get_principal_identifiers(expr->right(), ident, do_transforms))
-          result = false;
+        get_principal_identifiers(expr->right(), ident, do_transforms);
     }
   }
-
-  return result;
 }
 } // namespace
 
@@ -124,8 +112,6 @@ bool get_principal_identifiers(const expr_t::ptr_op_t& expr, string& ident,
 
 value_t select_command(call_scope_t& args) {
   string text = "select " + join_args(args);
-  if (text.empty())
-    throw std::logic_error(_("Usage: select TEXT"));
 
   report_t& report(find_scope<report_t>(args));
 
@@ -235,22 +221,21 @@ value_t select_command(call_scope_t& args) {
       std::size_t cols_needed = 0;
       for (const value_t& column : columns.to_sequence()) {
         string ident;
-        if (get_principal_identifiers(as_expr(column), ident)) {
-          if (ident == "date" || ident == "aux_date") {
-            cols_needed += date_width + 1;
-          } else if (ident == "payee") {
-            cols_needed += payee_width + 1;
-            saw_payee = true;
-          } else if (ident == "account") {
-            cols_needed += account_width + 1;
-            saw_account = true;
-          } else if (ident == "amount") {
-            cols_needed += amount_width + 1;
-          } else if (ident == "total") {
-            cols_needed += total_width + 1;
-          } else {
-            cols_needed += meta_width + 1;
-          }
+        get_principal_identifiers(as_expr(column), ident);
+        if (ident == "date" || ident == "aux_date") {
+          cols_needed += date_width + 1;
+        } else if (ident == "payee") {
+          cols_needed += payee_width + 1;
+          saw_payee = true;
+        } else if (ident == "account") {
+          cols_needed += account_width + 1;
+          saw_account = true;
+        } else if (ident == "amount") {
+          cols_needed += amount_width + 1;
+        } else if (ident == "total") {
+          cols_needed += total_width + 1;
+        } else {
+          cols_needed += meta_width + 1;
         }
       }
 
@@ -318,95 +303,91 @@ value_t select_command(call_scope_t& args) {
         formatter << "%(";
 
         string ident;
-        if (get_principal_identifiers(as_expr(column), ident, true)) {
-          if (ident == "date" || ident == "aux_date") {
-            formatter << "ansify_if("
-                      << "ansify_if(justify(format_date(";
+        get_principal_identifiers(as_expr(column), ident, true);
+        if (ident == "date" || ident == "aux_date") {
+          formatter << "ansify_if("
+                    << "ansify_if(justify(format_date(";
 
-            as_expr(column)->print(formatter);
+          as_expr(column)->print(formatter);
 
-            formatter << "), int(date_width)),";
-            formatter << "green if color and date > today),"
-                      << "bold if should_bold)";
+          formatter << "), int(date_width)),";
+          formatter << "green if color and date > today),"
+                    << "bold if should_bold)";
 
-            if (!thus_far.empty())
-              thus_far += " + ";
-            thus_far += "int(date_width) + 1";
-          } else if (ident == "payee") {
-            formatter << "ansify_if("
-                      << "ansify_if(justify(truncated(";
+          if (!thus_far.empty())
+            thus_far += " + ";
+          thus_far += "int(date_width) + 1";
+        } else if (ident == "payee") {
+          formatter << "ansify_if("
+                    << "ansify_if(justify(truncated(";
 
-            as_expr(column)->print(formatter);
+          as_expr(column)->print(formatter);
 
-            formatter << ", int(payee_width)), int(payee_width)),";
-            formatter << "bold if color and !cleared and actual),"
-                      << "bold if should_bold)";
+          formatter << ", int(payee_width)), int(payee_width)),";
+          formatter << "bold if color and !cleared and actual),"
+                    << "bold if should_bold)";
 
-            if (!thus_far.empty())
-              thus_far += " + ";
-            thus_far += "int(payee_width) + 1";
-          } else if (ident == "account") {
+          if (!thus_far.empty())
+            thus_far += " + ";
+          thus_far += "int(payee_width) + 1";
+        } else if (ident == "account") {
+          formatter << "ansify_if(";
+
+          if (accounts_report) {
             formatter << "ansify_if(";
-
-            if (accounts_report) {
-              formatter << "ansify_if(";
-              formatter << "partial_account(options.flat), blue if color),";
-            } else {
-              formatter << "justify(truncated(";
-              as_expr(column)->print(formatter);
-              formatter << ", int(account_width), int(abbrev_len)),"
-                        << "int(account_width), -1, ";
-              formatter << "false, color),";
-
-              if (!thus_far.empty())
-                thus_far += " + ";
-              thus_far += "int(account_width) + 1";
-            }
-
-            formatter << " bold if should_bold)";
-          } else if (ident == "amount" || ident == "total") {
-            formatter << "ansify_if("
-                      << "justify(scrub(";
-
-            as_expr(column)->print(formatter);
-
-            formatter << "), ";
-
-            if (ident == "amount")
-              formatter << "int(amount_width),";
-            else
-              formatter << "int(total_width),";
-
-            if (!thus_far.empty())
-              thus_far += " + ";
-
-            if (ident == "amount")
-              thus_far += "int(amount_width)";
-            else
-              thus_far += "int(total_width)";
-
-            if (thus_far.empty())
-              formatter << "-1";
-            else
-              formatter << thus_far;
-
-            formatter << ", true, color),"
-                      << " bold if should_bold)";
-
-            thus_far += " + 1";
+            formatter << "partial_account(options.flat), blue if color),";
           } else {
-            formatter << "ansify_if("
-                      << "justify(truncated(";
-
+            formatter << "justify(truncated(";
             as_expr(column)->print(formatter);
-
-            formatter << ", int(meta_width or 10)), int(meta_width) or 10),";
-            formatter << "bold if should_bold)";
+            formatter << ", int(account_width), int(abbrev_len)),"
+                      << "int(account_width), -1, ";
+            formatter << "false, color),";
 
             if (!thus_far.empty())
               thus_far += " + ";
-            thus_far += "(int(meta_width) or 10) + 1";
+            thus_far += "int(account_width) + 1";
           }
+
+          formatter << " bold if should_bold)";
+        } else if (ident == "amount" || ident == "total") {
+          formatter << "ansify_if("
+                    << "justify(scrub(";
+
+          as_expr(column)->print(formatter);
+
+          formatter << "), ";
+
+          if (ident == "amount")
+            formatter << "int(amount_width),";
+          else
+            formatter << "int(total_width),";
+
+          if (!thus_far.empty())
+            thus_far += " + ";
+
+          if (ident == "amount")
+            thus_far += "int(amount_width)";
+          else
+            thus_far += "int(total_width)";
+
+          formatter << thus_far;
+
+          formatter << ", true, color),"
+                    << " bold if should_bold)";
+
+          thus_far += " + 1";
+        } else {
+          formatter << "ansify_if("
+                    << "justify(truncated(";
+
+          as_expr(column)->print(formatter);
+
+          formatter << ", int(meta_width or 10)), int(meta_width) or 10),";
+          formatter << "bold if should_bold)";
+
+          if (!thus_far.empty())
+            thus_far += " + ";
+          thus_far += "(int(meta_width) or 10) + 1";
         }
         formatter << ")";
       }
@@ -439,15 +420,7 @@ value_t select_command(call_scope_t& args) {
       // NOLINTEND(bugprone-branch-clone)
     } else if (keyword == "where") {
       /*--- WHERE clause: maps to --limit ---*/
-#if 0
-      query_t          query;
-      keep_details_t   keeper(true, true, true);
-      expr_t::ptr_op_t expr =
-        query.parse_args(string_value(arg).to_sequence(), keeper, false, true);
-      report.HANDLER(limit_).on("#select", query.get_query(query_t::QUERY_LIMIT));
-#else
       report.HANDLER(limit_).on("#select", arg);
-#endif
     } else if (keyword == "display") {
       /*--- DISPLAY clause: maps to --display ---*/
       report.HANDLER(display_).on("#select", arg);
@@ -458,14 +431,7 @@ value_t select_command(call_scope_t& args) {
       /*--- GROUP BY clause: maps to --group-by ---*/
       report.HANDLER(group_by_).on("#select", arg);
     } else if (keyword == "style") {
-      /*--- STYLE clause: output format selection (placeholder) ---*/
-      // NOLINTBEGIN(bugprone-branch-clone)
-      if (arg == "csv") {
-      } else if (arg == "xml") {
-      } else if (arg == "json") {
-      } else if (arg == "emacs") {
-      }
-      // NOLINTEND(bugprone-branch-clone)
+      /*--- STYLE clause: accepted and ignored ---*/
     }
 
     ++m1;

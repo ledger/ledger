@@ -1,14 +1,14 @@
 ; Coverage tests for select.cc
 ; Tests: amount as the very first column with thus_far empty
-; Covers (formatter << "-1" when thus_far is empty)
+; Covers (the column offset is int(amount_width) alone when thus_far starts empty)
 ; (thus_far += " + " when not the first column)
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00
     Assets:Checking
 
-; amount as first and only column - thus_far is empty
-; so formatter uses -1 for the column start position
+; amount as first and only column - thus_far starts empty,
+; so the column offset is int(amount_width) alone
 test select amount --columns 80
       $50.00
      $-50.00

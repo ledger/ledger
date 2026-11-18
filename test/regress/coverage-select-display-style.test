@@ -1,7 +1,7 @@
 ; Coverage test for select.cc display and style clauses
 ; Exercises the parsing of additional SQL-like clauses:
-;   L381-382: display clause parsing
-;   L387-394: style clause parsing (csv, xml, json, emacs branches)
+;   display clause: maps to --display
+;   style clause: accepted and ignored (any name; output unchanged)
 
 2024/01/15 Grocery Store
     Expenses:Food    $50.00
