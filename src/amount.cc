@@ -1508,6 +1508,9 @@ long amount_t::to_long() const {
 }
 
 bool amount_t::fits_in_long() const {
+  if (!quantity)
+    throw_(amount_error, _("Cannot determine if an uninitialized amount fits in a long"));
+
   mpfr_set_q(tempf, MP(quantity), GMP_RNDN);
   return mpfr_fits_slong_p(tempf, GMP_RNDN);
 }

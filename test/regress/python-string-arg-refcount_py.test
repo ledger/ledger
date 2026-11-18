@@ -1,0 +1,25 @@
+; A string passed from a value expression to a Python function reaches
+; it as a str that holds no reference beyond the ones Python itself
+; takes, so it is freed once Python lets go of it.
+;
+; Ledger used to wrap the new str in a borrowed handle, which added a
+; reference nothing released, and leaked one str per call.
+
+python
+    import sys
+    kept = None
+    def keep(s):
+        global kept
+        kept = s
+    control = "".join(["refcount", "-probe"])
+
+eval keep("refcount-probe")
+
+python
+    print(type(kept).__name__, kept == control)
+    print("extra references:", sys.getrefcount(kept) - sys.getrefcount(control))
+
+test reg
+str True
+extra references: 0
+end test

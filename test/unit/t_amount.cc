@@ -1318,6 +1318,7 @@ BOOST_AUTO_TEST_CASE(testIntegerConversion)
 
   BOOST_CHECK_THROW((void)x0.to_long(), amount_error);
   BOOST_CHECK_THROW((void)x0.to_double(), amount_error);
+  BOOST_CHECK_THROW((void)x0.fits_in_long(), amount_error);
   BOOST_CHECK(! x2.fits_in_long());
   BOOST_CHECK_EQUAL(123456L, x1.to_long());
   BOOST_CHECK_EQUAL(123456.0, x1.to_double());

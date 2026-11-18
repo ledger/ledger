@@ -87,9 +87,9 @@ struct python_run {
   object result;
 
   python_run(python_interpreter_t* interpreter, const string& str, int input_mode)
-      : result(handle<>(borrowed(PyRun_String(str.c_str(), input_mode,
-                                              interpreter->main_module->module_globals.ptr(),
-                                              interpreter->main_module->module_globals.ptr())))) {}
+      : result(handle<>(PyRun_String(str.c_str(), input_mode,
+                                     interpreter->main_module->module_globals.ptr(),
+                                     interpreter->main_module->module_globals.ptr()))) {}
   operator object() { return result; }
 };
 
@@ -486,6 +486,16 @@ expr_t::ptr_op_t python_interpreter_t::lookup(const symbol_t::kind_t kind, const
 }
 
 namespace {
+/// Gives SIGINT its default disposition for the life of one call into
+/// Python, so Ctrl-C stops runaway Python code, and reinstalls Ledger's
+/// handler on every exit from the call, normal or exceptional.
+struct sigint_default_guard {
+  sigint_default_guard() { std::signal(SIGINT, SIG_DFL); }
+  ~sigint_default_guard() { std::signal(SIGINT, sigint_handler); }
+  sigint_default_guard(const sigint_default_guard&) = delete;
+  sigint_default_guard& operator=(const sigint_default_guard&) = delete;
+};
+
 object convert_value_to_python(const value_t& val) {
   switch (val.type()) {
   case value_t::VOID: // a null value (i.e., uninitialized)
@@ -505,7 +515,7 @@ object convert_value_to_python(const value_t& val) {
   case value_t::COMMODITY: // a ledger::commodity_t
     return object(val.as_commodity());
   case value_t::STRING: // a string object
-    return object(handle<>(borrowed(str_to_py_unicode(val.as_string()))));
+    return object(handle<>(str_to_py_unicode(val.as_string())));
   case value_t::MASK: // a regular expression mask
     return object(val);
   case value_t::SEQUENCE: { // a vector of value_t objects
@@ -540,13 +550,11 @@ object convert_value_to_python(const value_t& val) {
 } // namespace
 
 value_t python_interpreter_t::functor_t::operator()(call_scope_t& args) {
+  sigint_default_guard sigint_guard;
   try {
-    std::signal(SIGINT, SIG_DFL);
-
     if (!PyCallable_Check(func.ptr())) {
       extract<value_t> val(func);
       DEBUG("python.interp", "Value of Python '" << name << "': " << val);
-      std::signal(SIGINT, sigint_handler);
       if (val.check())
         return val();
       return NULL_VALUE;
@@ -571,7 +579,6 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args) {
           Py_DECREF(val);
           return NULL_VALUE;
         }
-        std::signal(SIGINT, sigint_handler);
         return result;
       } else if (PyErr_Occurred()) {
         PyErr_Print();
@@ -580,18 +587,12 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args) {
         assert(false);
       }
     } else {
-      std::signal(SIGINT, sigint_handler);
       return call<value_t>(func.ptr());
     }
   } catch (const error_already_set&) {
-    std::signal(SIGINT, sigint_handler);
     PyErr_Print();
     throw_(calc_error, _f("Failed call to Python function '%1%'") % name);
-  } catch (...) {
-    std::signal(SIGINT, sigint_handler);
-    throw;
   }
-  std::signal(SIGINT, sigint_handler);
 
   return NULL_VALUE;
 }

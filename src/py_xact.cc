@@ -83,16 +83,8 @@ long posts_len(xact_base_t& xact) {
 }
 
 post_t& posts_getitem(xact_base_t& xact, long i) {
-  long len = static_cast<long>(xact.posts.size());
-  if (labs(i) >= len) {
-    PyErr_SetString(PyExc_IndexError, _("Index out of range"));
-    throw_error_already_set();
-  }
-
-  long x = i < 0 ? len + i : i;
-  auto it = xact.posts.begin();
-  std::advance(it, x);
-  return **it;
+  return **std::next(xact.posts.begin(),
+                     static_cast<std::ptrdiff_t>(py_sequence_index(i, xact.posts.size())));
 }
 
 } // unnamed namespace

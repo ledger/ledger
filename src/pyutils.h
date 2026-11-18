@@ -165,6 +165,18 @@ PyObject* str_to_py_unicode(const T& str) {
   return PyUnicode_FromString(str.c_str());
 }
 
+/// Maps a Python sequence index onto [0, len): a negative index counts
+/// from the end.  Any index outside [-len, len) sets IndexError and
+/// throws error_already_set.
+inline std::size_t py_sequence_index(long i, std::size_t len) {
+  const long n = static_cast<long>(len);
+  if (i >= n || i < -n) {
+    PyErr_SetString(PyExc_IndexError, _("Index out of range"));
+    boost::python::throw_error_already_set();
+  }
+  return static_cast<std::size_t>(i < 0 ? n + i : i);
+}
+
 } // namespace ledger::python
 
 // boost::python::register_ptr_to_python< std::shared_ptr<Base> >();

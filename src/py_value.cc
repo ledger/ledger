@@ -79,18 +79,17 @@ std::optional<value_t> py_value_2d(const value_t& value, const commodity_t* in_t
 
 /*--- Type Introspection and Debugging ---*/
 
-/// Returns the Python type object corresponding to the value's current
-/// variant type (PyBool_Type, PyLong_Type, PyUnicode_Type, or the
-/// Boost.Python wrapper class).
-PyObject* py_base_type(value_t& value) {
+/// Returns the Python type object for the value's current variant type:
+/// bool, int or str for boolean, integer and string values, ledger.Value
+/// for every other type.
+object py_base_type(value_t& value) {
   PyTypeObject* const t = value.is_boolean()  ? &PyBool_Type
                           : value.is_long()   ? &PyLong_Type
                           : value.is_string() ? &PyUnicode_Type
                                               : nullptr;
   if (t != nullptr)
-    return reinterpret_cast<PyObject*>(t);
-  object typeobj(object(value).attr("__class__"));
-  return typeobj.ptr();
+    return object(handle<>(borrowed(reinterpret_cast<PyObject*>(t))));
+  return object(value).attr("__class__");
 }
 
 string py_dump(const value_t& value) {

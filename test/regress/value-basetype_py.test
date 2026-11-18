@@ -1,0 +1,30 @@
+; Value.basetype() returns the Python type behind a Value: bool and str
+; for boolean and string values, ledger.Value for every other kind.  It
+; hands Python a reference it owns, so calling it any number of times
+; leaves the reference count of the returned type unchanged.
+;
+; Ledger used to return a borrowed type object as a new reference, so
+; each call on an amount-valued Value released one reference to the
+; ledger.Value class, and a loop of a few hundred calls freed the class
+; and crashed.
+
+python
+    import sys
+    import ledger
+    def show(val):
+        print(ledger.Value(True).basetype(), ledger.string_value("s").basetype())
+        amount = ledger.Value(ledger.Amount("$1"))
+        balance = ledger.Value(ledger.Balance(ledger.Amount("$1")))
+        print(amount.basetype(), balance.basetype())
+        before = sys.getrefcount(ledger.Value)
+        for _ in range(1000):
+            amount.basetype()
+        print("refcount unchanged:", sys.getrefcount(ledger.Value) == before)
+
+eval show(1)
+
+test reg
+<class 'bool'> <class 'str'>
+<class 'ledger.Value'> <class 'ledger.Value'>
+refcount unchanged: True
+end test

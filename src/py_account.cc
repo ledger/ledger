@@ -70,16 +70,9 @@ long accounts_len(account_t& account) {
 }
 
 account_t& accounts_getitem(account_t& account, long i) {
-  long len = static_cast<long>(account.accounts.size());
-
-  if (labs(i) >= len) {
-    PyErr_SetString(PyExc_IndexError, _("Index out of range"));
-    throw_error_already_set();
-  }
-
-  long x = i < 0 ? len + i : i;
-  auto elem = std::next(account.accounts.begin(), x);
-  return *elem->second;
+  return *std::next(account.accounts.begin(),
+                    static_cast<std::ptrdiff_t>(py_sequence_index(i, account.accounts.size())))
+              ->second;
 }
 
 #if 0

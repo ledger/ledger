@@ -1,0 +1,23 @@
+test python test/regress/query-getitem-bounds.py
+query 3 ['$10.00', '$3.00', '$-13.00', '$10.00', '$3.00', '$-13.00']
+query 3 IndexError: Index out of range
+query -4 IndexError: Index out of range
+query -9223372036854775808 IndexError: Index out of range
+last is last iterated: True
+empty query 0 []
+empty query 0 IndexError: Index out of range
+empty query -1 IndexError: Index out of range
+empty query -9223372036854775808 IndexError: Index out of range
+xact 3 ['$10.00', '$3.00', '$-13.00', '$10.00', '$3.00', '$-13.00']
+xact 3 IndexError: Index out of range
+xact -4 IndexError: Index out of range
+xact -9223372036854775808 IndexError: Index out of range
+account 2 ['Expenses:Drink', 'Expenses:Food', 'Expenses:Drink', 'Expenses:Food']
+account 2 IndexError: Index out of range
+account -3 IndexError: Index out of range
+account -9223372036854775808 IndexError: Index out of range
+leaf account 0 []
+leaf account 0 IndexError: Index out of range
+leaf account -1 IndexError: Index out of range
+leaf account -9223372036854775808 IndexError: Index out of range
+end test

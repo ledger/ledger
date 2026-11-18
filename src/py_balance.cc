@@ -139,15 +139,7 @@ amount_t balance_getitem(balance_t& bal, long i) {
   // map's own hash order, which differs from one run to the next.
   balance_t::amounts_array sorted;
   bal.sorted_amounts(sorted);
-  long len = static_cast<long>(sorted.size());
-
-  if (i >= len || i < -len) {
-    PyErr_SetString(PyExc_IndexError, _("Index out of range"));
-    throw_error_already_set();
-  }
-
-  long x = i < 0 ? len + i : i;
-  return *sorted[static_cast<std::size_t>(x)];
+  return *sorted[py_sequence_index(i, sorted.size())];
 }
 
 /*--- Annotation Stripping and String Conversion ---*/

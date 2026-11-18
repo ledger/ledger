@@ -324,8 +324,9 @@ shared_ptr<collector_wrapper> py_query(boost::shared_ptr<journal_t> journal_sp,
 }
 
 post_t* posts_getitem(collector_wrapper& collector, long i) {
-  return dynamic_cast<collect_posts*>(collector.posts_collector.get())
-      ->posts[static_cast<std::size_t>(i)];
+  std::vector<post_t*>& posts =
+      dynamic_cast<collect_posts*>(collector.posts_collector.get())->posts;
+  return posts[python::py_sequence_index(i, posts.size())];
 }
 
 /// Convert the display_amounts vector to a Python list of Value objects.
