@@ -81,10 +81,6 @@ account_t::xdata_t& py_xdata(account_t& account) {
   return account.xdata();
 }
 
-PyObject* py_account_unicode(account_t& account) {
-  return str_to_py_unicode(account.fullname());
-}
-
 /// Overloads for amount() and total() that accept an optional expression
 /// for custom aggregation from the Python side.
 value_t py_amount_0(const account_t& account) {
@@ -172,7 +168,6 @@ void export_account() {
       .def_readonly("depth", &account_t::depth)
 
       .def("__str__", &account_t::fullname)
-      .def("__unicode__", py_account_unicode)
 
       .def("fullname", &account_t::fullname)
       .def("partial_name", &account_t::partial_name)

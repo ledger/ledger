@@ -1,0 +1,12 @@
+test python test/regress/python-str-without-unicode.py
+Account False
+Amount False
+Balance False
+Commodity False
+Value False
+10.00 €
+10.00 €
+10.00 €
+€
+Dépenses:Café
+end test

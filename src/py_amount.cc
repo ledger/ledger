@@ -112,13 +112,6 @@ amount_t py_strip_annotations_1(amount_t& amount, const keep_details_t& keep) {
   return amount.strip_annotations(keep);
 }
 
-/*--- String Conversion ---*/
-
-/// Returns a Python unicode object for __unicode__ support.
-PyObject* py_amount_unicode(amount_t& amount) {
-  return str_to_py_unicode(amount.to_string());
-}
-
 } // unnamed namespace
 
 #define EXC_TRANSLATOR(type)                                                                       \
@@ -268,7 +261,6 @@ internal precision."))
 
       .def("__str__", &amount_t::to_string)
       .def("to_string", &amount_t::to_string)
-      .def("__unicode__", py_amount_unicode)
       .def("to_fullstring", &amount_t::to_fullstring)
       .def("__repr__", &amount_t::to_fullstring)
       .def("quantity_string", &amount_t::quantity_string)

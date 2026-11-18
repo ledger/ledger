@@ -130,17 +130,13 @@ amount_t balance_getitem(balance_t& bal, long i) {
   return *sorted[py_sequence_index(i, sorted.size())];
 }
 
-/*--- Annotation Stripping and String Conversion ---*/
+/*--- Annotation Stripping ---*/
 
 balance_t py_strip_annotations_0(balance_t& balance) {
   return balance.strip_annotations(keep_details_t());
 }
 balance_t py_strip_annotations_1(balance_t& balance, const keep_details_t& keep) {
   return balance.strip_annotations(keep);
-}
-
-PyObject* py_balance_unicode(balance_t& balance) {
-  return str_to_py_unicode(balance.to_string());
 }
 
 } // unnamed namespace
@@ -191,7 +187,6 @@ void export_balance() {
 
       .def("__str__", &balance_t::to_string)
       .def("to_string", &balance_t::to_string)
-      .def("__unicode__", py_balance_unicode)
 
       .def("negated", &balance_t::negated)
       .def("in_place_negate", &balance_t::in_place_negate, return_internal_reference<>())

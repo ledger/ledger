@@ -87,7 +87,7 @@ using bool_python_conversion = register_python_conversion<bool, bool_to_python, 
 
 struct string_to_python {
   static PyObject* convert(const string& str) {
-    // Return bytes, not characters; see __unicode__ methods for that
+    // Boost.Python converts std::string to a Python str (UTF-8 decoded).
     return incref(object(static_cast<const std::string&>(str)).ptr());
   }
 };

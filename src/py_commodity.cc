@@ -268,10 +268,6 @@ std::optional<amount_t> py_set_price(annotation_t& ann, const std::optional<amou
   return ann.price;
 }
 
-PyObject* py_commodity_unicode(commodity_t& commodity) {
-  return str_to_py_unicode(commodity.symbol());
-}
-
 } // unnamed namespace
 
 void export_commodity() {
@@ -351,7 +347,6 @@ void export_commodity() {
                            make_setter(&commodity_t::decimal_comma_by_default))
 
       .def("__str__", &commodity_t::symbol)
-      .def("__unicode__", py_commodity_unicode)
       .def("__bool__", &commodity_t::operator bool)
 
       .def(self == self)

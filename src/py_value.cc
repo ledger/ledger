@@ -122,10 +122,6 @@ value_t py_strip_annotations_1(value_t& value, const keep_details_t& keep) {
   return value.strip_annotations(keep);
 }
 
-PyObject* py_value_unicode(value_t& value) {
-  return str_to_py_unicode(value.to_string());
-}
-
 } // unnamed namespace
 
 #define EXC_TRANSLATOR(type)                                                                       \
@@ -349,7 +345,6 @@ void export_value() {
       .def("to_balance", &value_t::to_balance)
       .def("to_commodity", &value_t::to_commodity, return_internal_reference<>())
       .def("__str__", &value_t::to_string)
-      .def("__unicode__", py_value_unicode)
       .def("to_string", &value_t::to_string)
       .def("to_mask", &value_t::to_mask)
       .def("to_sequence", &value_t::to_sequence)

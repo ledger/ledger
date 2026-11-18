@@ -704,6 +704,10 @@ components with their standard-library equivalents.
   `Amount.initialize()` creates one, instead of after the next
   `close_journal_files()`
 
+- Remove the Python 2 `__unicode__` methods from `Account`, `Amount`,
+  `Balance`, `Commodity` and `Value`; Python 3's `str()` calls `__str__`,
+  which returns the same text
+
 ### New Commands and Directives
 
 - Add `payee-rewrite` and `account-rewrite` directives, which replace
