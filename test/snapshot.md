@@ -63,12 +63,17 @@ Some output is inherently non-deterministic and will always differ between
 runs:
 
 - **Timing values** in `--debug`/`--verbose` output (e.g., `2ms` vs `1ms`)
-- **The current time** in output that shows the value of `now`
-- **Memory addresses** in XML output (heap pointer IDs)
 - **`--anon` output** (intentionally randomized)
+- **`register --depth 2` on some journals** (for example `drewr3.dat`), which
+  orders same-date postings differently from run to run
 - **Occasional timeouts** depending on system load
 
 These can be safely ignored or filtered out.
+
+Two former sources of noise are removed before output is written. Every run
+passes `--now 2030/06/15`, the date the test suite uses, so reports that read
+the clock (`stats`, `--current`, `budget`, forecasts) are stable. The object
+addresses in XML `id` and `ref` attributes are replaced by `XXXX`.
 
 ## CLI Reference
 
@@ -96,6 +101,7 @@ python3 test/snapshot.py <ledger-binary> <data-file> <output-dir> [options]
 | `--only-command CMD` | all | Only run combos for one command |
 | `--only-curated` | off | Skip mined combos |
 | `--only-mined` | off | Skip curated combos |
+| `--only-bench` | off | Run only the reports in `BENCH_COMBOS` (the performance acceptance set; no mining, no coverage check) |
 
 When `--mine-from` is not given, the tool assumes the binary was built in a
 directory directly below the top of a source tree, as `./build/ledger` is, and
@@ -119,17 +125,17 @@ The tool generates command/option combinations from two sources:
 
 After generation, the tool validates coverage by discovering all options via
 `ledger --debug option.names parse true` and generating fallback combinations
-for any gaps. This check is skipped when `--only-command` or `--only-mined` is
-given. Only a Debug build (`-DCMAKE_BUILD_TYPE=Debug`) prints the output that
-option discovery reads; with any other build the tool silently discovers no
-options and checks only those in its own catalog.
+for any gaps. This check is skipped when `--only-command`, `--only-mined` or
+`--only-bench` is given. Only a Debug build (`-DCMAKE_BUILD_TYPE=Debug`) prints
+the output that option discovery reads; with any other build the tool silently
+discovers no options and checks only those in its own catalog.
 
 ### Output Format
 
 Each combination produces one file in the output directory:
 
 ```
-# Command: ledger --args-only --columns 80 -f drewr3.dat balance --flat --no-total
+# Command: ledger --args-only --columns 80 --now 2030/06/15 -f drewr3.dat balance --flat --no-total
 # Exit code: 0
           $ 1,366.00  Assets:Checking
              $ 30.00  Assets:Checking:Business
@@ -150,7 +156,9 @@ Each combination produces one file in the output directory:
 ### Environment
 
 All runs use a sanitized environment matching the test harness:
-`TZ=America/Chicago`, `--args-only`, and `--columns=80` for reproducibility.
+`TZ=America/Chicago`, `--args-only`, `--columns 80` and `--now 2030/06/15`
+(the date the test harness pins; a combo's own `--now` overrides it). XML `id`
+and `ref` attributes, which are object addresses, are written as `XXXX`.
 
 ## Tips
 

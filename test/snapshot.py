@@ -207,7 +207,6 @@ OPTION_MATRIX: dict[str, tuple[bool, set[str]]] = {
     "--date-format":     (True,  {"balance", "register", "csv", "print", "cleared"}),
     "--base":            (False, _BAL_REG_CSV),
     "--primary-date":    (False, _BAL_REG_CSV_PRINT),
-    "--expand-period":   (False, {"register", "balance"}),
 }
 
 # Default test values for value-bearing options
@@ -287,6 +286,48 @@ MULTI_OPTION_COMBOS: list[tuple[tuple[tuple[str, ...], ...], set[str]]] = [
 ]
 
 
+# The reports a performance change must leave byte-identical, sized to run on
+# the large generated journals of tools/bench (see --only-bench).
+BENCH_COMBOS: list[tuple[str, tuple[tuple[str, ...], ...]]] = [
+    ("balance", ()),
+    ("balance", (("--flat",),)),
+    ("balance", (("--flat",), ("--no-total",))),
+    ("balance", (("--lots",),)),
+    ("balance", (("--lot-prices",),)),
+    ("balance", (("--basis",),)),
+    ("balance", (("--market",),)),
+    ("balance", (("--exchange", "B"),)),
+    ("balance", (("--historical",),)),
+    ("balance", (("--depth", "2"),)),
+    ("balance", (("--monthly",),)),
+    ("register", ()),
+    ("register", (("--lots",),)),
+    ("register", (("--basis",),)),
+    ("register", (("--market",),)),
+    ("register", (("--monthly",),)),
+    ("register", (("--sort", "total"),)),
+    ("register", (("--format", "%(top_amount(total))\\n"),)),
+    ("print", ()),
+    ("print", (("--lots",),)),
+    ("csv", ()),
+    ("xml", ()),
+    ("equity", ()),
+    ("stats", ()),
+    ("prices", ()),
+    ("pricedb", ()),
+    ("commodities", ()),
+    ("accounts", ()),
+]
+
+
+def generate_bench_combos() -> list[Combo]:
+    """Return the BENCH_COMBOS reports as combos."""
+    return [
+        Combo(command=cmd, options=tuple(sorted(opts)), source="bench")
+        for cmd, opts in BENCH_COMBOS
+    ]
+
+
 def generate_curated_combos() -> list[Combo]:
     """Generate all curated command/option combinations."""
     combos: list[Combo] = []
@@ -321,6 +362,10 @@ def generate_curated_combos() -> list[Combo]:
     for opts, applicable in MULTI_OPTION_COMBOS:
         for cmd in applicable:
             _add(cmd, opts)
+
+    # The performance acceptance reports
+    for combo in generate_bench_combos():
+        _add(combo.command, combo.options)
 
     return combos
 
@@ -712,6 +757,24 @@ def make_sanitized_env() -> dict[str, str]:
 # Execution
 # ---------------------------------------------------------------------------
 
+# The same date RegressTests.NOW gives the test suite, so that output which
+# reads the clock (stats, --current, budget, forecasts) does not change from
+# one day to the next.
+NOW = "2030/06/15"
+
+# Arguments every run starts with, before -f and the combo's own options (a
+# combo's own --now therefore overrides NOW).
+BASE_ARGS = ["--args-only", "--columns", "80", "--now", NOW]
+
+# XML ids and refs are object addresses and differ between any two runs.
+_ADDRESS_ATTR = re.compile(r' (id|ref)="[0-9a-f]+"')
+
+
+def mask_addresses(text: str) -> str:
+    """Replace the object addresses in XML id and ref attributes with XXXX."""
+    return _ADDRESS_ATTR.sub(r' \1="XXXX"', text)
+
+
 def _safe_decode(data: bytes) -> str:
     """Decode bytes to UTF-8, replacing binary content with a placeholder."""
     try:
@@ -731,17 +794,14 @@ def run_combo(
 
     exit_code is an int for normal exits, or "TIMEOUT" for timeouts.
     """
-    cmd = [
-        str(ledger_binary), "--args-only", "--columns", "80",
-        "-f", str(data_file),
-    ] + combo_to_cmdline(combo)
+    cmd = [str(ledger_binary), *BASE_ARGS, "-f", str(data_file)] + combo_to_cmdline(combo)
 
     try:
         result = subprocess.run(
             cmd, capture_output=True, timeout=timeout, env=env,
         )
-        stdout = _safe_decode(result.stdout)
-        stderr = _safe_decode(result.stderr)
+        stdout = mask_addresses(_safe_decode(result.stdout))
+        stderr = mask_addresses(_safe_decode(result.stderr))
         return (combo, result.returncode, stdout, stderr)
     except subprocess.TimeoutExpired:
         return (combo, "TIMEOUT", "", "")
@@ -757,8 +817,7 @@ def format_output(
 ) -> str:
     """Format the output for writing to a snapshot file."""
     cmd_display = " ".join(
-        ["ledger", "--args-only", "--columns", "80", "-f", data_file.name]
-        + combo_to_cmdline(combo)
+        ["ledger", *BASE_ARGS, "-f", data_file.name] + combo_to_cmdline(combo)
     )
     lines = [f"# Command: {cmd_display}"]
 
@@ -827,6 +886,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--only-command", type=str, default=None, help="Only run combos for this command")
     parser.add_argument("--only-curated", action="store_true", help="Skip mined combos")
     parser.add_argument("--only-mined", action="store_true", help="Skip curated combos")
+    parser.add_argument("--only-bench", action="store_true",
+                        help="Run only the reports in BENCH_COMBOS (no mining, no coverage check)")
     return parser.parse_args(argv)
 
 
@@ -854,9 +915,11 @@ def main(argv: list[str] | None = None) -> int:
     curated: list[Combo] = []
     mined: list[Combo] = []
 
-    if not args.only_mined:
+    if args.only_bench:
+        curated = generate_bench_combos()
+    elif not args.only_mined:
         curated = generate_curated_combos()
-    if not args.only_curated:
+    if not args.only_curated and not args.only_bench:
         source_root = args.mine_from
         if source_root is None:
             # Auto-detect: assume ledger binary is in <source>/build/ledger
@@ -880,7 +943,7 @@ def main(argv: list[str] | None = None) -> int:
             return 1
 
     # Coverage validation (unless filtering)
-    if not args.only_command and not args.only_mined:
+    if not args.only_command and not args.only_mined and not args.only_bench:
         all_combos = validate_coverage(all_combos, args.ledger_binary, args.verbose)
 
     if args.dry_run:

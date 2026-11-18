@@ -237,6 +237,14 @@ if(Python_EXECUTABLE)
     COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/regress/3277.py
     ${PROJECT_SOURCE_DIR})
 
+  # test/snapshot.py must capture only options ledger accepts, and two
+  # captures by one binary must agree (the clock pinned, XML addresses masked).
+  add_test(NAME RegressPyTest_snapshot_tool
+    COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/regress/snapshot_tool.py
+    $<TARGET_FILE:ledger> ${PROJECT_SOURCE_DIR})
+  set_tests_properties(RegressPyTest_snapshot_tool
+    PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}")
+
   # Every src/ header that an installed header includes must be installed too
   # (LEDGER_INCLUDES in src/CMakeLists.txt), or the installed tree cannot compile.
   add_test(NAME RegressPyTest_installed_headers

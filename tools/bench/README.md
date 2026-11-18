@@ -22,14 +22,22 @@ journals pathological for 3.4.1.
 
 ## Checking that output is unchanged
 
-    tools/bench/difftest.sh ./build-before/ledger ./build/ledger bench-journals/10k.journal test/input/*.dat
+    for j in bench-journals/10k.journal test/input/*.dat; do
+        n=$(basename "$j")
+        python3 test/snapshot.py ./build-before/ledger "$j" before/"$n" --only-bench --timeout 600
+        python3 test/snapshot.py ./build/ledger "$j" after/"$n" --only-bench --timeout 600
+    done
+    diff -r --exclude=_snapshot_meta.txt before after
 
-runs both binaries over a matrix of reports (balance in several modes,
-register, print, csv, xml, equity, prices, with lots, basis, market value
-and periods) and lists every command whose output or exit status differs.
-Byte-identical output is the acceptance criterion for a performance
-change, so run it, with the pre-change binary as the reference, before
-measuring anything.
+runs both binaries over the reports listed in `BENCH_COMBOS` in
+`test/snapshot.py` (balance in several modes, register, print, csv, xml,
+equity, stats, prices, with lots, basis, market value and periods), records
+each report's output and exit status, and `diff` lists every report whose
+output or exit status differs, exiting 1 if any does.  Start from empty
+`before` and `after` directories.  Byte-identical output is the acceptance
+criterion for a performance change, so run it, with the pre-change binary as
+the reference, before measuring anything.  Without `--only-bench` the same
+tool runs its full matrix (see `test/snapshot.md`).
 
 ## Measuring
 
