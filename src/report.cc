@@ -234,7 +234,7 @@ void report_t::normalize_options(const string& verb) {
     }
   }
 
-  if (verb == "print" || verb == "xact" || verb == "dump") { // NOLINT(bugprone-branch-clone)
+  if (verb == "print" || verb == "xact") { // NOLINT(bugprone-branch-clone)
     HANDLER(related_all).parent = this;
     HANDLER(related_all).on("?normalize");
   } else if (verb == "equity") {
@@ -504,7 +504,7 @@ expr_t::ptr_op_t wrap_negations(const expr_t::ptr_op_t& op) {
 
 /// @brief Wrap a query AST for transaction-level (xact) commands.
 ///
-/// For print, xact, dump and --related-all (report.cc
+/// For print, xact and --related-all (report.cc
 /// `if (HANDLED(related_all))`), a `not` means "no posting of the
 /// transaction matches" (#1227) at any depth: every O_NOT(t) reached
 /// through and/or/not becomes O_NOT(any(t)), and a root that is not a
@@ -539,7 +539,7 @@ void report_t::parse_query_args(const value_t& args, const string& whence) {
   if (limit_op) {
     string pred;
 
-    // For commands that display whole transactions (print, xact, dump),
+    // For commands that display whole transactions (print, xact),
     // wrap the predicate in any() at the AST level so that the filter
     // operates on the transaction rather than individual postings.
     if (HANDLED(related_all)) {
@@ -1578,33 +1578,6 @@ value_t report_t::fn_nail_down(call_scope_t& args) {
   return arg0;
 }
 
-value_t report_t::fn_lot_date(call_scope_t& args) {
-  if (args[0].has_annotation()) {
-    const annotation_t& details(args[0].annotation());
-    if (details.date)
-      return *details.date;
-  }
-  return NULL_VALUE;
-}
-
-value_t report_t::fn_lot_price(call_scope_t& args) {
-  if (args[0].has_annotation()) {
-    const annotation_t& details(args[0].annotation());
-    if (details.price)
-      return *details.price;
-  }
-  return NULL_VALUE;
-}
-
-value_t report_t::fn_lot_tag(call_scope_t& args) {
-  if (args[0].has_annotation()) {
-    const annotation_t& details(args[0].annotation());
-    if (details.tag)
-      return string_value(*details.tag);
-  }
-  return NULL_VALUE;
-}
-
 value_t report_t::fn_to_boolean(call_scope_t& args) {
   return args.get<bool>(0);
 }
@@ -2229,8 +2202,6 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
         return MAKE_FUNCTOR(report_t::fn_total_expr);
       else if (is_eq(p, "today"))
         return MAKE_FUNCTOR(report_t::fn_today);
-      else if (is_eq(p, "t"))
-        return MAKE_FUNCTOR(report_t::fn_display_amount);
       else if (is_eq(p, "trim"))
         return MAKE_FUNCTOR(report_t::fn_trim);
       else if (is_eq(p, "top_amount"))
@@ -2253,11 +2224,6 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
         return MAKE_FUNCTOR(report_t::fn_to_mask);
       else if (is_eq(p, "to_sequence"))
         return MAKE_FUNCTOR(report_t::fn_to_sequence);
-      break;
-
-    case 'T':
-      if (is_eq(p, "T"))
-        return MAKE_FUNCTOR(report_t::fn_display_total);
       break;
 
     case 'u':

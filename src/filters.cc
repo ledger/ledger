@@ -1021,9 +1021,10 @@ bool exchange_names_one_commodity(const report_t& report) {
  * - Budget reports add generated budget postings to the running total,
  *   which is then no sum over the journal's postings, and the budget
  *   command pairs each amount with its budget.
- * - Under --forecast the forecast-while filter sits downstream of this
- *   handler (chain_post_handlers), so the forecast posting that ends the
- *   forecast enters the running total but is never displayed.
+ * - Under --forecast the forecast posting that ends the forecast passes this
+ *   handler and enters the running total, but forecast_posts::flush then
+ *   withholds it from the account totals (it drops POST_EXT_VISITED), so it
+ *   is never displayed.
  * - Under --anon, anonymize_posts relabels a posting's cost and the price in
  *   its lot annotation separately and can give one commodity two labels (in
  *   regress/1190 the cost is in B and the fixated price in C), so the cost is
@@ -1074,15 +1075,14 @@ bool report_revalues_between_postings(const report_t& report) {
          !report.HANDLED(inject_);
 }
 
-bool uses_cost_baseline(const report_t& report, bool for_accounts_report, bool show_unrealized) {
-  return for_accounts_report && show_unrealized && report.HANDLED(market) &&
-         amount_expr_reads_cost(report) && exchange_names_one_commodity(report) &&
-         report_revalues_between_postings(report);
+bool uses_cost_baseline(const report_t& report, bool for_accounts_report) {
+  return for_accounts_report && report.HANDLED(market) && amount_expr_reads_cost(report) &&
+         exchange_names_one_commodity(report) && report_revalues_between_postings(report);
 }
 } // namespace
 
 changed_value_posts::changed_value_posts(post_handler_ptr handler, report_t& _report,
-                                         bool _for_accounts_report, bool _show_unrealized,
+                                         bool _for_accounts_report,
                                          display_filter_posts* _display_filter)
     : item_handler<post_t>(std::move(handler)), report(_report),
       total_expr(report.HANDLED(revalued_total_) ? report.HANDLER(revalued_total_).expr
@@ -1090,8 +1090,7 @@ changed_value_posts::changed_value_posts(post_handler_ptr handler, report_t& _re
       display_total_expr(report.HANDLER(display_total_).expr), cost_expr("cost"),
       changed_values_only(report.HANDLED(revalued_only)),
       historical_prices_only(report.HANDLED(historical)), for_accounts_report(_for_accounts_report),
-      show_unrealized(_show_unrealized),
-      value_from_cost(uses_cost_baseline(_report, _for_accounts_report, _show_unrealized)),
+      value_from_cost(uses_cost_baseline(_report, _for_accounts_report)),
       amount_expr(report.HANDLER(amount_).expr),
       held_value_expr("market(amount, value_date, exchange)"),
       baseline_expr("market(amount_expr, value_date, exchange)"), last_post(nullptr),
@@ -1114,8 +1113,7 @@ changed_value_posts::changed_value_posts(post_handler_ptr handler, report_t& _re
 
   create_accounts();
 
-  TRACE_CTOR(changed_value_posts,
-             "post_handler_ptr, report_t&, bool, bool, display_filter_posts *");
+  TRACE_CTOR(changed_value_posts, "post_handler_ptr, report_t&, bool, display_filter_posts *");
 }
 
 /**
@@ -1288,7 +1286,7 @@ void changed_value_posts::output_value_change(post_t& post, const date_t& date,
                  /* mark_visited=  */ false,
                  /* bidir_link=    */ true,
                  /* source_post=   */ &post);
-  } else if (show_unrealized) {
+  } else {
     handle_value(
         /* value=         */ -diff,
         /* account=       */ (diff < 0L ? losses_equity_account : gains_equity_account),
@@ -1343,7 +1341,7 @@ bool changed_value_posts::books_from_basis() const {
   // of the holding as a gain under the basis footing
   // (regress/unrealized-excluded-reports,
   // regress/unrealized-unconvertible-cost).
-  if (show_unrealized && report.HANDLED(market) &&
+  if (report.HANDLED(market) &&
       (!amount_expr_reads_cost(report) || !exchange_names_one_commodity(report) ||
        !report_revalues_between_postings(report)))
     return false;
@@ -1456,18 +1454,6 @@ value_t changed_value_posts::basis_gain(post_t& post, const amount_t& amount, va
     return value_t();
   return gain;
 }
-
-namespace {
-struct insert_prices_in_map {
-  price_map_t& all_prices;
-
-  insert_prices_in_map(price_map_t& _all_prices) : all_prices(_all_prices) {}
-
-  void operator()(const datetime_t& date, const amount_t& price) {
-    all_prices.insert(price_map_t::value_type(date, price));
-  }
-};
-} // namespace
 
 /**
  * Scan for commodity price changes between the last posting and the current one,
@@ -1635,29 +1621,8 @@ void changed_value_posts::output_intermediate_prices(post_t& post, const date_t&
 
     DEBUG("filters.revalued", "intermediate last_total = " << last_total);
 
-    switch (last_total.type()) {
-    case value_t::BOOLEAN:
-    case value_t::INTEGER:
-      last_total.in_place_cast(value_t::AMOUNT);
-      [[fallthrough]];
-
-    case value_t::AMOUNT:
-      temp.amount = last_total.as_amount();
-      temp.given_lot_total = std::nullopt;
-      break;
-
-    case value_t::BALANCE:
-    case value_t::SEQUENCE:
-      xdata.compound_value = last_total;
-      xdata.add_flags(POST_EXT_COMPOUND);
-      break;
-
-    case value_t::DATETIME:
-    case value_t::DATE:
-    default:
-      assert(false);
-      break;
-    }
+    xdata.compound_value = last_total;
+    xdata.add_flags(POST_EXT_COMPOUND);
 
     bind_scope_t inner_scope(report, temp);
     display_total = display_total_expr.calc(inner_scope);
@@ -1676,28 +1641,19 @@ void changed_value_posts::output_intermediate_prices(post_t& post, const date_t&
     [[fallthrough]];
 
   case value_t::BALANCE: {
-    price_map_t all_prices;
-
+    // One revaluation per distinct pricing date between the two postings;
+    // output_revaluation() values the total as of that date.
+    std::set<date_t> pricing_dates;
     for (const balance_t::amounts_map::value_type& amt_comm : display_total.as_balance().amounts)
-      amt_comm.first->map_prices(insert_prices_in_map(all_prices), datetime_t(current),
-                                 datetime_t(post.value_date()), true);
+      amt_comm.first->map_prices(
+          [&pricing_dates](datetime_t when, const amount_t&) {
+            DEBUG("filters.revalued", "pricing date " << when.date());
+            pricing_dates.insert(when.date());
+          },
+          datetime_t(current), datetime_t(post.value_date()), true);
 
-    // Choose the last price from each day as the price to use
-    typedef std::map<const date_t, bool> date_map;
-    date_map pricing_dates;
-
-    for (auto it = all_prices.rbegin(); it != all_prices.rend(); ++it) {
-      const auto& price = *it;
-      // This insert will fail if a later price has already been inserted
-      // for that date.
-      DEBUG("filters.revalued", "re-inserting " << price.second << " at " << price.first.date());
-      pricing_dates.insert(date_map::value_type(price.first.date(), true));
-    }
-
-    // Go through the time-sorted prices list, outputting a revaluation for
-    // each price difference.
-    for (const date_map::value_type& price : pricing_dates) {
-      output_revaluation(post, price.first);
+    for (const date_t& date : pricing_dates) {
+      output_revaluation(post, date);
       last_total = repriced_total;
     }
     break;
@@ -1895,14 +1851,8 @@ void subtotal_posts::operator()(post_t& post) {
 
   values_map::iterator i = values.find(key);
   if (i == values.end()) {
-#if DEBUG_ON
-    std::pair<values_map::iterator, bool> result =
-#endif
-        values.insert(values_pair(key, acct_value_t(acct, amount, post.has_flags(POST_VIRTUAL),
-                                                    post.has_flags(POST_MUST_BALANCE))));
-#if DEBUG_ON
-    assert(result.second);
-#endif
+    values.emplace(key, acct_value_t(acct, amount, post.has_flags(POST_VIRTUAL),
+                                     post.has_flags(POST_MUST_BALANCE)));
   } else {
     add_or_set_value((*i).second.value, amount);
   }
@@ -2206,18 +2156,11 @@ void by_payee_posts::flush() {
 /// Route each posting to the subtotal_posts instance for its payee.
 void by_payee_posts::operator()(post_t& post) {
   payee_subtotals_map::iterator i = payee_subtotals.find(post.payee());
-  if (i == payee_subtotals.end()) {
-    payee_subtotals_pair temp(
-        post.payee(), std::shared_ptr<subtotal_posts>(new subtotal_posts(handler, amount_expr)));
-    auto [iter, inserted] = payee_subtotals.insert(temp);
-
-    assert(inserted);
-    if (!inserted)
-      return;
-    i = iter;
-  }
-
-  (*(*i).second)(post);
+  if (i == payee_subtotals.end())
+    i = payee_subtotals
+            .emplace(post.payee(), std::make_shared<subtotal_posts>(handler, amount_expr))
+            .first;
+  (*i->second)(post);
 }
 
 /*--- Detail transfer ---*/
@@ -2283,10 +2226,8 @@ void transfer_details::operator()(post_t& post) {
 /// when a view is set, and forward the original posting when it matches.
 void filter_posts::operator()(post_t& post) {
   bind_scope_t bound_scope(context, view ? view->transfer(post) : post);
-  if (pred(bound_scope)) {
-    post.xdata().add_flags(POST_EXT_MATCHES);
+  if (pred(bound_scope))
     (*handler)(post);
-  }
 }
 
 /*--- Day-of-week subtotaling ---*/
@@ -2537,8 +2478,8 @@ void forecast_posts::add_post(const date_interval_t& period, post_t& post) {
  * downstream, so that calc_posts has updated the running total.  This
  * supports both date-based predicates (e.g., 'd<[2024/09/01]') and
  * value-based predicates (e.g., 'T>={0}') that depend on the accumulated
- * total.  The downstream filter_posts(forecast_while) in chain.cc provides
- * additional filtering at the output level.
+ * total.  In posting reports, the downstream filter_posts(forecast_while) in
+ * chain.cc provides additional filtering at the output level.
  *
  * A periodic posting is removed from consideration when:
  * - Its start date exceeds forecast_years beyond the last generated date, or
@@ -2621,9 +2562,10 @@ void forecast_posts::flush() {
     // date-based predicates (e.g. "d<[2024/09/01]"), dates are always
     // available so evaluation is straightforward.
     //
-    // The downstream filter_posts(forecast_while) in chain.cc provides
-    // additional filtering at the output level, preventing any individual
-    // postings that fail the predicate from reaching the output.
+    // In posting reports, the downstream filter_posts(forecast_while) in
+    // chain.cc provides additional filtering at the output level, preventing
+    // any individual postings that fail the predicate from reaching the
+    // output.
     std::vector<post_t*> generated;
     for (auto& it : same_date) {
       post_t& post = *(*it).second;

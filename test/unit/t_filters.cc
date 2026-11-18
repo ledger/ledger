@@ -269,9 +269,11 @@ BOOST_AUTO_TEST_CASE(testFilterPostsByAccount)
   BOOST_CHECK(collector->posts[0] == p_exp);
 }
 
-BOOST_AUTO_TEST_CASE(testFilterPostsSetsMatchFlag)
+BOOST_AUTO_TEST_CASE(testFilterPostsLeavesXdataUnallocated)
 {
-  // Posts that match the filter predicate should have POST_EXT_MATCHES set
+  // filter_posts forwards a matching posting without touching its xdata:
+  // no handler reads a per-posting "matched" flag, so none is set and no
+  // xdata is allocated for it.
   std::shared_ptr<collect_posts> collector(new collect_posts);
   predicate_t pred("1", keep_details_t());
   filter_posts filter(collector, pred, report);
@@ -282,8 +284,8 @@ BOOST_AUTO_TEST_CASE(testFilterPostsSetsMatchFlag)
 
   filter(*post);
 
-  BOOST_CHECK(post->has_xdata());
-  BOOST_CHECK(post->xdata().has_flags(POST_EXT_MATCHES));
+  BOOST_CHECK_EQUAL(1u, collector->length());
+  BOOST_CHECK(!post->has_xdata());
 }
 
 //////////////////////////////////////////////////////////////////////

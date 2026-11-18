@@ -694,6 +694,12 @@ components with their standard-library equivalents.
   `ledger.commodities.iteritems()` yield `(symbol, Commodity)` pairs; both
   raised `TypeError`
 
+- Remove the `POST_EXT_MATCHES` posting flag and its Python constant: no part
+  of Ledger has read it since the forecast overhaul, and the `--limit`,
+  `--display` and `--only` filters no longer set it on every posting they
+  pass.  A script that names `ledger.POST_EXT_MATCHES` now fails with
+  `AttributeError`
+
 ### New Commands and Directives
 
 - Add `payee-rewrite` and `account-rewrite` directives, which replace

@@ -360,9 +360,6 @@ public:
   value_t fn_commodity_price(call_scope_t& scope); ///< Look up a commodity's price at a given date
   value_t fn_set_commodity_price(call_scope_t& scope); ///< Inject a price into the price history
   value_t fn_nail_down(call_scope_t& scope); ///< Fix an amount's per-unit cost via annotation
-  value_t fn_lot_date(call_scope_t& scope);  ///< Extract the lot date annotation
-  value_t fn_lot_price(call_scope_t& scope); ///< Extract the lot price annotation
-  value_t fn_lot_tag(call_scope_t& scope);   ///< Extract the lot tag (note) annotation
 
   // Type conversion functions (callable as to_boolean(), to_int(), etc.)
   value_t fn_to_boolean(call_scope_t& scope);  ///< Convert to boolean

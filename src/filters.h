@@ -526,8 +526,6 @@ class transfer_details;
  * @brief Forwards only postings that match a predicate expression.
  *
  * Used for --limit, --display, --only, and internal filter predicates.
- * Matching postings are flagged with POST_EXT_MATCHES so downstream handlers
- * (e.g., forecast_posts) can detect which postings matched the report query.
  * With a view (the pre-budget --limit under --pivot), the predicate is
  * evaluated on view->transfer(post) and the original posting is forwarded.
  */
@@ -888,21 +886,20 @@ class changed_value_posts : public item_handler<post_t> {
   expr_t& display_total_expr; ///< Expression for computing display totals.
   expr_t cost_expr;           ///< A posting's cost basis, as --basis reports it.
   bool changed_values_only; ///< If true, only show postings where value changed (--revalued-only).
-  bool historical_prices_only; ///< If true, skip intermediate price lookups (--historical).
-  bool for_accounts_report;    ///< Whether this is an accounts (balance) report.
-  bool show_unrealized;        ///< Whether to generate equity gain/loss postings (--unrealized).
-  bool value_from_cost;        ///< Accounts report under -V/-X with --unrealized working from
-                               ///< cost baselines: see the class note (uses_cost_baseline()).
-  expr_t& amount_expr;         ///< The report's amount expression (value_from_cost).
-  expr_t held_value_expr;      ///< A substituted amount, valued (value_from_cost).
-  expr_t baseline_expr;        ///< The report's amount expression, valued (value_from_cost).
-  post_t* last_post;           ///< Previous posting for comparison.
-  value_t last_total;          ///< Total after the previous posting.
-  value_t cost_total;          ///< Sum of cost_baseline() over the postings (value_from_cost).
-  value_t repriced_total;      ///< Total after repricing (set by output_revaluation).
-  value_t unrealized_gain;     ///< Unrealized gain gathered so far (balance reports).
-  temporaries_t temps;         ///< Temporary storage for synthetic revaluation postings.
-  account_t* revalued_account; ///< The <Revalued> account for register revaluations.
+  bool historical_prices_only;      ///< If true, skip intermediate price lookups (--historical).
+  bool for_accounts_report;         ///< Whether this is an accounts (balance) report.
+  bool value_from_cost;             ///< Accounts report under -V/-X with --unrealized working from
+                                    ///< cost baselines: see the class note (uses_cost_baseline()).
+  expr_t& amount_expr;              ///< The report's amount expression (value_from_cost).
+  expr_t held_value_expr;           ///< A substituted amount, valued (value_from_cost).
+  expr_t baseline_expr;             ///< The report's amount expression, valued (value_from_cost).
+  post_t* last_post;                ///< Previous posting for comparison.
+  value_t last_total;               ///< Total after the previous posting.
+  value_t cost_total;               ///< Sum of cost_baseline() over the postings (value_from_cost).
+  value_t repriced_total;           ///< Total after repricing (set by output_revaluation).
+  value_t unrealized_gain;          ///< Unrealized gain gathered so far (balance reports).
+  temporaries_t temps;              ///< Temporary storage for synthetic revaluation postings.
+  account_t* revalued_account;      ///< The <Revalued> account for register revaluations.
   account_t* gains_equity_account;  ///< Equity account for unrealized gains.
   account_t* losses_equity_account; ///< Equity account for unrealized losses.
 
@@ -913,7 +910,7 @@ class changed_value_posts : public item_handler<post_t> {
 
 public:
   changed_value_posts(post_handler_ptr handler, report_t& _report, bool _for_accounts_report,
-                      bool _show_unrealized, display_filter_posts* _display_filter);
+                      display_filter_posts* _display_filter);
 
   ~changed_value_posts() override {
     TRACE_DTOR(changed_value_posts);
@@ -1005,7 +1002,6 @@ protected:
   };
 
   using values_map = std::map<string, acct_value_t>;
-  using values_pair = std::pair<string, acct_value_t>;
 
 protected:
   expr_t& amount_expr;                 ///< Expression for evaluating each posting's value.
@@ -1176,7 +1172,6 @@ public:
  */
 class by_payee_posts : public item_handler<post_t> {
   using payee_subtotals_map = std::map<string, std::shared_ptr<subtotal_posts>>;
-  using payee_subtotals_pair = std::pair<string, std::shared_ptr<subtotal_posts>>;
 
   expr_t& amount_expr;                 ///< Amount expression shared with sub-totals.
   payee_subtotals_map payee_subtotals; ///< Per-payee subtotal_posts instances.

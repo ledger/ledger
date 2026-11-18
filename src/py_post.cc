@@ -107,7 +107,6 @@ void export_post() {
   scope().attr("POST_EXT_SORT_CALC") = POST_EXT_SORT_CALC;
   scope().attr("POST_EXT_COMPOUND") = POST_EXT_COMPOUND;
   scope().attr("POST_EXT_VISITED") = POST_EXT_VISITED;
-  scope().attr("POST_EXT_MATCHES") = POST_EXT_MATCHES;
   scope().attr("POST_EXT_CONSIDERED") = POST_EXT_CONSIDERED;
 
   class_<post_t::xdata_t>("PostingXData")

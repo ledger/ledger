@@ -315,17 +315,18 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
   report.HANDLER(display_amount_).expr.set_context(&report);
   report.HANDLER(display_total_).expr.set_context(&report);
 
-  /* Forecast-while filter: must be innermost so it can stop forecast
-     postings from reaching the output handler.  This applies to both
-     posting reports (register) and accounts reports (balance) so that
-     --forecast-while correctly bounds forecast entries for all report
-     types.  (#1605) */
-  if (report.HANDLED(forecast_while_)) {
-    handler = std::make_shared<filter_posts>(
-        handler, predicate_t(report.HANDLER(forecast_while_).str(), report.what_to_keep()), report);
-  }
-
   if (!for_accounts_report) {
+    // Forecast-while filter: innermost, so that forecast postings failing
+    // the predicate never reach the output handler.  Accounts reports need
+    // no such filter: their output handler ignores postings, and
+    // forecast_posts::flush withholds a failing forecast group from the
+    // account totals by dropping POST_EXT_VISITED (#1605).
+    if (report.HANDLED(forecast_while_)) {
+      handler = std::make_shared<filter_posts>(
+          handler, predicate_t(report.HANDLER(forecast_while_).str(), report.what_to_keep()),
+          report);
+    }
+
     handler = chain_selection_handlers(handler, report, /*has_collapse_stage=*/true,
                                        display_predicate, only_predicate);
 
@@ -369,8 +370,8 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
   // in market value of commodities, which otherwise would affect the running
   // total unpredictably.
   if (report.HANDLED(revalued) && (!for_accounts_report || report.HANDLED(unrealized)))
-    handler = std::make_shared<changed_value_posts>(handler, report, for_accounts_report,
-                                                    report.HANDLED(unrealized), display_filter);
+    handler =
+        std::make_shared<changed_value_posts>(handler, report, for_accounts_report, display_filter);
 
   // calc_posts computes the running total.  When this appears will determine,
   // for example, whether filtered posts are included or excluded from the

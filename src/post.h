@@ -329,7 +329,6 @@ public:
 #define POST_EXT_SORT_CALC 0x0010  ///< Sort key value has been computed and cached in sort_values.
 #define POST_EXT_COMPOUND 0x0020   ///< compound_value is set and should be used instead of amount.
 #define POST_EXT_VISITED 0x0040    ///< Posting was visited during report traversal.
-#define POST_EXT_MATCHES 0x0080    ///< Posting matches the current query predicate.
 #define POST_EXT_CONSIDERED 0x0100 ///< Posting has already been counted toward account totals.
 /// xdata.display_total holds the annotation-stripped display total.
 #define POST_EXT_DISPLAY_TOTAL_CACHED 0x0200
