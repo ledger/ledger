@@ -1,0 +1,2 @@
+convert test/regress/convert-parse-context-bad.csv --input-date-format "%Y-%m-%d"
+--import test/regress/convert_parse_context.py bal

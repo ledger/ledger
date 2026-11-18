@@ -78,22 +78,30 @@ value_t convert_command(call_scope_t& args) {
   path csv_file_path(args.get<string>(0));
 
   report.session.parsing_context.push(csv_file_path);
+
+  // RAII guard: point journal.current_context at the CSV's parse context
+  // so metadata checks and warnings have one, and on every exit path
+  // restore it and pop the CSV's context off the session's stack.  It is
+  // built only after the push succeeds, so a CSV that cannot be opened
+  // pops nothing.
+  struct csv_context_guard {
+    parse_context_stack_t& stack;
+    journal_t& journal;
+    parse_context_t* saved;
+    csv_context_guard(parse_context_stack_t& s, journal_t& j)
+        : stack(s), journal(j), saved(j.current_context) {
+      journal.current_context = &stack.get_current();
+    }
+    ~csv_context_guard() {
+      journal.current_context = saved;
+      stack.pop();
+    }
+  } guard(report.session.parsing_context, journal);
+
   parse_context_t& context(report.session.parsing_context.get_current());
   context.journal = &journal;
   context.master = bucket;
   context.scope = &report.session;
-
-  // RAII guard to set and restore journal.current_context during CSV parsing.
-  // This ensures metadata checks and warnings have a valid parse context.
-  struct current_context_guard {
-    journal_t& journal;
-    parse_context_t* saved;
-    current_context_guard(journal_t& j, parse_context_t* current)
-        : journal(j), saved(j.current_context) {
-      journal.current_context = current;
-    }
-    ~current_context_guard() { journal.current_context = saved; }
-  } guard(journal, &context);
 
   char separator = ',';
   if (report.HANDLED(csv_separator_)) {
@@ -185,13 +193,6 @@ value_t convert_command(call_scope_t& args) {
     add_error_context(line_context(reader.get_last_line()));
     throw;
   }
-
-  // If not, transform the payee according to regexps
-
-  // Set the account to a default value, then transform the account according
-  // to the payee
-
-  // Print out the final form of the transaction
 
   return true;
 }
