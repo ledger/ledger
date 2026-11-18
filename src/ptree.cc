@@ -95,13 +95,9 @@ void format_ptree::flush() {
         put_post(post_tree.add("posting", ""), *post);
   }
 
-  switch (format) {
-  case FORMAT_XML:
-    auto indented = property_tree::xml_writer_make_settings<std::string>(' ', 2);
-    property_tree::write_xml(out, pt, indented);
-    out << '\n';
-    break;
-  }
+  auto indented = property_tree::xml_writer_make_settings<std::string>(' ', 2);
+  property_tree::write_xml(out, pt, indented);
+  out << '\n';
 }
 
 void format_ptree::operator()(post_t& post) {

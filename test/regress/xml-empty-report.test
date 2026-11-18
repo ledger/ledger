@@ -1,0 +1,19 @@
+; An xml report whose query matches no posting still writes the full
+; document skeleton: the flush path runs unconditionally, with no
+; output-format selector in between.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test xml NoSuchAccount | sed -E 's/ (id|ref)="[0-9a-f]+"/ \1="XXXX"/g; s/ version="[0-9]+"/ version="VVVVVV"/g'
+<?xml version="1.0" encoding="utf-8"?>
+<ledger version="VVVVVV">
+  <commodities/>
+  <accounts>
+    <account/>
+  </accounts>
+  <transactions/>
+</ledger>
+
+end test

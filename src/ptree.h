@@ -88,12 +88,8 @@ protected:
   std::deque<xact_t*> transactions;   ///< Transactions in encounter order
 
 public:
-  /// Output format selector (currently only XML is supported).
-  enum format_t : uint8_t { FORMAT_XML } format;
-
-  format_ptree(report_t& _report, format_t _format = FORMAT_XML)
-      : report(_report), format(_format) {
-    TRACE_CTOR(format_ptree, "report&, format_t");
+  explicit format_ptree(report_t& _report) : report(_report) {
+    TRACE_CTOR(format_ptree, "report&");
   }
   ~format_ptree() override { TRACE_DTOR(format_ptree); }
 

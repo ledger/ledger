@@ -85,8 +85,6 @@ class generate_posts_iterator
   int_generator_t three_gen;
   uniform_int<> six_range;
   int_generator_t six_gen;
-  uniform_int<> two_six_range;
-  int_generator_t two_six_gen;
 
   uniform_int<> strlen_range;
   int_generator_t strlen_gen;
