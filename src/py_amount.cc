@@ -57,6 +57,14 @@ using namespace boost::python;
 
 namespace {
 
+/*--- Lifecycle Wrapper ---*/
+
+/// Initializes the amount subsystem and rebinds ledger.commodities to the pool it creates.
+void py_amount_initialize() {
+  amount_t::initialize();
+  import("ledger").attr("commodities") = commodity_pool_t::current_pool;
+}
+
 /*--- Valuation Wrapper Overloads ---*/
 
 /// Wrappers that adapt amount_t::value() to Python by converting the
@@ -128,7 +136,7 @@ EXC_TRANSLATOR(amount_error)
 /// and conversions to Python numeric and string types.
 void export_amount() {
   class_<amount_t>("Amount")
-      .def("initialize", &amount_t::initialize) // only for the PyUnitTests
+      .def("initialize", &py_amount_initialize)
       .staticmethod("initialize")
       .def("shutdown", &amount_t::shutdown)
       .staticmethod("shutdown")

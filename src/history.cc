@@ -530,10 +530,11 @@ std::optional<price_point_t> commodity_history_impl_t::find_price(const commodit
   if (source == target)
     return std::nullopt;
 
-  // Guard against cross-pool commodity lookups (e.g. after close_journal_files()
-  // a commodity from the old pool may carry a graph_index that is out of range
-  // for the new pool's price graph).  Treat such commodities as unresolvable
-  // rather than invoking undefined behaviour in Boost.Graph (issue #976).
+  // Guard against commodities from another pool: a Commodity that Python
+  // obtained before Amount.shutdown()/Amount.initialize() replaced the pool
+  // carries a graph_index into the old pool's price graph, which may be out
+  // of range here.  Treat such commodities as unresolvable rather than
+  // invoking undefined behaviour in Boost.Graph (issue #976).
   std::size_t n = num_vertices(price_graph);
   if (!source.graph_index() || *source.graph_index() >= n)
     return std::nullopt;

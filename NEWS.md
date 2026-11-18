@@ -700,6 +700,10 @@ components with their standard-library equivalents.
   pass.  A script that names `ledger.POST_EXT_MATCHES` now fails with
   `AttributeError`
 
+- `ledger.commodities` now names the new commodity pool as soon as
+  `Amount.initialize()` creates one, instead of after the next
+  `close_journal_files()`
+
 ### New Commands and Directives
 
 - Add `payee-rewrite` and `account-rewrite` directives, which replace

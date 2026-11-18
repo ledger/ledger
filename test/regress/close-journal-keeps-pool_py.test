@@ -1,0 +1,5 @@
+test python test/regress/close-journal-keeps-pool.py
+True
+True True
+QQQ
+end test
