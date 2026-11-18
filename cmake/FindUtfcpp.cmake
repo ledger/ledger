@@ -1,10 +1,11 @@
-# - Try to find utfcpp
+# - Try to find utfcpp (UTF-8 with C++ in a portable way)
 # Once done, this will define
 #
-#  UTFCPP_FOUND        - system has utfcpp's utf8.h
-#  UTFCPP_PATH         - the utfcpp include directories
-
-include(CheckCXXSourceCompiles)
+#  UTFCPP_FOUND        - utf8.h was found
+#  UTFCPP_INCLUDE_DIR  - the include directory holding utf8.h
+#
+# utfcpp is header-only.  A system installation is preferred (hint it with
+# UTFCPP_PATH); the copy vendored below lib/utfcpp/v4/source is the fallback.
 
 set(UTFCPP_FOUND FALSE)
 
@@ -15,17 +16,5 @@ find_path(UTFCPP_INCLUDE_DIR
 )
 
 if (UTFCPP_INCLUDE_DIR)
-  set(CMAKE_REQUIRED_INCLUDES "${UTFCPP_INCLUDE_DIR}")
   set(UTFCPP_FOUND TRUE)
 endif()
-
-check_cxx_source_compiles("
-#include <string>
-#include \"utf8.h\"
-
-int main(int argc, char** argv) {
-    std::string input = std::string(\"utfcpp\");
-    const char * p = input.c_str();
-    std::size_t len = input.length();
-    utf8::is_valid(p, p + len);
-}" HAVE_WORKING_UTFCPP)
