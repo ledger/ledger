@@ -64,22 +64,6 @@ journal_t::journal_t() {
   TRACE_CTOR(journal_t, "");
 }
 
-#if 0
-journal_t::journal_t(const path& pathname)
-{
-  initialize();
-  read(pathname);
-  TRACE_CTOR(journal_t, "path");
-}
-
-journal_t::journal_t(const string& str)
-{
-  initialize();
-  read(str);
-  TRACE_CTOR(journal_t, "string");
-}
-#endif
-
 /**
  * @brief Destroy the journal, freeing all owned transactions and accounts.
  *

@@ -53,8 +53,6 @@ void xacts_iterator::reset(journal_t& journal) {
   xacts_i = journal.xacts.begin();
   xacts_end = journal.xacts.end();
 
-  xacts_uninitialized = false;
-
   increment();
 }
 
@@ -72,19 +70,29 @@ void journal_posts_iterator::reset(journal_t& journal) {
   increment();
 }
 
-void journal_posts_iterator::increment() {
+namespace {
+
+/// Advance a two-level (transaction, posting) walk and return the next
+/// posting, or nullptr once every transaction is exhausted.
+post_t* next_post(xacts_iterator& xacts, xact_posts_iterator& posts) {
   // NOLINTBEGIN(bugprone-branch-clone)
   // Try the next posting in the current transaction first.  If exhausted,
   // advance to the next transaction and reset the inner posting iterator.
   if (post_t* post = *posts++) {
-    m_node = post;
+    return post;
   } else if (xact_t* xact = *xacts++) {
     posts.reset(*xact);
-    m_node = *posts++;
+    return *posts++;
   } else {
-    m_node = nullptr;
+    return nullptr;
   }
   // NOLINTEND(bugprone-branch-clone)
+}
+
+} // namespace
+
+void journal_posts_iterator::increment() {
+  m_node = next_post(xacts, posts);
 }
 
 /*--- Commodity price posting synthesis ---*/
@@ -260,16 +268,7 @@ void posts_commodities_iterator::reset(journal_t& journal) {
 }
 
 void posts_commodities_iterator::increment() {
-  // NOLINTBEGIN(bugprone-branch-clone)
-  if (post_t* post = *posts++) {
-    m_node = post;
-  } else if (xact_t* xact = *xacts++) {
-    posts.reset(*xact);
-    m_node = *posts++;
-  } else {
-    m_node = nullptr;
-  }
-  // NOLINTEND(bugprone-branch-clone)
+  m_node = next_post(xacts, posts);
 }
 
 /*--- Account tree traversal ---*/

@@ -162,9 +162,8 @@ public:
       lot_policy_t::none; ///< How commodity lots are matched for consumption.
   payee_alias_mappings_t
       payee_alias_mappings; ///< Regex-based payee alias rules from `alias` directives.
-  payee_uuid_mappings_t payee_uuid_mappings;       ///< UUID-to-payee-name mappings.
-  payee_rewrite_mappings_t payee_rewrite_mappings; ///< Regex-based payee rewrite rules.
-  account_mappings_t account_mappings; ///< Regex-to-account mappings for automatic categorization.
+  payee_uuid_mappings_t payee_uuid_mappings;           ///< UUID-to-payee-name mappings.
+  payee_rewrite_mappings_t payee_rewrite_mappings;     ///< Regex-based payee rewrite rules.
   account_rewrite_mappings_t account_rewrite_mappings; ///< Regex-based account name rewrite rules.
   accounts_map account_aliases; ///< Account alias map from `alias Name=Target` directives.
   account_mappings_t
@@ -218,10 +217,6 @@ public:
   }
 
   journal_t();
-#if 0
-  journal_t(const path& pathname);
-  journal_t(const string& str);
-#endif
   ~journal_t();
 
   /** @brief Reset all members to their initial state and register built-in tags. */

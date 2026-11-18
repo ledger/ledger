@@ -99,9 +99,6 @@ public:
 
   explicit iterator_facade_base(node_base p) : m_node(p) {}
 
-  /// Advance to the next element; implemented by each concrete iterator.
-  void increment();
-
 private:
   friend class boost::iterator_core_access;
 
@@ -163,7 +160,7 @@ public:
  * @brief Iterates over the transactions in a journal, in parse order.
  *
  * Walks the flat list of xact_t pointers stored in journal_t::xacts.
- * Used standalone or as the outer loop inside journal_posts_iterator.
+ * Used as the outer loop inside journal_posts_iterator and posts_commodities_iterator.
  */
 class xacts_iterator
     : public iterator_facade_base<xacts_iterator, xact_t*, boost::forward_traversal_tag> {
@@ -171,20 +168,10 @@ public:
   xacts_list::iterator xacts_i;   ///< Current position in the transaction list.
   xacts_list::iterator xacts_end; ///< Past-the-end sentinel.
 
-  bool xacts_uninitialized; ///< True until reset() has been called.
-
-  xacts_iterator() : xacts_uninitialized(true) { TRACE_CTOR(xacts_iterator, ""); }
-  xacts_iterator(journal_t& journal) : xacts_uninitialized(false) {
-    reset(journal);
-    TRACE_CTOR(xacts_iterator, "journal_t&");
-  }
-  xacts_iterator(xacts_list::iterator beg, xacts_list::iterator end) : xacts_uninitialized(false) {
-    reset(beg, end);
-    TRACE_CTOR(xacts_iterator, "xacts_list::iterator, xacts_list::iterator");
-  }
+  xacts_iterator() { TRACE_CTOR(xacts_iterator, ""); }
   xacts_iterator(const xacts_iterator& i)
       : iterator_facade_base<xacts_iterator, xact_t*, boost::forward_traversal_tag>(i),
-        xacts_i(i.xacts_i), xacts_end(i.xacts_end), xacts_uninitialized(i.xacts_uninitialized) {
+        xacts_i(i.xacts_i), xacts_end(i.xacts_end) {
     TRACE_CTOR(xacts_iterator, "copy");
   }
   xacts_iterator& operator=(const xacts_iterator&) = default;

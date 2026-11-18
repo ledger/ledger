@@ -405,26 +405,6 @@ public:
   const account_t* reported_account() const {
     return const_cast<post_t*>(this)->reported_account();
   }
-
-  friend class xact_t;
-
-  /**
-   * @brief Comparator for sorting postings by date, then by file sequence.
-   *
-   * Used to present postings in chronological order.  When two postings
-   * share the same date, the tie is broken by their source file sequence
-   * number, preserving the order in which they appeared in the journal.
-   */
-  struct compare_by_date_and_sequence {
-    bool operator()(const post_t* left, const post_t* right) const {
-      gregorian::date_duration duration = left->primary_date() - right->primary_date();
-      if (duration.days() == 0) {
-        return ((left->pos ? left->pos->sequence : 0) < (right->pos ? right->pos->sequence : 0));
-      } else {
-        return duration.days() < 0;
-      }
-    }
-  };
 };
 
 class journal_t;

@@ -342,8 +342,6 @@ public:
 
   [[nodiscard]] bool valid() const;
 
-  friend class journal_t;
-
   /**
    * @brief Extended data attached to an account during reporting.
    *
@@ -358,7 +356,7 @@ public:
 #define ACCOUNT_EXT_HAS_UNB_VIRTUALS 0x04 ///< Account has at least one unbalanced virtual posting.
 #define ACCOUNT_EXT_AUTO_VIRTUALIZE 0x08  ///< Auto-virtualization is active for this account.
 #define ACCOUNT_EXT_VISITED 0x10  ///< Account was visited by the report walker (totals are valid).
-#define ACCOUNT_EXT_MATCHING 0x20 ///< Account matches the current report query.
+#define ACCOUNT_EXT_MATCHING 0x20 ///< Never set; retained for the Python API.
 #define ACCOUNT_EXT_TO_DISPLAY 0x40 ///< Account is selected for display in the current report.
 #define ACCOUNT_EXT_DISPLAYED 0x80  ///< Account has already been output in the current report.
 

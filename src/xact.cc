@@ -904,23 +904,7 @@ bool xact_base_t::finalize() {
             if (post->must_balance())
               add_or_set_value(post->has_flags(POST_VIRTUAL) ? virtual_balance : balance,
                                gain_loss.reduced());
-#if 0
-            account_t * account;
-            if (gain_loss.sign() > 0)
-              account = journal->find_account(_("Equity:Capital Gains"));
-            else
-              account = journal->find_account(_("Equity:Capital Losses"));
-
-            post_t * p = new post_t(account, gain_loss, ITEM_GENERATED);
-            p->set_state(post->state());
-            if (post->has_flags(POST_VIRTUAL)) {
-              DEBUG("xact.finalize", "gain_loss came from a virtual post");
-              p->add_flags(post->flags() & (POST_VIRTUAL | POST_MUST_BALANCE));
-            }
-            add_post(p);
-#else
             *post->cost += gain_loss;
-#endif
             DEBUG("xact.finalize", "added gain_loss, balance = " << balance);
           } else {
             DEBUG("xact.finalize", "gain_loss would have displayed as zero");
