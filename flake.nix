@@ -19,8 +19,6 @@
   outputs = { self, nixpkgs, ledger-semantics }: let
     usePython = true;
     gpgmeSupport = true;
-    useLibedit = true;
-    useReadline = false;
     forAllSystems = f: nixpkgs.lib.genAttrs systems (system: f system);
     nixpkgsFor = forAllSystems (system: import nixpkgs { inherit system; });
     systems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
@@ -41,11 +39,7 @@
         outputs = [ "out" "dev" ] ++ lib.optionals usePython [ "py" ];
 
         buildInputs = [
-          gmp mpfr gnused icu
-        ] ++ lib.optionals useLibedit [
-          libedit
-        ] ++ lib.optionals useReadline [
-          readline
+          gmp mpfr gnused icu libedit
         ] ++ lib.optionals gpgmeSupport [
           gpgme gpgmepp
         ] ++ (if usePython
@@ -53,11 +47,7 @@
               else [ boost ]);
 
         nativeBuildInputs = [
-          cmake texinfo tzdata
-        ] ++ lib.optionals useLibedit [
-          libedit.dev
-        ] ++ lib.optionals useReadline [
-          readline.dev
+          cmake texinfo tzdata libedit.dev
         ];
 
         enableParallelBuilding = true;
