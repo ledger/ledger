@@ -37,6 +37,7 @@ Useful CMake flags:
 
 - `-DUSE_PYTHON=ON` -- Enable Python bindings (requires Boost.Python)
 - `-DUSE_SANITIZERS=ON` -- Enable AddressSanitizer + UBSan
+- `-DUSE_GCOV=ON` -- gcov instrumentation (with `-DCMAKE_BUILD_TYPE=Debug`); after `make && ctest`, `make coverage` writes `coverage_html/` and `make coverage-clean` resets the counters (both need lcov and genhtml)
 - `-DBUILD_DEBUG=ON` -- Enable runtime debugging support
 - `-DDISABLE_ASSERTS=ON` -- Disable assertion checks
 
