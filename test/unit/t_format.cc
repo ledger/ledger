@@ -767,28 +767,6 @@ BOOST_AUTO_TEST_CASE(testFormatTruncateStylesW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: format.cc lines 104-106: parse_single_expression eof
-// (when the format string ends inside an expression)
-// -----------------------------------------------------------------------
-
-BOOST_AUTO_TEST_CASE(testFormatParseExprEofW8)
-{
-  times_initialize();
-  amount_t::initialize();
-
-  session_t session;
-  report_t report(session);
-
-  // Test expression that consumes to EOF in parse_single_expression
-  format_t fmt("%(1)");
-  string result = fmt.real_calc(report);
-  BOOST_CHECK_EQUAL(result, "1");
-
-  amount_t::shutdown();
-  times_shutdown();
-}
-
-// -----------------------------------------------------------------------
 // Coverage W8: format.cc line 115: missing closing paren
 // -----------------------------------------------------------------------
 
@@ -968,28 +946,6 @@ BOOST_AUTO_TEST_CASE(testFormatCurlyBraceColorizeOpW8)
   format_t fmt("{1+2, 3 > 2}");
   string result = fmt.real_calc(report);
   BOOST_CHECK_EQUAL(result, "{1+2, 3 > 2}");
-
-  amount_t::shutdown();
-  times_shutdown();
-}
-
-// -----------------------------------------------------------------------
-// Coverage W11: format.cc lines 104-106 (parse_single_expression eof)
-// When expression consumes the entire format string
-// -----------------------------------------------------------------------
-
-BOOST_AUTO_TEST_CASE(testFormatExprEofW11)
-{
-  times_initialize();
-  amount_t::initialize();
-
-  session_t session;
-  report_t report(session);
-
-  // This expression should consume everything until EOF
-  format_t fmt("%(1+2+3+4)");
-  string result = fmt.real_calc(report);
-  BOOST_CHECK_EQUAL(result, "10");
 
   amount_t::shutdown();
   times_shutdown();

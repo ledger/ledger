@@ -29,7 +29,6 @@ BOOST_FIXTURE_TEST_SUITE(commodity, commodity_fixture)
 
 BOOST_AUTO_TEST_CASE(testPriceHistory)
 {
-#ifndef NOT_FOR_PYTHON
   datetime_t jan17_05;
   datetime_t jan17_06;
   datetime_t jan17_07;
@@ -38,7 +37,6 @@ BOOST_AUTO_TEST_CASE(testPriceHistory)
   datetime_t feb28_07sbm;
   datetime_t mar01_07;
   datetime_t apr15_07;
-#endif // NOT_FOR_PYTHON
 
   jan17_05    = parse_datetime("2005/01/17 00:00:00");
   jan17_06    = parse_datetime("2006/01/17 00:00:00");
@@ -53,9 +51,7 @@ BOOST_AUTO_TEST_CASE(testPriceHistory)
   amount_t x1("100.10 AAPL");
 
   BOOST_CHECK_THROW(x0.value(), amount_error);
-#ifndef NOT_FOR_PYTHON
   BOOST_CHECK(! x1.value());
-#endif
 
   // Commodities cannot be constructed by themselves, since a great deal
   // of their state depends on how they were seen to be used.
@@ -81,7 +77,6 @@ BOOST_AUTO_TEST_CASE(testPriceHistory)
 
   cad.add_price(jan17_06, amount_t("$1.11"));
 
-#ifndef NOT_FOR_PYTHON
   std::optional<amount_t> amt = x1.value(feb28_07sbm);
   BOOST_CHECK(amt);
   BOOST_CHECK_EQUAL(amount_t("$1831.83"), *amt);
@@ -109,7 +104,6 @@ BOOST_AUTO_TEST_CASE(testPriceHistory)
   amt = x1.value(CURRENT_TIME(), &cad);
   BOOST_CHECK(amt);
   BOOST_CHECK_EQUAL(string("CAD 3223.22"), amt->to_string());
-#endif // NOT_FOR_PYTHON
 
   BOOST_CHECK(x1.valid());
 }
@@ -1000,7 +994,6 @@ BOOST_AUTO_TEST_CASE(testCommodityBoolOperator)
 
 BOOST_AUTO_TEST_CASE(testCommodityPoolAnnotated)
 {
-#ifndef NOT_FOR_PYTHON
   amount_t x1("$1.00");
   commodity_pool_t& pool(x1.commodity().pool());
 
@@ -1037,7 +1030,6 @@ BOOST_AUTO_TEST_CASE(testCommodityPoolAnnotated)
 
   // The base commodity should have COMMODITY_SAW_ANNOTATED flag
   BOOST_CHECK(base->has_flags(COMMODITY_SAW_ANNOTATED));
-#endif // NOT_FOR_PYTHON
 
   BOOST_CHECK(x1.valid());
 }

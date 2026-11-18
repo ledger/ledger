@@ -54,14 +54,12 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer1)
   args.push_back(string_value("and"));
   args.push_back(string_value("bar"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer2)
@@ -69,14 +67,12 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer2)
   value_t args;
   args.push_back(string_value("foo and bar"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end(), false);
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer3)
@@ -86,7 +82,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer3)
   args.push_back(string_value("and"));
   args.push_back(string_value("bar)"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::LPAREN, tokens.next_token().kind);
@@ -95,7 +90,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer3)
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::RPAREN, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer4)
@@ -107,7 +101,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer4)
   args.push_back(string_value("bar"));
   args.push_back(string_value(")"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::LPAREN, tokens.next_token().kind);
@@ -116,7 +109,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer4)
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::RPAREN, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer5)
@@ -125,7 +117,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer5)
   args.push_back(string_value("( foo and"));
   args.push_back(string_value("bar)"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end(), false);
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::LPAREN, tokens.next_token().kind);
@@ -134,7 +125,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer5)
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::RPAREN, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer6)
@@ -144,7 +134,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer6)
   args.push_back(string_value("and"));
   args.push_back(string_value("bar"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_NOTE, tokens.next_token().kind);
@@ -152,7 +141,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer6)
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_AND, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer7)
@@ -160,13 +148,11 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer7)
   value_t args;
   args.push_back(string_value("=foo and bar"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_NOTE, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer8)
@@ -174,13 +160,11 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer8)
   value_t args;
   args.push_back(string_value("expr 'foo and bar'"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end(), false);
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_EXPR, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer9)
@@ -189,13 +173,11 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer9)
   args.push_back(string_value("expr"));
   args.push_back(string_value("'foo and bar'"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_EXPR, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer10)
@@ -206,7 +188,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer10)
   args.push_back(string_value("and"));
   args.push_back(string_value("bar"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_EXPR, tokens.next_token().kind);
@@ -214,7 +195,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer10)
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_AND,  tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer11)
@@ -226,7 +206,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer11)
   args.push_back(string_value("or"));
   args.push_back(string_value("baz"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
@@ -235,7 +214,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer11)
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_OR,  tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer12)
@@ -247,7 +225,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer12)
   args.push_back(string_value("|"));
   args.push_back(string_value("baz"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
@@ -256,7 +233,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer12)
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_OR,  tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer13)
@@ -267,7 +243,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer13)
   args.push_back(string_value("bar"));
   args.push_back(string_value("|baz"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
@@ -276,7 +251,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer13)
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_OR,  tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer14)
@@ -287,7 +261,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer14)
   args.push_back(string_value("bar|"));
   args.push_back(string_value("baz"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
@@ -296,7 +269,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer14)
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_OR,  tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer15)
@@ -306,7 +278,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer15)
   args.push_back(string_value("and"));
   args.push_back(string_value("bar|baz"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
@@ -315,7 +286,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer15)
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_OR,  tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testPredicateTokenizer16)
@@ -324,7 +294,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer16)
   args.push_back(string_value("foo"));
   args.push_back(string_value("and bar|baz"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end(), false);
 
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
@@ -333,7 +302,6 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer16)
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_OR,  tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 // -----------------------------------------------------------------------
@@ -718,12 +686,10 @@ BOOST_AUTO_TEST_CASE(testQueryLexerNotKeyword)
   args.push_back(string_value("not"));
   args.push_back(string_value("foo"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_NOT, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryLexerCodeKeyword)
@@ -733,12 +699,10 @@ BOOST_AUTO_TEST_CASE(testQueryLexerCodeKeyword)
   args.push_back(string_value("code"));
   args.push_back(string_value("1234"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_CODE, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryLexerDescPayeeKeyword)
@@ -749,22 +713,18 @@ BOOST_AUTO_TEST_CASE(testQueryLexerDescPayeeKeyword)
     args.push_back(string_value("desc"));
     args.push_back(string_value("Grocery"));
 
-#ifndef NOT_FOR_PYTHON
     query_t::lexer_t tokens(args.begin(), args.end());
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_PAYEE, tokens.next_token().kind);
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-#endif
   }
   {
     value_t args;
     args.push_back(string_value("payee"));
     args.push_back(string_value("Grocery"));
 
-#ifndef NOT_FOR_PYTHON
     query_t::lexer_t tokens(args.begin(), args.end());
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_PAYEE, tokens.next_token().kind);
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-#endif
   }
 }
 
@@ -775,11 +735,9 @@ BOOST_AUTO_TEST_CASE(testQueryLexerNoteKeyword)
   args.push_back(string_value("note"));
   args.push_back(string_value("lunch"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_NOTE, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryLexerTagMetaDataKeywords)
@@ -790,33 +748,27 @@ BOOST_AUTO_TEST_CASE(testQueryLexerTagMetaDataKeywords)
     args.push_back(string_value("tag"));
     args.push_back(string_value("Payee"));
 
-#ifndef NOT_FOR_PYTHON
     query_t::lexer_t tokens(args.begin(), args.end());
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_META, tokens.next_token().kind);
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-#endif
   }
   {
     value_t args;
     args.push_back(string_value("meta"));
     args.push_back(string_value("Payee"));
 
-#ifndef NOT_FOR_PYTHON
     query_t::lexer_t tokens(args.begin(), args.end());
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_META, tokens.next_token().kind);
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-#endif
   }
   {
     value_t args;
     args.push_back(string_value("data"));
     args.push_back(string_value("Payee"));
 
-#ifndef NOT_FOR_PYTHON
     query_t::lexer_t tokens(args.begin(), args.end());
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_META, tokens.next_token().kind);
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-#endif
   }
 }
 
@@ -827,28 +779,22 @@ BOOST_AUTO_TEST_CASE(testQueryLexerShowOnlyBoldKeywords)
     value_t args;
     args.push_back(string_value("show"));
 
-#ifndef NOT_FOR_PYTHON
     query_t::lexer_t tokens(args.begin(), args.end());
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_SHOW, tokens.next_token().kind);
-#endif
   }
   {
     value_t args;
     args.push_back(string_value("only"));
 
-#ifndef NOT_FOR_PYTHON
     query_t::lexer_t tokens(args.begin(), args.end());
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_ONLY, tokens.next_token().kind);
-#endif
   }
   {
     value_t args;
     args.push_back(string_value("bold"));
 
-#ifndef NOT_FOR_PYTHON
     query_t::lexer_t tokens(args.begin(), args.end());
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_BOLD, tokens.next_token().kind);
-#endif
   }
 }
 
@@ -859,28 +805,22 @@ BOOST_AUTO_TEST_CASE(testQueryLexerForSinceUntilKeywords)
     value_t args;
     args.push_back(string_value("for"));
 
-#ifndef NOT_FOR_PYTHON
     query_t::lexer_t tokens(args.begin(), args.end());
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_FOR, tokens.next_token().kind);
-#endif
   }
   {
     value_t args;
     args.push_back(string_value("since"));
 
-#ifndef NOT_FOR_PYTHON
     query_t::lexer_t tokens(args.begin(), args.end());
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_SINCE, tokens.next_token().kind);
-#endif
   }
   {
     value_t args;
     args.push_back(string_value("until"));
 
-#ifndef NOT_FOR_PYTHON
     query_t::lexer_t tokens(args.begin(), args.end());
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_UNTIL, tokens.next_token().kind);
-#endif
   }
 }
 
@@ -890,14 +830,12 @@ BOOST_AUTO_TEST_CASE(testQueryLexerSpecialChars)
   value_t args;
   args.push_back(string_value("!@#%foo"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end(), false);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_NOT, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_PAYEE, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_CODE, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_META, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryLexerQuotedPattern)
@@ -908,39 +846,33 @@ BOOST_AUTO_TEST_CASE(testQueryLexerQuotedPattern)
     value_t args;
     args.push_back(string_value("'food'"));
 
-#ifndef NOT_FOR_PYTHON
     query_t::lexer_t tokens(args.begin(), args.end());
     query_t::lexer_t::token_t tok = tokens.next_token();
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tok.kind);
     BOOST_CHECK(tok.value);
     BOOST_CHECK_EQUAL(string("food"), *tok.value);
-#endif
   }
   {
     // Double-quoted pattern
     value_t args;
     args.push_back(string_value("\"food\""));
 
-#ifndef NOT_FOR_PYTHON
     query_t::lexer_t tokens(args.begin(), args.end());
     query_t::lexer_t::token_t tok = tokens.next_token();
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tok.kind);
     BOOST_CHECK(tok.value);
     BOOST_CHECK_EQUAL(string("food"), *tok.value);
-#endif
   }
   {
     // Regex pattern
     value_t args;
     args.push_back(string_value("/food/"));
 
-#ifndef NOT_FOR_PYTHON
     query_t::lexer_t tokens(args.begin(), args.end());
     query_t::lexer_t::token_t tok = tokens.next_token();
     BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tok.kind);
     BOOST_CHECK(tok.value);
     BOOST_CHECK_EQUAL(string("food"), *tok.value);
-#endif
   }
 }
 
@@ -950,13 +882,11 @@ BOOST_AUTO_TEST_CASE(testQueryLexerEscapeInQuotedPattern)
   value_t args;
   args.push_back(string_value("'fo\\od'"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
   query_t::lexer_t::token_t tok = tokens.next_token();
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tok.kind);
   BOOST_CHECK(tok.value);
   BOOST_CHECK_EQUAL(string("food"), *tok.value);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryLexerUnclosedQuote)
@@ -965,10 +895,8 @@ BOOST_AUTO_TEST_CASE(testQueryLexerUnclosedQuote)
   value_t args;
   args.push_back(string_value("'food"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
   BOOST_CHECK_THROW(tokens.next_token(), parse_error);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryLexerEmptyPattern)
@@ -977,10 +905,8 @@ BOOST_AUTO_TEST_CASE(testQueryLexerEmptyPattern)
   value_t args;
   args.push_back(string_value("''"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
   BOOST_CHECK_THROW(tokens.next_token(), parse_error);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryLexerBackslashAtEnd)
@@ -989,10 +915,8 @@ BOOST_AUTO_TEST_CASE(testQueryLexerBackslashAtEnd)
   value_t args;
   args.push_back(string_value("'foo\\"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
   BOOST_CHECK_THROW(tokens.next_token(), parse_error);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryLexerUnbalancedBraces)
@@ -1001,14 +925,12 @@ BOOST_AUTO_TEST_CASE(testQueryLexerUnbalancedBraces)
   value_t args;
   args.push_back(string_value("test"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
   BOOST_CHECK(tokens.unbalanced_braces("(foo"));
   BOOST_CHECK(tokens.unbalanced_braces("foo)"));
   BOOST_CHECK(! tokens.unbalanced_braces("(foo)"));
   BOOST_CHECK(! tokens.unbalanced_braces("foo"));
   BOOST_CHECK(tokens.unbalanced_braces("((foo)"));
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryLexerPeekToken)
@@ -1018,7 +940,6 @@ BOOST_AUTO_TEST_CASE(testQueryLexerPeekToken)
   args.push_back(string_value("foo"));
   args.push_back(string_value("bar"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
   // peek should return the token without consuming it
   query_t::lexer_t::token_t tok1 = tokens.peek_token();
@@ -1026,7 +947,6 @@ BOOST_AUTO_TEST_CASE(testQueryLexerPeekToken)
   // next should return the same token
   query_t::lexer_t::token_t tok2 = tokens.next_token();
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tok2.kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryLexerTokenExpected)
@@ -1035,17 +955,14 @@ BOOST_AUTO_TEST_CASE(testQueryLexerTokenExpected)
   value_t args;
   args.push_back(string_value("foo"));
 
-#ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
   query_t::lexer_t::token_t tok = tokens.next_token();
   BOOST_CHECK_THROW(tok.expected(')'), parse_error);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryLexerTokenSymbol)
 {
   // Cover query.h lines 169-222: token_t::symbol() for all token types
-#ifndef NOT_FOR_PYTHON
   {
     query_t::lexer_t::token_t tok;
     tok.kind = query_t::lexer_t::token_t::LPAREN;
@@ -1141,87 +1058,73 @@ BOOST_AUTO_TEST_CASE(testQueryLexerTokenSymbol)
     tok.kind = query_t::lexer_t::token_t::END_REACHED;
     BOOST_CHECK_EQUAL(string("<EOF>"), tok.symbol());
   }
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseCode)
 {
   // Cover query.cc parse_query_term for TOK_CODE (lines 328-330)
-#ifndef NOT_FOR_PYTHON
   query_t query;
   value_t args;
   args.push_back(string_value("code"));
   args.push_back(string_value("1234"));
   query.parse_args(args);
   BOOST_CHECK(query.has_query(query_t::QUERY_LIMIT));
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParsePayee)
 {
   // Cover query.cc parse_query_term for TOK_PAYEE (lines 325-327)
-#ifndef NOT_FOR_PYTHON
   query_t query;
   value_t args;
   args.push_back(string_value("@Grocery"));
   query.parse_args(args);
   BOOST_CHECK(query.has_query(query_t::QUERY_LIMIT));
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseNote)
 {
   // Cover query.cc parse_query_term for TOK_NOTE (lines 331-333)
-#ifndef NOT_FOR_PYTHON
   query_t query;
   value_t args;
   args.push_back(string_value("=lunch"));
   query.parse_args(args);
   BOOST_CHECK(query.has_query(query_t::QUERY_LIMIT));
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseMeta)
 {
   // Cover query.cc parse_query_term for TOK_META (lines 289-314)
-#ifndef NOT_FOR_PYTHON
   query_t query;
   value_t args;
   args.push_back(string_value("%Payee"));
   query.parse_args(args);
   BOOST_CHECK(query.has_query(query_t::QUERY_LIMIT));
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseMetaWithEquals)
 {
   // Cover query.cc lines 300-310: metadata with equality operator
-#ifndef NOT_FOR_PYTHON
   query_t query;
   value_t args;
   args.push_back(string_value("%Payee=Grocery"));
   query.parse_args(args);
   BOOST_CHECK(query.has_query(query_t::QUERY_LIMIT));
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseNot)
 {
   // Cover query.cc parse_unary_expr TOK_NOT (lines 373)
-#ifndef NOT_FOR_PYTHON
   query_t query;
   value_t args;
   args.push_back(string_value("not"));
   args.push_back(string_value("food"));
   query.parse_args(args);
   BOOST_CHECK(query.has_query(query_t::QUERY_LIMIT));
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseAnd)
 {
   // Cover query.cc parse_and_expr TOK_AND (lines 399)
-#ifndef NOT_FOR_PYTHON
   query_t query;
   value_t args;
   args.push_back(string_value("food"));
@@ -1229,13 +1132,11 @@ BOOST_AUTO_TEST_CASE(testQueryParseAnd)
   args.push_back(string_value("@Grocery"));
   query.parse_args(args);
   BOOST_CHECK(query.has_query(query_t::QUERY_LIMIT));
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseOr)
 {
   // Cover query.cc parse_or_expr TOK_OR (lines 420)
-#ifndef NOT_FOR_PYTHON
   query_t query;
   value_t args;
   args.push_back(string_value("food"));
@@ -1243,13 +1144,11 @@ BOOST_AUTO_TEST_CASE(testQueryParseOr)
   args.push_back(string_value("rent"));
   query.parse_args(args);
   BOOST_CHECK(query.has_query(query_t::QUERY_LIMIT));
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseShowOnlyBold)
 {
   // Cover query.cc lines 454-488: SHOW, ONLY, BOLD query sections
-#ifndef NOT_FOR_PYTHON
   {
     query_t query;
     value_t args;
@@ -1280,13 +1179,11 @@ BOOST_AUTO_TEST_CASE(testQueryParseShowOnlyBold)
     BOOST_CHECK(query.has_query(query_t::QUERY_LIMIT));
     BOOST_CHECK(query.has_query(query_t::QUERY_BOLD));
   }
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseFor)
 {
   // Cover query.cc lines 492-528: FOR/SINCE/UNTIL query sections
-#ifndef NOT_FOR_PYTHON
   {
     query_t query;
     value_t args;
@@ -1319,13 +1216,11 @@ BOOST_AUTO_TEST_CASE(testQueryParseFor)
     BOOST_CHECK(query.has_query(query_t::QUERY_FOR));
     BOOST_CHECK_EQUAL(string("until 2024"), query.get_query(query_t::QUERY_FOR));
   }
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseParenthesized)
 {
   // Cover query.cc lines 350-354: parenthesized subexpressions
-#ifndef NOT_FOR_PYTHON
   query_t query;
   value_t args;
   args.push_back(string_value("(food"));
@@ -1333,61 +1228,50 @@ BOOST_AUTO_TEST_CASE(testQueryParseParenthesized)
   args.push_back(string_value("rent)"));
   query.parse_args(args);
   BOOST_CHECK(query.has_query(query_t::QUERY_LIMIT));
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryGetQueryMissing)
 {
   // Cover query.h lines 341-346: get_query for missing query returns empty
-#ifndef NOT_FOR_PYTHON
   query_t query;
   value_t args;
   args.push_back(string_value("food"));
   query.parse_args(args);
   BOOST_CHECK_EQUAL(string(""), query.get_query(query_t::QUERY_SHOW));
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryHasQueryNoParser)
 {
   // Cover query.h line 338: has_query with no parser
-#ifndef NOT_FOR_PYTHON
   query_t query;
   BOOST_CHECK(! query.has_query(query_t::QUERY_LIMIT));
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryGetQueryNoParser)
 {
   // Cover query.h line 346: get_query with no parser
-#ifndef NOT_FOR_PYTHON
   query_t query;
   BOOST_CHECK_EQUAL(string(""), query.get_query(query_t::QUERY_LIMIT));
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryConstructFromValue)
 {
   // Cover query.h lines 320-326: value_t constructor
-#ifndef NOT_FOR_PYTHON
   value_t args;
   args.push_back(string_value("food"));
   query_t query(args);
   BOOST_CHECK(query.has_query(query_t::QUERY_LIMIT));
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryConstructEmpty)
 {
   // Default and empty-argument constructors leave no query.
-#ifndef NOT_FOR_PYTHON
   query_t query1;
   BOOST_CHECK(! query1.has_query(query_t::QUERY_LIMIT));
 
   value_t empty_args;
   query_t query2(empty_args);
   BOOST_CHECK(! query2.has_query(query_t::QUERY_LIMIT));
-#endif
 }
 
 // -----------------------------------------------------------------------
@@ -1398,7 +1282,6 @@ BOOST_AUTO_TEST_CASE(testQueryLexerAccountNotKeyword)
 {
   // Note: despite TOK_ACCOUNT existing in the enum, the lexer has no
   // keyword check for "account" -- it becomes a plain TERM.
-#ifndef NOT_FOR_PYTHON
   value_t args;
   args.push_back(string_value("account"));
   args.push_back(string_value("Food"));
@@ -1409,13 +1292,11 @@ BOOST_AUTO_TEST_CASE(testQueryLexerAccountNotKeyword)
   BOOST_CHECK(tok.value && *tok.value == "account");
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseImplicitOr)
 {
   // Multiple bare terms at top level are implicitly OR'd
-#ifndef NOT_FOR_PYTHON
   query_t query;
   value_t args;
   args.push_back(string_value("Food"));
@@ -1426,35 +1307,29 @@ BOOST_AUTO_TEST_CASE(testQueryParseImplicitOr)
   string pred = query.get_query(query_t::QUERY_LIMIT);
   BOOST_CHECK(pred.find("Food") != string::npos);
   BOOST_CHECK(pred.find("Gas") != string::npos);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseCodeNoArg)
 {
   // 'code' keyword with no following argument should throw
-#ifndef NOT_FOR_PYTHON
   query_t query;
   value_t args;
   args.push_back(string_value("code"));
   BOOST_CHECK_THROW(query.parse_args(args), parse_error);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseExprNoArg)
 {
   // 'expr' keyword with no following argument should throw
-#ifndef NOT_FOR_PYTHON
   query_t query;
   value_t args;
   args.push_back(string_value("expr"));
   BOOST_CHECK_THROW(query.parse_args(args), parse_error);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseSinceNoLimit)
 {
   // 'since' with no limit predicate should still populate QUERY_FOR
-#ifndef NOT_FOR_PYTHON
   query_t query;
   value_t args;
   args.push_back(string_value("since"));
@@ -1463,13 +1338,11 @@ BOOST_AUTO_TEST_CASE(testQueryParseSinceNoLimit)
   BOOST_CHECK(! query.has_query(query_t::QUERY_LIMIT));
   BOOST_CHECK(query.has_query(query_t::QUERY_FOR));
   BOOST_CHECK(query.get_query(query_t::QUERY_FOR).find("since") != string::npos);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(testQueryParseNestedParens)
 {
   // Nested parentheses: ((Food and @Grocery) or Gas)
-#ifndef NOT_FOR_PYTHON
   query_t query;
   value_t args;
   args.push_back(string_value("((Food"));
@@ -1479,7 +1352,6 @@ BOOST_AUTO_TEST_CASE(testQueryParseNestedParens)
   args.push_back(string_value("Gas)"));
   query.parse_args(args);
   BOOST_CHECK(query.has_query(query_t::QUERY_LIMIT));
-#endif
 }
 
 // -----------------------------------------------------------------------
@@ -3181,18 +3053,6 @@ BOOST_AUTO_TEST_CASE(testExprBaseContextToStrW7)
 // -----------------------------------------------------------------------
 
 // -----------------------------------------------------------------------
-// W7 Coverage: expr.cc line 215 - context_to_str with null ptr
-// -----------------------------------------------------------------------
-
-BOOST_AUTO_TEST_CASE(testExprContextToStrNullW7)
-{
-  expr_t expr;
-  // With null ptr, returns "<empty expression>"
-  string ctx = expr.context_to_str();
-  BOOST_CHECK(!ctx.empty());
-}
-
-// -----------------------------------------------------------------------
 // W7 Coverage: expr.cc line 255 - merged_expr with non-semicolon merge op
 // -----------------------------------------------------------------------
 
@@ -3874,25 +3734,6 @@ BOOST_AUTO_TEST_CASE(testPrintDefineW8)
   string result = out.str();
   // O_DEFINE prints "left = right"
   BOOST_CHECK(result.find("=") != string::npos);
-}
-
-// =======================================================================
-// W8 Coverage: op.cc - print() for O_LAMBDA (line 768-774)
-// =======================================================================
-
-BOOST_AUTO_TEST_CASE(testPrintLambdaW8)
-{
-  // Build: x -> 42
-  expr_t::ptr_op_t param = expr_t::op_t::new_node(expr_t::op_t::IDENT);
-  param->set_ident("x");
-  expr_t::ptr_op_t body = expr_t::op_t::wrap_value(value_t(42L));
-  expr_t::ptr_op_t lambda = expr_t::op_t::new_node(
-      expr_t::op_t::O_LAMBDA, param, body);
-
-  std::ostringstream out;
-  lambda->print(out);
-  string result = out.str();
-  BOOST_CHECK(result.find("->") != string::npos);
 }
 
 // =======================================================================
@@ -5380,20 +5221,6 @@ BOOST_AUTO_TEST_CASE(testExprCalcAutoCompile)
 }
 
 // =======================================================================
-// Coverage: op.cc - O_CALL compile and lambda definition (lines 144-156)
-// =======================================================================
-
-BOOST_AUTO_TEST_CASE(testOpDefineWithOCall)
-{
-  // Test defining a function using O_DEFINE where left is O_CALL
-  // This is equivalent to: f(x) = x + 1
-  expr_t e("f(x) = x + 1; f(5)");
-  symbol_scope_t scope(*scope_t::empty_scope);
-  value_t result = e.calc(scope);
-  BOOST_CHECK_EQUAL(result.to_long(), 6L);
-}
-
-// =======================================================================
 // Coverage: expression parsing of NOT, AND, OR
 // =======================================================================
 
@@ -5633,18 +5460,6 @@ BOOST_AUTO_TEST_CASE(testExprBaseParseStreamWithOrigString)
   e.parse(in, PARSE_DEFAULT, string("2 + 3"));
   BOOST_CHECK(static_cast<bool>(e));
   BOOST_CHECK(e.text() == "2 + 3");
-}
-
-// =======================================================================
-// Coverage: exprbase.h line 189 - context_to_str() base class
-// =======================================================================
-
-BOOST_AUTO_TEST_CASE(testExprBaseContextToStrEmpty)
-{
-  // An empty expr_t should return the "<empty expression>" message
-  expr_t e;
-  string ctx = e.context_to_str();
-  BOOST_CHECK(!ctx.empty());
 }
 
 // =======================================================================

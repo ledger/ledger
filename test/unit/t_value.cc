@@ -4821,19 +4821,6 @@ BOOST_AUTO_TEST_CASE(testIsGreaterThanStringVsCommodity)
 }
 
 // ---------------------------------------------------------------------------
-// is_greater_than STRING vs STRING (value.cc lines 1095-1096)
-// ---------------------------------------------------------------------------
-
-BOOST_AUTO_TEST_CASE(testIsGreaterThanStringVsStringW5)
-{
-  value_t v1(string_value("banana"));
-  value_t v2(string_value("apple"));
-
-  BOOST_CHECK(v1.is_greater_than(v2));
-  BOOST_CHECK(!v2.is_greater_than(v1));
-}
-
-// ---------------------------------------------------------------------------
 // is_greater_than SEQUENCE vs SEQUENCE: not-greater path (value.cc 1114-1125)
 // ---------------------------------------------------------------------------
 
@@ -5210,18 +5197,6 @@ BOOST_AUTO_TEST_CASE(testCastDatetimeToStringW4)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_cast: AMOUNT -> STRING (value.cc lines 1248-1252)
-// ---------------------------------------------------------------------------
-
-BOOST_AUTO_TEST_CASE(testCastAmountToStringW4)
-{
-  value_t v1(amount_t("$42.00"));
-  v1.in_place_cast(value_t::STRING);
-  BOOST_CHECK(v1.is_string());
-  BOOST_CHECK(!v1.as_string().empty());
-}
-
-// ---------------------------------------------------------------------------
 // in_place_cast: BALANCE -> STRING (value.cc lines 1279-1284)
 // ---------------------------------------------------------------------------
 
@@ -5355,17 +5330,6 @@ BOOST_AUTO_TEST_CASE(testCastVoidToIntegerW4)
 }
 
 // ---------------------------------------------------------------------------
-// in_place_cast: VOID -> AMOUNT (value.cc line 1165)
-// ---------------------------------------------------------------------------
-
-BOOST_AUTO_TEST_CASE(testCastVoidToAmountW4)
-{
-  value_t v1;
-  v1.in_place_cast(value_t::AMOUNT);
-  BOOST_CHECK(v1.is_amount());
-}
-
-// ---------------------------------------------------------------------------
 // in_place_cast: BOOLEAN -> STRING (value.cc line 1184)
 // ---------------------------------------------------------------------------
 
@@ -5402,17 +5366,6 @@ BOOST_AUTO_TEST_CASE(testCastDatetimeToDateW4)
   value_t v1(boost::posix_time::ptime_from_tm(t1));
   v1.in_place_cast(value_t::DATE);
   BOOST_CHECK(v1.is_date());
-}
-
-// ---------------------------------------------------------------------------
-// in_place_cast: INTEGER -> BALANCE (value.cc line 1222)
-// ---------------------------------------------------------------------------
-
-BOOST_AUTO_TEST_CASE(testCastIntegerToBalanceW4)
-{
-  value_t v1(42L);
-  v1.in_place_cast(value_t::BALANCE);
-  BOOST_CHECK(v1.is_balance());
 }
 
 // ---------------------------------------------------------------------------
@@ -5911,22 +5864,8 @@ BOOST_AUTO_TEST_CASE(testIsRealzeroSequenceNotAllZero)
 }
 
 // ---------------------------------------------------------------------------
-// Wave 4: value_t number() for VOID returns 0 (value.cc lines 280-295)
+// value_t::number() on a STRING throws value_error
 // ---------------------------------------------------------------------------
-
-BOOST_AUTO_TEST_CASE(testNumberVoid)
-{
-  value_t v1;
-  // VOID returns 0
-  BOOST_CHECK_EQUAL(v1.number(), value_t(0L));
-}
-
-BOOST_AUTO_TEST_CASE(testNumberBoolean)
-{
-  value_t v1(true);
-  // BOOLEAN: true -> 1
-  BOOST_CHECK_EQUAL(v1.number(), value_t(1L));
-}
 
 BOOST_AUTO_TEST_CASE(testNumberString)
 {

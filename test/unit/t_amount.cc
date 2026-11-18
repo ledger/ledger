@@ -51,13 +51,11 @@ BOOST_AUTO_TEST_CASE(testParser)
 
   BOOST_CHECK_EQUAL(amount_t::precision_t(2), x12.commodity().precision());
 
-#ifndef NOT_FOR_PYTHON
   string buf("$100...");
   std::istringstream input(buf);
   amount_t x13;
   (void)x13.parse(input);
   BOOST_CHECK_EQUAL(x12, x13);
-#endif // NOT_FOR_PYTHON
 
   amount_t x14;
   BOOST_CHECK_THROW((void)x14.parse("DM"), amount_error);
@@ -220,8 +218,6 @@ BOOST_AUTO_TEST_CASE(testCommodityConstructors)
   BOOST_CHECK(x10.valid());
 }
 
-#ifndef NOT_FOR_PYTHON
-
 BOOST_AUTO_TEST_CASE(testAssignment)
 {
   amount_t x0;
@@ -328,8 +324,6 @@ BOOST_AUTO_TEST_CASE(testCommodityAssignment)
   BOOST_CHECK(x10.valid());
 }
 
-#endif // NOT_FOR_PYTHON
-
 BOOST_AUTO_TEST_CASE(testEquality)
 {
   amount_t x1(123456L);
@@ -433,10 +427,8 @@ BOOST_AUTO_TEST_CASE(testComparisons)
   BOOST_CHECK(100L > x1);
   BOOST_CHECK(x1 < 100UL);
   BOOST_CHECK(100UL > x1);
-#ifndef NOT_FOR_PYTHON
   BOOST_CHECK(x1 < 100.0);
   BOOST_CHECK(100.0 > x1);
-#endif // NOT_FOR_PYTHON
 
   BOOST_CHECK(x0.valid());
   BOOST_CHECK(x1.valid());
@@ -461,14 +453,10 @@ BOOST_AUTO_TEST_CASE(testCommodityComparisons)
   BOOST_CHECK(x3 <= x5);
   BOOST_CHECK(x3 < x5);
   BOOST_CHECK(x3 <= x5);
-#ifndef NOT_FOR_PYTHON
   BOOST_CHECK(! (x3 == x5));
-#endif
   BOOST_CHECK(x3 < x1);
   BOOST_CHECK(x3 < x4);
-#ifndef NOT_FOR_PYTHON
   BOOST_CHECK(! (x6 == x7));
-#endif
   BOOST_CHECK_THROW(x6 < x7, amount_error);
 
   BOOST_CHECK(x1.valid());
@@ -554,9 +542,7 @@ BOOST_AUTO_TEST_CASE(testCommodityAddition)
   BOOST_CHECK_THROW(x1 + x4, amount_error);
   BOOST_CHECK_THROW(x1 + x5, amount_error);
   BOOST_CHECK_EQUAL(string("$246.90"), (x1 + x6).to_string());
-#ifndef NOT_FOR_PYTHON
   BOOST_CHECK_EQUAL(string("$246.90"), (x1 + 123.45).to_string());
-#endif // NOT_FOR_PYTHON
   BOOST_CHECK_EQUAL(string("$246.45"), (x1 + 123L).to_string());
 
   BOOST_CHECK_EQUAL(amount_t("DM 246.90"), x3 + x3);
@@ -670,9 +656,7 @@ BOOST_AUTO_TEST_CASE(testCommoditySubtraction)
   BOOST_CHECK_THROW(x1 - x4, amount_error);
   BOOST_CHECK_THROW(x1 - x5, amount_error);
   BOOST_CHECK_EQUAL(string("$0.00"), (x1 - x6).to_string());
-#ifndef NOT_FOR_PYTHON
   BOOST_CHECK_EQUAL(string("$-0.00"), (x1 - 123.45).to_string());
-#endif // NOT_FOR_PYTHON
   BOOST_CHECK_EQUAL(string("$0.45"), (x1 - 123L).to_string());
 
   BOOST_CHECK_EQUAL(amount_t("DM 0.00"), x3 - x3);
@@ -1187,34 +1171,6 @@ BOOST_AUTO_TEST_CASE(testRoundto)
   BOOST_CHECK_EQUAL(amount_t("-3.25001").roundto(1), amount_t("-3.3"));
 }
 
-#ifndef NOT_FOR_PYTHON
-#if 0
-BOOST_AUTO_TEST_CASE(testReduction)
-{
-  amount_t x0;
-  amount_t x1("60s");
-  amount_t x2("600s");
-  amount_t x3("6000s");
-  amount_t x4("360000s");
-  amount_t x5("10m");           // 600s
-  amount_t x6("100m");          // 6000s
-  amount_t x7("1000m");         // 60000s
-  amount_t x8("10000m");        // 600000s
-  amount_t x9("10h");           // 36000s
-  amount_t x10("100h");         // 360000s
-  amount_t x11("1000h");        // 3600000s
-  amount_t x12("10000h");       // 36000000s
-
-  BOOST_CHECK_THROW(x0.reduce(), amount_error);
-  BOOST_CHECK_THROW(x0.unreduce(), amount_error);
-  BOOST_CHECK_EQUAL(x2, x5.reduce());
-  BOOST_CHECK_EQUAL(x3, x6.reduce());
-  BOOST_CHECK_EQUAL(x10, x4.reduce());
-  BOOST_CHECK_EQUAL(string("100.0h"), x4.unreduce().to_string());
-}
-#endif
-#endif // NOT_FOR_PYTHON
-
 BOOST_AUTO_TEST_CASE(testSign)
 {
   amount_t x0;
@@ -1260,9 +1216,7 @@ BOOST_AUTO_TEST_CASE(testTruth)
   amount_t x1("1234");
   amount_t x2("1234.56");
 
-#ifndef NOT_FOR_PYTHON
   BOOST_CHECK_THROW(x0.operator bool(), amount_error);
-#endif // NOT_FOR_PYTHON
 
   BOOST_CHECK(x1);
   BOOST_CHECK(x2);
@@ -1352,8 +1306,6 @@ BOOST_AUTO_TEST_CASE(testCommodityConversion)
 
   BOOST_CHECK(x1.valid());
 }
-
-#ifndef NOT_FOR_PYTHON
 
 BOOST_AUTO_TEST_CASE(testPrinting)
 {
@@ -1540,8 +1492,6 @@ BOOST_AUTO_TEST_CASE(testAnnotationWithDate)
   BOOST_CHECK(x3.valid());
   BOOST_CHECK(x4.valid());
 }
-
-#endif // NOT_FOR_PYTHON
 
 BOOST_AUTO_TEST_CASE(testDisplayPrecision)
 {
