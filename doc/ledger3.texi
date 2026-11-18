@@ -9502,6 +9502,17 @@ next week
 last week
 @end smallexample
 
+A @var{SPEC} without a year, such as @samp{10/1} or @samp{oct}, means
+its most recent occurrence on or before today (or the date given to
+@option{--now}): in June 2024, @samp{oct} is October 2023 and @samp{jun}
+is June 2024.  The same rule applies to @option{--begin} and
+@option{--end} and to dates in square brackets in value expressions.  An
+end @var{SPEC} without a year that follows a begin means its first
+occurrence that does not fall before that begin, so @samp{from mar to
+oct} in June 2024 runs from March to October 2024 and @samp{10/15 - oct}
+covers the second half of October 2023.  Write @samp{this oct} to name
+this year's October before it arrives.
+
 The beginning and ending can be given at the same time, if it spans a
 single period.  In that case, just use @var{SPEC} by itself.  In that
 case, the period @samp{oct}, for example, will cover all the days in

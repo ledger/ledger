@@ -1,3 +1,4 @@
+; A yearless date is its most recent occurrence by --now: 12/01 means 2009/12/01.
 test period --now=2010/11/01 12/01
 --- Period expression tokens ---
 TOK_DATE:  month Dec day 1
@@ -8,11 +9,11 @@ END_REACHED: <EOF>
 
 --- After stabilization ---
    range: in month Dec day 1
-   start: 10-Dec-01
-  finish: 10-Dec-02
+   start: 09-Dec-01
+  finish: 09-Dec-02
 
 --- Sample dates in range (max. 20) ---
- 1: 10-Dec-01
+ 1: 09-Dec-01
 end test
 
 test period --now=2010/11/01 10/01

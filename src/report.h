@@ -714,12 +714,6 @@ public:
 
         date_interval_t interval(str);
         if (optional<date_t> begin = interval.begin()) {
-          // When no explicit year was given (e.g. "-b 10/01" or "-b Oct"),
-          // and the resolved begin date lies in the future, roll back one year.
-          // The user most likely wants the most recent past occurrence of that
-          // date rather than a future one.
-          if (!interval.begin_has_year() && *begin > CURRENT_DATE())
-            begin = clamped_date(begin->year() - 1, begin->month(), begin->day());
           parent->report_begin = begin;
           OTHER(limit_).on(whence, "date>=[" + to_iso_extended_string(*begin) + "]");
           if (!parent->origin || *begin < *parent->origin)

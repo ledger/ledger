@@ -531,14 +531,21 @@ public:
   ~date_specifier_t() noexcept { TRACE_DTOR(date_specifier_t); }
 
   /// @brief Return the earliest date matching this specifier.
-  /// Missing components default to the earliest valid value
-  /// (year = current year, month = January, day = 1).
+  /// Missing month and day default to January and 1.  A missing year, when
+  /// a month is given, is that of the most recent occurrence on or before
+  /// CURRENT_DATE(); otherwise the current year.
   date_t begin() const;
 
   /// @brief Return one unit past the specifier's granularity.
   /// For a day specifier: begin() + 1 day.  For month: + 1 month.
   /// For year: + 1 year.  This makes [begin(), end()) a half-open range.
   date_t end() const;
+
+  /// @brief This specifier with a missing year filled in: the first year,
+  /// from anchor's on, in which the end it gives as a range end is not
+  /// before anchor (inclusive: end() > anchor; exclusive: begin() >=
+  /// anchor).  *this when the year is given or the month is not.
+  date_specifier_t with_year_on_or_after(const date_t& anchor, bool inclusive) const;
 
   /// @brief Returns true if this specifier includes an explicit year.
   bool has_year() const { return static_cast<bool>(year); }
@@ -628,20 +635,17 @@ public:
   /// @brief Resolve the end of the range to a concrete date, or none if unbounded.
   /// When end_inclusive is true (dash syntax), returns the end specifier's
   /// end() so the final day is included.  When false (since/until syntax),
-  /// returns the end specifier's begin() for exclusive behavior.
+  /// returns the end specifier's begin() for exclusive behavior.  A yearless
+  /// end takes the first year in which it does not fall before the range's
+  /// begin, so a range never runs backwards.
   optional<date_t> end() const {
-    if (range_end) {
-      if (end_inclusive)
-        return range_end->end();
-      else
-        return range_end->begin();
-    } else {
+    if (!range_end)
       return none;
-    }
+    date_specifier_t until =
+        range_begin ? range_end->with_year_on_or_after(range_begin->begin(), end_inclusive)
+                    : *range_end;
+    return end_inclusive ? until.end() : until.begin();
   }
-
-  /// @brief Returns true if the range's begin specifier has an explicit year.
-  bool begin_has_year() const { return range_begin && range_begin->has_year(); }
 
   /// @brief Test whether a date falls within [begin(), end()).
   bool is_within(const date_t& date) const {
@@ -709,15 +713,6 @@ public:
     if (const auto* r = std::get_if<date_range_t>(&specifier_or_range))
       return r->end();
     return none;
-  }
-
-  /// @brief Whether the begin specifier carries an explicit year.
-  bool begin_has_year() const {
-    if (const auto* s = std::get_if<date_specifier_t>(&specifier_or_range))
-      return s->has_year();
-    if (const auto* r = std::get_if<date_range_t>(&specifier_or_range))
-      return r->begin_has_year();
-    return false;
   }
 
   /// @brief Debug representation showing the active alternative.
@@ -818,10 +813,6 @@ public:
   optional<date_t> begin() const { return start ? start : (range ? range->begin() : none); }
   /// @brief The effective end date: finish if set, otherwise the range's end.
   optional<date_t> end() const { return finish ? finish : (range ? range->end() : none); }
-
-  // Returns true if the begin date was specified with an explicit year in the
-  // original expression (as opposed to having the year inferred from context).
-  bool begin_has_year() const { return range && range->begin_has_year(); }
 
   /// @brief Parse a period expression string and populate this interval.
   void parse(const string& str);

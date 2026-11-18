@@ -543,11 +543,38 @@ date_t parse_date_expr(const std::string& str) {
 
 /*--- Date Specifier Resolution ---*/
 
+namespace {
+
+/// Whether month/day exists in year (false for Feb 29 outside a leap year
+/// and for a day past the month's end such as 04/31).
+bool day_exists(int year, date_t::month_type month, date_t::day_type day) {
+  return day <= gregorian::gregorian_calendar::end_of_month_day(
+                    static_cast<date_t::year_type>(year), month);
+}
+
+/// The nearest occurrence of month/day on or before `reference`, skipping
+/// years in which the day does not exist (Feb 29).
+date_t nearest_occurrence(date_t::month_type month, date_t::day_type day, const date_t& reference) {
+  for (int year = reference.year(), tries = 0; tries < 9; ++tries, --year) {
+    if (day_exists(year, month, day)) {
+      date_t when(static_cast<date_t::year_type>(year), month, day);
+      if (when <= reference)
+        return when;
+    }
+  }
+  // No such day in any year (e.g. 04/31): let date_t report it.
+  return date_t(reference.year(), month, day);
+}
+
+} // namespace
+
 /**
  * @brief Resolve a possibly-partial specifier to its earliest concrete date.
  *
  * Fills in missing components with the earliest valid value:
- *   - year defaults to the current year
+ *   - year: when absent and a month is given, the year of the most recent
+ *     occurrence on or before CURRENT_DATE() (which honours --now); when
+ *     month is absent too, the current year
  *   - month defaults to January
  *   - day defaults to the 1st
  *
@@ -566,6 +593,9 @@ date_t date_specifier_t::begin() const {
   else if (wday)
     assert(!day);
 
+  if (month && !year)
+    return nearest_occurrence(*month, the_day, CURRENT_DATE());
+
   if (wday && !year && !month && !day) {
     date_t when = CURRENT_DATE();
     while (when.day_of_week() != *wday)
@@ -576,6 +606,24 @@ date_t date_specifier_t::begin() const {
   return gregorian::date(static_cast<date_t::year_type>(the_year),
                          static_cast<date_t::month_type>(the_month),
                          static_cast<date_t::day_type>(the_day));
+}
+
+date_specifier_t date_specifier_t::with_year_on_or_after(const date_t& anchor,
+                                                         bool inclusive) const {
+  if (year || !month)
+    return *this;
+  date_specifier_t spec(*this);
+  const day_type first_day = day ? *day : day_type(1);
+  for (int y = anchor.year(), tries = 0; tries < 9; ++tries, ++y) {
+    if (!day_exists(y, *month, first_day))
+      continue;
+    spec.year = year_type(y);
+    if (inclusive ? spec.end() > anchor : spec.begin() >= anchor)
+      return spec;
+  }
+  // No such day in any year (e.g. 04/31): let begin() report it.
+  spec.year = year_type(anchor.year());
+  return spec;
 }
 
 /**

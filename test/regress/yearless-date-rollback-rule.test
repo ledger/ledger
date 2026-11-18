@@ -1,0 +1,220 @@
+; A yearless date in -b, -e, -p or any period expression means its most
+; recent occurrence on or before today (--now); a yearless range end means
+; its first occurrence on or after the range's begin.
+
+2020/02/29 Leap day
+    Expenses:A    $16
+    Assets:Cash
+
+2022/05/01 Old
+    Expenses:A    $32
+    Assets:Cash
+
+2023/02/28 Feb end
+    Expenses:A    $64
+    Assets:Cash
+
+2023/09/20 Before
+    Expenses:A    $1
+    Assets:Cash
+
+2023/10/05 Oct
+    Expenses:A    $2
+    Assets:Cash
+
+2024/03/10 March
+    Expenses:A    $4
+    Assets:Cash
+
+2024/06/10 June
+    Expenses:A    $8
+    Assets:Cash
+
+; -b already rolled back (issue #1095); the rule now lives in date_specifier_t::begin().
+test reg Expenses --now 2024/06/15 -b 10/01
+23-Oct-05 Oct                   Expenses:A                       $2           $2
+24-Mar-10 March                 Expenses:A                       $4           $6
+24-Jun-10 June                  Expenses:A                       $8          $14
+end test
+
+; since/from mean the same year as -b.
+test reg Expenses --now 2024/06/15 -p "since 10/01"
+23-Oct-05 Oct                   Expenses:A                       $2           $2
+24-Mar-10 March                 Expenses:A                       $4           $6
+24-Jun-10 June                  Expenses:A                       $8          $14
+end test
+
+test reg Expenses --now 2024/06/15 -p "from 10/01"
+23-Oct-05 Oct                   Expenses:A                       $2           $2
+24-Mar-10 March                 Expenses:A                       $4           $6
+24-Jun-10 June                  Expenses:A                       $8          $14
+end test
+
+; -e and until roll back too: before 2023/10/01.
+test reg Expenses --now 2024/06/15 -e 10/01
+20-Feb-29 Leap day              Expenses:A                      $16          $16
+22-May-01 Old                   Expenses:A                      $32          $48
+23-Feb-28 Feb end               Expenses:A                      $64         $112
+23-Sep-20 Before                Expenses:A                       $1         $113
+end test
+
+test reg Expenses --now 2024/06/15 -p "until 10/01"
+20-Feb-29 Leap day              Expenses:A                      $16          $16
+22-May-01 Old                   Expenses:A                      $32          $48
+23-Feb-28 Feb end               Expenses:A                      $64         $112
+23-Sep-20 Before                Expenses:A                       $1         $113
+end test
+
+; A bare month or day is the most recent one that has begun.
+test reg Expenses --now 2024/06/15 -p oct
+23-Oct-05 Oct                   Expenses:A                       $2           $2
+end test
+
+test reg Expenses --now 2024/06/15 -p 10/05
+23-Oct-05 Oct                   Expenses:A                       $2           $2
+end test
+
+; The comparison is by day, as for -b: 06/20 is still ahead of 06/15.
+test reg Expenses --now 2024/06/15 -p "since 06/20"
+23-Sep-20 Before                Expenses:A                       $1           $1
+23-Oct-05 Oct                   Expenses:A                       $2           $3
+24-Mar-10 March                 Expenses:A                       $4           $7
+24-Jun-10 June                  Expenses:A                       $8          $15
+end test
+
+; A date already reached this year stays in this year.
+test reg Expenses --now 2024/06/15 -p "since 06/01"
+24-Jun-10 June                  Expenses:A                       $8           $8
+end test
+
+; A yearless range end is its first occurrence on or after the begin.
+test reg Expenses --now 2024/06/15 -p "from 10/01 to 03/15"
+23-Oct-05 Oct                   Expenses:A                       $2           $2
+24-Mar-10 March                 Expenses:A                       $4           $6
+end test
+
+test reg Expenses --now 2024/06/15 -p "from mar to oct"
+24-Mar-10 March                 Expenses:A                       $4           $4
+24-Jun-10 June                  Expenses:A                       $8          $12
+end test
+
+test reg Expenses --now 2024/06/15 -p "from 2022/01/01 to 10/01"
+22-May-01 Old                   Expenses:A                      $32          $32
+end test
+
+; On 2024/02/10 this year's Feb 29 is still ahead, so 02/29 means 2020/02/29.
+test reg Expenses --now 2024/02/10 -b 02/29
+20-Feb-29 Leap day              Expenses:A                      $16          $16
+22-May-01 Old                   Expenses:A                      $32          $48
+23-Feb-28 Feb end               Expenses:A                      $64         $112
+23-Sep-20 Before                Expenses:A                       $1         $113
+23-Oct-05 Oct                   Expenses:A                       $2         $115
+24-Mar-10 March                 Expenses:A                       $4         $119
+24-Jun-10 June                  Expenses:A                       $8         $127
+end test
+
+test reg Expenses --now 2024/02/10 -p 02/29
+20-Feb-29 Leap day              Expenses:A                      $16          $16
+end test
+
+; A dash range includes its end: Oct 2023 through Mar 2024.
+test reg Expenses --now 2024/06/15 -p "oct - mar"
+23-Oct-05 Oct                   Expenses:A                       $2           $2
+24-Mar-10 March                 Expenses:A                       $4           $6
+end test
+
+test reg Expenses --now 2024/06/15 -p "10/01 - 10/31"
+23-Oct-05 Oct                   Expenses:A                       $2           $2
+end test
+
+; Bracketed dates in value expressions follow the same rule.
+test reg Expenses --now 2024/06/15 -l "date >= [oct]"
+23-Oct-05 Oct                   Expenses:A                       $2           $2
+24-Mar-10 March                 Expenses:A                       $4           $6
+24-Jun-10 June                  Expenses:A                       $8          $14
+end test
+
+; The period command shows both resolved bounds.
+test period --now 2024/06/15 "from 10/01 to 03/15"
+--- Period expression tokens ---
+TOK_SINCE: since
+TOK_DATE:  month Oct day 1
+TOK_UNTIL: until
+TOK_DATE:  month Mar day 15
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from month Oct day 1 to month Mar day 15
+
+--- After stabilization ---
+   range: from month Oct day 1 to month Mar day 15
+   start: 23-Oct-01
+  finish: 24-Mar-15
+
+--- Sample dates in range (max. 20) ---
+ 1: 23-Oct-01
+end test
+
+; An inclusive (dash) end takes the first year whose last day is on or
+; after the begin: Oct 2023, not Oct 2024, after a begin of 2023/10/15.
+test period --now 2024/06/15 "10/15 - oct"
+--- Period expression tokens ---
+TOK_DATE:  month Oct day 15
+TOK_DASH: -
+TOK_A_MONTH: Oct
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from month Oct day 15 to month Oct
+
+--- After stabilization ---
+   range: from month Oct day 15 to month Oct
+   start: 23-Oct-15
+  finish: 23-Nov-01
+
+--- Sample dates in range (max. 20) ---
+ 1: 23-Oct-15
+end test
+
+; The last day of an inclusive month end is read in its own year: February
+; 2024 ends on the 29th, so it reaches a begin of 2024/02/29.
+test period --now 2024/06/15 "02/29 - feb"
+--- Period expression tokens ---
+TOK_DATE:  month Feb day 29
+TOK_DASH: -
+TOK_A_MONTH: Feb
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from month Feb day 29 to month Feb
+
+--- After stabilization ---
+   range: from month Feb day 29 to month Feb
+   start: 24-Feb-29
+  finish: 24-Mar-01
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Feb-29
+end test
+
+; An exclusive (until) end takes the first year whose first day is on or
+; after the begin: October 1 before 2023/10/15 is passed, so 2024/10/01.
+test period --now 2024/06/15 "from 10/15 to oct"
+--- Period expression tokens ---
+TOK_SINCE: since
+TOK_DATE:  month Oct day 15
+TOK_UNTIL: until
+TOK_A_MONTH: Oct
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from month Oct day 15 to month Oct
+
+--- After stabilization ---
+   range: from month Oct day 15 to month Oct
+   start: 23-Oct-15
+  finish: 24-Oct-01
+
+--- Sample dates in range (max. 20) ---
+ 1: 23-Oct-15
+end test

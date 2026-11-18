@@ -241,7 +241,7 @@ BOOST_AUTO_TEST_CASE(testDateDurationAdd)
 }
 
 // ---------------------------------------------------------------------------
-// Cover times.h lines 386-403: date_interval_t begin/end/begin_has_year
+// Cover times.h lines 386-403: date_interval_t begin/end
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateIntervalFromPeriod)
