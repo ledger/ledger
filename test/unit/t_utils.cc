@@ -5,8 +5,11 @@
 #include <system.hh>
 
 #include <chrono>
+#include <limits>
+#include <new>
 #include <regex>
 #include <thread>
+#include <type_traits>
 
 #include "utils.h"
 
@@ -138,6 +141,80 @@ BOOST_AUTO_TEST_CASE(testSplitArgumentsLongWord)
   std::vector<string> want{"bal", word, quoted, "end"};
   std::vector<string> got = split(line.c_str());
   BOOST_CHECK_EQUAL_COLLECTIONS(got.begin(), got.end(), want.begin(), want.end());
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+// AddressSanitizer aborts on an impossible allocation (allocation-size-too-big)
+// unless allocator_may_return_null=1, so the allocation-failure cases cannot
+// run under it; they run in every other build.
+#if defined(__SANITIZE_ADDRESS__)
+#define LEDGER_TEST_ASAN 1
+#elif defined(__has_feature)
+#if __has_feature(address_sanitizer)
+#define LEDGER_TEST_ASAN 1
+#endif
+#endif
+#ifndef LEDGER_TEST_ASAN
+#define LEDGER_TEST_ASAN 0
+#endif
+
+namespace {
+
+// volatile keeps the compiler from folding or warning about the constant size.
+volatile std::size_t impossible_size = std::numeric_limits<std::size_t>::max();
+
+void allocate_and_free(std::size_t size) {
+  ::operator delete(::operator new(size));
+}
+
+void allocate_array_and_free(std::size_t size) {
+  ::operator delete[](::operator new[](size));
+}
+
+int new_handler_calls = 0;
+
+void counting_new_handler() {
+  ++new_handler_calls;
+  std::set_new_handler(nullptr); // the next failure throws
+}
+
+} // namespace
+
+BOOST_AUTO_TEST_SUITE(utils)
+
+#if !LEDGER_TEST_ASAN
+
+BOOST_AUTO_TEST_CASE(testOperatorNewThrowsBadAlloc)
+{
+  BOOST_CHECK_THROW(allocate_and_free(impossible_size), std::bad_alloc);
+}
+
+BOOST_AUTO_TEST_CASE(testOperatorNewArrayThrowsBadAlloc)
+{
+  BOOST_CHECK_THROW(allocate_array_and_free(impossible_size), std::bad_alloc);
+}
+
+BOOST_AUTO_TEST_CASE(testOperatorNewCallsNewHandler)
+{
+  new_handler_calls = 0;
+  std::new_handler previous = std::set_new_handler(counting_new_handler);
+  BOOST_CHECK_THROW(allocate_and_free(impossible_size), std::bad_alloc);
+  std::set_new_handler(previous);
+  BOOST_CHECK_EQUAL(new_handler_calls, 1);
+}
+
+#endif // !LEDGER_TEST_ASAN
+
+BOOST_AUTO_TEST_CASE(testOperatorNewZeroSizeIsUnique)
+{
+  void* a = ::operator new(std::size_t(0));
+  void* b = ::operator new(std::size_t(0));
+  BOOST_CHECK(a != nullptr);
+  BOOST_CHECK(b != nullptr);
+  BOOST_CHECK(a != b);
+  ::operator delete(a);
+  ::operator delete(b);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

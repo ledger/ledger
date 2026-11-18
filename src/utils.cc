@@ -255,17 +255,24 @@ static void trace_delete_func(void* ptr, const char* which) {
 
 /*--- Global operator new/delete overloads for memory tracing ---*/
 
-void* operator new(std::size_t size) {
-  void* ptr = std::malloc(size);
+static void* traced_allocate(std::size_t size, const char* which) {
+  void* ptr;
+  while ((ptr = std::malloc(size != 0 ? size : 1)) == nullptr) {
+    std::new_handler handler = std::get_new_handler();
+    if (!handler)
+      throw std::bad_alloc();
+    handler();
+  }
   if (DO_VERIFY() && ledger::memory_tracing_active)
-    ledger::trace_new_func(ptr, "new", size);
+    ledger::trace_new_func(ptr, which, size);
   return ptr;
 }
+
+void* operator new(std::size_t size) {
+  return traced_allocate(size, "new");
+}
 void* operator new[](std::size_t size) {
-  void* ptr = std::malloc(size);
-  if (DO_VERIFY() && ledger::memory_tracing_active)
-    ledger::trace_new_func(ptr, "new[]", size);
-  return ptr;
+  return traced_allocate(size, "new[]");
 }
 void operator delete(void* ptr) noexcept {
   if (DO_VERIFY() && ledger::memory_tracing_active)
