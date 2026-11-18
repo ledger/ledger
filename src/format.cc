@@ -221,6 +221,11 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
     if (*p == '\\') {
       p++;
       current->type = element_t::STRING;
+      if (*p == '\0') {
+        // A trailing backslash stands for itself.
+        current->data = string("\\");
+        break;
+      }
       switch (*p) {
       case 'b':
         current->data = string("\b");
