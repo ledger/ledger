@@ -773,7 +773,7 @@ void finish_timer(const char* name) {
 
 /*--- Signal handlers ---*/
 
-caught_signal_t caught_signal = NONE_CAUGHT;
+volatile std::sig_atomic_t caught_signal = NONE_CAUGHT;
 
 void sigint_handler(int) {
   caught_signal = INTERRUPTED;

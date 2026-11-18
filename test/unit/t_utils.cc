@@ -218,3 +218,33 @@ BOOST_AUTO_TEST_CASE(testOperatorNewZeroSizeIsUnique)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+// A signal handler may only write a volatile std::sig_atomic_t
+// ([support.signal]); check_for_signal() polls it at safe points.
+static_assert(std::is_same_v<decltype(caught_signal), volatile std::sig_atomic_t>,
+              "caught_signal must be volatile std::sig_atomic_t");
+
+BOOST_AUTO_TEST_SUITE(utils)
+
+BOOST_AUTO_TEST_CASE(testSignalHandlersSetCaughtSignal)
+{
+  caught_signal = NONE_CAUGHT;
+  BOOST_CHECK_NO_THROW(check_for_signal());
+
+  sigint_handler(SIGINT);
+  BOOST_CHECK_EQUAL(static_cast<int>(caught_signal), static_cast<int>(INTERRUPTED));
+  BOOST_CHECK_EXCEPTION(check_for_signal(), std::runtime_error, [](const std::runtime_error& e) {
+    return std::string(e.what()) == "Interrupted by user (use Control-D to quit)";
+  });
+
+  caught_signal = NONE_CAUGHT;
+  sigpipe_handler(SIGPIPE);
+  BOOST_CHECK_EQUAL(static_cast<int>(caught_signal), static_cast<int>(PIPE_CLOSED));
+  BOOST_CHECK_EXCEPTION(check_for_signal(), std::runtime_error, [](const std::runtime_error& e) {
+    return std::string(e.what()) == "Pipe terminated";
+  });
+
+  caught_signal = NONE_CAUGHT;
+}
+
+BOOST_AUTO_TEST_SUITE_END()

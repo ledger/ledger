@@ -535,14 +535,15 @@ void finish_timer(const char* name);
  */
 /*@{*/
 
-/// Tracks which signal, if any, has been caught since the last check.
+/// The values stored in caught_signal: which signal, if any, has been caught since the last check.
 enum caught_signal_t : uint8_t {
   NONE_CAUGHT, ///< No signal pending
   INTERRUPTED, ///< SIGINT received (user pressed Ctrl-C)
   PIPE_CLOSED  ///< SIGPIPE received (pager or pipe consumer exited)
 };
 
-extern caught_signal_t caught_signal; ///< Global signal flag, set by signal handlers
+/// Holds a caught_signal_t; set by signal handlers.
+extern volatile std::sig_atomic_t caught_signal;
 
 void sigint_handler(int sig);  ///< SIGINT handler -- sets caught_signal to INTERRUPTED
 void sigpipe_handler(int sig); ///< SIGPIPE handler -- sets caught_signal to PIPE_CLOSED
