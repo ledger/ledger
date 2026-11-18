@@ -39,33 +39,24 @@
 namespace ledger {
 
 xact_t& temporaries_t::copy_xact(xact_t& origin) {
-  if (!xact_temps)
-    xact_temps = std::list<xact_t>();
-
-  xact_temps->push_back(origin);
-  xact_t& temp(xact_temps->back());
+  xact_temps.push_back(origin);
+  xact_t& temp(xact_temps.back());
 
   temp.add_flags(ITEM_TEMP);
   return temp;
 }
 
 xact_t& temporaries_t::create_xact() {
-  if (!xact_temps)
-    xact_temps = std::list<xact_t>();
-
-  xact_temps->push_back(xact_t());
-  xact_t& temp(xact_temps->back());
+  xact_temps.push_back(xact_t());
+  xact_t& temp(xact_temps.back());
 
   temp.add_flags(ITEM_TEMP);
   return temp;
 }
 
 post_t& temporaries_t::copy_post(post_t& origin, xact_t& xact, account_t* account) {
-  if (!post_temps)
-    post_temps = std::list<post_t>();
-
-  post_temps->push_back(origin);
-  post_t& temp(post_temps->back());
+  post_temps.push_back(origin);
+  post_t& temp(post_temps.back());
 
   temp.add_flags(ITEM_TEMP);
   if (account)
@@ -78,14 +69,10 @@ post_t& temporaries_t::copy_post(post_t& origin, xact_t& xact, account_t* accoun
 }
 
 post_t& temporaries_t::create_post(xact_t& xact, account_t* account, bool bidir_link) {
-  if (!post_temps)
-    post_temps = std::list<post_t>();
-
-  post_temps->push_back(post_t(account));
-  post_t& temp(post_temps->back());
+  post_temps.push_back(post_t(account));
+  post_t& temp(post_temps.back());
 
   temp.add_flags(ITEM_TEMP);
-  temp.account = account;
 
   temp.account->add_post(&temp);
   if (bidir_link)
@@ -97,11 +84,8 @@ post_t& temporaries_t::create_post(xact_t& xact, account_t* account, bool bidir_
 }
 
 account_t& temporaries_t::create_account(const string& name, account_t* parent) {
-  if (!acct_temps)
-    acct_temps = std::list<account_t>();
-
-  acct_temps->emplace_back(parent, name);
-  account_t& temp(acct_temps->back());
+  acct_temps.emplace_back(parent, name);
+  account_t& temp(acct_temps.back());
 
   temp.add_flags(ACCOUNT_TEMP);
   if (parent)
@@ -111,36 +95,31 @@ account_t& temporaries_t::create_account(const string& name, account_t* parent) 
 }
 
 void temporaries_t::clear() {
-  if (post_temps) {
-    // account_t::remove_post searches the account's posting list for one
-    // posting, so calling it for each temporary is quadratic in how many an
-    // account holds, and posts_commodities_iterator gives a commodity's account one
-    // per price point.  Detach each account's temporaries in a single pass.
-    std::map<account_t*, std::set<post_t*>> account_posts;
+  // account_t::remove_post searches the account's posting list for one
+  // posting, so calling it for each temporary is quadratic in how many an
+  // account holds, and posts_commodities_iterator gives a commodity's account one
+  // per price point.  Detach each account's temporaries in a single pass.
+  std::map<account_t*, std::set<post_t*>> account_posts;
 
-    for (post_t& post : *post_temps) {
-      if (!post.xact->has_flags(ITEM_TEMP))
-        post.xact->remove_post(&post);
+  for (post_t& post : post_temps) {
+    if (!post.xact->has_flags(ITEM_TEMP))
+      post.xact->remove_post(&post);
 
-      if (post.account && !post.account->has_flags(ACCOUNT_TEMP))
-        account_posts[post.account].insert(&post);
-    }
-    for (const auto& [account, posts] : account_posts)
-      account->remove_posts(posts);
-
-    post_temps->clear();
+    if (post.account && !post.account->has_flags(ACCOUNT_TEMP))
+      account_posts[post.account].insert(&post);
   }
+  for (const auto& [account, posts] : account_posts)
+    account->remove_posts(posts);
 
-  if (xact_temps)
-    xact_temps->clear();
+  post_temps.clear();
 
-  if (acct_temps) {
-    for (account_t& acct : *acct_temps) {
-      if (acct.parent && !acct.parent->has_flags(ACCOUNT_TEMP))
-        acct.parent->remove_account(&acct);
-    }
-    acct_temps->clear();
+  xact_temps.clear();
+
+  for (account_t& acct : acct_temps) {
+    if (acct.parent && !acct.parent->has_flags(ACCOUNT_TEMP))
+      acct.parent->remove_account(&acct);
   }
+  acct_temps.clear();
 }
 
 } // namespace ledger

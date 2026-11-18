@@ -54,9 +54,7 @@ namespace ledger {
 using namespace python;
 using namespace boost::python;
 
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(value_overloads, value, 0, 2)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(exchange_commodities_overloads, exchange_commodities, 1, 2)
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(set_string_overloads, set_string, 0, 2)
 
 namespace {
 
@@ -297,7 +295,6 @@ void export_value() {
       .def("value", py_value_2, args("in_terms_of", "moment"))
       .def("value", py_value_2d, args("in_terms_of", "moment"))
 
-      //.def("value", &value_t::value, value_overloads())
       .def("exchange_commodities", &value_t::exchange_commodities, exchange_commodities_overloads())
 
       .def("is_nonzero", &value_t::is_nonzero)

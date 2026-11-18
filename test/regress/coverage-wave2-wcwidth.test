@@ -1,6 +1,6 @@
 ; Tests for wcwidth.cc uncovered lines
-; Covers: mk_wcwidth, mk_wcswidth, mk_wcwidth_cjk, mk_wcswidth_cjk
-; These functions handle wide character width computation for CJK and other wide chars
+; Covers: mk_wcwidth
+; This function handles wide character width computation for CJK and other wide chars
 
 ; Test CJK characters in payee (full-width) - covers mk_wcwidth
 2024/01/01 日本語テスト
