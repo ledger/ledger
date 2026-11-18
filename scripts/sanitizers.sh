@@ -37,11 +37,11 @@ if [ "$(uname)" = "Darwin" ]; then
     export ASAN_OPTIONS="detect_leaks=0:detect_stack_use_after_return=1:check_initialization_order=1"
 else
     export ASAN_OPTIONS="detect_leaks=1:detect_stack_use_after_return=1:check_initialization_order=1"
-    export LSAN_OPTIONS="suppressions=${PROJECT_ROOT}/.lsan-suppressions"
+    export LSAN_OPTIONS="suppressions=${PROJECT_ROOT}/lsan-suppressions.txt"
 fi
 export UBSAN_OPTIONS="print_stacktrace=1:halt_on_error=0:suppressions=${PROJECT_ROOT}/ubsan-suppressions.txt"
 
 ctest --output-on-failure
 
 echo ""
-echo "Sanitizer build and test complete. No issues found."
+echo "Sanitizer build and test complete. UBSan does not halt (halt_on_error=0); check the output above for runtime error reports."
