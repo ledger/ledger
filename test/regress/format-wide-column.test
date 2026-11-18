@@ -1,0 +1,22 @@
+; Columns wider than 4094 are truncated like any other width.
+;
+; format_t::truncate asserted width < 4095, a leftover from a fixed-size
+; buffer it no longer uses, so a wide --payee-width or --account-width, or
+; truncated() with a large width, ended the report with an assertion
+; failure.
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test eval 'truncated("abcdef", 4100)'
+abcdef
+end test
+
+test reg Expenses --payee-width 4100 --format '%(truncated(payee, payee_width))|\n'
+Payee|
+end test
+
+test reg Expenses --account-width 4100 --format '%(truncated(account, account_width, 1))|\n'
+Expenses:Food|
+end test

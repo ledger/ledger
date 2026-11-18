@@ -572,8 +572,6 @@ string format_t::real_calc(scope_t& scope) {
 
 string format_t::truncate(const unistring& ustr, const std::size_t width,
                           const std::size_t account_abbrev_length) {
-  assert(width < 4095);
-
   const std::size_t len = ustr.width();
   if (width == 0 || len <= width)
     return ustr.extract();
