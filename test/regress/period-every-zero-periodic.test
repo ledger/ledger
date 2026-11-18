@@ -1,0 +1,18 @@
+; A periodic transaction with a period of zero units is rejected when the
+; journal is read; it used to hang once --forecast expanded it.
+
+~ every 0 months
+    Expenses:Rent    $500.00
+    Assets:Cash
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --forecast 'd<[2025]' --now 2024/06/01 -> 1
+__ERROR__
+While parsing file "$FILE", line 4:
+While parsing periodic transaction:
+> ~ every 0 months
+Error: Invalid period length: 0
+end test

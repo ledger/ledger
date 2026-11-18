@@ -1,0 +1,47 @@
+; A period of zero units, or a number too large for a period, is an error.
+;
+; "every 0 months" built a zero-length duration, and the loops that step
+; through a period's intervals never advanced, so ledger hung.  A number
+; above 65535 surfaced Boost's "bad lexical cast" text instead of naming
+; the number.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg -p "every 0 months" -> 1
+__ERROR__
+Error: Invalid period length: 0
+end test
+
+test reg -p "every 00 days" -> 1
+__ERROR__
+Error: Invalid period length: 0
+end test
+
+test period "every 0 weeks" -> 1
+--- Period expression tokens ---
+TOK_EVERY: every
+TOK_INT: 0
+TOK_WEEKS: weeks
+END_REACHED: <EOF>
+
+__ERROR__
+Error: Invalid period length: 0
+end test
+
+test reg -p "every 99999 days" -> 1
+__ERROR__
+Error: Invalid number in period: 99999
+end test
+
+test reg -p "every 2x days" -> 1
+__ERROR__
+Error: Invalid number in period: 2x
+end test
+
+test period 99999 -> 1
+--- Period expression tokens ---
+__ERROR__
+Error: Invalid number in period: 99999
+end test

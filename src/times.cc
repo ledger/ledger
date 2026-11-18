@@ -1591,6 +1591,8 @@ void date_parser_t::handle_every_token(lexer_t::token_t& tok, optional<date_dura
   if (tok.kind == lexer_t::token_t::TOK_INT) {
     // "every N units" -- explicit count
     int quantity = std::get<unsigned short>(*tok.value);
+    if (quantity == 0)
+      throw_(date_error, _f("Invalid period length: %1%") % quantity);
     tok = lexer.next_token();
     switch (tok.kind) {
     case lexer_t::token_t::TOK_YEARS:
@@ -2367,7 +2369,11 @@ date_parser_t::lexer_t::token_t date_parser_t::lexer_t::next_token() {
   if (!term.empty()) {
     if (std::isdigit(static_cast<unsigned char>(term[0]))) {
       // Bare integer (not a full date)
-      return token_t(token_t::TOK_INT, token_t::content_t(lexical_cast<unsigned short>(term)));
+      try {
+        return token_t(token_t::TOK_INT, token_t::content_t(lexical_cast<unsigned short>(term)));
+      } catch (const bad_lexical_cast&) {
+        throw_(date_error, _f("Invalid number in period: %1%") % term);
+      }
     } else if (std::isalpha(static_cast<unsigned char>(term[0]))) {
       to_lower(term);
 
