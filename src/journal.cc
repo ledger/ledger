@@ -646,7 +646,13 @@ bool journal_t::add_xact(xact_t* xact) {
 }
 
 void journal_t::extend_xact(xact_base_t* xact) {
-  if (!current_context)
+  // A transaction added outside a parse -- the xact command's draft, or
+  // Journal.add_xact from Python -- has no parse context.  Apply the
+  // automated transactions and account checks anyway, against the default
+  // scope, as register_metadata() does for tag checks (#3244); only when
+  // there is no scope at all (embedded use) is there nothing to evaluate
+  // them in.
+  if (!current_context && !scope_t::default_scope)
     return;
   // Run posting-generating auto_xacts first, then assertion-only ones.
   // Assertion-only auto_xacts (check_exprs but no template postings) need
@@ -654,13 +660,13 @@ void journal_t::extend_xact(xact_base_t* xact) {
   // all posting generators have finished (fixes #1680).
   for (unique_ptr<auto_xact_t>& auto_xact : auto_xacts)
     if (!auto_xact->posts.empty())
-      auto_xact->extend_xact(*xact, *current_context);
+      auto_xact->extend_xact(*xact, current_context);
   // Skip auto_xacts that are scoped to a specific account; those are
   // dispatched below via `account_check_xacts` to avoid the O(m*n) scan
   // pattern described in issue #562.
   for (unique_ptr<auto_xact_t>& auto_xact : auto_xacts)
     if (auto_xact->posts.empty() && auto_xact->scoped_to_account == nullptr)
-      auto_xact->extend_xact(*xact, *current_context);
+      auto_xact->extend_xact(*xact, current_context);
   // Dispatch account-scoped check directives via the per-account index.
   // Snapshot posts after posting-generating auto_xacts have run so that
   // generated postings are checked too (matching prior #1680 behavior).
@@ -671,7 +677,7 @@ void journal_t::extend_xact(xact_base_t* xact) {
       if (it == account_check_xacts.end())
         continue;
       for (auto_xact_t* axe : it->second)
-        axe->apply_checks_to_post(*post, *current_context);
+        axe->apply_checks_to_post(*post, current_context);
     }
   }
 }

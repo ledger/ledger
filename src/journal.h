@@ -308,7 +308,13 @@ public:
    */
   [[nodiscard]] bool add_xact(xact_t* xact);
 
-  /** @brief Apply all auto_xacts to the given transaction. */
+  /**
+   * @brief Apply all auto_xacts and account check directives to @p xact.
+   *
+   * Runs whether or not a parse is in progress: with no current_context
+   * (the xact command's draft, Python's Journal.add_xact) the expressions
+   * are evaluated in scope_t::default_scope.
+   */
   void extend_xact(xact_base_t* xact);
 
   [[nodiscard]] bool remove_xact(xact_t* xact);

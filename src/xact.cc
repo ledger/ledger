@@ -1441,6 +1441,15 @@ bool post_pred(const expr_t::ptr_op_t& op, post_t& post) {
   throw_(calc_error, _("Unhandled operator"));
   return false;
 }
+
+/// Location prefix ("file", line N: plus a space) for a failed check: the
+/// transaction's own position, else the line being parsed, else nothing
+/// (a transaction added outside a parse has neither).
+string check_location(const xact_base_t* xact, const parse_context_t* context) {
+  if (xact && xact->pos)
+    return file_context(*xact->pos->pathname, xact->pos->beg_line) + " ";
+  return context ? context->location() + " " : string();
+}
 } // namespace
 
 /// If a string contains `%(` format expressions, expand them against
@@ -1523,7 +1532,7 @@ static string expand_account_variables(const string& name, scope_t& parent, acco
  * 5. **After processing all postings**, if any must-balance posting was
  *    generated, call verify() to ensure the transaction still balances.
  */
-void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
+void auto_xact_t::extend_xact(xact_base_t& xact, const parse_context_t* context) {
   if (!enabled)
     return;
 
@@ -1610,9 +1619,8 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
                 if (pair.second == expr_t::EXPR_ASSERTION)
                   throw_(parse_error, _f("Transaction assertion failed: %1%") % pair.first);
                 else
-                  warning_func((xact.pos ? file_context(*xact.pos->pathname, xact.pos->beg_line)
-                                         : context.location()) +
-                               " " + (_f("Transaction check failed: %1%") % pair.first).str() +
+                  warning_func(check_location(&xact, context) +
+                               (_f("Transaction check failed: %1%") % pair.first).str() +
                                (pos ? "\n  " + (_f("(check expression at \"%1%\", line %2%)") %
                                                 pos->pathname->string() % pos->beg_line)
                                                    .str()
@@ -1675,7 +1683,9 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
           assert(!template_name.empty());
           string fullname = apply_format(template_name, bound_scope);
           if (template_name.find('$') != string::npos)
-            fullname = expand_account_variables(fullname, *context.scope, *initial_post->account);
+            fullname = expand_account_variables(fullname,
+                                                context ? *context->scope : *scope_t::default_scope,
+                                                *initial_post->account);
           if (fullname != template_name) {
             while (account->parent)
               account = account->parent;
@@ -1793,7 +1803,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
  * check expressions need to run; the logic mirrors the check_exprs
  * branch of the main extend_xact() loop.
  */
-void auto_xact_t::apply_checks_to_post(post_t& initial_post, parse_context_t& context) {
+void auto_xact_t::apply_checks_to_post(post_t& initial_post, const parse_context_t* context) {
   if (!enabled || !check_exprs)
     return;
 
@@ -1816,14 +1826,11 @@ void auto_xact_t::apply_checks_to_post(post_t& initial_post, parse_context_t& co
       if (pair.second == expr_t::EXPR_GENERAL) {
         pair.first.calc(bound_scope);
       } else if (!pair.first.calc(bound_scope).to_boolean()) {
-        const xact_base_t* parent_xact = initial_post.xact;
         if (pair.second == expr_t::EXPR_ASSERTION)
           throw_(parse_error, _f("Transaction assertion failed: %1%") % pair.first);
         else
-          warning_func((parent_xact && parent_xact->pos
-                            ? file_context(*parent_xact->pos->pathname, parent_xact->pos->beg_line)
-                            : context.location()) +
-                       " " + (_f("Transaction check failed: %1%") % pair.first).str() +
+          warning_func(check_location(initial_post.xact, context) +
+                       (_f("Transaction check failed: %1%") % pair.first).str() +
                        (pos ? "\n  " + (_f("(check expression at \"%1%\", line %2%)") %
                                         pos->pathname->string() % pos->beg_line)
                                            .str()

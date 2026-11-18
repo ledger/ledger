@@ -1,0 +1,45 @@
+; The xact command runs the check and assert expressions of the journal's
+; automated transactions on the transaction it drafts, as parsing does:
+; a failed check warns (without a position, since a draft has none) and
+; a failed assert fails the command.
+
+= /^Expenses:Food/
+    check amount < $50
+    assert amount < $100
+    (Budget:Food)    -1
+
+2026/01/01 Grocer
+    Expenses:Food      $10.00
+    Assets:Cash
+
+test --now 2026/02/01 xact Grocer 75
+2026/02/01 Grocer
+    Expenses:Food                             $75.00
+    Assets:Cash
+__ERROR__
+Warning: Transaction check failed: (amount < {$50.00})
+  (check expression at "$FILE", line 6)
+end test
+
+test --now 2026/02/01 xact Grocer 75 --generated
+2026/02/01 Grocer
+    Expenses:Food                             $75.00
+    Assets:Cash                              $-75.00
+    (Budget:Food)                            $-75.00
+__ERROR__
+Warning: Transaction check failed: (amount < {$50.00})
+  (check expression at "$FILE", line 6)
+end test
+
+test --now 2026/02/01 xact Grocer 150 -> 1
+__ERROR__
+Warning: Transaction check failed: (amount < {$50.00})
+  (check expression at "$FILE", line 6)
+While applying automated transaction from "$FILE", lines 6-9:
+> = /^Expenses:Food/
+>     check amount < $50
+>     assert amount < $100
+>     (Budget:Food)    -1
+
+Error: Transaction assertion failed: (amount < {$100.00})
+end test

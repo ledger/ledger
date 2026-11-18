@@ -631,6 +631,11 @@ components with their standard-library equivalents.
   `--strict` no longer warns about them; suppress the spurious `--strict`
   warning for `$account` in automated transactions (#545)
 
+- Apply automated transactions, their `check`/`assert` expressions and
+  `account` check directives to transactions added after parsing -- the
+  `xact` command's draft and Python's `Journal.add_xact` -- which silently
+  skipped them
+
 ### CSV Conversion and Imports
 
 - Strip journal-syntax quotes from commodity names in CSV output (#2008); set

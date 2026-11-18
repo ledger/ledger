@@ -386,8 +386,14 @@ public:
    * After all postings are added, if any must-balance posting was
    * generated, verify() is called to ensure the transaction still
    * balances.
+   *
+   * @p context is the active parse context, or null when the transaction
+   * enters the journal outside a parse (the xact command, Python's
+   * Journal.add_xact); `$var` account templates are then evaluated in
+   * scope_t::default_scope and a failed check on a transaction without a
+   * source position warns without a location.
    */
-  virtual void extend_xact(xact_base_t& xact, parse_context_t& context);
+  virtual void extend_xact(xact_base_t& xact, const parse_context_t* context);
 
   /**
    * @brief Evaluate check_exprs against a single posting, skipping the
@@ -398,8 +404,12 @@ public:
    * posting's account matches `scoped_to_account`, so the predicate is
    * not re-evaluated.  No template postings are generated and deferred
    * notes are not applied (account directives cannot carry those).
+   *
+   * @p context is the active parse context, or null outside a parse (the
+   * xact command, Python's Journal.add_xact); a failed check on a
+   * transaction without a source position then warns without a location.
    */
-  void apply_checks_to_post(post_t& initial_post, parse_context_t& context);
+  void apply_checks_to_post(post_t& initial_post, const parse_context_t* context);
 };
 
 /**

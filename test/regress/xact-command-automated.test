@@ -1,0 +1,38 @@
+; The xact command applies the journal's automated transactions to the
+; transaction it drafts, as parsing does.  The printed draft shows the
+; postings they generate only under --generated, as print does for a
+; transaction read from the file.
+
+= /^Expenses:Food/
+    (Budget:Food)    -1
+
+= /^Expenses:Books/
+    (Budget:$account)    -1
+
+2026/01/01 Grocer
+    Expenses:Food      $10.00
+    Assets:Cash
+
+2026/01/01 Bookshop
+    Expenses:Books      $20.00
+    Assets:Cash
+
+test --now 2026/02/01 xact Grocer 75
+2026/02/01 Grocer
+    Expenses:Food                             $75.00
+    Assets:Cash
+end test
+
+test --now 2026/02/01 xact Grocer 75 --generated
+2026/02/01 Grocer
+    Expenses:Food                             $75.00
+    Assets:Cash                              $-75.00
+    (Budget:Food)                            $-75.00
+end test
+
+test --now 2026/02/01 xact Bookshop 30 --generated
+2026/02/01 Bookshop
+    Expenses:Books                            $30.00
+    Assets:Cash                              $-30.00
+    (Budget:Expenses:Books)                  $-30.00
+end test
