@@ -681,9 +681,14 @@ BOOST_AUTO_TEST_CASE(testFormatCurlyBraceW7)
   session_t session;
   report_t report(session);
 
-  // The {ident} form wraps in justify/scrub; exercised through
-  // the ledger register --format "%{amount}" regression test.
-  // Here we exercise the %(expr) path with a simple value.
+  // '%{' hands "{...}" to the expression tokenizer, which reads it as a
+  // braced amount literal such as {$50}: an identifier is not an amount,
+  // and an unterminated literal is a parse error.  The working form is
+  // pinned by test/regress/format-braced-amount-literal.test.
+  BOOST_CHECK_THROW(format_t("%{amount}"), amount_error);
+  BOOST_CHECK_THROW(format_t("%{$50"), parse_error);
+
+  // The %(expr) path with a simple value.
   format_t fmt("%(\"hello\")");
   string result = fmt.real_calc(report);
   BOOST_CHECK_EQUAL(result, "hello");
@@ -857,8 +862,7 @@ BOOST_AUTO_TEST_CASE(testFormatFieldRefOutOfRangeW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: format.cc lines 361-380: curly brace format with colorize
-// (O_CONS expression that has a color argument)
+// Coverage W8: braces and commas without '%' are literal text
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatCurlyBraceWithColorW8)
@@ -869,13 +873,11 @@ BOOST_AUTO_TEST_CASE(testFormatCurlyBraceWithColorW8)
   session_t session;
   report_t report(session);
 
-  // The {expr, color_expr} syntax creates an O_CONS node that
-  // triggers lines 360-384 (colorize_op path).
-  // We can exercise this through the parsing:
+  // A format string with no '%' is literal text: braces and commas are
+  // copied through unparsed.
   format_t fmt("{2+3, 1}");
   string result = fmt.real_calc(report);
-  // Just exercise the path; the result depends on ansify_if behavior
-  BOOST_CHECK(!result.empty());
+  BOOST_CHECK_EQUAL(result, "{2+3, 1}");
 
   amount_t::shutdown();
   times_shutdown();
@@ -951,8 +953,7 @@ BOOST_AUTO_TEST_CASE(testFormatAbbreviateW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: format.cc line 364-376: curly brace expr with O_CONS
-// that has non-null colorize_op
+// Coverage W8: braces without '%' are literal text
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFormatCurlyBraceColorizeOpW8)
@@ -963,12 +964,10 @@ BOOST_AUTO_TEST_CASE(testFormatCurlyBraceColorizeOpW8)
   session_t session;
   report_t report(session);
 
-  // Parse a curly-brace format that uses the "expr, color" syntax
-  // where the expression evaluates to O_CONS (a pair of subexpressions).
-  // {expr, color_condition}
+  // A format string with no '%' is literal text.
   format_t fmt("{1+2, 3 > 2}");
   string result = fmt.real_calc(report);
-  BOOST_CHECK(!result.empty());
+  BOOST_CHECK_EQUAL(result, "{1+2, 3 > 2}");
 
   amount_t::shutdown();
   times_shutdown();

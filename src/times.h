@@ -284,12 +284,6 @@ void set_date_format(const char* format);
 /// its own separators.
 void set_input_date_format(const char* format);
 
-/// @brief Returns true if set_date_format() has been called.
-bool date_format_is_set();
-
-/// @brief Returns true if set_datetime_format() has been called.
-bool datetime_format_is_set();
-
 /// @brief Serialize a datetime into a property_tree node using the FMT_WRITTEN format.
 inline void put_datetime(property_tree::ptree& pt, const datetime_t& when) {
   pt.put_value(format_datetime(when, FMT_WRITTEN));

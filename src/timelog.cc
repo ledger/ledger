@@ -120,11 +120,6 @@ std::size_t clock_out_from_timelog(std::list<time_xact_t>& time_xacts, time_xact
       throw parse_error(_("Timelog check-out event does not match any current check-ins"));
   }
 
-  if (event.checkin.is_not_a_date_time())
-    throw parse_error(_("Timelog check-in has no corresponding check-out"));
-  if (out_event.checkin.is_not_a_date_time())
-    throw parse_error(_("Timelog check-out has no corresponding check-in"));
-
   if (out_event.checkin < event.checkin)
     throw parse_error(_("Timelog check-out date less than corresponding check-in"));
 
@@ -200,20 +195,15 @@ void time_log_t::clock_in(const time_xact_t& event) {
   if (!event.account)
     throw parse_error(_("Clock-in directive requires an account"));
 
-  if (!time_xacts.empty()) {
-    for (time_xact_t& time_xact : time_xacts) {
-      if (event.account == time_xact.account)
-        throw parse_error(_("Cannot double check-in to the same account"));
-    }
+  for (time_xact_t& time_xact : time_xacts) {
+    if (event.account == time_xact.account)
+      throw parse_error(_("Cannot double check-in to the same account"));
   }
 
   time_xacts.push_back(event);
 }
 
 std::size_t time_log_t::clock_out(const time_xact_t& event) {
-  if (time_xacts.empty())
-    throw std::logic_error(_("Timelog check-out event without a check-in"));
-
   return clock_out_from_timelog(time_xacts, event, context);
 }
 

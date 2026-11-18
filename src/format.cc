@@ -141,22 +141,20 @@ struct format_mapping_t {
 /**
  * @brief Parse an expression from the current position in a format string.
  *
- * Called when the parser encounters `%(` or `%{`.  Reads the expression text
- * using Ledger's expression parser (in PARSE_SINGLE or PARSE_PARTIAL mode)
- * and advances the pointer past the consumed characters.
+ * Called when the parser encounters `%(` or `%{`.  Reads one term with
+ * Ledger's expression parser in PARSE_SINGLE mode (a parenthesized
+ * expression, or a braced amount literal) and advances the pointer past the
+ * consumed characters.
  *
  * @param p            Reference to the current scan pointer; advanced past
  *                     the parsed expression on return.
- * @param single_expr  If true, parse a single complete expression; if false,
- *                     parse a partial expression (stopping at the first
- *                     unmatched delimiter).
  * @return             The parsed and ready-to-compile expression.
  */
-expr_t parse_single_expression(const char*& p, bool single_expr = true) {
+expr_t parse_single_expression(const char*& p) {
   string temp(p); // NOLINT(bugprone-unused-local-non-trivial-variable)
   ptristream str(const_cast<char*&>(p));
   expr_t expr;
-  expr.parse(str, single_expr ? PARSE_SINGLE : PARSE_PARTIAL, temp);
+  expr.parse(str, PARSE_SINGLE, temp);
   if (str.eof()) {
     expr.set_text(p);
     p += std::strlen(p);
@@ -175,7 +173,7 @@ expr_t parse_single_expression(const char*& p, bool single_expr = true) {
 }
 
 /// @brief Create an IDENT op node, used when building AST wrappers for
-///        the scrub/justify/ansify_if calls that surround `%{..}` elements.
+///        the scrub/justify calls that surround `%{..}` elements.
 inline expr_t::ptr_op_t ident_node(const string& ident) {
   expr_t::ptr_op_t node(new expr_t::op_t(expr_t::op_t::IDENT));
   node->set_ident(ident);
@@ -360,9 +358,8 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
 
       case '(':
       case '{': {
-        // '(' parses a raw expression; '{' parses an expression and
-        // additionally wraps it in scrub()/justify()/ansify_if() calls
-        // so that monetary amounts are formatted and colorized properly.
+        // '(' parses a raw expression; '{' parses a braced amount literal and
+        // wraps it in scrub() and justify() calls with the element's widths.
         bool format_amount = *p == '{';
 
         current->type = element_t::EXPR;
@@ -385,7 +382,7 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
                 expr_t::ptr_op_t call1_node(new expr_t::op_t(expr_t::op_t::O_CALL));
                 {
                   call1_node->set_left(ident_node("scrub"));
-                  call1_node->set_right(op->kind == expr_t::op_t::O_CONS ? op->left() : op);
+                  call1_node->set_right(op);
                 }
 
                 args3_node->set_left(call1_node);
@@ -433,32 +430,7 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
         current->max_width = 0;
 
         string prev_expr = std::get<expr_t>(current->data).text();
-
-        expr_t::ptr_op_t colorize_op;
-        if (op->kind == expr_t::op_t::O_CONS)
-          colorize_op = op->has_right() ? op->right() : nullptr;
-
-        if (colorize_op) {
-          expr_t::ptr_op_t call3_node(new expr_t::op_t(expr_t::op_t::O_CALL));
-          {
-            call3_node->set_left(ident_node("ansify_if"));
-
-            {
-              expr_t::ptr_op_t args4_node(new expr_t::op_t(expr_t::op_t::O_CONS));
-              {
-                args4_node->set_left(call2_node); // from above
-                args4_node->set_right(colorize_op);
-              }
-
-              call3_node->set_right(args4_node);
-            }
-          }
-
-          current->data = expr_t(call3_node);
-        } else {
-          current->data = expr_t(call2_node);
-        }
-
+        current->data = expr_t(call2_node);
         std::get<expr_t>(current->data).set_text(prev_expr);
         break;
       }

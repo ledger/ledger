@@ -1,0 +1,40 @@
+; A %{...} format element hands its text, braces included, to the
+; expression tokenizer, which reads '{' as the start of a braced amount
+; literal.  The element is that amount wrapped in justify(scrub(...)),
+; and whatever follows the closing brace is literal text: there is no
+; colorizing argument.
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg --color --format '[%-10{-$50}|%{$50}, "red"|]\n' Food
+[$-50.00   |$50.00, "red"|]
+end test
+
+test reg --format '[%{$1}(amount) + %{$2}]\n' Food
+[$1.00(amount) + $2.00]
+end test
+
+test format '%-12{-$50}|%8{$5}'
+--- Context is first posting of the following transaction ---
+2004/05/27 Book Store
+    ; This note applies to all postings. :SecondTag:
+    Expenses:Books                 20 BOOK @ $10
+    ; Metadata: Some Value
+    ; Typed:: $100 + $200
+    ; :ExampleTag:
+    ; Here follows a note describing the posting.
+    Liabilities:MasterCard        $-200.00
+
+--- Input format string ---
+%-12{-$50}|%8{$5}
+
+--- Format elements ---
+Element:    EXPR  flags: 0x1  min:  0  max:  0  expr: justify(scrub({$-50.00}), 12, -1, false)
+Element:  STRING  flags: 0x0  min:  0  max:  0   str: '|'
+Element:    EXPR  flags: 0x0  min:  0  max:  0  expr: justify(scrub({$5.00}), 8, -1, true)
+
+--- Formatted string ---
+"$-50.00     |   $5.00"
+end test

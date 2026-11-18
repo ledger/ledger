@@ -116,13 +116,6 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
   xact_t* xact;
   bool found_exact = false;
   while (!found_exact && iter != end && (xact = *iter++) != nullptr) {
-#if 0
-    // Only consider transactions from the last two years (jww (2010-03-07):
-    // make this an option)
-    if ((CURRENT_DATE() - xact->date()).days() > 700)
-      continue;
-#endif
-
     // Collect all effective payees: the header payee plus any Payee: tags
     // on postings.
     std::vector<string> payee_candidates;
@@ -223,21 +216,6 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
 
             if (in_order_match && pos - index < 3)
               addend++;
-
-#if 0
-#if !HAVE_BOOST_REGEX_UNICODE
-            // Probably doesn't make sense with value_key as unistring,
-            // but this code is under #if 0 anyway, so if anyone is
-            // tempted to use this by changing value_key to string, let's
-            // avoid leaving a rake to step on.
-            if (pos == 0 ||
-                (pos > 0 &&
-                 !std::isalnum(static_cast<unsigned char>(value_key[pos - 1]))))
-              addend++;
-#else
-            // jww (2010-03-07): Not yet implemented
-#endif
-#endif
 
             last_match_pos = pos;
           }

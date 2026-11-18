@@ -2549,30 +2549,19 @@ std::string format_date(const date_t& when, const format_type_t format_type,
 /*--- Format Configuration ---*/
 
 namespace {
-bool is_initialized = false;           ///< Guard for times_initialize/times_shutdown.
-bool explicit_date_format = false;     ///< True after set_date_format() is called.
-bool explicit_datetime_format = false; ///< True after set_datetime_format() is called.
+bool is_initialized = false; ///< Guard for times_initialize/times_shutdown.
 } // namespace
 
 /// @brief Override both the written and printed datetime format.
 void set_datetime_format(const char* format) {
-  explicit_datetime_format = true;
   written_datetime_io->set_format(format);
   printed_datetime_io->set_format(format);
 }
 
 /// @brief Override both the written and printed date format.
 void set_date_format(const char* format) {
-  explicit_date_format = true;
   written_date_io->set_format(format);
   printed_date_io->set_format(format);
-}
-
-bool date_format_is_set() {
-  return explicit_date_format;
-}
-bool datetime_format_is_set() {
-  return explicit_datetime_format;
 }
 
 /**
@@ -2610,9 +2599,6 @@ void set_input_date_format(const char* format) {
  */
 void times_initialize() {
   if (!is_initialized) {
-    explicit_date_format = false;
-    explicit_datetime_format = false;
-
     input_datetime_io.reset(new datetime_io_t("%Y/%m/%d %H:%M:%S"));
     timelog_datetime_io.reset(new datetime_io_t("%m/%d/%Y %H:%M:%S"));
 

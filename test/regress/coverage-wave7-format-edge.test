@@ -4,7 +4,6 @@
 ; - Lines 240: unrecognized format keyword assert
 ; - Lines 267-268: %$ field reference validation
 ; - Lines 280: %$ reference to non-existent prior field
-; - Lines 361-380: format_amount with colorize_op
 ; - Lines 424: real_calc with STRING element and min_width
 ; - Lines 435-438: real_calc with function expression
 ; - Lines 471-472: real_calc with min_width padding

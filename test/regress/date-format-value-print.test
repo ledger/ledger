@@ -1,0 +1,22 @@
+; A date or datetime value that a format expression prints (with a
+; width, through value_t::print) or converts to a string (without one,
+; through the string cast) uses the written format: %Y/%m/%d and
+; %Y/%m/%d %H:%M:%S by default, and the --date-format or
+; --datetime-format string once given.  The printed default (%y-%b-%d)
+; never appears here.
+
+2024/01/05 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format '%(date)|%-12(date)|%(to_datetime(date))|%-21(to_datetime(date))|\n' Food
+2024/01/05|2024/01/05  |2024/01/05 00:00:00|2024/01/05 00:00:00  |
+end test
+
+test reg --date-format '%d.%m.%Y' --format '%(date)|%-12(date)|%(to_datetime(date))|%-21(to_datetime(date))|\n' Food
+05.01.2024|05.01.2024  |2024/01/05 00:00:00|2024/01/05 00:00:00  |
+end test
+
+test reg --datetime-format '%d.%m.%Y %H.%M' --format '%(date)|%-12(date)|%(to_datetime(date))|%-21(to_datetime(date))|\n' Food
+2024/01/05|2024/01/05  |05.01.2024 00.00|05.01.2024 00.00     |
+end test
