@@ -104,8 +104,7 @@ inline bool is_valid(const datetime_t& moment) {
   return !moment.is_not_a_date_time();
 }
 
-using date_t = boost::gregorian::date;                   ///< Calendar date without time-of-day.
-using date_iterator_t = boost::gregorian::date_iterator; ///< Day-by-day date iterator.
+using date_t = boost::gregorian::date; ///< Calendar date without time-of-day.
 
 /// @brief Test whether a date value has been assigned (is not "not_a_date").
 inline bool is_valid(const date_t& moment) {
@@ -328,11 +327,6 @@ struct date_traits_t {
     has_day = traits.has_day;
     return *this;
   }
-
-  bool operator==(const date_traits_t& traits) const {
-    return (has_year == traits.has_year && has_month == traits.has_month &&
-            has_day == traits.has_day);
-  }
 };
 
 /**
@@ -475,11 +469,7 @@ class date_specifier_t {
   friend class date_parser_t;
 
 public:
-#if 0
-  typedef date_t::year_type        year_type;
-#else
   using year_type = unsigned short;
-#endif
   using month_type = date_t::month_type;
   using day_type = date_t::day_type;
   using day_of_week_type = date_t::day_of_week_type;
@@ -543,9 +533,6 @@ public:
 
   /// @brief Returns true if this specifier includes an explicit year.
   bool has_year() const { return static_cast<bool>(year); }
-
-  /// @brief Test whether a date falls within [begin(), end()).
-  bool is_within(const date_t& date) const { return date >= begin() && date < end(); }
 
   /**
    * @brief Infer the natural duration for this specifier's granularity.
@@ -639,15 +626,6 @@ public:
         range_begin ? range_end->with_year_on_or_after(range_begin->begin(), end_inclusive)
                     : *range_end;
     return end_inclusive ? until.end() : until.begin();
-  }
-
-  /// @brief Test whether a date falls within [begin(), end()).
-  bool is_within(const date_t& date) const {
-    optional<date_t> b = begin();
-    optional<date_t> e = end();
-    bool after_begin = b ? date >= *b : true;
-    bool before_end = e ? date < *e : true;
-    return after_begin && before_end;
   }
 
   /// @brief Produce a debug representation of the range.
@@ -754,13 +732,8 @@ public:
  * This type directly implements `--period`, `--begin`, `--end`,
  * `--daily`, `--weekly`, `--monthly`, `--quarterly`, and `--yearly`.
  */
-class date_interval_t : public equality_comparable<date_interval_t> {
+class date_interval_t {
 public:
-  /// @brief Add a duration to a date (convenience wrapper around date_duration_t::add).
-  static date_t add_duration(const date_t& date, const date_duration_t& duration);
-  /// @brief Subtract a duration from a date (convenience wrapper around date_duration_t::subtract).
-  static date_t subtract_duration(const date_t& date, const date_duration_t& duration);
-
   optional<date_specifier_or_range_t> range; ///< The parsed date range or specifier.
 
   optional<date_t> start;  ///< Effective start date, after stabilization and alignment.
@@ -792,13 +765,6 @@ public:
   }
   date_interval_t& operator=(const date_interval_t&) = default;
   ~date_interval_t() noexcept { TRACE_DTOR(date_interval_t); }
-
-  bool operator==(const date_interval_t& other) const {
-    return (start == other.start && (!start || *start == *other.start));
-  }
-  bool operator<(const date_interval_t& other) const {
-    return (start == other.start && (!start || *start < *other.start));
-  }
 
   /// @brief True if the interval has been stabilized (i.e. has a start date).
   operator bool() const { return is_valid(); }

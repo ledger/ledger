@@ -963,9 +963,10 @@ BOOST_AUTO_TEST_CASE(testDateSpecifierW7)
   date_t e = spec.end();
   BOOST_CHECK(!e.is_not_a_date());
 
-  // Test is_within
+  // 2024/01/15 lies in the half-open range [begin(), end())
   date_t check = parse_date("2024/01/15");
-  BOOST_CHECK(spec.is_within(check));
+  BOOST_CHECK(check >= spec.begin() && check < spec.end());
+  BOOST_CHECK_EQUAL(spec.end(), parse_date("2024/01/16"));
 
   // Test implied_duration with day
   optional<date_duration_t> dur = spec.implied_duration();
@@ -1582,7 +1583,7 @@ BOOST_AUTO_TEST_CASE(testDateParserInvalidCharsW11)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: times.cc date_duration_t to_string and add_duration
+// Coverage W11: times.cc date_duration_t to_string
 // (lines 1801-1802, 1820-1821)
 // -----------------------------------------------------------------------
 
