@@ -128,7 +128,10 @@ commodity_t* commodity_pool_t::find(const string& symbol) {
   return nullptr;
 }
 
-/** @brief Look up a commodity by symbol, creating it if it does not exist. */
+/**
+ * @brief Look up a commodity by symbol, creating it if it does not exist.  Never returns
+ * nullptr: create() throws rather than fail.
+ */
 commodity_t* commodity_pool_t::find_or_create(const string& symbol) {
   DEBUG("pool.commodities", "Find-or-create commodity " << symbol);
   if (commodity_t* commodity = find(symbol))
@@ -766,12 +769,10 @@ commodity_pool_t::parse_price_directive(char* line, bool do_not_add_price, bool 
         first = false;
       });
       expr_text << ')';
-      if (commodity_t* commodity = find_or_create(symbol)) {
-        commodity->set_value_expr(expr_t(expr_text.str(), PARSE_NO_MIGRATE));
-        commodity->add_flags(COMMODITY_KNOWN);
-        return std::pair<commodity_t*, price_point_t>(commodity, point);
-      }
-      return std::nullopt;
+      commodity_t* commodity = find_or_create(symbol);
+      commodity->set_value_expr(expr_t(expr_text.str(), PARSE_NO_MIGRATE));
+      commodity->add_flags(COMMODITY_KNOWN);
+      return std::pair<commodity_t*, price_point_t>(commodity, point);
     }
     point.price = result.to_amount();
   } else {
@@ -796,20 +797,17 @@ commodity_pool_t::parse_price_directive(char* line, bool do_not_add_price, bool 
   }
 
   DEBUG("commodity.download", "Looking up symbol: " << symbol);
-  if (commodity_t* commodity = find_or_create(symbol)) {
-    if (point.price.has_commodity() && commodity->referent() == point.price.commodity().referent())
-      throw_(parse_error,
-             _f("A price directive may not use the same commodity for both source and price: %1%") %
-                 symbol);
-    DEBUG("commodity.download",
-          "Adding price for " << symbol << ": " << point.when << " " << point.price);
-    if (!do_not_add_price)
-      commodity->add_price(point.when, point.price, true);
-    commodity->add_flags(COMMODITY_KNOWN);
-    return std::pair<commodity_t*, price_point_t>(commodity, point);
-  }
-
-  return std::nullopt;
+  commodity_t* commodity = find_or_create(symbol);
+  if (point.price.has_commodity() && commodity->referent() == point.price.commodity().referent())
+    throw_(parse_error,
+           _f("A price directive may not use the same commodity for both source and price: %1%") %
+               symbol);
+  DEBUG("commodity.download",
+        "Adding price for " << symbol << ": " << point.when << " " << point.price);
+  if (!do_not_add_price)
+    commodity->add_price(point.when, point.price, true);
+  commodity->add_flags(COMMODITY_KNOWN);
+  return std::pair<commodity_t*, price_point_t>(commodity, point);
 }
 
 /**
@@ -826,19 +824,17 @@ commodity_t* commodity_pool_t::parse_price_expression(const std::string& str, co
   string commodity_name = (eq_pos != string::npos) ? str.substr(0, eq_pos) : str;
   boost::trim(commodity_name);
 
-  if (commodity_t* commodity = find_or_create(commodity_name)) {
-    if (eq_pos != string::npos && add_prices) {
-      string prices_str = str.substr(eq_pos + 1);
-      std::vector<string> prices;
-      boost::split(prices, prices_str, boost::is_any_of(";"));
-      for (const string& p : prices) {
-        if (!p.empty())
-          commodity->add_price(moment ? *moment : CURRENT_TIME(), amount_t(p));
-      }
+  commodity_t* commodity = find_or_create(commodity_name);
+  if (eq_pos != string::npos && add_prices) {
+    string prices_str = str.substr(eq_pos + 1);
+    std::vector<string> prices;
+    boost::split(prices, prices_str, boost::is_any_of(";"));
+    for (const string& p : prices) {
+      if (!p.empty())
+        commodity->add_price(moment ? *moment : CURRENT_TIME(), amount_t(p));
     }
-    return commodity;
   }
-  return nullptr;
+  return commodity;
 }
 
 /// @}

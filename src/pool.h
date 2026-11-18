@@ -225,7 +225,8 @@ public:
   /// @return The commodity if found, or nullptr.
   commodity_t* find(const string& name);
 
-  /// @brief Look up a commodity by symbol, creating it if it does not exist.
+  /// @brief Look up a commodity by symbol, creating it if it does not exist.  Never returns
+  /// nullptr: create() throws rather than fail.
   commodity_t* find_or_create(const string& symbol);
 
   /// @brief Register @p name as an alias for @p referent.
@@ -397,7 +398,7 @@ public:
    * @param str        The price expression string.
    * @param add_prices Whether to record prices in the history graph.
    * @param moment     Timestamp for the recorded prices (default = now).
-   * @return The commodity on the left-hand side, or nullptr on failure.
+   * @return The commodity on the left-hand side (created if new); never nullptr.
    */
   commodity_t* parse_price_expression(const std::string& str, const bool add_prices = true,
                                       const std::optional<datetime_t>& moment = {});

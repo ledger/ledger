@@ -157,7 +157,7 @@ public:
         TOK_CODE,    ///< `code` or `#` -- match transaction code field.
         TOK_PAYEE,   ///< `payee`, `desc`, or `@` -- match payee/description field.
         TOK_NOTE,    ///< `note` or leading `=` -- match note/comment field.
-        TOK_ACCOUNT, ///< `account` -- match account name (the default context).
+        TOK_ACCOUNT, ///< Default context for bare terms; no keyword produces it.
         TOK_META,    ///< `meta`, `tag`, `data`, or `%` -- match metadata tags.
         TOK_EXPR,    ///< `expr` -- pass-through a raw expression string.
 

@@ -60,9 +60,11 @@
  * filters) to bypass the full scope/calc machinery and read the posting
  * field directly.
  *
- * merged_expr_t extends expr_t to support incremental expression composition:
- * users can layer flags like `-O`, `-B`, `-V`, and `-A` which each prepend
- * or append transformations to a base expression term.
+ * merged_expr_t composes one expression from report options: a base
+ * expression, which -O, -B, -I, -G, --dc and --plopen replace, followed
+ * by the pieces that --amount, --total and --display-* options (and
+ * -V and -A, which go through --display-amount and --display-total)
+ * append in order.
  */
 #pragma once
 
@@ -214,27 +216,32 @@ value_t expr_value(expr_t::ptr_op_t op);
 /**
  * @brief Composable expression that layers transformations onto a base term.
  *
- * merged_expr_t allows one to set an expression term (e.g., `"amount"`) and
- * a base expression (e.g., `"amount"`), then merge in later transformations:
+ * merged_expr_t threads a variable, the @c term (e.g. `display_total`),
+ * through @c base_expr and then each piece in @c exprs.  Options build
+ * it in two ways:
+ *
+ *   - set_base_expr() replaces the base: -O/--quantity, -B/--basis,
+ *     -I/--price, -G/--gain, --dc and --plopen do this to amount_ (-O
+ *     also to total_), as do report_t's normalization for --gain-since
+ *     (amount_) and --flat (total_).
+ *   - append() adds a piece at the end: --amount, --total,
+ *     --display-account, --display-amount, --display-total and the
+ *     options that route through them, such as -V/--market and
+ *     -A/--average.  A piece that is a bare identifier instead replaces
+ *     the base and clears the pieces (check_for_single_identifier).
+ *
+ * With no pieces, compile() parses base_expr alone.  For `-V -A`, it
+ * assembles display_total_ (shown wrapped; it is one line) as:
  *
  * @code
- *    term:   "amount"
- *    base:   "amount"
- *    merge:  "amount * 10"    // from -O flag
- *    merge:  "amount + 20"    // from -B flag
+ *    __tmp_display_total=(display_total=(total_expr);
+ *      display_total=(market(display_total, value_date, exchange));
+ *      display_total=(count>0?(display_total/count):0);
+ *      display_total);__tmp_display_total
  * @endcode
  *
- * When compile() is called, these are assembled into a single expression:
- *
- * @code
- *    __tmp_amount=(amount=(amount); amount=(amount * 10); amount=(amount + 20); amount);
- * __tmp_amount
- * @endcode
- *
- * This allows users to combine flags like `-O`, `-B`, `-V`, and `-A` at any
- * time, with each flag contributing a transformation that is applied in order.
- *
- * @see report_t  Where merged_expr_t instances are used for amount_expr and total_expr.
+ * @see report_t  Its amount_, total_, display_account_, display_amount_
+ *                and display_total_ options hold the five instances.
  */
 class merged_expr_t : public expr_t {
 public:

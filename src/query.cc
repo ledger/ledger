@@ -611,7 +611,7 @@ expr_t::ptr_op_t query_t::parser_t::make_match_node(query_t::lexer_t::token_t::k
  * Parse a single query term -- the lowest level of the grammar.
  *
  * This handles:
- * - **Field context switches**: `code`, `payee`, `note`, `account`, `meta`,
+ * - **Field context switches**: `code`, `payee`, `note`, `meta`,
  *   `expr` tokens change tok_context and recurse to get the actual term.
  * - **Section boundaries**: `show`, `only`, `bold`, `for`, `since`, `until`
  *   are pushed back for the top-level parse_query_expr to handle.

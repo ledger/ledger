@@ -1873,8 +1873,8 @@ BOOST_AUTO_TEST_CASE(testAmountAssignment)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for amount.cc lines 288-289: _copy with BIGINT_BULK_ALLOC
-// Already tested implicitly but let's ensure _dup path is hit
+// amount_t::_copy / _dup: a copy shares the bigint_t until a mutation
+// forces a private copy
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountDup)
@@ -2162,20 +2162,32 @@ BOOST_AUTO_TEST_CASE(testAmountPrintElideCommodityQuotesW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: _copy with BIGINT_BULK_ALLOC (lines 287-289)
+// amount_t::_copy: copy construction and assignment share the bigint_t;
+// a later mutation must not reach the copies
 // -----------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(testAmountCopyBulkAllocW7)
+BOOST_AUTO_TEST_CASE(testAmountCopySharesUntilMutation)
 {
-  // Create amounts and exercise the copy path
   amount_t x1("$10.00");
-  const amount_t& x2(x1);  // copy constructor
+  const amount_t x2(x1);  // copy constructor
   BOOST_CHECK_EQUAL(x1, x2);
 
   // Assign over an existing amount
   amount_t x3("$20.00");
   x3 = x1;
   BOOST_CHECK_EQUAL(x3, x1);
+
+  // Assign from an amount that already shares x3's bigint_t
+  x3 = x2;
+  BOOST_CHECK_EQUAL(x3, x2);
+
+  // x1, x2 and x3 share one bigint_t; mutating x1 must copy it first
+  x1 += amount_t("$1.00");
+  BOOST_CHECK_EQUAL(x1, amount_t("$11.00"));
+  BOOST_CHECK_EQUAL(x2, amount_t("$10.00"));
+  BOOST_CHECK_EQUAL(x3, amount_t("$10.00"));
+  BOOST_CHECK(x1.valid());
+  BOOST_CHECK(x2.valid());
 }
 
 // -----------------------------------------------------------------------
@@ -2287,8 +2299,7 @@ BOOST_AUTO_TEST_CASE(testUnsignedLongConstructorW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: copy constructor edge cases (lines 117-136: _copy with
-// BIGINT_BULK_ALLOC flag, line 288-289)
+// amount_t::_copy: copy constructor and assignment edge cases
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCopyEdgeCasesW8)
@@ -2609,7 +2620,7 @@ BOOST_AUTO_TEST_CASE(testAmountDivisionW11)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: amount.cc lines 288-289 (copy with BIGINT_BULK_ALLOC)
+// amount_t::_copy: copy and assignment
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAmountCopyW11)

@@ -189,8 +189,8 @@ void instance_t::nomarket_directive(char* line) {
   string symbol; // NOLINT(bugprone-unused-local-non-trivial-variable)
   commodity_t::parse_symbol(p, symbol);
 
-  if (commodity_t* commodity = commodity_pool_t::current_pool->find_or_create(symbol))
-    commodity->add_flags(COMMODITY_NOMARKET | COMMODITY_KNOWN);
+  commodity_t* commodity = commodity_pool_t::current_pool->find_or_create(symbol);
+  commodity->add_flags(COMMODITY_NOMARKET | COMMODITY_KNOWN);
 }
 
 /*--- File and Option Directives ---*/
@@ -943,42 +943,41 @@ void instance_t::commodity_directive(char* line) {
   string symbol; // NOLINT(bugprone-unused-local-non-trivial-variable)
   commodity_t::parse_symbol(p, symbol);
 
-  if (commodity_t* commodity = commodity_pool_t::current_pool->find_or_create(symbol)) {
-    context.journal->register_commodity(*commodity, 0);
+  commodity_t* commodity = commodity_pool_t::current_pool->find_or_create(symbol);
+  context.journal->register_commodity(*commodity, 0);
 
-    while (peek_whitespace_line()) {
-      read_line(line);
-      char* q = skip_ws(line);
-      if (!*q)
-        break;
-      if (is_block_comment(q))
-        continue;
+  while (peek_whitespace_line()) {
+    read_line(line);
+    char* q = skip_ws(line);
+    if (!*q)
+      break;
+    if (is_block_comment(q))
+      continue;
 
-      char* b = next_element(q);
-      string keyword(q);
-      // As in account_directive_body(), only a recognized keyword is
-      // checked for a missing argument.
-      auto argument = [&]() -> char* {
-        if (!b)
-          throw_(parse_error, _f("Commodity directive '%1%' requires an argument") % keyword);
-        return b;
-      };
+    char* b = next_element(q);
+    string keyword(q);
+    // As in account_directive_body(), only a recognized keyword is
+    // checked for a missing argument.
+    auto argument = [&]() -> char* {
+      if (!b)
+        throw_(parse_error, _f("Commodity directive '%1%' requires an argument") % keyword);
+      return b;
+    };
 
-      if (keyword == "alias")
-        commodity_alias_directive(*commodity, argument());
-      else if (keyword == "value")
-        commodity_value_directive(*commodity, argument());
-      else if (keyword == "format")
-        commodity_format_directive(*commodity, argument());
-      else if (keyword == "nomarket")
-        commodity_nomarket_directive(*commodity);
-      else if (keyword == "default")
-        commodity_default_directive(*commodity);
-      else if (keyword == "note")
-        commodity->set_note(string(argument()));
-      else
-        throw_(parse_error, _f("Unrecognized commodity directive '%1%'") % keyword);
-    }
+    if (keyword == "alias")
+      commodity_alias_directive(*commodity, argument());
+    else if (keyword == "value")
+      commodity_value_directive(*commodity, argument());
+    else if (keyword == "format")
+      commodity_format_directive(*commodity, argument());
+    else if (keyword == "nomarket")
+      commodity_nomarket_directive(*commodity);
+    else if (keyword == "default")
+      commodity_default_directive(*commodity);
+    else if (keyword == "note")
+      commodity->set_note(string(argument()));
+    else
+      throw_(parse_error, _f("Unrecognized commodity directive '%1%'") % keyword);
   }
 }
 

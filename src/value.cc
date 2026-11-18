@@ -2032,8 +2032,8 @@ struct exchange_entry_t {
   bool forced;               ///< True when the target carried a trailing `!`.
 };
 
-/// Parse a comma-separated exchange spec into its entries.  An entry whose
-/// target parse_price_expression() rejects is skipped.
+/// Parse a comma-separated exchange spec into its entries.
+/// parse_price_expression() creates a target the pool does not hold yet.
 std::vector<exchange_entry_t> parse_exchange_spec(const string& commodities, const bool add_prices,
                                                   const datetime_t& moment) {
   std::vector<exchange_entry_t> entries;
@@ -2057,13 +2057,12 @@ std::vector<exchange_entry_t> parse_exchange_spec(const string& commodities, con
     bool is_forced = name_len > 0 && target_name[name_len - 1] == '!';
     string expr_name = is_forced ? string(target_name, 0, name_len - 1) : target_name;
 
-    if (commodity_t* commodity =
-            commodity_pool_t::current_pool->parse_price_expression(expr_name, add_prices, moment)) {
-      DEBUG("commodity.exchange", "Pricing for commodity: " << commodity->symbol());
-      commodity_t* src = selective ? commodity_pool_t::current_pool->find(source_name) : nullptr;
-      entries.push_back(
-          {&commodity->referent(), selective, src ? &src->referent() : nullptr, is_forced});
-    }
+    commodity_t* commodity =
+        commodity_pool_t::current_pool->parse_price_expression(expr_name, add_prices, moment);
+    DEBUG("commodity.exchange", "Pricing for commodity: " << commodity->symbol());
+    commodity_t* src = selective ? commodity_pool_t::current_pool->find(source_name) : nullptr;
+    entries.push_back(
+        {&commodity->referent(), selective, src ? &src->referent() : nullptr, is_forced});
   }
 
   return entries;

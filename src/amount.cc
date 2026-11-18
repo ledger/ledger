@@ -112,15 +112,18 @@ static mpfr_t tempf;
  *                  (see @c amount_t::_dup).
  *
  * Two flags control special behavior:
- *   - @c BIGINT_BULK_ALLOC -- the object lives inside a bulk memory
- *     pool and must not be freed with @c delete.
  *   - @c BIGINT_KEEP_PREC  -- the stored precision should be used for
  *     display rather than the commodity's default precision.  This is
  *     set when an amount is parsed with PARSE_NO_MIGRATE or after an
  *     explicit @c unround() call.
+ *   - @c BIGINT_COST_PREC  -- set by set_cost_precision() on an amount
+ *     inferred from a cost (xact.cc).  When the commodity's display
+ *     precision would show the amount as zero, or the commodity has no
+ *     precision yet, is_zero() and print() use the stored precision
+ *     instead (#1692).  operator+= and operator-= clear it on their
+ *     result (#717).
  */
 struct amount_t::bigint_t : public flags::supports_flags<> {
-#define BIGINT_BULK_ALLOC 0x01
 #define BIGINT_KEEP_PREC 0x02
 #define BIGINT_COST_PREC 0x04
 
@@ -135,9 +138,7 @@ struct amount_t::bigint_t : public flags::supports_flags<> {
     mpq_init(val);
     TRACE_CTOR(bigint_t, "");
   }
-  bigint_t(const bigint_t& other)
-      : supports_flags<>(static_cast<uint_least8_t>(other.flags() & ~BIGINT_BULK_ALLOC)),
-        prec(other.prec), refc(1) {
+  bigint_t(const bigint_t& other) : supports_flags<>(other.flags()), prec(other.prec), refc(1) {
     mpq_init(val);
     mpq_set(val, other.val);
     TRACE_CTOR(bigint_t, "copy");
@@ -154,9 +155,8 @@ struct amount_t::bigint_t : public flags::supports_flags<> {
       DEBUG("ledger.validate", "amount_t::bigint_t: prec > 1024");
       return false;
     }
-    if (flags() & ~(BIGINT_BULK_ALLOC | BIGINT_KEEP_PREC | BIGINT_COST_PREC)) {
-      DEBUG("ledger.validate",
-            "amount_t::bigint_t: flags() & ~(BULK_ALLOC | KEEP_PREC | COST_PREC)");
+    if (flags() & ~(BIGINT_KEEP_PREC | BIGINT_COST_PREC)) {
+      DEBUG("ledger.validate", "amount_t::bigint_t: flags() & ~(KEEP_PREC | COST_PREC)");
       return false;
     }
     return true;
@@ -486,12 +486,11 @@ void amount_t::shutdown() {
 /*----------------------------------------------------------------------*/
 
 /**
- * @brief Share or deep-copy another amount's bigint_t into this one.
+ * @brief Share another amount's bigint_t.
  *
- * If the source bigint_t was allocated from a bulk pool (flagged with
- * BIGINT_BULK_ALLOC), a full deep copy is made because pool pointers
- * are not guaranteed to remain valid.  Otherwise, the reference count
- * on the shared bigint_t is simply incremented.
+ * Releases this amount's own bigint_t, then points at @p amt's and
+ * increments its reference count; the first mutation of either amount
+ * makes a private copy (see _dup).
  */
 void amount_t::_copy(const amount_t& amt) {
   VERIFY(amt.valid());
@@ -500,15 +499,9 @@ void amount_t::_copy(const amount_t& amt) {
     if (quantity)
       _release();
 
-    // Never maintain a pointer into a bulk allocation pool; such
-    // pointers are not guaranteed to remain.
-    if (amt.quantity->has_flags(BIGINT_BULK_ALLOC)) {
-      quantity = new bigint_t(*amt.quantity);
-    } else {
-      quantity = amt.quantity;
-      DEBUG("amount.refs", quantity << " refc++, now " << (quantity->refc + 1));
-      quantity->refc++;
-    }
+    quantity = amt.quantity;
+    DEBUG("amount.refs", quantity << " refc++, now " << (quantity->refc + 1));
+    quantity->refc++;
   }
   commodity_ = amt.commodity_;
 
@@ -554,8 +547,7 @@ void amount_t::_clear() {
 /**
  * @brief Decrement the bigint_t reference count, freeing if it reaches zero.
  *
- * Bulk-allocated bigint_t objects are destroyed in-place (destructor
- * only); heap-allocated ones are deleted outright.
+ * The last release deletes it.
  */
 void amount_t::_release() {
   VERIFY(valid());
@@ -563,10 +555,7 @@ void amount_t::_release() {
   DEBUG("amount.refs", quantity << " refc--, now " << (quantity->refc - 1));
 
   if (--quantity->refc == 0) {
-    if (quantity->has_flags(BIGINT_BULK_ALLOC))
-      quantity->~bigint_t();
-    else
-      checked_delete(quantity);
+    checked_delete(quantity);
     quantity = nullptr;
     commodity_ = nullptr;
   }
@@ -1783,11 +1772,6 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags,
   // Set when the decimal comma came only from the comma heuristics below,
   // not from the commodity, --decimal-comma, or a period.
   bool decimal_comma_guessed = false;
-#if 0
-  bool time_colon_style
-    = (commodity_t::time_colon_by_default ||
-       commodity().has_flags(COMMODITY_STYLE_TIME_COLON));
-#endif
 
   new_quantity->prec = 0;
 
