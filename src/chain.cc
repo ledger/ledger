@@ -140,7 +140,7 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t
   // filtering.
   if (report.HANDLED(pivot_only_) && !report.HANDLED(account_)) {
     handler = std::make_shared<transfer_details>(
-        handler, transfer_details::SET_ACCOUNT_REPLACE, report.session.journal->master,
+        handler, transfer_details::SET_ACCOUNT_REPLACE,
         pivot_account_expr(report.HANDLER(pivot_only_).str()), report);
   }
 
@@ -162,8 +162,8 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t
   std::shared_ptr<transfer_details> pivot_handler;
   if (report.HANDLED(pivot_) && !report.HANDLED(account_)) {
     pivot_handler = std::make_shared<transfer_details>(
-        handler, transfer_details::SET_ACCOUNT, report.session.journal->master,
-        pivot_account_expr(report.HANDLER(pivot_).str()), report);
+        handler, transfer_details::SET_ACCOUNT, pivot_account_expr(report.HANDLER(pivot_).str()),
+        report);
     handler = pivot_handler;
   }
 
@@ -535,12 +535,10 @@ post_handler_ptr chain_transfer_handlers(post_handler_ptr base_handler, report_t
 
   if (report.HANDLED(date_))
     handler = std::make_shared<transfer_details>(handler, transfer_details::SET_DATE,
-                                                 report.session.journal->master,
                                                  report.HANDLER(date_).str(), report);
 
   if (report.HANDLED(account_)) {
     handler = std::make_shared<transfer_details>(handler, transfer_details::SET_ACCOUNT,
-                                                 report.session.journal->master,
                                                  report.HANDLER(account_).str(), report);
   }
   // Note: --pivot is handled in chain_pre_post_handlers() so that the
@@ -550,7 +548,6 @@ post_handler_ptr chain_transfer_handlers(post_handler_ptr base_handler, report_t
 
   if (report.HANDLED(payee_))
     handler = std::make_shared<transfer_details>(handler, transfer_details::SET_PAYEE,
-                                                 report.session.journal->master,
                                                  report.HANDLER(payee_).str(), report);
 
   /*--- Payee/account rewriting and related/inject ---*/

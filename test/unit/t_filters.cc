@@ -555,30 +555,6 @@ BOOST_AUTO_TEST_CASE(testAnonymizePostsFlagSet)
 
 //////////////////////////////////////////////////////////////////////
 //
-// push_to_posts_list tests
-//
-
-BOOST_AUTO_TEST_CASE(testPushToPostsList)
-{
-  // push_to_posts_list should add posts to an external posts_list
-  posts_list external_list;
-  push_to_posts_list pusher(external_list);
-
-  account_t* acct = make_account("Expenses");
-  xact_t* xact = make_xact("Test", date_t(2024, 7, 1));
-  post_t* p1 = make_post(xact, acct, amount_t(10L));
-  post_t* p2 = make_post(xact, acct, amount_t(20L));
-
-  pusher(*p1);
-  pusher(*p2);
-
-  BOOST_CHECK_EQUAL(2u, external_list.size());
-  BOOST_CHECK(external_list.front() == p1);
-  BOOST_CHECK(external_list.back() == p2);
-}
-
-//////////////////////////////////////////////////////////////////////
-//
 // Handler chain integration tests
 //
 
@@ -934,8 +910,7 @@ BOOST_AUTO_TEST_CASE(testTransferDetailsClear)
   // Cover transfer_details::clear() (filters.h lines 989-994)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   expr_t expr("'Transferred'");
-  transfer_details td(collector, transfer_details::SET_PAYEE,
-                      root, expr, report);
+  transfer_details td(collector, transfer_details::SET_PAYEE, expr, report);
 
   account_t* acct = make_account("Expenses:Food");
   xact_with_posts xwp = make_balanced_xact(
@@ -1601,8 +1576,7 @@ BOOST_AUTO_TEST_CASE(testTransferDetailsSetPayeeW8)
 {
   std::shared_ptr<collect_posts> collector(new collect_posts);
   expr_t payee_expr("'NewPayee'");
-  transfer_details xfer(collector, transfer_details::SET_PAYEE,
-                        root, payee_expr, report);
+  transfer_details xfer(collector, transfer_details::SET_PAYEE, payee_expr, report);
 
   account_t* exp = make_account("Expenses:Food");
   account_t* cash = make_account("Assets:Cash");
@@ -1625,8 +1599,7 @@ BOOST_AUTO_TEST_CASE(testTransferDetailsSetDateW8)
 {
   std::shared_ptr<collect_posts> collector(new collect_posts);
   expr_t date_expr("[2025/01/01]");
-  transfer_details xfer(collector, transfer_details::SET_DATE,
-                        root, date_expr, report);
+  transfer_details xfer(collector, transfer_details::SET_DATE, date_expr, report);
 
   account_t* exp = make_account("Expenses:Food");
   account_t* cash = make_account("Assets:Cash");

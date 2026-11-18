@@ -1779,15 +1779,11 @@ void subtotal_posts::report_subtotal(const char* spec_fmt,
 
   std::ostringstream out_date;
   if (!payee) {
-    // NOLINTBEGIN(bugprone-branch-clone)
     if (spec_fmt) {
       out_date << format_date(*range_finish, FMT_CUSTOM, spec_fmt);
-    } else if (date_format) {
-      out_date << "- " << format_date(*range_finish, FMT_CUSTOM, date_format->c_str());
     } else {
       out_date << "- " << format_date(*range_finish);
     }
-    // NOLINTEND(bugprone-branch-clone)
   }
 
   xact_t& xact = temps.create_xact();

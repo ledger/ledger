@@ -90,7 +90,6 @@
  * - **post_splitter** -- Groups postings by expression value, flushing a
  *   sub-chain per group.  Used by --group-by.
  * - **collect_posts** -- Accumulates post_t* into a vector; does not forward.
- * - **push_to_posts_list** -- Pushes postings into an external posts_list.
  *
  * @subsection cat_passthrough Pass-Through / Iteration
  * - **pass_down_posts\<Iterator\>** -- Iterates an iterator of postings,
@@ -376,21 +375,6 @@ public:
   ~pass_down_posts() override { TRACE_DTOR(pass_down_posts); }
 };
 
-/// Appends each posting pointer to an external posts_list (no forwarding).
-class push_to_posts_list : public item_handler<post_t> {
-  push_to_posts_list();
-
-public:
-  posts_list& posts;
-
-  push_to_posts_list(posts_list& _posts) : posts(_posts) {
-    TRACE_CTOR(push_to_posts_list, "posts_list&");
-  }
-  ~push_to_posts_list() override { TRACE_DTOR(push_to_posts_list); }
-
-  void operator()(post_t& post) override { posts.push_back(&post); }
-};
-
 /**
  * @brief Limits output to the first and/or last N transactions.
  *
@@ -482,8 +466,8 @@ public:
  * time a new transaction is encountered.
  */
 class sort_xacts : public item_handler<post_t> {
-  sort_posts sorter; ///< Internal sorter flushed per transaction.
-  xact_t* last_xact; ///< Previous transaction, for boundary detection.
+  sort_posts sorter;           ///< Internal sorter flushed per transaction.
+  xact_t* last_xact = nullptr; ///< Previous transaction, for boundary detection.
 
   sort_xacts();
 
@@ -491,10 +475,6 @@ public:
   sort_xacts(post_handler_ptr handler, const expr_t& _sort_order, report_t& _report)
       : sorter(std::move(handler), _sort_order, _report) {
     TRACE_CTOR(sort_xacts, "post_handler_ptr, const value_expr&, report_t&");
-  }
-  sort_xacts(post_handler_ptr handler, const string& _sort_order, report_t& _report)
-      : sorter(std::move(handler), _sort_order, _report) {
-    TRACE_CTOR(sort_xacts, "post_handler_ptr, const string&, report_t&");
   }
   ~sort_xacts() override { TRACE_DTOR(sort_xacts); }
 
@@ -1006,16 +986,13 @@ protected:
 protected:
   expr_t& amount_expr;                 ///< Expression for evaluating each posting's value.
   values_map values;                   ///< Accumulated values keyed by account name.
-  optional<string> date_format;        ///< Custom date format for the subtotal payee string.
   temporaries_t temps;                 ///< Temporary storage for synthetic xacts/posts.
   std::deque<post_t*> component_posts; ///< Original postings contributing to this subtotal.
 
 public:
-  subtotal_posts(post_handler_ptr handler, expr_t& _amount_expr,
-                 const optional<string>& _date_format = none)
-      : item_handler<post_t>(std::move(handler)), amount_expr(_amount_expr),
-        date_format(_date_format) {
-    TRACE_CTOR(subtotal_posts, "post_handler_ptr, expr_t&, const optional<string>&");
+  subtotal_posts(post_handler_ptr handler, expr_t& _amount_expr)
+      : item_handler<post_t>(std::move(handler)), amount_expr(_amount_expr) {
+    TRACE_CTOR(subtotal_posts, "post_handler_ptr, expr_t&");
   }
   ~subtotal_posts() override {
     TRACE_DTOR(subtotal_posts);
@@ -1026,8 +1003,8 @@ public:
   /// @param spec_fmt A strftime format for the subtotal's date payee
   ///        (day_of_week_posts passes "%As").
   /// @param interval Optional interval providing start/finish dates.
-  /// @param payee When given, used verbatim as the payee; spec_fmt and
-  ///        date_format are then not consulted.
+  /// @param payee When given, used verbatim as the payee; spec_fmt is
+  ///        then not consulted.
   void report_subtotal(const char* spec_fmt = nullptr,
                        const optional<date_interval_t>& interval = none,
                        const optional<string>& payee = none);
@@ -1130,7 +1107,6 @@ public:
  */
 class posts_as_equity : public subtotal_posts {
   report_t& report;           ///< Report context.
-  post_t* last_post;          ///< Last posting seen (for date tracking).
   account_t* equity_account;  ///< The synthetic Equity account.
   account_t* balance_account; ///< The Equity:Opening Balances sub-account.
   bool unround;               ///< If true, unround amounts before output (--unround).
@@ -1158,7 +1134,6 @@ public:
   }
 
   void clear() override {
-    last_post = nullptr;
     subtotal_posts::clear();
     create_accounts();
   }
@@ -1206,7 +1181,6 @@ public:
  * replaces the account entirely, dropping the original account hierarchy.
  */
 class transfer_details : public item_handler<post_t> {
-  account_t* master;   ///< Journal master account for resolving account paths.
   expr_t expr;         ///< Expression to evaluate for the replacement value.
   scope_t& scope;      ///< Scope for expression evaluation.
   temporaries_t temps; ///< Temporary storage for rewritten xacts/posts.
@@ -1222,11 +1196,11 @@ public:
     SET_PAYEE            ///< Rewrite the transaction payee.
   } which_element;
 
-  transfer_details(post_handler_ptr handler, element_t _which_element, account_t* _master,
-                   const expr_t& _expr, scope_t& _scope)
-      : item_handler<post_t>(std::move(handler)), master(_master), expr(_expr), scope(_scope),
+  transfer_details(post_handler_ptr handler, element_t _which_element, const expr_t& _expr,
+                   scope_t& _scope)
+      : item_handler<post_t>(std::move(handler)), expr(_expr), scope(_scope),
         which_element(_which_element) {
-    TRACE_CTOR(transfer_details, "post_handler_ptr, element_t, account_t *, expr_t, scope_t&");
+    TRACE_CTOR(transfer_details, "post_handler_ptr, element_t, expr_t, scope_t&");
   }
   ~transfer_details() override {
     TRACE_DTOR(transfer_details);
