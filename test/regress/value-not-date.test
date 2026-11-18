@@ -1,0 +1,10 @@
+; 'not' of a date follows operator bool (a valid date is true), whether
+; the parser folds a constant or the evaluator applies it at run time.
+
+test eval 'not [2024/01/01]'
+0
+end test
+
+test eval --now 2030/06/15 'not now'
+0
+end test

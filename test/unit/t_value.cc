@@ -4077,10 +4077,64 @@ BOOST_AUTO_TEST_CASE(testIsGreaterThanSequenceVsInteger)
 
 BOOST_AUTO_TEST_CASE(testInPlaceNegateDatetime)
 {
-  // INTEGER and DATETIME share the same case; only INTEGER is really exercised
+  // Only INTEGER negates a stored long; DATE/DATETIME throw (testInPlaceNegateDateIsValueError)
   value_t v1(42L);
   v1.in_place_negate();
   BOOST_CHECK_EQUAL(v1.as_long(), -42L);
+}
+
+BOOST_AUTO_TEST_CASE(testInPlaceNegateDateIsValueError)
+{
+  // A date has no long to negate: the failure is a value_error naming the
+  // type, and the value is left as it was.
+  value_t d(parse_date("2024/01/01"));
+  BOOST_CHECK_THROW(d.in_place_negate(), value_error);
+  BOOST_CHECK(d.is_date());
+
+  value_t dt(parse_datetime("2024/01/01 10:00:00"));
+  BOOST_CHECK_THROW(dt.in_place_negate(), value_error);
+  BOOST_CHECK(dt.is_datetime());
+}
+
+BOOST_AUTO_TEST_CASE(testInPlaceNotDateUsesValidity)
+{
+  // in_place_not (parser constant folding, Python) agrees with operator bool,
+  // which the evaluator's O_NOT uses: a valid date is true.
+  value_t d(parse_date("2024/01/01"));
+  d.in_place_not();
+  BOOST_CHECK(d.is_boolean());
+  BOOST_CHECK_EQUAL(d.as_boolean(), false);
+
+  value_t dt(parse_datetime("2024/01/01 10:00:00"));
+  dt.in_place_not();
+  BOOST_CHECK(dt.is_boolean());
+  BOOST_CHECK_EQUAL(dt.as_boolean(), false);
+
+  value_t::sequence_t s;
+  value_t seq(s);
+  seq.push_back(value_t(parse_date("2024/01/01")));
+  seq.push_back(value_t(0L));
+  seq.in_place_not();
+  BOOST_CHECK(seq.is_sequence());
+  BOOST_CHECK_EQUAL(seq[0].as_boolean(), false);
+  BOOST_CHECK_EQUAL(seq[1].as_boolean(), true);
+}
+
+BOOST_AUTO_TEST_CASE(testCastStringToIntegerGrammar)
+{
+  // STRING -> INTEGER: optional leading '-', then one or more decimal digits
+  // that fit a long.  Everything else is a value_error.
+  BOOST_CHECK_EQUAL(value_t(string("-12"), true).to_long(), -12L);
+  BOOST_CHECK_EQUAL(value_t(string("007"), true).to_long(), 7L);
+  BOOST_CHECK_EQUAL(value_t(string("-0"), true).to_long(), 0L);
+  BOOST_CHECK_THROW((void)value_t(string("1-2"), true).to_long(), value_error);
+  BOOST_CHECK_THROW((void)value_t(string(""), true).to_long(), value_error);
+  BOOST_CHECK_THROW((void)value_t(string("-"), true).to_long(), value_error);
+  BOOST_CHECK_THROW((void)value_t(string("--1"), true).to_long(), value_error);
+  BOOST_CHECK_THROW((void)value_t(string("+3"), true).to_long(), value_error);
+  BOOST_CHECK_THROW((void)value_t(string(" 12"), true).to_long(), value_error);
+  BOOST_CHECK_THROW((void)value_t(string("99999999999999999999"), true).to_long(),
+                    value_error);
 }
 
 BOOST_AUTO_TEST_CASE(testInPlaceNegateBalance)

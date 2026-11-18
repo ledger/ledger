@@ -1,0 +1,10 @@
+; STRING -> INTEGER accepts an optional leading minus sign followed by
+; decimal digits that fit a long; leading zeros are allowed.
+
+test eval 'int("-12")'
+-12
+end test
+
+test eval 'int("007")'
+7
+end test

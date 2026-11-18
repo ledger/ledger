@@ -71,6 +71,7 @@
  */
 
 #include <system.hh>
+#include <charconv>
 
 #include "value.h"
 #include "commodity.h"
@@ -1713,8 +1714,12 @@ void value_t::in_place_cast(type_t cast_type) {
   case STRING:
     switch (cast_type) {
     case INTEGER: {
-      if (all(as_string(), is_any_of("-0123456789"))) {
-        set_long(lexical_cast<long>(as_string()));
+      const string& str(as_string());
+      const char* const end = str.data() + str.size();
+      long result = 0;
+      const auto [ptr, ec] = std::from_chars(str.data(), end, result);
+      if (ec == std::errc() && ptr == end) {
+        set_long(result);
         return;
       }
       break;
@@ -1807,9 +1812,10 @@ void value_t::in_place_cast(type_t cast_type) {
 /// @brief Negate this value in place (unary minus).
 ///
 /// For BOOLEAN, negation flips the value (equivalent to logical not).
-/// For INTEGER, DATETIME, and DATE, the stored long is negated.
+/// For INTEGER, the stored long is negated.
 /// For AMOUNT and BALANCE, the corresponding in_place_negate() is called.
 /// For SEQUENCE, each element is negated recursively.
+/// COMMODITY, DATE, DATETIME, STRING, MASK, SCOPE and ANY throw value_error.
 void value_t::in_place_negate() {
   switch (type()) {
   case VOID:
@@ -1818,8 +1824,6 @@ void value_t::in_place_negate() {
     set_boolean(!as_boolean());
     return;
   case INTEGER:
-  case DATETIME:
-  case DATE:
     set_long(-as_long());
     return;
   case AMOUNT:
@@ -1843,17 +1847,21 @@ void value_t::in_place_negate() {
 /// @brief Apply logical NOT in place, converting the value to BOOLEAN.
 ///
 /// Unlike in_place_negate() which preserves the value's type,
-/// in_place_not() always converts the result to BOOLEAN.  This is used
-/// by the expression engine's `not` operator and `!` syntax.
+/// in_place_not() turns a scalar into a BOOLEAN; a SEQUENCE stays a
+/// SEQUENCE whose elements are each not-ed.  DATE and DATETIME follow
+/// operator bool (a valid date is true).  The parser uses this to fold
+/// a constant `not`/`!`; the evaluator's O_NOT uses operator bool.
 void value_t::in_place_not() {
   switch (type()) {
   case BOOLEAN:
     set_boolean(!as_boolean());
     return;
   case INTEGER:
+    set_boolean(!as_long());
+    return;
   case DATETIME:
   case DATE:
-    set_boolean(!as_long());
+    set_boolean(!bool(*this));
     return;
   case AMOUNT:
     set_boolean(!as_amount());
