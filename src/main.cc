@@ -142,14 +142,14 @@ int main(int argc, char* argv[], char* envp[]) {
       // Script mode: execute commands from a file, one per line
       global_scope->session().read_journal_files();
 
-      status = 0;
-
       ifstream in(global_scope->HANDLER(script_).str());
-      while (status == 0 && !in.eof()) {
-        char line[1024];
-        in.getline(line, 1023);
+      if (!in)
+        throw_(std::runtime_error,
+               _f("Could not open script file '%1%'") % global_scope->HANDLER(script_).str());
 
-        char* p = skip_ws(line);
+      status = 0;
+      for (string line; status == 0 && std::getline(in, line);) {
+        char* p = skip_ws(line.data());
         if (*p && *p != '#')
           status = global_scope->execute_command_wrapper(split_arguments(p), true);
       }
@@ -186,12 +186,9 @@ int main(int argc, char* argv[], char* envp[]) {
 
 #else // HAVE_EDIT || HAVE_READLINE
 
-      while (!std::cin.eof()) {
-        std::cout << global_scope->prompt_string();
-        char line[1024];
-        std::cin.getline(line, 1023);
-
-        char* p = skip_ws(line);
+      for (string line;
+           (std::cout << global_scope->prompt_string()) && std::getline(std::cin, line);) {
+        char* p = skip_ws(line.data());
 
 #endif // HAVE_EDIT || HAVE_READLINE
 

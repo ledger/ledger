@@ -68,3 +68,76 @@ BOOST_AUTO_TEST_CASE(testFinishTimerWithEmptyDescription)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+namespace {
+
+std::vector<string> split(const char* line) {
+  strings_list args = split_arguments(line);
+  return {args.begin(), args.end()};
+}
+
+auto says(const string& text) {
+  return [text](const std::logic_error& err) { return string(err.what()) == text; };
+}
+
+} // namespace
+
+BOOST_AUTO_TEST_SUITE(utils)
+
+BOOST_AUTO_TEST_CASE(testSplitArgumentsWhitespace)
+{
+  std::vector<string> want{"bal", "Food", "Cash"};
+  std::vector<string> got = split("  bal  Food\tCash\r\n");
+  BOOST_CHECK_EQUAL_COLLECTIONS(got.begin(), got.end(), want.begin(), want.end());
+
+  BOOST_CHECK(split("").empty());
+  BOOST_CHECK(split(" \t\r\n").empty());
+}
+
+BOOST_AUTO_TEST_CASE(testSplitArgumentsQuotes)
+{
+  // Quotes group words and are removed; the other kind of quote is
+  // literal inside them; quoted text joins the bare text it touches.
+  std::vector<string> want{"a b", "c d", "a\"b", "a'b", "xy zw"};
+  std::vector<string> got = split("'a b' \"c d\" 'a\"b' \"a'b\" x'y z'w");
+  BOOST_CHECK_EQUAL_COLLECTIONS(got.begin(), got.end(), want.begin(), want.end());
+
+  // An empty quoted argument yields no argument at all.
+  std::vector<string> want_empty{"a", "b"};
+  std::vector<string> got_empty = split("a '' \"\" b");
+  BOOST_CHECK_EQUAL_COLLECTIONS(got_empty.begin(), got_empty.end(), want_empty.begin(),
+                                want_empty.end());
+}
+
+BOOST_AUTO_TEST_CASE(testSplitArgumentsBackslash)
+{
+  // A backslash escapes the next character outside quotes and inside
+  // double quotes, and is literal inside single quotes.
+  std::vector<string> want{"a b", "a\"b", "a\\b", "a\\"};
+  std::vector<string> got = split("a\\ b \"a\\\"b\" 'a\\b' 'a\\'");
+  BOOST_CHECK_EQUAL_COLLECTIONS(got.begin(), got.end(), want.begin(), want.end());
+}
+
+BOOST_AUTO_TEST_CASE(testSplitArgumentsErrors)
+{
+  BOOST_CHECK_EXCEPTION(split_arguments("abc\\"), std::logic_error,
+                        says("Invalid use of backslash"));
+  BOOST_CHECK_EXCEPTION(split_arguments("'abc"), std::logic_error,
+                        says("Unterminated string, expected '''"));
+  BOOST_CHECK_EXCEPTION(split_arguments("\"abc"), std::logic_error,
+                        says("Unterminated string, expected '\"'"));
+}
+
+BOOST_AUTO_TEST_CASE(testSplitArgumentsLongWord)
+{
+  // An argument has no length limit; it used to be copied into a
+  // 4096-byte stack buffer.
+  const string word(10000, 'x');
+  const string quoted(6000, 'q');
+  const string line = "bal " + word + " '" + quoted + "' end";
+  std::vector<string> want{"bal", word, quoted, "end"};
+  std::vector<string> got = split(line.c_str());
+  BOOST_CHECK_EQUAL_COLLECTIONS(got.begin(), got.end(), want.begin(), want.end());
+}
+
+BOOST_AUTO_TEST_SUITE_END()

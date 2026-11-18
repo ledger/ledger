@@ -1,0 +1,12 @@
+; A command argument longer than 4096 bytes is split out whole: the
+; script's first line holds a 6005-character account pattern in double
+; quotes and its second an unquoted 5005-character one.
+
+2012-03-17 KFC
+    Expenses:Food                20 CAD
+    Assets:Cash
+
+test --script test/regress/split-arguments-long-token.dat
+              20 CAD  Expenses:Food
+              20 CAD  Expenses:Food
+end test

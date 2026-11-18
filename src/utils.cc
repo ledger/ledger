@@ -502,22 +502,20 @@ string empty_string("");
 strings_list split_arguments(const char* line) {
   strings_list args;
 
-  char buf[4096];
-  char* q = buf;
+  string arg;
   char in_quoted_string = '\0';
 
   for (const char* p = line; *p; p++) {
     if (!in_quoted_string && std::isspace(static_cast<unsigned char>(*p))) {
-      if (q != buf) {
-        *q = '\0';
-        args.push_back(buf);
-        q = buf;
+      if (!arg.empty()) {
+        args.push_back(std::move(arg));
+        arg.clear();
       }
     } else if (in_quoted_string != '\'' && *p == '\\') {
       p++;
       if (!*p)
         throw_(std::logic_error, _("Invalid use of backslash"));
-      *q++ = *p;
+      arg.push_back(*p);
     } else if (in_quoted_string != '"' && *p == '\'') {
       if (in_quoted_string == '\'')
         in_quoted_string = '\0';
@@ -529,17 +527,15 @@ strings_list split_arguments(const char* line) {
       else
         in_quoted_string = '"';
     } else {
-      *q++ = *p;
+      arg.push_back(*p);
     }
   }
 
   if (in_quoted_string)
     throw_(std::logic_error, _f("Unterminated string, expected '%1%'") % in_quoted_string);
 
-  if (q != buf) {
-    *q = '\0';
-    args.push_back(buf);
-  }
+  if (!arg.empty())
+    args.push_back(std::move(arg));
 
   return args;
 }

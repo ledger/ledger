@@ -1,0 +1,10 @@
+; --script on a file that cannot be opened reports the error and exits 1.
+
+2012-03-17 KFC
+    Expenses:Food                20 CAD
+    Assets:Cash
+
+test --script test/regress/script-missing-file.nonexistent -> 1
+__ERROR__
+Error: Could not open script file 'test/regress/script-missing-file.nonexistent'
+end test
