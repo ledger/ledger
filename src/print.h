@@ -58,8 +58,6 @@
 #pragma once
 
 #include "chain.h"
-#include "predicate.h"
-#include "format.h"
 
 namespace ledger {
 
