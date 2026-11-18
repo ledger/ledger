@@ -48,7 +48,6 @@
 namespace ledger {
 
 class account_t;
-class journal_t;
 class parse_context_t;
 
 class time_xact_t {

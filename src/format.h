@@ -70,8 +70,6 @@
 
 namespace ledger {
 
-class unistring;
-
 /**
  * @brief Exception thrown when a format string cannot be parsed.
  *
