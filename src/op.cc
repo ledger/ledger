@@ -373,8 +373,8 @@ bool carries_commodity(const value_t& val) {
 } // namespace
 
 value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t* locus, const int depth) {
-  if (depth > 1024)
-    throw_(calc_error, _("Expression evaluation depth limit exceeded"));
+  if (depth > MAX_EXPR_DEPTH)
+    throw_(recursion_error, _("Expression evaluation depth limit exceeded"));
 
   try {
 
@@ -640,7 +640,7 @@ expr_t::ptr_op_t find_definition(expr_t::ptr_op_t op, scope_t& scope, expr_t::pt
     return op;
 
   if (recursion_depth > 256)
-    throw_(value_error, _("Function recursion_depth too deep (> 256)"));
+    throw_(recursion_error, _("Function recursion_depth too deep (> 256)"));
 
   // If it's an identifier, look up its definition and see if it's a
   // function.

@@ -8,3 +8,25 @@ While handling posting from "$FILE", line 2:
 >     Expenses:Food              $10.00
 Error: Expression recursion depth exceeded (257)
 end test
+
+; A plain expr_t (--bold-if, --limit, --sort) that re-enters itself
+; through a report function must hit the same nested-evaluation limit
+; as the merged -t expression above, not overflow the stack.
+test --bold-if should_bold reg -> 1
+__ERROR__
+While handling posting from "$FILE", line 2:
+>     Expenses:Food              $10.00
+Error: Expression recursion depth exceeded (257)
+end test
+
+test --limit should_bold --bold-if should_bold reg -> 1
+__ERROR__
+While handling posting from "$FILE", line 2:
+>     Expenses:Food              $10.00
+Error: Expression recursion depth exceeded (257)
+end test
+
+test reg --sort should_bold --bold-if should_bold -> 1
+__ERROR__
+Error: Expression recursion depth exceeded (257)
+end test

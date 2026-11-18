@@ -5800,4 +5800,16 @@ BOOST_AUTO_TEST_CASE(testPrintOAnd)
   BOOST_CHECK(result.find("&") != string::npos);
 }
 
+BOOST_AUTO_TEST_CASE(testFindDefinitionHopLimitThrowsRecursionError)
+{
+  // An identifier whose definition is itself makes find_definition hop
+  // forever; past 256 hops it must raise recursion_error (not value_error)
+  // so calc_call and expr_t::real_calc pass it through without context.
+  symbol_scope_t scope;
+  expr_t::ptr_op_t a = expr_t::op_t::new_node(expr_t::op_t::IDENT);
+  a->set_ident("a");
+  scope.define(symbol_t::FUNCTION, "a", a);
+  BOOST_CHECK_THROW(a->call(value_t(1L), scope), recursion_error);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

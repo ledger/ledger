@@ -362,7 +362,7 @@ public:
   /// @param scope  The runtime scope providing variable/function bindings.
   /// @param locus  If non-null and an exception occurs, set to the failing
   ///               node for error-context reporting.
-  /// @param depth  Current recursion depth (capped at 1024).
+  /// @param depth  Current recursion depth (capped at MAX_EXPR_DEPTH).
   /// @return The computed value.
   value_t calc(scope_t& scope, ptr_op_t* locus = nullptr, const int depth = 0);
 

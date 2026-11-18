@@ -66,6 +66,12 @@ namespace ledger {
 
 /*--- Primary Value Terms ---*/
 
+int expr_t::parser_t::checked_depth(int depth) const {
+  if (depth > MAX_EXPR_DEPTH)
+    throw_(parse_error, _("Expression tree depth limit exceeded"));
+  return depth;
+}
+
 expr_t::ptr_op_t expr_t::parser_t::parse_value_term(std::istream& in,
                                                     const parse_flags_t& tflags) const {
   ptr_op_t node;
@@ -76,6 +82,7 @@ expr_t::ptr_op_t expr_t::parser_t::parse_value_term(std::istream& in,
   case token_t::VALUE:
     node = new op_t(op_t::VALUE);
     node->set_value(tok.value);
+    subtree_depth = 0;
     break;
 
   case token_t::IDENT: {
@@ -83,6 +90,7 @@ expr_t::ptr_op_t expr_t::parser_t::parse_value_term(std::istream& in,
 
     node = new op_t(op_t::IDENT);
     node->set_ident(ident);
+    subtree_depth = 0;
     break;
   }
 
@@ -96,6 +104,7 @@ expr_t::ptr_op_t expr_t::parser_t::parse_value_term(std::istream& in,
 
   default:
     push_token(tok);
+    subtree_depth = 0;
     break;
   }
 
@@ -109,6 +118,7 @@ expr_t::ptr_op_t expr_t::parser_t::parse_call_expr(std::istream& in,
   ptr_op_t node(parse_value_term(in, tflags));
 
   if (node && !tflags.has_flags(PARSE_SINGLE)) {
+    int d = subtree_depth;
     while (true) {
       token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
       if (tok.kind == token_t::LPAREN) {
@@ -117,11 +127,13 @@ expr_t::ptr_op_t expr_t::parser_t::parse_call_expr(std::istream& in,
         node->set_left(prev);
         push_token(tok); // let the parser see the '(' again
         node->set_right(parse_value_expr(in, tflags.plus_flags(PARSE_SINGLE)));
+        d = checked_depth(1 + std::max(d, subtree_depth));
       } else {
         push_token(tok);
         break;
       }
     }
+    subtree_depth = d;
   }
 
   return node;
@@ -132,6 +144,7 @@ expr_t::ptr_op_t expr_t::parser_t::parse_dot_expr(std::istream& in,
   ptr_op_t node(parse_call_expr(in, tflags));
 
   if (node && !tflags.has_flags(PARSE_SINGLE)) {
+    int d = subtree_depth;
     while (true) {
       token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
       if (tok.kind == token_t::DOT) {
@@ -141,11 +154,13 @@ expr_t::ptr_op_t expr_t::parser_t::parse_dot_expr(std::istream& in,
         node->set_right(parse_call_expr(in, tflags));
         if (!node->right())
           throw_(parse_error, _f("%1% operator not followed by argument") % tok.symbol);
+        d = checked_depth(1 + std::max(d, subtree_depth));
       } else {
         push_token(tok);
         break;
       }
     }
+    subtree_depth = d;
   }
 
   return node;
@@ -172,6 +187,7 @@ expr_t::ptr_op_t expr_t::parser_t::parse_unary_expr(std::istream& in,
     } else {
       node = new op_t(op_t::O_NOT);
       node->set_left(term);
+      subtree_depth = checked_depth(subtree_depth + 1);
     }
     break;
   }
@@ -188,6 +204,7 @@ expr_t::ptr_op_t expr_t::parser_t::parse_unary_expr(std::istream& in,
     } else {
       node = new op_t(op_t::O_NEG);
       node->set_left(term);
+      subtree_depth = checked_depth(subtree_depth + 1);
     }
     break;
   }
@@ -208,6 +225,7 @@ expr_t::ptr_op_t expr_t::parser_t::parse_mul_expr(std::istream& in,
   ptr_op_t node(parse_unary_expr(in, tflags));
 
   if (node && !tflags.has_flags(PARSE_SINGLE)) {
+    int d = subtree_depth;
     while (true) {
       token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
 
@@ -218,11 +236,13 @@ expr_t::ptr_op_t expr_t::parser_t::parse_mul_expr(std::istream& in,
         node->set_right(parse_unary_expr(in, tflags));
         if (!node->right())
           throw_(parse_error, _f("%1% operator not followed by argument") % tok.symbol);
+        d = checked_depth(1 + std::max(d, subtree_depth));
       } else {
         push_token(tok);
         break;
       }
     }
+    subtree_depth = d;
   }
 
   return node;
@@ -233,6 +253,7 @@ expr_t::ptr_op_t expr_t::parser_t::parse_add_expr(std::istream& in,
   ptr_op_t node(parse_mul_expr(in, tflags));
 
   if (node && !tflags.has_flags(PARSE_SINGLE)) {
+    int d = subtree_depth;
     while (true) {
       token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
 
@@ -243,11 +264,13 @@ expr_t::ptr_op_t expr_t::parser_t::parse_add_expr(std::istream& in,
         node->set_right(parse_mul_expr(in, tflags));
         if (!node->right())
           throw_(parse_error, _f("%1% operator not followed by argument") % tok.symbol);
+        d = checked_depth(1 + std::max(d, subtree_depth));
       } else {
         push_token(tok);
         break;
       }
     }
+    subtree_depth = d;
   }
 
   return node;
@@ -260,6 +283,7 @@ expr_t::ptr_op_t expr_t::parser_t::parse_logic_expr(std::istream& in,
   ptr_op_t node(parse_add_expr(in, tflags));
 
   if (node && !tflags.has_flags(PARSE_SINGLE)) {
+    int d = subtree_depth;
     while (true) {
       op_t::kind_t kind = op_t::LAST;
       const parse_flags_t& _flags = tflags;
@@ -300,6 +324,7 @@ expr_t::ptr_op_t expr_t::parser_t::parse_logic_expr(std::istream& in,
         break;
       default:
         push_token(tok);
+        subtree_depth = d;
         goto exit_loop;
       }
 
@@ -310,11 +335,13 @@ expr_t::ptr_op_t expr_t::parser_t::parse_logic_expr(std::istream& in,
 
       if (!node->right())
         throw_(parse_error, _f("%1% operator not followed by argument") % tok.symbol);
+      d = checked_depth(1 + std::max(d, subtree_depth));
 
       if (negate) {
         prev = node;
         node = new op_t(op_t::O_NOT);
         node->set_left(prev);
+        d = checked_depth(d + 1);
       }
     }
   }
@@ -328,6 +355,7 @@ expr_t::ptr_op_t expr_t::parser_t::parse_and_expr(std::istream& in,
   ptr_op_t node(parse_logic_expr(in, tflags));
 
   if (node && !tflags.has_flags(PARSE_SINGLE)) {
+    int d = subtree_depth;
     while (true) {
       token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
 
@@ -338,11 +366,13 @@ expr_t::ptr_op_t expr_t::parser_t::parse_and_expr(std::istream& in,
         node->set_right(parse_logic_expr(in, tflags));
         if (!node->right())
           throw_(parse_error, _f("%1% operator not followed by argument") % tok.symbol);
+        d = checked_depth(1 + std::max(d, subtree_depth));
       } else {
         push_token(tok);
         break;
       }
     }
+    subtree_depth = d;
   }
   return node;
 }
@@ -352,6 +382,7 @@ expr_t::ptr_op_t expr_t::parser_t::parse_or_expr(std::istream& in,
   ptr_op_t node(parse_and_expr(in, tflags));
 
   if (node && !tflags.has_flags(PARSE_SINGLE)) {
+    int d = subtree_depth;
     while (true) {
       token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
 
@@ -362,11 +393,13 @@ expr_t::ptr_op_t expr_t::parser_t::parse_or_expr(std::istream& in,
         node->set_right(parse_and_expr(in, tflags));
         if (!node->right())
           throw_(parse_error, _f("%1% operator not followed by argument") % tok.symbol);
+        d = checked_depth(1 + std::max(d, subtree_depth));
       } else {
         push_token(tok);
         break;
       }
     }
+    subtree_depth = d;
   }
   return node;
 }
@@ -378,6 +411,7 @@ expr_t::ptr_op_t expr_t::parser_t::parse_querycolon_expr(std::istream& in,
   ptr_op_t node(parse_or_expr(in, tflags));
 
   if (node && !tflags.has_flags(PARSE_SINGLE)) {
+    int d = subtree_depth;
     token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
 
     if (tok.kind == token_t::QUERY) {
@@ -389,6 +423,7 @@ expr_t::ptr_op_t expr_t::parser_t::parse_querycolon_expr(std::istream& in,
       node->set_right(parse_or_expr(in, tflags));
       if (!node->right())
         throw_(parse_error, _f("%1% operator not followed by argument") % tok.symbol);
+      int branches = subtree_depth;
 
       next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT), token_t::COLON);
       prev = node->right();
@@ -397,20 +432,25 @@ expr_t::ptr_op_t expr_t::parser_t::parse_querycolon_expr(std::istream& in,
       subnode->set_right(parse_or_expr(in, tflags));
       if (!subnode->right())
         throw_(parse_error, _f("%1% operator not followed by argument") % tok.symbol);
+      branches = std::max(branches, subtree_depth);
 
       node->set_right(subnode);
+      d = checked_depth(1 + std::max(d, 1 + branches));
     } else if (tok.kind == token_t::KW_IF) {
       // Postfix conditional: value_expr if cond [else alt_expr]
       // Normalized to the same AST shape: O_QUERY(cond, O_COLON(value, alt))
       ptr_op_t if_op(parse_or_expr(in, tflags));
       if (!if_op)
         throw_(parse_error, _("'if' keyword not followed by argument"));
+      int cond = subtree_depth;
+      int alt = 0; // the null VALUE when there is no else
 
       tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
       if (tok.kind == token_t::KW_ELSE) {
         ptr_op_t else_op(parse_or_expr(in, tflags));
         if (!else_op)
           throw_(parse_error, _("'else' keyword not followed by argument"));
+        alt = subtree_depth;
 
         ptr_op_t subnode = new op_t(op_t::O_COLON);
         subnode->set_left(node);
@@ -433,9 +473,11 @@ expr_t::ptr_op_t expr_t::parser_t::parse_querycolon_expr(std::istream& in,
 
         push_token(tok);
       }
+      d = checked_depth(1 + std::max(cond, 1 + std::max(d, alt)));
     } else {
       push_token(tok);
     }
+    subtree_depth = d;
   }
   return node;
 }
@@ -447,6 +489,9 @@ expr_t::ptr_op_t expr_t::parser_t::parse_comma_expr(std::istream& in,
   ptr_op_t node(parse_querycolon_expr(in, tflags));
 
   if (node && !tflags.has_flags(PARSE_SINGLE)) {
+    // Element i (1-based) hangs under i O_CONS nodes.
+    int d = subtree_depth; // first element
+    int conses = 0;
     ptr_op_t next;
     while (true) {
       token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
@@ -459,6 +504,8 @@ expr_t::ptr_op_t expr_t::parser_t::parse_comma_expr(std::istream& in,
           node = new op_t(op_t::O_CONS);
           node->set_left(prev);
           next = node;
+          conses = 1;
+          d = checked_depth(1 + d);
         }
 
         token_t& ntok = next_token(in, tflags);
@@ -468,14 +515,17 @@ expr_t::ptr_op_t expr_t::parser_t::parse_comma_expr(std::istream& in,
 
         ptr_op_t chain(new op_t(op_t::O_CONS));
         chain->set_left(parse_querycolon_expr(in, tflags));
+        ++conses;
 
         next->set_right(chain);
         next = chain;
+        d = checked_depth(std::max(d, conses + subtree_depth));
       } else {
         push_token(tok);
         break;
       }
     }
+    subtree_depth = d;
   }
 
   return node;
@@ -488,6 +538,7 @@ expr_t::ptr_op_t expr_t::parser_t::parse_lambda_expr(std::istream& in,
   ptr_op_t node(parse_comma_expr(in, tflags));
 
   if (node && !tflags.has_flags(PARSE_SINGLE)) {
+    int d = subtree_depth;
     token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
 
     if (tok.kind == token_t::ARROW) {
@@ -497,9 +548,11 @@ expr_t::ptr_op_t expr_t::parser_t::parse_lambda_expr(std::istream& in,
       ptr_op_t scope(new op_t(op_t::SCOPE));
       scope->set_left(parse_querycolon_expr(in, tflags));
       node->set_right(scope);
+      d = checked_depth(1 + std::max(d, 1 + subtree_depth));
     } else {
       push_token(tok);
     }
+    subtree_depth = d;
   }
 
   return node;
@@ -512,6 +565,7 @@ expr_t::ptr_op_t expr_t::parser_t::parse_assign_expr(std::istream& in,
   ptr_op_t node(parse_lambda_expr(in, tflags));
 
   if (node && !tflags.has_flags(PARSE_SINGLE)) {
+    int d = subtree_depth;
     token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
 
     if (tok.kind == token_t::ASSIGN) {
@@ -521,9 +575,11 @@ expr_t::ptr_op_t expr_t::parser_t::parse_assign_expr(std::istream& in,
       ptr_op_t scope(new op_t(op_t::SCOPE));
       scope->set_left(parse_lambda_expr(in, tflags));
       node->set_right(scope);
+      d = checked_depth(1 + std::max(d, 1 + subtree_depth));
     } else {
       push_token(tok);
     }
+    subtree_depth = d;
   }
 
   return node;
@@ -536,6 +592,11 @@ expr_t::ptr_op_t expr_t::parser_t::parse_value_expr(std::istream& in,
   ptr_op_t node(parse_assign_expr(in, tflags));
 
   if (node && !tflags.has_flags(PARSE_SINGLE)) {
+    // The k-th O_SEQ (1-based) holds statements k-1 and k, both at depth k,
+    // so the previous statement moves one level down.
+    int d = subtree_depth;    // statement 0
+    int last = subtree_depth; // depth of the newest statement
+    int seqs = 0;
     ptr_op_t chain;
     while (true) {
       token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
@@ -550,11 +611,15 @@ expr_t::ptr_op_t expr_t::parser_t::parse_value_expr(std::istream& in,
         }
         seq->set_right(parse_assign_expr(in, tflags));
         chain = seq;
+        ++seqs;
+        d = checked_depth(std::max(d, seqs + std::max(last, subtree_depth)));
+        last = subtree_depth;
       } else {
         push_token(tok);
         break;
       }
     }
+    subtree_depth = d;
   }
 
   return node;

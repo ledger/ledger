@@ -181,10 +181,13 @@ protected:
   // Subclasses (e.g. merged_expr_t) may also use this directly.
   std::unique_ptr<symbol_scope_t> accumulator_scope_;
 
-  // Core calc implementation: evaluates ptr->calc(scope) with error context
-  // handling and recursion depth protection, but WITHOUT accumulator wrapping.
-  // Callers are responsible for wrapping scope with accumulator_scope_ first.
-  value_t calc_with_scope(scope_t& scope);
+  // Evaluation core shared by expr_t::real_calc and merged_expr_t::real_calc:
+  // evaluates ptr->calc(scope, locus) under the thread-local guard that
+  // limits nested expr_t evaluations to 256 (#1103: the op_t::calc depth
+  // restarts at every C++ function boundary, so only this counter sees an
+  // expression re-entering itself through a report function).  Adds no error
+  // context and no accumulator wrapping; callers wrap @p scope first.
+  value_t calc_with_scope(scope_t& scope, ptr_op_t* locus = nullptr);
 
 private:
   /// @brief After compilation, inspect the root op to see if it is a bare

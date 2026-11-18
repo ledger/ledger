@@ -101,8 +101,17 @@ public:
   ~calc_error() noexcept override {}
 };
 
-/// @brief Thrown when expression evaluation or function calls exceed the
-/// maximum recursion depth (256 for function calls, 1024 for AST depth).
+/// @brief Deepest AST node depth, counting the root as 0, that
+/// expr_t::op_t::calc evaluates and expr_t::parser_t will build.
+constexpr int MAX_EXPR_DEPTH = 1024;
+
+/// @brief Thrown when evaluation runs past one of the evaluator's recursion
+/// limits: MAX_EXPR_DEPTH nested op_t::calc frames within one evaluation,
+/// 256 expr_t evaluations nested inside one another (an expression that
+/// re-enters itself through a report function, #1103; see
+/// expr_t::calc_with_scope), or 256 identifier-resolution hops while finding
+/// a callee.  Callers rethrow it without adding context, so the message
+/// stays one line.
 class recursion_error : public std::runtime_error {
 public:
   explicit recursion_error(const string& why) noexcept : std::runtime_error(why) {}

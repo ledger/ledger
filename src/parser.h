@@ -102,6 +102,18 @@ class expr_t::parser_t : public noncopyable {
   mutable unsigned int parse_depth = 0;
   static constexpr unsigned int MAX_PARSE_DEPTH = 128;
 
+  /// Depth of the deepest node in the subtree the last parse_* call
+  /// returned, counting that subtree's root as 0 (op_t::calc's convention);
+  /// 0 when it returned no node.
+  mutable int subtree_depth = 0;
+
+  /// @brief Return @p depth, the depth a node about to be linked into the
+  /// tree gives its deepest descendant; throw parse_error("Expression tree
+  /// depth limit exceeded") if it exceeds MAX_EXPR_DEPTH, so no tree that
+  /// compile, calc, print, dump or release could overflow the stack on is
+  /// ever built.
+  int checked_depth(int depth) const;
+
   /**
    * @brief Advance to the next token, or reuse the lookahead if pushed back.
    *
