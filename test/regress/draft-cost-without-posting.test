@@ -1,0 +1,22 @@
+; A `@` or `@@` cost with no posting before it to price is an argument
+; error, as for every other preposition missing its operand.  It used
+; to dereference a null posting pointer (SIGSEGV).
+
+2024/01/01 Opening Balance
+    Assets:Checking                  $1,000.00
+    Equity:Opening Balances
+
+test xact 2024/01/02 Broker @ '$5' -> 1
+__ERROR__
+Error: Invalid xact command arguments
+end test
+
+test template Broker @@ '$50' -> 1
+__ERROR__
+Error: Invalid xact command arguments
+end test
+
+test xact @ '$5' Broker -> 1
+__ERROR__
+Error: Invalid xact command arguments
+end test

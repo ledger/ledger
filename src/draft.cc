@@ -126,6 +126,8 @@ void draft_t::xact_template_t::dump(std::ostream& out) const {
  *     an account; "on DATE" gives the date anywhere.
  *   - Prepositions ("at", "to", "from", "on", "code", "note", "@", "@@")
  *     introduce their respective fields.
+ *   - "@" or "@@" prices the open posting or, after an amount, the
+ *     posting that amount concluded; with no posting yet it is an error.
  *   - Without a preposition, the first non-date token becomes the payee.
  *     Subsequent tokens become either accounts or amounts depending on
  *     whether they parse as valid amount_t values.
@@ -210,14 +212,22 @@ void draft_t::parse_args(const value_t& args) {
         } else if (arg == "rest") {
           ; // just ignore this argument
         } else if (arg == "@" || arg == "@@") {
+          // A cost prices the open posting or, once an amount has concluded
+          // it, the posting that amount was given to.
+          xact_template_t::post_template_t* priced = post;
+          if (!priced) {
+            if (tmpl->posts.empty())
+              throw std::runtime_error(_("Invalid xact command arguments"));
+            priced = &tmpl->posts.back();
+          }
           amount_t cost;
-          post->cost_operator = arg;
+          priced->cost_operator = arg;
           if (++begin == end)
             throw std::runtime_error(_("Invalid xact command arguments"));
           arg = (*begin).to_string();
           if (!cost.parse(arg, PARSE_SOFT_FAIL | PARSE_NO_MIGRATE))
             throw std::runtime_error(_("Invalid xact command arguments"));
-          post->cost = cost;
+          priced->cost = cost;
         } else {
           // Without a preposition, it is either:
           //
