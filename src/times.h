@@ -157,8 +157,7 @@ extern int day_of_period;
 /// @return The weekday, or none if the string is not recognized.
 optional<date_time::weekdays> string_to_day_of_week(const std::string& str);
 
-/// @brief Convert a locale-aware month name or number ("jan", "january", "0") to a months_of_year
-/// enum.
+/// @brief Convert a locale-aware month name ("jan", "january") to a months_of_year enum.
 /// @return The month, or none if the string is not recognized.
 optional<date_time::months_of_year> string_to_month_of_year(const std::string& str);
 
@@ -533,24 +532,6 @@ public:
 
   /// @brief Returns true if this specifier includes an explicit year.
   bool has_year() const { return static_cast<bool>(year); }
-
-  /**
-   * @brief Infer the natural duration for this specifier's granularity.
-   *
-   * A day specifier implies a 1-day duration; a month specifier
-   * implies 1 month; a year specifier implies 1 year.  Returns none
-   * if the specifier has no components at all.
-   */
-  optional<date_duration_t> implied_duration() const {
-    if (day || wday)
-      return date_duration_t(date_duration_t::DAYS, 1);
-    else if (month)
-      return date_duration_t(date_duration_t::MONTHS, 1);
-    else if (year)
-      return date_duration_t(date_duration_t::YEARS, 1);
-    else
-      return none;
-  }
 
   /// @brief Produce a debug representation of the specifier's components.
   string to_string() const {

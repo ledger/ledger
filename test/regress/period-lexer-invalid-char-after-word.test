@@ -1,0 +1,29 @@
+; The period lexer rejects a punctuation run that follows a word with
+; "Invalid char", and a blank expression reaches END_REACHED before
+; the word scanner runs (so the scanner never sees an empty term).
+
+2024/01/15 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test period --now 2024/06/15 "jan#" -> 1
+--- Period expression tokens ---
+TOK_A_MONTH: Jan
+__ERROR__
+Error: Invalid char '#'
+end test
+
+test period --now 2024/06/15 "   " -> 1
+--- Period expression tokens ---
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+__ERROR__
+Error: Invalid date interval: neither start, nor finish, nor duration
+end test
+
+test period --now 2024/06/15 "#" -> 1
+--- Period expression tokens ---
+__ERROR__
+Error: Invalid char '#'
+end test

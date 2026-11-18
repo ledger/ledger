@@ -16,3 +16,8 @@ test reg --input-date-format "%d.%m.%Y"
 24-Mar-20 Payee B               Expenses:Rent              $1000.00     $1000.00
                                 Assets:Checking           $-1000.00            0
 end test
+
+test reg --input-date-format %d.%m.%Y --now 2024/06/15 -p "since 01.03.2024"
+24-Mar-20 Payee B               Expenses:Rent              $1000.00     $1000.00
+                                Assets:Checking           $-1000.00            0
+end test

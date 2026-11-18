@@ -374,37 +374,36 @@ optional<date_time::weekdays> string_to_day_of_week(const std::string& str) {
 }
 
 /**
- * @brief Map a month name (locale-aware, case-insensitive) or digit to a Boost month.
+ * @brief Map a month name (locale-aware, case-insensitive) to a Boost month.
  *
- * Accepts full names ("january"), abbreviations ("jan"), or digit
- * strings ("0" for January through "11" for December).  Names are
- * matched without regard to case.
+ * Accepts full names ("january") or abbreviations ("jan"), matched
+ * without regard to case.
  */
 optional<date_time::months_of_year> string_to_month_of_year(const std::string& str) {
   const string s = lowered(str);
-  if (s == _("jan") || s == _("january") || s == "0")
+  if (s == _("jan") || s == _("january"))
     return gregorian::Jan;
-  else if (s == _("feb") || s == _("february") || s == "1")
+  else if (s == _("feb") || s == _("february"))
     return gregorian::Feb;
-  else if (s == _("mar") || s == _("march") || s == "2")
+  else if (s == _("mar") || s == _("march"))
     return gregorian::Mar;
-  else if (s == _("apr") || s == _("april") || s == "3")
+  else if (s == _("apr") || s == _("april"))
     return gregorian::Apr;
-  else if (s == _("may") || s == "4")
+  else if (s == _("may"))
     return gregorian::May;
-  else if (s == _("jun") || s == _("june") || s == "5")
+  else if (s == _("jun") || s == _("june"))
     return gregorian::Jun;
-  else if (s == _("jul") || s == _("july") || s == "6")
+  else if (s == _("jul") || s == _("july"))
     return gregorian::Jul;
-  else if (s == _("aug") || s == _("august") || s == "7")
+  else if (s == _("aug") || s == _("august"))
     return gregorian::Aug;
-  else if (s == _("sep") || s == _("september") || s == "8")
+  else if (s == _("sep") || s == _("september"))
     return gregorian::Sep;
-  else if (s == _("oct") || s == _("october") || s == "9")
+  else if (s == _("oct") || s == _("october"))
     return gregorian::Oct;
-  else if (s == _("nov") || s == _("november") || s == "10")
+  else if (s == _("nov") || s == _("november"))
     return gregorian::Nov;
-  else if (s == _("dec") || s == _("december") || s == "11")
+  else if (s == _("dec") || s == _("december"))
     return gregorian::Dec;
   else
     return none;
@@ -1000,7 +999,7 @@ class date_parser_t {
       /// @brief Throw a date_error for an unexpected token.
       void unexpected();
       /// @brief Throw a date_error for an unexpected character.
-      static void expected(char wanted, char c = '\0');
+      [[noreturn]] static void expected(char wanted, char c = '\0');
     };
 
     token_t token_cache; ///< One-token lookahead buffer.
@@ -1784,11 +1783,6 @@ date_interval_t date_parser_t::parse() {
     }
   }
 
-#if 0
-  if (!period.duration && inclusion_specifier)
-    period.duration = inclusion_specifier->implied_duration();
-#endif
-
   // Finalize the period structure with collected specifiers
   finalize_period(period, since_specifier, until_specifier, inclusion_specifier, end_inclusive);
 
@@ -2315,8 +2309,6 @@ date_parser_t::lexer_t::token_t date_parser_t::lexer_t::next_token() {
     break;
   }
 
-  string::const_iterator start = begin;
-
   // Phase 2: If the first character is a digit, try parsing the whole
   // argument as a date using the typical date formats.  This allows not
   // only dates like "2009/08/01", but also dates that fit the user's
@@ -2327,7 +2319,7 @@ date_parser_t::lexer_t::token_t date_parser_t::lexer_t::next_token() {
     for (i = begin; i != end && !std::isspace(static_cast<unsigned char>(*i)); i++) {}
     assert(i != begin);
 
-    string possible_date(start, i); // NOLINT(bugprone-unused-local-non-trivial-variable)
+    string possible_date(begin, i); // NOLINT(bugprone-unused-local-non-trivial-variable)
 
     try {
       date_traits_t traits;
@@ -2346,8 +2338,6 @@ date_parser_t::lexer_t::token_t date_parser_t::lexer_t::next_token() {
     }
   }
 
-  start = begin;
-
   // Phase 3: Collect an alphanumeric (or non-alphanumeric) word and
   // match against known tokens.
   string term;
@@ -2358,86 +2348,82 @@ date_parser_t::lexer_t::token_t date_parser_t::lexer_t::next_token() {
        begin++)
     term.push_back(*begin);
 
-  if (!term.empty()) {
-    if (std::isdigit(static_cast<unsigned char>(term[0]))) {
-      // Bare integer (not a full date)
-      try {
-        return token_t(token_t::TOK_INT, token_t::content_t(lexical_cast<unsigned short>(term)));
-      } catch (const bad_lexical_cast&) {
-        throw_(date_error, _f("Invalid number in period: %1%") % term);
-      }
-    } else if (std::isalpha(static_cast<unsigned char>(term[0]))) {
-      to_lower(term);
-
-      // Try month and weekday names first, then keywords
-      if (optional<date_time::months_of_year> month = string_to_month_of_year(term)) {
-        return token_t(token_t::TOK_A_MONTH, token_t::content_t(*month));
-      } else if (optional<date_time::weekdays> wday = string_to_day_of_week(term)) {
-        return token_t(token_t::TOK_A_WDAY, token_t::content_t(*wday));
-      } else if (term == _("ago"))
-        return token_t(token_t::TOK_AGO);
-      else if (term == _("hence"))
-        return token_t(token_t::TOK_HENCE);
-      else if (term == _("from") || term == _("since"))
-        return token_t(token_t::TOK_SINCE);
-      else if (term == _("to") || term == _("until"))
-        return token_t(token_t::TOK_UNTIL);
-      else if (term == _("in"))
-        return token_t(token_t::TOK_IN);
-      else if (term == _("this"))
-        return token_t(token_t::TOK_THIS);
-      else if (term == _("next"))
-        return token_t(token_t::TOK_NEXT);
-      else if (term == _("last"))
-        return token_t(token_t::TOK_LAST);
-      else if (term == _("every"))
-        return token_t(token_t::TOK_EVERY);
-      else if (term == _("today"))
-        return token_t(token_t::TOK_TODAY);
-      else if (term == _("tomorrow"))
-        return token_t(token_t::TOK_TOMORROW);
-      else if (term == _("yesterday") or term == _("yday"))
-        return token_t(token_t::TOK_YESTERDAY);
-      else if (term == _("year"))
-        return token_t(token_t::TOK_YEAR);
-      else if (term == _("quarter"))
-        return token_t(token_t::TOK_QUARTER);
-      else if (term == _("month"))
-        return token_t(token_t::TOK_MONTH);
-      else if (term == _("week"))
-        return token_t(token_t::TOK_WEEK);
-      else if (term == _("day"))
-        return token_t(token_t::TOK_DAY);
-      else if (term == _("yearly"))
-        return token_t(token_t::TOK_YEARLY);
-      else if (term == _("quarterly"))
-        return token_t(token_t::TOK_QUARTERLY);
-      else if (term == _("bimonthly"))
-        return token_t(token_t::TOK_BIMONTHLY);
-      else if (term == _("monthly"))
-        return token_t(token_t::TOK_MONTHLY);
-      else if (term == _("biweekly"))
-        return token_t(token_t::TOK_BIWEEKLY);
-      else if (term == _("weekly"))
-        return token_t(token_t::TOK_WEEKLY);
-      else if (term == _("daily"))
-        return token_t(token_t::TOK_DAILY);
-      else if (term == _("years"))
-        return token_t(token_t::TOK_YEARS);
-      else if (term == _("quarters"))
-        return token_t(token_t::TOK_QUARTERS);
-      else if (term == _("months"))
-        return token_t(token_t::TOK_MONTHS);
-      else if (term == _("weeks"))
-        return token_t(token_t::TOK_WEEKS);
-      else if (term == _("days"))
-        return token_t(token_t::TOK_DAYS);
-    } else {
-      token_t::expected('\0', term[0]);
-      begin = ++start;
+  assert(!term.empty());
+  if (std::isdigit(static_cast<unsigned char>(term[0]))) {
+    // Bare integer (not a full date)
+    try {
+      return token_t(token_t::TOK_INT, token_t::content_t(lexical_cast<unsigned short>(term)));
+    } catch (const bad_lexical_cast&) {
+      throw_(date_error, _f("Invalid number in period: %1%") % term);
     }
+  } else if (std::isalpha(static_cast<unsigned char>(term[0]))) {
+    to_lower(term);
+
+    // Try month and weekday names first, then keywords
+    if (optional<date_time::months_of_year> month = string_to_month_of_year(term)) {
+      return token_t(token_t::TOK_A_MONTH, token_t::content_t(*month));
+    } else if (optional<date_time::weekdays> wday = string_to_day_of_week(term)) {
+      return token_t(token_t::TOK_A_WDAY, token_t::content_t(*wday));
+    } else if (term == _("ago"))
+      return token_t(token_t::TOK_AGO);
+    else if (term == _("hence"))
+      return token_t(token_t::TOK_HENCE);
+    else if (term == _("from") || term == _("since"))
+      return token_t(token_t::TOK_SINCE);
+    else if (term == _("to") || term == _("until"))
+      return token_t(token_t::TOK_UNTIL);
+    else if (term == _("in"))
+      return token_t(token_t::TOK_IN);
+    else if (term == _("this"))
+      return token_t(token_t::TOK_THIS);
+    else if (term == _("next"))
+      return token_t(token_t::TOK_NEXT);
+    else if (term == _("last"))
+      return token_t(token_t::TOK_LAST);
+    else if (term == _("every"))
+      return token_t(token_t::TOK_EVERY);
+    else if (term == _("today"))
+      return token_t(token_t::TOK_TODAY);
+    else if (term == _("tomorrow"))
+      return token_t(token_t::TOK_TOMORROW);
+    else if (term == _("yesterday") or term == _("yday"))
+      return token_t(token_t::TOK_YESTERDAY);
+    else if (term == _("year"))
+      return token_t(token_t::TOK_YEAR);
+    else if (term == _("quarter"))
+      return token_t(token_t::TOK_QUARTER);
+    else if (term == _("month"))
+      return token_t(token_t::TOK_MONTH);
+    else if (term == _("week"))
+      return token_t(token_t::TOK_WEEK);
+    else if (term == _("day"))
+      return token_t(token_t::TOK_DAY);
+    else if (term == _("yearly"))
+      return token_t(token_t::TOK_YEARLY);
+    else if (term == _("quarterly"))
+      return token_t(token_t::TOK_QUARTERLY);
+    else if (term == _("bimonthly"))
+      return token_t(token_t::TOK_BIMONTHLY);
+    else if (term == _("monthly"))
+      return token_t(token_t::TOK_MONTHLY);
+    else if (term == _("biweekly"))
+      return token_t(token_t::TOK_BIWEEKLY);
+    else if (term == _("weekly"))
+      return token_t(token_t::TOK_WEEKLY);
+    else if (term == _("daily"))
+      return token_t(token_t::TOK_DAILY);
+    else if (term == _("years"))
+      return token_t(token_t::TOK_YEARS);
+    else if (term == _("quarters"))
+      return token_t(token_t::TOK_QUARTERS);
+    else if (term == _("months"))
+      return token_t(token_t::TOK_MONTHS);
+    else if (term == _("weeks"))
+      return token_t(token_t::TOK_WEEKS);
+    else if (term == _("days"))
+      return token_t(token_t::TOK_DAYS);
   } else {
-    token_t::expected('\0', *begin);
+    token_t::expected('\0', term[0]);
   }
 
   return token_t(token_t::UNKNOWN, token_t::content_t(term));

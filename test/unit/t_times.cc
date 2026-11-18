@@ -968,10 +968,6 @@ BOOST_AUTO_TEST_CASE(testDateSpecifierW7)
   BOOST_CHECK(check >= spec.begin() && check < spec.end());
   BOOST_CHECK_EQUAL(spec.end(), parse_date("2024/01/16"));
 
-  // Test implied_duration with day
-  optional<date_duration_t> dur = spec.implied_duration();
-  BOOST_CHECK(dur);
-
   // Test has_year
   BOOST_CHECK(spec.has_year());
 
@@ -1405,7 +1401,7 @@ BOOST_AUTO_TEST_CASE(testLexerExpectedW8)
 {
   // Lines 1749-1753: These are triggered by the lexer encountering
   // non-alphanumeric, non-digit characters that aren't recognized.
-  // e.g. "!!!" exercises the expected('\0', *begin) path
+  // e.g. "@@@" exercises the expected('\0', term[0]) path
   BOOST_CHECK_THROW(date_interval_t("@@@"), date_error);
 }
 
