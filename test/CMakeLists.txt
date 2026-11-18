@@ -257,6 +257,12 @@ if(Python_EXECUTABLE)
       TIMEOUT 120)
   endif()
 
+  # CheckAcprep keeps acprep's help text, options and Ubuntu Boost packages
+  # in line with the phases, flavors and Boost components that exist.
+  add_test(NAME CheckAcprep
+    COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/CheckAcprep.py
+    ${PROJECT_SOURCE_DIR})
+
   if(HAVE_BOOST_PYTHON)
     add_test(NAME demo
       COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/python/demo.py

@@ -16,7 +16,7 @@ set(cases
   "test/regress/build-order.test|FALSE"
   "contrib/tools/README|FALSE"
   # Dropped: version-control files at any depth, editor files, unpublished
-  # documentation, autotools-era helper scripts, and in-tree build trees.
+  # documentation, maintainer scripts under tools/, and in-tree build trees.
   ".git/HEAD|TRUE"
   ".gitignore|TRUE"
   ".github/workflows/cmake.yml|TRUE"
@@ -25,7 +25,7 @@ set(cases
   "src/journal.cc~|TRUE"
   "doc/website/index.html|TRUE"
   "doc/wiki/Home.md|TRUE"
-  "tools/build.sh|TRUE"
+  "tools/gendocs.sh|TRUE"
   "build/CMakeCache.txt|TRUE"
   "build-opt/src/ledger|TRUE")
 
