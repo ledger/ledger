@@ -43,7 +43,7 @@ end test
 
 test bal Wallet -X 'EUR!'
               20 EUR  Wallet
-              12 EUR    A
+              13 EUR    A
                8 EUR    B
 --------------------
               20 EUR

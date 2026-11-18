@@ -1,0 +1,70 @@
+; An amount that lies exactly halfway between two figures at its
+; commodity's display precision prints rounded half away from zero: the
+; rule --round, roundto() and the <Adjustment> postings already apply, so
+; a figure and its rounded twin no longer differ by one unit.
+
+2024/01/01 Setup
+    Assets:Cash                         $1.00
+    Assets:Bank                         1,000.00 USD
+    Equity
+
+2024/01/02 Buy
+    Assets:Gems                        10 X @ $0.0125
+    Assets:Cash
+
+; 10 X is worth exactly $0.125: plain and --round output agree on $0.13.
+test reg Gems -X $
+24-Jan-02 Buy                   Assets:Gems                   $0.13        $0.13
+end test
+
+test reg Gems -X $ --round
+24-Jan-02 Buy                   Assets:Gems                   $0.13        $0.13
+end test
+
+test eval '$1.00/8'
+$0.13
+end test
+
+test eval '$5.00/8'
+$0.63
+end test
+
+test eval '$-1.00/8'
+$-0.13
+end test
+
+test eval '$3.00/8'
+$0.38
+end test
+
+test eval 'roundto($5.00/8, 2)'
+$0.63
+end test
+
+; The carry ripples through every digit.
+test eval '$19.99/2'
+$10.00
+end test
+
+; X has a display precision of 0.
+test eval '5 X / 2'
+3 X
+end test
+
+test eval '$3.00/200'
+$0.02
+end test
+
+; Thousands separators are placed after the carry.
+test eval '1,999.99 USD / 2'
+1,000.00 USD
+end test
+
+; $0.875 is a tie too; --unround still shows the exact value.
+test bal Cash
+               $0.88  Assets:Cash
+end test
+
+test bal Cash --unround
+              $0.875  Assets:Cash
+end test

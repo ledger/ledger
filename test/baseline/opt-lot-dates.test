@@ -787,12 +787,27 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                    Recipe: Elixir of Giant Growth 1 [2006/03/15]
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -71.65G
+                                                                         -71.66G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                    Recipe: Elixir of Giant Growth 1 [2006/03/15]
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -71.65G
+                                                                         -71.66G
+                                      Plans: Mithril Shield Spike 2 [2006/03/15]
+                                            Plans: Wildthorn Mail 1 [2006/03/14]
+                                   Recipe: Elixir of Giant Growth 2 [2006/03/15]
+                                              Beaststalker's Belt 1 [2006/03/15]
+                                                                         -73.16G
+                                      Plans: Mithril Shield Spike 2 [2006/03/15]
+                                            Plans: Wildthorn Mail 1 [2006/03/14]
+                                   Recipe: Elixir of Giant Growth 2 [2006/03/15]
+                                              Beaststalker's Belt 1 [2006/03/15]
+                                                                         -70.16G
+                                      Plans: Mithril Shield Spike 2 [2006/03/15]
+                                            Plans: Wildthorn Mail 1 [2006/03/14]
+                                   Recipe: Elixir of Giant Growth 2 [2006/03/15]
+                                              Beaststalker's Belt 1 [2006/03/15]
+                                                                         -73.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
@@ -802,22 +817,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -70.15G
-                                      Plans: Mithril Shield Spike 2 [2006/03/15]
-                                            Plans: Wildthorn Mail 1 [2006/03/14]
-                                   Recipe: Elixir of Giant Growth 2 [2006/03/15]
-                                              Beaststalker's Belt 1 [2006/03/15]
-                                                                         -73.15G
-                                      Plans: Mithril Shield Spike 2 [2006/03/15]
-                                            Plans: Wildthorn Mail 1 [2006/03/14]
-                                   Recipe: Elixir of Giant Growth 2 [2006/03/15]
-                                              Beaststalker's Belt 1 [2006/03/15]
-                                                                         -73.15G
-                                      Plans: Mithril Shield Spike 2 [2006/03/15]
-                                            Plans: Wildthorn Mail 1 [2006/03/14]
-                                   Recipe: Elixir of Giant Growth 2 [2006/03/15]
-                                              Beaststalker's Belt 1 [2006/03/15]
-                                                                         -73.15G
+                                                                         -73.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
@@ -834,27 +834,27 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                          -8.15G
+                                                                          -8.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                          -8.15G
+                                                                          -8.16G
                                                    Plans: Mithril Shield Spike 1
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                          -8.15G
+                                                                          -8.16G
                                                    Plans: Mithril Shield Spike 2
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                          -8.15G
+                                                                          -8.16G
                                                    Plans: Mithril Shield Spike 2
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
@@ -862,7 +862,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                          -8.15G
+                                                                          -8.16G
                                                    Plans: Mithril Shield Spike 2
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
@@ -870,7 +870,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                          -8.15G
+                                                                          -8.16G
                                                    Plans: Mithril Shield Spike 1
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
@@ -878,57 +878,57 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                          -8.15G
+                                                                          -8.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                                 Recipe: Elixir of Giant Growth 2
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                          -8.15G
+                                                                          -8.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                                 Recipe: Elixir of Giant Growth 1
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                          -8.15G
+                                                                          -8.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                          -4.15G
+                                                                          -4.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                          -8.15G
+                                                                          -8.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                           5.25G
+                                                                           5.26G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                          -8.15G
-                                      Plans: Mithril Shield Spike 2 [2006/03/15]
-                                            Plans: Wildthorn Mail 1 [2006/03/14]
-                                   Recipe: Elixir of Giant Growth 2 [2006/03/15]
-                                                          Beaststalker's Belt -1
-                                              Beaststalker's Belt 1 [2006/03/15]
-                                                                          -8.15G
+                                                                          -8.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
                                                                           -8.15G
+                                      Plans: Mithril Shield Spike 2 [2006/03/15]
+                                            Plans: Wildthorn Mail 1 [2006/03/14]
+                                   Recipe: Elixir of Giant Growth 2 [2006/03/15]
+                                                          Beaststalker's Belt -1
+                                              Beaststalker's Belt 1 [2006/03/15]
+                                                                          -8.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
@@ -946,7 +946,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                          -8.15G
+                                                                          -8.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
@@ -982,13 +982,13 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                          -8.15G
+                                                                          -8.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                          -7.75G
+                                                                          -7.76G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
@@ -1000,7 +1000,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                          -8.15G
+                                                                          -8.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
@@ -1018,7 +1018,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                          -8.15G
+                                                                          -8.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
@@ -1036,20 +1036,20 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                          -8.15G
+                                                                          -8.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                          -8.15G
+                                                                          -8.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                             Pulsating Hydra Heart 1 [2006/03/16]
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                          -9.15G
+                                                                          -9.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                             Pulsating Hydra Heart 1 [2006/03/16]
@@ -1063,7 +1063,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                          -9.15G
+                                                                          -9.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                             Pulsating Hydra Heart 1 [2006/03/16]
@@ -1084,7 +1084,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                    Recipe: Elixir of Giant Growth 2 [2006/03/15]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                          -9.15G
+                                                                          -9.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                             Pulsating Hydra Heart 1 [2006/03/16]
@@ -1092,7 +1092,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                   Ace of Warlords 2 [2006/03/16]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                          -9.15G
+                                                                          -9.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                             Pulsating Hydra Heart 1 [2006/03/16]
@@ -1100,7 +1100,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                   Ace of Warlords 2 [2006/03/16]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -39.15G
+                                                                         -39.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                             Pulsating Hydra Heart 1 [2006/03/16]
@@ -1109,7 +1109,15 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                   Ace of Warlords 2 [2006/03/16]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -39.15G
+                                                                         -39.16G
+                                      Plans: Mithril Shield Spike 2 [2006/03/15]
+                                            Plans: Wildthorn Mail 1 [2006/03/14]
+                                            Pulsating Hydra Heart 1 [2006/03/16]
+                                   Recipe: Elixir of Giant Growth 2 [2006/03/15]
+                                                  Ace of Warlords 2 [2006/03/16]
+                                                          Beaststalker's Belt -1
+                                              Beaststalker's Belt 1 [2006/03/15]
+                                                                         -39.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                             Pulsating Hydra Heart 1 [2006/03/16]
@@ -1125,15 +1133,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                   Ace of Warlords 2 [2006/03/16]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -39.15G
-                                      Plans: Mithril Shield Spike 2 [2006/03/15]
-                                            Plans: Wildthorn Mail 1 [2006/03/14]
-                                            Pulsating Hydra Heart 1 [2006/03/16]
-                                   Recipe: Elixir of Giant Growth 2 [2006/03/15]
-                                                  Ace of Warlords 2 [2006/03/16]
-                                                          Beaststalker's Belt -1
-                                              Beaststalker's Belt 1 [2006/03/15]
-                                                                         -39.15G
+                                                                         -39.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                             Pulsating Hydra Heart 1 [2006/03/16]
@@ -1149,7 +1149,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                   Ace of Warlords 2 [2006/03/16]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -39.15G
+                                                                         -39.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                             Pulsating Hydra Heart 1 [2006/03/16]
@@ -1165,7 +1165,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                   Ace of Warlords 2 [2006/03/16]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -39.15G
+                                                                         -39.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                             Pulsating Hydra Heart 1 [2006/03/16]
@@ -1173,7 +1173,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                   Ace of Warlords 2 [2006/03/16]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -38.40G
+                                                                         -38.41G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                             Pulsating Hydra Heart 1 [2006/03/16]
@@ -1181,7 +1181,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                   Ace of Warlords 2 [2006/03/16]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -37.65G
+                                                                         -37.66G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                             Pulsating Hydra Heart 1 [2006/03/16]
@@ -1189,15 +1189,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                   Ace of Warlords 2 [2006/03/16]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -39.15G
-                                      Plans: Mithril Shield Spike 2 [2006/03/15]
-                                            Plans: Wildthorn Mail 1 [2006/03/14]
-                                            Pulsating Hydra Heart 1 [2006/03/16]
-                                   Recipe: Elixir of Giant Growth 2 [2006/03/15]
-                                                  Ace of Warlords 2 [2006/03/16]
-                                                          Beaststalker's Belt -1
-                                              Beaststalker's Belt 1 [2006/03/15]
-                                                                         -39.15G
+                                                                         -39.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                             Pulsating Hydra Heart 1 [2006/03/16]
@@ -1213,7 +1205,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                   Ace of Warlords 2 [2006/03/16]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -39.15G
+                                                                         -39.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                             Pulsating Hydra Heart 1 [2006/03/16]
@@ -1229,7 +1221,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                   Ace of Warlords 2 [2006/03/16]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -39.15G
+                                                                         -39.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                             Pulsating Hydra Heart 1 [2006/03/16]
@@ -1245,7 +1237,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                   Ace of Warlords 2 [2006/03/16]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -39.15G
+                                                                         -39.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                             Pulsating Hydra Heart 1 [2006/03/16]
@@ -1261,7 +1253,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                   Ace of Warlords 2 [2006/03/16]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -38.15G
+                                                                         -39.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                             Pulsating Hydra Heart 1 [2006/03/16]
@@ -1269,7 +1261,15 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                   Ace of Warlords 2 [2006/03/16]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -39.15G
+                                                                         -38.16G
+                                      Plans: Mithril Shield Spike 2 [2006/03/15]
+                                            Plans: Wildthorn Mail 1 [2006/03/14]
+                                            Pulsating Hydra Heart 1 [2006/03/16]
+                                   Recipe: Elixir of Giant Growth 2 [2006/03/15]
+                                                  Ace of Warlords 2 [2006/03/16]
+                                                          Beaststalker's Belt -1
+                                              Beaststalker's Belt 1 [2006/03/15]
+                                                                         -39.16G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                             Pulsating Hydra Heart 1 [2006/03/16]
@@ -1294,7 +1294,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                   Ace of Warlords 2 [2006/03/16]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -37.65G
+                                                                         -37.66G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                             Pulsating Hydra Heart 1 [2006/03/16]
@@ -1321,7 +1321,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                   Ace of Warlords 2 [2006/03/16]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -36.65G
+                                                                         -36.66G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                             Pulsating Hydra Heart 1 [2006/03/16]
@@ -1339,7 +1339,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                   Ace of Warlords 2 [2006/03/16]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -36.65G
+                                                                         -36.66G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                             Pulsating Hydra Heart 1 [2006/03/16]
@@ -1348,7 +1348,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                   Ace of Warlords 2 [2006/03/16]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -36.65G
+                                                                         -36.66G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                             Pulsating Hydra Heart 1 [2006/03/16]
@@ -1359,7 +1359,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                  Ace of Warlords -2 [2006/03/17]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -36.65G
+                                                                         -36.66G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                             Pulsating Hydra Heart 1 [2006/03/16]
@@ -1381,7 +1381,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                  Ace of Warlords -2 [2006/03/17]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -36.65G
+                                                                         -36.66G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                             Pulsating Hydra Heart 1 [2006/03/16]
@@ -1392,7 +1392,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                  Ace of Warlords -2 [2006/03/17]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -36.62G
+                                                                         -36.63G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                             Pulsating Hydra Heart 1 [2006/03/16]
@@ -1403,7 +1403,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                  Ace of Warlords -2 [2006/03/17]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -36.65G
+                                                                         -36.66G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                             Pulsating Hydra Heart 1 [2006/03/16]
@@ -1414,7 +1414,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                  Ace of Warlords -2 [2006/03/17]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -35.65G
+                                                                         -35.66G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                             Plans: Wildthorn Mail 1 [2006/03/14]
                                             Pulsating Hydra Heart 1 [2006/03/16]
@@ -1425,7 +1425,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                  Ace of Warlords -2 [2006/03/17]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -35.65G
+                                                                         -35.66G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                                         Plans: Wildthorn Mail -1
                                             Plans: Wildthorn Mail 1 [2006/03/14]
@@ -1437,7 +1437,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                  Ace of Warlords -2 [2006/03/17]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -35.40G
+                                                                         -35.41G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                                         Plans: Wildthorn Mail -1
                                             Plans: Wildthorn Mail 1 [2006/03/14]
@@ -1461,7 +1461,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                  Ace of Warlords -2 [2006/03/17]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -35.40G
+                                                                         -35.41G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                                         Plans: Wildthorn Mail -1
                                             Plans: Wildthorn Mail 1 [2006/03/14]
@@ -1473,7 +1473,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                  Ace of Warlords -1 [2006/03/17]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -35.40G
+                                                                         -35.41G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                                         Plans: Wildthorn Mail -1
                                             Plans: Wildthorn Mail 1 [2006/03/14]
@@ -1484,7 +1484,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                   Ace of Warlords 2 [2006/03/16]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -35.40G
+                                                                         -35.41G
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                                         Plans: Wildthorn Mail -1
                                             Plans: Wildthorn Mail 1 [2006/03/14]
@@ -1495,7 +1495,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                   Ace of Warlords 2 [2006/03/16]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -35.40G
+                                                                         -35.41G
                                                      Holy Bologna 1 [2006/03/17]
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                                         Plans: Wildthorn Mail -1
@@ -1507,7 +1507,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                   Ace of Warlords 2 [2006/03/16]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -35.40G
+                                                                         -35.41G
                                                      Holy Bologna 1 [2006/03/17]
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                                         Plans: Wildthorn Mail -1
@@ -1520,7 +1520,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                   Ace of Warlords 2 [2006/03/16]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -35.40G
+                                                                         -35.41G
                                                      Holy Bologna 1 [2006/03/17]
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
                                                         Plans: Wildthorn Mail -1
@@ -1534,7 +1534,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                   Ace of Warlords 2 [2006/03/16]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -35.40G
+                                                                         -35.41G
                                                Harnessing Shadows 1 [2006/03/17]
                                                      Holy Bologna 1 [2006/03/17]
                                       Plans: Mithril Shield Spike 2 [2006/03/15]
@@ -1549,7 +1549,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                   Ace of Warlords 2 [2006/03/16]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -35.40G
+                                                                         -35.41G
                                         Garona: Book on Treachery 1 [2006/03/17]
                                                Harnessing Shadows 1 [2006/03/17]
                                                      Holy Bologna 1 [2006/03/17]
@@ -1565,7 +1565,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-f
                                                   Ace of Warlords 2 [2006/03/16]
                                                           Beaststalker's Belt -1
                                               Beaststalker's Belt 1 [2006/03/15]
-                                                                         -35.40G
+                                                                         -35.41G
                                         Garona: Book on Treachery 1 [2006/03/17]
                                                Harnessing Shadows 1 [2006/03/17]
                                                      Holy Bologna 1 [2006/03/17]

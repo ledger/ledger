@@ -2,15 +2,13 @@
 # diverge, as test/semantic/check_all.py --gross measured them
 # (repo-relative path).  On 3314_rounding_auto the oracle books an
 # automated rule's memo postings once where C++'s column sums book
-# them once per matched posting; on display-rounding-ties the tie
-# rounding of the rows differs, on 722 the display of a duration in
-# minutes, and on the two session-option-infile-time-round files the
-# oracle ignores the `--time-round` option line (see
-# oracle-divergent.txt for all three).  The ratchet: an unlisted
+# them once per matched posting; on 722 the display of a duration in
+# minutes differs, and on the two session-option-infile-time-round
+# files the oracle ignores the `--time-round` option line (see
+# oracle-divergent.txt for both).  The ratchet: an unlisted
 # divergence or a stale entry fails the run, so the set changes only
 # with the rule that forced it.
 test/regress/3314_rounding_auto.test
 test/regress/722.test
-test/regress/display-rounding-ties.test
 test/regress/session-option-infile-time-round-applied.test
 test/regress/session-option-infile-time-round.test

@@ -10760,7 +10760,7 @@ def lunch_total = x -> x * 1.0825
 $ ledger -f doc.dat reg Food --format "%(lunch_total(amount))\n"
 @end smallexample
 @smallexample @c output:E3B23A4
-$54.12
+$54.13
 @end smallexample
 
 Function calls use ordinary parentheses, and a function that takes no

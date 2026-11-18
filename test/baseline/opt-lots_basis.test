@@ -679,9 +679,9 @@ test reg --basis
                                 Assets:Tajer:Items          -65.00G       54.58G
                                 Income:Brokering            -54.58G            0
 06-Mar-16 Auction House         Assets:Wyshona:Items          2.11G        2.11G
-                                Assets:Wyshona:Items          2.30G        4.40G
-                                Assets:Wyshona:Items          1.00G        5.40G
-                                Assets:Wyshona:Items          1.50G        6.90G
+                                Assets:Wyshona:Items          2.30G        4.41G
+                                Assets:Wyshona:Items          1.00G        5.41G
+                                Assets:Wyshona:Items          1.50G        6.91G
                                 Assets:Tajer:Items           -2.11G        4.80G
                                 Assets:Tajer:Items           -2.30G        2.50G
                                 Assets:Tajer:Items           -1.00G        1.50G
@@ -814,9 +814,9 @@ test reg --basis
 06-Mar-19 Auction House         Assets:Tajer                 17.10G       17.10G
                                 Assets:Tajer:Items           -4.00G       13.10G
                                 Income:Brokering            -13.10G            0
-06-Mar-19 Auction House         Assets:Tajer                  4.65G        4.65G
-                                Assets:Tajer:Items           -1.00G        3.65G
-                                Income:Brokering             -3.65G            0
+06-Mar-19 Auction House         Assets:Tajer                  4.66G        4.66G
+                                Assets:Tajer:Items           -1.00G        3.66G
+                                Income:Brokering             -3.66G            0
 06-Mar-19 Auction House         Assets:Tajer:Items            3.00G        3.00G
                                 Assets:Tajer:Items            2.50G        5.50G
                                 Assets:Tajer                 -5.50G            0

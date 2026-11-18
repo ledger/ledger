@@ -38,7 +38,7 @@ end test
 
 test reg Expenses --empty
 24-Jan-01 Seed                  Expenses:A                    $1.00        $1.00
-24-Jan-02 Tiny                  Expenses:A                        0        $1.00
+24-Jan-02 Tiny                  Expenses:A                        0        $1.01
 24-Jan-03 Tiny                  Expenses:A                        0        $1.01
 24-Jan-04 Last                  <Adjustment>                  $0.01        $1.01
                                 Expenses:A                    $1.00        $2.01

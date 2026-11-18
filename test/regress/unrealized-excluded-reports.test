@@ -78,7 +78,7 @@ end test
 test bal -V --unrealized -A --now 2024/04/01
               $24.92  Assets
              $510.00    Brokerage
-            $-217.62    Checking
+            $-217.63    Checking
               $-6.67  Equity:Unrealized Gains
                $5.25  Expenses
               $10.00    Books
@@ -91,7 +91,7 @@ end test
 test bal --exchange $ --unrealized -A --now 2024/04/01
               $24.92  Assets
              $510.00    Brokerage
-            $-217.62    Checking
+            $-217.63    Checking
               $-6.67  Equity:Unrealized Gains
                $5.25  Expenses
               $10.00    Books

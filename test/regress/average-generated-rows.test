@@ -43,7 +43,7 @@ test reg --budget Expenses -A -b 2024/01/01 -e 2024/03/01 --now 2024/03/01
 24-Jan-01 Budget transaction    Expenses:Food                 $-100        $-100
 24-Jan-01 Budget transaction    Expenses:Rent                 $-500        $-300
 24-Jan-05 Grocer                Expenses:Food                   $50        $-183
-24-Feb-01 Budget transaction    Expenses:Food                 $-100        $-162
+24-Feb-01 Budget transaction    Expenses:Food                 $-100        $-163
 24-Feb-01 Budget transaction    Expenses:Rent                 $-500        $-230
 24-Feb-05 Grocer                Expenses:Food                   $80        $-178
 end test
@@ -52,7 +52,7 @@ test reg Expenses -A --forecast 'd<[2024/04/01]' -b 2024/01/01 --now 2024/02/10
 24-Jan-05 Grocer                Expenses:Food                   $50          $50
 24-Feb-05 Grocer                Expenses:Food                   $80          $65
 24-Feb-01 Forecast transaction  Expenses:Food                  $100          $77
-24-Feb-01 Forecast transaction  Expenses:Rent                  $500         $182
+24-Feb-01 Forecast transaction  Expenses:Rent                  $500         $183
 24-Mar-01 Forecast transaction  Expenses:Food                  $100         $166
 24-Mar-01 Forecast transaction  Expenses:Rent                  $500         $222
 end test

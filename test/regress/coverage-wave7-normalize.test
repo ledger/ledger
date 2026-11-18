@@ -33,7 +33,7 @@ end test
 ; --- Test 5: --percent -V ---
 test bal --percent -V Expenses
              100.00%  Expenses
-               3.12%    Auto
+               3.13%    Auto
               96.88%    Food
 end test
 

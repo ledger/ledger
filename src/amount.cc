@@ -94,9 +94,6 @@ bool amount_t::stream_fullstrings = false;
 static mpz_t temp;
 static mpq_t tempq;
 static mpfr_t tempf;
-static mpfr_t tempfb;
-static mpfr_t tempfnum;
-static mpfr_t tempfden;
 #endif
 
 /**
@@ -176,44 +173,64 @@ bool amount_t::is_initialized = false;
 
 namespace {
 
-/// Scratch integers for stream_out_mpq() (its exact path and the
-/// time-colon minutes), initialized by amount_t::initialize() alongside the
-/// other GMP temporaries.
+/// Scratch integers for format_mpq_exact(), within_half_unit() and the
+/// time-colon minutes of stream_out_mpq(), initialized by
+/// amount_t::initialize() alongside the other GMP temporaries.  None of
+/// these users calls another while holding a value in them.
 mpz_t out_scale;
 mpz_t out_quot;
 mpz_t out_rem;
 
 /**
- * @brief Render @p quant with exactly @p precision decimals, rounding the
- * exact rational half away from zero, into @p digits.
+ * @brief Set @p quot to @p num / @p den rounded to the nearest integer,
+ * ties away from zero: the single tie rule of Ledger.
  *
- * Returns false and leaves @p digits alone when the value is an exact tie
- * at that precision (the discarded part is exactly one half unit).  For a
- * tie the caller keeps the historical MPFR rendering, which rounds a
- * binary approximation and so may go either way, and the output stays
- * what Ledger has always printed.  Every other value takes this exact,
- * allocation-free route; the two renderings agree up to about 230
- * decimals, beyond which the approximation's own digits used to show
- * through.  Like MPFR's "%f", a negative value that rounds to zero keeps
- * its sign ("-0.00").
+ * @p rem is scratch.  @p den must be positive.  @p quot may alias @p num,
+ * because the sign is taken from the remainder (with truncating division
+ * the remainder carries the dividend's sign whenever it is nonzero);
+ * neither may alias @p den.  Used by both format_mpq_exact() and
+ * amount_t::in_place_roundto(), so a displayed figure always equals its
+ * roundto().
  */
-bool format_mpq_exact(std::string& digits, mpq_t quant, amount_t::precision_t precision) {
+void round_quotient_half_away(mpz_ptr quot, mpz_ptr rem, mpz_srcptr num, mpz_srcptr den) {
+  mpz_tdiv_qr(quot, rem, num, den);
+  const int sign = mpz_sgn(rem);
+  if (sign == 0)
+    return;
+  mpz_abs(rem, rem);
+  mpz_mul_2exp(rem, rem, 1);
+  if (mpz_cmp(rem, den) >= 0) { // half a unit or more: away from zero
+    if (sign < 0)
+      mpz_sub_ui(quot, quot, 1);
+    else
+      mpz_add_ui(quot, quot, 1);
+  }
+}
+
+/**
+ * @brief Whether @p quant lies within half a unit of zero at @p places
+ * decimals, an exact half included: the tolerance a transaction may leave
+ * over and still balance (regress/1765.test).
+ */
+bool within_half_unit(mpq_srcptr quant, amount_t::precision_t places) {
+  mpz_ui_pow_ui(out_scale, 10, places);
+  mpz_mul(out_quot, mpq_numref(quant), out_scale);
+  mpz_abs(out_quot, out_quot);
+  mpz_mul_2exp(out_quot, out_quot, 1);
+  return mpz_cmp(out_quot, mpq_denref(quant)) <= 0;
+}
+
+/**
+ * @brief Render @p quant with exactly @p precision decimals into
+ * @p digits, rounding the exact rational to nearest with ties away from
+ * zero (round_quotient_half_away()), the rule roundto() and --round use.
+ *
+ * A negative value that rounds to zero keeps its sign ("-0.00").
+ */
+void format_mpq_exact(std::string& digits, mpq_t quant, amount_t::precision_t precision) {
   mpz_ui_pow_ui(out_scale, 10, precision);
   mpz_mul(out_quot, mpq_numref(quant), out_scale);
-  mpz_tdiv_qr(out_quot, out_rem, out_quot, mpq_denref(quant));
-  if (mpz_sgn(out_rem) != 0) {
-    mpz_abs(out_rem, out_rem);
-    mpz_mul_2exp(out_rem, out_rem, 1);
-    const int cmp = mpz_cmp(out_rem, mpq_denref(quant));
-    if (cmp == 0)
-      return false;
-    if (cmp > 0) {
-      if (mpz_sgn(mpq_numref(quant)) < 0)
-        mpz_sub_ui(out_quot, out_quot, 1);
-      else
-        mpz_add_ui(out_quot, out_quot, 1);
-    }
-  }
+  round_quotient_half_away(out_quot, out_rem, out_quot, mpq_denref(quant));
 
   // mpz_get_str wants room for the digits, a sign and the terminator.
   char stack_buf[64];
@@ -245,46 +262,6 @@ bool format_mpq_exact(std::string& digits, mpq_t quant, amount_t::precision_t pr
     digits += '.';
     digits.append(p + (len - precision), precision);
   }
-  return true;
-}
-
-/**
- * @brief The historical MPFR rendering of @p quant to @p precision
- * decimals: convert numerator and denominator to floating-point values a
- * few hundred bits wider than they need, divide, and let MPFR round the
- * quotient to the requested decimals.
- *
- * Used for exact ties (see format_mpq_exact) and for rounding modes other
- * than GMP_RNDN.
- */
-std::string format_mpq_mpfr(mpq_t quant, amount_t::precision_t precision, mpfr_rnd_t rnd) {
-  mp_prec_t num_prec = static_cast<mpfr_prec_t>(mpz_sizeinbase(mpq_numref(quant), 2));
-  num_prec += amount_t::extend_by_digits * 64;
-  if (num_prec < MPFR_PREC_MIN)
-    num_prec = MPFR_PREC_MIN;
-  DEBUG("amount.convert", "num prec = " << num_prec);
-
-  mpfr_set_prec(tempfnum, num_prec);
-  mpfr_set_z(tempfnum, mpq_numref(quant), rnd);
-
-  mp_prec_t den_prec = static_cast<mpfr_prec_t>(mpz_sizeinbase(mpq_denref(quant), 2));
-  den_prec += amount_t::extend_by_digits * 64;
-  if (den_prec < MPFR_PREC_MIN)
-    den_prec = MPFR_PREC_MIN;
-  DEBUG("amount.convert", "den prec = " << den_prec);
-
-  mpfr_set_prec(tempfden, den_prec);
-  mpfr_set_z(tempfden, mpq_denref(quant), rnd);
-
-  mpfr_set_prec(tempfb, num_prec + den_prec);
-  mpfr_div(tempfb, tempfnum, tempfden, rnd);
-
-  char* buf = nullptr;
-  if (mpfr_asprintf(&buf, "%.*RNf", precision, tempfb) < 0)
-    throw_(amount_error, _("Cannot output amount to a floating-point representation"));
-  std::string result(buf);
-  mpfr_free_str(buf);
-  return result;
 }
 
 /**
@@ -302,8 +279,7 @@ std::string format_mpq_mpfr(mpq_t quant, amount_t::precision_t precision, mpfr_r
  *     instead of 1.50h).
  *
  * The digits come from format_mpq_exact(), exact integer arithmetic on
- * the rational, except for exact ties and for rounding modes other than
- * GMP_RNDN, which format_mpq_mpfr() renders as before; the separators
+ * the rational rounded half away from zero; the separators
  * and the time-colon conversion are then applied to that string.
  *
  * @param out        Output stream to write the formatted number to.
@@ -313,13 +289,11 @@ std::string format_mpq_mpfr(mpq_t quant, amount_t::precision_t precision, mpfr_r
  *                   decimal places are stripped.  A value of -1 (the
  *                   default) preserves all trailing zeros up to
  *                   @a precision.
- * @param rnd        MPFR rounding mode (default: round to nearest).
  * @param comm       Optional commodity reference whose display flags
  *                   control thousands separators and decimal style.
  */
 void stream_out_mpq(std::ostream& out, mpq_t quant, amount_t::precision_t precision,
-                    int zeros_prec = -1, mpfr_rnd_t rnd = GMP_RNDN,
-                    const optional<commodity_t&>& comm = none) {
+                    int zeros_prec = -1, const optional<commodity_t&>& comm = none) {
 #if DEBUG_ON
   IF_DEBUG("amount.convert") {
     char* tbuf = mpq_get_str(nullptr, 10, quant);
@@ -329,8 +303,7 @@ void stream_out_mpq(std::ostream& out, mpq_t quant, amount_t::precision_t precis
 #endif
 
   std::string digits;
-  if (rnd != GMP_RNDN || !format_mpq_exact(digits, quant, precision))
-    digits = format_mpq_mpfr(quant, precision, rnd);
+  format_mpq_exact(digits, quant, precision);
 
   DEBUG("amount.convert", "rendered = " << digits << " (precision " << precision << ", zeros_prec "
                                         << zeros_prec << ")");
@@ -467,9 +440,6 @@ void amount_t::initialize() {
     mpz_init(out_quot);
     mpz_init(out_rem);
     mpfr_init(tempf);
-    mpfr_init(tempfb);
-    mpfr_init(tempfnum);
-    mpfr_init(tempfden);
 
     commodity_pool_t::current_pool.reset(new commodity_pool_t);
 
@@ -506,9 +476,6 @@ void amount_t::shutdown() {
     mpz_clear(out_quot);
     mpz_clear(out_rem);
     mpfr_clear(tempf);
-    mpfr_clear(tempfb);
-    mpfr_clear(tempfnum);
-    mpfr_clear(tempfden);
 
     commodity_pool_t::current_pool.reset();
 
@@ -1171,10 +1138,9 @@ void amount_t::in_place_ceiling() {
 /**
  * @brief Round to exactly @a places decimal digits, modifying the GMP value.
  *
- * Implements banker's rounding (round half away from zero) by scaling
- * the rational, extracting the integer quotient and remainder via
- * mpz_tdiv_qr, then adjusting the quotient when the remainder is at
- * least half the denominator.
+ * Rounds half away from zero (not banker's rounding): scales the rational
+ * by 10^|places| and rounds the quotient with round_quotient_half_away(),
+ * the rule print() uses.
  *
  * @param places Number of decimal places to round to.  May be zero
  *               (round to integer) or negative (round to tens,
@@ -1197,17 +1163,8 @@ void amount_t::in_place_roundto(int places) {
   }
 
   auto whole(mpq_numref(tempq));
-  auto reminder(mpq_denref(tempq));
-  mpz_tdiv_qr(whole, reminder, mpq_numref(MP(quantity)), mpq_denref(MP(quantity)));
-  mpz_mul_2exp(reminder, reminder, 1);
-  mpz_abs(reminder, reminder);
-  const int rem_denom_cmp = mpz_cmp(reminder, mpq_denref(MP(quantity)));
-  if (rem_denom_cmp >= 0) {
-    if (mpz_sgn(mpq_numref(MP(quantity))) >= 0)
-      mpz_add_ui(whole, whole, 1);
-    else
-      mpz_sub_ui(whole, whole, 1);
-  }
+  round_quotient_half_away(whole, mpq_denref(tempq), mpq_numref(MP(quantity)),
+                           mpq_denref(MP(quantity)));
 
   if (places > 0) {
     mpq_set_num(MP(quantity), whole);
@@ -1471,17 +1428,19 @@ int amount_t::sign() const {
 }
 
 /**
- * @brief Test whether this amount is zero at its display precision.
+ * @brief Test whether this amount is zero at its display precision:
+ * within half a unit of zero there, an exact half included
+ * (within_half_unit()), so a transaction may leave that much over and
+ * still balance.
  *
- * An amount may be non-zero in its exact rational representation but
- * still display as zero when rounded to the commodity's precision.
- * For example, $0.001 with a 2-digit commodity displays as "$0.00"
- * and is considered zero by this test.
+ * For example, with a 2-digit commodity $0.001 and $0.005 are zero and
+ * $0.006 is not.  An exact half unit therefore counts as zero yet prints
+ * rounded away from zero when the value is not first simplified to zero:
+ * is_zero() is true for $0.005, which prints "$0.01".
  *
  * The check is optimized: if the numerator exceeds the denominator
- * the amount is obviously non-zero.  Otherwise, the amount is
- * rendered to a string at commodity precision and scanned for any
- * non-zero digit.
+ * the amount is obviously non-zero; otherwise it is decided in exact
+ * rational arithmetic, independent of how the amount prints.
  */
 bool amount_t::is_zero() const {
   if (!quantity)
@@ -1524,18 +1483,7 @@ bool amount_t::is_zero() const {
       DEBUG("amount.is_zero", "Numerator is larger than the denominator");
       return false;
     } else {
-      DEBUG("amount.is_zero", "We have to print the number to check for zero");
-
-      std::ostringstream out;
-      stream_out_mpq(out, MP(quantity), check_prec);
-
-      string output = out.str(); // NOLINT(bugprone-unused-local-non-trivial-variable)
-      if (!output.empty()) {
-        for (const char* p = output.c_str(); *p; p++)
-          if (*p != '0' && *p != '.' && *p != '-')
-            return false;
-      }
-      return true;
+      return within_half_unit(MP(quantity), check_prec);
     }
   }
   return is_realzero();
@@ -2205,7 +2153,7 @@ void amount_t::print_unpadded(std::ostream& out, const uint_least8_t flags,
     }
   }
   zeros_prec = std::max(zeros_prec, static_cast<int>(min_decimals));
-  stream_out_mpq(out, MP(quantity), disp_prec, zeros_prec, GMP_RNDN, comm);
+  stream_out_mpq(out, MP(quantity), disp_prec, zeros_prec, comm);
 
   if (comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {
     if (comm.has_flags(COMMODITY_STYLE_SEPARATED))

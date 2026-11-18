@@ -388,6 +388,14 @@ components with their standard-library equivalents.
 
 ### Reporting and Display Improvements
 
+- An amount exactly halfway between two figures at its display precision
+  now prints rounded half away from zero, as `--round`, `roundto()` and the
+  `<Adjustment>` postings already rounded it: `$1.00/8` prints `$0.13`, where
+  the printer, which rounded a binary approximation of each tie, showed
+  `$0.12`.  A transaction may leave exactly half a unit over at any precision
+  and still balance; at seven or more decimals such a residual used to be
+  rejected
+
 - `accounts` lists accounts in the byte order of their full names, so `Foo`
   now precedes `Foo Bar`, `Foo-Baz` and `Foo:Sub`.
 
