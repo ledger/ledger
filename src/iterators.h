@@ -273,14 +273,8 @@ public:
     reset(journal);
     TRACE_CTOR(posts_commodities_iterator, "journal_t&");
   }
-  posts_commodities_iterator(const posts_commodities_iterator& i)
-      : iterator_facade_base<posts_commodities_iterator, post_t*, boost::forward_traversal_tag>(i),
-        journal_posts(i.journal_posts), xacts(i.xacts), posts(i.posts), xact_temps(i.xact_temps),
-        temps(i.temps), latest_only(i.latest_only), interval(i.interval),
-        bidirectional(i.bidirectional) {
-    TRACE_CTOR(posts_commodities_iterator, "copy");
-  }
-  posts_commodities_iterator& operator=(const posts_commodities_iterator&) = default;
+  posts_commodities_iterator(const posts_commodities_iterator&) = delete;
+  posts_commodities_iterator& operator=(const posts_commodities_iterator&) = delete;
   ~posts_commodities_iterator() noexcept { TRACE_DTOR(posts_commodities_iterator); }
 
   void reset(journal_t& journal);

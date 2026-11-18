@@ -135,7 +135,7 @@ void export_account() {
   scope().attr("ACCOUNT_EXT_TO_DISPLAY") = ACCOUNT_EXT_TO_DISPLAY;
   scope().attr("ACCOUNT_EXT_DISPLAYED") = ACCOUNT_EXT_DISPLAYED;
 
-  class_<account_t::xdata_t::details_t>("AccountXDataDetails")
+  class_<account_t::xdata_t::details_t, boost::noncopyable>("AccountXDataDetails")
       .def_readonly("total", &account_t::xdata_t::details_t::total)
       .def_readonly("real_total", &account_t::xdata_t::details_t::real_total)
       .def_readonly("calculated", &account_t::xdata_t::details_t::calculated)
@@ -163,7 +163,7 @@ void export_account() {
 
       .def("update", &account_t::xdata_t::details_t::update);
 
-  class_<account_t::xdata_t>("AccountXData")
+  class_<account_t::xdata_t, boost::noncopyable>("AccountXData")
       .def(flags_visitor<supports_flags<>>())
 
       .def_readonly("self_details", &account_t::xdata_t::self_details)
@@ -175,12 +175,12 @@ void export_account() {
   scope().attr("ACCOUNT_KNOWN") = ACCOUNT_KNOWN;
   scope().attr("ACCOUNT_TEMP") = ACCOUNT_TEMP;
 
-  class_<account_t>("Account")
+  class_<account_t, boost::noncopyable>("Account")
       .def(flags_visitor<supports_flags<>>())
 
       .add_property("parent", make_getter(&account_t::parent, return_internal_reference<>()))
 
-      .def_readwrite("name", &account_t::name)
+      .def_readonly("name", &account_t::name)
       .def_readwrite("note", &account_t::note)
       .def_readonly("depth", &account_t::depth)
 

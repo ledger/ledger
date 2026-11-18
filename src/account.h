@@ -124,8 +124,7 @@ public:
    * combined and real-only, with the latest date() among them.  It
    * catches up lazily on the posts appended since, so add_post() pays
    * nothing.  remove_post()/remove_posts() and a change of
-   * item_t::use_aux_date reset it.  A copy starts empty, because `last`
-   * points into another account's list.
+   * item_t::use_aux_date reset it.
    */
   struct running_total_t {
     value_t total;                             ///< All posts' amounts.
@@ -134,12 +133,6 @@ public:
     optional<posts_list::const_iterator> last; ///< Last post summed.
     bool aux_dates = false;                    ///< item_t::use_aux_date when summed.
 
-    running_total_t() = default;
-    running_total_t(const running_total_t&) {}
-    running_total_t& operator=(const running_total_t&) {
-      reset();
-      return *this;
-    }
     void reset() {
       total = value_t();
       real_total = value_t();
@@ -159,16 +152,8 @@ public:
       throw std::runtime_error("Account hierarchy too deep");
     TRACE_CTOR(account_t, "account_t *, const string&, const string&");
   }
-  // Note: copy is intentionally shallow — posts and deferred_posts are
-  // NOT copied. The copy shares the same parent and children map but
-  // has an independent (empty) posting history.  Metadata is copied via
-  // the metadata_t copy constructor.
-  account_t(const account_t& other)
-      : supports_flags<>(other.flags()), metadata_t(other), scope_t(), parent(other.parent),
-        name(other.name), note(other.note), depth(other.depth), accounts(other.accounts) {
-    TRACE_CTOR(account_t, "copy");
-  }
-  account_t& operator=(const account_t&) = default;
+  account_t(const account_t&) = delete;
+  account_t& operator=(const account_t&) = delete;
   ~account_t() override;
 
   string description() override { return string(_("account ")) + fullname(); }
@@ -310,9 +295,7 @@ public:
   };
 
   /// Lot holdings for --lot-matching, kept by held_lots();
-  /// remove_post() and remove_posts() drop them.  The copy constructor
-  /// leaves them empty, as it leaves posts; the defaulted operator=
-  /// copies them together with posts, so counted stays true.
+  /// remove_post() and remove_posts() drop them.
   std::optional<lot_inventory_t> lot_inventory;
 
   posts_list::iterator posts_begin() { return posts.begin(); }
@@ -435,14 +418,9 @@ public:
             posts_last_30_count(0), posts_this_month_count(0), latest_checkout_cleared(false) {
         TRACE_CTOR(account_t::xdata_t::details_t, "");
       }
-      // A copy copies nothing
-      details_t(const details_t&)
-          : calculated(false), gathered(false),
-
-            posts_count(0), posts_virtuals_count(0), posts_cleared_count(0), posts_last_7_count(0),
-            posts_last_30_count(0), posts_this_month_count(0), latest_checkout_cleared(false) {
-        TRACE_CTOR(account_t::xdata_t::details_t, "copy");
-      }
+      details_t(const details_t&) = delete;
+      // Assignment copies every member; report_statistics::clear() resets
+      // by assigning a fresh details_t.
       details_t& operator=(const details_t&) = default;
       ~details_t() noexcept { TRACE_DTOR(account_t::xdata_t::details_t); }
 
@@ -471,12 +449,8 @@ public:
     bool sort_amount_as_total = false;
 
     xdata_t() : supports_flags<>() { TRACE_CTOR(account_t::xdata_t, ""); }
-    xdata_t(const xdata_t& other)
-        : supports_flags<>(other.flags()), self_details(other.self_details),
-          family_details(other.family_details), sort_values(other.sort_values) {
-      TRACE_CTOR(account_t::xdata_t, "copy");
-    }
-    xdata_t& operator=(const xdata_t&) = default;
+    xdata_t(const xdata_t&) = delete;
+    xdata_t& operator=(const xdata_t&) = delete;
     ~xdata_t() noexcept { TRACE_DTOR(account_t::xdata_t); }
   };
 
@@ -501,7 +475,7 @@ public:
   void clear_display_state();
   xdata_t& xdata() {
     if (!xdata_)
-      xdata_ = xdata_t();
+      xdata_.emplace();
     return *xdata_;
   }
   const xdata_t& xdata() const {

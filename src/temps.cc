@@ -100,7 +100,7 @@ account_t& temporaries_t::create_account(const string& name, account_t* parent) 
   if (!acct_temps)
     acct_temps = std::list<account_t>();
 
-  acct_temps->push_back(account_t(parent, name));
+  acct_temps->emplace_back(parent, name);
   account_t& temp(acct_temps->back());
 
   temp.add_flags(ACCOUNT_TEMP);

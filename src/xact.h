@@ -108,7 +108,7 @@ public:
 
   xact_base_t() : item_t(), journal(nullptr) { TRACE_CTOR(xact_base_t, ""); }
   xact_base_t(const xact_base_t& e);
-  xact_base_t& operator=(const xact_base_t&) = default;
+  xact_base_t& operator=(const xact_base_t&) = delete;
 
   ~xact_base_t() override;
 
@@ -199,7 +199,7 @@ public:
 
   xact_t() { TRACE_CTOR(xact_t, ""); }
   xact_t(const xact_t& e);
-  xact_t& operator=(const xact_t&) = default;
+  xact_t& operator=(const xact_t&) = delete;
 
   ~xact_t() override { TRACE_DTOR(xact_t); }
 
@@ -280,13 +280,13 @@ class auto_xact_t : public xact_base_t {
 public:
   predicate_t
       predicate; ///< Expression that must be true for a posting to trigger this auto transaction.
-  optional<string> name; ///< Optional descriptive name for the automated transaction.
-  bool try_quick_match;  ///< If true, attempt the fast AST-based predicate matcher before falling
-                         ///< back to full evaluation. Disabled after a failure.
+  optional<string> name;       ///< Optional descriptive name for the automated transaction.
+  bool try_quick_match = true; ///< If true, attempt the fast AST-based predicate matcher before
+                               ///< falling back to full evaluation. Disabled after a failure.
   std::map<string, bool>
       memoized_results; ///< Cache of account fullname -> predicate result, for the quick matcher.
                         ///< Cleared if quick matching is disabled.
-  bool enabled;         ///< If false, this auto transaction is skipped entirely. Can be toggled by
+  bool enabled = true;  ///< If false, this auto transaction is skipped entirely. Can be toggled by
                         ///< directives.
 
   /// If non-null, this auto_xact applies only to postings whose reported
@@ -326,27 +326,15 @@ public:
   using deferred_notes_list = std::list<deferred_tag_data_t>;
 
   optional<deferred_notes_list> deferred_notes; ///< Tags deferred until extend_xact() applies them.
-  post_t* active_post; ///< During parsing, the template posting currently being built (used by
-                       ///< parse_tags to set apply_to_post).
+  post_t* active_post = nullptr; ///< During parsing, the template posting currently being built
+                                 ///< (used by parse_tags to set apply_to_post).
 
-  auto_xact_t() : try_quick_match(true), active_post(nullptr) { TRACE_CTOR(auto_xact_t, ""); }
-  auto_xact_t(const auto_xact_t& other)
-      : xact_base_t(other), predicate(other.predicate), name(other.name),
-        try_quick_match(other.try_quick_match), enabled(other.enabled),
-        active_post(other.active_post) {
-    TRACE_CTOR(auto_xact_t, "copy");
+  auto_xact_t(const predicate_t& _predicate = predicate_t(), optional<string> _name = none)
+      : predicate(_predicate), name(std::move(_name)) {
+    TRACE_CTOR(auto_xact_t, "const predicate_t&, optional<string>");
   }
-  auto_xact_t& operator=(const auto_xact_t&) = default;
-  auto_xact_t(const predicate_t& _predicate)
-      : predicate(_predicate), name(none), try_quick_match(true), enabled(true),
-        active_post(nullptr) {
-    TRACE_CTOR(auto_xact_t, "const predicate_t&");
-  }
-  auto_xact_t(const predicate_t& _predicate, optional<string> _name)
-      : predicate(_predicate), name(std::move(_name)), try_quick_match(true), enabled(true),
-        active_post(nullptr) {
-    TRACE_CTOR(auto_xact_t, "const predicate_t&");
-  }
+  auto_xact_t(const auto_xact_t&) = delete;
+  auto_xact_t& operator=(const auto_xact_t&) = delete;
 
   ~auto_xact_t() override { TRACE_DTOR(auto_xact_t); }
 
@@ -441,7 +429,7 @@ public:
       : xact_base_t(e), period(e.period), period_string(e.period_string) {
     TRACE_CTOR(period_xact_t, "copy");
   }
-  period_xact_t& operator=(const period_xact_t&) = default;
+  period_xact_t& operator=(const period_xact_t&) = delete;
   period_xact_t(const string& _period) : period(_period), period_string(_period) {
     TRACE_CTOR(period_xact_t, "const string&");
   }

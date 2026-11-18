@@ -12,6 +12,7 @@
 #include "journal.h"
 #include "session.h"
 #include "draft.h"
+#include "temps.h"
 
 using namespace ledger;
 
@@ -2699,6 +2700,74 @@ BOOST_AUTO_TEST_CASE(testCommoditySwapGainIsExact)
   BOOST_CHECK_EQUAL(amount_t("-0.4 EUR"), at_gain->posts.back()->amount);
 
   scope_t::default_scope = old_scope;
+}
+
+// ---------------------------------------------------------------------------
+// Journal-model copy semantics: accounts, transactions and the temporaries
+// arena are identity objects; nothing may copy their owning pointers.
+// ---------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testAutoXactConstructorDefaults)
+{
+  // Build each object over zeroed storage, so that a member the constructor
+  // forgets to initialize reads as false/null instead of stack garbage.
+  alignas(auto_xact_t) unsigned char storage[sizeof(auto_xact_t)];
+
+  std::memset(storage, 0, sizeof(storage));
+  auto_xact_t* plain = new (storage) auto_xact_t();
+  BOOST_CHECK(plain->enabled);
+  BOOST_CHECK(plain->try_quick_match);
+  BOOST_CHECK(plain->active_post == nullptr);
+  BOOST_CHECK(!plain->name);
+  plain->~auto_xact_t();
+
+  std::memset(storage, 0, sizeof(storage));
+  keep_details_t keeper(true, true, true);
+  expr_t expr("account =~ /Expenses/");
+  predicate_t pred(expr.get_op(), keeper);
+  auto_xact_t* named = new (storage) auto_xact_t(pred, string("groceries"));
+  BOOST_CHECK(named->enabled);
+  BOOST_CHECK(named->try_quick_match);
+  BOOST_CHECK(named->active_post == nullptr);
+  BOOST_REQUIRE(named->name);
+  BOOST_CHECK_EQUAL(*named->name, "groceries");
+  named->~auto_xact_t();
+}
+
+BOOST_AUTO_TEST_CASE(testJournalModelCopySemantics)
+{
+  BOOST_CHECK(!std::is_copy_constructible<account_t>::value);
+  BOOST_CHECK(!std::is_copy_assignable<account_t>::value);
+  BOOST_CHECK(!std::is_copy_constructible<account_t::xdata_t>::value);
+  BOOST_CHECK(!std::is_copy_assignable<account_t::xdata_t>::value);
+  // details_t keeps one copy operation, assignment, and it copies every
+  // member (report_statistics::clear() resets by assigning a fresh one).
+  BOOST_CHECK(!std::is_copy_constructible<account_t::xdata_t::details_t>::value);
+  BOOST_CHECK(std::is_copy_assignable<account_t::xdata_t::details_t>::value);
+  BOOST_CHECK(!std::is_copy_constructible<auto_xact_t>::value);
+  BOOST_CHECK(!std::is_copy_assignable<auto_xact_t>::value);
+  BOOST_CHECK(!std::is_copy_assignable<xact_base_t>::value);
+  BOOST_CHECK(!std::is_copy_assignable<xact_t>::value);
+  BOOST_CHECK(!std::is_copy_assignable<period_xact_t>::value);
+  BOOST_CHECK(!std::is_copy_constructible<temporaries_t>::value);
+  BOOST_CHECK(!std::is_copy_assignable<temporaries_t>::value);
+  // temporaries_t::copy_xact still copies a transaction (never its posts).
+  BOOST_CHECK(std::is_copy_constructible<xact_t>::value);
+  BOOST_CHECK(std::is_copy_constructible<period_xact_t>::value);
+}
+
+BOOST_AUTO_TEST_CASE(testTemporaryAccountBuiltInPlace)
+{
+  temporaries_t temps;
+  account_t& temp = temps.create_account("<Total>", expenses);
+  BOOST_CHECK(temp.has_flags(ACCOUNT_TEMP));
+  BOOST_CHECK(temp.parent == expenses);
+  BOOST_CHECK_EQUAL(temp.depth, expenses->depth + 1);
+  BOOST_CHECK_EQUAL(temp.fullname(), "Expenses:<Total>");
+  BOOST_CHECK(expenses->find_account("<Total>", false) == &temp);
+
+  temps.clear();
+  BOOST_CHECK(expenses->find_account("<Total>", false) == nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

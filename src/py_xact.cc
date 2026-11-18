@@ -135,7 +135,7 @@ void export_xact() {
 
       .def("valid", &xact_t::valid);
 
-  class_<auto_xact_t, bases<xact_base_t>>("AutomatedTransaction")
+  class_<auto_xact_t, bases<xact_base_t>, boost::noncopyable>("AutomatedTransaction")
       .def(init<predicate_t>())
 
       .add_property("predicate", make_getter(&auto_xact_t::predicate),

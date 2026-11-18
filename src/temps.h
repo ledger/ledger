@@ -50,6 +50,8 @@ class temporaries_t {
 
 public:
   temporaries_t() { TRACE_CTOR(temporaries_t, ""); }
+  temporaries_t(const temporaries_t&) = delete;
+  temporaries_t& operator=(const temporaries_t&) = delete;
   ~temporaries_t() {
     TRACE_DTOR(temporaries_t);
     clear();
