@@ -75,30 +75,29 @@ void intrusive_ptr_release(const expr_t::op_t* op) {
 
 /*--- O_CONS Flattening ---*/
 
+namespace {
+/// @brief Call @p fn on each element of a right-leaning chain of @p kind
+/// links (O_CONS or O_SEQ): the left child of every link, then the final
+/// non-link tail if there is one.  A link with no right child ends it.
+template <typename F>
+void for_each_in_chain(expr_t::ptr_op_t link, const expr_t::op_t::kind_t kind, F fn) {
+  for (; link && link->kind == kind; link = link->right())
+    fn(link->left());
+  if (link)
+    fn(link);
+}
+} // namespace
+
 value_t split_cons_expr(const expr_t::ptr_op_t& op) {
   if (!op) {
     return value_t();
   }
   if (op->kind == expr_t::op_t::O_CONS) {
     value_t seq;
-    if (op->left()) {
-      seq.push_back(expr_value(op->left()));
-    }
-
-    expr_t::ptr_op_t next = op->right();
-    while (next) {
-      expr_t::ptr_op_t value_op;
-      if (next->kind == expr_t::op_t::O_CONS) {
-        value_op = next->left();
-        next = next->has_right() ? next->right() : nullptr;
-      } else {
-        value_op = next;
-        next = nullptr;
-      }
-      if (value_op) {
-        seq.push_back(expr_value(value_op));
-      }
-    }
+    for_each_in_chain(op, expr_t::op_t::O_CONS, [&](const expr_t::ptr_op_t& elem) {
+      if (elem)
+        seq.push_back(expr_value(elem));
+    });
     return seq;
   } else {
     return expr_value(op);
@@ -274,9 +273,7 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth, scope_t*
   } else if (kind == O_LAMBDA) {
     symbol_scope_t params(param_scope ? *param_scope : *scope_t::empty_scope);
 
-    for (ptr_op_t sym = left(); sym; sym = sym->has_right() ? sym->right() : nullptr) {
-      ptr_op_t varname = sym->kind == O_CONS ? sym->left() : sym;
-
+    for_each_in_chain(left(), O_CONS, [&](const ptr_op_t& varname) {
       if (!varname->is_ident()) {
         std::ostringstream buf;
         varname->dump(buf, 0);
@@ -285,7 +282,7 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth, scope_t*
         DEBUG("expr.compile", "Defining function parameter " << varname->as_ident());
         params.define(symbol_t::FUNCTION, varname->as_ident(), new op_t(PLUG));
       }
-    }
+    });
 
     ptr_op_t rhs(right()->compile(*scope_ptr, depth + 1, &params));
     if (rhs == right())
@@ -675,8 +672,7 @@ value_t call_lambda(const expr_t::ptr_op_t& func, scope_t& scope, call_scope_t& 
 
   symbol_scope_t args_scope(*scope_t::empty_scope);
 
-  for (expr_t::ptr_op_t sym = func->left(); sym; sym = sym->has_right() ? sym->right() : nullptr) {
-    expr_t::ptr_op_t varname = sym->kind == expr_t::op_t::O_CONS ? sym->left() : sym;
+  for_each_in_chain(func->left(), expr_t::op_t::O_CONS, [&](const expr_t::ptr_op_t& varname) {
     if (!varname->is_ident()) {
       throw_(calc_error, _("Invalid function definition"));
     } else if (args_index == args_count) {
@@ -688,7 +684,7 @@ value_t call_lambda(const expr_t::ptr_op_t& func, scope_t& scope, call_scope_t& 
       args_scope.define(symbol_t::FUNCTION, varname->as_ident(),
                         expr_t::op_t::wrap_value(call_args[args_index++]));
     }
-  }
+  });
 
   if (args_index < args_count)
     throw_(calc_error, _f("Too many arguments in function call (saw %1%, wanted %2%)") %
@@ -747,25 +743,15 @@ value_t expr_t::op_t::calc_call(scope_t& scope, ptr_op_t* locus, const int depth
 
 value_t expr_t::op_t::calc_cons(scope_t& scope, ptr_op_t* locus, const int depth) {
   value_t result = left()->calc(scope, locus, depth + 1);
-  if (has_right()) {
-    value_t temp;
-    temp.push_back(result);
+  if (!has_right())
+    return result;
 
-    ptr_op_t next = right();
-    while (next) {
-      ptr_op_t value_op;
-      if (next->kind == O_CONS) {
-        value_op = next->left();
-        next = next->has_right() ? next->right() : nullptr;
-      } else {
-        value_op = next;
-        next = nullptr;
-      }
-      temp.push_back(value_op->calc(scope, locus, depth + 1));
-    }
-    result = temp;
-  }
-  return result;
+  value_t list;
+  list.push_back(result);
+  for_each_in_chain(right(), O_CONS, [&](const ptr_op_t& elem) {
+    list.push_back(elem->calc(scope, locus, depth + 1));
+  });
+  return list;
 }
 
 value_t expr_t::op_t::calc_seq(scope_t& scope, ptr_op_t* locus, const int depth) {
@@ -776,20 +762,8 @@ value_t expr_t::op_t::calc_seq(scope_t& scope, ptr_op_t* locus, const int depth)
   // the stack.  We evaluate the left side here to catch any
   // side-effects, such as definitions in the case of 'x = 1; x'.
   value_t result = left()->calc(scope, locus, depth + 1);
-  if (has_right()) {
-    ptr_op_t next = right();
-    while (next) {
-      ptr_op_t value_op;
-      if (next->kind == O_SEQ) {
-        value_op = next->left();
-        next = next->right();
-      } else {
-        value_op = next;
-        next = nullptr;
-      }
-      result = value_op->calc(scope, locus, depth + 1);
-    }
-  }
+  for_each_in_chain(right(), O_SEQ,
+                    [&](const ptr_op_t& stmt) { result = stmt->calc(scope, locus, depth + 1); });
   return result;
 }
 

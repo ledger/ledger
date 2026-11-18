@@ -5784,6 +5784,40 @@ BOOST_AUTO_TEST_CASE(testManySharedCopies)
 }
 
 // =======================================================================
+// op.h - operator nodes without a right child
+// =======================================================================
+
+BOOST_AUTO_TEST_CASE(testOperatorWithoutRightChild)
+{
+  // new_node() (and so op_t::copy() during compile) creates operator
+  // nodes whose right child is absent; right() must then return null
+  // and agree with has_right(), never throw bad_variant_access.
+  expr_t::ptr_op_t lhs = expr_t::op_t::wrap_value(value_t(1L));
+  expr_t::ptr_op_t seq = expr_t::op_t::new_node(expr_t::op_t::O_SEQ, lhs);
+  const expr_t::op_t& node(*seq);
+  BOOST_CHECK(!node.has_right());
+  BOOST_CHECK_NO_THROW(node.right());
+  BOOST_CHECK(!node.right());
+
+  expr_t::ptr_op_t cons(new expr_t::op_t(expr_t::op_t::O_CONS));
+  BOOST_CHECK(!cons->has_right());
+  BOOST_CHECK(!cons->right());
+}
+
+BOOST_AUTO_TEST_CASE(testLambdaParameterWalkRejectsNonIdent)
+{
+  // compile()'s O_LAMBDA arm walks the parameter chain and rejects any
+  // element that is not an identifier, in the middle of the chain or
+  // at its tail.  (call_lambda's walk is pinned by
+  // testCallLambdaInvalidParamW7.)
+  symbol_scope_t scope;
+  expr_t middle("dbl(a, 1) = a; dbl(1)");
+  BOOST_CHECK_THROW(middle.calc(scope), calc_error);
+  expr_t tail("dbl(a + b) = a; dbl(1)");
+  BOOST_CHECK_THROW(tail.calc(scope), calc_error);
+}
+
+// =======================================================================
 // Coverage: op.cc - O_AND print (lines 706-714)
 // =======================================================================
 

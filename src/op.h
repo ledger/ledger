@@ -94,7 +94,7 @@ private:
   ptr_op_t left_;   ///< Left child (operand) or compiled definition for IDENT nodes.
 
   /// Polymorphic payload -- the active alternative depends on @c kind:
-  ///  - monostate: no payload yet (also used to detect "no right child")
+  ///  - monostate: no payload yet (terminal nodes only; operators hold a ptr_op_t)
   ///  - ptr_op_t:  right child for binary operators, or resolved def for IDENT
   ///  - value_t:   literal constant for VALUE nodes
   ///  - string:    identifier name for IDENT nodes
@@ -184,7 +184,11 @@ public:
   kind_t kind; ///< Discriminator tag identifying this node's role in the AST.
 
   explicit op_t() : refc(0), kind(UNKNOWN) { TRACE_CTOR(op_t, ""); }
-  explicit op_t(const kind_t _kind) : refc(0), kind(_kind) { TRACE_CTOR(op_t, "const kind_t"); }
+  explicit op_t(const kind_t _kind) : refc(0), kind(_kind) {
+    TRACE_CTOR(op_t, "const kind_t");
+    if (kind > TERMINALS)
+      data = ptr_op_t();
+  }
   ~op_t() {
     TRACE_DTOR(op_t);
     assert(refc == 0);
