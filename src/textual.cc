@@ -76,7 +76,7 @@ void instance_t::parse() {
   // Each iteration dispatches one top-level line.  Errors are caught,
   // reported, and counted rather than aborting the entire parse, so that
   // all errors in a file can be shown at once.
-  while (in.good() && !in.eof() && in.peek() != '^' && in.good()) {
+  while (!in.eof() && in.peek() != '^' && in.good()) {
     try {
       if (xact_t* xact = read_next_directive(error_flag, previous_xact)) {
         previous_xact = xact;

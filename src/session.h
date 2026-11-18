@@ -292,7 +292,7 @@ public:
         set_input_date_format(str.c_str());
       });
 
-  OPTION(session_t, explicit);        ///< Only accept explicitly declared accounts/commodities
+  OPTION(session_t, explicit);        ///< Accepted for compatibility; has no effect
   OPTION(session_t, master_account_); ///< Parent account for all postings
   OPTION_(session_t, pedantic, DO() { parent->require_checking(journal_t::CHECK_ERROR); });
   /// Like --pedantic but applies only to commodity validation (issue #3200).

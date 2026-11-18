@@ -165,14 +165,7 @@ void draft_t::parse_args(const value_t& args) {
     } else {
       weekday = string_to_day_of_week(arg);
       if (check_for_date && weekday) {
-#if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 7
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-#endif
         short dow = static_cast<short>(*weekday);
-#if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 7
-#pragma GCC diagnostic pop
-#endif
         date_t date = CURRENT_DATE() - date_duration(1);
         while (date.day_of_week() != dow)
           date -= date_duration(1);

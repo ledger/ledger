@@ -449,7 +449,6 @@ void global_scope_t::read_environment_settings(char* envp[]) {
   process_environment(const_cast<const char**>(envp), "LEDGER_", *this);
   process_environment(const_cast<const char**>(envp), "LEDGER_", report());
 
-#if 1
   // These are here for backwards compatibility, but are deprecated.
 
   if (const char* p = std::getenv("LEDGER")) {
@@ -468,7 +467,6 @@ void global_scope_t::read_environment_settings(char* envp[]) {
     if (!std::getenv("LEDGER_PRICE_EXP"))
       process_option("environ", "price-exp", report(), p, "PRICE_EXP");
   }
-#endif
 
   TRACE_FINISH(environment, 1);
 }
@@ -504,14 +502,6 @@ strings_list global_scope_t::read_command_arguments(scope_t& scope, strings_list
   TRACE_FINISH(arguments, 1);
 
   return remaining;
-}
-
-void global_scope_t::normalize_session_options() {
-  INFO("Initialization file is " << HANDLER(init_file_).str());
-  INFO("Price database is " << session().HANDLER(price_db_).str());
-
-  for (const path& pathname : session().HANDLER(file_).data_files)
-    INFO("Journal file is " << pathname.string());
 }
 
 /*--- Command Verb Resolution ---*/

@@ -268,12 +268,10 @@ void instance_t::automated_xact_directive(char* line) {
       } else {
         reveal_context = false;
 
-        if (post_t* post = parse_post(p, len - (p - line), top_account(), nullptr, true)) {
-          reveal_context = true;
-          ae->add_post(post);
-          ae->active_post = last_post = post;
-        }
+        post_t* post = parse_post(p, len - (p - line), top_account(), nullptr, true);
         reveal_context = true;
+        ae->add_post(post);
+        ae->active_post = last_post = post;
       }
     }
 
@@ -322,7 +320,6 @@ void instance_t::period_xact_directive(char* line) {
 
         pe.release(); // NOLINT(bugprone-unused-return-value)
       } else {
-        reveal_context = true;
         pe->journal = nullptr;
         throw parse_error(_("Period transaction failed to balance"));
       }
@@ -344,19 +341,15 @@ xact_t* instance_t::xact_directive(char* line, std::streamsize len, xact_t* prev
   xact_t* added = nullptr;
 
   try {
-    if (xact_t* xact = parse_xact(line, len, top_account(), previous_xact)) {
-      unique_ptr<xact_t> manager(xact);
+    unique_ptr<xact_t> manager(parse_xact(line, len, top_account(), previous_xact));
 
-      if (context.journal->add_xact(xact)) {
-        context.count++;
-        added = manager.release(); // it's owned by the journal now
-      }
-      // It's perfectly valid for the journal to reject the xact, which it
-      // will do if the xact has no substantive effect (for example, a
-      // checking xact, all of whose postings have null amounts).
-    } else {
-      throw parse_error(_("Failed to parse transaction"));
+    if (context.journal->add_xact(manager.get())) {
+      context.count++;
+      added = manager.release(); // it's owned by the journal now
     }
+    // It's perfectly valid for the journal to reject the xact, which it
+    // will do if the xact has no substantive effect (for example, a
+    // checking xact, all of whose postings have null amounts).
   } catch (...) {
     TRACE_STOP(xacts, 2);
     throw;
@@ -913,10 +906,8 @@ bool instance_t::parse_posts(account_t* account, xact_base_t& xact, const bool d
     if (!*p)
       break;
     if (*p != ';') {
-      if (post_t* post = parse_post(line, len, account, nullptr, defer_expr)) {
-        xact.add_post(post);
-        added = true;
-      }
+      xact.add_post(parse_post(line, len, account, nullptr, defer_expr));
+      added = true;
     }
   }
 
@@ -1080,30 +1071,12 @@ xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* accou
           }
         }
 
-        if (post_t* post = parse_post(p, len - (p - line), account, xact.get())) {
-          reveal_context = true;
-          xact->add_post(post);
-          last_post = post;
-        }
+        post_t* post = parse_post(p, len - (p - line), account, xact.get());
         reveal_context = true;
+        xact->add_post(post);
+        last_post = post;
       }
     }
-
-#if 0
-  if (xact->_state == item_t::UNCLEARED) {
-    item_t::application_t result = item_t::CLEARED;
-
-    for (post_t * post : xact->posts) {
-      if (post->_state == item_t::UNCLEARED) {
-        result = item_t::UNCLEARED;
-        break;
-      }
-      else if (post->_state == item_t::PENDING) {
-        result = item_t::PENDING;
-      }
-    }
-  }
-#endif
 
     xact->pos->end_pos = context.curr_pos;
     xact->pos->end_line = context.linenum;
@@ -1141,8 +1114,7 @@ xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* accou
       string expected_hash = xact->hash(prev_hash, hash_type);
       if (xact->has_tag("Hash")) {
         string current_hash = xact->get_tag("Hash")->to_string();
-        if (current_hash.size() != expected_hash.size() ||
-            !std::equal(expected_hash.begin(), expected_hash.end(), current_hash.begin()))
+        if (current_hash != expected_hash)
           throw_(parse_error, _f("Expected hash %1% != %2%") % expected_hash % current_hash);
       } else {
         xact->set_tag("Hash", string_value(expected_hash));

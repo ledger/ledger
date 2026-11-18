@@ -1,0 +1,49 @@
+; A posting that fails to parse reports only its own line ("While parsing
+; posting:"), never the enclosing automated, periodic or regular
+; transaction, and parsing continues with the next entry.  parse_post()
+; signals failure only by throwing; it never returns a null posting.
+; The automated transaction has a check line and a valid posting before
+; the bad one, so its context flag has already been set once.
+; A line that begins with '^' ends the file: the malformed entry after
+; it is never read.
+
+= /Food/
+    check amount > 0
+    (Budget:Food)    1
+    (Budget:Food)    (1 +)
+
+~ Monthly
+    Expenses:Rent    $500 @@
+    Assets:Cash
+
+2024/01/01 Grocer
+    Expenses:Food    $10.00 @ @ $2
+    Assets:Cash
+
+2024/01/02 Cafe
+    Expenses:Food    $5.00
+    Assets:Cash
+
+^ The parser stops here.
+2024/01/03 Never read
+    Expenses:Food    $1.00 @ @ $2
+    Assets:Cash
+
+test bal -> 3
+__ERROR__
+While parsing file "$FILE", line 13:
+While parsing posting:
+  (Budget:Food)    (1 +)
+                   ^^^^^
+Error: ) operator not followed by argument
+While parsing file "$FILE", line 16:
+While parsing posting:
+      Expenses:Rent    $500 @@
+                       ^^^^^^^
+Error: Expected a cost amount
+While parsing file "$FILE", line 20:
+While parsing posting:
+  Expenses:Food    $10.00 @ @ $2
+                            ^^^^
+Error: No quantity specified for amount
+end test

@@ -121,9 +121,6 @@ public:
   /// @return The remaining non-option arguments (verb + operands).
   strings_list read_command_arguments(scope_t& scope, strings_list args);
 
-  /// Log informational messages about which files and databases are in use.
-  void normalize_session_options();
-
   /// Search the scope chain for a pre-command matching @p verb.
   /// Pre-commands (e.g., "parse", "eval") bypass journal loading entirely.
   expr_t::func_t look_for_precommand(scope_t& scope, const string& verb);

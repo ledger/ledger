@@ -81,7 +81,7 @@ void set_session_context(session_t* session) {
     amount_t::parse_conversion("1.00h", "60m");
 
     value_t::initialize();
-  } else if (!session) {
+  } else {
     value_t::shutdown();
     amount_t::shutdown();
     times_shutdown();

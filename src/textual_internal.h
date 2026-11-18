@@ -366,7 +366,7 @@ public:
    * @param account    The current root account (from apply account or master).
    * @param xact       The owning transaction (nullptr for automated/period xacts).
    * @param defer_expr If true, amount expressions are stored but not evaluated yet.
-   * @return A heap-allocated post_t, or nullptr on failure.
+   * @return A heap-allocated post_t owned by the caller; failures throw parse_error.
    */
   post_t* parse_post(char* line, std::streamsize len, account_t* account, xact_t* xact,
                      bool defer_expr = false);
@@ -390,7 +390,7 @@ public:
    * @param len            Length of the header line.
    * @param account        Current root account.
    * @param previous_xact  Previous transaction for hash chaining (may be nullptr).
-   * @return A heap-allocated xact_t, or nullptr on failure.
+   * @return A heap-allocated xact_t owned by the caller; failures throw parse_error.
    */
   xact_t* parse_xact(char* line, std::streamsize len, account_t* account, xact_t* previous_xact);
 
