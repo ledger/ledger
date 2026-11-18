@@ -120,7 +120,8 @@ public:
     value_t::sequence_t::const_iterator begin; ///< Current position in the argument sequence.
     value_t::sequence_t::const_iterator end;   ///< One past the last argument.
 
-    string::const_iterator prev_arg_i; ///< Start of the previously consumed argument (for rewind).
+    string::const_iterator prev_arg_i; ///< Start of the most recently scanned token in the current
+                                       ///< argument (for rewind).
     string::const_iterator arg_i;      ///< Current character position within the current argument.
     string::const_iterator arg_end;    ///< End of the current argument string.
 
@@ -196,6 +197,21 @@ public:
       }
 
       operator bool() const { return kind != END_REACHED; }
+
+      /// @brief True for the keywords that begin a query section (see the grammar in query.cc).
+      static bool is_section_keyword(kind_t kind) {
+        switch (kind) {
+        case TOK_SHOW:
+        case TOK_ONLY:
+        case TOK_BOLD:
+        case TOK_FOR:
+        case TOK_SINCE:
+        case TOK_UNTIL:
+          return true;
+        default:
+          return false;
+        }
+      }
 
       /// @brief Return the debug-friendly name of this token (e.g., "TOK_AND", "TERM(food)").
       string to_string() const {
@@ -326,9 +342,10 @@ public:
       TRACE_CTOR(query_t::lexer_t, "");
     }
     lexer_t(const lexer_t& lexer)
-        : begin(lexer.begin), end(lexer.end), arg_i(lexer.arg_i), arg_end(lexer.arg_end),
-          consume_whitespace(lexer.consume_whitespace), consume_next_arg(lexer.consume_next_arg),
-          multiple_args(lexer.multiple_args), token_cache(lexer.token_cache) {
+        : begin(lexer.begin), end(lexer.end), prev_arg_i(lexer.prev_arg_i), arg_i(lexer.arg_i),
+          arg_end(lexer.arg_end), consume_whitespace(lexer.consume_whitespace),
+          consume_next_arg(lexer.consume_next_arg), multiple_args(lexer.multiple_args),
+          token_cache(lexer.token_cache) {
       TRACE_CTOR(query_t::lexer_t, "copy");
     }
     lexer_t& operator=(const lexer_t&) = default;
@@ -359,6 +376,9 @@ public:
     /// @brief Match a completed identifier against known keywords.
     /// @return The corresponding keyword token, or TERM with the identifier as value.
     token_t match_keyword(const string& ident, string::const_iterator ident_start);
+
+    /// @brief Look up a bare word in the keyword table; TERM if it is not a keyword.
+    static token_t::kind_t keyword_kind(const string& ident);
 
   public:
     /// @brief Push a token back into the one-element lookahead cache.

@@ -288,45 +288,26 @@ query_t::lexer_t::token_t query_t::lexer_t::match_keyword(const string& ident,
     }
   }
 
-  // NOLINTBEGIN(bugprone-branch-clone)
-  if (ident == "and")
-    return token_t(token_t::TOK_AND);
-  else if (ident == "or")
-    return token_t(token_t::TOK_OR);
-  else if (ident == "not")
-    return token_t(token_t::TOK_NOT);
-  else if (ident == "code")
-    return token_t(token_t::TOK_CODE);
-  else if (ident == "desc")
-    return token_t(token_t::TOK_PAYEE);
-  else if (ident == "payee")
-    return token_t(token_t::TOK_PAYEE);
-  else if (ident == "note")
-    return token_t(token_t::TOK_NOTE);
-  else if (ident == "tag")
-    return token_t(token_t::TOK_META);
-  else if (ident == "meta")
-    return token_t(token_t::TOK_META);
-  else if (ident == "data")
-    return token_t(token_t::TOK_META);
-  else if (ident == "show")
-    return token_t(token_t::TOK_SHOW);
-  else if (ident == "only")
-    return token_t(token_t::TOK_ONLY);
-  else if (ident == "bold")
-    return token_t(token_t::TOK_BOLD);
-  else if (ident == "for")
-    return token_t(token_t::TOK_FOR);
-  else if (ident == "since")
-    return token_t(token_t::TOK_SINCE);
-  else if (ident == "until")
-    return token_t(token_t::TOK_UNTIL);
-  else if (ident == "expr") {
-    consume_next_arg = true;
-    return token_t(token_t::TOK_EXPR);
-  } else
+  token_t::kind_t kind = keyword_kind(ident);
+  if (kind == token_t::TERM)
     return token_t(token_t::TERM, ident);
-  // NOLINTEND(bugprone-branch-clone)
+  if (kind == token_t::TOK_EXPR)
+    consume_next_arg = true;
+  return token_t(kind);
+}
+
+query_t::lexer_t::token_t::kind_t query_t::lexer_t::keyword_kind(const string& ident) {
+  static const std::pair<const char*, token_t::kind_t> keywords[] = {
+      {"and", token_t::TOK_AND},     {"or", token_t::TOK_OR},      {"not", token_t::TOK_NOT},
+      {"code", token_t::TOK_CODE},   {"desc", token_t::TOK_PAYEE}, {"payee", token_t::TOK_PAYEE},
+      {"note", token_t::TOK_NOTE},   {"tag", token_t::TOK_META},   {"meta", token_t::TOK_META},
+      {"data", token_t::TOK_META},   {"show", token_t::TOK_SHOW},  {"only", token_t::TOK_ONLY},
+      {"bold", token_t::TOK_BOLD},   {"for", token_t::TOK_FOR},    {"since", token_t::TOK_SINCE},
+      {"until", token_t::TOK_UNTIL}, {"expr", token_t::TOK_EXPR}};
+  for (const auto& [word, kind] : keywords)
+    if (ident == word)
+      return kind;
+  return token_t::TERM;
 }
 
 /*--- Lexer: Token Production ---*/
@@ -352,6 +333,9 @@ query_t::lexer_t::next_token(query_t::lexer_t::token_t::kind_t tok_context) {
       arg_end = (*begin).as_string().end();
     }
 
+    // Record where this token starts so the parser can rewind to it.
+    prev_arg_i = arg_i;
+
     // Phase 1: Quoted/delimited patterns.
     if (*arg_i == '\'' || *arg_i == '"' || *arg_i == '/')
       return scan_quoted_pattern();
@@ -361,7 +345,6 @@ query_t::lexer_t::next_token(query_t::lexer_t::token_t::kind_t tok_context) {
     if (multiple_args && consume_next_arg) {
       consume_next_arg = false;
       token_t tok(token_t::TERM, string(arg_i, arg_end));
-      prev_arg_i = arg_i;
       arg_i = arg_end;
       return tok;
     }
@@ -913,8 +896,10 @@ expr_t::ptr_op_t query_t::parser_t::parse_query_expr(lexer_t::token_t::kind_t to
           if (tok.kind != lexer_t::token_t::TERM)
             throw_(parse_error, _("Unexpected token in date range expression"));
 
-          if (*tok.value == "show" || *tok.value == "bold" || *tok.value == "for" ||
-              *tok.value == "since" || *tok.value == "until") {
+          // An unquoted section keyword ends the period; rewind so the outer
+          // loop reads it as a keyword. A quoted or /regex/ one is a period word.
+          if (!tok.quoted &&
+              lexer_t::token_t::is_section_keyword(lexer_t::keyword_kind(*tok.value))) {
             lexer.token_cache = lexer_t::token_t();
             lexer.arg_i = lexer.prev_arg_i;
             lexer.consume_next_arg = false;
