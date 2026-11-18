@@ -954,10 +954,11 @@ BOOST_AUTO_TEST_CASE(testParseSymbol)
     BOOST_CHECK_EQUAL(string("My Fund"), sym);
   }
 
-  // Parse a symbol with single return value overload
+  // Parse a symbol through the out-parameter overload
   {
     std::istringstream in("EUR ");
-    string sym = commodity_t::parse_symbol(in);
+    string sym;
+    commodity_t::parse_symbol(in, sym);
     BOOST_CHECK_EQUAL(string("EUR"), sym);
   }
 

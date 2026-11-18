@@ -333,17 +333,8 @@ commodity_t* commodity_pool_t::find_annotation_fuzzy(const string& symbol,
   const auto candidates = annotated_commodities.equal_range(annotation_shape_t{symbol, details});
   for (auto it = candidates.first; it != candidates.second; ++it) {
     const annotation_t& existing = it->first.second;
-    if (!existing.price || !existing.price->has_commodity())
-      continue;
-    if (existing.price->commodity() != details.price->commodity())
-      continue;
-    if (existing.date != details.date || existing.tag != details.tag)
-      continue;
-    if (existing.value_expr.has_value() != details.value_expr.has_value())
-      continue;
-    if (existing.value_expr && details.value_expr &&
-        existing.value_expr->text() != details.value_expr->text())
-      continue;
+    // The range already fixes price commodity, date, tag and value_expr.
+    assert(existing.price);
     if ((existing.flags() & ANNOTATION_SEMANTIC_FLAGS) !=
         (details.flags() & ANNOTATION_SEMANTIC_FLAGS))
       continue;
@@ -383,10 +374,7 @@ commodity_t* commodity_pool_t::find_annotation_fuzzy(const string& symbol,
  * must be non-empty.  The new annotated commodity is inserted into the
  * annotated_commodities map keyed by (base_symbol, details); if that key
  * is taken, it throws std::logic_error, since the map could not keep the
- * new commodity.  Flags on the base commodity are updated to record
- * whether fixated or floating price annotations have been seen
- * (COMMODITY_SAW_ANN_PRICE_FIXATED, COMMODITY_SAW_ANN_PRICE_FLOAT), which
- * influences find_price() behavior.
+ * new commodity.  The base commodity is marked COMMODITY_SAW_ANNOTATED.
  */
 annotated_commodity_t* commodity_pool_t::create(commodity_t& comm, const annotation_t& details) {
   DEBUG("pool.commodities", "commodity_pool_t::create[ann:comm] " << "symbol " << comm.base_symbol()
@@ -408,12 +396,6 @@ annotated_commodity_t* commodity_pool_t::create(commodity_t& comm, const annotat
   std::shared_ptr<annotated_commodity_t> commodity(new annotated_commodity_t(&comm, details));
 
   comm.add_flags(COMMODITY_SAW_ANNOTATED);
-  if (details.price) {
-    if (details.has_flags(ANNOTATION_PRICE_FIXATED))
-      comm.add_flags(COMMODITY_SAW_ANN_PRICE_FIXATED);
-    else
-      comm.add_flags(COMMODITY_SAW_ANN_PRICE_FLOAT);
-  }
 
   DEBUG("pool.commodities", "Creating annotated commodity " << "symbol " << commodity->base_symbol()
                                                             << '\n'

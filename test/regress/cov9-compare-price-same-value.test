@@ -1,6 +1,6 @@
-; Test compare_by_commodity with same numeric price but different currencies
-; Covers commodity.cc (recursion found no difference, comparing
-; prices with commodity for ordering by commodity name)
+; Test compare_by_commodity with same numeric price but different currencies:
+; lots priced in different commodities sort by the price commodity's
+; symbol ($ before EUR); the equal numbers play no part.
 
 2024/01/01 Buy in USD
     Assets:Brokerage    10 AAPL {$150.00}

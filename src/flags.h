@@ -188,7 +188,6 @@ protected:
   supports_flags<T>& _flags; ///< Reference to the actual flag storage
 
 public:
-  delegates_flags() : _flags() { TRACE_CTOR(delegates_flags, ""); }
   delegates_flags(supports_flags<T>& arg) : _flags(arg) {
     TRACE_CTOR(delegates_flags, "const supports_flags<T>&");
   }

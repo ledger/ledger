@@ -113,21 +113,19 @@ protected:
    */
   class base_t : public noncopyable, public flags::supports_flags<uint_least16_t> {
   public:
-#define COMMODITY_STYLE_DEFAULTS 0x000        ///< No special formatting; symbol is prefixed.
-#define COMMODITY_STYLE_SUFFIXED 0x001        ///< Symbol follows the amount (e.g., "100 EUR").
-#define COMMODITY_STYLE_SEPARATED 0x002       ///< A space separates symbol from quantity.
-#define COMMODITY_STYLE_DECIMAL_COMMA 0x004   ///< Use comma as decimal point (European style).
-#define COMMODITY_STYLE_THOUSANDS 0x008       ///< Insert grouping separators (e.g., "1,000").
-#define COMMODITY_NOMARKET 0x010              ///< Exclude from market-price valuations (-V/-X).
-#define COMMODITY_BUILTIN 0x020               ///< Internally created (e.g., the null commodity).
-#define COMMODITY_WALKED 0x040                ///< Traversal flag for graph algorithms.
-#define COMMODITY_KNOWN 0x080                 ///< Explicitly declared via a commodity directive.
-#define COMMODITY_PRIMARY 0x100               ///< This commodity has appeared as a price target.
-#define COMMODITY_SAW_ANNOTATED 0x200         ///< An annotated variant has been created.
-#define COMMODITY_SAW_ANN_PRICE_FLOAT 0x400   ///< Seen with a floating lot price.
-#define COMMODITY_SAW_ANN_PRICE_FIXATED 0x800 ///< Seen with a fixated lot price ({=...}).
-#define COMMODITY_STYLE_TIME_COLON 0x1000     ///< Use colon notation for time amounts.
-#define COMMODITY_STYLE_NO_MIGRATE 0x2000     ///< Do not migrate formatting from parsed amounts.
+#define COMMODITY_STYLE_DEFAULTS 0x000      ///< No special formatting; symbol is prefixed.
+#define COMMODITY_STYLE_SUFFIXED 0x001      ///< Symbol follows the amount (e.g., "100 EUR").
+#define COMMODITY_STYLE_SEPARATED 0x002     ///< A space separates symbol from quantity.
+#define COMMODITY_STYLE_DECIMAL_COMMA 0x004 ///< Use comma as decimal point (European style).
+#define COMMODITY_STYLE_THOUSANDS 0x008     ///< Insert grouping separators (e.g., "1,000").
+#define COMMODITY_NOMARKET 0x010            ///< Exclude from market-price valuations (-V/-X).
+#define COMMODITY_BUILTIN 0x020             ///< Internally created (e.g., the null commodity).
+#define COMMODITY_WALKED 0x040              ///< Traversal flag for graph algorithms.
+#define COMMODITY_KNOWN 0x080               ///< Explicitly declared via a commodity directive.
+#define COMMODITY_PRIMARY 0x100             ///< This commodity has appeared as a price target.
+#define COMMODITY_SAW_ANNOTATED 0x200       ///< An annotated variant has been created.
+#define COMMODITY_STYLE_TIME_COLON 0x1000   ///< Use colon notation for time amounts.
+#define COMMODITY_STYLE_NO_MIGRATE 0x2000   ///< Do not migrate formatting from parsed amounts.
 #define COMMODITY_STYLE_THOUSANDS_APOSTROPHE 0x4000 ///< Use apostrophe as thousands separator.
 #define COMMODITY_PRECISION_FROM_PRICE 0x8000 ///< Precision was inferred from a price directive.
 
@@ -308,12 +306,6 @@ public:
    * trailing whitespace.
    */
   static void parse_symbol(char*& p, string& symbol);
-  /** @brief Convenience overload that returns the parsed symbol by value. */
-  static string parse_symbol(std::istream& in) {
-    string temp; // NOLINT(bugprone-unused-local-non-trivial-variable)
-    parse_symbol(in, temp);
-    return temp;
-  }
 
   virtual void print(std::ostream& out, bool elide_quotes = false,
                      bool print_annotations = false) const;

@@ -78,11 +78,7 @@
 /// distance combiner in Dijkstra's algorithm so that the "distance" of
 /// a path equals the weight of its heaviest (oldest) edge.
 template <typename T>
-struct f_max
-#if __cplusplus < 201103L
-    : public std::binary_function<T, T, bool>
-#endif
-{
+struct f_max {
   T operator()(const T& x, const T& y) const { return std::max(x, y); }
 };
 
@@ -587,16 +583,11 @@ std::optional<price_point_t> commodity_history_impl_t::find_price(const commodit
 
   vertex_descriptor v = tv;
   for (vertex_descriptor u = predecessorMap[v]; u != v; v = u, u = predecessorMap[v]) {
-    auto [edge_uv, uv_exists] = edge(u, v, fg);
-    auto [edge_vu, vu_exists] = edge(v, u, fg);
-
-    if (!uv_exists || !vu_exists)
+    auto [e, exists] = edge(u, v, fg);
+    if (!exists)
       continue;
 
-    const price_point_t& point_uv(get(pricemap, edge_uv));
-    const price_point_t& point_vu(get(pricemap, edge_vu));
-
-    const price_point_t& point(point_vu.when > point_uv.when ? point_vu : point_uv);
+    const price_point_t& point(get(pricemap, e));
 
     const commodity_t* u_comm = get(namemap, u);
     const commodity_t* v_comm = get(namemap, v);

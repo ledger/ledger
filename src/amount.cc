@@ -86,7 +86,6 @@ bool amount_t::stream_fullstrings = false;
 /*  Internal storage: GMP temporaries and copy-on-write bigint_t        */
 /*----------------------------------------------------------------------*/
 
-#if !defined(THREADSAFE)
 // These global temporaries are pre-initialized for the sake of
 // efficiency, and are reused over and over again.
 // TODO: These globals are not thread-safe. Use thread_local when
@@ -94,7 +93,6 @@ bool amount_t::stream_fullstrings = false;
 static mpz_t temp;
 static mpq_t tempq;
 static mpfr_t tempf;
-#endif
 
 /**
  * @brief Copy-on-write storage wrapper around a GMP rational (mpq_t).

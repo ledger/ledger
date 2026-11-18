@@ -1,0 +1,36 @@
+; Lots of one commodity whose prices are in different commodities sort
+; by the price commodity's symbol ($ < EUR < GBP), not by the price's
+; number: {$5.00} comes first although 5 is the largest price.  Lots
+; priced in the same commodity sort by price ({1 EUR} before {2 EUR}).
+; The journal buys the lots out of that order on purpose.
+
+2024/01/01 Opening
+    Equity:Opening     -3 EUR
+    Equity:Opening     $-5.00
+    Equity:Opening     -0.50 GBP
+    Assets:Cash        3 EUR
+    Assets:Cash        $5.00
+    Assets:Cash        0.50 GBP
+
+2024/01/02 Buy in euros
+    Assets:Broker      1 X {2 EUR}
+    Assets:Cash        -2 EUR
+
+2024/01/03 Buy in pounds
+    Assets:Broker      1 X {0.50 GBP}
+    Assets:Cash        -0.50 GBP
+
+2024/01/04 Buy in dollars
+    Assets:Broker      1 X {$5.00}
+    Assets:Cash        $-5.00
+
+2024/01/05 Buy in euros again
+    Assets:Broker      1 X {1 EUR}
+    Assets:Cash        -1 EUR
+
+test bal Assets:Broker --lots
+         1 X {$5.00}
+         1 X {1 EUR}
+         1 X {2 EUR}
+      1 X {0.50 GBP}  Assets:Broker
+end test
