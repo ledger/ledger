@@ -30,7 +30,7 @@ end test
 ; With --empty the parent header and zero-balance child are correctly shown.
 test bal Assets:Bank --empty
              $100.00  Assets:Bank
-               $0.00    Checking
+                   0    Checking
              $100.00    Savings
 --------------------
              $100.00

@@ -52,8 +52,6 @@ set(CPACK_SOURCE_IGNORE_FILES
   "~$"
   "^${_ledger_source_re}/doc/website/"
   "^${_ledger_source_re}/doc/wiki/"
-  "^${_ledger_source_re}/lib/[^/]*\\.sh$"
-  "^${_ledger_source_re}/lib/Makefile$"
   "^${_ledger_source_re}/tools/"
   "^${_ledger_source_re}/build[^/]*/"
   ${CPACK_SOURCE_IGNORE_FILES})

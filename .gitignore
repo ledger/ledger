@@ -5,34 +5,15 @@
 *.backup
 *.elc
 *.gcov
-*.l[oa]
 *.pyc
-*.sw[p-z]
+__pycache__/
+*.sw?
 *~
 .timestamp
 *.tar.bz2
 *.tar.gz
-.deps/
-.libs/
-ABOUT-NLS
 Makefile
-Makefile.am
-Makefile.in
 TAGS
-acconf.h.in
-aclocal.m4
-autogen.sh
-autom4te.cache/
-config.guess
-config.h
-config.h.in
-config.log
-config.rpath
-config.status
-config.sub
-configure
-configure.ac
-depcomp
 doc/Doxyfile
 doc/*.aux
 doc/*.cp
@@ -57,31 +38,11 @@ doc/latex/
 doc/refman.pdf
 doc/report/
 doc/version.texi
-install-sh
-intl/
 ledger
-libtool
-ltmain.sh
-m4/
 make.sh
-missing
-mkinstalldirs
-po/
-py-compile
-shave
-shave-libtool
-stamp-h1
 texinfo.tex
 tmpcvs*/
 tmpwrk*/
-dist/win/vc9/Debug/
-dist/win/vc9/gen-mpir.exe
-dist/win/vc9/gen-mpir.ilk
-dist/win/vc9/gen-mpir.pdb
-dist/win/vc9/ledger.ncb
-dist/win/vc9/ledger.vcproj.*.user
-dist/win/vc9/ledger.suo
-dist/win/vc9/lib/Win32/Debug/
 src/TAGS
 CMakeCache.txt
 CPackConfig.cmake
@@ -108,38 +69,27 @@ contrib/non-profit-audit-reports/general-ledger.zip
 build.ninja
 rules.ninja
 test/Testing
+# Outputs of an in-source build (cmake .)
+/CMakeDoxyfile.in
+/CMakeDoxygenDefaults.cmake
+/compile_commands.json
+/ledger.hh
+/Testing/
+/FilterTests
 /MathTests
+/TextualTests
 /UtilTests
 # Files generated when building / developing via Nix
 /result*
 */build
 /outputs
 
-# Logs
-logs
+# Local environment, editor and OS files
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-dev-debug.log
-# Dependency directories
-node_modules/
-# Environment variables
 .env
-# Editor directories and files
 .idea
 .vscode
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-# OS specific
 .DS_Store
-
-# Task files
-tasks.json
-tasks/ 
 
 # Semantic-bisimulation artifacts (regenerable, tuple-pinned)
 test/semantic/artifacts/

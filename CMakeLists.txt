@@ -83,12 +83,6 @@ else()
   set(NO_ASSERTS 0)
 endif()
 
-if(CLANG_GCOV)
-  set(USE_GCOV ON)
-  set(PROFILE_LIBS profile_rt)
-  set(CMAKE_REQUIRED_LIBRARIES ${PROFILE_LIBS})
-endif()
-
 if(USE_GCOV)
   add_compile_options(-fprofile-arcs -ftest-coverage)
   add_link_options(-fprofile-arcs -ftest-coverage)
@@ -325,7 +319,7 @@ endif()
 cmake_push_check_state()
 
 set(CMAKE_REQUIRED_INCLUDES ${CMAKE_INCLUDE_PATH} ${Boost_INCLUDE_DIRS} ${ICU_INCLUDE_DIRS})
-set(CMAKE_REQUIRED_LIBRARIES Boost::regex ${ICU_LIBRARIES} ${PROFILE_LIBS})
+set(CMAKE_REQUIRED_LIBRARIES Boost::regex ${ICU_LIBRARIES})
 
 check_cxx_source_runs("
 #include <boost/regex/icu.hpp>
@@ -474,7 +468,6 @@ macro(add_ledger_library_dependencies _target)
   endif()
   target_link_libraries(${_target} ${GMP_LIB})
   target_link_libraries(${_target} ${MPFR_LIB})
-  target_link_libraries(${_target} ${PROFILE_LIBS})
   if(HAVE_CLOCK_GETTIME_IN_RT AND RT_LIBRARY)
     target_link_libraries(${_target} ${RT_LIBRARY})
   endif()

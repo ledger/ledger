@@ -27,3 +27,24 @@ if run.returncode != 0 or actual != expected:
           % (run.returncode, actual, expected, run.stdout))
     sys.exit(1)
 print('OK acprep info reports %s' % actual)
+
+# The gcov flavor gets its coverage flags from USE_GCOV alone: no CLANG_GCOV
+# (which linked every configure probe against clang 3.1's libprofile_rt),
+# no hand-added -fprofile-arcs/-ftest-coverage and no -lgcov.
+env = {k: v for k, v in os.environ.items()
+       if k not in ('CXX', 'CXXFLAGS', 'LDFLAGS')}
+run = subprocess.run([sys.executable, '-I', os.path.join(source, 'acprep'),
+                      '--debug', 'gcov', 'info'],
+                     cwd=source, env=env, stdout=subprocess.PIPE,
+                     stderr=subprocess.STDOUT, text=True)
+args = run.stdout.partition('CMake arguments')[2].split()
+stray = [a for a in args
+         if 'CLANG_GCOV' in a or a == '-lgcov'
+         or a.startswith(('-DCMAKE_CXX_FLAGS=', '-DCMAKE_EXE_LINKER_FLAGS='))]
+if (run.returncode != 0 or '-DUSE_GCOV=ON' not in args
+        or '-DDISABLE_ASSERTS=ON' not in args or stray):
+    print('FAIL: acprep gcov info exited %d; expected -DUSE_GCOV=ON and '
+          '-DDISABLE_ASSERTS=ON and no %s:\n%s'
+          % (run.returncode, stray, run.stdout))
+    sys.exit(1)
+print('OK acprep gcov flavor configures with -DUSE_GCOV=ON only')

@@ -12,7 +12,7 @@ set(cases
   "lib/utfcpp/v4/source/utf8.h|FALSE"
   "doc/ledger3.texi|FALSE"
   "doc/agile/notes.txt|FALSE"
-  "lib/refresh|FALSE"
+  "lib/xgit|FALSE"
   "test/regress/build-order.test|FALSE"
   "contrib/tools/README|FALSE"
   # Dropped: version-control files at any depth, editor files, unpublished
@@ -25,9 +25,6 @@ set(cases
   "src/journal.cc~|TRUE"
   "doc/website/index.html|TRUE"
   "doc/wiki/Home.md|TRUE"
-  "lib/build.sh|TRUE"
-  "lib/build-gcc.sh|TRUE"
-  "lib/Makefile|TRUE"
   "tools/build.sh|TRUE"
   "build/CMakeCache.txt|TRUE"
   "build-opt/src/ledger|TRUE")
