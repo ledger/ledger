@@ -184,13 +184,9 @@ static bool ends_with_comparison(const string& ident) {
 /// @param consume_next When true (set by `\\` escape), the next operator
 ///                     character is consumed into the identifier instead
 ///                     of acting as a boundary.
-/// @param hit_boundary Set to true if scanning stopped at an operator
-///                     boundary (arg_i points at the boundary char);
-///                     false if the entire argument was consumed.
-string query_t::lexer_t::scan_identifier(token_t::kind_t tok_context, bool consume_next,
-                                         bool& hit_boundary) {
+string query_t::lexer_t::scan_identifier(token_t::kind_t tok_context, bool consume_next) {
   string ident;
-  hit_boundary = false;
+  bool hit_boundary = false;
 
   for (; arg_i != arg_end; ++arg_i) {
     switch (*arg_i) {
@@ -414,8 +410,7 @@ query_t::lexer_t::next_token(query_t::lexer_t::token_t::kind_t tok_context) {
 
     // Phase 4: Accumulate an identifier and match against keywords.
     string::const_iterator ident_start = arg_i;
-    bool hit_boundary = false;
-    string ident = scan_identifier(tok_context, consume_next, hit_boundary);
+    string ident = scan_identifier(tok_context, consume_next);
     return match_keyword(ident, ident_start);
   }
 }
@@ -654,7 +649,6 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
   case lexer_t::token_t::TOK_CODE:
   case lexer_t::token_t::TOK_PAYEE:
   case lexer_t::token_t::TOK_NOTE:
-  case lexer_t::token_t::TOK_ACCOUNT:
   case lexer_t::token_t::TOK_META:
   case lexer_t::token_t::TOK_EXPR:
     node = parse_query_term(tok.kind);
@@ -788,6 +782,23 @@ expr_t::ptr_op_t query_t::parser_t::parse_or_expr(lexer_t::token_t::kind_t tok_c
   return expr_t::ptr_op_t();
 }
 
+/// Join successive OR expressions left to right with O_OR until one is
+/// empty; null if the first one is.
+expr_t::ptr_op_t query_t::parser_t::parse_or_chain(lexer_t::token_t::kind_t tok_context) {
+  expr_t::ptr_op_t chain;
+  while (expr_t::ptr_op_t next = parse_or_expr(tok_context)) {
+    if (!chain) {
+      chain = next;
+    } else {
+      expr_t::ptr_op_t prev(chain);
+      chain = new expr_t::op_t(expr_t::op_t::O_OR);
+      chain->set_left(prev);
+      chain->set_right(next);
+    }
+  }
+  return chain;
+}
+
 /*--- Parser: Top-Level Query Expression and Section Splitting ---*/
 
 /**
@@ -806,19 +817,8 @@ expr_t::ptr_op_t query_t::parser_t::parse_or_expr(lexer_t::token_t::kind_t tok_c
  */
 expr_t::ptr_op_t query_t::parser_t::parse_query_expr(lexer_t::token_t::kind_t tok_context,
                                                      bool subexpression) {
-  expr_t::ptr_op_t limiter;
-
-  // Parse the main (limit) predicate: accumulate OR-connected expressions.
-  while (expr_t::ptr_op_t next = parse_or_expr(tok_context)) {
-    if (!limiter) {
-      limiter = next;
-    } else {
-      expr_t::ptr_op_t prev(limiter);
-      limiter = new expr_t::op_t(expr_t::op_t::O_OR);
-      limiter->set_left(prev);
-      limiter->set_right(next);
-    }
-  }
+  // Parse the main (limit) predicate.
+  expr_t::ptr_op_t limiter = parse_or_chain(tok_context);
 
   // For top-level queries, store the limit predicate and then process
   // any trailing section keywords (show, only, bold, for/since/until).
@@ -840,32 +840,11 @@ expr_t::ptr_op_t query_t::parser_t::parse_query_expr(lexer_t::token_t::kind_t to
       case lexer_t::token_t::TOK_BOLD: {
         lexer.next_token(tok_context);
 
-        kind_t kind = QUERY_SHOW; // Initialize with a default value
-        switch (tok.kind) {
-        case lexer_t::token_t::TOK_SHOW:
-          kind = QUERY_SHOW;
-          break;
-        case lexer_t::token_t::TOK_ONLY:
-          kind = QUERY_ONLY;
-          break;
-        case lexer_t::token_t::TOK_BOLD:
-          kind = QUERY_BOLD;
-          break;
-        default:
-          break;
-        }
+        const kind_t kind = tok.kind == lexer_t::token_t::TOK_SHOW   ? QUERY_SHOW
+                            : tok.kind == lexer_t::token_t::TOK_ONLY ? QUERY_ONLY
+                                                                     : QUERY_BOLD;
 
-        expr_t::ptr_op_t node;
-        while (expr_t::ptr_op_t next = parse_or_expr(tok_context)) {
-          if (!node) {
-            node = next;
-          } else {
-            expr_t::ptr_op_t prev(node);
-            node = new expr_t::op_t(expr_t::op_t::O_OR);
-            node->set_left(prev);
-            node->set_right(next);
-          }
-        }
+        expr_t::ptr_op_t node = parse_or_chain(tok_context);
 
         if (node)
           query_map.insert(

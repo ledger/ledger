@@ -1019,7 +1019,6 @@ void post_t::add_to_value(value_t& value, const optional<expr_t&>& expr) const {
 #if 1
       value_t temp(expr->calc(bound_scope));
       add_or_set_value(value, temp);
-      expr->set_context(ctx);
 #else
       if (!xdata_)
         xdata_ = xdata_t();

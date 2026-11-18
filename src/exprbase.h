@@ -66,8 +66,6 @@
  *  - **Context preservation**: compile() stores the scope pointer for
  *    later no-argument calc() calls, but is careful not to overwrite a
  *    long-lived context set via set_context() with a stack-allocated scope.
- *  - **Preview**: The preview() method shows the full pipeline (input,
- *    parsed text, AST, compiled AST, result) for diagnostic purposes.
  */
 #pragma once
 
@@ -116,13 +114,6 @@ class recursion_error : public std::runtime_error {
 public:
   explicit recursion_error(const string& why) noexcept : std::runtime_error(why) {}
   ~recursion_error() noexcept override {}
-};
-
-/// @brief Thrown for command-line usage errors (wrong number of arguments, etc.).
-class usage_error : public std::runtime_error {
-public:
-  explicit usage_error(const string& why) noexcept : std::runtime_error(why) {}
-  ~usage_error() noexcept override {}
 };
 
 class scope_t;
@@ -174,10 +165,6 @@ public:
     }
     return *this;
   }
-  expr_base_t& operator=(const string& _expr) {
-    parse(_expr);
-    return *this;
-  }
 
   /// @brief Boolean conversion: true if the expression has been parsed
   /// (i.e., has non-empty text).
@@ -211,12 +198,6 @@ public:
   /// @brief Mark the expression as needing recompilation on next calc().
   virtual void mark_uncompiled() { compiled = false; }
 
-  /// @brief Force recompilation against @p scope, even if already compiled.
-  void recompile(scope_t& scope) {
-    compiled = false;
-    compile(scope);
-  }
-
   /// @brief Compile the expression against @p scope.
   /// Only compiles once (idempotent).  Stores scope as context for later
   /// no-argument calc() calls, but does not overwrite a previously set
@@ -248,14 +229,6 @@ public:
   /// evaluation in the reporting pipeline.
   result_type calc(scope_t& scope) {
     if (!compiled) {
-      // Save context before compile: the scope argument is often a
-      // stack-allocated bind_scope_t that will be destroyed when the
-      // caller returns.  compile() (or a derived override) may store
-      // &scope into context, creating a dangling pointer.  By
-      // restoring the saved context afterwards we ensure that any
-      // long-lived context set via set_context() is preserved.
-      scope_t* saved_context = context;
-
 #if DEBUG_ON
       if (SHOW_DEBUG("expr.compile")) {
         DEBUG("expr.compile", "Before compilation:");
@@ -272,9 +245,6 @@ public:
         dump(*_log_stream);
       }
 #endif // DEBUG_ON
-
-      if (saved_context)
-        context = saved_context;
     }
 
     DEBUG("expr.calc", "Calculating: " << str);
@@ -306,44 +276,11 @@ public:
     print(out);
     return out.str();
   }
-  /// @brief Convenience: dump the AST to a string.
-  string dump_to_str() const {
-    std::ostringstream out;
-    dump(out);
-    return out.str();
-  }
-  string preview_to_str(scope_t&) const {
-    std::ostringstream out;
-    preview(out);
-    return out.str();
-  }
 
   /// @brief Pretty-print the expression in infix form (overridden by derived classes).
   virtual void print(std::ostream&) const {}
   /// @brief Dump the internal AST for debugging (overridden by derived classes).
   virtual void dump(std::ostream&) const {}
-
-  /// @brief Diagnostic method: show the full pipeline from input text to
-  /// computed result.  Useful with `ledger expr 'some expression'` to
-  /// inspect how an expression is parsed, compiled, and evaluated.
-  result_type preview(std::ostream& out, scope_t& scope) const {
-    out << _("--- Input expression ---") << '\n';
-    out << text() << '\n';
-
-    out << '\n' << _("--- Text as parsed ---") << '\n';
-    print(out);
-    out << '\n';
-
-    out << '\n' << _("--- Expression tree ---") << '\n';
-    dump(out);
-
-    out << '\n' << _("--- Compiled tree ---") << '\n';
-    compile(scope);
-    dump(out);
-
-    out << '\n' << _("--- Result value ---") << '\n';
-    return calc();
-  }
 };
 
 /// @brief Stream insertion operator: prints the expression in infix form.

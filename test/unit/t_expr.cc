@@ -1348,16 +1348,6 @@ BOOST_AUTO_TEST_CASE(testQueryGetQueryMissing)
 #endif
 }
 
-BOOST_AUTO_TEST_CASE(testQueryTokensRemaining)
-{
-  // Cover query.h line 349: tokens_remaining()
-#ifndef NOT_FOR_PYTHON
-  query_t query;
-  // With no parser initialized, tokens_remaining returns false
-  BOOST_CHECK(! query.tokens_remaining());
-#endif
-}
-
 BOOST_AUTO_TEST_CASE(testQueryHasQueryNoParser)
 {
   // Cover query.h line 338: has_query with no parser
@@ -1376,16 +1366,6 @@ BOOST_AUTO_TEST_CASE(testQueryGetQueryNoParser)
 #endif
 }
 
-BOOST_AUTO_TEST_CASE(testQueryConstructFromString)
-{
-  // Cover query.h lines 312-319: string constructor
-#ifndef NOT_FOR_PYTHON
-  string food_str("food");
-  query_t query(food_str, keep_details_t(), true);
-  BOOST_CHECK(query.has_query(query_t::QUERY_LIMIT));
-#endif
-}
-
 BOOST_AUTO_TEST_CASE(testQueryConstructFromValue)
 {
   // Cover query.h lines 320-326: value_t constructor
@@ -1399,13 +1379,13 @@ BOOST_AUTO_TEST_CASE(testQueryConstructFromValue)
 
 BOOST_AUTO_TEST_CASE(testQueryConstructEmpty)
 {
-  // Cover query.h lines 308, 312-319: empty string constructor
+  // Default and empty-argument constructors leave no query.
 #ifndef NOT_FOR_PYTHON
   query_t query1;
   BOOST_CHECK(! query1.has_query(query_t::QUERY_LIMIT));
 
-  string empty_str("");
-  query_t query2(empty_str, keep_details_t(), true);
+  value_t empty_args;
+  query_t query2(empty_args);
   BOOST_CHECK(! query2.has_query(query_t::QUERY_LIMIT));
 #endif
 }
@@ -1570,10 +1550,10 @@ BOOST_AUTO_TEST_CASE(testExprCalcEmpty)
 }
 
 // -----------------------------------------------------------------------
-// Cover expr.cc lines 266-279: as_expr, set_expr, expr_value
+// Cover expr.cc: as_expr, expr_value
 // -----------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(testAsExprSetExprExprValue)
+BOOST_AUTO_TEST_CASE(testAsExprExprValue)
 {
   // Create a simple op
   expr_t e("42");
@@ -1587,11 +1567,6 @@ BOOST_AUTO_TEST_CASE(testAsExprSetExprExprValue)
   // as_expr: extracts op from value_t
   expr_t::ptr_op_t recovered = as_expr(val);
   BOOST_CHECK(recovered);
-
-  // set_expr: sets op on a value_t
-  value_t val2;
-  set_expr(val2, op);
-  BOOST_CHECK(val2.is_any());
 }
 
 // -----------------------------------------------------------------------
@@ -2436,7 +2411,7 @@ BOOST_AUTO_TEST_CASE(testOpCallFunction)
 }
 
 // -----------------------------------------------------------------------
-// Test for expr_t::is_constant() and constant_value()
+// Test for expr_t::is_constant()
 // Exercises lines 188-205 of expr.cc
 // -----------------------------------------------------------------------
 
@@ -2445,7 +2420,7 @@ BOOST_AUTO_TEST_CASE(testExprIsConstant)
   expr_t expr("42");
   expr.compile(*scope_t::default_scope);
   BOOST_CHECK(expr.is_constant());
-  BOOST_CHECK_EQUAL(42L, expr.constant_value().to_long());
+  BOOST_CHECK_EQUAL(42L, expr.get_op()->as_value().to_long());
 }
 
 // -----------------------------------------------------------------------
@@ -2844,23 +2819,6 @@ BOOST_AUTO_TEST_CASE(testExprCalcNullExpr)
   symbol_scope_t scope;
   value_t result = expr.calc(scope);
   BOOST_CHECK(result.is_null());
-}
-
-// -----------------------------------------------------------------------
-// Coverage for expr.cc lines 203-205: constant_value() const
-// -----------------------------------------------------------------------
-
-BOOST_AUTO_TEST_CASE(testExprConstantValueConst)
-{
-  expr_t expr("42");
-  symbol_scope_t scope;
-  expr.compile(scope);
-
-  BOOST_CHECK(expr.is_constant());
-  const expr_t& cexpr = expr;
-  const value_t& cv = cexpr.constant_value();
-  // The constant value might be INTEGER or AMOUNT depending on parsing
-  BOOST_CHECK(!cv.is_null());
 }
 
 // -----------------------------------------------------------------------
@@ -3704,23 +3662,6 @@ BOOST_AUTO_TEST_CASE(testCalcFunctionDirectW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: merged_expr_t with exprs (non-empty) and semicolon merge_operator
-// (expr.cc line 253)
-// -----------------------------------------------------------------------
-
-BOOST_AUTO_TEST_CASE(testMergedExprSemicolonW7)
-{
-  empty_scope_t parent;
-  symbol_scope_t scope(parent);
-  merged_expr_t merged("t", "1");
-  merged.set_base_expr("1");
-  // Use a non-identifier expression so check_for_single_identifier returns false
-  merged.prepend("2 + 3");
-  merged.compile(scope);
-  BOOST_CHECK(!merged.text().empty());
-}
-
-// -----------------------------------------------------------------------
 // W7 Coverage: op.cc compile O_DEFINE with O_CALL left (lines 134-154)
 // -----------------------------------------------------------------------
 
@@ -4245,23 +4186,6 @@ BOOST_AUTO_TEST_CASE(testExprDumpW8)
   std::ostringstream out;
   e.dump(out);
   BOOST_CHECK(out.str().find("O_ADD") != string::npos);
-}
-
-// =======================================================================
-// W8 Coverage: expr.cc - compile with scope (line 255)
-// merged_expr_t::compile with non-semicolon merge operator
-// =======================================================================
-
-BOOST_AUTO_TEST_CASE(testMergedExprCompileW8)
-{
-  // Test merged_expr_t compile with non-semicolon merge operator
-  // The constructor takes (term, base_expr, merge_op)
-  merged_expr_t me("amount", "1", "+");
-  me.prepend("2");
-
-  symbol_scope_t scope(*scope_t::empty_scope);
-  // This will compile the merged expression, exercising line 255
-  BOOST_CHECK_NO_THROW(me.compile(scope));
 }
 
 // =======================================================================
@@ -4791,22 +4715,9 @@ BOOST_AUTO_TEST_CASE(testContextToStrEmpty)
   BOOST_CHECK(!ctx.empty());
 }
 
-// =======================================================================
-// Coverage: expr.cc - merged_expr_t compile with non-";" operator (line 255)
-// =======================================================================
-
-BOOST_AUTO_TEST_CASE(testMergedExprNonSemicolonOperator)
-{
-  merged_expr_t merged("total", "amount", "+");
-  merged.append("amount * 2");
-
-  symbol_scope_t scope(*scope_t::empty_scope);
-  BOOST_CHECK_NO_THROW(merged.compile(scope));
-}
-
 BOOST_AUTO_TEST_CASE(testMergedExprSemicolonOperator)
 {
-  merged_expr_t merged("total", "amount", ";");
+  merged_expr_t merged("total", "amount");
   merged.append("amount * 3");
 
   symbol_scope_t scope(*scope_t::empty_scope);
@@ -4866,7 +4777,7 @@ BOOST_AUTO_TEST_CASE(testRecompileKeepsRunningAccumulator)
 
 BOOST_AUTO_TEST_CASE(testMergedExprCompileKeepsCallerContext)
 {
-  merged_expr_t merged("total", "amount", ";");
+  merged_expr_t merged("total", "amount");
   merged.append("amount * 3");
 
   symbol_scope_t scope(*scope_t::empty_scope);
@@ -4906,21 +4817,18 @@ BOOST_AUTO_TEST_CASE(testExprCalcWithContext)
 }
 
 // =======================================================================
-// Coverage: exprbase.h - print and dump (lines 207-208)
+// Coverage: exprbase.h - print_to_str
 // =======================================================================
 
-BOOST_AUTO_TEST_CASE(testExprPrintAndDumpCov)
+BOOST_AUTO_TEST_CASE(testExprPrintToStrCov)
 {
   expr_t e("2*3");
   symbol_scope_t scope(*scope_t::empty_scope);
   e.compile(scope);
 
-  // Test print_to_str and dump_to_str (exprbase.h lines 191-199)
+  // Test print_to_str
   string printed = e.print_to_str();
   BOOST_CHECK(!printed.empty());
-
-  string dumped = e.dump_to_str();
-  BOOST_CHECK(!dumped.empty());
 }
 
 // =======================================================================
@@ -5844,6 +5752,90 @@ BOOST_AUTO_TEST_CASE(testFindDefinitionHopLimitThrowsRecursionError)
   a->set_ident("a");
   scope.define(symbol_t::FUNCTION, "a", a);
   BOOST_CHECK_THROW(a->call(value_t(1L), scope), recursion_error);
+}
+
+// -----------------------------------------------------------------------
+// Guards for the query section loops, the merged expression form and the
+// context kept across a lazy compile.
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testQuerySectionOrChains)
+{
+  // Each section ORs its terms left to right; show, only and bold each land
+  // under their own query kind; a section with no terms records nothing.
+  value_t args;
+  for (const char* arg : {"Food", "Cash", "Gas", "show", "Food", "Gas", "Oil", "only", "Cash",
+                          "Bank", "Fees", "bold", "A", "B", "C", "for", "2024"})
+    args.push_back(string_value(arg));
+  query_t query(args);
+  BOOST_CHECK_EQUAL(string("(((account =~ /Food/) | (account =~ /Cash/)) | (account =~ /Gas/))"),
+                    query.get_query(query_t::QUERY_LIMIT));
+  BOOST_CHECK_EQUAL(string("(((account =~ /Food/) | (account =~ /Gas/)) | (account =~ /Oil/))"),
+                    query.get_query(query_t::QUERY_SHOW));
+  BOOST_CHECK_EQUAL(string("(((account =~ /Cash/) | (account =~ /Bank/)) | (account =~ /Fees/))"),
+                    query.get_query(query_t::QUERY_ONLY));
+  BOOST_CHECK_EQUAL(string("(((account =~ /A/) | (account =~ /B/)) | (account =~ /C/))"),
+                    query.get_query(query_t::QUERY_BOLD));
+  BOOST_CHECK_EQUAL(string("2024"), query.get_query(query_t::QUERY_FOR));
+
+  value_t empty_show;
+  for (const char* arg : {"show", "only", "Cash"})
+    empty_show.push_back(string_value(arg));
+  query_t query2(empty_show);
+  BOOST_CHECK(!query2.has_query(query_t::QUERY_LIMIT));
+  BOOST_CHECK(!query2.has_query(query_t::QUERY_SHOW));
+  BOOST_CHECK_EQUAL(string("(account =~ /Cash/)"), query2.get_query(query_t::QUERY_ONLY));
+}
+
+BOOST_AUTO_TEST_CASE(testMergedExprAssemblesSequence)
+{
+  // Merged pieces are threaded through the term with ';' assignments.
+  symbol_scope_t scope(*scope_t::empty_scope);
+  merged_expr_t merged("total", "amount");
+  merged.append("amount * 3");
+  merged.append("total + 1");
+  merged.compile(scope);
+  BOOST_CHECK_EQUAL(
+      string("__tmp_total=(total=(amount);total=(amount * 3);total=(total + 1);total);__tmp_total"),
+      merged.text());
+
+  // A bare identifier replaces the base and drops the merged pieces.
+  merged_expr_t ident("total", "amount");
+  ident.append("amount * 3");
+  ident.append("cost");
+  BOOST_CHECK_EQUAL(string("cost"), ident.base_expr);
+  BOOST_CHECK(ident.exprs.empty());
+  ident.compile(scope);
+  BOOST_CHECK_EQUAL(string("cost"), ident.text());
+}
+
+BOOST_AUTO_TEST_CASE(testExprCalcKeepsSetContext)
+{
+  // A context set with set_context() survives the lazy compile inside
+  // calc(scope), even when calc() is given a short-lived scope.
+  symbol_scope_t long_lived(*scope_t::empty_scope);
+
+  expr_t plain("1 + 2");
+  plain.set_context(&long_lived);
+  {
+    symbol_scope_t short_lived(static_cast<scope_t&>(long_lived));
+    BOOST_CHECK_EQUAL(3L, plain.calc(short_lived).to_long());
+  }
+  BOOST_CHECK(plain.get_context() == &long_lived);
+
+  merged_expr_t merged("t", "1");
+  merged.append("t * 2");
+  merged.set_context(&long_lived);
+  {
+    symbol_scope_t short_lived(static_cast<scope_t&>(long_lived));
+    BOOST_CHECK_EQUAL(2L, merged.calc(short_lived).to_long());
+  }
+  BOOST_CHECK(merged.get_context() == &long_lived);
+
+  // With no context set, the lazy compile records the scope it was given.
+  expr_t unset("4");
+  BOOST_CHECK_EQUAL(4L, unset.calc(long_lived).to_long());
+  BOOST_CHECK(unset.get_context() == &long_lived);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

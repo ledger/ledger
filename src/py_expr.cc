@@ -73,8 +73,6 @@ void export_expr() {
       //.def("calc", &expr_t::calc)
 
       .def("is_constant", &expr_t::is_constant)
-
-      //.def("constant_value", &expr_t::constant_value)
       ;
 }
 

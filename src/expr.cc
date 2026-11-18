@@ -290,16 +290,6 @@ bool expr_t::is_function() const {
   return ptr && ptr->is_function();
 }
 
-value_t& expr_t::constant_value() {
-  assert(is_constant());
-  return ptr->as_value_lval();
-}
-
-const value_t& expr_t::constant_value() const {
-  assert(is_constant());
-  return ptr->as_value();
-}
-
 expr_t::func_t& expr_t::get_function() {
   assert(is_function());
   return ptr->as_function_lval();
@@ -323,9 +313,9 @@ void expr_t::dump(std::ostream& out) const {
 
 /*--- merged_expr_t Implementation ---*/
 
-merged_expr_t::merged_expr_t(const string& _term, const string& expr, const string& merge_op)
-    : expr_t(), term(_term), base_expr(expr), merge_operator(merge_op) {
-  TRACE_CTOR(merged_expr_t, "string, string, string");
+merged_expr_t::merged_expr_t(const string& _term, const string& expr)
+    : expr_t(), term(_term), base_expr(expr) {
+  TRACE_CTOR(merged_expr_t, "string, string");
 }
 
 // NOLINTBEGIN(bugprone-copy-constructor-init)
@@ -333,8 +323,7 @@ merged_expr_t::merged_expr_t(const string& _term, const string& expr, const stri
 // starts with a fresh, uncompiled expression state.  push_report() needs an
 // independent expression context for the new report, not a shared compiled state.
 merged_expr_t::merged_expr_t(const merged_expr_t& other)
-    : expr_t(), term(other.term), base_expr(other.base_expr), merge_operator(other.merge_operator),
-      exprs(other.exprs) {
+    : expr_t(), term(other.term), base_expr(other.base_expr), exprs(other.exprs) {
   TRACE_CTOR(merged_expr_t, "copy");
 }
 // NOLINTEND(bugprone-copy-constructor-init)
@@ -344,7 +333,6 @@ merged_expr_t& merged_expr_t::operator=(const merged_expr_t& other) {
     expr_t::operator=(expr_t()); // reset to fresh uncompiled expression
     term = other.term;
     base_expr = other.base_expr;
-    merge_operator = other.merge_operator;
     exprs = other.exprs;
     // accumulator_scope_ reset is handled by expr_t::operator=() above
   }
@@ -379,12 +367,8 @@ void merged_expr_t::compile(scope_t& scope) {
     std::ostringstream buf;
 
     buf << "__tmp_" << term << "=(" << term << "=(" << base_expr << ")";
-    for (const string& expr : exprs) {
-      if (merge_operator == ";")
-        buf << merge_operator << term << "=(" << expr << ")";
-      else
-        buf << merge_operator << "(" << expr << ")";
-    }
+    for (const string& expr : exprs)
+      buf << ";" << term << "=(" << expr << ")";
     buf << ";" << term << ");__tmp_" << term;
 
     DEBUG("expr.merged.compile", "Compiled expr: " << buf.str());
@@ -435,10 +419,6 @@ value_t merged_expr_t::real_calc(scope_t& scope) {
 expr_t::ptr_op_t as_expr(const value_t& val) {
   VERIFY(val.is_any());
   return val.as_any<expr_t::ptr_op_t>();
-}
-
-void set_expr(value_t& val, expr_t::ptr_op_t op) {
-  val.set_any(op);
 }
 
 value_t expr_value(expr_t::ptr_op_t op) {

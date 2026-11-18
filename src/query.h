@@ -213,59 +213,6 @@ public:
         }
       }
 
-      /// @brief Return the debug-friendly name of this token (e.g., "TOK_AND", "TERM(food)").
-      string to_string() const {
-        switch (kind) {
-        case UNKNOWN:
-          return "UNKNOWN";
-        case LPAREN:
-          return "LPAREN";
-        case RPAREN:
-          return "RPAREN";
-        case TOK_NOT:
-          return "TOK_NOT";
-        case TOK_AND:
-          return "TOK_AND";
-        case TOK_OR:
-          return "TOK_OR";
-        case TOK_EQ:
-          return "TOK_EQ";
-        case TOK_EQEQ:
-          return "TOK_EQEQ";
-        case TOK_CODE:
-          return "TOK_CODE";
-        case TOK_PAYEE:
-          return "TOK_PAYEE";
-        case TOK_NOTE:
-          return "TOK_NOTE";
-        case TOK_ACCOUNT:
-          return "TOK_ACCOUNT";
-        case TOK_META:
-          return "TOK_META";
-        case TOK_EXPR:
-          return "TOK_EXPR";
-        case TOK_SHOW:
-          return "TOK_SHOW";
-        case TOK_ONLY:
-          return "TOK_ONLY";
-        case TOK_BOLD:
-          return "TOK_BOLD";
-        case TOK_FOR:
-          return "TOK_FOR";
-        case TOK_SINCE:
-          return "TOK_SINCE";
-        case TOK_UNTIL:
-          return "TOK_UNTIL";
-        case TERM:
-          return string("TERM(") + *value + ")";
-        case END_REACHED:
-          return "END_REACHED";
-        default:
-          assert(false && "Unknown token kind");
-          return "<UNKNOWN>";
-        }
-      }
-
       /// @brief Return the user-facing symbol for this token (e.g., "and", "@", "(").
       string symbol() const {
         switch (kind) {
@@ -368,10 +315,8 @@ public:
     /// @brief Accumulate a bare-word identifier until an operator boundary.
     /// @param tok_context Affects which characters are boundaries (TOK_EXPR is permissive).
     /// @param consume_next When true, operator chars are consumed into the identifier.
-    /// @param[out] hit_boundary Set to true if scanning stopped at an operator boundary
-    ///             rather than end-of-argument.
     /// @return The accumulated identifier string.
-    string scan_identifier(token_t::kind_t tok_context, bool consume_next, bool& hit_boundary);
+    string scan_identifier(token_t::kind_t tok_context, bool consume_next);
 
     /// @brief Match a completed identifier against known keywords.
     /// @return The corresponding keyword token, or TERM with the identifier as value.
@@ -455,6 +400,8 @@ protected:
     expr_t::ptr_op_t parse_and_expr(lexer_t::token_t::kind_t tok_context);
     /// @brief Parse an OR expression (left-associative chain of AND expressions).
     expr_t::ptr_op_t parse_or_expr(lexer_t::token_t::kind_t tok_context);
+    /// @brief Parse OR expressions until one is empty, joining them left to right with O_OR.
+    expr_t::ptr_op_t parse_or_chain(lexer_t::token_t::kind_t tok_context);
     /**
      * @brief Parse a complete query expression, including section keywords.
      * @param tok_context The default field context (typically TOK_ACCOUNT).
@@ -499,33 +446,14 @@ protected:
     expr_t::ptr_op_t parse(bool subexpression = false) {
       return parse_query_expr(lexer_t::token_t::TOK_ACCOUNT, subexpression);
     }
-
-    /// @brief Check whether any unparsed tokens remain in the lexer stream.
-    bool tokens_remaining() {
-      lexer_t::token_t tok = lexer.peek_token();
-      assert(tok.kind != lexer_t::token_t::UNKNOWN);
-      return tok.kind != lexer_t::token_t::END_REACHED;
-    }
   };
 
   optional<parser_t> parser; ///< Lazily constructed parser (created on first parse_args call).
-  query_map_t predicates;    ///< Cached predicate strings by section.
 
 public:
   query_t() { TRACE_CTOR(query_t, ""); }
-  query_t(const query_t& other) : parser(other.parser), predicates(other.predicates) {
-    TRACE_CTOR(query_t, "copy");
-  }
+  query_t(const query_t& other) : parser(other.parser) { TRACE_CTOR(query_t, "copy"); }
 
-  /// @brief Construct from a single query string (e.g., "food and @grocery").
-  query_t(const string& arg, const keep_details_t& what_to_keep = keep_details_t(),
-          bool multiple_args = true) {
-    if (!arg.empty()) {
-      value_t temp(string_value(arg));
-      parse_args(temp.to_sequence(), what_to_keep, multiple_args);
-    }
-    TRACE_CTOR(query_t, "string, keep_details_t, bool");
-  }
   /// @brief Construct from an argument sequence (e.g., from command-line argv).
   query_t(const value_t& args, const keep_details_t& what_to_keep = keep_details_t(),
           bool multiple_args = true) {
@@ -534,7 +462,7 @@ public:
 
     TRACE_CTOR(query_t, "value_t, keep_details_t, bool");
   }
-  virtual ~query_t() { TRACE_DTOR(query_t); }
+  ~query_t() { TRACE_DTOR(query_t); }
 
   /**
    * @brief Parse query arguments into expression trees, populating query_map.
@@ -568,9 +496,6 @@ public:
     }
     return empty_string;
   }
-
-  /// @brief Check whether unparsed tokens remain (useful for incremental parsing).
-  bool tokens_remaining() { return parser && parser->tokens_remaining(); }
 };
 
 } // namespace ledger

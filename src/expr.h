@@ -161,14 +161,11 @@ public:
 
   /// @brief True if the compiled expression is a single VALUE constant.
   bool is_constant() const;
-  value_t& constant_value();
-  const value_t& constant_value() const;
   /// @brief True if the compiled expression is a single FUNCTION terminal.
   bool is_function() const;
   func_t& get_function();
 
   fast_path_t fast_path() const { return fast_path_; }
-  void set_fast_path(fast_path_t fp) { fast_path_ = fp; }
 
   string context_to_str() const override;
   void print(std::ostream& out) const override;
@@ -209,8 +206,6 @@ inline bool is_expr(const value_t& val) {
 
 /// @brief Extract the embedded op_t pointer from a value_t.
 expr_t::ptr_op_t as_expr(const value_t& val);
-/// @brief Store an op_t pointer inside a value_t (as boost::any).
-void set_expr(value_t& val, expr_t::ptr_op_t op);
 /// @brief Create a value_t that wraps the given op_t pointer.
 value_t expr_value(expr_t::ptr_op_t op);
 
@@ -238,20 +233,17 @@ value_t expr_value(expr_t::ptr_op_t op);
  *
  * This allows users to combine flags like `-O`, `-B`, `-V`, and `-A` at any
  * time, with each flag contributing a transformation that is applied in order.
- * The @c merge_operator controls how pieces are joined (`;` for sequential
- * assignment, or an arithmetic operator for inline combination).
  *
  * @see report_t  Where merged_expr_t instances are used for amount_expr and total_expr.
  */
 class merged_expr_t : public expr_t {
 public:
-  string term;           ///< Variable name used as the threading term (e.g., "amount").
-  string base_expr;      ///< The initial expression assigned to @c term.
-  string merge_operator; ///< Operator joining merged pieces (";" or "+", "*", etc.).
+  string term;      ///< Variable name used as the threading term (e.g., "amount").
+  string base_expr; ///< The initial expression assigned to @c term.
 
   std::list<string> exprs; ///< Accumulated transformation expressions to apply in order.
 
-  merged_expr_t(const string& _term, const string& expr, const string& merge_op = ";");
+  merged_expr_t(const string& _term, const string& expr);
   // Custom copy constructor: copies the configuration (term, base_expr, etc.)
   // but starts with a fresh, uncompiled expression.  This is correct for
   // push_report() which needs an independent expression context for the new
@@ -260,25 +252,17 @@ public:
   merged_expr_t& operator=(const merged_expr_t& other);
   ~merged_expr_t() override;
 
-  void set_term(const string& _term) { term = _term; }
   void set_base_expr(const string& expr) { base_expr = expr; }
-  void set_merge_operator(const string& merge_op) { merge_operator = merge_op; }
 
   /// @brief If @p expr is a bare identifier (no operators), adopt it as
   /// the new base_expr and clear all merged pieces.  Returns true if so.
   bool check_for_single_identifier(const string& expr);
 
-  /// @brief Add a transformation to the front of the merge chain.
-  void prepend(const string& expr) {
-    if (!check_for_single_identifier(expr))
-      exprs.push_front(expr);
-  }
   /// @brief Add a transformation to the end of the merge chain.
   void append(const string& expr) {
     if (!check_for_single_identifier(expr))
       exprs.push_back(expr);
   }
-  void remove(const string& expr) { exprs.remove(expr); }
 
   /// @brief Assemble the merged expression string, parse it, and compile
   /// against @p scope with accumulator isolation.
