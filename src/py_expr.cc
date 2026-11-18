@@ -66,11 +66,8 @@ void export_expr() {
       .def("text", &expr_t::text)
       .def("set_text", &expr_t::set_text)
 
-      //.def("parse", &expr_t::parse)
-
       .def("__call__", py_expr_call)
       .def("compile", &expr_t::compile)
-      //.def("calc", &expr_t::calc)
 
       .def("is_constant", &expr_t::is_constant)
       ;

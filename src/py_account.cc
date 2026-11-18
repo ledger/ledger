@@ -75,19 +75,6 @@ account_t& accounts_getitem(account_t& account, long i) {
               ->second;
 }
 
-#if 0
-  account_t * py_find_account_1(journal_t& journal, const string& name)
-  {
-    return journal.find_account(name);
-  }
-
-  account_t * py_find_account_2(journal_t& journal, const string& name,
-                                const bool auto_create)
-  {
-    return journal.find_account(name, auto_create);
-  }
-#endif
-
 /*--- Extended Data and Computation Wrappers ---*/
 
 account_t::xdata_t& py_xdata(account_t& account) {

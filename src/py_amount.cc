@@ -91,18 +91,6 @@ void py_parse_str_2(amount_t& amount, const string& str, unsigned char flags) {
   (void)amount.parse(str, flags);
 }
 
-#if 0
-  void py_print(amount_t& amount, object out) {
-    if (PyFile_Check(out.ptr())) {
-      pyofstream outstr(reinterpret_cast<PyFileObject *>(out.ptr()));
-      amount.print(outstr);
-    } else {
-      PyErr_SetString(PyExc_IOError,
-                      _("Argument to amount.print_(file) is not a file object"));
-    }
-  }
-#endif
-
 /*--- Annotation and Strip Wrappers ---*/
 
 annotation_t& py_amount_annotation(amount_t& amount) {

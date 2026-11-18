@@ -1,0 +1,17 @@
+; An exception raised by a `python` directive block is printed as a Python
+; traceback and reported as a parse error at the end of the block.
+python
+    raise ValueError("boom")
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ValueError: boom
+While parsing file "$FILE", line 5:
+Error: Failed to evaluate Python code
+end test

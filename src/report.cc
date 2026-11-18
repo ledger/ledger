@@ -404,15 +404,15 @@ void report_t::normalize_options(const string& verb) {
     if (!HANDLED(prepend_width_))
       HANDLER(prepend_width_).value = "0";
     if (!HANDLED(date_width_))
-      HANDLER(date_width_).value = to_string(date_width);
+      HANDLER(date_width_).value = std::to_string(date_width);
     if (!HANDLED(payee_width_))
-      HANDLER(payee_width_).value = to_string(payee_width);
+      HANDLER(payee_width_).value = std::to_string(payee_width);
     if (!HANDLED(account_width_))
-      HANDLER(account_width_).value = to_string(account_width);
+      HANDLER(account_width_).value = std::to_string(account_width);
     if (!HANDLED(amount_width_))
-      HANDLER(amount_width_).value = to_string(amount_width);
+      HANDLER(amount_width_).value = std::to_string(amount_width);
     if (!HANDLED(total_width_))
-      HANDLER(total_width_).value = to_string(total_width);
+      HANDLER(total_width_).value = std::to_string(total_width);
   }
 }
 

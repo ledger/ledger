@@ -92,18 +92,6 @@ std::optional<amount_t> py_commodity_amount_1(const balance_t& balance,
   return r ? std::optional<amount_t>(*r) : std::nullopt;
 }
 
-#if 0
-  void py_print(balance_t& balance, object out) {
-    if (PyFile_Check(out.ptr())) {
-      pyofstream outstr(reinterpret_cast<PyFileObject *>(out.ptr()));
-      balance.print(outstr);
-    } else {
-      PyErr_SetString(PyExc_IOError,
-                      _("Argument to balance.print_(file) is not a file object"));
-    }
-  }
-#endif
-
 /*--- Sequence Protocol ---*/
 
 /// Sequence protocol, so that Balance behaves as a sequence of amounts:

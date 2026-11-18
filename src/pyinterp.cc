@@ -169,8 +169,6 @@ void python_interpreter_t::initialize() {
 
     assert(Py_IsInitialized());
 
-    hack_system_paths();
-
     main_module = import_module("__main__");
     // PyImport_ImportModule returns the cached module if "ledger" is
     // already in sys.modules, so this does not re-run PyInit_ledger and
@@ -184,46 +182,6 @@ void python_interpreter_t::initialize() {
   }
 
   TRACE_FINISH(python_init, 1);
-}
-
-void python_interpreter_t::hack_system_paths() {
-  // Hack ledger.__path__ so it points to a real location
-  object sys_module = import("sys");
-  object sys_dict = sys_module.attr("__dict__");
-
-  list paths(sys_dict["path"]);
-
-#if DEBUG_ON
-  bool path_initialized = false;
-#endif
-  int n = extract<int>(paths.attr("__len__")());
-  for (int i = 0; i < n; i++) {
-    extract<std::string> str(paths[i]);
-    path pathname(str());
-    DEBUG("python.interp", "sys.path = " << pathname);
-
-    if (exists(pathname / "ledger" / "__init__.py")) {
-      if (object module_ledger = import("ledger")) {
-        DEBUG("python.interp", "Setting ledger.__path__ = " << (pathname / "ledger"));
-
-        object ledger_dict = module_ledger.attr("__dict__");
-        list temp_list;
-        temp_list.append((pathname / "ledger").string());
-
-        ledger_dict["__path__"] = temp_list;
-      } else {
-        throw_(std::runtime_error, _("Python failed to initialize (couldn't find ledger)"));
-      }
-#if DEBUG_ON
-      path_initialized = true;
-#endif
-      break;
-    }
-  }
-#if DEBUG_ON
-  if (!path_initialized)
-    DEBUG("python.init", "Ledger failed to find 'ledger/__init__.py' on the PYTHONPATH");
-#endif
 }
 
 object python_interpreter_t::import_option(const string& str) {
@@ -255,74 +213,17 @@ object python_interpreter_t::import_option(const string& str) {
   } catch (const error_already_set&) {
     PyErr_Print();
     throw_(std::runtime_error, _f("Python failed to import: %1%") % str);
-  } catch (...) {
-    throw;
   }
 
   return object();
 }
 
-object python_interpreter_t::eval(std::istream& in, py_eval_mode_t mode) {
-  bool first = true;
-  string buffer;
-  buffer.reserve(4096);
-
-  while (!in.eof()) {
-    char buf[256];
-    in.getline(buf, 255);
-    if (buf[0] == '!')
-      break;
-    if (first)
-      first = false;
-    else
-      buffer += "\n";
-    buffer += buf;
-  }
-
+object python_interpreter_t::eval(const string& str) {
   if (!is_initialized)
     initialize();
 
   try {
-    int input_mode = -1;
-    switch (mode) {
-    case PY_EVAL_EXPR:
-      input_mode = Py_eval_input;
-      break;
-    case PY_EVAL_STMT:
-      input_mode = Py_single_input;
-      break;
-    case PY_EVAL_MULTI:
-      input_mode = Py_file_input;
-      break;
-    }
-
-    return python_run(this, buffer, input_mode);
-  } catch (const error_already_set&) {
-    PyErr_Print();
-    throw_(std::runtime_error, _("Failed to evaluate Python code"));
-  }
-  return object();
-}
-
-object python_interpreter_t::eval(const string& str, py_eval_mode_t mode) {
-  if (!is_initialized)
-    initialize();
-
-  try {
-    int input_mode = -1;
-    switch (mode) {
-    case PY_EVAL_EXPR:
-      input_mode = Py_eval_input;
-      break;
-    case PY_EVAL_STMT:
-      input_mode = Py_single_input;
-      break;
-    case PY_EVAL_MULTI:
-      input_mode = Py_file_input;
-      break;
-    }
-
-    return python_run(this, str, input_mode);
+    return python_run(this, str, Py_file_input);
   } catch (const error_already_set&) {
     PyErr_Print();
     throw_(std::runtime_error, _("Failed to evaluate Python code"));

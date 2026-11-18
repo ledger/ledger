@@ -62,8 +62,6 @@
 #include <boost/uuid/detail/sha1.hpp>
 #include <ledger.hh>
 
-#define TIMERS_ON 1 ///< Enable cumulative timer instrumentation
-
 /**
  * @name Forward declarations and type aliases
  *
@@ -234,29 +232,11 @@ extern string empty_string; ///< Shared empty string instance, avoids repeated a
 /// command parser and Python bindings.
 strings_list split_arguments(const char* line);
 
-/// Convert a long integer to its decimal string representation.
-inline string to_string(long num) {
-  std::ostringstream buf;
-  buf << num;
-  return buf.str();
-}
-
-/// Convert a size_t value to its decimal string representation.
-inline string to_string(std::size_t num) {
-  std::ostringstream buf;
-  buf << num;
-  return buf.str();
-}
-
 /// Return a lower-cased copy of @p str (using Boost's locale-aware to_lower).
 inline string lowered(const string& str) {
   string tmp(str); // NOLINT(bugprone-unused-local-non-trivial-variable)
   to_lower(tmp);
   return tmp;
-}
-
-inline string operator+(const char* left, const string& right) {
-  return string(left) + right;
 }
 
 } // namespace ledger
@@ -276,12 +256,13 @@ inline string operator+(const char* left, const string& right) {
  * - **DEBUG** messages are filtered by a regex-matched category string
  *   (e.g. `--debug "history.find"`).  Source files declare their default
  *   category with `LOGGER("category.name")`.
- * - **INFO** through **CRITICAL** are unconditionally formatted when
- *   the log level is high enough.
+ * - **INFO** messages are formatted whenever the log level is at least
+ *   `LOG_INFO` (`--verbose` and above).
  *
- * The `IF_TRACE`, `IF_DEBUG`, etc. macros allow guarding expensive
- * argument construction so it is skipped when the message would not
- * be emitted.
+ * `SHOW_TRACE(lvl)`, `SHOW_DEBUG(cat)` and `SHOW_INFO()` test whether a
+ * message would be emitted, and `IF_DEBUG(cat)` guards a block with that
+ * test, so expensive argument construction is skipped when the message
+ * would not be emitted.
  */
 /*@{*/
 
@@ -313,7 +294,7 @@ extern thread_local std::ostringstream _log_buffer; ///< Per-thread buffer for m
 void logger_func(log_level_t level);
 
 /// Declare the default debug category for the current translation unit.
-/// Used by `DEBUG_()` and `SHOW_DEBUG_()` to avoid repeating the category.
+/// Used by `DEBUG_()` to avoid repeating the category.
 #define LOGGER(cat) static const char* const _this_category = cat
 
 #if TRACING_ON
@@ -368,7 +349,6 @@ inline bool category_matches(const char* cat) {
 }
 
 #define SHOW_DEBUG(cat) (ledger::_log_level >= ledger::LOG_DEBUG && ledger::category_matches(cat))
-#define SHOW_DEBUG_() SHOW_DEBUG(_this_category)
 
 #define DEBUG(cat, ...)                                                                            \
   do {                                                                                             \
@@ -382,7 +362,6 @@ inline bool category_matches(const char* cat) {
 #else // DEBUG_ON
 
 #define SHOW_DEBUG(cat) false
-#define SHOW_DEBUG_() false
 #define DEBUG(cat, msg)
 #define DEBUG_(msg)
 
@@ -397,31 +376,12 @@ inline bool category_matches(const char* cat) {
   } while (false)
 
 #define SHOW_INFO() (ledger::_log_level >= ledger::LOG_INFO) ///< True if INFO messages are visible
-#define SHOW_WARN() (ledger::_log_level >= ledger::LOG_WARN) ///< True if WARN messages are visible
-#define SHOW_ERROR()                                                                               \
-  (ledger::_log_level >= ledger::LOG_ERROR) ///< True if ERROR messages are visible
-#define SHOW_FATAL()                                                                               \
-  (ledger::_log_level >= ledger::LOG_FATAL) ///< True if FATAL messages are visible
-#define SHOW_CRITICAL()                                                                            \
-  (ledger::_log_level >= ledger::LOG_CRIT) ///< True if CRITICAL messages are visible
 
-#define INFO(msg) LOG_MACRO(ledger::LOG_INFO, msg)        ///< Log an informational message
-#define WARN(msg) LOG_MACRO(ledger::LOG_WARN, msg)        ///< Log a warning message
-#define ERROR(msg) LOG_MACRO(ledger::LOG_ERROR, msg)      ///< Log an error message
-#define FATAL(msg) LOG_MACRO(ledger::LOG_FATAL, msg)      ///< Log a fatal error message
-#define CRITICAL(msg) LOG_MACRO(ledger::LOG_CRIT, msg)    ///< Log a critical error message
-#define EXCEPTION(msg) LOG_MACRO(ledger::LOG_EXCEPT, msg) ///< Log exception details
+#define INFO(msg) LOG_MACRO(ledger::LOG_INFO, msg) ///< Log an informational message
 
 } // namespace ledger
 
-#define IF_TRACE(lvl) if (SHOW_TRACE(lvl))
 #define IF_DEBUG(cat) if (SHOW_DEBUG(cat))
-#define IF_DEBUG_() if (SHOW_DEBUG_())
-#define IF_INFO() if (SHOW_INFO())
-#define IF_WARN() if (SHOW_WARN())
-#define IF_ERROR() if (SHOW_ERROR())
-#define IF_FATAL() if (SHOW_FATAL())
-#define IF_CRITICAL() if (SHOW_CRITICAL())
 
 /*@}*/
 
@@ -435,13 +395,11 @@ inline bool category_matches(const char* cat) {
  *   start/stop pairs (useful for functions called repeatedly).
  * - `finish_timer` logs the total accumulated time and removes the timer.
  *
- * The `TRACE_START`/`DEBUG_START`/`INFO_START` macros combine the level
+ * The `TRACE_START`/`INFO_START` macros combine the level
  * check with the timer start so that the timer description is only built
  * when the corresponding log level is active.
  */
 /*@{*/
-
-#if TIMERS_ON
 
 namespace ledger {
 
@@ -468,26 +426,6 @@ void finish_timer(const char* name);
 #define TRACE_FINISH(name, lvl)
 #endif
 
-#if DEBUG_ON
-#define DEBUG_START(name, cat, ...)                                                                \
-  do {                                                                                             \
-    if (SHOW_DEBUG(cat)) {                                                                         \
-      ledger::_log_buffer << __VA_ARGS__;                                                          \
-      ledger::start_timer(#name, ledger::LOG_DEBUG);                                               \
-    }                                                                                              \
-  } while (false)
-#define DEBUG_START_(name, msg) DEBUG_START_(name, _this_category, msg)
-#define DEBUG_STOP(name, cat) (SHOW_DEBUG(cat) ? ledger::stop_timer(#name) : ((void)0))
-#define DEBUG_STOP_(name) DEBUG_STOP_(name, _this_category)
-#define DEBUG_FINISH(name, cat) (SHOW_DEBUG(cat) ? ledger::finish_timer(#name) : ((void)0))
-#define DEBUG_FINISH_(name) DEBUG_FINISH_(name, _this_category)
-#else
-#define DEBUG_START(name, cat, msg)
-#define DEBUG_START_(name, msg)
-#define DEBUG_STOP(name)
-#define DEBUG_FINISH(name)
-#endif
-
 #define INFO_START(name, ...)                                                                      \
   do {                                                                                             \
     if (SHOW_INFO()) {                                                                             \
@@ -495,27 +433,9 @@ void finish_timer(const char* name);
       ledger::start_timer(#name, ledger::LOG_INFO);                                                \
     }                                                                                              \
   } while (false)
-#define INFO_STOP(name) (SHOW_INFO() ? stop_timer(#name) : ((void)0))
 #define INFO_FINISH(name) (SHOW_INFO() ? finish_timer(#name) : ((void)0))
 
 } // namespace ledger
-
-#else // !TIMERS_ON
-
-#define TRACE_START(lvl, msg, name)
-#define TRACE_STOP(name, lvl)
-#define TRACE_FINISH(name, lvl)
-
-#define DEBUG_START(name, msg)
-#define DEBUG_START_(name, cat, msg)
-#define DEBUG_STOP(name)
-#define DEBUG_FINISH(name)
-
-#define INFO_START(name, msg)
-#define INFO_STOP(name)
-#define INFO_FINISH(name)
-
-#endif // TIMERS_ON
 
 /*@}*/
 
@@ -589,11 +509,6 @@ inline T& downcast(U& object) {
 /// and normalizing the result.  On Cygwin, also converts Windows-style
 /// drive letter paths (e.g. `C:\...`) to POSIX paths.
 path resolve_path(const path& pathname);
-
-/// Return @p first if non-empty, otherwise @p second.
-inline const string& either_or(const string& first, const string& second) {
-  return first.empty() ? second : first;
-}
 
 /// Advance @p ptr past any leading whitespace (space, tab, newline).
 inline char* skip_ws(char* ptr) {

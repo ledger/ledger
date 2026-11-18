@@ -225,11 +225,6 @@ void export_times() {
   scope().attr("parse_date") = &py_parse_date;
   scope().attr("times_initialize") = &times_initialize;
   scope().attr("times_shutdown") = &times_shutdown;
-
-#if 0
-  class_< interval_t > ("Interval")
-    ;
-#endif
 }
 
 } // namespace ledger

@@ -62,80 +62,9 @@ using namespace boost::python;
 
 namespace {
 
-#if 0
-  account_t& py_account_master(journal_t& journal) {
-    return *journal.master;
-  }
-#endif
-
 long xacts_len(journal_t& journal) {
   return static_cast<long>(journal.xacts.size());
 }
-
-#if 0
-  xact_t& xacts_getitem(journal_t& journal, long i)
-  {
-    static long last_index = 0;
-    static journal_t * last_journal = NULL;
-    static xacts_list::iterator elem;
-
-    long len = static_cast<long>(journal.xacts.size());
-
-    if (labs(i) >= len) {
-      PyErr_SetString(PyExc_IndexError, _("Index out of range"));
-      throw_error_already_set();
-    }
-
-    if (&journal == last_journal && i == last_index + 1) {
-      last_index = i;
-      return **++elem;
-    }
-
-    long x = i < 0 ? len + i : i;
-    elem = journal.xacts.begin();
-    while (--x >= 0)
-      elem++;
-
-    last_journal = &journal;
-    last_index   = i;
-
-    return **elem;
-  }
-
-  long accounts_len(account_t& account)
-  {
-    return static_cast<long>(account.accounts.size());
-  }
-
-  account_t& accounts_getitem(account_t& account, long i)
-  {
-    static long last_index = 0;
-    static account_t * last_account = NULL;
-    static accounts_map::iterator elem;
-
-    long len = static_cast<long>(account.accounts.size());
-
-    if (labs(i) >= len) {
-      PyErr_SetString(PyExc_IndexError, _("Index out of range"));
-      throw_error_already_set();
-    }
-
-    if (&account == last_account && i == last_index + 1) {
-      last_index = i;
-      return *(*++elem).second;
-    }
-
-    long x = i < 0 ? len + i : i;
-    elem = account.accounts.begin();
-    while (--x >= 0)
-      elem++;
-
-    last_account = &account;
-    last_index   = i;
-
-    return *(*elem).second;
-  }
-#endif
 
 /*--- Account Lookup Wrappers ---*/
 
@@ -150,13 +79,6 @@ account_t* py_find_account_2(journal_t& journal, const string& name, const bool 
 account_t* py_register_account(journal_t& journal, const string& name, post_t* post) {
   return journal.register_account(name, post, journal.master);
 }
-
-#if 0
-  std::size_t py_read(journal_t& journal, const string& pathname)
-  {
-    return journal.read(context_stack);
-  }
-#endif
 
 /*--- Query Result Collection ---*/
 
@@ -406,10 +328,6 @@ void export_journal() {
                     make_setter(&journal_t::fileinfo_t::from_stream));
 
   class_<journal_t, boost::shared_ptr<journal_t>, boost::noncopyable>("Journal")
-#if 0
-    .def(init<path>())
-    .def(init<string>())
-#endif
       .add_property(
           "master",
           make_getter(&journal_t::master,
@@ -442,11 +360,6 @@ void export_journal() {
       .def("remove_xact", &journal_t::remove_xact)
 
       .def("__len__", xacts_len)
-#if 0
-    .def("__getitem__", xacts_getitem,
-         return_internal_reference<1,
-             with_custodian_and_ward_postcall<1, 0> >())
-#endif
 
       .def("__iter__", boost::python::range<return_internal_reference<>>(&journal_t::xacts_begin,
                                                                          &journal_t::xacts_end))
@@ -459,9 +372,6 @@ void export_journal() {
                         &journal_t::period_xacts_begin, &journal_t::period_xacts_end))
       .add_property("sources", boost::python::range<return_internal_reference<>>(
                                    &journal_t::sources_begin, &journal_t::sources_end))
-#if 0
-    .def("read", py_read)
-#endif
       .def("has_xdata", &journal_t::has_xdata)
       .def("clear_xdata", &journal_t::clear_xdata)
 

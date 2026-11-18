@@ -136,7 +136,6 @@ void export_post() {
   scope().attr("POST_COST_CALCULATED") = POST_COST_CALCULATED;
 
   class_<post_t, bases<item_t>>("Posting")
-      //.def(init<account_t *>())
 
       .def("id", &post_t::id)
       .def("seq", &post_t::seq)
@@ -177,7 +176,6 @@ void export_post() {
       .def("clear_xdata", &post_t::clear_xdata)
       .def("xdata", py_xdata, return_internal_reference<>())
 
-      //.def("add_to_value", &post_t::add_to_value)
       .def("set_reported_account", &post_t::set_reported_account)
 
       .def("reported_account", py_reported_account, return_internal_reference<>());

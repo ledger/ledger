@@ -1,0 +1,12 @@
+; --import of a module Python cannot find reports the Python exception and
+; names the module in the error.
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test --import no_such_module_for_ledger_test bal -> 1
+__ERROR__
+ModuleNotFoundError: No module named 'no_such_module_for_ledger_test'
+While parsing option '--import'
+Error: Python failed to import: no_such_module_for_ledger_test
+end test

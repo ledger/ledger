@@ -295,15 +295,15 @@ value_t select_command(call_scope_t& args) {
       // Persist computed widths back into the report so the format engine
       // can reference them (e.g. `int(date_width)`).
       if (!report.HANDLED(date_width_))
-        report.HANDLER(date_width_).value = to_string(date_width);
+        report.HANDLER(date_width_).value = std::to_string(date_width);
       if (!report.HANDLED(payee_width_))
-        report.HANDLER(payee_width_).value = to_string(payee_width);
+        report.HANDLER(payee_width_).value = std::to_string(payee_width);
       if (!report.HANDLED(account_width_))
-        report.HANDLER(account_width_).value = to_string(account_width);
+        report.HANDLER(account_width_).value = std::to_string(account_width);
       if (!report.HANDLED(amount_width_))
-        report.HANDLER(amount_width_).value = to_string(amount_width);
+        report.HANDLER(amount_width_).value = std::to_string(amount_width);
       if (!report.HANDLED(total_width_))
-        report.HANDLER(total_width_).value = to_string(total_width);
+        report.HANDLER(total_width_).value = std::to_string(total_width);
 
       // Second pass: emit format directives for each selected column.
       // Each column becomes a `%(...)` expression in the format string,

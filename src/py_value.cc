@@ -165,8 +165,6 @@ void export_value() {
       .def(init<const commodity_t&>())
       .def(init<mask_t>())
       .def(init<std::string>())
-      // jww (2009-11-02): Need to support conversion of value_t::sequence_t
-      //.def(init<value_t::sequence_t>())
       .def(init<value_t>())
 
       .def("is_equal_to", &value_t::is_equal_to)
@@ -371,9 +369,6 @@ void export_value() {
       .def("strip_annotations", py_strip_annotations_0)
       .def("strip_annotations", py_strip_annotations_1)
 
-#if 0
-    .def("__getitem__", &value_t::operator[])
-#endif
       .def("push_back", &value_t::push_back)
       .def("pop_back", &value_t::pop_back)
       .def("size", &value_t::size)
@@ -384,14 +379,6 @@ void export_value() {
       .def("valid", &value_t::valid)
 
       .def("basetype", py_base_type);
-
-#if 0
-  // jww (2010-06-10): This is not working since I switched sequence_t to
-  // ptr_deque<value_t>.
-  class_< value_t::sequence_t > ("ValueSequence")
-    .def(vector_indexing_suite< value_t::sequence_t, true >());
-    ;
-#endif
 
   scope().attr("NULL_VALUE") = NULL_VALUE;
   scope().attr("string_value") = &string_value;

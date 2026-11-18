@@ -184,16 +184,6 @@ void export_utils() {
 
       .def(flags_visitor<supports_flags<uint_least16_t>>());
 
-#if 0
-  class_< basic_flags_t<uint_least8_t>,
-          bases<supports_flags<uint_least8_t> > > ("BasicFlags8")
-    .def(init<uint_least8_t>())
-
-    .def("plus_flags", &basic_flags_t<uint_least8_t>::plus_flags)
-    .def("minus_flags", &basic_flags_t<uint_least8_t>::minus_flags)
-    ;
-#endif
-
   class_<delegates_flags<uint_least16_t>, boost::noncopyable>("DelegatesFlags16", no_init)
       .def(flags_visitor<delegates_flags<uint_least16_t>>());
 
