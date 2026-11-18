@@ -160,46 +160,29 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth, scope_t*
 
   if (is_ident()) {
     DEBUG("expr.compile", "Lookup: " << as_ident() << " in " << scope_ptr);
-    ptr_op_t def;
-    bool from_param = false;
-    if (param_scope) {
-      def = param_scope->lookup(symbol_t::FUNCTION, as_ident());
-      if (def)
-        from_param = true;
-    }
-    if (!def)
-      def = scope_ptr->lookup(symbol_t::FUNCTION, as_ident());
+    // Inside a function body (param_scope is non-null) no identifier is
+    // inlined: parameters are bound only when the function is called, and
+    // any other name (payee, amount, a global define) must resolve in the
+    // calling scope (e.g. post_t), not the compilation scope (e.g. report_t),
+    // where "payee" names an option handler.
+    ptr_op_t def = param_scope ? ptr_op_t() : scope_ptr->lookup(symbol_t::FUNCTION, as_ident());
     if (def && def->kind != PLUG) {
       // Identifier references are first looked up at the point of
       // definition, and then at the point of every use if they could
       // not be found there.  We skip PLUG sentinels here -- the ones
-      // declared for lambda parameters and for accumulators (a
-      // self-referential O_DEFINE) -- so that those identifiers remain
-      // dynamic IDENT nodes that do a fresh scope lookup at runtime.
-      // This allows accumulator patterns like
-      // biggest=max(amount,biggest);biggest to read the running
+      // declared for accumulators (a self-referential O_DEFINE) -- so
+      // that those identifiers remain dynamic IDENT nodes that do a
+      // fresh scope lookup at runtime.  This allows accumulator patterns
+      // like biggest=max(amount,biggest);biggest to read the running
       // accumulated value each time rather than always returning NULL
       // (the value of PLUG).
-      //
-      // When compiling inside a lambda/function body (param_scope is
-      // non-null), only inline identifiers found in the parameter scope.
-      // Non-parameter identifiers (like "payee", "amount", etc.) must
-      // remain as unresolved IDENT nodes for runtime lookup, because
-      // the correct definition depends on the calling scope (e.g.,
-      // post_t), not the compilation scope (e.g., report_t).  Without
-      // this guard, identifiers like "payee" are incorrectly resolved
-      // to option handlers at compile time (fixes #953).
-      if (from_param || !param_scope) {
 #if DEBUG_ON
-        if (SHOW_DEBUG("expr.compile")) {
-          DEBUG("expr.compile", "Found definition:");
-          def->dump(*_log_stream, 0);
-        }
-#endif // DEBUG_ON
-        result = copy(def);
-      } else {
-        result = this;
+      if (SHOW_DEBUG("expr.compile")) {
+        DEBUG("expr.compile", "Found definition:");
+        def->dump(*_log_stream, 0);
       }
+#endif // DEBUG_ON
+      result = copy(def);
     } else if (left()) {
       result = copy();
     } else {
@@ -436,16 +419,12 @@ value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t* locus, const int depth) {
       break;
     }
 
-    case SCOPE:
+    case SCOPE: {
       assert(!is_scope_unset());
-      if (is_scope_unset()) {
-        symbol_scope_t subscope(scope);
-        result = left()->calc(subscope, locus, depth + 1);
-      } else {
-        bind_scope_t bound_scope(scope, *as_scope());
-        result = left()->calc(bound_scope, locus, depth + 1);
-      }
+      bind_scope_t bound_scope(scope, *as_scope());
+      result = left()->calc(bound_scope, locus, depth + 1);
       break;
+    }
 
     case O_LOOKUP: {
       context_scope_t context_scope(scope, value_t::SCOPE);

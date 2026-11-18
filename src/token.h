@@ -76,7 +76,8 @@ namespace ledger {
  *
  * Design note: a single token object is reused rather than allocated per
  * token because expression parsing is a hot path during report generation.
- * The assert(false) in operator= enforces this single-instance discipline.
+ * The noncopyable base deletes copy assignment, so the compiler enforces
+ * this single-instance discipline.
  */
 struct expr_t::token_t : public noncopyable {
   /**
@@ -143,14 +144,6 @@ struct expr_t::token_t : public noncopyable {
 
   explicit token_t() : kind(UNKNOWN), length(0) { TRACE_CTOR(expr_t::token_t, ""); }
   ~token_t() noexcept { TRACE_DTOR(expr_t::token_t); }
-
-  /// @brief Assignment is forbidden at runtime; only one token object exists.
-  token_t& operator=(const token_t& other) {
-    if (&other == this)
-      return *this;
-    assert(false); // only one token object is used at a time
-    return *this;
-  }
 
   /// @brief Reset the token to its uninitialized state between uses.
   void clear() {

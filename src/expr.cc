@@ -345,8 +345,10 @@ merged_expr_t::~merged_expr_t() {
 
 bool merged_expr_t::check_for_single_identifier(const string& expr) {
   bool single_identifier = true;
+  // Only a bare alphanumeric name replaces the base expression.  A name
+  // containing '_' (e.g. display_amount) is appended as a merged step.
   for (const char* p = expr.c_str(); *p; ++p)
-    if (!std::isalnum(static_cast<unsigned char>(*p)) || *p == '_') {
+    if (!std::isalnum(static_cast<unsigned char>(*p))) {
       single_identifier = false;
       break;
     }

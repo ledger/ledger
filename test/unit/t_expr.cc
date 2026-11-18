@@ -1636,6 +1636,24 @@ BOOST_AUTO_TEST_CASE(testOpDumpScopeSet)
   BOOST_CHECK(after_scope != "null");
 }
 
+BOOST_AUTO_TEST_CASE(testParsedScopeNodesCarryScope)
+{
+  // The parser gives every SCOPE node (an assignment's right side, a
+  // lambda's body) its scope when it builds it, so an uncompiled tree,
+  // such as the right operand of a '.' lookup, can be evaluated.
+  expr_t def("x = 1");
+  expr_t::ptr_op_t op = def.get_op();
+  BOOST_REQUIRE(op && op->kind == expr_t::op_t::O_DEFINE);
+  BOOST_REQUIRE(op->right()->is_scope());
+  BOOST_CHECK(!op->right()->is_scope_unset());
+
+  expr_t lam("y -> y * 2");
+  op = lam.get_op();
+  BOOST_REQUIRE(op && op->kind == expr_t::op_t::O_LAMBDA);
+  BOOST_REQUIRE(op->right()->is_scope());
+  BOOST_CHECK(!op->right()->is_scope_unset());
+}
+
 BOOST_AUTO_TEST_CASE(testOpDumpNot)
 {
   // Cover lines 876-877: O_NOT
@@ -4722,6 +4740,29 @@ BOOST_AUTO_TEST_CASE(testMergedExprSemicolonOperator)
 
   symbol_scope_t scope(*scope_t::empty_scope);
   BOOST_CHECK_NO_THROW(merged.compile(scope));
+}
+
+// -----------------------------------------------------------------------
+// merged_expr_t::append: only a bare alphanumeric name replaces the base
+// expression; a name containing '_' is appended as a merged step.
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testMergedExprAppendUnderscoreName)
+{
+  merged_expr_t merged("amount", "amount");
+  merged.append("amount * 2");
+  BOOST_CHECK_EQUAL(std::size_t(1), merged.exprs.size());
+
+  merged.append("cost");
+  BOOST_CHECK_EQUAL(string("cost"), merged.base_expr);
+  BOOST_CHECK(merged.exprs.empty());
+
+  merged.append("display_amount");
+  BOOST_CHECK_EQUAL(string("cost"), merged.base_expr);
+  BOOST_CHECK_EQUAL(std::size_t(1), merged.exprs.size());
+  BOOST_CHECK_EQUAL(string("display_amount"), merged.exprs.back());
+
+  BOOST_CHECK(!merged.check_for_single_identifier("_"));
 }
 
 BOOST_AUTO_TEST_CASE(testSelfReferentialDefineStaysInExpression)

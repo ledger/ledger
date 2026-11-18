@@ -151,9 +151,6 @@ class expr_t::parser_t : public noncopyable {
     use_lookahead = true;
   }
 
-  /// @brief Push the current lookahead back without an explicit token reference.
-  void push_token() const { use_lookahead = true; }
-
   /*--- Precedence-level parsing functions (highest to lowest) ---*/
 
   /// @brief Parse a primary value: literal, identifier, or parenthesized sub-expression.

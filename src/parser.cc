@@ -61,6 +61,7 @@
 #include <system.hh>
 
 #include "parser.h"
+#include "scope.h"
 
 namespace ledger {
 
@@ -99,7 +100,7 @@ expr_t::ptr_op_t expr_t::parser_t::parse_value_term(std::istream& in,
       throw_(parse_error, _("Expression nesting depth limit exceeded"));
     node = parse_value_expr(in, tflags.minus_flags(PARSE_SINGLE));
     --parse_depth;
-    tok = next_token(in, tflags, token_t::RPAREN);
+    next_token(in, tflags, token_t::RPAREN);
     break;
 
   default:
@@ -445,7 +446,7 @@ expr_t::ptr_op_t expr_t::parser_t::parse_querycolon_expr(std::istream& in,
       int cond = subtree_depth;
       int alt = 0; // the null VALUE when there is no else
 
-      tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
+      next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
       if (tok.kind == token_t::KW_ELSE) {
         ptr_op_t else_op(parse_or_expr(in, tflags));
         if (!else_op)
@@ -546,6 +547,7 @@ expr_t::ptr_op_t expr_t::parser_t::parse_lambda_expr(std::istream& in,
       node = new op_t(op_t::O_LAMBDA);
       node->set_left(prev);
       ptr_op_t scope(new op_t(op_t::SCOPE));
+      scope->set_scope(std::make_shared<symbol_scope_t>(*scope_t::empty_scope));
       scope->set_left(parse_querycolon_expr(in, tflags));
       node->set_right(scope);
       d = checked_depth(1 + std::max(d, 1 + subtree_depth));
@@ -573,6 +575,7 @@ expr_t::ptr_op_t expr_t::parser_t::parse_assign_expr(std::istream& in,
       node = new op_t(op_t::O_DEFINE);
       node->set_left(prev);
       ptr_op_t scope(new op_t(op_t::SCOPE));
+      scope->set_scope(std::make_shared<symbol_scope_t>(*scope_t::empty_scope));
       scope->set_left(parse_lambda_expr(in, tflags));
       node->set_right(scope);
       d = checked_depth(1 + std::max(d, 1 + subtree_depth));
