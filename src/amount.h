@@ -153,6 +153,15 @@ protected:
       true): checks, arithmetic, precision and the BIGINT_COST_PREC drop. */
   amount_t& add_or_subtract(const amount_t& amt, bool subtract);
 
+  /** The precision at which is_zero() tests and print() shows this
+      amount, which must have a commodity: the commodity's precision,
+      widened to quantity->prec for an amount inferred from a cost
+      (BIGINT_COST_PREC, #1692) when the commodity's stored precision is 0
+      or the amount would round to zero at it.  It reads the stored
+      precision, not whether the precision was ever learned: a precision
+      of 0 learned from a whole-unit amount still widens. */
+  precision_t cost_display_precision() const;
+
   struct bigint_t;
 
   bigint_t* quantity;

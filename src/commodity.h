@@ -214,6 +214,14 @@ public:
   amount_t::precision_t precision() const { return base->precision; }
   void set_precision(amount_t::precision_t arg) { base->precision = arg; }
 
+  /** Whether a price may mark this commodity's precision tentative
+      (COMMODITY_PRECISION_FROM_PRICE): not once a commodity, D, N or P
+      directive declared it (COMMODITY_KNOWN) or a format fixed its style
+      (COMMODITY_STYLE_NO_MIGRATE). */
+  bool accepts_price_precision() const {
+    return !has_flags(COMMODITY_KNOWN | COMMODITY_STYLE_NO_MIGRATE);
+  }
+
   optional<amount_t> smaller() const { return base->smaller; }
   void set_smaller(const optional<amount_t>& arg = none) { base->smaller = arg; }
 

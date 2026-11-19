@@ -91,18 +91,15 @@ commodity_t* py_find_2(commodity_pool_t& pool, const string& symbol, const annot
 
 // Exchange one commodity for another, while recording the factored price.
 
-// Mark the per_unit_cost commodity's precision as tentative (derived from a
-// price expression) so that actual transaction amounts can later override it.
-// This mirrors what parse_price_directive does in pool.cc: when a commodity's
-// precision has been set from a price expression rather than from an explicit
-// commodity declaration, we tag it with COMMODITY_PRECISION_FROM_PRICE so
-// that the textual parser is free to widen the precision if it sees a higher-
-// precision amount in the journal.
+// Mark the price commodity's precision tentative
+// (COMMODITY_PRECISION_FROM_PRICE), as parse_price_directive does, so
+// journal amounts may still set it.  Unlike a P directive this applies
+// whatever the precision: the Amount literal passed in has already taught
+// it (issue #1019).
 static void mark_price_commodity_precision(const amount_t& per_unit_cost) {
   if (per_unit_cost.has_commodity()) {
     commodity_t& price_commodity = per_unit_cost.commodity();
-    if (!price_commodity.has_flags(COMMODITY_KNOWN) &&
-        !price_commodity.has_flags(COMMODITY_STYLE_NO_MIGRATE)) {
+    if (price_commodity.accepts_price_precision()) {
       price_commodity.add_flags(COMMODITY_PRECISION_FROM_PRICE);
     }
   }

@@ -904,6 +904,17 @@ void amount_t::set_cost_precision(precision_t prec) {
   quantity->add_flags(BIGINT_COST_PREC);
 }
 
+amount_t::precision_t amount_t::cost_display_precision() const {
+  const precision_t comm_prec = commodity().precision();
+  if (!quantity->has_flags(BIGINT_COST_PREC) || quantity->prec <= comm_prec)
+    return comm_prec;
+  if (comm_prec == 0)
+    return quantity->prec;
+  amount_t at_comm_prec(*this);
+  at_comm_prec.in_place_roundto(comm_prec);
+  return at_comm_prec.is_realzero() ? quantity->prec : comm_prec;
+}
+
 bool amount_t::set_precision_if_exact(precision_t prec) {
   if (!quantity)
     throw_(amount_error, _("Cannot set precision of an uninitialized amount"));
@@ -1408,7 +1419,7 @@ int amount_t::sign() const {
  * rounded away from zero when the value is not first simplified to zero:
  * is_zero() is true for $0.005, which prints "$0.01".
  *
- * The check is optimized: if the numerator exceeds the denominator
+ * The check is optimized: if the magnitude is at least one
  * the amount is obviously non-zero; otherwise it is decided in exact
  * rational arithmetic, independent of how the amount prints.
  */
@@ -1417,40 +1428,16 @@ bool amount_t::is_zero() const {
     throw_(amount_error, _("Cannot determine if an uninitialized amount is zero"));
 
   if (has_commodity()) {
-    // For amounts flagged with BIGINT_COST_PREC, print() may use
-    // quantity->prec as the effective display precision when the
-    // commodity's display precision would otherwise drop the value to
-    // zero on the page (or when the commodity has no established
-    // precision at all).  Mirror that here so inferred balancing
-    // postings whose value falls below the commodity's display
-    // precision are not silently classified as zero -- which would
-    // hide them from output and break the accounting equation (issue
-    // #1692).
-    precision_t check_prec = commodity().precision();
-    if (quantity->has_flags(BIGINT_COST_PREC) && quantity->prec > check_prec) {
-      // Widen the precision used for the zero-check whenever the
-      // commodity has no established precision (the user has expressed
-      // no expectation of display precision), or whenever the value
-      // would round to zero at the commodity's display precision (the
-      // case the original report describes).  In other situations the
-      // commodity's display precision has caught up to or covered the
-      // value's significant digits and is the right precision to use.
-      if (check_prec == 0) {
-        check_prec = quantity->prec;
-      } else {
-        amount_t at_comm_prec(*this);
-        at_comm_prec.in_place_roundto(check_prec);
-        if (at_comm_prec.is_realzero())
-          check_prec = quantity->prec;
-      }
-    }
+    // print() shows the amount at this precision; testing at it keeps a
+    // shown amount from counting as zero (#1692).
+    const precision_t check_prec = cost_display_precision();
 
     if (keep_precision() || quantity->prec <= check_prec) {
       return is_realzero();
     } else if (is_realzero()) {
       return true;
-    } else if (mpz_cmp(mpq_numref(MP(quantity)), mpq_denref(MP(quantity))) > 0) {
-      DEBUG("amount.is_zero", "Numerator is larger than the denominator");
+    } else if (mpz_cmpabs(mpq_numref(MP(quantity)), mpq_denref(MP(quantity))) >= 0) {
+      DEBUG("amount.is_zero", "Magnitude is at least one");
       return false;
     } else {
       return within_half_unit(MP(quantity), check_prec);
@@ -2095,30 +2082,13 @@ void amount_t::print_unpadded(std::ostream& out, const uint_least8_t flags,
   }
 
   precision_t disp_prec = display_precision();
-  int zeros_prec = comm ? commodity().precision() : 0;
-  // Inferred balancing amounts tagged by set_cost_precision() carry
-  // BIGINT_COST_PREC together with a quantity->prec that captures the
-  // recovered cost precision.  Render at the recovered precision when
-  // the commodity has no established display precision (so we don't
-  // collapse to integer rendering) or when the value would otherwise
-  // round to zero on the page (issue #1692).  When the commodity's
-  // display precision has grown to a meaningful coverage (e.g. EUR was
-  // at precision 0 when the inference happened but a later transaction
-  // bumped it to 2), normal display via that precision is what the
-  // user expects.
-  if (comm && quantity->has_flags(BIGINT_COST_PREC) && quantity->prec > commodity().precision()) {
-    bool widen = false;
-    if (commodity().precision() == 0) {
-      widen = true;
-    } else {
-      amount_t at_comm_prec(*this);
-      at_comm_prec.in_place_roundto(commodity().precision());
-      widen = at_comm_prec.is_realzero();
-    }
-    if (widen) {
-      disp_prec = quantity->prec;
-      zeros_prec = quantity->prec;
-    }
+  int zeros_prec = 0;
+  if (comm) {
+    // An amount inferred from a cost may show more digits than its
+    // commodity's precision (see cost_display_precision, #1692).
+    zeros_prec = cost_display_precision();
+    if (zeros_prec > commodity().precision())
+      disp_prec = static_cast<precision_t>(zeros_prec);
   }
   zeros_prec = std::max(zeros_prec, static_cast<int>(min_decimals));
   stream_out_mpq(out, MP(quantity), disp_prec, zeros_prec, comm);

@@ -2836,4 +2836,22 @@ BOOST_AUTO_TEST_CASE(testAddSubtractErrorMessages)
   BOOST_CHECK_EQUAL(amount_t("$-1.00"), amount_t("$1.25") - amount_t("$2.25"));
 }
 
+BOOST_AUTO_TEST_CASE(testIsZeroNegativeBeyondPrecision)
+{
+  // The fixture gives $ a precision of 2.  Each quotient carries more
+  // digits than that, so is_zero() decides at the commodity's precision.
+  const amount_t big = amount_t("$-10.00") / amount_t(3L);   // $-3.333...
+  const amount_t small = amount_t("$-0.03") / amount_t(5L);  // $-0.006 shows as $-0.01
+  const amount_t tiny = amount_t("$-0.01") / amount_t(4L);   // $-0.0025 shows as $-0.00
+  const amount_t one = amount_t("$-3.00") / amount_t(3L);    // $-1, |x| == 1 exactly
+
+  BOOST_CHECK(!big.is_zero());
+  BOOST_CHECK(!small.is_zero());
+  BOOST_CHECK(tiny.is_zero());
+  BOOST_CHECK(!one.is_zero());
+  BOOST_CHECK(!(-big).is_zero());
+  BOOST_CHECK(!(-small).is_zero());
+  BOOST_CHECK((-tiny).is_zero());
+}
+
 BOOST_AUTO_TEST_SUITE_END()

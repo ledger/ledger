@@ -1,0 +1,27 @@
+; JPY has a stored precision of 0 after the 1000 JPY posting, yet the
+; amount inferred from the 3 Z @ 100.4 JPY cost still shows the cost's
+; precision (#1692).  That widening reads the commodity's stored precision,
+; whether or not a later change records that the 0 was learned (#3278), so
+; the inferred -301.2 JPY is not shown as -301 JPY.
+
+2018-05-01 * Opening
+    Assets:Yen                1000 JPY
+    Equity:Opening
+
+2018-05-02 * Quux
+    Assets:I                    3 Z @ 100.4 JPY
+    Assets:J
+
+test bal Assets:I Assets:J
+          -301.2 JPY
+                 3 Z  Assets
+                 3 Z    I
+          -301.2 JPY    J
+--------------------
+          -301.2 JPY
+                 3 Z
+end test
+
+test reg Assets:J
+18-May-02 Quux                  Assets:J                 -301.2 JPY   -301.2 JPY
+end test
