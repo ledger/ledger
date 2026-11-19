@@ -67,6 +67,11 @@ CASES = [
      ['-f', '$JOURNAL', 'bal', '--force-color'],
      '             \033[31m$-25.00\033[0m  \033[33mAssets:Checking\033[0m\n'
      '              $25.00  \033[33mExpenses:Food\033[0m\n' + TOTAL, 0),
+    # An account check is an automated check, which an init file must not
+    # hold.
+    ('An account check in the init file is rejected', {},
+     {'ledgerrc': 'account Assets:Checking\n    check amount < 1000\n'},
+     ['--init-file', '$DIR/ledgerrc', '-f', '$JOURNAL', 'bal'], '', 1),
 ]
 # Every documented way of naming an init file on the command line reads it,
 # and a missing one is an error.

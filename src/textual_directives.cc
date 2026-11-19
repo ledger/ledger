@@ -731,15 +731,10 @@ void instance_t::account_directive_body(char* line, account_t* parent, std::size
           account_directive_body(sub.argument(), account, sub.indent);
         } else if (sub.keyword == "assert" || sub.keyword == "check") {
           char* expr_str = sub.argument();
-          keep_details_t keeper(true, true, true);
-          string safe_name = account->fullname();
-          boost::replace_all(safe_name, "\\", "\\\\");
-          boost::replace_all(safe_name, "\"", "\\\"");
-          expr_t expr(string("account == \"") + safe_name + "\"");
-          predicate_t pred(expr.get_op(), keeper);
 
           if (!ae.get()) {
-            ae.reset(new auto_xact_t(pred));
+            // No predicate: apply_checks_to_post never evaluates one.
+            ae.reset(new auto_xact_t());
 
             ae->pos = position_t();
             ae->pos->pathname = context.pathname_ref;
@@ -776,13 +771,8 @@ void instance_t::account_directive_body(char* line, account_t* parent, std::size
     ae->journal = context.journal;
     ae->pos->end_pos = context.curr_pos;
     ae->pos->end_line = context.linenum;
-    // Mark this auto_xact as scoped to `account` and index it so that
-    // journal_t::extend_xact() can dispatch it via O(1) account lookup
-    // rather than scanning every auto_xact for every posting.  See #562.
-    ae->scoped_to_account = account;
-    auto_xact_t* ae_ptr = ae.get();
-    context.journal->auto_xacts.push_back(std::move(ae));
-    context.journal->account_check_xacts[account].push_back(ae_ptr);
+    // Indexed by account for journal_t::extend_xact() (#562).
+    context.journal->account_check_xacts[account].push_back(std::move(ae));
   }
 }
 

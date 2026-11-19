@@ -827,4 +827,30 @@ BOOST_AUTO_TEST_CASE(testSessionHeaderLeavesTokenCommaIntact) {
   BOOST_CHECK_EQUAL(out.str(), ",");
 }
 
+BOOST_AUTO_TEST_CASE(testAccountCheckIsNotAnAutomatedTransaction)
+{
+  // `check`/`assert` under an account directive are owned by the
+  // journal's per-account index, not listed among its `=` automated
+  // transactions.
+  std::string input =
+    "account Assets:Cash\n"
+    "    check amount < 1000\n"
+    "    assert amount > -1000\n"
+    "\n"
+    "2024/01/15 Grocery Store\n"
+    "    Expenses:Food                $50.00\n"
+    "    Assets:Cash\n";
+
+  BOOST_CHECK_EQUAL(1u, parse_text(input));
+  BOOST_CHECK(session.journal->auto_xacts.empty());
+
+  account_t* cash = session.journal->master->find_account("Assets:Cash", false);
+  BOOST_REQUIRE(cash);
+  auto it = session.journal->account_check_xacts.find(cash);
+  BOOST_REQUIRE(it != session.journal->account_check_xacts.end());
+  BOOST_REQUIRE_EQUAL(1u, it->second.size());
+  BOOST_REQUIRE(it->second.front()->check_exprs);
+  BOOST_CHECK_EQUAL(2u, it->second.front()->check_exprs->size());
+}
+
 BOOST_AUTO_TEST_SUITE_END()

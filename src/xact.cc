@@ -1771,7 +1771,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact, const parse_context_t* context)
  *        predicate and posting-generation phases of extend_xact().
  *
  * This fast path is used by journal_t::extend_xact() for account-scoped
- * check directives (see `scoped_to_account`).  The caller has already
+ * check directives (journal_t::account_check_xacts).  The caller has already
  * verified via index lookup that the posting belongs to the scoped
  * account, so predicate evaluation is unnecessary.  Because account
  * directives cannot carry template postings or deferred notes, only
