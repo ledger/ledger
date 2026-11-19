@@ -84,6 +84,29 @@ void check_command_has_match(parse_context_t& context, bool has_match, const str
                     command % name_mask);
   }
 }
+
+/// @brief Recognize an indented `assert`, `check`, `expr` or `eval` line of
+///        a transaction or automated transaction.
+///
+/// Returns the kind (`expr` and `eval` are EXPR_GENERAL) and the expression
+/// text with its leading whitespace skipped, or nullopt for anything else,
+/// which is a posting.  The keyword must be followed by whitespace and at
+/// least one more character.
+std::optional<std::pair<expr_t::check_expr_kind_t, char*>> match_inline_check(char* p) {
+  static const std::pair<const char*, expr_t::check_expr_kind_t> keywords[] = {
+      {"assert", expr_t::EXPR_ASSERTION},
+      {"check", expr_t::EXPR_CHECK},
+      {"expr", expr_t::EXPR_GENERAL},
+      {"eval", expr_t::EXPR_GENERAL},
+  };
+  for (const auto& [kw, kind] : keywords) {
+    const std::size_t len = std::strlen(kw);
+    if (std::strncmp(p, kw, len) == 0 && std::isspace(static_cast<unsigned char>(p[len])) &&
+        p[len + 1] != '\0')
+      return std::make_pair(kind, skip_ws(p + len));
+  }
+  return std::nullopt;
+}
 } // namespace
 
 /*--- Automated Transaction Parsing ---*/
@@ -227,8 +250,6 @@ void instance_t::automated_xact_directive(char* line) {
       if (!*p)
         break;
 
-      const std::size_t remlen = std::strlen(p);
-
       if (*p == ';') {
         item_t* item;
         if (last_post)
@@ -241,22 +262,10 @@ void instance_t::automated_xact_directive(char* line) {
         item->add_flags(ITEM_NOTE_ON_NEXT_LINE);
         item->pos->end_pos = context.curr_pos;
         item->pos->end_line++;
-      } else if ((remlen > 7 && *p == 'a' && std::strncmp(p, "assert", 6) == 0 &&
-                  std::isspace(static_cast<unsigned char>(p[6]))) ||
-                 (remlen > 6 && *p == 'c' && std::strncmp(p, "check", 5) == 0 &&
-                  std::isspace(static_cast<unsigned char>(p[5]))) ||
-                 (remlen > 5 && *p == 'e' &&
-                  ((std::strncmp(p, "expr", 4) == 0 &&
-                    std::isspace(static_cast<unsigned char>(p[4]))) ||
-                   (std::strncmp(p, "eval", 4) == 0 &&
-                    std::isspace(static_cast<unsigned char>(p[4])))))) {
-        const char c = *p;
-        p = skip_ws(&p[*p == 'a' ? 6 : (*p == 'c' ? 5 : 4)]);
+      } else if (auto check = match_inline_check(p)) {
         if (!ae->check_exprs)
           ae->check_exprs = expr_t::check_expr_list();
-        ae->check_exprs->push_back(expr_t::check_expr_pair(
-            expr_t(p), c == 'a' ? expr_t::EXPR_ASSERTION
-                                : (c == 'c' ? expr_t::EXPR_CHECK : expr_t::EXPR_GENERAL)));
+        ae->check_exprs->push_back(expr_t::check_expr_pair(expr_t(check->second), check->first));
       } else {
         reveal_context = false;
 
@@ -1010,8 +1019,6 @@ xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* accou
       if (!*p)
         break;
 
-      const std::size_t remlen = std::strlen(p);
-
       item_t* item;
       if (last_post)
         item = last_post;
@@ -1024,23 +1031,16 @@ xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* accou
         item->add_flags(ITEM_NOTE_ON_NEXT_LINE);
         item->pos->end_pos = context.curr_pos;
         item->pos->end_line++;
-      } else if ((remlen > 7 && *p == 'a' && std::strncmp(p, "assert", 6) == 0 &&
-                  std::isspace(static_cast<unsigned char>(p[6]))) ||
-                 (remlen > 6 && *p == 'c' && std::strncmp(p, "check", 5) == 0 &&
-                  std::isspace(static_cast<unsigned char>(p[5]))) ||
-                 (remlen > 5 && *p == 'e' && std::strncmp(p, "expr", 4) == 0 &&
-                  std::isspace(static_cast<unsigned char>(p[4])))) {
-        const char c = *p;
-        p = skip_ws(&p[*p == 'a' ? 6 : (*p == 'c' ? 5 : 4)]);
-        expr_t expr(p);
+      } else if (auto check = match_inline_check(p)) {
+        expr_t expr(check->second);
         bind_scope_t bound_scope(*context.scope, *item);
-        if (c == 'e') {
+        if (check->first == expr_t::EXPR_GENERAL) {
           expr.calc(bound_scope);
         } else if (!expr.calc(bound_scope).to_boolean()) {
-          if (c == 'a') {
-            throw_(parse_error, _f("Transaction assertion failed: %1%") % p);
+          if (check->first == expr_t::EXPR_ASSERTION) {
+            throw_(parse_error, _f("Transaction assertion failed: %1%") % check->second);
           } else {
-            context.warning(_f("Transaction check failed: %1%") % p);
+            context.warning(_f("Transaction check failed: %1%") % check->second);
           }
         }
       } else {

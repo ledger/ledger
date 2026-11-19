@@ -1,0 +1,24 @@
+; `eval EXPR` inside a regular transaction is an expression line, as it
+; is inside an automated transaction and as its synonym `expr` is in
+; both: it is evaluated, not read as a posting to an account named
+; "eval ...".  An account whose name only begins with "eval" is still a
+; posting.
+
+= /Food/
+    eval auto_total = 3
+    assert auto_total == 3
+
+2024/01/01 Payee
+    eval inline_total = 7
+    assert inline_total == 7
+    Expenses:Food    $10.00
+    evaluation:Fees    $1.00
+    Assets:Cash
+
+test bal
+             $-11.00  Assets:Cash
+              $10.00  Expenses:Food
+               $1.00  evaluation:Fees
+--------------------
+                   0
+end test

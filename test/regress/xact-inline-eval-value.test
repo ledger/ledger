@@ -1,0 +1,20 @@
+; An `eval` line of a regular transaction is evaluated as it is read,
+; as its synonym `expr` is, so the oracle refuses to value the journal
+; (value-expression: an assignment there could define a name that a
+; valuation calls) instead of comparing it.  C++ values it from the
+; price as usual.
+
+P 2024/06/01 AAPL $160
+
+2024/01/02 Buy
+    eval purchase_count = 1
+    Assets:Broker    10 AAPL @ $150
+    Assets:Cash
+
+test bal -X $
+                $100  Assets
+               $1600    Broker
+              $-1500    Cash
+--------------------
+                $100
+end test

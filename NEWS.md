@@ -386,6 +386,10 @@ components with their standard-library equivalents.
   in balance assertions (#2071); and use fixated price annotations for
   multi-commodity balance checking
 
+- `eval EXPR` inside a regular transaction is now an expression line, as it
+  already was inside an automated transaction and as its synonym `expr` is
+  in both; it was read as a posting to an account named `eval ...`
+
 ### Reporting and Display Improvements
 
 - An amount exactly halfway between two figures at its display precision
