@@ -12,6 +12,7 @@
 #include "journal.h"
 #include "session.h"
 #include "draft.h"
+#include "op.h"
 #include "temps.h"
 
 using namespace ledger;
@@ -2768,6 +2769,26 @@ BOOST_AUTO_TEST_CASE(testTemporaryAccountBuiltInPlace)
 
   temps.clear();
   BOOST_CHECK(expenses->find_account("<Total>", false) == nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(testPostAmountIdentsBindPostingAmount)
+{
+  // post_t::lookup binds the posting amount to exactly the names that
+  // expr_t::is_post_amount_ident accepts, so the POST_AMOUNT fast path,
+  // which skips the lookup, reads what the lookup would have bound.
+  post_t post(expenses, amount_t("$10.00"));
+  post.cost = amount_t("EUR 9.00");
+  for (const char* name :
+       {"a", "amount", "Amount", "am", "amt", "amounts", "b", "cost", "actual"}) {
+    expr_t::ptr_op_t def = post.lookup(symbol_t::FUNCTION, name);
+    bool binds_amount = false;
+    if (def && def->is_function()) {
+      call_scope_t args(post);
+      value_t result = def->as_function()(args);
+      binds_amount = result.is_amount() && result.as_amount() == post.amount;
+    }
+    BOOST_CHECK_MESSAGE(binds_amount == expr_t::is_post_amount_ident(name), name);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

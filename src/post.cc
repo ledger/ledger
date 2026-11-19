@@ -702,12 +702,14 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind, const string& name)
   if (kind != symbol_t::FUNCTION)
     return item_t::lookup(kind, name);
 
+  // The names the POST_AMOUNT fast path reads directly (see expr.h).
+  if (expr_t::is_post_amount_ident(name))
+    return WRAP_FUNCTOR(get_wrapper<&get_amount>);
+
   // NOLINTBEGIN(bugprone-branch-clone)
   switch (name[0]) {
   case 'a':
-    if (name[1] == '\0' || name == "amount")
-      return WRAP_FUNCTOR(get_wrapper<&get_amount>);
-    else if (name == "account")
+    if (name == "account")
       return WRAP_FUNCTOR(get_account);
     else if (name == "account_base")
       return WRAP_FUNCTOR(get_wrapper<&get_account_base>);

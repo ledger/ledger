@@ -217,7 +217,7 @@ public:
 
   /// @brief Parse an expression from a string (convenience wrapper).
   void parse(const string& expr_str, const parse_flags_t& flags = PARSE_DEFAULT) {
-    std::istringstream stream(expr_str); // NOLINT(bugprone-unused-local-non-trivial-variable)
+    std::istringstream stream(expr_str);
     return parse(stream, flags, expr_str);
   }
   /// @brief Parse an expression from a stream.  Derived classes override

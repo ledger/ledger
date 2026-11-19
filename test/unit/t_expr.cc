@@ -5751,4 +5751,25 @@ BOOST_AUTO_TEST_CASE(testSymbolScopeOrdersByKindThenName)
   } while (std::next_permutation(order.begin(), order.end()));
 }
 
+// -----------------------------------------------------------------------
+// The POST_AMOUNT fast path covers exactly the identifiers post_t::lookup
+// binds to the posting amount
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testExprFastPathPostAmountIdents)
+{
+  empty_scope_t parent;
+  symbol_scope_t scope(parent);
+  for (const char* text : {"amount", "a", "(amount)"}) {
+    expr_t expr(text);
+    expr.compile(scope);
+    BOOST_CHECK_MESSAGE(expr.fast_path() == expr_t::fast_path_t::POST_AMOUNT, text);
+  }
+  for (const char* text : {"account", "amt", "b", "A", "amount + 1", "-amount"}) {
+    expr_t expr(text);
+    expr.compile(scope);
+    BOOST_CHECK_MESSAGE(expr.fast_path() == expr_t::fast_path_t::NONE, text);
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()

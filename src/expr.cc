@@ -204,8 +204,7 @@ void expr_t::detect_fast_path() {
   // By detecting this pattern, callers can bypass the full
   // scope/calc machinery.
   if (ptr && ptr->is_ident()) {
-    const string& name = ptr->as_ident();
-    if (name == "amount" || name == "a")
+    if (is_post_amount_ident(ptr->as_ident()))
       fast_path_ = fast_path_t::POST_AMOUNT;
   }
 }

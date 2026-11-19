@@ -125,6 +125,10 @@ public:
     POST_AMOUNT, ///< Expression is "amount" (or "a"); read post_t::amount directly.
   };
 
+  /// @brief True for the identifiers post_t::lookup binds to the posting amount ("amount" and
+  /// "a"); detect_fast_path() selects POST_AMOUNT for exactly these.
+  static bool is_post_amount_ident(const string& name) { return name == "amount" || name == "a"; }
+
 protected:
   ptr_op_t ptr;                               ///< Root of the compiled AST (null if unparsed).
   fast_path_t fast_path_ = fast_path_t::NONE; ///< Detected shortcut, if any.
@@ -145,10 +149,7 @@ public:
 
   ptr_op_t get_op() noexcept;
 
-  void parse(const string& str, const parse_flags_t& flags = PARSE_DEFAULT) {
-    std::istringstream stream(str); // NOLINT(bugprone-unused-local-non-trivial-variable)
-    return parse(stream, flags, str);
-  }
+  using base_type::parse;
 
   void parse(std::istream& in, const parse_flags_t& flags = PARSE_DEFAULT,
              const optional<string>& original_string = none) override;
