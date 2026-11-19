@@ -1159,6 +1159,15 @@ void amount_t::in_place_roundto(int places) {
   }
 }
 
+bool amount_t::in_place_round_unit_price(precision_t divisor_prec) {
+  if (!has_commodity() || !keep_precision())
+    return false;
+  amount_t exact(*this);
+  in_place_roundto(
+      boost::numeric_cast<int>(divisor_prec + commodity().precision() + extend_by_digits));
+  return *this != exact;
+}
+
 /**
  * @brief Mark this amount to display its full internal precision.
  *
@@ -1947,21 +1956,9 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags,
       if (given_lot_total)
         *given_lot_total = *details.price;
       *details.price /= this->abs();
-      // Normalize per-unit cost to a stable precision, matching the
-      // normalization in pool.cc::exchange().  The rounding precision is
-      // derived from the divisor (quantity) and cost commodity precision,
-      // deliberately excluding the dividend (total cost) precision.
-      // This ensures that {{$250}} and @@ $250.00 produce identical
-      // per-unit prices despite differing internal precision metadata
-      // (fixes #2948, #2975).
-      if (details.price->has_commodity() && details.price->keep_precision()) {
-        int round_prec = boost::numeric_cast<int>(
-            this->precision() + details.price->commodity().precision() + extend_by_digits);
-        amount_t exact(*details.price);
-        details.price->in_place_roundto(round_prec);
-        if (*details.price != exact)
-          details.add_flags(ANNOTATION_PRICE_ROUNDED);
-      }
+      // Same rounding as an @@ cost in commodity_pool_t::exchange().
+      if (details.price->in_place_round_unit_price(this->precision()))
+        details.add_flags(ANNOTATION_PRICE_ROUNDED);
     }
     set_commodity(*commodity_pool_t::current_pool->find_or_create(*commodity_, details));
   }

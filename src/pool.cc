@@ -553,8 +553,11 @@ void commodity_pool_t::exchange(commodity_t& commodity, const amount_t& per_unit
  * This is the workhorse for "@" and "@@" cost expressions in postings.
  * It performs these steps:
  *   1. Compute the per-unit cost (dividing total cost by quantity for @@).
- *   2. Normalize the per-unit cost to display precision so that lot prices
- *      computed from total costs can be matched by users (issue #1032).
+ *   2. Round the per-unit cost to a stable precision: an @@ cost through
+ *      amount_t::in_place_round_unit_price() (quantity precision + cost
+ *      commodity precision + extend_by_digits, issue #2975), an @ cost to
+ *      its display precision (issue #1032); flag ANNOTATION_PRICE_ROUNDED
+ *      when that changed it.
  *   3. Optionally record a market price in the history graph (skipped for
  *      fixated prices and lot-basis consumption -- issue #1217).
  *   4. Build an annotation_t with price, date, and tag; mark computed
@@ -591,32 +594,15 @@ cost_breakdown_t commodity_pool_t::exchange(const amount_t& amount, const amount
   if (cost.has_annotation())
     per_unit_cost = per_unit_cost.strip_annotations(keep_details_t());
 
-  // Normalize per-unit cost to a stable precision so that lot prices are
-  // deterministic regardless of how the total cost was written.  Without
-  // this, `@@ $250` and `@@ $250.00` would produce different per-unit
-  // prices because the internal precision metadata of the cost amount
-  // differs (0 vs 2), leading to different division precisions.
-  //
-  // For costs computed by division (total cost / quantity), the rounding
-  // precision is derived from the divisor (quantity) precision and the
-  // cost commodity's display precision, deliberately excluding the
-  // dividend (total cost) precision.  This ensures that $250 and $250.00
-  // -- which are the same GMP rational -- produce identical per-unit
-  // prices after rounding (fixes #2975).
-  //
-  // For per-unit costs (no division), the existing display_precision()
-  // is used, preserving the user-typed precision (fixes #1032).
+  // A cost divided out of a total gets the precision of
+  // amount_t::in_place_round_unit_price (#2975); a per-unit cost keeps the
+  // precision the user typed (#1032).
   bool per_unit_cost_rounded = false;
-  if (per_unit_cost.has_commodity() && per_unit_cost.keep_precision()) {
-    int round_prec;
-    if (!is_per_unit && !amount.is_zero()) {
-      round_prec = boost::numeric_cast<int>(
-          amount.precision() + per_unit_cost.commodity().precision() + amount_t::extend_by_digits);
-    } else {
-      round_prec = boost::numeric_cast<int>(per_unit_cost.display_precision());
-    }
+  if (!is_per_unit && !amount.is_zero()) {
+    per_unit_cost_rounded = per_unit_cost.in_place_round_unit_price(amount.precision());
+  } else if (per_unit_cost.has_commodity() && per_unit_cost.keep_precision()) {
     amount_t exact(per_unit_cost);
-    per_unit_cost.in_place_roundto(round_prec);
+    per_unit_cost.in_place_roundto(boost::numeric_cast<int>(per_unit_cost.display_precision()));
     per_unit_cost_rounded = per_unit_cost != exact;
   }
 

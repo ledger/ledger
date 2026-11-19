@@ -1,0 +1,44 @@
+; A lot bought at a total price, {{$10}} for 3 X, is named again by the
+; per-unit price that lot shows, {$3.333333}, and the two cancel.  The
+; per-unit price divided out of the total is rounded to the quantity's
+; precision plus the price commodity's precision plus six digits, which
+; turns 10/3 into exactly $3.333333; a typed {$3.333333} then names the
+; same lot.  The amount parser ({{total}}) and the pool's exchange (@@)
+; share that rounding rule, so it must survive any change to either.
+
+2024/01/01 Buy at a total
+    Assets:A        3 X {{$10}}
+    Equity:Opening
+
+2024/02/01 Sell by the displayed unit price
+    Assets:A       -3 X {$3.333333}
+    Equity:Opening
+
+2024/03/01 Buy by the displayed unit price
+    Assets:B        3 Y {$3.333333}
+    Equity:Opening
+
+2024/04/01 Sell at a total
+    Assets:B       -3 Y {{$10}}
+    Equity:Opening
+
+; The pool rounds an @@ cost the same way, and dates the lot it makes.
+2024/05/01 Buy at a total cost
+    Assets:C        3 Z @@ $10
+    Equity:Opening
+
+2024/06/01 Sell by the displayed unit price
+    Assets:C       -3 Z {$3.333333} [2024/05/01]
+    Equity:Opening
+
+test bal --lots Assets
+end test
+
+test bal --lots Assets -E
+                   0  Assets
+                   0    A
+                   0    B
+                   0    C
+--------------------
+                   0
+end test

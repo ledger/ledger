@@ -406,6 +406,14 @@ public:
   }
   void in_place_roundto(int places);
 
+  /** Round a per-unit price divided out of a total (a {{total}} lot
+      price, an @@ cost) to divisor_prec + this commodity's precision +
+      extend_by_digits, so {{$250}} and @@ $250.00 give one lot (#2948,
+      #2975) and a typed per-unit price can name it.  Does nothing unless
+      the price has a commodity and keeps its precision.  Returns whether
+      the value changed (ANNOTATION_PRICE_ROUNDED). */
+  bool in_place_round_unit_price(precision_t divisor_prec);
+
   /** Yields an amount which has lost all of its extra precision, beyond what
       the display precision of the commodity would have printed, truncating
       towards zero. */

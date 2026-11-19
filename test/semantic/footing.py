@@ -316,6 +316,20 @@ EXPECTED_NONFOOTING = {
                    " unconverted, $-1000 and 1000 AAPL, with no"
                    " unrealized row, and bal -G -X $ prints nothing, as"
                    " on 3.4.1 and on the build before the G7 fix")},
+    "test/regress/lot-total-vs-displayed-unit.test": {
+        "failures": {"-V": {"total": {}, "unrealized": {},
+                            "gain": {"$": "-0.000001"}},
+                     "-X": {"total": {}, "unrealized": {},
+                            "gain": {"$": "-0.000001"}}},
+        "reason": ("Assets:C buys 3 Z @@ $10, a cost of $10, and sells"
+                   " them by the lot's displayed unit price, {$3.333333},"
+                   " a basis of $9.999999, so bal -B --flat keeps"
+                   " $0.000001 in Assets; bal -G and bal -G -X $ show it"
+                   " as a $-0.000001 loss, while bal -V --unrealized and"
+                   " bal -X $ --unrealized print nothing, no unrealized"
+                   " row among them.  The journal pins lot matching, not"
+                   " valuation; C++ behaves so on the build before"
+                   " P4-024 too")},
 }
 
 # Journals on which a valuation report is not compared because its rows
