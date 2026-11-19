@@ -185,10 +185,7 @@ struct add_balancing_post {
       : first(true), xact(_xact), null_post(_null_post) {
     TRACE_CTOR(add_balancing_post, "xact_base_t&, post_t *");
   }
-  add_balancing_post(const add_balancing_post& other)
-      : first(other.first), xact(other.xact), null_post(other.null_post) {
-    TRACE_CTOR(add_balancing_post, "copy");
-  }
+  add_balancing_post(const add_balancing_post&) = delete;
   ~add_balancing_post() noexcept { TRACE_DTOR(add_balancing_post); }
 
   void set_cost_prec_if_needed(amount_t& amt) {

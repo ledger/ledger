@@ -1,0 +1,16 @@
+; balance_t::print widens a multi-commodity balance to its widest amount,
+; measured in display columns: the euro sign is one column but three
+; bytes, so the column is 21 wide, not 23 (22 and 24 for the negated
+; amounts).
+
+2024/01/01 Buy
+    Assets:Wallet    €1.123456789012345678
+    Assets:Wallet    2 BTC
+    Equity:Opening
+
+test bal --no-total
+                2 BTC
+€1.123456789012345678  Assets:Wallet
+                -2 BTC
+€-1.123456789012345678  Equity:Opening
+end test

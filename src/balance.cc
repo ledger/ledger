@@ -617,29 +617,6 @@ const amount_t* balance_t::first_sorted_amount() const {
   return top;
 }
 
-/// @brief Visit each amount in sorted commodity order via a callback.
-///
-/// This is a convenience wrapper around sorted_amounts() that handles
-/// the common single-amount fast path (no sorting needed) and then
-/// invokes @p fn for each amount.  It is the primary iteration
-/// primitive used by print() and the report formatters.
-///
-/// @param fn  A callable invoked once per non-null amount, in sorted order.
-void balance_t::map_sorted_amounts(const function<void(const amount_t&)>& fn) const {
-  if (!amounts.empty()) {
-    if (amounts.size() == 1) {
-      const amount_t& amount((*amounts.begin()).second);
-      if (!amount.is_null())
-        fn(amount);
-    } else {
-      amounts_array sorted;
-      sorted_amounts(sorted);
-      for (const amount_t* amount : sorted)
-        fn(*amount);
-    }
-  }
-}
-
 /*----------------------------------------------------------------------*/
 /*  Printing                                                            */
 /*----------------------------------------------------------------------*/
@@ -670,11 +647,6 @@ struct print_amount_from_balance {
       : out(_out), first(_first), fwidth(_fwidth), lwidth(_lwidth), flags(_flags),
         negative_color(_negative_color) {
     TRACE_CTOR(print_amount_from_balance, "ostream&, int, int, uint_least8_t, const string&");
-  }
-  print_amount_from_balance(const print_amount_from_balance& other)
-      : out(other.out), first(other.first), fwidth(other.fwidth), lwidth(other.lwidth),
-        flags(other.flags), negative_color(other.negative_color) {
-    TRACE_CTOR(print_amount_from_balance, "copy");
   }
   ~print_amount_from_balance() noexcept { TRACE_DTOR(print_amount_from_balance); }
 
@@ -749,12 +721,14 @@ void balance_t::print(std::ostream& out, const int first_width, const int latter
   if (first_width > 0 && (flags & AMOUNT_PRINT_RIGHT_JUSTIFY) &&
       (flags & AMOUNT_PRINT_FIT_TO_WIDEST)) {
     int widest = 0;
-    map_sorted_amounts([&widest, flags](const amount_t& amount) {
+    std::ostringstream buf;
+    map_sorted_amounts([&widest, &buf, flags](const amount_t& amount) {
       if (amount.is_zero())
         return;
-      std::ostringstream buf;
+      buf.str(string());
+      buf.clear();
       amount.print(buf, flags);
-      const int w = static_cast<int>(unistring(strip_ansi_escapes(buf.str())).width());
+      const int w = static_cast<int>(display_width(buf.str()));
       if (w > widest)
         widest = w;
     });

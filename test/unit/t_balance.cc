@@ -1377,4 +1377,25 @@ BOOST_AUTO_TEST_CASE(testVisitComponentsFailureOrder)
   }
 }
 
+BOOST_AUTO_TEST_CASE(testMapSortedAmountsCallsCallerFunctor)
+{
+  // map_sorted_amounts calls the caller's own functor: a stateful functor
+  // passed as an lvalue sees every call, on the sorted path and on the
+  // single-component fast path.  (A copy into a type-erased wrapper would
+  // leave the caller's count at zero.)
+  struct counter_t {
+    int calls = 0;
+    void operator()(const amount_t&) { ++calls; }
+  };
+  balance_t b;
+  b += amount_t("$1.00");
+  b += amount_t("EUR 2");
+  counter_t counter;
+  b.map_sorted_amounts(counter);
+  BOOST_CHECK_EQUAL(counter.calls, 2);
+  balance_t single(amount_t("$1.00"));
+  single.map_sorted_amounts(counter);
+  BOOST_CHECK_EQUAL(counter.calls, 3);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -2048,11 +2048,7 @@ struct create_post_from_amount {
         temps(_temps) {
     TRACE_CTOR(create_post_from_amount, "post_handler_ptr, xact_t&, account_t&, temporaries_t&");
   }
-  create_post_from_amount(const create_post_from_amount& other)
-      : handler(other.handler), xact(other.xact), balance_account(other.balance_account),
-        temps(other.temps) {
-    TRACE_CTOR(create_post_from_amount, "copy");
-  }
+  create_post_from_amount(const create_post_from_amount&) = delete;
   ~create_post_from_amount() noexcept { TRACE_DTOR(create_post_from_amount); }
 
   void operator()(const amount_t& amount) {

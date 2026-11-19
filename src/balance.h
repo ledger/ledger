@@ -675,9 +675,26 @@ public:
    * Iteration primitives.  `map_sorted_amounts' allows one to visit
    * each amount in balance in the proper order for displaying to the
    * user.  Mostly used by `print' and other routines where the sort
-   * order of the amounts' commodities is significant.
+   * order of the amounts' commodities is significant.  A single
+   * component is visited without sorting; @p fn is called once per
+   * non-null amount, in sorted order.  @p fn is called by reference and
+   * never copied.
    */
-  void map_sorted_amounts(const function<void(const amount_t&)>& fn) const;
+  template <typename Fn>
+  void map_sorted_amounts(Fn&& fn) const {
+    if (!amounts.empty()) {
+      if (amounts.size() == 1) {
+        const amount_t& amount((*amounts.begin()).second);
+        if (!amount.is_null())
+          fn(amount);
+      } else {
+        amounts_array sorted;
+        sorted_amounts(sorted);
+        for (const amount_t* amount : sorted)
+          fn(*amount);
+      }
+    }
+  }
 
   /**
    * Printing methods.  A balance may be output to a stream using the
