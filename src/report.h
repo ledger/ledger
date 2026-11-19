@@ -311,6 +311,25 @@ public:
   /// @throws option_error for a malformed assignment or unknown name.
   static void assign_colors(const string& assignments, std::map<string, string>& palette);
 
+  /// @brief Widths of the register's date, payee, account, amount and
+  /// total columns.
+  struct column_widths_t {
+    long date;
+    long payee;
+    long account;
+    long amount;
+    long total;
+  };
+
+  /// @brief The report's width in columns: --columns, else $COLUMNS, else
+  /// the terminal's width when stdin is a terminal that reports one, else 80.
+  long terminal_columns() const;
+
+  /// @brief The width of each column in a @p cols wide report: the user's
+  /// --date-width etc. where given, else the default share of @p cols.
+  /// Payee is date + 3 in a --period report (#3216); total follows amount.
+  column_widths_t default_column_widths(long cols) const;
+
   /*--- Built-in Value Expression Functions ---*/
   // These methods implement the functions callable from format strings and
   // value expressions (e.g., "market(amount, value_date, exchange)").

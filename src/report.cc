@@ -333,20 +333,7 @@ void report_t::normalize_options(const string& verb) {
         to_iso_extended_string(gain_from->date()) + "], exchange) : cost)");
   }
 
-  long cols = 0;
-#if HAVE_IOCTL
-  struct winsize ws;
-#endif
-  if (HANDLED(columns_))
-    cols = lexical_cast<long>(HANDLER(columns_).value);
-  else if (const char* columns = std::getenv("COLUMNS"))
-    cols = lexical_cast<long>(columns);
-#if HAVE_IOCTL
-  else if (ioctl(STDIN_FILENO, TIOCGWINSZ, &ws) != -1 && ws.ws_col > 0)
-    cols = ws.ws_col;
-#endif
-  else
-    cols = 80L;
+  long cols = terminal_columns();
 
   if (meta_width > 0)
     cols -= meta_width;
@@ -354,27 +341,12 @@ void report_t::normalize_options(const string& verb) {
   if (cols > 0) {
     DEBUG("auto.columns", "cols = " << cols);
 
-    long date_width = (HANDLED(date_width_)
-                           ? lexical_cast<long>(HANDLER(date_width_).str())
-                           : static_cast<long>(format_date(CURRENT_DATE(), FMT_PRINTED).length()));
-    // In interval reports (e.g. --daily, --monthly), the payee column shows
-    // the period range "- <end-date>", which is exactly date_width + 2 wide.
-    // Default payee_width to that size + 1 so the column ends with a trailing
-    // space, giving two visual spaces of separation from the account column
-    // (the format string adds one more between fields).  This avoids the
-    // usual cols * 0.263 default, which leaves the column much wider than
-    // needed and wastes space that would be better given to the account
-    // column (#3216).
-    long payee_width = (HANDLED(payee_width_) ? lexical_cast<long>(HANDLER(payee_width_).str())
-                        : HANDLED(period_)    ? date_width + 3
-                                              : long(double(cols) * 0.263157));
-    long account_width =
-        (HANDLED(account_width_) ? lexical_cast<long>(HANDLER(account_width_).str())
-                                 : long(double(cols) * 0.302631));
-    long amount_width = (HANDLED(amount_width_) ? lexical_cast<long>(HANDLER(amount_width_).str())
-                                                : long(double(cols) * 0.157894));
-    long total_width =
-        (HANDLED(total_width_) ? lexical_cast<long>(HANDLER(total_width_).str()) : amount_width);
+    const column_widths_t widths = default_column_widths(cols);
+    long date_width = widths.date;
+    long payee_width = widths.payee;
+    long account_width = widths.account;
+    long amount_width = widths.amount;
+    long total_width = widths.total;
 
     DEBUG("auto.columns", "date_width    = " << date_width);
     DEBUG("auto.columns", "payee_width   = " << payee_width);
@@ -458,6 +430,48 @@ void report_t::apply_option_globals() {
   if (HANDLED(decimal_places_))
     commodity_pool_t::current_pool->cap_precision(
         static_cast<amount_t::precision_t>(lexical_cast<int>(HANDLER(decimal_places_).value)));
+}
+
+long report_t::terminal_columns() const {
+  long cols = 0;
+#if HAVE_IOCTL
+  struct winsize ws;
+#endif
+  if (HANDLED(columns_))
+    cols = lexical_cast<long>(HANDLER(columns_).value);
+  else if (const char* columns = std::getenv("COLUMNS"))
+    cols = lexical_cast<long>(columns);
+#if HAVE_IOCTL
+  else if (ioctl(STDIN_FILENO, TIOCGWINSZ, &ws) != -1 && ws.ws_col > 0)
+    cols = ws.ws_col;
+#endif
+  else
+    cols = 80L;
+  return cols;
+}
+
+report_t::column_widths_t report_t::default_column_widths(long cols) const {
+  long date_width =
+      (HANDLED(date_width_) ? lexical_cast<long>(HANDLER(date_width_).str())
+                            : static_cast<long>(format_date(CURRENT_DATE(), FMT_PRINTED).length()));
+  // In interval reports (e.g. --daily, --monthly), the payee column shows
+  // the period range "- <end-date>", which is exactly date_width + 2 wide.
+  // Default payee_width to that size + 1 so the column ends with a trailing
+  // space, giving two visual spaces of separation from the account column
+  // (the format string adds one more between fields).  This avoids the
+  // usual cols * 0.263 default, which leaves the column much wider than
+  // needed and wastes space that would be better given to the account
+  // column (#3216).
+  long payee_width = (HANDLED(payee_width_) ? lexical_cast<long>(HANDLER(payee_width_).str())
+                      : HANDLED(period_)    ? date_width + 3
+                                            : long(double(cols) * 0.263157));
+  long account_width = (HANDLED(account_width_) ? lexical_cast<long>(HANDLER(account_width_).str())
+                                                : long(double(cols) * 0.302631));
+  long amount_width = (HANDLED(amount_width_) ? lexical_cast<long>(HANDLER(amount_width_).str())
+                                              : long(double(cols) * 0.157894));
+  long total_width =
+      (HANDLED(total_width_) ? lexical_cast<long>(HANDLER(total_width_).str()) : amount_width);
+  return {date_width, payee_width, account_width, amount_width, total_width};
 }
 
 void report_t::normalize_period() {

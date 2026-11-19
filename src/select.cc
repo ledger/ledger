@@ -168,57 +168,24 @@ value_t select_command(call_scope_t& args) {
       bool first = true;
       string thus_far = ""; ///< Running sum expression for column offsets.
 
-      // Determine terminal width for column layout calculations.
-      std::size_t cols = 0;
-#if HAVE_IOCTL
-      struct winsize ws;
-#endif
-      if (report.HANDLED(columns_))
-        cols = lexical_cast<std::size_t>(report.HANDLER(columns_).value);
-      else if (const char* columns_env = std::getenv("COLUMNS"))
-        cols = lexical_cast<std::size_t>(columns_env);
-#if HAVE_IOCTL
-      else if (ioctl(STDIN_FILENO, TIOCGWINSZ, &ws) != -1)
-        cols = ws.ws_col;
-#endif
-      else
-        cols = 80;
-
-      std::size_t date_width =
-          (report.HANDLED(date_width_)
-               ? lexical_cast<std::size_t>(report.HANDLER(date_width_).str())
-               : static_cast<std::size_t>(format_date(CURRENT_DATE(), FMT_PRINTED).length()));
-      // In interval reports (e.g. --daily, --monthly), the payee column
-      // contains the period range "- <end-date>", which is exactly
-      // date_width + 2 wide.  Default payee_width to that size + 1 so the
-      // column ends with a trailing space, giving two visual spaces of
-      // separation from the account column.  This replaces the usual
-      // cols * 0.263 default, which leaves the column much wider than
-      // needed and wastes space better given to the account column (#3216).
-      std::size_t payee_width = (report.HANDLED(payee_width_)
-                                     ? lexical_cast<std::size_t>(report.HANDLER(payee_width_).str())
-                                 : report.HANDLED(period_) ? date_width + 3
-                                                           : std::size_t(double(cols) * 0.263157));
-      std::size_t account_width =
-          (report.HANDLED(account_width_)
-               ? lexical_cast<std::size_t>(report.HANDLER(account_width_).str())
-               : std::size_t(double(cols) * 0.302631));
-      std::size_t amount_width =
-          (report.HANDLED(amount_width_)
-               ? lexical_cast<std::size_t>(report.HANDLER(amount_width_).str())
-               : std::size_t(double(cols) * 0.157894));
-      std::size_t total_width = (report.HANDLED(total_width_)
-                                     ? lexical_cast<std::size_t>(report.HANDLER(total_width_).str())
-                                     : amount_width);
-      std::size_t meta_width = (report.HANDLED(meta_width_)
-                                    ? lexical_cast<std::size_t>(report.HANDLER(meta_width_).str())
-                                    : 10);
+      // The register's width model sizes the columns; select then fits
+      // the columns it was asked for to the terminal below.
+      const long cols = report.terminal_columns();
+      const report_t::column_widths_t widths = report.default_column_widths(cols);
+      long date_width = widths.date;
+      long payee_width = widths.payee;
+      long account_width = widths.account;
+      long amount_width = widths.amount;
+      long total_width = widths.total;
+      long meta_width =
+          (report.HANDLED(meta_width_) ? lexical_cast<long>(report.HANDLER(meta_width_).str())
+                                       : 10);
 
       // First pass: measure total width needed by the requested columns.
       bool saw_payee = false;
       bool saw_account = false;
 
-      std::size_t cols_needed = 0;
+      long cols_needed = 0;
       for (const value_t& column : columns.to_sequence()) {
         string ident;
         get_principal_identifiers(as_expr(column), ident);
