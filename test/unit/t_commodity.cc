@@ -2479,4 +2479,28 @@ BOOST_AUTO_TEST_CASE(testCompareByCommodityFieldOrder)
   }
 }
 
+BOOST_AUTO_TEST_CASE(testPoolFindAnnotatedExactKey)
+{
+  // find(symbol, details) matches the whole key: symbol, shape, price
+  // value and semantic flags; a non-semantic flag does not matter.
+  commodity_pool_t& pool(*commodity_pool_t::current_pool);
+  const annotation_t details(amount_t("$5.00"), parse_date("2024/01/02"), string("t"));
+  commodity_t* lot = pool.find_or_create("PFEK", details);
+  BOOST_REQUIRE(lot != nullptr);
+  BOOST_CHECK(pool.find("PFEK", details) == lot);
+  BOOST_CHECK(pool.find("PFEX", details) == nullptr);
+
+  annotation_t other_price(details);
+  other_price.price = amount_t("$6.00");
+  BOOST_CHECK(pool.find("PFEK", other_price) == nullptr);
+
+  annotation_t fixated(details);
+  fixated.add_flags(ANNOTATION_PRICE_FIXATED);
+  BOOST_CHECK(pool.find("PFEK", fixated) == nullptr);
+
+  annotation_t calculated(details);
+  calculated.add_flags(ANNOTATION_PRICE_CALCULATED);
+  BOOST_CHECK(pool.find("PFEK", calculated) == lot);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

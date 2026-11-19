@@ -247,7 +247,7 @@ commodity_t* commodity_pool_t::find(const string& symbol, const annotation_t& de
   DEBUG("pool.commodities", "commodity_pool_t::find[ann] " << "symbol " << symbol << '\n'
                                                            << details);
 
-  if (auto i = annotated_commodities.find(annotated_commodities_map::key_type(symbol, details));
+  if (auto i = annotated_commodities.find(annotation_key_view_t{symbol, details});
       i != annotated_commodities.end()) {
     DEBUG("pool.commodities", "commodity_pool_t::find[ann] found "
                                   << "symbol " << (*i).second->base_symbol() << '\n'
@@ -441,8 +441,8 @@ void commodity_pool_t::reannotate(annotated_commodity_t& comm, const annotation_
   // This lot's own entry: the one keyed by its current annotation, unless
   // something edited the annotation in place (the Python bindings can), in
   // which case it is found by identity.
-  auto current = annotated_commodities.find(
-      annotated_commodities_map::key_type(comm.base_symbol(), comm.details));
+  auto current =
+      annotated_commodities.find(annotation_key_view_t{comm.base_symbol(), comm.details});
   if (current == annotated_commodities.end() || current->second.get() != &comm) {
     current = std::find_if(annotated_commodities.begin(), annotated_commodities.end(),
                            [&comm](const annotated_commodities_map::value_type& entry) {

@@ -91,13 +91,23 @@ public:
   };
 
   /**
+   * @brief Borrowed view of a whole annotated_commodities key, for lookups
+   * that should not copy the symbol and annotation into a key_type.
+   */
+  struct annotation_key_view_t {
+    const string& symbol;
+    const annotation_t& details;
+  };
+
+  /**
    * @brief Ordering of annotated_commodities: base symbol, then the
    * annotation's shape, then its price value, then its semantic flags.
    *
    * Lots that differ only in price value are therefore adjacent, and the
    * transparent overloads let find_annotation_fuzzy() fetch exactly that
    * range with equal_range(annotation_shape_t) in logarithmic time rather
-   * than scanning every lot of the symbol.
+   * than scanning every lot of the symbol.  annotation_key_view_t looks up
+   * one whole key without copying it.
    */
   struct annotated_key_less {
     using is_transparent = void;
@@ -117,6 +127,16 @@ public:
       if (int cmp = lhs.symbol.compare(rhs.first))
         return cmp < 0;
       return annotation_t::compare_shape(lhs.details, rhs.second) < 0;
+    }
+    bool operator()(const key_type& lhs, const annotation_key_view_t& rhs) const {
+      if (int cmp = lhs.first.compare(rhs.symbol))
+        return cmp < 0;
+      return lhs.second.compare(rhs.details) < 0;
+    }
+    bool operator()(const annotation_key_view_t& lhs, const key_type& rhs) const {
+      if (int cmp = lhs.symbol.compare(rhs.first))
+        return cmp < 0;
+      return lhs.details.compare(rhs.second) < 0;
     }
   };
 
