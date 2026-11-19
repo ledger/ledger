@@ -686,22 +686,6 @@ xact_t* draft_t::insert(journal_t& journal) {
   return added.release();
 }
 
-namespace {
-
-/// Hides the journal's year directive while a command drafts a
-/// transaction, so that its dates resolve against now (--now or the
-/// clock), not the directive's year (#707), and puts it back on every
-/// exit path, including a throw from draft_t or insert().
-class year_directive_suspension_t : public noncopyable {
-  optional<int> saved_;
-
-public:
-  year_directive_suspension_t() : saved_(year_directive_year) { year_directive_year = none; }
-  ~year_directive_suspension_t() { year_directive_year = saved_; }
-};
-
-} // namespace
-
 /*--- Command Handlers ---*/
 
 value_t template_command(call_scope_t& args) {
@@ -712,7 +696,8 @@ value_t template_command(call_scope_t& args) {
   args.value().dump(out);
   out << '\n' << '\n';
 
-  year_directive_suspension_t suspension; // Draft against now, not the year directive (#707).
+  // Draft against now, not the year directive (#707).
+  scoped_assign<optional<int>> suspension(year_directive_year, optional<int>());
   draft_t draft(args.value());
 
   out << _("--- Transaction template ---") << '\n';
@@ -728,7 +713,7 @@ value_t xact_command(call_scope_t& args) {
   // not against any year directive in the journal (#707).
   xact_t* new_xact;
   {
-    year_directive_suspension_t suspension;
+    scoped_assign<optional<int>> suspension(year_directive_year, optional<int>());
     draft_t draft(args.value());
 
     // Once insert() succeeds the generated transaction lives in the journal,

@@ -107,12 +107,9 @@ post_t* get_sample_xact(report_t& report, journal_t& journal) {
       // Temporarily disable decimal-comma mode while parsing the
       // hardcoded sample journal, which uses period-decimal amounts
       // (e.g. $-200.00).  See issue #594.
-      bool saved_decimal_comma = commodity_t::decimal_comma_by_default;
-      commodity_t::decimal_comma_by_default = false;
+      scoped_assign<bool> period_decimals(commodity_t::decimal_comma_by_default, false);
 
       journal.read(parsing_context, NO_HASHES);
-
-      commodity_t::decimal_comma_by_default = saved_decimal_comma;
     }
   }
   return journal.xacts.front()->posts.front();

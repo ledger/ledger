@@ -467,8 +467,8 @@ void instance_t::include_directive(char* line) {
     // file do not bleed back into the parent file after the include
     // returns.  This mirrors what end_apply_directive does for the
     // "apply year" / "end apply year" pair.
-    optional<datetime_t> saved_epoch = epoch;
-    optional<int> saved_year_directive_year = year_directive_year;
+    scoped_assign<optional<datetime_t>> epoch_guard(epoch);
+    scoped_assign<optional<int>> year_guard(year_directive_year);
 
     try {
       instance_t instance(context_stack, context_stack.get_current(), this, hash_type);
@@ -479,16 +479,10 @@ void instance_t::include_directive(char* line) {
       count += context_stack.get_current().count;
       sequence += context_stack.get_current().sequence;
 
-      epoch = saved_epoch;
-      year_directive_year = saved_year_directive_year;
-
       journal->current_context = save_current_context;
       context_stack.pop();
       throw;
     }
-
-    epoch = saved_epoch;
-    year_directive_year = saved_year_directive_year;
 
     errors += context_stack.get_current().errors;
     count += context_stack.get_current().count;

@@ -248,3 +248,76 @@ BOOST_AUTO_TEST_CASE(testSignalHandlersSetCaughtSignal)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+// Spelled ledger::optional so the file compiles whether ledger's
+// optional is boost::optional or std::optional.
+using opt_int = ledger::optional<int>;
+
+BOOST_AUTO_TEST_SUITE(utils)
+
+BOOST_AUTO_TEST_CASE(testScopedAssignRestoresOnScopeExit)
+{
+  bool flag = true;
+  {
+    scoped_assign<bool> guard(flag, false);
+    BOOST_CHECK(!flag);
+    BOOST_CHECK(guard.saved());
+  }
+  BOOST_CHECK(flag);
+}
+
+BOOST_AUTO_TEST_CASE(testScopedAssignRestoresWhenUnwinding)
+{
+  opt_int year = 2020;
+  auto draft = [&year] {
+    scoped_assign<opt_int> guard(year, opt_int());
+    BOOST_CHECK(!year);
+    throw std::runtime_error("draft failed");
+  };
+  BOOST_CHECK_THROW(draft(), std::runtime_error);
+  BOOST_REQUIRE(year);
+  BOOST_CHECK_EQUAL(*year, 2020);
+}
+
+BOOST_AUTO_TEST_CASE(testScopedAssignSaveOnlyUndoesWrites)
+{
+  opt_int year = 2020;
+  {
+    scoped_assign<opt_int> guard(year);
+    BOOST_REQUIRE(year);
+    BOOST_CHECK_EQUAL(*year, 2020);
+    year = 2023; // an included file's `year 2023`
+  }
+  BOOST_REQUIRE(year);
+  BOOST_CHECK_EQUAL(*year, 2020);
+
+  opt_int unset;
+  {
+    scoped_assign<opt_int> guard(unset);
+    unset = 1999;
+  }
+  BOOST_CHECK(!unset);
+}
+
+BOOST_AUTO_TEST_CASE(testScopedAssignNestsInReverseOrder)
+{
+  int depth = 0;
+  {
+    scoped_assign<int> outer(depth, 1);
+    {
+      scoped_assign<int> inner(depth, 2);
+      BOOST_CHECK_EQUAL(depth, 2);
+      BOOST_CHECK_EQUAL(inner.saved(), 1);
+    }
+    BOOST_CHECK_EQUAL(depth, 1);
+  }
+  BOOST_CHECK_EQUAL(depth, 0);
+}
+
+BOOST_AUTO_TEST_CASE(testScopedAssignIsNoncopyable)
+{
+  BOOST_CHECK(!std::is_copy_constructible_v<scoped_assign<bool>>);
+  BOOST_CHECK(!std::is_copy_assignable_v<scoped_assign<bool>>);
+}
+
+BOOST_AUTO_TEST_SUITE_END()

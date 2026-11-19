@@ -505,6 +505,35 @@ inline T& downcast(U& object) {
   return *polymorphic_downcast<T*>(&object);
 }
 
+/// Assign a new value to @p target (or only save it) for the lifetime of
+/// this object, restoring the saved value on every exit path, including
+/// unwinding.  Used for the process globals that steer parsing and
+/// evaluation (epoch, year_directive_year, item_t::use_aux_date,
+/// commodity_t::decimal_comma_by_default).
+template <typename T>
+class scoped_assign {
+public:
+  /// Save @p target, leaving it unchanged.
+  explicit scoped_assign(T& target) : target_(target), saved_(target) {}
+
+  /// Save @p target, then assign @p value to it.
+  scoped_assign(T& target, T value) : target_(target), saved_(target) {
+    target_ = std::move(value);
+  }
+
+  ~scoped_assign() noexcept { target_ = std::move(saved_); }
+
+  /// The value saved at construction.
+  const T& saved() const { return saved_; }
+
+  scoped_assign(const scoped_assign&) = delete;
+  scoped_assign& operator=(const scoped_assign&) = delete;
+
+private:
+  T& target_;
+  T saved_;
+};
+
 /// Resolve a filesystem path, expanding `~` to the user's home directory
 /// and normalizing the result.  On Cygwin, also converts Windows-style
 /// drive letter paths (e.g. `C:\...`) to POSIX paths.

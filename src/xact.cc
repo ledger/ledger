@@ -1548,13 +1548,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact, const parse_context_t* context)
       // two and breaking predicates that distinguish them (fixes #2945).
       bool matches_predicate = false;
       {
-        bool saved = item_t::use_aux_date;
-        item_t::use_aux_date = false;
-        struct restore_guard {
-          bool& flag;
-          bool val;
-          ~restore_guard() { flag = val; }
-        } guard{item_t::use_aux_date, saved};
+        scoped_assign<bool> aux_date_guard(item_t::use_aux_date, false);
 
         if (try_quick_match) {
           try {
@@ -1798,13 +1792,7 @@ void auto_xact_t::apply_checks_to_post(post_t& initial_post, const parse_context
     // date() returns the primary date and expressions like
     // "aux_date != date" behave correctly; mirrors extend_xact() above
     // (fixes #2945).
-    bool saved = item_t::use_aux_date;
-    item_t::use_aux_date = false;
-    struct restore_guard {
-      bool& flag;
-      bool val;
-      ~restore_guard() { flag = val; }
-    } guard{item_t::use_aux_date, saved};
+    scoped_assign<bool> aux_date_guard(item_t::use_aux_date, false);
 
     for (expr_t::check_expr_pair& pair : *check_exprs) {
       if (pair.second == expr_t::EXPR_GENERAL) {
