@@ -103,8 +103,7 @@
  * |-------|-----------|---------|
  * | `BEGIN(type, name)` | `struct name##option_t : public option_t<type>` | Opens the option struct
  * declaration | | `CTOR(type, name)` | `name##option_t() : option_t<type>(#name)` | Basic
- * constructor | | `CTOR_(type, name, base)` | `name##option_t() : option_t<type>(#name), base` |
- * Constructor with extra member initializer | | `DECL1(type, name, vartype, var, value)` | declares
+ * constructor | | `DECL1(type, name, vartype, var, value)` | declares
  * `vartype var;` + constructor | Adds an extra member variable to the option struct | | `END(name)`
  * | `name##handler` | Closes the struct and declares the member instance |
  *
@@ -147,8 +146,7 @@
  * | `HANDLER(name)` | `name##handler` | Access the option's member instance |
  * | `HANDLED(name)` | `name##handler` | Same; tests if option is set (via bool conversion) |
  * | `OTHER(name)` | `parent->HANDLER(name)` | Access another option on the same parent; used in
- * DO()/DO_() bodies for cross-option side effects | | `COPY_OPT(name, other)` | copy constructor
- * helper | Copies one option's handler from another instance |
+ * DO()/DO_() bodies for cross-option side effects |
  *
  * @subsection opt_factory Factory Macros
  *
@@ -422,8 +420,6 @@ public:
 #define BEGIN(type, name) struct name##option_t : public option_t<type> ///< Opens the option struct
 
 #define CTOR(type, name) name##option_t() : option_t<type>(#name) ///< Basic constructor
-#define CTOR_(type, name, base)                                                                    \
-  name##option_t() : option_t<type>(#name), base ///< Ctor with extra init
 #define DECL1(type, name, vartype, var, value)                                                     \
   vartype var;                                                                                     \
   name##option_t() : option_t<type>(#name), var value ///< Declares extra member var + constructor
@@ -438,12 +434,9 @@ public:
                              [[maybe_unused]] const string& str)                                   \
       override ///< Override for options taking an argument
 
-/*--- Instance and Copy Macros ---*/
+/*--- Instance Macros ---*/
 
 #define END(name) name##handler ///< Closes the struct and declares the member instance
-
-#define COPY_OPT(name, other)                                                                      \
-  name##handler((other).name##handler) ///< Copy one option's handler from another instance
 
 /*--- Factory Macros (wrap option methods as expression functors) ---*/
 
