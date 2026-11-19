@@ -1321,60 +1321,54 @@ std::optional<amount_t> amount_t::value(const datetime_t& moment,
     if (has_commodity() && (in_terms_of || (!commodity().has_flags(COMMODITY_PRIMARY) &&
                                             !(commodity().has_flags(COMMODITY_NOMARKET) &&
                                               !commodity().has_flags(COMMODITY_BUILTIN))))) {
-      std::optional<price_point_t> point;
       const commodity_t* comm(in_terms_of);
-
-      if (has_annotation() && annotation().price) {
-        if (annotation().has_flags(ANNOTATION_PRICE_FIXATED)) {
-          point = price_point_t();
-          point->price = *annotation().price;
-          DEBUG("commodity.prices.find", "amount_t::value: fixated price =  " << point->price);
-        } else if (!comm) {
-          comm = annotation().price->commodity_ptr();
-        }
-      }
+      const bool fixated = has_annotation() && annotation().price &&
+                           annotation().has_flags(ANNOTATION_PRICE_FIXATED);
+      if (!comm && !fixated && has_annotation() && annotation().price)
+        comm = annotation().price->commodity_ptr();
 
       if (comm && commodity().referent() == comm->referent())
         return with_commodity(comm->referent());
 
-      if (!point) {
-        point = commodity().find_price(comm, moment);
-
+      // annotated_commodity_t::find_price returns a fixated lot price as
+      // is; it establishes no market value, so it is never re-downloaded.
+      std::optional<price_point_t> point = commodity().find_price(comm, moment);
+      if (!fixated) {
         // Whether a price was found or not, check whether we should attempt
         // to download a price from the Internet.  This is done if (a) no
         // price was found, or (b) the price is "stale" according to the
         // setting of --price-exp.
         point = commodity().check_for_updated_price(point, moment, comm);
+      }
 
-        // If no price was found directly, walk the larger unit chain to find
-        // a price for an equivalent larger unit (issue #2017).  This handles
-        // chains such as A -> B -> C -> D when amounts are stored in the
-        // smallest unit (D) but a price is only defined for an intermediate
-        // unit such as B.  We scale the amount up to the larger unit before
-        // computing the price, then return the scaled price directly.
-        //
-        // Also handles the case where the target commodity is reachable via
-        // the larger() chain directly (e.g. -X h forces seconds to hours,
-        // even when the result is a fraction like 0.50h for 1800s).
-        if (!point && commodity().larger()) {
-          amount_t scaled(*this);
-          int depth = 0;
-          while (!point && scaled.commodity_ && scaled.commodity().larger()) {
-            if (++depth > 100) // safety net: break out of cyclic larger chains
-              break;
-            scaled /= scaled.commodity().larger()->number();
-            scaled.commodity_ = scaled.commodity().larger()->commodity_;
-            if (comm && scaled.commodity().referent() == comm->referent())
-              return scaled;
-            point = scaled.commodity().find_price(comm, moment);
-            point = scaled.commodity().check_for_updated_price(point, moment, comm);
-          }
-          if (point) {
-            amount_t price(point->price);
-            price.multiply(scaled, true);
-            price.in_place_round();
-            return price;
-          }
+      // If no price was found directly, walk the larger unit chain to find
+      // a price for an equivalent larger unit (issue #2017).  This handles
+      // chains such as A -> B -> C -> D when amounts are stored in the
+      // smallest unit (D) but a price is only defined for an intermediate
+      // unit such as B.  We scale the amount up to the larger unit before
+      // computing the price, then return the scaled price directly.
+      //
+      // Also handles the case where the target commodity is reachable via
+      // the larger() chain directly (e.g. -X h forces seconds to hours,
+      // even when the result is a fraction like 0.50h for 1800s).
+      if (!point && commodity().larger()) {
+        amount_t scaled(*this);
+        int depth = 0;
+        while (!point && scaled.commodity_ && scaled.commodity().larger()) {
+          if (++depth > 100) // safety net: break out of cyclic larger chains
+            break;
+          scaled /= scaled.commodity().larger()->number();
+          scaled.commodity_ = scaled.commodity().larger()->commodity_;
+          if (comm && scaled.commodity().referent() == comm->referent())
+            return scaled;
+          point = scaled.commodity().find_price(comm, moment);
+          point = scaled.commodity().check_for_updated_price(point, moment, comm);
+        }
+        if (point) {
+          amount_t price(point->price);
+          price.multiply(scaled, true);
+          price.in_place_round();
+          return price;
         }
       }
 
