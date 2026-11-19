@@ -1,0 +1,35 @@
+; Lots priced in a commodity that a later `alias` retires value through
+; the referent's prices.  The price lookup's target is then the retired
+; commodity, whose graph vertex holds the referent; MSFT reaches it over
+; two hops (MSFT -> USD -> JPY).  -V states the result in the retired
+; commodity, as it was written in the lot price (alias-after-price.test
+; pins the same rule for NOK); -X JPY states it in the referent.
+
+2024/01/01 Buy
+    A    10 AAPL {5 Yen}
+    B
+
+2024/01/01 Buy two hops
+    M    20 MSFT {3 Yen}
+    B
+
+commodity JPY
+    alias Yen
+
+P 2024/01/05 AAPL 600 JPY
+P 2024/01/05 MSFT 10.00 USD
+P 2024/01/05 USD 150 JPY
+
+test bal ^A ^M -V --now 2024/02/01
+             Yen6000  A
+            Yen30000  M
+--------------------
+            Yen36000
+end test
+
+test bal ^A ^M -X JPY --now 2024/02/01
+             JPY6000  A
+            JPY30000  M
+--------------------
+            JPY36000
+end test

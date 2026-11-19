@@ -431,6 +431,12 @@ EXPECTED_UNVALUED = {
               " neither report values the XYZ holding, whose cost $1"
               " is a virtual posting's cost; -X $ values the $ rows and"
               " foots"),
+    "test/regress/alias-retired-lot-price-target.test": (
+        "-X", "the lot prices are in Yen, which a later alias retires"
+              " into JPY; bal -B still states the costs in Yen, so C is"
+              " Yen, and -X Yen, which the alias reads as JPY, values"
+              " every row in JPY; -V values them in Yen, as written in"
+              " the lot prices, and foots"),
 }
 
 # The tests the check exists for: on the default corpus each must PASS,
