@@ -1,0 +1,26 @@
+; With --effective alone the journal is read in effective-date order, so
+; the assertion that effective-primary-date-assertion.test shows holding
+; under --effective --primary-date fails here: by 2021-04-01 in
+; effective-date order acc1 holds 10 + 1 = 11 r, the -5 r posting being
+; dated 2021-06-01.
+
+2021-01-01 opening
+    acc1               10 r
+    income:opening
+
+2021-02-01 spend
+    expenses            5 r
+    acc1               -5 r  ; [=2021-06-01]
+
+2021-04-01 top up
+    acc1                1 r = 6 r  ; [=2021-04-01]
+    income:opening
+
+test bal --effective -> 1
+__ERROR__
+While parsing file "$FILE", line 16:
+While parsing posting:
+  acc1                1 r = 6 r  ; [=2021-04-01]
+                            ^^^^^^^^^^^^^^^^^^^^
+Error: Balance assertion off by -5 r (expected to see 11 r)
+end test

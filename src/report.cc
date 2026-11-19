@@ -192,7 +192,7 @@ void report_t::normalize_options(const string& verb) {
   }
 #endif
 
-  item_t::use_aux_date = (HANDLED(aux_date) && !HANDLED(primary_date));
+  item_t::use_aux_date = wants_aux_date();
 
   commodity_pool_t::current_pool->keep_base = HANDLED(base);
   commodity_pool_t::current_pool->get_quotes = session.HANDLED(download);

@@ -239,6 +239,12 @@ public:
   /// @param verb  The command name (e.g., "balance", "register", "print").
   void normalize_options(const string& verb);
 
+  /// @brief Whether dates are auxiliary (effective) dates for this report:
+  /// --aux-date (--effective) is set and --primary-date, which overrides it,
+  /// is not.  The value of item_t::use_aux_date while the journal is read
+  /// and the report runs.
+  bool wants_aux_date() const { return HANDLED(aux_date) && !HANDLED(primary_date); }
+
   /// Set the process globals through which report options reach lower
   /// layers (start_of_week, day_of_period, ledger::ignore_diacritics,
   /// format_t::default_style and default_style_changed, and the clock
