@@ -126,6 +126,10 @@
  * DO()/DO_() handler | | `OPTION_CTOR(type, name, body)` | `OPTION_CTOR(report_t, amount_,
  * DECL1(...) { } DO_(...) { ... });` | Fully custom body with extra members, custom CTOR, and
  * handler |
+ * | `OPTION_INT(type, name)` / `OPTION_INT_(type, name, body)` | `OPTION_INT(report_t, head_);` |
+ * Integer option: argument validated when set, read with as_int() |
+ * | `OPTION_INT_CTOR(type, int_type, name, body)` | `OPTION_INT_CTOR(report_t, unsigned int,
+ * seed_, ...);` | Integer option with its own constructor or parse type |
  *
  * @subsection opt_lookup Lookup Macros (used in lookup_option)
  *
@@ -353,6 +357,8 @@ public:
   /// @param str     The argument value (e.g., "monthly", "amount > 100").
   void on(const char* whence, const string& str) { on(string(whence), str); }
   void on(const optional<string>& whence, const string& str) {
+    validate_argument(str);
+
     string before = value; // NOLINT(bugprone-unused-local-non-trivial-variable)
 
     handler_thunk(whence, str);
@@ -375,6 +381,9 @@ public:
   virtual void handler_thunk(const optional<string>&) {}
   /// @brief Override point for argument option side effects (called by on(whence, str)).
   virtual void handler_thunk(const optional<string>&, const string&) {}
+  /// @brief Override point to reject a malformed argument before on() applies it (throws
+  /// option_error).
+  virtual void validate_argument(const string&) const {}
 
   /// @brief Entry point when the option is invoked via the expression engine.
   /// Validates argument count and types, then delegates to on().
@@ -495,25 +504,26 @@ inline bool is_eq(const char* p, const char* n) {
   }                                                                                                \
   END(name)
 
-/// @brief Declare a numeric option that returns an integer value to the expression engine.
-/// Like OPTION, but overrides operator() so that querying the option from an expression
-/// yields an INTEGER value_t rather than a STRING.  This allows arithmetic like
-/// `4 + total_width` without requiring an explicit int() cast.
+/// @brief Declare an option whose argument must be a whole decimal int (see int_option_t).
+/// The argument is checked when the option is set, HANDLER(name).as_int() reads it, and
+/// querying the option from an expression yields an INTEGER value_t, so `4 + total_width`
+/// works without an explicit int() cast.
 #define OPTION_INT(type, name)                                                                     \
-  BEGIN(type, name) {                                                                              \
-    CTOR(type, name) {}                                                                            \
-    value_t operator()(call_scope_t& args) override {                                              \
-      if (!args.empty()) {                                                                         \
-        args.push_front(string_value("?expr"));                                                    \
-        return handler(args);                                                                      \
-      } else if (wants_arg) {                                                                      \
-        return value.empty() ? value_t(0L) : value_t(std::stol(value));                            \
-      } else {                                                                                     \
-        return handled;                                                                            \
-      }                                                                                            \
-    }                                                                                              \
-  }                                                                                                \
-  END(name)
+  struct name##option_t : public int_option_t<type> {                                              \
+    name##option_t() : int_option_t<type>(#name) {}                                                \
+  } END(name)
+
+/// @brief Like OPTION_INT, with a custom body (e.g., a DO_() handler); the body may call
+/// parse_int(str) and invalid(str).
+#define OPTION_INT_(type, name, ...)                                                               \
+  struct name##option_t                                                                            \
+      : public int_option_t<type>{name##option_t() :                                               \
+                                      int_option_t<type>(#name){} __VA_ARGS__} END(name)
+
+/// @brief Like OPTION_CTOR for an integer option parsed as @a int_type (e.g., unsigned int);
+/// the body supplies the constructor, which names int_option_t<type, int_type>.
+#define OPTION_INT_CTOR(type, int_type, name, ...)                                                 \
+  struct name##option_t : public int_option_t<type, int_type>{__VA_ARGS__} END(name)
 
 /// @brief Declare an option with a custom DO()/DO_() handler body.
 #define OPTION_(type, name, ...) BEGIN(type, name){CTOR(type, name){} __VA_ARGS__} END(name)
@@ -559,6 +569,41 @@ class option_error : public std::runtime_error {
 public:
   explicit option_error(const string& why) noexcept : std::runtime_error(why) {}
   ~option_error() noexcept override {}
+};
+
+/// @brief An option whose argument is a whole decimal number of type Int, checked once when
+/// the option is set.
+template <typename T, typename Int = int>
+class int_option_t : public option_t<T> {
+public:
+  explicit int_option_t(const char* _name) : option_t<T>(_name) {}
+
+  /// @brief The option's validated value in its parse type; 0 when the value is empty.
+  Int as_int() const { return this->value.empty() ? Int(0) : parse_int(this->value); }
+
+  /// @brief Query the option from an expression: an INTEGER value_t for an argument option.
+  value_t operator()(call_scope_t& args) override {
+    if (args.empty() && this->wants_arg)
+      return value_t(static_cast<long>(as_int()));
+    return option_t<T>::operator()(args);
+  }
+
+protected:
+  /// @brief Parse @a str as an Int, or reject it with invalid().
+  Int parse_int(const string& str) const {
+    try {
+      return lexical_cast<Int>(str);
+    } catch (const bad_lexical_cast&) {
+      invalid(str);
+    }
+  }
+
+  /// @brief Throw the option_error "Invalid value for --NAME: STR".
+  [[noreturn]] void invalid(const string& str) const {
+    throw_(option_error, _f("Invalid value for %1%: %2%") % this->desc() % str);
+  }
+
+  void validate_argument(const string& str) const override { (void)parse_int(str); }
 };
 
 } // namespace ledger

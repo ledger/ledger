@@ -177,9 +177,7 @@ value_t select_command(call_scope_t& args) {
       long account_width = widths.account;
       long amount_width = widths.amount;
       long total_width = widths.total;
-      long meta_width =
-          (report.HANDLED(meta_width_) ? lexical_cast<long>(report.HANDLER(meta_width_).str())
-                                       : 10);
+      long meta_width = (report.HANDLED(meta_width_) ? report.HANDLER(meta_width_).as_int() : 10);
 
       // First pass: measure total width needed by the requested columns.
       bool saw_payee = false;
@@ -349,7 +347,9 @@ value_t select_command(call_scope_t& args) {
 
           as_expr(column)->print(formatter);
 
-          formatter << ", int(meta_width or 10)), int(meta_width) or 10),";
+          // Truncate at --meta-width when one is given (0, the default, keeps
+          // the whole value); pad to it, or to 10.
+          formatter << ", int(meta_width)), int(meta_width) or 10),";
           formatter << "bold if should_bold)";
 
           if (!thus_far.empty())

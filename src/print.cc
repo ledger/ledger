@@ -319,13 +319,14 @@ struct print_layout_t {
   string format_str;
 
   explicit print_layout_t(report_t& report)
-      : columns(report.HANDLED(columns_) ? lexical_cast<std::size_t>(report.HANDLER(columns_).str())
-                                         : 80),
+      : columns(report.HANDLED(columns_)
+                    ? static_cast<std::size_t>(report.HANDLER(columns_).as_int())
+                    : 80),
         account_width(report.HANDLED(account_width_)
-                          ? lexical_cast<std::size_t>(report.HANDLER(account_width_).str())
+                          ? static_cast<std::size_t>(report.HANDLER(account_width_).as_int())
                           : 36),
         amount_width(report.HANDLED(amount_width_)
-                         ? lexical_cast<std::size_t>(report.HANDLER(amount_width_).str())
+                         ? static_cast<std::size_t>(report.HANDLER(amount_width_).as_int())
                          : 12),
         show_generated(report.HANDLED(generated)),
         format_type(report.HANDLED(date_format_) ? FMT_CUSTOM : FMT_WRITTEN),

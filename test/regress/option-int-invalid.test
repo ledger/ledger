@@ -1,0 +1,146 @@
+; Integer-valued options (--head, --tail, --depth, --period-shift,
+; --decimal-places, --columns, the column widths, --meta-width, --seed,
+; --forecast-years, --prepend-width, --abbrev-len) take a whole decimal
+; number that fits in an int (--seed: an unsigned int).  A value that is
+; not one is rejected when the option is set, naming the option, instead
+; of surfacing "bad lexical cast" or "stoi: no conversion" from wherever
+; the value happened to be used, or silently dropping trailing characters
+; such as the x in 15x.  The accepted values are pinned in
+; option-int-values.test.
+
+2024/01/05 Grocer
+    Expenses:Food:Groceries    $10.25
+    Assets:Cash
+
+2024/02/05 Diner
+    Expenses:Food:Dining       $20.00
+    Assets:Cash
+
+2024/03/05 Grocer
+    Expenses:Food:Groceries    $30.00
+    Assets:Cash
+
+test reg --depth=abc -> 1
+__ERROR__
+While parsing option '--depth=abc'
+Error: Invalid value for --depth: abc
+end test
+
+test reg --depth abc -> 1
+__ERROR__
+While parsing option '--depth'
+Error: Invalid value for --depth: abc
+end test
+
+test reg --depth=99999999999 -> 1
+__ERROR__
+While parsing option '--depth=99999999999'
+Error: Invalid value for --depth: 99999999999
+end test
+
+test bal --depth 1.5 -> 1
+__ERROR__
+While parsing option '--depth'
+Error: Invalid value for --depth: 1.5
+end test
+
+test reg --head=abc -> 1
+__ERROR__
+While parsing option '--head=abc'
+Error: Invalid value for --head: abc
+end test
+
+test reg --first=abc -> 1
+__ERROR__
+While parsing option '--first=abc'
+Error: Invalid value for --head: abc
+end test
+
+test reg --tail 3x -> 1
+__ERROR__
+While parsing option '--tail'
+Error: Invalid value for --tail: 3x
+end test
+
+test reg -M --period-shift abc -> 1
+__ERROR__
+While parsing option '--period-shift'
+Error: Invalid value for --period-shift: abc
+end test
+
+test reg -M --period-shift 15x -> 1
+__ERROR__
+While parsing option '--period-shift'
+Error: Invalid value for --period-shift: 15x
+end test
+
+test bal --decimal-places -1 -> 1
+__ERROR__
+While parsing option '--decimal-places'
+Error: Invalid value for --decimal-places: -1
+end test
+
+test bal --decimal-places abc -> 1
+__ERROR__
+While parsing option '--decimal-places'
+Error: Invalid value for --decimal-places: abc
+end test
+
+test reg --columns=abc -> 1
+__ERROR__
+While parsing option '--columns=abc'
+Error: Invalid value for --columns: abc
+end test
+
+test reg --date-width=abc -> 1
+__ERROR__
+While parsing option '--date-width=abc'
+Error: Invalid value for --date-width: abc
+end test
+
+test reg --prepend-width=abc -> 1
+__ERROR__
+While parsing option '--prepend-width=abc'
+Error: Invalid value for --prepend-width: abc
+end test
+
+test reg --meta-width=abc --meta Payee -> 1
+__ERROR__
+While parsing option '--meta-width=abc'
+Error: Invalid value for --meta-width: abc
+end test
+
+test reg --meta Payee:abc -> 1
+__ERROR__
+Error: Invalid value for --meta-width: abc
+end test
+
+test reg --seed abc -> 1
+__ERROR__
+While parsing option '--seed'
+Error: Invalid value for --seed: abc
+end test
+
+test reg --forecast-years abc -> 1
+__ERROR__
+While parsing option '--forecast-years'
+Error: Invalid value for --forecast-years: abc
+end test
+
+test print --columns=3000000000 -> 1
+__ERROR__
+While parsing option '--columns=3000000000'
+Error: Invalid value for --columns: 3000000000
+end test
+
+test reg --seed=4294967296 -> 1
+__ERROR__
+While parsing option '--seed=4294967296'
+Error: Invalid value for --seed: 4294967296
+end test
+
+test reg --abbrev-len abc -> 1
+__ERROR__
+While parsing option '--abbrev-len'
+Error: Invalid value for --abbrev-len: abc
+end test

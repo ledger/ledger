@@ -206,7 +206,7 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t
     auto forecast_handler = std::make_shared<forecast_posts>(
         handler, predicate_t(report.HANDLER(forecast_while_).str(), report.what_to_keep()), report,
         (report.HANDLED(forecast_years_)
-             ? lexical_cast<std::size_t>(report.HANDLER(forecast_years_).value)
+             ? static_cast<std::size_t>(report.HANDLER(forecast_years_).as_int())
              : 5UL));
     forecast_handler->add_period_xacts(report.session.journal->period_xacts);
     handler = forecast_handler;
@@ -238,8 +238,8 @@ post_handler_ptr chain_selection_handlers(post_handler_ptr base_handler, report_
   // displayed.  It does not affect calculation.
   if (report.HANDLED(head_) || report.HANDLED(tail_))
     handler = std::make_shared<truncate_xacts>(
-        handler, report.HANDLED(head_) ? lexical_cast<int>(report.HANDLER(head_).value) : 0,
-        report.HANDLED(tail_) ? lexical_cast<int>(report.HANDLER(tail_).value) : 0);
+        handler, report.HANDLED(head_) ? report.HANDLER(head_).as_int() : 0,
+        report.HANDLED(tail_) ? report.HANDLER(tail_).as_int() : 0);
 
   // filter_posts will only pass through posts matching the
   // `display_predicate'.
@@ -254,7 +254,8 @@ post_handler_ptr chain_selection_handlers(post_handler_ptr base_handler, report_
   if (report.HANDLED(display_)) {
     string display_expr = report.HANDLER(display_).str();
     if (has_collapse_stage && report.HANDLED(depth_))
-      display_expr = "(" + display_expr + ")&(depth<=" + report.HANDLER(depth_).str() + ")";
+      display_expr =
+          "(" + display_expr + ")&(depth<=" + std::to_string(report.HANDLER(depth_).as_int()) + ")";
     display_predicate = predicate_t(display_expr, report.what_to_keep());
     handler = std::make_shared<filter_posts>(handler, display_predicate, report);
   }
@@ -461,7 +462,7 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
     if (report.HANDLED(collapse) || report.HANDLED(depth_)) {
       unsigned short collapse_depth = 0;
       if (report.HANDLED(depth_))
-        collapse_depth = lexical_cast<int>(report.HANDLER(depth_).str());
+        collapse_depth = static_cast<unsigned short>(report.HANDLER(depth_).as_int());
 
       handler =
           std::make_shared<collapse_posts>(handler, report, expr, display_predicate, only_predicate,

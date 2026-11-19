@@ -229,11 +229,13 @@ void report_t::normalize_options(const string& verb) {
       }
     }
     if (HANDLED(meta_width_)) { // NOLINT(bugprone-branch-clone)
+      meta_width = HANDLER(meta_width_).as_int();
+      // Paste the parsed width, not the argument text: "+5" is a valid
+      // --meta-width but not a valid term of the format expression.
+      const string width = std::to_string(meta_width);
       HANDLER(prepend_format_)
           .on("?normalize", string("%(justify(truncated(tag(\"") + HANDLER(meta_).str() + "\"), " +
-                                HANDLED(meta_width_).value + " - 1), " +
-                                HANDLED(meta_width_).value + "))");
-      meta_width = lexical_cast<long>(HANDLED(meta_width_).value);
+                                width + " - 1), " + width + "))");
     } else {
       HANDLER(prepend_format_).on("?normalize", string("%(tag(\"") + HANDLER(meta_).str() + "\"))");
     }
@@ -406,7 +408,7 @@ void report_t::apply_option_globals() {
     start_of_week = gregorian::Sunday;
   }
 
-  day_of_period = HANDLED(period_shift_) ? std::stoi(HANDLER(period_shift_).str()) : 0;
+  day_of_period = HANDLED(period_shift_) ? HANDLER(period_shift_).as_int() : 0;
 
   ledger::ignore_diacritics = HANDLED(ignore_diacritics);
 
@@ -429,7 +431,7 @@ void report_t::apply_option_globals() {
   commodity_pool_t::current_pool->uncap_precision();
   if (HANDLED(decimal_places_))
     commodity_pool_t::current_pool->cap_precision(
-        static_cast<amount_t::precision_t>(lexical_cast<int>(HANDLER(decimal_places_).value)));
+        static_cast<amount_t::precision_t>(HANDLER(decimal_places_).as_int()));
 }
 
 long report_t::terminal_columns() const {
@@ -438,7 +440,7 @@ long report_t::terminal_columns() const {
   struct winsize ws;
 #endif
   if (HANDLED(columns_))
-    cols = lexical_cast<long>(HANDLER(columns_).value);
+    cols = HANDLER(columns_).as_int();
   else if (const char* columns = std::getenv("COLUMNS"))
     cols = lexical_cast<long>(columns);
 #if HAVE_IOCTL
@@ -452,7 +454,7 @@ long report_t::terminal_columns() const {
 
 report_t::column_widths_t report_t::default_column_widths(long cols) const {
   long date_width =
-      (HANDLED(date_width_) ? lexical_cast<long>(HANDLER(date_width_).str())
+      (HANDLED(date_width_) ? HANDLER(date_width_).as_int()
                             : static_cast<long>(format_date(CURRENT_DATE(), FMT_PRINTED).length()));
   // In interval reports (e.g. --daily, --monthly), the payee column shows
   // the period range "- <end-date>", which is exactly date_width + 2 wide.
@@ -462,15 +464,14 @@ report_t::column_widths_t report_t::default_column_widths(long cols) const {
   // usual cols * 0.263 default, which leaves the column much wider than
   // needed and wastes space that would be better given to the account
   // column (#3216).
-  long payee_width = (HANDLED(payee_width_) ? lexical_cast<long>(HANDLER(payee_width_).str())
+  long payee_width = (HANDLED(payee_width_) ? HANDLER(payee_width_).as_int()
                       : HANDLED(period_)    ? date_width + 3
                                             : long(double(cols) * 0.263157));
-  long account_width = (HANDLED(account_width_) ? lexical_cast<long>(HANDLER(account_width_).str())
-                                                : long(double(cols) * 0.302631));
-  long amount_width = (HANDLED(amount_width_) ? lexical_cast<long>(HANDLER(amount_width_).str())
-                                              : long(double(cols) * 0.157894));
-  long total_width =
-      (HANDLED(total_width_) ? lexical_cast<long>(HANDLER(total_width_).str()) : amount_width);
+  long account_width =
+      (HANDLED(account_width_) ? HANDLER(account_width_).as_int() : long(double(cols) * 0.302631));
+  long amount_width =
+      (HANDLED(amount_width_) ? HANDLER(amount_width_).as_int() : long(double(cols) * 0.157894));
+  long total_width = (HANDLED(total_width_) ? HANDLER(total_width_).as_int() : amount_width);
   return {date_width, payee_width, account_width, amount_width, total_width};
 }
 
@@ -713,9 +714,9 @@ void report_t::posts_report_quick(post_handler_ptr handler) {
 void report_t::generate_report(post_handler_ptr handler) {
   handler = chain_handlers(handler, *this);
 
-  generate_posts_iterator walker(
-      session, HANDLED(seed_) ? lexical_cast<unsigned int>(HANDLER(seed_).str()) : 0,
-      HANDLED(head_) ? lexical_cast<unsigned int>(HANDLER(head_).str()) : 50);
+  generate_posts_iterator walker(session, HANDLED(seed_) ? HANDLER(seed_).as_int() : 0,
+                                 HANDLED(head_) ? static_cast<unsigned int>(HANDLER(head_).as_int())
+                                                : 50);
 
   pass_down_posts<generate_posts_iterator>(handler, walker); // NOLINT(bugprone-unused-raii)
 }
@@ -2163,7 +2164,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
 #define FORMATTED_POSTS_REPORTER(format)                                                           \
   POSTS_REPORTER(new format_posts(                                                                 \
       *this, report_format(HANDLER(format)), maybe_format(HANDLER(prepend_format_)),               \
-      HANDLED(prepend_width_) ? lexical_cast<std::size_t>(HANDLER(prepend_width_).str()) : 0,      \
+      HANDLED(prepend_width_) ? static_cast<std::size_t>(HANDLER(prepend_width_).as_int()) : 0,    \
       maybe_format(HANDLER(append_format_)))) ///< Posting report using a named format option
 
 #define FORMATTED_COMMODITIES_REPORTER(format)                                                     \
@@ -2171,7 +2172,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
       &report_t::commodities_report,                                                               \
       new format_posts(                                                                            \
           *this, report_format(HANDLER(format)), maybe_format(HANDLER(prepend_format_)),           \
-          HANDLED(prepend_width_) ? lexical_cast<std::size_t>(HANDLER(prepend_width_).str()) : 0,  \
+          HANDLED(prepend_width_) ? static_cast<std::size_t>(HANDLER(prepend_width_).as_int())     \
+                                  : 0,                                                             \
           maybe_format(HANDLER(append_format_)))) ///< Commodity report using a named \
                                                   ///< format option
 
@@ -2183,7 +2185,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
 #define FORMATTED_ACCOUNTS_REPORTER(format)                                                        \
   ACCOUNTS_REPORTER(new format_accounts(                                                           \
       *this, report_format(HANDLER(format)), maybe_format(HANDLER(prepend_format_)),               \
-      HANDLED(prepend_width_) ? lexical_cast<std::size_t>(HANDLER(prepend_width_).str()) : 0,      \
+      HANDLED(prepend_width_) ? static_cast<std::size_t>(HANDLER(prepend_width_).as_int()) : 0,    \
       maybe_format(HANDLER(append_format_)))) ///< Account report using a named format option
 
   case symbol_t::COMMAND:

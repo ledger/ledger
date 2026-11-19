@@ -492,7 +492,7 @@ void report_accounts::flush() {
   if (do_prepend_format) {
     prepend_format.parse_format(report.HANDLER(prepend_format_).str());
     prepend_width = report.HANDLED(prepend_width_)
-                        ? lexical_cast<std::size_t>(report.HANDLER(prepend_width_).str())
+                        ? static_cast<std::size_t>(report.HANDLER(prepend_width_).as_int())
                         : 0;
   }
 

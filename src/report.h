@@ -665,8 +665,9 @@ public:
    */
   ///@{
 
-  OPTION_CTOR(
-      report_t, abbrev_len_, CTOR(report_t, abbrev_len_) {
+  OPTION_INT_CTOR(
+      report_t, int, abbrev_len_, abbrev_len_option_t()
+      : int_option_t<report_t>("abbrev_len_") {
         on(none, "2");
       }); ///< Minimum abbreviation length for account names (default: 2)
 
@@ -838,7 +839,7 @@ public:
 
   OPTION_(report_t, collapse_if_zero, DO() { OTHER(collapse).on(whence); });
 
-  OPTION(report_t, columns_);
+  OPTION_INT(report_t, columns_);
   OPTION(report_t, count);
 
   OPTION_CTOR(
@@ -872,7 +873,11 @@ public:
   OPTION(report_t, date_format_);
   OPTION(report_t, datetime_format_);
 
-  OPTION(report_t, decimal_places_);
+  OPTION_INT_(
+      report_t, decimal_places_, DO_() {
+        if (parse_int(str) < 0)
+          invalid(str);
+      });
 
   OPTION(report_t, lisp_date_format_);
 
@@ -962,7 +967,9 @@ public:
 
   // Like --collapse, limit only account rows through display_;
   // chain_selection_handlers() limits the postings of a collapsing chain.
-  OPTION_(report_t, depth_, DO_() { OTHER(display_).on(whence, string("post|depth<=") + str); });
+  OPTION_INT_(
+      report_t, depth_,
+      DO_() { OTHER(display_).on(whence, "post|depth<=" + std::to_string(parse_int(str))); });
 
   OPTION_(
       report_t, deviation,
@@ -1044,7 +1051,7 @@ public:
   OPTION(report_t, force_color);
   OPTION(report_t, force_pager);
   OPTION(report_t, forecast_while_);
-  OPTION(report_t, forecast_years_);
+  OPTION_INT(report_t, forecast_years_);
   OPTION(report_t, format_); // -F
 
   OPTION_(
@@ -1077,7 +1084,7 @@ public:
       report_t, group_title_format_,
       CTOR(report_t, group_title_format_) { on(none, "%(value)\n"); });
 
-  OPTION(report_t, head_);
+  OPTION_INT(report_t, head_);
 
   OPTION_(
       report_t, historical, DO() { // -H
@@ -1238,7 +1245,7 @@ public:
           value += string(" ") + str;
       });
 
-  OPTION(report_t, period_shift_);
+  OPTION_INT(report_t, period_shift_);
 
   OPTION(report_t, pivot_);
   OPTION(report_t, pivot_only_);
@@ -1355,7 +1362,8 @@ public:
 
   OPTION(report_t, rich_data);
 
-  OPTION(report_t, seed_);
+  OPTION_INT_CTOR(report_t, unsigned int, seed_, seed_option_t()
+                  : int_option_t<report_t, unsigned int>("seed_"){});
 
   OPTION_(
       report_t, sort_, DO_() { // -S
@@ -1372,7 +1380,7 @@ public:
 
   OPTION(report_t, start_of_week_);
   OPTION(report_t, subtotal); // -s
-  OPTION(report_t, tail_);
+  OPTION_INT(report_t, tail_);
 
   OPTION_(
       report_t, time_report, DO() {
@@ -1461,7 +1469,7 @@ public:
 
   /*--- Column Width Options ---*/
 
-  OPTION(report_t, meta_width_);        ///< Width of the meta-tag prepend column
+  OPTION_INT(report_t, meta_width_);    ///< Width of the meta-tag prepend column
   OPTION_INT(report_t, date_width_);    ///< Width of the date column in register reports
   OPTION_INT(report_t, payee_width_);   ///< Width of the payee column in register reports
   OPTION_INT(report_t, account_width_); ///< Width of the account column in register reports
