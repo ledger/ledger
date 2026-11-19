@@ -854,34 +854,36 @@ void instance_t::payee_uuid_directive(const string& payee, string uuid) {
   context.journal->payee_uuid_mappings[uuid] = payee;
 }
 
-void instance_t::payee_rewrite_directive(char* line) {
-  // Format: payee-rewrite PATTERN   REPLACEMENT
+namespace {
+
+/// Read the `PATTERN  REPLACEMENT` argument of a payee-rewrite or
+/// account-rewrite directive into the pattern mask and the trimmed
+/// replacement, throwing parse_error with @p missing_replacement_message
+/// when the replacement is missing.
+std::pair<mask_t, string> parse_rewrite_args(char* line, const char* missing_replacement_message) {
+  // Format: payee-rewrite|account-rewrite PATTERN   REPLACEMENT
   // The pattern and replacement are separated by two spaces or a tab.
   char* p = skip_ws(line);
   char* repl = next_element(p, true);
   if (!repl)
-    throw_(parse_error, _("payee-rewrite directive requires a pattern and a replacement"));
+    throw_(parse_error, missing_replacement_message);
   string pattern(p);
   trim(pattern);
   string replacement(repl);
   trim(replacement);
+  return {mask_t(pattern), replacement};
+}
+
+} // namespace
+
+void instance_t::payee_rewrite_directive(char* line) {
   context.journal->payee_rewrite_mappings.push_back(
-      payee_rewrite_mapping_t(mask_t(pattern), replacement));
+      parse_rewrite_args(line, _("payee-rewrite directive requires a pattern and a replacement")));
 }
 
 void instance_t::account_rewrite_directive(char* line) {
-  // Format: account-rewrite PATTERN   REPLACEMENT
-  // The pattern and replacement are separated by two spaces or a tab.
-  char* p = skip_ws(line);
-  char* repl = next_element(p, true);
-  if (!repl)
-    throw_(parse_error, _("account-rewrite directive requires a pattern and a replacement"));
-  string pattern(p);
-  trim(pattern);
-  string replacement(repl);
-  trim(replacement);
-  context.journal->account_rewrite_mappings.push_back(
-      account_rewrite_mapping_t(mask_t(pattern), replacement));
+  context.journal->account_rewrite_mappings.push_back(parse_rewrite_args(
+      line, _("account-rewrite directive requires a pattern and a replacement")));
 }
 
 /*--- Commodity Directives ---*/
