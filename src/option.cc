@@ -234,11 +234,9 @@ strings_list process_arguments(strings_list args, scope_t& scope) {
       if (!opt.first)
         throw_(option_error, _f("Illegal option --%1%") % name);
 
-      if (opt.second && !value && ++i != args.end() && value == nullptr) {
+      if (opt.second && !value && ++i != args.end()) {
         value = (*i).c_str();
         DEBUG("option.args", "  read option value from arg: " << value);
-        if (value == nullptr)
-          throw_(option_error, _f("Missing option argument for --%1%") % name);
       }
       process_option(string("--") + name, opt.first->as_function(), scope, value,
                      string("--") + name);
@@ -263,8 +261,6 @@ strings_list process_arguments(strings_list args, scope_t& scope) {
         if (o.truth && ++i != args.end()) {
           value = (*i).c_str();
           DEBUG("option.args", "  read option value from arg: " << value);
-          if (value == nullptr)
-            throw_(option_error, _f("Missing option argument for -%1%") % o.ch);
         }
         process_option(string("-") + o.ch, o.op->as_function(), scope, value, string("-") + o.ch);
       }

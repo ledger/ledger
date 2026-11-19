@@ -1,0 +1,19 @@
+; When an option's argument is missing, whether "--name=" gives an empty value
+; or a short-option cluster ends on a letter that takes an argument with no
+; argv word after it, the one diagnostic is the option handler's "No argument
+; provided".  option-argument-forms.test pins the forms that succeed.
+
+2024/01/01 Test
+    Expenses:Food   $10.00
+    Assets:Cash
+
+test bal --limit= -> 1
+__ERROR__
+Error: No argument provided for --limit
+end test
+
+test bal -El -> 1
+__ERROR__
+While parsing option '-l'
+Error: No argument provided for --limit
+end test
