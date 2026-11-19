@@ -85,8 +85,8 @@ namespace ledger {
 /**
  * @brief The key of a symbol_scope_t entry: a symbol's kind and name.
  *
- * Kinds keep functions, options, pre-commands, commands and directives in
- * separate namespaces; the map orders keys by kind, then name.
+ * Kinds keep functions, options, pre-commands and commands in separate
+ * namespaces; the map orders keys by kind, then name.
  */
 struct symbol_t {
   enum kind_t : uint8_t {
@@ -94,8 +94,7 @@ struct symbol_t {
     FUNCTION,   ///< A callable function (most expression identifiers).
     OPTION,     ///< A command-line option handler.
     PRECOMMAND, ///< A pre-command (executed before journal parsing).
-    COMMAND,    ///< A report command (balance, register, print, etc.).
-    DIRECTIVE   ///< A journal directive handler.
+    COMMAND     ///< A report command (balance, register, print, etc.).
   };
 
   kind_t kind; ///< The category of this symbol.

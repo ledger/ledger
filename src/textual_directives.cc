@@ -68,8 +68,10 @@
  *   **Time tracking** -- `i`/`I` (clock-in), `o`/`O` (clock-out)
  *   Record time-log events that are converted to transactions.
  *
- * The general_directive() method is the main dispatch table, mapping
- * directive keywords to handler methods via a switch on the first character.
+ * The general_directive() method dispatches word directives through the
+ * word_directives table, which maps each keyword to its handler and says
+ * whether the keyword may stand alone; when it finds no match,
+ * read_next_directive() tries the legacy single-character directives.
  */
 
 #include "textual_internal.h"
@@ -1207,16 +1209,52 @@ void instance_t::python_directive(char*) {
 
 /*--- General Directive Dispatch ---*/
 
+namespace {
+
+/// A word directive: the keyword that begins its line, the handler that
+/// reads the rest of the line, and whether the keyword may stand alone.
+struct word_directive_t {
+  const char* keyword;
+  void (*handler)(instance_t& instance, char* arg);
+  bool bare_ok;
+};
+
+const word_directive_t word_directives[] = {
+    {"account", [](instance_t& in, char* arg) { in.account_directive(arg); }, false},
+    {"account-rewrite", [](instance_t& in, char* arg) { in.account_rewrite_directive(arg); },
+     false},
+    {"alias", [](instance_t& in, char* arg) { in.alias_directive(arg); }, false},
+    {"apply", [](instance_t& in, char* arg) { in.apply_directive(arg); }, false},
+    {"assert", [](instance_t& in, char* arg) { in.assert_directive(arg); }, false},
+    {"bucket", [](instance_t& in, char* arg) { in.default_account_directive(arg); }, false},
+    {"check", [](instance_t& in, char* arg) { in.check_directive(arg); }, false},
+    {"comment", [](instance_t& in, char* arg) { in.comment_directive(arg); }, true},
+    {"commodity", [](instance_t& in, char* arg) { in.commodity_directive(arg); }, false},
+    {"def", [](instance_t& in, char* arg) { in.eval_directive(arg); }, false},
+    {"define", [](instance_t& in, char* arg) { in.eval_directive(arg); }, false},
+    {"end", [](instance_t& in, char* arg) { in.end_apply_directive(arg); }, true},
+    {"eval", [](instance_t& in, char* arg) { in.eval_directive(arg); }, false},
+    {"expr", [](instance_t& in, char* arg) { in.eval_directive(arg); }, false},
+    {"import", [](instance_t& in, char* arg) { in.import_directive(arg); }, false},
+    {"include", [](instance_t& in, char* arg) { in.include_directive(arg); }, false},
+    {"payee", [](instance_t& in, char* arg) { in.payee_directive(arg); }, false},
+    {"payee-rewrite", [](instance_t& in, char* arg) { in.payee_rewrite_directive(arg); }, false},
+    {"python", [](instance_t& in, char* arg) { in.python_directive(arg); }, true},
+    {"tag", [](instance_t& in, char* arg) { in.tag_directive(arg); }, false},
+    {"test", [](instance_t& in, char* arg) { in.comment_directive(arg); }, true},
+    {"value", [](instance_t& in, char* arg) { in.value_directive(arg); }, false},
+    {"year", [](instance_t& in, char* arg) { in.apply_year_directive(arg); }, false},
+};
+
+} // namespace
+
 /**
- * @brief Main dispatch table for word-based directives.
+ * @brief Dispatch a word directive (account, commodity, include, ...)
+ *        through the word_directives table.
  *
- * The first character of the directive keyword is used as a fast switch
- * to narrow down candidates, then a full string comparison selects the
- * handler.  If no built-in directive matches, the method falls through
- * to a symbol lookup so that user-defined directives (registered via
- * Python or the expression engine) can be invoked.
- *
- * @return true if a directive was handled, false otherwise.
+ * @return true if the line's first word names a word directive, which has
+ *         then been handled; false otherwise, and the caller then tries the
+ *         legacy single-character directives.
  */
 bool instance_t::general_directive(char* line) {
   std::string buf(line); // NOLINT(bugprone-unused-local-non-trivial-variable)
@@ -1227,128 +1265,25 @@ bool instance_t::general_directive(char* line) {
   if (*p == '@' || *p == '!')
     p++;
 
-  // Ensure there's an argument for all directives that need one.
-  if (!arg && std::strcmp(p, "comment") != 0 && std::strcmp(p, "end") != 0 &&
-      std::strcmp(p, "python") != 0 && std::strcmp(p, "test") != 0 && *p != 'Y') {
+  // Comparing the first character before calling strcmp() keeps the scan
+  // cheap for the legacy single-character directives, such as the `P` of a
+  // price history, whose letters begin no keyword.
+  const word_directive_t* const end = std::end(word_directives);
+  const word_directive_t* directive =
+      std::find_if(std::begin(word_directives), end, [p](const word_directive_t& d) {
+        return *p == *d.keyword && std::strcmp(p, d.keyword) == 0;
+      });
+
+  // Ensure there's an argument for all directives that need one.  This runs
+  // before the legacy single-character directives are tried, so a bare word
+  // that names no directive is reported here too; `Y2024` carries its year.
+  if (!arg && !(directive != end && directive->bare_ok) && *p != 'Y')
     throw_(parse_error, _f("Directive '%1%' requires an argument") % p);
-  }
 
-  switch (*p) {
-  case 'a':
-    if (std::strcmp(p, "account") == 0) {
-      account_directive(arg);
-      return true;
-    } else if (std::strcmp(p, "account-rewrite") == 0) {
-      account_rewrite_directive(arg);
-      return true;
-    } else if (std::strcmp(p, "alias") == 0) {
-      alias_directive(arg);
-      return true;
-    } else if (std::strcmp(p, "apply") == 0) {
-      apply_directive(arg);
-      return true;
-    } else if (std::strcmp(p, "assert") == 0) {
-      assert_directive(arg);
-      return true;
-    }
-    break;
-
-  case 'b':
-    if (std::strcmp(p, "bucket") == 0) {
-      default_account_directive(arg);
-      return true;
-    }
-    break;
-
-  case 'c':
-    if (std::strcmp(p, "check") == 0) {
-      check_directive(arg);
-      return true;
-    } else if (std::strcmp(p, "comment") == 0) {
-      comment_directive(arg);
-      return true;
-    } else if (std::strcmp(p, "commodity") == 0) {
-      commodity_directive(arg);
-      return true;
-    }
-    break;
-
-  case 'd':
-    if (std::strcmp(p, "def") == 0 || std::strcmp(p, "define") == 0) {
-      eval_directive(arg);
-      return true;
-    }
-    break;
-
-  case 'e':
-    if (std::strcmp(p, "end") == 0) {
-      end_apply_directive(arg);
-      return true;
-    } else if (std::strcmp(p, "expr") == 0 || std::strcmp(p, "eval") == 0) {
-      eval_directive(arg);
-      return true;
-    }
-    break;
-
-  case 'i':
-    if (std::strcmp(p, "include") == 0) {
-      include_directive(arg);
-      return true;
-    } else if (std::strcmp(p, "import") == 0) {
-      import_directive(arg);
-      return true;
-    }
-    break;
-
-  case 'p':
-    if (std::strcmp(p, "payee") == 0) {
-      payee_directive(arg);
-      return true;
-    } else if (std::strcmp(p, "payee-rewrite") == 0) {
-      payee_rewrite_directive(arg);
-      return true;
-    } else if (std::strcmp(p, "python") == 0) {
-      python_directive(arg);
-      return true;
-    }
-    break;
-
-  case 't':
-    if (std::strcmp(p, "tag") == 0) {
-      tag_directive(arg);
-      return true;
-    } else if (std::strcmp(p, "test") == 0) {
-      comment_directive(arg);
-      return true;
-    }
-    break;
-
-  case 'v':
-    if (std::strcmp(p, "value") == 0) {
-      value_directive(arg);
-      return true;
-    }
-    break;
-
-  case 'y':
-    if (std::strcmp(p, "year") == 0) {
-      apply_year_directive(arg);
-      return true;
-    }
-    break;
-
-  default:
-    break;
-  }
-
-  if (expr_t::ptr_op_t op = lookup(symbol_t::DIRECTIVE, p)) {
-    call_scope_t args(*this);
-    args.push_back(string_value(p));
-    op->as_function()(args);
-    return true;
-  }
-
-  return false;
+  if (directive == end)
+    return false;
+  directive->handler(*this, arg);
+  return true;
 }
 
 } // namespace ledger
