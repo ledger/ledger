@@ -71,8 +71,21 @@ public:
   /// programmatically (false).
   using tag_data_t = std::pair<std::optional<value_t>, bool>;
 
+  /**
+   * @brief Case-insensitive ordering for metadata tag names.
+   *
+   * The comparator type of string_map, so that lookups by exact string
+   * are case-insensitive: a tag set as "Payee" can be retrieved via
+   * has_tag("payee") or get_tag("PAYEE").
+   */
+  struct CaseInsensitiveKeyCompare {
+    bool operator()(const string& s1, const string& s2) const {
+      return boost::algorithm::ilexicographical_compare(s1, s2);
+    }
+  };
+
   /// Case-insensitive ordered map from tag names to their values.
-  using string_map = std::map<string, tag_data_t, std::function<bool(string, string)>>;
+  using string_map = std::map<string, tag_data_t, CaseInsensitiveKeyCompare>;
 
   optional<string_map> metadata; ///< Structured metadata tags parsed from comment lines.
 
@@ -110,7 +123,8 @@ public:
   /**
    * @brief Set or overwrite a metadata tag, creating the map if needed.
    *
-   * The map is initialized lazily with a case-insensitive comparator.
+   * The map is initialized lazily; its comparator type,
+   * CaseInsensitiveKeyCompare, makes its keys case-insensitive.
    * Null or empty-string values are normalized to nullopt.
    */
   virtual string_map::iterator set_tag(const string& tag, const std::optional<value_t>& value = {},

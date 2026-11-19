@@ -35,21 +35,6 @@
 
 namespace ledger {
 
-namespace {
-/**
- * @brief Case-insensitive ordering for metadata tag names.
- *
- * Used as the comparator for metadata_t::string_map so that lookups
- * by exact string are case-insensitive: a tag set as "Payee" can be
- * retrieved via has_tag("payee") or get_tag("PAYEE").
- */
-struct CaseInsensitiveKeyCompare {
-  bool operator()(const string& s1, const string& s2) const {
-    return boost::algorithm::ilexicographical_compare(s1, s2);
-  }
-};
-} // namespace
-
 bool metadata_t::has_tag(const string& tag, bool) const {
   DEBUG("metadata", "Checking if holder has tag: " << tag);
   if (!metadata) {
@@ -110,7 +95,7 @@ metadata_t::string_map::iterator metadata_t::set_tag(const string& tag,
   assert(!tag.empty());
 
   if (!metadata)
-    metadata = string_map(CaseInsensitiveKeyCompare());
+    metadata.emplace();
 
   DEBUG("metadata", "Setting tag '" << tag << "' to value '"
                                     << (value ? *value : string_value("<none>")) << "'");

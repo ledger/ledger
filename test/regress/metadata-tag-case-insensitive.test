@@ -1,0 +1,14 @@
+; Metadata tag names compare case-insensitively: a lookup in any case
+; finds the tag, and a second spelling of the same name on one item
+; replaces the first rather than adding a second key.
+
+2024/01/01 Grocery Store
+    ; Project: garden
+    ; PROJECT: orchard
+    ; :Organic:
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg Food --format "%(tag(\"project\"))|%(has_tag(\"organic\"))|%(has_tag(\"ORGANIC\"))|%(tag(\"Project\"))\n"
+orchard|true|true|orchard
+end test
