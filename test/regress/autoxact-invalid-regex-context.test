@@ -1,0 +1,18 @@
+; A plain automated transaction whose /pattern/ is not a valid regex is
+; reported as an automated-transaction parse error, with the directive
+; shown.
+
+= /Food(/
+    (Budget:A)    1
+
+2024/01/01 Food
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 5:
+While parsing automated transaction:
+> = /Food(/
+Error: Unmatched marking parenthesis ( or \(.  The error occurred while parsing the regular expression: 'Food(>>>HERE>>>'.
+end test

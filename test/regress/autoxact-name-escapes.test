@@ -1,0 +1,79 @@
+; Backslashes in the name of an automated transaction.
+;
+; A name being defined (`= NAME :: PRED`) is a plain string whatever its
+; quotes: every \X stands for X, so /c\.d/ and 'c\.d' both define c.d.
+; It need not be a valid regex.
+;
+; The name given to enable, disable or delete is a regex.  Inside /.../
+; it follows the query and value-expression rule: \/ yields /, \\
+; yields \, and every other \X reaches the regex engine whole, so
+; /a\.b/ matches only a literal dot.  Inside '...' or "..." every
+; backslash is dropped, as in a query, so 'z\.z' is the regex z.z.
+
+= 'a.b' :: /^Expenses:Food/
+    (Budget:Dot)    1
+
+= 'aXb' :: /^Expenses:Food/
+    (Budget:X)    1
+
+= 'zXz' :: /^Expenses:Food/
+    (Budget:Z)    1
+
+= /x\/y/ :: /^Expenses:Food/
+    (Budget:Slash)    1
+
+= /c\.d/ :: /^Expenses:Food/
+    (Budget:Lit)    1
+
+; As a regex x\1 is invalid; as a name it is the string x1.
+= /x\1/ :: /^Expenses:Food/
+    (Budget:Backref)    1
+
+; A defined name is never compiled as a regex.
+= 'a(b' :: /^Expenses:Food/
+    (Budget:Raw)    1
+
+; \. is a literal dot: disables 'a.b', leaves 'aXb' alone.
+= /a\.b/ disable
+
+; Quotes drop the backslash: the regex z.z disables 'zXz'.
+= 'z\.z' disable
+
+; \/ is the delimiter escape, so the name defined above is 'x/y'.
+= 'x/y' disable
+
+; The definition stored c.d, which the regex c\.d matches.
+= /c\.d/ disable
+
+; The definition stored x1.
+= 'x1' disable
+
+; The escaped parenthesis reaches the regex engine intact.
+= /\(Gift/
+    (Budget:Paren)    1
+
+; The first word of a plain rule is not a name and need not be a regex.
+= (Food or Gift)
+    (Budget:Group)    1
+
+2024/01/01 Food
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Gift
+    Expenses:(Gift)    $5.00
+    Assets:Cash
+
+test bal
+             $-15.00  Assets:Cash
+              $40.00  Budget
+              $15.00    Group
+               $5.00    Paren
+              $10.00    Raw
+              $10.00    X
+              $15.00  Expenses
+               $5.00    (Gift)
+              $10.00    Food
+--------------------
+              $40.00
+end test

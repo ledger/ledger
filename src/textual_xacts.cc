@@ -95,27 +95,18 @@ void instance_t::automated_xact_directive(char* line) {
 
   // Phase 1: Extract the name/pattern from the line.  The pattern can be
   // quoted (single, double, or slash-delimited) or a bare word.
-  string name;
+  string name;    // the string a `::` definition stores
+  string pattern; // the regex enable/disable/delete match stored names with
   char* p = skip_ws(line + 1);
   switch (*p) {
   case '\'':
   case '"':
   case '/': {
-    char closing = *p;
-    bool found_closing = false;
-    for (p++; *p; p++) {
-      if (*p == '\\') {
-        if (*(p++) == '\0')
-          throw_(parse_error, _("Unexpected '\\' at end of pattern"));
-      } else if (*p == closing) {
-        p++;
-        found_closing = true;
-        break;
-      }
-      name.push_back(*p);
-    }
-    if (!found_closing)
-      throw_(parse_error, _f("Expected '%1%' at end of pattern") % closing);
+    char closing = *p++;
+    char* end = p + std::strlen(p);
+    char* q = p;
+    name = scan_pattern_literal(q, end, closing, false);
+    pattern = scan_pattern_literal(p, end, closing, closing == '/');
     if (name.empty())
       throw_(parse_error, _("Match pattern is empty"));
     break;
@@ -126,6 +117,7 @@ void instance_t::automated_xact_directive(char* line) {
         break;
       name.push_back(*p);
     }
+    pattern = name;
   }
 
   // Phase 2: Extract an optional command word (enable, disable, delete, or ::).
@@ -137,36 +129,36 @@ void instance_t::automated_xact_directive(char* line) {
     command.push_back(*p);
   }
 
-  mask_t name_mask(name);
-  bool has_match = false;
-
   // Phase 3: Handle management commands that operate on existing auto-xacts.
-  if (command == "enable" || command == "disable") {
-    DEBUG("textual.autoxact", command << " automated transaction matching '" << name << "'");
-    bool enabled = command == "enable";
-    for (unique_ptr<auto_xact_t>& xact : context.journal->auto_xacts) {
-      if (xact->name && name_mask.match(xact->name.get())) {
-        DEBUG("textual.autoxact", command << "d '" << xact->name.get() << "'");
-        xact->enabled = enabled;
-        has_match = true;
-      }
-    }
-    check_command_has_match(context, has_match, command, name_mask);
-    return;
-  } else if (command == "delete") {
-    DEBUG("textual.autoxact", "deleting automated transaction matching '" << name << "'");
-    auto_xacts_list::iterator it = context.journal->auto_xacts_begin();
-    auto_xacts_list::iterator end = context.journal->auto_xacts_end();
+  // Only these match with the pattern, so only they compile it.
+  if (command == "enable" || command == "disable" || command == "delete") {
+    mask_t name_mask(pattern);
+    bool has_match = false;
+    if (command == "delete") {
+      DEBUG("textual.autoxact", "deleting automated transaction matching '" << pattern << "'");
+      auto_xacts_list::iterator it = context.journal->auto_xacts_begin();
+      auto_xacts_list::iterator end = context.journal->auto_xacts_end();
 
-    while (it != end) {
-      unique_ptr<auto_xact_t>& xact = *it;
-      if (xact->name && name_mask.match(xact->name.get())) {
-        DEBUG("textual.autoxact", "deleted '" << xact->name.get() << "'");
-        it = context.journal->auto_xacts.erase(it);
-        has_match = true;
-        continue;
-      } else {
-        it++;
+      while (it != end) {
+        unique_ptr<auto_xact_t>& xact = *it;
+        if (xact->name && name_mask.match(xact->name.get())) {
+          DEBUG("textual.autoxact", "deleted '" << xact->name.get() << "'");
+          it = context.journal->auto_xacts.erase(it);
+          has_match = true;
+          continue;
+        } else {
+          it++;
+        }
+      }
+    } else {
+      DEBUG("textual.autoxact", command << " automated transaction matching '" << pattern << "'");
+      bool enabled = command == "enable";
+      for (unique_ptr<auto_xact_t>& xact : context.journal->auto_xacts) {
+        if (xact->name && name_mask.match(xact->name.get())) {
+          DEBUG("textual.autoxact", command << "d '" << xact->name.get() << "'");
+          xact->enabled = enabled;
+          has_match = true;
+        }
       }
     }
     check_command_has_match(context, has_match, command, name_mask);

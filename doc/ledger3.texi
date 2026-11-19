@@ -5027,6 +5027,12 @@ automated transactions at once:
 This disables both @samp{tax:federal} and @samp{tax:state} automated
 transactions with a single command.
 
+Inside @samp{/@dots{}/} the command's pattern keeps its backslash
+escapes, as a @samp{/regex/} in a query does: @samp{= /tax\.federal/
+disable} matches only a literal dot.  Inside quotes every backslash is
+dropped, and so is every backslash in a name being defined:
+@samp{= /c\.d/ :: /^Income:/} defines the name @samp{c.d}.
+
 If a command's pattern does not match any automated transaction,
 a warning is issued.
 

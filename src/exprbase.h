@@ -116,6 +116,40 @@ public:
   ~recursion_error() noexcept override {}
 };
 
+/// @brief Scan the body of a delimited pattern literal such as `/regex/`,
+/// `'text'` or `"text"`.
+///
+/// On entry @p i is one past the opening delimiter; on return it is one past
+/// the closing delimiter @p closing.  With @p regex true, `\<closing>` yields
+/// `<closing>`, `\\` yields `\`, and every other `\X` is kept whole as `\X`
+/// for the regex engine.  With @p regex false, every `\X` yields `X`.
+///
+/// Throws parse_error "Unexpected '\' at end of pattern" when a backslash is
+/// the last input character, and "Expected '<closing>' at end of pattern"
+/// when the input runs out before the closing delimiter; both are thrown
+/// only with @p i at @p end.  An empty pattern is not an error here; the
+/// callers decide.
+template <typename Iter>
+string scan_pattern_literal(Iter& i, Iter end, char closing, bool regex) {
+  string pat;
+  for (;; ++i) {
+    if (i == end)
+      throw_(parse_error, _f("Expected '%1%' at end of pattern") % closing);
+    if (*i == '\\') {
+      if (++i == end)
+        throw_(parse_error, _("Unexpected '\\' at end of pattern"));
+      // A regex keeps \X whole; an escaped delimiter and a doubled
+      // backslash stand for the character itself.
+      if (regex && *i != closing && *i != '\\')
+        pat.push_back('\\');
+    } else if (*i == closing) {
+      ++i;
+      return pat;
+    }
+    pat.push_back(*i);
+  }
+}
+
 class scope_t;
 class call_scope_t;
 

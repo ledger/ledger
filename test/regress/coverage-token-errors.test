@@ -45,7 +45,16 @@ __ERROR__
 While parsing value expression:
   /unterminated
 
-Error: Missing '/'
+Error: Expected '/' at end of pattern
+end test
+
+; Regex ending in a lone backslash
+test eval '/unterminated\' -> 1
+__ERROR__
+While parsing value expression:
+  /unterminated\
+
+Error: Unexpected '\' at end of pattern
 end test
 
 ; Unterminated braced amount

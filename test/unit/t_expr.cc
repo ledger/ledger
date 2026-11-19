@@ -5674,4 +5674,44 @@ BOOST_AUTO_TEST_CASE(testExprCalcKeepsSetContext)
   BOOST_CHECK(unset.get_context() == &long_lived);
 }
 
+BOOST_AUTO_TEST_CASE(testScanPatternLiteral)
+{
+  // Regex regime: \/ -> /, \\ -> \, every other \X kept whole
+  string re("a\\/b\\\\c\\.d/rest");
+  string::const_iterator i = re.cbegin();
+  BOOST_CHECK_EQUAL(string("a/b\\c\\.d"), scan_pattern_literal(i, re.cend(), '/', true));
+  BOOST_CHECK_EQUAL(string("rest"), string(i, re.cend()));
+
+  // Literal regime with the same delimiter: every \X -> X
+  string lit("a\\/b\\\\c\\.d/rest");
+  string::const_iterator l = lit.cbegin();
+  BOOST_CHECK_EQUAL(string("a/b\\c.d"), scan_pattern_literal(l, lit.cend(), '/', false));
+  BOOST_CHECK_EQUAL(string("rest"), string(l, lit.cend()));
+
+  // Quoted pattern, literal regime: \X -> X
+  const char* q = "it\\'s\\.x' tail";
+  const char* qp = q;
+  BOOST_CHECK_EQUAL(string("it's.x"), scan_pattern_literal(qp, q + std::strlen(q), '\'', false));
+  BOOST_CHECK_EQUAL(string(" tail"), string(qp));
+
+  // Stream input: the stream is left just past the closing delimiter
+  std::istringstream in("a\\|b/ x");
+  std::istreambuf_iterator<char> si(in), eos;
+  BOOST_CHECK_EQUAL(string("a\\|b"), scan_pattern_literal(si, eos, '/', true));
+  BOOST_CHECK_EQUAL(' ', static_cast<char>(in.get()));
+
+  // A lone trailing backslash, and a missing closing delimiter
+  auto says = [](const char* msg) {
+    return [msg](const parse_error& e) { return string(e.what()) == msg; };
+  };
+  string bs("abc\\");
+  string::const_iterator j = bs.cbegin();
+  BOOST_CHECK_EXCEPTION(scan_pattern_literal(j, bs.cend(), '/', true), parse_error,
+                        says("Unexpected '\\' at end of pattern"));
+  string open("abc");
+  string::const_iterator k = open.cbegin();
+  BOOST_CHECK_EXCEPTION(scan_pattern_literal(k, open.cend(), '"', false), parse_error,
+                        says("Expected '\"' at end of pattern"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
