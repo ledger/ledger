@@ -9060,5 +9060,22 @@ BOOST_AUTO_TEST_CASE(testBalanceStorageCopyOnWrite)
   BOOST_CHECK(original.as_balance() == bal);
 }
 
+BOOST_AUTO_TEST_CASE(testAnnotationReadKeepsStorageShared)
+{
+  // The annotation lives in the pooled commodity, not in the value's
+  // storage, so reading it -- through either overload -- must not give
+  // a value that shares its storage a private copy.
+  const value_t original(amount_t("10 AAPL {$50.00}"));
+  value_t copy(original);
+  BOOST_REQUIRE(&copy.as_amount() == &original.as_amount());
+
+  const value_t& const_copy(copy);
+  BOOST_CHECK_EQUAL(*const_copy.annotation().price, amount_t("$50.00"));
+  BOOST_CHECK(&copy.as_amount() == &original.as_amount());
+
+  BOOST_CHECK_EQUAL(*copy.annotation().price, amount_t("$50.00"));
+  BOOST_CHECK(&copy.as_amount() == &original.as_amount());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 

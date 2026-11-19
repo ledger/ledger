@@ -2380,19 +2380,18 @@ bool value_t::has_annotation() const {
   return false;
 }
 
-/// @brief Return a mutable reference to this value's annotation.
+/// @brief Return this value's annotation.
 ///
-/// The caller can modify the returned annotation_t to change the price,
-/// date, or tag associated with this amount's commodity.  Only AMOUNT
+/// The annotation (price, date and tag) belongs to the amount's annotated
+/// commodity, which is shared through the commodity pool, not to this
+/// value's storage, so reading it never copies the storage.  Only AMOUNT
 /// values support this; other types throw value_error.
-annotation_t& value_t::annotation() {
-  if (is_amount()) {
-    return as_amount_lval().annotation();
-  } else {
+const annotation_t& value_t::annotation() const {
+  if (!is_amount()) {
     add_error_context(_f("While requesting the annotations of %1%:") % *this);
     throw_(value_error, _f("Cannot request annotation of %1%") % label());
-    return as_amount_lval().annotation(); // quiet g++ warning
   }
+  return as_amount().annotation();
 }
 
 /// @brief Return a copy of this value with annotations selectively removed.

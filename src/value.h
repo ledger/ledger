@@ -875,8 +875,12 @@ public:
   void annotate(const annotation_t& details);
   bool has_annotation() const;
 
-  annotation_t& annotation();
-  const annotation_t& annotation() const { return const_cast<value_t&>(*this).annotation(); }
+  const annotation_t& annotation() const;
+  // The annotation is the pooled commodity's own (non-const) details, so
+  // writing through it never touches this value's storage.
+  annotation_t& annotation() {
+    return const_cast<annotation_t&>(std::as_const(*this).annotation());
+  }
 
   value_t strip_annotations(const keep_details_t& what_to_keep) const;
 
@@ -1009,7 +1013,7 @@ inline std::ostream& operator<<(std::ostream& out, const value_t& val) {
 
 inline string value_context(const value_t& val) {
   std::ostringstream buf;
-  val.print(buf, 20, 20, true);
+  val.print(buf, 20, 20, AMOUNT_PRINT_RIGHT_JUSTIFY);
   return buf.str();
 }
 
