@@ -111,8 +111,6 @@ FILE* decrypted_stream_t::open_file(const path& filename) {
 
 shared_ptr<Data> decrypted_stream_t::setup_cipher_buffer(FILE* f) {
   auto enc_d = make_shared<Data>(f);
-  if (!enc_d)
-    throw runtime_error("Unable to create cipher text buffer");
 
   if (enc_d->type() != Data::PGPEncrypted && enc_d->type() != Data::CMSEncrypted &&
       enc_d->type() != Data::Unknown && enc_d->type() != Data::Invalid)
@@ -133,7 +131,6 @@ shared_ptr<Data> decrypted_stream_t::decrypt(shared_ptr<Data> enc_d) {
   shared_ptr<Data> dec_d;
 
   if (enc_d->type() == Data::Unknown || enc_d->type() == Data::Invalid) {
-    ctx = nullptr;
     dec_d = enc_d;
   } else {
     ctx = Context::create(enc_d->type() == Data::PGPEncrypted ? Protocol::OpenPGP : Protocol::CMS);
@@ -142,8 +139,6 @@ shared_ptr<Data> decrypted_stream_t::decrypt(shared_ptr<Data> enc_d) {
 
     ctx->setOffline(true);
     dec_d = make_shared<Data>();
-    if (!dec_d)
-      throw runtime_error("Unable to create plain text buffer");
 
     auto res = ctx->decrypt(*enc_d.get(), *dec_d.get());
     if (res.error())
@@ -185,29 +180,7 @@ istream* decrypted_stream_t::open_stream(const path& filename) {
   return new ifstream(filename);
 }
 
-decrypted_stream_t::decrypted_stream_t(path& filename) : istream(nullptr), file(nullptr) {
-  init_lib();
-
-  file = open_file(filename);
-  std::unique_ptr<FILE, int (*)(FILE*)> file_guard(file, &fclose);
-
-  auto enc_d = setup_cipher_buffer(file);
-  dec_d = decrypt(enc_d);
-  dec_d.get()->rewind();
-
-  if (is_encrypted(enc_d)) {
-    file_guard.reset();
-    file = nullptr;
-  } else {
-    file_guard.release(); // constructor succeeded, member takes ownership
-  }
-
-  rdbuf(new data_streambuffer_t(*dec_d.get()));
-  clear();
-}
-
-decrypted_stream_t::decrypted_stream_t(shared_ptr<Data> dec_d)
-    : istream(nullptr), dec_d(dec_d), file(nullptr) {
+decrypted_stream_t::decrypted_stream_t(shared_ptr<Data> dec_d) : istream(nullptr), dec_d(dec_d) {
   rdbuf(new data_streambuffer_t(*dec_d.get()));
   clear();
 }
@@ -215,8 +188,6 @@ decrypted_stream_t::decrypted_stream_t(shared_ptr<Data> dec_d)
 decrypted_stream_t::~decrypted_stream_t() {
   auto* buf = rdbuf(nullptr); // disconnect first
   delete buf;
-  if (file)
-    fclose(file);
 }
 
 } // namespace ledger

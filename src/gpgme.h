@@ -78,19 +78,6 @@ protected:
 class decrypted_stream_t : public std::istream {
 public:
   std::shared_ptr<GpgME::Data> dec_d;
-  std::FILE* file;
-
-  /* Establishes an istream decrypting a file pointed to by FILENAME.
-
-     Decryption is performed at object creation and only the decrypted Data
-     buffer is retained as the backing store for the stream.
-
-     Expects the input file to be unencrypted or encrypted in CMS or PGP
-     format (includes asymmetrically and symmetrically encrypted content).
-
-     Calls open_file(), setup_cipher_buffer() and decrypt() and throws
-     exceptions noted in there on error. */
-  decrypted_stream_t(path& filename);
 
   /* Established an istream serving the decrypted content in DEC_D.
 
