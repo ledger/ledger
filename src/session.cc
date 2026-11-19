@@ -170,50 +170,36 @@ std::size_t session_t::read_data(const string& master_account) {
   // market values).
   if (price_db_path) {
     if (exists(*price_db_path)) {
-      parsing_context.push(*price_db_path);
+      parse_context_stack_t::pushed_t pushed(parsing_context, *price_db_path);
       parsing_context.get_current().journal = journal.get();
-      try {
-        if (journal->read(parsing_context, HANDLER(hashes_).hash_type) > 0)
-          throw_(parse_error, _("Transactions not allowed in price history file"));
-      } catch (...) {
-        parsing_context.pop();
-        throw;
-      }
-      parsing_context.pop();
+      if (journal->read(parsing_context, HANDLER(hashes_).hash_type) > 0)
+        throw_(parse_error, _("Transactions not allowed in price history file"));
     }
   }
 
   // Read each journal data file in order
   for (const path& pathname : HANDLER(file_).data_files) {
+    std::optional<parse_context_stack_t::pushed_t> pushed;
     if (pathname == "-" || pathname == "/dev/stdin") {
       // To avoid problems with stdin and pipes, etc., we read the entire
       // file in beforehand into a memory buffer, and then parcel it out
       // from there.
       std::ostringstream buffer;
-
-      while (std::cin.good() && !std::cin.eof()) {
-        char line[8192];
-        std::cin.read(line, 8192);
-        std::streamsize count = std::cin.gcount();
-        buffer.write(line, count);
-      }
-      buffer.flush();
+      if (std::cin.good())
+        buffer << std::cin.rdbuf();
+      // Leave std::cin as a read to its end leaves it, so that a second "-"
+      // reads nothing rather than waiting on a terminal.
+      std::cin.setstate(std::ios::eofbit | std::ios::failbit);
 
       std::shared_ptr<std::istream> stream(new std::istringstream(buffer.str()));
-      parsing_context.push(stream);
+      pushed.emplace(parsing_context, stream);
     } else {
-      parsing_context.push(pathname);
+      pushed.emplace(parsing_context, pathname);
     }
 
     parsing_context.get_current().journal = journal.get();
     parsing_context.get_current().master = acct;
-    try {
-      xact_count += journal->read(parsing_context, HANDLER(hashes_).hash_type);
-    } catch (...) {
-      parsing_context.pop();
-      throw;
-    }
-    parsing_context.pop();
+    xact_count += journal->read(parsing_context, HANDLER(hashes_).hash_type);
   }
 
   DEBUG("ledger.read", "xact_count [" << xact_count << "] == journal->xacts.size() ["
@@ -268,17 +254,11 @@ journal_t* session_t::read_journal_from_string(const string& data) {
   HANDLER(file_).data_files.clear();
 
   std::shared_ptr<std::istream> stream(new std::istringstream(data));
-  parsing_context.push(stream);
+  parse_context_stack_t::pushed_t pushed(parsing_context, stream);
 
   parsing_context.get_current().journal = journal.get();
   parsing_context.get_current().master = journal->master;
-  try {
-    journal->read(parsing_context, HANDLER(hashes_).hash_type);
-  } catch (...) {
-    parsing_context.pop();
-    throw;
-  }
-  parsing_context.pop();
+  journal->read(parsing_context, HANDLER(hashes_).hash_type);
 
   return journal.get();
 }

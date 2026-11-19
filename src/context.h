@@ -200,6 +200,21 @@ public:
     assert(!parsing_context.empty());
     return parsing_context.front();
   }
+
+  /// Keeps a context on the stack for the guard's lifetime: pushes it on
+  /// construction, with the arguments of one of the push() overloads, and
+  /// pops it on destruction, so a reader that throws leaves the stack as it
+  /// found it.  If the push itself throws, nothing was pushed.
+  class pushed_t : public noncopyable {
+    parse_context_stack_t& stack;
+
+  public:
+    template <typename... Args>
+    explicit pushed_t(parse_context_stack_t& _stack, Args&&... args) : stack(_stack) {
+      stack.push(std::forward<Args>(args)...);
+    }
+    ~pushed_t() { stack.pop(); }
+  };
 };
 
 } // namespace ledger

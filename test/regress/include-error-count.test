@@ -1,0 +1,40 @@
+; The errors in an included file add to those of the file that includes
+; it, before and after the include, and the exit status counts them all.
+
+2024/00/01 Bad month before the include
+    Expenses:Food    $1.00
+    Assets:Cash
+
+include include-error-count.dat
+
+2024/01/01 Unbalanced after the include
+    Expenses:Food    $1.00
+    Assets:Cash      $2.00
+
+test bal -> 4
+__ERROR__
+While parsing file "$FILE", line 4:
+While parsing transaction:
+> 2024/00/01 Bad month before the include
+Error: Invalid date: 2024/00/01
+In file included from "$FILE", line 8:
+While parsing file "$sourcepath/test/regress/include-error-count.dat", line 1:
+While parsing transaction:
+> 2024/13/01 Bad month
+Error: Invalid date: 2024/13/01
+In file included from "$FILE", line 8:
+While parsing file "$sourcepath/test/regress/include-error-count.dat", line 5:
+While parsing transaction:
+> 2024/01/32 Bad day
+Error: Invalid date: 2024/01/32
+While parsing file "$FILE", line 12:
+While balancing transaction from "$FILE", lines 10-12:
+> 2024/01/01 Unbalanced after the include
+>     Expenses:Food    $1.00
+>     Assets:Cash      $2.00
+Unbalanced remainder is:
+               $3.00
+Amount to balance against:
+               $3.00
+Error: Transaction does not balance
+end test

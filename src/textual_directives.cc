@@ -449,21 +449,15 @@ void instance_t::include_directive(char* line) {
     journal_t* journal = context.journal;
     account_t* master = top_account();
     scope_t* scope = context.scope;
-    std::size_t& errors = context.errors;
-    std::size_t& count = context.count;
-    std::size_t& sequence = context.sequence;
 
     DEBUG("textual.include", "Including: " << matched);
     DEBUG("textual.include", "Master account: " << master->fullname());
 
-    context_stack.push(matched);
+    parse_context_stack_t::pushed_t pushed(context_stack, matched);
 
     context_stack.get_current().journal = journal;
     context_stack.get_current().master = master;
     context_stack.get_current().scope = scope;
-
-    parse_context_t* save_current_context = journal->current_context;
-    journal->current_context = &context_stack.get_current();
 
     // Save year state so that year/Y directives inside the included
     // file do not bleed back into the parent file after the include
@@ -472,26 +466,28 @@ void instance_t::include_directive(char* line) {
     scoped_assign<optional<datetime_t>> epoch_guard(epoch);
     scoped_assign<optional<int>> year_guard(year_directive_year);
 
-    try {
-      instance_t instance(context_stack, context_stack.get_current(), this, hash_type);
-      instance.apply_stack.push_front(application_t("account", master));
-      instance.parse();
-    } catch (...) {
-      errors += context_stack.get_current().errors;
-      count += context_stack.get_current().count;
-      sequence += context_stack.get_current().sequence;
+    // Whether the included file parses or throws, fold its counts into this
+    // file's and make this file's context current again.  Declared after
+    // `pushed`, this runs first, while the included file's context is still
+    // on the stack.
+    struct restore_t {
+      parse_context_t& parent;
+      parse_context_t& child;
+      journal_t* journal;
+      parse_context_t* saved_current_context;
 
-      journal->current_context = save_current_context;
-      context_stack.pop();
-      throw;
-    }
+      ~restore_t() {
+        parent.errors += child.errors;
+        parent.count += child.count;
+        parent.sequence += child.sequence;
+        journal->current_context = saved_current_context;
+      }
+    } restore{context, context_stack.get_current(), journal, journal->current_context};
 
-    errors += context_stack.get_current().errors;
-    count += context_stack.get_current().count;
-    sequence += context_stack.get_current().sequence;
-
-    journal->current_context = save_current_context;
-    context_stack.pop();
+    journal->current_context = &context_stack.get_current();
+    instance_t instance(context_stack, context_stack.get_current(), this, hash_type);
+    instance.apply_stack.push_front(application_t("account", master));
+    instance.parse();
 
     files_found = true;
   }

@@ -1,0 +1,818 @@
+; Standard input is read whole before it is parsed, however long it is.
+; This journal is longer than 8 KB, the size of the chunks the reader
+; once copied it in, so the last transaction lies past the first chunk.
+; Naming standard input twice reads it once: the second gets nothing.
+
+2024/01/01 * Store 1
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/02 * Store 2
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/03 * Store 3
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/04 * Store 4
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/05 * Store 5
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/06 * Store 6
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/07 * Store 7
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/08 * Store 8
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/09 * Store 9
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/10 * Store 10
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/11 * Store 11
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/12 * Store 12
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/13 * Store 13
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/14 * Store 14
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/15 * Store 15
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/16 * Store 16
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/17 * Store 17
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/18 * Store 18
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/19 * Store 19
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/20 * Store 20
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/21 * Store 21
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/22 * Store 22
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/23 * Store 23
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/24 * Store 24
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/25 * Store 25
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/26 * Store 26
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/27 * Store 27
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/28 * Store 28
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/01 * Store 29
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/02 * Store 30
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/03 * Store 31
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/04 * Store 32
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/05 * Store 33
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/06 * Store 34
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/07 * Store 35
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/08 * Store 36
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/09 * Store 37
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/10 * Store 38
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/11 * Store 39
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/12 * Store 40
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/13 * Store 41
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/14 * Store 42
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/15 * Store 43
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/16 * Store 44
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/17 * Store 45
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/18 * Store 46
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/19 * Store 47
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/20 * Store 48
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/21 * Store 49
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/22 * Store 50
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/23 * Store 51
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/24 * Store 52
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/25 * Store 53
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/26 * Store 54
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/27 * Store 55
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/28 * Store 56
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/01 * Store 57
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/02 * Store 58
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/03 * Store 59
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/04 * Store 60
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/05 * Store 61
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/06 * Store 62
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/07 * Store 63
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/08 * Store 64
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/09 * Store 65
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/10 * Store 66
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/11 * Store 67
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/12 * Store 68
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/13 * Store 69
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/14 * Store 70
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/15 * Store 71
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/16 * Store 72
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/17 * Store 73
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/18 * Store 74
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/19 * Store 75
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/20 * Store 76
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/21 * Store 77
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/22 * Store 78
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/23 * Store 79
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/24 * Store 80
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/25 * Store 81
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/26 * Store 82
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/27 * Store 83
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/28 * Store 84
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/01 * Store 85
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/02 * Store 86
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/03 * Store 87
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/04 * Store 88
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/05 * Store 89
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/06 * Store 90
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/07 * Store 91
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/08 * Store 92
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/09 * Store 93
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/10 * Store 94
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/11 * Store 95
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/12 * Store 96
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/13 * Store 97
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/14 * Store 98
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/15 * Store 99
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/16 * Store 100
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/17 * Store 101
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/18 * Store 102
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/19 * Store 103
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/20 * Store 104
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/21 * Store 105
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/22 * Store 106
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/23 * Store 107
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/24 * Store 108
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/25 * Store 109
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/26 * Store 110
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/27 * Store 111
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/28 * Store 112
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/01 * Store 113
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/02 * Store 114
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/03 * Store 115
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/04 * Store 116
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/05 * Store 117
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/06 * Store 118
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/07 * Store 119
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/08 * Store 120
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/09 * Store 121
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/10 * Store 122
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/11 * Store 123
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/12 * Store 124
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/13 * Store 125
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/14 * Store 126
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/15 * Store 127
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/16 * Store 128
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/17 * Store 129
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/18 * Store 130
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/19 * Store 131
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/20 * Store 132
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/21 * Store 133
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/22 * Store 134
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/23 * Store 135
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/24 * Store 136
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/25 * Store 137
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/26 * Store 138
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/27 * Store 139
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/28 * Store 140
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/01 * Store 141
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/02 * Store 142
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/03 * Store 143
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/04 * Store 144
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/05 * Store 145
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/06 * Store 146
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/07 * Store 147
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/08 * Store 148
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/09 * Store 149
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/10 * Store 150
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/11 * Store 151
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/12 * Store 152
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/13 * Store 153
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/14 * Store 154
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/15 * Store 155
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/16 * Store 156
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/17 * Store 157
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/18 * Store 158
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/19 * Store 159
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/20 * Store 160
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/21 * Store 161
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/22 * Store 162
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/23 * Store 163
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/24 * Store 164
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/25 * Store 165
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/26 * Store 166
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/27 * Store 167
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/28 * Store 168
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/01 * Store 169
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/02 * Store 170
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/03 * Store 171
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/04 * Store 172
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/05 * Store 173
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/06 * Store 174
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/07 * Store 175
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/08 * Store 176
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/09 * Store 177
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/10 * Store 178
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/11 * Store 179
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/12 * Store 180
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/13 * Store 181
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/14 * Store 182
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/15 * Store 183
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/16 * Store 184
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/17 * Store 185
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/18 * Store 186
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/19 * Store 187
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/20 * Store 188
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/21 * Store 189
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/22 * Store 190
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/23 * Store 191
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/24 * Store 192
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/25 * Store 193
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/26 * Store 194
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/27 * Store 195
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/28 * Store 196
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/01 * Store 197
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/02 * Store 198
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/03 * Store 199
+    Expenses:Food              $1.00
+    Assets:Checking
+
+2024/01/04 * Store 200
+    Expenses:Food              $1.00
+    Assets:Checking
+
+test -f - bal
+            $-200.00  Assets:Checking
+             $200.00  Expenses:Food
+--------------------
+                   0
+end test
+
+test -f - -f - bal
+            $-200.00  Assets:Checking
+             $200.00  Expenses:Food
+--------------------
+                   0
+end test
