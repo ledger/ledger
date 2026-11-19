@@ -83,11 +83,10 @@
 namespace ledger {
 
 /**
- * @brief An entry in a symbol table: a named, typed definition.
+ * @brief The key of a symbol_scope_t entry: a symbol's kind and name.
  *
- * Symbols can represent functions, options, commands, directives, or
- * format strings.  They are stored in symbol_scope_t's sorted map and
- * compared by (kind, name) for lookup.
+ * Kinds keep functions, options, pre-commands, commands and directives in
+ * separate namespaces; the map orders keys by kind, then name.
  */
 struct symbol_t {
   enum kind_t : uint8_t {
@@ -96,27 +95,23 @@ struct symbol_t {
     OPTION,     ///< A command-line option handler.
     PRECOMMAND, ///< A pre-command (executed before journal parsing).
     COMMAND,    ///< A report command (balance, register, print, etc.).
-    DIRECTIVE,  ///< A journal directive handler.
-    FORMAT      ///< A named format string.
+    DIRECTIVE   ///< A journal directive handler.
   };
 
-  kind_t kind;                 ///< The category of this symbol.
-  string name;                 ///< The symbol name (e.g., "amount", "balance").
-  expr_t::ptr_op_t definition; ///< The expression tree implementing this symbol.
+  kind_t kind; ///< The category of this symbol.
+  string name; ///< The symbol name (e.g., "amount", "balance").
 
-  symbol_t() : kind(UNKNOWN), name(""), definition(nullptr) { TRACE_CTOR(symbol_t, ""); }
-  symbol_t(kind_t _kind, string _name, expr_t::ptr_op_t _definition = nullptr)
-      : kind(_kind), name(std::move(_name)), definition(std::move(_definition)) {
+  symbol_t() : kind(UNKNOWN), name("") { TRACE_CTOR(symbol_t, ""); }
+  symbol_t(kind_t _kind, string _name) : kind(_kind), name(std::move(_name)) {
     TRACE_CTOR(symbol_t, "symbol_t::kind_t, string");
   }
-  symbol_t(const symbol_t& sym) : kind(sym.kind), name(sym.name), definition(sym.definition) {
-    TRACE_CTOR(symbol_t, "copy");
-  }
+  symbol_t(const symbol_t& sym) : kind(sym.kind), name(sym.name) { TRACE_CTOR(symbol_t, "copy"); }
   symbol_t& operator=(const symbol_t&) = default;
   ~symbol_t() noexcept { TRACE_DTOR(symbol_t); }
 
-  bool operator<(const symbol_t& sym) const { return kind < sym.kind || name < sym.name; }
-  bool operator==(const symbol_t& sym) const { return kind == sym.kind || name == sym.name; }
+  bool operator<(const symbol_t& sym) const {
+    return kind != sym.kind ? kind < sym.kind : name < sym.name;
+  }
 };
 
 class empty_scope_t;

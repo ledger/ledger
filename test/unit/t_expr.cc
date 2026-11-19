@@ -5714,4 +5714,41 @@ BOOST_AUTO_TEST_CASE(testScanPatternLiteral)
                         says("Expected '\"' at end of pattern"));
 }
 
+// -----------------------------------------------------------------------
+// symbol_t orders symbol_scope_t's map by (kind, name)
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testSymbolScopeOrdersByKindThenName)
+{
+  // Definitions of different kinds sharing names, made in every order, are
+  // each found under their own key; a redefinition replaces only its own
+  // entry; an undefined key falls through to the parent.
+  const std::vector<std::pair<symbol_t::kind_t, string>> keys = {
+      {symbol_t::FUNCTION, "a"},
+      {symbol_t::FUNCTION, "z"},
+      {symbol_t::OPTION, "a"},
+      {symbol_t::OPTION, "z"}};
+  std::vector<expr_t::ptr_op_t> defs;
+  for (std::size_t i = 0; i < keys.size(); ++i)
+    defs.push_back(expr_t::op_t::wrap_value(value_t(static_cast<long>(i))));
+
+  std::vector<std::size_t> order = {0, 1, 2, 3};
+  do {
+    empty_scope_t parent;
+    symbol_scope_t scope(parent);
+    for (std::size_t i : order)
+      scope.define(keys[i].first, keys[i].second, defs[i]);
+    for (std::size_t i = 0; i < keys.size(); ++i)
+      BOOST_CHECK(scope.lookup(keys[i].first, keys[i].second) == defs[i]);
+
+    expr_t::ptr_op_t redefined(expr_t::op_t::wrap_value(value_t(99L)));
+    scope.define(symbol_t::OPTION, "a", redefined);
+    BOOST_CHECK(scope.lookup(symbol_t::OPTION, "a") == redefined);
+    BOOST_CHECK(scope.lookup(symbol_t::FUNCTION, "a") == defs[0]);
+    BOOST_CHECK(scope.lookup(symbol_t::FUNCTION, "z") == defs[1]);
+    BOOST_CHECK(scope.lookup(symbol_t::OPTION, "z") == defs[3]);
+    BOOST_CHECK(!scope.lookup(symbol_t::COMMAND, "a"));
+  } while (std::next_permutation(order.begin(), order.end()));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
