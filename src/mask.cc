@@ -56,271 +56,31 @@ namespace {
 
 /// Map a single Unicode codepoint to its ASCII base equivalent.
 /// Covers Latin-1 Supplement (U+00C0-U+00FF) and Latin Extended-A
-/// (U+0100-U+017F), the most common European diacritics.
-/// Returns the codepoint unchanged if no folding is defined.
+/// (U+0100-U+017F), the most common European diacritics.  Ligatures fold
+/// to their first letter (AE -> A, OE -> O), eth to D, thorn to T, sharp s
+/// and kra to s and k.  Returns the codepoint unchanged if no folding is
+/// defined, which the table marks with '\0' (U+00D7, U+00F7, U+0132,
+/// U+0133, U+017F).
 boost::uint32_t fold_codepoint(boost::uint32_t cp) {
-  // NOLINTBEGIN(bugprone-branch-clone)
-  switch (cp) {
-  // Latin-1 Supplement: uppercase
-  case 0x00C0:
-  case 0x00C1:
-  case 0x00C2:
-  case 0x00C3:
-  case 0x00C4:
-  case 0x00C5:
-    return 'A';
-  case 0x00C6:
-    return 'A'; // AE ligature -> A
-  case 0x00C7:
-    return 'C';
-  case 0x00C8:
-  case 0x00C9:
-  case 0x00CA:
-  case 0x00CB:
-    return 'E';
-  case 0x00CC:
-  case 0x00CD:
-  case 0x00CE:
-  case 0x00CF:
-    return 'I';
-  case 0x00D0:
-    return 'D'; // Eth
-  case 0x00D1:
-    return 'N';
-  case 0x00D2:
-  case 0x00D3:
-  case 0x00D4:
-  case 0x00D5:
-  case 0x00D6:
-  case 0x00D8:
-    return 'O';
-  case 0x00D9:
-  case 0x00DA:
-  case 0x00DB:
-  case 0x00DC:
-    return 'U';
-  case 0x00DD:
-    return 'Y';
-  case 0x00DE:
-    return 'T'; // Thorn
-
-  // Latin-1 Supplement: lowercase
-  case 0x00DF:
-    return 's'; // sharp s
-  case 0x00E0:
-  case 0x00E1:
-  case 0x00E2:
-  case 0x00E3:
-  case 0x00E4:
-  case 0x00E5:
-    return 'a';
-  case 0x00E6:
-    return 'a'; // ae ligature -> a
-  case 0x00E7:
-    return 'c';
-  case 0x00E8:
-  case 0x00E9:
-  case 0x00EA:
-  case 0x00EB:
-    return 'e';
-  case 0x00EC:
-  case 0x00ED:
-  case 0x00EE:
-  case 0x00EF:
-    return 'i';
-  case 0x00F0:
-    return 'd'; // eth
-  case 0x00F1:
-    return 'n';
-  case 0x00F2:
-  case 0x00F3:
-  case 0x00F4:
-  case 0x00F5:
-  case 0x00F6:
-  case 0x00F8:
-    return 'o';
-  case 0x00F9:
-  case 0x00FA:
-  case 0x00FB:
-  case 0x00FC:
-    return 'u';
-  case 0x00FD:
-  case 0x00FF:
-    return 'y';
-  case 0x00FE:
-    return 't'; // thorn
-
-  // Latin Extended-A
-  case 0x0100:
-  case 0x0102:
-  case 0x0104:
-    return 'A';
-  case 0x0101:
-  case 0x0103:
-  case 0x0105:
-    return 'a';
-  case 0x0106:
-  case 0x0108:
-  case 0x010A:
-  case 0x010C:
-    return 'C';
-  case 0x0107:
-  case 0x0109:
-  case 0x010B:
-  case 0x010D:
-    return 'c';
-  case 0x010E:
-  case 0x0110:
-    return 'D';
-  case 0x010F:
-  case 0x0111:
-    return 'd';
-  case 0x0112:
-  case 0x0114:
-  case 0x0116:
-  case 0x0118:
-  case 0x011A:
-    return 'E';
-  case 0x0113:
-  case 0x0115:
-  case 0x0117:
-  case 0x0119:
-  case 0x011B:
-    return 'e';
-  case 0x011C:
-  case 0x011E:
-  case 0x0120:
-  case 0x0122:
-    return 'G';
-  case 0x011D:
-  case 0x011F:
-  case 0x0121:
-  case 0x0123:
-    return 'g';
-  case 0x0124:
-  case 0x0126:
-    return 'H';
-  case 0x0125:
-  case 0x0127:
-    return 'h';
-  case 0x0128:
-  case 0x012A:
-  case 0x012C:
-  case 0x012E:
-  case 0x0130:
-    return 'I';
-  case 0x0129:
-  case 0x012B:
-  case 0x012D:
-  case 0x012F:
-  case 0x0131:
-    return 'i';
-  case 0x0134:
-    return 'J';
-  case 0x0135:
-    return 'j';
-  case 0x0136:
-    return 'K';
-  case 0x0137:
-  case 0x0138:
-    return 'k';
-  case 0x0139:
-  case 0x013B:
-  case 0x013D:
-  case 0x013F:
-  case 0x0141:
-    return 'L';
-  case 0x013A:
-  case 0x013C:
-  case 0x013E:
-  case 0x0140:
-  case 0x0142:
-    return 'l';
-  case 0x0143:
-  case 0x0145:
-  case 0x0147:
-  case 0x014A:
-    return 'N';
-  case 0x0144:
-  case 0x0146:
-  case 0x0148:
-  case 0x0149:
-  case 0x014B:
-    return 'n';
-  case 0x014C:
-  case 0x014E:
-  case 0x0150:
-    return 'O';
-  case 0x014D:
-  case 0x014F:
-  case 0x0151:
-    return 'o';
-  case 0x0152:
-    return 'O'; // OE ligature
-  case 0x0153:
-    return 'o'; // oe ligature
-  case 0x0154:
-  case 0x0156:
-  case 0x0158:
-    return 'R';
-  case 0x0155:
-  case 0x0157:
-  case 0x0159:
-    return 'r';
-  case 0x015A:
-  case 0x015C:
-  case 0x015E:
-  case 0x0160:
-    return 'S';
-  case 0x015B:
-  case 0x015D:
-  case 0x015F:
-  case 0x0161:
-    return 's';
-  case 0x0162:
-  case 0x0164:
-  case 0x0166:
-    return 'T';
-  case 0x0163:
-  case 0x0165:
-  case 0x0167:
-    return 't';
-  case 0x0168:
-  case 0x016A:
-  case 0x016C:
-  case 0x016E:
-  case 0x0170:
-  case 0x0172:
-    return 'U';
-  case 0x0169:
-  case 0x016B:
-  case 0x016D:
-  case 0x016F:
-  case 0x0171:
-  case 0x0173:
-    return 'u';
-  case 0x0174:
-    return 'W';
-  case 0x0175:
-    return 'w';
-  case 0x0176:
-  case 0x0178:
-    return 'Y';
-  case 0x0177:
-    return 'y';
-  case 0x0179:
-  case 0x017B:
-  case 0x017D:
-    return 'Z';
-  case 0x017A:
-  case 0x017C:
-  case 0x017E:
-    return 'z';
-
-  default:
+  static constexpr boost::uint32_t first = 0xC0;
+  static constexpr char table[] =
+      /* U+00C0 */ "AAAAAAACEEEEIIII"
+                   /* U+00D0 */ "DNOOOOO\0OUUUUYTs"
+                   /* U+00E0 */ "aaaaaaaceeeeiiii"
+                   /* U+00F0 */ "dnooooo\0ouuuuyty"
+                   /* U+0100 */ "AaAaAaCcCcCcCcDd"
+                   /* U+0110 */ "DdEeEeEeEeEeGgGg"
+                   /* U+0120 */ "GgGgHhHhIiIiIiIi"
+                   /* U+0130 */ "Ii\0\0JjKkkLlLlLlL"
+                   /* U+0140 */ "lLlNnNnNnnNnOoOo"
+                   /* U+0150 */ "OoOoRrRrRrSsSsSs"
+                   /* U+0160 */ "SsTtTtTtUuUuUuUu"
+                   /* U+0170 */ "UuUuWwYyYZzZzZz\0";
+  static_assert(sizeof(table) == 0x180 - first + 1, "one entry per code point");
+  if (cp < first || cp >= first + sizeof(table) - 1)
     return cp;
-  }
-  // NOLINTEND(bugprone-branch-clone)
+  const char folded = table[cp - first];
+  return folded != 0 ? static_cast<unsigned char>(folded) : cp;
 }
 
 } // namespace

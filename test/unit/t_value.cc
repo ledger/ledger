@@ -4668,6 +4668,52 @@ BOOST_AUTO_TEST_CASE(testMaskGlobDiacritics)
   BOOST_CHECK(mask_t("caf\xc3\xa9").match("cafe"));
 }
 
+BOOST_AUTO_TEST_CASE(testFoldDiacriticsLatinRange)
+{
+  // What --ignore-diacritics folds each code point in U+00C0..U+017F to,
+  // sixteen per row; '\0' leaves the code point unchanged (U+00D7, U+00F7,
+  // U+0132, U+0133, U+017F).  Every code point outside the range is left
+  // unchanged.
+  static const char expected[] =
+      /* U+00C0 */ "AAAAAAACEEEEIIII"
+      /* U+00D0 */ "DNOOOOO\0OUUUUYTs"
+      /* U+00E0 */ "aaaaaaaceeeeiiii"
+      /* U+00F0 */ "dnooooo\0ouuuuyty"
+      /* U+0100 */ "AaAaAaCcCcCcCcDd"
+      /* U+0110 */ "DdEeEeEeEeEeGgGg"
+      /* U+0120 */ "GgGgHhHhIiIiIiIi"
+      /* U+0130 */ "Ii\0\0JjKkkLlLlLlL"
+      /* U+0140 */ "lLlNnNnNnnNnOoOo"
+      /* U+0150 */ "OoOoRrRrRrSsSsSs"
+      /* U+0160 */ "SsTtTtTtUuUuUuUu"
+      /* U+0170 */ "UuUuWwYyYZzZzZz\0";
+  BOOST_REQUIRE_EQUAL(sizeof(expected), std::size_t(0x180 - 0xC0 + 1));
+
+  auto encode = [](boost::uint32_t cp) {
+    string s;
+    utf8::append(cp, std::back_inserter(s));
+    return s;
+  };
+
+  for (boost::uint32_t cp = 0; cp < 0x180; ++cp) {
+    const string in = encode(cp);
+    const char want = cp >= 0xC0 ? expected[cp - 0xC0] : '\0';
+    const string out = want != '\0' ? string(1, want) : in;
+    BOOST_CHECK_MESSAGE(fold_diacritics(in) == out, "U+" << std::hex << cp);
+  }
+
+  // The code points on either side of the range, and beyond the BMP.
+  for (boost::uint32_t cp : {0xBFU, 0x180U, 0x1E9EU, 0x1F600U}) {
+    const string in = encode(cp);
+    BOOST_CHECK_MESSAGE(fold_diacritics(in) == in, "U+" << std::hex << cp);
+  }
+
+  // Folding works code point by code point inside a longer string:
+  // "Ł×ódź" (L-stroke, times, o-acute, d, z-acute).
+  BOOST_CHECK_EQUAL(fold_diacritics("\xc5\x81\xc3\x97\xc3\xb3" "d\xc5\xba"),
+                    string("L\xc3\x97odz"));
+}
+
 BOOST_AUTO_TEST_CASE(testIsEqualToSequence)
 {
   value_t seq1;
