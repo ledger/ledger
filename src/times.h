@@ -142,6 +142,12 @@ extern optional<int> year_directive_year;
    : year_directive_year ? date_t(*year_directive_year, 12, 31)                                    \
                          : boost::gregorian::day_clock::local_day()) ///< Effective "today".
 
+/// @brief The moment a price lookup reads: @p moment when it is set, else
+/// the effective "now" (the --now epoch, or the clock).
+inline datetime_t moment_or_now(const datetime_t& moment) {
+  return moment.is_not_a_date_time() ? CURRENT_TIME() : moment;
+}
+
 /// The day that starts each week for period alignment (default: Sunday).
 /// Configurable so that `weekly` reports can begin on Monday, etc.
 extern date_time::weekdays start_of_week;

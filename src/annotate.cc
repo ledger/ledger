@@ -379,13 +379,7 @@ std::optional<price_point_t> annotated_commodity_t::find_price(const commodity_t
                                                                const datetime_t& oldest) const {
   DEBUG("commodity.price.find", "annotated_commodity_t::find_price(" << symbol() << ")");
 
-  datetime_t when;
-  if (!moment.is_not_a_date_time())
-    when = moment;
-  else if (epoch)
-    when = *epoch;
-  else
-    when = CURRENT_TIME();
+  const datetime_t when = moment_or_now(moment);
 
   DEBUG("commodity.price.find", "reference time: " << when);
 

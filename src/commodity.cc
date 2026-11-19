@@ -104,13 +104,7 @@ void commodity_t::remove_price(const datetime_t& date, commodity_t& commodity) {
 void commodity_t::map_prices(const function<void(datetime_t, const amount_t&)>& fn,
                              const datetime_t& moment, const datetime_t& _oldest,
                              bool bidirectionally) {
-  datetime_t when;
-  if (!moment.is_not_a_date_time())
-    when = moment;
-  else if (epoch)
-    when = *epoch;
-  else
-    when = CURRENT_TIME();
+  const datetime_t when = moment_or_now(moment);
 
   pool().commodity_price_history.map_prices(fn, referent(), when, _oldest, bidirectionally);
 }
@@ -197,13 +191,7 @@ std::optional<price_point_t> commodity_t::find_price(const commodity_t* commodit
     return (*i).second;
   }
 
-  datetime_t when;
-  if (!moment.is_not_a_date_time())
-    when = moment;
-  else if (epoch)
-    when = *epoch;
-  else
-    when = CURRENT_TIME();
+  const datetime_t when = moment_or_now(moment);
 
   if (base->value_expr)
     return find_price_from_expr(*base->value_expr, commodity, when);
