@@ -177,6 +177,24 @@ inline std::size_t py_sequence_index(long i, std::size_t len) {
   return static_cast<std::size_t>(i < 0 ? n + i : i);
 }
 
+/// Registers a translator that raises the C++ exception @p E in Python as
+/// @p py_type (e.g. PyExc_ArithmeticError), carrying its what() text.
+template <class E>
+void register_error_translator(PyObject* py_type) {
+  boost::python::register_exception_translator<E>(
+      [py_type](const E& err) { PyErr_SetString(py_type, err.what()); });
+}
+
+/// Builds a Python list from [first, last), appending convert(*it) for each
+/// element in order.
+template <class It, class Fn>
+boost::python::list to_py_list(It first, It last, Fn convert) {
+  boost::python::list result;
+  for (; first != last; ++first)
+    result.append(convert(*first));
+  return result;
+}
+
 } // namespace ledger::python
 
 // boost::python::register_ptr_to_python< std::shared_ptr<Base> >();

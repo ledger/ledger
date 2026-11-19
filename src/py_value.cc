@@ -122,13 +122,6 @@ value_t py_strip_annotations_1(value_t& value, const keep_details_t& keep) {
 
 } // unnamed namespace
 
-#define EXC_TRANSLATOR(type)                                                                       \
-  void exc_translate_##type(const type& err) {                                                     \
-    PyErr_SetString(PyExc_ArithmeticError, err.what());                                            \
-  }
-
-EXC_TRANSLATOR(value_error)
-
 void export_value() {
   enum_<value_t::type_t>("ValueType")
       .value("Void", value_t::VOID)
@@ -388,9 +381,7 @@ void export_value() {
   implicitly_convertible<date_t, value_t>();
   implicitly_convertible<datetime_t, value_t>();
 
-#define EXC_TRANSLATE(type) register_exception_translator<type>(&exc_translate_##type);
-
-  EXC_TRANSLATE(value_error);
+  register_error_translator<value_error>(PyExc_ArithmeticError);
 }
 
 } // namespace ledger

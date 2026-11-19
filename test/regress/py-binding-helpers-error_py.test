@@ -1,0 +1,16 @@
+test python test/regress/py-binding-helpers-error.py
+journal RuntimeError: While balancing transaction from streamed input:
+Unbalanced remainder is:
+               5 USD
+Amount to balance against:
+              10 USD
+Transaction does not balance
+__ERROR__
+While parsing file "", line 4:
+While balancing transaction from streamed input:
+Unbalanced remainder is:
+               5 USD
+Amount to balance against:
+              10 USD
+Error: Transaction does not balance
+end test

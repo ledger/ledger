@@ -1,0 +1,14 @@
+test python test/regress/py-binding-helpers.py
+amount ArithmeticError: Adding amounts with different commodities: 'USD' != 'EUR'
+balance ArithmeticError: Cannot convert a balance with multiple commodities to an amount
+value ArithmeticError: Cannot add an amount to a boolean
+Amount 6 USD 6 USD None 6 USD
+Balance 6 USD 6 USD None 6 USD
+Value 6 USD 6 USD  6 USD
+no price None None
+keys sorted True ['QQQ', 'USD', 'XYZ']
+['Expenses:Food', 'Expenses:Food:Dining', 'Expenses:Food:Groceries', 'Expenses:Transport']
+['Expenses:Food', 'Expenses:Food:Dining', 'Expenses:Food:Groceries', 'Expenses:Transport']
+[]
+['3 XYZ', '4 XYZ', '5 XYZ']
+end test

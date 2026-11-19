@@ -105,10 +105,9 @@ long balance_len(balance_t& bal) {
 object balance_iter(balance_t& bal) {
   balance_t::amounts_array sorted;
   bal.sorted_amounts(sorted);
-  list items;
-  for (const amount_t* amount : sorted)
-    items.append(*amount);
-  return items.attr("__iter__")();
+  return to_py_list(sorted.begin(), sorted.end(),
+                    [](const amount_t* a) -> const amount_t& { return *a; })
+      .attr("__iter__")();
 }
 
 /// reversed() would otherwise call __getitem__ for every index, sorting
@@ -116,10 +115,9 @@ object balance_iter(balance_t& bal) {
 object balance_reversed(balance_t& bal) {
   balance_t::amounts_array sorted;
   bal.sorted_amounts(sorted);
-  list items;
-  for (auto i = sorted.rbegin(); i != sorted.rend(); ++i)
-    items.append(**i);
-  return items.attr("__iter__")();
+  return to_py_list(sorted.rbegin(), sorted.rend(),
+                    [](const amount_t* a) -> const amount_t& { return *a; })
+      .attr("__iter__")();
 }
 
 amount_t balance_getitem(balance_t& bal, long i) {
@@ -140,13 +138,6 @@ balance_t py_strip_annotations_1(balance_t& balance, const keep_details_t& keep)
 }
 
 } // unnamed namespace
-
-#define EXC_TRANSLATOR(type)                                                                       \
-  void exc_translate_##type(const type& err) {                                                     \
-    PyErr_SetString(PyExc_ArithmeticError, err.what());                                            \
-  }
-
-EXC_TRANSLATOR(balance_error)
 
 void export_balance() {
   class_<balance_t>("Balance")
@@ -252,9 +243,7 @@ void export_balance() {
   implicitly_convertible<string, balance_t>();
   implicitly_convertible<amount_t, balance_t>();
 
-#define EXC_TRANSLATE(type) register_exception_translator<type>(&exc_translate_##type);
-
-  EXC_TRANSLATE(balance_error);
+  register_error_translator<balance_error>(PyExc_ArithmeticError);
 }
 
 } // namespace ledger

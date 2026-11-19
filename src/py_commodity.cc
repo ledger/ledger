@@ -138,12 +138,8 @@ commodity_t* py_pool_getitem(commodity_pool_t& pool, const string& symbol) {
 }
 
 list py_pool_keys(commodity_pool_t& pool) {
-  list keys;
-  for (auto it = pool.commodities.rbegin(); it != pool.commodities.rend(); ++it) {
-    const auto& pair = *it;
-    keys.insert(0, pair.first);
-  }
-  return keys;
+  return to_py_list(pool.commodities.begin(), pool.commodities.end(),
+                    [](const auto& pair) -> const string& { return pair.first; });
 }
 
 bool py_pool_contains(commodity_pool_t& pool, const string& symbol) {

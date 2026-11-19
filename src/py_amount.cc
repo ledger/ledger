@@ -114,13 +114,6 @@ amount_t py_strip_annotations_1(amount_t& amount, const keep_details_t& keep) {
 
 } // unnamed namespace
 
-#define EXC_TRANSLATOR(type)                                                                       \
-  void exc_translate_##type(const type& err) {                                                     \
-    PyErr_SetString(PyExc_ArithmeticError, err.what());                                            \
-  }
-
-EXC_TRANSLATOR(amount_error)
-
 /// @brief Registers the Amount class and ParseFlags enum with Boost.Python.
 ///
 /// The Amount class exposes constructors from long and string, full arithmetic
@@ -303,9 +296,7 @@ internal precision."))
   implicitly_convertible<long, amount_t>();
   implicitly_convertible<string, amount_t>();
 
-#define EXC_TRANSLATE(type) register_exception_translator<type>(&exc_translate_##type);
-
-  EXC_TRANSLATE(amount_error);
+  register_error_translator<amount_error>(PyExc_ArithmeticError);
 }
 
 } // namespace ledger

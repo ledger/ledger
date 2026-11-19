@@ -100,10 +100,9 @@ value_t py_total_1(const account_t& account, const boost::optional<expr_t&>& exp
 }
 
 boost::python::list py_find_accounts_re(account_t& account, const string& regexp) {
-  boost::python::list result;
-  for (account_t* a : account.find_accounts_re(regexp))
-    result.append(boost::python::ptr(a));
-  return result;
+  auto accounts = account.find_accounts_re(regexp);
+  return to_py_list(accounts.begin(), accounts.end(),
+                    [](account_t* a) { return boost::python::ptr(a); });
 }
 
 } // unnamed namespace

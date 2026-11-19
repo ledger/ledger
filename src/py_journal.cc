@@ -253,10 +253,8 @@ post_t* posts_getitem(collector_wrapper& collector, long i) {
 
 /// Convert the display_amounts vector to a Python list of Value objects.
 boost::python::object py_collector_display_amounts(collector_wrapper& coll) {
-  boost::python::list result;
-  for (const value_t& v : coll.display_amounts)
-    result.append(v);
-  return result;
+  return python::to_py_list(coll.display_amounts.begin(), coll.display_amounts.end(),
+                            [](const value_t& v) -> const value_t& { return v; });
 }
 
 /*--- FileInfo Property Wrappers ---*/
@@ -290,21 +288,12 @@ void py_fileinfo_set_modtime(journal_t::fileinfo_t& fi, const object& obj) {
 }
 
 boost::python::list py_find_accounts_re(journal_t& journal, const string& regexp) {
-  boost::python::list result;
-  for (account_t* a : journal.find_accounts_re(regexp))
-    result.append(boost::python::ptr(a));
-  return result;
+  auto accounts = journal.find_accounts_re(regexp);
+  return python::to_py_list(accounts.begin(), accounts.end(),
+                            [](account_t* a) { return boost::python::ptr(a); });
 }
 
 } // unnamed namespace
-
-#define EXC_TRANSLATOR(type)                                                                       \
-  void exc_translate_##type(const type& err) {                                                     \
-    PyErr_SetString(PyExc_RuntimeError, err.what());                                               \
-  }
-
-EXC_TRANSLATOR(parse_error)
-EXC_TRANSLATOR(error_count)
 
 void export_journal() {
   class_<item_handler<post_t>, shared_ptr<item_handler<post_t>>, boost::noncopyable>("PostHandler");
@@ -379,10 +368,8 @@ void export_journal() {
 
       .def("valid", &journal_t::valid);
 
-#define EXC_TRANSLATE(type) register_exception_translator<type>(&exc_translate_##type);
-
-  EXC_TRANSLATE(parse_error);
-  EXC_TRANSLATE(error_count);
+  python::register_error_translator<parse_error>(PyExc_RuntimeError);
+  python::register_error_translator<error_count>(PyExc_RuntimeError);
 }
 
 } // namespace ledger
