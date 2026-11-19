@@ -474,6 +474,40 @@ report_t::column_widths_t report_t::default_column_widths(long cols) const {
   return {date_width, payee_width, account_width, amount_width, total_width};
 }
 
+void report_t::set_gain_display_exprs(const optional<string>& whence, const char* when) {
+  HANDLER(amount_).expr.set_base_expr("(amount, cost)");
+
+  // Since we are displaying the amounts of revalued postings, they
+  // will end up being composite totals, and hence a pair of pairs.
+  // When --subtotal collapses compound postings the amount expression
+  // evaluates to a nested pair ((amount, cost), (amount, cost)).  We
+  // distinguish two sub-cases by looking at the inner cost element:
+  //
+  //  inner[1] != 0  →  subtotaled post: compute market(inner[0]) - inner[1]
+  //  inner[1] == 0  →  revalued post from changed_value_posts: the delta
+  //                    market(repriced) - market(last) is already computed as
+  //                    inner[0], so return it unchanged (issue #965).
+  HANDLER(display_amount_)
+      .on(whence, "use_direct_amount ? amount :"
+                  " (is_seq(get_at(amount_expr, 0)) ?"
+                  "  (get_at(get_at(amount_expr, 0), 1) ?"
+                  "    market(get_at(get_at(amount_expr, 0), 0), " +
+                      string(when) +
+                      ", exchange)"
+                      "    - get_at(get_at(amount_expr, 0), 1) :"
+                      "    get_at(get_at(amount_expr, 0), 0)) :"
+                      "  market(get_at(amount_expr, 0), " +
+                      string(when) +
+                      ", exchange)"
+                      "  - get_at(amount_expr, 1))");
+  HANDLER(display_total_)
+      .on(whence, "use_direct_amount ? total_expr :"
+                  " market(get_at(total_expr, 0), " +
+                      string(when) +
+                      ", exchange)"
+                      " - get_at(total_expr, 1)");
+}
+
 void report_t::normalize_period() {
   date_interval_t interval(HANDLER(period_).str());
 

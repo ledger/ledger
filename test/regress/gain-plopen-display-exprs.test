@@ -1,0 +1,39 @@
+; --gain and --plopen share one pair of display expressions; --gain values
+; them at each posting's value_date, --plopen at today.  These blocks pin
+; both, including the nested (amount, cost) pairs that --subtotal builds
+; (#965) and a balance report's direct amounts.
+
+P 2024/01/01 EUR 1.10 USD
+
+2024/01/10 Buy EUR
+    Assets:Investments    100 EUR @ 1.10 USD
+    Assets:Checking
+
+P 2024/01/20 EUR 1.20 USD
+
+2024/01/20 Buy USD stock
+    Assets:Investments     50.00 USD
+    Assets:Checking
+
+P 2024/01/30 EUR 1.25 USD
+
+test reg --plopen --now 2024/02/01 Assets:Investments
+24-Jan-10 Buy EUR               Assets:Investments        15.00 USD    15.00 USD
+end test
+
+test reg --plopen --subtotal --now 2024/02/01 Assets:Investments
+24-Jan-10 - 24-Jan-20           Assets:Investments        15.00 USD    15.00 USD
+end test
+
+test bal --plopen --now 2024/01/25 Assets:Investments
+           10.00 USD  Assets:Investments
+end test
+
+test reg --gain --now 2024/02/01 Assets:Investments
+24-Jan-20 Commodities revalued  <Revalued>                10.00 USD    10.00 USD
+24-Jan-30 Commodities revalued  <Revalued>                 5.00 USD    15.00 USD
+end test
+
+test bal --gain --now 2024/01/25 Assets:Investments
+           10.00 USD  Assets:Investments
+end test

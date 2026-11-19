@@ -1050,34 +1050,10 @@ public:
   OPTION_(
       report_t, gain, DO() { // -G
         OTHER(revalued).on(whence);
-        OTHER(amount_).expr.set_base_expr("(amount, cost)");
-
-        // Since we are displaying the amounts of revalued postings, they
-        // will end up being composite totals, and hence a pair of pairs.
-        // When --subtotal collapses compound postings the amount expression
-        // evaluates to a nested pair ((amount, cost), (amount, cost)).  We
-        // distinguish two sub-cases by looking at the inner cost element:
-        //
-        //  inner[1] != 0  →  subtotaled post: compute market(inner[0]) - inner[1]
-        //  inner[1] == 0  →  revalued post from changed_value_posts: the delta
-        //                    market(repriced) - market(last) is already computed as
-        //                    inner[0], so return it unchanged (issue #965).
-        OTHER(display_amount_)
-            .on(whence, "use_direct_amount ? amount :"
-                        " (is_seq(get_at(amount_expr, 0)) ?"
-                        "  (get_at(get_at(amount_expr, 0), 1) ?"
-                        "    market(get_at(get_at(amount_expr, 0), 0), value_date, exchange)"
-                        "    - get_at(get_at(amount_expr, 0), 1) :"
-                        "    get_at(get_at(amount_expr, 0), 0)) :"
-                        "  market(get_at(amount_expr, 0), value_date, exchange)"
-                        "  - get_at(amount_expr, 1))");
+        parent->set_gain_display_exprs(whence, "value_date");
         OTHER(revalued_total_)
             .on(whence, "(market(get_at(total_expr, 0), value_date, exchange), "
                         "get_at(total_expr, 1))");
-        OTHER(display_total_)
-            .on(whence, "use_direct_amount ? total_expr :"
-                        " market(get_at(total_expr, 0), value_date, exchange)"
-                        " - get_at(total_expr, 1)");
       });
 
   OPTION(report_t, generated);
@@ -1274,21 +1250,7 @@ public:
         // postings are generated.  Prices are looked up at today (not
         // value_date) so each posting reflects its current mark-to-market
         // gain rather than the historical gain at the posting date.
-        OTHER(amount_).expr.set_base_expr("(amount, cost)");
-
-        OTHER(display_amount_)
-            .on(whence, "use_direct_amount ? amount :"
-                        " (is_seq(get_at(amount_expr, 0)) ?"
-                        "  (get_at(get_at(amount_expr, 0), 1) ?"
-                        "    market(get_at(get_at(amount_expr, 0), 0), today, exchange)"
-                        "    - get_at(get_at(amount_expr, 0), 1) :"
-                        "    get_at(get_at(amount_expr, 0), 0)) :"
-                        "  market(get_at(amount_expr, 0), today, exchange)"
-                        "  - get_at(amount_expr, 1))");
-        OTHER(display_total_)
-            .on(whence, "use_direct_amount ? total_expr :"
-                        " market(get_at(total_expr, 0), today, exchange)"
-                        " - get_at(total_expr, 1)");
+        parent->set_gain_display_exprs(whence, "today");
       });
 
   OPTION_CTOR(
@@ -1508,6 +1470,12 @@ public:
   OPTION(report_t, values);             ///< Show computed expression values (for debugging)
 
   ///@}
+
+private:
+  /// @brief Set --amount, --display-amount and --display-total to report
+  /// market value less cost, valuing at @p when ("value_date" for --gain,
+  /// "today" for --plopen).
+  void set_gain_display_exprs(const optional<string>& whence, const char* when);
 };
 
 /**
