@@ -853,4 +853,40 @@ BOOST_AUTO_TEST_CASE(testAccountCheckIsNotAnAutomatedTransaction)
   BOOST_CHECK_EQUAL(2u, it->second.front()->check_exprs->size());
 }
 
+BOOST_AUTO_TEST_CASE(testParseContextCopiesAndMovesEveryMember)
+{
+  // A parse_context_t copy carries every member (the hand-written copy
+  // constructor used to drop `last`), a fresh context has no journal, and
+  // the type is nothrow-movable (a user-declared copy constructor used to
+  // suppress the move constructor).
+  parse_context_t ctx(path("/"));
+  BOOST_CHECK(ctx.journal == nullptr);
+  BOOST_CHECK(ctx.master == nullptr);
+  BOOST_CHECK(ctx.scope == nullptr);
+  BOOST_CHECK_EQUAL(ctx.sequence, 1U);
+
+  ctx.last = "boom";
+  ctx.linenum = 7;
+  parse_context_t copy(ctx);
+  BOOST_CHECK_EQUAL(copy.last, "boom");
+  BOOST_CHECK_EQUAL(copy.linenum, 7U);
+
+  BOOST_CHECK(std::is_nothrow_move_constructible_v<parse_context_t>);
+}
+
+BOOST_AUTO_TEST_CASE(testParseContextPathnameIsTheSharedPath)
+{
+  // The context keeps one representation of the current file: pathname()
+  // reads through pathname_ref, so assigning pathname_ref alone moves
+  // location() to the new file.
+  parse_context_t ctx(path("/"));
+  BOOST_CHECK(ctx.pathname().empty());
+  BOOST_CHECK(&ctx.pathname() == ctx.pathname_ref.get());
+
+  ctx.pathname_ref = std::make_shared<const path>("/books/main.dat");
+  ctx.linenum = 3;
+  BOOST_CHECK_EQUAL(ctx.pathname().string(), "/books/main.dat");
+  BOOST_CHECK_EQUAL(ctx.location(), file_context(path("/books/main.dat"), 3));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

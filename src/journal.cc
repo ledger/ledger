@@ -497,14 +497,11 @@ void check_all_metadata(journal_t& journal, std::variant<int, xact_t*, post_t*> 
   if ((xact || post) && (xact ? xact->metadata : post->metadata)) {
     item_t* item = xact ? static_cast<item_t*>(xact) : static_cast<item_t*>(post);
 
-    path saved_pathname;
     std::shared_ptr<const path> saved_pathname_ref;
     std::size_t saved_linenum = 0;
     if (journal.current_context && item->pos) {
-      saved_pathname = journal.current_context->pathname;
       saved_pathname_ref = journal.current_context->pathname_ref;
       saved_linenum = journal.current_context->linenum;
-      journal.current_context->pathname = *item->pos->pathname;
       journal.current_context->pathname_ref = item->pos->pathname;
       journal.current_context->linenum = item->pos->beg_line;
     }
@@ -520,7 +517,6 @@ void check_all_metadata(journal_t& journal, std::variant<int, xact_t*, post_t*> 
     }
 
     if (journal.current_context && item->pos) {
-      journal.current_context->pathname = saved_pathname;
       journal.current_context->pathname_ref = saved_pathname_ref;
       journal.current_context->linenum = saved_linenum;
     }
@@ -718,15 +714,15 @@ std::size_t journal_t::read(parse_context_stack_t& context, hash_type_t hash_typ
 
     if (!current.scope)
       throw_(std::runtime_error,
-             _f("No default scope in which to read journal file '%1%'") % current.pathname);
+             _f("No default scope in which to read journal file '%1%'") % current.pathname());
 
     if (!current.master)
       current.master = master;
 
     count = read_textual(context, hash_type);
     if (count > 0) {
-      if (!current.pathname.empty())
-        sources.push_back(fileinfo_t(current.pathname));
+      if (!current.pathname().empty())
+        sources.push_back(fileinfo_t(current.pathname()));
       else
         sources.push_back(fileinfo_t());
     }

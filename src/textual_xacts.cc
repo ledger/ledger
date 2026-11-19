@@ -284,7 +284,7 @@ void instance_t::automated_xact_directive(char* line) {
   } catch (const std::exception&) {
     if (reveal_context) {
       add_error_context(_("While parsing automated transaction:"));
-      add_error_context(source_context(context.pathname, pos, context.curr_pos, "> "));
+      add_error_context(source_context(context.pathname(), pos, context.curr_pos, "> "));
     }
     throw;
   }
@@ -329,7 +329,7 @@ void instance_t::period_xact_directive(char* line) {
   } catch (const std::exception&) {
     if (reveal_context) {
       add_error_context(_("While parsing periodic transaction:"));
-      add_error_context(source_context(context.pathname, pos, context.curr_pos, "> "));
+      add_error_context(source_context(context.pathname(), pos, context.curr_pos, "> "));
     }
     throw;
   }

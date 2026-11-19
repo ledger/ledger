@@ -231,7 +231,7 @@ void instance_t::option_directive(char* line) {
     p = const_cast<char*>(unquoted.c_str());
   }
 
-  if (!process_option(context.pathname.string(), line + 2, *context.scope, p, line))
+  if (!process_option(context.pathname().string(), line + 2, *context.scope, p, line))
     throw_(option_error, _f("Illegal option --%1%") % (line + 2));
 }
 
@@ -417,8 +417,8 @@ void instance_t::include_directive(char* line) {
   path include_path(line);
   if (line[0] != '/' && line[0] != '\\' && line[0] != '~' && !include_path.is_absolute()) {
     DEBUG("textual.include", "received a relative path");
-    DEBUG("textual.include", "parent file path: " << context.pathname);
-    path parent_path = context.pathname.parent_path();
+    DEBUG("textual.include", "parent file path: " << context.pathname());
+    path parent_path = context.pathname().parent_path();
     if (parent_path.empty()) {
       filename = context.current_directory / line;
     } else {
@@ -441,7 +441,7 @@ void instance_t::include_directive(char* line) {
 
   bool files_found = false;
   for (const path& matched : matched_files) {
-    if (context.pathname == matched) {
+    if (context.pathname() == matched) {
       DEBUG("textual.include", "Avoiding recursive include of: " << matched);
       continue;
     }

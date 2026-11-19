@@ -59,9 +59,9 @@ using detail::instance_t;
 /*--- Main Parse Loop ---*/
 
 void instance_t::parse() {
-  INFO("Parsing file " << context.pathname);
+  INFO("Parsing file " << context.pathname());
 
-  TRACE_START(instance_parse, 1, "Done parsing file " << context.pathname);
+  TRACE_START(instance_parse, 1, "Done parsing file " << context.pathname());
 
   if (!in.good() || in.eof())
     return;
