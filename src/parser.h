@@ -182,6 +182,13 @@ class expr_t::parser_t : public noncopyable {
   /// @brief Parse semicolon-separated statement sequences (lowest precedence).
   ptr_op_t parse_value_expr(std::istream& in, const parse_flags_t& flags) const;
 
+  using operand_fn = ptr_op_t (parser_t::*)(std::istream&, const parse_flags_t&) const;
+  using op_kind_fn = op_t::kind_t (*)(token_t::kind_t, bool& negate);
+  /// @brief One left-associative binary level: operands from @p operand, operators chosen by
+  /// @p op_kind (op_t::LAST ends the level; negate wraps the node in O_NOT).
+  ptr_op_t parse_binary(std::istream& in, const parse_flags_t& tflags, operand_fn operand,
+                        op_kind_fn op_kind) const;
+
 public:
   parser_t() : use_lookahead(false) { TRACE_CTOR(parser_t, ""); }
   ~parser_t() noexcept { TRACE_DTOR(parser_t); }

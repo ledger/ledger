@@ -44,9 +44,11 @@
  *
  * The general pattern for binary operator levels is:
  *   1. Call the next-higher-precedence function to get the left operand.
- *   2. Loop: read a token; if it is an operator at this level, create an
- *      op_t node, set the left operand, parse the right operand by calling
- *      the higher-precedence function again, and continue the loop.
+ *   2. Loop (parse_binary()): read a token; if it is an operator at this
+ *      level, create an op_t node, set the left operand, parse the right
+ *      operand by calling the higher-precedence function again, and continue
+ *      the loop.  Each binary level passes its operand parser and its
+ *      token-to-op map to parse_binary().
  *   3. If the token is not at this level, push it back and return.
  *
  * Constant folding is performed eagerly for unary `!` and `-` when the
@@ -219,121 +221,94 @@ expr_t::ptr_op_t expr_t::parser_t::parse_unary_expr(std::istream& in,
   return node;
 }
 
-/*--- Arithmetic Operators ---*/
+/*--- Binary Operators ---*/
 
-expr_t::ptr_op_t expr_t::parser_t::parse_mul_expr(std::istream& in,
-                                                  const parse_flags_t& tflags) const {
-  ptr_op_t node(parse_unary_expr(in, tflags));
+namespace {
 
-  if (node && !tflags.has_flags(PARSE_SINGLE)) {
-    int d = subtree_depth;
-    while (true) {
-      token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
+// Each map returns the op_t kind its level builds for a token, or
+// op_t::LAST when the token ends the level.
 
-      if (tok.kind == token_t::STAR || tok.kind == token_t::SLASH || tok.kind == token_t::KW_DIV) {
-        ptr_op_t prev(node);
-        node = new op_t(tok.kind == token_t::STAR ? op_t::O_MUL : op_t::O_DIV);
-        node->set_left(prev);
-        node->set_right(parse_unary_expr(in, tflags));
-        if (!node->right())
-          throw_(parse_error, _f("%1% operator not followed by argument") % tok.symbol);
-        d = checked_depth(1 + std::max(d, subtree_depth));
-      } else {
-        push_token(tok);
-        break;
-      }
-    }
-    subtree_depth = d;
+expr_t::op_t::kind_t mul_kind(expr_t::token_t::kind_t tok, bool& /*negate*/) {
+  switch (tok) {
+  case expr_t::token_t::STAR:
+    return expr_t::op_t::O_MUL;
+  case expr_t::token_t::SLASH:
+  case expr_t::token_t::KW_DIV:
+    return expr_t::op_t::O_DIV;
+  default:
+    return expr_t::op_t::LAST;
   }
-
-  return node;
 }
 
-expr_t::ptr_op_t expr_t::parser_t::parse_add_expr(std::istream& in,
-                                                  const parse_flags_t& tflags) const {
-  ptr_op_t node(parse_mul_expr(in, tflags));
-
-  if (node && !tflags.has_flags(PARSE_SINGLE)) {
-    int d = subtree_depth;
-    while (true) {
-      token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
-
-      if (tok.kind == token_t::PLUS || tok.kind == token_t::MINUS) {
-        ptr_op_t prev(node);
-        node = new op_t(tok.kind == token_t::PLUS ? op_t::O_ADD : op_t::O_SUB);
-        node->set_left(prev);
-        node->set_right(parse_mul_expr(in, tflags));
-        if (!node->right())
-          throw_(parse_error, _f("%1% operator not followed by argument") % tok.symbol);
-        d = checked_depth(1 + std::max(d, subtree_depth));
-      } else {
-        push_token(tok);
-        break;
-      }
-    }
-    subtree_depth = d;
+expr_t::op_t::kind_t add_kind(expr_t::token_t::kind_t tok, bool& /*negate*/) {
+  switch (tok) {
+  case expr_t::token_t::PLUS:
+    return expr_t::op_t::O_ADD;
+  case expr_t::token_t::MINUS:
+    return expr_t::op_t::O_SUB;
+  default:
+    return expr_t::op_t::LAST;
   }
-
-  return node;
 }
 
-/*--- Comparison and Logical Operators ---*/
+expr_t::op_t::kind_t logic_kind(expr_t::token_t::kind_t tok, bool& negate) {
+  switch (tok) {
+  case expr_t::token_t::EQUAL:
+    return expr_t::op_t::O_EQ;
+  // != and !~ are desugared as O_NOT(O_EQ(...)) and O_NOT(O_MATCH(...))
+  // rather than having their own op_t kinds, reducing evaluator complexity.
+  case expr_t::token_t::NEQUAL:
+    negate = true;
+    return expr_t::op_t::O_EQ;
+  case expr_t::token_t::MATCH:
+    return expr_t::op_t::O_MATCH;
+  case expr_t::token_t::NMATCH:
+    negate = true;
+    return expr_t::op_t::O_MATCH;
+  case expr_t::token_t::EMATCH:
+    return expr_t::op_t::O_EMATCH;
+  case expr_t::token_t::LESS:
+    return expr_t::op_t::O_LT;
+  case expr_t::token_t::LESSEQ:
+    return expr_t::op_t::O_LTE;
+  case expr_t::token_t::GREATER:
+    return expr_t::op_t::O_GT;
+  case expr_t::token_t::GREATEREQ:
+    return expr_t::op_t::O_GTE;
+  default:
+    return expr_t::op_t::LAST;
+  }
+}
 
-expr_t::ptr_op_t expr_t::parser_t::parse_logic_expr(std::istream& in,
-                                                    const parse_flags_t& tflags) const {
-  ptr_op_t node(parse_add_expr(in, tflags));
+expr_t::op_t::kind_t and_kind(expr_t::token_t::kind_t tok, bool& /*negate*/) {
+  return tok == expr_t::token_t::KW_AND ? expr_t::op_t::O_AND : expr_t::op_t::LAST;
+}
+
+expr_t::op_t::kind_t or_kind(expr_t::token_t::kind_t tok, bool& /*negate*/) {
+  return tok == expr_t::token_t::KW_OR ? expr_t::op_t::O_OR : expr_t::op_t::LAST;
+}
+
+} // namespace
+
+expr_t::ptr_op_t expr_t::parser_t::parse_binary(std::istream& in, const parse_flags_t& tflags,
+                                                operand_fn operand, op_kind_fn op_kind) const {
+  ptr_op_t node((this->*operand)(in, tflags));
 
   if (node && !tflags.has_flags(PARSE_SINGLE)) {
     int d = subtree_depth;
     while (true) {
-      op_t::kind_t kind = op_t::LAST;
-      const parse_flags_t& _flags = tflags;
       token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
       bool negate = false;
-
-      switch (tok.kind) {
-      case token_t::EQUAL:
-        kind = op_t::O_EQ;
-        break;
-      // != and !~ are desugared as O_NOT(O_EQ(...)) and O_NOT(O_MATCH(...))
-      // rather than having their own op_t kinds, reducing evaluator complexity.
-      case token_t::NEQUAL:
-        kind = op_t::O_EQ;
-        negate = true;
-        break;
-      case token_t::MATCH:
-        kind = op_t::O_MATCH;
-        break;
-      case token_t::NMATCH:
-        kind = op_t::O_MATCH;
-        negate = true;
-        break;
-      case token_t::EMATCH:
-        kind = op_t::O_EMATCH;
-        break;
-      case token_t::LESS:
-        kind = op_t::O_LT;
-        break;
-      case token_t::LESSEQ:
-        kind = op_t::O_LTE;
-        break;
-      case token_t::GREATER:
-        kind = op_t::O_GT;
-        break;
-      case token_t::GREATEREQ:
-        kind = op_t::O_GTE;
-        break;
-      default:
+      op_t::kind_t kind = op_kind(tok.kind, negate);
+      if (kind == op_t::LAST) {
         push_token(tok);
-        subtree_depth = d;
-        goto exit_loop;
+        break;
       }
 
       ptr_op_t prev(node);
       node = new op_t(kind);
       node->set_left(prev);
-      node->set_right(parse_add_expr(in, _flags));
-
+      node->set_right((this->*operand)(in, tflags));
       if (!node->right())
         throw_(parse_error, _f("%1% operator not followed by argument") % tok.symbol);
       d = checked_depth(1 + std::max(d, subtree_depth));
@@ -345,64 +320,34 @@ expr_t::ptr_op_t expr_t::parser_t::parse_logic_expr(std::istream& in,
         d = checked_depth(d + 1);
       }
     }
+    subtree_depth = d;
   }
-
-exit_loop:
   return node;
+}
+
+expr_t::ptr_op_t expr_t::parser_t::parse_mul_expr(std::istream& in,
+                                                  const parse_flags_t& tflags) const {
+  return parse_binary(in, tflags, &parser_t::parse_unary_expr, mul_kind);
+}
+
+expr_t::ptr_op_t expr_t::parser_t::parse_add_expr(std::istream& in,
+                                                  const parse_flags_t& tflags) const {
+  return parse_binary(in, tflags, &parser_t::parse_mul_expr, add_kind);
+}
+
+expr_t::ptr_op_t expr_t::parser_t::parse_logic_expr(std::istream& in,
+                                                    const parse_flags_t& tflags) const {
+  return parse_binary(in, tflags, &parser_t::parse_add_expr, logic_kind);
 }
 
 expr_t::ptr_op_t expr_t::parser_t::parse_and_expr(std::istream& in,
                                                   const parse_flags_t& tflags) const {
-  ptr_op_t node(parse_logic_expr(in, tflags));
-
-  if (node && !tflags.has_flags(PARSE_SINGLE)) {
-    int d = subtree_depth;
-    while (true) {
-      token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
-
-      if (tok.kind == token_t::KW_AND) {
-        ptr_op_t prev(node);
-        node = new op_t(op_t::O_AND);
-        node->set_left(prev);
-        node->set_right(parse_logic_expr(in, tflags));
-        if (!node->right())
-          throw_(parse_error, _f("%1% operator not followed by argument") % tok.symbol);
-        d = checked_depth(1 + std::max(d, subtree_depth));
-      } else {
-        push_token(tok);
-        break;
-      }
-    }
-    subtree_depth = d;
-  }
-  return node;
+  return parse_binary(in, tflags, &parser_t::parse_logic_expr, and_kind);
 }
 
 expr_t::ptr_op_t expr_t::parser_t::parse_or_expr(std::istream& in,
                                                  const parse_flags_t& tflags) const {
-  ptr_op_t node(parse_and_expr(in, tflags));
-
-  if (node && !tflags.has_flags(PARSE_SINGLE)) {
-    int d = subtree_depth;
-    while (true) {
-      token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
-
-      if (tok.kind == token_t::KW_OR) {
-        ptr_op_t prev(node);
-        node = new op_t(op_t::O_OR);
-        node->set_left(prev);
-        node->set_right(parse_and_expr(in, tflags));
-        if (!node->right())
-          throw_(parse_error, _f("%1% operator not followed by argument") % tok.symbol);
-        d = checked_depth(1 + std::max(d, subtree_depth));
-      } else {
-        push_token(tok);
-        break;
-      }
-    }
-    subtree_depth = d;
-  }
-  return node;
+  return parse_binary(in, tflags, &parser_t::parse_and_expr, or_kind);
 }
 
 /*--- Ternary and Conditional Expressions ---*/

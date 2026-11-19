@@ -1,0 +1,37 @@
+; The binary-operator levels of the value-expression parser, from tightest
+; to loosest: * / div, + -, comparisons (== != =~ !~ ==~ < <= > >=), and
+; (&&), or (||).  Each level is left-associative, and != and !~ build O_NOT
+; over O_EQ and O_MATCH.  The missing-operand errors are in
+; expr-binary-operator-missing-operand.test.
+
+test format '%(aa - bb - cc * dd / ee div ff == gg != hh =~ jj !~ kk ==~ ll < mm <= nn > oo >= pp and qq && rr or ss || tt)' 2>/dev/null | grep Element
+Element:    EXPR  flags: 0x0  min:  0  max:  0  expr: ((((((((((! (((! ((((aa - bb) - (((cc * dd) / ee) / ff)) == gg) == hh)) =~ jj) =~ kk)) ==~ ll) < mm) <= nn) > oo) >= pp) & qq) & rr) | ss) | tt)
+end test
+
+test eval '10 - 2 - 3'
+5
+end test
+
+test eval '100 / 10 / 5'
+2
+end test
+
+test eval '2 * 3 + 4 * 5'
+26
+end test
+
+test eval '1 or 0 and 0'
+1
+end test
+
+test eval '2 == 2 and 3'
+3
+end test
+
+test eval '1 != 1'
+0
+end test
+
+test eval '"abc" !~ /b/'
+0
+end test

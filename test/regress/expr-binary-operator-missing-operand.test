@@ -1,0 +1,52 @@
+; A binary operator with no right operand names itself in the error, at
+; every level of the value-expression parser (* / div, + -, comparisons,
+; and, or), including a negated comparison nested inside an and operand.
+; The positive chains are in expr-binary-operator-chains.test.
+
+test eval '1 div' -> 1
+__ERROR__
+While parsing value expression:
+  1 div
+
+Error: / operator not followed by argument
+end test
+
+test eval '1 + 1 +' -> 1
+__ERROR__
+While parsing value expression:
+  1 + 1 +
+
+Error: + operator not followed by argument
+end test
+
+test eval '1 !=' -> 1
+__ERROR__
+While parsing value expression:
+  1 !=
+
+Error: != operator not followed by argument
+end test
+
+test eval '1 and' -> 1
+__ERROR__
+While parsing value expression:
+  1 and
+
+Error: & operator not followed by argument
+end test
+
+test eval '1 or' -> 1
+__ERROR__
+While parsing value expression:
+  1 or
+
+Error: | operator not followed by argument
+end test
+
+test eval '1 == 1 and 2 !=' -> 1
+__ERROR__
+While parsing value expression:
+  1 == 1 and 2 !=
+
+Error: != operator not followed by argument
+end test
