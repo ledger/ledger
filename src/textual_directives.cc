@@ -795,10 +795,7 @@ void instance_t::account_alias_directive(account_t* account, string alias) {
   if (alias == account->fullname()) {
     throw_(parse_error, _f("Illegal alias %1%=%2%") % alias % account->fullname());
   }
-  auto [iter, inserted] =
-      context.journal->account_aliases.insert(accounts_map::value_type(alias, account));
-  if (!inserted)
-    iter->second = account;
+  context.journal->account_aliases.insert_or_assign(alias, account);
 }
 
 void instance_t::alias_directive(char* line) {
