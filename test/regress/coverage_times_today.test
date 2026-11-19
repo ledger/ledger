@@ -1,6 +1,6 @@
 ; Coverage test for times.cc
 ; Test TOK_TODAY/TOK_TOMORROW/TOK_YESTERDAY dispatching to
-; handle_simple_period_token
+; determine_when through handle_date_token
 ;
 ; Each block prints how the period expression resolves as of 2030/06/15:
 ; the stabilized range, start, finish and duration, and the first

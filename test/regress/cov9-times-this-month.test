@@ -1,4 +1,4 @@
-; Coverage for times.cc handle_simple_period_token for "today" (not "this month")
+; Coverage for times.cc determine_when for "today" (not "this month")
 
 2024/01/15 Test1
     Expenses:Food    $10.00

@@ -1,5 +1,5 @@
 ; Test times.cc today/yesterday/tomorrow
-; as period tokens in handle_simple_period_token
+; as period tokens resolved by determine_when
 
 2026/03/02 Monday tx
     Expenses:Food   $20.00

@@ -1,5 +1,5 @@
 ; Coverage test for times.cc
-; Exercise handle_relative_token and handle_simple_period_token
+; Exercise handle_relative_token and determine_when
 ; with various period expressions
 ;
 ; Each block prints how the period expression resolves as of 2030/06/15:

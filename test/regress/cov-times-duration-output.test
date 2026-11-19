@@ -1,6 +1,6 @@
 ; Coverage test for times.cc
 ; Exercise date_duration output for yearly periods
-; Also covers (handle_relative_token), (handle_simple_period_token)
+; Also covers (handle_relative_token)
 ; (default break in handle_period_token)
 
 2024/01/01 Test

@@ -1,6 +1,6 @@
 ; Coverage test for times.cc
 ; Exercise today/tomorrow/yesterday tokens in period parsing
-; Covers handle_simple_period_token
+; Covers date_parser_t::determine_when's today/tomorrow/yesterday arm
 
 2020/01/01 Old Transaction
     Expenses:Food            $10.00

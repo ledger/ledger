@@ -1,0 +1,157 @@
+; "this", "next" and "last" quarter or week name one period of the same
+; boundary grid that date_duration_t::find_nearest() defines, whether they
+; stand alone (since/until bound the whole period) or follow since or
+; until (the period's first day); today/tomorrow/yesterday give one day.
+; --now 2024/05/15 is a Wednesday; weeks start on Sunday 2024/05/12.
+; With --period-shift 29 the 2024 quarters begin on Jan 30, Apr 30, Jul 30
+; and Oct 30, so every day falls in exactly one quarter: Jan 30 is in Q1
+; whether Q1 is reached as "this quarter" or as "last quarter", and Jul 30
+; begins Q3 and so is not in Q2.
+
+2024/01/30 Q1 shifted start
+    Expenses:A    $1.00
+    Assets:Cash
+
+2024/04/29 Q2 day before shifted
+    Expenses:A    $2.00
+    Assets:Cash
+
+2024/04/30 Q2 shifted start
+    Expenses:A    $4.00
+    Assets:Cash
+
+2024/05/11 Week before
+    Expenses:A    $8.00
+    Assets:Cash
+
+2024/05/12 Week start
+    Expenses:A    $16.00
+    Assets:Cash
+
+2024/05/19 Next week start
+    Expenses:A    $32.00
+    Assets:Cash
+
+2024/07/30 Q3 shifted start
+    Expenses:A    $64.00
+    Assets:Cash
+
+2024/07/31 Q3 day after shifted
+    Expenses:A    $128.00
+    Assets:Cash
+
+test reg Expenses --now 2024/05/15 -p "last week"
+24-May-11 Week before           Expenses:A                    $8.00        $8.00
+end test
+
+test reg Expenses --now 2024/05/15 -p "this week"
+24-May-12 Week start            Expenses:A                   $16.00       $16.00
+end test
+
+test reg Expenses --now 2024/05/15 -p "next week"
+24-May-19 Next week start       Expenses:A                   $32.00       $32.00
+end test
+
+test reg Expenses --now 2024/05/15 -p "since last week"
+24-May-11 Week before           Expenses:A                    $8.00        $8.00
+24-May-12 Week start            Expenses:A                   $16.00       $24.00
+24-May-19 Next week start       Expenses:A                   $32.00       $56.00
+24-Jul-30 Q3 shifted start      Expenses:A                   $64.00      $120.00
+24-Jul-31 Q3 day after shifted  Expenses:A                  $128.00      $248.00
+end test
+
+test reg Expenses --now 2024/05/15 -p "since next week"
+24-May-19 Next week start       Expenses:A                   $32.00       $32.00
+24-Jul-30 Q3 shifted start      Expenses:A                   $64.00       $96.00
+24-Jul-31 Q3 day after shifted  Expenses:A                  $128.00      $224.00
+end test
+
+test reg Expenses --now 2024/05/15 -p "until this week"
+24-Jan-30 Q1 shifted start      Expenses:A                    $1.00        $1.00
+24-Apr-29 Q2 day before shifted Expenses:A                    $2.00        $3.00
+24-Apr-30 Q2 shifted start      Expenses:A                    $4.00        $7.00
+24-May-11 Week before           Expenses:A                    $8.00       $15.00
+end test
+
+test reg Expenses --now 2024/05/15 --start-of-week monday -p "last week"
+24-May-11 Week before           Expenses:A                    $8.00        $8.00
+24-May-12 Week start            Expenses:A                   $16.00       $24.00
+end test
+
+test reg Expenses --now 2024/05/15 --start-of-week monday -p "this week"
+24-May-19 Next week start       Expenses:A                   $32.00       $32.00
+end test
+
+test reg Expenses --now 2024/05/15 -p "this quarter"
+24-Apr-29 Q2 day before shifted Expenses:A                    $2.00        $2.00
+24-Apr-30 Q2 shifted start      Expenses:A                    $4.00        $6.00
+24-May-11 Week before           Expenses:A                    $8.00       $14.00
+24-May-12 Week start            Expenses:A                   $16.00       $30.00
+24-May-19 Next week start       Expenses:A                   $32.00       $62.00
+end test
+
+test reg Expenses --now 2024/05/15 -p "last quarter"
+24-Jan-30 Q1 shifted start      Expenses:A                    $1.00        $1.00
+end test
+
+test reg Expenses --now 2024/02/15 --period-shift 29 -p "this quarter"
+24-Jan-30 Q1 shifted start      Expenses:A                    $1.00        $1.00
+24-Apr-29 Q2 day before shifted Expenses:A                    $2.00        $3.00
+end test
+
+test reg Expenses --now 2024/05/15 --period-shift 29 -p "last quarter"
+24-Jan-30 Q1 shifted start      Expenses:A                    $1.00        $1.00
+24-Apr-29 Q2 day before shifted Expenses:A                    $2.00        $3.00
+end test
+
+test reg Expenses --now 2024/05/15 --period-shift 29 -p "this quarter"
+24-Apr-30 Q2 shifted start      Expenses:A                    $4.00        $4.00
+24-May-11 Week before           Expenses:A                    $8.00       $12.00
+24-May-12 Week start            Expenses:A                   $16.00       $28.00
+24-May-19 Next week start       Expenses:A                   $32.00       $60.00
+end test
+
+test reg Expenses --now 2024/02/15 --period-shift 29 -p "next quarter"
+24-Apr-30 Q2 shifted start      Expenses:A                    $4.00        $4.00
+24-May-11 Week before           Expenses:A                    $8.00       $12.00
+24-May-12 Week start            Expenses:A                   $16.00       $28.00
+24-May-19 Next week start       Expenses:A                   $32.00       $60.00
+end test
+
+test reg Expenses --now 2024/08/15 --period-shift 29 -p "last quarter"
+24-Apr-30 Q2 shifted start      Expenses:A                    $4.00        $4.00
+24-May-11 Week before           Expenses:A                    $8.00       $12.00
+24-May-12 Week start            Expenses:A                   $16.00       $28.00
+24-May-19 Next week start       Expenses:A                   $32.00       $60.00
+end test
+
+test reg Expenses --now 2024/08/15 --period-shift 29 -p "this quarter"
+24-Jul-30 Q3 shifted start      Expenses:A                   $64.00       $64.00
+24-Jul-31 Q3 day after shifted  Expenses:A                  $128.00      $192.00
+end test
+
+test reg Expenses --now 2024/08/15 --period-shift 29 -p "since last quarter"
+24-Apr-30 Q2 shifted start      Expenses:A                    $4.00        $4.00
+24-May-11 Week before           Expenses:A                    $8.00       $12.00
+24-May-12 Week start            Expenses:A                   $16.00       $28.00
+24-May-19 Next week start       Expenses:A                   $32.00       $60.00
+24-Jul-30 Q3 shifted start      Expenses:A                   $64.00      $124.00
+24-Jul-31 Q3 day after shifted  Expenses:A                  $128.00      $252.00
+end test
+
+test reg Expenses --now 2024/05/12 -p today
+24-May-12 Week start            Expenses:A                   $16.00       $16.00
+end test
+
+test reg Expenses --now 2024/05/10 -p tomorrow
+24-May-11 Week before           Expenses:A                    $8.00        $8.00
+end test
+
+test reg Expenses --now 2024/05/13 -p yesterday
+24-May-12 Week start            Expenses:A                   $16.00       $16.00
+end test
+
+test reg Expenses --now 2024/05/12 -p "from yesterday to tomorrow"
+24-May-11 Week before           Expenses:A                    $8.00        $8.00
+24-May-12 Week start            Expenses:A                   $16.00       $24.00
+end test

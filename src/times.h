@@ -161,13 +161,11 @@ optional<date_time::weekdays> string_to_day_of_week(const std::string& str);
 /// @return The month, or none if the string is not recognized.
 optional<date_time::months_of_year> string_to_month_of_year(const std::string& str);
 
-/// @brief Resolve a single-word relative-date keyword ("today", "yesterday", "tomorrow",
-/// or the short forms "tday", "yday", "tmrw") to a concrete date.
-///
-/// The anchor is `epoch->date()` if --now was used, otherwise CURRENT_DATE().
-/// Intended for command-line contexts (like the xact command) that accept a
-/// relative date as a positional argument.
-/// @return The resolved date, or none if the string is not a recognized keyword.
+/// @brief Resolve a string that is exactly one day keyword of the period
+/// grammar ("today"/"tday", "tomorrow"/"tmrw", "yesterday"/"yday", any case)
+/// to its date, anchored at CURRENT_DATE() (which honors --now).
+/// Used by the xact command, which accepts such a word as a positional date.
+/// @return The resolved date, or none if the string is not one day keyword.
 optional<date_t> string_to_relative_date(const std::string& str);
 
 /**
@@ -775,14 +773,16 @@ public:
    *
    * Stabilization finds the period boundary that contains or precedes
    * the given date, sets start accordingly, and computes end_of_duration.
-   * The align_intervals parameter controls whether explicit `since` dates
-   * are used directly (true) or snapped to the nearest quantum boundary.
+   * With an explicit `since` date, periods start from it: at the reference
+   * date itself when align_intervals is true, otherwise at the since date
+   * advanced by whole intervals.  Without one, they snap to the boundary
+   * find_nearest() gives.
    *
    * If no duration is set, the range's begin/end are used directly.
    * This method is idempotent once `aligned` is true.
    *
    * @param date             Reference date to align to (default: today).
-   * @param align_intervals  If true and since_specified, use the since date directly.
+   * @param align_intervals  If true and since_specified, start at the reference date itself.
    */
   void stabilize(const optional<date_t>& date = none, bool align_intervals = false);
 

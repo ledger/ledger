@@ -1092,15 +1092,12 @@ BOOST_AUTO_TEST_CASE(testLastNUnexpectedTokenW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: times.cc line 1097: handle_simple_period_token default
+// today, tomorrow and yesterday as whole period expressions
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testSimplePeriodTokenDefaultW8)
 {
-  // The default case in handle_simple_period_token is a break (no-op),
-  // reached through tokens that are not today/tomorrow/yesterday
-  // but this is hard to hit directly. Exercised via coverage of the
-  // other branches.
+  // Each keyword resolves through determine_when to a one-day range.
   date_interval_t i1("today");
   BOOST_CHECK(i1.range || i1.start);
 
@@ -1524,7 +1521,7 @@ BOOST_AUTO_TEST_CASE(testDateDurationOutputYearsW11)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W11: times.cc line 1097 (handle_simple_period_token default)
+// "in" followed by a month name
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDateIntervalMixedTokensW11)

@@ -84,3 +84,78 @@ test --now 2024/03/15 xact monday Grocery
     Expenses:Food                             $50.00
     Assets:Checking
 end test
+
+; The short forms are period-expression keywords, so every date input
+; accepts them, not only the positional argument: the `on` preposition,
+; --begin and --period.
+
+test --now 2024/03/15 xact Grocery on tday
+2024/03/15 Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Checking
+end test
+
+test --now 2024/03/15 xact Grocery on tmrw
+2024/03/16 Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Checking
+end test
+
+test reg --now 2024/01/15 -b tday
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+test reg --now 2024/01/14 -b tmrw
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+test reg --now 2024/01/14 -p tmrw
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+; Positional keywords match without regard to case, and surrounding
+; blanks are ignored the way the period grammar ignores them after `on`
+
+test --now 2024/03/15 xact TMRW Grocery
+2024/03/16 Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Checking
+end test
+
+test --now 2024/03/15 xact ' tmrw ' Grocery
+2024/03/16 Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Checking
+end test
+
+test --now 2024/03/15 xact Grocery on ' tomorrow '
+2024/03/16 Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Checking
+end test
+
+; A positional word the period grammar knows but that is not one of the
+; day keywords (here a month name) stays the payee
+
+test --now 2024/03/15 xact May '$5'
+2024/03/15 May
+    Expenses:Unknown                           $5.00
+    Liabilities:Unknown
+end test
+
+; Words the period lexer cannot read stay the payee
+
+test --now 2024/03/15 xact 'Today,' '$5'
+2024/03/15 Today,
+    Expenses:Unknown                           $5.00
+    Liabilities:Unknown
+end test
+
+test --now 2024/03/15 xact 99999999 '$5'
+2024/03/15 99999999
+    Expenses:Unknown                           $5.00
+    Liabilities:Unknown
+end test

@@ -409,27 +409,6 @@ optional<date_time::months_of_year> string_to_month_of_year(const std::string& s
     return none;
 }
 
-/**
- * @brief Resolve a single-word relative-date keyword to a concrete date.
- *
- * Recognizes the common shorthand the `xact` command accepts in place of
- * an explicit date: "today"/"tday", "yesterday"/"yday", "tomorrow"/"tmrw".
- * The anchor is `epoch->date()` when --now is in effect, otherwise
- * CURRENT_DATE(), matching the conventions used elsewhere by
- * date_interval_t::determine_when().  Keywords are matched without
- * regard to case.
- */
-optional<date_t> string_to_relative_date(const std::string& str) {
-  const string s = lowered(str);
-  if (s == _("today") || s == _("tday"))
-    return epoch ? epoch->date() : CURRENT_DATE();
-  if (s == _("yesterday") || s == _("yday"))
-    return (epoch ? epoch->date() : CURRENT_DATE()) - gregorian::days(1);
-  if (s == _("tomorrow") || s == _("tmrw"))
-    return (epoch ? epoch->date() : CURRENT_DATE()) + gregorian::days(1);
-  return none;
-}
-
 /*--- Top-Level Parse Functions ---*/
 
 /**
@@ -681,6 +660,7 @@ std::ostream& operator<<(std::ostream& out, const date_duration_t& duration) {
  */
 class date_parser_t {
   friend void show_period_tokens(std::ostream& out, const string& arg);
+  friend optional<date_t> string_to_relative_date(const std::string& str);
 
   /**
    * @brief Lexer for period expression tokens.
@@ -692,7 +672,7 @@ class date_parser_t {
    *   - Month names (jan, february, etc.)
    *   - Weekday names (mon, tuesday, etc.)
    *   - Keywords: ago, hence, since, until, in, this, next, last, every,
-   *     today, tomorrow, yesterday
+   *     today/tday, tomorrow/tmrw, yesterday/yday
    *   - Period units: year(s), quarter(s), month(s), week(s), day(s)
    *   - Frequency shortcuts: yearly, quarterly, bimonthly, monthly,
    *     biweekly, weekly, daily
@@ -732,8 +712,8 @@ class date_parser_t {
         TOK_LAST,  ///< The keyword "last" (preceding period).
         TOK_EVERY, ///< The keyword "every" (recurrence prefix).
 
-        TOK_TODAY,     ///< The keyword "today".
-        TOK_TOMORROW,  ///< The keyword "tomorrow".
+        TOK_TODAY,     ///< The keyword "today" or "tday".
+        TOK_TOMORROW,  ///< The keyword "tomorrow" or "tmrw".
         TOK_YESTERDAY, ///< The keyword "yesterday" or "yday".
 
         TOK_YEAR,    ///< The singular unit "year".
@@ -1051,7 +1031,8 @@ private:
   /// Each handles a specific class of token encountered in the main loop.
   /// @{
 
-  /// @brief Handle a date, integer, month, or weekday token as an inclusion specifier.
+  /// @brief Handle a date, integer, month, weekday or day-keyword token as an
+  /// inclusion specifier.
   void handle_date_token(lexer_t::token_t& tok, optional<date_specifier_t>& inclusion_specifier);
 
   /// @brief Handle the dash operator: converts an inclusion specifier into a
@@ -1075,11 +1056,6 @@ private:
   void handle_relative_token(lexer_t::token_t& tok, optional<date_specifier_t>& since_specifier,
                              optional<date_specifier_t>& until_specifier,
                              optional<date_specifier_t>& inclusion_specifier, const date_t& today);
-
-  /// @brief Handle "today", "tomorrow", "yesterday" as inclusion specifiers.
-  void handle_simple_period_token(lexer_t::token_t::kind_t kind,
-                                  optional<date_specifier_t>& inclusion_specifier,
-                                  const date_t& today);
 
   /// @brief Handle the "every" keyword followed by a quantity and unit.
   /// Sets the interval's duration (e.g. "every 2 weeks" -> WEEKS/2).
@@ -1111,11 +1087,42 @@ private:
   void determine_when(lexer_t::token_t& tok, date_specifier_t& specifier);
 };
 
+namespace {
+
+/**
+ * @brief The first day of the quarter or week after the one that begins
+ * at boundary, on the grid date_duration_t::find_nearest() defines.
+ *
+ * A quarter of that grid is 90-92 days long and a week 7, so the date 92
+ * (or 7) days after a boundary lies in the following period.
+ */
+date_t boundary_after(const date_t& boundary, date_duration_t::skip_quantum_t quantum) {
+  const int longest = quantum == date_duration_t::QUARTERS ? 92 : 7;
+  return date_duration_t::find_nearest(boundary + gregorian::days(longest), quantum);
+}
+
+/**
+ * @brief The [begin, end) of "last", "this" or "next" quarter or week.
+ *
+ * adjust is -1, 0 or 1.  "this" is the grid period that contains today;
+ * both ends of every span are grid boundaries, so adjacent spans meet.
+ */
+std::pair<date_t, date_t> relative_span(int adjust, date_duration_t::skip_quantum_t quantum,
+                                        const date_t& today) {
+  const date_t base = date_duration_t::find_nearest(today, quantum);
+  if (adjust < 0)
+    return {date_duration_t::find_nearest(base - gregorian::days(1), quantum), base};
+  const date_t begin = adjust > 0 ? boundary_after(base, quantum) : base;
+  return {begin, boundary_after(begin, quantum)};
+}
+
+} // namespace
+
 /*--- determine_when: Token-to-Specifier Resolution ---*/
 
 void date_parser_t::determine_when(date_parser_t::lexer_t::token_t& tok,
                                    date_specifier_t& specifier) {
-  date_t today = epoch ? epoch->date() : CURRENT_DATE();
+  date_t today = CURRENT_DATE();
 
   switch (tok.kind) {
   case lexer_t::token_t::TOK_DATE:
@@ -1239,37 +1246,15 @@ void date_parser_t::determine_when(date_parser_t::lexer_t::token_t& tok,
       break;
     }
 
-    case lexer_t::token_t::TOK_QUARTER: {
+    case lexer_t::token_t::TOK_QUARTER:
       // "this quarter" / "next quarter" / "last quarter"
-      date_t base = date_duration_t::find_nearest(today, date_duration_t::QUARTERS);
-      date_t temp;
-      if (adjust < 0) {
-        temp = base + gregorian::months(3 * adjust);
-      } else if (adjust == 0) {
-        temp = base + gregorian::months(3);
-      } else if (adjust > 0) {
-        base += gregorian::months(3 * adjust);
-        temp = base + gregorian::months(3 * adjust);
-      }
-      specifier = date_specifier_t(adjust < 0 ? temp : base);
+      specifier = date_specifier_t(relative_span(adjust, date_duration_t::QUARTERS, today).first);
       break;
-    }
 
-    case lexer_t::token_t::TOK_WEEK: {
+    case lexer_t::token_t::TOK_WEEK:
       // "this week" / "next week" / "last week"
-      date_t base = date_duration_t::find_nearest(today, date_duration_t::WEEKS);
-      date_t temp;
-      if (adjust < 0) {
-        temp = base + gregorian::days(static_cast<int>(7 * adjust));
-      } else if (adjust == 0) {
-        temp = base + gregorian::days(7);
-      } else if (adjust > 0) {
-        base += gregorian::days(static_cast<int>(7 * adjust));
-        temp = base + gregorian::days(static_cast<int>(7 * adjust));
-      }
-      specifier = date_specifier_t(adjust < 0 ? temp : base);
+      specifier = date_specifier_t(relative_span(adjust, date_duration_t::WEEKS, today).first);
       break;
-    }
 
     case lexer_t::token_t::TOK_DAY: {
       // "this day" / "next day" / "last day"
@@ -1329,7 +1314,7 @@ void date_parser_t::determine_when(date_parser_t::lexer_t::token_t& tok,
 
 /*--- Parser Helper Methods ---*/
 
-/// @brief Handle date/integer/month/weekday tokens as inclusion specifiers.
+/// @brief Handle date/integer/month/weekday/day-keyword tokens as inclusion specifiers.
 void date_parser_t::handle_date_token(lexer_t::token_t& tok,
                                       optional<date_specifier_t>& inclusion_specifier) {
   if (!inclusion_specifier)
@@ -1402,17 +1387,14 @@ void date_parser_t::handle_in_token(lexer_t::token_t& tok,
 }
 
 /**
- * @brief Handle "this"/"next"/"last" followed by a quantity and unit.
+ * @brief Handle "this"/"next"/"last" in the main parsing loop.
  *
- * This method handles the more complex relative expressions that appear
- * in the main parsing loop (as opposed to determine_when, which handles
- * them in the context of since/until/in).  Examples:
- *
- *   - "last 3 months" -> since = today - 3 months, until = today
- *   - "next 2 weeks"  -> since = today, until = today + 2 weeks
- *   - "this quarter"  -> since = start of quarter, until = end of quarter
- *   - "next january"  -> inclusion specifier for jan of next year
- *   - "last monday"   -> inclusion specifier for the previous monday
+ * A count gives a range from today ("last 3 months" -> since = today - 3
+ * months, until = today; "next 2 weeks" -> since = today, until = today +
+ * 2 weeks).  A quarter or week gives since/until bounding that whole
+ * period (relative_span).  Any other unit ("next january", "last monday",
+ * "this year", "next day", "last month") resolves through determine_when
+ * to the inclusion specifier, the same date that since/until/in use.
  */
 void date_parser_t::handle_relative_token(lexer_t::token_t& tok,
                                           optional<date_specifier_t>& since_specifier,
@@ -1425,9 +1407,9 @@ void date_parser_t::handle_relative_token(lexer_t::token_t& tok,
   else if (tok.kind == lexer_t::token_t::TOK_LAST)
     adjust = -1;
 
-  tok = lexer.next_token();
-  switch (tok.kind) {
+  switch (lexer.peek_token().kind) {
   case lexer_t::token_t::TOK_INT: {
+    tok = lexer.next_token();
     // "last 3 months" / "next 2 weeks" / "this 5 days"
     unsigned short amount = std::get<unsigned short>(*tok.value);
     date_t base(today);
@@ -1470,111 +1452,26 @@ void date_parser_t::handle_relative_token(lexer_t::token_t& tok,
     break;
   }
 
-  case lexer_t::token_t::TOK_A_MONTH: {
-    // "next january" / "last march"
-    inclusion_specifier = date_specifier_t();
-    determine_when(tok, *inclusion_specifier);
-
-    date_t temp(today.year(), *inclusion_specifier->month, 1);
-    temp += gregorian::years(adjust);
-    inclusion_specifier =
-        date_specifier_t(static_cast<date_specifier_t::year_type>(temp.year()), temp.month());
-    break;
-  }
-
-  case lexer_t::token_t::TOK_A_WDAY: {
-    // "next monday" / "last friday"
-    inclusion_specifier = date_specifier_t();
-    determine_when(tok, *inclusion_specifier);
-
-    date_t temp = date_duration_t::find_nearest(today, date_duration_t::WEEKS);
-    while (temp.day_of_week() != inclusion_specifier->wday)
-      temp += gregorian::days(1);
-    temp += gregorian::days(static_cast<int>(7 * adjust));
-    inclusion_specifier = date_specifier_t(temp);
-    break;
-  }
-
-  case lexer_t::token_t::TOK_YEAR: {
-    // "next year" / "last year"
-    date_t temp(today);
-    temp += gregorian::years(adjust);
-    inclusion_specifier = date_specifier_t(static_cast<date_specifier_t::year_type>(temp.year()));
-    break;
-  }
-
-  case lexer_t::token_t::TOK_QUARTER: {
-    // "this quarter" / "next quarter" / "last quarter"
-    // Produces since/until specifiers bounding the quarter.
-    date_t base = date_duration_t::find_nearest(today, date_duration_t::QUARTERS);
-    date_t temp;
-    if (adjust < 0) {
-      temp = base + gregorian::months(3 * adjust);
-    } else if (adjust == 0) {
-      temp = base + gregorian::months(3);
-    } else if (adjust > 0) {
-      base += gregorian::months(3 * adjust);
-      temp = base + gregorian::months(3 * adjust);
-    }
-    since_specifier = date_specifier_t(adjust < 0 ? temp : base);
-    until_specifier = date_specifier_t(adjust < 0 ? base : temp);
-    break;
-  }
-
+  case lexer_t::token_t::TOK_QUARTER:
   case lexer_t::token_t::TOK_WEEK: {
-    // "this week" / "next week" / "last week"
-    // Produces since/until specifiers bounding the week.
-    date_t base = date_duration_t::find_nearest(today, date_duration_t::WEEKS);
-    date_t temp;
-    if (adjust < 0) {
-      temp = base + gregorian::days(static_cast<int>(7 * adjust));
-    } else if (adjust == 0) {
-      temp = base + gregorian::days(7);
-    } else if (adjust > 0) {
-      base += gregorian::days(static_cast<int>(7 * adjust));
-      temp = base + gregorian::days(static_cast<int>(7 * adjust));
-    }
-    since_specifier = date_specifier_t(adjust < 0 ? temp : base);
-    until_specifier = date_specifier_t(adjust < 0 ? base : temp);
-    break;
-  }
-
-  case lexer_t::token_t::TOK_DAY: {
-    // "next day" / "last day"
-    date_t temp(today);
-    temp += gregorian::days(adjust);
-    inclusion_specifier = date_specifier_t(temp);
+    // "this quarter" / "last week": since/until bound the whole period.
+    tok = lexer.next_token();
+    const auto [begin, end] =
+        relative_span(adjust,
+                      tok.kind == lexer_t::token_t::TOK_QUARTER ? date_duration_t::QUARTERS
+                                                                : date_duration_t::WEEKS,
+                      today);
+    since_specifier = date_specifier_t(begin);
+    until_specifier = date_specifier_t(end);
     break;
   }
 
   default:
-  case lexer_t::token_t::TOK_MONTH: {
-    // "this month" / "next month" / "last month"
-    // Also the default case for unrecognized unit tokens.
-    date_t temp(today);
-    temp += gregorian::months(adjust);
-    inclusion_specifier =
-        date_specifier_t(static_cast<date_specifier_t::year_type>(temp.year()), temp.month());
-    break;
-  }
-  }
-}
-
-/// @brief Map "today"/"tomorrow"/"yesterday" to an inclusion specifier.
-void date_parser_t::handle_simple_period_token(lexer_t::token_t::kind_t kind,
-                                               optional<date_specifier_t>& inclusion_specifier,
-                                               const date_t& today) {
-  switch (kind) {
-  case lexer_t::token_t::TOK_TODAY:
-    inclusion_specifier = date_specifier_t(today);
-    break;
-  case lexer_t::token_t::TOK_TOMORROW:
-    inclusion_specifier = date_specifier_t(today + gregorian::days(1));
-    break;
-  case lexer_t::token_t::TOK_YESTERDAY:
-    inclusion_specifier = date_specifier_t(today - gregorian::days(1));
-    break;
-  default:
+    // A month or weekday name, year, month or day ("next january", "last
+    // monday", "this year"): the same date or year-month that since, until
+    // and in resolve to.
+    inclusion_specifier = date_specifier_t();
+    determine_when(tok, *inclusion_specifier);
     break;
   }
 }
@@ -1713,7 +1610,7 @@ date_interval_t date_parser_t::parse() {
   optional<date_specifier_t> inclusion_specifier;
 
   date_interval_t period;
-  date_t today = epoch ? epoch->date() : CURRENT_DATE();
+  date_t today = CURRENT_DATE();
   bool end_inclusive = false;
 
   // Main parsing loop - process tokens sequentially
@@ -1726,6 +1623,9 @@ date_interval_t date_parser_t::parse() {
     case lexer_t::token_t::TOK_INT:
     case lexer_t::token_t::TOK_A_MONTH:
     case lexer_t::token_t::TOK_A_WDAY:
+    case lexer_t::token_t::TOK_TODAY:
+    case lexer_t::token_t::TOK_TOMORROW:
+    case lexer_t::token_t::TOK_YESTERDAY:
       handle_date_token(tok, inclusion_specifier);
       break;
 
@@ -1752,13 +1652,6 @@ date_interval_t date_parser_t::parse() {
     case lexer_t::token_t::TOK_NEXT:
     case lexer_t::token_t::TOK_LAST:
       handle_relative_token(tok, since_specifier, until_specifier, inclusion_specifier, today);
-      break;
-
-    // Simple period tokens (today/tomorrow/yesterday)
-    case lexer_t::token_t::TOK_TODAY:
-    case lexer_t::token_t::TOK_TOMORROW:
-    case lexer_t::token_t::TOK_YESTERDAY:
-      handle_simple_period_token(tok.kind, inclusion_specifier, today);
       break;
 
     // Recurring period specifications
@@ -1795,6 +1688,33 @@ date_interval_t date_parser_t::parse() {
 void date_interval_t::parse(const string& str) {
   date_parser_t parser(str);
   *this = parser.parse();
+}
+
+/**
+ * @brief Resolve a whole string that is one day keyword to its date.
+ *
+ * The keywords are the period lexer's today/tday, tomorrow/tmrw and
+ * yesterday/yday, matched without regard to case, so the xact command's
+ * positional date accepts the same words as --begin, --period and `on`.
+ */
+optional<date_t> string_to_relative_date(const std::string& str) {
+  try {
+    date_parser_t::lexer_t lexer(str.begin(), str.end());
+    switch (lexer.next_token().kind) {
+    case date_parser_t::lexer_t::token_t::TOK_TODAY:
+    case date_parser_t::lexer_t::token_t::TOK_TOMORROW:
+    case date_parser_t::lexer_t::token_t::TOK_YESTERDAY:
+      if (lexer.next_token().kind == date_parser_t::lexer_t::token_t::END_REACHED)
+        return date_interval_t(str).begin();
+      break;
+    default:
+      break;
+    }
+  } catch (const std::exception&) { // NOLINT(bugprone-empty-catch)
+    // The lexer rejects the text (e.g. "today," or a number too large for a
+    // day or year), so it is not a day keyword.
+  }
+  return none;
 }
 
 /**
@@ -1919,15 +1839,17 @@ date_t date_duration_t::find_nearest(const date_t& date, skip_quantum_t skip) {
  * (which may have relative references like "monthly") into a concrete
  * start/finish/end_of_duration for a specific reference date.  It:
  *
- *   1. Finds the natural period boundary (via find_nearest) for the
- *      duration's quantum that contains or precedes the reference date.
+ *   1. Without an explicit since date, finds the natural period boundary
+ *      (via find_nearest) for the duration's quantum that contains or
+ *      precedes the reference date.
  *
- *   2. For months/quarters/years with an explicit since date, either
- *      preserves the user's day-of-period (advancing by whole intervals)
- *      or snaps to the period boundary.
+ *   2. With an explicit since date (weeks, months, quarters and years),
+ *      starts at the reference date when align_intervals is set, and
+ *      otherwise at the since date advanced by whole intervals, keeping
+ *      the user's day-of-period.
  *
- *   3. For weeks, starts from a point sufficiently far back that the
- *      subsequent scan will find the correct period.
+ *   3. For weeks without a since date, starts from a point sufficiently
+ *      far back that the subsequent scan will find the correct period.
  *
  *   4. Iterates forward through periods until the one containing the
  *      reference date is found.
@@ -2382,9 +2304,9 @@ date_parser_t::lexer_t::token_t date_parser_t::lexer_t::next_token() {
       return token_t(token_t::TOK_LAST);
     else if (term == _("every"))
       return token_t(token_t::TOK_EVERY);
-    else if (term == _("today"))
+    else if (term == _("today") || term == _("tday"))
       return token_t(token_t::TOK_TODAY);
-    else if (term == _("tomorrow"))
+    else if (term == _("tomorrow") || term == _("tmrw"))
       return token_t(token_t::TOK_TOMORROW);
     else if (term == _("yesterday") or term == _("yday"))
       return token_t(token_t::TOK_YESTERDAY);

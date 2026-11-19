@@ -1,5 +1,4 @@
 ; Coverage tests for times.cc (format_datetime/format_date FMT_CUSTOM)
-; Also covers times.cc (default case break in handle_simple_period_token)
 ; Also covers times.cc (date validation mismatch check)
 
 2024/01/01 Payee

@@ -9561,10 +9561,12 @@ The following keywords can be used to specify common dates:
 
 @table @code
 @item today
-The current date.
+@itemx tday
+The current date (both @code{today} and @code{tday} can be used).
 
 @item tomorrow
-The day after today.
+@itemx tmrw
+The day after today (both @code{tomorrow} and @code{tmrw} can be used).
 
 @item yesterday
 @itemx yday
