@@ -1,0 +1,40 @@
+; Journal for test/regress/balance-assignment-lot-amount.test.  It cannot be
+; that file's inline journal: the Lean oracle that test/semantic/check_all.py
+; runs reads an annotated target such as "= 12 AAPL {$100.00}" as a target
+; for the whole AAPL holding, where ledger assigns only the {$100.00} lot,
+; and check_all.py fails on any inline positive journal the oracle
+; disagrees with.
+
+2024/01/01 Opening
+    Assets:Broker              3 AAPL
+    Assets:Broker              2 AAPL {$90.00}
+    Assets:Cash
+
+2024/01/02 Single lot left over
+    Assets:Broker              = 3 AAPL
+    Equity:Adjustments
+
+2024/01/03 Two lots
+    Assets:Stocks              10 AAPL {$100.00}
+    Assets:Stocks              5 AAPL {$110.00}
+    Assets:Cash
+
+2024/01/04 Several lots
+    Assets:Stocks              = 20 AAPL
+    Equity:Adjustments
+
+2024/01/05 Annotated target
+    Assets:Stocks              = 12 AAPL {$100.00}
+    Equity:Adjustments
+
+2024/01/06 Other commodity
+    Assets:Broker              = 5 EUR
+    Equity:Adjustments
+
+2024/01/07 Annotated other lot
+    Assets:Stocks              = 3 AAPL {$120.00}
+    Equity:Adjustments
+
+2024/01/08 Annotated zero
+    Assets:Stocks              = 0 AAPL {$100.00}
+    Equity:Adjustments

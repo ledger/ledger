@@ -801,21 +801,14 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
                 // Recompute the diff preserving lot annotations (cost basis
                 // and lot date) so that the assigned amount retains them.
                 balance_t ann_diff = compute_balance_diff(amt, post.get(), xact, false, context);
-                // Use annotated diff if it can be represented as a single
-                // amount; fall back to the stripped diff otherwise (e.g.
-                // when multiple lots with different annotations exist).
-                try {
-                  post->amount = ann_diff.to_amount();
-                } catch (...) {
-                  post->amount = diff.to_amount();
-                }
+                // Use the annotated diff if it is a single amount; fall back
+                // to the stripped diff otherwise (e.g. when multiple lots with
+                // different annotations exist).
+                post->amount = ann_diff.single_amount() ? ann_diff.to_amount() : diff.to_amount();
               } else {
-                // Diff already has annotations; use it directly.
-                try {
-                  post->amount = diff.to_amount();
-                } catch (...) {
-                  post->amount = diff.strip_annotations(keep_details_t()).to_amount();
-                }
+                // An annotated target has a commodity, so diff was restricted
+                // above to that one lot and is a single amount.
+                post->amount = diff.to_amount();
               }
               DEBUG("textual.parse", "line " << context.linenum << ": "
                                              << "Overwrite null posting with " << post->amount);

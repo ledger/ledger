@@ -1,0 +1,21 @@
+; A commodity-less balance assignment ("= 0") on an account holding two
+; commodities cannot be expressed as one posting amount, so parsing fails
+; with the balance conversion error.
+
+2024/01/01 Two commodities
+    Assets:Mixed               10 AAPL
+    Assets:Mixed               5 EUR
+    Assets:Cash
+
+2024/01/02 Zero everything
+    Assets:Mixed               = 0
+    Equity:Adjustments
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 11:
+While parsing posting:
+  Assets:Mixed               = 0
+                               ^
+Error: Cannot convert a balance with multiple commodities to an amount
+end test
