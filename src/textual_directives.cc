@@ -530,38 +530,13 @@ void instance_t::apply_account_directive(char* line) {
 
 void instance_t::apply_tag_directive(char* line) {
   string tag(trim_ws(line));
-
-  // Register the tag name(s) as known so that --strict mode does not warn
-  // about them.  Using 'apply tag' is an explicit act that declares the tag.
-  // This mirrors what 'tag <name>' does via tag_directive.
-  if (tag.find(':') == string::npos) {
-    // Simple boolean tag (no colon): register it and wrap in colons.
-    context.journal->register_metadata(tag, NULL_VALUE, 0);
+  if (tag.find(':') == string::npos)
     tag = string(":") + tag + ":";
-  } else if (!tag.empty() && tag.front() == ':') {
-    // ":name1:name2:" format: register each tag name between colons.
-    string inner = tag.substr(1);
-    if (!inner.empty() && inner.back() == ':')
-      inner.pop_back();
-    string::size_type pos = 0;
-    while (pos <= inner.size()) {
-      string::size_type next = inner.find(':', pos);
-      if (next == string::npos)
-        next = inner.size();
-      string name = inner.substr(pos, next - pos);
-      trim(name);
-      if (!name.empty())
-        context.journal->register_metadata(name, NULL_VALUE, 0);
-      pos = next + 1;
-    }
-  } else {
-    // "tagname: value" format: register just the name before the colon.
-    string::size_type colon = tag.find(':');
-    string name = tag.substr(0, colon);
-    trim(name);
-    if (!name.empty())
-      context.journal->register_metadata(name, NULL_VALUE, 0);
-  }
+
+  // Declare the names the tag string applies, read by the same scanner that
+  // applies them to each transaction, so that --strict does not warn.
+  for (const metadata_t::parsed_tag_t& parsed : metadata_t::scan_metadata_tags(tag.c_str()))
+    context.journal->register_metadata(parsed.name, NULL_VALUE, 0);
 
   apply_stack.push_front(application_t("tag", tag));
 }

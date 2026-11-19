@@ -117,19 +117,44 @@ public:
                                        bool overwrite_existing = true);
 
   /**
-   * @brief Parse `:tag:` and `Key:`/`Key::` metadata from a comment line.
+   * @brief One tag found in a comment by scan_metadata_tags().
    *
-   * Recognizes:
+   * A bare `:name:` tag has no value; a `Key:` or `Key::` setting
+   * carries the trimmed rest of the line, which is an expression when
+   * @c by_value is set.
+   */
+  struct parsed_tag_t {
+    string name;
+    std::optional<string> value;
+    bool by_value = false;
+  };
+
+  /**
+   * @brief Find the `:tag:` and `Key:`/`Key::` metadata in a comment line.
+   *
+   * This is the tokenizer of parse_metadata_tags(); it sets and
+   * evaluates nothing.  Recognizes:
    *   - `:tag1:tag2:tag3:` -- colon-delimited bare tags.
    *   - `Key: value`       -- the first whitespace-delimited token ending
    *                           in `:` names a key whose value is the rest of
    *                           the line as a string.
-   *   - `Key:: expr`       -- like `Key:` but the value is parsed and
-   *                           evaluated as an expression in @p outer_scope
-   *                           bound through @p self_scope.
+   *   - `Key:: expr`       -- like `Key:` but the value is an expression,
+   *                           which parse_metadata_tags() evaluates.
    *
    * Skips a leading run of `;`/whitespace so that comments written as
    * `;;Key: value` parse the same as `; Key: value` (issue #1786).
+   *
+   * @param p Raw comment text.
+   * @return  The tags in the order they appear.
+   */
+  static std::vector<parsed_tag_t> scan_metadata_tags(const char* p);
+
+  /**
+   * @brief Parse `:tag:` and `Key:`/`Key::` metadata from a comment line.
+   *
+   * Applies the tags scan_metadata_tags() finds in @p p, in order,
+   * marking each as parsed from a comment.  A `Key:: expr` value is
+   * evaluated in @p outer_scope bound through @p self_scope.
    *
    * @param p                  Raw comment text.
    * @param outer_scope        Scope used to evaluate `Key:: expr` forms.

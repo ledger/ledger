@@ -130,8 +130,9 @@ metadata_t::string_map::iterator metadata_t::set_tag(const string& tag,
   return i;
 }
 
-void metadata_t::parse_metadata_tags(const char* p, scope_t& outer_scope, scope_t& self_scope,
-                                     bool overwrite_existing) {
+std::vector<metadata_t::parsed_tag_t> metadata_t::scan_metadata_tags(const char* p) {
+  std::vector<parsed_tag_t> found;
+
   // Skip any additional leading `;` characters (with interleaved whitespace).
   // The first `;` has already been consumed by the caller, but comments
   // written as `;;Key: value` or `;  ;Key: value` would otherwise see the
@@ -140,13 +141,11 @@ void metadata_t::parse_metadata_tags(const char* p, scope_t& outer_scope, scope_
     ++p;
 
   if (!std::strchr(p, ':'))
-    return;
+    return found;
 
   string str(p);
   string::size_type pos = 0;
 
-  string tag;
-  bool by_value = false;
   bool first = true;
 
   while (pos < str.length()) {
@@ -169,33 +168,40 @@ void metadata_t::parse_metadata_tags(const char* p, scope_t& outer_scope, scope_
       std::vector<string> tag_names;
       boost::split(tag_names, tag_str, boost::is_any_of(":"));
       for (const string& tag_name : tag_names) {
-        if (!tag_name.empty()) {
-          string_map::iterator i = set_tag(tag_name, std::nullopt, overwrite_existing);
-          i->second.second = true;
-        }
+        if (!tag_name.empty())
+          found.push_back({tag_name, std::nullopt, false});
       }
     } else if (first && token[token.length() - 1] == ':') { // a metadata setting
+      bool by_value = false;
       std::size_t index = 1;
       if (token[token.length() - 2] == ':') {
         by_value = true;
         index = 2;
       }
-      tag = token.substr(0, token.length() - index);
-
-      string_map::iterator i;
-      string field(p + end); // NOLINT(bugprone-unused-local-non-trivial-variable)
+      string field(p + end);
       trim(field);
-      if (by_value) {
-        bind_scope_t bound_scope(outer_scope, self_scope);
-        i = set_tag(tag, expr_t(field).calc(bound_scope), overwrite_existing);
-      } else {
-        i = set_tag(tag, string_value(field), overwrite_existing);
-      }
-      i->second.second = true;
+      found.push_back({token.substr(0, token.length() - index), field, by_value});
       break;
     }
     first = false;
     pos = end;
+  }
+  return found;
+}
+
+void metadata_t::parse_metadata_tags(const char* p, scope_t& outer_scope, scope_t& self_scope,
+                                     bool overwrite_existing) {
+  for (const parsed_tag_t& t : scan_metadata_tags(p)) {
+    string_map::iterator i;
+    if (!t.value) {
+      i = set_tag(t.name, std::nullopt, overwrite_existing);
+    } else if (t.by_value) {
+      bind_scope_t bound_scope(outer_scope, self_scope);
+      i = set_tag(t.name, expr_t(*t.value).calc(bound_scope), overwrite_existing);
+    } else {
+      i = set_tag(t.name, string_value(*t.value), overwrite_existing);
+    }
+    i->second.second = true;
   }
 }
 
