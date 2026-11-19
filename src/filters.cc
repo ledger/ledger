@@ -1107,6 +1107,8 @@ changed_value_posts::changed_value_posts(post_handler_ptr handler, report_t& _re
       display_total_expr(report.HANDLER(display_total_).expr), cost_expr("cost"),
       changed_values_only(report.HANDLED(revalued_only)),
       historical_prices_only(report.HANDLED(historical)), for_accounts_report(_for_accounts_report),
+      suppress_for_plot(report.HANDLED(period_) &&
+                        (report.HANDLED(amount_data) || report.HANDLED(total_data))),
       value_from_cost(uses_cost_baseline(_report, _for_accounts_report)),
       amount_expr(report.HANDLER(amount_).expr),
       held_value_expr("market(amount, value_date, exchange)"),
@@ -1199,8 +1201,6 @@ void changed_value_posts::flush() {
     // every holding at the terminus regardless of when it was acquired,
     // and the equity rows must cover that whole change.
     if (!historical_prices_only) {
-      bool suppress_for_plot =
-          report.HANDLED(period_) && (report.HANDLED(amount_data) || report.HANDLED(total_data));
       if (!for_accounts_report && !suppress_for_plot)
         output_intermediate_prices(*last_post, report.terminus.date());
       last_total =
@@ -1218,8 +1218,6 @@ void changed_value_posts::flush() {
       // the correct market value at its end date, and extra intra-period
       // revaluations would create unwanted extra data points for gnuplot
       // (issue #984).
-      bool suppress_for_plot =
-          report.HANDLED(period_) && (report.HANDLED(amount_data) || report.HANDLED(total_data));
       if (!for_accounts_report && !suppress_for_plot)
         output_intermediate_prices(*last_post, report.terminus.date());
       output_revaluation(*last_post, report.terminus.date());
@@ -1731,8 +1729,6 @@ void changed_value_posts::operator()(post_t& post) {
       // In plot mode (-j/-J) combined with period mode (-M/--period),
       // suppress intermediate price entries between periods so that each
       // period produces exactly one data point for gnuplot (issue #984).
-      bool suppress_for_plot =
-          report.HANDLED(period_) && (report.HANDLED(amount_data) || report.HANDLED(total_data));
       if (!for_accounts_report && !historical_prices_only && !suppress_for_plot)
         output_intermediate_prices(*last_post, post.value_date());
 

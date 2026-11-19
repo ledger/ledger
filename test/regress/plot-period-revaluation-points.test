@@ -1,0 +1,41 @@
+; A --period report in plot mode (-j or -J) prints one data point per
+; period (#984): changed_value_posts leaves out the revaluations it would
+; otherwise insert at each price between two periods and between the last
+; period and the end of the report, and revalues once instead.  Without
+; that, the two March prices below would each add a point after February.
+
+P 2011-01-15 AAPL $309.23
+P 2011-02-15 AAPL $320.00
+P 2011-03-10 AAPL $330.00
+P 2011-03-20 AAPL $340.00
+
+2011-01-10 Purchase AAPL
+    Assets:401K:AAPL        100 AAPL @ $309.23
+    Assets:Cash
+
+2011-02-10 Purchase AAPL
+    Assets:401K:AAPL         10 AAPL @ $320.00
+    Assets:Cash
+
+test reg -J -M -X $ --now 2011/04/15 Assets:401K
+2011-01-01 30923
+2011-02-01 32000
+2011-02-01 35200
+2011-04-15 37400
+end test
+
+test reg -j -M -X $ --now 2011/04/15 Assets:401K
+2011-01-01 30923
+2011-02-01 1077
+2011-02-01 3200
+2011-04-15 2200
+end test
+
+; The same report outside plot mode shows the revaluations plot mode omits.
+test reg -M -X $ --now 2011/04/15 Assets:401K
+11-Jan-01 - 11-Jan-31  Assets:401K:AAPL            $30923.00    $30923.00
+11-Feb-10 Commoditie.. <Revalued>                   $1077.00    $32000.00
+11-Feb-01 - 11-Feb-28  Assets:401K:AAPL             $3200.00    $35200.00
+11-Mar-10 Commoditie.. <Revalued>                   $1100.00    $36300.00
+11-Mar-20 Commoditie.. <Revalued>                   $1100.00    $37400.00
+end test

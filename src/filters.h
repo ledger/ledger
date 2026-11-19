@@ -872,6 +872,7 @@ class changed_value_posts : public item_handler<post_t> {
   bool changed_values_only; ///< If true, only show postings where value changed (--revalued-only).
   bool historical_prices_only;      ///< If true, skip intermediate price lookups (--historical).
   bool for_accounts_report;         ///< Whether this is an accounts (balance) report.
+  const bool suppress_for_plot;     ///< --period with -j/-J: no intermediate prices (#984).
   bool value_from_cost;             ///< Accounts report under -V/-X with --unrealized working from
                                     ///< cost baselines: see the class note (uses_cost_baseline()).
   expr_t& amount_expr;              ///< The report's amount expression (value_from_cost).
