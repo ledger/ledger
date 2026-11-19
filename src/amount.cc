@@ -665,34 +665,34 @@ bool amount_t::operator==(const amount_t& amt) const {
 /*----------------------------------------------------------------------*/
 
 /**
- * @brief Add another amount to this one in place.
- *
- * Both amounts must be initialized and share the same commodity.
- * The result's precision is the maximum of the two operands'
- * precisions, so that no decimal information is lost in the sum.
- *
- * Triggers copy-on-write via _dup() before mutating the GMP value.
+ * @brief The shared body of operator+= and operator-=: add @p amt to
+ * this amount, or subtract it when @p subtract is true, in place.
  */
-amount_t& amount_t::operator+=(const amount_t& amt) {
+amount_t& amount_t::add_or_subtract(const amount_t& amt, bool subtract) {
   VERIFY(amt.valid());
 
   if (!quantity || !amt.quantity) {
     if (quantity)
-      throw_(amount_error, _("Cannot add an uninitialized amount to an amount"));
+      throw_(amount_error, subtract ? _("Cannot subtract an uninitialized amount from an amount")
+                                    : _("Cannot add an uninitialized amount to an amount"));
     else if (amt.quantity)
-      throw_(amount_error, _("Cannot add an amount to an uninitialized amount"));
+      throw_(amount_error, subtract ? _("Cannot subtract an amount from an uninitialized amount")
+                                    : _("Cannot add an amount to an uninitialized amount"));
     else
-      throw_(amount_error, _("Cannot add two uninitialized amounts"));
+      throw_(amount_error, subtract ? _("Cannot subtract two uninitialized amounts")
+                                    : _("Cannot add two uninitialized amounts"));
   }
 
-  if (has_commodity() && amt.has_commodity() && commodity() != amt.commodity()) {
-    throw_(amount_error, _f("Adding amounts with different commodities: '%1%' != '%2%'") %
-                             commodity() % amt.commodity());
-  }
+  if (has_commodity() && amt.has_commodity() && commodity() != amt.commodity())
+    throw_(amount_error,
+           boost::format(subtract
+                             ? _("Subtracting amounts with different commodities: '%1%' != '%2%'")
+                             : _("Adding amounts with different commodities: '%1%' != '%2%'")) %
+               commodity() % amt.commodity());
 
   _dup();
 
-  mpq_add(MP(quantity), MP(quantity), MP(amt.quantity));
+  (subtract ? mpq_sub : mpq_add)(MP(quantity), MP(quantity), MP(amt.quantity));
 
   if (has_commodity() == amt.has_commodity())
     if (quantity->prec < amt.quantity->prec)
@@ -712,42 +712,25 @@ amount_t& amount_t::operator+=(const amount_t& amt) {
 }
 
 /**
+ * @brief Add another amount to this one in place.
+ *
+ * Both amounts must be initialized and share the same commodity.
+ * The result's precision is the maximum of the two operands'
+ * precisions, so that no decimal information is lost in the sum.
+ *
+ * Triggers copy-on-write via _dup() before mutating the GMP value.
+ */
+amount_t& amount_t::operator+=(const amount_t& amt) {
+  return add_or_subtract(amt, false);
+}
+
+/**
  * @brief Subtract another amount from this one in place.
  *
  * Same commodity and precision rules as operator+=.
  */
 amount_t& amount_t::operator-=(const amount_t& amt) {
-  VERIFY(amt.valid());
-
-  if (!quantity || !amt.quantity) {
-    if (quantity)
-      throw_(amount_error, _("Cannot subtract an amount from an uninitialized amount"));
-    else if (amt.quantity)
-      throw_(amount_error, _("Cannot subtract an uninitialized amount from an amount"));
-    else
-      throw_(amount_error, _("Cannot subtract two uninitialized amounts"));
-  }
-
-  if (has_commodity() && amt.has_commodity() && commodity() != amt.commodity()) {
-    throw_(amount_error, _f("Subtracting amounts with different commodities: '%1%' != '%2%'") %
-                             commodity() % amt.commodity());
-  }
-
-  _dup();
-
-  mpq_sub(MP(quantity), MP(quantity), MP(amt.quantity));
-
-  if (has_commodity() == amt.has_commodity())
-    if (quantity->prec < amt.quantity->prec)
-      quantity->prec = amt.quantity->prec;
-
-  // See the comment in operator+= -- BIGINT_COST_PREC must not
-  // propagate through arithmetic, or running-total residuals inherit
-  // it and surface as non-zero (issues #1692 / #717).
-  if (quantity->has_flags(BIGINT_COST_PREC))
-    quantity->drop_flags(BIGINT_COST_PREC);
-
-  return *this;
+  return add_or_subtract(amt, true);
 }
 
 /**

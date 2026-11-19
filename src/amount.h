@@ -149,6 +149,10 @@ protected:
   void _clear();
   void _release();
 
+  /** The body of operator+= (subtract false) and operator-= (subtract
+      true): checks, arithmetic, precision and the BIGINT_COST_PREC drop. */
+  amount_t& add_or_subtract(const amount_t& amt, bool subtract);
+
   struct bigint_t;
 
   bigint_t* quantity;

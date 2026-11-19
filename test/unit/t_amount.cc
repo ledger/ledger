@@ -2802,4 +2802,38 @@ BOOST_AUTO_TEST_CASE(testSetPrecisionIfExact)
   BOOST_CHECK_THROW(x4.set_precision_if_exact(2), amount_error);
 }
 
+BOOST_AUTO_TEST_CASE(testAddSubtractErrorMessages)
+{
+  // operator+= and operator-= share one implementation.  Each error names
+  // its own operation and gives the operands in the order written:
+  // `x -= y` subtracts y from x.
+  auto names = [](const string& text) {
+    return [text](const amount_error& err) { return string(err.what()) == text; };
+  };
+  const amount_t dollars("$1.00");
+  const amount_t euros("1.00 EUR");
+  const amount_t none;
+
+  BOOST_CHECK_EXCEPTION(amount_t(dollars) += none, amount_error,
+                        names("Cannot add an uninitialized amount to an amount"));
+  BOOST_CHECK_EXCEPTION(amount_t(none) += dollars, amount_error,
+                        names("Cannot add an amount to an uninitialized amount"));
+  BOOST_CHECK_EXCEPTION(amount_t(none) += none, amount_error,
+                        names("Cannot add two uninitialized amounts"));
+  BOOST_CHECK_EXCEPTION(amount_t(dollars) -= none, amount_error,
+                        names("Cannot subtract an uninitialized amount from an amount"));
+  BOOST_CHECK_EXCEPTION(amount_t(none) -= dollars, amount_error,
+                        names("Cannot subtract an amount from an uninitialized amount"));
+  BOOST_CHECK_EXCEPTION(amount_t(none) -= none, amount_error,
+                        names("Cannot subtract two uninitialized amounts"));
+  BOOST_CHECK_EXCEPTION(amount_t(dollars) += euros, amount_error,
+                        names("Adding amounts with different commodities: '$' != 'EUR'"));
+  BOOST_CHECK_EXCEPTION(amount_t(dollars) -= euros, amount_error,
+                        names("Subtracting amounts with different commodities: '$' != 'EUR'"));
+
+  // The sum and difference themselves.
+  BOOST_CHECK_EQUAL(amount_t("$3.50"), amount_t("$1.25") + amount_t("$2.25"));
+  BOOST_CHECK_EQUAL(amount_t("$-1.00"), amount_t("$1.25") - amount_t("$2.25"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
