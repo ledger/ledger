@@ -1762,6 +1762,11 @@ ensuring that each account is at least
 .Ar account_len
 long.
 .\".It Sy uncleared
+.It Sy value_date
+Return the date at which market prices value the posting: the posting's
+date, unless the report assigns another, such as the last day of each
+.Fl \-period
+interval.
 .It Sy virtual
 Return true if the transaction is virtual, e.g automated, false otherwise.
 .\".It Sy xact

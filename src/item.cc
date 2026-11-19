@@ -236,6 +236,47 @@ template <value_t (*Func)(item_t&)>
 value_t get_wrapper(call_scope_t& scope) {
   return (*Func)(find_scope<item_t>(scope));
 }
+
+/// The functions item_t binds by name.
+constexpr symbol_entry_t<value_t (*)(call_scope_t&)> item_functions[] = {
+    {"L", get_wrapper<&get_actual>},
+    {"X", get_wrapper<&get_cleared>},
+    {"Y", get_wrapper<&get_pending>},
+    {"actual", get_wrapper<&get_actual>},
+    {"actual_date", get_wrapper<&get_primary_date>},
+    {"addr", get_wrapper<&get_addr>},
+    {"aux_date", get_wrapper<&get_aux_date>},
+    {"beg_line", get_wrapper<&get_beg_line>},
+    {"beg_pos", get_wrapper<&get_beg_pos>},
+    {"cleared", get_wrapper<&get_cleared>},
+    {"comment", get_wrapper<&get_comment>},
+    {"d", get_wrapper<&get_date>},
+    {"date", get_wrapper<&get_date>},
+    {"depth", get_wrapper<&get_depth>},
+    {"effective_date", get_wrapper<&get_aux_date>},
+    {"end_line", get_wrapper<&get_end_line>},
+    {"end_pos", get_wrapper<&get_end_pos>},
+    {"filebase", get_wrapper<&get_filebase>},
+    {"filename", get_wrapper<&get_pathname>},
+    {"filepath", get_wrapper<&get_filepath>},
+    {"has_meta", item_has_tag},
+    {"has_tag", item_has_tag},
+    {"id", get_wrapper<&get_id>},
+    {"is_account", get_wrapper<&ignore>},
+    {"meta", item_get_tag},
+    {"note", get_wrapper<&get_note>},
+    {"parent", get_wrapper<&ignore>},
+    {"pending", get_wrapper<&get_pending>},
+    {"primary_date", get_wrapper<&get_primary_date>},
+    {"seq", get_wrapper<&get_seq>},
+    {"state", get_wrapper<&get_status>},
+    {"status", get_wrapper<&get_status>},
+    {"tag", item_get_tag},
+    {"uncleared", get_wrapper<&get_uncleared>},
+    {"uuid", get_wrapper<&get_id>},
+    {"value_date", get_wrapper<&get_date>},
+};
+static_assert(symbol_table_sorted(item_functions), "item_functions must stay sorted");
 } // namespace
 
 /*----------------------------------------------------------------------*/
@@ -327,133 +368,9 @@ void item_t::define(const symbol_t::kind_t, const string& name, const expr_t::pt
  * and fall through to item_t::lookup() for base properties.
  */
 expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind, const string& name) {
-  if (kind != symbol_t::FUNCTION)
-    return nullptr;
-
-  // NOLINTBEGIN(bugprone-branch-clone)
-  switch (name[0]) {
-  case 'a':
-    if (name == "actual")
-      return WRAP_FUNCTOR(get_wrapper<&get_actual>);
-    else if (name == "actual_date")
-      return WRAP_FUNCTOR(get_wrapper<&get_primary_date>);
-    else if (name == "addr")
-      return WRAP_FUNCTOR(get_wrapper<&get_addr>);
-    else if (name == "aux_date")
-      return WRAP_FUNCTOR(get_wrapper<&get_aux_date>);
-    break;
-
-  case 'b':
-    if (name == "beg_line")
-      return WRAP_FUNCTOR(get_wrapper<&get_beg_line>);
-    else if (name == "beg_pos")
-      return WRAP_FUNCTOR(get_wrapper<&get_beg_pos>);
-    break;
-
-  case 'c':
-    if (name == "cleared")
-      return WRAP_FUNCTOR(get_wrapper<&get_cleared>);
-    else if (name == "comment")
-      return WRAP_FUNCTOR(get_wrapper<&get_comment>);
-    break;
-
-  case 'd':
-    if (name[1] == '\0' || name == "date")
-      return WRAP_FUNCTOR(get_wrapper<&get_date>);
-    else if (name == "depth")
-      return WRAP_FUNCTOR(get_wrapper<&get_depth>);
-    break;
-
-  case 'e':
-    if (name == "end_line")
-      return WRAP_FUNCTOR(get_wrapper<&get_end_line>);
-    else if (name == "end_pos")
-      return WRAP_FUNCTOR(get_wrapper<&get_end_pos>);
-    else if (name == "effective_date")
-      return WRAP_FUNCTOR(get_wrapper<&get_aux_date>);
-    break;
-
-  case 'f':
-    if (name == "filename")
-      return WRAP_FUNCTOR(get_wrapper<&get_pathname>);
-    else if (name == "filebase")
-      return WRAP_FUNCTOR(get_wrapper<&get_filebase>);
-    else if (name == "filepath")
-      return WRAP_FUNCTOR(get_wrapper<&get_filepath>);
-    break;
-
-  case 'h':
-    if (name == "has_tag" || name == "has_meta")
-      return WRAP_FUNCTOR(item_has_tag);
-    break;
-
-  case 'i':
-    if (name == "is_account")
-      return WRAP_FUNCTOR(get_wrapper<&ignore>);
-    else if (name == "id")
-      return WRAP_FUNCTOR(get_wrapper<&get_id>);
-    break;
-
-  case 'm':
-    if (name == "meta")
-      return WRAP_FUNCTOR(item_get_tag);
-    break;
-
-  case 'n':
-    if (name == "note")
-      return WRAP_FUNCTOR(get_wrapper<&get_note>);
-    break;
-
-  case 'p':
-    if (name == "pending")
-      return WRAP_FUNCTOR(get_wrapper<&get_pending>);
-    else if (name == "parent")
-      return WRAP_FUNCTOR(get_wrapper<&ignore>);
-    else if (name == "primary_date")
-      return WRAP_FUNCTOR(get_wrapper<&get_primary_date>);
-    break;
-
-  case 's':
-    if (name == "status" || name == "state")
-      return WRAP_FUNCTOR(get_wrapper<&get_status>);
-    else if (name == "seq")
-      return WRAP_FUNCTOR(get_wrapper<&get_seq>);
-    break;
-
-  case 't':
-    if (name == "tag")
-      return WRAP_FUNCTOR(item_get_tag);
-    break;
-
-  case 'u':
-    if (name == "uncleared")
-      return WRAP_FUNCTOR(get_wrapper<&get_uncleared>);
-    else if (name == "uuid")
-      return WRAP_FUNCTOR(get_wrapper<&get_id>);
-    break;
-
-  case 'v':
-    if (name == "value_date")
-      return WRAP_FUNCTOR(get_wrapper<&get_date>);
-    break;
-
-  case 'L':
-    if (name[1] == '\0')
-      return WRAP_FUNCTOR(get_wrapper<&get_actual>);
-    break;
-
-  case 'X':
-    if (name[1] == '\0')
-      return WRAP_FUNCTOR(get_wrapper<&get_cleared>);
-    break;
-
-  case 'Y':
-    if (name[1] == '\0')
-      return WRAP_FUNCTOR(get_wrapper<&get_pending>);
-    break;
-  }
-  // NOLINTEND(bugprone-branch-clone)
-
+  if (kind == symbol_t::FUNCTION)
+    if (const auto* fn = find_symbol(item_functions, name))
+      return WRAP_FUNCTOR(*fn);
   return nullptr;
 }
 

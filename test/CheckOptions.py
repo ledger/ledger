@@ -3,6 +3,7 @@
 import re
 import os
 import sys
+import glob
 import shlex
 import pathlib
 import argparse
@@ -95,7 +96,21 @@ class CheckOptions (object):
 
     regex = re.compile(r'fn_([^(]+)\(');
     functions = {match.group(1) for match in {regex.search(line) for line in output} if match}
-    return functions
+    # report_t binds its functions by name in report_functions (report.cc),
+    # where a name need not match its member (unround -> fn_unrounded).
+    return functions | self.ledger_table_names('report_functions')
+
+  def ledger_table_names(self, table=r'\w+_functions'):
+    """Return the names bound by the symbol_entry_t tables in src/*.cc whose
+    variable name matches the regex table (every table by default)."""
+    table_regex = re.compile(r'symbol_entry_t<.*?>\s+(?:%s)\[\]\s*=\s*\{(.*?)\n\};' % table, re.S)
+    row_regex = re.compile(r'\{"([A-Za-z_][A-Za-z0-9_]*)",')
+    names = set()
+    for path in sorted(glob.glob(os.path.join(self.source, 'src', '*.cc'))):
+      with open(path) as f:
+        for match in table_regex.finditer(f.read()):
+          names |= set(row_regex.findall(match.group(1)))
+    return names
 
   def main(self):
     options = self.find_options(self.source_file)

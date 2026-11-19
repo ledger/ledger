@@ -633,6 +633,49 @@ value_t fn_all(call_scope_t& args) {
   }
   return true;
 }
+
+/// The functions account_t binds by name.
+constexpr symbol_entry_t<value_t (*)(call_scope_t&)> account_functions[] = {
+    {"N", get_wrapper<&get_count>},
+    {"O", get_wrapper<&get_total>},
+    {"a", get_wrapper<&get_amount>},
+    {"account", &get_account},
+    {"account_base", get_wrapper<&get_account_base>},
+    {"addr", get_wrapper<&get_addr>},
+    {"all", &fn_all},
+    {"amount", get_wrapper<&get_amount>},
+    {"any", &fn_any},
+    {"cost", get_wrapper<&get_cost>},
+    {"count", get_wrapper<&get_count>},
+    {"d", get_wrapper<&get_account_date>},
+    {"date", get_wrapper<&get_account_date>},
+    {"depth", get_wrapper<&get_depth>},
+    {"depth_parent", get_wrapper<&get_depth_parent>},
+    {"depth_spacer", get_wrapper<&get_depth_spacer>},
+    {"display_parent", get_wrapper<&get_display_parent_account>},
+    {"earliest", get_wrapper<&get_earliest>},
+    {"earliest_checkin", get_wrapper<&get_earliest_checkin>},
+    {"has_children_to_display", get_wrapper<&get_has_children_to_display>},
+    {"has_meta", account_has_tag},
+    {"has_tag", account_has_tag},
+    {"is_account", get_wrapper<&get_true>},
+    {"is_index", get_wrapper<&get_subcount>},
+    {"l", get_wrapper<&get_depth>},
+    {"latest", get_wrapper<&get_latest>},
+    {"latest_checkout", get_wrapper<&get_latest_checkout>},
+    {"latest_checkout_cleared", get_wrapper<&get_latest_checkout_cleared>},
+    {"latest_cleared", get_wrapper<&get_latest_cleared>},
+    {"meta", account_get_tag},
+    {"n", get_wrapper<&get_subcount>},
+    {"note", get_wrapper<&get_note>},
+    {"parent", get_wrapper<&get_parent_account>},
+    {"partial_account", get_partial_name},
+    {"subcount", get_wrapper<&get_subcount>},
+    {"tag", account_get_tag},
+    {"total", get_wrapper<&get_total>},
+    {"use_direct_amount", get_wrapper<&ignore>},
+};
+static_assert(symbol_table_sorted(account_functions), "account_functions must stay sorted");
 } // namespace
 
 /**
@@ -644,128 +687,9 @@ value_t fn_all(call_scope_t& args) {
  * the name to a callable functor.
  */
 expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind, const string& fn_name) {
-  if (kind != symbol_t::FUNCTION)
-    return nullptr;
-
-  // NOLINTBEGIN(bugprone-branch-clone)
-  switch (fn_name[0]) {
-  case 'a':
-    if (fn_name[1] == '\0' || fn_name == "amount")
-      return WRAP_FUNCTOR(get_wrapper<&get_amount>);
-    else if (fn_name == "account")
-      return WRAP_FUNCTOR(&get_account);
-    else if (fn_name == "account_base")
-      return WRAP_FUNCTOR(get_wrapper<&get_account_base>);
-    else if (fn_name == "addr")
-      return WRAP_FUNCTOR(get_wrapper<&get_addr>);
-    else if (fn_name == "any")
-      return WRAP_FUNCTOR(&fn_any);
-    else if (fn_name == "all")
-      return WRAP_FUNCTOR(&fn_all);
-    break;
-
-  case 'c':
-    if (fn_name == "count")
-      return WRAP_FUNCTOR(get_wrapper<&get_count>);
-    else if (fn_name == "cost")
-      return WRAP_FUNCTOR(get_wrapper<&get_cost>);
-    break;
-
-  case 'd':
-    if (fn_name[1] == '\0' || fn_name == "date")
-      return WRAP_FUNCTOR(get_wrapper<&get_account_date>);
-    else if (fn_name == "depth")
-      return WRAP_FUNCTOR(get_wrapper<&get_depth>);
-    else if (fn_name == "depth_parent")
-      return WRAP_FUNCTOR(get_wrapper<&get_depth_parent>);
-    else if (fn_name == "depth_spacer")
-      return WRAP_FUNCTOR(get_wrapper<&get_depth_spacer>);
-    else if (fn_name == "display_parent")
-      return WRAP_FUNCTOR(get_wrapper<&get_display_parent_account>);
-    break;
-
-  case 'e':
-    if (fn_name == "earliest")
-      return WRAP_FUNCTOR(get_wrapper<&get_earliest>);
-    else if (fn_name == "earliest_checkin")
-      return WRAP_FUNCTOR(get_wrapper<&get_earliest_checkin>);
-    break;
-
-  case 'h':
-    if (fn_name == "has_children_to_display")
-      return WRAP_FUNCTOR(get_wrapper<&get_has_children_to_display>);
-    else if (fn_name == "has_tag" || fn_name == "has_meta")
-      return WRAP_FUNCTOR(account_has_tag);
-    break;
-
-  case 'm':
-    if (fn_name == "meta")
-      return WRAP_FUNCTOR(account_get_tag);
-    break;
-
-  case 'i':
-    if (fn_name == "is_account")
-      return WRAP_FUNCTOR(get_wrapper<&get_true>);
-    else if (fn_name == "is_index")
-      return WRAP_FUNCTOR(get_wrapper<&get_subcount>);
-    break;
-
-  case 'l':
-    if (fn_name[1] == '\0')
-      return WRAP_FUNCTOR(get_wrapper<&get_depth>);
-    else if (fn_name == "latest_cleared")
-      return WRAP_FUNCTOR(get_wrapper<&get_latest_cleared>);
-    else if (fn_name == "latest")
-      return WRAP_FUNCTOR(get_wrapper<&get_latest>);
-    else if (fn_name == "latest_checkout")
-      return WRAP_FUNCTOR(get_wrapper<&get_latest_checkout>);
-    else if (fn_name == "latest_checkout_cleared")
-      return WRAP_FUNCTOR(get_wrapper<&get_latest_checkout_cleared>);
-    break;
-
-  case 'n':
-    if (fn_name[1] == '\0')
-      return WRAP_FUNCTOR(get_wrapper<&get_subcount>);
-    else if (fn_name == "note")
-      return WRAP_FUNCTOR(get_wrapper<&get_note>);
-    break;
-
-  case 'p':
-    if (fn_name == "partial_account")
-      return WRAP_FUNCTOR(get_partial_name);
-    else if (fn_name == "parent")
-      return WRAP_FUNCTOR(get_wrapper<&get_parent_account>);
-    break;
-
-  case 's':
-    if (fn_name == "subcount")
-      return WRAP_FUNCTOR(get_wrapper<&get_subcount>);
-    break;
-
-  case 't':
-    if (fn_name == "tag")
-      return WRAP_FUNCTOR(account_get_tag);
-    else if (fn_name == "total")
-      return WRAP_FUNCTOR(get_wrapper<&get_total>);
-    break;
-
-  case 'u':
-    if (fn_name == "use_direct_amount")
-      return WRAP_FUNCTOR(get_wrapper<&ignore>);
-    break;
-
-  case 'N':
-    if (fn_name[1] == '\0')
-      return WRAP_FUNCTOR(get_wrapper<&get_count>);
-    break;
-
-  case 'O':
-    if (fn_name[1] == '\0')
-      return WRAP_FUNCTOR(get_wrapper<&get_total>);
-    break;
-  }
-  // NOLINTEND(bugprone-branch-clone)
-
+  if (kind == symbol_t::FUNCTION)
+    if (const auto* fn = find_symbol(account_functions, fn_name))
+      return WRAP_FUNCTOR(*fn);
   return nullptr;
 }
 

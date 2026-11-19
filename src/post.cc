@@ -610,6 +610,49 @@ value_t get_wrapper(call_scope_t& scope) {
   return (*Func)(find_scope<post_t>(scope));
 }
 
+/// The functions post_t binds by name, besides the posting amount's names
+/// (expr_t::is_post_amount_ident); anything else falls through to item_t.
+constexpr symbol_entry_t<value_t (*)(call_scope_t&)> post_functions[] = {
+    {"N", get_wrapper<&get_count>},
+    {"O", get_wrapper<&get_total>},
+    {"R", get_wrapper<&get_real>},
+    {"account", get_account},
+    {"account_base", get_wrapper<&get_account_base>},
+    {"account_id", get_wrapper<&get_account_id>},
+    {"all", &fn_post_all},
+    {"any", &fn_post_any},
+    {"b", get_wrapper<&get_cost>},
+    {"calculated", get_wrapper<&get_is_calculated>},
+    {"capital_gain", get_wrapper<&get_capital_gain>},
+    {"checkin", get_wrapper<&get_checkin>},
+    {"checkout", get_wrapper<&get_checkout>},
+    {"code", get_wrapper<&get_code>},
+    {"commodity", &get_commodity},
+    {"cost", get_wrapper<&get_cost>},
+    {"cost_calculated", get_wrapper<&get_is_cost_calculated>},
+    {"count", get_wrapper<&get_count>},
+    {"datetime", get_wrapper<&get_datetime>},
+    {"depth", get_wrapper<&get_account_depth>},
+    {"has_cost", get_wrapper<&get_has_cost>},
+    {"index", get_wrapper<&get_count>},
+    {"magnitude", get_wrapper<&get_magnitude>},
+    {"n", get_wrapper<&get_count>},
+    {"note", get_wrapper<&get_note>},
+    {"parent", get_wrapper<&get_xact>},
+    {"payee", get_wrapper<&get_payee>},
+    {"payee_changed", get_wrapper<&get_payee_changed>},
+    {"post", get_wrapper<&get_this>},
+    {"price", get_wrapper<&get_price>},
+    {"primary", get_wrapper<&get_commodity_is_primary>},
+    {"real", get_wrapper<&get_real>},
+    {"total", get_wrapper<&get_total>},
+    {"use_direct_amount", get_wrapper<&get_use_direct_amount>},
+    {"value_date", get_wrapper<&get_value_date>},
+    {"virtual", get_wrapper<&get_virtual>},
+    {"xact", get_wrapper<&get_xact>},
+    {"xact_id", get_wrapper<&get_xact_id>},
+};
+static_assert(symbol_table_sorted(post_functions), "post_functions must stay sorted");
 } // namespace
 
 value_t post_t::decorate_account_name(const value_t& name) const {
@@ -686,7 +729,7 @@ value_t fn_post_all(call_scope_t& args) {
  * @brief Map expression names to getter implementations for the posting scope.
  *
  * This dispatch table maps expression identifiers to the appropriate getter
- * functions defined above.  It uses a first-character switch for fast lookup.
+ * functions defined above.  The names are the rows of post_functions.
  *
  * Single-character aliases (used in format strings and expressions):
  *   - `a` = amount
@@ -706,137 +749,8 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind, const string& name)
   if (expr_t::is_post_amount_ident(name))
     return WRAP_FUNCTOR(get_wrapper<&get_amount>);
 
-  // NOLINTBEGIN(bugprone-branch-clone)
-  switch (name[0]) {
-  case 'a':
-    if (name == "account")
-      return WRAP_FUNCTOR(get_account);
-    else if (name == "account_base")
-      return WRAP_FUNCTOR(get_wrapper<&get_account_base>);
-    else if (name == "account_id")
-      return WRAP_FUNCTOR(get_wrapper<&get_account_id>);
-    else if (name == "any")
-      return WRAP_FUNCTOR(&fn_post_any);
-    else if (name == "all")
-      return WRAP_FUNCTOR(&fn_post_all);
-    break;
-
-  case 'b':
-    if (name[1] == '\0')
-      return WRAP_FUNCTOR(get_wrapper<&get_cost>);
-    break;
-
-  case 'c':
-    if (name == "code")
-      return WRAP_FUNCTOR(get_wrapper<&get_code>);
-    else if (name == "cost")
-      return WRAP_FUNCTOR(get_wrapper<&get_cost>);
-    else if (name == "capital_gain")
-      return WRAP_FUNCTOR(get_wrapper<&get_capital_gain>);
-    else if (name == "cost_calculated")
-      return WRAP_FUNCTOR(get_wrapper<&get_is_cost_calculated>);
-    else if (name == "count")
-      return WRAP_FUNCTOR(get_wrapper<&get_count>);
-    else if (name == "calculated")
-      return WRAP_FUNCTOR(get_wrapper<&get_is_calculated>);
-    else if (name == "commodity")
-      return WRAP_FUNCTOR(&get_commodity);
-    else if (name == "checkin")
-      return WRAP_FUNCTOR(get_wrapper<&get_checkin>);
-    else if (name == "checkout")
-      return WRAP_FUNCTOR(get_wrapper<&get_checkout>);
-    break;
-
-  case 'd':
-    if (name == "depth")
-      return WRAP_FUNCTOR(get_wrapper<&get_account_depth>);
-    else if (name == "datetime")
-      return WRAP_FUNCTOR(get_wrapper<&get_datetime>);
-    break;
-
-  case 'h':
-    if (name == "has_cost")
-      return WRAP_FUNCTOR(get_wrapper<&get_has_cost>);
-    break;
-
-  case 'i':
-    if (name == "index")
-      return WRAP_FUNCTOR(get_wrapper<&get_count>);
-    break;
-
-  case 'm':
-    if (name == "magnitude")
-      return WRAP_FUNCTOR(get_wrapper<&get_magnitude>);
-    break;
-
-  case 'n':
-    if (name == "note")
-      return WRAP_FUNCTOR(get_wrapper<&get_note>);
-    else if (name[1] == '\0')
-      return WRAP_FUNCTOR(get_wrapper<&get_count>);
-    break;
-
-  case 'p':
-    if (name == "post")
-      return WRAP_FUNCTOR(get_wrapper<&get_this>);
-    else if (name == "payee")
-      return WRAP_FUNCTOR(get_wrapper<&get_payee>);
-    else if (name == "payee_changed")
-      return WRAP_FUNCTOR(get_wrapper<&get_payee_changed>);
-    else if (name == "primary")
-      return WRAP_FUNCTOR(get_wrapper<&get_commodity_is_primary>);
-    else if (name == "price")
-      return WRAP_FUNCTOR(get_wrapper<&get_price>);
-    else if (name == "parent")
-      return WRAP_FUNCTOR(get_wrapper<&get_xact>);
-    break;
-
-  case 'r':
-    if (name == "real")
-      return WRAP_FUNCTOR(get_wrapper<&get_real>);
-    break;
-
-  case 't':
-    if (name == "total")
-      return WRAP_FUNCTOR(get_wrapper<&get_total>);
-    break;
-
-  case 'u':
-    if (name == "use_direct_amount")
-      return WRAP_FUNCTOR(get_wrapper<&get_use_direct_amount>);
-    break;
-
-  case 'v':
-    if (name == "virtual")
-      return WRAP_FUNCTOR(get_wrapper<&get_virtual>);
-    else if (name == "value_date")
-      return WRAP_FUNCTOR(get_wrapper<&get_value_date>);
-    break;
-
-  case 'x':
-    if (name == "xact")
-      return WRAP_FUNCTOR(get_wrapper<&get_xact>);
-    else if (name == "xact_id")
-      return WRAP_FUNCTOR(get_wrapper<&get_xact_id>);
-    break;
-
-  case 'N':
-    if (name[1] == '\0')
-      return WRAP_FUNCTOR(get_wrapper<&get_count>);
-    break;
-
-  case 'O':
-    if (name[1] == '\0')
-      return WRAP_FUNCTOR(get_wrapper<&get_total>);
-    break;
-
-  case 'R':
-    if (name[1] == '\0')
-      return WRAP_FUNCTOR(get_wrapper<&get_real>);
-    break;
-  }
-  // NOLINTEND(bugprone-branch-clone)
-
+  if (const auto* fn = find_symbol(post_functions, name))
+    return WRAP_FUNCTOR(*fn);
   return item_t::lookup(kind, name);
 }
 

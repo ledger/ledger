@@ -314,7 +314,7 @@ public:
   /*--- Built-in Value Expression Functions ---*/
   // These methods implement the functions callable from format strings and
   // value expressions (e.g., "market(amount, value_date, exchange)").
-  // They are registered in lookup() under symbol_t::FUNCTION.
+  // They are bound by name in report_functions (report.cc), which lookup() reads.
 
   // Core expression evaluators
   value_t fn_amount_expr(call_scope_t& scope);    ///< Evaluate the current --amount expression
@@ -353,7 +353,6 @@ public:
   value_t fn_clear_commodity(call_scope_t& scope); ///< Remove commodity from an amount
   value_t fn_round(call_scope_t& scope);           ///< Round to nearest integer
   value_t fn_roundto(call_scope_t& scope);         ///< Round to N decimal places: roundto(val, N)
-  value_t fn_unround(call_scope_t& scope);         ///< Synonym for unrounded()
   value_t fn_abs(call_scope_t& scope);             ///< Absolute value
 
   // Formatting and display helpers

@@ -113,6 +113,33 @@ struct symbol_t {
   }
 };
 
+/// One row of a scope's table of the function names its lookup() binds.
+/// Each table is sorted by name; find_symbol() relies on that and
+/// symbol_table_sorted() lets a static_assert prove it.
+template <typename Fn>
+struct symbol_entry_t {
+  std::string_view name;
+  Fn fn;
+};
+
+/// Whether @p table is strictly increasing by name (sorted, no duplicates).
+template <typename Fn, std::size_t N>
+constexpr bool symbol_table_sorted(const symbol_entry_t<Fn> (&table)[N]) {
+  for (std::size_t i = 1; i < N; ++i)
+    if (!(table[i - 1].name < table[i].name))
+      return false;
+  return true;
+}
+
+/// The function bound to exactly @p name in the sorted @p table, or nullptr.
+template <typename Fn, std::size_t N>
+const Fn* find_symbol(const symbol_entry_t<Fn> (&table)[N], std::string_view name) {
+  const auto* it = std::lower_bound(
+      std::begin(table), std::end(table), name,
+      [](const symbol_entry_t<Fn>& entry, std::string_view key) { return entry.name < key; });
+  return it != std::end(table) && it->name == name ? &it->fn : nullptr;
+}
+
 class empty_scope_t;
 class bind_scope_t;
 class item_t;

@@ -1167,17 +1167,11 @@ value_t report_t::fn_ceiling(call_scope_t& args) {
 }
 
 value_t report_t::fn_round(call_scope_t& args) {
-  if (args.has<int>(1))
-    return args[0].roundto(args.get<int>(1));
-  return args[0].rounded();
+  return args.has<int>(1) ? fn_roundto(args) : args[0].rounded();
 }
 
 value_t report_t::fn_roundto(call_scope_t& args) {
   return args[0].roundto(args.get<int>(1));
-}
-
-value_t report_t::fn_unround(call_scope_t& args) {
-  return args[0].unrounded();
 }
 
 value_t report_t::fn_abs(call_scope_t& args) {
@@ -1625,42 +1619,9 @@ value_t report_t::fn_to_sequence(call_scope_t& args) {
   return args[0].to_sequence();
 }
 
-/*--- ANSI Color Constants and Sentinel Functions ---*/
+/*--- Sentinel Functions ---*/
 
 namespace {
-value_t fn_black(call_scope_t&) {
-  return string_value("black");
-}
-value_t fn_blink(call_scope_t&) {
-  return string_value("blink");
-}
-value_t fn_blue(call_scope_t&) {
-  return string_value("blue");
-}
-value_t fn_bold(call_scope_t&) {
-  return string_value("bold");
-}
-value_t fn_cyan(call_scope_t&) {
-  return string_value("cyan");
-}
-value_t fn_green(call_scope_t&) {
-  return string_value("green");
-}
-value_t fn_magenta(call_scope_t&) {
-  return string_value("magenta");
-}
-value_t fn_red(call_scope_t&) {
-  return string_value("red");
-}
-value_t fn_underline(call_scope_t&) {
-  return string_value("underline");
-}
-value_t fn_white(call_scope_t&) {
-  return string_value("white");
-}
-value_t fn_yellow(call_scope_t&) {
-  return string_value("yellow");
-}
 value_t fn_false(call_scope_t&) {
   return false;
 }
@@ -1995,6 +1956,77 @@ void report_t::define(const symbol_t::kind_t kind, const string& name,
   session.define(kind, name, def);
 }
 
+namespace {
+using report_fn_t = value_t (report_t::*)(call_scope_t&);
+
+/// The functions report_t binds by name (phase 2 of report_t::lookup).
+constexpr symbol_entry_t<report_fn_t> report_functions[] = {
+    {"abs", &report_t::fn_abs},
+    {"account_prefix", &report_t::fn_account_prefix},
+    {"account_skip_prefix", &report_t::fn_account_skip_prefix},
+    {"account_skip_suffix", &report_t::fn_account_skip_suffix},
+    {"account_suffix", &report_t::fn_account_suffix},
+    {"amount_expr", &report_t::fn_amount_expr},
+    {"ansify_if", &report_t::fn_ansify_if},
+    {"averaged_lots", &report_t::fn_averaged_lots},
+    {"ceiling", &report_t::fn_ceiling},
+    {"clear_commodity", &report_t::fn_clear_commodity},
+    {"commodity", &report_t::fn_commodity},
+    {"commodity_price", &report_t::fn_commodity_price},
+    {"date", &report_t::fn_today},
+    {"display_account", &report_t::fn_display_account},
+    {"display_amount", &report_t::fn_display_amount},
+    {"display_total", &report_t::fn_display_total},
+    {"fifo_lots", &report_t::fn_fifo_lots},
+    {"floor", &report_t::fn_floor},
+    {"format", &report_t::fn_format},
+    {"format_date", &report_t::fn_format_date},
+    {"format_datetime", &report_t::fn_format_datetime},
+    {"get_at", &report_t::fn_get_at},
+    {"is_seq", &report_t::fn_is_seq},
+    {"join", &report_t::fn_join},
+    {"justify", &report_t::fn_justify},
+    {"lifo_lots", &report_t::fn_lifo_lots},
+    {"market", &report_t::fn_market},
+    {"nail_down", &report_t::fn_nail_down},
+    {"now", &report_t::fn_now},
+    {"options", &report_t::fn_options},
+    {"percent", &report_t::fn_percent},
+    {"print", &report_t::fn_print},
+    {"quantity", &report_t::fn_quantity},
+    {"quoted", &report_t::fn_quoted},
+    {"quoted_rfc", &report_t::fn_quoted_rfc},
+    {"round", &report_t::fn_round},
+    {"rounded", &report_t::fn_rounded},
+    {"roundto", &report_t::fn_roundto},
+    {"roundto_commodity", &report_t::fn_roundto_commodity},
+    {"scrub", &report_t::fn_scrub},
+    {"scrubbed_display_total", &report_t::fn_scrubbed_display_total},
+    {"set_commodity_price", &report_t::fn_set_commodity_price},
+    {"should_bold", &report_t::fn_should_bold},
+    {"strip", &report_t::fn_strip},
+    {"to_amount", &report_t::fn_to_amount},
+    {"to_balance", &report_t::fn_to_balance},
+    {"to_boolean", &report_t::fn_to_boolean},
+    {"to_date", &report_t::fn_to_date},
+    {"to_datetime", &report_t::fn_to_datetime},
+    {"to_int", &report_t::fn_to_int},
+    {"to_mask", &report_t::fn_to_mask},
+    {"to_sequence", &report_t::fn_to_sequence},
+    {"to_string", &report_t::fn_to_string},
+    {"today", &report_t::fn_today},
+    {"top_amount", &report_t::fn_top_amount},
+    {"total_expr", &report_t::fn_total_expr},
+    {"trim", &report_t::fn_trim},
+    {"truncate", &report_t::fn_truncate},
+    {"truncated", &report_t::fn_truncated},
+    {"unround", &report_t::fn_unrounded},
+    {"unrounded", &report_t::fn_unrounded},
+    {"value_date", &report_t::fn_now},
+};
+static_assert(symbol_table_sorted(report_functions), "report_functions must stay sorted");
+} // namespace
+
 expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& name) {
   if (expr_t::ptr_op_t def = session.lookup(kind, name))
     return def;
@@ -2041,225 +2073,17 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
       }
     }
 
-    // Phase 2: Multi-character function name lookup.
-    // These are the built-in functions callable from format strings and
-    // value expressions (e.g., "market(amount, value_date, exchange)").
-    switch (*p) {
-    case 'a': // NOLINT(bugprone-branch-clone)
-      if (is_eq(p, "amount_expr"))
-        return MAKE_FUNCTOR(report_t::fn_amount_expr);
-      else if (is_eq(p, "ansify_if"))
-        return MAKE_FUNCTOR(report_t::fn_ansify_if);
-      else if (is_eq(p, "abs"))
-        return MAKE_FUNCTOR(report_t::fn_abs);
-      else if (is_eq(p, "averaged_lots"))
-        return MAKE_FUNCTOR(report_t::fn_averaged_lots);
-      else if (is_eq(p, "account_prefix"))
-        return MAKE_FUNCTOR(report_t::fn_account_prefix);
-      else if (is_eq(p, "account_suffix"))
-        return MAKE_FUNCTOR(report_t::fn_account_suffix);
-      else if (is_eq(p, "account_skip_prefix"))
-        return MAKE_FUNCTOR(report_t::fn_account_skip_prefix);
-      else if (is_eq(p, "account_skip_suffix"))
-        return MAKE_FUNCTOR(report_t::fn_account_skip_suffix);
-      break;
-
-    case 'b':
-      if (is_eq(p, "black"))
-        return WRAP_FUNCTOR(fn_black);
-      else if (is_eq(p, "blink"))
-        return WRAP_FUNCTOR(fn_blink);
-      else if (is_eq(p, "blue"))
-        return WRAP_FUNCTOR(fn_blue);
-      else if (is_eq(p, "bold"))
-        return WRAP_FUNCTOR(fn_bold);
-      break;
-
-    case 'c':
-      if (is_eq(p, "cyan"))
-        return WRAP_FUNCTOR(fn_cyan);
-      else if (is_eq(p, "commodity"))
-        return MAKE_FUNCTOR(report_t::fn_commodity);
-      else if (is_eq(p, "commodity_price"))
-        return MAKE_FUNCTOR(report_t::fn_commodity_price);
-      else if (is_eq(p, "ceiling"))
-        return MAKE_FUNCTOR(report_t::fn_ceiling);
-      else if (is_eq(p, "clear_commodity"))
-        return MAKE_FUNCTOR(report_t::fn_clear_commodity);
-      break;
-
-    case 'd':
-      if (is_eq(p, "display_amount"))
-        return MAKE_FUNCTOR(report_t::fn_display_amount);
-      else if (is_eq(p, "display_total"))
-        return MAKE_FUNCTOR(report_t::fn_display_total);
-      else if (is_eq(p, "display_account"))
-        return MAKE_FUNCTOR(report_t::fn_display_account);
-      else if (is_eq(p, "date"))
-        return MAKE_FUNCTOR(report_t::fn_today);
-      break;
-
-    case 'f':
-      if (is_eq(p, "format_date"))
-        return MAKE_FUNCTOR(report_t::fn_format_date);
-      else if (is_eq(p, "format_datetime"))
-        return MAKE_FUNCTOR(report_t::fn_format_datetime);
-      else if (is_eq(p, "format"))
-        return MAKE_FUNCTOR(report_t::fn_format);
-      else if (is_eq(p, "floor"))
-        return MAKE_FUNCTOR(report_t::fn_floor);
-      else if (is_eq(p, "fifo_lots"))
-        return MAKE_FUNCTOR(report_t::fn_fifo_lots);
-      break;
-
-    case 'g':
-      if (is_eq(p, "get_at"))
-        return MAKE_FUNCTOR(report_t::fn_get_at);
-      else if (is_eq(p, "green"))
-        return WRAP_FUNCTOR(fn_green);
-      break;
-
-    case 'i':
-      if (is_eq(p, "is_seq"))
-        return MAKE_FUNCTOR(report_t::fn_is_seq);
-      break;
-
-    case 'j':
-      if (is_eq(p, "justify"))
-        return MAKE_FUNCTOR(report_t::fn_justify);
-      else if (is_eq(p, "join"))
-        return MAKE_FUNCTOR(report_t::fn_join);
-      break;
-
-    case 'l':
-      if (is_eq(p, "lifo_lots"))
-        return MAKE_FUNCTOR(report_t::fn_lifo_lots);
-      break;
-
-    case 'm':
-      if (is_eq(p, "market"))
-        return MAKE_FUNCTOR(report_t::fn_market);
-      else if (is_eq(p, "magenta"))
-        return WRAP_FUNCTOR(fn_magenta);
-      break;
-
-    case 'n':
-      if (is_eq(p, "null"))
-        return WRAP_FUNCTOR(fn_null);
-      else if (is_eq(p, "now"))
-        return MAKE_FUNCTOR(report_t::fn_now);
-      else if (is_eq(p, "nail_down"))
-        return MAKE_FUNCTOR(report_t::fn_nail_down);
-      break;
-
-    case 'o':
-      if (is_eq(p, "options"))
-        return MAKE_FUNCTOR(report_t::fn_options);
-      break;
-
-    case 'p':
-      if (is_eq(p, "post"))
-        return WRAP_FUNCTOR(fn_false);
-      else if (is_eq(p, "percent"))
-        return MAKE_FUNCTOR(report_t::fn_percent);
-      else if (is_eq(p, "print"))
-        return MAKE_FUNCTOR(report_t::fn_print);
-      break;
-
-    case 'q':
-      if (is_eq(p, "quoted"))
-        return MAKE_FUNCTOR(report_t::fn_quoted);
-      else if (is_eq(p, "quoted_rfc"))
-        return MAKE_FUNCTOR(report_t::fn_quoted_rfc);
-      else if (is_eq(p, "quantity"))
-        return MAKE_FUNCTOR(report_t::fn_quantity);
-      break;
-
-    case 'r':
-      if (is_eq(p, "rounded"))
-        return MAKE_FUNCTOR(report_t::fn_rounded);
-      else if (is_eq(p, "roundto_commodity"))
-        return MAKE_FUNCTOR(report_t::fn_roundto_commodity);
-      else if (is_eq(p, "red"))
-        return WRAP_FUNCTOR(fn_red);
-      else if (is_eq(p, "round"))
-        return MAKE_FUNCTOR(report_t::fn_round);
-      else if (is_eq(p, "roundto"))
-        return MAKE_FUNCTOR(report_t::fn_roundto);
-      break;
-
-    case 's':
-      if (is_eq(p, "scrub"))
-        return MAKE_FUNCTOR(report_t::fn_scrub);
-      else if (is_eq(p, "scrubbed_display_total"))
-        return MAKE_FUNCTOR(report_t::fn_scrubbed_display_total);
-      else if (is_eq(p, "strip"))
-        return MAKE_FUNCTOR(report_t::fn_strip);
-      else if (is_eq(p, "should_bold"))
-        return MAKE_FUNCTOR(report_t::fn_should_bold);
-      else if (is_eq(p, "set_commodity_price"))
-        return MAKE_FUNCTOR(report_t::fn_set_commodity_price);
-      break;
-
-    case 't':
-      if (is_eq(p, "truncate"))
-        return MAKE_FUNCTOR(report_t::fn_truncate);
-      else if (is_eq(p, "truncated"))
-        return MAKE_FUNCTOR(report_t::fn_truncated);
-      else if (is_eq(p, "total_expr"))
-        return MAKE_FUNCTOR(report_t::fn_total_expr);
-      else if (is_eq(p, "today"))
-        return MAKE_FUNCTOR(report_t::fn_today);
-      else if (is_eq(p, "trim"))
-        return MAKE_FUNCTOR(report_t::fn_trim);
-      else if (is_eq(p, "top_amount"))
-        return MAKE_FUNCTOR(report_t::fn_top_amount);
-      else if (is_eq(p, "to_boolean"))
-        return MAKE_FUNCTOR(report_t::fn_to_boolean);
-      else if (is_eq(p, "to_int"))
-        return MAKE_FUNCTOR(report_t::fn_to_int);
-      else if (is_eq(p, "to_datetime"))
-        return MAKE_FUNCTOR(report_t::fn_to_datetime);
-      else if (is_eq(p, "to_date"))
-        return MAKE_FUNCTOR(report_t::fn_to_date);
-      else if (is_eq(p, "to_amount"))
-        return MAKE_FUNCTOR(report_t::fn_to_amount);
-      else if (is_eq(p, "to_balance"))
-        return MAKE_FUNCTOR(report_t::fn_to_balance);
-      else if (is_eq(p, "to_string"))
-        return MAKE_FUNCTOR(report_t::fn_to_string);
-      else if (is_eq(p, "to_mask"))
-        return MAKE_FUNCTOR(report_t::fn_to_mask);
-      else if (is_eq(p, "to_sequence"))
-        return MAKE_FUNCTOR(report_t::fn_to_sequence);
-      break;
-
-    case 'u':
-      if (is_eq(p, "underline"))
-        return WRAP_FUNCTOR(fn_underline);
-      else if (is_eq(p, "unround"))
-        return MAKE_FUNCTOR(report_t::fn_unround);
-      else if (is_eq(p, "unrounded"))
-        return MAKE_FUNCTOR(report_t::fn_unrounded);
-      break;
-
-    case 'v':
-      if (is_eq(p, "value_date"))
-        return MAKE_FUNCTOR(report_t::fn_now);
-      break;
-
-    case 'w':
-      if (is_eq(p, "white"))
-        return WRAP_FUNCTOR(fn_white);
-      break;
-
-    case 'y':
-      if (is_eq(p, "yellow"))
-        return WRAP_FUNCTOR(fn_yellow);
-      break;
-    default:
-      break;
-    }
+    // Phase 2: Multi-character function names, from report_functions; the
+    // color names, from standard_colors; and two constant sentinels.
+    if (const report_fn_t* fn = find_symbol(report_functions, name))
+      return expr_t::op_t::wrap_functor(
+          [this, member = *fn](call_scope_t& args) { return (this->*member)(args); });
+    if (standard_color(name))
+      return expr_t::op_t::wrap_functor([name](call_scope_t&) { return string_value(name); });
+    if (name == "null")
+      return WRAP_FUNCTOR(fn_null);
+    if (name == "post")
+      return WRAP_FUNCTOR(fn_false);
 
     // Phase 3: Check if they are trying to access an option's setting or value.
     // Options can be read from expressions (e.g., "options.flat" in format strings).
