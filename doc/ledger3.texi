@@ -10032,8 +10032,12 @@ A @strong{string literal} is written in single quotes
 without quotes (or wrap it in braces, see below).  The exception is a
 double-quoted string followed by a quantity, such as
 @samp{"ab cd" 17}: that is an amount of the commodity @samp{ab cd},
-written as in a journal.  Use the literal that does not collide with
-any contained quotes.
+written as in a journal.  As after a name, the quantity may begin with
+a minus sign, so @samp{"ab" -1} and @samp{"ab"-1} are amounts; write
+@samp{"ab" - 1} to subtract.  A plus sign or comma after the closing
+quote is an operator, so @samp{"ab"+1} concatenates.  A double-quoted
+token that is not a well-formed amount is a string.  Use the literal
+that does not collide with any contained quotes.
 
 A @strong{brace-amount literal} like @samp{@{$10.00@}} parses the
 contents as an amount without commodity migration, so the precision

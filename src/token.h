@@ -173,6 +173,18 @@ struct expr_t::token_t : public noncopyable {
   void parse_ident(std::istream& in);
 
   /**
+   * @brief Try to read an amount literal that began at @p pos.
+   *
+   * Parses without annotations; a comma or plus sign is an operator, not
+   * the start of a quantity (PARSE_IN_EXPR); commodity migration and
+   * reduction follow @p pflags.  On success sets kind to VALUE, value and
+   * length and returns true.  Returns false when no quantity follows,
+   * leaving the stream for the caller to rewind; errors from
+   * amount_t::parse propagate.
+   */
+  bool try_parse_amount(std::istream& in, std::istream::pos_type pos, const parse_flags_t& pflags);
+
+  /**
    * @brief Read the next token from the input stream.
    *
    * This is the main tokenizer entry point.  It skips whitespace, then

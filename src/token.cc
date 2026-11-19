@@ -172,6 +172,38 @@ void expr_t::token_t::parse_ident(std::istream& in) {
   value.set_string(buf);
 }
 
+/*--- Amount Literals ---*/
+
+bool expr_t::token_t::try_parse_amount(std::istream& in, std::istream::pos_type pos,
+                                       const parse_flags_t& pflags) {
+  parse_flags_t parse_flags;
+
+  parse_flags.add_flags(PARSE_NO_ANNOT);
+  // In f(account,1) or x+1 the comma or plus sign is an operator; it must
+  // not begin the quantity of an amount whose commodity would be the
+  // identifier.
+  parse_flags.add_flags(PARSE_IN_EXPR);
+  if (pflags.has_flags(PARSE_NO_MIGRATE))
+    parse_flags.add_flags(PARSE_NO_MIGRATE);
+  if (pflags.has_flags(PARSE_NO_REDUCE))
+    parse_flags.add_flags(PARSE_NO_REDUCE);
+
+  amount_t temp;
+  if (!temp.parse(in, parse_flags.plus_flags(PARSE_SOFT_FAIL)))
+    return false;
+
+  if (!in.good()) {
+    in.clear();
+    in.seekg(0, std::ios::end);
+    if (in.fail())
+      throw_(parse_error, _("Failed to reset input stream"));
+  }
+  kind = VALUE;
+  value = temp;
+  length = static_cast<std::size_t>(in.tellg() - pos);
+  return true;
+}
+
 /*--- Main Tokenizer ---*/
 
 void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
@@ -272,31 +304,12 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
   case '"': {
     std::istream::pos_type pos = in.tellg();
 
-    // Phase 1: attempt amount parsing.  Under PARSE_IN_EXPR a comma or plus
-    // sign after the closing quote is an operator, as in f("abc",1) or
-    // "abc"+1; it does not begin a quantity.
-    parse_flags_t parse_flags;
-    parse_flags.add_flags(PARSE_NO_ANNOT);
-    parse_flags.add_flags(PARSE_IN_EXPR);
-    if (pflags.has_flags(PARSE_NO_MIGRATE))
-      parse_flags.add_flags(PARSE_NO_MIGRATE);
-    if (pflags.has_flags(PARSE_NO_REDUCE))
-      parse_flags.add_flags(PARSE_NO_REDUCE);
-
+    // Phase 1: "ab cd" 17 is an amount of the quoted commodity (#2172).
+    // Anything else is a string, including text amount_t::parse rejects
+    // with an error: the string reader below reports its own diagnostics.
     try {
-      amount_t temp;
-      if (temp.parse(in, parse_flags.plus_flags(PARSE_SOFT_FAIL))) {
-        if (!in.good()) {
-          in.clear();
-          in.seekg(0, std::ios::end);
-          if (in.fail())
-            throw_(parse_error, _("Failed to reset input stream"));
-        }
-        kind = VALUE;
-        value = temp;
-        length = static_cast<std::size_t>(in.tellg() - pos);
+      if (try_parse_amount(in, pos, pflags))
         break;
-      }
     } catch (const std::exception&) {} // NOLINT(bugprone-empty-catch)
 
     // Phase 2: amount parse failed; rewind and read as a plain string
@@ -515,24 +528,8 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
     assert(!in.eof());
     assert(static_cast<int>(in.tellg()) != -1);
 
-    // When in relaxed parsing mode, we want to migrate commodity flags
-    // so that any precision specified by the user updates the current
-    // maximum displayed precision.
-    parse_flags_t parse_flags;
-
-    parse_flags.add_flags(PARSE_NO_ANNOT);
-    // In f(account,1) or x+1 the comma or plus sign is an operator; it must
-    // not begin the quantity of an amount whose commodity would be the
-    // identifier.
-    parse_flags.add_flags(PARSE_IN_EXPR);
-    if (pflags.has_flags(PARSE_NO_MIGRATE))
-      parse_flags.add_flags(PARSE_NO_MIGRATE);
-    if (pflags.has_flags(PARSE_NO_REDUCE))
-      parse_flags.add_flags(PARSE_NO_REDUCE);
-
     try {
-      amount_t temp;
-      if (!temp.parse(in, parse_flags.plus_flags(PARSE_SOFT_FAIL))) {
+      if (!try_parse_amount(in, pos, pflags)) {
         in.clear();
         in.seekg(pos, std::ios::beg);
         if (in.fail() || !in.good())
@@ -554,17 +551,6 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
           symbol[1] = '\0';
           throw_(parse_error, _("Failed to parse identifier"));
         }
-      } else {
-        if (!in.good()) {
-          in.clear();
-          in.seekg(0, std::ios::end);
-          if (in.fail())
-            throw_(parse_error, _("Failed to reset input stream"));
-        }
-
-        kind = VALUE;
-        value = temp;
-        length = static_cast<std::size_t>(in.tellg() - pos);
       }
     } catch (const std::exception&) {
       kind = ERROR;

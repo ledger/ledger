@@ -1,0 +1,24 @@
+; Error cases of a double-quoted token in a value expression; the amount and
+; string readings are in expr-quoted-token.test.  When amount_t::parse
+; rejects the quoted text with an error, the token falls back to the string
+; reading, so the error reported is the string reader's.
+
+; With a space on each side the minus sign is the subtraction operator.
+test eval '"ab" - 1' -> 1
+__ERROR__
+While evaluating value expression:
+  ("ab" - 1)
+  ^^^^^^^^^^
+While subtracting 1 from ab:
+Error: Cannot subtract an amount from a string
+end test
+
+; amount_t::parse throws "Quoted commodity symbol lacks closing quote" here;
+; the string reader's diagnostic is the one reported.
+test eval '"ab\"' -> 1
+__ERROR__
+While parsing value expression:
+  "ab\"
+
+Error: Missing '"'
+end test
