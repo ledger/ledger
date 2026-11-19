@@ -998,13 +998,27 @@ value_t& value_t::operator/=(const value_t& val) {
 //
 // Comparison is used by the expression engine for sorting (`--sort`),
 // filtering (`--limit "amount > 100"`), and conditional formatting.
-// Like arithmetic, comparisons handle cross-type operands by promoting
-// to a common type:
-//   - INTEGER can be compared to AMOUNT and BALANCE (via to_amount())
-//   - AMOUNT can be compared to INTEGER and BALANCE
-//   - BALANCE values are compared via to_amount() (a balance that comes to one amount)
-//   - COMMODITY and STRING can be compared to each other (by symbol name)
-//   - Same-type comparisons use the type's native operator
+// is_less_than() and is_greater_than() share one type matrix,
+// value_ordered(), which takes the direction as a sign; a value
+// expression evaluates `a > b` as `b < a`.  Across types:
+//   - INTEGER and AMOUNT compare by quantity; an AMOUNT with no commodity
+//     compares with one in any commodity.  AMOUNTs in two commodities
+//     order by commodity (compare_by_commodity), so sorts are
+//     deterministic.
+//   - BALANCE vs INTEGER or AMOUNT, on either side, compares every
+//     component: a live component in another commodity throws
+//     amount_error, and one that netted to zero in another commodity is
+//     left out.
+//   - BALANCE vs BALANCE compares the one amount each side comes to
+//     (to_amount(), by balance_t::sole_amount()): components that are
+//     exactly zero are ignored, a balance of nothing but zeros is zero,
+//     and a balance with two live commodities throws value_error.
+//   - SEQUENCE vs INTEGER or AMOUNT compares every element; SEQUENCE vs
+//     SEQUENCE compares pair by pair, not lexicographically.
+//   - COMMODITY orders by bare symbol, against a STRING as against
+//     another COMMODITY, so it neither precedes nor follows a string
+//     that names it.
+//   - Same-type comparisons use the type's native operator.
 //
 // Comparing incompatible types (e.g., DATE to AMOUNT) throws value_error.
 // ----------------------------------------------------------------------
@@ -1207,100 +1221,110 @@ const amount_t* foreign_component(const balance_t& bal, const value_t& val) {
     }
   return nullptr;
 }
-} // namespace
 
-/// @brief Test whether this value is strictly less than another.
+/// Whether the three-way result @p cmp points the way @p sign asks: below
+/// zero for -1 (less), above zero for +1 (greater).
+bool has_sign(int cmp, int sign) {
+  return sign < 0 ? cmp < 0 : cmp > 0;
+}
+
+/// Whether @p left is less (@p sign -1) or greater (+1) than @p right, by
+/// the type's own operator<.  Greater asks `right < left`, as `left >
+/// right` does under Boost's operators, so for amounts the same operand
+/// is the object of amount_t::compare() in either direction.
+template <typename T>
+bool ordered_pair(const T& left, const T& right, int sign) {
+  return sign < 0 ? left < right : right < left;
+}
+
+/// @brief The one type matrix behind value_t::is_less_than() (@p sign -1)
+/// and value_t::is_greater_than() (@p sign +1).
 ///
-/// For VOID, null is considered less than any non-null value (establishing
-/// a total order where VOID sorts first).  For AMOUNT values of different
-/// commodities, lexicographic commodity comparison is used as a tiebreaker
-/// so that sort output is deterministic.
-///
-/// A BALANCE is less than an amount or a number when every component that
-/// takes part in the comparison is (the BALANCE case below says which do,
-/// and when a component in another commodity makes the comparison an
-/// error).  SEQUENCE comparison is lexicographic.
-/// COMMODITY orders by bare symbol, against a STRING as against another
-/// COMMODITY, so it neither precedes nor follows a string that names it.
-bool value_t::is_less_than(const value_t& val) const {
-  if (val.is_null())
-    return false; // nothing is less than null (null sorts first)
+/// A pair that only the other operand's type handles is asked of it with
+/// the direction reversed.  The elements of a SEQUENCE compare through
+/// is_less_than() in the order a value expression gives them, which runs
+/// `a > b` as `b < a`; so an element comparison, and the error it may
+/// raise, is the one the expression engine would make.
+bool value_ordered(const value_t& left, const value_t& right, int sign) {
+  // Null sorts first: nothing is less than it, and every other value is
+  // greater.
+  if (right.is_null())
+    return sign > 0 && !left.is_null();
 
-  switch (type()) {
-  case VOID:
-    return true; // null is less than any non-null value
+  auto precedes = [sign](const value_t& first, const value_t& second) {
+    return sign < 0 ? first.is_less_than(second) : second.is_less_than(first);
+  };
 
-  case BOOLEAN:
-    if (val.is_boolean()) {
-      if (as_boolean()) {
-        return false;
-      } else if (!as_boolean()) {
-        if (!val.as_boolean())
-          return false;
-        else
-          return true;
-      }
-    }
+  switch (left.type()) {
+  case value_t::VOID:
+    return sign < 0;
+
+  case value_t::BOOLEAN:
+    if (right.is_boolean())
+      return ordered_pair(left.as_boolean(), right.as_boolean(), sign);
     break;
 
-  case DATETIME:
-    if (val.is_datetime())
-      return as_datetime() < val.as_datetime();
+  case value_t::DATETIME:
+    if (right.is_datetime())
+      return ordered_pair(left.as_datetime(), right.as_datetime(), sign);
     break;
 
-  case DATE:
-    if (val.is_date())
-      return as_date() < val.as_date();
+  case value_t::DATE:
+    if (right.is_date())
+      return ordered_pair(left.as_date(), right.as_date(), sign);
     break;
 
-  case INTEGER:
-    switch (val.type()) {
-    case INTEGER:
-      return as_long() < val.as_long();
-    case AMOUNT:
-      return val.as_amount() > as_long();
-    case BALANCE:
-    case SEQUENCE:
-      return val.is_greater_than(*this);
+  case value_t::INTEGER:
+    switch (right.type()) {
+    case value_t::INTEGER:
+      return ordered_pair(left.as_long(), right.as_long(), sign);
+    case value_t::AMOUNT:
+    case value_t::BALANCE:
+    case value_t::SEQUENCE:
+      return value_ordered(right, left, -sign);
     default:
       break;
     }
     break;
 
-  case AMOUNT:
-    switch (val.type()) {
-    case INTEGER:
-      return as_amount() < val.as_long();
-    case AMOUNT:
-      if (as_amount().commodity() == val.as_amount().commodity() || !as_amount().has_commodity() ||
-          !val.as_amount().has_commodity())
-        return as_amount() < val.as_amount();
-      else
-        return commodity_t::compare_by_commodity()(&as_amount(), &val.as_amount()) < 0;
-    case BALANCE:
-    case SEQUENCE:
-      return val.is_greater_than(*this);
+  case value_t::AMOUNT:
+    switch (right.type()) {
+    case value_t::INTEGER:
+      return has_sign(left.as_amount().compare(amount_t(right.as_long())), sign);
+    case value_t::AMOUNT: {
+      // Amounts in two commodities order by commodity, so that sort output
+      // is deterministic; an amount with no commodity compares with any.
+      const amount_t& lhs(left.as_amount());
+      const amount_t& rhs(right.as_amount());
+      if (lhs.has_commodity() && rhs.has_commodity() && lhs.commodity() != rhs.commodity())
+        return sign < 0 ? commodity_t::compare_by_commodity()(&lhs, &rhs) < 0
+                        : commodity_t::compare_by_commodity()(&rhs, &lhs) < 0;
+      return ordered_pair(lhs, rhs, sign);
+    }
+    case value_t::BALANCE:
+    case value_t::SEQUENCE:
+      return value_ordered(right, left, -sign);
     default:
       break;
     }
     break;
 
-  case BALANCE:
-    switch (val.type()) {
-    case INTEGER:
-    case AMOUNT: {
+  case value_t::BALANCE:
+    switch (right.type()) {
+    case value_t::INTEGER:
+    case value_t::AMOUNT: {
       // A component in another commodity makes the comparison an error
       // whichever component is met first; otherwise every component
       // decides, in any order, except a component that netted to zero in
       // another commodity, which is no holding in the amount's and is left
       // out.  A balance of nothing else compares as zero; an empty one
       // compares false, as it always has.
-      const balance_t& bal(as_balance());
-      if (const amount_t* foreign = foreign_component(bal, val))
+      const balance_t& bal(left.as_balance());
+      if (const amount_t* foreign = foreign_component(bal, right))
         throw_(amount_error,
                _f("Cannot compare amounts with different commodities: '%1%' and '%2%'") %
-                   foreign->commodity() % val.as_amount().commodity());
-      const amount_t rhs(val.is_amount() ? val.as_amount() : amount_t(val.as_long()));
+                   foreign->commodity() % right.as_amount().commodity());
+      const amount_t rhs(right.is_amount() ? right.as_amount() : amount_t(right.as_long()));
       bool any = false;
       bool compared = false;
       for (const balance_t::amounts_map::value_type& pair : bal.amounts) {
@@ -1310,66 +1334,64 @@ bool value_t::is_less_than(const value_t& val) const {
             component.commodity() != rhs.commodity())
           continue;
         compared = true;
-        if (component.compare(rhs) >= 0)
+        if (!has_sign(component.compare(rhs), sign))
           return false;
       }
-      return compared || (any && rhs.sign() > 0);
+      return compared || (any && has_sign(rhs.sign(), -sign));
     }
-    case BALANCE:
-      return val.to_amount() > to_amount();
+    case value_t::BALANCE:
+      return ordered_pair(left.to_amount(), right.to_amount(), sign);
     default:
       break;
     }
     break;
 
-  case COMMODITY:
-    switch (val.type()) {
-    case COMMODITY:
-      return to_string() < val.to_string();
-    case STRING: {
-      if (const auto* otherCommodity = find_named_commodity(as_commodity().pool(), val.as_string()))
-        return to_string() < otherCommodity->base_symbol();
-      return to_string() < journal_symbol(val.as_string());
+  case value_t::COMMODITY:
+    switch (right.type()) {
+    case value_t::COMMODITY:
+      return ordered_pair(left.to_string(), right.to_string(), sign);
+    case value_t::STRING: {
+      const auto* named = find_named_commodity(left.as_commodity().pool(), right.as_string());
+      return ordered_pair(left.to_string(),
+                          named ? named->base_symbol() : journal_symbol(right.as_string()), sign);
     }
     default:
       break;
     }
     break;
 
-  case STRING:
-    switch (val.type()) {
-    case COMMODITY:
-      return val.is_greater_than(*this);
-    case STRING:
-      return as_string() < val.as_string();
+  case value_t::STRING:
+    switch (right.type()) {
+    case value_t::COMMODITY:
+      return value_ordered(right, left, -sign);
+    case value_t::STRING:
+      return ordered_pair(left.as_string(), right.as_string(), sign);
     default:
       break;
     }
     break;
 
-  case SEQUENCE:
-    switch (val.type()) {
-    case INTEGER:
-    case AMOUNT: {
-      bool no_amounts = true;
-      for (const value_t& value : as_sequence()) {
-        if (value >= val)
+  case value_t::SEQUENCE:
+    switch (right.type()) {
+    case value_t::INTEGER:
+    case value_t::AMOUNT: {
+      // Every element decides; an empty sequence compares false.
+      for (const value_t& value : left.as_sequence())
+        if (!precedes(value, right))
           return false;
-        no_amounts = false;
-      }
-      return !no_amounts;
+      return !left.as_sequence().empty();
     }
-    case SEQUENCE: {
-      sequence_t::const_iterator i = as_sequence().begin();
-      sequence_t::const_iterator j = val.as_sequence().begin();
-      for (; (i != as_sequence().end() && j != val.as_sequence().end()); i++, j++) {
-        if (!((*i) < (*j)))
+    case value_t::SEQUENCE: {
+      // Pair by pair, not lexicographically.  The end is not antisymmetric:
+      // less holds when this sequence ran out first or with the other,
+      // greater only when this one is longer.
+      value_t::sequence_t::const_iterator i = left.as_sequence().begin();
+      value_t::sequence_t::const_iterator j = right.as_sequence().begin();
+      for (; i != left.as_sequence().end() && j != right.as_sequence().end(); ++i, ++j)
+        if (!precedes(*i, *j))
           return false;
-      }
-      if (i == as_sequence().end())
-        return true;
-      else
-        return false;
+      const bool longer = i != left.as_sequence().end();
+      return sign < 0 ? !longer : longer;
     }
     default:
       break;
@@ -1380,171 +1402,35 @@ bool value_t::is_less_than(const value_t& val) const {
     break;
   }
 
-  add_error_context(_f("While comparing if %1% is less than %2%:") % *this % val);
-  throw_(value_error, _f("Cannot compare %1% to %2%") % label() % val.label());
+  if (sign < 0)
+    add_error_context(_f("While comparing if %1% is less than %2%:") % left % right);
+  else
+    add_error_context(_f("While comparing if %1% is greater than %2%:") % left % right);
+  throw_(value_error, _f("Cannot compare %1% to %2%") % left.label() % right.label());
+}
+} // namespace
 
-  return *this;
+/// @brief Test whether this value is strictly less than another.
+///
+/// Null is less than any non-null value and nothing is less than null, so
+/// VOID sorts first.  The type matrix is value_ordered()'s; the Section 5
+/// header lists it.  SEQUENCE < SEQUENCE holds only when every paired
+/// element is less and this sequence is not longer; it is not
+/// lexicographic.  Sorting by several keys uses sort_value_is_less_than(),
+/// which is.
+bool value_t::is_less_than(const value_t& val) const {
+  return value_ordered(*this, val, -1);
 }
 
 /// @brief Test whether this value is strictly greater than another.
 ///
-/// Mirrors is_less_than() with reversed comparison directions.  VOID is
-/// never greater than anything.  A BALANCE is greater than an amount or a
-/// number when every component that takes part in the comparison is, as
-/// for is_less_than().
+/// The mirror of is_less_than(), from value_ordered() with the direction
+/// reversed: null is greater than nothing, and every non-null value is
+/// greater than null.  SEQUENCE > SEQUENCE holds only when every paired
+/// element is greater and this sequence is longer, so (10, 20) > (1, 2)
+/// is false although (1, 2) < (10, 20) is true.
 bool value_t::is_greater_than(const value_t& val) const {
-  if (val.is_null())
-    return !is_null(); // non-null is greater than null
-
-  switch (type()) {
-  case VOID:
-    return false; // null is not greater than anything
-
-  case BOOLEAN:
-    if (val.is_boolean()) {
-      if (as_boolean()) {
-        if (!val.as_boolean())
-          return true;
-        else
-          return false;
-      } else if (!as_boolean()) {
-        return false;
-      }
-    }
-    break;
-
-  case DATETIME:
-    if (val.is_datetime())
-      return as_datetime() > val.as_datetime();
-    break;
-
-  case DATE:
-    if (val.is_date())
-      return as_date() > val.as_date();
-    break;
-
-  case INTEGER:
-    switch (val.type()) {
-    case INTEGER:
-      return as_long() > val.as_long();
-    case AMOUNT:
-      return val.as_amount() < as_long();
-    case BALANCE:
-    case SEQUENCE:
-      return val.is_less_than(*this);
-    default:
-      break;
-    }
-    break;
-
-  case AMOUNT:
-    switch (val.type()) {
-    case INTEGER:
-      return as_amount() > val.as_long();
-    case AMOUNT:
-      return as_amount() > val.as_amount();
-    case BALANCE:
-    case SEQUENCE:
-      return val.is_less_than(*this);
-    default:
-      break;
-    }
-    break;
-
-  case BALANCE:
-    switch (val.type()) {
-    case INTEGER:
-    case AMOUNT: {
-      // As in is_less_than.
-      const balance_t& bal(as_balance());
-      if (const amount_t* foreign = foreign_component(bal, val))
-        throw_(amount_error,
-               _f("Cannot compare amounts with different commodities: '%1%' and '%2%'") %
-                   foreign->commodity() % val.as_amount().commodity());
-      const amount_t rhs(val.is_amount() ? val.as_amount() : amount_t(val.as_long()));
-      bool any = false;
-      bool compared = false;
-      for (const balance_t::amounts_map::value_type& pair : bal.amounts) {
-        const amount_t& component(pair.second);
-        any = true;
-        if (component.is_realzero() && component.has_commodity() && rhs.has_commodity() &&
-            component.commodity() != rhs.commodity())
-          continue;
-        compared = true;
-        if (component.compare(rhs) <= 0)
-          return false;
-      }
-      return compared || (any && rhs.sign() < 0);
-    }
-    case BALANCE:
-      return val.to_amount() < to_amount();
-    default:
-      break;
-    }
-    break;
-
-  case COMMODITY:
-    switch (val.type()) {
-    case COMMODITY:
-      return to_string() > val.to_string();
-    case STRING: {
-      if (const auto* otherCommodity = find_named_commodity(as_commodity().pool(), val.as_string()))
-        return to_string() > otherCommodity->base_symbol();
-      return to_string() > journal_symbol(val.as_string());
-    }
-    default:
-      break;
-    }
-    break;
-
-  case STRING:
-    switch (val.type()) {
-    case COMMODITY:
-      return val.is_less_than(*this);
-    case STRING:
-      return as_string() > val.as_string();
-    default:
-      break;
-    }
-    break;
-
-  case SEQUENCE:
-    switch (val.type()) {
-    case INTEGER:
-    case AMOUNT: {
-      bool no_amounts = true;
-      for (const value_t& value : as_sequence()) {
-        if (value <= val)
-          return false;
-        no_amounts = false;
-      }
-      return !no_amounts;
-    }
-    case SEQUENCE: {
-      sequence_t::const_iterator i = as_sequence().begin();
-      sequence_t::const_iterator j = val.as_sequence().begin();
-      for (; (i != as_sequence().end() && j != val.as_sequence().end()); i++, j++) {
-        if (!((*i) > (*j)))
-          return false;
-      }
-      if (i == as_sequence().end())
-        return false;
-      else
-        return true;
-    }
-    default:
-      break;
-    }
-    break;
-
-  default:
-    break;
-  }
-
-  add_error_context(_f("While comparing if %1% is greater than %2%:") % *this % val);
-  throw_(value_error, _f("Cannot compare %1% to %2%") % label() % val.label());
-
-  return *this;
+  return value_ordered(*this, val, 1);
 }
 
 /// @brief Convert this value to the specified type in place.

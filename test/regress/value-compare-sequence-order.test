@@ -1,0 +1,36 @@
+; Two sequences compare pair by pair, and not lexicographically:
+; (a, b) < (c, d) holds only when a < c and b < d, and the left sequence
+; is no longer than the right.  A sequence and a number compare element
+; by element: the sequence is below the number when every element is,
+; and above it when every element is.
+;
+; A value expression evaluates `a > b` as `b < a`, so each element
+; compares with `<`.
+
+test eval '(1, 2) < (1, 3)'
+0
+end test
+
+test eval '(1, 2) < (2, 3)'
+1
+end test
+
+test eval '(2, 3) > (1, 5)'
+0
+end test
+
+test eval '(1, 2) < (2, 3, 4)'
+1
+end test
+
+test eval '(1, 2) < 3'
+1
+end test
+
+test eval '3 < (1, 5)'
+0
+end test
+
+test eval '0 < (1, 2)'
+1
+end test

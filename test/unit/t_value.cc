@@ -8892,5 +8892,130 @@ BOOST_AUTO_TEST_CASE(testScalarComparesWithBalanceComponentwise)
   BOOST_CHECK(!empty.is_greater_than(zero));
 }
 
+BOOST_AUTO_TEST_CASE(testOrderingDirectionsAgree)
+{
+  // is_greater_than() answers every pair as is_less_than() does with the
+  // operands swapped.  Amounts in two commodities order by commodity in
+  // both directions ('$' before 'EUR'; a lot at $1.00 before one at
+  // $2.00), so neither direction throws.
+  value_t dollars(amount_t("$10.00"));
+  value_t euros(amount_t("5 EUR"));
+  BOOST_CHECK(dollars.is_less_than(euros));
+  BOOST_CHECK(!euros.is_less_than(dollars));
+  BOOST_CHECK(euros.is_greater_than(dollars));
+  BOOST_CHECK(!dollars.is_greater_than(euros));
+
+  value_t cheap(amount_t("10 AAPL {$1.00}"));
+  value_t dear(amount_t("10 AAPL {$2.00}"));
+  BOOST_CHECK(cheap.is_less_than(dear));
+  BOOST_CHECK(dear.is_greater_than(cheap));
+  BOOST_CHECK(!cheap.is_greater_than(dear));
+
+  // A number, or an amount with no commodity, compares with an amount in
+  // any commodity by quantity.
+  value_t thirty(amount_t("30"));
+  BOOST_CHECK(thirty.is_greater_than(dollars));
+  BOOST_CHECK(!thirty.is_less_than(dollars));
+  BOOST_CHECK(value_t(30L).is_greater_than(dollars));
+  BOOST_CHECK(dollars.is_less_than(value_t(30L)));
+
+  // Null sorts first: nothing is less than it, and it is greater than
+  // nothing.
+  value_t null_value;
+  BOOST_CHECK(null_value.is_less_than(dollars));
+  BOOST_CHECK(!null_value.is_greater_than(dollars));
+  BOOST_CHECK(dollars.is_greater_than(null_value));
+  BOOST_CHECK(!dollars.is_less_than(null_value));
+  BOOST_CHECK(!null_value.is_less_than(null_value));
+  BOOST_CHECK(!null_value.is_greater_than(null_value));
+
+  // A component that netted to zero in another commodity takes no part,
+  // from either side and in either direction.
+  balance_t netted;
+  netted += amount_t("$1.00");
+  netted += amount_t("10 EUR");
+  netted += amount_t("-10 EUR");
+  BOOST_REQUIRE_EQUAL(netted.amounts.size(), 2U);
+  value_t wallet(netted);
+  value_t no_dollars(amount_t("$0.00"));
+  BOOST_CHECK(wallet.is_greater_than(no_dollars));
+  BOOST_CHECK(!wallet.is_less_than(no_dollars));
+  BOOST_CHECK(no_dollars.is_less_than(wallet));
+  BOOST_CHECK(!no_dollars.is_greater_than(wallet));
+  BOOST_CHECK(value_t(balance_t("$5.00")).is_greater_than(value_t(balance_t("$3.00"))));
+  BOOST_CHECK(!value_t(balance_t("$5.00")).is_less_than(value_t(balance_t("$3.00"))));
+
+  // Two balances compare as the one amount each comes to: a component
+  // that netted to zero is ignored, and a balance holding two live
+  // commodities comes to no one amount and cannot be compared.
+  balance_t five_netted;
+  five_netted += amount_t("$5.00");
+  five_netted += amount_t("10 EUR");
+  five_netted += amount_t("-10 EUR");
+  BOOST_REQUIRE_EQUAL(five_netted.amounts.size(), 2U);
+  value_t three_bal((balance_t("$3.00")));
+  BOOST_CHECK(value_t(five_netted).is_greater_than(three_bal));
+  BOOST_CHECK(three_bal.is_less_than(value_t(five_netted)));
+  balance_t two_live;
+  two_live += amount_t("$5.00");
+  two_live += amount_t("10 EUR");
+  BOOST_CHECK_THROW(value_t(two_live).is_less_than(three_bal), value_error);
+  BOOST_CHECK_THROW(three_bal.is_greater_than(value_t(two_live)), value_error);
+
+  // An error names its operands as the comparison a > b == b < a makes
+  // them, in both directions: is_greater_than asks the right operand.
+  auto names = [](const string& text) {
+    return [text](const amount_error& err) { return string(err.what()) == text; };
+  };
+  value_t dollar_bal((balance_t("$1.00")));
+  value_t euro_bal((balance_t("5 EUR")));
+  BOOST_CHECK_EXCEPTION(
+      dollar_bal.is_less_than(euro_bal), amount_error,
+      names("Cannot compare amounts with different commodities: '$' and 'EUR'"));
+  BOOST_CHECK_EXCEPTION(
+      dollar_bal.is_greater_than(euro_bal), amount_error,
+      names("Cannot compare amounts with different commodities: 'EUR' and '$'"));
+  value_t uninitialized((amount_t()));
+  BOOST_REQUIRE(uninitialized.is_amount());
+  BOOST_CHECK_EXCEPTION(uninitialized.is_less_than(dollars), amount_error,
+                        names("Cannot compare an uninitialized amount to an amount"));
+  BOOST_CHECK_EXCEPTION(uninitialized.is_greater_than(dollars), amount_error,
+                        names("Cannot compare an amount to an uninitialized amount"));
+
+  // Two sequences compare pair by pair, not lexicographically: less when
+  // every pair is less and this sequence is no longer, greater when every
+  // pair is greater and this sequence is longer.  An empty sequence is
+  // neither less nor greater than a number.
+  auto sequence = [](std::initializer_list<long> numbers) {
+    value_t::sequence_t no_values;
+    value_t seq(no_values);
+    for (long number : numbers)
+      seq.push_back(value_t(number));
+    return seq;
+  };
+  BOOST_CHECK(!sequence({1, 2}).is_less_than(sequence({1, 3})));
+  BOOST_CHECK(sequence({1, 2}).is_less_than(sequence({2, 3})));
+  BOOST_CHECK(sequence({1, 2}).is_less_than(sequence({2, 3, 4})));
+  BOOST_CHECK(!sequence({2, 3}).is_greater_than(sequence({1, 5})));
+  BOOST_CHECK(!sequence({2, 3}).is_greater_than(sequence({1, 2})));
+  BOOST_CHECK(sequence({2, 3, 4}).is_greater_than(sequence({1, 2})));
+  BOOST_CHECK(!sequence({}).is_less_than(value_t(1L)));
+  BOOST_CHECK(!sequence({}).is_greater_than(value_t(1L)));
+
+  // Elements compare as a value expression compares two values, where
+  // a > b runs b < a.  (1) > (0) is false (equal lengths) but (0) < (1)
+  // is true, so ((1), (2), 3) is greater than ((0), (1)).
+  value_t::sequence_t no_values;
+  value_t outer_left(no_values);
+  outer_left.push_back(sequence({1}));
+  outer_left.push_back(sequence({2}));
+  outer_left.push_back(value_t(3L));
+  value_t outer_right(no_values);
+  outer_right.push_back(sequence({0}));
+  outer_right.push_back(sequence({1}));
+  BOOST_CHECK(!sequence({1}).is_greater_than(sequence({0})));
+  BOOST_CHECK(outer_left.is_greater_than(outer_right));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
