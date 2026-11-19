@@ -2075,6 +2075,34 @@ value_t value_t::exchange_commodities(const std::string& commodities, const bool
   return *this;
 }
 
+namespace {
+/// The one type switch behind value_t's rounding family.  An INTEGER is
+/// already integral and is left alone; AMOUNT and BALANCE take @p op, and
+/// a SEQUENCE hands each element to @p op, which re-enters the same
+/// value_t operation and so applies the same rule to it.  Returns false,
+/// changing nothing, for any other type; the caller decides whether that
+/// value passes through or is an error.
+template <typename Op>
+bool round_numeric(value_t& value, Op op) {
+  switch (value.type()) {
+  case value_t::INTEGER:
+    return true;
+  case value_t::AMOUNT:
+    op(value.as_amount_lval());
+    return true;
+  case value_t::BALANCE:
+    op(value.as_balance_lval());
+    return true;
+  case value_t::SEQUENCE:
+    for (value_t& element : value.as_sequence_lval())
+      op(element);
+    return true;
+  default:
+    return false;
+  }
+}
+} // namespace
+
 /// @brief Reduce commodity expressions to their base commodities.
 ///
 /// For example, if "min" is defined as "60s", an amount of "5 min" would
@@ -2082,22 +2110,7 @@ value_t value_t::exchange_commodities(const std::string& commodities, const bool
 /// or balance_t::in_place_reduce() which walk the commodity equivalence
 /// chain.  Non-numeric types are silently ignored.
 void value_t::in_place_reduce() {
-  switch (type()) {
-  case AMOUNT:
-    as_amount_lval().in_place_reduce();
-    return;
-  case BALANCE:
-    as_balance_lval().in_place_reduce();
-    return;
-  case SEQUENCE:
-    for (value_t& value : as_sequence_lval())
-      value.in_place_reduce();
-    return;
-  default:
-    return;
-  }
-
-  // throw_(value_error, _f("Cannot reduce %1%") % label());
+  round_numeric(*this, [](auto& x) { x.in_place_reduce(); });
 }
 
 /// @brief Expand base commodities back to their higher-level equivalents.
@@ -2105,22 +2118,7 @@ void value_t::in_place_reduce() {
 /// The inverse of in_place_reduce(): "300s" would become "5 min" if such
 /// an equivalence is defined.
 void value_t::in_place_unreduce() {
-  switch (type()) {
-  case AMOUNT:
-    as_amount_lval().in_place_unreduce();
-    return;
-  case BALANCE:
-    as_balance_lval().in_place_unreduce();
-    return;
-  case SEQUENCE:
-    for (value_t& value : as_sequence_lval())
-      value.in_place_unreduce();
-    return;
-  default:
-    return;
-  }
-
-  // throw_(value_error, _f("Cannot reduce %1%") % label());
+  round_numeric(*this, [](auto& x) { x.in_place_unreduce(); });
 }
 
 /// @brief Return the absolute value.
@@ -2158,70 +2156,25 @@ value_t value_t::abs() const {
 /// rounded independently.  INTEGER values are already integral and need
 /// no rounding.  For SEQUENCE, rounding is applied element-wise.
 void value_t::in_place_round() {
-  switch (type()) {
-  case INTEGER:
-    return;
-  case AMOUNT:
-    as_amount_lval().in_place_round();
-    return;
-  case BALANCE:
-    as_balance_lval().in_place_round();
-    return;
-  case SEQUENCE:
-    for (value_t& value : as_sequence_lval())
-      value.in_place_round();
-    return;
-  default:
-    break;
+  if (!round_numeric(*this, [](auto& x) { x.in_place_round(); })) {
+    add_error_context(_f("While rounding %1%:") % *this);
+    throw_(value_error, _f("Cannot set rounding for %1%") % label());
   }
-
-  add_error_context(_f("While rounding %1%:") % *this);
-  throw_(value_error, _f("Cannot set rounding for %1%") % label());
 }
 
 /// @brief Round to a specific number of decimal places.
 /// @param places  The number of decimal places to retain.
 void value_t::in_place_roundto(int places) {
   DEBUG("amount.roundto", "=====> roundto places " << places);
-  switch (type()) {
-  case INTEGER:
-    return;
-  case AMOUNT:
-    as_amount_lval().in_place_roundto(places);
-    return;
-  case BALANCE:
-    as_balance_lval().in_place_roundto(places);
-    return;
-  case SEQUENCE:
-    for (value_t& value : as_sequence_lval())
-      value.in_place_roundto(places);
-    return;
-  default:
-    break;
-  }
+  round_numeric(*this, [places](auto& x) { x.in_place_roundto(places); });
 }
 
 /// @brief Truncate toward zero (remove fractional part without rounding).
 void value_t::in_place_truncate() {
-  switch (type()) {
-  case INTEGER:
-    return;
-  case AMOUNT:
-    as_amount_lval().in_place_truncate();
-    return;
-  case BALANCE:
-    as_balance_lval().in_place_truncate();
-    return;
-  case SEQUENCE:
-    for (value_t& value : as_sequence_lval())
-      value.in_place_truncate();
-    return;
-  default:
-    break;
+  if (!round_numeric(*this, [](auto& x) { x.in_place_truncate(); })) {
+    add_error_context(_f("While truncating %1%:") % *this);
+    throw_(value_error, _f("Cannot truncate %1%") % label());
   }
-
-  add_error_context(_f("While truncating %1%:") % *this);
-  throw_(value_error, _f("Cannot truncate %1%") % label());
 }
 
 /// @brief Round to the commodity's display precision.
@@ -2231,25 +2184,10 @@ void value_t::in_place_truncate() {
 /// This method rounds to the display precision, which is used when
 /// formatting output for the user.
 void value_t::in_place_display_round() {
-  switch (type()) {
-  case INTEGER:
-    return;
-  case AMOUNT:
-    as_amount_lval().in_place_roundto(as_amount_lval().display_precision());
-    return;
-  case BALANCE:
-    as_balance_lval().in_place_display_round();
-    return;
-  case SEQUENCE:
-    for (value_t& value : as_sequence_lval())
-      value.in_place_display_round();
-    return;
-  default:
-    break;
+  if (!round_numeric(*this, [](auto& x) { x.in_place_display_round(); })) {
+    add_error_context(_f("While display-rounding %1%:") % *this);
+    throw_(value_error, _f("Cannot display-round %1%") % label());
   }
-
-  add_error_context(_f("While display-rounding %1%:") % *this);
-  throw_(value_error, _f("Cannot display-round %1%") % label());
 }
 
 /// @brief Round to the precision defined by the commodity's usage history.
@@ -2258,94 +2196,34 @@ void value_t::in_place_display_round() {
 /// observed from actual transactions involving the commodity, rather than
 /// a fixed internal precision.
 void value_t::in_place_round_to_commodity_precision() {
-  switch (type()) {
-  case INTEGER:
-    return;
-  case AMOUNT:
-    as_amount_lval().in_place_round_to_commodity_precision();
-    return;
-  case BALANCE:
-    as_balance_lval().in_place_round_to_commodity_precision();
-    return;
-  case SEQUENCE:
-    for (value_t& value : as_sequence_lval())
-      value.in_place_round_to_commodity_precision();
-    return;
-  default:
-    break;
+  if (!round_numeric(*this, [](auto& x) { x.in_place_round_to_commodity_precision(); })) {
+    add_error_context(_f("While rounding %1% to commodity precision:") % *this);
+    throw_(value_error, _f("Cannot round %1% to commodity precision") % label());
   }
-
-  add_error_context(_f("While rounding %1% to commodity precision:") % *this);
-  throw_(value_error, _f("Cannot round %1% to commodity precision") % label());
 }
 
 /// @brief Round toward negative infinity.
 void value_t::in_place_floor() {
-  switch (type()) {
-  case INTEGER:
-    return;
-  case AMOUNT:
-    as_amount_lval().in_place_floor();
-    return;
-  case BALANCE:
-    as_balance_lval().in_place_floor();
-    return;
-  case SEQUENCE:
-    for (value_t& value : as_sequence_lval())
-      value.in_place_floor();
-    return;
-  default:
-    break;
+  if (!round_numeric(*this, [](auto& x) { x.in_place_floor(); })) {
+    add_error_context(_f("While flooring %1%:") % *this);
+    throw_(value_error, _f("Cannot floor %1%") % label());
   }
-
-  add_error_context(_f("While flooring %1%:") % *this);
-  throw_(value_error, _f("Cannot floor %1%") % label());
 }
 
 /// @brief Round toward positive infinity.
 void value_t::in_place_ceiling() {
-  switch (type()) {
-  case INTEGER:
-    return;
-  case AMOUNT:
-    as_amount_lval().in_place_ceiling();
-    return;
-  case BALANCE:
-    as_balance_lval().in_place_ceiling();
-    return;
-  case SEQUENCE:
-    for (value_t& value : as_sequence_lval())
-      value.in_place_ceiling();
-    return;
-  default:
-    break;
+  if (!round_numeric(*this, [](auto& x) { x.in_place_ceiling(); })) {
+    add_error_context(_f("While ceiling %1%:") % *this);
+    throw_(value_error, _f("Cannot ceiling %1%") % label());
   }
-
-  add_error_context(_f("While ceiling %1%:") % *this);
-  throw_(value_error, _f("Cannot ceiling %1%") % label());
 }
 
 /// @brief Restore the value to its full internal precision, undoing rounding.
 void value_t::in_place_unround() {
-  switch (type()) {
-  case INTEGER:
-    return;
-  case AMOUNT:
-    as_amount_lval().in_place_unround();
-    return;
-  case BALANCE:
-    as_balance_lval().in_place_unround();
-    return;
-  case SEQUENCE:
-    for (value_t& value : as_sequence_lval())
-      value.in_place_unround();
-    return;
-  default:
-    break;
+  if (!round_numeric(*this, [](auto& x) { x.in_place_unround(); })) {
+    add_error_context(_f("While unrounding %1%:") % *this);
+    throw_(value_error, _f("Cannot unround %1%") % label());
   }
-
-  add_error_context(_f("While unrounding %1%:") % *this);
-  throw_(value_error, _f("Cannot unround %1%") % label());
 }
 
 /// @brief Attach price/date/tag annotations to this value's commodity.

@@ -9077,5 +9077,40 @@ BOOST_AUTO_TEST_CASE(testAnnotationReadKeepsStorageShared)
   BOOST_CHECK(&copy.as_amount() == &original.as_amount());
 }
 
+BOOST_AUTO_TEST_CASE(testRoundingFamilyNonNumericRules)
+{
+  // An INTEGER is already integral: all ten operations leave it alone.
+  value_t seven(7L);
+  BOOST_CHECK(seven.rounded() == seven);
+  BOOST_CHECK(seven.roundto(2) == seven);
+  BOOST_CHECK(seven.truncated() == seven);
+  BOOST_CHECK(seven.display_rounded() == seven);
+  BOOST_CHECK(seven.rounded_to_commodity_precision() == seven);
+  BOOST_CHECK(seven.floored() == seven);
+  BOOST_CHECK(seven.ceilinged() == seven);
+  BOOST_CHECK(seven.unrounded() == seven);
+  BOOST_CHECK(seven.reduced() == seven);
+  BOOST_CHECK(seven.unreduced() == seven);
+
+  // roundto, reduce and unreduce pass any other value through unchanged;
+  // the other seven operations reject it.
+  const value_t others[] = {value_t(string("abc"), true),
+                            value_t(date_t(parse_date("2024/01/01"))), value_t()};
+  for (const value_t& v : others) {
+    BOOST_CHECK(v.roundto(2).type() == v.type());
+    BOOST_CHECK(v.reduced().type() == v.type());
+    BOOST_CHECK(v.unreduced().type() == v.type());
+    BOOST_CHECK_THROW((void)v.rounded(), value_error);
+    BOOST_CHECK_THROW((void)v.truncated(), value_error);
+    BOOST_CHECK_THROW((void)v.display_rounded(), value_error);
+    BOOST_CHECK_THROW((void)v.rounded_to_commodity_precision(), value_error);
+    BOOST_CHECK_THROW((void)v.floored(), value_error);
+    BOOST_CHECK_THROW((void)v.ceilinged(), value_error);
+    BOOST_CHECK_THROW((void)v.unrounded(), value_error);
+  }
+  BOOST_CHECK(value_t(string("abc"), true).roundto(2) == value_t(string("abc"), true));
+  BOOST_CHECK(value_t(string("abc"), true).unreduced() == value_t(string("abc"), true));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 

@@ -1,0 +1,77 @@
+; value_t's rounding operations other than roundto() and reduce/unreduce
+; reject a value that is not an integer, amount, balance or sequence, each
+; with its own message.
+
+2024/01/01 Grocer
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test eval 'round("abc")' -> 1
+__ERROR__
+While evaluating value expression:
+  round("abc")
+  ^^^^^^^^^^^^
+While rounding abc:
+While calling function 'round abc':
+Error: Cannot set rounding for a string
+end test
+
+test eval 'truncate("abc")' -> 1
+__ERROR__
+While evaluating value expression:
+  truncate("abc")
+  ^^^^^^^^^^^^^^^
+While truncating abc:
+While calling function 'truncate abc':
+Error: Cannot truncate a string
+end test
+
+test eval 'floor([2024/01/01])' -> 1
+__ERROR__
+While evaluating value expression:
+  floor([2024/01/01])
+  ^^^^^^^^^^^^^^^^^^^
+While flooring 2024/01/01:
+While calling function 'floor 2024/01/01':
+Error: Cannot floor a date
+end test
+
+test eval 'ceiling("abc")' -> 1
+__ERROR__
+While evaluating value expression:
+  ceiling("abc")
+  ^^^^^^^^^^^^^^
+While ceiling abc:
+While calling function 'ceiling abc':
+Error: Cannot ceiling a string
+end test
+
+test eval 'unround("abc")' -> 1
+__ERROR__
+While evaluating value expression:
+  unround("abc")
+  ^^^^^^^^^^^^^^
+While unrounding abc:
+While calling function 'unround abc':
+Error: Cannot unround a string
+end test
+
+test eval 'roundto_commodity("abc")' -> 1
+__ERROR__
+While evaluating value expression:
+  roundto_commodity("abc")
+  ^^^^^^^^^^^^^^^^^^^^^^^^
+While rounding abc to commodity precision:
+While calling function 'roundto_commodity abc':
+Error: Cannot round a string to commodity precision
+end test
+
+test eval 'rounded(($1.25, "x"))' -> 1
+__ERROR__
+While evaluating value expression:
+  rounded($1.25, "x")
+  ^^^^^^^^^^^^^^^^^^^
+While rounding x:
+While calling function 'rounded ($1.25, x)':
+Error: Cannot set rounding for a string
+end test

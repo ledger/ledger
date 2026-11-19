@@ -186,9 +186,9 @@ mpz_t out_rem;
  * @p rem is scratch.  @p den must be positive.  @p quot may alias @p num,
  * because the sign is taken from the remainder (with truncating division
  * the remainder carries the dividend's sign whenever it is nonzero);
- * neither may alias @p den.  Used by both format_mpq_exact() and
- * amount_t::in_place_roundto(), so a displayed figure always equals its
- * roundto().
+ * neither may alias @p den.  Used by both format_mpq_exact() and, through
+ * round_quantity(), amount_t::in_place_roundto(), so a displayed figure
+ * always equals its roundto().
  */
 void round_quotient_half_away(mpz_ptr quot, mpz_ptr rem, mpz_srcptr num, mpz_srcptr den) {
   mpz_tdiv_qr(quot, rem, num, den);
@@ -216,6 +216,49 @@ bool within_half_unit(mpq_srcptr quant, amount_t::precision_t places) {
   mpz_abs(out_quot, out_quot);
   mpz_mul_2exp(out_quot, out_quot, 1);
   return mpz_cmp(out_quot, mpq_denref(quant)) <= 0;
+}
+
+/// How round_quantity() settles the digits it drops.
+enum class rounding_t { toward_zero, half_away_from_zero };
+
+/**
+ * @brief Round @p quant in place to @p places decimals, toward zero or
+ * half away from zero as @p mode says.
+ *
+ * Zero @p places rounds to an integer; negative @p places rounds to
+ * tens, hundreds, and so on.  The integer division is mpz_tdiv_q() or
+ * round_quotient_half_away(), the one tie rule Ledger's printer also
+ * uses.  The file-scope temp holds 10^|places| and tempq's numerator and
+ * denominator are the quotient and remainder scratch, so @p quant must
+ * not be tempq.
+ */
+void round_quantity(mpq_ptr quant, int places, rounding_t mode) {
+  mpz_t& scale(temp);
+  if (places)
+    mpz_ui_pow_ui(scale, 10, labs(places));
+
+  if (places > 0) {
+    mpz_mul(mpq_numref(quant), mpq_numref(quant), scale);
+  } else if (places < 0) {
+    mpz_mul(mpq_denref(quant), mpq_denref(quant), scale);
+  }
+
+  auto whole(mpq_numref(tempq));
+  if (mode == rounding_t::toward_zero)
+    mpz_tdiv_q(whole, mpq_numref(quant), mpq_denref(quant));
+  else
+    round_quotient_half_away(whole, mpq_denref(tempq), mpq_numref(quant), mpq_denref(quant));
+
+  if (places > 0) {
+    mpq_set_num(quant, whole);
+    mpq_set_den(quant, scale);
+    mpq_canonicalize(quant);
+  } else if (places == 0) {
+    mpq_set_z(quant, whole);
+  } else {
+    mpq_set_ui(quant, 0, 1);
+    mpz_mul(mpq_numref(quant), whole, scale);
+  }
 }
 
 /**
@@ -1039,9 +1082,7 @@ void amount_t::in_place_round_to_commodity_precision() {
  * negative numbers it rounds toward zero (unlike floor which rounds
  * toward negative infinity).
  *
- * The implementation scales the rational's numerator (or denominator)
- * by 10^places, performs integer truncation via mpz_tdiv_q, then
- * reconstructs the rational at the target precision.
+ * Rounds toward zero at display_precision() through round_quantity().
  */
 void amount_t::in_place_truncate() {
   if (!quantity)
@@ -1051,35 +1092,7 @@ void amount_t::in_place_truncate() {
 
   _dup();
 
-  const int places = display_precision();
-
-  mpz_t& scale(temp);
-  if (places)
-    mpz_ui_pow_ui(scale, 10, labs(places));
-
-  // Scale the numerator or denominator so that the division below produces
-  // a result at the requested decimal precision.
-  if (places > 0) {
-    mpz_mul(mpq_numref(MP(quantity)), mpq_numref(MP(quantity)), scale);
-  } else if (places < 0) {
-    mpz_mul(mpq_denref(MP(quantity)), mpq_denref(MP(quantity)), scale);
-  }
-
-  // mpz_tdiv_q truncates towards zero -- exactly the semantics required.
-  // No rounding step; the remainder is simply discarded.
-  auto whole(mpq_numref(tempq));
-  mpz_tdiv_q(whole, mpq_numref(MP(quantity)), mpq_denref(MP(quantity)));
-
-  if (places > 0) {
-    mpq_set_num(MP(quantity), whole);
-    mpq_set_den(MP(quantity), scale);
-    mpq_canonicalize(MP(quantity));
-  } else if (places == 0) {
-    mpq_set_z(MP(quantity), whole);
-  } else {
-    mpq_set_ui(MP(quantity), 0, 1);
-    mpz_mul(mpq_numref(MP(quantity)), whole, scale);
-  }
+  round_quantity(MP(quantity), display_precision(), rounding_t::toward_zero);
 
   DEBUG("amount.truncate", "Truncated = " << *this);
 }
@@ -1119,9 +1132,9 @@ void amount_t::in_place_ceiling() {
 /**
  * @brief Round to exactly @a places decimal digits, modifying the GMP value.
  *
- * Rounds half away from zero (not banker's rounding): scales the rational
- * by 10^|places| and rounds the quotient with round_quotient_half_away(),
- * the rule print() uses.
+ * Rounds half away from zero (not banker's rounding) through
+ * round_quantity(), whose division is round_quotient_half_away(), the
+ * rule the printer uses too.
  *
  * @param places Number of decimal places to round to.  May be zero
  *               (round to integer) or negative (round to tens,
@@ -1133,30 +1146,7 @@ void amount_t::in_place_roundto(int places) {
 
   _dup();
 
-  mpz_t& scale(temp);
-  if (places)
-    mpz_ui_pow_ui(scale, 10, labs(places));
-
-  if (places > 0) {
-    mpz_mul(mpq_numref(MP(quantity)), mpq_numref(MP(quantity)), scale);
-  } else if (places < 0) {
-    mpz_mul(mpq_denref(MP(quantity)), mpq_denref(MP(quantity)), scale);
-  }
-
-  auto whole(mpq_numref(tempq));
-  round_quotient_half_away(whole, mpq_denref(tempq), mpq_numref(MP(quantity)),
-                           mpq_denref(MP(quantity)));
-
-  if (places > 0) {
-    mpq_set_num(MP(quantity), whole);
-    mpq_set_den(MP(quantity), scale);
-    mpq_canonicalize(MP(quantity));
-  } else if (places == 0)
-    mpq_set_z(MP(quantity), whole);
-  else {
-    mpq_set_ui(MP(quantity), 0, 1);
-    mpz_mul(mpq_numref(MP(quantity)), whole, scale);
-  }
+  round_quantity(MP(quantity), places, rounding_t::half_away_from_zero);
 }
 
 bool amount_t::in_place_round_unit_price(precision_t divisor_prec) {

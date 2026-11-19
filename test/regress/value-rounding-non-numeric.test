@@ -1,0 +1,36 @@
+; value_t's rounding family on values that are not amounts or balances:
+; an integer is already integral, so every operation leaves it alone;
+; roundto() and unreduce (which report_t::display_value applies to every
+; displayed amount and total) pass strings, dates and sequence elements
+; through unchanged.
+
+2024/01/01 Grocer
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Bakery
+    Expenses:Food    $2.50
+    Assets:Cash
+
+test reg --amount payee
+24-Jan-01 Grocer                Expenses:Food                Grocer       Grocer
+                                Assets:Cash                  Grocer GrocerGrocer
+24-Jan-02 Bakery                Expenses:Food                Bakery GrocerGrocerBakery
+                                Assets:Cash                  Bakery GrocerGrocerBakeryBakery
+end test
+
+test eval 'roundto("abc", 2)'
+abc
+end test
+
+test eval 'roundto([2024/01/01], 1)'
+2024/01/01
+end test
+
+test eval 'roundto(($1.25, "x", 7), 1)'
+($1.30, x, 7)
+end test
+
+test eval '(round(5), roundto(5, 2), truncate(3), floor(-7), ceiling(-7), unround(-1), roundto_commodity(5))'
+(5, 5, 3, -7, -7, -1, 5)
+end test

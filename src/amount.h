@@ -429,9 +429,10 @@ public:
       postings where the result must match the displayed value. */
   [[nodiscard]] amount_t display_rounded() const {
     amount_t temp(*this);
-    temp.in_place_roundto(temp.display_precision());
+    temp.in_place_display_round();
     return temp;
   }
+  void in_place_display_round() { in_place_roundto(display_precision()); }
 
   /** Yields an amount which has lost all of its extra precision, beyond what
       the display precision of the commodity would have printed. */

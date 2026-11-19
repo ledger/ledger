@@ -411,7 +411,7 @@ public:
     return temp;
   }
   void in_place_display_round() {
-    transform_amounts([&](amount_t& amt) { amt.in_place_roundto(amt.display_precision()); });
+    transform_amounts([&](amount_t& amt) { amt.in_place_display_round(); });
   }
 
   [[nodiscard]] balance_t rounded_to_commodity_precision() const {
