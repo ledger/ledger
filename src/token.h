@@ -93,12 +93,9 @@ struct expr_t::token_t : public noncopyable {
     ERROR, ///< Tokenization error; triggers a parse_error exception
     VALUE, ///< Literal value: number, amount, date, string, boolean, or regex
     IDENT, ///< Identifier: alphabetic characters and underscores ([A-Za-z_]+)
-    MASK,  ///< Regular expression mask: /regexp/
 
     LPAREN, ///< Left parenthesis `(`  -- grouping / function call
     RPAREN, ///< Right parenthesis `)` -- closes grouping / call
-    LBRACE, ///< Left brace `{`  -- inline amount literal
-    RBRACE, ///< Right brace `}` -- closes inline amount
 
     EQUAL,     ///< Equality `==`
     NEQUAL,    ///< Inequality `!=`
@@ -116,12 +113,11 @@ struct expr_t::token_t : public noncopyable {
     STAR,   ///< Multiplication `*`
     SLASH,  ///< Division `/` (in operator context; terminal context reads regex)
     ARROW,  ///< Lambda arrow `->` for anonymous function definitions
-    KW_DIV, ///< Integer division keyword `div`
+    KW_DIV, ///< Division keyword `div` (same as `/`)
 
     EXCLAM, ///< Logical NOT `!` or keyword `not`
     KW_AND, ///< Logical AND: `&`, `&&`, or keyword `and`
     KW_OR,  ///< Logical OR: `|`, `||`, or keyword `or`
-    KW_MOD, ///< Modulus `%`
 
     KW_IF,   ///< Conditional keyword `if`
     KW_ELSE, ///< Conditional keyword `else`
@@ -236,7 +232,7 @@ struct expr_t::token_t : public noncopyable {
 
 /// @brief Stream insertion for token kind (for diagnostics and debugging).
 std::ostream& operator<<(std::ostream& out, const expr_t::token_t::kind_t& kind);
-/// @brief Stream insertion for a complete token (includes value for VALUE/IDENT/MASK).
+/// @brief Stream insertion for a complete token (includes value for VALUE/IDENT).
 std::ostream& operator<<(std::ostream& out, const expr_t::token_t& token);
 
 } // namespace ledger

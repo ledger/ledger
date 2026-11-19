@@ -687,21 +687,12 @@ std::ostream& operator<<(std::ostream& out, const expr_t::token_t::kind_t& kind)
   case expr_t::token_t::IDENT:
     out << "<identifier>";
     break;
-  case expr_t::token_t::MASK:
-    out << "<regex mask>";
-    break;
 
   case expr_t::token_t::LPAREN:
     out << "(";
     break;
   case expr_t::token_t::RPAREN:
     out << ")";
-    break;
-  case expr_t::token_t::LBRACE:
-    out << "{";
-    break;
-  case expr_t::token_t::RBRACE:
-    out << "}";
     break;
 
   case expr_t::token_t::EQUAL:
@@ -763,9 +754,6 @@ std::ostream& operator<<(std::ostream& out, const expr_t::token_t::kind_t& kind)
   case expr_t::token_t::KW_OR:
     out << "or";
     break;
-  case expr_t::token_t::KW_MOD:
-    out << "mod";
-    break;
 
   case expr_t::token_t::KW_IF:
     out << "if";
@@ -809,9 +797,6 @@ std::ostream& operator<<(std::ostream& out, const expr_t::token_t& token) {
     break;
   case expr_t::token_t::IDENT:
     out << "<ident '" << token.value << "'>";
-    break;
-  case expr_t::token_t::MASK:
-    out << "<mask '" << token.value << "'>";
     break;
 
   default:

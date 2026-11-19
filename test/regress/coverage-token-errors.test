@@ -1,5 +1,5 @@
 ; Coverage tests for token.cc - parse error paths
-; Exercises unexpected(), expected(), and error conditions
+; Exercises expected() and parser error conditions
 
 ; Unclosed parenthesis - triggers expected(RPAREN) which uses
 ; operator<<(token_t) and operator<<(kind_t) for RPAREN and TOK_EOF
@@ -111,7 +111,7 @@ While parsing value expression:
 Error: . operator not followed by argument
 end test
 
-; Unexpected RPAREN - triggers unexpected() default case
+; Unexpected RPAREN after an operator
 test eval '1 + )' -> 1
 __ERROR__
 While parsing value expression:

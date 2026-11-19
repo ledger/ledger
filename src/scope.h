@@ -339,27 +339,24 @@ inline report_t* scope_downcast<report_t>(scope_t* ptr) {
  *
  * This template function performs a depth-first search through the scope
  * hierarchy using scope_downcast() (and as_bind_scope() to recognise bind
- * nodes).  For bind_scope_t nodes (which have two children), the search
- * order depends on @p prefer_direct_parents:
- * - false (default): check grandchild first, then parent
- * - true: check parent first, then grandchild
+ * nodes).  At a bind_scope_t node the grandchild is searched before the
+ * parent.
  *
  * @tparam T The concrete scope type to search for (e.g., report_t, session_t).
  * @param ptr The starting scope.
- * @param prefer_direct_parents If true, prioritize parent over grandchild at bind nodes.
  * @return A pointer to the found scope, or nullptr if not found.
  */
 template <typename T>
-T* search_scope(scope_t* ptr, bool prefer_direct_parents = false) {
+T* search_scope(scope_t* ptr) {
   DEBUG("scope.search", "Searching scope " << ptr->description());
 
   if (T* sought = scope_downcast<T>(ptr))
     return sought;
 
   if (bind_scope_t* scope = ptr->as_bind_scope()) {
-    if (T* sought = search_scope<T>(prefer_direct_parents ? scope->parent : &scope->grandchild))
+    if (T* sought = search_scope<T>(&scope->grandchild))
       return sought;
-    return search_scope<T>(prefer_direct_parents ? &scope->grandchild : scope->parent);
+    return search_scope<T>(scope->parent);
   } else if (scope_t* parent = ptr->get_parent()) {
     return search_scope<T>(parent);
   }
@@ -367,13 +364,12 @@ T* search_scope(scope_t* ptr, bool prefer_direct_parents = false) {
 }
 
 /**
- * @brief Find a scope of type T in the chain, throwing if not found.
- * @param skip_this If true (default), start searching from scope.parent.
+ * @brief Find a scope of type T in the chain above @p scope (starting at
+ * scope.parent), throwing if not found.
  */
 template <typename T>
-inline T& find_scope(child_scope_t& scope, bool skip_this = true,
-                     bool prefer_direct_parents = false) {
-  if (T* sought = search_scope<T>(skip_this ? scope.parent : &scope, prefer_direct_parents))
+inline T& find_scope(child_scope_t& scope) {
+  if (T* sought = search_scope<T>(scope.parent))
     return *sought;
 
   throw_(std::runtime_error, _("Could not find scope"));
@@ -382,8 +378,8 @@ inline T& find_scope(child_scope_t& scope, bool skip_this = true,
 
 /// @brief Overload of find_scope for a bare scope_t reference.
 template <typename T>
-inline T& find_scope(scope_t& scope, bool prefer_direct_parents = false) {
-  if (T* sought = search_scope<T>(&scope, prefer_direct_parents))
+inline T& find_scope(scope_t& scope) {
+  if (T* sought = search_scope<T>(&scope))
     return *sought;
 
   throw_(std::runtime_error, _("Could not find scope"));
@@ -500,11 +496,6 @@ public:
   }
 
   value_t& operator[](const std::size_t index) { return resolve(index); }
-#if 0
-  const value_t& operator[](const std::size_t index) const {
-    return args[index];
-  }
-#endif
 
   bool has(std::size_t index) { return index < args.size() && !(*this)[index].is_null(); }
   template <typename T>
@@ -529,7 +520,6 @@ public:
 
   void push_front(const value_t& val) { args.push_front(val); }
   void push_back(const value_t& val) { args.push_back(val); }
-  void pop_back() { args.pop_back(); }
 
   using iterator = value_t::sequence_t::iterator;
 
@@ -568,8 +558,6 @@ inline bool call_scope_t::has(std::size_t index) {
       resolve(index, value_t::DATE, false);
     else if constexpr (std::is_same_v<T, datetime_t>)
       resolve(index, value_t::DATETIME, false);
-    else if constexpr (std::is_same_v<T, scope_t*>)
-      resolve(index, value_t::SCOPE, false);
     else if constexpr (std::is_same_v<T, expr_t::ptr_op_t>)
       resolve(index, value_t::ANY, false);
     return !args[index].is_null();
@@ -620,8 +608,6 @@ inline T call_scope_t::get(std::size_t index, bool convert) {
     if (convert)
       return resolve(index, value_t::DATETIME, false).to_datetime();
     return resolve(index, value_t::DATETIME).as_datetime();
-  } else if constexpr (std::is_same_v<T, scope_t*>) {
-    return resolve(index, value_t::SCOPE).as_scope();
   } else if constexpr (std::is_same_v<T, expr_t::ptr_op_t>) {
     return args[index].as_any<expr_t::ptr_op_t>();
   }

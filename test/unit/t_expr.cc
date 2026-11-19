@@ -330,13 +330,6 @@ BOOST_AUTO_TEST_CASE(testTokenKindOutputIdent)
   BOOST_CHECK_EQUAL(out.str(), "<identifier>");
 }
 
-BOOST_AUTO_TEST_CASE(testTokenKindOutputMask)
-{
-  std::ostringstream out;
-  out << expr_t::token_t::MASK;
-  BOOST_CHECK_EQUAL(out.str(), "<regex mask>");
-}
-
 BOOST_AUTO_TEST_CASE(testTokenKindOutputLparen)
 {
   std::ostringstream out;
@@ -349,20 +342,6 @@ BOOST_AUTO_TEST_CASE(testTokenKindOutputRparen)
   std::ostringstream out;
   out << expr_t::token_t::RPAREN;
   BOOST_CHECK_EQUAL(out.str(), ")");
-}
-
-BOOST_AUTO_TEST_CASE(testTokenKindOutputLbrace)
-{
-  std::ostringstream out;
-  out << expr_t::token_t::LBRACE;
-  BOOST_CHECK_EQUAL(out.str(), "{");
-}
-
-BOOST_AUTO_TEST_CASE(testTokenKindOutputRbrace)
-{
-  std::ostringstream out;
-  out << expr_t::token_t::RBRACE;
-  BOOST_CHECK_EQUAL(out.str(), "}");
 }
 
 BOOST_AUTO_TEST_CASE(testTokenKindOutputEqual)
@@ -491,13 +470,6 @@ BOOST_AUTO_TEST_CASE(testTokenKindOutputKwOr)
   BOOST_CHECK_EQUAL(out.str(), "or");
 }
 
-BOOST_AUTO_TEST_CASE(testTokenKindOutputKwMod)
-{
-  std::ostringstream out;
-  out << expr_t::token_t::KW_MOD;
-  BOOST_CHECK_EQUAL(out.str(), "mod");
-}
-
 BOOST_AUTO_TEST_CASE(testTokenKindOutputKwIf)
 {
   std::ostringstream out;
@@ -564,7 +536,7 @@ BOOST_AUTO_TEST_CASE(testTokenKindOutputUnknown)
 // -----------------------------------------------------------------------
 // Tests for token.cc operator<<(ostream&, token_t)
 // Exercises lines 683-701 of token.cc
-// The token_t operator<< has special output for VALUE, IDENT, MASK;
+// The token_t operator<< has special output for VALUE and IDENT;
 // other kinds delegate to kind_t operator<<
 // -----------------------------------------------------------------------
 
@@ -586,16 +558,6 @@ BOOST_AUTO_TEST_CASE(testTokenOutputIdentKind)
   std::ostringstream out;
   out << tok;
   BOOST_CHECK_EQUAL(out.str(), "<ident 'myvar'>");
-}
-
-BOOST_AUTO_TEST_CASE(testTokenOutputMaskKind)
-{
-  expr_t::token_t tok;
-  tok.kind = expr_t::token_t::MASK;
-  tok.value = string_value("foo.*");
-  std::ostringstream out;
-  out << tok;
-  BOOST_CHECK_EQUAL(out.str(), "<mask 'foo.*'>");
 }
 
 BOOST_AUTO_TEST_CASE(testTokenOutputDefaultKind)
@@ -3100,6 +3062,24 @@ BOOST_AUTO_TEST_CASE(testFindScopeNotFoundW7)
   // find_scope<report_t> should throw since there's no report_t in scope
   // We test the template via search_scope returning NULL
   BOOST_CHECK(search_scope<empty_scope_t>(&scope) != nullptr);
+}
+
+// -----------------------------------------------------------------------
+// search_scope / find_scope order: grandchild before parent at a bind
+// node; find_scope on a child_scope_t starts at its parent.
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testSearchScopeBindOrder)
+{
+  empty_scope_t root;
+  symbol_scope_t outer(root);
+  symbol_scope_t inner(root);
+  bind_scope_t bound(outer, inner);
+
+  BOOST_CHECK(search_scope<symbol_scope_t>(&bound) == &inner);
+  BOOST_CHECK(&find_scope<symbol_scope_t>(static_cast<scope_t&>(bound)) == &inner);
+  BOOST_CHECK(&find_scope<symbol_scope_t>(bound) == &outer);
+  BOOST_CHECK_THROW(find_scope<bind_scope_t>(root), std::runtime_error);
 }
 
 // -----------------------------------------------------------------------

@@ -411,8 +411,6 @@ public:
   static ptr_op_t wrap_value(const value_t& val);
   /// @brief Wrap a native C++ callable as a FUNCTION node.
   static ptr_op_t wrap_functor(const expr_t::func_t& fobj);
-  /// @brief Wrap a scope pointer as a SCOPE node.
-  static ptr_op_t wrap_scope(std::shared_ptr<scope_t> sobj);
 
   /*--- Private calc helpers ---*/
 
