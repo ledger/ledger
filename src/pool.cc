@@ -862,12 +862,8 @@ void commodity_pool_t::prefetch_quotes() {
       continue;
 
     // Skip commodities that already have a recent quote this session.
-    if (comm.referent().base->last_quote) {
-      time_duration_t::sec_type secs_since_last =
-          (TRUE_CURRENT_TIME() - *comm.referent().base->last_quote).total_seconds();
-      if (secs_since_last < quote_leeway)
-        continue;
-    }
+    if (comm.quoted_recently())
+      continue;
 
     // Fetch a commodity that has a price of its own, in terms of the
     // commodity of its latest one at or before now.  map_prices() without

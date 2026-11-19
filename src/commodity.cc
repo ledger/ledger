@@ -225,6 +225,11 @@ std::optional<price_point_t> commodity_t::find_price(const commodity_t* commodit
   return point;
 }
 
+bool commodity_t::quoted_recently() const {
+  const std::optional<datetime_t>& last_quote = referent().base->last_quote;
+  return last_quote && (TRUE_CURRENT_TIME() - *last_quote).total_seconds() < pool().quote_leeway;
+}
+
 /**
  * @brief Download an updated price quote if the current one is stale.
  *
@@ -248,15 +253,9 @@ commodity_t::check_for_updated_price(const std::optional<price_point_t>& point,
     // multiple postings (issue #996): find_price() called with a historical
     // moment (midnight) cannot see a price downloaded with a later time
     // component on the same date, causing repeated download attempts.
-    if (referent().base->last_quote) {
-      time_duration_t::sec_type secs_since_last =
-          (TRUE_CURRENT_TIME() - *referent().base->last_quote).total_seconds();
-      DEBUG("commodity.download", "last_quote = " << *referent().base->last_quote);
-      DEBUG("commodity.download", "secs_since_last = " << secs_since_last);
-      if (secs_since_last < pool().quote_leeway) {
-        DEBUG("commodity.download", "quote already fetched recently, skipping download");
-        return point;
-      }
+    if (quoted_recently()) {
+      DEBUG("commodity.download", "quote already fetched recently, skipping download");
+      return point;
     }
 
     bool exceeds_leeway = true;

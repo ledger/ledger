@@ -286,6 +286,10 @@ public:
                                                        const datetime_t& moment,
                                                        const commodity_t* in_terms_of);
 
+  /** Whether --download fetched a quote for this commodity (or its
+      referent) less than quote_leeway seconds ago (#996, #1602). */
+  bool quoted_recently() const;
+
   commodity_t& nail_down(const expr_t& expr);
 
   // Methods related to parsing, reading, writing, etc., the commodity
