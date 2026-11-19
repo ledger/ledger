@@ -343,7 +343,7 @@ void export_commodity() {
                            make_getter(&commodity_t::decimal_comma_by_default),
                            make_setter(&commodity_t::decimal_comma_by_default))
 
-      .def("__str__", &commodity_t::symbol)
+      .def("__str__", &commodity_t::symbol, return_value_policy<copy_const_reference>())
       .def("__bool__", &commodity_t::operator bool)
 
       .def(self == self)
@@ -361,8 +361,11 @@ void export_commodity() {
 
       .def("pool", &commodity_t::pool, return_internal_reference<>())
 
-      .add_property("base_symbol", &commodity_t::base_symbol)
-      .add_property("symbol", &commodity_t::symbol)
+      .add_property("base_symbol",
+                    make_function(&commodity_t::base_symbol,
+                                  return_value_policy<copy_const_reference>()))
+      .add_property("symbol",
+                    make_function(&commodity_t::symbol, return_value_policy<copy_const_reference>()))
 
       .add_property("name", &commodity_t::name, &commodity_t::set_name)
       .add_property("note", &commodity_t::note, &commodity_t::set_note)

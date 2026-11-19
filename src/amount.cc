@@ -372,8 +372,8 @@ void stream_out_mpq(std::ostream& out, mpq_t quant, amount_t::precision_t precis
   const bool decimal_comma =
       commodity_t::decimal_comma_by_default || comm->has_flags(COMMODITY_STYLE_DECIMAL_COMMA);
   const bool time_colon =
-      (("h" == comm->symbol() || "m" == comm->symbol()) &&
-       (commodity_t::time_colon_by_default || comm->has_flags(COMMODITY_STYLE_TIME_COLON)));
+      (commodity_t::time_colon_by_default || comm->has_flags(COMMODITY_STYLE_TIME_COLON)) &&
+      (comm->symbol() == "h" || comm->symbol() == "m");
 
   // Under time-colon notation the fraction becomes the next smaller time
   // unit (0.50h -> 0:30h, meaning 30 min), rounded half up and padded with

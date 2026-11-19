@@ -199,8 +199,8 @@ public:
 
   commodity_pool_t& pool() const { return *parent_; }
 
-  string base_symbol() const { return base->symbol; }
-  string symbol() const { return qualified_symbol ? *qualified_symbol : base_symbol(); }
+  const string& base_symbol() const { return base->symbol; }
+  const string& symbol() const { return qualified_symbol ? *qualified_symbol : base->symbol; }
 
   optional<std::size_t> graph_index() const { return base->graph_index; }
   void set_graph_index(const optional<std::size_t>& arg = none) { base->graph_index = arg; }
