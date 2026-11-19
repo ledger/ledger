@@ -190,55 +190,51 @@ void metadata_t::parse_metadata_tags(const char* p, scope_t& outer_scope, scope_
   }
 }
 
-value_t metadata_has_tag(metadata_t& target, call_scope_t& args) {
-  if (args.size() == 1) {
-    if (args[0].is_string())
-      return target.has_tag(args.get<string>(0));
-    else if (args[0].is_mask())
-      return target.has_tag(args.get<mask_t>(0));
-    else
-      throw_(std::runtime_error,
-             _f("Expected string or mask for argument 1, but received %1%") % args[0].label());
-  } else if (args.size() == 2) {
-    if (args[0].is_mask() && args[1].is_mask())
-      return target.has_tag(args.get<mask_t>(0), args.get<mask_t>(1));
-    else
-      throw_(std::runtime_error,
-             _f("Expected masks for arguments 1 and 2, but received %1% and %2%") %
-                 args[0].label() % args[1].label());
-  } else if (args.size() == 0) {
+namespace {
+
+/**
+ * @brief Validate a `has_tag(...)` / `tag(...)` call and hand it to a lookup.
+ *
+ * The call takes a tag name or mask, optionally followed by a value mask.
+ * @p lookup is called as lookup(string), lookup(mask_t) or
+ * lookup(mask_t, std::optional<mask_t>); any other shape throws.
+ */
+template <typename F>
+value_t call_with_tag_args(call_scope_t& args, F&& lookup) {
+  switch (args.size()) {
+  case 0:
     throw_(std::runtime_error, _("Too few arguments to function"));
-  } else {
+  case 1:
+    if (args[0].is_string())
+      return lookup(args.get<string>(0));
+    if (args[0].is_mask())
+      return lookup(args.get<mask_t>(0));
+    throw_(std::runtime_error,
+           _f("Expected string or mask for argument 1, but received %1%") % args[0].label());
+  case 2:
+    if (args[0].is_mask() && args[1].is_mask())
+      return lookup(args.get<mask_t>(0), std::optional<mask_t>(args.get<mask_t>(1)));
+    throw_(std::runtime_error,
+           _f("Expected masks for arguments 1 and 2, but received %1% and %2%") % args[0].label() %
+               args[1].label());
+  default:
     throw_(std::runtime_error, _("Too many arguments to function"));
   }
-  return false;
+}
+
+} // namespace
+
+value_t metadata_has_tag(metadata_t& target, call_scope_t& args) {
+  // has_tag, not get_tag: a valueless tag is present but has no value.
+  return call_with_tag_args(args,
+                            [&](const auto&... a) -> value_t { return target.has_tag(a...); });
 }
 
 value_t metadata_get_tag(metadata_t& target, call_scope_t& args) {
-  std::optional<value_t> val;
-
-  if (args.size() == 1) {
-    if (args[0].is_string())
-      val = target.get_tag(args.get<string>(0));
-    else if (args[0].is_mask())
-      val = target.get_tag(args.get<mask_t>(0));
-    else
-      throw_(std::runtime_error,
-             _f("Expected string or mask for argument 1, but received %1%") % args[0].label());
-  } else if (args.size() == 2) {
-    if (args[0].is_mask() && args[1].is_mask())
-      val = target.get_tag(args.get<mask_t>(0), args.get<mask_t>(1));
-    else
-      throw_(std::runtime_error,
-             _f("Expected masks for arguments 1 and 2, but received %1% and %2%") %
-                 args[0].label() % args[1].label());
-  } else if (args.size() == 0) {
-    throw_(std::runtime_error, _("Too few arguments to function"));
-  } else {
-    throw_(std::runtime_error, _("Too many arguments to function"));
-  }
-
-  return val ? *val : NULL_VALUE;
+  return call_with_tag_args(args, [&](const auto&... a) -> value_t {
+    std::optional<value_t> val = target.get_tag(a...);
+    return val ? *val : NULL_VALUE;
+  });
 }
 
 void put_metadata(property_tree::ptree& st, const metadata_t::string_map& metadata) {
