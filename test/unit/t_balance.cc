@@ -1415,4 +1415,29 @@ BOOST_AUTO_TEST_CASE(testMergeOntoSharedMapKeepsPrecision)
   BOOST_CHECK_EQUAL(shared.first_sorted_amount()->number(), amount_t("1.00"));
 }
 
+BOOST_AUTO_TEST_CASE(testMoveTransfersComponents)
+{
+  BOOST_CHECK(std::is_nothrow_move_constructible_v<balance_t>);
+  BOOST_CHECK(std::is_nothrow_move_assignable_v<balance_t>);
+
+  balance_t source;
+  source += amount_t("$1.00");
+  source += amount_t("EUR 2");
+  source.sort_order = balance_t::lot_sort_order::fifo;
+
+  balance_t moved(std::move(source));
+  BOOST_CHECK(source.is_empty()); // NOLINT(bugprone-use-after-move)
+  BOOST_CHECK_EQUAL(moved.commodity_count(), 2U);
+  BOOST_CHECK(moved.sort_order == balance_t::lot_sort_order::fifo);
+
+  balance_t target(amount_t("GBP 3"));
+  target = std::move(moved);
+  BOOST_CHECK_EQUAL(target.commodity_count(), 2U);
+  BOOST_CHECK(target.sort_order == balance_t::lot_sort_order::fifo);
+
+  // A moved-from balance is still a balance: it can be assigned and used.
+  source += amount_t("$4.00");
+  BOOST_CHECK_EQUAL(source, amount_t("$4.00"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

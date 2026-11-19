@@ -163,7 +163,7 @@ public:
                  date_t,             // DATE
                  long,               // INTEGER
                  amount_t,           // AMOUNT
-                 balance_t*,         // BALANCE
+                 balance_t,          // BALANCE
                  commodity_t const*, // COMMODITY
                  string,             // STRING
                  mask_t,             // MASK
@@ -172,6 +172,8 @@ public:
                  std::any            // ANY
                  >
         data;
+    static_assert(sizeof(balance_t) <= std::max(sizeof(string), sizeof(std::any)),
+                  "BALANCE must not grow value_t::storage_t");
 
     type_t type;
 
@@ -244,9 +246,6 @@ public:
       switch (type) {
       case VOID:
         return;
-      case BALANCE: // NOLINT(bugprone-branch-clone)
-        checked_delete(std::get<balance_t*>(data));
-        break;
       case SEQUENCE:
         checked_delete(std::get<sequence_t*>(data));
         break;
@@ -388,11 +387,16 @@ public:
     *this = val;
     TRACE_CTOR(value_t, "copy");
   }
+  value_t(value_t&& val) noexcept : storage(std::move(val.storage)) { TRACE_CTOR(value_t, "move"); }
   value_t& operator=(const value_t& val) {
     if (this == &val)
       return *this;
     if (storage != val.storage)
       storage = val.storage;
+    return *this;
+  }
+  value_t& operator=(value_t&& val) noexcept {
+    storage = std::move(val.storage);
     return *this;
   }
 
@@ -689,16 +693,16 @@ public:
   balance_t& as_balance_lval() {
     VERIFY(is_balance());
     _dup();
-    return *std::get<balance_t*>(storage->data);
+    return std::get<balance_t>(storage->data);
   }
   const balance_t& as_balance() const {
     VERIFY(is_balance());
-    return *std::get<balance_t*>(storage->data);
+    return std::get<balance_t>(storage->data);
   }
   void set_balance(const balance_t& val) {
     VERIFY(val.valid());
     set_type(BALANCE);
-    storage->data = new balance_t(val);
+    storage->data = val;
   }
 
   bool is_commodity() const { return is_type(COMMODITY); }

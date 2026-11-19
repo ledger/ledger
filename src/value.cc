@@ -89,17 +89,17 @@ intrusive_ptr<value_t::storage_t> value_t::false_value;
 // Section 1: Storage management
 //
 // value_t uses intrusive reference-counted storage with copy-on-write
-// semantics.  BALANCE and SEQUENCE own heap-allocated objects and must
-// be deep-copied; all other types are stored inline in the variant and
-// can be copied by value.
+// semantics.  SEQUENCE owns a heap-allocated object and must be
+// deep-copied; all other types, BALANCE included, are stored inline in
+// the variant and can be copied by value.
 // ----------------------------------------------------------------------
 
 /// @brief Deep-copy assignment for storage objects.
 ///
-/// BALANCE and SEQUENCE contain raw pointers to heap-allocated objects,
-/// so they must be cloned rather than pointer-copied.  All other variant
-/// alternatives are trivially copyable or have proper copy constructors
-/// within std::variant and are handled by the default branch.
+/// Only SEQUENCE holds an owned pointer to a heap-allocated object, so it
+/// must be cloned rather than pointer-copied.  Every other variant
+/// alternative, BALANCE included, is copied by std::variant's own copy
+/// and is handled by the default branch.
 value_t::storage_t& value_t::storage_t::operator=(const value_t::storage_t& rhs) {
   if (this == &rhs)
     return *this;
@@ -107,9 +107,6 @@ value_t::storage_t& value_t::storage_t::operator=(const value_t::storage_t& rhs)
   type = rhs.type;
 
   switch (type) {
-  case BALANCE: // NOLINT(bugprone-branch-clone)
-    data = new balance_t(*std::get<balance_t*>(rhs.data));
-    break;
   case SEQUENCE:
     data = new sequence_t(*std::get<sequence_t*>(rhs.data));
     break;

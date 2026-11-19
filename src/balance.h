@@ -193,12 +193,21 @@ public:
   balance_t(const balance_t& bal) : amounts(bal.amounts), sort_order(bal.sort_order) {
     TRACE_CTOR(balance_t, "copy");
   }
+  balance_t(balance_t&& bal) noexcept
+      : amounts(std::move(bal.amounts)), sort_order(bal.sort_order) {
+    TRACE_CTOR(balance_t, "move");
+  }
 
   balance_t& operator=(const balance_t& bal) {
     if (this != &bal) {
       amounts = bal.amounts;
       sort_order = bal.sort_order;
     }
+    return *this;
+  }
+  balance_t& operator=(balance_t&& bal) noexcept {
+    amounts = std::move(bal.amounts);
+    sort_order = bal.sort_order;
     return *this;
   }
   balance_t& operator=(const amount_t& amt) {
@@ -453,7 +462,7 @@ public:
     temp.sort_order = sort_order;
     for (const amounts_map::value_type& pair : amounts)
       temp.merge(pair.second.reduced());
-    *this = temp;
+    *this = std::move(temp);
   }
 
   balance_t unreduced() const {
@@ -468,7 +477,7 @@ public:
     temp.sort_order = sort_order;
     for (const amounts_map::value_type& pair : amounts)
       temp.merge(pair.second.unreduced());
-    *this = temp;
+    *this = std::move(temp);
   }
 
   optional<balance_t> value(const datetime_t& moment = datetime_t(),

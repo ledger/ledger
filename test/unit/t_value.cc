@@ -9017,5 +9017,48 @@ BOOST_AUTO_TEST_CASE(testOrderingDirectionsAgree)
   BOOST_CHECK(outer_left.is_greater_than(outer_right));
 }
 
+BOOST_AUTO_TEST_CASE(testMoveTransfersStorage)
+{
+  BOOST_CHECK(std::is_nothrow_move_constructible_v<value_t>);
+  BOOST_CHECK(std::is_nothrow_move_assignable_v<value_t>);
+
+  value_t source(amount_t("$1.00"));
+  const amount_t* held = &source.as_amount();
+
+  value_t moved(std::move(source));
+  BOOST_CHECK(source.is_null()); // NOLINT(bugprone-use-after-move)
+  BOOST_CHECK(&moved.as_amount() == held);
+
+  value_t target(2L);
+  target = std::move(moved);
+  BOOST_CHECK(moved.is_null()); // NOLINT(bugprone-use-after-move)
+  BOOST_CHECK(&target.as_amount() == held);
+
+  // A moved-from value is VOID and can be assigned again.
+  source = value_t(3L);
+  BOOST_CHECK_EQUAL(source.as_long(), 3L);
+}
+
+BOOST_AUTO_TEST_CASE(testBalanceStorageCopyOnWrite)
+{
+  balance_t bal;
+  bal += amount_t("$1.00");
+  bal += amount_t("EUR 2");
+  const value_t original(bal);
+  value_t copy(original);
+
+  copy.as_balance_lval() += amount_t("GBP 3");
+  BOOST_CHECK_EQUAL(original.as_balance().commodity_count(), 2U);
+  BOOST_CHECK_EQUAL(copy.as_balance().commodity_count(), 3U);
+  BOOST_CHECK(original.as_balance() == bal);
+
+  copy = value_t(amount_t("$5.00"));
+  BOOST_CHECK(copy.is_amount());
+  copy.in_place_cast(value_t::BALANCE);
+  BOOST_CHECK(copy.is_balance());
+  BOOST_CHECK_EQUAL(copy.as_balance().commodity_count(), 1U);
+  BOOST_CHECK(original.as_balance() == bal);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
