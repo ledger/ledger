@@ -403,7 +403,7 @@ void commodity_t::parse_symbol(std::istream& in, string& symbol) {
   int c = peek_next_nonws(in);
   if (c == '"') {
     in.get();
-    READ_INTO(in, symbol, c, c != '"');
+    c = read_into(in, symbol, [](int ch) { return ch != '"'; });
     if (c == '"')
       in.get();
     else

@@ -1574,8 +1574,9 @@ void parse_quantity(std::istream& in, string& value, const parse_flags_t& flags)
   } else if (c == '+') {
     in.get(); // consume unary '+'; value is positive by default
   }
-  READ_INTO(in, value, c,
-            std::isdigit(static_cast<unsigned char>(c)) || c == '.' || c == ',' || c == '\'');
+  read_into(in, value, [](int ch) {
+    return std::isdigit(static_cast<unsigned char>(ch)) || ch == '.' || ch == ',' || ch == '\'';
+  });
 
   while (!value.empty() && !std::isdigit(static_cast<unsigned char>(value.back()))) {
     value.pop_back();

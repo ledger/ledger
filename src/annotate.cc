@@ -174,7 +174,7 @@ void annotation_t::parse(std::istream& in) {
         add_flags(ANNOTATION_PRICE_FIXATED);
       }
 
-      READ_INTO(in, buf, c, c != '}');
+      c = read_into(in, buf, [](int ch) { return ch != '}'; });
       if (c == '}') {
         in.get();
         if (has_flags(ANNOTATION_PRICE_NOT_PER_UNIT)) {
@@ -198,7 +198,7 @@ void annotation_t::parse(std::istream& in) {
         throw_(amount_error, _("Commodity specifies more than one date"));
 
       in.get();
-      READ_INTO(in, buf, c, c != ']');
+      c = read_into(in, buf, [](int ch) { return ch != ']'; });
       if (c == ']')
         in.get();
       else
@@ -253,7 +253,7 @@ void annotation_t::parse(std::istream& in) {
         if (tag)
           throw_(amount_error, _("Commodity specifies more than one tag"));
 
-        READ_INTO(in, buf, c, c != ')');
+        c = read_into(in, buf, [](int ch) { return ch != ')'; });
         if (c == ')')
           in.get();
         else

@@ -76,7 +76,9 @@ int expr_t::token_t::parse_reserved_word(std::istream& in) {
     length = 0;
 
     string buf;
-    READ_INTO_(in, buf, c, length, std::isalpha(static_cast<unsigned char>(c)) || c == '_');
+    read_into(
+        in, buf, [](int ch) { return std::isalpha(static_cast<unsigned char>(ch)) || ch == '_'; },
+        &length);
 
     switch (buf[0]) {
     case 'a':
@@ -165,9 +167,10 @@ void expr_t::token_t::parse_ident(std::istream& in) {
   kind = IDENT;
   length = 0;
 
-  int c;
   string buf;
-  READ_INTO_(in, buf, c, length, std::isalpha(static_cast<unsigned char>(c)) || c == '_');
+  read_into(
+      in, buf, [](int ch) { return std::isalpha(static_cast<unsigned char>(ch)) || ch == '_'; },
+      &length);
 
   value.set_string(buf);
 }
@@ -268,7 +271,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
     in.get();
 
     string buf;
-    READ_INTO_(in, buf, c, length, c != ']');
+    c = read_into(in, buf, [](int ch) { return ch != ']'; }, &length);
     if (c != ']')
       expected(']', c);
 
@@ -289,7 +292,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
     char delim;
     in.get(delim);
     string buf;
-    READ_INTO_(in, buf, c, length, c != delim);
+    c = read_into(in, buf, [delim](int ch) { return ch != delim; }, &length);
     if (c != delim)
       expected(delim, c);
     in.get();
@@ -321,7 +324,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
     char delim;
     in.get(delim);
     string buf;
-    READ_INTO_(in, buf, c, length, c != delim);
+    c = read_into(in, buf, [delim](int ch) { return ch != delim; }, &length);
     if (c != delim)
       expected(delim, c);
     in.get();

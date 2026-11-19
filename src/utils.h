@@ -625,95 +625,57 @@ inline int peek_next_nonws(std::istream& in) {
   return c;
 }
 
-/// Read characters from stream @p str into string @p targ, appending each
-/// character to @p targ and storing the byte just consumed in @p var,
-/// continuing while @p cond is true.  The string grows as needed, so the
-/// caller does not need to anticipate the input length.  Handles backslash
-/// escape sequences (\b, \f, \n, \r, \t, \v).  Stops at newline or
-/// end-of-stream; the terminating character is left in the stream so the
-/// caller can inspect it via @p var.
-#define READ_INTO(str, targ, var, cond)                                                            \
-  {                                                                                                \
-    (var) = (str).peek();                                                                          \
-    while ((str).good() && !(str).eof() && (var) != '\n' && (cond)) {                              \
-      (var) = (str).get();                                                                         \
-      if ((str).eof())                                                                             \
-        break;                                                                                     \
-      if ((var) == '\\') {                                                                         \
-        (var) = (str).get();                                                                       \
-        if ((str).eof())                                                                           \
-          break;                                                                                   \
-        switch (var) {                                                                             \
-        case 'b':                                                                                  \
-          (var) = '\b';                                                                            \
-          break;                                                                                   \
-        case 'f':                                                                                  \
-          (var) = '\f';                                                                            \
-          break;                                                                                   \
-        case 'n':                                                                                  \
-          (var) = '\n';                                                                            \
-          break;                                                                                   \
-        case 'r':                                                                                  \
-          (var) = '\r';                                                                            \
-          break;                                                                                   \
-        case 't':                                                                                  \
-          (var) = '\t';                                                                            \
-          break;                                                                                   \
-        case 'v':                                                                                  \
-          (var) = '\v';                                                                            \
-          break;                                                                                   \
-        default:                                                                                   \
-          break;                                                                                   \
-        }                                                                                          \
-      }                                                                                            \
-      (targ).push_back(static_cast<char>(var));                                                    \
-      (var) = (str).peek();                                                                        \
-    }                                                                                              \
+/// Read characters from @p in into @p out while the next character is not
+/// a newline and @p keep(next) holds, decoding backslash escapes (\b, \f,
+/// \n, \r, \t, \v; any other escaped byte stands for itself).  @p out grows
+/// as needed.  The terminating character is left in the stream.  When
+/// @p consumed is given it is incremented once per byte taken from the
+/// stream, both bytes of an escape included (the expression tokenizer's
+/// column count).  Returns the last character peeked, or read at
+/// end-of-stream, which callers test to see why reading stopped.
+template <class Keep>
+inline int read_into(std::istream& in, string& out, Keep keep, std::size_t* consumed = nullptr) {
+  int c = in.peek();
+  while (in.good() && !in.eof() && c != '\n' && keep(c)) {
+    c = in.get();
+    if (in.eof())
+      break;
+    if (consumed)
+      ++*consumed;
+    if (c == '\\') {
+      c = in.get();
+      if (in.eof())
+        break;
+      switch (c) {
+      case 'b':
+        c = '\b';
+        break;
+      case 'f':
+        c = '\f';
+        break;
+      case 'n':
+        c = '\n';
+        break;
+      case 'r':
+        c = '\r';
+        break;
+      case 't':
+        c = '\t';
+        break;
+      case 'v':
+        c = '\v';
+        break;
+      default:
+        break;
+      }
+      if (consumed)
+        ++*consumed;
+    }
+    out.push_back(static_cast<char>(c));
+    c = in.peek();
   }
-
-/// Like READ_INTO but also increments a column index @p idx for each
-/// character consumed, including both bytes of an escape sequence.
-/// Used by the parser to track column positions for error reporting.
-#define READ_INTO_(str, targ, var, idx, cond)                                                      \
-  {                                                                                                \
-    (var) = (str).peek();                                                                          \
-    while ((str).good() && !(str).eof() && (var) != '\n' && (cond)) {                              \
-      (var) = (str).get();                                                                         \
-      if ((str).eof())                                                                             \
-        break;                                                                                     \
-      (idx)++;                                                                                     \
-      if ((var) == '\\') {                                                                         \
-        (var) = (str).get();                                                                       \
-        if ((str).eof())                                                                           \
-          break;                                                                                   \
-        switch (var) {                                                                             \
-        case 'b':                                                                                  \
-          (var) = '\b';                                                                            \
-          break;                                                                                   \
-        case 'f':                                                                                  \
-          (var) = '\f';                                                                            \
-          break;                                                                                   \
-        case 'n':                                                                                  \
-          (var) = '\n';                                                                            \
-          break;                                                                                   \
-        case 'r':                                                                                  \
-          (var) = '\r';                                                                            \
-          break;                                                                                   \
-        case 't':                                                                                  \
-          (var) = '\t';                                                                            \
-          break;                                                                                   \
-        case 'v':                                                                                  \
-          (var) = '\v';                                                                            \
-          break;                                                                                   \
-        default:                                                                                   \
-          break;                                                                                   \
-        }                                                                                          \
-        (idx)++;                                                                                   \
-      }                                                                                            \
-      (targ).push_back(static_cast<char>(var));                                                    \
-      (var) = (str).peek();                                                                        \
-    }                                                                                              \
-  }
+  return c;
+}
 
 /// Convert a SHA-1 digest to a hexadecimal string.
 /// @param message_digest  The raw SHA-1 digest (array of unsigned ints).

@@ -889,4 +889,44 @@ BOOST_AUTO_TEST_CASE(testParseContextPathnameIsTheSharedPath)
   BOOST_CHECK_EQUAL(ctx.location(), file_context(path("/books/main.dat"), 3));
 }
 
+BOOST_AUTO_TEST_CASE(testReadIntoDecodesEscapesAndCountsBytes)
+{
+  // read_into keeps reading while keep(next) holds and next is not a
+  // newline, decodes \b \f \n \r \t \v (any other escaped byte stands for
+  // itself), counts every byte taken (both bytes of an escape), leaves the
+  // terminator in the stream and returns it.
+  string out;
+  std::size_t consumed = 0;
+
+  std::istringstream brace("a\\tb}rest");
+  int c = read_into(brace, out, [](int ch) { return ch != '}'; }, &consumed);
+  BOOST_CHECK_EQUAL(out, "a\tb");
+  BOOST_CHECK_EQUAL(c, '}');
+  BOOST_CHECK_EQUAL(consumed, 4U);
+  BOOST_CHECK_EQUAL(brace.peek(), '}');
+
+  std::istringstream quote("A\\\"B\"x");
+  out.clear();
+  BOOST_CHECK_EQUAL(read_into(quote, out, [](int ch) { return ch != '"'; }), '"');
+  BOOST_CHECK_EQUAL(out, "A\"B");
+
+  std::istringstream newline("ab\ncd");
+  out.clear();
+  BOOST_CHECK_EQUAL(read_into(newline, out, [](int) { return true; }), '\n');
+  BOOST_CHECK_EQUAL(out, "ab");
+
+  std::istringstream trailing("ab\\");
+  out.clear();
+  consumed = 0;
+  BOOST_CHECK_EQUAL(read_into(trailing, out, [](int) { return true; }, &consumed),
+                    std::char_traits<char>::eof());
+  BOOST_CHECK_EQUAL(out, "ab");
+  BOOST_CHECK_EQUAL(consumed, 3U);
+
+  std::istringstream other("\\q\\\\x");
+  out.clear();
+  read_into(other, out, [](int) { return true; });
+  BOOST_CHECK_EQUAL(out, "q\\x");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
