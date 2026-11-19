@@ -24,15 +24,15 @@ jobs:
         with:
           nix_path: nixpkgs=channel:nixpkgs-unstable
 
-      # Save PR versions of flake and benchmark files so we can restore them
-      # after switching to the base branch.  nix develop must always use the
-      # PR flake (which includes hyperfine and LLVM tools).
+      # Save PR versions of flake, benchmark and journal-generator files so we
+      # can restore them after switching to the base branch.  nix develop must
+      # always use the PR flake (which includes hyperfine and LLVM tools).
       - name: Save PR support files
         run: |
           mkdir -p /tmp/pr-files
           cp flake.nix flake.lock /tmp/pr-files/
           cp benchmark/run_benchmark.sh benchmark/compare_benchmarks.py \
-             benchmark/gen_benchmark.py /tmp/pr-files/
+             tools/bench/generate_journal.py /tmp/pr-files/
 
       # --- Build PR branch ---
 
@@ -54,9 +54,9 @@ jobs:
       - name: Restore PR support files
         run: |
           cp /tmp/pr-files/flake.nix /tmp/pr-files/flake.lock .
-          mkdir -p benchmark
-          cp /tmp/pr-files/run_benchmark.sh /tmp/pr-files/compare_benchmarks.py \
-             /tmp/pr-files/gen_benchmark.py benchmark/
+          mkdir -p benchmark tools/bench
+          cp /tmp/pr-files/run_benchmark.sh /tmp/pr-files/compare_benchmarks.py benchmark/
+          cp /tmp/pr-files/generate_journal.py tools/bench/
 
       - name: Build base branch
         run: |
@@ -76,7 +76,6 @@ jobs:
       - name: Benchmark both branches
         run: |
           nix develop --command bash -c "
-            python3 benchmark/gen_benchmark.py
             ./benchmark/run_benchmark.sh \
               build-pr/ledger build-base/ledger \
               pr_results.json base_results.json

@@ -1,10 +1,15 @@
 # Benchmarking and profiling Ledger
 
 This directory holds the tools behind Ledger's comparison with hledger
-(https://hledger.org/PERFORMANCE.html#other-apps) and the profiling
-recipes used to find and fix the slow paths.  `benchmark/` next door is the
-older PGO-oriented workflow that CI's `perf.yml` drives; the two will be
-merged once this one has settled.
+(https://hledger.org/PERFORMANCE.html#other-apps) and the profiling recipes
+used to find and fix the slow paths.  `benchmark/` next door is CI's
+performance gate: `perf.yml` runs `benchmark/run_benchmark.sh`, which times
+the PR and base binaries in alternation with hyperfine on this directory's
+10k journal (`generate_journal.py 10000 1000 10`, written to
+`benchmark/10k.journal`), and `benchmark/compare_benchmarks.py`, which fails
+the job when any report's median slows by more than the threshold;
+`benchmark/profile.sh` holds the clang PGO recipe.  Use `bench.py` here for
+CPU time, RSS and comparisons with hledger.
 
 ## Journals
 
