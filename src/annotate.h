@@ -131,6 +131,21 @@ struct annotation_t : public flags::supports_flags<>, public equality_comparable
   static int compare_shape(const annotation_t& lhs, const annotation_t& rhs);
 
   /**
+   * @brief Three-way comparison of the date, then the tag, then the
+   * value-expression text; absent before present.
+   *
+   * This is the part of the order that compare_shape() and
+   * commodity_t::compare_by_commodity share.
+   */
+  static int compare_details(const annotation_t& lhs, const annotation_t& rhs);
+
+  /**
+   * @brief Three-way comparison of the ANNOTATION_SEMANTIC_FLAGS, fewer
+   * before more.
+   */
+  static int compare_semantic_flags(const annotation_t& lhs, const annotation_t& rhs);
+
+  /**
    * @brief Three-way total order: compare_shape(), then the price value,
    * then the semantic flags.
    *

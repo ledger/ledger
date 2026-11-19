@@ -499,11 +499,9 @@ bool commodity_t::valid() const {
  * difference is found:
  *   1. Base symbol (lexicographic).
  *   2. Annotation presence (unannotated sorts before annotated).
- *   3. Lot price (by commodity symbol, then by numeric value).
- *   4. Lot date (chronological).
- *   5. Lot tag (lexicographic).
- *   6. Valuation expression text (lexicographic).
- *   7. Semantic flags (ANNOTATION_PRICE_FIXATED).
+ *   3. Lot price (presence, then by commodity, then by numeric value).
+ *   4-6. annotation_t::compare_details (date, tag, value expression).
+ *   7. annotation_t::compare_semantic_flags.
  *
  * Returns negative if left < right, zero if equal, positive if left > right.
  */
@@ -532,109 +530,27 @@ int commodity_t::compare_by_commodity::operator()(const amount_t* left,
     return 0;
   }
 
-  annotated_commodity_t& aleftcomm(static_cast<annotated_commodity_t&>(leftcomm));
-  annotated_commodity_t& arightcomm(static_cast<annotated_commodity_t&>(rightcomm));
+  const annotation_t& ldetails(static_cast<annotated_commodity_t&>(leftcomm).details);
+  const annotation_t& rdetails(static_cast<annotated_commodity_t&>(rightcomm).details);
 
-  if (!aleftcomm.details.price && arightcomm.details.price) {
-    DEBUG("commodity.compare", "left has no price, right does");
-    return -1;
-  }
-  if (aleftcomm.details.price && !arightcomm.details.price) {
-    DEBUG("commodity.compare", "right has no price, left does");
-    return 1;
-  }
-
-  if (aleftcomm.details.price && arightcomm.details.price) {
-    amount_t leftprice(*aleftcomm.details.price);
-    amount_t rightprice(*arightcomm.details.price);
-
-    if (leftprice.commodity() != rightprice.commodity()) {
-      // Prices in different commodities share no scale, so order the
-      // lots by the price commodities themselves.
+  // Display order compares the price value before the other fields (the
+  // pool key, annotation_t::compare, compares it after them).
+  if (ldetails.price.has_value() != rdetails.price.has_value())
+    return ldetails.price ? 1 : -1;
+  if (ldetails.price) {
+    const amount_t& leftprice(*ldetails.price);
+    const amount_t& rightprice(*rdetails.price);
+    if (leftprice.commodity() != rightprice.commodity())
+      // Prices in different commodities share no scale, so order the lots
+      // by the price commodities themselves.
       return commodity_t::compare_by_commodity()(&leftprice, &rightprice);
-    } else {
-      if (leftprice < rightprice) {
-        DEBUG("commodity.compare", "left price is less");
-        return -1;
-      } else if (leftprice > rightprice) {
-        DEBUG("commodity.compare", "left price is more");
-        return 1;
-      }
-    }
+    if (int cmp = leftprice.compare(rightprice))
+      return cmp;
   }
 
-  if (!aleftcomm.details.date && arightcomm.details.date) {
-    DEBUG("commodity.compare", "left has no date, right does");
-    return -1;
-  }
-  if (aleftcomm.details.date && !arightcomm.details.date) {
-    DEBUG("commodity.compare", "right has no date, left does");
-    return 1;
-  }
-
-  if (aleftcomm.details.date && arightcomm.details.date) {
-    gregorian::date_duration diff = *aleftcomm.details.date - *arightcomm.details.date;
-    DEBUG("commodity.compare", "both have dates, comparing on difference");
-    if (diff.is_negative()) {
-      DEBUG("commodity.compare", "dates differ");
-      return -1;
-    }
-
-    gregorian::date_duration diff2 = *arightcomm.details.date - *aleftcomm.details.date;
-    if (diff2.is_negative()) {
-      DEBUG("commodity.compare", "dates differ");
-      return 1;
-    }
-  }
-
-  if (!aleftcomm.details.tag && arightcomm.details.tag) {
-    DEBUG("commodity.compare", "left has no tag, right does");
-    return -1;
-  }
-  if (aleftcomm.details.tag && !arightcomm.details.tag) {
-    DEBUG("commodity.compare", "right has no tag, left does");
-    return 1;
-  }
-
-  if (aleftcomm.details.tag && arightcomm.details.tag) {
-    DEBUG("commodity.compare", "both have tags, comparing lexically");
-    if (*aleftcomm.details.tag < *arightcomm.details.tag)
-      return -1;
-    else if (*aleftcomm.details.tag > *arightcomm.details.tag)
-      return 1;
-  }
-
-  if (!aleftcomm.details.value_expr && arightcomm.details.value_expr) {
-    DEBUG("commodity.compare", "left has no value expr, right does");
-    return -1;
-  }
-  if (aleftcomm.details.value_expr && !arightcomm.details.value_expr) {
-    DEBUG("commodity.compare", "right has no value expr, left does");
-    return 1;
-  }
-
-  if (aleftcomm.details.value_expr && arightcomm.details.value_expr) {
-    DEBUG("commodity.compare", "both have value exprs, comparing text reprs");
-    int cmp3 = aleftcomm.details.value_expr->text().compare(arightcomm.details.value_expr->text());
-    if (cmp3 != 0)
-      return cmp3 < 0 ? -1 : 1;
-  }
-
-  // Compare the semantic flags (ANNOTATION_SEMANTIC_FLAGS: whether the price is fixated)
-  unsigned int left_flags = aleftcomm.details.flags() & ANNOTATION_SEMANTIC_FLAGS;
-  unsigned int right_flags = arightcomm.details.flags() & ANNOTATION_SEMANTIC_FLAGS;
-  if (left_flags < right_flags) {
-    DEBUG("commodity.compare", "left has fewer semantic flags");
-    return -1;
-  }
-  if (left_flags > right_flags) {
-    DEBUG("commodity.compare", "left has more semantic flags");
-    return 1;
-  }
-
-  // All attributes match - the commodities are equal
-  DEBUG("commodity.compare", "all attributes match, commodities are equal");
-  return 0;
+  if (int cmp = annotation_t::compare_details(ldetails, rdetails))
+    return cmp;
+  return annotation_t::compare_semantic_flags(ldetails, rdetails);
 }
 
 void put_commodity(property_tree::ptree& st, const commodity_t& comm, bool commodity_details) {

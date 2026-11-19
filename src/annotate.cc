@@ -60,12 +60,12 @@ namespace ledger {
 /**
  * @brief Compare the non-price part of two annotations.
  *
- * Fields are compared in the order price presence, price commodity, date,
- * tag, value expression; within each field "absent" sorts before
- * "present".  Price commodities are compared by symbol, and two distinct
- * commodity objects with the same symbol (an annotated price commodity)
- * are kept apart by identity, mirroring operator== which compares them
- * with commodity_t::operator==.
+ * The price step (price presence, then price commodity) followed by
+ * compare_details() (date, tag, value expression); within each field
+ * "absent" sorts before "present".  Price commodities are compared by
+ * symbol, and two distinct commodity objects with the same symbol (an
+ * annotated price commodity) are kept apart by identity, mirroring
+ * operator== which compares them with commodity_t::operator==.
  */
 int annotation_t::compare_shape(const annotation_t& lhs, const annotation_t& rhs) {
   if (lhs.price.has_value() != rhs.price.has_value())
@@ -80,6 +80,10 @@ int annotation_t::compare_shape(const annotation_t& lhs, const annotation_t& rhs
     }
   }
 
+  return compare_details(lhs, rhs);
+}
+
+int annotation_t::compare_details(const annotation_t& lhs, const annotation_t& rhs) {
   if (lhs.date.has_value() != rhs.date.has_value())
     return lhs.date ? 1 : -1;
   if (lhs.date && *lhs.date != *rhs.date)
@@ -102,6 +106,12 @@ int annotation_t::compare_shape(const annotation_t& lhs, const annotation_t& rhs
   return 0;
 }
 
+int annotation_t::compare_semantic_flags(const annotation_t& lhs, const annotation_t& rhs) {
+  unsigned int lhs_flags = lhs.flags() & ANNOTATION_SEMANTIC_FLAGS;
+  unsigned int rhs_flags = rhs.flags() & ANNOTATION_SEMANTIC_FLAGS;
+  return lhs_flags < rhs_flags ? -1 : lhs_flags > rhs_flags ? 1 : 0;
+}
+
 /**
  * @brief Total order on annotations: shape, then price value, then the
  * semantic flags.
@@ -120,9 +130,7 @@ int annotation_t::compare(const annotation_t& rhs) const {
     if (int cmp = price->compare(*rhs.price))
       return cmp;
 
-  unsigned int lhs_flags = flags() & ANNOTATION_SEMANTIC_FLAGS;
-  unsigned int rhs_flags = rhs.flags() & ANNOTATION_SEMANTIC_FLAGS;
-  return lhs_flags < rhs_flags ? -1 : lhs_flags > rhs_flags ? 1 : 0;
+  return compare_semantic_flags(*this, rhs);
 }
 
 /**

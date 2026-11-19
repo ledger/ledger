@@ -2437,4 +2437,46 @@ BOOST_AUTO_TEST_CASE(testCreateExistingCommodityFails)
   BOOST_CHECK_EQUAL(pool.commodities.size(), entries);
 }
 
+BOOST_AUTO_TEST_CASE(testCompareByCommodityFieldOrder)
+{
+  // compare_by_commodity orders lots of one symbol by price value, then
+  // date, tag, value expression and the fixated flag, each absent before
+  // present.  Unlike annotation_t::compare, the price value outranks the
+  // date: the first lot is cheaper but dated later than the others.
+  const auto lot = [](const char* date, const char* tag, const char* expr, bool fixated,
+                      const char* price = "$20.00") {
+    annotation_t details{amount_t(price)};
+    if (date)
+      details.date = parse_date(date);
+    if (tag)
+      details.tag = string(tag);
+    if (expr)
+      details.value_expr = expr_t(expr);
+    if (fixated)
+      details.add_flags(ANNOTATION_PRICE_FIXATED);
+    amount_t amt(1L);
+    amt.set_commodity(*commodity_pool_t::current_pool->find_or_create("CBFO", details));
+    return amt;
+  };
+  const std::vector<amount_t> lots{
+      lot("2024/03/01", nullptr, nullptr, false, "$10.00"),
+      lot(nullptr, nullptr, nullptr, false),
+      lot("2024/01/01", nullptr, nullptr, false),
+      lot("2024/02/01", nullptr, nullptr, false),
+      lot("2024/02/01", "a", nullptr, false),
+      lot("2024/02/01", "b", nullptr, false),
+      lot("2024/02/01", "b", "amount", false),
+      lot("2024/02/01", "b", "amount * 2", false),
+      lot("2024/02/01", "b", "amount * 2", true),
+  };
+  commodity_t::compare_by_commodity cmp;
+  for (std::size_t i = 0; i < lots.size(); ++i) {
+    BOOST_CHECK_EQUAL(0, cmp(&lots[i], &lots[i]));
+    for (std::size_t j = i + 1; j < lots.size(); ++j) {
+      BOOST_CHECK_MESSAGE(cmp(&lots[i], &lots[j]) < 0, "lot " << i << " < lot " << j);
+      BOOST_CHECK_MESSAGE(cmp(&lots[j], &lots[i]) > 0, "lot " << j << " > lot " << i);
+    }
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
