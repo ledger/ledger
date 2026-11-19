@@ -151,6 +151,7 @@ sys.path.insert(0, HERE)
 sys.path.append(os.path.dirname(HERE))
 import sweep  # normalization + C++ balance parsing
 from RegressTests import NOW  # the clock RegressTests.py runs the tests at
+from LedgerHarness import sanitized_env  # the environment the .test harness gives ledger
 
 TEST_RE = re.compile(r"^test\s+(.*?)(?:\s*->\s*([0-9]+))?\s*$")
 # The only expected error a NEG:unbalanced test may carry
@@ -681,7 +682,8 @@ def main():
                     divergent_rows_listed.add(ln.strip())
     repo = os.path.abspath(args.source) if args.source else sweep.REPO
     ledger = args.ledger or os.path.join(repo, "build", "ledger")
-    env = {**os.environ, "TZ": os.environ.get("TZ", "America/Chicago")}
+    ledger_env = sanitized_env()
+    lake_env = {**os.environ, "TZ": ledger_env["TZ"]}
     dirs = args.dirs or [os.path.join(repo, "test", d)
                          for d in ("baseline", "regress", "manual")]
 
@@ -767,7 +769,7 @@ def main():
                 inc_texts = copy_includes(journal,
                                           os.path.dirname(tpath), fdir)
                 if skip == "negative":
-                    run = admit_negative(ledger, dat, cpp_flags, env)
+                    run = admit_negative(ledger, dat, cpp_flags, ledger_env)
                     if run is None:
                         bins["SKIP:negative"].append(rel)
                         continue
@@ -978,7 +980,7 @@ def main():
                    "--run", "Ledger/Driver.lean", *argv]
             drv = subprocess.run(
                 cmd, cwd=lean_dir, capture_output=True,
-                text=True, timeout=3600, env=sweep.oracle_env(env))
+                text=True, timeout=3600, env=sweep.oracle_env(lake_env))
             if drv.returncode != 0:
                 msg = (drv.stderr or drv.stdout)[-500:]
                 print("oracle driver invocation failed:\n" + msg,
@@ -1043,7 +1045,7 @@ def main():
                     ledger, [*cpp_flags, "--permissive", "-f", dat,
                              "balance", "--flat", "--no-total", "--limit",
                              "false"],
-                    env)
+                    ledger_env)
                 if pr.returncode != 0:
                     return None, (f"eval preamble probe: C++ exit"
                                   f" {pr.returncode}:"
@@ -1054,7 +1056,7 @@ def main():
                 g = sweep.run_cpp(
                     ledger, [*cpp_flags, "--permissive", "-f", dat,
                              "balance", "--flat", "--no-total", "--amount", expr],
-                    env)
+                    ledger_env)
                 if g.returncode != 0:
                     return None, f"{tag}: C++ exit {g.returncode}: " \
                                  f"{g.stderr.strip()[-200:]}"
@@ -1111,7 +1113,7 @@ def main():
                     ledger, [*cpp_flags, "--permissive", "-f", dat,
                              "balance", "--flat", "--no-total", "--limit",
                              "false"],
-                    env)
+                    ledger_env)
                 if pr.returncode != 0:
                     return None, (f"eval preamble probe: C++ exit"
                                   f" {pr.returncode}:"
@@ -1120,7 +1122,7 @@ def main():
             g = sweep.run_cpp(
                 ledger, [*cpp_flags, "--permissive", "-f", dat,
                          "balance", "--flat", "--no-total", "-X", target],
-                env)
+                ledger_env)
             if g.returncode != 0:
                 return None, f"C++ exit {g.returncode}: " \
                              f"{g.stderr.strip()[-200:]}"
@@ -1195,7 +1197,7 @@ def main():
                 cpp = sweep.run_cpp(
                     ledger, [*cpp_flags, "--permissive", "-f", dat,
                              "balance", "--flat", "--no-total"],
-                    env)
+                    ledger_env)
             if cpp.returncode != 0:
                 bins["SKIP:cpp-parse"].append(rel)
                 details.append({"file": rel, "status": "SKIP:cpp-parse",
@@ -1246,7 +1248,7 @@ def main():
             def cpp_rows_of(path):
                 out = sweep.run_cpp(
                     ledger, ["-f", path, "balance", "--flat", "--no-total"],
-                    env)
+                    ledger_env)
                 return sweep.parse_cpp_balance(out.stdout)
             control_ok = isinstance(res, set) and cpp_rows_of(p1) == res
             fired = (not isinstance(res, set)) or cpp_rows_of(p2) != res
@@ -1266,7 +1268,7 @@ def main():
             def cpp_net(path):
                 out = sweep.run_cpp(
                     ledger, ["-f", path, "balance", "--flat", "--no-total"],
-                    env)
+                    ledger_env)
                 return sweep.parse_cpp_balance(out.stdout)
 
             og = {"dr": gdr.get(t1, set()), "cr": gcr.get(t1, set())}
@@ -1309,7 +1311,7 @@ def main():
                                       f"control_ok={vctl} fired={vfired}"))
 
         def cpp_reject(path, flags):
-            return sweep.run_cpp(ledger, [*flags, "-f", path, "balance"], env)
+            return sweep.run_cpp(ledger, [*flags, "-f", path, "balance"], ledger_env)
 
         for tpath, dat, nflags, _ in neg_candidates:
             rel = os.path.relpath(tpath, repo)
@@ -1466,7 +1468,7 @@ def main():
         except OSError:
             return "unknown"
 
-    ledger_version = run_line([ledger, "--args-only", "--version"], env=env)
+    ledger_version = run_line([ledger, "--args-only", "--version"], env=ledger_env)
     git_rev = run_line(["git", "rev-parse", "HEAD"], cwd=repo)
     # In the Nix build the oracle is a store path with no repository;
     # the flake passes the semantics revision in LEDGER_LEAN_REV.
@@ -1477,7 +1479,7 @@ def main():
             "oracle_rev": oracle_rev,
             "utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "git_rev": git_rev, "ledger_version": ledger_version,
-            "tz": env["TZ"], "capture": "test/semantic/check_all.py",
+            "tz": ledger_env["TZ"], "capture": "test/semantic/check_all.py",
             "cpp_flags_common": ["--args-only", "--permissive", "balance",
                                  "--flat", "--no-total"],
             "cpp_flags_note": ("per-file flags (--now, --decimal-comma,"

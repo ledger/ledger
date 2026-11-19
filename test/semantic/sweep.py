@@ -31,6 +31,8 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
+sys.path.append(os.path.dirname(HERE))
+from LedgerHarness import sanitized_env  # the environment the .test harness gives ledger
 
 # (repo-relative path, scope, note)
 MANIFEST = [
@@ -187,9 +189,10 @@ def run_cpp(ledger, args, env):
 
 def main():
     ledger = os.environ.get("LEDGER", os.path.join(REPO, "build", "ledger"))
-    env = {**os.environ, "TZ": "America/Chicago"}
+    ledger_env = sanitized_env()
+    lake_env = {**os.environ, "TZ": ledger_env["TZ"]}
 
-    ledger_version = run_cpp(ledger, ["--version"], env).stdout.splitlines()[0]
+    ledger_version = run_cpp(ledger, ["--version"], ledger_env).stdout.splitlines()[0]
     git_rev = subprocess.run(
         ["git", "rev-parse", "HEAD"], capture_output=True, text=True, cwd=REPO
     ).stdout.strip()
@@ -207,7 +210,7 @@ def main():
     drv = subprocess.run(
         [*cmd, *abs_paths],
         cwd=lean_dir, capture_output=True, text=True,
-        timeout=1800, env=oracle_env(env),
+        timeout=1800, env=oracle_env(lake_env),
     )
     if drv.returncode != 0:
         print("driver invocation failed:", file=sys.stderr)
@@ -248,7 +251,7 @@ def main():
             cpp = run_cpp(
                 ledger, ["-f", os.path.join(REPO, path),
                          "balance", "--flat", "--no-total"],
-                env)
+                ledger_env)
             if cpp.returncode != 0:
                 entry["status"] = "FAIL: C++ ledger errored"
                 entry["cpp_stderr"] = cpp.stderr[-500:]

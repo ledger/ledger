@@ -12,6 +12,27 @@ import subprocess
 from subprocess import Popen, PIPE
 
 
+# The environment of every ledger a test runs: the variables that locate the
+# system, the locale and the temporary directory, plus sanitizer and coverage
+# settings; no LEDGER_* variable.  TZ is always the suite's.
+ALLOWED_ENV_VARS = frozenset({
+    'PATH', 'HOME', 'TZ', 'TZDIR', 'LANG', 'LC_ALL', 'LC_CTYPE', 'TERM',
+    'TMPDIR', 'TEMP', 'TMP',
+    'SYSTEMROOT', 'COMSPEC', 'MSYSTEM', 'MINGW_PREFIX',
+    'ASAN_OPTIONS', 'LSAN_OPTIONS', 'UBSAN_OPTIONS', 'MSAN_OPTIONS',
+    'TSAN_OPTIONS',
+})
+ALLOWED_ENV_PREFIXES = ('LLVM_PROFILE_', 'GCOV_')
+
+
+def sanitized_env():
+    """Return a new dict: the allowed part of os.environ, with TZ set to America/Chicago."""
+    env = {k: v for k, v in os.environ.items()
+           if k in ALLOWED_ENV_VARS or k.startswith(ALLOWED_ENV_PREFIXES)}
+    env['TZ'] = 'America/Chicago'
+    return env
+
+
 class LedgerHarness:
     @staticmethod
     def parser():
@@ -49,17 +70,7 @@ class LedgerHarness:
         self.timeout    = timeout
 
     def run(self, command, verify=None, gmalloc=None, columns=True, now=None):
-        ALLOWED_ENV_VARS = {
-            'PATH', 'HOME', 'TZ', 'TZDIR', 'LANG', 'LC_ALL', 'LC_CTYPE', 'TERM',
-            'TMPDIR', 'TEMP', 'TMP',
-            'SYSTEMROOT', 'COMSPEC', 'MSYSTEM', 'MINGW_PREFIX',
-            'ASAN_OPTIONS', 'LSAN_OPTIONS', 'UBSAN_OPTIONS', 'MSAN_OPTIONS',
-            'TSAN_OPTIONS',
-        }
-        ALLOWED_ENV_PREFIXES = ('LLVM_PROFILE_', 'GCOV_')
-        env = {k: v for k, v in os.environ.items()
-               if k in ALLOWED_ENV_VARS or k.startswith(ALLOWED_ENV_PREFIXES)}
-        env['TZ'] = 'America/Chicago'
+        env = sanitized_env()
 
         if (gmalloc is not None and gmalloc) or \
            (gmalloc is None and self.gmalloc):

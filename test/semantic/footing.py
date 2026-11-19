@@ -238,8 +238,10 @@ from decimal import Decimal
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
+sys.path.append(os.path.dirname(HERE))
 import check_all  # journal extraction, shared with the bisimulation
 import sweep      # amount normalization
+from LedgerHarness import sanitized_env  # the environment the .test harness gives ledger
 
 NOW = ["--now", "2026/08/26"]
 COMMON = ["--permissive", "--real"]  # after the per-file flags and NOW
@@ -863,7 +865,7 @@ def main():
 
     repo = os.path.abspath(args.source) if args.source else sweep.REPO
     ledger = args.ledger or os.path.join(repo, "build", "ledger")
-    env = {**os.environ, "TZ": os.environ.get("TZ", "America/Chicago")}
+    ledger_env = sanitized_env()
     dirs = args.dirs or [os.path.join(repo, "test", d)
                          for d in ("baseline", "regress", "manual")]
     if not os.path.isfile(ledger):
@@ -879,7 +881,7 @@ def main():
     with tempfile.TemporaryDirectory() as tmp:
         home = os.path.join(tmp, "home")  # holds no .pricedb
         os.makedirs(home)
-        checker = Checker(ledger, {**env, "HOME": home})
+        checker = Checker(ledger, {**ledger_env, "HOME": home})
         jobs = []
         tests = sorted(os.path.join(root, f) for d in dirs
                        for root, _, files in os.walk(d)
@@ -1013,8 +1015,8 @@ def main():
             "utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "git_rev": first_line(["git", "rev-parse", "HEAD"], cwd=repo),
             "ledger_version": first_line([ledger, "--args-only",
-                                          "--version"], env=env),
-            "tz": env["TZ"], "home": "an empty directory",
+                                          "--version"], env=ledger_env),
+            "tz": ledger_env["TZ"], "home": "an empty directory",
             "capture": "test/semantic/footing.py",
             "cpp_flags_common": ["--args-only", *NOW, *COMMON],
             "cpp_flags_note": ("per-file flags (--decimal-comma,"

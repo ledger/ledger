@@ -8,6 +8,18 @@ import pathlib
 import argparse
 import subprocess
 
+def ledger_option_names(ledger):
+  """Return the names of the options LEDGER lists under --debug option.names.
+
+  Only a Debug build lists them; any other build yields an empty set.  Raise
+  subprocess.CalledProcessError when ledger exits non-zero."""
+  result = subprocess.run([str(ledger), '--args-only', '--debug', 'option.names', 'parse', 'true'],
+                          stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=60, check=True)
+  regex = re.compile(r'\[DEBUG\]\s+Option:\s+(.*?)_?$')
+  return {match.group(1).replace('_', '-')
+          for match in map(regex.search, result.stderr.decode('utf-8', errors='replace').splitlines())
+          if match}
+
 class CheckOptions (object):
   @staticmethod
   def parser():
@@ -63,19 +75,16 @@ class CheckOptions (object):
     return alternates
 
   def ledger_options(self):
-    result = subprocess.run([str(self.ledger), '--args-only', '--debug', 'option.names',
-                             'parse', 'true'],
-                            stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
-    if result.returncode != 0:
-      print('%s exited with status %d while listing its options' % (self.ledger, result.returncode))
-      print(result.stderr.decode())
+    try:
+      options = ledger_option_names(self.ledger)
+    except subprocess.CalledProcessError as error:
+      print('%s exited with status %d while listing its options' % (self.ledger, error.returncode))
+      print(error.stderr.decode('utf-8', errors='replace'), end='')
       sys.exit(1)
-    regex = re.compile(r'\[DEBUG\]\s+Option:\s+(.*?)_?$')
-    ledger_options = {match.group(1).replace('_', '-') for match in {regex.search(line) for line in result.stderr.decode().splitlines()} if match}
-    if not ledger_options:
+    if not options:
       print('%s lists no options: --debug option.names prints only in a Debug build (CMAKE_BUILD_TYPE=Debug); skipping' % self.ledger)
       sys.exit(77)
-    return ledger_options
+    return options
 
   def ledger_functions(self):
     command = shlex.split('grep --no-filename fn_ %s' % (os.path.join(self.source, 'src', 'report.h')))

@@ -16,6 +16,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from CheckOptions import ledger_option_names
+from LedgerHarness import sanitized_env
+
 
 # ---------------------------------------------------------------------------
 # Data model
@@ -651,28 +654,6 @@ def mine_combos(source_root: Path) -> list[Combo]:
 # Option discovery and coverage validation
 # ---------------------------------------------------------------------------
 
-def discover_options(ledger_binary: Path) -> set[str]:
-    """Discover the options the ledger binary supports via --debug option.names.
-
-    Only a Debug build (CMAKE_BUILD_TYPE=Debug) prints these names; any other
-    build yields an empty set, and validate_coverage then covers OPTION_MATRIX alone.
-    """
-    try:
-        result = subprocess.run(
-            [str(ledger_binary), "--debug", "option.names", "parse", "true"],
-            capture_output=True, timeout=10,
-        )
-        regex = re.compile(r'\[DEBUG\]\s+Option:\s+(.*?)_?$')
-        options = set()
-        for line in result.stderr.decode("utf-8", errors="replace").splitlines():
-            m = regex.search(line)
-            if m:
-                options.add(m.group(1).replace("_", "-"))
-        return options
-    except (subprocess.TimeoutExpired, OSError):
-        return set()
-
-
 def validate_coverage(
     combos: list[Combo],
     ledger_binary: Path,
@@ -698,7 +679,9 @@ def validate_coverage(
                 print(f"Coverage: adding fallback bare combo for command '{cmd}'", file=sys.stderr)
 
     # Check options from binary discovery
-    known_options = discover_options(ledger_binary)
+    # Only a Debug build lists its options; any other yields an empty set,
+    # and OPTION_MATRIX alone is covered.
+    known_options = ledger_option_names(ledger_binary)
     # Also include options from our matrix
     for opt in OPTION_MATRIX:
         known_options.add(opt.lstrip("-"))
@@ -726,31 +709,6 @@ def validate_coverage(
             print(f"Coverage: adding fallback combo for option '--{opt}'", file=sys.stderr)
 
     return combos + fallbacks
-
-
-# ---------------------------------------------------------------------------
-# Environment sanitization (mirrors LedgerHarness.run)
-# ---------------------------------------------------------------------------
-
-ALLOWED_ENV_VARS = frozenset({
-    "PATH", "HOME", "TZ", "TZDIR", "LANG", "LC_ALL", "LC_CTYPE", "TERM",
-    "TMPDIR", "TEMP", "TMP",
-    "SYSTEMROOT", "COMSPEC", "MSYSTEM", "MINGW_PREFIX",
-    "ASAN_OPTIONS", "LSAN_OPTIONS", "UBSAN_OPTIONS", "MSAN_OPTIONS",
-    "TSAN_OPTIONS",
-})
-
-ALLOWED_ENV_PREFIXES = ("LLVM_PROFILE_", "GCOV_")
-
-
-def make_sanitized_env() -> dict[str, str]:
-    """Build a sanitized environment dict matching LedgerHarness conventions."""
-    env = {
-        k: v for k, v in os.environ.items()
-        if k in ALLOWED_ENV_VARS or k.startswith(ALLOWED_ENV_PREFIXES)
-    }
-    env["TZ"] = "America/Chicago"
-    return env
 
 
 # ---------------------------------------------------------------------------
@@ -958,7 +916,7 @@ def main(argv: list[str] | None = None) -> int:
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
     # Run all combinations
-    env = make_sanitized_env()
+    env = sanitized_env()
     total = len(all_combos)
     successes = 0
     warnings = 0
