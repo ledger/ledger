@@ -1,0 +1,27 @@
+; A path built at report time with an empty component is an error, whether
+; the empty name falls under an account the journal has (the rewrite of
+; Expenses:Food) or under one the report made up (Brand, from --account).
+
+account-rewrite Food  Expenses::Groceries
+
+2024/01/01 Grocer
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Landlord
+    Expenses:Rent    $500.00
+    Assets:Cash
+
+test bal Food -> 1
+__ERROR__
+While handling posting from "$FILE", line 8:
+>     Expenses:Food    $10.00
+Error: Account name contains an empty sub-account name
+end test
+
+test bal Rent --account '"Brand::New"' -> 1
+__ERROR__
+While handling posting from "$FILE", line 12:
+>     Expenses:Rent    $500.00
+Error: Account name contains an empty sub-account name
+end test

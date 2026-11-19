@@ -1,0 +1,15 @@
+test python test/regress/report-temp-accounts.py
+journal: Assets, Assets:Cash, Expenses, Expenses:Food, Expenses:Rent
+Food -> Expenses:Groceries
+journal: Assets, Assets:Cash, Expenses, Expenses:Food, Expenses:Rent
+--account='"Assets"' Food -> Assets:Expenses:Groceries
+journal: Assets, Assets:Cash, Expenses, Expenses:Food, Expenses:Rent
+--pivot-only=Assets Food -> Expenses:Rent
+journal: Assets, Assets:Cash, Expenses, Expenses:Food, Expenses:Rent
+--inject=Expenses:Tip Food -> Expenses:Groceries
+journal: Assets, Assets:Cash, Expenses, Expenses:Food, Expenses:Rent
+--pivot-only=Assets Rent Food -> Expenses:Rent, Expenses:Rent:Larder
+journal: Assets, Assets:Cash, Expenses, Expenses:Food, Expenses:Rent
+--pivot-only=Brand Food -> Expenses:Rent
+journal: Assets, Assets:Cash, Expenses, Expenses:Food, Expenses:Rent
+end test

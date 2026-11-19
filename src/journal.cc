@@ -54,6 +54,7 @@
 #include "xact.h"
 #include "post.h"
 #include "account.h"
+#include "temps.h"
 
 namespace ledger {
 
@@ -69,7 +70,8 @@ journal_t::journal_t() {
  *
  * Cleanup order matters: regular and period xacts are deleted first,
  * then auto_xacts are cleared (their destructors call remove_post on
- * accounts), and finally the master account tree is deleted.
+ * accounts), the accounts reports built are taken out of the tree, and
+ * finally the master account tree is deleted.
  */
 journal_t::~journal_t() {
   TRACE_DTOR(journal_t);
@@ -89,7 +91,21 @@ journal_t::~journal_t() {
   // auto_xact_t destructors call remove_post on accounts owned by master.
   auto_xacts.clear();
 
+  // A report may still hold the pool after this journal (the session closes
+  // its journal while the last report lives).  The pool's accounts hang in
+  // the tree below, so take them out while it stands.
+  if (std::shared_ptr<temporaries_t> pool = report_accounts_.lock())
+    pool->clear();
+
   checked_delete(master);
+}
+
+std::shared_ptr<temporaries_t> journal_t::report_accounts_pool() {
+  if (std::shared_ptr<temporaries_t> pool = report_accounts_.lock())
+    return pool;
+  std::shared_ptr<temporaries_t> pool = std::make_shared<temporaries_t>();
+  report_accounts_ = pool;
+  return pool;
 }
 
 void journal_t::initialize() {

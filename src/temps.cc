@@ -99,13 +99,16 @@ void temporaries_t::clear() {
   // posting, so calling it for each temporary is quadratic in how many an
   // account holds, and posts_commodities_iterator gives a commodity's account one
   // per price point.  Detach each account's temporaries in a single pass.
+  // Temporary accounts are included: the journal's report-account pool
+  // outlives the postings a filter clears, under --group-by from one group
+  // to the next.
   std::map<account_t*, std::set<post_t*>> account_posts;
 
   for (post_t& post : post_temps) {
     if (!post.xact->has_flags(ITEM_TEMP))
       post.xact->remove_post(&post);
 
-    if (post.account && !post.account->has_flags(ACCOUNT_TEMP))
+    if (post.account)
       account_posts[post.account].insert(&post);
   }
   for (const auto& [account, posts] : account_posts)

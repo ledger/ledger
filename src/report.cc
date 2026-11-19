@@ -145,6 +145,11 @@ long parse_leeway_seconds(const string& raw) {
 
 } // anonymous namespace
 
+temporaries_t& report_t::temp_accounts() {
+  accounts_pool = session.journal->report_accounts_pool();
+  return *accounts_pool;
+}
+
 /*--- Option Normalization ---*/
 
 void report_t::normalize_options(const string& verb) {

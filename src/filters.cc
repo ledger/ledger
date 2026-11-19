@@ -229,56 +229,73 @@ void sort_posts::post_accumulated_posts() {
 /*--- Helper utilities ---*/
 
 namespace {
-/// Split a string by a delimiter character into a list of substrings.
-void split_string(const string& str, const char ch, std::list<string>& strings) {
-  const char* b = str.c_str();
-  for (const char* p = b; *p; p++) {
-    if (*p == ch) {
-      strings.push_back(string(b, static_cast<std::string::size_type>(p - b)));
-      b = p + 1;
-    }
-  }
-  strings.push_back(string(b));
+/// The child @p name of @p parent, for postings a report moves there: the
+/// journal's own account when it has one, otherwise created in @p accounts
+/// (the journal's report-account pool, report_t::temp_accounts()), so the
+/// paths built here never add an account to the journal.  An empty @p name
+/// is an error (find_account throws).
+account_t* report_child_account(account_t* parent, string_view name, temporaries_t& accounts) {
+  // Below a temporary account, find_account creates the child itself: it
+  // inherits ACCOUNT_TEMP and is freed with its parent (~account_t), so it
+  // must not also be owned by @p accounts.  A temporary account found at this
+  // level may have been made by another live report; the pool they share
+  // keeps it until the last of them ends.
+  account_t* child = parent->find_account(name, parent->has_flags(ACCOUNT_TEMP));
+  return child ? child : &accounts.create_account(string(name), parent);
 }
 
-/// Create or find a temporary account from a list of path components.
-account_t* create_temp_account_from_path(std::list<string>& account_names, temporaries_t& temps,
-                                         account_t* master) {
-  account_t* new_account = nullptr;
-  for (const string& name : account_names) {
-    if (new_account) {
-      new_account = new_account->find_account(name);
-    } else {
-      new_account = master->find_account(name, false);
-      if (!new_account)
-        new_account = &temps.create_account(name, master);
-    }
-  }
+/// The account at the path @p account_names (one name per component) under
+/// @p master, each component found or created by report_child_account.
+account_t* create_temp_account_from_path(const std::list<string>& account_names,
+                                         temporaries_t& accounts, account_t* master) {
+  account_t* account = master;
+  for (const string& name : account_names)
+    account = report_child_account(account, name, accounts);
+  return account;
+}
 
-  assert(new_account != nullptr);
-  return new_account;
+/// The account at the ':'-separated @p path under @p master, as the
+/// list overload gives it for the path's components (an empty component,
+/// including a leading or trailing ':', is an error).  The components are
+/// looked up in place: this runs once per posting --account, --pivot and
+/// account rewrites move, and copying them into a list of strings first
+/// (boost::split) costs several times the lookups themselves.
+account_t* create_temp_account_from_path(string_view path, temporaries_t& accounts,
+                                         account_t* master) {
+  account_t* account = master;
+  for (;;) {
+    const string_view::size_type sep = path.find(':');
+    account = report_child_account(account, path.substr(0, sep), accounts);
+    if (sep == string_view::npos)
+      return account;
+    path.remove_prefix(sep + 1);
+  }
 }
 
 /// Give @p account, which a posting has been moved onto while reporting, the
 /// flags of the @p original account it came from.  ACCOUNT_KNOWN stays
 /// behind: the copy was never declared, and --empty lists declared accounts
 /// even when no posting reaches them, so it would show the copy too (#3281).
+/// ACCOUNT_TEMP stays behind as well: @p account is temporary already when
+/// the report made it, and an account the journal has must not become one
+/// (temporaries_t::clear() would no longer unlink the pool's accounts beneath
+/// it, and lookups would skip it).
 void transfer_account_flags(account_t& account, account_t& original) {
-  account.add_flags(original.flags() & ~ACCOUNT_KNOWN);
+  account.add_flags(original.flags() & ~(ACCOUNT_KNOWN | ACCOUNT_TEMP));
   if (original.has_xdata())
     account.xdata().add_flags(original.xdata().flags());
 }
 
-/// Move the report-time copy @p temp from its account to the temporary
-/// account @p path under @p master, which takes the old account's flags as
-/// transfer_account_flags gives them.
-void retarget_temp_post(post_t& temp, const string& path, temporaries_t& temps, account_t* master) {
+/// Move the report-time copy @p temp from its account to the account at
+/// @p path under @p master (created in @p accounts, the journal's
+/// report-account pool, where the journal lacks it), which takes the old
+/// account's flags as transfer_account_flags gives them.
+void retarget_temp_post(post_t& temp, const string& path, temporaries_t& accounts,
+                        account_t* master) {
   account_t* prev_account = temp.account;
   prev_account->remove_post(&temp);
 
-  std::list<string> names;
-  split_string(path, ':', names);
-  temp.account = create_temp_account_from_path(names, temps, master);
+  temp.account = create_temp_account_from_path(path, accounts, master);
   temp.account->add_post(&temp);
 
   transfer_account_flags(*temp.account, *prev_account);
@@ -378,7 +395,7 @@ void anonymize_posts::operator()(post_t& post) {
   }
 
   account_t* new_account =
-      create_temp_account_from_path(account_names, temps, xact.journal->master);
+      create_temp_account_from_path(account_names, accounts, xact.journal->master);
   post_t& temp = temps.copy_post(post, xact, new_account);
   temp.note = none;
   temp.add_flags(POST_ANONYMIZED);
@@ -2200,7 +2217,7 @@ post_t& transfer_details::transfer(post_t& post) {
           account_name += ':';
           account_name += temp.account->fullname();
         }
-        retarget_temp_post(temp, account_name, temps, xact.journal->master);
+        retarget_temp_post(temp, account_name, accounts, xact.journal->master);
       }
       break;
     }
@@ -2639,12 +2656,14 @@ void forecast_posts::flush() {
 /**
  * Construct the inject_posts handler by parsing the comma-separated tag list.
  *
- * Each tag name is split by ':' to form an account path, and a temporary
- * account is created for it.  The tags_list stores each tag name paired with
- * its target account and a set tracking which transactions have already been
- * injected (to avoid duplicates).
+ * Each tag name is split by ':' to form an account path, and its account is
+ * found, or created in @p accounts (the journal's report-account pool).  The
+ * tags_list stores each tag name paired with its target account and a set
+ * tracking which transactions have already been injected (to avoid
+ * duplicates).
  */
-inject_posts::inject_posts(post_handler_ptr handler, const string& tag_list, account_t* master)
+inject_posts::inject_posts(post_handler_ptr handler, const string& tag_list, account_t* master,
+                           temporaries_t& accounts)
     : item_handler<post_t>(std::move(handler)) {
   std::vector<string> tags;
   boost::split(tags, tag_list, boost::is_any_of(","));
@@ -2652,16 +2671,13 @@ inject_posts::inject_posts(post_handler_ptr handler, const string& tag_list, acc
   for (const string& tag : tags) {
     if (tag.empty())
       continue;
-    std::list<string> account_names;
-    split_string(tag, ':', account_names);
-
-    account_t* account = create_temp_account_from_path(account_names, temps, master);
+    account_t* account = create_temp_account_from_path(tag, accounts, master);
     account->add_flags(ACCOUNT_GENERATED);
 
     tags_list.push_back(tags_list_pair(tag, tag_mapping_pair(account, tag_injected_set())));
   }
 
-  TRACE_CTOR(inject_posts, "post_handler_ptr, string, account_t *");
+  TRACE_CTOR(inject_posts, "post_handler_ptr, string, account_t *, temporaries_t&");
 }
 
 /**
@@ -2771,7 +2787,7 @@ void rewrite_posts::rewrite_xact(xact_t& xact, xact_state_t& state) {
     // Retarget the copy at once, while it is the last posting of its account.
     string new_account = new_account_of(**i);
     if (!new_account.empty())
-      retarget_temp_post(temp, new_account, temps, journal->master);
+      retarget_temp_post(temp, new_account, accounts, journal->master);
     // A copy of a journal posting stands in for it in print; a copy of one
     // ledger made up (temporary or generated) keeps that posting's flags.
     if (!(*i)->has_flags(ITEM_TEMP | ITEM_GENERATED))

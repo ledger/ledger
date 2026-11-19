@@ -1,0 +1,21 @@
+test python test/regress/report-temp-accounts-overlap.py
+journal: Assets, Assets:Cash, Expenses, Expenses:Food, Expenses:Rent
+Food #0 -> Expenses:Groceries
+Food #1 -> Expenses:Groceries
+Food #2 -> Expenses:Groceries
+Food b -> Expenses:Groceries
+journal: Assets, Assets:Cash, Expenses, Expenses:Food, Expenses:Rent
+Rent #0 -> Brand:Home
+Rent #1 -> Brand:Home
+Rent #2 -> Brand:Home
+Rent b -> Brand:Home
+journal: Assets, Assets:Cash, Expenses, Expenses:Food, Expenses:Rent
+--account='"X"' Food #0 -> X:Expenses:Groceries
+--account='"X"' Food #1 -> X:Expenses:Groceries
+--account='"X"' Food #2 -> X:Expenses:Groceries
+--account='"X"' Food b -> X:Expenses:Groceries
+journal: Assets, Assets:Cash, Expenses, Expenses:Food, Expenses:Rent
+c -> Brand:Expenses:Groceries
+c -> Brand:Expenses:Groceries
+journal: Assets, Assets:Cash, Expenses, Expenses:Food, Expenses:Rent
+end test

@@ -123,7 +123,7 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t
   // anonymize_posts removes all meaningful information from xact payee's and
   // account names, for the sake of creating useful bug reports.
   if (report.HANDLED(anon))
-    handler = std::make_shared<anonymize_posts>(handler);
+    handler = std::make_shared<anonymize_posts>(handler, report.temp_accounts());
 
   // --pivot-only (issue #1153) replaces the original account entirely with
   // "Tag:Value" rather than prepending it.  Because the original account
@@ -141,7 +141,7 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t
   if (report.HANDLED(pivot_only_) && !report.HANDLED(account_)) {
     handler = std::make_shared<transfer_details>(
         handler, transfer_details::SET_ACCOUNT_REPLACE,
-        pivot_account_expr(report.HANDLER(pivot_only_).str()), report);
+        pivot_account_expr(report.HANDLER(pivot_only_).str()), report, report.temp_accounts());
   }
 
   // This filter_posts will only pass through posts matching the `predicate'.
@@ -163,7 +163,7 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t
   if (report.HANDLED(pivot_) && !report.HANDLED(account_)) {
     pivot_handler = std::make_shared<transfer_details>(
         handler, transfer_details::SET_ACCOUNT, pivot_account_expr(report.HANDLER(pivot_).str()),
-        report);
+        report, report.temp_accounts());
     handler = pivot_handler;
   }
 
@@ -535,11 +535,13 @@ post_handler_ptr chain_transfer_handlers(post_handler_ptr base_handler, report_t
 
   if (report.HANDLED(date_))
     handler = std::make_shared<transfer_details>(handler, transfer_details::SET_DATE,
-                                                 report.HANDLER(date_).str(), report);
+                                                 report.HANDLER(date_).str(), report,
+                                                 report.temp_accounts());
 
   if (report.HANDLED(account_)) {
     handler = std::make_shared<transfer_details>(handler, transfer_details::SET_ACCOUNT,
-                                                 report.HANDLER(account_).str(), report);
+                                                 report.HANDLER(account_).str(), report,
+                                                 report.temp_accounts());
   }
   // Note: --pivot is handled in chain_pre_post_handlers() so that the
   // account name transformation occurs before the --limit predicate is
@@ -548,12 +550,13 @@ post_handler_ptr chain_transfer_handlers(post_handler_ptr base_handler, report_t
 
   if (report.HANDLED(payee_))
     handler = std::make_shared<transfer_details>(handler, transfer_details::SET_PAYEE,
-                                                 report.HANDLER(payee_).str(), report);
+                                                 report.HANDLER(payee_).str(), report,
+                                                 report.temp_accounts());
 
   /*--- Payee/account rewriting and related/inject ---*/
 
   if (rewrite_posts::has_rules(report))
-    handler = std::make_shared<rewrite_posts>(handler, report);
+    handler = std::make_shared<rewrite_posts>(handler, report, report.temp_accounts());
 
   // related_posts will pass along all posts related to the post received.  If
   // the `related_all' handler is on, then all the xact's posts are passed;
@@ -563,8 +566,9 @@ post_handler_ptr chain_transfer_handlers(post_handler_ptr base_handler, report_t
     handler = std::make_shared<related_posts>(handler, report.HANDLED(related_all));
 
   if (report.HANDLED(inject_))
-    handler = std::make_shared<inject_posts>(handler, report.HANDLED(inject_).str(),
-                                             report.session.journal->master);
+    handler =
+        std::make_shared<inject_posts>(handler, report.HANDLED(inject_).str(),
+                                       report.session.journal->master, report.temp_accounts());
 
   return handler;
 }

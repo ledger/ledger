@@ -548,7 +548,10 @@ class anonymize_posts : public item_handler<post_t> {
 
   using account_hash_map = std::map<account_t*, string>;
 
-  temporaries_t temps;          ///< Temporary storage for anonymized xacts/posts.
+  temporaries_t temps; ///< Temporary storage for anonymized xacts/posts.
+  /// The journal's report-account pool (report_t::temp_accounts()), where
+  /// the anonymized paths go.
+  temporaries_t& accounts;
   commodity_index_map comms;    ///< Maps original commodities to sequential IDs.
   account_hash_map acct_hashes; ///< Maps original accounts to stable hashed names.
   std::size_t next_comm_id;     ///< Next available commodity ID.
@@ -560,11 +563,12 @@ class anonymize_posts : public item_handler<post_t> {
   anonymize_posts();
 
 public:
-  anonymize_posts(post_handler_ptr handler)
-      : item_handler<post_t>(std::move(handler)), next_comm_id(0), last_xact(nullptr),
+  anonymize_posts(post_handler_ptr handler, temporaries_t& _accounts)
+      : item_handler<post_t>(std::move(handler)), accounts(_accounts), next_comm_id(0),
+        last_xact(nullptr),
         rnd_gen(static_cast<unsigned int>(static_cast<boost::uintmax_t>(std::time(nullptr)))),
         integer_range(1, 2000000000L), integer_gen(rnd_gen, integer_range) {
-    TRACE_CTOR(anonymize_posts, "post_handler_ptr");
+    TRACE_CTOR(anonymize_posts, "post_handler_ptr, temporaries_t&");
   }
   ~anonymize_posts() override {
     TRACE_DTOR(anonymize_posts);
@@ -1184,6 +1188,9 @@ class transfer_details : public item_handler<post_t> {
   expr_t expr;         ///< Expression to evaluate for the replacement value.
   scope_t& scope;      ///< Scope for expression evaluation.
   temporaries_t temps; ///< Temporary storage for rewritten xacts/posts.
+  /// The journal's report-account pool (report_t::temp_accounts()), where
+  /// --account and --pivot paths go.
+  temporaries_t& accounts;
 
   transfer_details();
 
@@ -1197,10 +1204,10 @@ public:
   } which_element;
 
   transfer_details(post_handler_ptr handler, element_t _which_element, const expr_t& _expr,
-                   scope_t& _scope)
-      : item_handler<post_t>(std::move(handler)), expr(_expr), scope(_scope),
+                   scope_t& _scope, temporaries_t& _accounts)
+      : item_handler<post_t>(std::move(handler)), expr(_expr), scope(_scope), accounts(_accounts),
         which_element(_which_element) {
-    TRACE_CTOR(transfer_details, "post_handler_ptr, element_t, expr_t, scope_t&");
+    TRACE_CTOR(transfer_details, "post_handler_ptr, element_t, expr_t, scope_t&, temporaries_t&");
   }
   ~transfer_details() override {
     TRACE_DTOR(transfer_details);
@@ -1381,7 +1388,8 @@ class inject_posts : public item_handler<post_t> {
   temporaries_t temps; ///< Temporary storage for synthetic xacts/posts.
 
 public:
-  inject_posts(post_handler_ptr handler, const string& tag_list, account_t* master);
+  inject_posts(post_handler_ptr handler, const string& tag_list, account_t* master,
+               temporaries_t& accounts);
 
   ~inject_posts() noexcept override {
     TRACE_DTOR(inject_posts);
@@ -1411,6 +1419,9 @@ class rewrite_posts : public item_handler<post_t> {
 
   report_t& report;    ///< Report context (its own rewrite rules and the journal's).
   temporaries_t temps; ///< Temporary storage for rewritten xacts/posts.
+  /// The journal's report-account pool (report_t::temp_accounts()), where
+  /// the rewritten account paths go.
+  temporaries_t& accounts;
   std::unordered_map<const xact_t*, xact_state_t> xacts;
   /// Posting of a rewritten transaction -> its copy.
   std::unordered_map<const post_t*, post_t*> copies;
@@ -1420,9 +1431,9 @@ class rewrite_posts : public item_handler<post_t> {
   void rewrite_xact(xact_t& xact, xact_state_t& state);
 
 public:
-  rewrite_posts(post_handler_ptr handler, report_t& _report)
-      : item_handler<post_t>(std::move(handler)), report(_report) {
-    TRACE_CTOR(rewrite_posts, "post_handler_ptr, report_t&");
+  rewrite_posts(post_handler_ptr handler, report_t& _report, temporaries_t& _accounts)
+      : item_handler<post_t>(std::move(handler)), report(_report), accounts(_accounts) {
+    TRACE_CTOR(rewrite_posts, "post_handler_ptr, report_t&, temporaries_t&");
   }
   ~rewrite_posts() override {
     TRACE_DTOR(rewrite_posts);

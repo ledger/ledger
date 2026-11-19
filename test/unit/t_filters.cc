@@ -486,7 +486,7 @@ BOOST_AUTO_TEST_CASE(testAnonymizePostsAccountChanged)
   // After anonymization, the post's account name should differ from
   // the original
   std::shared_ptr<collect_posts> collector(new collect_posts);
-  anonymize_posts anonymizer(collector);
+  anonymize_posts anonymizer(collector, report.temp_accounts());
 
   account_t* expenses = make_account("Expenses:Food:Groceries");
   account_t* assets = make_account("Assets:Cash");
@@ -514,7 +514,7 @@ BOOST_AUTO_TEST_CASE(testAnonymizePostsPayeeChanged)
   // After anonymization, the transaction payee should differ from
   // the original
   std::shared_ptr<collect_posts> collector(new collect_posts);
-  anonymize_posts anonymizer(collector);
+  anonymize_posts anonymizer(collector, report.temp_accounts());
 
   account_t* expenses = make_account("Expenses:Dining");
   account_t* assets = make_account("Assets:Cash");
@@ -538,7 +538,7 @@ BOOST_AUTO_TEST_CASE(testAnonymizePostsFlagSet)
 {
   // Anonymized posts should have the POST_ANONYMIZED flag set
   std::shared_ptr<collect_posts> collector(new collect_posts);
-  anonymize_posts anonymizer(collector);
+  anonymize_posts anonymizer(collector, report.temp_accounts());
 
   account_t* expenses = make_account("Expenses:Transport");
   account_t* assets = make_account("Assets:Cash");
@@ -716,7 +716,7 @@ BOOST_AUTO_TEST_CASE(testAnonymizePostsClear)
 {
   // Cover anonymize_posts::clear() (filters.h lines 535-541)
   std::shared_ptr<collect_posts> collector(new collect_posts);
-  anonymize_posts anonymizer(collector);
+  anonymize_posts anonymizer(collector, report.temp_accounts());
 
   account_t* expenses = make_account("Expenses:Food");
   account_t* assets = make_account("Assets:Cash");
@@ -910,7 +910,8 @@ BOOST_AUTO_TEST_CASE(testTransferDetailsClear)
   // Cover transfer_details::clear() (filters.h lines 989-994)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   expr_t expr("'Transferred'");
-  transfer_details td(collector, transfer_details::SET_PAYEE, expr, report);
+  transfer_details td(collector, transfer_details::SET_PAYEE, expr,
+    report, report.temp_accounts());
 
   account_t* acct = make_account("Expenses:Food");
   xact_with_posts xwp = make_balanced_xact(
@@ -1065,7 +1066,7 @@ BOOST_AUTO_TEST_CASE(testAnonymizePostsW7)
 {
   // Cover anonymize_posts rendering
   std::shared_ptr<collect_posts> collector(new collect_posts);
-  anonymize_posts anon(collector);
+  anonymize_posts anon(collector, report.temp_accounts());
 
   account_t* exp = make_account("Expenses:Food");
   account_t* cash = make_account("Assets:Cash");
@@ -1338,7 +1339,7 @@ BOOST_AUTO_TEST_CASE(testBudgetPostsClearW7)
 BOOST_AUTO_TEST_CASE(testInjectPostsClearW7)
 {
   std::shared_ptr<collect_posts> collector(new collect_posts);
-  inject_posts inject(collector, "amount", root);
+  inject_posts inject(collector, "amount", root, report.temp_accounts());
 
   xact_with_posts xwp = make_balanced_xact(
     "Store", date_t(2024, 10, 1),
@@ -1358,7 +1359,7 @@ BOOST_AUTO_TEST_CASE(testInjectPostsClearW7)
 BOOST_AUTO_TEST_CASE(testAnonymizePostsAnnotatedW8)
 {
   std::shared_ptr<collect_posts> collector(new collect_posts);
-  anonymize_posts anon(collector);
+  anonymize_posts anon(collector, report.temp_accounts());
 
   account_t* exp = make_account("Expenses:Food");
   account_t* cash = make_account("Assets:Cash");
@@ -1387,7 +1388,7 @@ BOOST_AUTO_TEST_CASE(testAnonymizePostsAnnotatedW8)
 BOOST_AUTO_TEST_CASE(testAnonymizePostsWithCostW8)
 {
   std::shared_ptr<collect_posts> collector(new collect_posts);
-  anonymize_posts anon(collector);
+  anonymize_posts anon(collector, report.temp_accounts());
 
   account_t* exp = make_account("Expenses:Food");
   account_t* cash = make_account("Assets:Cash");
@@ -1412,7 +1413,7 @@ BOOST_AUTO_TEST_CASE(testAnonymizePostsWithCostW8)
 BOOST_AUTO_TEST_CASE(testAnonymizePostsWithAssignedW8)
 {
   std::shared_ptr<collect_posts> collector(new collect_posts);
-  anonymize_posts anon(collector);
+  anonymize_posts anon(collector, report.temp_accounts());
 
   account_t* exp = make_account("Expenses:Food");
   account_t* cash = make_account("Assets:Cash");
@@ -1576,7 +1577,8 @@ BOOST_AUTO_TEST_CASE(testTransferDetailsSetPayeeW8)
 {
   std::shared_ptr<collect_posts> collector(new collect_posts);
   expr_t payee_expr("'NewPayee'");
-  transfer_details xfer(collector, transfer_details::SET_PAYEE, payee_expr, report);
+  transfer_details xfer(collector, transfer_details::SET_PAYEE, payee_expr,
+    report, report.temp_accounts());
 
   account_t* exp = make_account("Expenses:Food");
   account_t* cash = make_account("Assets:Cash");
@@ -1599,7 +1601,8 @@ BOOST_AUTO_TEST_CASE(testTransferDetailsSetDateW8)
 {
   std::shared_ptr<collect_posts> collector(new collect_posts);
   expr_t date_expr("[2025/01/01]");
-  transfer_details xfer(collector, transfer_details::SET_DATE, date_expr, report);
+  transfer_details xfer(collector, transfer_details::SET_DATE, date_expr,
+    report, report.temp_accounts());
 
   account_t* exp = make_account("Expenses:Food");
   account_t* cash = make_account("Assets:Cash");
@@ -1722,6 +1725,47 @@ BOOST_AUTO_TEST_CASE(testPostsAsEquityZeroW8)
   // The account nets to $0, so equity emits neither a posting for it nor a
   // balancing Equity:Opening Balances posting (`ledger equity` prints nothing)
   BOOST_CHECK_EQUAL(0u, collector->length());
+}
+
+BOOST_AUTO_TEST_CASE(testReportAccountsPoolIsSharedAndReleased)
+{
+  // One pool per journal: every holder gets the same one, it ends with its
+  // last holder, and the next holder starts a new one.
+  journal_t other;
+  std::shared_ptr<temporaries_t> first = other.report_accounts_pool();
+  BOOST_REQUIRE(first);
+  BOOST_CHECK(first == other.report_accounts_pool());
+
+  std::weak_ptr<temporaries_t> watch(first);
+  first.reset();
+  BOOST_CHECK(watch.expired());
+  BOOST_CHECK(other.report_accounts_pool());
+}
+
+BOOST_AUTO_TEST_CASE(testReportTempAccountsComeFromTheJournal)
+{
+  // A report and its copies (the REPL's push_report, Python's query) hold
+  // the journal's pool, so they hold the same one.
+  temporaries_t& pool = report.temp_accounts();
+  BOOST_CHECK(&pool == journal->report_accounts_pool().get());
+
+  report_t copy(report);
+  BOOST_CHECK(&copy.temp_accounts() == &pool);
+}
+
+BOOST_AUTO_TEST_CASE(testJournalDestructionTakesReportAccountsOut)
+{
+  // A report can hold the pool past the journal (the session closes its
+  // journal while the last report lives): the journal takes the accounts out
+  // of its tree first, so releasing the pool afterwards touches no freed
+  // parent.  Observable under Guard Malloc or a sanitizer.
+  std::unique_ptr<journal_t> doomed(new journal_t);
+  std::shared_ptr<temporaries_t> pool = doomed->report_accounts_pool();
+  pool->create_account("Brand", doomed->master);
+
+  doomed.reset();
+  pool.reset();
+  BOOST_CHECK(true);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

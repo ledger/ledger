@@ -172,6 +172,9 @@ class report_t : public scope_t {
 public:
   session_t& session;            ///< The owning session (provides journal, global options)
   output_stream_t output_stream; ///< Manages pager, file output, or stdout as configured
+  /// The journal's report-account pool while this report (or a copy) uses
+  /// it; see temp_accounts().
+  std::shared_ptr<temporaries_t> accounts_pool;
 
   /*--- Budget Mode Flags ---*/
 
@@ -217,6 +220,16 @@ public:
 
   /// @brief Close the output stream immediately (used for early cleanup).
   void quick_close() { output_stream.close(); }
+
+  /// The pool that owns the accounts this report's filters hang in the
+  /// journal's account tree, the paths --account, --pivot, --pivot-only,
+  /// --anon, --inject and account rewrites build.  Every filter finds them
+  /// through the tree, so they belong to the journal's pool, which every
+  /// live report on the journal holds and which takes them out of the tree
+  /// when the last of those reports ends.  Each filter that builds paths
+  /// calls it once, when the chain is built, with session.journal the
+  /// journal being reported on.
+  temporaries_t& temp_accounts();
 
   string description() override { return _("current report"); }
 

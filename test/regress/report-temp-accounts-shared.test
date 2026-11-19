@@ -1,0 +1,119 @@
+; Every filter finds the accounts a report builds through the journal's
+; account tree, so an account one filter made can carry another filter's
+; postings and children.  --account makes Brand (and Expenses:Groceries)
+; for the Landlord posting, then account-rewrite puts the Grocer posting
+; on Brand:Fresh beneath it; --pivot-only, above --group-by, makes
+; Brand:Home, and the rewrite hangs Fresh beside it in each group.  The
+; report owns all of them, so none is freed while a posting or child still
+; uses it, whichever filter made it and in whatever order the chain is
+; cleared (--group-by) or destroyed.  Brand:Fresh is reached in two groups
+; (Grocer, Market): the count and --pivot-only blocks check that the first
+; group's postings left it when that group ended.
+
+account-rewrite Food  Brand:Fresh
+account-rewrite Phone  Expenses:Groceries:Fresh
+
+2024/01/01 Landlord
+    Expenses:Rent    $500.00
+    ; Brand: Home
+    Assets:Cash
+
+2024/01/02 Grocer
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/03 Market
+    Expenses:Food    $4.00
+    Assets:Cash
+
+2024/01/04 Carrier
+    Expenses:Phone    $30.00
+    Assets:Cash
+
+test bal --account '"Brand"'
+                   0  Brand
+            $-544.00    Assets:Cash
+              $14.00    Brand:Fresh
+             $530.00    Expenses
+              $30.00      Groceries:Fresh
+             $500.00      Rent
+--------------------
+                   0
+end test
+
+test bal --account '"Expenses:Groceries"'
+                   0  Expenses:Groceries
+            $-544.00    Assets:Cash
+              $14.00    Brand:Fresh
+             $530.00    Expenses
+              $30.00      Groceries:Fresh
+             $500.00      Rent
+--------------------
+                   0
+end test
+
+test reg --payee '"P"' --group-by payee
+Carrier
+24-Jan-04 P                     Expens:Groceries:Fresh       $30.00       $30.00
+24-Jan-04 P                     Assets:Cash                 $-30.00            0
+
+Grocer
+24-Jan-02 P                     Brand:Fresh                  $10.00       $10.00
+24-Jan-02 P                     Assets:Cash                 $-10.00            0
+
+Landlord
+24-Jan-01 P                     Expenses:Rent               $500.00      $500.00
+24-Jan-01 P                     Assets:Cash                $-500.00            0
+
+Market
+24-Jan-03 P                     Brand:Fresh                   $4.00        $4.00
+24-Jan-03 P                     Assets:Cash                  $-4.00            0
+end test
+
+test bal --flat --group-by payee --format '%-26(account)%(count)\n'
+Carrier
+Assets:Cash               1
+Expenses:Groceries:Fresh  1
+                          2
+
+Grocer
+Assets:Cash               1
+Brand:Fresh               1
+                          2
+
+Landlord
+Assets:Cash               1
+Expenses:Rent             1
+                          2
+
+Market
+Assets:Cash               1
+Brand:Fresh               1
+                          2
+end test
+
+test bal --pivot-only Brand --group-by payee
+Carrier
+             $-30.00  Assets:Cash
+              $30.00  Expenses:Groceries:Fresh
+--------------------
+                   0
+
+Grocer
+             $-10.00  Assets:Cash
+              $10.00  Brand:Fresh
+--------------------
+                   0
+
+Landlord
+            $-500.00  Assets:Cash
+             $500.00  Brand:Home
+--------------------
+                   0
+
+Market
+              $-4.00  Assets:Cash
+               $4.00  Brand:Fresh
+--------------------
+                   0
+end test

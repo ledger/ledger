@@ -71,6 +71,7 @@ enum class lot_policy_t : std::uint8_t {
 class xact_base_t;
 class parse_context_t;
 class parse_context_stack_t;
+class temporaries_t;
 
 using payee_alias_mapping_t = std::pair<mask_t, string>; ///< Regex-to-payee-name alias pair.
 using payee_alias_mappings_t = std::list<payee_alias_mapping_t>;
@@ -219,6 +220,13 @@ public:
   journal_t();
   ~journal_t();
 
+  /// The pool that owns the accounts reports hang in this journal's account
+  /// tree (the paths --account, --pivot, --pivot-only, --anon, --inject and
+  /// account rewrites build).  Reports hold it, so it is shared by every live
+  /// report on this journal and ends with the last of them; the journal keeps
+  /// only a weak reference.
+  std::shared_ptr<temporaries_t> report_accounts_pool();
+
   /** @brief Reset all members to their initial state and register built-in tags. */
   void initialize();
 
@@ -347,6 +355,8 @@ private:
   bool payee_not_registered(const string& name);
   /** @brief Apply payee_alias_mappings to translate a payee name. */
   string translate_payee_name(const string& name);
+
+  std::weak_ptr<temporaries_t> report_accounts_; ///< The live pool, if any report holds one.
 };
 
 } // namespace ledger

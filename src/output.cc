@@ -444,10 +444,10 @@ void format_accounts::flush() {
 
   out.flush();
 
-  // Drop queued accounts so subsequent group flushes (--group-by) don't see
-  // stale pointers.  Without this, accounts created by transfer_details that
-  // are torn down by post_chain->clear() between groups would leave dangling
-  // entries in posted_accounts, crashing the next group's flush (#3207).
+  // Drop queued accounts so each --group-by group flushes from its own list.
+  // The accounts transfer_details makes belong to the report and are no
+  // longer torn down between groups, but a group's queue must not carry into
+  // the next (#3207).
   posted_accounts.clear();
 }
 
