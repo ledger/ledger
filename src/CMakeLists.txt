@@ -254,17 +254,19 @@ if(USE_PYTHON)
     # install(TARGETS ...).  The build-tree RPATH -- which CMake pads with empty
     # entries to reserve room for the longer install RPATH -- would otherwise
     # leak into the installed module, and ELF loaders treat an empty
-    # RPATH/RUNPATH element as the current working directory.  Strip the RPATH
-    # from the copied module so the installed artifact cannot be hijacked by a
-    # library planted in CWD.  ELF-only: macOS (Mach-O) and Windows (PE) use
-    # different mechanisms and are not affected.
+    # RPATH/RUNPATH element as the current working directory.  Remove the empty
+    # elements from the copied module's RPATH/RUNPATH and keep its genuine
+    # directories (Nix, Homebrew or a custom prefix need them to find Boost, GMP
+    # and Python), so the installed artifact cannot be hijacked by a library
+    # planted in CWD.  ELF-only: macOS (Mach-O) and Windows (PE) use different
+    # mechanisms and are not affected.
     if(UNIX AND NOT APPLE)
       add_custom_command(
         TARGET libledger POST_BUILD
         COMMAND ${CMAKE_COMMAND}
           "-DLEDGER_PYTHON_MODULE=${CMAKE_BINARY_DIR}/${_ledger_python_module_name}"
           -P "${CMAKE_SOURCE_DIR}/cmake/SanitizeModuleRPath.cmake"
-        COMMENT "Stripping insecure RPATH from ledger Python module (#3229)")
+        COMMENT "Removing empty RPATH/RUNPATH elements from ledger Python module (#3229)")
     endif()
 
     # Use PROGRAMS (not FILES) so the installed Python extension module has
