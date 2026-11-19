@@ -87,8 +87,9 @@ void push_sort_value(std::list<sort_value_t>& sort_values, expr_t::ptr_op_t node
  * extended data (xdata), and delegates to sort_value_is_less_than for the
  * actual comparison.
  *
- * Template specializations exist for post_t and account_t; each binds the
- * sort expression into the correct scope before evaluation.
+ * operator() is specialized for post_t and account_t, which cache their
+ * keys in different xdata; both evaluate through find_sort_values, which
+ * binds the item into the expression's context (if any) and the report.
  *
  * @tparam T  The item type being sorted (post_t or account_t).
  */
@@ -108,7 +109,9 @@ public:
   compare_items& operator=(const compare_items&) = delete;
   ~compare_items() noexcept { TRACE_DTOR(compare_items); }
 
-  /// Evaluate the sort expression in @p scope and append results to @p sort_values.
+  /// Evaluate the sort expression for the item @p scope, bound into the
+  /// expression's context (if any) and the report, and append the results
+  /// to @p sort_values.
   void find_sort_values(std::list<sort_value_t>& sort_values, scope_t& scope);
 
   /// Compare two items; returns true if @p left should appear before @p right.

@@ -1,0 +1,26 @@
+; A sort key naming a function that neither the item nor the report
+; defines is an error, for postings and for accounts alike.
+
+2024/01/01 Beta
+    Expenses:Food          $5.00
+    Assets:Cash
+
+2024/01/02 Alpha
+    Expenses:Rent          $30.00
+    Assets:Cash
+
+test reg Expenses -S no_such_key -> 1
+__ERROR__
+While evaluating value expression:
+  no_such_key
+  ^^^^^^^^^^^
+Error: Unknown identifier 'no_such_key'
+end test
+
+test bal Expenses -S no_such_key -> 1
+__ERROR__
+While evaluating value expression:
+  no_such_key
+  ^^^^^^^^^^^
+Error: Unknown identifier 'no_such_key'
+end test

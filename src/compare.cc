@@ -120,19 +120,18 @@ void push_sort_value(std::list<sort_value_t>& sort_values, expr_t::ptr_op_t node
   }
 }
 
-/*--- Template specializations for find_sort_values ---*/
+/*--- Sort value evaluation for one item ---*/
 
-template <>
-void compare_items<post_t>::find_sort_values(std::list<sort_value_t>& sort_values, scope_t& scope) {
-  bind_scope_t bound_scope(report, scope);
-  push_sort_value(sort_values, sort_order.get_op(), bound_scope);
-}
-
-template <>
-void compare_items<account_t>::find_sort_values(std::list<sort_value_t>& sort_values,
-                                                scope_t& scope) {
-  bind_scope_t bound_scope(report, scope);
-  push_sort_value(sort_values, sort_order.get_op(), bound_scope);
+template <typename T>
+void compare_items<T>::find_sort_values(std::list<sort_value_t>& sort_values, scope_t& scope) {
+  if (scope_t* context = sort_order.get_context()) {
+    bind_scope_t item_scope(*context, scope);
+    bind_scope_t bound_scope(report, item_scope);
+    push_sort_value(sort_values, sort_order.get_op(), bound_scope);
+  } else {
+    bind_scope_t bound_scope(report, scope);
+    push_sort_value(sort_values, sort_order.get_op(), bound_scope);
+  }
 }
 
 /*--- Template specializations for operator() with sort-value caching ---*/
@@ -148,31 +147,18 @@ bool compare_items<post_t>::operator()(post_t* left, post_t* right) {
   assert(left);
   assert(right);
 
-  post_t::xdata_t& lxdata(left->xdata());
-  if (!lxdata.has_flags(POST_EXT_SORT_CALC)) {
-    if (sort_order.get_context()) {
-      bind_scope_t bound_scope(*sort_order.get_context(), *left);
-      find_sort_values(lxdata.sort_values, bound_scope);
-    } else {
-      find_sort_values(lxdata.sort_values, *left);
+  auto sort_values_of = [&](post_t& post) -> std::list<sort_value_t>& {
+    post_t::xdata_t& xdata(post.xdata());
+    if (!xdata.has_flags(POST_EXT_SORT_CALC)) {
+      find_sort_values(xdata.sort_values, post);
+      convert_sort_values_for_exchange(xdata.sort_values, report, datetime_t(post.value_date()));
+      xdata.add_flags(POST_EXT_SORT_CALC);
     }
-    convert_sort_values_for_exchange(lxdata.sort_values, report, datetime_t(left->value_date()));
-    lxdata.add_flags(POST_EXT_SORT_CALC);
-  }
+    return xdata.sort_values;
+  };
 
-  post_t::xdata_t& rxdata(right->xdata());
-  if (!rxdata.has_flags(POST_EXT_SORT_CALC)) {
-    if (sort_order.get_context()) {
-      bind_scope_t bound_scope(*sort_order.get_context(), *right);
-      find_sort_values(rxdata.sort_values, bound_scope);
-    } else {
-      find_sort_values(rxdata.sort_values, *right);
-    }
-    convert_sort_values_for_exchange(rxdata.sort_values, report, datetime_t(right->value_date()));
-    rxdata.add_flags(POST_EXT_SORT_CALC);
-  }
-
-  return sort_value_is_less_than(lxdata.sort_values, rxdata.sort_values);
+  std::list<sort_value_t>& left_values(sort_values_of(*left));
+  return sort_value_is_less_than(left_values, sort_values_of(*right));
 }
 
 /**
@@ -199,12 +185,7 @@ bool compare_items<account_t>::operator()(account_t* left, account_t* right) {
         acct.amount().is_null() ||
         (!report.HANDLED(flat) && report.HANDLER(total_).expr.base_expr == "total");
     sort_amount_as_total_t as_total(xdata, shows_total);
-    if (sort_order.get_context()) {
-      bind_scope_t bound_scope(*sort_order.get_context(), acct);
-      find_sort_values(xdata.sort_values, bound_scope);
-    } else {
-      find_sort_values(xdata.sort_values, acct);
-    }
+    find_sort_values(xdata.sort_values, acct);
     convert_sort_values_for_exchange(xdata.sort_values, report, report.terminus);
     xdata.add_flags(ACCOUNT_EXT_SORT_CALC);
   };
