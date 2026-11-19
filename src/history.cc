@@ -150,6 +150,8 @@ public:
                                           const datetime_t& moment,
                                           const datetime_t& oldest = datetime_t());
 
+  std::optional<vertex_descriptor> vertex_of(const commodity_t& comm) const;
+
   void alias_commodity(commodity_t& old_comm, commodity_t& new_comm);
 
   void print_map(std::ostream& out, const datetime_t& moment = datetime_t());
@@ -329,6 +331,23 @@ void commodity_history_impl_t::add_commodity(commodity_t& comm) {
   }
 }
 
+/// The vertex that holds @p comm's prices, or nullopt when @p comm has no
+/// vertex in this graph.  A commodity's graph_index means something only in
+/// its own pool's graph: one kept from a replaced pool (Python can keep one
+/// across Amount.shutdown()/Amount.initialize()) may carry an index that is
+/// in range here but names another commodity's vertex.  A commodity retired
+/// by an alias shares its referent's vertex, which is in the same pool.
+std::optional<commodity_history_impl_t::vertex_descriptor>
+commodity_history_impl_t::vertex_of(const commodity_t& comm) const {
+  const optional<std::size_t> index = comm.graph_index();
+  if (!index || *index >= num_vertices(price_graph))
+    return std::nullopt;
+  const vertex_descriptor v = vertex(*index, price_graph);
+  if (&get(vertex_name, price_graph, v)->pool() != &comm.pool())
+    return std::nullopt;
+  return v;
+}
+
 void commodity_history_impl_t::alias_commodity(commodity_t& old_comm, commodity_t& new_comm) {
   if (!old_comm.graph_index())
     return;
@@ -418,10 +437,10 @@ void commodity_history_impl_t::map_prices(const function<void(datetime_t, const 
                                           const datetime_t& oldest, bool bidirectionally) {
   DEBUG("history.map", "Mapping prices for source commodity: " << source);
 
-  if (!source.graph_index() || *source.graph_index() >= num_vertices(price_graph))
+  const std::optional<vertex_descriptor> source_v = vertex_of(source);
+  if (!source_v)
     return;
-
-  vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
+  const vertex_descriptor sv = *source_v;
 
   FGraph fg(price_graph, recent_edge_weight<EdgeWeightMap, PricePointMap, PriceRatioMap>(
                              get(edge_weight, price_graph), pricemap, ratiomap, moment, oldest));
@@ -468,10 +487,10 @@ void commodity_history_impl_t::map_prices(const function<void(datetime_t, const 
 std::optional<price_point_t> commodity_history_impl_t::find_price(const commodity_t& source,
                                                                   const datetime_t& moment,
                                                                   const datetime_t& oldest) {
-  if (!source.graph_index() || *source.graph_index() >= num_vertices(price_graph))
+  const std::optional<vertex_descriptor> source_v = vertex_of(source);
+  if (!source_v)
     return std::nullopt;
-
-  vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
+  const vertex_descriptor sv = *source_v;
 
   FGraph fg(price_graph, recent_edge_weight<EdgeWeightMap, PricePointMap, PriceRatioMap>(
                              get(edge_weight, price_graph), pricemap, ratiomap, moment, oldest));
@@ -530,26 +549,18 @@ std::optional<price_point_t> commodity_history_impl_t::find_price(const commodit
   if (source == target)
     return std::nullopt;
 
-  // Guard against commodities from another pool: a Commodity that Python
-  // obtained before Amount.shutdown()/Amount.initialize() replaced the pool
-  // carries a graph_index into the old pool's price graph, which may be out
-  // of range here.  Treat such commodities as unresolvable rather than
-  // invoking undefined behaviour in Boost.Graph (issue #976).
-  std::size_t n = num_vertices(price_graph);
-  if (!source.graph_index() || *source.graph_index() >= n)
+  const std::optional<vertex_descriptor> source_v = vertex_of(source);
+  const std::optional<vertex_descriptor> target_v = vertex_of(target);
+  if (!source_v || !target_v)
     return std::nullopt;
-  if (!target.graph_index() || *target.graph_index() >= n)
-    return std::nullopt;
+  const vertex_descriptor sv = *source_v;
+  const vertex_descriptor tv = *target_v;
 
   // A retired commodity shares its referent's vertex (commodity_pool_t::
   // alias): the two are one commodity, so one unit of either is one of
-  // the other.  A commodity of another pool may carry the same index by
-  // chance (see the guard above) and is no such pair.
-  if (&source.pool() == &target.pool() && *source.graph_index() == *target.graph_index())
+  // the other.
+  if (sv == tv)
     return price_point_t(moment, amount_t(1L).with_commodity(target));
-
-  vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
-  vertex_descriptor tv = vertex(*target.graph_index(), price_graph);
 
   FGraph fg(price_graph, recent_edge_weight<EdgeWeightMap, PricePointMap, PriceRatioMap>(
                              get(edge_weight, price_graph), pricemap, ratiomap, moment, oldest));

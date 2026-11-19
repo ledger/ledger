@@ -1,0 +1,11 @@
+test python test/regress/price-lookup-stale-pool.py
+2.00 USD
+None
+AAA None
+BBB None
+CCC None
+DDD None
+FFF None
+GGG None
+USD None
+end test
