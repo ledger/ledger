@@ -203,7 +203,7 @@ private:
 
 /// @brief Test whether a value_t contains an embedded expression op_t.
 inline bool is_expr(const value_t& val) {
-  return val.is_any() && val.as_any().type() == typeid(expr_t::ptr_op_t);
+  return val.is_any<expr_t::ptr_op_t>();
 }
 
 /// @brief Extract the embedded op_t pointer from a value_t.

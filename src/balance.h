@@ -708,29 +708,8 @@ public:
              const string& negative_color = empty_string) const;
 
   /**
-   * Debugging methods.  There are two methods defined to help with
-   * debugging:
-   *
-   * dump(ostream) dumps a balance to an output stream.  There is
-   * little different from print(), it simply surrounds the display
-   * value with a marker, for example "BALANCE($1.00, DM 12.00)".
-   * This code is used by other dumping code elsewhere in Ledger.
-   *
    * valid() returns true if the amounts within the balance are valid.
    */
-  void dump(std::ostream& out) const {
-    out << "BALANCE(";
-    bool first = true;
-    for (const amounts_map::value_type& pair : amounts) {
-      if (first)
-        first = false;
-      else
-        out << ", ";
-      pair.second.print(out);
-    }
-    out << ")";
-  }
-
   [[nodiscard]] bool valid() const {
     for (const amounts_map::value_type& pair : amounts)
       if (!pair.second.valid()) {

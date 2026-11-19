@@ -97,8 +97,6 @@ class compare_items {
   expr_t sort_order; ///< Parsed sort expression from `--sort`.
   report_t& report;  ///< Report context for expression evaluation.
 
-  compare_items(); ///< Deleted -- a sort expression and report are required.
-
 public:
   compare_items(const expr_t& _sort_order, report_t& _report)
       : sort_order(_sort_order), report(_report) {
@@ -116,16 +114,6 @@ public:
   /// Compare two items; returns true if @p left should appear before @p right.
   bool operator()(T* left, T* right);
 };
-
-/// Evaluate a single sort-key expression node and return the result.
-sort_value_t calc_sort_value(const expr_t::ptr_op_t op);
-
-template <typename T>
-bool compare_items<T>::operator()(T* left, T* right) {
-  assert(left);
-  assert(right);
-  return sort_value_is_less_than(find_sort_values(left), find_sort_values(right));
-}
 
 template <>
 bool compare_items<post_t>::operator()(post_t* left, post_t* right);

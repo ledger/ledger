@@ -1554,8 +1554,6 @@ void value_t::in_place_cast(type_t cast_type) {
   if (type() == cast_type)
     return;
 
-  _dup();
-
   if (cast_type == BOOLEAN) {
     set_boolean(bool(*this));
     return;
@@ -2582,7 +2580,7 @@ string value_t::label(optional<type_t> the_type) const {
   case SCOPE:
     return _("a scope");
   case ANY:
-    if (as_any().type() == typeid(expr_t::ptr_op_t))
+    if (is_any<expr_t::ptr_op_t>())
       return _("an expr");
     else
       return _("an object");
@@ -2712,7 +2710,7 @@ void value_t::print(std::ostream& _out, const int first_width, const int latter_
     out << "<#SCOPE>";
     break;
   case ANY:
-    if (as_any().type() == typeid(expr_t::ptr_op_t)) {
+    if (is_any<expr_t::ptr_op_t>()) {
       out << "<#EXPR ";
       as_any<expr_t::ptr_op_t>()->print(out);
       out << ">";
@@ -2817,7 +2815,7 @@ void value_t::dump(std::ostream& out, const bool relaxed) const {
     out << as_scope();
     break;
   case ANY:
-    if (as_any().type() == typeid(expr_t::ptr_op_t))
+    if (is_any<expr_t::ptr_op_t>())
       as_any<expr_t::ptr_op_t>()->dump(out);
     else
       out << as_any().type().name();

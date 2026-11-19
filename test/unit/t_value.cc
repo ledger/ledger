@@ -8063,6 +8063,99 @@ BOOST_AUTO_TEST_CASE(testIsAnyTyped)
 }
 
 // =======================================================================
+// in_place_cast on a value whose storage is shared must leave every other
+// holder of that storage untouched (set_type allocates fresh storage when
+// refc > 1; in_place_cast relies on that, not on a prior _dup()).
+// =======================================================================
+
+BOOST_AUTO_TEST_CASE(testCastSharedStorageLeavesOriginal)
+{
+  // BALANCE -> AMOUNT (single commodity)
+  balance_t bal(amount_t("$1.00"));
+  value_t bal_orig(bal);
+  value_t bal_copy(bal_orig);
+  bal_copy.in_place_cast(value_t::type_t::AMOUNT);
+  BOOST_CHECK(bal_copy.is_amount());
+  BOOST_CHECK_EQUAL(bal_copy.as_amount(), amount_t("$1.00"));
+  BOOST_CHECK(bal_orig.is_balance());
+  BOOST_CHECK_EQUAL(bal_orig.as_balance(), bal);
+
+  // BALANCE -> STRING (two commodities)
+  balance_t multi(amount_t("$1.00"));
+  multi += amount_t("2 EUR");
+  const string multi_text = multi.to_string();
+  value_t multi_orig(multi);
+  value_t multi_copy(multi_orig);
+  multi_copy.in_place_cast(value_t::type_t::STRING);
+  BOOST_CHECK(multi_copy.is_string());
+  BOOST_CHECK_EQUAL(multi_copy.as_string(), multi_text);
+  BOOST_CHECK(multi_orig.is_balance());
+  BOOST_CHECK_EQUAL(multi_orig.as_balance(), multi);
+
+  // BALANCE via the to_*() helpers, which cast a temporary sharing *this
+  BOOST_CHECK_EQUAL(bal_orig.to_amount(), amount_t("$1.00"));
+  BOOST_CHECK(bal_orig.is_balance());
+
+  // SEQUENCE -> STRING
+  value_t::sequence_t seq;
+  seq.push_back(new value_t(1L));
+  seq.push_back(new value_t(2L));
+  value_t seq_orig(seq);
+  value_t seq_copy(seq_orig);
+  seq_copy.in_place_cast(value_t::type_t::STRING);
+  BOOST_CHECK(seq_copy.is_string());
+  BOOST_CHECK_EQUAL(seq_copy.as_string(), "(1, 2)");
+  BOOST_CHECK(seq_orig.is_sequence());
+  BOOST_CHECK_EQUAL(seq_orig.as_sequence().size(), 2u);
+  BOOST_CHECK_EQUAL(seq_orig.as_sequence()[0].as_long(), 1L);
+  BOOST_CHECK_EQUAL(seq_orig.as_sequence()[1].as_long(), 2L);
+
+  // STRING -> MASK
+  value_t str_orig(string("ab.*"), true);
+  value_t str_copy(str_orig);
+  str_copy.in_place_cast(value_t::type_t::MASK);
+  BOOST_CHECK(str_copy.is_mask());
+  BOOST_CHECK_EQUAL(str_copy.as_mask().str(), "ab.*");
+  BOOST_CHECK(str_orig.is_string());
+  BOOST_CHECK_EQUAL(str_orig.as_string(), "ab.*");
+
+  // BOOLEAN -> INTEGER: every boolean shares the static true_value storage
+  value_t t1(true);
+  value_t t2(true);
+  t2.in_place_cast(value_t::type_t::INTEGER);
+  BOOST_CHECK(t2.is_long());
+  BOOST_CHECK_EQUAL(t2.as_long(), 1L);
+  BOOST_CHECK(t1.is_boolean());
+  BOOST_CHECK(t1.as_boolean());
+  BOOST_CHECK(value_t(true).is_boolean());
+  BOOST_CHECK(value_t(true).as_boolean());
+}
+
+// =======================================================================
+// print() of an ANY value distinguishes an embedded expression from any
+// other object (pins the is_any<expr_t::ptr_op_t>() test in print()).
+// =======================================================================
+
+BOOST_AUTO_TEST_CASE(testPrintAnyExprAndObject)
+{
+  value_t e;
+  expr_t::ptr_op_t op(new expr_t::op_t(expr_t::op_t::VALUE));
+  op->set_value(value_t(42L));
+  e.set_any(op);
+  std::ostringstream e_out;
+  e.print(e_out);
+  BOOST_CHECK_EQUAL(e_out.str(), "<#EXPR 42>");
+  BOOST_CHECK(is_expr(e));
+
+  value_t o;
+  o.set_any(std::any(42));
+  std::ostringstream o_out;
+  o.print(o_out);
+  BOOST_CHECK_EQUAL(o_out.str(), "<#OBJECT>");
+  BOOST_CHECK(!is_expr(o));
+}
+
+// =======================================================================
 // Coverage: value.h lines 300-301, 304-305 - unsigned long and double ctors
 // =======================================================================
 

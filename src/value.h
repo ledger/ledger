@@ -371,13 +371,6 @@ public:
     set_scope(item);
     TRACE_CTOR(value_t, "scope_t *");
   }
-#if 0
-  template <typename T>
-  explicit value_t(T& item) {
-    set_any(item);
-    TRACE_CTOR(value_t, "T&");
-  }
-#endif
 
   /**
    * Destructor.  This does not do anything, because the intrusive_ptr
@@ -831,7 +824,6 @@ public:
   bool to_boolean() const;
   int to_int() const;
   long to_long() const;
-  std::size_t to_size_t() const { return static_cast<std::size_t>(to_long()); }
   datetime_t to_datetime() const;
   date_t to_date() const;
   amount_t to_amount() const;
@@ -1000,7 +992,6 @@ inline value_t string_value(const string& str = "") {
   return value_t(str, true);
 }
 
-#define VALUE_OR_ZERO(val) ((val).is_null() ? value_t(0L) : (val))
 #define SIMPLIFIED_VALUE_OR_ZERO(val) ((val).is_null() ? value_t(0L) : (val).simplified())
 
 inline value_t mask_value(const string& str) {
