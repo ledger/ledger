@@ -32,7 +32,6 @@
 #include <system.hh>
 
 #include "metadata.h"
-#include "ptree.h"
 
 namespace ledger {
 

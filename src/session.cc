@@ -53,8 +53,6 @@
 #include "xact.h"
 #include "account.h"
 #include "journal.h"
-#include "iterators.h"
-#include "filters.h"
 
 namespace ledger {
 
