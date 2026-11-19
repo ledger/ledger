@@ -123,9 +123,7 @@ void instance_t::parse() {
   while (!apply_stack.empty())
     pop_application();
 
-#if TIMELOG_SUPPORT
   timelog.close();
-#endif // TIMELOG_SUPPORT
 
   TRACE_STOP(instance_parse, 1);
 }
@@ -325,7 +323,6 @@ xact_t* instance_t::read_next_directive(bool& error_flag, xact_t* previous_xact)
     // directives inherited from the original Ledger format.
     if (!general_directive(line)) {
       switch (line[0]) {
-#if TIMELOG_SUPPORT
       case 'i': // clock-in (lowercase = no payee capitalization)
         clock_in_directive(line, false);
         break;
@@ -343,7 +340,6 @@ xact_t* instance_t::read_next_directive(bool& error_flag, xact_t* previous_xact)
       case 'h': // ignored (historical Ledger compatibility)
       case 'b':
         break;
-#endif // TIMELOG_SUPPORT
 
       case 'A': // A -- default account for unbalanced posts
         default_account_directive(line + 1);

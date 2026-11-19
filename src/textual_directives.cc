@@ -84,8 +84,6 @@ using detail::instance_t;
 
 /*--- Time Tracking Directives ---*/
 
-#if TIMELOG_SUPPORT
-
 time_xact_t instance_t::parse_clock_event(char* line, bool capitalized) {
   if (std::strlen(line) < 21)
     throw_(parse_error, _("Clock-in/out directive is too short"));
@@ -124,8 +122,6 @@ void instance_t::clock_in_directive(char* line, bool capitalized) {
 void instance_t::clock_out_directive(char* line, bool capitalized) {
   context.count += timelog.clock_out(parse_clock_event(line, capitalized));
 }
-
-#endif // TIMELOG_SUPPORT
 
 /*--- Legacy Single-Character Directives ---*/
 

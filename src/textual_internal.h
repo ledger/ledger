@@ -75,10 +75,7 @@
 #include "pyinterp.h"
 #endif
 
-#define TIMELOG_SUPPORT 1 ///< Enable time-tracking (clock-in/out) directives
-#if TIMELOG_SUPPORT
 #include "timelog.h"
-#endif
 
 namespace ledger::detail {
 
@@ -150,9 +147,7 @@ public:
   std::list<application_t>
       apply_stack;       ///< Stack of active `apply` directives (front = most recent)
   hash_type_t hash_type; ///< Hash algorithm for transaction chaining (NO_HASHES to disable)
-#if TIMELOG_SUPPORT
-  time_log_t timelog; ///< Accumulates clock-in/out events for time tracking
-#endif
+  time_log_t timelog;    ///< Accumulates clock-in/out events for time tracking
   directory_cache_t directory_cache; ///< Include directory listings (only the root's is used)
 
   instance_t(parse_context_stack_t& _context_stack, parse_context_t& _context,
@@ -234,12 +229,10 @@ public:
    */
   xact_t* read_next_directive(bool& error_flag, xact_t* previous_xact);
 
-#if TIMELOG_SUPPORT
   /// Parse "i|o DATE TIME[ ACCOUNT[  PAYEE][  ; NOTE]]"; account is null when the line names none.
   time_xact_t parse_clock_event(char* line, bool capitalized);
   void clock_in_directive(char* line, bool capitalized);
   void clock_out_directive(char* line, bool capitalized);
-#endif
 
   /// @brief Dispatch table for word-based directives (account, commodity, include, etc.).
   /// @return true if a known directive was handled, false to fall through to legacy single-char
