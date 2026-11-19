@@ -1,4 +1,4 @@
-; Coverage for post.cc get_display_account when a post
+; Coverage for report_t::fn_display_account when a post
 ; is virtual (balanced or unbalanced).
 
 2024/01/01 Test

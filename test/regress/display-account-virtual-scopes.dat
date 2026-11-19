@@ -1,0 +1,23 @@
+; --display-account and the ()/[] wrappers of virtual postings, evaluated
+; through every scope that reaches display_account: report formats,
+; aggregated postings, automated-transaction predicates and posting-level
+; check directives.  The define alias binds display_account when the
+; journal is parsed and must decorate exactly like the direct identifier.
+; Read by display-account-virtual-scopes.test.
+
+define da=display_account
+
+= expr display_account =~ /^\(Budget/
+    (Tracked)    1
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Checking  $-10.00
+    (Budget:Food)    $-10.00
+    check display_account =~ /^\(Budget:Food/
+    [Assets:Cash]    $-3.00
+    [Equity:Fund]    $3.00
+
+2024/01/15 Other
+    Expenses:Food    $5.00
+    Assets:Checking

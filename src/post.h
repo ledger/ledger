@@ -258,6 +258,15 @@ public:
   }
 
   /**
+   * @brief Wrap an account name in this posting's virtual-posting brackets.
+   *
+   * Balanced virtual postings get [brackets] and other virtual postings
+   * (parens), matching the journal syntax; real postings and non-string
+   * values are returned unchanged.
+   */
+  value_t decorate_account_name(const value_t& name) const;
+
+  /**
    * @brief Resolve an expression name to its implementation in the posting scope.
    *
    * Maps expression identifiers to getter functions.  Single-character
@@ -265,7 +274,7 @@ public:
    *   - `a` = amount, `b` = cost, `n`/`N` = count, `O` = total, `R` = real
    *
    * Key named bindings include: amount, cost, price, total, count, account,
-   * display_account, payee, virtual, real, has_cost, commodity, any(), all().
+   * payee, virtual, real, has_cost, commodity, any(), all().
    * Falls through to item_t::lookup() for inherited bindings (date, note, etc.).
    */
   expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;

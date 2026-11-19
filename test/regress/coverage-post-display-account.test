@@ -1,4 +1,4 @@
-; Coverage test for post.cc get_display_account (L309-321).
+; Coverage test for report_t::fn_display_account.
 ; Balanced virtual postings are wrapped in [] (L314-315),
 ; unbalanced virtual postings are wrapped in () (L316-317).
 ; Non-virtual postings are shown without wrapping.

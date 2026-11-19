@@ -1,4 +1,4 @@
-; Test virtual posting display_account (exercises post.cc get_display_account)
+; Test virtual posting display_account (exercises report_t::fn_display_account)
 
 2024/01/15 * Store
     Expenses:Food              $50.00

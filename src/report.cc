@@ -950,7 +950,10 @@ value_t report_t::fn_scrubbed_display_total(call_scope_t& scope) {
 }
 
 value_t report_t::fn_display_account(call_scope_t& scope) {
-  return HANDLER(display_account_).expr.calc(scope);
+  value_t acct = HANDLER(display_account_).expr.calc(scope);
+  if (post_t* post = search_scope<post_t>(&scope))
+    return post->decorate_account_name(acct);
+  return acct;
 }
 
 value_t report_t::fn_should_bold(call_scope_t& scope) {

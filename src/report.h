@@ -323,7 +323,8 @@ public:
   value_t fn_display_total(call_scope_t& scope);  ///< Evaluate --display-total
   value_t fn_scrubbed_display_total(call_scope_t& scope); ///< scrub(display_total), reading the
                                                           ///< cached stripped total when present
-  value_t fn_display_account(call_scope_t& scope);        ///< Evaluate --display-account expression
+  value_t fn_display_account(call_scope_t& scope); ///< Evaluate --display-account, then wrap a
+                                                   ///< virtual posting's name in ()/[]
   value_t fn_top_amount(call_scope_t& val); ///< Extract the first amount from a balance or sequence
   value_t
   fn_should_bold(call_scope_t& scope); ///< Evaluate --bold-if expression for conditional formatting

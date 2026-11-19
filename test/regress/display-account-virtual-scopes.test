@@ -1,0 +1,97 @@
+; --display-account and the ()/[] wrappers of virtual postings, through
+; every scope that reaches display_account.  The journal lives in
+; display-account-virtual-scopes.dat and every command reads it with -f:
+; its automated-transaction predicate and posting check name
+; display_account, which the semantic oracle does not model, so this
+; file must carry no journal text of its own.
+
+test -f test/regress/display-account-virtual-scopes.dat reg --format '%(display_account)|%(account)\n'
+Expenses:Food|Expenses:Food
+Assets:Checking|Assets:Checking
+(Budget:Food)|Budget:Food
+[Assets:Cash]|Assets:Cash
+[Equity:Fund]|Equity:Fund
+(Tracked)|Tracked
+Expenses:Food|Expenses:Food
+Assets:Checking|Assets:Checking
+end test
+
+test -f test/regress/display-account-virtual-scopes.dat reg --display-account 'display_account + "!"' --format '%(display_account)\n'
+Expenses:Food!
+Assets:Checking!
+(Budget:Food!)
+[Assets:Cash!]
+[Equity:Fund!]
+(Tracked!)
+Expenses:Food!
+Assets:Checking!
+end test
+
+test -f test/regress/display-account-virtual-scopes.dat reg --display-account 'display_account + "!"' --related Food --format '%(display_account)\n'
+Assets:Checking!
+[Assets:Cash!]
+[Equity:Fund!]
+(Tracked!)
+Assets:Checking!
+end test
+
+test -f test/regress/display-account-virtual-scopes.dat reg -M --display-account 'account + "!"' --format '%(display_account)\n'
+[Assets:Cash!]
+Assets:Checking!
+(Budget:Food!)
+[Equity:Fund!]
+Expenses:Food!
+(Tracked!)
+end test
+
+test -f test/regress/display-account-virtual-scopes.dat csv --display-account 'display_account + "!"'
+"2024/01/01","","Payee","Expenses:Food!","$","10","",""
+"2024/01/01","","Payee","Assets:Checking!","$","-10","",""
+"2024/01/01","","Payee","(Budget:Food!)","$","-10","",""
+"2024/01/01","","Payee","[Assets:Cash!]","$","-3","",""
+"2024/01/01","","Payee","[Equity:Fund!]","$","3","",""
+"2024/01/01","","Payee","(Tracked!)","$","-10","",""
+"2024/01/15","","Other","Expenses:Food!","$","5","",""
+"2024/01/15","","Other","Assets:Checking!","$","-5","",""
+end test
+
+test -f test/regress/display-account-virtual-scopes.dat select 'display_account, amount from posts where virtual'
+(Budget:Food)      $-10.00
+[Assets:Cash]       $-3.00
+[Equity:Fund]        $3.00
+(Tracked)       $-10.00
+end test
+
+test -f test/regress/display-account-virtual-scopes.dat reg --group-by 'display_account' --format '%(display_account)\n' Budget Tracked
+(Budget:Food)
+(Budget:Food)
+
+(Tracked)
+(Tracked)
+end test
+
+test -f test/regress/display-account-virtual-scopes.dat eval --display-account '"Z"' display_account
+Z
+end test
+
+test -f test/regress/display-account-virtual-scopes.dat reg --format '%(da)|%(display_account)\n'
+Expenses:Food|Expenses:Food
+Assets:Checking|Assets:Checking
+(Budget:Food)|(Budget:Food)
+[Assets:Cash]|[Assets:Cash]
+[Equity:Fund]|[Equity:Fund]
+(Tracked)|(Tracked)
+Expenses:Food|Expenses:Food
+Assets:Checking|Assets:Checking
+end test
+
+test -f test/regress/display-account-virtual-scopes.dat reg --display-account 'account + "!"' --format '%(da)|%(display_account)\n'
+Expenses:Food!|Expenses:Food!
+Assets:Checking!|Assets:Checking!
+(Budget:Food!)|(Budget:Food!)
+[Assets:Cash!]|[Assets:Cash!]
+[Equity:Fund!]|[Equity:Fund!]
+(Tracked!)|(Tracked!)
+Expenses:Food!|Expenses:Food!
+Assets:Checking!|Assets:Checking!
+end test

@@ -52,7 +52,6 @@
 #include "journal.h"
 #include "format.h"
 #include "pool.h"
-#include "report.h"
 
 namespace ledger {
 
@@ -571,34 +570,6 @@ value_t get_account(call_scope_t& args) {
   return string_value(name);
 }
 
-/**
- * @brief Return the display account name, decorated with virtual indicators.
- *
- * Virtual postings are wrapped in parentheses, balanced virtual postings
- * in brackets, matching the journal syntax the user originally wrote.
- *
- * If --display-account is set, the user-supplied expression is evaluated
- * first to transform the account name (e.g., to drop a leading prefix);
- * the virtual-posting wrappers are then applied to the transformed name.
- */
-value_t get_display_account(call_scope_t& args) {
-  value_t acct;
-  if (report_t* report = search_scope<report_t>(&args))
-    acct = report->HANDLER(display_account_).expr.calc(args);
-  else
-    acct = get_account(args);
-  if (acct.is_string()) {
-    post_t& post(args.context<post_t>());
-    if (post.has_flags(POST_VIRTUAL)) {
-      if (post.must_balance())
-        acct = string_value(string("[") + acct.as_string() + "]");
-      else
-        acct = string_value(string("(") + acct.as_string() + ")");
-    }
-  }
-  return acct;
-}
-
 value_t get_account_id(post_t& post) {
   return static_cast<long>(post.account_id());
 }
@@ -640,6 +611,16 @@ value_t get_wrapper(call_scope_t& scope) {
 }
 
 } // namespace
+
+value_t post_t::decorate_account_name(const value_t& name) const {
+  if (name.is_string() && has_flags(POST_VIRTUAL)) {
+    if (must_balance())
+      return string_value(string("[") + name.as_string() + "]");
+    else
+      return string_value(string("(") + name.as_string() + ")");
+  }
+  return name;
+}
 
 /**
  * @brief Test whether any posting in the same transaction satisfies an expression.
@@ -765,9 +746,7 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind, const string& name)
     break;
 
   case 'd':
-    if (name == "display_account")
-      return WRAP_FUNCTOR(get_display_account);
-    else if (name == "depth")
+    if (name == "depth")
       return WRAP_FUNCTOR(get_wrapper<&get_account_depth>);
     else if (name == "datetime")
       return WRAP_FUNCTOR(get_wrapper<&get_datetime>);

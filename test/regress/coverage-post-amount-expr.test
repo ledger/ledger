@@ -1,5 +1,5 @@
 ; Test post.cc: post with display_account showing virtual brackets
-; Exercises get_display_account showing [Account] and (Account)
+; Exercises report_t::fn_display_account showing [Account] and (Account)
 
 2024/01/15 Salary
     Assets:Checking    $3000.00
