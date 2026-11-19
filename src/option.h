@@ -184,15 +184,15 @@
  * This expands to a struct `my_filter_option_t` with an instance
  * `my_filter_handler` as a member of report_t.
  *
- * **Step 2.** Register the option in report_t::lookup_option() (report.cc):
+ * **Step 2.** Register the option in report_t::lookup_option() (report.cc),
+ * under the `case` for its first letter:
  * @code
- *   OPT(my_filter_);
+ *   case 'm':
+ *     OPT(my_filter_);
  * @endcode
- * Or, to also support `-m` as a shortcut, use:
- * @code
- *   OPT_(my_filter_);
- *   // and set ch='m' via a custom CTOR if desired.
- * @endcode
+ * To also accept `-m`, write OPT_(my_filter_) there instead: OPT_ matches a
+ * one-letter name purely by the `case` it sits under, so it must sit under
+ * `case 'm':`.  OPT_CH matches only the one-letter name.
  *
  * **Step 3.** (Optional) If you need a filter handler in the pipeline,
  * add it to chain_pre_post_handlers() or chain_post_handlers() in chain.cc:
@@ -262,7 +262,7 @@ public:
 
   /// @brief Construct an option with the given internal name and optional shortcut.
   /// @param _name  Internal name string (e.g., "sort_all_"); trailing '_' sets wants_arg.
-  /// @param _ch    Single-character CLI shortcut (e.g., 'S'), or '\0' for none.
+  /// @param _ch    Shortcut letter that desc() appends as " (-ch)"; no option passes one.
   option_t(const char* _name, const char _ch = '\0')
       : name(_name), name_len(std::strlen(name)), ch(_ch), handled(false), parent(nullptr), value(),
         wants_arg(name_len > 0 ? name[name_len - 1] == '_' : false) {
@@ -295,8 +295,9 @@ public:
     }
   }
 
-  /// @brief Return the CLI display form (e.g., "--sort-all (-S)").
-  /// Converts internal underscores to hyphens and appends the shortcut if present.
+  /// @brief Return the CLI display form (e.g., "--sort-all").
+  /// Converts internal underscores to hyphens, drops a trailing one, and appends
+  /// " (-ch)" when the option was constructed with a shortcut letter (none is).
   string desc() const {
     std::ostringstream out;
     out << "--";
