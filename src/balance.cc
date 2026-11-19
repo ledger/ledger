@@ -131,29 +131,28 @@ balance_t& balance_t::operator+=(const amount_t& amt) {
   if (amt.is_realzero())
     return *this;
 
-  // When this balance owns its map outright, immer hands the lambda the
-  // stored component itself (as an rvalue) and the addition happens in
-  // place; a component of a shared map arrives const and is copied first.
-  // amount_t has no move constructor, so a by-value parameter would copy
-  // either way and force operator+= to duplicate the bigint every time.
   commodity_t* comm = component_key(amt.commodity());
-  bool found = false;
-  amounts = std::move(amounts).update_if_exists(comm, [&amt, &found](auto&& current) -> amount_t {
-    found = true;
-    if constexpr (std::is_const_v<std::remove_reference_t<decltype(current)>>) {
-      amount_t sum(current);
-      sum += amt;
-      return sum;
-    } else {
-      current += amt;
-      return current;
-    }
-  });
-  if (!found)
+  if (!update_component(comm, [&amt](amount_t& current) { current += amt; }))
     amounts = std::move(amounts).set(comm, amt);
 
   return *this;
 }
+
+namespace {
+
+/// amount_t::operator+= keeps the left operand's precision flags, so the
+/// part that keeps full precision is made the left operand.
+void add_keeping_precision(amount_t& sum, const amount_t& part) {
+  if (part.keep_precision() && !sum.keep_precision()) {
+    amount_t total(part);
+    total += sum;
+    sum = total;
+  } else {
+    sum += part;
+  }
+}
+
+} // namespace
 
 /// @brief Add @p amt onto any existing component of its commodity, keeping
 /// full precision if either part has it (see the declaration).
@@ -170,24 +169,7 @@ balance_t& balance_t::merge(const amount_t& amt) {
     return *this;
 
   commodity_t* comm = component_key(amt.commodity());
-  bool found = false;
-  amounts = std::move(amounts).update_if_exists(comm, [&amt, &found](auto&& current) -> amount_t {
-    found = true;
-    if (amt.keep_precision() && !current.keep_precision()) {
-      amount_t sum(amt);
-      sum += current;
-      return sum;
-    }
-    if constexpr (std::is_const_v<std::remove_reference_t<decltype(current)>>) {
-      amount_t sum(current);
-      sum += amt;
-      return sum;
-    } else {
-      current += amt;
-      return current;
-    }
-  });
-  if (!found)
+  if (!update_component(comm, [&amt](amount_t& current) { add_keeping_precision(current, amt); }))
     amounts = std::move(amounts).set(comm, amt);
 
   return *this;
@@ -224,25 +206,12 @@ balance_t& balance_t::operator-=(const amount_t& amt) {
   if (amt.is_realzero())
     return *this;
 
-  // In place when the map is uniquely owned, as in operator+=.
   commodity_t* comm = component_key(amt.commodity());
-  bool found = false;
   bool zero = false;
-  amounts =
-      std::move(amounts).update_if_exists(comm, [&amt, &found, &zero](auto&& current) -> amount_t {
-        found = true;
-        if constexpr (std::is_const_v<std::remove_reference_t<decltype(current)>>) {
-          amount_t difference(current);
-          difference -= amt;
-          zero = difference.is_realzero();
-          return difference;
-        } else {
-          current -= amt;
-          zero = current.is_realzero();
-          return current;
-        }
-      });
-  if (!found)
+  if (!update_component(comm, [&amt, &zero](amount_t& current) {
+        current -= amt;
+        zero = current.is_realzero();
+      }))
     amounts = std::move(amounts).set(comm, amt.negated());
   else if (zero)
     amounts = std::move(amounts).erase(comm);
@@ -805,20 +774,7 @@ balance_t average_lot_prices(const balance_t& bal) {
   typedef std::map<optional<std::string>, group_t> balance_map;
   balance_map bycomm;
 
-  // Add @p part into @p sum, keeping full precision if either has it (as
-  // balance_t::merge()): amount_t's addition keeps the left operand's flags,
-  // so a part that keeps precision is added the other way round.
-  auto accumulate = [](amount_t& sum, const amount_t& part) {
-    if (part.keep_precision() && !sum.keep_precision()) {
-      amount_t total(part);
-      total += sum;
-      sum = total;
-    } else {
-      sum += part;
-    }
-  };
-
-  auto add = [&bycomm, &accumulate](const amount_t& amount) {
+  auto add = [&bycomm](const amount_t& amount) {
     commodity_t& comm(amount.commodity());
     optional<std::string> sym(comm.symbol());
     amount_t quant(amount.strip_annotations(keep_details_t()));
@@ -827,14 +783,14 @@ balance_t average_lot_prices(const balance_t& bal) {
         bycomm.insert(balance_map::value_type(sym, group_t{quant, annotation_t()}));
     group_t& group(i->second);
     if (!inserted)
-      accumulate(group.quantity, quant);
+      add_keeping_precision(group.quantity, quant);
 
     const annotated_commodity_t* acomm =
         comm.has_annotation() ? &static_cast<const annotated_commodity_t&>(comm) : nullptr;
     if (acomm && acomm->details.price) {
       amount_t cost(*acomm->details.price * quant);
       if (group.ann.price)
-        accumulate(*group.ann.price, cost);
+        add_keeping_precision(*group.ann.price, cost);
       else
         group.ann.price = cost;
       if (!acomm->details.has_flags(ANNOTATION_PRICE_FIXATED) && !quant.is_realzero())
@@ -863,10 +819,7 @@ balance_t average_lot_prices(const balance_t& bal) {
       add(pair.second);
   } catch (...) {
     bycomm.clear();
-    balance_t::amounts_array sorted;
-    bal.sorted_amounts(sorted);
-    for (const amount_t* amount : sorted)
-      add(*amount);
+    bal.map_sorted_amounts(add);
     throw;
   }
 

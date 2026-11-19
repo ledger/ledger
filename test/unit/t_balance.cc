@@ -1398,4 +1398,21 @@ BOOST_AUTO_TEST_CASE(testMapSortedAmountsCallsCallerFunctor)
   BOOST_CHECK_EQUAL(counter.calls, 3);
 }
 
+BOOST_AUTO_TEST_CASE(testMergeOntoSharedMapKeepsPrecision)
+{
+  balance_t b;
+  b += amount_t("$1.00");
+  const balance_t shared(b);
+
+  amount_t keeper("$0.001");
+  keeper.set_keep_precision(true);
+  b.merge(keeper);
+
+  BOOST_REQUIRE_EQUAL(b.commodity_count(), 1U);
+  BOOST_CHECK(b.first_sorted_amount()->keep_precision());
+  BOOST_CHECK_EQUAL(b.first_sorted_amount()->number(), amount_t("1.001"));
+  BOOST_CHECK(!shared.first_sorted_amount()->keep_precision());
+  BOOST_CHECK_EQUAL(shared.first_sorted_amount()->number(), amount_t("1.00"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

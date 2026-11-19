@@ -312,16 +312,7 @@ public:
       keys.push_back(pair.first);
     amounts_map::transient_type result = std::move(amounts).transient();
     for (commodity_t* key : keys)
-      result.update_if_exists(key, [&fn](auto&& current) -> amount_t {
-        if constexpr (std::is_const_v<std::remove_reference_t<decltype(current)>>) {
-          amount_t amt(current);
-          fn(amt);
-          return amt;
-        } else {
-          fn(current);
-          return current;
-        }
-      });
+      result.update_if_exists(key, component_updater(fn));
     amounts = std::move(result).persistent();
   }
 
@@ -734,6 +725,42 @@ public:
         return false;
       }
     return true;
+  }
+
+private:
+  /**
+   * The function immer's update_if_exists() takes, applying @p op to one
+   * component: when the map is owned outright immer hands over the stored
+   * amount itself (an rvalue) and @p op updates it in place; a component
+   * of a shared map arrives const and @p op updates a copy.  amount_t has
+   * no move constructor, so a by-value parameter would copy either way.
+   * The result refers to @p op and must be used within the full-expression.
+   */
+  template <typename Fn>
+  static auto component_updater(Fn&& op) {
+    return [&op](auto&& current) -> amount_t {
+      if constexpr (std::is_const_v<std::remove_reference_t<decltype(current)>>) {
+        amount_t updated(current);
+        op(updated);
+        return updated;
+      } else {
+        op(current);
+        return current;
+      }
+    };
+  }
+
+  /// Apply @p op to the component kept under @p key, if there is one, in
+  /// place when this balance owns its map; returns whether there was one.
+  template <typename Fn>
+  bool update_component(commodity_t* key, Fn&& op) {
+    bool found = false;
+    amounts = std::move(amounts).update_if_exists(
+        key, component_updater([&found, &op](amount_t& current) {
+          found = true;
+          op(current);
+        }));
+    return found;
   }
 };
 
