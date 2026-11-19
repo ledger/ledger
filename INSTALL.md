@@ -54,7 +54,7 @@ A: You're probably missing some dependency libraries.  If you tried
   like this should work (as root):
 
     $ sudo apt-get install build-essential cmake texinfo python-dev \
-        zlib1g-dev libbz2-dev libgmp3-dev gettext libmpfr-dev \
+        zlib1g-dev libbz2-dev libgmp3-dev libmpfr-dev \
         libboost-date-time-dev libboost-filesystem-dev \
         libboost-graph-dev libboost-iostreams-dev \
         libboost-python-dev libboost-regex-dev libboost-test-dev \

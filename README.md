@@ -65,7 +65,6 @@ Dependency  | Version (or greater)
 [utfcpp]    | 3.2.3
 [immer]     | 0.9.1
 [ICU]       | 63 _optional_
-[gettext]   | 0.17 _optional_
 [libedit]   | 20090111-3.0 _optional_
 [Python]    | 3.10 _optional_
 [Gpgmepp]   | 1.13.1 _optional_
@@ -94,7 +93,7 @@ run:
     $ sudo port install -f cmake python37 \
          libiconv zlib gmp \
          mpfr ncurses ncursesw \
-         gettext libedit boost-jam \
+         libedit boost-jam \
          boost +st+python37+icu texlive doxygen graphviz \
          texinfo lcov sloccount
 
@@ -106,7 +105,7 @@ platforms (for example, `linux-64`), which can be used with [Conda] or [mamba].
 With Conda you could run:
 
     $ conda install -c conda-forge python=3 cmake boost gmp mpfr \
-         gettext libedit texinfo doxygen graphviz
+         libedit texinfo doxygen graphviz
 
 ### Ubuntu
 
@@ -114,7 +113,7 @@ If you're going to build on Ubuntu, `sudo apt-get install ...` the
 following packages (current as of Ubuntu 18.04):
 
     $ sudo apt-get install build-essential cmake doxygen \
-         libboost-system-dev libboost-dev python3-dev gettext git \
+         libboost-system-dev libboost-dev python3-dev git \
          libboost-date-time-dev libboost-filesystem-dev \
          libboost-iostreams-dev libboost-python-dev libboost-regex-dev \
          libboost-test-dev libedit-dev libgmp3-dev libmpfr-dev texinfo tzdata
@@ -125,8 +124,8 @@ Debian 10 (bullseye), Debian 11 ("bullseye"), Debian testing and Debian
 unstable (sid) contain all components needed to build ledger.  You can
 install all required build dependencies using the following command:
 
-    $ sudo apt-get install build-essential cmake autopoint texinfo python3-dev \
-         zlib1g-dev libbz2-dev libgmp3-dev gettext libmpfr-dev \
+    $ sudo apt-get install build-essential cmake texinfo python3-dev \
+         zlib1g-dev libbz2-dev libgmp3-dev libmpfr-dev \
          libboost-date-time-dev libboost-filesystem-dev \
          libboost-graph-dev libboost-iostreams-dev \
          libboost-python-dev libboost-regex-dev libboost-test-dev
@@ -138,7 +137,7 @@ following command (tested with Fedora 32):
 
     $ sudo dnf install boost-date-time boost-devel boost-filesystem \
         boost-iostreams boost-python3-devel boost-regex boost-system \
-        boost-test cmake doxygen gettext git gmp-devel libedit-devel \
+        boost-test cmake doxygen git gmp-devel libedit-devel \
         mpfr-devel python3-devel texinfo tzdata
 
 ## Building
@@ -247,7 +246,6 @@ hack as much as you like, then [open a pull request on GitHub](https://github.co
 [utfcpp]: https://utfcpp.sourceforge.net
 [immer]: https://github.com/arximboldi/immer
 [ICU]: https://icu.unicode.org
-[gettext]: https://www.gnu.org/software/gettext/
 [libedit]: https://thrysoee.dk/editline/
 [Python]: https://python.org
 [Gpgmepp]: https://www.gnupg.org/related_software/gpgme/

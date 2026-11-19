@@ -49,8 +49,6 @@
 /* Application configuration                                              */
 /*------------------------------------------------------------------------*/
 
-#cmakedefine01 HAVE_GETTEXT
-
 #cmakedefine01 HAVE_EDIT
 #cmakedefine01 HAVE_READLINE
 #cmakedefine01 HAVE_GETPWUID
@@ -144,12 +142,7 @@
 #include <sys/ioctl.h>
 #endif
 
-#if HAVE_GETTEXT
-#include <libintl.h>
-#define _(str) gettext(str)
-#else
 #define _(str) str
-#endif
 #define _f(str) boost::format(_(str))
 
 #include <gmp.h>

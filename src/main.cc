@@ -113,10 +113,6 @@ int main(int argc, char* argv[], char* envp[]) {
   std::signal(SIGPIPE, sigpipe_handler);
 #endif
 
-#if HAVE_GETTEXT
-  ::textdomain("ledger");
-#endif
-
   /*--- Phase 2: Session and argument processing ---*/
 
   global_scope_t* global_scope = nullptr;

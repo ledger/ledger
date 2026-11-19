@@ -469,7 +469,6 @@ class PrepareBuild(CommandLineApp):
                     'zlib',
                     'gmp', 'mpfr',
                     'ncurses',
-                    'gettext',
                     'libedit',
                     'texlive-xetex', 'doxygen', 'graphviz', 'texinfo',
                     'lcov', 'sloccount'
@@ -537,7 +536,6 @@ class PrepareBuild(CommandLineApp):
                                 "libmpfr-dev",
                                 "libicu-dev",
                                 "libgpgmepp-dev",
-                                "gettext",
                                 "zlib1g-dev",
                                 "libbz2-dev",
                                 "libedit-dev",
@@ -595,7 +593,6 @@ class PrepareBuild(CommandLineApp):
                         'libicu-dev',
                         'libedit-dev',
                         'libutfcpp-dev',
-                        'gettext',
                         'texinfo',
                         'doxygen',
                         'graphviz',
@@ -625,7 +622,6 @@ class PrepareBuild(CommandLineApp):
                         'bzip2-devel',
                         'python-devel',
                         'gmp-devel',
-                        'gettext-devel',
                         #'mpfr-devel'
                         'libedit-devel',
                         #'texlive-full',

@@ -408,19 +408,6 @@ if(UNIX AND NOT APPLE)
   endif()
 endif()
 
-
-#find_package(Gettext)           # Used for running tests
-
-#if(GETTEXT_FOUND)
-#  set(HAVE_GETTEXT 1)
-#else()
-  set(HAVE_GETTEXT 0)
-#endif()
-
-#find_path(INTL_PATH libintl.h)
-#find_library(INTL_LIB intl)
-#include_directories(SYSTEM "${INTL_PATH}")
-
 ########################################################################
 
 macro(add_ledger_library_dependencies _target)
@@ -438,9 +425,6 @@ macro(add_ledger_library_dependencies _target)
   endif()
   if(HAVE_READLINE)
     target_link_libraries(${_target} ${READLINE_LIB})
-  endif()
-  if(HAVE_GETTEXT)
-    target_link_libraries(${_target} ${INTL_LIB})
   endif()
   if(HAVE_GPGME)
     target_link_libraries(${_target} Gpgmepp)
