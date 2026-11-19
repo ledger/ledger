@@ -1,0 +1,72 @@
+; The `period` command dumps each lexer token as "<kind name>: <text>".
+; Pin the name and canonical text of every token kind: every keyword in
+; the first block, every payload or punctuation kind and the lexer's
+; aliases (from, to, yday) in the second.
+
+test period "ago hence since until in this next last every today tomorrow yesterday year quarter month week day yearly quarterly bimonthly monthly biweekly weekly daily years quarters months weeks days" -> 1
+--- Period expression tokens ---
+TOK_AGO: ago
+TOK_HENCE: hence
+TOK_SINCE: since
+TOK_UNTIL: until
+TOK_IN: in
+TOK_THIS: this
+TOK_NEXT: next
+TOK_LAST: last
+TOK_EVERY: every
+TOK_TODAY: today
+TOK_TOMORROW: tomorrow
+TOK_YESTERDAY: yesterday
+TOK_YEAR: year
+TOK_QUARTER: quarter
+TOK_MONTH: month
+TOK_WEEK: week
+TOK_DAY: day
+TOK_YEARLY: yearly
+TOK_QUARTERLY: quarterly
+TOK_BIMONTHLY: bimonthly
+TOK_MONTHLY: monthly
+TOK_BIWEEKLY: biweekly
+TOK_WEEKLY: weekly
+TOK_DAILY: daily
+TOK_YEARS: years
+TOK_QUARTERS: quarters
+TOK_MONTHS: months
+TOK_WEEKS: weeks
+TOK_DAYS: days
+END_REACHED: <EOF>
+
+__ERROR__
+Error: Unexpected date period token 'ago'
+end test
+
+test period "2024/01/15 3 / - . jan mon from to yday foo" -> 1
+--- Period expression tokens ---
+TOK_DATE:  year 2024 month Jan day 15
+TOK_INT: 3
+TOK_SLASH: /
+TOK_DASH: -
+TOK_DOT: .
+TOK_A_MONTH: Jan
+TOK_A_WDAY: Mon
+TOK_SINCE: since
+TOK_UNTIL: until
+TOK_YESTERDAY: yesterday
+UNKNOWN: foo
+END_REACHED: <EOF>
+
+__ERROR__
+Error: Unexpected date period token '/'
+end test
+
+test period "every 2 weeks foo" -> 1
+--- Period expression tokens ---
+TOK_EVERY: every
+TOK_INT: 2
+TOK_WEEKS: weeks
+UNKNOWN: foo
+END_REACHED: <EOF>
+
+__ERROR__
+Error: Unexpected date period token 'foo'
+end test

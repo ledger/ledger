@@ -1,0 +1,29 @@
+; --input-date-format turns off separator rewriting for dates: the custom
+; format reads '.' literally and an ISO date falls through to the built-in
+; %Y-%m-%d reader.  Timeclock datetimes, and datetimes given to
+; to_datetime, are still rewritten to '/'.  The rejection of a dotted date
+; no format names lives in date-input-errors.test, so that this file stays
+; positive and SemanticBisimulation replays its journal.
+
+15.01.2024 Custom
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024-01-20 Iso
+    Expenses:Food    $20.00
+    Assets:Cash
+
+i 2024-01-22 08:30:00 Work
+o 2024.01.22 17:00:00
+
+test reg --input-date-format "%d.%m.%Y"
+24-Jan-15 Custom                Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Jan-20 Iso                   Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+24-Jan-22                       Work                          8.50h        8.50h
+end test
+
+test eval --input-date-format "%d.%m.%Y" 'to_datetime("2024.01.15 08:30:00")'
+2024/01/15 08:30:00
+end test

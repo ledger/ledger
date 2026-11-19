@@ -247,44 +247,59 @@ std::deque<std::shared_ptr<date_io_t>> readers;
 
 /// When true (the default), '.' and '-' in date strings are converted to '/'
 /// before parsing.  Disabled when a custom --input-date-format is set, since
-/// the custom format may use those characters literally.
+/// the custom format may use those characters literally.  It governs dates
+/// only: parse_datetime() always rewrites the separators.
 bool convert_separators_to_slashes = true;
 
 /*--- Low-Level Date Parsing ---*/
 
 /**
- * @brief Try to parse a date string against a single format.
+ * @brief Copy date or datetime input into a fixed buffer, normalizing
+ *        its separators.
  *
- * This is the workhorse behind parse_date_mask().  It:
- *   1. Copies the date string into a buffer, normalizing separators.
- *   2. Parses via the given io object.
- *   3. Round-trip validates: formats the parsed date back to a string
- *      and verifies it matches the input (catching invalid dates like
- *      "02/30").
- *   4. Reports the format's traits; the parse itself has already chosen
- *      the year of a yearless format (see temporal_io_t<date_t>::parse).
+ * Every date and datetime parser works on this copy, made once per call.
+ * The buffer holds 127 bytes and a terminator: longer input is refused
+ * here, before strptime sees it.  Error messages name the original
+ * date_str, not buf, so the user sees the text as written.
  *
- * @param date_str  The date string to parse.
- * @param io        The format-specific IO object.
- * @param traits    If non-null, receives the format's date_traits_t.
- * @return          The parsed date, or not-a-date on failure.
+ * @param date_str    The text to parse, as the user wrote it.
+ * @param buf         Receives a copy of date_str.
+ * @param to_slashes  When true, every '.' and '-' in buf becomes '/', so
+ *                    users can write 2024.01.15 or 2024-01-15.
+ * @throws date_error if date_str does not fit in buf.
  */
-date_t parse_date_mask_routine(const char* date_str, date_io_t& io,
-                               date_traits_t* traits = nullptr) {
-  char buf[128];
-  if (std::strlen(date_str) >= sizeof(buf)) {
+void normalize_date_input(const char* date_str, char (&buf)[128], bool to_slashes) {
+  if (std::strlen(date_str) >= sizeof(buf))
     throw_(date_error, _f("Invalid date: %1%") % date_str);
-  }
 
   std::strcpy(buf, date_str);
 
-  // Normalize separators so users can write 2024.01.15 or 2024-01-15
-  if (convert_separators_to_slashes) {
+  if (to_slashes) {
     for (char* p = buf; *p; p++)
       if (*p == '.' || *p == '-')
         *p = '/';
   }
+}
 
+/**
+ * @brief Try to parse a date string against a single format.
+ *
+ * This is the workhorse behind parse_date_mask().  It:
+ *   1. Parses buf via the given io object.
+ *   2. Round-trip validates: formats the parsed date back to a string
+ *      and verifies it matches buf (catching invalid dates like
+ *      "02/30").
+ *   3. Reports the format's traits; the parse itself has already chosen
+ *      the year of a yearless format (see temporal_io_t<date_t>::parse).
+ *
+ * @param date_str  The date string as written, named in error messages.
+ * @param buf       date_str after normalize_date_input().
+ * @param io        The format-specific IO object.
+ * @param traits    If non-null, receives the format's date_traits_t.
+ * @return          The parsed date, or not-a-date on failure.
+ */
+date_t parse_date_mask_routine(const char* date_str, const char* buf, date_io_t& io,
+                               date_traits_t* traits = nullptr) {
   date_t when = io.parse(buf);
 
   if (!when.is_not_a_date()) {
@@ -332,8 +347,11 @@ date_t parse_date_mask_routine(const char* date_str, date_io_t& io,
  * @throws date_error if no format matches.
  */
 date_t parse_date_mask(const char* date_str, date_traits_t* traits = nullptr) {
+  char buf[128];
+  normalize_date_input(date_str, buf, convert_separators_to_slashes);
+
   for (std::shared_ptr<date_io_t>& reader : readers) {
-    date_t when = parse_date_mask_routine(date_str, *reader.get(), traits);
+    date_t when = parse_date_mask_routine(date_str, buf, *reader.get(), traits);
     if (!when.is_not_a_date())
       return when;
   }
@@ -421,17 +439,9 @@ optional<date_time::months_of_year> string_to_month_of_year(const std::string& s
  * separator.
  */
 datetime_t parse_datetime(const char* str) {
-  if (std::strlen(str) > 127) {
-    throw_(date_error, _f("Invalid date: %1%") % str);
-  }
-
+  // Always rewrite separators, even under --input-date-format.
   char buf[128];
-  std::strcpy(buf, str);
-
-  for (char* p = buf; *p; p++) {
-    if (*p == '.' || *p == '-')
-      *p = '/';
-  }
+  normalize_date_input(str, buf, true);
 
   datetime_t when = input_datetime_io->parse(buf);
   if (when.is_not_a_date_time()) {
@@ -740,6 +750,66 @@ class date_parser_t {
 
       } kind;
 
+      /// @brief The name and canonical text of one token kind.
+      struct kind_info_t {
+        kind_t kind;      ///< The kind this row describes (its index in kinds[]).
+        const char* name; ///< The enumerator's spelling, printed by dump().
+        /// The canonical keyword or punctuation printed by to_string(), or
+        /// nullptr when the token carries a payload that to_string() prints.
+        const char* text;
+      };
+
+      /// @brief One row per kind_t, in enum order, indexed by kind.
+      static constexpr kind_info_t kinds[] = {
+          {UNKNOWN, "UNKNOWN", nullptr},
+          {TOK_DATE, "TOK_DATE", nullptr},
+          {TOK_INT, "TOK_INT", nullptr},
+          {TOK_SLASH, "TOK_SLASH", "/"},
+          {TOK_DASH, "TOK_DASH", "-"},
+          {TOK_DOT, "TOK_DOT", "."},
+          {TOK_A_MONTH, "TOK_A_MONTH", nullptr},
+          {TOK_A_WDAY, "TOK_A_WDAY", nullptr},
+          {TOK_AGO, "TOK_AGO", "ago"},
+          {TOK_HENCE, "TOK_HENCE", "hence"},
+          {TOK_SINCE, "TOK_SINCE", "since"},
+          {TOK_UNTIL, "TOK_UNTIL", "until"},
+          {TOK_IN, "TOK_IN", "in"},
+          {TOK_THIS, "TOK_THIS", "this"},
+          {TOK_NEXT, "TOK_NEXT", "next"},
+          {TOK_LAST, "TOK_LAST", "last"},
+          {TOK_EVERY, "TOK_EVERY", "every"},
+          {TOK_TODAY, "TOK_TODAY", "today"},
+          {TOK_TOMORROW, "TOK_TOMORROW", "tomorrow"},
+          {TOK_YESTERDAY, "TOK_YESTERDAY", "yesterday"},
+          {TOK_YEAR, "TOK_YEAR", "year"},
+          {TOK_QUARTER, "TOK_QUARTER", "quarter"},
+          {TOK_MONTH, "TOK_MONTH", "month"},
+          {TOK_WEEK, "TOK_WEEK", "week"},
+          {TOK_DAY, "TOK_DAY", "day"},
+          {TOK_YEARLY, "TOK_YEARLY", "yearly"},
+          {TOK_QUARTERLY, "TOK_QUARTERLY", "quarterly"},
+          {TOK_BIMONTHLY, "TOK_BIMONTHLY", "bimonthly"},
+          {TOK_MONTHLY, "TOK_MONTHLY", "monthly"},
+          {TOK_BIWEEKLY, "TOK_BIWEEKLY", "biweekly"},
+          {TOK_WEEKLY, "TOK_WEEKLY", "weekly"},
+          {TOK_DAILY, "TOK_DAILY", "daily"},
+          {TOK_YEARS, "TOK_YEARS", "years"},
+          {TOK_QUARTERS, "TOK_QUARTERS", "quarters"},
+          {TOK_MONTHS, "TOK_MONTHS", "months"},
+          {TOK_WEEKS, "TOK_WEEKS", "weeks"},
+          {TOK_DAYS, "TOK_DAYS", "days"},
+          {END_REACHED, "END_REACHED", "<EOF>"},
+      };
+      static_assert(std::size(kinds) == END_REACHED + 1, "kinds[] needs one row per kind_t");
+
+      /// @brief True iff every row of kinds[] sits at the index of its kind.
+      static constexpr bool kinds_in_order() {
+        for (std::size_t i = 0; i < std::size(kinds); ++i)
+          if (static_cast<std::size_t>(kinds[i].kind) != i)
+            return false;
+        return true;
+      }
+
       using content_t = std::variant<unsigned short, string, date_time::months_of_year,
                                      date_time::weekdays, date_specifier_t>;
 
@@ -767,90 +837,28 @@ class date_parser_t {
       operator bool() const { return kind != END_REACHED; }
 
       /// @brief Render the token as a human-readable string for diagnostics.
+      ///
+      /// Kinds that carry a payload print it; every other kind prints its
+      /// canonical text from kinds[].
       string to_string() const {
         std::ostringstream out;
 
         switch (kind) {
         case UNKNOWN:
-          out << std::get<string>(*value);
-          break;
+          return std::get<string>(*value);
         case TOK_DATE:
           return std::get<date_specifier_t>(*value).to_string();
         case TOK_INT:
           out << std::get<unsigned short>(*value);
           break;
-        case TOK_SLASH:
-          return "/";
-        case TOK_DASH:
-          return "-";
-        case TOK_DOT:
-          return ".";
         case TOK_A_MONTH: // NOLINT(bugprone-branch-clone)
           out << date_specifier_t::month_type(std::get<date_time::months_of_year>(*value));
           break;
         case TOK_A_WDAY:
           out << date_specifier_t::day_of_week_type(std::get<date_time::weekdays>(*value));
           break;
-        case TOK_AGO:
-          return "ago";
-        case TOK_HENCE:
-          return "hence";
-        case TOK_SINCE:
-          return "since";
-        case TOK_UNTIL:
-          return "until";
-        case TOK_IN:
-          return "in";
-        case TOK_THIS:
-          return "this";
-        case TOK_NEXT:
-          return "next";
-        case TOK_LAST:
-          return "last";
-        case TOK_EVERY:
-          return "every";
-        case TOK_TODAY:
-          return "today";
-        case TOK_TOMORROW:
-          return "tomorrow";
-        case TOK_YESTERDAY:
-          return "yesterday";
-        case TOK_YEAR:
-          return "year";
-        case TOK_QUARTER:
-          return "quarter";
-        case TOK_MONTH:
-          return "month";
-        case TOK_WEEK:
-          return "week";
-        case TOK_DAY:
-          return "day";
-        case TOK_YEARLY:
-          return "yearly";
-        case TOK_QUARTERLY:
-          return "quarterly";
-        case TOK_BIMONTHLY:
-          return "bimonthly";
-        case TOK_MONTHLY:
-          return "monthly";
-        case TOK_BIWEEKLY:
-          return "biweekly";
-        case TOK_WEEKLY:
-          return "weekly";
-        case TOK_DAILY:
-          return "daily";
-        case TOK_YEARS:
-          return "years";
-        case TOK_QUARTERS:
-          return "quarters";
-        case TOK_MONTHS:
-          return "months";
-        case TOK_WEEKS:
-          return "weeks";
-        case TOK_DAYS:
-          return "days";
-        case END_REACHED:
-          return "<EOF>";
+        default:
+          return kinds[kind].text;
         }
 
         return out.str();
@@ -858,122 +866,10 @@ class date_parser_t {
 
       /// @brief Write the token's kind_t name for debug output.
       void dump(std::ostream& out) const {
-        switch (kind) {
-        case UNKNOWN:
-          out << "UNKNOWN";
-          break;
-        case TOK_DATE:
-          out << "TOK_DATE";
-          break;
-        case TOK_INT:
-          out << "TOK_INT";
-          break;
-        case TOK_SLASH:
-          out << "TOK_SLASH";
-          break;
-        case TOK_DASH:
-          out << "TOK_DASH";
-          break;
-        case TOK_DOT:
-          out << "TOK_DOT";
-          break;
-        case TOK_A_MONTH:
-          out << "TOK_A_MONTH";
-          break;
-        case TOK_A_WDAY:
-          out << "TOK_A_WDAY";
-          break;
-        case TOK_AGO:
-          out << "TOK_AGO";
-          break;
-        case TOK_HENCE:
-          out << "TOK_HENCE";
-          break;
-        case TOK_SINCE:
-          out << "TOK_SINCE";
-          break;
-        case TOK_UNTIL:
-          out << "TOK_UNTIL";
-          break;
-        case TOK_IN:
-          out << "TOK_IN";
-          break;
-        case TOK_THIS:
-          out << "TOK_THIS";
-          break;
-        case TOK_NEXT:
-          out << "TOK_NEXT";
-          break;
-        case TOK_LAST:
-          out << "TOK_LAST";
-          break;
-        case TOK_EVERY:
-          out << "TOK_EVERY";
-          break;
-        case TOK_TODAY:
-          out << "TOK_TODAY";
-          break;
-        case TOK_TOMORROW:
-          out << "TOK_TOMORROW";
-          break;
-        case TOK_YESTERDAY:
-          out << "TOK_YESTERDAY";
-          break;
-        case TOK_YEAR:
-          out << "TOK_YEAR";
-          break;
-        case TOK_QUARTER:
-          out << "TOK_QUARTER";
-          break;
-        case TOK_MONTH:
-          out << "TOK_MONTH";
-          break;
-        case TOK_WEEK:
-          out << "TOK_WEEK";
-          break;
-        case TOK_DAY:
-          out << "TOK_DAY";
-          break;
-        case TOK_YEARLY:
-          out << "TOK_YEARLY";
-          break;
-        case TOK_QUARTERLY:
-          out << "TOK_QUARTERLY";
-          break;
-        case TOK_BIMONTHLY:
-          out << "TOK_BIMONTHLY";
-          break;
-        case TOK_MONTHLY:
-          out << "TOK_MONTHLY";
-          break;
-        case TOK_BIWEEKLY:
-          out << "TOK_BIWEEKLY";
-          break;
-        case TOK_WEEKLY:
-          out << "TOK_WEEKLY";
-          break;
-        case TOK_DAILY:
-          out << "TOK_DAILY";
-          break;
-        case TOK_YEARS:
-          out << "TOK_YEARS";
-          break;
-        case TOK_QUARTERS:
-          out << "TOK_QUARTERS";
-          break;
-        case TOK_MONTHS:
-          out << "TOK_MONTHS";
-          break;
-        case TOK_WEEKS:
-          out << "TOK_WEEKS";
-          break;
-        case TOK_DAYS:
-          out << "TOK_DAYS";
-          break;
-        case END_REACHED:
-          out << "END_REACHED";
-          break;
-        }
+        // Checked here, not beside the size assert: a member function body
+        // is a complete-class context, where kinds_in_order() is defined.
+        static_assert(kinds_in_order(), "kinds[] rows must follow kind_t order");
+        out << kinds[kind].name;
       }
 
       /// @brief Throw a date_error for an unexpected token.
@@ -2388,62 +2284,56 @@ datetime_io_map temp_datetime_io;
 
 /// Cache of custom date format objects, keyed by format string.
 date_io_map temp_date_io;
-} // namespace
 
 /**
- * @brief Format a datetime value as a string.
+ * @brief Format a date or datetime value as a string.
  *
  * Dispatches to the appropriate IO object based on format_type:
- *   - FMT_WRITTEN: canonical "YYYY/MM/DD HH:MM:SS" for serialization
- *   - FMT_PRINTED: human-friendly "YY-Mon-DD HH:MM:SS" for display
- *   - FMT_CUSTOM: a caller-supplied strftime format, with caching
+ *   - FMT_WRITTEN: the written IO, for serialization
+ *   - FMT_PRINTED: the printed IO, for display
+ *   - FMT_CUSTOM: a caller-supplied strftime format, with its IO object
+ *     created on first use and kept in cache, keyed by the format string
+ *
+ * written and printed are taken as pointers and dereferenced only on
+ * their own branch, so a FMT_CUSTOM call never touches them.
  */
-std::string format_datetime(const datetime_t& when, const format_type_t format_type,
-                            const optional<const char*>& format) {
+template <typename T, typename IO>
+std::string format_temporal(const T& when, const format_type_t format_type,
+                            const optional<const char*>& format, const std::shared_ptr<IO>& written,
+                            const std::shared_ptr<IO>& printed,
+                            std::map<std::string, std::unique_ptr<IO>>& cache) {
   // NOLINTNEXTLINE(bugprone-branch-clone)
   if (format_type == FMT_WRITTEN) {
-    return written_datetime_io->format(when);
+    return written->format(when);
   } else if (format_type == FMT_CUSTOM && format) {
-    if (auto i = temp_datetime_io.find(*format); i != temp_datetime_io.end()) {
+    if (auto i = cache.find(*format); i != cache.end()) {
       return (*i).second->format(when);
     } else {
-      auto& stored = (temp_datetime_io[*format] = std::make_unique<datetime_io_t>(*format));
+      auto& stored = (cache[*format] = std::make_unique<IO>(*format));
       return stored->format(when);
     }
   } else if (format_type == FMT_PRINTED) {
-    return printed_datetime_io->format(when);
+    return printed->format(when);
   } else {
     assert(false);
     return empty_string;
   }
 }
+} // namespace
 
-/**
- * @brief Format a date value as a string.
- *
- * Dispatches to the appropriate IO object based on format_type:
- *   - FMT_WRITTEN: canonical "YYYY/MM/DD" for serialization
- *   - FMT_PRINTED: human-friendly "YY-Mon-DD" for display
- *   - FMT_CUSTOM: a caller-supplied strftime format, with caching
- */
+/// @brief Format a datetime; FMT_WRITTEN is "YYYY/MM/DD HH:MM:SS",
+/// FMT_PRINTED "YY-Mon-DD HH:MM:SS" (see format_temporal()).
+std::string format_datetime(const datetime_t& when, const format_type_t format_type,
+                            const optional<const char*>& format) {
+  return format_temporal(when, format_type, format, written_datetime_io, printed_datetime_io,
+                         temp_datetime_io);
+}
+
+/// @brief Format a date; FMT_WRITTEN is "YYYY/MM/DD", FMT_PRINTED
+/// "YY-Mon-DD" (see format_temporal()).
 std::string format_date(const date_t& when, const format_type_t format_type,
                         const optional<const char*>& format) {
-  // NOLINTNEXTLINE(bugprone-branch-clone)
-  if (format_type == FMT_WRITTEN) {
-    return written_date_io->format(when);
-  } else if (format_type == FMT_CUSTOM && format) {
-    if (auto i = temp_date_io.find(*format); i != temp_date_io.end()) {
-      return (*i).second->format(when);
-    } else {
-      auto& stored = (temp_date_io[*format] = std::make_unique<date_io_t>(*format));
-      return stored->format(when);
-    }
-  } else if (format_type == FMT_PRINTED) {
-    return printed_date_io->format(when);
-  } else {
-    assert(false);
-    return empty_string;
-  }
+  return format_temporal(when, format_type, format, written_date_io, printed_date_io, temp_date_io);
 }
 
 /*--- Format Configuration ---*/
