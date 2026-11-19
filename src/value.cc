@@ -1011,11 +1011,28 @@ value_t& value_t::operator/=(const value_t& val) {
 
 namespace {
 
-/// @brief Strip the double quotes that a journal writes around a symbol.
-string without_journal_quotes(const string& name) {
+/// @brief The symbol a string spells as a journal writes one.
+///
+/// A string in double quotes loses the two quotes and nothing else
+/// (#3241).  A string that does not begin with a double quote and holds a
+/// backslash is read by commodity_t::parse_symbol, the journal's reader of
+/// bare symbols, where a backslash makes the next character part of the
+/// symbol (#3313, #3321); if it reads as exactly one symbol, that symbol
+/// is returned.  Any other string is returned unchanged.
+string journal_symbol(const string& name) {
   if (name.length() >= 2 && name.front() == '"' && name.back() == '"')
     return string(name, 1, name.length() - 2);
-  return name;
+  if (name.empty() || name.front() == '"' || name.find('\\') == string::npos)
+    return name;
+  string text(name);
+  char* p = text.data();
+  string symbol;
+  try {
+    commodity_t::parse_symbol(p, symbol);
+  } catch (const amount_error&) {
+    return name;
+  }
+  return *p == '\0' ? symbol : name;
 }
 
 /// @brief Find the commodity that a string names in a value expression.
@@ -1023,11 +1040,12 @@ string without_journal_quotes(const string& name) {
 /// The string may give the commodity's symbol or one of its aliases, or
 /// either of those in the double quotes that a journal writes around a
 /// symbol containing spaces, digits, or other reserved characters (issue
-/// #3241).  Returns nullptr if the string names no commodity.
+/// #3241), or with backslash escapes, as a bare journal symbol.  Returns
+/// nullptr if the string names no commodity.
 commodity_t* find_named_commodity(commodity_pool_t& pool, const string& name) {
   if (commodity_t* commodity = pool.find(name))
     return commodity;
-  string symbol = without_journal_quotes(name);
+  string symbol = journal_symbol(name);
   return symbol != name ? pool.find(symbol) : nullptr;
 }
 
@@ -1311,7 +1329,7 @@ bool value_t::is_less_than(const value_t& val) const {
     case STRING: {
       if (const auto* otherCommodity = find_named_commodity(as_commodity().pool(), val.as_string()))
         return to_string() < otherCommodity->base_symbol();
-      return to_string() < without_journal_quotes(val.as_string());
+      return to_string() < journal_symbol(val.as_string());
     }
     default:
       break;
@@ -1472,7 +1490,7 @@ bool value_t::is_greater_than(const value_t& val) const {
     case STRING: {
       if (const auto* otherCommodity = find_named_commodity(as_commodity().pool(), val.as_string()))
         return to_string() > otherCommodity->base_symbol();
-      return to_string() > without_journal_quotes(val.as_string());
+      return to_string() > journal_symbol(val.as_string());
     }
     default:
       break;
