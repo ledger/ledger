@@ -71,6 +71,7 @@
 #include "session.h"
 #include <algorithm>
 #include <utility>
+#include <functional>
 #if HAVE_BOOST_PYTHON
 #include "pyinterp.h"
 #endif
@@ -238,6 +239,37 @@ public:
   /// @return true if a known directive was handled, false to fall through to legacy single-char
   /// directives.
   bool general_directive(char* line);
+
+  /// @brief One indented line beneath a block directive (`account`,
+  ///        `commodity`, `payee`, `tag`), split into keyword and argument.
+  struct subdirective_t {
+    const char* kind;   ///< The block's name in errors: "account", "commodity", ...
+    string keyword;     ///< The line's first word
+    char* arg;          ///< The rest of the line, or nullptr if there is none
+    std::size_t indent; ///< The line's indentation: the outer indent of a nested block
+
+    /// @brief The argument of a recognized keyword that takes one.  A
+    ///        keyword is checked for a missing argument only once it has
+    ///        been recognized, so an unknown one is reported as
+    ///        unrecognized instead (issue #3260).
+    /// @throws parse_error "<Kind> directive '<keyword>' requires an argument"
+    ///         if the line has none.
+    char* argument() const;
+  };
+
+  /// @brief Read the sub-directives beneath a block directive whose own
+  ///        line is indented @p outer_indent columns (0 at top level).
+  ///
+  /// Reads each following line indented more deeply, stopping before the
+  /// first line that is not, or after a blank line.  A comment line is
+  /// passed, past its comment character and the whitespace after it, to
+  /// @p on_comment when one is given, and is skipped otherwise.  Every
+  /// other line goes to @p on_keyword, which returns false for a keyword it
+  /// does not recognize; that is reported as
+  /// "Unrecognized <kind> directive '<keyword>'".
+  void read_subdirectives(std::size_t outer_indent, const char* kind,
+                          const std::function<bool(const subdirective_t&)>& on_keyword,
+                          const std::function<void(char*)>& on_comment = nullptr);
 
   /*--- Account Directives ---*/
 

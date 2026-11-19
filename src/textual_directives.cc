@@ -672,6 +672,53 @@ bool is_block_comment(const char* line) {
 
 } // namespace
 
+char* instance_t::subdirective_t::argument() const {
+  if (!arg) {
+    string name(kind);
+    name[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(name[0])));
+    throw_(parse_error, _f("%1% directive '%2%' requires an argument") % name % keyword);
+  }
+  return arg;
+}
+
+void instance_t::read_subdirectives(std::size_t outer_indent, const char* kind,
+                                    const std::function<bool(const subdirective_t&)>& on_keyword,
+                                    const std::function<void(char*)>& on_comment) {
+  while (true) {
+    // At top level a plain one-character look at the stream decides; the
+    // seek-and-restore of peek_line_indent() is needed only to compare the
+    // depth of a nested block against its parent's, before the line is read.
+    std::size_t indent = 0;
+    if (outer_indent == 0) {
+      if (!peek_whitespace_line())
+        break;
+    } else {
+      indent = peek_line_indent();
+      if (indent <= outer_indent) // 0 when the next line is not indented
+        break;
+    }
+
+    char* line;
+    read_line(line);
+    char* q = skip_ws(line);
+    if (outer_indent == 0)
+      indent = static_cast<std::size_t>(q - line); // same count peek_line_indent() makes
+    if (!*q)
+      break;
+
+    if (is_block_comment(q)) {
+      if (on_comment)
+        on_comment(skip_ws(q + 1));
+      continue;
+    }
+
+    char* arg = next_element(q); // terminates the keyword at q
+    subdirective_t sub{kind, q, arg, indent};
+    if (!on_keyword(sub))
+      throw_(parse_error, _f("Unrecognized %1% directive '%2%'") % kind % sub.keyword);
+  }
+}
+
 /*--- Account Directives ---*/
 
 void instance_t::account_directive(char* line) {
@@ -695,85 +742,64 @@ void instance_t::account_directive_body(char* line, account_t* parent, std::size
     account->parse_tags(skip_ws(comment), *context.scope, true);
   unique_ptr<auto_xact_t> ae;
 
-  while (true) {
-    std::size_t next_indent = peek_line_indent();
-    if (next_indent == 0 || next_indent <= outer_indent)
-      break;
+  read_subdirectives(
+      outer_indent, "account",
+      [&](const subdirective_t& sub) -> bool {
+        if (sub.keyword == "alias") {
+          account_alias_directive(account, sub.argument());
+        } else if (sub.keyword == "payee") {
+          account_payee_directive(account, sub.argument());
+        } else if (sub.keyword == "value") {
+          account_value_directive(account, sub.argument());
+        } else if (sub.keyword == "default") {
+          account_default_directive(account);
+        } else if (sub.keyword == "account") {
+          // Nested account declaration (issue #877): register a child account
+          // using the enclosing account as its parent, avoiding the need to
+          // repeat the full colon-separated path.
+          account_directive_body(sub.argument(), account, sub.indent);
+        } else if (sub.keyword == "assert" || sub.keyword == "check") {
+          char* expr_str = sub.argument();
+          keep_details_t keeper(true, true, true);
+          string safe_name = account->fullname();
+          boost::replace_all(safe_name, "\\", "\\\\");
+          boost::replace_all(safe_name, "\"", "\\\"");
+          expr_t expr(string("account == \"") + safe_name + "\"");
+          predicate_t pred(expr.get_op(), keeper);
 
-    read_line(line);
-    char* q = skip_ws(line);
-    if (!*q)
-      break;
+          if (!ae.get()) {
+            ae.reset(new auto_xact_t(pred));
 
-    // A comment line under an account directive (e.g.
-    // `    ; Contribution: 12.97 EUR`) carries metadata tags for the
-    // account rather than a sub-directive.  Parsing it through
-    // account_t::parse_tags makes the `:tag:` and `Key: value` forms
-    // available to balance-format expressions such as
-    // `%(tag("Contribution"))` (issue #1681).
-    if (is_block_comment(q)) {
-      char* body = skip_ws(q + 1);
-      account->parse_tags(body, *context.scope, true);
-      continue;
-    }
+            ae->pos = position_t();
+            ae->pos->pathname = context.pathname_ref;
+            ae->pos->beg_pos = beg_pos;
+            ae->pos->beg_line = beg_linenum;
+            ae->pos->sequence = context.sequence++;
+            ae->check_exprs = expr_t::check_expr_list();
+          }
 
-    char* b = next_element(q);
-    string keyword(q);
-    // Sub-directives that take an argument fetch it through here, so that
-    // a keyword is checked for a missing argument only once it has been
-    // recognized; anything else is reported as unrecognized (issue #3260).
-    auto argument = [&]() -> char* {
-      if (!b)
-        throw_(parse_error, _f("Account directive '%1%' requires an argument") % keyword);
-      return b;
-    };
-
-    if (keyword == "alias") {
-      account_alias_directive(account, argument());
-    } else if (keyword == "payee") {
-      account_payee_directive(account, argument());
-    } else if (keyword == "value") {
-      account_value_directive(account, argument());
-    } else if (keyword == "default") {
-      account_default_directive(account);
-    } else if (keyword == "account") {
-      // Nested account declaration (issue #877): register a child account
-      // using the enclosing account as its parent, avoiding the need to
-      // repeat the full colon-separated path.
-      account_directive_body(argument(), account, next_indent);
-    } else if (keyword == "assert" || keyword == "check") {
-      char* expr_str = argument();
-      keep_details_t keeper(true, true, true);
-      string safe_name = account->fullname();
-      boost::replace_all(safe_name, "\\", "\\\\");
-      boost::replace_all(safe_name, "\"", "\\\"");
-      expr_t expr(string("account == \"") + safe_name + "\"");
-      predicate_t pred(expr.get_op(), keeper);
-
-      if (!ae.get()) {
-        ae.reset(new auto_xact_t(pred));
-
-        ae->pos = position_t();
-        ae->pos->pathname = context.pathname_ref;
-        ae->pos->beg_pos = beg_pos;
-        ae->pos->beg_line = beg_linenum;
-        ae->pos->sequence = context.sequence++;
-        ae->check_exprs = expr_t::check_expr_list();
-      }
-
-      ae->check_exprs->push_back(expr_t::check_expr_pair(
-          expr_t(expr_str), keyword == "assert" ? expr_t::EXPR_ASSERTION : expr_t::EXPR_CHECK));
-    } else if (keyword == "eval" || keyword == "expr") {
-      // jww (2012-02-27): Make account into symbol scopes so that this
-      // can be used to override definitions within the account.
-      bind_scope_t bound_scope(*context.scope, *account);
-      expr_t(argument()).calc(bound_scope);
-    } else if (keyword == "note") {
-      account->note = argument();
-    } else {
-      throw_(parse_error, _f("Unrecognized account directive '%1%'") % keyword);
-    }
-  }
+          ae->check_exprs->push_back(expr_t::check_expr_pair(
+              expr_t(expr_str),
+              sub.keyword == "assert" ? expr_t::EXPR_ASSERTION : expr_t::EXPR_CHECK));
+        } else if (sub.keyword == "eval" || sub.keyword == "expr") {
+          // jww (2012-02-27): Make account into symbol scopes so that this
+          // can be used to override definitions within the account.
+          bind_scope_t bound_scope(*context.scope, *account);
+          expr_t(sub.argument()).calc(bound_scope);
+        } else if (sub.keyword == "note") {
+          account->note = sub.argument();
+        } else {
+          return false;
+        }
+        return true;
+      },
+      // A comment line under an account directive (e.g.
+      // `    ; Contribution: 12.97 EUR`) carries metadata tags for the
+      // account rather than a sub-directive.  Parsing it through
+      // account_t::parse_tags makes the `:tag:` and `Key: value` forms
+      // available to balance-format expressions such as
+      // `%(tag("Contribution"))` (issue #1681).
+      [&](char* comment) { account->parse_tags(comment, *context.scope, true); });
 
   if (ae.get()) {
     ae->journal = context.journal;
@@ -836,31 +862,15 @@ void instance_t::account_value_directive(account_t* account, const string& expr_
 void instance_t::payee_directive(char* line) {
   string payee = context.journal->register_payee(line);
 
-  while (peek_whitespace_line()) {
-    read_line(line);
-    char* p = skip_ws(line);
-    if (!*p)
-      break;
-    if (is_block_comment(p))
-      continue;
-
-    char* b = next_element(p);
-    string keyword(p);
-    // As in account_directive_body(), only a recognized keyword is checked
-    // for a missing argument.
-    auto argument = [&]() -> char* {
-      if (!b)
-        throw_(parse_error, _f("Payee directive '%1%' requires an argument") % keyword);
-      return b;
-    };
-
-    if (keyword == "alias")
-      payee_alias_directive(payee, argument());
-    else if (keyword == "uuid")
-      payee_uuid_directive(payee, argument());
+  read_subdirectives(0, "payee", [&](const subdirective_t& sub) -> bool {
+    if (sub.keyword == "alias")
+      payee_alias_directive(payee, sub.argument());
+    else if (sub.keyword == "uuid")
+      payee_uuid_directive(payee, sub.argument());
     else
-      throw_(parse_error, _f("Unrecognized payee directive '%1%'") % keyword);
-  }
+      return false;
+    return true;
+  });
 }
 
 void instance_t::payee_alias_directive(const string& payee, string alias) {
@@ -938,39 +948,23 @@ void instance_t::commodity_directive(char* line) {
   commodity_t* commodity = commodity_pool_t::current_pool->find_or_create(symbol);
   context.journal->register_commodity(*commodity, 0);
 
-  while (peek_whitespace_line()) {
-    read_line(line);
-    char* q = skip_ws(line);
-    if (!*q)
-      break;
-    if (is_block_comment(q))
-      continue;
-
-    char* b = next_element(q);
-    string keyword(q);
-    // As in account_directive_body(), only a recognized keyword is
-    // checked for a missing argument.
-    auto argument = [&]() -> char* {
-      if (!b)
-        throw_(parse_error, _f("Commodity directive '%1%' requires an argument") % keyword);
-      return b;
-    };
-
-    if (keyword == "alias")
-      commodity_alias_directive(*commodity, argument());
-    else if (keyword == "value")
-      commodity_value_directive(*commodity, argument());
-    else if (keyword == "format")
-      commodity_format_directive(*commodity, argument());
-    else if (keyword == "nomarket")
+  read_subdirectives(0, "commodity", [&](const subdirective_t& sub) -> bool {
+    if (sub.keyword == "alias")
+      commodity_alias_directive(*commodity, sub.argument());
+    else if (sub.keyword == "value")
+      commodity_value_directive(*commodity, sub.argument());
+    else if (sub.keyword == "format")
+      commodity_format_directive(*commodity, sub.argument());
+    else if (sub.keyword == "nomarket")
       commodity_nomarket_directive(*commodity);
-    else if (keyword == "default")
+    else if (sub.keyword == "default")
       commodity_default_directive(*commodity);
-    else if (keyword == "note")
-      commodity->set_note(string(argument()));
+    else if (sub.keyword == "note")
+      commodity->set_note(string(sub.argument()));
     else
-      throw_(parse_error, _f("Unrecognized commodity directive '%1%'") % keyword);
-  }
+      return false;
+    return true;
+  });
 }
 
 void instance_t::commodity_alias_directive(commodity_t& comm, string alias) {
@@ -1075,33 +1069,15 @@ void instance_t::tag_directive(char* line) {
   char* p = skip_ws(line);
   context.journal->register_metadata(p, NULL_VALUE, 0);
 
-  while (peek_whitespace_line()) {
-    read_line(line);
-    char* q = skip_ws(line);
-    if (!*q)
-      break;
-    if (is_block_comment(q))
-      continue;
-
-    char* b = next_element(q);
-    string keyword(q);
-    // As in account_directive_body(), only a recognized keyword is checked
-    // for a missing argument.
-    auto argument = [&]() -> char* {
-      if (!b)
-        throw_(parse_error, _f("Tag directive '%1%' requires an argument") % keyword);
-      return b;
-    };
-
-    if (keyword == "assert" || keyword == "check") {
-      context.journal->tag_check_exprs.insert(tag_check_exprs_map::value_type(
-          string(p),
-          expr_t::check_expr_pair(expr_t(argument()), keyword == "assert" ? expr_t::EXPR_ASSERTION
-                                                                          : expr_t::EXPR_CHECK)));
-    } else {
-      throw_(parse_error, _f("Unrecognized tag directive '%1%'") % keyword);
-    }
-  }
+  read_subdirectives(0, "tag", [&](const subdirective_t& sub) -> bool {
+    if (sub.keyword != "assert" && sub.keyword != "check")
+      return false;
+    context.journal->tag_check_exprs.insert(tag_check_exprs_map::value_type(
+        string(p), expr_t::check_expr_pair(expr_t(sub.argument()), sub.keyword == "assert"
+                                                                       ? expr_t::EXPR_ASSERTION
+                                                                       : expr_t::EXPR_CHECK)));
+    return true;
+  });
 }
 
 /*--- Expression and Assertion Directives ---*/
