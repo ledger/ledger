@@ -14,6 +14,7 @@
 #include "error.h"
 #include "pool.h"
 #include "utils.h"
+#include "token.h"
 #include "times.h"
 
 using namespace ledger;
@@ -816,6 +817,14 @@ BOOST_AUTO_TEST_CASE(testDeclaredPrecisionUsesCommodityCheckingFallback)
   BOOST_CHECK_THROW(read_with(journal_t::CHECK_ERROR, journal_t::CHECK_NORMAL), error_count);
   // The commodity level alone applies without account checking.
   BOOST_CHECK_THROW(read_with(journal_t::CHECK_NORMAL, journal_t::CHECK_ERROR), error_count);
+}
+
+BOOST_AUTO_TEST_CASE(testSessionHeaderLeavesTokenCommaIntact) {
+  // session.h is included above; it must not define macros that collide
+  // with names elsewhere in the expression engine, such as token_t::COMMA.
+  std::ostringstream out;
+  out << expr_t::token_t::COMMA;
+  BOOST_CHECK_EQUAL(out.str(), ",");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

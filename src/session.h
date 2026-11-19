@@ -73,21 +73,6 @@ namespace ledger {
 class xact_t;
 
 /**
- * @brief Path comparator that considers filesystem equivalence.
- *
- * Two paths compare equal if they resolve to the same filesystem entity
- * (via std::filesystem::equivalent), preventing duplicate journal loads
- * when the same file is specified by different relative or absolute paths.
- */
-struct ComparePaths {
-  bool operator()(const path& p1, const path& p2) const {
-    return p1 < p2 && !std::filesystem::equivalent(p1, p2);
-  }
-};
-
-#define COMMA ,
-
-/**
  * @brief Holds all state for a single "open document" -- the journal,
  *        commodity pool, and session-level options.
  *
@@ -118,7 +103,6 @@ public:
 
   boost::shared_ptr<journal_t> journal;  ///< The loaded journal data
   parse_context_stack_t parsing_context; ///< Stack of active parse contexts (for includes)
-  optional<expr_t> value_expr;           ///< User-specified value expression (--value-expr)
 
   explicit session_t();
   ~session_t() override {
@@ -142,7 +126,7 @@ public:
   /// price database.  This is the core data-loading method.
   /// @param master_account  If non-empty, all postings are placed under
   ///                        this account (--master-account).
-  /// @return The number of transactions read.
+  /// @return The total number of transactions in the journal after reading.
   std::size_t read_data(const string& master_account = "");
 
   /// High-level entry point: read all journal files configured via options.
