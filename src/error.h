@@ -150,6 +150,10 @@ string line_context(const string& line, const string::size_type pos = 0,
 string source_context(const path& file, const std::istream::pos_type pos,
                       const std::istream::pos_type end_pos, const string& prefix = "");
 
+/// Read up to @p len bytes of @p file starting at @p pos (fewer at end of
+/// file), decrypting the file first when it is GPG-encrypted.
+string read_source(const path& file, const std::istream::pos_type pos, const std::streamoff len);
+
 /// Tracks the number of errors encountered during a parse run.  Thrown
 /// when the error threshold is exceeded, carrying the count and a summary
 /// message.  This is not a std::exception subclass; it is caught specially

@@ -48,10 +48,6 @@
 #include "item.h"
 #include "context.h"
 
-#if HAVE_GPGME
-#include "gpgme.h"
-#endif
-
 namespace ledger {
 
 bool item_t::use_aux_date = false;
@@ -385,12 +381,7 @@ bool item_t::valid() const {
 }
 
 /** @brief Re-read and print the original source text of an item. */
-void print_item(std::ostream& out, const item_t& item, const string& prefix) {
-  if (!prefix.empty()) {
-    out << source_context(*item.pos->pathname, item.pos->beg_pos, item.pos->end_pos, prefix);
-    return;
-  }
-
+void print_item(std::ostream& out, const item_t& item) {
   // Raw printing: stream source directly without any size limit.
   if (!item.pos || item.pos->pathname->empty())
     return;
@@ -399,52 +390,11 @@ void print_item(std::ostream& out, const item_t& item, const string& prefix) {
   if (!(len > 0))
     return;
 
-  std::unique_ptr<std::istream> in(
-#if HAVE_GPGME
-      decrypted_stream_t::open_stream(*item.pos->pathname)
-#else
-      new ifstream(*item.pos->pathname, std::ios::binary)
-#endif
-  );
-
-  // Determine the effective end position by scanning backwards to strip
-  // trailing CR/LF, matching source_context()'s line-splitting behaviour which
-  // never emits trailing newlines.  (print_xacts::flush() appends one.)
-  std::streamoff effective_off = static_cast<std::streamoff>(item.pos->end_pos);
-  const std::streamoff beg_off = static_cast<std::streamoff>(item.pos->beg_pos);
-  {
-    char c;
-    while (effective_off > beg_off) {
-      in->seekg(effective_off - 1, std::ios::beg);
-      if (!in->read(&c, 1))
-        break;
-      if (c != '\n' && c != '\r')
-        break;
-      --effective_off;
-    }
-  }
-
-  const std::streamoff effective_len = effective_off - beg_off;
-  if (effective_len <= 0)
-    return;
-
-  in->seekg(beg_off, std::ios::beg);
-
-  const std::size_t CHUNK_SIZE = 8192;
-  scoped_array<char> buf(new char[CHUNK_SIZE]);
-  std::streamoff remaining = effective_len;
-
-  while (remaining > 0) {
-    const std::streamsize to_read = static_cast<std::streamsize>(
-        remaining < static_cast<std::streamoff>(CHUNK_SIZE) ? static_cast<std::size_t>(remaining)
-                                                            : CHUNK_SIZE);
-    in->read(buf.get(), to_read);
-    const std::streamsize got = in->gcount();
-    if (got <= 0)
-      break;
-    out.write(buf.get(), got);
-    remaining -= got;
-  }
+  string text = read_source(*item.pos->pathname, item.pos->beg_pos, len);
+  // Drop trailing CR/LF, as source_context() does; print_xacts::flush()
+  // appends the newline.
+  text.erase(text.find_last_not_of("\r\n") + 1);
+  out << text;
 }
 
 /**
@@ -480,7 +430,7 @@ string item_context(const item_t& item, const string& desc) {
   else
     out << _(", line ") << item.pos->beg_line << ":\n";
 
-  print_item(out, item, "> ");
+  out << source_context(*item.pos->pathname, item.pos->beg_pos, item.pos->end_pos, "> ");
 
   return out.str();
 }

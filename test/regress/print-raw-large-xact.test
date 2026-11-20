@@ -1,0 +1,118 @@
+; print --raw reproduces a transaction longer than the 4096-byte
+; error-context cap in full, without a trailing newline.
+
+2024/01/01 Large
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part01    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part02    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part03    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part04    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part05    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part06    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part07    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part08    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part09    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part10    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part11    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part12    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part13    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part14    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part15    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part16    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part17    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part18    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part19    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part20    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part21    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part22    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part23    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part24    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part25    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part26    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part27    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part28    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part29    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part30    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part31    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part32    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part33    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part34    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part35    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part36    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part37    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part38    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part39    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part40    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part41    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part42    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part43    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part44    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part45    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part46    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part47    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part48    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part49    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part50    $1.00
+    Assets:Cash
+
+2024/01/02 Small
+    Expenses:Food    $2.00
+    Assets:Cash
+
+test print --raw
+2024/01/01 Large
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part01    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part02    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part03    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part04    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part05    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part06    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part07    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part08    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part09    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part10    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part11    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part12    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part13    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part14    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part15    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part16    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part17    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part18    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part19    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part20    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part21    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part22    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part23    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part24    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part25    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part26    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part27    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part28    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part29    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part30    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part31    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part32    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part33    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part34    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part35    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part36    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part37    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part38    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part39    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part40    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part41    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part42    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part43    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part44    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part45    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part46    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part47    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part48    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part49    $1.00
+    Expenses:Household:Maintenance:Plumbing:Kitchen:Sink:Faucet:Cartridge:Part50    $1.00
+    Assets:Cash
+
+2024/01/02 Small
+    Expenses:Food    $2.00
+    Assets:Cash
+end test

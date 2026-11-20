@@ -367,10 +367,10 @@ value_t get_comment(item_t& item);
 /**
  * @brief Print the source text of an item to an output stream.
  *
- * Re-reads the original bytes between pos->beg_pos and pos->end_pos
- * from the source file and writes them with an optional line prefix.
+ * Re-reads the original bytes between pos->beg_pos and pos->end_pos and
+ * writes them verbatim, without trailing newlines (print --raw).
  */
-void print_item(std::ostream& out, const item_t& item, const string& prefix = "");
+void print_item(std::ostream& out, const item_t& item);
 
 /**
  * @brief Build a human-readable error context string for an item.
