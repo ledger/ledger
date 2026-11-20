@@ -1331,8 +1331,7 @@ string xact_t::hash(const string& nonce, hash_type_t hash_type) const {
 
   std::vector<std::string> strings;
 
-  posts_list all_posts(posts.begin(), posts.end());
-  for (post_t* post : all_posts) {
+  for (post_t* post : posts) {
     std::ostringstream posting;
     posting << post->account->fullname();
     if (!post->amount.is_null())
