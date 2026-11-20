@@ -1308,17 +1308,12 @@ public:
  * each period boundary up to the current date.  Actual postings are then
  * matched against these budget accounts.
  *
- * The flags field controls which postings are forwarded:
+ * The flags field (BUDGET_* bits, defined in chain.h) controls which postings are forwarded:
  * - BUDGET_BUDGETED: forward postings that match a budget account.
  * - BUDGET_UNBUDGETED: forward postings that do not match any budget.
  * - BUDGET_WRAP_VALUES: wrap amounts in a sequence for compound display.
  */
 class budget_posts : public generate_posts {
-#define BUDGET_NO_BUDGET 0x00   ///< No budget mode active.
-#define BUDGET_BUDGETED 0x01    ///< Show postings matching a budget account.
-#define BUDGET_UNBUDGETED 0x02  ///< Show postings not matching any budget account.
-#define BUDGET_WRAP_VALUES 0x04 ///< Wrap values as (amount, budget) sequences for compound display.
-
   uint_least8_t flags;     ///< Combination of BUDGET_* flags controlling behavior.
   date_t terminus;         ///< End date for budget generation (typically report terminus).
   optional<date_t> origin; ///< Report begin date for initializing budget period intervals.

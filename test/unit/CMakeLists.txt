@@ -24,7 +24,7 @@ if(BUILD_LIBRARY AND TARGET Boost::unit_test_framework)
   add_ledger_test(MathTests t_amount.cc t_commodity.cc t_balance.cc t_expr.cc
     t_value.cc t_account.cc t_xact.cc)
 
-  add_ledger_test(FilterTests t_filters.cc)
+  add_ledger_test(FilterTests t_filters.cc t_chain.cc)
 
   if(HAVE_GPGME)
     add_ledger_test(GpgmeTests t_gpgme.cc)

@@ -54,6 +54,10 @@
  *   chain_pre_post_handlers() (outer/upstream filters), both defined in
  *   chain.cc.
  *
+ * - **BUDGET_* flags**: The budget-mode bits of report_t::budget_flags and
+ *   budget_posts, defined here once so that report.h and filters.h share
+ *   them.
+ *
  * The concrete filter classes themselves are declared in filters.h; this
  * header is intentionally lightweight so that it can be included by any
  * module that needs to pass around handler pointers without pulling in the
@@ -147,6 +151,21 @@ public:
 using post_handler_ptr = std::shared_ptr<item_handler<post_t>>;
 /// Convenience alias for a shared pointer to an account handler.
 using acct_handler_ptr = std::shared_ptr<item_handler<account_t>>;
+
+/**
+ * @name Budget mode flags
+ *
+ * Bits of report_t::budget_flags and of budget_posts' flags.  The options set
+ * them (--budget: BUDGETED; --unbudgeted: UNBUDGETED; --add-budget: both; the
+ * budget command adds WRAP_VALUES, and BUDGETED when nothing else is set), and
+ * chain_pre_post_handlers() inserts budget_posts whenever any bit is set.
+ * @{
+ */
+#define BUDGET_NO_BUDGET 0x00   ///< No budget reporting (default).
+#define BUDGET_BUDGETED 0x01    ///< Forward postings that match a budget account.
+#define BUDGET_UNBUDGETED 0x02  ///< Forward postings that match no budget account.
+#define BUDGET_WRAP_VALUES 0x04 ///< Wrap amounts as (actual, budget) sequences for display.
+/** @} */
 
 class report_t;
 class predicate_t;

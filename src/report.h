@@ -176,13 +176,6 @@ public:
   /// it; see temp_accounts().
   std::shared_ptr<temporaries_t> accounts_pool;
 
-  /*--- Budget Mode Flags ---*/
-
-#define BUDGET_NO_BUDGET 0x00   ///< No budget reporting (default)
-#define BUDGET_BUDGETED 0x01    ///< Show only budgeted accounts (--budget)
-#define BUDGET_UNBUDGETED 0x02  ///< Show only unbudgeted accounts (--unbudgeted)
-#define BUDGET_WRAP_VALUES 0x04 ///< Wrap amounts as (actual, budget) pairs for budget command
-
   datetime_t
       terminus; ///< Valuation date for market prices (defaults to now, adjusted by --end/--now)
   optional<datetime_t>
