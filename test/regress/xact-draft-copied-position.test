@@ -1,0 +1,19 @@
+; The xact command's draft copies the matched transaction's postings,
+; positions included.  A failed metadata check on such a posting is still
+; reported without a source location, because the draft was not parsed
+; from a file: only a parse context makes a position a location to cite.
+
+tag posted
+    check date < [2026/07/10]
+
+2026/07/01 * Echo
+    Assets:Checking     $5  ; posted: stuff
+    Income:Interest
+
+test xact 2026/07/15 echo
+2026/07/15 Echo
+    Assets:Checking                               $5  ; posted: stuff
+    Income:Interest
+__ERROR__
+Warning: Metadata check failed for (posted: stuff): (date < [2026/07/10])
+end test

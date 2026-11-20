@@ -370,8 +370,8 @@ public:
    * @p context is the active parse context, or null when the transaction
    * enters the journal outside a parse (the xact command, Python's
    * Journal.add_xact); `$var` account templates are then evaluated in
-   * scope_t::default_scope and a failed check on a transaction without a
-   * source position warns without a location.
+   * scope_t::default_scope and a failed check warns without a location
+   * (see check_location()).
    */
   virtual void extend_xact(xact_base_t& xact, const parse_context_t* context);
 
@@ -386,8 +386,8 @@ public:
    * notes are not applied (account directives cannot carry those).
    *
    * @p context is the active parse context, or null outside a parse (the
-   * xact command, Python's Journal.add_xact); a failed check on a
-   * transaction without a source position then warns without a location.
+   * xact command, Python's Journal.add_xact); a failed check then warns
+   * without a location (see check_location()).
    */
   void apply_checks_to_post(post_t& initial_post, const parse_context_t* context);
 };

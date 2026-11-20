@@ -64,6 +64,8 @@
 
 namespace ledger {
 
+class parse_context_t;
+
 /**
  * @brief Records the source file location of a parsed journal item.
  *
@@ -377,5 +379,12 @@ void print_item(std::ostream& out, const item_t& item, const string& prefix = ""
  * followed by the source text, for use in error reporting.
  */
 string item_context(const item_t& item, const string& desc);
+
+/// Location prefix ("file", line N: and a space) for a failed check or a
+/// --strict/--pedantic warning about @p item.  A location is cited only
+/// while parsing (@p context non-null): the item's own position if it has
+/// one, else the line being parsed.  Outside a parse (Python's add_xact,
+/// the xact command) it is empty, since positions there may be copies.
+string check_location(const item_t* item, const parse_context_t* context);
 
 } // namespace ledger

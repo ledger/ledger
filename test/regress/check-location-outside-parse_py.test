@@ -1,0 +1,20 @@
+; Journal.add_xact from Python, after parsing: a failed `account ... check`
+; on the added transaction warns without a source location, although the
+; transaction was given the position of the parsed transaction at line 10.
+
+account Assets:Cash
+account Equity:Opening
+account Expenses:Food
+    check amount < $5
+
+2026/01/01 Opening
+    Assets:Cash        $100.00
+    Equity:Opening
+
+test python test/regress/check-location-outside-parse.py
+position line: 10
+added: True
+__ERROR__
+Warning: Transaction check failed: (amount < {$5.00})
+  (check expression at "$FILE", line 7)
+end test

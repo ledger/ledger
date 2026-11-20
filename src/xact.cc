@@ -1422,15 +1422,6 @@ bool post_pred(const expr_t::ptr_op_t& op, post_t& post) {
   throw_(calc_error, _("Unhandled operator"));
   return false;
 }
-
-/// Location prefix ("file", line N: plus a space) for a failed check: the
-/// transaction's own position, else the line being parsed, else nothing
-/// (a transaction added outside a parse has neither).
-string check_location(const xact_base_t* xact, const parse_context_t* context) {
-  if (xact && xact->pos)
-    return file_context(*xact->pos->pathname, xact->pos->beg_line) + " ";
-  return context ? context->location() + " " : string();
-}
 } // namespace
 
 /// If a string contains `%(` format expressions, expand them against

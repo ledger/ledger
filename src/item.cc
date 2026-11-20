@@ -46,6 +46,7 @@
 #include <system.hh>
 
 #include "item.h"
+#include "context.h"
 
 #if HAVE_GPGME
 #include "gpgme.h"
@@ -482,6 +483,14 @@ string item_context(const item_t& item, const string& desc) {
   print_item(out, item, "> ");
 
   return out.str();
+}
+
+string check_location(const item_t* item, const parse_context_t* context) {
+  if (!context)
+    return string();
+  if (item && item->pos)
+    return file_context(*item->pos->pathname, item->pos->beg_line) + " ";
+  return context->location() + " ";
 }
 
 } // namespace ledger

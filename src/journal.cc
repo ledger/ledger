@@ -217,12 +217,8 @@ account_t* journal_t::register_account(string_view name, post_t* post, account_t
         if (has_template_var) {
           result->add_flags(ACCOUNT_KNOWN);
         } else if (checking_style == CHECK_WARNING) {
-          // Outside of parsing (e.g. register_account called from Python)
-          // there is no parse context, and thus no source location.
-          if (current_context)
-            current_context->warning(_f("Unknown account '%1%'") % result->fullname());
-          else
-            warning_func((_f("Unknown account '%1%'") % result->fullname()).str());
+          warning_func(check_location(nullptr, current_context) +
+                       (_f("Unknown account '%1%'") % result->fullname()).str());
         } else if (checking_style == CHECK_ERROR) {
           throw_(parse_error, _f("Unknown account '%1%'") % result->fullname());
         }
@@ -360,7 +356,8 @@ string journal_t::validate_payee(const string& name_or_alias) {
 
   if (should_check_payees() && payee_not_registered(payee)) {
     if (checking_style == CHECK_WARNING) {
-      current_context->warning(_f("Unknown payee '%1%'") % payee);
+      warning_func(check_location(nullptr, current_context) +
+                   (_f("Unknown payee '%1%'") % payee).str());
     } else if (checking_style == CHECK_ERROR) {
       throw_(parse_error, _f("Unknown payee '%1%'") % payee);
     }
@@ -400,7 +397,8 @@ void journal_t::register_commodity(commodity_t& comm, std::variant<int, xact_t*,
       if (context.index() == 0) {
         comm.add_flags(COMMODITY_KNOWN);
       } else if (style == CHECK_WARNING) {
-        current_context->warning(_f("Unknown commodity '%1%'") % comm);
+        warning_func(check_location(nullptr, current_context) +
+                     (_f("Unknown commodity '%1%'") % comm).str());
       } else if (style == CHECK_ERROR) {
         throw_(parse_error, _f("Unknown commodity '%1%'") % comm);
       }
@@ -418,6 +416,11 @@ void journal_t::register_commodity(commodity_t& comm, std::variant<int, xact_t*,
  */
 void journal_t::register_metadata(const string& key, const value_t& value,
                                   std::variant<int, xact_t*, post_t*> context) {
+  const item_t* item = context.index() == 1 ? static_cast<const item_t*>(std::get<xact_t*>(context))
+                       : context.index() == 2
+                           ? static_cast<const item_t*>(std::get<post_t*>(context))
+                           : nullptr;
+
   if (checking_style == CHECK_WARNING || checking_style == CHECK_ERROR) {
     std::set<string>::iterator i = known_tags.find(key);
 
@@ -426,12 +429,8 @@ void journal_t::register_metadata(const string& key, const value_t& value,
       if (context.index() == 0) {
         known_tags.insert(key);
       } else if (checking_style == CHECK_WARNING) {
-        // Outside of parsing (e.g. add_xact called from Python) there is
-        // no parse context, and thus no source location to point at.
-        if (current_context)
-          current_context->warning(_f("Unknown metadata tag '%1%'") % key);
-        else
-          warning_func((_f("Unknown metadata tag '%1%'") % key).str());
+        warning_func(check_location(item, current_context) +
+                     (_f("Unknown metadata tag '%1%'") % key).str());
       } else if (checking_style == CHECK_ERROR) {
         throw_(parse_error, _f("Unknown metadata tag '%1%'") % key);
       }
@@ -473,10 +472,7 @@ void journal_t::register_metadata(const string& key, const value_t& value,
         } else {
           boost::format msg(_f("Metadata check failed for (%1%: %2%): %3%") % key % value %
                             (*i).second.first);
-          if (current_context)
-            current_context->warning(msg);
-          else
-            warning_func(msg.str());
+          warning_func(check_location(item, current_context) + msg.str());
         }
       }
     }
@@ -486,9 +482,9 @@ void journal_t::register_metadata(const string& key, const value_t& value,
 namespace {
 /** @brief Iterate all metadata on a transaction or posting and validate each tag.
  *
- * Temporarily overrides the journal's current_context pathname and linenum
- * with the item's source position so that --strict warnings reference the
- * correct file and line (fixes #750 and #692).
+ * Warnings cite the item's own line while parsing, through check_location()
+ * (#750, #692); an error propagates with the item's source added to the
+ * error context.
  */
 void check_all_metadata(journal_t& journal, std::variant<int, xact_t*, post_t*> context) {
   xact_t* xact = context.index() == 1 ? std::get<xact_t*>(context) : NULL;
@@ -497,28 +493,21 @@ void check_all_metadata(journal_t& journal, std::variant<int, xact_t*, post_t*> 
   if ((xact || post) && (xact ? xact->metadata : post->metadata)) {
     item_t* item = xact ? static_cast<item_t*>(xact) : static_cast<item_t*>(post);
 
-    std::shared_ptr<const path> saved_pathname_ref;
-    std::size_t saved_linenum = 0;
-    if (journal.current_context && item->pos) {
-      saved_pathname_ref = journal.current_context->pathname_ref;
-      saved_linenum = journal.current_context->linenum;
-      journal.current_context->pathname_ref = item->pos->pathname;
-      journal.current_context->linenum = item->pos->beg_line;
-    }
+    try {
+      for (const item_t::string_map::value_type& pair : xact ? *xact->metadata : *post->metadata) {
+        const string& key(pair.first);
 
-    for (const item_t::string_map::value_type& pair : xact ? *xact->metadata : *post->metadata) {
-      const string& key(pair.first);
-
-      const std::optional<value_t>& value = pair.second.first;
-      if (value)
-        journal.register_metadata(key, *value, context);
-      else
-        journal.register_metadata(key, NULL_VALUE, context);
-    }
-
-    if (journal.current_context && item->pos) {
-      journal.current_context->pathname_ref = saved_pathname_ref;
-      journal.current_context->linenum = saved_linenum;
+        const std::optional<value_t>& value = pair.second.first;
+        if (value)
+          journal.register_metadata(key, *value, context);
+        else
+          journal.register_metadata(key, NULL_VALUE, context);
+      }
+    } catch (const std::exception&) {
+      if (journal.current_context && item->pos)
+        add_error_context(item_context(*item, xact ? _("While checking transaction metadata")
+                                                   : _("While checking posting metadata")));
+      throw;
     }
   }
 }
