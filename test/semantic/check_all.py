@@ -88,8 +88,9 @@ __ERROR__ sections contain at least one `Error:` line and every
 no test command reads a journal other than the file itself (`-f`
 or `--file` naming anything but $FILE; noncanonical long file aliases
 and short-option bundles containing `f` are conservatively excluded),
-(c) every `include` in the extracted journal resolves to files next to
-the test, and (d) that journal embeds no python block.  Its per-test
+and (c) the extracted journal embeds no python block.  An include that
+does not resolve needs no rule of its own: C++ then reports a second
+error beside the imbalance, which fails the comparison.  Its per-test
 flags are derived exactly as for positive tests.  The oracle's rejection
 must match NEG_REASON_RE, the balance reason documented in the oracle
 protocol section of the ledger-semantics README: `line N: unbalanced transaction ...`,
@@ -122,6 +123,12 @@ line in a file whose arguments do not request it is a FAIL
 output must never be dropped silently, because a comparator running
 without the flag would read it as part of the balance rows.
 
+Every replayed journal is written into one temporary tree that mirrors
+the source tree (overlay()): the journal takes its test's place and
+every other entry is a symlink to the original, so its includes, globs
+and `..` resolve through the filesystem, for C++ and the oracle alike,
+to the files the test itself reads.
+
 Exit codes: 0 all comparisons pass and the ratchet bins are empty;
 1 any FAIL, any GROSS:FAIL, any VALUE:FAIL, or any entry in
 SKIP:out-of-scope or SKIP:cpp-parse (both reached zero against the
@@ -137,7 +144,6 @@ import argparse
 import datetime
 import json
 import os
-import posixpath
 import re
 import shlex
 import signal
@@ -292,12 +298,13 @@ def has_python_block(journal):
 def has_eval_preamble(journal):
     """C++ prints the value of eval/expr directives at the head of
     every report; the balance comparison strips that preamble by
-    parsing, the gross one must strip it by offset.  The text passed
-    here is the journal plus its copied include closure, since a
-    directive inside an include prints into the report head just the
-    same; over-approximating is harmless, because the no-limit probe
-    then prints nothing and no strip is applied."""
-    return re.search(r"^(?:eval|expr)\s", journal, re.M) is not None
+    parsing, the gross and value ones must strip it by offset.  A
+    journal with an include line counts as having one, since a
+    directive inside an included file prints into the report head just
+    the same; over-approximating is harmless, because the no-limit
+    probe then prints nothing and no strip is applied."""
+    return (re.search(r"^(?:eval|expr)\s", journal, re.M) is not None
+            or INCLUDE_RE.search(journal) is not None)
 
 
 def classify_negative_test(path):
@@ -352,13 +359,6 @@ def classify_negative_test(path):
     journal = "\n".join(journal_lines) + "\n"
     if has_python_block(journal):
         return None
-    for m in INCLUDE_RE.finditer(journal):
-        name = m.group(1)
-        if len(name) >= 2 and name[0] in "'\"" and name[-1] == name[0]:
-            name = name[1:-1]
-        matches = include_matches(os.path.dirname(path), name)
-        if not matches or not all(os.path.isfile(p) for p in matches):
-            return None
     if "--now" not in cpp_flags:
         cpp_flags.extend(["--now", NOW])  # as for positives
     return journal, cpp_flags, dc
@@ -376,9 +376,7 @@ def negative_classifier_failures(directory, journal):
              ("mixed errors", text.replace(BALANCE_ERROR,
                                            BALANCE_ERROR + "\nError: other"), False),
              ("python", "python\npass\nend python\n" + text, False),
-             ("missing include", "include missing.dat\n" + text, False),
-             ("include", "include selftest-neg-control.dat\n" + text, True),
-             ("directory include", "include .\n" + text, False)]
+             ("include", "include selftest-neg-control.dat\n" + text, True)]
     for flag in ('-f $FILE', '--file "$FILE"', '--file=$FILE'):
         cases.append((flag, text.replace("balance ->", "balance " + flag + " ->"), True))
     for flag in ('-f"$FILE"', '-f other.dat', '-fother.dat', '--file=other.dat',
@@ -526,100 +524,40 @@ def admit_negative(ledger, dat, cpp_flags, env):
 
 # src/textual.cc:read_line/read_next_directive and
 # src/textual_directives.cc:general_directive strip a BOM and up to two prefixes.
-# The characters mask_t::assign_glob() (src/mask.cc) escapes when it
-# reads an include path component as a regex.
-GLOB_META = "\\^$.|?*+()[{}"
-
-
-def glob_regex(comp):
-    """The regex mask_t::assign_glob() builds for one include path
-    component.  `?` and `*` are wildcards, a `[` opens a set that runs
-    to the next `]` and is an ordinary character when no `]` follows, a
-    backslash makes the next character literal, and every other
-    character is literal."""
-    out = []
-    i = 0
-    while i < len(comp):
-        c = comp[i]
-        close = comp.find("]", i + 1) if c == "[" else -1
-        if c == "?":
-            out.append(".")
-        elif c == "*":
-            out.append(".*")
-        elif close != -1:
-            out.append(comp[i:close + 1])
-            i = close
-        else:
-            if c == "\\" and i + 1 < len(comp):
-                i += 1
-                c = comp[i]
-            out.append("\\" + c if c in GLOB_META else c)
-        i += 1
-    return "".join(out)
-
-
-def include_matches(src_dir, pattern):
-    """The files `include PATTERN` reads, resolved against src_dir the
-    way include_directive() resolves it: the path is normalized, then
-    each component is matched against the entries of the directories
-    reached so far, descending only into directories and keeping only
-    regular files."""
-    pattern = posixpath.normpath(pattern)
-    found = [src_dir]
-    if pattern.startswith("/"):
-        found, pattern = ["/"], pattern.lstrip("/")
-    comps = pattern.split("/")
-    for k, comp in enumerate(comps):
-        if comp in (os.curdir, os.pardir):
-            found = [os.path.join(d, comp) for d in found]
-        else:
-            try:
-                rx = re.compile(glob_regex(comp), re.DOTALL)
-            except re.error:
-                return []
-            found = [os.path.join(d, name)
-                     for d in found if os.path.isdir(d)
-                     for name in sorted(os.listdir(d)) if rx.fullmatch(name)]
-        keep = os.path.isfile if k == len(comps) - 1 else os.path.isdir
-        found = [p for p in found if keep(p)]
-    return found
-
-
 INCLUDE_RE = re.compile(r"^\s*\ufeff?[@!]{0,2}include\s+(.+?)\s*$", re.M)
 
 
-def copy_includes(journal, src_dir, dst_dir, depth=4):
-    """Copy files referenced by include lines (globs included) next to
-    the extracted journal so both sides resolve them identically.
-    Returns the texts of the copied files and of their own includes,
-    for callers that need the include closure's content."""
-    if depth == 0:
-        return ""
-    texts = []
-    # A relative include may step above the journal's own directory
-    # (test/regress does this), which lands the copy in the shared
-    # session directory one level up.  That is allowed; escaping the
-    # session directory itself is not.
-    session_root = os.path.dirname(os.path.abspath(dst_dir))
-    for m in INCLUDE_RE.finditer(journal):
-        name = m.group(1)
-        if len(name) >= 2 and name[0] in "'\"" and name[-1] == name[0]:
-            name = name[1:-1]
-        for src in include_matches(src_dir, name):
-            rel = os.path.relpath(src, src_dir)
-            dst = os.path.join(dst_dir, rel)
-            if not os.path.abspath(dst).startswith(session_root + os.sep):
+def overlay(root, tree, journals):
+    """Lay out at `tree` a view of the directory tree under `root` in
+    which each file named in `journals` (a dict from an absolute path
+    under root to journal text) holds that text, and every other entry
+    is a symlink to the original.  Only the directories on the way to a
+    journal are real.  A journal therefore sits among the neighbours
+    of the test it came from, so its relative includes, globs and `..`
+    resolve, for C++ and for the oracle alike, to the files the test
+    itself reads, through the filesystem rather than a resolver of our
+    own.  Returns {original path: path of its journal in tree}."""
+    real = {root}
+    for path in journals:
+        d = os.path.dirname(path)
+        while d not in real:
+            real.add(d)
+            d = os.path.dirname(d)
+    for d in real:
+        mirror = os.path.join(tree, os.path.relpath(d, root))
+        os.makedirs(mirror, exist_ok=True)
+        for name in os.listdir(d):
+            src = os.path.join(d, name)
+            if src in real:
                 continue
-            if os.path.isfile(src) and not os.path.exists(dst):
-                os.makedirs(os.path.dirname(dst), exist_ok=True)
-                with open(src, "rb") as fi, open(dst, "wb") as fo:
-                    fo.write(fi.read())
-                with open(src, encoding="utf-8", errors="replace") as fh:
-                    inc = fh.read()
-                texts.append(inc)
-                texts.append(copy_includes(inc, src_dir, dst_dir,
-                                           depth - 1))
-    return "".join(texts)
+            dst = os.path.join(mirror, name)
+            if src in journals:
+                with open(dst, "w", encoding="utf-8") as fh:
+                    fh.write(journals[src])
+            else:
+                os.symlink(src, dst)
+    return {p: os.path.join(tree, os.path.relpath(p, root))
+            for p in journals}
 
 
 def main():
@@ -710,7 +648,7 @@ def main():
 
     tests = []
     for d in dirs:
-        for root, _, files in os.walk(d):
+        for root, _, files in os.walk(os.path.abspath(d)):
             for f in sorted(files):
                 if f.endswith(".test"):
                     tests.append(os.path.join(root, f))
@@ -728,29 +666,32 @@ def main():
         admitted = {}  # dat_path -> the C++ run that admitted a negative
         # test's journal (see the classification loop)
         neg_candidates = []  # the same, for NEG:unbalanced files
-        journal_text_of = {}  # dat_path -> journal text plus its copied
-        # include closure, for the gross comparison's eval/expr
-        # preamble strip
+        journal_text_of = {}  # dat_path -> journal text, for the gross
+        # and value comparisons' eval/expr preamble strip
         vtarget, spec_form = {}, {}  # dat_path -> target / off-form set
         detector_inputs = []  # fixtures that ride the oracle batch but
         # are never live candidates, like neg_fixtures
-        for i, tpath in enumerate(tests):
+        classified = []  # (tpath, journal, skip, cpp_flags, dc, neg)
+        for tpath in tests:
             journal, skip, cpp_flags, dc = classify_test_file(tpath)
             if journal is not None and has_python_block(journal):
                 # a python block anywhere in the journal makes the
                 # file non-comparable, whatever its name
                 journal, skip = None, "python"
-            rel = os.path.relpath(tpath, repo)
             neg = classify_negative_test(tpath) if skip == "negative" else None
+            classified.append((tpath, journal, skip, cpp_flags, dc, neg))
+        # Every replayed journal sits in one tree that mirrors the
+        # sources (see overlay), so its includes need no resolving here.
+        dats = overlay(os.path.commonpath([repo, *tests]),
+                       os.path.join(tmp, "tree"),
+                       {t: journal if neg is None else neg[0]
+                        for t, journal, skip, _, _, neg in classified
+                        if neg is not None or skip in (None, "negative")})
+        for tpath, journal, skip, cpp_flags, dc, neg in classified:
+            rel = os.path.relpath(tpath, repo)
             if neg is not None:
-                njournal, nflags, ndc = neg
-                fdir = os.path.join(tmp, f"{i:05d}")
-                os.makedirs(fdir, exist_ok=True)
-                dat = os.path.join(fdir, os.path.basename(tpath))
-                with open(dat, "w", encoding="utf-8") as fh:
-                    fh.write(njournal)
-                copy_includes(njournal, os.path.dirname(tpath), fdir)
-                neg_candidates.append((tpath, dat, nflags, ndc))
+                _, nflags, ndc = neg
+                neg_candidates.append((tpath, dats[tpath], nflags, ndc))
             elif skip == "no-journal":
                 bins["SKIP:no-journal"].append(rel)
             elif skip == "python":
@@ -761,13 +702,7 @@ def main():
                                 "why": skip})
             else:
                 assert journal is not None
-                fdir = os.path.join(tmp, f"{i:05d}")
-                os.makedirs(fdir, exist_ok=True)
-                dat = os.path.join(fdir, os.path.basename(tpath))
-                with open(dat, "w", encoding="utf-8") as fh:
-                    fh.write(journal)
-                inc_texts = copy_includes(journal,
-                                          os.path.dirname(tpath), fdir)
+                dat = dats[tpath]
                 if skip == "negative":
                     run = admit_negative(ledger, dat, cpp_flags, ledger_env)
                     if run is None:
@@ -775,7 +710,7 @@ def main():
                         continue
                     admitted[dat] = run
                 candidates.append((tpath, dat, cpp_flags, dc))
-                journal_text_of[dat] = journal + inc_texts
+                journal_text_of[dat] = journal
                 if value_on:
                     ts = value_targets(tpath)
                     if ts:
@@ -1347,6 +1282,17 @@ def main():
         w_cpp_accept = neg_failures(oracle.get(n1), cpp_reject(p1, []), p1, j)
         w_reason = neg_failures(oracle.get(n2), cpp_reject(n2, []), n2, "C 0 h = 60 m\n" + j)
         w_missing = neg_failures(None, cpp_control, n1, neg_control)
+        # An include that does not resolve is no rule of the classifier:
+        # C++ then reports a second error beside the imbalance, and the
+        # comparison must fail on it, for a missing file and a directory.
+        w_unresolved = []
+        for name, line in (("missing", "include selftest-neg-missing.dat\n"),
+                           ("directory", "include .\n")):
+            path = os.path.join(tmp, f"selftest-neg-unresolved-{name}.dat")
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write(line + neg_control)
+            w_unresolved.append(neg_failures(oracle.get(n1), cpp_reject(path, []),
+                                             path, line + neg_control))
         cpp_signal = subprocess.CompletedProcess(
             cpp_control.args, -signal.SIGTERM, cpp_control.stdout, cpp_control.stderr)
         w_signal = neg_failures(oracle.get(n1), cpp_signal, n1, neg_control)
@@ -1429,6 +1375,8 @@ def main():
                   and any(w.startswith("oracle rejected it for another")
                           for w in w_reason[0])
                   and w_missing == (["no oracle output for journal"], False)
+                  and w_unresolved == [(["C++ did not reject the extracted journal"
+                                         " as unbalanced"], False)] * 2
                   and w_signal == (["C++ did not reject the extracted journal as unbalanced"],
                                    False)
                   and w_noctx == ([NO_CONTEXT_REASON], False)
@@ -1452,6 +1400,7 @@ def main():
                 "why": f"NEG detector fixtures: control={w_control} "
                        f"accepted={w_accept} cpp_accepted={w_cpp_accept} "
                        f"other_reason={w_reason} missing={w_missing} signal={w_signal} "
+                       f"unresolved_include={w_unresolved} "
                        f"no_context={w_noctx} no_context2={w_noctx2} "
                        f"other_entry={w_entry} entry_skipped={entry_skipped} "
                        f"include={w_include} include_other={w_include_other} "

@@ -902,15 +902,15 @@ def main():
         home = os.path.join(tmp, "home")  # holds no .pricedb
         os.makedirs(home)
         checker = Checker(ledger, {**ledger_env, "HOME": home})
-        jobs = []
+        pending = []  # (rel, test path, journal, flags, dc)
         tests = sorted(os.path.join(root, f) for d in dirs
-                       for root, _, files in os.walk(d)
+                       for root, _, files in os.walk(os.path.abspath(d))
                        for f in files if f.endswith(".test"))
         if not tests:
             print("valuation footing: no .test file found under "
                   + ", ".join(dirs), file=sys.stderr)
             sys.exit(1)
-        for i, tpath in enumerate(tests):
+        for tpath in tests:
             rel = os.path.relpath(tpath, repo)
             journal, skip, flags, dc = check_all.classify_test_file(tpath)
             if journal is not None and check_all.has_python_block(journal):
@@ -930,13 +930,13 @@ def main():
             if "--now" in flags:
                 k = flags.index("--now")
                 flags = flags[:k] + flags[k + 2:]
-            fdir = os.path.join(tmp, f"{i:05d}")
-            os.makedirs(fdir)
-            dat = os.path.join(fdir, os.path.basename(tpath))
-            with open(dat, "w", encoding="utf-8") as fh:
-                fh.write(journal)
-            check_all.copy_includes(journal, os.path.dirname(tpath), fdir)
-            jobs.append((rel, dat, flags + NOW, dc))
+            pending.append((rel, tpath, journal, flags, dc))
+        # One tree that mirrors the sources, as check_all.py replays them.
+        dats = check_all.overlay(os.path.commonpath([repo, *tests]),
+                                 os.path.join(tmp, "tree"),
+                                 {t: j for _, t, j, _, _ in pending})
+        jobs = [(rel, dats[t], flags + NOW, dc)
+                for rel, t, _, flags, dc in pending]
 
         # Detector: the fixture, each valuation report limited to one
         # account, the perturbed price read by one -G report alone, and

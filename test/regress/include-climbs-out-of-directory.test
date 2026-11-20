@@ -1,0 +1,13 @@
+; An include may climb out of the including file's directory and back
+; down again.  The semantic bisimulation reads each journal from a place
+; where its neighbours sit as they do in the source tree, so a path like
+; this one resolves for the Lean oracle exactly as it does for ledger.
+
+include ../../test/regress/include-glob-escapes/j.dat
+
+test bal
+              $-4.00  Assets:Cash
+               $4.00  Expenses:Letter
+--------------------
+                   0
+end test
