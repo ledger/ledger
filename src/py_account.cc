@@ -105,6 +105,11 @@ boost::python::list py_find_accounts_re(account_t& account, const string& regexp
                     [](account_t* a) { return boost::python::ptr(a); });
 }
 
+// Python keeps update(post, gather_all); the recency counters use today.
+void py_details_update(account_t::xdata_t::details_t& details, post_t& post, bool gather_all) {
+  details.update(post, CURRENT_DATE(), gather_all);
+}
+
 } // unnamed namespace
 
 void export_account() {
@@ -143,7 +148,7 @@ void export_account() {
 
       .def(self += self)
 
-      .def("update", &account_t::xdata_t::details_t::update);
+      .def("update", &py_details_update);
 
   class_<account_t::xdata_t, boost::noncopyable>("AccountXData")
       .def(flags_visitor<supports_flags<>>())

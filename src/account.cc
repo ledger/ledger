@@ -950,8 +950,9 @@ const account_t::xdata_t::details_t& account_t::self_details(bool gather_all) co
   if (!(xdata_ && xdata_->self_details.gathered)) {
     const_cast<account_t&>(*this).xdata().self_details.gathered = true;
 
+    const date_t today = CURRENT_DATE();
     for (const post_t* post : posts)
-      xdata_->self_details.update(const_cast<post_t&>(*post), gather_all);
+      xdata_->self_details.update(const_cast<post_t&>(*post), today, gather_all);
   }
   return xdata_->self_details;
 }
@@ -968,7 +969,7 @@ const account_t::xdata_t::details_t& account_t::family_details(bool gather_all) 
   return xdata_->family_details;
 }
 
-void account_t::xdata_t::details_t::update(post_t& post, bool gather_all) {
+void account_t::xdata_t::details_t::update(post_t& post, const date_t& today, bool gather_all) {
   posts_count++;
 
   if (post.has_flags(POST_VIRTUAL))
@@ -977,8 +978,7 @@ void account_t::xdata_t::details_t::update(post_t& post, bool gather_all) {
   if (gather_all && post.pos)
     filenames.insert(*post.pos->pathname);
 
-  date_t date = post.date();
-  date_t today = CURRENT_DATE();
+  const date_t date = post.date();
 
   // Recency counters should only include postings that have actually
   // occurred on or before today; future-dated postings must not inflate
@@ -996,10 +996,10 @@ void account_t::xdata_t::details_t::update(post_t& post, bool gather_all) {
       latest_past_post = date;
   }
 
-  if (!is_valid(earliest_post) || post.date() < earliest_post)
-    earliest_post = post.date();
-  if (!is_valid(latest_post) || post.date() > latest_post)
-    latest_post = post.date();
+  if (!is_valid(earliest_post) || date < earliest_post)
+    earliest_post = date;
+  if (!is_valid(latest_post) || date > latest_post)
+    latest_post = date;
 
   if (post.checkin && (earliest_checkin.is_not_a_date_time() || *post.checkin < earliest_checkin))
     earliest_checkin = *post.checkin;
@@ -1012,10 +1012,10 @@ void account_t::xdata_t::details_t::update(post_t& post, bool gather_all) {
   if (post.state() == item_t::CLEARED) {
     posts_cleared_count++;
 
-    if (!is_valid(earliest_cleared_post) || post.date() < earliest_cleared_post)
-      earliest_cleared_post = post.date();
-    if (!is_valid(latest_cleared_post) || post.date() > latest_cleared_post)
-      latest_cleared_post = post.date();
+    if (!is_valid(earliest_cleared_post) || date < earliest_cleared_post)
+      earliest_cleared_post = date;
+    if (!is_valid(latest_cleared_post) || date > latest_cleared_post)
+      latest_cleared_post = date;
   }
 
   if (gather_all) {

@@ -60,9 +60,11 @@ class report_statistics : public item_handler<post_t> {
 protected:
   report_t& report;                         ///< The report context.
   account_t::xdata_t::details_t statistics; ///< Accumulated statistics.
+  const date_t today; ///< Reference date for the recency counters, fixed when the stats report
+                      ///< starts (after --now).
 
 public:
-  report_statistics(report_t& _report) : report(_report) {
+  report_statistics(report_t& _report) : report(_report), today(CURRENT_DATE()) {
     TRACE_CTOR(report_statistics, "report&");
   }
   ~report_statistics() override { TRACE_DTOR(report_statistics); }

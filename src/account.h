@@ -431,8 +431,10 @@ public:
        * Increments counters, extends date ranges, records timeclock
        * data, and (when @p gather_all is true) collects referenced
        * account names, payee names, and source file paths.
+       * @p today is the reference date for the recency counters; callers
+       * compute it once per gather.
        */
-      void update(post_t& post, bool gather_all = false);
+      void update(post_t& post, const date_t& today, bool gather_all = false);
     };
 
     details_t self_details;    ///< Statistics for this account's own postings only.

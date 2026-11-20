@@ -1,0 +1,21 @@
+; AccountXDataDetails.update keeps its (post, gather_all) Python form and
+; counts recency against --now; the 2026/02/10 postings are in the future.
+
+2026/01/02 Early
+    Expenses:Food      $1.00
+    Assets:Cash
+
+2026/01/18 Recent
+    Expenses:Food      $2.00
+    Assets:Cash
+
+2026/02/10 Future
+    Expenses:Food      $3.00
+    Assets:Cash
+
+test --now 2026/01/20 python test/regress/details-update-python.py
+posts: 6
+this month: 4
+last 7 days: 2
+last 30 days: 4
+end test

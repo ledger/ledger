@@ -40,7 +40,7 @@
 namespace ledger {
 
 void report_statistics::operator()(post_t& post) {
-  statistics.update(post, /* gather_all= */ true);
+  statistics.update(post, today, /* gather_all= */ true);
 }
 
 void report_statistics::flush() {
@@ -106,8 +106,8 @@ void report_statistics::flush() {
   // Fall back to latest_post only if every posting is in the future.
   out << _("  Days since last post:   ");
   out.width(6);
-  out << (CURRENT_DATE() - (is_valid(statistics.latest_past_post) ? statistics.latest_past_post
-                                                                  : statistics.latest_post))
+  out << (today - (is_valid(statistics.latest_past_post) ? statistics.latest_past_post
+                                                         : statistics.latest_post))
              .days()
       << '\n';
 
