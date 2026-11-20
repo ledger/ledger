@@ -1709,14 +1709,9 @@ void auto_xact_t::extend_xact(xact_base_t& xact, const parse_context_t* context)
           // initial_post->xact where the payee is available.  The new post has
           // not yet been linked to a transaction at this point, so
           // register_account cannot perform the lookup on its own.
-          if (account->name == _("Unknown") && initial_post->xact) {
-            for (account_mapping_t& value : journal->payees_for_unknown_accounts) {
-              if (value.first.match(initial_post->xact->payee)) {
-                account = value.second;
-                break;
-              }
-            }
-          }
+          if (account->name == _("Unknown") && initial_post->xact)
+            if (account_t* mapped = journal->account_for_payee(initial_post->xact->payee))
+              account = mapped;
           new_post->account =
               journal->register_account(account->fullname(), new_post.get(), journal->master);
 

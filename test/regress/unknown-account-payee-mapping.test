@@ -1,0 +1,59 @@
+; A posting to an account named Unknown takes the account that an
+; `account` directive's `payee` sub-directive maps the transaction's payee
+; to, both for a posting in the journal and for one an automated
+; transaction generates; a payee that matches no mapping stays in
+; Unknown.  When several directives match, the first one declared wins.
+; Declaring the Unknown account itself, which registers it with no
+; posting, maps nothing.  journal_t::account_for_payee owns the rule, and
+; --strict raises no warning for the mapped or generated postings.
+
+commodity $
+account Assets:Checking
+
+account Expenses:Food
+    payee ^Grocer$
+
+account Expenses:Other
+    payee ^Gro
+
+account Expenses:Unknown
+
+= /^Assets:Checking$/
+    (Expenses:Unknown)     0.5
+
+2024/01/02 Grocer
+    Expenses:Unknown                       $10.00
+    Assets:Checking
+
+2024/01/03 Someone
+    Expenses:Unknown                        $5.00
+    Assets:Checking
+
+test bal --flat
+             $-15.00  Assets:Checking
+               $5.00  Expenses:Food
+               $2.50  Expenses:Unknown
+--------------------
+              $-7.50
+end test
+
+test reg
+24-Jan-02 Grocer                Expenses:Food                $10.00       $10.00
+                                Assets:Checking             $-10.00            0
+                                (Expenses:Food)              $-5.00       $-5.00
+24-Jan-03 Someone               Expenses:Unknown              $5.00            0
+                                Assets:Checking              $-5.00       $-5.00
+                                (Expenses:Unknown)           $-2.50       $-7.50
+end test
+
+test print --generated --strict
+2024/01/02 Grocer
+    Expenses:Food                             $10.00
+    Assets:Checking                          $-10.00
+    (Expenses:Food)                           $-5.00
+
+2024/01/03 Someone
+    Expenses:Unknown                           $5.00
+    Assets:Checking                           $-5.00
+    (Expenses:Unknown)                        $-2.50
+end test

@@ -13169,8 +13169,8 @@ debug. You can provide multiple using a regex expression like
 @item @code{commodity.price.find}        @tab @code{lookup.account}                   @tab @code{value.storage.refcount}
 @item @code{commodity.prices.add}        @tab @code{mask.match}                       @tab @code{xact.extend}
 @item @code{commodity.prices.find}       @tab @code{memory.debug}                     @tab @code{xact.extend.cleared}
-@item @code{csv.mappings}                @tab @code{op.memory}                        @tab @code{xact.extend.fail}
-@item @code{csv.parse}                   @tab @code{option.args}                      @tab @code{xact.finalize}
+@item @code{csv.parse}                   @tab @code{op.memory}                        @tab @code{xact.extend.fail}
+@item                                    @tab @code{option.args}                      @tab @code{xact.finalize}
 @end multitable
 @
 

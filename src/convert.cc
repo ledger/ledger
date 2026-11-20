@@ -151,14 +151,8 @@ value_t convert_command(call_scope_t& args) {
           // Re-apply payee-to-account mapping with the resolved payee name
           // so that `account` directives with a matching `payee` sub-directive
           // take effect even though the CSV reader ran before we knew the payee.
-          if (xact->posts.front()->account == nullptr) {
-            for (account_mapping_t& value : journal.payees_for_unknown_accounts) {
-              if (value.first.match(xact->payee)) {
-                xact->posts.front()->account = value.second;
-                break;
-              }
-            }
-          }
+          if (xact->posts.front()->account == nullptr)
+            xact->posts.front()->account = journal.account_for_payee(xact->payee);
         }
       }
 

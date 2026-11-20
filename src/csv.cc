@@ -212,20 +212,9 @@ xact_t* csv_reader::read_xact(bool rich_data) {
         xact->code = field;
       break;
 
-    case FIELD_PAYEE: {
-      bool found = false;
-      for (payee_alias_mapping_t& value : context.journal->payee_alias_mappings) {
-        DEBUG("csv.mappings", "Looking for payee mapping: " << value.first);
-        if (value.first.match(field)) {
-          xact->payee = value.second;
-          found = true;
-          break;
-        }
-      }
-      if (!found)
-        xact->payee = field;
+    case FIELD_PAYEE:
+      xact->payee = context.journal->translate_payee_name(field);
       break;
-    }
 
     case FIELD_DEBIT:
     case FIELD_CREDIT: {
@@ -314,13 +303,8 @@ xact_t* csv_reader::read_xact(bool rich_data) {
 
   // Phase 4: Resolve the primary posting's account using the journal's
   // payee-to-account mappings (from `account` directives with payee conditions).
-
-  for (account_mapping_t& value : context.journal->payees_for_unknown_accounts) {
-    if (value.first.match(xact->payee)) {
-      post->account = value.second;
-      break;
-    }
-  }
+  if (account_t* mapped = context.journal->account_for_payee(xact->payee))
+    post->account = mapped;
 
   xact->add_post(post.release());
 

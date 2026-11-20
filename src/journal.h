@@ -271,6 +271,18 @@ public:
   account_t* register_account(string_view name, post_t* post, account_t* master = nullptr,
                               bool template_post = false);
 
+  /**
+   * @brief Apply payee_alias_mappings: the payee of the first alias
+   *        matching @p name, else @p name.
+   */
+  string translate_payee_name(const string& name) const;
+
+  /**
+   * @brief The account of the first payees_for_unknown_accounts mapping
+   *        that matches @p payee, or nullptr.
+   */
+  account_t* account_for_payee(const string& payee) const;
+
   /** @brief Register a payee name as known (for --strict validation). */
   string register_payee(const string& name);
 
@@ -352,8 +364,6 @@ private:
   bool should_check_payees();
   /** @brief True if the payee name has not been declared with a `payee` directive. */
   bool payee_not_registered(const string& name);
-  /** @brief Apply payee_alias_mappings to translate a payee name. */
-  string translate_payee_name(const string& name);
 
   std::weak_ptr<temporaries_t> report_accounts_; ///< The live pool, if any report holds one.
 };

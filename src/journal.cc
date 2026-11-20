@@ -179,14 +179,9 @@ account_t* journal_t::register_account(string_view name, post_t* post, account_t
 
   // If the account name being registered is "Unknown", check whether
   // the payee indicates an account that should be used.
-  if (result->name == _("Unknown")) {
-    for (account_mapping_t& value : payees_for_unknown_accounts) {
-      if (post && post->xact && value.first.match(post->xact->payee)) {
-        result = value.second;
-        break;
-      }
-    }
-  }
+  if (result->name == _("Unknown") && post && post->xact)
+    if (account_t* mapped = account_for_payee(post->xact->payee))
+      result = mapped;
 
   // Now that we have an account, make certain that the account is
   // "known", if the user has requested validation of that fact.
@@ -374,10 +369,10 @@ bool journal_t::payee_not_registered(const string& name) {
   return known_payees.find(name) == known_payees.end();
 }
 
-string journal_t::translate_payee_name(const string& name) {
+string journal_t::translate_payee_name(const string& name) const {
   string payee;
 
-  for (payee_alias_mapping_t& value : payee_alias_mappings) {
+  for (const payee_alias_mapping_t& value : payee_alias_mappings) {
     if (value.first.match(name)) {
       payee = value.second;
       break;
@@ -385,6 +380,13 @@ string journal_t::translate_payee_name(const string& name) {
   }
 
   return payee.empty() ? name : payee;
+}
+
+account_t* journal_t::account_for_payee(const string& payee) const {
+  for (const account_mapping_t& value : payees_for_unknown_accounts)
+    if (value.first.match(payee))
+      return value.second;
+  return nullptr;
 }
 
 /*--- Commodity and Metadata Registration ---*/
