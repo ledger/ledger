@@ -19,7 +19,7 @@ import sys
 from pathlib import Path
 
 
-def get_compiler_implicit_flags(compiler: str) -> list[str]:
+def get_compiler_implicit_flags(compiler: str) -> list[tuple[str, str]]:
     """Run 'compiler -v -E -x c++ /dev/null' and extract flags passed to cc1.
 
     Compiler wrappers like Nix's clang-wrapper inject -isystem/-isysroot paths
@@ -28,6 +28,10 @@ def get_compiler_implicit_flags(compiler: str) -> list[str]:
 
     The wrapper outputs the underlying cc1 invocation to stderr when -v is
     used; we parse that line to extract the extra flags.
+
+    Every (-isystem|-idirafter|-isysroot, path) pair is returned in cc1
+    order, duplicates included; inject_flags() decides which ones a
+    command lacks.
     """
     try:
         result = subprocess.run(
@@ -57,25 +61,8 @@ def get_compiler_implicit_flags(compiler: str) -> list[str]:
     except ValueError:
         return []
 
-    # Extract -isystem, -isysroot, -idirafter flags
-    extra_flags: list[str] = []
-    seen_isystem: set[str] = set()
-    i = 0
-    while i < len(tokens):
-        tok = tokens[i]
-        if tok in ('-isystem', '-idirafter') and i + 1 < len(tokens):
-            path = tokens[i + 1]
-            if tok == '-idirafter' or path not in seen_isystem:
-                extra_flags.extend([tok, path])
-                if tok == '-isystem':
-                    seen_isystem.add(path)
-            i += 2
-        elif tok == '-isysroot' and i + 1 < len(tokens):
-            extra_flags.extend(['-isysroot', tokens[i + 1]])
-            i += 2
-        else:
-            i += 1
-    return extra_flags
+    return [(flag, path) for flag, path in zip(tokens, tokens[1:])
+            if flag in ('-isystem', '-idirafter', '-isysroot')]
 
 
 def strip_pch_flags(command: str) -> str:
@@ -91,30 +78,23 @@ def strip_pch_flags(command: str) -> str:
     return ' '.join(command.split())
 
 
-def inject_flags(command: str, extra_flags: list[str]) -> str:
-    """Append extra flags to a command, skipping duplicate -isystem paths."""
-    if not extra_flags:
-        return command
+def inject_flags(command: str, pairs: list[tuple[str, str]]) -> str:
+    """Append the implicit flag pairs a command lacks: an -isystem path
+    already on the command (or added earlier) is skipped, -isysroot is
+    added only when the command has none, and every -idirafter is kept."""
     existing_isystem = set(re.findall(r'-isystem\s+(\S+)', command))
-    existing_isysroot = '-isysroot' in command
-    new_flags = []
-    i = 0
-    while i < len(extra_flags) - 1:
-        tok = extra_flags[i]
-        if tok in ('-isystem', '-idirafter') and i + 1 < len(extra_flags):
-            path = extra_flags[i + 1]
-            if tok == '-idirafter' or path not in existing_isystem:
-                new_flags.extend([tok, path])
-                if tok == '-isystem':
-                    existing_isystem.add(path)
-            i += 2
-        elif tok == '-isysroot' and i + 1 < len(extra_flags):
-            if not existing_isysroot:
-                new_flags.extend([tok, extra_flags[i + 1]])
-                existing_isysroot = True
-            i += 2
-        else:
-            i += 1
+    has_isysroot = '-isysroot' in command
+    new_flags: list[str] = []
+    for flag, path in pairs:
+        if flag == '-isystem':
+            if path in existing_isystem:
+                continue
+            existing_isystem.add(path)
+        elif flag == '-isysroot':
+            if has_isysroot:
+                continue
+            has_isysroot = True
+        new_flags.extend([flag, path])
     if new_flags:
         return command + ' ' + ' '.join(new_flags)
     return command
@@ -131,7 +111,7 @@ def main() -> int:
         entries = json.load(f)
 
     # Collect all unique compilers so we only probe each wrapper once.
-    compiler_flags_cache: dict[str, list[str]] = {}
+    compiler_flags_cache: dict[str, list[tuple[str, str]]] = {}
 
     filtered = []
     for entry in entries:
@@ -161,9 +141,7 @@ def main() -> int:
     with open(output_path, 'w') as f:
         json.dump(filtered, f, indent=2)
 
-    n_extra = sum(
-        len(v) // 2 for v in compiler_flags_cache.values()
-    )
+    n_extra = sum(len(v) for v in compiler_flags_cache.values())
     print(
         f"strip_pch_flags: {len(entries)} -> {len(filtered)} entries"
         f" (+{n_extra} implicit flags per entry)",

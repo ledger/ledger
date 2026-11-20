@@ -569,13 +569,13 @@ if(CLANG_TIDY)
   # compiled as standalone translation units.
   set(_lint_cc_files ${ALL_CXX_SOURCE_FILES})
   list(FILTER _lint_cc_files INCLUDE REGEX "\\.cc$")
-  find_program(PYTHON3 python3)
-  if(PYTHON3)
+  find_package(Python COMPONENTS Interpreter)
+  if(Python_EXECUTABLE)
     set(_lint_db_dir  "${CMAKE_BINARY_DIR}/lint")
     set(_lint_db_file "${_lint_db_dir}/compile_commands.json")
     list(APPEND _lint_commands
       COMMAND ${CMAKE_COMMAND} -E make_directory "${_lint_db_dir}"
-      COMMAND ${PYTHON3}
+      COMMAND ${Python_EXECUTABLE}
         "${CMAKE_SOURCE_DIR}/cmake/strip_pch_flags.py"
         "${CMAKE_BINARY_DIR}/compile_commands.json"
         "${_lint_db_file}"
@@ -584,11 +584,8 @@ if(CLANG_TIDY)
         --quiet
         ${_lint_cc_files})
   else()
-    list(APPEND _lint_commands
-      COMMAND ${CLANG_TIDY}
-        -p "${CMAKE_BINARY_DIR}"
-        --quiet
-        ${_lint_cc_files})
+    message(STATUS
+      "lint: clang-tidy skipped (cmake/strip_pch_flags.py needs Python)")
   endif()
 endif()
 
