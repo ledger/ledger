@@ -327,11 +327,8 @@ value_t get_use_direct_amount(post_t& post) {
 }
 
 /**
- * @brief Return the commodity of the posting amount.
- *
- * Accepts an optional amount argument; if provided, returns that amount's
- * commodity instead of the posting's.  Annotations are stripped to return
- * the base commodity symbol.
+ * @brief The commodity a posting reports: that of its compound value when
+ *        it has one that converts to a single amount, else post.amount's.
  *
  * When the posting has a compound value (e.g., budget display sequences like
  * "(actual, budget)"), and that compound value is a sequence, fall back to
@@ -345,6 +342,27 @@ value_t get_use_direct_amount(post_t& post) {
  * convert a balance with multiple commodities to an amount" (issue #763).
  * In that case fall back to post.amount's commodity, which reflects the
  * posting's actual commodity and matches what a -l filter sees.
+ *
+ * The commodity is pool-owned, so the reference outlives the temporary
+ * amount it is read from.
+ */
+commodity_t& reported_commodity(post_t& post) {
+  if (post.has_xdata() && post.xdata().has_flags(POST_EXT_COMPOUND) &&
+      !post.xdata().compound_value.is_sequence()) {
+    const value_t& cv(post.xdata().compound_value);
+    if (!cv.is_balance() || cv.as_balance().single_amount())
+      return cv.to_amount().commodity();
+  }
+  return post.amount.commodity();
+}
+
+/**
+ * @brief Return the commodity of the posting amount.
+ *
+ * Accepts an optional amount argument; if provided, returns that amount's
+ * commodity instead of the posting's.  Annotations are stripped to return
+ * the base commodity symbol.  Without one, returns the posting's
+ * reported_commodity().
  */
 value_t get_commodity(call_scope_t& args) {
   if (args.has<amount_t>(0)) {
@@ -357,25 +375,12 @@ value_t get_commodity(call_scope_t& args) {
     }
     return args.get<amount_t>(0).commodity().strip_annotations(keep_details_t{});
   } else {
-    post_t& post(args.context<post_t>());
-    if (post.has_xdata() && post.xdata().has_flags(POST_EXT_COMPOUND) &&
-        !post.xdata().compound_value.is_sequence()) {
-      const value_t& cv(post.xdata().compound_value);
-      if (!cv.is_balance() || cv.as_balance().single_amount())
-        return cv.to_amount().commodity().strip_annotations(keep_details_t{});
-    }
-    return post.amount.commodity().strip_annotations(keep_details_t{});
+    return reported_commodity(args.context<post_t>()).strip_annotations(keep_details_t{});
   }
 }
 
 value_t get_commodity_is_primary(post_t& post) {
-  if (post.has_xdata() && post.xdata().has_flags(POST_EXT_COMPOUND) &&
-      !post.xdata().compound_value.is_sequence()) {
-    const value_t& cv(post.xdata().compound_value);
-    if (!cv.is_balance() || cv.as_balance().single_amount())
-      return cv.to_amount().commodity().has_flags(COMMODITY_PRIMARY);
-  }
-  return post.amount.commodity().has_flags(COMMODITY_PRIMARY);
+  return reported_commodity(post).has_flags(COMMODITY_PRIMARY);
 }
 
 value_t get_has_cost(post_t& post) {
@@ -482,11 +487,7 @@ value_t get_capital_gain(post_t& post) {
     return 0L;
 
   // Use the posting's effective value_date for market price lookup.
-  date_t vdate;
-  if (post.has_xdata() && !post.xdata().value_date.is_not_a_date())
-    vdate = post.xdata().value_date;
-  else
-    vdate = post.date();
+  date_t vdate = post.value_date();
 
   // Look up the market value of the amount at vdate.
   std::optional<amount_t> market_opt = post.amount.value(datetime_t(vdate));
@@ -583,12 +584,7 @@ value_t get_account_depth(post_t& post) {
 }
 
 value_t get_value_date(post_t& post) {
-  if (post.has_xdata()) {
-    post_t::xdata_t& xdata(post.xdata());
-    if (!xdata.value_date.is_not_a_date())
-      return xdata.value_date;
-  }
-  return post.date();
+  return post.value_date();
 }
 value_t get_datetime(post_t& post) {
   if (!post.xdata().datetime.is_not_a_date_time())
