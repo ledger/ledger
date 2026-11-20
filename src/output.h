@@ -259,8 +259,6 @@ protected:
   report_t& report;                     ///< The report context.
   std::map<string, std::size_t> payees; ///< Map of payee names to posting counts.
 
-  using payees_pair = std::map<string, std::size_t>::value_type;
-
 public:
   report_payees(report_t& _report) : report(_report) { TRACE_CTOR(report_payees, "report&"); }
   ~report_payees() override { TRACE_DTOR(report_payees); }
@@ -287,8 +285,6 @@ class report_tags : public item_handler<post_t> {
 protected:
   report_t& report;                   ///< The report context.
   std::map<string, std::size_t> tags; ///< Map of tag strings to occurrence counts.
-
-  using tags_pair = std::map<string, std::size_t>::value_type;
 
 public:
   report_tags(report_t& _report) : report(_report) { TRACE_CTOR(report_tags, "report&"); }
@@ -317,7 +313,6 @@ class report_commodities : public item_handler<post_t> {
 protected:
   report_t& report; ///< The report context.
 
-  using commodities_pair = std::map<commodity_t*, std::size_t>::value_type;
   using commodities_report_map = std::map<commodity_t*, std::size_t, commodity_compare>;
 
   commodities_report_map commodities; ///< Map of commodities to occurrence counts.

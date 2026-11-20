@@ -522,43 +522,40 @@ void report_accounts::flush() {
 }
 
 void report_accounts::operator()(post_t& post) {
-  if (auto i = accounts.find(post.account); i == accounts.end())
-    accounts.insert(accounts_pair(post.account, 1));
-  else
-    (*i).second++;
+  ++accounts[post.account];
 }
 
 /*--- report_payees: Payee Listing ---*/
 
-void report_payees::flush() {
+namespace {
+/// @brief Print each key of @p counts on its own line, preceded by its
+///        count when --count is active; the flush shared by the payees,
+///        tags and commodities listings.
+template <typename Map, typename PrintKey>
+void print_counts(report_t& report, const Map& counts, PrintKey print_key) {
   std::ostream& out(report.output_stream);
-
-  for (payees_pair& entry : payees) {
+  for (const auto& [key, n] : counts) {
     if (report.HANDLED(count))
-      out << entry.second << ' ';
-    out << entry.first << '\n';
+      out << n << ' ';
+    print_key(out, key);
+    out << '\n';
   }
   out.flush();
 }
+} // namespace
+
+void report_payees::flush() {
+  print_counts(report, payees, [](std::ostream& out, const string& payee) { out << payee; });
+}
 
 void report_payees::operator()(post_t& post) {
-  if (auto i = payees.find(post.payee()); i == payees.end())
-    payees.insert(payees_pair(post.payee(), 1));
-  else
-    (*i).second++;
+  ++payees[post.payee()];
 }
 
 /*--- report_tags: Tag Listing ---*/
 
 void report_tags::flush() {
-  std::ostream& out(report.output_stream);
-
-  for (tags_pair& entry : tags) {
-    if (report.HANDLED(count))
-      out << entry.second << ' ';
-    out << entry.first << '\n';
-  }
-  out.flush();
+  print_counts(report, tags, [](std::ostream& out, const string& tag) { out << tag; });
 }
 
 void report_tags::gather_metadata(item_t& item) {
@@ -569,10 +566,7 @@ void report_tags::gather_metadata(item_t& item) {
     if (report.HANDLED(values) && data.second.first)
       tag += ": " + data.second.first->to_string();
 
-    if (auto i = tags.find(tag); i == tags.end())
-      tags.insert(tags_pair(tag, 1));
-    else
-      (*i).second++;
+    ++tags[tag];
   }
 }
 
@@ -584,41 +578,24 @@ void report_tags::operator()(post_t& post) {
 /*--- report_commodities: Commodity Listing ---*/
 
 void report_commodities::flush() {
-  std::ostream& out(report.output_stream);
-
-  for (commodities_pair& entry : commodities) {
-    if (report.HANDLED(count))
-      out << entry.second << ' ';
-    out << *entry.first << '\n';
-  }
-  out.flush();
+  print_counts(report, commodities, [](std::ostream& out, commodity_t* comm) { out << *comm; });
 }
 
 void report_commodities::operator()(post_t& post) {
   amount_t temp(post.amount.strip_annotations(report.what_to_keep()));
   commodity_t& comm(temp.commodity());
 
-  if (auto i = commodities.find(&comm); i == commodities.end())
-    commodities.insert(commodities_pair(&comm, 1));
-  else
-    (*i).second++;
+  ++commodities[&comm];
 
   if (comm.has_annotation()) {
     annotated_commodity_t& ann_comm(as_annotated_commodity(comm));
-    if (ann_comm.details.price) {
-      if (auto ii = commodities.find(&ann_comm.details.price->commodity()); ii == commodities.end())
-        commodities.insert(commodities_pair(&ann_comm.details.price->commodity(), 1));
-      else
-        (*ii).second++;
-    }
+    if (ann_comm.details.price)
+      ++commodities[&ann_comm.details.price->commodity()];
   }
 
   if (post.cost) {
     amount_t temp_cost(post.cost->strip_annotations(report.what_to_keep()));
-    if (auto i = commodities.find(&temp_cost.commodity()); i == commodities.end())
-      commodities.insert(commodities_pair(&temp_cost.commodity(), 1));
-    else
-      (*i).second++;
+    ++commodities[&temp_cost.commodity()];
   }
 }
 

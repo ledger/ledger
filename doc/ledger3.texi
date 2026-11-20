@@ -8418,7 +8418,15 @@ Define the output format for a total data plot.  @xref{Visualizing with
 Gnuplot}.
 
 @item --prepend-format @var{FORMAT_STRING}
-Prepend @var{STR} to every line of the output.
+Prepend @var{FORMAT_STRING} to the start of each entry of the report.
+An entry that spans several lines, such as a @command{register} posting
+with amounts in two commodities, gets it once, on its first line; the
+separator line above the @command{balance} total gets none.  The
+@command{register}, @command{csv}, @command{prices}, @command{pricedb},
+@command{balance}, @command{budget}, @command{cleared} and
+@command{accounts} reports honor it; the other reports, such as
+@command{payees}, @command{tags}, @command{commodities},
+@command{select} and @command{print}, ignore it.
 
 @item --prepend-width @var{INT}
 Reserve @var{INT} spaces at the beginning of each line of the output.

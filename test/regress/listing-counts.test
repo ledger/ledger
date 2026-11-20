@@ -1,0 +1,81 @@
+; The payees, tags, commodities and accounts listings count each key
+; once per posting that carries it: a transaction's tag counts once per
+; posting, and commodities counts the amount's commodity, the lot price's
+; commodity under --lots, and the cost's commodity.
+
+2024/01/02 Broker  ; Note: one
+    Assets:Brokerage            10 AAPL {$150.00} @ $160.00
+    Assets:Cash
+    ; Lot: a
+
+2024/01/03 Broker
+    Assets:Brokerage             5 AAPL {$150.00}
+    Assets:Cash                         $-750.00
+    ; Lot: b
+
+2024/01/04 Exchange
+    Assets:Euro                  100 EUR @ $1.10
+    Assets:Cash
+
+test payees --count
+4 Broker
+2 Exchange
+end test
+
+test payees
+Broker
+Exchange
+end test
+
+test tags --count
+2 Lot
+2 Note
+end test
+
+test tags --count --values
+1 Lot: a
+1 Lot: b
+2 Note: one
+end test
+
+test commodities --count
+6 $
+2 AAPL
+1 EUR
+end test
+
+test commodities --count --lots
+9 $
+2 AAPL {$150.00}
+1 EUR {$1.10} [2024/01/04]
+end test
+
+test commodities
+$
+AAPL
+EUR
+end test
+
+test accounts --count
+2 Assets:Brokerage
+3 Assets:Cash
+1 Assets:Euro
+end test
+
+test payees --count --group-by account
+2 Broker
+2 Broker
+1 Exchange
+1 Exchange
+end test
+
+test payees --prepend-format '<P>' --append-format '<A>'
+Broker
+Exchange
+end test
+
+test accounts --count --prepend-format '<P>'
+<P>2 Assets:Brokerage
+<P>3 Assets:Cash
+<P>1 Assets:Euro
+end test

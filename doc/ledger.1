@@ -1110,7 +1110,26 @@ Define the output format for a total data plot.
 .It Fl \-prepend-format Ar FMT
 Prepend
 .Ar FMT
-to every line of the output.
+to the start of each entry of the report; an entry that spans several
+lines gets it once, on its first line.
+The
+.Ic register ,
+.Ic csv ,
+.Ic prices ,
+.Ic pricedb ,
+.Ic balance ,
+.Ic budget ,
+.Ic cleared
+and
+.Ic accounts
+reports honor it; the other reports, such as
+.Ic payees ,
+.Ic tags ,
+.Ic commodities ,
+.Ic select
+and
+.Ic print ,
+ignore it.
 .It Fl \-prepend-width Ar INT
 Reserve
 .Ar INT
