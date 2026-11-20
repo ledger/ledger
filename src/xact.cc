@@ -58,6 +58,7 @@
 #include "format.h"
 #include "pool.h"
 #include "annotate.h"
+#include "sha512.h"
 
 namespace ledger {
 
@@ -1296,8 +1297,6 @@ bool xact_t::valid() const {
 /*  Hashing                                                             */
 /*----------------------------------------------------------------------*/
 
-extern "C" unsigned char* SHA512(void* data, unsigned int data_len, unsigned char* digest);
-
 namespace {
 /// Convert a binary buffer to a lowercase hexadecimal string.
 std::string bufferToHex(const unsigned char* buffer, std::size_t size) {
@@ -1349,10 +1348,10 @@ string xact_t::hash(const string& nonce, hash_type_t hash_type) const {
     repr << str;
   }
 
-  unsigned char data[128];
+  unsigned char data[64];
   string repr_str(repr.str()); // NOLINT(bugprone-unused-local-non-trivial-variable)
 
-  SHA512(const_cast<char*>(repr_str.c_str()), repr_str.length(), data);
+  sha512(repr_str.data(), repr_str.size(), data);
 
   return bufferToHex(data, hash_type == HASH_SHA512 ? 64 : 32 /*SHA512_DIGEST_LENGTH*/);
 }

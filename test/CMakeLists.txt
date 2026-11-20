@@ -15,6 +15,14 @@ add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} ${CTEST_BUILD_FLAGS})
 
 add_subdirectory(unit)
 
+# libledger (and the Python module, a copy of it) must not export the
+# OpenSSL-named C symbols of the vendored SHA-512 in src/sha512.cc.
+if(BUILD_LIBRARY AND CMAKE_NM)
+  add_test(NAME CheckHiddenSha512Symbols
+    COMMAND ${CMAKE_COMMAND} -DNM=${CMAKE_NM} -DLIBRARY=$<TARGET_FILE:libledger>
+    -P ${PROJECT_SOURCE_DIR}/test/CheckHiddenSha512Symbols.cmake)
+endif()
+
 if(HAVE_BOOST_PYTHON)
   set(TEST_PYTHON_FLAGS "--python")
 endif()
