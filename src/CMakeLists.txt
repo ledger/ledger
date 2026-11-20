@@ -239,10 +239,13 @@ if(USE_PYTHON)
     set(LEDGER_PYTHON_INSTALL_DIR "${Python_SITEARCH}" CACHE PATH
       "Directory to install the ledger Python module into")
 
-    # FIXME: symlink would be sufficient:
-    # maybe using install(CODE "...") and
-    # execute_process(COMMAND "${CMAKE_COMMAND}" -E create_symlink ...).
-    # Windows will need a special case due to not supporting symlinks.
+    # The module is libledger itself, copied under the module's name.
+    # Its init function, PyInit_ledger, is defined in libledger by
+    # pyledger.cc's BOOST_PYTHON_MODULE, and pyinterp.cc declares and
+    # registers that same function for the embedded interpreter, so the
+    # module cannot be a target of its own unless libledger exports a
+    # separate init for it to forward to.  The copy carries libledger's
+    # build-tree RUNPATH, which the #3229 step below sanitizes.
     add_custom_command(
       TARGET libledger POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
