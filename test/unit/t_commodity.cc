@@ -9,6 +9,7 @@
 #include "annotate.h"
 #include "pool.h"
 #include "ptree.h"
+#include "scope.h"
 
 using namespace ledger;
 
@@ -751,6 +752,77 @@ BOOST_AUTO_TEST_CASE(testParsePriceDirective)
     BOOST_CHECK(result);
     BOOST_CHECK_EQUAL(string("GOOG"), result->first->symbol());
     BOOST_CHECK_EQUAL(amount_t("$175.00"), result->second.price);
+  }
+
+  BOOST_CHECK(x1.valid());
+}
+
+BOOST_AUTO_TEST_CASE(testParsePriceDirectiveTrailingText)
+{
+  amount_t x1("$1.00");
+  commodity_pool_t& pool(x1.commodity().pool());
+
+  // An expression price is evaluated in the default scope, or else in the
+  // empty scope, which only a global scope or the Python module sets up;
+  // give this test one of its own.
+  struct empty_scope_guard {
+    empty_scope_t scope;
+    empty_scope_t* saved = scope_t::empty_scope;
+    empty_scope_guard() { scope_t::empty_scope = &scope; }
+    ~empty_scope_guard() { scope_t::empty_scope = saved; }
+  } guard;
+
+  // Only white-space and a comment may follow the price, whether it is an
+  // amount or a parenthesized expression, and a lot annotation is not part
+  // of a price (#3353).  A quote that a getquote script prints may end in a
+  // carriage return.
+  {
+    char line[] = "2024/01/15 AAPL $150.00 ; a comment";
+    auto result = pool.parse_price_directive(line, true);
+    BOOST_CHECK(result);
+    BOOST_CHECK_EQUAL(amount_t("$150.00"), result->second.price);
+  }
+  {
+    char line[] = "2024/01/15 AAPL ($100.00 + $50.00);a comment";
+    auto result = pool.parse_price_directive(line, true);
+    BOOST_CHECK(result);
+    BOOST_CHECK_EQUAL(amount_t("$150.00"), result->second.price);
+  }
+  {
+    char line[] = "2024/01/15 AAPL $150.00\r";
+    auto result = pool.parse_price_directive(line, true);
+    BOOST_CHECK(result);
+    BOOST_CHECK_EQUAL(amount_t("$150.00"), result->second.price);
+  }
+  {
+    char line[] = "2024/01/15 AAPL 150.00 USD\r";
+    auto result = pool.parse_price_directive(line, true);
+    BOOST_CHECK(result);
+    BOOST_CHECK_EQUAL(amount_t("150.00 USD"), result->second.price);
+  }
+  {
+    char line[] = "2024/01/15 AAPL ($150.00)\r";
+    auto result = pool.parse_price_directive(line, true);
+    BOOST_CHECK(result);
+    BOOST_CHECK_EQUAL(amount_t("$150.00"), result->second.price);
+  }
+  {
+    char line[] = "2024/01/15 AAPL $150.00   ";
+    auto result = pool.parse_price_directive(line, true);
+    BOOST_CHECK(result);
+    BOOST_CHECK_EQUAL(amount_t("$150.00"), result->second.price);
+  }
+  {
+    char line[] = "2024/01/15 AAPL '$150.00'";
+    BOOST_CHECK_THROW(pool.parse_price_directive(line, true), parse_error);
+  }
+  {
+    char line[] = "2024/01/15 AAPL $150.00 {$100.00}";
+    BOOST_CHECK_THROW(pool.parse_price_directive(line, true), parse_error);
+  }
+  {
+    char line[] = "2024/01/15 AAPL ($150.00) $1.00";
+    BOOST_CHECK_THROW(pool.parse_price_directive(line, true), parse_error);
   }
 
   BOOST_CHECK(x1.valid());

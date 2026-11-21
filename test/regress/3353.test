@@ -1,0 +1,42 @@
+; A price directive may be followed by a comment and nothing else, as
+; the amount of a posting may (#3353).  Ledger used to stop reading a P
+; line at the end of its price and drop the rest unread.  The first line
+; below, with its price written in single quotes, priced EUR in a
+; commodity named '$, because a bare symbol may contain an apostrophe,
+; and the closing quote was lost.  The other lines lost the text after
+; their prices too, except the lot annotation, which was read as part of
+; the price and corrupted the price history.  A price written as an
+; expression ends at its closing parenthesis, so only a comment may
+; follow that either.
+
+P 2024/01/01 EUR '$1.10'
+P 2024/01/02 EUR $1.20 junk
+P 2024/01/03 EUR 1.30 USD!
+P 2024/01/04 EUR $1.40 @ $2.00
+P 2024/01/05 EUR $1.50 {$2.00}
+P 2024/01/06 EUR ($1.00 + $0.60) junk
+P 2024/01/07 EUR ($1.00) * 1.70
+P EUR $1.80 junk
+apply fixed EUR $1.90 junk
+
+test pricedb -> 9
+__ERROR__
+While parsing file "$FILE", line 12:
+Error: Unexpected text ''' after the price
+While parsing file "$FILE", line 13:
+Error: Unexpected text 'junk' after the price
+While parsing file "$FILE", line 14:
+Error: Unexpected text '!' after the price
+While parsing file "$FILE", line 15:
+Error: Unexpected text '@ $2.00' after the price
+While parsing file "$FILE", line 16:
+Error: Unexpected text '{$2.00}' after the price
+While parsing file "$FILE", line 17:
+Error: Unexpected text 'junk' after the price
+While parsing file "$FILE", line 18:
+Error: Unexpected text '* 1.70' after the price
+While parsing file "$FILE", line 19:
+Error: Unexpected text 'junk' after the price
+While parsing file "$FILE", line 20:
+Error: Unexpected text 'junk' after the price
+end test

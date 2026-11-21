@@ -1,0 +1,29 @@
+; A comment may follow the price of a price directive, as it may follow
+; the amount of a posting, with or without white-space before its
+; semicolon (#3353).  So may one follow a price written as an
+; expression, which ends at its closing parenthesis: the semicolon used
+; to continue the expression, which then failed to evaluate the comment.
+
+P 2024/01/01 EUR $1.10 ; a comment after a space
+P 2024/01/02 EUR $1.20; a comment right after the price
+P 2024/01/03 EUR ($1.00 + $0.30)	; a comment after a tab
+P GBP $1.50 ; a comment on a line without a date
+
+apply fixed CAD $0.75 ; a comment after a fixed price
+2024/01/04 Buy
+    Assets:Cash                           10 CAD
+    Equity
+end apply fixed
+
+test pricedb --now 2030/06/15
+P 2024/01/01 00:00:00 EUR $1.10
+P 2024/01/02 00:00:00 EUR $1.20
+P 2024/01/03 00:00:00 EUR $1.30
+P 2030/06/15 00:00:00 GBP $1.50
+end test
+
+test print
+2024/01/04 Buy
+    Assets:Cash                         10 CAD {=$0.75}
+    Equity
+end test
