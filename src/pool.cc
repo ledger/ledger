@@ -683,15 +683,39 @@ commodity_pool_t::parse_price_directive(char* line, bool do_not_add_price, bool 
   // A parenthesized price expression (issue #1101) allows the price to be
   // computed from an expression which may reference multiple commodities,
   // e.g. "P 2015-01-01 bicur (€0.45 + $0.55)".  The enclosing parentheses
-  // signal that the remaining text should be parsed as a value expression
-  // rather than as a plain amount.  If the expression evaluates to a
-  // multi-commodity balance (a "basket"), the result is attached as a
-  // value_expr on the commodity so that later valuations can reprice the
-  // basket into whatever target commodity is requested.  Otherwise the
-  // collapsed amount is recorded as a normal price history entry.
+  // signal that the price is a value expression rather than a plain amount,
+  // and, as in the amount of a posting, the expression ends at its closing
+  // parenthesis.  If the expression evaluates to a multi-commodity balance
+  // (a "basket"), the result is attached as a value_expr on the commodity so
+  // that later valuations can reprice the basket into whatever target
+  // commodity is requested.  Otherwise the collapsed amount is recorded as a
+  // normal price history entry.
   char* price_ptr = skip_ws(symbol_and_price);
-  if (price_ptr && *price_ptr == '(') {
-    expr_t value_expr{string(price_ptr)};
+  const bool price_is_expr = *price_ptr == '(';
+  std::istringstream price_in(price_ptr);
+  expr_t value_expr;
+  if (price_is_expr)
+    value_expr.parse(price_in, PARSE_SINGLE, string(price_ptr));
+  else
+    (void)point.price.parse(price_in, PARSE_NO_MIGRATE | PARSE_NO_ANNOT);
+
+  // Only a comment may follow the price, as only one may follow the amount
+  // of a posting.  Anything else used to be dropped unread: the closing
+  // quote of `P 2024/01/01 EUR '$1.10'` vanished, while its opening quote,
+  // which a bare symbol may contain, began a commodity named `'$` (issue
+  // #3353).  A price is not a lot, so the annotations of one are not read
+  // as part of it either: after `P 2024/01/01 EUR $1.10 {$2.00}`, pricedb
+  // listed a price of `$` in `$` and valued EUR wrongly.  The stream has
+  // no position once it has reached the end.
+  if (std::istream::pos_type end = price_in.tellg(); end != std::istream::pos_type(-1)) {
+    const char* rest = price_ptr + static_cast<std::ptrdiff_t>(end);
+    while (std::isspace(static_cast<unsigned char>(*rest)))
+      ++rest;
+    if (*rest && *rest != ';')
+      throw_(parse_error, _f("Unexpected text '%1%' after the price") % rest);
+  }
+
+  if (price_is_expr) {
     value_t result(
         value_expr.calc(scope_t::default_scope ? *scope_t::default_scope : *scope_t::empty_scope));
     if (result.is_balance() && result.as_balance().amounts.size() > 1) {
@@ -716,8 +740,6 @@ commodity_pool_t::parse_price_directive(char* line, bool do_not_add_price, bool 
       return std::nullopt;
     }
     point.price = result.to_amount();
-  } else {
-    (void)point.price.parse(symbol_and_price, PARSE_NO_MIGRATE);
   }
   VERIFY(point.price.valid());
 

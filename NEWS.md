@@ -317,6 +317,19 @@ components with their standard-library equivalents.
   `true` when printing it, as an amount requires, so that `print` output can
   be read back (#3321)
 
+- Reject text other than a comment after the price of a `P` directive, of
+  `apply fixed`, or of a quote that a getquote script prints, as text after
+  the amount of a posting is rejected (#3353).  It was dropped unread:
+  `P 2024/01/01 EUR '$1.10'` priced EUR in a commodity named `'$`, since a
+  symbol may contain an apostrophe, and lost the closing quote, and a cost
+  such as `@ $2.00` written after a price was ignored.  A lot price, date or
+  note after a price, which was read as part of it and corrupted the price
+  history, is rejected too.  A price written as an expression now ends at
+  its closing parenthesis, as an expression in the amount of a posting
+  does, so a comment may follow it; the comment used to be read as part of
+  the expression, and fail to evaluate.  An expression price such as
+  `($1.00) * 3` must now be enclosed whole: `(($1.00) * 3)`
+
 - Add batch commodity quote fetching to amortize the per-call cost (#588); add
   `--account-value-expr` and `--commodity-value-expr` options for custom
   valuations; expose a `capital_gain` value expression variable
