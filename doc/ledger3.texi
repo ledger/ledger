@@ -2325,7 +2325,18 @@ Commodities}), but unless a time precedes it, a @code{SYMBOL} that
 begins with a digit must be quoted, or Ledger reads it as the time, or,
 on a line without a date, as the date.
 
-@code{PRICE} may also be a parenthesized expression.  If the
+@code{PRICE} is an amount, written as in a posting, and only a comment,
+which begins with @samp{;}, may follow it.  Ledger reports any other
+text after the price as an error, including a lot price, date or note,
+which a price cannot have.  Quotes do not enclose an amount: double
+quotes may enclose the symbol of its commodity (@pxref{Naming
+Commodities}), but a single quote is an ordinary character of a
+symbol, so in @w{@samp{P 2024/01/01 EUR '$1.10'}} the first single
+quote begins the symbol @samp{'$} and the second is text after the
+price.
+
+@code{PRICE} may also be a parenthesized expression, which ends at its
+closing parenthesis, so that a comment may follow it too.  If the
 expression evaluates to a single-commodity amount, that amount is
 recorded as the commodity's price on @code{DATE}.  If the expression
 evaluates to a multi-commodity balance (a ``basket''), the basket is
