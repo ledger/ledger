@@ -427,6 +427,14 @@ static balance_t compute_balance_diff(const amount_t& amt, post_t* post, xact_t*
     // (fixes #2071); otherwise it uses primary-date ordering so that
     // an assertion dated before later-dated transactions in the file
     // is not polluted by those future-dated posts (fixes #847, #1092).
+    // In --effective mode, though, only postings that themselves carry
+    // an explicit effective date take part in that ordering: a posting
+    // without one is ordered by file position, as in #2966, so it is
+    // counted here whatever its primary date.  Otherwise a posting
+    // dated after the cutoff drops out of the running total even
+    // though the journal's balance assignments already counted it,
+    // and a balance assignment on the effective-dated posting computes
+    // an amount that leaves the transaction unbalanced (fixes #3351).
     date_t cutoff = post->date();
     std::set<const post_t*> seen;
     for (const post_t* p : post->account->posts) {
@@ -434,7 +442,8 @@ static balance_t compute_balance_diff(const amount_t& amt, post_t* post, xact_t*
         continue;
       if (real_only && p->has_flags(POST_VIRTUAL))
         continue;
-      if (!p->amount.is_null() && p->date() <= cutoff)
+      if (!p->amount.is_null() &&
+          (!item_t::use_aux_date || !p->aux_date() || p->date() <= cutoff))
         add_or_set_value(account_total, p->amount);
     }
   }
