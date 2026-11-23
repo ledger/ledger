@@ -240,8 +240,11 @@ std::size_t session_t::read_data(const string& master_account) {
     }
   }
 
-  // Read each journal data file in order
-  for (const path& pathname : HANDLER(file_).data_files) {
+  // Read each journal data file in order.  Snapshot the list first: a
+  // --file option line inside a journal clears the live list (the -f
+  // override), which would invalidate the iteration and segfault (#3338).
+  const auto data_files = HANDLER(file_).data_files;
+  for (const path& pathname : data_files) {
     if (pathname == "-" || pathname == "/dev/stdin") {
       // To avoid problems with stdin and pipes, etc., we read the entire
       // file in beforehand into a memory buffer, and then parcel it out
