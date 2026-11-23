@@ -7,4 +7,11 @@ if(Python_EXECUTABLE)
   set_tests_properties(RegressTest_3273 PROPERTIES
     ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}"
     TIMEOUT 120)
+
+  add_test(NAME RegressTest_3338
+    COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/3338.py
+      --ledger $<TARGET_FILE:ledger>)
+  set_tests_properties(RegressTest_3338 PROPERTIES
+    ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}"
+    TIMEOUT 120)
 endif()
