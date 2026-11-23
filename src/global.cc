@@ -320,8 +320,13 @@ int global_scope_t::execute_command_wrapper(strings_list args, bool at_repl) {
     if (at_repl)
       push_report();
     execute_command(std::move(args), at_repl);
-    if (at_repl)
+    if (at_repl) {
+      // A successful report can leave cached totals and display flags in the
+      // journal, just as a failed one can (#3337; cf. #3274). Clear them so
+      // the next report in this session starts from a clean state.
+      session().journal->clear_xdata();
       pop_report();
+    }
 
     // If we've reached this point, everything succeeded fine.  Ledger uses
     // exceptions to notify of error conditions, so if you're using gdb,
