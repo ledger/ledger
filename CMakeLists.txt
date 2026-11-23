@@ -378,8 +378,11 @@ if(GMP_PATH AND EXISTS "${GMP_PATH}/gmp.h")
     # resolve the version macros (fixes #2949).
     file(WRITE "${CMAKE_BINARY_DIR}/gmp_version_check.c"
       "#include <gmp.h>\nGMP_V __GNU_MP_VERSION\nGMP_VMIN __GNU_MP_VERSION_MINOR\nGMP_VPATCH __GNU_MP_VERSION_PATCHLEVEL\n")
+    # -P suppresses linemarkers: without it the compiler may emit a
+    # linemarker between "GMP_V" and its value, so the regexes below
+    # never match and configure fails (fixes #3343).
     execute_process(
-      COMMAND ${CMAKE_C_COMPILER} -I${GMP_PATH} -E "${CMAKE_BINARY_DIR}/gmp_version_check.c"
+      COMMAND ${CMAKE_C_COMPILER} -I${GMP_PATH} -E -P "${CMAKE_BINARY_DIR}/gmp_version_check.c"
       OUTPUT_VARIABLE gmp_pp_output
       ERROR_QUIET
       RESULT_VARIABLE gmp_pp_result)
