@@ -585,7 +585,14 @@ void instance_t::end_apply_directive(char* kind) {
     }
   }
 
-  if (!name.empty() && name != apply_stack.front().label)
+  // `apply rate` and `apply fixed` open the same kind of block: the frame is
+  // always labelled "fixed" (see apply_rate_directive), so `end apply rate`
+  // and `end apply fixed` close it interchangeably (#3340).
+  const string& label = apply_stack.front().label;
+  const bool same_kind =
+      name == label ||
+      ((name == "rate" || name == "fixed") && (label == "rate" || label == "fixed"));
+  if (!name.empty() && !same_kind)
     throw_(std::runtime_error,
            _f("'end apply %1%' directive does not match 'apply %2%' directive") % name %
                apply_stack.front().label);

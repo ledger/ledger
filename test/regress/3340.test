@@ -1,0 +1,26 @@
+; Test for issue #3340: `end apply rate` cannot close an `apply rate` block
+; (`apply rate` and `apply fixed` open the same kind of block, so either
+; `end apply` spelling must close it.)
+
+apply rate CAD $0.90
+
+2012-04-10 Lunch in Canada
+    Assets:Wallet            -15.50 CAD
+    Expenses:Food            15.50 CAD
+
+end apply rate
+
+apply fixed CAD $0.90
+
+2012-04-11 Lunch in Canada
+    Assets:Wallet            -10.00 CAD
+    Expenses:Food            10.00 CAD
+
+end apply rate
+
+test bal
+          -25.50 CAD  Assets:Wallet
+           25.50 CAD  Expenses:Food
+--------------------
+                   0
+end test
