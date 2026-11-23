@@ -1,0 +1,39 @@
+; Regression test for issue #3351: a balance assignment on a transaction
+; with an effective date fails under --effective when an earlier
+; transaction without an effective date is dated after it.
+;
+; The third transaction is dated 1994/01/08 with effective date
+; 1994/01/04, and its balance assignment "= 6400 F" counts the second
+; transaction (1994/01/06, no effective date) in the file-order running
+; total: 7000 - 300 - 300 = 6400.  Without the fix, the date filter
+; dropped the second transaction's posting (01/06 > 01/04), the
+; assignment computed -600 F, and the transaction failed to balance
+; with "Unbalanced remainder is: -300 F".
+
+1994/01/01 * Solde initial
+    Actif:Courant:BnpCc                       7000 F = 7000 F
+    Equity:SoldeInitial
+
+1994/01/06 * Retrait
+    Dépense:Liquide                            300 F
+    Actif:Courant:BnpCc                               = 6700 F
+
+1994/01/08=1994/01/04 * Retrait
+    Dépense:Liquide                            300 F
+    Actif:Courant:BnpCc                               = 6400 F
+
+test bal --effective
+              6400 F  Actif:Courant:BnpCc
+               600 F  Dépense:Liquide
+             -7000 F  Equity:SoldeInitial
+--------------------
+                   0
+end test
+
+test bal
+              6400 F  Actif:Courant:BnpCc
+               600 F  Dépense:Liquide
+             -7000 F  Equity:SoldeInitial
+--------------------
+                   0
+end test
