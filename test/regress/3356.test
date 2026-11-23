@@ -1,0 +1,36 @@
+; Regression test for issue #3356:
+; getquote: an unreadable quote is an error with no context, and a batch
+; then skips pclose()
+;
+; A getquote script that prints a line parse_price_directive() cannot read
+; used to abort the whole report with a bare "No quantity specified for
+; amount".  Now the line only costs a warning naming the commodity, the
+; line and the error, the batch reads on, and the per-commodity fallback
+; tries again; a bare word gets the same warning.  The prices the batch
+; did read are still used: AAPL is valued at the quoted $150.00, not its
+; old $100.00, so Brokerage totals $3000.00 rather than $2500.00.
+
+2024/01/15 Buy Stock A
+    Assets:Brokerage        10 AAPL
+    Assets:Checking        $-1000.00
+
+2024/01/15 Buy Stock B
+    Assets:Brokerage        10 BADLINE
+    Assets:Checking        $-1000.00
+
+2024/01/15 Buy Stock C
+    Assets:Brokerage        10 BAREWORD
+    Assets:Checking        $-500.00
+
+test bal --market --download --getquote $sourcepath/test/scripts/mock-getquote.sh -> 0
+            $3000.00  Assets
+            $3000.00    Brokerage
+           $-2500.00    Checking
+--------------------
+             $500.00
+__ERROR__
+Warning: Price quote script returned an unreadable price for commodity 'BADLINE': '2024/06/15 BADLINE N/A' (No quantity specified for amount)
+Warning: Price quote script returned an unreadable price: 'N/A'
+Warning: Price quote script returned an unreadable price for commodity 'BADLINE': '2024/06/15 BADLINE N/A' (No quantity specified for amount)
+Warning: Price quote script returned an unreadable price for commodity 'BAREWORD': 'N/A'
+end test
