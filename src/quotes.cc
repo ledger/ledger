@@ -31,8 +31,12 @@
 
 #include <system.hh>
 
+#include <memory>
+#include <sstream>
+
 #include "amount.h"
 #include "commodity.h"
+#include "exprbase.h"
 #include "pool.h"
 #include "quotes.h"
 
@@ -48,6 +52,37 @@ static std::string shell_escape(const std::string& str) {
   }
   result += "'";
   return result;
+}
+
+// Warn about a quote line that could not be read, naming the commodity
+// (when it is known), the line and the error (when there is one), instead
+// of failing the whole report with a bare parse error (issue #3356).
+static void warn_unreadable_price(const string& line, const std::optional<string>& symbol,
+                                  const std::optional<string>& error = std::nullopt) {
+  string message = "Price quote script returned an unreadable price";
+  if (symbol)
+    message += " for commodity '" + *symbol + "'";
+  message += ": '" + line + "'";
+  if (error)
+    message += " (" + *error + ")";
+  warning_(message);
+}
+
+// Find which of the requested commodities a batch line is quoting, if any:
+// the symbol appears as a whitespace-separated token in the line.  A line
+// that carries no requested symbol (a bare word, for example) yields none,
+// and the warning then names the line alone.
+static std::optional<string> batch_line_symbol(
+    const std::vector<std::reference_wrapper<commodity_t>>& commodities, const string& line) {
+  std::istringstream tokens(line);
+  string token;
+  while (tokens >> token) {
+    for (commodity_t& comm : commodities) {
+      if (token == comm.symbol())
+        return comm.symbol();
+    }
+  }
+  return std::nullopt;
 }
 
 std::optional<price_point_t> commodity_quote_from_script(commodity_t& commodity,
@@ -111,15 +146,31 @@ std::optional<price_point_t> commodity_quote_from_script(commodity_t& commodity,
       *p = '\0';
     DEBUG("commodity.download", "downloaded quote: " << buf);
 
-    if (std::optional<std::pair<commodity_t*, price_point_t>> point =
-            commodity_pool_t::current_pool->parse_price_directive(buf)) {
-      if (commodity_pool_t::current_pool->price_db) {
-        ofstream database(*commodity_pool_t::current_pool->price_db,
-                          std::ios_base::out | std::ios_base::app);
-        database << "P " << format_datetime(point->second.when, FMT_WRITTEN) << " "
-                 << commodity.symbol() << " " << point->second.price << '\n';
+    try {
+      if (std::optional<std::pair<commodity_t*, price_point_t>> point =
+              commodity_pool_t::current_pool->parse_price_directive(buf)) {
+        if (commodity_pool_t::current_pool->price_db) {
+          ofstream database(*commodity_pool_t::current_pool->price_db,
+                            std::ios_base::out | std::ios_base::app);
+          database << "P " << format_datetime(point->second.when, FMT_WRITTEN) << " "
+                   << commodity.symbol() << " " << point->second.price << '\n';
+        }
+        return point->second;
       }
-      return point->second;
+      // The line gave no price at all (a bare word, for example): warn
+      // just as for a line that fails to parse, rather than staying
+      // silent while the report goes on with the old price (issue #3356).
+      warn_unreadable_price(buf, commodity.symbol());
+    } catch (const parse_error& err) {
+      warn_unreadable_price(buf, commodity.symbol(), err.what());
+    } catch (const amount_error& err) {
+      warn_unreadable_price(buf, commodity.symbol(), err.what());
+    } catch (const date_error& err) {
+      warn_unreadable_price(buf, commodity.symbol(), err.what());
+    } catch (const datetime_error& err) {
+      warn_unreadable_price(buf, commodity.symbol(), err.what());
+    } catch (const calc_error& err) {
+      warn_unreadable_price(buf, commodity.symbol(), err.what());
     }
   } else {
     if (cmd_failed)
@@ -179,15 +230,19 @@ commodity_batch_quote_from_script(std::vector<std::reference_wrapper<commodity_t
   DEBUG("commodity.download", "invoking batch command: " << getquote_cmd);
 
   bool cmd_failed = false;
-  if (FILE* fp = popen(getquote_cmd.c_str(), "r")) {
+  if (FILE* raw_fp = popen(getquote_cmd.c_str(), "r")) {
+    // Close the pipe on every path: if reading a line throws, the guard
+    // still reaps the script instead of leaving it a zombie (issue #3356).
+    // The exit status is checked explicitly below, via release().
+    std::unique_ptr<FILE, decltype(&pclose)> fp(raw_fp, &pclose);
     char buf[4096];
-    while (std::fgets(buf, sizeof(buf), fp) != nullptr) {
+    while (std::fgets(buf, sizeof(buf), fp.get()) != nullptr) {
       // Check for truncation (no newline means line was too long)
       std::size_t buflen = std::strlen(buf);
       if (buflen > 0 && buf[buflen - 1] != '\n') {
         // Consume rest of line and skip it
         char discard[4096];
-        while (std::fgets(discard, sizeof(discard), fp) != nullptr) {
+        while (std::fgets(discard, sizeof(discard), fp.get()) != nullptr) {
           std::size_t dlen = std::strlen(discard);
           if (dlen > 0 && discard[dlen - 1] == '\n')
             break;
@@ -204,18 +259,35 @@ commodity_batch_quote_from_script(std::vector<std::reference_wrapper<commodity_t
 
       DEBUG("commodity.download", "batch downloaded quote: " << buf);
 
-      if (std::optional<std::pair<commodity_t*, price_point_t>> point =
-              commodity_pool_t::current_pool->parse_price_directive(buf)) {
-        if (commodity_pool_t::current_pool->price_db) {
-          ofstream database(*commodity_pool_t::current_pool->price_db,
-                            std::ios_base::out | std::ios_base::app);
-          database << "P " << format_datetime(point->second.when, FMT_WRITTEN) << " "
-                   << point->first->symbol() << " " << point->second.price << '\n';
+      try {
+        if (std::optional<std::pair<commodity_t*, price_point_t>> point =
+                commodity_pool_t::current_pool->parse_price_directive(buf)) {
+          if (commodity_pool_t::current_pool->price_db) {
+            ofstream database(*commodity_pool_t::current_pool->price_db,
+                              std::ios_base::out | std::ios_base::app);
+            database << "P " << format_datetime(point->second.when, FMT_WRITTEN) << " "
+                     << point->first->symbol() << " " << point->second.price << '\n';
+          }
+          results.push_back(*point);
+        } else {
+          // A line that gives no price at all is unreadable too: warn
+          // and read on, rather than dropping the rest of the batch
+          // silently (issue #3356).
+          warn_unreadable_price(buf, batch_line_symbol(commodities, buf));
         }
-        results.push_back(*point);
+      } catch (const parse_error& err) {
+        warn_unreadable_price(buf, batch_line_symbol(commodities, buf), err.what());
+      } catch (const amount_error& err) {
+        warn_unreadable_price(buf, batch_line_symbol(commodities, buf), err.what());
+      } catch (const date_error& err) {
+        warn_unreadable_price(buf, batch_line_symbol(commodities, buf), err.what());
+      } catch (const datetime_error& err) {
+        warn_unreadable_price(buf, batch_line_symbol(commodities, buf), err.what());
+      } catch (const calc_error& err) {
+        warn_unreadable_price(buf, batch_line_symbol(commodities, buf), err.what());
       }
     }
-    if (pclose(fp) != 0)
+    if (pclose(fp.release()) != 0)
       cmd_failed = true;
   } else {
     cmd_failed = true;
