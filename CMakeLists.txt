@@ -228,7 +228,9 @@ else()
   set(HAVE_BOOST_PYTHON 0)
 endif()
 
-# Set BOOST_ROOT to help CMake to find the right Boost version
+# Set Boost_ROOT (./acprep --boost=DIR) to help CMake find the right Boost.
+# find_package reads the upper-case BOOST_ROOT only under policy CMP0144
+# (CMake 3.27 and later), so the mixed-case name is the one that always works.
 find_package(Boost ${Required_Boost_Version}
   REQUIRED date_time iostreams regex
   ${BOOST_PYTHON} OPTIONAL_COMPONENTS nowide unit_test_framework

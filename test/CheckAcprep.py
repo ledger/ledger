@@ -14,7 +14,9 @@
 #   4. importing acprep runs its command line (the check needs the module);
 #   5. for a supported Ubuntu release, BoostInfo's Boost packages differ from
 #      the components CMakeLists.txt's find_package(Boost ... REQUIRED ...)
-#      names, or --python does not add exactly libboost-python-dev.
+#      names, or --python does not add exactly libboost-python-dev;
+#   6. --boost=DIR does not reach CMake as -DBoost_ROOT=DIR, the spelling
+#      find_package(Boost ... CONFIG) reads on every supported CMake.
 #
 # The version that `acprep info` reports is checked by CheckAcprepInfo.py.
 
@@ -38,6 +40,36 @@ def fail(message):
 def help_entries(text, start, stop):
     section = text.split(start, 1)[1].split(stop, 1)[0]
     return set(re.findall(r'^  ([a-z_]+) {2,}\S', section, re.MULTILINE))
+
+
+def check_boost_root(source, acprep_path):
+    # find_package reads <PackageName>_ROOT (Boost_ROOT) under policy CMP0074,
+    # NEW since CMake 3.12.  It reads the upper-case BOOST_ROOT only under
+    # CMP0144, which needs CMake 3.27, so -DBOOST_ROOT selects nothing on the
+    # 3.16.2 floor and is ignored with a warning on newer CMake.  A stub cmake
+    # records the arguments acprep's config phase would pass.
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp = pathlib.Path(tmp)
+        (tmp / 'bin').mkdir()
+        stub = tmp / 'bin' / 'cmake'
+        stub.write_text('#!/bin/sh\nprintf \'%s\\n\' "$@" > "$CHECK_ACPREP_ARGS"\n')
+        stub.chmod(0o755)
+        args_file = tmp / 'cmake-args'
+        boost = str(tmp / 'my boost')
+        env = dict(os.environ, HOME=str(tmp), CHECK_ACPREP_ARGS=str(args_file),
+                   PATH=str(tmp / 'bin') + os.pathsep + os.environ.get('PATH', ''))
+        result = subprocess.run(
+            [sys.executable, '-B', str(acprep_path), '--no-git',
+             '--boost=' + boost, '--output=' + str(tmp / 'build'), 'config'],
+            cwd=str(source), env=env, capture_output=True, text=True)
+        args = args_file.read_text().splitlines() if args_file.exists() else []
+        if result.returncode != 0 or not args:
+            fail('acprep --boost=DIR config did not run cmake (exit %d): %s'
+                 % (result.returncode, result.stderr))
+        elif '-DBoost_ROOT=' + boost not in args or \
+                any(a.startswith('-DBOOST_ROOT=') for a in args):
+            fail('acprep --boost=DIR passes %s, expected -DBoost_ROOT=DIR'
+                 % [a for a in args if a.upper().startswith('-DBOOST_ROOT=')])
 
 
 def main():
@@ -114,6 +146,8 @@ def main():
                 fail('ubuntu-%s: libboost-python-dev %s with python=%s'
                      % (release, 'present' if not python else 'missing',
                         python))
+
+    check_boost_root(source, acprep_path)
 
     if failures:
         return 1

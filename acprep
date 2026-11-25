@@ -275,7 +275,7 @@ class PrepareBuild(CommandLineApp):
                       help='Do not call out to Git; useful for offline builds')
         op.add_option('', '--doxygen', action='store_true',
                       dest='enable_doxygen', default=False,
-                      help='Enable use of Doxygen to build ref manual ("make docs")')
+                      help='Enable use of Doxygen to build ref manual ("make doc.doxygen")')
         op.add_option('', '--python', action='store_true', dest='python',
                       default=False,
                       help='Enable Python support')
@@ -808,7 +808,7 @@ class PrepareBuild(CommandLineApp):
                                      self.envvars[var])
 
         if self.options.boost_root:
-            conf_args.append('-DBOOST_ROOT=%s' %
+            conf_args.append('-DBoost_ROOT=%s' %
                              self.options.boost_root)
             conf_args.append('-DBoost_NO_SYSTEM_PATHS=TRUE')
         if self.options.boost_suffix:

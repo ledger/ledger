@@ -32,58 +32,46 @@ down easily:
     $ ./acprep --debug update          # shows what acprep was thinking
     $ $EDITOR CMakeCache.txt           # shows what cmake was thinking
 
-With the contents of config.log, and the output from acprep --debug update,
-it's usually fairly obvious where things have gone astray.
+With the contents of `CMakeCache.txt` and `CMakeFiles/CMakeConfigureLog.yaml`
+(CMake 3.26 and later; earlier releases write `CMakeFiles/CMakeOutput.log` and
+`CMakeFiles/CMakeError.log`), and the output from acprep --debug update, it's
+usually fairly obvious where things have gone astray.
 
 
 ## F.A.Q.
 
 
-Q: The build fails saying it can't find `utf8.h`
-
-A: You didn't run `./acprep update`.
-
-----------------------------------------------------------------------
-
 Q: `./acprep update` gives errors or `./acprep dependencies` fails
 
 A: You're probably missing some dependency libraries.  If you tried
   `./acprep dependencies` already and that didn't solve the problem,
-  then you may need to install dependencies by hand.  On a Debian
-  GNU/Linux system (or Debian-based system such as Ubuntu), something
-  like this should work (as root):
-
-    $ sudo apt-get install build-essential cmake texinfo python-dev \
-        zlib1g-dev libbz2-dev libgmp3-dev libmpfr-dev \
-        libboost-date-time-dev libboost-filesystem-dev \
-        libboost-graph-dev libboost-iostreams-dev \
-        libboost-python-dev libboost-regex-dev libboost-test-dev \
-        doxygen libedit-dev libmpc-dev tzdata
+  then you may need to install dependencies by hand.  The packages for
+  each platform are listed in the
+  [Dependencies section of README.md](README.md#dependencies).
 
 ----------------------------------------------------------------------
 
 Q: Configure fails saying it can't find boost_regex
 
-A: Look in config.log and search for "boost_regex", then scroll down a bit
-  until you see the exact compile error.  Usually it's failing because
-  your include directory is different from anything acprep is expecting to
-  see.  It could also be failing because your Boost libraries have a
-  custom "suffix" on them.
+A: Look in `CMakeFiles/CMakeConfigureLog.yaml` (`CMakeFiles/CMakeError.log`
+  before CMake 3.26) in the build directory and search for "boost_regex", then
+  scroll down a bit until you see the exact compile error.  Usually it's
+  failing because your Boost is installed somewhere acprep is not expecting.
+  It could also be failing because your Boost libraries have a custom
+  "suffix" on them.
 
   Let's say your Boost was installed in ~/boost, and every library has the
   suffix `-xgcc42`.  This is what you would run:
 
-    $ CPPFLAGS=-I$HOME/boost acprep --boost=xgcc42 update
+    $ ./acprep --boost=$HOME/boost --boost-suffix=-xgcc42 update
 
 ----------------------------------------------------------------------
 
 Q: Configure fails saying it can't find MPFR
 
-A: You need MPFR version 2.4.0 or higher.  This version does not come with
-  most Debian distributions, so you will need to build it.  The
-  relevant packages are `libmpfr-dev` and `libmpfr-dbg`.  See also
-  the question above about what to do if `./acprep update` gives
-  errors or `./acprep dependencies` fails.
+A: You need MPFR version 4.0.2 or higher.  The relevant Debian and Ubuntu
+  package is `libmpfr-dev`.  See also the question above about what to do
+  if `./acprep update` gives errors or `./acprep dependencies` fails.
 
 ----------------------------------------------------------------------
 
@@ -98,8 +86,8 @@ A: Actually, the real segfault is in libstdc++'s facet code.  It's being
 Q: Something else fails, or Ledger crashes on startup
 
 A: This, I am most interested in hearing about.  Please
-  [file a bug report](https://bugs.ledger-cli.org/new) at the
-  [Ledger Issue Tracker](https://bugs.ledger-cli.org).  The more
+  [file a bug report](https://github.com/ledger/ledger/issues/new) at the
+  [Ledger Issue Tracker](https://github.com/ledger/ledger/issues).  The more
   details you can provide, the better.  Also, if Ledger is crashing, try
   running it under a debugger, e.g. gdb or lldb, like so:
 
@@ -121,10 +109,11 @@ A: Make sure that the boost_python library you linked against is using the
   Python, while Ledger is linked against the version provided by MacPorts.
   Or vice versa.
 
-  Solution: Use one or the other.  If you prefer the system Python, run
-  `port deactivate -f python26`, to get MacPorts' version out of the way.
-  You'll then need to delete the Ledger binary and run `make` to relink
-  it.
+  Solution: Use one or the other.  Configure Ledger for the Python that
+  boost_python was built against with `./acprep --python --python-home DIR`,
+  where DIR is that Python's installation prefix (`--python-version X.Y` only
+  sets the oldest Python that CMake will accept).  You'll then need to delete
+  the Ledger binary and run `make` to relink it.
 
 ----------------------------------------------------------------------
 
@@ -149,8 +138,8 @@ A: Here's commands that one user used to make this work, for Boost 1.72.0
 
         $ export BOOST_VERSION=1.72.0
         $ cd /somewhere/you/want/to/build/boost
-        $ wget -N https://boostorg.jfrog.io/artifactory/main/release/$BOOST_VERSION/source/boost_${BOOST_VERSION//./_}.tar.gz
-        $ tar xvf boost_${BOOST_VERSION//./_}.tar.bz2
+        $ wget -N https://archives.boost.io/release/$BOOST_VERSION/source/boost_${BOOST_VERSION//./_}.tar.gz
+        $ tar xvf boost_${BOOST_VERSION//./_}.tar.gz
         $ cd boost_${BOOST_VERSION//./_}
         $ ./bootstrap.sh
         $ ./b2 --build-type=complete --layout=tagged --prefix=/where/you/want/boost/installed
@@ -170,9 +159,13 @@ A: Here's commands that one user used to make this work, for Boost 1.72.0
   - Building Ledger using the CMake and/or Boost as installed above
 
         $ cd /path/to/ledger/sources
-        $ env PATH=/where/you/want/cmake/installed/bin:$PATH  BOOST_ROOT=/where/you/want/boost/installed PREFIX=/where/you/want/ledger/installed $SHELL
-        $ ./acprep --prefix=$PREFIX --debug --python config
-        $ ./acprep --prefix=$PREFIX --debug --python make
-        $ ./acprep --prefix=$PREFIX --debug --python install
+        $ env PATH=/where/you/want/cmake/installed/bin:$PATH PREFIX=/where/you/want/ledger/installed $SHELL
+        $ ./acprep --prefix=$PREFIX --boost=/where/you/want/boost/installed --debug config
+        $ ./acprep --prefix=$PREFIX --debug make
+        $ ./acprep --prefix=$PREFIX --debug make install
+
+  To build the Python bindings as well, add `--python` to the `config` step.
+  They need Python 3.10 or later (Debian 12 and later; bullseye's python3 is
+  3.9) and a boost_python built against that Python.
 
 [YMMV]: https://www.acronymfinder.com/Your-Mileage-May-Vary-(YMMV).html

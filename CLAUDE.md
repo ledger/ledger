@@ -16,7 +16,8 @@ requiring a database.
 ```bash
 # Initial setup and build
 ./acprep dependencies  # Install dependencies (platform-specific)
-./acprep update --output=build # Configure and build in one step
+./acprep update --output=build     # git pull, then configure and build
+./acprep debug make --output=build # Configure and build without pulling
 
 # Alternative configuration commands
 ./acprep opt --output=build   # Optimized build
@@ -38,7 +39,7 @@ Useful CMake flags:
 - `-DUSE_PYTHON=ON` -- Enable Python bindings (requires Boost.Python)
 - `-DUSE_SANITIZERS=ON` -- Enable AddressSanitizer + UBSan
 - `-DUSE_GCOV=ON` -- gcov instrumentation (with `-DCMAKE_BUILD_TYPE=Debug`); after `make && ctest`, `make coverage` writes `coverage_html/` and `make coverage-clean` resets the counters (both need lcov and genhtml)
-- `-DBUILD_DEBUG=ON` -- Enable runtime debugging support
+- `-DCMAKE_BUILD_TYPE=Debug` -- Debug build with runtime debugging support (`--debug`, `--verify`)
 - `-DDISABLE_ASSERTS=ON` -- Disable assertion checks
 
 ### Running Tests
@@ -112,7 +113,9 @@ The codebase is organized around these key abstractions:
 
 ### Data Flow
 
-1. **Parsing**: Text files are parsed by `src/textual.cc` into the journal structure
+1. **Parsing**: Text files are parsed into the journal structure by `src/textual.cc` (driver),
+   `src/textual_directives.cc` (directives) and `src/textual_xacts.cc` (transactions and
+   postings), which share `src/textual_internal.h`
 2. **Processing**: Transactions flow through filters (`src/filters.h/cc`) for transformation
 3. **Reporting**: Output formatters (`src/output.h/cc`, `src/print.h/cc`) generate reports
 4. **Commands**: User commands are implemented in `src/report.cc` and related files
