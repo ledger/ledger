@@ -5807,4 +5807,30 @@ BOOST_AUTO_TEST_CASE(testExprFastPathPostAmountIdents)
   }
 }
 
+BOOST_AUTO_TEST_CASE(testInfoTreeDumpKeepsLongLines)
+{
+  // With --verbose an evaluation error carries the value expression tree.
+  // A dump line longer than any fixed buffer must reach the error context
+  // whole, and so must the lines after it.
+  const string literal(1100, 'a');
+  expr_t expr("\"" + literal + "\" + (1 / 0)");
+  empty_scope_t scope;
+
+  const log_level_t saved_level = _log_level;
+  _log_level = LOG_INFO;
+  discard_error_context(); // context left by earlier cases
+  bool threw = false;
+  try {
+    expr.calc(scope);
+  } catch (const std::exception&) {
+    threw = true;
+  }
+  _log_level = saved_level;
+
+  const string context = error_context();
+  BOOST_CHECK(threw);
+  BOOST_CHECK(context.find("VALUE: \"" + literal + "\"") != string::npos);
+  BOOST_CHECK(context.find("O_DIV") != string::npos);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

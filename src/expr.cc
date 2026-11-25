@@ -63,7 +63,6 @@
 // scope.h must be included before the symbol_scope_t / lexical_scope_t definitions
 // are needed by merged_expr_t methods below.
 
-#include <boost/smart_ptr/scoped_ptr.hpp>
 #include <utility>
 
 namespace ledger {
@@ -132,11 +131,10 @@ void expr_t::parse(std::istream& in, const parse_flags_t& flags,
   } else if (end_pos > start_pos) {
     in.clear();
     in.seekg(start_pos, std::ios::beg);
-    scoped_array<char> buf(new char[static_cast<std::size_t>(end_pos - start_pos) + 1]);
-    std::streamoff len = std::streamoff(end_pos) - std::streamoff(start_pos);
-    in.read(buf.get(), len);
-    buf[len] = '\0';
-    set_text(buf.get());
+    string text(static_cast<std::size_t>(end_pos - start_pos), '\0');
+    in.read(text.data(), static_cast<std::streamsize>(text.size()));
+    text.resize(static_cast<std::size_t>(in.gcount()));
+    set_text(text);
   } else {
     set_text("<stream>");
   }
@@ -252,18 +250,13 @@ value_t expr_t::real_calc(scope_t& scope) {
 
           std::istringstream in(buf.str());
           std::ostringstream out;
-          char linebuf[1024];
           bool first = true;
-          while (in.good() && !in.eof()) {
-            in.getline(linebuf, 1023);
-            std::streamsize len = in.gcount();
-            if (len > 0) {
-              if (first)
-                first = false;
-              else
-                out << '\n';
-              out << "  " << linebuf;
-            }
+          for (string line; std::getline(in, line);) {
+            if (first)
+              first = false;
+            else
+              out << '\n';
+            out << "  " << line;
           }
           add_error_context(out.str());
         }
