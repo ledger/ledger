@@ -7581,7 +7581,8 @@ the resolution order.
 
 @item --day-break
 Break up @command{register} report of @ref{timelog} entries that span multiple
-days by day.
+days by day.  Under @option{--time-round}, each day's part of such an entry is
+rounded up on its own.
 @c see test/baseline/opt-day-break.dat
 @c @smallexample @c input:
 @c i 2015/
@@ -7738,6 +7739,12 @@ $ ledger bal --time-round 15
 --------------------
                1.00h
 @end smallexample
+
+Each timelog entry is rounded on its own.  With @option{--day-break}, a
+session that spans midnight becomes one entry per day, and each is rounded
+separately: with @option{--time-round 15}, a session from 23:55 to 00:05 is
+reported as 15 minutes on each day, 30 minutes in all, where without
+@option{--day-break} it is one 10-minute entry rounded up to 15 minutes.
 
 @item --value-expr @var{VEXPR}
 Set a global value expression annotation.  This is the lowest-priority

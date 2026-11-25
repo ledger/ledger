@@ -707,7 +707,8 @@ components with their standard-library equivalents.
 ### Timelog and Time-based Reporting
 
 - Add `--time-round` to round timelog durations up to the next multiple of N
-  minutes (#1608)
+  minutes (#1608); under `--day-break` each day's part of a session is
+  rounded separately
 
 - Fix the `datetime` field to include the time portion for timelog postings
   (#2264); fix payee sub-directive application to timelog entries (#1211); fix
