@@ -1,0 +1,12 @@
+test python test/regress/python-raw-posts-generated.py
+posts:
+  $100 Expenses:Food
+  10 EUR Expenses:Travel
+  $-100 Assets:Credit
+  -10 EUR Assets:Credit
+  $100 Assets:Cash
+raw_posts:
+  $100 Expenses:Food
+  10 EUR Expenses:Travel
+  $-100 Assets:Credit
+end test

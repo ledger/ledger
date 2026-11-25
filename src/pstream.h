@@ -45,10 +45,12 @@
  * allowing existing parsing code (which expects istream references) to
  * operate on in-memory data without copying into a `std::istringstream`.
  *
- * This is used when Ledger needs to parse expressions or data that has
- * already been read into memory (e.g., from a pipe, a Python binding
- * call, or an interactive command).  The stream supports seeking
- * (`seekg`) so that the parser can backtrack when needed.
+ * The textual parser and `format_t` use it to parse an amount or value
+ * expression in place from a line buffer they already hold: posting
+ * amounts, costs and balance assertions in textual_xacts.cc, and the
+ * `%(...)` and `%{...}` expressions of a format string in format.cc.  The
+ * stream supports seeking (`seekg`) so that the parser can backtrack when
+ * needed.
  *
  * Note: despite the file name suggesting "process stream" (popen),
  * this class is actually a pointer-to-memory input stream.  The pager

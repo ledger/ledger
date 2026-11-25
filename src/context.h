@@ -109,7 +109,7 @@ public:
   /// The file being parsed (empty for stdin or a string).
   const path& pathname() const { return *pathname_ref; }
 
-  /// @brief Return a human-readable "file:line" string for error messages.
+  /// @brief Return this file's location as file_context() formats it: "FILE", line N:
   string location() const { return file_context(pathname(), linenum); }
 
   /// @brief Emit a warning from a boost::format, prefixed with location.
