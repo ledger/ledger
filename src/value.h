@@ -840,13 +840,20 @@ public:
   /**
    * Dynamic typing conversion methods.
    *
-   * `cast(type_t)` returns a new value whose type has been cast to
+   * `casted(type_t)` returns a new value whose type has been cast to
    * the given type, but whose value is based on the original value.
    * For example, the uncommoditized AMOUNT "100.00" could be cast to
-   * an INTEGER value.  If a cast would lose information or is not
-   * meaningful, an exception is thrown.
+   * an INTEGER value.  A cast with no conversion path throws
+   * value_error, and so do BALANCE -> AMOUNT for a balance with more
+   * than one non-zero commodity and STRING -> INTEGER for a string
+   * that does not parse as a long; the other STRING casts throw when
+   * the string does not parse (STRING -> COMMODITY when it names no
+   * known commodity).  No cast throws for lost precision or a dropped
+   * commodity: AMOUNT -> INTEGER rounds to the nearest integer (ties
+   * to even) and drops the commodity.  See the Section 3 table in
+   * value.cc.
    *
-   * `simplify()` is an automatic cast to the simplest type that can
+   * `simplified()` is an automatic cast to the simplest type that can
    * still represent the original value.
    *
    * There are also "in-place" versions of these two methods:

@@ -255,11 +255,15 @@ void value_t::set_commodity(const commodity_t& val) {
 //   - DATE <-> DATETIME
 //   - DATE/DATETIME -> STRING
 //   - INTEGER -> AMOUNT, BALANCE, STRING
-//   - AMOUNT -> INTEGER (truncates), BALANCE, STRING
-//   - BALANCE -> AMOUNT (only if single commodity), STRING
+//   - AMOUNT -> INTEGER (rounds to nearest, ties to even, via
+//     amount_t::to_long(); the commodity is dropped), BALANCE, STRING
+//   - BALANCE -> AMOUNT (balance_t::sole_amount(): the only non-zero
+//     component, or a zero when every component is zero; throws for
+//     two or more non-zero commodities), STRING
 //   - STRING -> INTEGER, AMOUNT, COMMODITY, DATE, DATETIME, MASK
 //   - COMMODITY -> STRING
 //   - MASK -> STRING
+//   - SEQUENCE -> STRING ("(a, b, c)", as print() renders it)
 //
 // in_place_simplify() reduces a value to the most compact representation
 // that preserves its meaning: a zero value of any type becomes INTEGER 0,
@@ -1456,9 +1460,10 @@ bool value_t::is_greater_than(const value_t& val) const {
 /// complete table of valid conversions.
 ///
 /// Notable behaviors:
-///   - BALANCE -> AMOUNT only succeeds if the balance contains exactly
-///     one commodity (or is empty, yielding amount 0).  Multi-commodity
-///     balances cannot be losslessly represented as a single amount.
+///   - BALANCE -> AMOUNT yields the one amount the balance comes to
+///     (balance_t::sole_amount(): its only non-zero component), or a
+///     zero when every component is zero; a balance with two or more
+///     non-zero commodities throws value_error.
 ///   - STRING -> INTEGER only succeeds if the string contains only
 ///     digits and an optional leading minus sign.
 ///   - STRING -> AMOUNT parses the string as a commoditized amount
