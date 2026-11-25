@@ -2,10 +2,9 @@
 
 ## 3.5.0
 
-This is a substantial release representing more than 575 merged pull requests.
-It modernizes the C++ codebase, dramatically expands test coverage, fixes a
-long list of crashes and correctness bugs, and adds several new options,
-directives, and commands.
+This is a substantial release.  It modernizes the C++ codebase, dramatically
+expands test coverage, fixes a long list of crashes and correctness bugs, and
+adds several new options, directives, and commands.
 
 ### Critical Bug Fixes
 
@@ -54,6 +53,16 @@ directives, and commands.
 - Fix infinite recursion with `--unround` and `--group-by` (issue #518) and
   the infinite loop produced by a self-referential `C` (commodity equivalence)
   directive (#1065)
+
+- Fix crashes in the `xact` command: a later command in the same REPL
+  session used the transaction it had generated after freeing it, and a
+  draft whose metadata a `tag ... assert` or `tag ... check` expression
+  tests crashed the command; also fix the crash in Python's
+  `Journal.register_account` under `--strict` after parsing (#3244)
+
+- Report an error instead of crashing when a commodity would be filed twice
+  under one name, as `--anon` could do after an `alias` named a commodity
+  with lots (#3341)
 
 - Fix the parser looping forever on `==` in a posting's amount or cost
   expression, such as `(1 == 1)`.  `==` now compares there, as `!=` already did
@@ -280,11 +289,11 @@ components with their standard-library equivalents.
   of `--unround`, which rounds each posting to its commodity's precision
   before aggregation (#781)
 
-- Allow parenthesized expression prices in `P` directives (#1101), emit
-  pricedb entries in both directions (#779), filter built-in commodities from
-  pricemap output (#738), report all priced commodities in `prices`/`pricedb`
-  (#739), report errors for self-referential price directives, and add
-  `--latest` to `prices`/`pricedb`
+- Allow parenthesized expression prices in `P` directives (#1101), add
+  `--both-directions` to emit each `pricedb` entry in both directions (#779),
+  filter built-in commodities from pricemap output (#738), report all priced
+  commodities in `prices`/`pricedb` (#739), report errors for
+  self-referential price directives, and add `--latest` to `prices`/`pricedb`
 
 - Fix `prices` and `pricedb` leaking the postings they synthesize from the
   price history (#3293).  The postings stayed in the account named after each
@@ -338,6 +347,7 @@ components with their standard-library equivalents.
   be read back (#3321)
 
 - Add batch commodity quote fetching to amortize the per-call cost (#588); add
+  `--getquote PATH` to choose the script that fetches quotes; add
   `--account-value-expr` and `--commodity-value-expr` options for custom
   valuations; expose a `capital_gain` value expression variable
 
@@ -351,6 +361,13 @@ components with their standard-library equivalents.
 - Read the init file named by `-i FILE` or `--init-file=FILE`, which were
   silently ignored: only `--init-file FILE` was looked for before the init
   file is read
+
+- Record a lot price written in a third commodity, as in `100 A {3 C}` paid
+  with `-200 B`, in the price history, so that `--exchange C` can value the
+  `B` leg through `A` (#3232); and keep the cost of a commodity swap whose
+  legs carry lot prices in one base currency in that currency even when the
+  swap has no gain or loss, so that `--basis` reports `100 BTC {$100}` traded
+  for `200 ETH {$50}` at `$10,000.00` rather than `200 ETH` (#3227)
 
 ### Balance, Assertions, and Assignments
 
@@ -518,6 +535,34 @@ components with their standard-library equivalents.
 - Make the `--trace` timing lines count the time a timer accumulated before it
   was last restarted, instead of only the final running stretch
 
+- Add `--display-account EXPR` to transform the account name that formats
+  show through `display_account`, with the `account_prefix`,
+  `account_suffix`, `account_skip_prefix` and `account_skip_suffix` functions
+  to pick out its colon-separated components (#3211)
+
+- Add `--collapse-if EXPR` to collapse, in a balance report, each account
+  for which EXPR is true into one line with its subtotal, where `--collapse`
+  folds the whole report (#3222)
+
+- In period reports (`--daily`, `--monthly` and the like) and in `select`,
+  the payee column, which shows the period's range, now defaults to the
+  width of that range plus one space instead of about a quarter of the
+  terminal, giving the rest to the account column (#3216)
+
+- Fix `balance --group-by` printing nothing when combined with `--payee`,
+  `--account` or `--date` (#3207)
+
+- `--no-revalued` now cancels the revaluation that `-V`, `-B`, `-G` and the
+  options implying them turn on, wherever it appears on the command line;
+  given before them, it was turned back on (#3196)
+
+- Keep the commodity of a zero amount in `print` output: `$0.00` was
+  printed as `0` (#3233)
+
+- Reset the cached totals and display flags that a failed REPL command
+  leaves in the journal, so that the next command's report starts clean
+  (#3273)
+
 ### Filtering, Queries, and Aggregation
 
 - Show declared-but-unused accounts with `--empty` (#1204) and in the
@@ -577,6 +622,15 @@ components with their standard-library equivalents.
 
 - Accept a time component for `--begin`/`--end`/`--now` (#1696): the parser
   detects datetime structurally and accepts `@` as a date/time separator
+
+- Match weekday, month, and relative-date names ignoring case, so that
+  `--start-of-week Monday` and `--start-of-week Mon` take effect, and report
+  a `--start-of-week` value that names no weekday as an error instead of
+  starting weeks on Sunday (#3268)
+
+- A bracketed date after a colon in a comment, such as the value of
+  `; key:: [2020-01-01]`, no longer sets the posting's date; a `[date]` or
+  `[=date]` before any colon in the comment still does (#3192, #3252)
 
 - Add `%m-%d` as a built-in short date format (#566); accept relative date
   expressions (`yesterday`, `tomorrow`, `tday`, `yday`, `tmrw`, plus the full
@@ -715,6 +769,10 @@ components with their standard-library equivalents.
 
 - Add directives to enable and disable automatic transactions
 
+- Add `--strict-commodity` and `--pedantic-commodity`, which check only that
+  commodities are declared and accept undeclared accounts, payees, and tags
+  (#3200)
+
 - Support nested `account` declarations (#877) and metadata tags on `account`
   directives (#1681)
 
@@ -806,6 +864,10 @@ components with their standard-library equivalents.
 - Install `types.h` with the other headers; the installed `account.h`,
   `journal.h` and `xact.h` include it, so the installed header tree could not
   be compiled
+
+- Strip the empty entries from the installed Python module's RPATH, which
+  ELF loaders read as the current directory, so that importing `ledger` no
+  longer searches the working directory for shared libraries (#3229)
 
 ### Testing and Coverage
 
