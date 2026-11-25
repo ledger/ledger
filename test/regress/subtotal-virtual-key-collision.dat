@@ -1,0 +1,9 @@
+; Journal for subtotal-virtual-key-collision.test.  The second
+; transaction posts to an account whose name ends in the control byte 0x01.
+
+2024/01/05 Payee A
+    (Assets:Bank)    $10.00
+
+2024/01/06 Payee B
+    Assets:Bank    $3.00
+    Equity

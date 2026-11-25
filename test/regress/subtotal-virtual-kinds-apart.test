@@ -1,0 +1,46 @@
+; subtotal_posts (--subtotal, period reports, equity) keeps real, virtual
+; (parenthesized) and balanced virtual (bracketed) postings to one account
+; apart, keyed by (account name, virtual, must balance).  Its old key, the
+; account name with a 0x01 byte appended for any virtual posting, put (A)
+; and [A] in one entry that took the flags of whichever came first, so the
+; bracketed 1 DDD below printed as (Assets:Broker), dropped out of the
+; equity total and left a spurious Opening Balances line.
+
+2024/01/05 Buy
+    Assets:Broker    10 AAA
+    Assets:Broker    5 BBB
+    Assets:Cash     $-100.00
+    Equity:Start
+
+2024/01/06 Budget
+    (Assets:Broker)    3 AAA
+    (Assets:Broker)    2 CCC
+    [Assets:Broker]    1 DDD
+    [Equity:Start]    -1 DDD
+
+test equity
+2024/01/06 Opening Balances
+    Assets:Broker                             10 AAA
+    Assets:Broker                              5 BBB
+    (Assets:Broker)                            3 AAA
+    (Assets:Broker)                            2 CCC
+    [Assets:Broker]                            1 DDD
+    Assets:Cash                             $-100.00
+    Equity:Start                             $100.00
+    Equity:Start                             -10 AAA
+    Equity:Start                              -5 BBB
+    [Equity:Start]                            -1 DDD
+end test
+
+test reg -s -F '%(display_account)|%(display_amount)\n'
+Assets:Broker|10 AAA
+5 BBB
+(Assets:Broker)|3 AAA
+2 CCC
+[Assets:Broker]|1 DDD
+Assets:Cash|$-100.00
+Equity:Start|$100.00
+-10 AAA
+-5 BBB
+[Equity:Start]|-1 DDD
+end test

@@ -986,11 +986,12 @@ protected:
     ~acct_value_t() noexcept { TRACE_DTOR(acct_value_t); }
   };
 
-  using values_map = std::map<string, acct_value_t>;
+  using values_key = std::tuple<string, bool, bool>; ///< (account fullname, virtual, must balance)
+  using values_map = std::map<values_key, acct_value_t>;
 
 protected:
   expr_t& amount_expr;                 ///< Expression for evaluating each posting's value.
-  values_map values;                   ///< Accumulated values keyed by account name.
+  values_map values;                   ///< Accumulated values keyed by account and posting kind.
   temporaries_t temps;                 ///< Temporary storage for synthetic xacts/posts.
   std::deque<post_t*> component_posts; ///< Original postings contributing to this subtotal.
 

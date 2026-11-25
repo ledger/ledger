@@ -1903,8 +1903,9 @@ void subtotal_posts::report_subtotal(const char* spec_fmt,
  *
  * The posting's amount is evaluated via amount_expr and added to the
  * values_map entry for its account.  Virtual and non-virtual postings to the
- * same account are tracked separately (using a sentinel suffix in the key)
- * so they can be emitted with correct virtual flags in report_subtotal.
+ * same account are tracked separately (the key carries the posting's
+ * virtual and must-balance flags) so they can be emitted with correct
+ * virtual flags in report_subtotal.
  */
 void subtotal_posts::operator()(post_t& post) {
   component_posts.push_back(&post);
@@ -1926,19 +1927,13 @@ void subtotal_posts::operator()(post_t& post) {
   xdata.compound_value = value_t(post.amount);
   xdata.add_flags(POST_EXT_COMPOUND);
 
-  // Use a composite key to distinguish virtual from non-virtual postings to
-  // the same account.  A sentinel suffix '\x01' is appended for virtual
-  // postings so they accumulate separately and do not trigger the error that
-  // previously fired when the same account appeared with both virtual and
-  // non-virtual postings within a single reporting period (issue #2051).
-  string key = acct->fullname();
-  if (post.has_flags(POST_VIRTUAL))
-    key += '\x01';
+  const bool is_virtual = post.has_flags(POST_VIRTUAL);
+  const bool must_balance = is_virtual && post.has_flags(POST_MUST_BALANCE);
+  const values_key key(acct->fullname(), is_virtual, must_balance);
 
   values_map::iterator i = values.find(key);
   if (i == values.end()) {
-    values.emplace(key, acct_value_t(acct, amount, post.has_flags(POST_VIRTUAL),
-                                     post.has_flags(POST_MUST_BALANCE)));
+    values.emplace(key, acct_value_t(acct, amount, is_virtual, must_balance));
   } else {
     add_or_set_value((*i).second.value, amount);
   }
