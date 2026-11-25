@@ -153,6 +153,31 @@ void csv_reader::read_index(std::istream& in) {
   }
 }
 
+namespace {
+/// @brief Parse one CSV amount column (amount, cost or total).
+///
+/// The field is read alone with PARSE_NO_REDUCE, and a bare number takes
+/// the journal's default commodity (the `D` directive), if one is set.
+amount_t parse_csv_amount(const string& field) {
+  amount_t amt;
+  std::istringstream amount_str(field); // NOLINT(bugprone-unused-local-non-trivial-variable)
+  (void)amt.parse(amount_str, PARSE_NO_REDUCE);
+  if (!amt.has_commodity() && commodity_pool_t::current_pool->default_commodity)
+    amt.set_commodity(*commodity_pool_t::current_pool->default_commodity);
+  return amt;
+}
+
+/// @brief Stamp @p item with the position of the CSV line just read, and
+///        give it the next item sequence number of @p context.
+void set_csv_position(item_t& item, parse_context_t& context) {
+  item.pos = position_t();
+  item.pos->pathname = context.pathname_ref;
+  item.pos->beg_pos = context.stream->tellg();
+  item.pos->beg_line = context.linenum;
+  item.pos->sequence = context.sequence++;
+}
+} // namespace
+
 /*--- Transaction Construction ---*/
 
 xact_t* csv_reader::read_xact(bool rich_data) {
@@ -170,19 +195,11 @@ xact_t* csv_reader::read_xact(bool rich_data) {
 
   xact->set_state(item_t::CLEARED);
 
-  xact->pos = position_t();
-  xact->pos->pathname = context.pathname_ref;
-  xact->pos->beg_pos = context.stream->tellg();
-  xact->pos->beg_line = context.linenum;
-  xact->pos->sequence = context.sequence++;
+  set_csv_position(*xact, context);
 
   post->xact = xact.get();
 
-  post->pos = position_t();
-  post->pos->pathname = context.pathname_ref;
-  post->pos->beg_pos = context.stream->tellg();
-  post->pos->beg_line = context.linenum;
-  post->pos->sequence = context.sequence++;
+  set_csv_position(*post, context);
 
   post->set_state(item_t::CLEARED);
   post->account = nullptr;
@@ -220,11 +237,7 @@ xact_t* csv_reader::read_xact(bool rich_data) {
     case FIELD_CREDIT: {
       if (field.length() == 0)
         break;
-      amount_t amt;
-      std::istringstream amount_str(field); // NOLINT(bugprone-unused-local-non-trivial-variable)
-      (void)amt.parse(amount_str, PARSE_NO_REDUCE);
-      if (!amt.has_commodity() && commodity_pool_t::current_pool->default_commodity)
-        amt.set_commodity(*commodity_pool_t::current_pool->default_commodity);
+      amount_t amt = parse_csv_amount(field);
       // For a debit column: negate only if the value is positive (unsigned
       // convention where the bank gives the debit amount as a positive number).
       // If the value is already negative (signed convention, e.g. some credit
@@ -242,11 +255,7 @@ xact_t* csv_reader::read_xact(bool rich_data) {
     case FIELD_COST: {
       if (field.length() == 0)
         break;
-      amount_t cost;
-      std::istringstream amount_str(field); // NOLINT(bugprone-unused-local-non-trivial-variable)
-      (void)cost.parse(amount_str, PARSE_NO_REDUCE);
-      if (!cost.has_commodity() && commodity_pool_t::current_pool->default_commodity)
-        cost.set_commodity(*commodity_pool_t::current_pool->default_commodity);
+      amount_t cost = parse_csv_amount(field);
       post->cost = cost;
       post->given_cost = cost;
       post->add_flags(POST_COST_IN_FULL);
@@ -316,11 +325,7 @@ xact_t* csv_reader::read_xact(bool rich_data) {
 
   post->xact = xact.get();
 
-  post->pos = position_t();
-  post->pos->pathname = context.pathname_ref;
-  post->pos->beg_pos = context.stream->tellg();
-  post->pos->beg_line = context.linenum;
-  post->pos->sequence = context.sequence++;
+  set_csv_position(*post, context);
 
   post->set_state(item_t::CLEARED);
   post->account = context.master;
@@ -328,14 +333,8 @@ xact_t* csv_reader::read_xact(bool rich_data) {
   if (!balance.is_null())
     post->amount = -balance;
 
-  if (!total.empty()) {
-    amount_t assigned;
-    std::istringstream assigned_amount_str(total);
-    (void)assigned.parse(assigned_amount_str, PARSE_NO_REDUCE);
-    if (!assigned.has_commodity() && commodity_pool_t::current_pool->default_commodity)
-      assigned.set_commodity(*commodity_pool_t::current_pool->default_commodity);
-    post->assigned_amount = assigned;
-  }
+  if (!total.empty())
+    post->assigned_amount = parse_csv_amount(total);
 
   xact->add_post(post.release());
 
