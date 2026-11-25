@@ -73,86 +73,47 @@ adds several new options, directives, and commands.
 
 ### Performance
 
-- Performance: the `balance`, `print` and `register` reports no longer slow
-  down or exhaust memory as lots accumulate, and the common reports are
-  substantially faster.  Creating a lot during parsing scanned every lot of the
-  same commodity (quadratic parsing, introduced after 3.4.1); adding a lot to a
-  balance scanned the balance (quadratic account totals); and every posting of
-  a register or print report kept a full copy of the running total (memory
-  proportional to postings times lots: 4 GB for a 10k-transaction journal).
-  Balances are now stored in a persistent map (the vendored `immer` library
-  under lib/), amounts are formatted with exact integer arithmetic instead of
-  MPFR except on exact ties, most of the expression evaluator's scope lookups
-  no longer use `dynamic_cast`, revaluation reads only the price points it
-  needs instead of an edge's whole history, and the printing path allocates far
-  less.  On hledger's 100k-transaction benchmark journal the flat balance
-  report went from 16s to 0.7s, and `print` and `register`, which needed 4 GB
-  at 10k transactions and could not finish at 100k within 23 GB, now take 0.3
-  GB and 0.6 GB, `register` in about 8s; the 1M-transaction journal, previously
-  unusable, is read in 4s, balanced in 7s and printed in 8s.  `print` no longer
-  computes running totals it never displays, unless an option that may read
-  them is given: `--amount` or `--display-amount` (which `-V`, `-X`, `-G` and
-  `--unround` set), `--revalued` (`-B`), `--display`, `--only`, `--forecast`,
-  `--average`, `--deviation` or `--percent`.  A journal with more than about
-  32,000 lots valued by one `value` expression no longer aborts.  Two costs
-  remain: creating a lot still examines the lots that share its day, or like it
-  have none, one by one (the price matching added after 3.4.1), so many such
-  lots of one commodity take time quadratic in their number; and a report that
-  visits every lot of the running total at every posting still takes time
-  proportional to postings times lots: one that revalues the total (`-V`, `-X`,
-  `-G`, and `--unrealized` with them), `--invert`, `--round`, `--unround`,
+- The `balance`, `print` and `register` reports no longer slow down or
+  exhaust memory as lots accumulate, and the common reports are
+  substantially faster.  Adding a lot to a balance scanned the balance
+  (quadratic account totals), and every posting of a register or print
+  report kept a full copy of the running total (memory proportional to
+  postings times lots: 4 GB for a 10k-transaction journal).  Balances are
+  now stored in a persistent map (the vendored `immer` library under lib/),
+  amounts are formatted with exact integer arithmetic instead of MPFR except
+  on exact ties, most of the expression evaluator's scope lookups no longer
+  use `dynamic_cast`, revaluation reads only the price points it needs
+  instead of an edge's whole history, and the printing path allocates far
+  less.  `register` also skips evaluating the trivial `amount` expression
+  and keeps its running total stripped of lot annotations incrementally.
+  On hledger's 100k-transaction benchmark journal the flat balance report
+  went from 16s to 0.7s, and `print` and `register`, which needed 4 GB at
+  10k transactions and could not finish at 100k within 23 GB, now take
+  0.3 GB and 0.6 GB, `register` in about 8s; the 1M-transaction journal,
+  previously unusable, is read in 4s, balanced in 7s and printed in 8s.
+
+- `print` no longer computes running totals it never displays, unless an
+  option that may read them is given: `--amount` or `--display-amount`
+  (which `-V`, `-X`, `-G` and `--unround` set), `--revalued` (which `-B`
+  sets), `--display`, `--only`, `--forecast`, `--average`, `--deviation` or
+  `--percent`.  A journal with more than about 32,000 lots valued by one
+  `value` expression no longer aborts.
+
+- Two costs remain: creating a lot still examines the lots that share its
+  day, or like it have none, one by one, so many such lots of one commodity
+  take time quadratic in their number; and a report that visits every lot
+  of the running total at every posting still takes time proportional to
+  postings times lots: one that revalues the total (`-V`, `-X`, `-G`, and
+  `--unrealized` with them), `--invert`, `--round`, `--unround`,
   `--average`, `--deviation`, `--average-lot-prices`, `top_amount()`, and
   `register --lots`, `--lot-prices`, `--lot-dates` and `xml`, whose output
-  lists them.  A benchmark and profiling kit lives in tools/bench and a `perf`
-  development shell in flake.nix.
+  lists them.  A benchmark and profiling kit lives in tools/bench and a
+  `perf` development shell in flake.nix.
 
-  Output is unchanged, with these exceptions.  XML balances, `top_amount()`
-  (whose documented meaning this is), the commodity list in a basket
-  commodity's value expression, and a Python `Balance`'s indexing and iteration
-  list components in commodity order rather than in an accidental one (each
-  index sorts the balance, iteration and `reversed()` sort it once, and indices
-  down to -len work), and lots that differ only in their value expression sort
-  by the expression's text.  An amount merged from several components (lots
-  stripped to their commodity, components valued in one currency, units
-  reduced, lots averaged by `--average-lot-prices`) keeps full precision when
-  any of its parts did, where it used to depend on their order, so `--unround`
-  and `--gain` can show more digits, and an `--unround` report can show a
-  residue where a total used to be zero, a register also gaining or losing an
-  `<Adjustment>` row; comparing a balance with an amount in a commodity that
-  one of its components is not in is an error whichever component comes first,
-  in Python's `>` and `<=` too (and with an Amount on the left), which used to
-  answer there (a plain number among the components compares with any amount,
-  as it always has; a component that netted to zero in another commodity is
-  left out, a balance of nothing else comparing as zero and an empty balance
-  false either way, as before; against a plain number every component takes
-  part, as it always has, and `<` or `>=` never fails; `>` and `<=` in a value
-  expression are unchanged and still need the balance to be a single amount);
-  and an error that names a component, or a pair of commodities, names the one
-  the display order lists first.  Ledger no longer edits lot annotations in
-  place behind the pool's index (a `value` expression still applies to every
-  holder of its lot; the Python `Annotation` setters still edit in place, and a
-  lot so edited no longer merges in a balance with a lot of the same
-  annotation): a fixated cost, `@ =price`, fixates the lot it creates, as
-  `{=price}` would, and never a lot the posting names, so `-10 AAPL {$5} @ =$6`
-  sells from the `{$5}` lot instead of fixating it for every holder (and a
-  later sale from that lot at a cost records the cost as a market price, as a
-  sale from any floating lot does; none was recorded once the lot had been
-  fixated), `10 AAPL {$5} @ =$5` buys into that lot, and a lot bought with
-  `@ =price` is `{=price} [date]`, the lot a later posting must name to post to
-  it (`{$5}` and `{=$5}` are two lots, #1454); `--lot-prices` and
-  `--lots-actual` keep a lot's `=` marker, so lots bought at `{$5}` and at
-  `{=$5}` stay apart in those reports as they do under `--lots`; a typed
-  fixated lot price merges with a computed one it rounds to (#524's matching)
-  when the computed lot came first, as does a typed lot written with the
-  valuation its account's `value` gives it; `--average-lot-prices` fixates the
-  average of lots that were all fixated, and only then (it used to depend on
-  whether a lot with the averaged price and the earliest date happened to be
-  fixated); and `--anon` renders each lot's price commodity once instead of
-  re-anonymizing it for every posting, and no longer fails on a lot that has
-  only a tag.  Time amounts shown with `--time-colon` at eighteen or more
-  decimal places (as with `--unround`) no longer overflow their minutes, and
-  values shown with more than about 230 decimal places print their exact
-  digits.
+- This work leaves report output unchanged except where an entry in the
+  sections below says otherwise: lots and fixated costs, merged precision
+  and component order, balance comparisons, `--time-colon`, and Python's
+  `Balance`.
 
 ### Code Modernization
 
@@ -369,6 +330,32 @@ components with their standard-library equivalents.
   swap has no gain or loss, so that `--basis` reports `100 BTC {$100}` traded
   for `200 ETH {$50}` at `$10,000.00` rather than `200 ETH` (#3227)
 
+- A fixated cost, `@ =price`, fixates the lot it creates, as `{=price}`
+  would, and never a lot the posting names: `-10 AAPL {$5} @ =$6` sells from
+  the `{$5}` lot instead of fixating it for every holder (and a later sale
+  from that lot at a cost records the cost as a market price, as a sale from
+  any floating lot does; none was recorded once the lot had been fixated),
+  `10 AAPL {$5} @ =$5` buys into that lot, and a lot bought with `@ =price`
+  is `{=price} [date]`, the lot a later posting must name to post to it
+  (`{$5}` and `{=$5}` are two lots, #1454).  Ledger no longer edits lot
+  annotations in place behind the pool's index: a `value` expression still
+  applies to every holder of its lot, and the Python `Annotation` setters
+  still edit in place, but a lot so edited no longer merges in a balance
+  with a lot of the same annotation
+
+- `--lot-prices` and `--lots-actual` keep a lot's `=` marker, so lots bought
+  at `{$5}` and at `{=$5}` stay apart in those reports as they do under
+  `--lots`; `--average-lot-prices` fixates the average of lots that were all
+  fixated, and only then (it used to depend on whether a lot with the
+  averaged price and the earliest date happened to be fixated); and `--anon`
+  renders each lot's price commodity once instead of re-anonymizing it for
+  every posting, and no longer fails on a lot that has only a tag
+
+- A typed fixated lot price merges with a computed one it rounds to (#524's
+  matching) when the computed lot came first, as does a typed lot written
+  with the valuation its account's `value` gives it; and lots that differ
+  only in their value expression sort by the expression's text
+
 ### Balance, Assertions, and Assignments
 
 - Balanced virtual postings, whose accounts are written in `[brackets]`, now
@@ -467,12 +454,6 @@ components with their standard-library equivalents.
   scope (#3345); both now run, and `--flat` still leaves posting reports'
   figures unchanged.
 
-- Optimize the `register` command for a 46% speedup on large journals (≈50K
-  postings: 6.0s → 3.3s on the benchmark) by short-circuiting the trivial
-  `amount` expression, exploiting `strip(A+B) = strip(A)+strip(B)` to maintain
-  a stripped running total, and early-returning from
-  `balance_t::strip_annotations` when nothing carries annotations
-
 - Route the `accounts`, `payees`, `tags`, and `commodities` listing commands
   through the `stats` fast path (#3202).  These commands only iterate the
   posting stream to collect distinct names; previously they paid for the
@@ -563,6 +544,19 @@ components with their standard-library equivalents.
   leaves in the journal, so that the next command's report starts clean
   (#3273)
 
+- An amount merged from several components (lots stripped to their
+  commodity, components valued in one currency, units reduced, lots averaged
+  by `--average-lot-prices`) keeps full precision when any of its parts did,
+  where it used to depend on their order, so `--unround` and `--gain` can
+  show more digits, and an `--unround` report can show a residue where a
+  total used to be zero, a register also gaining or losing an `<Adjustment>`
+  row
+
+- XML balances, `top_amount()` (whose documented meaning this is), and the
+  commodity list in a basket commodity's value expression list a balance's
+  components in commodity order rather than in an accidental one; and values
+  shown with more than about 230 decimal places print their exact digits
+
 ### Filtering, Queries, and Aggregation
 
 - Show declared-but-unused accounts with `--empty` (#1204) and in the
@@ -581,6 +575,18 @@ components with their standard-library equivalents.
   arguments to function".  As a result, a comma can no longer begin a
   quantity in a value expression outside a braced amount literal, including
   in a parenthesized posting amount: write `($0,50 * 2)`, not `($,50 * 2)`.
+
+- Comparing a balance with an amount in a commodity that one of its
+  components is not in is an error whichever component comes first, in
+  Python's `>` and `<=` too (and with an Amount on the left), which used to
+  answer there.  A plain number among the components compares with any
+  amount, as it always has; a component that netted to zero in another
+  commodity is left out, a balance of nothing else comparing as zero and an
+  empty balance false either way, as before; against a plain number every
+  component takes part, as it always has, and `<` or `>=` never fails; `>`
+  and `<=` in a value expression are unchanged and still need the balance
+  to be a single amount.  An error that names a component, or a pair of
+  commodities, names the one the display order lists first
 
 - Expand account aliases in CLI query arguments; fix `--pivot` with
   command-line account queries (#1154), with built-in properties (#1048), and
@@ -711,6 +717,9 @@ components with their standard-library equivalents.
 - Correct `--time-colon` arithmetic in budget and other computed reports; fix
   `-X` to convert time values across scale units (#1177)
 
+- Time amounts shown with `--time-colon` at eighteen or more decimal places
+  (as with `--unround`) no longer overflow their minutes
+
 ### Python Bindings
 
 - Allow `ledger` to be loaded as a Python extension module (#513); install the
@@ -725,6 +734,11 @@ components with their standard-library equivalents.
   `FileInfo.filename` and `FileInfo.modtime` access (#1205); fix
   `Session.read_journal()` to accept a string path; reset journal state before
   re-reading from Python; expose `price_point_t` to the Python bindings
+
+- A Python `Balance`'s indexing and iteration list its components in
+  commodity order rather than in an accidental one: each index sorts the
+  balance, iteration and `reversed()` sort it once, and indices down to -len
+  work
 
 - Fix Python bindings for virtual posting flag detection (#2169) by binding to
   the correct `supports_flags<uint_least16_t>` instantiation; fix Python
