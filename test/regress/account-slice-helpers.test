@@ -1,0 +1,23 @@
+; account_prefix, account_suffix, account_skip_prefix and account_skip_suffix
+; split an account name on ':' and keep or drop N components from one end;
+; trim() removes ASCII whitespace from both ends of a string.  These blocks
+; pin the edges the shared slice helper and trim_copy must keep: negative
+; and oversized counts, empty components, an empty name, and whitespace
+; other than spaces, while a non-breaking space (U+00A0) on either side of
+; the text is not trimmed.
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg Food --format "[%(account_prefix(\"A:B:C\", -1))][%(account_suffix(\"A:B:C\", -1))][%(account_skip_prefix(\"A:B:C\", 5))][%(account_skip_suffix(\"A:B:C\", 5))]\n"
+[][][][]
+end test
+
+test reg Food --format "[%(account_skip_prefix(\"A::B\", 1))][%(account_suffix(\"A::B\", 2))][%(account_prefix(\"\", 1))][%(account_suffix(\"A:B:\", 1))][%(account_skip_suffix(\"A:B:C\", 1))]\n"
+[:B][:B][][][A:B]
+end test
+
+test reg Food --format "[%(trim(\"\t x y \n\"))][%(trim(\"   \"))][%(trim(\"\"))][%(trim(\"  x  \"))]\n"
+[x y][][][ x ]
+end test

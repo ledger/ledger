@@ -1068,12 +1068,7 @@ value_t report_t::fn_strip(call_scope_t& args) {
 }
 
 value_t report_t::fn_trim(call_scope_t& args) {
-  string temp = args.value().to_string();
-  auto start = temp.find_first_not_of(" \t\n\r\f\v");
-  if (start == string::npos)
-    return string_value(empty_string);
-  auto end = temp.find_last_not_of(" \t\n\r\f\v");
-  return string_value(temp.substr(start, end - start + 1));
+  return string_value(trim_copy(args.value().to_string()));
 }
 
 value_t report_t::fn_format(call_scope_t& args) {
@@ -1246,74 +1241,35 @@ value_t report_t::fn_join(call_scope_t& args) {
 }
 
 namespace {
-/// Split a colon-separated account name into its components.
-std::vector<string> split_account_name(const string& name) {
+/// Keep (keep) or drop (!keep) the first (from_front) or last N ':'-separated
+/// components of the account name in args[0]; N is args[1], clamped to
+/// [0, depth].
+string account_slice(call_scope_t& args, bool from_front, bool keep) {
+  const string name(args.get<string>(0));
+  const long count = args.get<long>(1);
   std::vector<string> parts;
-  string::size_type start = 0;
-  while (start <= name.size()) {
-    string::size_type pos = name.find(':', start);
-    if (pos == string::npos) {
-      parts.push_back(name.substr(start));
-      break;
-    }
-    parts.push_back(name.substr(start, pos - start));
-    start = pos + 1;
-  }
-  return parts;
-}
-
-/// Rejoin components with ':' separators.
-string join_account_name(const std::vector<string>& parts, std::size_t begin, std::size_t end) {
-  string result;
-  for (std::size_t i = begin; i < end; ++i) {
-    if (i > begin)
-      result += ':';
-    result += parts[i];
-  }
-  return result;
-}
-
-/// Read the count argument for an account_* helper; clamp negatives to zero.
-std::size_t account_count_arg(call_scope_t& args) {
-  long n = args.get<long>(1);
-  return n < 0 ? 0 : static_cast<std::size_t>(n);
+  boost::split(parts, name, boost::is_any_of(":"));
+  const std::size_t n = std::min(parts.size(), count < 0 ? std::size_t(0) : std::size_t(count));
+  const auto cut = parts.begin() + static_cast<std::ptrdiff_t>(from_front ? n : parts.size() - n);
+  return keep == from_front ? boost::join(boost::make_iterator_range(parts.begin(), cut), ":")
+                            : boost::join(boost::make_iterator_range(cut, parts.end()), ":");
 }
 } // namespace
 
 value_t report_t::fn_account_prefix(call_scope_t& args) {
-  string name(args.get<string>(0)); // NOLINT(bugprone-unused-local-non-trivial-variable)
-  std::size_t n = account_count_arg(args);
-  std::vector<string> parts = split_account_name(name);
-  if (n > parts.size())
-    n = parts.size();
-  return string_value(join_account_name(parts, 0, n));
+  return string_value(account_slice(args, true, true));
 }
 
 value_t report_t::fn_account_suffix(call_scope_t& args) {
-  string name(args.get<string>(0)); // NOLINT(bugprone-unused-local-non-trivial-variable)
-  std::size_t n = account_count_arg(args);
-  std::vector<string> parts = split_account_name(name);
-  if (n > parts.size())
-    n = parts.size();
-  return string_value(join_account_name(parts, parts.size() - n, parts.size()));
+  return string_value(account_slice(args, false, true));
 }
 
 value_t report_t::fn_account_skip_prefix(call_scope_t& args) {
-  string name(args.get<string>(0)); // NOLINT(bugprone-unused-local-non-trivial-variable)
-  std::size_t n = account_count_arg(args);
-  std::vector<string> parts = split_account_name(name);
-  if (n > parts.size())
-    n = parts.size();
-  return string_value(join_account_name(parts, n, parts.size()));
+  return string_value(account_slice(args, true, false));
 }
 
 value_t report_t::fn_account_skip_suffix(call_scope_t& args) {
-  string name(args.get<string>(0)); // NOLINT(bugprone-unused-local-non-trivial-variable)
-  std::size_t n = account_count_arg(args);
-  std::vector<string> parts = split_account_name(name);
-  if (n > parts.size())
-    n = parts.size();
-  return string_value(join_account_name(parts, 0, parts.size() - n));
+  return string_value(account_slice(args, false, false));
 }
 
 value_t report_t::fn_format_date(call_scope_t& args) {
