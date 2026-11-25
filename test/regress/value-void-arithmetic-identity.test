@@ -1,0 +1,16 @@
+; tag("Nope") names a tag no posting carries, so it evaluates to VOID,
+; the uninitialized value.  VOID is the identity for + and - on either
+; side (x + VOID, VOID + x, x - VOID), VOID - x is -x, and -VOID and
+; abs(VOID) are VOID, which a format prints as nothing.  Every column
+; but VOID + x reaches a rule that a1cff3ce3 or 055f8fbec added to
+; src/value.cc; removing any of them makes this report throw
+; value_error.
+
+2024/07/05 Payee
+    Expenses                                  $42.00
+    Assets:Checking
+
+test reg --format '[%(1 + tag("Nope"))|%(amount + tag("Nope"))|%(tag("Nope") + 1)|%(tag("Nope") + tag("Nope"))|%(1 - tag("Nope"))|%(amount - tag("Nope"))|%(tag("Nope") - 1)|%(tag("Nope") - amount)|%(-tag("Nope"))|%(abs(tag("Nope")))]\n'
+[1|$42.00|1||1|$42.00|-1|$-42.00||]
+[1|$-42.00|1||1|$-42.00|-1|$42.00||]
+end test

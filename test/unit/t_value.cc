@@ -2310,6 +2310,55 @@ BOOST_AUTO_TEST_CASE(testSubtractNullIsNoop)
   BOOST_CHECK_EQUAL(v1, value_t(42L));
 }
 
+// VOID is the identity for + and -, -VOID and abs(VOID) are VOID, and
+// VOID - x is -x.  a1cff3ce3 (#1590) and 055f8fbec (#2262) added these
+// rules; each site in value.cc says why.  Removing them is an owner
+// decision (review T0304).
+BOOST_AUTO_TEST_CASE(testVoidIsArithmeticIdentity)
+{
+  const value_t amt("$1.00");
+  value_t bal(amt);
+  bal += value_t("3 EUR");
+  BOOST_REQUIRE(bal.is_balance());
+
+  // x + VOID == x and x - VOID == x, type preserved.
+  for (const value_t& x : {amt, bal}) {
+    value_t sum(x);
+    sum += value_t();
+    BOOST_CHECK(sum.type() == x.type());
+    BOOST_CHECK_EQUAL(sum, x);
+
+    value_t diff(x);
+    diff -= value_t();
+    BOOST_CHECK(diff.type() == x.type());
+    BOOST_CHECK_EQUAL(diff, x);
+  }
+
+  // A sequence does not gain a VOID element.
+  value_t seq;
+  seq.push_back(amt);
+  seq += value_t();
+  BOOST_CHECK_EQUAL(seq.size(), 1U);
+
+  // VOID + x == x (the empty-accumulator idiom), VOID - x == -x,
+  // VOID + VOID == VOID.
+  value_t acc;
+  acc += bal;
+  BOOST_CHECK_EQUAL(acc, bal);
+
+  value_t neg;
+  neg -= bal;
+  BOOST_CHECK_EQUAL(neg, bal.negated());
+
+  value_t none;
+  none += value_t();
+  BOOST_CHECK(none.is_null());
+
+  // -VOID == VOID and abs(VOID) == VOID.
+  BOOST_CHECK(value_t().negated().is_null());
+  BOOST_CHECK(value_t().abs().is_null());
+}
+
 BOOST_AUTO_TEST_CASE(testAddAmountsDifferentCommodities)
 {
   value_t v1(amount_t("10 GBP"));

@@ -471,6 +471,7 @@ value_t value_t::number() const {
 //   SEQUENCE + SEQUENCE     -> element-wise (must be same length)
 //   SEQUENCE + scalar       -> append to sequence
 //   VOID + anything         -> copy the right-hand value
+//   anything + VOID         -> unchanged (VOID is a two-sided identity)
 //
 // Subtraction follows similar rules but calls in_place_simplify()
 // after each operation, since a BALANCE minus an AMOUNT of the same
@@ -502,6 +503,13 @@ value_t value_t::number() const {
 /// "$100 + 50 EUR" cannot be reduced to a single number without a
 /// price lookup.
 value_t& value_t::operator+=(const value_t& val) {
+  // x + VOID == x.  a1cff3ce3 added this for #1590 (--dc -X left VOID
+  // in display_total), whose test no longer reaches it, but reports
+  // still add VOID: `amount if cond` is VOID when cond is false (the
+  // running total adds it), as is a lambda's missing argument.
+  // Pinned by value-void-arithmetic-identity.test, also pinned by
+  // test/regress/coverage-op-ifelse.test and
+  // test/regress/coverage-op-lambda-value.test.
   if (val.is_null())
     return *this;
 
@@ -534,6 +542,8 @@ value_t& value_t::operator+=(const value_t& val) {
 
   switch (type()) {
   case VOID:
+    // VOID + x == x: an accumulator starts as a default-constructed
+    // value_t and adds into it (operator*= on SEQUENCE does so).
     *this = value_t(val);
     return *this;
 
@@ -651,13 +661,16 @@ value_t& value_t::operator+=(const value_t& val) {
 /// commodity components (e.g., a BALANCE of "$100, 50 EUR" minus "$100"
 /// yields a single-commodity balance that can be simplified to AMOUNT).
 ///
-/// For VOID, subtraction assigns the negated right-hand value, matching
-/// the mathematical identity 0 - x = -x.
+/// VOID is an identity here as in operator+=: x - VOID == x, and
+/// VOID - x == -x, matching the mathematical identity 0 - x = -x.
+/// a1cff3ce3 added both for #1590, whose test no longer reaches them;
+/// test/regress/value-void-arithmetic-identity.test pins them.
 ///
 /// For SEQUENCE, subtraction has two modes:
 ///   - SEQUENCE - SEQUENCE: element-wise subtraction (lengths must match)
 ///   - SEQUENCE - scalar: removes the first matching element
 value_t& value_t::operator-=(const value_t& val) {
+  // x - VOID == x; see operator+=.
   if (val.is_null())
     return *this;
 
@@ -1713,7 +1726,14 @@ void value_t::in_place_cast(type_t cast_type) {
 /// For INTEGER, the stored long is negated.
 /// For AMOUNT and BALANCE, the corresponding in_place_negate() is called.
 /// For SEQUENCE, each element is negated recursively.
-/// COMMODITY, DATE, DATETIME, STRING, MASK, SCOPE and ANY throw value_error.
+/// VOID is left as it is (-VOID == VOID): 055f8fbec added this for the
+/// budget -X crash of #2262, which 50326143d then fixed at its source,
+/// but budget reports still reach it: their format negates
+/// get_at(display_total, 1), which can be VOID.  It is also pinned by
+/// test/regress/1023.test, test/regress/coverage-unbudgeted.test,
+/// test/regress/coverage-filters-budget.test and
+/// test/regress/value-void-arithmetic-identity.test.  COMMODITY, DATE,
+/// DATETIME, STRING, MASK, SCOPE and ANY throw value_error.
 void value_t::in_place_negate() {
   switch (type()) {
   case VOID:
@@ -2124,8 +2144,10 @@ void value_t::in_place_unreduce() {
 /// @brief Return the absolute value.
 ///
 /// Supported for INTEGER, AMOUNT, and BALANCE.  VOID is returned as-is
-/// (it has no sign).  Delegates to amount_t::abs() or balance_t::abs()
-/// for the commodity-aware types.
+/// (it has no sign; a1cff3ce3 added this for #1590, whose test no
+/// longer reaches it, and value-void-arithmetic-identity.test pins
+/// it).  Delegates to amount_t::abs() or balance_t::abs() for the
+/// commodity-aware types.
 value_t value_t::abs() const {
   switch (type()) {
   case VOID:
