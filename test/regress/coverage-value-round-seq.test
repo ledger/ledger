@@ -1,5 +1,6 @@
-; Coverage for value.cc round_to_commodity_precision for sequence,
-; and SEQUENCE -> STRING conversion introduced for the ==~ operator.
+; Coverage for value.cc: rounded() on a sequence (the SEQUENCE case of
+; value_t::in_place_round), and the SEQUENCE -> STRING conversion
+; introduced for the ==~ operator.
 
 2024/01/15 Test
     Expenses:Food    $50.123

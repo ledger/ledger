@@ -4282,29 +4282,32 @@ BOOST_AUTO_TEST_CASE(testPushSortValueInvertedW8)
 }
 
 // =======================================================================
-// W8 Coverage: compare.cc - push_sort_value with O_CONS (lines 44-48)
+// push_sort_value on a parser-built O_CONS chain
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testPushSortValueConsW8)
 {
-  std::list<sort_value_t> sort_values;
-  // Build: O_CONS(1, O_CONS(2, 3)) to exercise the while loop in
-  // push_sort_value that walks O_CONS chains.
-  // The left of each O_CONS is pushed; the rightmost non-CONS tail
-  // is not pushed (matches production behavior).
-  expr_t::ptr_op_t v1 = expr_t::op_t::wrap_value(value_t(1L));
-  expr_t::ptr_op_t v2 = expr_t::op_t::wrap_value(value_t(2L));
-  expr_t::ptr_op_t v3 = expr_t::op_t::wrap_value(value_t(3L));
-  expr_t::ptr_op_t inner_cons = expr_t::op_t::new_node(
-      expr_t::op_t::O_CONS, v2, v3);
-  expr_t::ptr_op_t outer_cons = expr_t::op_t::new_node(
-      expr_t::op_t::O_CONS, v1, inner_cons);
+  // The parser builds "1, 2, 3" as O_CONS(1, O_CONS(2, O_CONS(3))): every
+  // key, the last one included, is the left child of a CONS node, and the
+  // last CONS has no right child.  push_sort_value pushes one sort value
+  // per key, in order.
+  expr_t expr("1, 2, 3");
+  expr_t::ptr_op_t root = expr.get_op();
+  BOOST_REQUIRE(root && root->kind == expr_t::op_t::O_CONS);
+  BOOST_REQUIRE(root->right() && root->right()->kind == expr_t::op_t::O_CONS);
+  expr_t::ptr_op_t tail = root->right()->right();
+  BOOST_REQUIRE(tail && tail->kind == expr_t::op_t::O_CONS);
+  BOOST_CHECK(!tail->has_right());
 
+  std::list<sort_value_t> sort_values;
   symbol_scope_t scope(*scope_t::empty_scope);
-  ledger::push_sort_value(sort_values, outer_cons, scope);
-  // v1 is pushed (left of outer), v2 is pushed (left of inner),
-  // v3 is the tail after the while loop exits.
-  BOOST_CHECK_EQUAL(sort_values.size(), 2u);
+  ledger::push_sort_value(sort_values, root, scope);
+  BOOST_REQUIRE_EQUAL(sort_values.size(), 3u);
+  long expected = 1;
+  for (const sort_value_t& sv : sort_values) {
+    BOOST_CHECK(!sv.inverted);
+    BOOST_CHECK_EQUAL(sv.value.to_long(), expected++);
+  }
 }
 
 // =======================================================================
