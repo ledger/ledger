@@ -1,0 +1,59 @@
+; --account takes precedence over --pivot and --pivot-only, and when both
+; pivots are given --pivot-only replaces the account --pivot produced
+; (chain_pre_post_handlers in src/chain.cc).  The --limit filter sits
+; between the two pivots, so a query sees --pivot's name.
+
+2024/01/05 Grocer
+    ; color: red
+    ; size: big
+    Food                10 CAD
+    Cash
+
+2024/01/09 Hardware
+    ; color: blue
+    ; size: small
+    Tools               20 CAD
+    Cash
+
+test reg --pivot color
+24-Jan-05 Grocer                color:red:Food               10 CAD       10 CAD
+24-Jan-05 Grocer                color:red:Cash              -10 CAD            0
+24-Jan-09 Hardware              color:blue:Tools             20 CAD       20 CAD
+24-Jan-09 Hardware              color:blue:Cash             -20 CAD            0
+end test
+
+test reg --pivot color --pivot-only size
+24-Jan-05 Grocer                size:big                     10 CAD       10 CAD
+24-Jan-05 Grocer                size:big                    -10 CAD            0
+24-Jan-09 Hardware              size:small                   20 CAD       20 CAD
+24-Jan-09 Hardware              size:small                  -20 CAD            0
+end test
+
+test reg --pivot-only size --pivot color
+24-Jan-05 Grocer                size:big                     10 CAD       10 CAD
+24-Jan-05 Grocer                size:big                    -10 CAD            0
+24-Jan-09 Hardware              size:small                   20 CAD       20 CAD
+24-Jan-09 Hardware              size:small                  -20 CAD            0
+end test
+
+test reg --account '"Z"' --pivot color
+24-Jan-05 Grocer                Z:Food                       10 CAD       10 CAD
+24-Jan-05 Grocer                Z:Cash                      -10 CAD            0
+24-Jan-09 Hardware              Z:Tools                      20 CAD       20 CAD
+24-Jan-09 Hardware              Z:Cash                      -20 CAD            0
+end test
+
+test reg --account '"Z"' --pivot-only color
+24-Jan-05 Grocer                Z:Food                       10 CAD       10 CAD
+24-Jan-05 Grocer                Z:Cash                      -10 CAD            0
+24-Jan-09 Hardware              Z:Tools                      20 CAD       20 CAD
+24-Jan-09 Hardware              Z:Cash                      -20 CAD            0
+end test
+
+test reg --pivot color --pivot-only size red
+24-Jan-05 Grocer                size:big                     10 CAD       10 CAD
+24-Jan-05 Grocer                size:big                    -10 CAD            0
+end test
+
+test reg --pivot color --pivot-only size big
+end test

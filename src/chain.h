@@ -173,11 +173,10 @@ class predicate_t;
 /**
  * @brief Build the outer (upstream) portion of the posting filter chain.
  *
- * Wraps @p base_handler with filters that must execute before the core
- * pipeline: anonymization (--anon), the primary limit predicate (--limit),
- * and budget/forecast generation.  When budget or forecast handlers are
- * active, the limit predicate is re-applied so that only matching postings
- * contribute to budget calculations.
+ * Wraps @p base_handler with the filters that must see postings before the
+ * core pipeline: --limit, the --pivot/--pivot-only renames, budget/forecast
+ * generation and --anon.  Their order is given in the handler_ordering
+ * section of filters.h.
  *
  * @param base_handler  The handler chain built so far (from chain_post_handlers).
  * @param report        The report_t holding all parsed command-line options.
@@ -188,19 +187,14 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t
 /**
  * @brief Build the inner (downstream) portion of the posting filter chain.
  *
- * Starting from the output handler, this function wraps it with filters in
- * inside-out order: inject, related, transfer_details, interval, aggregation,
- * collapse, sort, only-predicate, calc, changed_value, display filter,
- * truncation, and forecast-while.  Each filter is added conditionally based
- * on the options present in @p report.
+ * Starting from the output handler, this function wraps it with the inner
+ * filters, each added only when its option is present in @p report.  Their
+ * order is given in the handler_ordering section of filters.h.
  *
  * @param base_handler        The terminal output handler (e.g., format_posts).
  * @param report              The report_t holding all parsed command-line options.
- * @param for_accounts_report When true, several display-oriented filters
- *                            (truncation, display_filter, display predicate,
- *                            sort, collapse, subtotal/equity) are skipped
- *                            because the accounts report handles those concerns
- *                            differently.
+ * @param for_accounts_report When true, builds the accounts-report variant, which
+ *                            omits the display-oriented stages (see filters.h).
  * @return The new outermost handler in the chain.
  *
  * The selection filters (truncation, --display, --only) are built by
@@ -214,9 +208,8 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
 /**
  * @brief Wrap @p base_handler with the posting selection filters.
  *
- * In inside-out order: truncate_xacts (--head/--tail), filter_posts for the
- * --display predicate, then filter_posts for the --only predicate, so that
- * postings meet --only first and truncation last.
+ * The filters are those of --only, --display and --head/--tail.  Order: see
+ * the handler_ordering section of filters.h.
  *
  * @param base_handler       The handler chain built so far.
  * @param report             The report_t holding all parsed command-line options.
@@ -238,10 +231,9 @@ post_handler_ptr chain_selection_handlers(post_handler_ptr base_handler, report_
  * @brief Wrap @p base_handler with the filters that rename, relate or inject
  * postings.
  *
- * In inside-out order: transfer_details for --date, --account and --payee,
- * rewrite_posts (payee-rewrite/account-rewrite directives and options),
- * related_posts (--related/--related-all), then inject_posts (--inject), so
- * that postings meet --inject first.
+ * The filters are those of --inject, --related, the payee-rewrite and
+ * account-rewrite directives and options, --payee, --account and --date.
+ * Order: see the handler_ordering section of filters.h.
  *
  * @param base_handler  The handler chain built so far.
  * @param report        The report_t holding all parsed command-line options.

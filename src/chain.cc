@@ -37,32 +37,17 @@
  *
  * @brief Pipeline construction -- translating command-line options into filter chains.
  *
- * This file implements the builder functions that assemble the posting
- * filter pipeline at report time:
- *
- * - **chain_pre_post_handlers()** adds the outermost filters: anonymization,
- *   the --limit predicate, and budget/forecast generation.
- *
- * - **chain_post_handlers()** adds the inner filters: injection, related
- *   posts, transfer_details, interval grouping, aggregation (subtotal,
- *   by-payee, day-of-week, equity), collapse, sorting, calc_posts,
- *   revaluation, the --only predicate, display filtering, truncation, and
- *   the forecast-while predicate.  It delegates two stages:
- *
- *   - **chain_selection_handlers()** adds truncation (--head/--tail) and the
- *     --display and --only predicates, next to the output.
- *
- *   - **chain_transfer_handlers()** adds the outermost of the inner filters:
- *     transfer_details (--date, --account, --payee), payee/account
- *     rewrites, related posts and injection.
- *
- *   posts_report_quick() (the listing commands) runs only those two stages.
- *
- * Both functions build the chain from the inside out: each new handler wraps
+ * This file implements the two builder functions that assemble the posting
+ * filter pipeline at report time: chain_pre_post_handlers() adds the
+ * outermost filters and chain_post_handlers() the inner ones.
+ * chain_selection_handlers() and chain_transfer_handlers() build two
+ * stretches of the inner chain that posts_report_quick() shares.  Each
+ * builds its part of the chain from the inside out: each new handler wraps
  * the previous one, so the last handler added is the first to receive
- * postings.  The inline chain_handlers() in chain.h calls
- * chain_post_handlers first, then chain_pre_post_handlers, producing the
- * complete pipeline described in the handler ordering diagram in filters.h.
+ * postings.
+ * The inline chain_handlers() in chain.h calls chain_post_handlers first,
+ * then chain_pre_post_handlers.  The resulting order is described once, in
+ * the handler_ordering section of filters.h.
  */
 
 #include <system.hh>
@@ -106,16 +91,9 @@ string pivot_account_expr(const string& name) {
 /**
  * @brief Build the outer (upstream) portion of the posting filter chain.
  *
- * Handlers are added in inside-out order.  The resulting chain, from
- * outermost to innermost, is:
- *
- * 1. **filter_posts(limit)** -- re-applied after budget/forecast so only
- *    matching postings contribute to budget calculations.
- * 2. **budget_posts** or **forecast_posts** -- generate synthetic periodic
- *    postings (mutually exclusive; budget takes precedence).
- * 3. **filter_posts(limit)** -- primary --limit predicate.
- * 4. **anonymize_posts** -- strip identifying data (--anon).
- * 5. [base_handler from chain_post_handlers]
+ * Handlers are added inside out.  The resulting order, and why the --limit
+ * filter sits between --pivot and --pivot-only, is in the handler_ordering
+ * section of filters.h.
  */
 post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t& report) {
   post_handler_ptr handler(std::move(base_handler));
@@ -135,9 +113,10 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t
   // wrap the pivot in the data flow, so the predicate sees the original
   // account.
   //
-  // --account, --pivot, and --pivot-only are mutually exclusive; --account
-  // stays in chain_post_handlers because it does not interact with query
-  // filtering.
+  // --account takes precedence over --pivot and --pivot-only (neither is
+  // installed when it is given).  Given both pivots, --pivot-only runs after
+  // --pivot and replaces the account it produced.  --account stays in
+  // chain_post_handlers because it does not interact with query filtering.
   if (report.HANDLED(pivot_only_) && !report.HANDLED(account_)) {
     handler = std::make_shared<transfer_details>(
         handler, transfer_details::SET_ACCOUNT_REPLACE,
@@ -456,10 +435,10 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
     // subtotal_posts combines all the posts it receives into one subtotal
     // xact, which has one post for each commodity in each account.
     //
-    // period_posts is like subtotal_posts, but it subtotals according to time
+    // interval_posts is like subtotal_posts, but it subtotals according to time
     // periods rather than totaling everything.
     //
-    // day_of_week_posts is like period_posts, except that it reports
+    // day_of_week_posts is like interval_posts, except that it reports
     // all the posts that fall on each subsequent day of the week.
     if (report.HANDLED(equity))
       handler = std::make_shared<posts_as_equity>(handler, report, expr, report.HANDLED(unround));

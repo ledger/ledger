@@ -121,10 +121,13 @@
  *
  * @subsection cat_display Display and Revaluation
  * - **display_filter_posts** -- Inserts rounding adjustment postings to keep
- *   displayed totals consistent.  Requires calc_posts downstream.
+ *   displayed totals consistent.  Requires calc_posts upstream when
+ *   rounding: it then reads the running total calc_posts stores.
  * - **changed_value_posts** -- Inserts virtual revaluation postings when
  *   commodity market values change between postings.  Used by --revalued
- *   and --unrealized.  Requires calc_posts downstream.
+ *   and --unrealized.  Requires calc_posts upstream: it reads the running
+ *   total calc_posts stores (and, when it books unrealized gain from the
+ *   cost basis, each posting's amount).
  *
  * @subsection cat_aggregation Aggregation and Subtotaling
  * - **subtotal_posts** -- Combines all postings into one subtotal transaction
@@ -152,6 +155,9 @@
  * - **transfer_details** -- Rewrites a posting's date, account, or payee based
  *   on an expression.  Used by --date, --account, --payee, --pivot, and
  *   --pivot-only.
+ * - **rewrite_posts** -- Replaces payee and account names that match a
+ *   rewrite rule.  Used by the payee-rewrite/account-rewrite directives and
+ *   --payee-rewrite/--account-rewrite.
  * - **anonymize_posts** -- Replaces all identifying information (payee, account
  *   names, commodity symbols) with anonymized data.  Used by --anon.
  * - **posts_as_equity** (extends subtotal_posts) -- Converts postings into
@@ -161,50 +167,78 @@
  * - **inject_posts** -- Injects additional postings based on tag values found
  *   on transactions.  Used by --inject.
  *
- * @section handler_ordering Handler Ordering (from chain.cc)
+ * @section handler_ordering Handler Ordering
  *
- * The full posting flow for a register/posting report is shown below.
- * Postings enter at the top and flow downward to the output handler.
- * Handlers marked with (conditional) are only present when the corresponding
- * option is active.
+ * This is the one description of the order chain_handlers() builds; the
+ * comments in chain.h and chain.cc point here.  Postings enter at the top
+ * and flow downward to the output handler.  Each builder adds handlers
+ * inside out, so the handler listed first was added last.  Unless marked
+ * "always" or with only a report kind, a stage is present only when the
+ * option named beside it is given.
  *
  * @subsection pre_post chain_pre_post_handlers (outermost, added last)
  *
  * @code
  *   [posting source]
- *     → budget_posts or forecast_posts    (conditional, mutually exclusive)
- *       → filter_posts(limit)             (re-applied if budget/forecast active)
- *     → filter_posts(limit)               (conditional: --limit)
- *     → anonymize_posts                   (conditional: --anon)
+ *     → filter_posts(limit)            (--limit with a budget or --forecast-while:
+ *                                       only matching postings reach budget/forecast
+ *                                       [under --pivot: tested on the pivoted name])
+ *     → sort_posts("date")             (budget only: budget_posts needs date order, #590)
+ *     → budget_posts | forecast_posts  (budget flags | --forecast-while; budget wins)
+ *     → transfer_details(SET_ACCOUNT)  (--pivot, unless --account)
+ *     → filter_posts(limit)            (--limit: sees --pivot's name, #1154)
+ *     → transfer_details(SET_ACCOUNT_REPLACE)
+ *                                      (--pivot-only, unless --account: the --limit
+ *                                       above sees the original name, #3210)
+ *     → anonymize_posts                (--anon)
+ *     → [chain_post_handlers]
  * @endcode
  *
  * @subsection post chain_post_handlers (innermost, added first)
  *
  * @code
- *     → inject_posts                      (conditional: --inject)
- *     → related_posts                     (conditional: --related)
- *     → transfer_details(SET_PAYEE)       (conditional: --payee)
- *     → transfer_details(SET_ACCOUNT)     (conditional: --account or --pivot)
- *     → transfer_details(SET_DATE)        (conditional: --date)
- *     → interval_posts                    (conditional: --period)
- *     → day_of_week_posts / by_payee_posts (conditional, mutually exclusive)
- *     → posts_as_equity / subtotal_posts  (conditional, mutually exclusive)
- *     → collapse_posts                    (conditional: --collapse or --depth)
- *     → sort_posts / sort_xacts           (conditional: --sort / --sort-xacts)
- *     → calc_posts                        (always present)
- *     → changed_value_posts               (conditional: --revalued)
- *     → filter_posts(only)                (conditional: --only, accounts reports)
- *     → display_filter_posts              (not accounts report)
- *     → filter_posts(only)                (conditional: --only, not accounts)
- *     → filter_posts(display)             (conditional: --display, not accounts)
- *     → truncate_xacts                    (conditional: --head/--tail, not accounts)
- *     → filter_posts(forecast_while)      (conditional: --forecast-while, not accounts)
+ *     → inject_posts                   (--inject)
+ *     → related_posts                  (--related)
+ *     → rewrite_posts                  (rewrite rules from directives or
+ *                                       --payee-rewrite/--account-rewrite)
+ *     → transfer_details(SET_PAYEE)    (--payee)
+ *     → transfer_details(SET_ACCOUNT)  (--account)
+ *     → transfer_details(SET_DATE)     (--date)
+ *     → interval_posts                 (--period)
+ *     → day_of_week_posts | by_payee_posts  (--dow | --by-payee; --dow wins)
+ *     → posts_as_equity | subtotal_posts    (--equity | --subtotal; not accounts)
+ *     → collapse_posts                 (--collapse or --depth; not accounts)
+ *     → sort_posts → sort_xacts        (--sort / --sort-xacts; not accounts;
+ *                                       a period report sorts --sort within
+ *                                       each period, with sort_xacts)
+ *     → calc_posts                     (always; keeps running totals only
+ *                                       when something below reads them)
+ *     → changed_value_posts            (--revalued; accounts reports only
+ *                                       with --unrealized)
+ *     → filter_posts(only)             (--only, accounts reports)
+ *     → display_filter_posts           (posting reports only)
+ *     → filter_posts(only)             (--only, not accounts: running totals
+ *                                       above include the hidden postings, #762)
+ *     → filter_posts(display)          (--display, not accounts)
+ *     → truncate_xacts                 (--head/--tail, not accounts)
+ *     → filter_posts(forecast_while)   (--forecast-while, not accounts)
  *     → [output handler]
  * @endcode
  *
- * For accounts reports (for_accounts_report=true), the following stages are
- * skipped: forecast_while filter, truncate_xacts, display_filter_posts,
- * display filter, sort, collapse, subtotal/equity.
+ * For posting reports only, chain_selection_handlers() builds the stretch
+ * from the second filter_posts(only) (--only, not accounts) through
+ * truncate_xacts; display_filter_posts and the accounts-report --only stay
+ * in chain_post_handlers().  chain_transfer_handlers() builds the stretch
+ * from inject_posts through transfer_details(SET_DATE).  The listing
+ * commands (accounts, payees, tags, ...) run posts_report_quick(), which
+ * applies the pre-post chain and these two stretches only: no calc_posts.
+ *
+ * For accounts reports (for_accounts_report=true), these stages are absent:
+ * posts_as_equity/subtotal_posts, collapse_posts, sort_posts/sort_xacts,
+ * display_filter_posts, filter_posts(display), truncate_xacts and
+ * filter_posts(forecast_while).  --only sits directly below calc_posts (or
+ * changed_value_posts), and calc_posts keeps no running total unless
+ * --revalued and --unrealized are both given.
  *
  * @section mutual_exclusions Mutual Exclusions
  *
@@ -218,6 +252,10 @@
  *   are both specified, sort_xacts runs within-transaction first, then
  *   sort_posts applies the global sort.  When period sorting activates
  *   sort_xacts alone, sort_posts is skipped.
+ * - **--account** vs **--pivot** and **--pivot-only** -- --account takes
+ *   precedence: neither pivot is installed when it is given.
+ * - **--pivot** with **--pivot-only** -- both are installed; --pivot-only
+ *   runs later and replaces the account --pivot produced.
  *
  * @section adding_handler Adding a New Handler
  *
@@ -230,7 +268,7 @@
  *    chain_post_handlers() that wraps the handler chain:
  *    @code
  *      if (report.HANDLED(my_option))
- *        handler.reset(new my_handler(handler, ...));
+ *        handler = std::make_shared<my_handler>(handler, ...);
  *    @endcode
  *
  * 3. Position matters: handlers added later in the function execute earlier
@@ -775,7 +813,8 @@ public:
  * Also acts as gatekeeper: postings whose display_amount rounds to zero
  * are suppressed unless --empty is specified.
  *
- * @note Requires calc_posts somewhere downstream in the chain.
+ * @note Requires calc_posts upstream in the chain when rounding: it then
+ *       reads the running total calc_posts stores.
  */
 class display_filter_posts : public item_handler<post_t> {
   report_t& report;            ///< Report context.
@@ -864,7 +903,9 @@ public:
  * leaves the baseline at its value, and the change in the price of the units
  * sold since their purchase joins the unrealized rows (cost_baseline()).
  *
- * @note Requires calc_posts somewhere downstream in the chain.
+ * @note Requires calc_posts upstream in the chain: it reads the running
+ *       total calc_posts stores (and, when it books unrealized gain from
+ *       the cost basis, each posting's amount).
  */
 class changed_value_posts : public item_handler<post_t> {
   report_t& report;   ///< Report context.
