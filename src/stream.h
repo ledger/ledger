@@ -138,8 +138,8 @@ public:
    * @param pager_path Path to a pager. To not use a pager, leave this
    * empty.
    */
-  void initialize(const optional<path>& output_file = none,
-                  const optional<path>& pager_path = none);
+  void initialize(const optional<path>& output_file = std::nullopt,
+                  const optional<path>& pager_path = std::nullopt);
 
   /**
    * Converter to a standard ostream.  This is used so that we can

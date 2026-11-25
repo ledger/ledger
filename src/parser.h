@@ -127,7 +127,7 @@ class expr_t::parser_t : public noncopyable {
    * @return Reference to the lookahead token (always the same object).
    */
   token_t& next_token(std::istream& in, const parse_flags_t& tflags,
-                      const optional<token_t::kind_t>& expecting = none) const {
+                      const optional<token_t::kind_t>& expecting = std::nullopt) const {
     if (use_lookahead)
       use_lookahead = false;
     else
@@ -211,7 +211,7 @@ public:
    * @return Root node of the parsed AST, or nullptr if the stream is empty.
    */
   ptr_op_t parse(std::istream& in, const parse_flags_t& flags = PARSE_DEFAULT,
-                 const optional<string>& original_string = boost::none);
+                 const optional<string>& original_string = std::nullopt);
 };
 
 } // namespace ledger

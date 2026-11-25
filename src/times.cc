@@ -388,7 +388,7 @@ optional<date_time::weekdays> string_to_day_of_week(const std::string& str) {
   else if (s == _("sat") || s == _("saturday") || s == "6")
     return gregorian::Saturday;
   else
-    return none;
+    return std::nullopt;
 }
 
 /**
@@ -424,7 +424,7 @@ optional<date_time::months_of_year> string_to_month_of_year(const std::string& s
   else if (s == _("dec") || s == _("december"))
     return gregorian::Dec;
   else
-    return none;
+    return std::nullopt;
 }
 
 /*--- Top-Level Parse Functions ---*/
@@ -474,20 +474,20 @@ datetime_t parse_datetime(const char* str) {
  */
 optional<datetime_t> try_parse_datetime(const std::string& str) {
   if (str.size() > 127)
-    return none;
+    return std::nullopt;
 
   std::string::size_type sep = str.find_first_of(" @");
   if (sep == std::string::npos)
-    return none;
+    return std::nullopt;
 
   try {
     date_t day = parse_date(str.substr(0, sep).c_str());
     time_duration_t tod = posix_time::duration_from_string(str.substr(sep + 1));
     if (tod.is_negative() || tod >= posix_time::hours(24))
-      return none;
+      return std::nullopt;
     return datetime_t(day, tod);
   } catch (const std::exception&) { // NOLINT(bugprone-empty-catch)
-    return none;
+    return std::nullopt;
   }
 }
 
@@ -1234,7 +1234,7 @@ void date_parser_t::handle_dash_operator(lexer_t::token_t& tok,
   if (inclusion_specifier) {
     since_specifier = inclusion_specifier;
     until_specifier = date_specifier_t();
-    inclusion_specifier = none;
+    inclusion_specifier = std::nullopt;
 
     tok = lexer.next_token();
     determine_when(tok, *until_specifier);
@@ -1610,7 +1610,7 @@ optional<date_t> string_to_relative_date(const std::string& str) {
     // The lexer rejects the text (e.g. "today," or a number too large for a
     // day or year), so it is not a day keyword.
   }
-  return none;
+  return std::nullopt;
 }
 
 /**
@@ -1828,8 +1828,8 @@ void date_interval_t::stabilize(const optional<date_t>& date, bool align_interva
         if (next_interval.start && *next_interval.start <= *date) {
           *this = next_interval;
         } else {
-          end_of_duration = none;
-          next = none;
+          end_of_duration = std::nullopt;
+          next = std::nullopt;
           break;
         }
       }
@@ -1848,8 +1848,8 @@ void date_interval_t::stabilize(const optional<date_t>& date, bool align_interva
         // If end_of_duration (computed from the old start) is no longer
         // past the clamped start, it is stale and must be recomputed.
         if (end_of_duration && *end_of_duration <= *start) {
-          end_of_duration = none;
-          next = none;
+          end_of_duration = std::nullopt;
+          next = std::nullopt;
           // The clamped start is off the period grid: later periods step from it.
           anchor_day = start->day();
           anchor_shift = 0;
@@ -1957,7 +1957,7 @@ bool date_interval_t::find_period(const date_t& date, const bool align_intervals
     if (date < end_of_scan) {
       start = scan;
       end_of_duration = end_of_scan;
-      next = none;
+      next = std::nullopt;
 
       DEBUG("times.interval", "true: start           = " << *start);
       DEBUG("times.interval", "true: end_of_duration = " << *end_of_duration);
@@ -2004,12 +2004,12 @@ date_interval_t& date_interval_t::operator++() {
 
   // NOLINTNEXTLINE(bugprone-branch-clone)
   if (finish && *next >= *finish) {
-    start = none;
+    start = std::nullopt;
   } else {
     start = *next;
     end_of_duration = next_boundary(*start);
   }
-  next = none;
+  next = std::nullopt;
 
   resolve_end();
 

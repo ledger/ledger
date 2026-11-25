@@ -177,7 +177,7 @@ public:
       optional<string> value; ///< The literal text for TERM tokens; none for operators/keywords.
       bool quoted = false;    ///< True for a TERM read from a '...', "..." or /.../ pattern.
 
-      explicit token_t(kind_t _kind = UNKNOWN, const optional<string>& _value = none,
+      explicit token_t(kind_t _kind = UNKNOWN, const optional<string>& _value = std::nullopt,
                        bool _quoted = false)
           : kind(_kind), value(_value), quoted(_quoted) {
         TRACE_CTOR(query_t::lexer_t::token_t, "");

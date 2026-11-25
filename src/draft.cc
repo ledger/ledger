@@ -367,7 +367,7 @@ optional<string> strip_uuid_lines(const optional<string>& note) {
 
   string result = out.str();
   if (result.empty())
-    return none;
+    return std::nullopt;
   return result;
 }
 } // namespace
@@ -459,7 +459,7 @@ xact_t* draft_t::insert(journal_t& journal) {
 
     added->_date = parse_date_expr(date_str);
     DEBUG("draft.xact",
-          "Setting date to parsed date string: " << *tmpl->date_string << " -> " << added->_date);
+          "Setting date to parsed date string: " << *tmpl->date_string << " -> " << *added->_date);
   }
 
   added->set_state(item_t::UNCLEARED);
@@ -481,7 +481,7 @@ xact_t* draft_t::insert(journal_t& journal) {
       added->metadata = matching->metadata;
       added->metadata->erase(_("UUID"));
       if (added->metadata->empty())
-        added->metadata = none;
+        added->metadata = std::nullopt;
     }
 
 #if DEBUG_ON

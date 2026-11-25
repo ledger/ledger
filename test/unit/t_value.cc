@@ -5754,7 +5754,7 @@ BOOST_AUTO_TEST_CASE(testBalanceMultiplyByRealzero)
 BOOST_AUTO_TEST_CASE(testBalanceFindByNameNotFound)
 {
   balance_t bal("$100.00");
-  auto result = bal.commodity_amount(amount_t("100 EUR").commodity());
+  auto result = bal.commodity_amount(&amount_t("100 EUR").commodity());
   BOOST_CHECK(!result);
 }
 

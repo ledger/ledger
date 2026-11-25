@@ -263,7 +263,7 @@ enum format_type_t : uint8_t { FMT_WRITTEN, FMT_PRINTED, FMT_CUSTOM };
  * @param format       Custom strftime format string (only with FMT_CUSTOM).
  */
 std::string format_datetime(const datetime_t& when, const format_type_t format_type = FMT_PRINTED,
-                            const optional<const char*>& format = none);
+                            const optional<const char*>& format = std::nullopt);
 
 /// @brief Override the default printed and written datetime format strings.
 void set_datetime_format(const char* format);
@@ -275,7 +275,7 @@ void set_datetime_format(const char* format);
  * @param format       Custom strftime format string (only with FMT_CUSTOM).
  */
 std::string format_date(const date_t& when, const format_type_t format_type = FMT_PRINTED,
-                        const optional<const char*>& format = none);
+                        const optional<const char*>& format = std::nullopt);
 
 /// @brief Override the default printed and written date format strings (--date-format).
 void set_date_format(const char* format);
@@ -484,9 +484,10 @@ protected:
   optional<day_of_week_type> wday; ///< Day of week, if specified.
 
 public:
-  date_specifier_t(const optional<year_type>& _year = none,
-                   const optional<month_type>& _month = none, const optional<day_type>& _day = none,
-                   const optional<day_of_week_type>& _wday = none)
+  date_specifier_t(const optional<year_type>& _year = std::nullopt,
+                   const optional<month_type>& _month = std::nullopt,
+                   const optional<day_type>& _day = std::nullopt,
+                   const optional<day_of_week_type>& _wday = std::nullopt)
       : year(_year), month(_month), day(_day), wday(_wday) {
     TRACE_CTOR(date_specifier_t, "year_type, month_type, day_type, day_of_week_type");
   }
@@ -500,7 +501,7 @@ public:
    * intent: a date parsed from "%m/%d" will have has_year=false, so
    * the specifier carries no year and matches any year.
    */
-  date_specifier_t(const date_t& date, const optional<date_traits_t>& traits = none) {
+  date_specifier_t(const date_t& date, const optional<date_traits_t>& traits = std::nullopt) {
     if (!traits || traits->has_year)
       year = date.year();
     if (!traits || traits->has_month)
@@ -577,8 +578,8 @@ class date_range_t {
   bool end_inclusive; ///< If true, range_end is included (dash syntax).
 
 public:
-  date_range_t(const optional<date_specifier_t>& _range_begin = none,
-               const optional<date_specifier_t>& _range_end = none)
+  date_range_t(const optional<date_specifier_t>& _range_begin = std::nullopt,
+               const optional<date_specifier_t>& _range_end = std::nullopt)
       : range_begin(_range_begin), range_end(_range_end), end_inclusive(false) {
     TRACE_CTOR(date_range_t, "date_specifier_t, date_specifier_t");
   }
@@ -595,7 +596,7 @@ public:
     if (range_begin)
       return range_begin->begin();
     else
-      return none;
+      return std::nullopt;
   }
 
   /// @brief Resolve the end of the range to a concrete date, or none if unbounded.
@@ -606,7 +607,7 @@ public:
   /// begin, so a range never runs backwards.
   optional<date_t> end() const {
     if (!range_end)
-      return none;
+      return std::nullopt;
     date_specifier_t until =
         range_begin ? range_end->with_year_on_or_after(range_begin->begin(), end_inclusive)
                     : *range_end;
@@ -660,7 +661,7 @@ public:
       return s->begin();
     if (const auto* r = std::get_if<date_range_t>(&specifier_or_range))
       return r->begin();
-    return none;
+    return std::nullopt;
   }
 
   /// @brief The end date, delegated to whichever alternative is active.
@@ -669,7 +670,7 @@ public:
       return s->end();
     if (const auto* r = std::get_if<date_range_t>(&specifier_or_range))
       return r->end();
-    return none;
+    return std::nullopt;
   }
 
   /// @brief Debug representation showing the active alternative.
@@ -755,9 +756,9 @@ public:
   operator bool() const { return is_valid(); }
 
   /// @brief The effective begin date: start if set, otherwise the range's begin.
-  optional<date_t> begin() const { return start ? start : (range ? range->begin() : none); }
+  optional<date_t> begin() const { return start ? start : (range ? range->begin() : std::nullopt); }
   /// @brief The effective end date: finish if set, otherwise the range's end.
-  optional<date_t> end() const { return finish ? finish : (range ? range->end() : none); }
+  optional<date_t> end() const { return finish ? finish : (range ? range->end() : std::nullopt); }
 
   /// @brief Parse a period expression string and populate this interval.
   void parse(const string& str);
@@ -790,7 +791,7 @@ public:
    * @param date             Reference date to align to (default: today).
    * @param align_intervals  If true and since_specified, start at the reference date itself.
    */
-  void stabilize(const optional<date_t>& date = none, bool align_intervals = false);
+  void stabilize(const optional<date_t>& date = std::nullopt, bool align_intervals = false);
 
   /// @brief Returns true if start has been set.
   bool is_valid() const { return static_cast<bool>(start); }
@@ -813,7 +814,7 @@ public:
     if (end_of_duration)
       return *end_of_duration - gregorian::days(1);
     else
-      return none;
+      return std::nullopt;
   }
 
   /**

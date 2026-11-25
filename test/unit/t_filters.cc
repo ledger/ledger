@@ -1025,7 +1025,7 @@ BOOST_AUTO_TEST_CASE(testPassDownAccountsClear)
   basic_accounts_iterator iter(*root);
   predicate_t pred("total", keep_details_t());
 
-  pass_down_accounts<basic_accounts_iterator> pda(recorder, iter, pred, report);
+  pass_down_accounts<basic_accounts_iterator> pda(recorder, iter, pred, &report);
 
   BOOST_CHECK(!recorder->cleared);
   pda.clear();

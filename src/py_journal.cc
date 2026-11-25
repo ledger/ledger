@@ -146,15 +146,15 @@ public:
 /// full filter chain (handler_chain) so that any synthetic posts created by
 /// interval or period filters remain valid while Python iterates.
 struct collector_wrapper {
-  boost::shared_ptr<journal_t> journal_sp;
+  std::shared_ptr<journal_t> journal_sp;
   report_t report;
   post_handler_ptr handler_chain; // Keeps the filter chain alive (owns synthetic temp posts)
   std::shared_ptr<collect_display_posts> posts_collector;
 
-  collector_wrapper(boost::shared_ptr<journal_t> _journal_sp, report_t& base)
+  collector_wrapper(std::shared_ptr<journal_t> _journal_sp, report_t& base)
       : journal_sp(std::move(_journal_sp)), report(base),
         posts_collector(std::make_shared<collect_display_posts>(report)) {
-    TRACE_CTOR(collector_wrapper, "boost::shared_ptr<journal_t>, report_t&");
+    TRACE_CTOR(collector_wrapper, "std::shared_ptr<journal_t>, report_t&");
   }
   ~collector_wrapper() {
     TRACE_DTOR(collector_wrapper);
@@ -170,7 +170,7 @@ struct collector_wrapper {
 /// Runs a Ledger query string against the journal, building the full
 /// report filter chain and collecting matching posts into a
 /// PostCollectorWrapper that Python can iterate over.
-shared_ptr<collector_wrapper> py_query(boost::shared_ptr<journal_t> journal_sp,
+std::shared_ptr<collector_wrapper> py_query(std::shared_ptr<journal_t> journal_sp,
                                        const string& query) {
   journal_t& journal = *journal_sp;
   if (journal.has_xdata()) {
@@ -179,10 +179,10 @@ shared_ptr<collector_wrapper> py_query(boost::shared_ptr<journal_t> journal_sp,
   }
 
   report_t& current_report(downcast<report_t>(*scope_t::default_scope));
-  shared_ptr<collector_wrapper> coll(new collector_wrapper(journal_sp, current_report));
+  std::shared_ptr<collector_wrapper> coll(new collector_wrapper(journal_sp, current_report));
   epoch_scope_t clock; // A --now given to this Journal.query ends with it.
 
-  boost::shared_ptr<journal_t> save_journal = coll->report.session.journal;
+  std::shared_ptr<journal_t> save_journal = coll->report.session.journal;
   coll->report.session.journal = journal_sp;
 
   try {
@@ -240,7 +240,7 @@ object py_fileinfo_filename(const journal_t::fileinfo_t& fi) {
 
 void py_fileinfo_set_filename(journal_t::fileinfo_t& fi, const object& obj) {
   if (obj.is_none())
-    fi.filename = none;
+    fi.filename = std::nullopt;
   else
     fi.filename = path(extract<std::string>(obj)());
 }
@@ -267,9 +267,10 @@ boost::python::list py_find_accounts_re(journal_t& journal, const string& regexp
 } // unnamed namespace
 
 void export_journal() {
-  class_<item_handler<post_t>, shared_ptr<item_handler<post_t>>, boost::noncopyable>("PostHandler");
+  class_<item_handler<post_t>, std::shared_ptr<item_handler<post_t>>, boost::noncopyable>(
+      "PostHandler");
 
-  class_<collector_wrapper, shared_ptr<collector_wrapper>, boost::noncopyable>(
+  class_<collector_wrapper, std::shared_ptr<collector_wrapper>, boost::noncopyable>(
       "PostCollectorWrapper", no_init)
       .def("__len__", &collector_wrapper::length)
       .def("__getitem__", posts_getitem, return_internal_reference<>())
@@ -287,7 +288,7 @@ void export_journal() {
       .add_property("from_stream", make_getter(&journal_t::fileinfo_t::from_stream),
                     make_setter(&journal_t::fileinfo_t::from_stream));
 
-  class_<journal_t, boost::shared_ptr<journal_t>, boost::noncopyable>("Journal")
+  class_<journal_t, std::shared_ptr<journal_t>, boost::noncopyable>("Journal")
       .add_property(
           "master",
           make_getter(&journal_t::master,

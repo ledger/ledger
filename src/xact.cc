@@ -1306,6 +1306,17 @@ std::string bufferToHex(const unsigned char* buffer, std::size_t size) {
     oss << std::setw(2) << static_cast<int>(buffer[i]);
   return oss.str();
 }
+
+/// Write an optional hash input as boost's optional operator<< spelled it:
+/// "--" when empty, else a space and the value.  Hash: tags already written
+/// into journals depend on that spelling, so it must not change.
+template <typename T>
+void put_hash_field(std::ostream& out, const optional<T>& field) {
+  if (field)
+    out << ' ' << *field;
+  else
+    out << "--";
+}
 } // namespace
 
 /**
@@ -1321,7 +1332,7 @@ string xact_t::hash(const string& nonce, hash_type_t hash_type) const {
 
   repr << nonce;
   repr << date();
-  repr << aux_date();
+  put_hash_field(repr, aux_date());
   if (code)
     repr << ' ' << *code;
   else
@@ -1337,8 +1348,8 @@ string xact_t::hash(const string& nonce, hash_type_t hash_type) const {
       posting << post->amount.to_fullstring();
     if (post->cost)
       posting << post->cost->to_fullstring();
-    posting << post->checkin;
-    posting << post->checkout;
+    put_hash_field(posting, post->checkin);
+    put_hash_field(posting, post->checkout);
     strings.push_back(posting.str());
   }
 

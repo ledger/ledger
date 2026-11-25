@@ -136,8 +136,8 @@ public:
     void reset() {
       total = value_t();
       real_total = value_t();
-      latest = none;
-      last = none;
+      latest = std::nullopt;
+      last = std::nullopt;
     }
   };
   mutable running_total_t running_total_;
@@ -145,7 +145,7 @@ public:
   mutable string _fullname; ///< Cached colon-joined full name, computed lazily by fullname().
 
   explicit account_t(account_t* _parent = nullptr, const string& _name = "",
-                     const optional<string>& _note = none)
+                     const optional<string>& _note = std::nullopt)
       : supports_flags<>(), metadata_t(), scope_t(), parent(_parent), name(_name), note(_note),
         depth(static_cast<unsigned short>(parent ? parent->depth + 1 : 0)) {
     if (parent && parent->depth == std::numeric_limits<unsigned short>::max())
@@ -495,8 +495,7 @@ public:
    * @param real_only  If true, return only the non-virtual total.
    * @param expr       Optional valuation expression applied to each posting.
    */
-  value_t amount(const optional<bool> real_only = false,
-                 const optional<expr_t&>& expr = none) const;
+  value_t amount(bool real_only = false, expr_t* expr = nullptr) const;
 
   /**
    * @brief Sum of the account's own postings (ignores visit flags).
@@ -510,14 +509,14 @@ public:
    * which case the account is rescanned.  Balance assertions and
    * assignments use it while parsing.
    */
-  value_t self_total(bool real_only = false, const optional<date_t>& cutoff = none) const;
+  value_t self_total(bool real_only = false, const optional<date_t>& cutoff = std::nullopt) const;
 
   /**
    * @brief Recursive family total: this account's amount() plus all children's total().
    *
    * Cached via family_details.calculated to avoid redundant tree walks.
    */
-  value_t total(const optional<expr_t&>& expr = none) const;
+  value_t total(expr_t* expr = nullptr) const;
 
   /**
    * @brief Lazily gather and return statistics for this account's own postings.

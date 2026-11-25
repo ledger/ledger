@@ -321,7 +321,7 @@ public:
   post_t* active_post = nullptr; ///< During parsing, the template posting currently being built
                                  ///< (used by parse_tags to set apply_to_post).
 
-  auto_xact_t(const predicate_t& _predicate = predicate_t(), optional<string> _name = none)
+  auto_xact_t(const predicate_t& _predicate = predicate_t(), optional<string> _name = std::nullopt)
       : predicate(_predicate), name(std::move(_name)) {
     TRACE_CTOR(auto_xact_t, "const predicate_t&, optional<string>");
   }

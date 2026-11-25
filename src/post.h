@@ -150,7 +150,7 @@ public:
     TRACE_CTOR(post_t, "account_t *, flags_t");
   }
   post_t(account_t* _account, const amount_t& _amount, flags_t _flags = ITEM_NORMAL,
-         const optional<string>& _note = none)
+         const optional<string>& _note = std::nullopt)
       : item_t(_flags, _note), xact(nullptr), account(_account), amount(_amount) {
     TRACE_CTOR(post_t, "account_t *, amount_t, flags_t, optional<string>");
   }
@@ -381,7 +381,7 @@ public:
   mutable optional<xdata_t> xdata_;
 
   bool has_xdata() const { return static_cast<bool>(xdata_); }
-  void clear_xdata() { xdata_ = none; }
+  void clear_xdata() { xdata_ = std::nullopt; }
   xdata_t& xdata() {
     if (!xdata_)
       xdata_ = xdata_t();
@@ -398,7 +398,7 @@ public:
    * Otherwise evaluates the expression in a bound scope.  The compound_value
    * in xdata takes precedence if POST_EXT_COMPOUND is set.
    */
-  void add_to_value(value_t& value, const optional<expr_t&>& expr = none) const;
+  void add_to_value(value_t& value, expr_t* expr = nullptr) const;
 
   void set_reported_account(account_t* account);
 

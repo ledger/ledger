@@ -223,7 +223,7 @@ public:
   /// @brief Parse an expression from a stream.  Derived classes override
   /// this to invoke their specific parser (e.g., parser_t for expr_t).
   virtual void parse(std::istream&, const parse_flags_t& = PARSE_DEFAULT,
-                     const optional<string>& original_string = none) {
+                     const optional<string>& original_string = std::nullopt) {
     set_text(original_string ? *original_string : "<stream>");
   }
 

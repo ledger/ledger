@@ -253,7 +253,7 @@ See LICENSE file included with the distribution for details and disclaimer.");
       CTOR(global_scope_t, init_file_) {
         if (!_init_file.empty())
           // _init_file is filled during handle_debug_options
-          on(none, _init_file);
+          on(std::nullopt, _init_file);
       });
 
   OPTION(global_scope_t, options);       ///< Dump all options before command output

@@ -228,7 +228,7 @@ void account_t::apply_deferred_posts() {
       for (post_t* post : pair.second)
         post->account->add_post(post);
     }
-    deferred_posts = none;
+    deferred_posts = std::nullopt;
   }
 
   // Also apply in child accounts
@@ -256,8 +256,8 @@ bool account_t::remove_post(post_t* post) {
 
   // Invalidate cached iterators
   if (xdata_) {
-    xdata_->self_details.last_post = none;
-    xdata_->self_details.last_reported_post = none;
+    xdata_->self_details.last_post = std::nullopt;
+    xdata_->self_details.last_reported_post = std::nullopt;
     invalidate_xdata_cache(this);
   }
 
@@ -282,8 +282,8 @@ void account_t::remove_posts(const std::set<post_t*>& doomed) {
 
   // Invalidate cached iterators
   if (xdata_) {
-    xdata_->self_details.last_post = none;
-    xdata_->self_details.last_reported_post = none;
+    xdata_->self_details.last_post = std::nullopt;
+    xdata_->self_details.last_reported_post = std::nullopt;
     invalidate_xdata_cache(this);
   }
   lot_inventory.reset();
@@ -767,7 +767,7 @@ account_t::xdata_t::details_t& account_t::xdata_t::details_t::operator+=(const d
 /*--- Cache Management ---*/
 
 void account_t::clear_xdata() {
-  xdata_ = none;
+  xdata_ = std::nullopt;
 
   // Recurse into all children, including ACCOUNT_TEMP ones.  When --pivot is
   // active, transfer_details creates a temporary parent account ("Invoice")
@@ -797,8 +797,8 @@ void account_t::clear_display_state() {
     // beginning.  Posts already marked POST_EXT_CONSIDERED will be
     // skipped, but newly visited posts anywhere in the list will be
     // picked up.
-    xdata_->self_details.last_post = none;
-    xdata_->self_details.last_reported_post = none;
+    xdata_->self_details.last_post = std::nullopt;
+    xdata_->self_details.last_reported_post = std::nullopt;
 
     xdata_->sort_values.clear();
   }
@@ -832,8 +832,7 @@ void account_t::clear_display_state() {
  * variables rather than cached in xdata, because the expression changes
  * the semantics of the accumulation.
  */
-value_t account_t::amount(const optional<bool> real_only, const optional<expr_t&>& expr /*= none*/
-) const {
+value_t account_t::amount(bool real_only, expr_t* expr /*= nullptr*/) const {
   DEBUG("account.amount", "real only: " << real_only);
 
   if (!xdata_ || !xdata_->has_flags(ACCOUNT_EXT_VISITED))
@@ -877,7 +876,7 @@ value_t account_t::amount(const optional<bool> real_only, const optional<expr_t&
       (*i)->xdata().add_flags(POST_EXT_CONSIDERED);
   }
 
-  return real_only == true ? real_total : total;
+  return real_only ? real_total : total;
 }
 
 static value_t sum_posts(const posts_list& posts, bool real_only, const optional<date_t>& cutoff) {
@@ -928,7 +927,7 @@ value_t account_t::self_total(bool real_only, const optional<date_t>& cutoff) co
  * result is cached via family_details.calculated so subsequent calls
  * return immediately.
  */
-value_t account_t::total(const optional<expr_t&>& expr) const {
+value_t account_t::total(expr_t* expr) const {
   if (!(xdata_ && xdata_->family_details.calculated)) {
     const_cast<account_t&>(*this).xdata().family_details.calculated = true;
 

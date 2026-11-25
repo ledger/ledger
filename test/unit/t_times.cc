@@ -22,7 +22,7 @@ struct times_fixture {
 // dates, and restores the system clock when the case ends.
 struct pinned_today {
   explicit pinned_today(const char* when) { epoch = parse_datetime(when); }
-  ~pinned_today() { epoch = none; }
+  ~pinned_today() { epoch = std::nullopt; }
 };
 
 BOOST_FIXTURE_TEST_SUITE(times, times_fixture)
@@ -844,9 +844,9 @@ BOOST_AUTO_TEST_CASE(testDateSpecifierW7)
 {
   // Use the public constructor with optional args
   date_specifier_t spec(
-    optional<date_specifier_t::year_type>(date_specifier_t::year_type(2024)),
-    optional<date_specifier_t::month_type>(gregorian::Jan),
-    optional<date_specifier_t::day_type>(date_specifier_t::day_type(15)));
+    std::optional<date_specifier_t::year_type>(date_specifier_t::year_type(2024)),
+    std::optional<date_specifier_t::month_type>(gregorian::Jan),
+    std::optional<date_specifier_t::day_type>(date_specifier_t::day_type(15)));
 
   date_t d = spec.begin();
   BOOST_CHECK(!d.is_not_a_date());
@@ -865,7 +865,7 @@ BOOST_AUTO_TEST_CASE(testDateSpecifierW7)
 
   // Test specifier with only year
   date_specifier_t year_only(
-    optional<date_specifier_t::year_type>(date_specifier_t::year_type(2024)));
+    std::optional<date_specifier_t::year_type>(date_specifier_t::year_type(2024)));
   BOOST_CHECK(year_only.has_year());
   BOOST_CHECK(!year_only.begin().is_not_a_date());
 
@@ -954,22 +954,22 @@ BOOST_AUTO_TEST_CASE(testDateSpecifierEndW8)
 {
   // end() with day set => begin() + 1 day
   date_specifier_t spec_day(
-    optional<date_specifier_t::year_type>(date_specifier_t::year_type(2024)),
-    optional<date_specifier_t::month_type>(gregorian::Mar),
-    optional<date_specifier_t::day_type>(date_specifier_t::day_type(15)));
+    std::optional<date_specifier_t::year_type>(date_specifier_t::year_type(2024)),
+    std::optional<date_specifier_t::month_type>(gregorian::Mar),
+    std::optional<date_specifier_t::day_type>(date_specifier_t::day_type(15)));
   date_t e1 = spec_day.end();
   BOOST_CHECK_EQUAL(e1, parse_date("2024/03/16"));
 
   // end() with month but no day => begin() + 1 month
   date_specifier_t spec_month(
-    optional<date_specifier_t::year_type>(date_specifier_t::year_type(2024)),
-    optional<date_specifier_t::month_type>(gregorian::Mar));
+    std::optional<date_specifier_t::year_type>(date_specifier_t::year_type(2024)),
+    std::optional<date_specifier_t::month_type>(gregorian::Mar));
   date_t e2 = spec_month.end();
   BOOST_CHECK_EQUAL(e2, parse_date("2024/04/01"));
 
   // end() with year only => begin() + 1 year (line 303-304)
   date_specifier_t spec_year(
-    optional<date_specifier_t::year_type>(date_specifier_t::year_type(2024)));
+    std::optional<date_specifier_t::year_type>(date_specifier_t::year_type(2024)));
   date_t e3 = spec_year.end();
   BOOST_CHECK_EQUAL(e3, parse_date("2025/01/01"));
 }

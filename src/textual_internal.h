@@ -179,7 +179,7 @@ public:
       if (std::holds_alternative<T>(state.value))
         return std::get<T>(state.value);
     }
-    return parent ? parent->get_application<T>() : none;
+    return parent ? parent->get_application<T>() : std::nullopt;
   }
 
   /// @brief The directory listing cache shared by every file of this parse:

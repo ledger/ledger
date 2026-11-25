@@ -155,15 +155,19 @@ components with their standard-library equivalents.
 
 - Boost dependencies are slimmed down.  `boost::filesystem`, `boost::any`, and
   `boost::variant` are replaced with their `std::` equivalents, and
-  `boost::shared_ptr` use is reduced significantly across the core code.
+  `boost::shared_ptr` is gone from the core code (the Python `Journal` is
+  held by `std::shared_ptr`).
   `find_package(Boost ...)`  now requires only `date_time`, `iostreams`, and
   `regex`, with optional `python`, `nowide`, and `unit_test_framework`.  The
   minimum Boost version (1.72.0) is unchanged
 
-- Embedders should note that most public headers now traffic in
-  `std::optional`, `std::any`, and `std::variant` rather than their `boost::`
-  counterparts; downstream code that named the Boost types explicitly will
-  need a one-line typedef or search-and-replace
+- Embedders should note that public headers now traffic only in
+  `std::optional` (unqualified `optional` inside `namespace ledger` is
+  `std::optional`; optional references became pointers, as in
+  `balance_t::commodity_amount(const commodity_t*)` and
+  `account_t::amount(bool, expr_t*)`), `std::any`, and `std::variant` rather
+  than their `boost::` counterparts; downstream code that named the Boost
+  types explicitly will need a one-line typedef or search-and-replace
 
 - Adopt C++17 idioms throughout: structured bindings, if-statement
   initializers, `if constexpr`, compact nested namespaces, `inline static

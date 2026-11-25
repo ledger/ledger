@@ -63,51 +63,15 @@ struct register_python_conversion {
 
 template <typename T>
 struct register_optional_to_python : public boost::noncopyable {
-  // Converters for boost::optional<T> (still used by members declared with
-  // unqualified `optional`, which resolves to boost::optional via
-  // `using namespace boost` in utils.h)
-  struct boost_optional_to_python {
-    static PyObject* convert(const boost::optional<T>& value) {
-      return boost::python::incref(value ? boost::python::to_python_value<T>()(*value)
-                                         : boost::python::detail::none());
-    }
-  };
-
-  struct boost_optional_from_python {
-    static void* convertible(PyObject* source) {
-      using namespace boost::python::converter;
-      if (source == Py_None)
-        return source;
-      const registration& converters(registered<T>::converters);
-      if (implicit_rvalue_convertible_from_python(source, converters)) {
-        rvalue_from_python_stage1_data data = rvalue_from_python_stage1(source, converters);
-        return data.convertible;
-      }
-      return nullptr;
-    }
-
-    static void construct(PyObject* source,
-                          boost::python::converter::rvalue_from_python_stage1_data* data) {
-      using namespace boost::python::converter;
-      void* storage = ((rvalue_from_python_storage<boost::optional<T>>*)data)->storage.bytes;
-      if (source == Py_None)
-        new (storage) boost::optional<T>();
-      else
-        new (storage) boost::optional<T>(boost::python::extract<T>(source)());
-      data->convertible = storage;
-    }
-  };
-
-  // Converters for std::optional<T> (used by explicitly migrated fields
-  // like xact_t::code and wrapper function return types)
-  struct std_optional_to_python {
+  // Converters between std::optional<T> and Python (None when empty).
+  struct to_python {
     static PyObject* convert(const std::optional<T>& value) {
       return boost::python::incref(value ? boost::python::to_python_value<T>()(*value)
                                          : boost::python::detail::none());
     }
   };
 
-  struct std_optional_from_python {
+  struct from_python {
     static void* convertible(PyObject* source) {
       using namespace boost::python::converter;
       if (source == Py_None)
@@ -133,10 +97,7 @@ struct register_optional_to_python : public boost::noncopyable {
   };
 
   explicit register_optional_to_python() {
-    register_python_conversion<boost::optional<T>, boost_optional_to_python,
-                               boost_optional_from_python>();
-    register_python_conversion<std::optional<T>, std_optional_to_python,
-                               std_optional_from_python>();
+    register_python_conversion<std::optional<T>, to_python, from_python>();
   }
 };
 

@@ -67,27 +67,21 @@ void py_amount_initialize() {
 
 /*--- Valuation Wrapper Overloads ---*/
 
-/// Wrappers that adapt amount_t::value() to Python by converting the
-/// optional return into std::optional, with overloads accepting different
-/// combinations of commodity and moment parameters.
+/// Overloads that supply the default moment and commodity for Python.
 
 std::optional<amount_t> py_value_0(const amount_t& amount) {
-  auto r = amount.value(CURRENT_TIME());
-  return r ? std::optional<amount_t>(*r) : std::nullopt;
+  return amount.value(CURRENT_TIME());
 }
 std::optional<amount_t> py_value_1(const amount_t& amount, const commodity_t* in_terms_of) {
-  auto r = amount.value(CURRENT_TIME(), in_terms_of);
-  return r ? std::optional<amount_t>(*r) : std::nullopt;
+  return amount.value(CURRENT_TIME(), in_terms_of);
 }
 std::optional<amount_t> py_value_2(const amount_t& amount, const commodity_t* in_terms_of,
                                    const datetime_t& moment) {
-  auto r = amount.value(moment, in_terms_of);
-  return r ? std::optional<amount_t>(*r) : std::nullopt;
+  return amount.value(moment, in_terms_of);
 }
 std::optional<amount_t> py_value_2d(const amount_t& amount, const commodity_t* in_terms_of,
                                     const date_t& moment) {
-  auto r = amount.value(datetime_t(moment), in_terms_of);
-  return r ? std::optional<amount_t>(*r) : std::nullopt;
+  return amount.value(datetime_t(moment), in_terms_of);
 }
 
 /*--- Parse Wrapper Overloads ---*/

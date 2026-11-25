@@ -59,12 +59,12 @@ namespace {
 
 /// These free functions delegate to the global python_session, providing
 /// a simpler API (ledger.read_journal) without requiring a Session object.
-boost::shared_ptr<journal_t> py_read_journal(const string& pathname) {
+std::shared_ptr<journal_t> py_read_journal(const string& pathname) {
   python_session->read_journal(path(pathname));
   return python_session->journal;
 }
 
-boost::shared_ptr<journal_t> py_read_journal_from_string(const string& data) {
+std::shared_ptr<journal_t> py_read_journal_from_string(const string& data) {
   python_session->read_journal_from_string(data);
   return python_session->journal;
 }
@@ -81,23 +81,23 @@ void py_close_journal_files() {
 
 /*--- Session Method Wrappers ---*/
 
-boost::shared_ptr<journal_t> py_session_read_journal(session_t& session, const string& pathname) {
+std::shared_ptr<journal_t> py_session_read_journal(session_t& session, const string& pathname) {
   session.read_journal(path(pathname));
   return session.journal;
 }
 
-boost::shared_ptr<journal_t> py_session_read_journal_from_string(session_t& session,
+std::shared_ptr<journal_t> py_session_read_journal_from_string(session_t& session,
                                                                  const string& data) {
   session.read_journal_from_string(data);
   return session.journal;
 }
 
-boost::shared_ptr<journal_t> py_session_read_journal_files(session_t& session) {
+std::shared_ptr<journal_t> py_session_read_journal_files(session_t& session) {
   session.read_journal_files();
   return session.journal;
 }
 
-boost::shared_ptr<journal_t> py_session_get_journal(session_t& session) {
+std::shared_ptr<journal_t> py_session_get_journal(session_t& session) {
   return session.journal;
 }
 } // namespace

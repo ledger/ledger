@@ -389,7 +389,7 @@ void anonymize_posts::operator()(post_t& post) {
     buf << reinterpret_cast<boost::uintmax_t>(post.xact->payee.c_str()) << integer_gen()
         << post.xact->payee.c_str();
     xact.payee = sha1sum(buf.str(), 8);
-    xact.note = none;
+    xact.note = std::nullopt;
   } else {
     xact.journal = post.xact->journal;
   }
@@ -412,7 +412,7 @@ void anonymize_posts::operator()(post_t& post) {
   account_t* new_account =
       create_temp_account_from_path(account_names, accounts, xact.journal->master);
   post_t& temp = temps.copy_post(post, xact, new_account);
-  temp.note = none;
+  temp.note = std::nullopt;
   temp.add_flags(POST_ANONYMIZED);
 
   render_commodity(temp.amount);
@@ -531,7 +531,7 @@ void calc_posts::operator()(post_t& post) {
   xdata.display_total = value_t();
   xdata.drop_flags(POST_EXT_DISPLAY_TOTAL_CACHED | POST_EXT_CONSIDERED);
 
-  post.add_to_value(xdata.visited_value, amount_expr);
+  post.add_to_value(xdata.visited_value, &amount_expr);
   xdata.add_flags(POST_EXT_VISITED);
 
   account_t* acct = post.reported_account();
@@ -748,7 +748,7 @@ void collapse_posts::report_subtotal() {
 
         date_t d = post->date();
         date_acct_key key(d, acct);
-        post->add_to_value(grouped[key], amount_expr);
+        post->add_to_value(grouped[key], &amount_expr);
       }
 
       for (const grouped_totals_map::value_type& entry : grouped) {
@@ -831,8 +831,8 @@ void collapse_posts::operator()(post_t& post) {
   if (last_xact != post.xact && count > 0)
     report_subtotal();
 
-  post.add_to_value(subtotal, amount_expr);
-  post.add_to_value(find_totals(post.account), amount_expr);
+  post.add_to_value(subtotal, &amount_expr);
+  post.add_to_value(find_totals(post.account), &amount_expr);
 
   component_posts.push_back(&post);
 
@@ -1806,8 +1806,8 @@ void subtotal_posts::report_subtotal(const char* spec_fmt,
   if (component_posts.empty())
     return;
 
-  optional<date_t> range_start = interval ? interval->start : none;
-  optional<date_t> range_finish = interval ? interval->inclusive_end() : none;
+  optional<date_t> range_start = interval ? interval->start : std::nullopt;
+  optional<date_t> range_finish = interval ? interval->inclusive_end() : std::nullopt;
 
   if (!range_start || !range_finish) {
     for (post_t* post : component_posts) {
@@ -1869,7 +1869,7 @@ void subtotal_posts::operator()(post_t& post) {
   // posts then bypass expression evaluation in calc_posts, which leads to
   // mismatched sequence lengths in the running total (issue #965).
   value_t amount;
-  post.add_to_value(amount, amount_expr);
+  post.add_to_value(amount, &amount_expr);
 
   post_t::xdata_t& xdata(post.xdata());
   saved_compounds.push_back({&post, xdata.has_flags(POST_EXT_COMPOUND), xdata.compound_value});
@@ -2133,7 +2133,7 @@ void posts_as_equity::report_subtotal() {
 /// Flush each payee's subtotal_posts instance and forward results downstream.
 void by_payee_posts::flush() {
   for (payee_subtotals_map::value_type& pair : payee_subtotals)
-    pair.second->report_subtotal(nullptr, none, pair.first);
+    pair.second->report_subtotal(nullptr, std::nullopt, pair.first);
 
   item_handler<post_t>::flush();
 

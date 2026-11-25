@@ -203,13 +203,13 @@ public:
   const string& symbol() const { return qualified_symbol ? *qualified_symbol : base->symbol; }
 
   optional<std::size_t> graph_index() const { return base->graph_index; }
-  void set_graph_index(const optional<std::size_t>& arg = none) { base->graph_index = arg; }
+  void set_graph_index(const optional<std::size_t>& arg = std::nullopt) { base->graph_index = arg; }
 
   optional<string> name() const { return base->name; }
-  void set_name(const optional<string>& arg = none) { base->name = arg; }
+  void set_name(const optional<string>& arg = std::nullopt) { base->name = arg; }
 
   optional<string> note() const { return base->note; }
-  void set_note(const optional<string>& arg = none) { base->note = arg; }
+  void set_note(const optional<string>& arg = std::nullopt) { base->note = arg; }
 
   amount_t::precision_t precision() const { return base->precision; }
   void set_precision(amount_t::precision_t arg) { base->precision = arg; }
@@ -223,10 +223,10 @@ public:
   }
 
   optional<amount_t> smaller() const { return base->smaller; }
-  void set_smaller(const optional<amount_t>& arg = none) { base->smaller = arg; }
+  void set_smaller(const optional<amount_t>& arg = std::nullopt) { base->smaller = arg; }
 
   optional<amount_t> larger() const { return base->larger; }
-  void set_larger(const optional<amount_t>& arg = none) { base->larger = arg; }
+  void set_larger(const optional<amount_t>& arg = std::nullopt) { base->larger = arg; }
 
   virtual std::optional<expr_t> value_expr() const { return base->value_expr; }
   void set_value_expr(const std::optional<expr_t>& expr = {}) { base->value_expr = expr; }

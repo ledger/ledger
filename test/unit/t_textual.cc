@@ -514,10 +514,10 @@ BOOST_AUTO_TEST_CASE(testYearDirectiveDatesTodayWithoutNow)
   // "today" to December 31 of its year.  It must do so without writing
   // the --now clock (epoch), which xact and template leave alone while
   // they hide the directive, and the latest directive decides.
-  const optional<datetime_t> saved_epoch = epoch;
-  const optional<int> saved_year = year_directive_year;
-  epoch = none;
-  year_directive_year = none;
+  const std::optional<datetime_t> saved_epoch = epoch;
+  const std::optional<int> saved_year = year_directive_year;
+  epoch = std::nullopt;
+  year_directive_year = std::nullopt;
 
   parse_text("year 2020\n");
   BOOST_CHECK(!epoch);

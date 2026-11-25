@@ -164,8 +164,8 @@ void instance_t::automated_xact_directive(char* line) {
 
       while (it != end) {
         unique_ptr<auto_xact_t>& xact = *it;
-        if (xact->name && name_mask.match(xact->name.get())) {
-          DEBUG("textual.autoxact", "deleted '" << xact->name.get() << "'");
+        if (xact->name && name_mask.match(*xact->name)) {
+          DEBUG("textual.autoxact", "deleted '" << *xact->name << "'");
           it = context.journal->auto_xacts.erase(it);
           has_match = true;
           continue;
@@ -177,8 +177,8 @@ void instance_t::automated_xact_directive(char* line) {
       DEBUG("textual.autoxact", command << " automated transaction matching '" << pattern << "'");
       bool enabled = command == "enable";
       for (unique_ptr<auto_xact_t>& xact : context.journal->auto_xacts) {
-        if (xact->name && name_mask.match(xact->name.get())) {
-          DEBUG("textual.autoxact", command << "d '" << xact->name.get() << "'");
+        if (xact->name && name_mask.match(*xact->name)) {
+          DEBUG("textual.autoxact", command << "d '" << *xact->name << "'");
           xact->enabled = enabled;
           has_match = true;
         }
@@ -189,7 +189,7 @@ void instance_t::automated_xact_directive(char* line) {
   }
 
   // Phase 4: Parse the predicate query and build the auto_xact_t.
-  optional<string> xact_name = none;
+  optional<string> xact_name = std::nullopt;
 
   // If command is "::" it means we are defining a named auto-xact, so we
   // need to start parsing the query at `p` (after the name and "::").
@@ -228,7 +228,7 @@ void instance_t::automated_xact_directive(char* line) {
     }
 
     for (unique_ptr<auto_xact_t>& xact : context.journal->auto_xacts) {
-      if (xact->name && name == xact->name.get()) {
+      if (xact->name && name == *xact->name) {
         throw_(parse_error, _f("Automated transaction with name '%1%' already exists") % name);
       }
     }
@@ -782,7 +782,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
             DEBUG("textual.parse", "line " << context.linenum << ": "
                                            << "Finding commodity " << amt.commodity() << " (" << amt
                                            << ") in balance " << diff);
-            optional<amount_t> wanted_commodity = diff.commodity_amount(amt.commodity());
+            optional<amount_t> wanted_commodity = diff.commodity_amount(&amt.commodity());
             if (!wanted_commodity) {
               diff = amt - amt; // this is '0' with the correct commodity.
             } else {

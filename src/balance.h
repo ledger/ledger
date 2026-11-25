@@ -577,15 +577,13 @@ public:
    * commodity_count() returns the number of different commodities
    * stored in the balance.
    *
-   * commodity_amount(optional<commodity_t>) returns an (optional)
-   * amount for the given commodity within the balance; if no
-   * commodity is specified, it returns the (optional) uncommoditized
-   * component of the balance.  If no matching element can be found,
-   * boost::none is returned.
+   * commodity_amount(commodity) returns the (optional) amount of that
+   * commodity, or with no commodity the sole one; if no matching element
+   * can be found, std::nullopt is returned.
    */
   std::size_t commodity_count() const { return amounts.size(); }
 
-  optional<amount_t> commodity_amount(const optional<const commodity_t&>& commodity = none) const;
+  optional<amount_t> commodity_amount(const commodity_t* commodity = nullptr) const;
 
   balance_t number() const {
     balance_t temp;

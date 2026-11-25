@@ -101,7 +101,7 @@ public:
   /// named on the command line.
   bool use_default_price_db;
 
-  boost::shared_ptr<journal_t> journal;  ///< The loaded journal data
+  std::shared_ptr<journal_t> journal;    ///< The loaded journal data
   parse_context_stack_t parsing_context; ///< Stack of active parse contexts (for includes)
 
   explicit session_t();

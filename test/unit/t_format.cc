@@ -660,7 +660,7 @@ BOOST_AUTO_TEST_CASE(testFormatTemplateRefW7)
   // Test that %$0 throws via parse_format with template
   format_t tmpl("%(account)");
   format_t fmt;
-  BOOST_CHECK_THROW(fmt.parse_format("%$0", tmpl), format_error);
+  BOOST_CHECK_THROW(fmt.parse_format("%$0", &tmpl), format_error);
 
   // Test %$ without template throws (via format_t constructor)
   BOOST_CHECK_THROW(format_t fmt2("%$1"), format_error);
@@ -830,10 +830,10 @@ BOOST_AUTO_TEST_CASE(testFormatFieldRefOutOfRangeW8)
   // Line 266-268: $0 and non-digit reference should throw
   format_t tmpl("%(account)");
   format_t fmt;
-  BOOST_CHECK_THROW(fmt.parse_format("%$0", tmpl), format_error);
+  BOOST_CHECK_THROW(fmt.parse_format("%$0", &tmpl), format_error);
 
   // Line 280: reference that exceeds available template elements
-  BOOST_CHECK_THROW(fmt.parse_format("%$9", tmpl), format_error);
+  BOOST_CHECK_THROW(fmt.parse_format("%$9", &tmpl), format_error);
 
   amount_t::shutdown();
   times_shutdown();
@@ -1049,10 +1049,10 @@ BOOST_AUTO_TEST_CASE(testFormatFieldRefInvalidW11)
   format_t fmt;
 
   // $0 is invalid
-  BOOST_CHECK_THROW(fmt.parse_format("%$0", tmpl), format_error);
+  BOOST_CHECK_THROW(fmt.parse_format("%$0", &tmpl), format_error);
 
   // Non-digit, non A-F is invalid
-  BOOST_CHECK_THROW(fmt.parse_format("%$G", tmpl), format_error);
+  BOOST_CHECK_THROW(fmt.parse_format("%$G", &tmpl), format_error);
 
   amount_t::shutdown();
   times_shutdown();

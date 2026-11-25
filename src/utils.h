@@ -73,6 +73,7 @@
 
 namespace ledger {
 using namespace boost;
+using std::optional; // not boost::optional, which `using namespace boost` would name
 
 using string = std::string;             ///< Default string type
 using string_view = std::string_view;   ///< Non-owning string view

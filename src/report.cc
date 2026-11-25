@@ -209,7 +209,7 @@ void report_t::normalize_options(const string& verb) {
   if (session.HANDLED(price_db_))
     commodity_pool_t::current_pool->price_db = session.HANDLER(price_db_).str();
   else
-    commodity_pool_t::current_pool->price_db = none;
+    commodity_pool_t::current_pool->price_db = std::nullopt;
 
   if (HANDLED(date_format_))
     set_date_format(HANDLER(date_format_).str().c_str());
@@ -422,7 +422,7 @@ void report_t::apply_option_globals() {
   // Re-running the handler re-applies this report's --truncate style (its
   // value was checked when the option was given, so it cannot throw here).
   if (HANDLED(truncate_)) {
-    HANDLER(truncate_).handler_thunk(none, HANDLER(truncate_).value);
+    HANDLER(truncate_).handler_thunk(std::nullopt, HANDLER(truncate_).value);
   } else {
     format_t::default_style = format_t::TRUNCATE_TRAILING;
     format_t::default_style_changed = false;
@@ -728,13 +728,13 @@ struct accounts_flusher {
     // pass_down_accounts reads the context only when a predicate is set.
     if (!report.HANDLED(sort_)) {
       basic_accounts_iterator iter(*report.session.journal->master);
-      pass_down_accounts<basic_accounts_iterator>(handler, iter, pred, report);
+      pass_down_accounts<basic_accounts_iterator>(handler, iter, pred, &report);
     } else {
       expr_t sort_expr(report.HANDLER(sort_).str());
       sort_expr.set_context(&report);
       sorted_accounts_iterator iter(*report.session.journal->master, sort_expr, report,
                                     report.HANDLED(flat));
-      pass_down_accounts<sorted_accounts_iterator>(handler, iter, pred, report);
+      pass_down_accounts<sorted_accounts_iterator>(handler, iter, pred, &report);
     }
 
     // The next cumulative group adds to these totals; walk_posts clears xdata otherwise.
@@ -831,7 +831,7 @@ void report_t::commodities_report(post_handler_ptr handler) {
     if (stripped != limit_op) {
       HANDLER(limit_).off();
       if (stripped)
-        HANDLER(limit_).on(none, predicate_t(stripped, what_to_keep()).print_to_str());
+        HANDLER(limit_).on(std::nullopt, predicate_t(stripped, what_to_keep()).print_to_str());
     }
   }
 
@@ -845,7 +845,7 @@ void report_t::commodities_report(post_handler_ptr handler) {
   // Restore the original limit.
   if (had_limit) {
     HANDLER(limit_).off();
-    HANDLER(limit_).on(none, saved_limit);
+    HANDLER(limit_).on(std::nullopt, saved_limit);
   }
 
   optional<date_interval_t> price_interval;
@@ -1465,7 +1465,7 @@ value_t report_t::fn_nail_down(call_scope_t& args) {
       // commodity for the per-unit cost calculation.
       if (stripped.is_balance()) {
         const balance_t& bal = stripped.as_balance();
-        if (optional<amount_t> comm_amt = bal.commodity_amount(tmp.commodity())) {
+        if (optional<amount_t> comm_amt = bal.commodity_amount(&tmp.commodity())) {
           arg1 = *comm_amt;
         } else if (bal.amounts.size() == 1) {
           arg1 = bal.amounts.begin()->second;

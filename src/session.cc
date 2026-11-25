@@ -150,8 +150,8 @@ std::size_t session_t::read_data(const string& master_account) {
   optional<path> price_db_path;
   if (HANDLED(price_db_)) {
     price_db_path = resolve_path(HANDLER(price_db_).str());
-    if (!exists(price_db_path.get())) {
-      throw_(parse_error, _f("Could not find specified price-db file %1%") % price_db_path);
+    if (!exists(*price_db_path)) {
+      throw_(parse_error, _f("Could not find specified price-db file %1%") % *price_db_path);
     }
   } else if (use_default_price_db) {
     if (const char* home_var = std::getenv("HOME")) {
@@ -364,9 +364,9 @@ void session_t::configure_journal() {
     if (!*opt)
       continue;
     if (opt->wants_arg)
-      opt->handler_thunk(none, opt->value);
+      opt->handler_thunk(std::nullopt, opt->value);
     else
-      opt->handler_thunk(none);
+      opt->handler_thunk(std::nullopt);
   }
 }
 

@@ -374,7 +374,7 @@ public:
   void off() {
     handled = false;
     value = "";
-    source = none;
+    source = std::nullopt;
   }
 
   /// @brief Override point for boolean option side effects (called by on(whence)).

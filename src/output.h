@@ -102,8 +102,9 @@ protected:
 
 public:
   format_posts(report_t& _report, const string& format,
-               const optional<string>& _prepend_format = none, std::size_t _prepend_width = 0,
-               const optional<string>& _append_format = none);
+               const optional<string>& _prepend_format = std::nullopt,
+               std::size_t _prepend_width = 0,
+               const optional<string>& _append_format = std::nullopt);
   ~format_posts() override { TRACE_DTOR(format_posts); }
 
   /// @brief Set the group title to be printed before the next posting.
@@ -157,8 +158,9 @@ protected:
 
 public:
   format_accounts(report_t& _report, const string& _format,
-                  const optional<string>& _prepend_format = none, std::size_t _prepend_width = 0,
-                  const optional<string>& _append_format = none);
+                  const optional<string>& _prepend_format = std::nullopt,
+                  std::size_t _prepend_width = 0,
+                  const optional<string>& _append_format = std::nullopt);
   ~format_accounts() override { TRACE_DTOR(format_accounts); }
 
   /**

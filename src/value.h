@@ -976,7 +976,7 @@ public:
   /**
    * Informational methods.
    */
-  [[nodiscard]] string label(optional<type_t> the_type = none) const;
+  [[nodiscard]] string label(optional<type_t> the_type = std::nullopt) const;
 
   /**
    * Printing methods.  With AMOUNT_PRINT_COLORIZE, print renders negative

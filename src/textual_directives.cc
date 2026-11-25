@@ -572,8 +572,8 @@ void instance_t::apply_year_directive(char* line, bool use_apply_stack) {
 
 void instance_t::pop_application() {
   const application_t& entry = apply_stack.front();
-  if (std::holds_alternative<boost::optional<datetime_t>>(entry.value)) {
-    epoch = std::get<boost::optional<datetime_t>>(entry.value);
+  if (std::holds_alternative<optional<datetime_t>>(entry.value)) {
+    epoch = std::get<optional<datetime_t>>(entry.value);
     year_directive_year = entry.saved_year_directive;
   }
 

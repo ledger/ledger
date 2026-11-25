@@ -172,7 +172,7 @@ public:
   bool defining_; ///< Re-entrancy guard for define(); prevents infinite recursion when setting tags
                   ///< triggers expression evaluation.
 
-  item_t(flags_t _flags = ITEM_NORMAL, const optional<string>& _note = none)
+  item_t(flags_t _flags = ITEM_NORMAL, const optional<string>& _note = std::nullopt)
       : supports_flags<uint_least16_t>(_flags), parent(nullptr), _state(UNCLEARED), note(_note),
         defining_(false) {
     TRACE_CTOR(item_t, "flags_t, const string&");

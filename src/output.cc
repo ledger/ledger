@@ -177,10 +177,10 @@ format_posts::format_posts(report_t& _report, const string& format,
     // NOLINTBEGIN(bugprone-branch-clone)
     if (const char* pp = std::strstr(n, "%/")) {
       next_lines_format.parse_format(string(n, static_cast<std::string::size_type>(pp - n)),
-                                     first_line_format);
-      between_format.parse_format(string(pp + 2), first_line_format);
+                                     &first_line_format);
+      between_format.parse_format(string(pp + 2), &first_line_format);
     } else {
-      next_lines_format.parse_format(string(n), first_line_format);
+      next_lines_format.parse_format(string(n), &first_line_format);
     }
     // NOLINTEND(bugprone-branch-clone)
   } else {
@@ -288,15 +288,15 @@ format_accounts::format_accounts(report_t& _report, const string& format,
     // NOLINTBEGIN(bugprone-branch-clone)
     if (const char* pp = std::strstr(n, "%/")) {
       total_line_format.parse_format(string(n, static_cast<std::string::size_type>(pp - n)),
-                                     account_line_format);
-      separator_format.parse_format(string(pp + 2), account_line_format);
+                                     &account_line_format);
+      separator_format.parse_format(string(pp + 2), &account_line_format);
     } else {
-      total_line_format.parse_format(n, account_line_format);
+      total_line_format.parse_format(n, &account_line_format);
     }
     // NOLINTEND(bugprone-branch-clone)
   } else {
     account_line_format.parse_format(format);
-    total_line_format.parse_format(format, account_line_format);
+    total_line_format.parse_format(format, &account_line_format);
   }
 
   if (_prepend_format)

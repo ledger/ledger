@@ -588,38 +588,38 @@ BOOST_AUTO_TEST_CASE(testCommodityAmount)
   b1 += amount_t("CAD 75");
 
   // Extract the dollar amount
-  optional<amount_t> dollar_amt =
-    b1.commodity_amount(amount_t("$1").commodity());
+  std::optional<amount_t> dollar_amt =
+    b1.commodity_amount(&amount_t("$1").commodity());
   BOOST_CHECK(dollar_amt);
   BOOST_CHECK_EQUAL(*dollar_amt, amount_t("$100.00"));
 
   // Extract the EUR amount
-  optional<amount_t> eur_amt =
-    b1.commodity_amount(amount_t("EUR 1").commodity());
+  std::optional<amount_t> eur_amt =
+    b1.commodity_amount(&amount_t("EUR 1").commodity());
   BOOST_CHECK(eur_amt);
   BOOST_CHECK_EQUAL(*eur_amt, amount_t("EUR 50"));
 
   // Extract the CAD amount
-  optional<amount_t> cad_amt =
-    b1.commodity_amount(amount_t("CAD 1").commodity());
+  std::optional<amount_t> cad_amt =
+    b1.commodity_amount(&amount_t("CAD 1").commodity());
   BOOST_CHECK(cad_amt);
   BOOST_CHECK_EQUAL(*cad_amt, amount_t("CAD 75"));
 
   // Looking up a commodity not in the balance returns none
-  optional<amount_t> gbp_amt =
-    b1.commodity_amount(amount_t("GBP 1").commodity());
+  std::optional<amount_t> gbp_amt =
+    b1.commodity_amount(&amount_t("GBP 1").commodity());
   BOOST_CHECK(!gbp_amt);
 
   // Single-commodity balance: calling with no argument returns the amount
   balance_t b2;
   b2 += amount_t("$200.00");
-  optional<amount_t> single_amt = b2.commodity_amount();
+  std::optional<amount_t> single_amt = b2.commodity_amount();
   BOOST_CHECK(single_amt);
   BOOST_CHECK_EQUAL(*single_amt, amount_t("$200.00"));
 
   // Empty balance: calling with no argument returns none
   balance_t b3;
-  optional<amount_t> empty_amt = b3.commodity_amount();
+  std::optional<amount_t> empty_amt = b3.commodity_amount();
   BOOST_CHECK(!empty_amt);
 
   BOOST_CHECK(b1.valid());
@@ -1181,17 +1181,17 @@ BOOST_AUTO_TEST_CASE(testDuplicateLotsCommodityAmount)
   balance_t b;
   b += duplicate_lots_t::of(lots.spelled, 10);
 
-  optional<amount_t> by_other = b.commodity_amount(*lots.reannotated);
+  std::optional<amount_t> by_other = b.commodity_amount(lots.reannotated);
   BOOST_REQUIRE(by_other);
   BOOST_CHECK(&by_other->commodity() == lots.spelled);
   BOOST_CHECK_EQUAL(by_other->number(), amount_t(10L));
 
-  optional<amount_t> by_own = b.commodity_amount(*lots.spelled);
+  std::optional<amount_t> by_own = b.commodity_amount(lots.spelled);
   BOOST_REQUIRE(by_own);
   BOOST_CHECK(&by_own->commodity() == lots.spelled);
   BOOST_CHECK_EQUAL(by_own->number(), amount_t(10L));
 
-  BOOST_CHECK(!b.commodity_amount(*lots.outsider));
+  BOOST_CHECK(!b.commodity_amount(lots.outsider));
 }
 
 BOOST_AUTO_TEST_CASE(testComponentKeyOutsideDuplicateLots)

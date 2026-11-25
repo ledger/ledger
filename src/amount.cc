@@ -334,7 +334,7 @@ void format_mpq_exact(std::string& digits, mpq_t quant, amount_t::precision_t pr
  *                   control thousands separators and decimal style.
  */
 void stream_out_mpq(std::ostream& out, mpq_t quant, amount_t::precision_t precision,
-                    int zeros_prec = -1, const optional<commodity_t&>& comm = none) {
+                    int zeros_prec = -1, const commodity_t* comm = nullptr) {
 #if DEBUG_ON
   IF_DEBUG("amount.convert") {
     char* tbuf = mpq_get_str(nullptr, 10, quant);
@@ -2073,7 +2073,7 @@ void amount_t::print_unpadded(std::ostream& out, const uint_least8_t flags,
       disp_prec = static_cast<precision_t>(zeros_prec);
   }
   zeros_prec = std::max(zeros_prec, static_cast<int>(min_decimals));
-  stream_out_mpq(out, MP(quantity), disp_prec, zeros_prec, comm);
+  stream_out_mpq(out, MP(quantity), disp_prec, zeros_prec, &comm);
 
   if (comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {
     if (comm.has_flags(COMMODITY_STYLE_SEPARATED))

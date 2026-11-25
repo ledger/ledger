@@ -1027,8 +1027,8 @@ public:
   /// @param payee When given, used verbatim as the payee; spec_fmt is
   ///        then not consulted.
   void report_subtotal(const char* spec_fmt = nullptr,
-                       const optional<date_interval_t>& interval = none,
-                       const optional<string>& payee = none);
+                       const optional<date_interval_t>& interval = std::nullopt,
+                       const optional<string>& payee = std::nullopt);
 
   void flush() override {
     if (values.size() > 0)
@@ -1080,8 +1080,9 @@ class interval_posts : public subtotal_posts {
 public:
   interval_posts(post_handler_ptr _handler, expr_t& amount_expr, const date_interval_t& _interval,
                  bool _exact_periods = false, bool _generate_empty_posts = false,
-                 bool _align_intervals = false, const optional<date_t>& _begin_of_report = none,
-                 const optional<date_t>& _end_of_report = none)
+                 bool _align_intervals = false,
+                 const optional<date_t>& _begin_of_report = std::nullopt,
+                 const optional<date_t>& _end_of_report = std::nullopt)
       : subtotal_posts(std::move(_handler), amount_expr), start_interval(_interval),
         interval(start_interval), exact_periods(_exact_periods),
         generate_empty_posts(_generate_empty_posts), align_intervals(_align_intervals),
@@ -1493,12 +1494,11 @@ class pass_down_accounts : public item_handler<account_t> {
   pass_down_accounts();
 
   optional<predicate_t> pred;
-  optional<scope_t&> context;
+  scope_t* context;
 
 public:
   pass_down_accounts(acct_handler_ptr handler, Iterator& iter,
-                     const optional<predicate_t>& _pred = none,
-                     const optional<scope_t&>& _context = none)
+                     const optional<predicate_t>& _pred = std::nullopt, scope_t* _context = nullptr)
       : item_handler<account_t>(handler), pred(_pred), context(_context) {
     TRACE_CTOR(pass_down_accounts, "acct_handler_ptr, accounts_iterator, ...");
 

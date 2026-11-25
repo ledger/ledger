@@ -254,7 +254,7 @@ public:
     TRACE_CTOR(posts_commodities_iterator, "");
   }
   posts_commodities_iterator(journal_t& journal, bool _latest_only = false,
-                             const optional<date_interval_t>& _interval = none,
+                             const optional<date_interval_t>& _interval = std::nullopt,
                              bool _bidirectional = false)
       : latest_only(_latest_only), interval(_interval), bidirectional(_bidirectional) {
     reset(journal);

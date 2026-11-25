@@ -249,8 +249,7 @@ BOOST_AUTO_TEST_CASE(testSignalHandlersSetCaughtSignal)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-// Spelled ledger::optional so the file compiles whether ledger's
-// optional is boost::optional or std::optional.
+// ledger::optional, which utils.h makes std::optional.
 using opt_int = ledger::optional<int>;
 
 BOOST_AUTO_TEST_SUITE(utils)

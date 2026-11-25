@@ -447,7 +447,7 @@ public:
   optional<string> maybe_format(option_t<report_t>& option) {
     if (option)
       return option.str();
-    return none;
+    return std::nullopt;
   }
 
   /*--- Interactive Commands ---*/
@@ -680,7 +680,7 @@ public:
   OPTION_INT_CTOR(
       report_t, int, abbrev_len_, abbrev_len_option_t()
       : int_option_t<report_t>("abbrev_len_") {
-        on(none, "2");
+        on(std::nullopt, "2");
       }); ///< Minimum abbreviation length for account names (default: 2)
 
   OPTION(report_t, account_);
@@ -723,18 +723,18 @@ public:
 
   OPTION_CTOR(
       report_t, balance_format_, CTOR(report_t, balance_format_) {
-        on(none, "%(ansify_if("
-                 "  justify(scrub(display_total), max(int(amount_width),20),"
-                 "          max(int(amount_width),20) + int(prepend_width), true, color,"
-                 "          true),"
-                 "            bold if should_bold))"
-                 "  %(!options.flat ? depth_spacer : \"\")"
-                 "%-(ansify_if("
-                 "   ansify_if(partial_account(options.flat), blue if color),"
-                 "             bold if should_bold))\n%/"
-                 "%$1\n%/"
-                 "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
-                 "%(\"-\" * max(int(amount_width),20))\n");
+        on(std::nullopt, "%(ansify_if("
+                         "  justify(scrub(display_total), max(int(amount_width),20),"
+                         "          max(int(amount_width),20) + int(prepend_width), true, color,"
+                         "          true),"
+                         "            bold if should_bold))"
+                         "  %(!options.flat ? depth_spacer : \"\")"
+                         "%-(ansify_if("
+                         "   ansify_if(partial_account(options.flat), blue if color),"
+                         "             bold if should_bold))\n%/"
+                         "%$1\n%/"
+                         "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
+                         "%(\"-\" * max(int(amount_width),20))\n");
       });
 
   OPTION(report_t, base);
@@ -779,29 +779,30 @@ public:
 
   OPTION_CTOR(
       report_t, budget_format_, CTOR(report_t, budget_format_) {
-        on(none, "%(justify(scrub(get_at(display_total, 0)), int(amount_width), -1, true, color))"
-                 " %(justify(-scrub(get_at(display_total, 1)), int(amount_width), "
-                 "           int(amount_width) + 1 + int(amount_width), true, color))"
-                 " %(justify(scrub((get_at(display_total, 1) || 0) + "
-                 "                 (get_at(display_total, 0) || 0)), int(amount_width), "
-                 "           int(amount_width) + 1 + int(amount_width) + 1 + int(amount_width), "
-                 "true, color))"
-                 " %(ansify_if("
-                 "   justify((get_at(display_total, 1) and "
-                 "            quantity(scrub(get_at(display_total, 1))) ? "
-                 "            (100% * quantity(scrub(get_at(display_total, 0)))) / "
-                 "             -quantity(scrub(get_at(display_total, 1))) : 0), "
-                 "           5, -1, true, false),"
-                 "   magenta if (color and get_at(display_total, 1) and "
-                 "               quantity(scrub(get_at(display_total, 1))) and "
-                 "               (abs(quantity(scrub(get_at(display_total, 0))) / "
-                 "                    quantity(scrub(get_at(display_total, 1)))) >= 1))))"
-                 "  %(!options.flat ? depth_spacer : \"\")"
-                 "%-(ansify_if(partial_account(options.flat), blue if color))\n"
-                 "%/%$1 %$2 %$3 %$4\n%/"
-                 "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
-                 "%(\"-\" * int(amount_width)) %(\"-\" * int(amount_width))"
-                 " %(\"-\" * int(amount_width)) -----\n");
+        on(std::nullopt,
+           "%(justify(scrub(get_at(display_total, 0)), int(amount_width), -1, true, color))"
+           " %(justify(-scrub(get_at(display_total, 1)), int(amount_width), "
+           "           int(amount_width) + 1 + int(amount_width), true, color))"
+           " %(justify(scrub((get_at(display_total, 1) || 0) + "
+           "                 (get_at(display_total, 0) || 0)), int(amount_width), "
+           "           int(amount_width) + 1 + int(amount_width) + 1 + int(amount_width), "
+           "true, color))"
+           " %(ansify_if("
+           "   justify((get_at(display_total, 1) and "
+           "            quantity(scrub(get_at(display_total, 1))) ? "
+           "            (100% * quantity(scrub(get_at(display_total, 0)))) / "
+           "             -quantity(scrub(get_at(display_total, 1))) : 0), "
+           "           5, -1, true, false),"
+           "   magenta if (color and get_at(display_total, 1) and "
+           "               quantity(scrub(get_at(display_total, 1))) and "
+           "               (abs(quantity(scrub(get_at(display_total, 0))) / "
+           "                    quantity(scrub(get_at(display_total, 1)))) >= 1))))"
+           "  %(!options.flat ? depth_spacer : \"\")"
+           "%-(ansify_if(partial_account(options.flat), blue if color))\n"
+           "%/%$1 %$2 %$3 %$4\n%/"
+           "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
+           "%(\"-\" * int(amount_width)) %(\"-\" * int(amount_width))"
+           " %(\"-\" * int(amount_width)) -----\n");
       });
 
   OPTION(report_t, by_payee); // -P
@@ -813,16 +814,16 @@ public:
 
   OPTION_CTOR(
       report_t, cleared_format_, CTOR(report_t, cleared_format_) {
-        on(none, "%(justify(scrub(get_at(display_total, 0)), 16, 16 + int(prepend_width), "
-                 " true, color))  %(justify(scrub(get_at(display_total, 1)), 18, "
-                 " 36 + int(prepend_width), true, color))"
-                 "    %(justify(latest_cleared ? format_date(latest_cleared) : \"\","
-                 " int(date_width)))"
-                 "    %(!options.flat ? depth_spacer : \"\")"
-                 "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
-                 "%$1  %$2    %$3\n%/"
-                 "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
-                 "----------------  ------------------    %(\"-\" * int(date_width))\n");
+        on(std::nullopt, "%(justify(scrub(get_at(display_total, 0)), 16, 16 + int(prepend_width), "
+                         " true, color))  %(justify(scrub(get_at(display_total, 1)), 18, "
+                         " 36 + int(prepend_width), true, color))"
+                         "    %(justify(latest_cleared ? format_date(latest_cleared) : \"\","
+                         " int(date_width)))"
+                         "    %(!options.flat ? depth_spacer : \"\")"
+                         "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
+                         "%$1  %$2    %$3\n%/"
+                         "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
+                         "----------------  ------------------    %(\"-\" * int(date_width))\n");
       });
 
   OPTION(report_t, color);
@@ -856,14 +857,14 @@ public:
 
   OPTION_CTOR(
       report_t, csv_format_, CTOR(report_t, csv_format_) {
-        on(none, "%(quoted(date)),"
-                 "%(quoted(code)),"
-                 "%(quoted(payee)),"
-                 "%(quoted(display_account)),"
-                 "%(quoted(commodity(scrub(display_amount)))),"
-                 "%(quoted(quantity(scrub(display_amount)))),"
-                 "%(quoted(cleared ? \"*\" : (pending ? \"!\" : \"\"))),"
-                 "%(quoted(join(note | xact.note)))\n");
+        on(std::nullopt, "%(quoted(date)),"
+                         "%(quoted(code)),"
+                         "%(quoted(payee)),"
+                         "%(quoted(display_account)),"
+                         "%(quoted(commodity(scrub(display_amount)))),"
+                         "%(quoted(quantity(scrub(display_amount)))),"
+                         "%(quoted(cleared ? \"*\" : (pending ? \"!\" : \"\"))),"
+                         "%(quoted(join(note | xact.note)))\n");
       });
 
   OPTION(report_t, csv_separator_);
@@ -899,82 +900,84 @@ public:
                                           " (amount > 0 ? amount : 0, amount < 0 ? amount : 0)");
 
         OTHER(register_format_)
-            .on(none, "%(ansify_if("
-                      "  ansify_if(justify(format_date(date), int(date_width)),"
-                      "            green if color and date > today),"
-                      "            bold if should_bold))"
-                      " %(ansify_if("
-                      "   ansify_if(justify(truncated(payee, int(payee_width)), int(payee_width)), "
-                      "             bold if color and !cleared and actual),"
-                      "             bold if should_bold))"
-                      " %(ansify_if("
-                      "   ansify_if(justify(truncated(display_account, int(account_width), "
-                      "                               int(abbrev_len)), int(account_width)),"
-                      "             blue if color),"
-                      "             bold if should_bold))"
-                      " %(ansify_if("
-                      "   justify(scrub(abs(get_at(display_amount, 0) || 0)), int(amount_width), "
-                      "           3 + int(meta_width) + int(date_width) + int(payee_width)"
-                      "             + int(account_width) + int(amount_width) + int(prepend_width),"
-                      "           true, color),"
-                      "           bold if should_bold))"
-                      " %(ansify_if("
-                      "   justify(scrub(abs(get_at(display_amount, 1) || 0)), int(amount_width), "
-                      "           4 + int(meta_width) + int(date_width) + int(payee_width)"
-                      "             + int(account_width) + int(amount_width) + int(amount_width) + "
-                      "int(prepend_width),"
-                      "           true, color),"
-                      "           bold if should_bold))"
-                      " %(ansify_if("
-                      "   justify(scrub((get_at(display_total, 0) || 0) + (get_at(display_total, "
-                      "1) || 0)), "
-                      "int(total_width), "
-                      "           5 + int(meta_width) + int(date_width) + int(payee_width)"
-                      "             + int(account_width) + int(amount_width) + int(amount_width) + "
-                      "int(total_width)"
-                      "             + int(prepend_width), true, color),"
-                      "           bold if should_bold))\n%/"
-                      "%(justify(\" \", int(date_width)))"
-                      " %(ansify_if("
-                      "   justify(truncated(payee_changed ? payee : \" \", "
-                      "                     int(payee_width)), int(payee_width)),"
-                      "             bold if should_bold))"
-                      " %$3 %$4 %$5 %$6\n");
+            .on(std::nullopt,
+                "%(ansify_if("
+                "  ansify_if(justify(format_date(date), int(date_width)),"
+                "            green if color and date > today),"
+                "            bold if should_bold))"
+                " %(ansify_if("
+                "   ansify_if(justify(truncated(payee, int(payee_width)), int(payee_width)), "
+                "             bold if color and !cleared and actual),"
+                "             bold if should_bold))"
+                " %(ansify_if("
+                "   ansify_if(justify(truncated(display_account, int(account_width), "
+                "                               int(abbrev_len)), int(account_width)),"
+                "             blue if color),"
+                "             bold if should_bold))"
+                " %(ansify_if("
+                "   justify(scrub(abs(get_at(display_amount, 0) || 0)), int(amount_width), "
+                "           3 + int(meta_width) + int(date_width) + int(payee_width)"
+                "             + int(account_width) + int(amount_width) + int(prepend_width),"
+                "           true, color),"
+                "           bold if should_bold))"
+                " %(ansify_if("
+                "   justify(scrub(abs(get_at(display_amount, 1) || 0)), int(amount_width), "
+                "           4 + int(meta_width) + int(date_width) + int(payee_width)"
+                "             + int(account_width) + int(amount_width) + int(amount_width) + "
+                "int(prepend_width),"
+                "           true, color),"
+                "           bold if should_bold))"
+                " %(ansify_if("
+                "   justify(scrub((get_at(display_total, 0) || 0) + (get_at(display_total, "
+                "1) || 0)), "
+                "int(total_width), "
+                "           5 + int(meta_width) + int(date_width) + int(payee_width)"
+                "             + int(account_width) + int(amount_width) + int(amount_width) + "
+                "int(total_width)"
+                "             + int(prepend_width), true, color),"
+                "           bold if should_bold))\n%/"
+                "%(justify(\" \", int(date_width)))"
+                " %(ansify_if("
+                "   justify(truncated(payee_changed ? payee : \" \", "
+                "                     int(payee_width)), int(payee_width)),"
+                "             bold if should_bold))"
+                " %$3 %$4 %$5 %$6\n");
 
         OTHER(balance_format_)
-            .on(none, "%(ansify_if("
-                      "  justify(scrub(abs(get_at(display_total, 0) || 0)), 14,"
-                      "          14 + int(prepend_width), true, color),"
-                      "            bold if should_bold)) "
-                      "%(ansify_if("
-                      "  justify(scrub(abs(get_at(display_total, 1) || 0)), 14,"
-                      "          14 + 1 + int(prepend_width) + int(total_width), true, color),"
-                      "            bold if should_bold)) "
-                      "%(ansify_if("
-                      "  justify(scrub((get_at(display_total, 0) || 0) + (get_at(display_total, 1) "
-                      "|| 0)), 14,"
-                      "          14 + 2 + int(prepend_width) + int(total_width) + "
-                      "int(total_width), true, color),"
-                      "            bold if should_bold))"
-                      "  %(!options.flat ? depth_spacer : \"\")"
-                      "%-(ansify_if("
-                      "   ansify_if(partial_account(options.flat), blue if color),"
-                      "             bold if should_bold))\n%/"
-                      "%$1 %$2 %$3\n%/"
-                      "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
-                      "-------------- -------------- --------------\n");
+            .on(std::nullopt,
+                "%(ansify_if("
+                "  justify(scrub(abs(get_at(display_total, 0) || 0)), 14,"
+                "          14 + int(prepend_width), true, color),"
+                "            bold if should_bold)) "
+                "%(ansify_if("
+                "  justify(scrub(abs(get_at(display_total, 1) || 0)), 14,"
+                "          14 + 1 + int(prepend_width) + int(total_width), true, color),"
+                "            bold if should_bold)) "
+                "%(ansify_if("
+                "  justify(scrub((get_at(display_total, 0) || 0) + (get_at(display_total, 1) "
+                "|| 0)), 14,"
+                "          14 + 2 + int(prepend_width) + int(total_width) + "
+                "int(total_width), true, color),"
+                "            bold if should_bold))"
+                "  %(!options.flat ? depth_spacer : \"\")"
+                "%-(ansify_if("
+                "   ansify_if(partial_account(options.flat), blue if color),"
+                "             bold if should_bold))\n%/"
+                "%$1 %$2 %$3\n%/"
+                "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
+                "-------------- -------------- --------------\n");
 
         OTHER(csv_format_)
-            .on(none, "%(quoted(date)),"
-                      "%(quoted(code)),"
-                      "%(quoted(payee)),"
-                      "%(quoted(display_account)),"
-                      "%(quoted(commodity(scrub("
-                      "get_at(display_amount, 0) || get_at(display_amount, 1) || 0)))),"
-                      "%(quoted(quantity(scrub(abs(get_at(display_amount, 0) || 0))))),"
-                      "%(quoted(quantity(scrub(abs(get_at(display_amount, 1) || 0))))),"
-                      "%(quoted(cleared ? \"*\" : (pending ? \"!\" : \"\"))),"
-                      "%(quoted(join(note | xact.note)))\n");
+            .on(std::nullopt, "%(quoted(date)),"
+                              "%(quoted(code)),"
+                              "%(quoted(payee)),"
+                              "%(quoted(display_account)),"
+                              "%(quoted(commodity(scrub("
+                              "get_at(display_amount, 0) || get_at(display_amount, 1) || 0)))),"
+                              "%(quoted(quantity(scrub(abs(get_at(display_amount, 0) || 0))))),"
+                              "%(quoted(quantity(scrub(abs(get_at(display_amount, 1) || 0))))),"
+                              "%(quoted(cleared ? \"*\" : (pending ? \"!\" : \"\"))),"
+                              "%(quoted(join(note | xact.note)))\n");
       });
 
   // Like --collapse, limit only account rows through display_;
@@ -1094,7 +1097,7 @@ public:
 
   OPTION_CTOR(
       report_t, group_title_format_,
-      CTOR(report_t, group_title_format_) { on(none, "%(value)\n"); });
+      CTOR(report_t, group_title_format_) { on(std::nullopt, "%(value)\n"); });
 
   OPTION_INT(report_t, head_);
 
@@ -1213,11 +1216,11 @@ public:
               have_less = true;
 
             if (have_less) {
-              on(none, "less");
+              on(std::nullopt, "less");
               setenv("LESS", "-FRSX", 0); // don't overwrite
             }
           } else {
-            on(none, std::getenv("PAGER"));
+            on(std::nullopt, std::getenv("PAGER"));
             setenv("LESS", "-FRSX", 0); // don't overwrite
           }
         }
@@ -1274,12 +1277,13 @@ public:
 
   OPTION_CTOR(
       report_t, plot_amount_format_, CTOR(report_t, plot_amount_format_) {
-        on(none, "%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(display_amount)))\n");
+        on(std::nullopt, "%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(display_amount)))\n");
       });
 
   OPTION_CTOR(
       report_t, plot_total_format_, CTOR(report_t, plot_total_format_) {
-        on(none, "%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrubbed_display_total))\n");
+        on(std::nullopt,
+           "%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrubbed_display_total))\n");
       });
 
   OPTION(report_t, prepend_format_);
@@ -1299,14 +1303,15 @@ public:
         // display_total whenever one of them is active (otherwise the report
         // reflects raw prices and the options appear to have no effect,
         // issue #753).
-        on(none, "%(date) %-8(display_account) %(justify(scrub("
-                 "options.average or options.deviation ? display_total : display_amount), 12, "
-                 "    2 + 9 + 8 + 12, true, color))\n");
+        on(std::nullopt,
+           "%(date) %-8(display_account) %(justify(scrub("
+           "options.average or options.deviation ? display_total : display_amount), 12, "
+           "    2 + 9 + 8 + 12, true, color))\n");
       });
 
   OPTION_CTOR(
       report_t, pricedb_format_, CTOR(report_t, pricedb_format_) {
-        on(none, "P %(datetime) %(display_account) %(scrub(display_amount))\n");
+        on(std::nullopt, "P %(datetime) %(display_account) %(scrub(display_amount))\n");
       });
 
   OPTION(report_t, primary_date);
@@ -1330,37 +1335,38 @@ public:
 
   OPTION_CTOR(
       report_t, register_format_, CTOR(report_t, register_format_) {
-        on(none, "%(ansify_if("
-                 "  ansify_if(justify(format_date(date), int(date_width)),"
-                 "            green if color and date > today),"
-                 "            bold if should_bold))"
-                 " %(ansify_if("
-                 "   ansify_if(justify(truncated(payee, int(payee_width)), int(payee_width)), "
-                 "             bold if color and !cleared and actual),"
-                 "             bold if should_bold))"
-                 " %(ansify_if("
-                 "   ansify_if(justify(truncated(display_account, int(account_width), "
-                 "                               int(abbrev_len)), int(account_width)),"
-                 "             blue if color),"
-                 "             bold if should_bold))"
-                 " %(ansify_if("
-                 "   justify(scrub(display_amount), int(amount_width), "
-                 "           3 + int(meta_width) + int(date_width) + int(payee_width)"
-                 "             + int(account_width) + int(amount_width) + int(prepend_width),"
-                 "           true, color),"
-                 "           bold if should_bold))"
-                 " %(ansify_if("
-                 "   justify(scrubbed_display_total, int(total_width), "
-                 "           4 + int(meta_width) + int(date_width) + int(payee_width)"
-                 "             + int(account_width) + int(amount_width) + int(total_width)"
-                 "             + int(prepend_width), true, color),"
-                 "           bold if should_bold))\n%/"
-                 "%(justify(\" \", int(date_width)))"
-                 " %(ansify_if("
-                 "   justify(truncated(payee_changed ? payee : \" \", "
-                 "                     int(payee_width)), int(payee_width)),"
-                 "             bold if should_bold))"
-                 " %$3 %$4 %$5\n");
+        on(std::nullopt,
+           "%(ansify_if("
+           "  ansify_if(justify(format_date(date), int(date_width)),"
+           "            green if color and date > today),"
+           "            bold if should_bold))"
+           " %(ansify_if("
+           "   ansify_if(justify(truncated(payee, int(payee_width)), int(payee_width)), "
+           "             bold if color and !cleared and actual),"
+           "             bold if should_bold))"
+           " %(ansify_if("
+           "   ansify_if(justify(truncated(display_account, int(account_width), "
+           "                               int(abbrev_len)), int(account_width)),"
+           "             blue if color),"
+           "             bold if should_bold))"
+           " %(ansify_if("
+           "   justify(scrub(display_amount), int(amount_width), "
+           "           3 + int(meta_width) + int(date_width) + int(payee_width)"
+           "             + int(account_width) + int(amount_width) + int(prepend_width),"
+           "           true, color),"
+           "           bold if should_bold))"
+           " %(ansify_if("
+           "   justify(scrubbed_display_total, int(total_width), "
+           "           4 + int(meta_width) + int(date_width) + int(payee_width)"
+           "             + int(account_width) + int(amount_width) + int(total_width)"
+           "             + int(prepend_width), true, color),"
+           "           bold if should_bold))\n%/"
+           "%(justify(\" \", int(date_width)))"
+           " %(ansify_if("
+           "   justify(truncated(payee_changed ? payee : \" \", "
+           "                     int(payee_width)), int(payee_width)),"
+           "             bold if should_bold))"
+           " %$3 %$4 %$5\n");
       });
 
   OPTION(report_t, related); // -r
@@ -1397,23 +1403,23 @@ public:
   OPTION_(
       report_t, time_report, DO() {
         OTHER(balance_format_)
-            .on(none, "%(ansify_if(justify(earliest_checkin ? "
-                      "     format_datetime(earliest_checkin) : \"\", 19, -1, true),"
-                      "     bold if latest_checkout_cleared))  "
-                      "%(ansify_if(justify(latest_checkout ? "
-                      "     format_datetime(latest_checkout) : \"\", 19, -1, true), "
-                      "     bold if latest_checkout_cleared)) "
-                      "%(latest_checkout_cleared ? \"*\" : \" \")  "
-                      "%(ansify_if("
-                      "  justify(scrub(display_total), 8,"
-                      "          8 + 4 + 19 * 2, true, color), bold if should_bold))"
-                      "  %(!options.flat ? depth_spacer : \"\")"
-                      "%-(ansify_if("
-                      "   ansify_if(partial_account(options.flat), blue if color),"
-                      "             bold if should_bold))\n%/"
-                      "%$1  %$2  %$3\n%/"
-                      "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
-                      "--------------------------------------------------\n");
+            .on(std::nullopt, "%(ansify_if(justify(earliest_checkin ? "
+                              "     format_datetime(earliest_checkin) : \"\", 19, -1, true),"
+                              "     bold if latest_checkout_cleared))  "
+                              "%(ansify_if(justify(latest_checkout ? "
+                              "     format_datetime(latest_checkout) : \"\", 19, -1, true), "
+                              "     bold if latest_checkout_cleared)) "
+                              "%(latest_checkout_cleared ? \"*\" : \" \")  "
+                              "%(ansify_if("
+                              "  justify(scrub(display_total), 8,"
+                              "          8 + 4 + 19 * 2, true, color), bold if should_bold))"
+                              "  %(!options.flat ? depth_spacer : \"\")"
+                              "%-(ansify_if("
+                              "   ansify_if(partial_account(options.flat), blue if color),"
+                              "             bold if should_bold))\n%/"
+                              "%$1  %$2  %$3\n%/"
+                              "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
+                              "--------------------------------------------------\n");
       });
 
   OPTION_CTOR(

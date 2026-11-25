@@ -38,8 +38,7 @@
  * AccountXData and AccountXDataDetails for extended runtime data.  Accounts
  * form a tree (parent/children) and aggregate posting amounts.  This binding
  * provides child account lookup, iteration over sub-accounts and postings,
- * amount/total computation with optional expressions, and xdata access for
- * report-time statistics.
+ * amount/total computation, and xdata access for report-time statistics.
  */
 
 #include <system.hh>
@@ -81,22 +80,13 @@ account_t::xdata_t& py_xdata(account_t& account) {
   return account.xdata();
 }
 
-/// Overloads for amount() and total() that accept an optional expression
-/// for custom aggregation from the Python side.
+/// Overloads that supply amount()'s and total()'s default arguments for Python.
 value_t py_amount_0(const account_t& account) {
   return account.amount();
 }
 
-value_t py_amount_1(const account_t& account, const boost::optional<expr_t&>& expr) {
-  return account.amount(false, expr);
-}
-
 value_t py_total_0(const account_t& account) {
   return account.total();
-}
-
-value_t py_total_1(const account_t& account, const boost::optional<expr_t&>& expr) {
-  return account.total(expr);
 }
 
 boost::python::list py_find_accounts_re(account_t& account, const string& regexp) {
@@ -203,9 +193,7 @@ void export_account() {
       .def("xdata", py_xdata, return_internal_reference<>())
 
       .def("amount", py_amount_0)
-      .def("amount", py_amount_1, args("expr"))
       .def("total", py_total_0)
-      .def("total", py_total_1, args("expr"))
 
       .def("self_details", &account_t::self_details, return_internal_reference<>())
       .def("family_details", &account_t::family_details, return_internal_reference<>())

@@ -235,18 +235,18 @@ std::vector<string> collect_matches(const boost::cmatch& what, string_view searc
 
 } // namespace
 
-boost::optional<std::vector<string>> mask_t::match_groups(string_view text) const {
+optional<std::vector<string>> mask_t::match_groups(string_view text) const {
   boost::cmatch what;
   if (!folds()) {
     if (search(text, what))
       return collect_matches(what, text, text);
-    return boost::none;
+    return std::nullopt;
   }
 
   const string folded = fold_diacritics(text);
   if (search(folded, what))
     return collect_matches(what, folded, text);
-  return boost::none;
+  return std::nullopt;
 }
 
 } // namespace ledger

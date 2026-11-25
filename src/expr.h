@@ -152,7 +152,7 @@ public:
   using base_type::parse;
 
   void parse(std::istream& in, const parse_flags_t& flags = PARSE_DEFAULT,
-             const optional<string>& original_string = none) override;
+             const optional<string>& original_string = std::nullopt) override;
 
   /// @brief Compile the parsed AST against @p scope, resolving identifiers
   /// and folding constants.  Also detects fast_path optimizations.

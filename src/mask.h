@@ -150,8 +150,8 @@ public:
   /// represented as an empty string.  Captures are substrings of @p text,
   /// also when the search ran on its diacritic-folded copy.
   ///
-  /// Returns boost::none if the regex does not match.
-  boost::optional<std::vector<string>> match_groups(string_view text) const;
+  /// Returns std::nullopt if the regex does not match.
+  optional<std::vector<string>> match_groups(string_view text) const;
 
   bool empty() const { return expr.empty(); } ///< True if no pattern has been assigned
 

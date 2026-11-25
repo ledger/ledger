@@ -336,7 +336,7 @@ struct print_layout_t {
   optional<const char*> date_format() const {
     if (format_type == FMT_CUSTOM)
       return format_str.c_str();
-    return none;
+    return std::nullopt;
   }
 
   /// Whether print leaves this posting out: a generated or temporary

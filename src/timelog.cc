@@ -184,8 +184,8 @@ void time_log_t::close() {
 
     for (account_t* account : accounts) {
       DEBUG("timelog", "Clocking out from account " << account->fullname());
-      context.count +=
-          clock_out_from_timelog(time_xacts, time_xact_t(none, now, false, account), context);
+      context.count += clock_out_from_timelog(
+          time_xacts, time_xact_t(std::nullopt, now, false, account), context);
     }
     assert(time_xacts.empty());
   }

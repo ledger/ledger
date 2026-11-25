@@ -186,7 +186,7 @@ private:
    * @return      The head of the newly allocated element linked list.  The
    *              caller takes ownership.
    */
-  static element_t* parse_elements(const string& fmt, const optional<format_t&>& tmpl);
+  static element_t* parse_elements(const string& fmt, const format_t* tmpl);
 
 public:
   format_t() : base_type() { TRACE_CTOR(format_t, ""); }
@@ -203,7 +203,7 @@ public:
   /// @brief Parse (or re-parse) a format string, replacing any prior elements.
   /// @param _format  The format string to parse.
   /// @param tmpl     Optional template format for `%$N` back-references.
-  void parse_format(const string& _format, const optional<format_t&>& tmpl = none) {
+  void parse_format(const string& _format, const format_t* tmpl = nullptr) {
     elements.reset(parse_elements(_format, tmpl));
     set_text(_format);
   }

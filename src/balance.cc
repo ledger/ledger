@@ -347,7 +347,7 @@ void merge_components(balance_t& into, const balance_t& from, Fn&& transform) {
 /// @param in_terms_of  Optional target commodity for conversion (e.g.,
 ///                     the user's preferred reporting currency).
 ///
-/// @return A new balance with repriced amounts, or boost::none if no
+/// @return A new balance with repriced amounts, or std::nullopt if no
 ///         commodity could be repriced (i.e., no price data exists).
 optional<balance_t> balance_t::value(const datetime_t& moment,
                                      const commodity_t* in_terms_of) const {
@@ -424,16 +424,15 @@ const amount_t* balance_t::sole_amount() const {
 /// This is commonly used when a value expression needs a single amount_t
 /// from what might be a multi-commodity balance.
 ///
-/// @param commodity  The commodity to look up.  If boost::none, returns
+/// @param commodity  The commodity to look up.  If nullptr, returns
 ///                   the sole commodity or throws on ambiguity.
 ///
-/// @return The matching amount, or boost::none if the commodity is not
+/// @return The matching amount, or std::nullopt if the commodity is not
 ///         present in the balance.
 ///
 /// @throws amount_error if no commodity is specified and the balance
 ///         contains multiple distinct commodities after annotation stripping.
-optional<amount_t>
-balance_t::commodity_amount(const optional<const commodity_t&>& commodity) const {
+optional<amount_t> balance_t::commodity_amount(const commodity_t* commodity) const {
   if (!commodity) {
     if (amounts.size() == 1) {
       return amounts.begin()->second;
@@ -450,7 +449,7 @@ balance_t::commodity_amount(const optional<const commodity_t&>& commodity) const
     if (const amount_t* found = amounts.find(component_key(*commodity)))
       return *found;
   }
-  return none;
+  return std::nullopt;
 }
 
 /*----------------------------------------------------------------------*/

@@ -1,8 +1,8 @@
 import ledger
 
-# Assigning None to an optional property must clear it.  xact.note is a
-# boost::optional<string>, xact.code a std::optional<string> and post.cost a
-# std::optional<amount_t>, so this covers both optional converters.
+# Assigning None to an optional property must clear it.  xact.note and
+# xact.code are std::optional<string> and post.cost a
+# std::optional<amount_t>, all served by the one optional converter family.
 
 session = ledger.Session()
 journal = session.read_journal_from_string("""

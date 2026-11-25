@@ -889,7 +889,7 @@ bool post_t::valid() const {
  * @param value  The accumulator to add this posting's value to.
  * @param expr   Optional expression to evaluate (e.g., `amount` or `cost`).
  */
-void post_t::add_to_value(value_t& value, const optional<expr_t&>& expr) const {
+void post_t::add_to_value(value_t& value, expr_t* expr) const {
   // NOLINTBEGIN(bugprone-branch-clone)
   if (xdata_ && xdata_->has_flags(POST_EXT_COMPOUND)) {
     if (!xdata_->compound_value.is_null())
