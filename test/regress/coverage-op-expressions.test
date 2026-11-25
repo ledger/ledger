@@ -2,7 +2,7 @@
 ; Tests expression evaluation paths in op_t::calc and print functions.
 ; SCOPE node evaluation (bind_scope path)
 ; exception handling during function calls
-; print_cons helper for O_CONS nodes
+; print_list helper for O_CONS nodes
 
 2024/01/15 Test
     Expenses:Food             $50.00

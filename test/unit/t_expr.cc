@@ -1693,6 +1693,41 @@ BOOST_AUTO_TEST_CASE(testOpPrintFunction)
   BOOST_CHECK(out.str().find("<FUNCTION>") != std::string::npos);
 }
 
+BOOST_AUTO_TEST_CASE(testOpPrintDumpTerminalsExact)
+{
+  // Byte-exact print()/dump() for kinds `parse` cannot show.  dump()
+  // starts each line with an 18-column address field, skipped here.
+  auto dump_of = [](const expr_t::ptr_op_t& op) {
+    std::ostringstream out;
+    op->dump(out, 1);
+    return out.str().substr((sizeof(void*) * 2) + 2);
+  };
+  auto print_of = [](const expr_t::ptr_op_t& op) {
+    std::ostringstream out;
+    op->print(out);
+    return out.str();
+  };
+
+  expr_t::ptr_op_t plug(new expr_t::op_t(expr_t::op_t::PLUG));
+  BOOST_CHECK_EQUAL(print_of(plug), "");
+  BOOST_CHECK_EQUAL(dump_of(plug), " PLUG (1)\n");
+
+  expr_t::ptr_op_t func =
+      expr_t::op_t::wrap_functor([](call_scope_t&) { return value_t(1L); });
+  BOOST_CHECK_EQUAL(print_of(func), "<FUNCTION>");
+  BOOST_CHECK_EQUAL(dump_of(func), " FUNCTION (1)\n");
+
+  expr_t::ptr_op_t neg = expr_t::op_t::new_node(expr_t::op_t::O_NEG, func);
+  BOOST_CHECK_EQUAL(print_of(neg), "(- <FUNCTION>)");
+
+  expr_t::ptr_op_t scope(new expr_t::op_t(expr_t::op_t::SCOPE));
+  scope->set_left(plug);
+  BOOST_CHECK_EQUAL(print_of(scope), "");
+
+  expr_t::ptr_op_t call = expr_t::op_t::new_node(expr_t::op_t::O_CALL, func);
+  BOOST_CHECK_EQUAL(print_of(call), "<FUNCTION>()");
+}
+
 BOOST_AUTO_TEST_CASE(testOpPrintNeg)
 {
   // Cover lines 644-647: O_NEG case in print
@@ -1933,13 +1968,13 @@ BOOST_AUTO_TEST_CASE(testOpPrintFoundMatch)
 }
 
 // -----------------------------------------------------------------------
-// Tests for print_cons/print_seq found=true branches
-// Exercises lines 574, 581, 592, 597 of op.cc
+// Tests for print_list found=true branches (O_CONS and O_SEQ)
+// Exercises the first and later elements of both list kinds
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testOpPrintFoundConsLeft)
 {
-  // Cover line 574: print_cons left child found=true
+  // print_list on O_CONS: first element found=true
   expr_t expr("f(x, y)");
   expr_t::ptr_op_t root = expr.get_op();
 
@@ -1964,7 +1999,7 @@ BOOST_AUTO_TEST_CASE(testOpPrintFoundConsLeft)
 
 BOOST_AUTO_TEST_CASE(testOpPrintFoundConsRight)
 {
-  // Cover line 581: print_cons right non-cons child found=true
+  // print_list on O_CONS: second element (left of the nested O_CONS) found=true
   expr_t expr("f(x, y)");
   expr_t::ptr_op_t root = expr.get_op();
   expr_t::ptr_op_t cons = root->right();
@@ -1981,7 +2016,7 @@ BOOST_AUTO_TEST_CASE(testOpPrintFoundConsRight)
 
 BOOST_AUTO_TEST_CASE(testOpPrintFoundSeqLeft)
 {
-  // Cover line 592: print_seq left child found=true
+  // print_list on O_SEQ: first element found=true
   expr_t expr("x; y");
   expr_t::ptr_op_t root = expr.get_op();
   expr_t::ptr_op_t target = root->left();
@@ -1995,7 +2030,7 @@ BOOST_AUTO_TEST_CASE(testOpPrintFoundSeqLeft)
 
 BOOST_AUTO_TEST_CASE(testOpPrintFoundSeqRight)
 {
-  // Cover line 597: print_seq right non-seq child found=true
+  // print_list on O_SEQ: last element (not an O_SEQ) found=true
   expr_t expr("x; y");
   expr_t::ptr_op_t root = expr.get_op();
   expr_t::ptr_op_t target = root->right();
@@ -2876,8 +2911,8 @@ BOOST_AUTO_TEST_CASE(testCalcCallExceptionW7)
 }
 
 // -----------------------------------------------------------------------
-// W7 Coverage: op.cc line 581 - print_cons right non-cons
-// Also: op.cc line 597 - print_seq right non-seq
+// W7 Coverage: op.cc print_list - O_CONS whose right is not O_CONS
+// Also: print_list - O_SEQ whose right is not O_SEQ
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPrintConsRightNonConsW7)
@@ -3770,7 +3805,7 @@ BOOST_AUTO_TEST_CASE(testPrintCallWithConsArgsW8)
 }
 
 // =======================================================================
-// W8 Coverage: op.cc - print_cons with right non-cons (line 580-581)
+// W8 Coverage: op.cc - print_list on O_CONS whose right is not O_CONS
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testPrintConsRightNonConsW8)
@@ -3789,7 +3824,7 @@ BOOST_AUTO_TEST_CASE(testPrintConsRightNonConsW8)
 }
 
 // =======================================================================
-// W8 Coverage: op.cc - print_seq with right non-seq (line 597)
+// W8 Coverage: op.cc - print_list on O_SEQ whose right is not O_SEQ
 // =======================================================================
 
 BOOST_AUTO_TEST_CASE(testPrintSeqRightNonSeqW8)

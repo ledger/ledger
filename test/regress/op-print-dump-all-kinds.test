@@ -1,0 +1,155 @@
+; op_t::print() ("Text as parsed", expression values) and op_t::dump()
+; ("Expression tree", "Compiled tree") for every node kind the parser
+; and compiler produce.  Pins the output byte for byte so a table-driven
+; printer cannot drift from the per-kind switches it replaced.  The sed
+; script replaces the 18-column address field of each dump line with
+; ADDR, keeping the depth indentation that follows it, and the scope
+; address a SCOPE node prints after its name.
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test parse 'inc = x -> x + 1; mix = (p, q) -> p * q - p / - q; logic = ! (2 < 3) & 5 == 2 | 3 <= 4; pick = 5 > 6 ? 7 >= 8 : 9; hit = "abc" =~ /b/; grab = "abc" ==~ /b/; today(); xact.payee; mix(2, 4); inc(1)' | sed -n '/^--- Text as parsed/,/^--- Compiled tree/p' | sed -E -e 's/^0x.{16}/ADDR/' -e 's/SCOPE: 0x[0-9a-f]+/SCOPE: ADDR/'
+--- Text as parsed ---
+(inc = (x -> (x + {1})); mix = ((p, q) -> ((p * q) - (p / (- q)))); logic = (((! ({2} < {3})) & ({5} == {2})) | ({3} <= {4})); pick = (({5} > {6}) ? ({7} >= {8}) : {9}); hit = ("abc" =~ /b/); grab = ("abc" ==~ /b/); today(); (xact.payee); mix({2}, {4}); inc({1}))
+
+--- Expression tree ---
+ADDRO_SEQ (1)
+ADDR O_DEFINE (1)
+ADDR  IDENT: inc (1)
+ADDR  SCOPE: ADDR (1)
+ADDR   O_LAMBDA (1)
+ADDR    IDENT: x (1)
+ADDR    SCOPE: ADDR (1)
+ADDR     O_ADD (1)
+ADDR      IDENT: x (1)
+ADDR      VALUE: 1 (1)
+ADDR O_SEQ (1)
+ADDR  O_DEFINE (1)
+ADDR   IDENT: mix (1)
+ADDR   SCOPE: ADDR (1)
+ADDR    O_LAMBDA (1)
+ADDR     O_CONS (1)
+ADDR      IDENT: p (1)
+ADDR      O_CONS (1)
+ADDR       IDENT: q (1)
+ADDR     SCOPE: ADDR (1)
+ADDR      O_SUB (1)
+ADDR       O_MUL (1)
+ADDR        IDENT: p (1)
+ADDR        IDENT: q (1)
+ADDR       O_DIV (1)
+ADDR        IDENT: p (1)
+ADDR        O_NEG (1)
+ADDR         IDENT: q (1)
+ADDR  O_SEQ (1)
+ADDR   O_DEFINE (1)
+ADDR    IDENT: logic (1)
+ADDR    SCOPE: ADDR (1)
+ADDR     O_OR (1)
+ADDR      O_AND (1)
+ADDR       O_NOT (1)
+ADDR        O_LT (1)
+ADDR         VALUE: 2 (1)
+ADDR         VALUE: 3 (1)
+ADDR       O_EQ (1)
+ADDR        VALUE: 5 (1)
+ADDR        VALUE: 2 (1)
+ADDR      O_LTE (1)
+ADDR       VALUE: 3 (1)
+ADDR       VALUE: 4 (1)
+ADDR   O_SEQ (1)
+ADDR    O_DEFINE (1)
+ADDR     IDENT: pick (1)
+ADDR     SCOPE: ADDR (1)
+ADDR      O_QUERY (1)
+ADDR       O_GT (1)
+ADDR        VALUE: 5 (1)
+ADDR        VALUE: 6 (1)
+ADDR       O_COLON (1)
+ADDR        O_GTE (1)
+ADDR         VALUE: 7 (1)
+ADDR         VALUE: 8 (1)
+ADDR        VALUE: 9 (1)
+ADDR    O_SEQ (1)
+ADDR     O_DEFINE (1)
+ADDR      IDENT: hit (1)
+ADDR      SCOPE: ADDR (1)
+ADDR       O_MATCH (1)
+ADDR        VALUE: "abc" (1)
+ADDR        VALUE: /b/ (1)
+ADDR     O_SEQ (1)
+ADDR      O_DEFINE (1)
+ADDR       IDENT: grab (1)
+ADDR       SCOPE: ADDR (1)
+ADDR        O_EMATCH (1)
+ADDR         VALUE: "abc" (1)
+ADDR         VALUE: /b/ (1)
+ADDR      O_SEQ (1)
+ADDR       O_CALL (1)
+ADDR        IDENT: today (1)
+ADDR       O_SEQ (1)
+ADDR        O_LOOKUP (1)
+ADDR         IDENT: xact (1)
+ADDR         IDENT: payee (1)
+ADDR        O_SEQ (1)
+ADDR         O_CALL (1)
+ADDR          IDENT: mix (1)
+ADDR          O_CONS (1)
+ADDR           VALUE: 2 (1)
+ADDR           O_CONS (1)
+ADDR            VALUE: 4 (1)
+ADDR         O_CALL (1)
+ADDR          IDENT: inc (1)
+ADDR          VALUE: 1 (1)
+
+--- Compiled tree ---
+end test
+
+test parse "payee =~ /Book/ ? abs(-3) : roundto(2.5, 0)" | sed -n '/^--- Text as parsed/,$p' | sed -E -e 's/^0x.{16}/ADDR/' -e 's/SCOPE: 0x[0-9a-f]+/SCOPE: ADDR/'
+--- Text as parsed ---
+((payee =~ /Book/) ? abs({-3}) : roundto({2.5}, {0}))
+
+--- Expression tree ---
+ADDRO_QUERY (1)
+ADDR O_MATCH (1)
+ADDR  IDENT: payee (1)
+ADDR  VALUE: /Book/ (1)
+ADDR O_COLON (1)
+ADDR  O_CALL (1)
+ADDR   IDENT: abs (1)
+ADDR   VALUE: -3 (1)
+ADDR  O_CALL (1)
+ADDR   IDENT: roundto (1)
+ADDR   O_CONS (1)
+ADDR    VALUE: 2.5 (1)
+ADDR    O_CONS (1)
+ADDR     VALUE: 0 (1)
+
+--- Compiled tree ---
+ADDRO_QUERY (1)
+ADDR O_MATCH (1)
+ADDR  IDENT: payee (1)
+ADDR   FUNCTION (1)
+ADDR  VALUE: /Book/ (1)
+ADDR O_COLON (1)
+ADDR  O_CALL (1)
+ADDR   IDENT: abs (1)
+ADDR    FUNCTION (1)
+ADDR   VALUE: -3 (1)
+ADDR  O_CALL (1)
+ADDR   IDENT: roundto (1)
+ADDR    FUNCTION (1)
+ADDR   O_CONS (1)
+ADDR    VALUE: 2.5 (1)
+ADDR    O_CONS (1)
+ADDR     VALUE: 0 (1)
+
+--- Calculated value ---
+3
+end test
+
+test eval "y -> y / 0"
+<#EXPR (y -> (y / {0}))>
+end test

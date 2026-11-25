@@ -749,42 +749,81 @@ value_t expr_t::op_t::calc_seq(scope_t& scope, ptr_op_t* locus, const int depth)
 /*--- Pretty-Printing ---*/
 
 namespace {
-/// @brief Recursively print a comma-separated O_CONS chain.
-bool print_cons(std::ostream& out, const expr_t::const_ptr_op_t& op,
-                const expr_t::op_t::context_t& context) {
-  bool found = false;
+/// @brief Per-kind spelling shared by op_t::print() and op_t::dump().
+struct op_info_t {
+  expr_t::op_t::kind_t kind; ///< The row's own kind; rows are in enum order.
+  const char* name;          ///< dump() label; "" for the range sentinels.
+  const char* infix;         ///< print() prefix (unary) or separator (binary);
+                             ///< nullptr when print() spells the kind itself.
+};
 
-  assert(op->left());
-  if (op->left()->print(out, context))
-    found = true;
+using op_t = expr_t::op_t;
 
-  if (op->has_right()) {
-    out << ", ";
-    if (op->right()->kind == expr_t::op_t::O_CONS)
-      found = print_cons(out, op->right(), context) || found;
-    else if (op->right()->print(out, context))
-      found = true;
-  }
-  return found;
+constexpr op_info_t op_info[] = {
+    {op_t::PLUG, "PLUG", nullptr},
+    {op_t::VALUE, "VALUE", nullptr},
+    {op_t::IDENT, "IDENT", nullptr},
+    {op_t::CONSTANTS, "", nullptr},
+    {op_t::FUNCTION, "FUNCTION", nullptr},
+    {op_t::SCOPE, "SCOPE", nullptr},
+    {op_t::TERMINALS, "", nullptr},
+    {op_t::O_NOT, "O_NOT", "! "},
+    {op_t::O_NEG, "O_NEG", "- "},
+    {op_t::UNARY_OPERATORS, "", nullptr},
+    {op_t::O_EQ, "O_EQ", " == "},
+    {op_t::O_LT, "O_LT", " < "},
+    {op_t::O_LTE, "O_LTE", " <= "},
+    {op_t::O_GT, "O_GT", " > "},
+    {op_t::O_GTE, "O_GTE", " >= "},
+    {op_t::O_AND, "O_AND", " & "},
+    {op_t::O_OR, "O_OR", " | "},
+    {op_t::O_ADD, "O_ADD", " + "},
+    {op_t::O_SUB, "O_SUB", " - "},
+    {op_t::O_MUL, "O_MUL", " * "},
+    {op_t::O_DIV, "O_DIV", " / "},
+    {op_t::O_QUERY, "O_QUERY", " ? "},
+    {op_t::O_COLON, "O_COLON", " : "},
+    {op_t::O_CONS, "O_CONS", ", "},
+    {op_t::O_SEQ, "O_SEQ", "; "},
+    {op_t::O_DEFINE, "O_DEFINE", " = "},
+    {op_t::O_LOOKUP, "O_LOOKUP", "."},
+    {op_t::O_LAMBDA, "O_LAMBDA", " -> "},
+    {op_t::O_CALL, "O_CALL", nullptr},
+    {op_t::O_MATCH, "O_MATCH", " =~ "},
+    {op_t::O_EMATCH, "O_EMATCH", " ==~ "},
+    {op_t::BINARY_OPERATORS, "", nullptr},
+    {op_t::OPERATORS, "", nullptr},
+    {op_t::UNKNOWN, "", nullptr},
+    {op_t::LAST, "", nullptr},
+};
+
+constexpr bool op_info_matches_kind_t() {
+  if (std::size(op_info) != static_cast<std::size_t>(op_t::LAST) + 1)
+    return false;
+  for (std::size_t i = 0; i < std::size(op_info); ++i)
+    if (static_cast<std::size_t>(op_info[i].kind) != i)
+      return false;
+  return true;
 }
+static_assert(op_info_matches_kind_t(),
+              "op_info must have one row per op_t::kind_t enumerator, in order");
 
-/// @brief Recursively print a semicolon-separated O_SEQ chain.
-bool print_seq(std::ostream& out, const expr_t::const_ptr_op_t& op,
-               const expr_t::op_t::context_t& context) {
+/// @brief Print an O_CONS or O_SEQ chain flat: a right child of the same
+/// kind continues the list instead of printing as a parenthesized node.
+bool print_list(std::ostream& out, const op_t& list, const op_t::context_t& context) {
   bool found = false;
+  const char* separator = op_info[list.kind].infix;
 
-  assert(op->left());
-  if (op->left()->print(out, context))
+  assert(list.left());
+  if (list.left()->print(out, context))
     found = true;
 
-  if (op->has_right()) {
-    out << "; ";
-    if (op->right()->kind == expr_t::op_t::O_SEQ)
-      found = print_seq(out, op->right(), context) || found;
-    else if (op->right()->print(out, context))
+  for_each_in_chain(list.right(), list.kind, [&](const expr_t::ptr_op_t& element) {
+    out << separator;
+    assert(element);
+    if (element->print(out, context))
       found = true;
-  }
-
+  });
   return found;
 }
 } // namespace
@@ -798,8 +837,6 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const {
     found = true;
   }
 
-  string symbol; // NOLINT(bugprone-unused-local-non-trivial-variable)
-
   // O_COLON is printed bare: it only ever appears as the right child of
   // O_QUERY, whose own parentheses already enclose "cond ? a : b", and
   // the parser does not accept a parenthesized "(a : b)" there.
@@ -809,6 +846,10 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const {
     out << '(';
 
   switch (kind) {
+  case PLUG:
+    // PLUG is an internal sentinel; it has no printable representation.
+    break;
+
   case VALUE:
     as_value().dump(out, context.relaxed);
     break;
@@ -827,141 +868,15 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const {
     break;
 
   case O_NOT:
-    out << "! ";
-    if (left() && left()->print(out, context))
-      found = true;
-    break;
   case O_NEG:
-    out << "- ";
+    out << op_info[kind].infix;
     if (left() && left()->print(out, context))
-      found = true;
-    break;
-
-  case O_ADD:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " + ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-  case O_SUB:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " - ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-  case O_MUL:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " * ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-  case O_DIV:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " / ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-
-  case O_EQ:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " == ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-  case O_LT:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " < ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-  case O_LTE:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " <= ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-  case O_GT:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " > ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-  case O_GTE:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " >= ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-
-  case O_AND:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " & ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-  case O_OR:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " | ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-
-  case O_QUERY:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " ? ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-
-  case O_COLON:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " : ";
-    if (has_right() && right()->print(out, context))
       found = true;
     break;
 
   case O_CONS:
-    found = print_cons(out, this, context);
-    break;
   case O_SEQ:
-    found = print_seq(out, this, context);
-    break;
-
-  case O_DEFINE:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " = ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-
-  case O_LOOKUP:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << ".";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-
-  case O_LAMBDA:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " -> ";
-    if (has_right() && right()->print(out, context))
-      found = true;
+    found = print_list(out, *this, context);
     break;
 
   case O_CALL:
@@ -973,7 +888,7 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const {
           found = true;
       } else {
         out << "(";
-        if (has_right() && right()->print(out, context))
+        if (right()->print(out, context))
           found = true;
         out << ")";
       }
@@ -982,40 +897,29 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const {
     }
     break;
 
-  case O_MATCH:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " =~ ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-
-  case O_EMATCH:
-    if (left() && left()->print(out, context))
-      found = true;
-    out << " ==~ ";
-    if (has_right() && right()->print(out, context))
-      found = true;
-    break;
-
-  case PLUG:
-    // PLUG is an internal sentinel; it has no printable representation.
-    break;
-
+  case CONSTANTS:
+  case TERMINALS:
+  case UNARY_OPERATORS:
+  case BINARY_OPERATORS:
+  case OPERATORS:
+  case UNKNOWN:
   case LAST:
-  default:
     assert(false);
+    break;
+
+  default:
+    // Every other binary operator prints as "left infix right".
+    assert(op_info[kind].infix);
+    if (left() && left()->print(out, context))
+      found = true;
+    out << op_info[kind].infix;
+    if (has_right() && right()->print(out, context))
+      found = true;
     break;
   }
 
   if (parenthesize)
     out << ')';
-
-  if (!symbol.empty()) {
-    if (commodity_pool_t::current_pool->find(symbol))
-      out << '@';
-    out << symbol;
-  }
 
   if (context.end_pos && this == context.op_to_find) {
     *context.end_pos = out.tellp();
@@ -1035,112 +939,20 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const {
   for (int i = 0; i < depth; i++)
     out << " ";
 
-  switch (kind) {
-  case PLUG:
-    out << "PLUG";
-    break;
+  assert(kind < LAST && *op_info[kind].name);
+  out << op_info[kind].name;
 
-  case VALUE:
-    out << "VALUE: ";
+  if (kind == VALUE) {
+    out << ": ";
     as_value().dump(out);
-    break;
-
-  case IDENT:
-    out << "IDENT: " << as_ident();
-    break;
-
-  case FUNCTION:
-    out << "FUNCTION";
-    break;
-
-  case SCOPE:
-    out << "SCOPE: ";
+  } else if (kind == IDENT) {
+    out << ": " << as_ident();
+  } else if (kind == SCOPE) {
+    out << ": ";
     if (is_scope_unset())
       out << "null";
     else
       out << as_scope().get();
-    break;
-
-  case O_DEFINE:
-    out << "O_DEFINE";
-    break;
-  case O_LOOKUP:
-    out << "O_LOOKUP";
-    break;
-  case O_LAMBDA:
-    out << "O_LAMBDA";
-    break;
-  case O_CALL:
-    out << "O_CALL";
-    break;
-  case O_MATCH:
-    out << "O_MATCH";
-    break;
-  case O_EMATCH:
-    out << "O_EMATCH";
-    break;
-
-  case O_NOT:
-    out << "O_NOT";
-    break;
-  case O_NEG:
-    out << "O_NEG";
-    break;
-
-  case O_ADD:
-    out << "O_ADD";
-    break;
-  case O_SUB:
-    out << "O_SUB";
-    break;
-  case O_MUL:
-    out << "O_MUL";
-    break;
-  case O_DIV:
-    out << "O_DIV";
-    break;
-
-  case O_EQ:
-    out << "O_EQ";
-    break;
-  case O_LT:
-    out << "O_LT";
-    break;
-  case O_LTE:
-    out << "O_LTE";
-    break;
-  case O_GT:
-    out << "O_GT";
-    break;
-  case O_GTE:
-    out << "O_GTE";
-    break;
-
-  case O_AND:
-    out << "O_AND";
-    break;
-  case O_OR:
-    out << "O_OR";
-    break;
-
-  case O_QUERY:
-    out << "O_QUERY";
-    break;
-  case O_COLON:
-    out << "O_COLON";
-    break;
-
-  case O_CONS:
-    out << "O_CONS";
-    break;
-  case O_SEQ:
-    out << "O_SEQ";
-    break;
-
-  case LAST:
-  default:
-    assert(false);
-    break;
   }
 
   out << " (" << refc << ')' << '\n';

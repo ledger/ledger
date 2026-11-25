@@ -1,6 +1,6 @@
 ; Coverage for op.cc
-; Recursive print_cons exercises the O_CONS printing when there are
-; multiple function arguments. With 4 arguments, print_cons recurses
+; print_list exercises the O_CONS printing when there are
+; multiple function arguments. With 4 arguments, print_list walks
 ; through nested O_CONS nodes to print "expr1, expr2, expr3, expr4".
 ; The error caret marks the failing element wherever it sits in a
 ; comma or semicolon list.

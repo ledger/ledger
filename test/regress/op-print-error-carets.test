@@ -1,0 +1,82 @@
+; op_t::print() in error contexts: the caret line must sit under the
+; failing node when it is reached through a call, a unary, ternary or
+; match operator, a lambda body, or a list nested inside the other list
+; kind (O_CONS inside O_SEQ and the reverse).
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test eval "abs(1/0)" -> 1
+__ERROR__
+While evaluating value expression:
+  abs((1 / 0))
+      ^^^^^^^
+While calling function 'abs <#EXPR ({1} / {0})>':
+Error: Divide by zero
+end test
+
+test eval "0 ? 2 : 1/0" -> 1
+__ERROR__
+While evaluating value expression:
+  (0 ? 2 : (1 / 0))
+           ^^^^^^^
+Error: Divide by zero
+end test
+
+test eval "! (1/0)" -> 1
+__ERROR__
+While evaluating value expression:
+  (! (1 / 0))
+     ^^^^^^^
+Error: Divide by zero
+end test
+
+test eval "'a' =~ 1/0" -> 1
+__ERROR__
+While evaluating value expression:
+  ("a" =~ (1 / 0))
+          ^^^^^^^
+Error: Divide by zero
+end test
+
+test eval "(x -> x / 0)(5)" -> 1
+__ERROR__
+While evaluating value expression:
+  (x -> (x / 0))(5)
+        ^^^^^^^
+While calling function '<value expr> 5':
+Error: Divide by zero
+end test
+
+test eval "(1, 2); (1/0)" -> 1
+__ERROR__
+While evaluating value expression:
+  ((1, 2); (1 / 0))
+           ^^^^^^^
+Error: Divide by zero
+end test
+
+test eval "(1, (1/0)); 3" -> 1
+__ERROR__
+While evaluating value expression:
+  ((1, (1 / 0)); 3)
+       ^^^^^^^
+Error: Divide by zero
+end test
+
+test eval "((1/0); 2), 3" -> 1
+__ERROR__
+While evaluating value expression:
+  (((1 / 0); 2), 3)
+    ^^^^^^^
+Error: Divide by zero
+end test
+
+test eval "((1/0), 2); 3" -> 1
+__ERROR__
+While evaluating value expression:
+  (((1 / 0), 2); 3)
+    ^^^^^^^
+Error: Divide by zero
+end test
