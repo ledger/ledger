@@ -2649,6 +2649,47 @@ $ ledger balance --no-total --recursive-aliases ^Exp
 The option @option{--no-aliases} completely disables alias expansion.
 All accounts are read verbatim as they are in the ledger file.
 
+@item account-rewrite
+@itemx payee-rewrite
+@findex account-rewrite
+@findex payee-rewrite
+@c instance_t::account_rewrite_directive in textual_directives.cc
+@c instance_t::payee_rewrite_directive in textual_directives.cc
+Rename accounts or payees in reports.  Each directive takes a regular
+expression and a replacement, separated by at least two spaces or a
+tab.  @code{account-rewrite} matches the full name of each posting's
+account, and @code{payee-rewrite} the payee of its transaction, both
+ignoring case; a match replaces the whole name with the replacement.
+When several rules match, the first one given wins, and rules given
+with @option{--account-rewrite} or @option{--payee-rewrite} are tried
+before those in the journal.  Unlike @code{alias}, which changes
+account names as the journal is read, a rewrite happens as postings
+enter a report, so the journal itself is unchanged.
+
+@smallexample @c input:9F558E7
+payee-rewrite ^AMZN  Amazon
+account-rewrite ^Expenses:Shop  Expenses:Online
+
+2024/03/01 AMZN Mktp US*2K4
+    Expenses:Shopping:Books      $25.00
+    Liabilities:Visa
+
+2024/03/02 amzn digital
+    Expenses:Shopping            $10.00
+    Liabilities:Visa
+@end smallexample
+
+@smallexample @c command:9F558E7
+$ ledger -f rewrite.dat reg
+@end smallexample
+
+@smallexample @c output:9F558E7
+24-Mar-01 Amazon                Expenses:Online              $25.00       $25.00
+                                Liabilities:Visa            $-25.00            0
+24-Mar-02 Amazon                Expenses:Online              $10.00       $10.00
+                                Liabilities:Visa            $-10.00            0
+@end smallexample
+
 @item assert
 @findex assert
 @cindex assertions
@@ -3701,15 +3742,19 @@ total value for that account as of that posting matches the amount
 specified.  See @option{--permissive} option to relax the balance assertions checks.
 
 There are two forms of this feature: balance assertions, and balance
-assignments.  Both are processed while parsing the ledger files, against
-the account's total as of the posting's date: postings dated after it do
-not count, even when they appear earlier in the file.  The posting's date
-is its own date when it has one (for example a @samp{[DATE]} note after
-the amount), else its transaction's.  Under @option{--effective}, a
-posting with an effective date is checked as of that date, and one
-without is checked against every posting read so far.  Specify
-@option{--check-in-file-order} to count every posting read so far
-regardless of date.
+assignments.  Both are processed while Ledger parses the journal, so
+they see only the postings that come before them in the file.  Of
+those postings, they count only the ones dated on or before the date
+of the posting that carries the assertion or assignment: a
+transaction dated later does not disturb them, even when it appears
+earlier in the file.  A transaction dated earlier that appears later
+in the file is not counted either.  The posting's date is its own date
+when it has one (for example a @samp{[DATE]} note after the amount),
+else its transaction's.  Under @option{--effective}, a posting with an
+effective date is checked as of that date, and one without is checked
+against every posting read so far.  The option
+@option{--check-in-file-order} counts every posting parsed so far,
+whatever its date, as Ledger did before version 3.5.
 
 @node Balance assertions, Balance assignments, Balance verification, Balance verification
 @subsection Balance assertions
@@ -3764,6 +3809,41 @@ assert that an account is totally empty.
 
 The last transaction will assert that we are out of cash of any sort.
 
+Because an assertion counts only the postings dated on or before its
+own date, the assertion in this journal holds even though the grocery
+purchase dated July 20 comes first in the file:
+
+@smallexample @c input:FBA128C
+2024/07/20 Grocery
+    Expenses:Food                $30.00
+    Assets:Checking
+
+2024/07/01 Paycheck
+    Assets:Checking            $1000.00
+    Income:Salary
+
+2024/07/10 Rent
+    Expenses:Rent               $500.00
+    Assets:Checking            $-500.00 = $500.00
+@end smallexample
+
+@smallexample @c command:FBA128C
+$ ledger -f assert.dat bal
+@end smallexample
+
+@smallexample @c output:FBA128C
+             $470.00  Assets:Checking
+             $530.00  Expenses
+              $30.00    Food
+             $500.00    Rent
+           $-1000.00  Income:Salary
+--------------------
+                   0
+@end smallexample
+
+With @option{--check-in-file-order} the same journal fails, because
+the assertion then also counts the $30.00 grocery purchase.
+
 @node Balance assignments, Resetting a balance, Balance assertions, Balance verification
 @subsection Balance assignments
 
@@ -3778,6 +3858,10 @@ A balance assignment has this form:
 This sets the amount of the second posting to whatever it would need to
 be for the total in @samp{Assets:Cash} to be $500.00 after the posting.
 If the resulting amount is not $-20.00 in this case, it is an error.
+
+A balance assignment counts the same postings as a balance assertion:
+those earlier in the file and dated on or before it (@pxref{Balance
+verification}).
 
 @node Resetting a balance, Balancing transactions, Balance assignments, Balance verification
 @subsection Resetting a balance
@@ -7560,6 +7644,17 @@ Prepend @var{STR} to all accounts reported.  That is, the option
 @samp{--account Personal} would tack @samp{Personal:} to the beginning
 of every account reported in a balance report or register report.
 
+@item --account-rewrite @var{PATTERN}=@var{REPLACEMENT}
+In reports, show every account whose full name matches the regular
+expression @var{PATTERN}, ignoring case, as @var{REPLACEMENT}.  The
+argument is split at its first @samp{=}.  The option may be given more
+than once; the first matching rule wins, and these rules are tried
+before those of @code{account-rewrite} directives in the journal
+(@pxref{Command Directives}).  In a @option{--script} file or at the
+REPL prompt, a rule given with this option applies only to the command
+that gives it; one given on the @command{ledger} command line, before
+@option{--script}, applies to every command.
+
 @item --account-width @var{INT}
 Set the width of the account column in the @command{register} report
 to @var{INT} characters.
@@ -7777,6 +7872,11 @@ Strings}).  The default is:
 "%(quoted(cleared ? \"*\" : (pending ? \"!\" : \"\"))),"
 "%(quoted(join(note | xact.note)))\n"
 @end smallexample
+
+@item --csv-separator @var{CHAR}
+Use @var{CHAR} as the field separator when @command{convert} reads a
+CSV file.  @samp{\t} or @samp{tab} selects a tab; otherwise the first
+character of @var{CHAR} is used.  The default is a comma.
 
 @item --current
 Shorthand for @samp{--limit "date <= today"}.
@@ -8079,6 +8179,13 @@ Group transactions together in the @command{register} report.
 @var{EXPR} can be anything, although most common would be @code{payee}
 or @code{commodity}.  The @code{tags()} function is also useful here.
 
+@item --group-by-cumulative
+With @option{--group-by}, do not reset totals between groups, so that
+each group's totals include the postings of every group before it.
+Groups are taken in the order of their @var{EXPR} values, so with
+@samp{--group-by date} a @command{balance} report shows the balance as
+of each date.
+
 @item --no-group-by
 Cancel any prior @option{--group-by} option, restoring flat ungrouped
 output.  This is useful for overriding a @option{--group-by} set in a
@@ -8163,6 +8270,13 @@ Print the first @var{INT} entries.  Opposite of @option{--tail
 @item --historical
 @itemx -H
 Value commodities at the time of their acquisition.
+
+@item --ignore-diacritics
+When matching a regular expression, such as a query term, fold
+accented letters to their base letters in both the pattern and the
+text, so that @samp{cafe} matches @samp{Café}.  Only letters of the
+Latin-1 Supplement and Latin Extended-A blocks are folded, and
+@code{include} file globs are never folded.
 
 @item --immediate
 Evaluate calculations immediately rather than lazily.
@@ -8312,6 +8426,17 @@ Direct output to @var{FILE} pager program.
 Sets a value expression for formatting the payee.  In the
 @command{register} report this prevents the second entry from having
 a date and payee for each transaction.
+
+@item --payee-rewrite @var{PATTERN}=@var{REPLACEMENT}
+In reports, show every payee that matches the regular expression
+@var{PATTERN}, ignoring case, as @var{REPLACEMENT}.  The argument is
+split at its first @samp{=}.  The option may be given more than once;
+the first matching rule wins, and these rules are tried before those
+of @code{payee-rewrite} directives in the journal (@pxref{Command
+Directives}).  In a @option{--script} file or at the REPL prompt, a
+rule given with this option applies only to the command that gives
+it; one given on the @command{ledger} command line, before
+@option{--script}, applies to every command.
 
 @item --payee-width @var{INT}
 Set the number of columns dedicated to the payee in the register
@@ -9749,6 +9874,57 @@ but by date only, and not against the running total:
 $ ledger --forecast "d<[2010]" bal ^assets ^liabilities
 @end smallexample
 
+Forecast postings start with the period that contains today's date,
+or the date given by @option{--now}, so a monthly periodic transaction
+forecast on July 15 first appears on July 1.  Forecasting stops when
+@var{VEXPR} becomes false, and in any case @option{--forecast-years}
+years (5 by default) after today:
+
+@smallexample @c input:69607D0
+~ Monthly
+    Expenses:Rent               $500.00
+    Assets:Checking
+
+2024/06/01 Opening Balance
+    Assets:Checking            $1200.00
+    Equity:Opening Balances
+@end smallexample
+
+@smallexample @c command:69607D0
+$ ledger -f forecast.dat --now 2024/07/15 --forecast "d<[2024/10/01]" reg Checking
+@end smallexample
+
+@smallexample @c output:69607D0
+24-Jun-01 Opening Balance       Assets:Checking            $1200.00     $1200.00
+24-Jul-01 Forecast transaction  Assets:Checking            $-500.00      $700.00
+24-Aug-01 Forecast transaction  Assets:Checking            $-500.00      $200.00
+24-Sep-01 Forecast transaction  Assets:Checking            $-500.00     $-300.00
+@end smallexample
+
+The @command{balance} report stops at the same date, and shows the
+balance after the last forecast posting:
+
+@smallexample @c command:A5C9423,with_input:69607D0
+$ ledger -f forecast.dat --now 2024/07/15 --forecast "d<[2024/10/01]" bal Checking
+@end smallexample
+
+@smallexample @c output:A5C9423
+            $-300.00  Assets:Checking
+@end smallexample
+
+The @command{balance} report keeps no running total for forecast
+postings, so a @var{VEXPR} that tests the total, such as
+@samp{T>@{$-500.00@}}, is false from the start there, and the report
+adds no forecast posting:
+
+@smallexample @c command:8263336,with_input:69607D0
+$ ledger -f forecast.dat --now 2024/07/15 --forecast "T>@{$-500.00@}" bal Checking
+@end smallexample
+
+@smallexample @c output:8263336
+            $1200.00  Assets:Checking
+@end smallexample
+
 @node Time Keeping, Value Expressions, Budgeting and Forecasting, Top
 @chapter Time Keeping
 @findex --day-break
@@ -11114,6 +11290,54 @@ and @code{assert} or @code{check} directives to inspect the running
 balance of a named account (@pxref{Using current account balances}).
 @end defun
 
+@defun account_prefix name n
+Return the first @var{n} colon-separated components of the account
+name @var{name}: the whole name when @var{n} exceeds its depth, and
+the empty string when @var{n} is zero or negative.
+@smallexample @c command:082CD7C
+$ ledger eval 'account_prefix("Assets:Bank:HSBC", 2)'
+@end smallexample
+@smallexample @c output:082CD7C
+Assets:Bank
+@end smallexample
+@end defun
+
+@defun account_skip_prefix name n
+Return the account name @var{name} without its first @var{n}
+colon-separated components: the empty string when @var{n} is at least
+its depth, and the whole name when @var{n} is zero or negative.
+@smallexample @c command:2F998D5
+$ ledger eval 'account_skip_prefix("Assets:Bank:HSBC", 2)'
+@end smallexample
+@smallexample @c output:2F998D5
+HSBC
+@end smallexample
+@end defun
+
+@defun account_skip_suffix name n
+Return the account name @var{name} without its last @var{n}
+colon-separated components: the empty string when @var{n} is at least
+its depth, and the whole name when @var{n} is zero or negative.
+@smallexample @c command:5364F95
+$ ledger eval 'account_skip_suffix("Assets:Bank:HSBC", 2)'
+@end smallexample
+@smallexample @c output:5364F95
+Assets
+@end smallexample
+@end defun
+
+@defun account_suffix name n
+Return the last @var{n} colon-separated components of the account
+name @var{name}: the whole name when @var{n} exceeds its depth, and
+the empty string when @var{n} is zero or negative.
+@smallexample @c command:4F8B9E9
+$ ledger eval 'account_suffix("Assets:Bank:HSBC", 2)'
+@end smallexample
+@smallexample @c output:4F8B9E9
+Bank:HSBC
+@end smallexample
+@end defun
+
 @defun all expr
 Apply @var{expr} to every posting of the parent transaction and
 return @code{true} if every result is true.  Use to express ``all
@@ -11590,6 +11814,24 @@ $ ledger -f expr.dat --format "%(account) %(roundto(amount, 1))\n" reg
 @smallexample @c output:B4DFB9F
 Assets:Cash ¤ -123,50
 Expenses:Office Supplies ¤ 123,50
+@end smallexample
+@end defun
+
+@defun roundto_commodity value
+Return @var{value} rounded to the display precision of its commodity.
+Unlike @code{rounded}, which changes only how a value is displayed,
+this changes the value itself, so later arithmetic sees the rounded
+amount.  @option{--round} rounds each posting's amount with it.
+@smallexample @c input:E6FD1DC
+2024/01/01 Dinner
+    Expenses:Food                 $1.00
+    Assets:Cash
+@end smallexample
+@smallexample @c command:E6FD1DC
+$ ledger -f split.dat --format "%(roundto_commodity(amount / 3) * 3) %(rounded(amount / 3) * 3)\n" reg Food
+@end smallexample
+@smallexample @c output:E6FD1DC
+$0.99 $1.00
 @end smallexample
 @end defun
 
@@ -12130,23 +12372,10 @@ variable @env{LEDGER_COLORS}, to have every report use your colors.
 @subsection Quantities and Calculations
 
 @table @code
-@item account_prefix(@var{name}, @var{n})
-Return the first @var{n} colon-separated components of an account name.
-For example, @code{account_prefix("Assets:Bank:HSBC", 2)} returns
-@code{"Assets:Bank"}.  When @var{n} is greater than the depth, returns the
-full name; when @var{n} is zero or negative, returns the empty string.
-@item account_suffix(@var{name}, @var{n})
-Return the last @var{n} colon-separated components of an account name.
-For example, @code{account_suffix("Assets:Bank:HSBC", 2)} returns
-@code{"Bank:HSBC"}.
-@item account_skip_prefix(@var{name}, @var{n})
-Drop the first @var{n} colon-separated components of an account name.
-For example, @code{account_skip_prefix("Assets:Bank:HSBC", 2)} returns
-@code{"HSBC"}.
-@item account_skip_suffix(@var{name}, @var{n})
-Drop the last @var{n} colon-separated components of an account name.
-For example, @code{account_skip_suffix("Assets:Bank:HSBC", 2)} returns
-@code{"Assets"}.
+@item account_prefix
+@item account_suffix
+@item account_skip_prefix
+@item account_skip_suffix
 @item amount_expr
 @item abs
 @item commodity

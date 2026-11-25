@@ -1,0 +1,24 @@
+; Payee and account rewrite rules: the first matching rule wins, and
+; rules given with --payee-rewrite/--account-rewrite are tried before the
+; journal's payee-rewrite/account-rewrite directives.  Matching ignores
+; case, and a match replaces the whole name.  The manual (Command
+; Directives, --payee-rewrite, --account-rewrite) documents this order.
+
+payee-rewrite ^amzn  Amazon
+payee-rewrite AMZN Mktp  Amazon Marketplace
+account-rewrite ^Expenses:Shop  Expenses:Online
+account-rewrite Books  Expenses:Reading
+
+2024/03/01 AMZN Mktp US*2K4
+    Expenses:Shopping:Books      $25.00
+    Liabilities:Visa
+
+test reg
+24-Mar-01 Amazon                Expenses:Online              $25.00       $25.00
+                                Liabilities:Visa            $-25.00            0
+end test
+
+test reg --payee-rewrite Mktp=Marketplace --account-rewrite Books=Expenses:Books
+24-Mar-01 Marketplace           Expenses:Books               $25.00       $25.00
+                                Liabilities:Visa            $-25.00            0
+end test
