@@ -1,7 +1,8 @@
-; Coverage test for filters.cc early return in create_post_from_amount
+; Coverage test for filters.cc early return in the balancing-post lambda in
+; posts_as_equity::report_subtotal
 ; When an equity balance has a zero-valued commodity (e.g., AAPL stock
-; bought and sold completely), the create_post_from_amount skips it
-; with an early return
+; bought and sold completely), the balancing-post lambda in
+; posts_as_equity::report_subtotal skips it with an early return
 
 2024/01/01 Buy
     Assets:Stock    10 AAPL @ $150

@@ -1699,7 +1699,8 @@ BOOST_AUTO_TEST_CASE(testByPayeePostsW8)
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: create_post_from_amount zero amount (line 1107-1108)
+// W8 Coverage: zero amount in the balancing-post lambda in
+// posts_as_equity::report_subtotal
 //
 
 BOOST_AUTO_TEST_CASE(testPostsAsEquityZeroW8)

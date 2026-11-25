@@ -1,7 +1,8 @@
 ; Coverage test for filters.cc
 ; Tests posts_as_equity::report_subtotal with multiple commodities
 ; total.to_amount path when total is single-commodity
-; amount.is_zero skip in create_post_from_amount
+; amount.is_zero skip in the balancing-post lambda in
+; posts_as_equity::report_subtotal
 ; The equity command forces the filter pipeline through posts_as_equity.
 
 2024/01/15 Buy Stock

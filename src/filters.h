@@ -1074,6 +1074,8 @@ class interval_posts : public subtotal_posts {
   std::deque<post_t*> all_posts; ///< Postings since the last flush(), sorted in flush().
 
   interval_posts();
+  /// Subtotal one <None> posting of 0 for the current interval (--empty).
+  void report_empty_period();
 
 public:
   interval_posts(post_handler_ptr _handler, expr_t& amount_expr, const date_interval_t& _interval,

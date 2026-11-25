@@ -569,6 +569,20 @@ void calc_posts::operator()(post_t& post) {
 /*--- Synthetic posting generation helper ---*/
 
 namespace {
+/// Optional settings for a posting that handle_value() generates.
+struct handle_value_options_t {
+  date_t date;                     ///< Date override; ignored when not valid.
+  bool act_date_p = true;          ///< date is the posting date (true) or its value date.
+  value_t total;                   ///< Running total stored in xdata, if not null.
+  bool direct_amount = false;      ///< Mark the posting POST_EXT_DIRECT_AMT.
+  bool mark_visited = false;       ///< Mark posting and account visited after handling.
+  bool bidir_link = true;          ///< Link the posting into its xact both ways.
+  post_t* source_post = nullptr;   ///< Copy tags/metadata from this posting.
+  bool force_virtual = false;      ///< Make the posting virtual regardless of account flags.
+  bool force_must_balance = false; ///< With force_virtual, make it a [balanced] posting.
+  bool subtotal_row = false;       ///< Mark it POST_EXT_SUBTOTAL_ROW (one row of a group).
+};
+
 /**
  * Create a synthetic (generated) posting and forward it through the handler.
  *
@@ -584,39 +598,26 @@ namespace {
  * @param xact             The transaction to attach the posting to.
  * @param temps            Temporary storage owning the posting's lifetime.
  * @param handler          The downstream handler to receive the posting.
- * @param date             Optional date override for the posting.
- * @param act_date_p       If true, date is an actual date; if false, a value date.
- * @param total            Optional total to store in xdata.
- * @param direct_amount    If true, mark as POST_EXT_DIRECT_AMT.
- * @param mark_visited     If true, mark posting and account as visited.
- * @param bidir_link       If true, create bidirectional xact/post links.
- * @param source_post      Optional source posting to copy metadata from.
- * @param force_virtual    If true, force the posting to be virtual.
- * @param force_must_balance If true, force virtual posting to require balance.
- * @param subtotal_row     If true, mark as POST_EXT_SUBTOTAL_ROW (one row of a grouped report).
+ * @param opts             Date, total, flags and source posting for the generated posting.
  */
 void handle_value(const value_t& value, account_t* account, xact_t* xact, temporaries_t& temps,
-                  const post_handler_ptr& handler, const date_t& date = date_t(),
-                  const bool act_date_p = true, const value_t& total = value_t(),
-                  const bool direct_amount = false, const bool mark_visited = false,
-                  const bool bidir_link = true, post_t* source_post = nullptr,
-                  const bool force_virtual = false, const bool force_must_balance = false,
-                  const bool subtotal_row = false) {
-  post_t& post = temps.create_post(*xact, account, bidir_link);
+                  const post_handler_ptr& handler,
+                  const handle_value_options_t& opts = handle_value_options_t()) {
+  post_t& post = temps.create_post(*xact, account, opts.bidir_link);
   post.add_flags(ITEM_GENERATED);
 
   // Copy tags/metadata from the source posting so that revaluation posts
   // inherit tags and can be properly filtered by predicates like --limit
-  if (source_post && source_post->metadata)
-    post.metadata = source_post->metadata;
+  if (opts.source_post && opts.source_post->metadata)
+    post.metadata = opts.source_post->metadata;
 
   // If the caller explicitly specifies that this posting is virtual (e.g.,
   // when subtotal_posts accumulates virtual and non-virtual postings for the
   // same account as separate entries), use that flag directly.  Otherwise,
   // infer virtual status from account xdata flags as before.
-  if (force_virtual) {
+  if (opts.force_virtual) {
     post.add_flags(POST_VIRTUAL);
-    if (force_must_balance)
+    if (opts.force_must_balance)
       post.add_flags(POST_MUST_BALANCE);
   } else if (account && account->has_xdata() &&
              account->xdata().has_flags(ACCOUNT_EXT_AUTO_VIRTUALIZE)) {
@@ -629,11 +630,11 @@ void handle_value(const value_t& value, account_t* account, xact_t* xact, tempor
 
   post_t::xdata_t& xdata(post.xdata());
 
-  if (is_valid(date)) {
-    if (act_date_p)
-      xdata.date = date;
+  if (is_valid(opts.date)) {
+    if (opts.act_date_p)
+      xdata.date = opts.date;
     else
-      xdata.value_date = date;
+      xdata.value_date = opts.date;
   }
 
   value_t temp(value);
@@ -661,19 +662,19 @@ void handle_value(const value_t& value, account_t* account, xact_t* xact, tempor
     break;
   }
 
-  if (!total.is_null())
-    xdata.total = total;
+  if (!opts.total.is_null())
+    xdata.total = opts.total;
 
-  if (direct_amount)
+  if (opts.direct_amount)
     xdata.add_flags(POST_EXT_DIRECT_AMT);
-  if (subtotal_row)
+  if (opts.subtotal_row)
     xdata.add_flags(POST_EXT_SUBTOTAL_ROW);
 
   DEBUG("filters.changed_value.rounding", "post.amount = " << post.amount);
 
   (*handler)(post);
 
-  if (mark_visited) {
+  if (opts.mark_visited) {
     post.xdata().add_flags(POST_EXT_VISITED);
     post.account->xdata().add_flags(ACCOUNT_EXT_VISITED);
   }
@@ -758,21 +759,10 @@ void collapse_posts::report_subtotal() {
         xact.payee = last_xact->payee;
         xact._date = d;
 
-        handle_value(/* value=              */ entry.second,
-                     /* account=            */ acct,
-                     /* xact=               */ &xact,
-                     /* temps=              */ temps,
-                     /* handler=            */ handler,
-                     /* date=               */ d,
-                     /* act_date_p=         */ true,
-                     /* total=              */ value_t(),
-                     /* direct_amount=      */ false,
-                     /* mark_visited=       */ false,
-                     /* bidir_link=         */ true,
-                     /* source_post=        */ nullptr,
-                     /* force_virtual=      */ false,
-                     /* force_must_balance= */ false,
-                     /* subtotal_row=       */ true);
+        handle_value_options_t opts;
+        opts.date = d;
+        opts.subtotal_row = true;
+        handle_value(entry.second, acct, &xact, temps, handler, opts);
       }
     } else {
       date_t earliest_date;
@@ -795,23 +785,12 @@ void collapse_posts::report_subtotal() {
       DEBUG("filters.collapse", "earliest date    = " << earliest_date);
       DEBUG("filters.collapse", "latest date      = " << latest_date);
 
-      for (totals_map::value_type& pat : totals) {
-        handle_value(/* value=              */ pat.second,
-                     /* account=            */ pat.first,
-                     /* xact=               */ &xact,
-                     /* temps=              */ temps,
-                     /* handler=            */ handler,
-                     /* date=               */ latest_date,
-                     /* act_date_p=         */ false,
-                     /* total=              */ value_t(),
-                     /* direct_amount=      */ false,
-                     /* mark_visited=       */ false,
-                     /* bidir_link=         */ true,
-                     /* source_post=        */ nullptr,
-                     /* force_virtual=      */ false,
-                     /* force_must_balance= */ false,
-                     /* subtotal_row=       */ true);
-      }
+      handle_value_options_t opts;
+      opts.date = latest_date;
+      opts.act_date_p = false;
+      opts.subtotal_row = true;
+      for (totals_map::value_type& pat : totals)
+        handle_value(pat.second, pat.first, &xact, temps, handler, opts);
     }
   }
   // NOLINTEND(bugprone-branch-clone)
@@ -982,17 +961,11 @@ bool display_filter_posts::output_rounding(post_t& post) {
       if (value_t diff = precise_display_total - last_display_total) {
         DEBUG("filters.changed_value.rounding", "rounding.diff                  = " << diff);
 
-        handle_value(/* value=         */ diff,
-                     /* account=       */ rounding_account,
-                     /* xact=          */ post.xact,
-                     /* temps=         */ temps,
-                     /* handler=       */ handler,
-                     /* date=          */ date_t(),
-                     /* act_date_p=    */ true,
-                     /* total=         */ precise_display_total,
-                     /* direct_amount= */ true,
-                     /* mark_visited=  */ false,
-                     /* bidir_link=    */ false);
+        handle_value_options_t opts;
+        opts.total = precise_display_total;
+        opts.direct_amount = true;
+        opts.bidir_link = false;
+        handle_value(diff, rounding_account, post.xact, temps, handler, opts);
       }
     }
     if (show_rounding)
@@ -1342,34 +1315,17 @@ void changed_value_posts::output_value_change(post_t& post, const date_t& date,
   xact.payee = _("Commodities revalued");
   xact._date = is_valid(date) ? date : post.value_date();
 
+  handle_value_options_t opts;
+  opts.date = *xact._date;
+  opts.source_post = &post;
   // NOLINTBEGIN(bugprone-branch-clone)
   if (!for_accounts_report) {
-    handle_value(/* value=         */ diff,
-                 /* account=       */ revalued_account,
-                 /* xact=          */ &xact,
-                 /* temps=         */ temps,
-                 /* handler=       */ handler,
-                 /* date=          */ *xact._date,
-                 /* act_date_p=    */ true,
-                 /* total=         */ repriced_total,
-                 /* direct_amount= */ false,
-                 /* mark_visited=  */ false,
-                 /* bidir_link=    */ true,
-                 /* source_post=   */ &post);
+    opts.total = repriced_total;
+    handle_value(diff, revalued_account, &xact, temps, handler, opts);
   } else {
-    handle_value(
-        /* value=         */ -diff,
-        /* account=       */ (diff < 0L ? losses_equity_account : gains_equity_account),
-        /* xact=          */ &xact,
-        /* temps=         */ temps,
-        /* handler=       */ handler,
-        /* date=          */ *xact._date,
-        /* act_date_p=    */ true,
-        /* total=         */ value_t(),
-        /* direct_amount= */ false,
-        /* mark_visited=  */ true,
-        /* bidir_link=    */ true,
-        /* source_post=   */ &post);
+    opts.mark_visited = true;
+    handle_value(-diff, (diff < 0L ? losses_equity_account : gains_equity_account), &xact, temps,
+                 handler, opts);
   }
   // NOLINTEND(bugprone-branch-clone)
 }
@@ -1878,22 +1834,15 @@ void subtotal_posts::report_subtotal(const char* spec_fmt,
   xact.payee = payee ? *payee : out_date.str();
   xact._date = *range_start;
 
-  for (values_map::value_type& pair : values)
-    handle_value(/* value=              */ pair.second.value,
-                 /* account=            */ pair.second.account,
-                 /* xact=               */ &xact,
-                 /* temps=              */ temps,
-                 /* handler=            */ handler,
-                 /* date=               */ *range_finish,
-                 /* act_date_p=         */ false,
-                 /* total=              */ value_t(),
-                 /* direct_amount=      */ false,
-                 /* mark_visited=       */ false,
-                 /* bidir_link=         */ true,
-                 /* source_post=        */ nullptr,
-                 /* force_virtual=      */ pair.second.is_virtual,
-                 /* force_must_balance= */ pair.second.must_balance,
-                 /* subtotal_row=       */ true);
+  handle_value_options_t opts;
+  opts.date = *range_finish;
+  opts.act_date_p = false;
+  opts.subtotal_row = true;
+  for (values_map::value_type& pair : values) {
+    opts.force_virtual = pair.second.is_virtual;
+    opts.force_must_balance = pair.second.must_balance;
+    handle_value(pair.second.value, pair.second.account, &xact, temps, handler, opts);
+  }
 
   values.clear();
 }
@@ -2055,15 +2004,7 @@ void interval_posts::flush() {
         // Generate a null posting, so the intervening periods can be
         // seen when -E is used, or if the calculated amount ends up
         // being non-zero
-        xact_t& null_xact = temps.create_xact();
-        null_xact._date = interval.inclusive_end();
-
-        post_t& null_post = temps.create_post(null_xact, empty_account);
-        null_post.add_flags(POST_CALCULATED);
-        null_post.amount = 0L;
-
-        subtotal_posts::operator()(null_post);
-        report_subtotal(interval);
+        report_empty_period();
       }
 
       DEBUG("filters.interval", "Advancing interval");
@@ -2084,17 +2025,7 @@ void interval_posts::flush() {
     ++interval;
     while (interval.start && *interval.start < *end_of_report_) {
       DEBUG("filters.interval", "Generating trailing empty post for " << *interval.start);
-
-      xact_t& null_xact = temps.create_xact();
-      null_xact._date = interval.inclusive_end();
-
-      post_t& null_post = temps.create_post(null_xact, empty_account);
-      null_post.add_flags(POST_CALCULATED);
-      null_post.amount = 0L;
-
-      subtotal_posts::operator()(null_post);
-      report_subtotal(interval);
-
+      report_empty_period();
       ++interval;
     }
   }
@@ -2111,31 +2042,18 @@ void interval_posts::flush() {
   interval = start_interval;
 }
 
-namespace {
-struct create_post_from_amount {
-  post_handler_ptr handler;
-  xact_t& xact;
-  account_t& balance_account;
-  temporaries_t& temps;
+/// Subtotal one <None> posting of 0 for the current interval (--empty).
+void interval_posts::report_empty_period() {
+  xact_t& null_xact = temps.create_xact();
+  null_xact._date = interval.inclusive_end();
 
-  explicit create_post_from_amount(post_handler_ptr _handler, xact_t& _xact,
-                                   account_t& _balance_account, temporaries_t& _temps)
-      : handler(std::move(_handler)), xact(_xact), balance_account(_balance_account),
-        temps(_temps) {
-    TRACE_CTOR(create_post_from_amount, "post_handler_ptr, xact_t&, account_t&, temporaries_t&");
-  }
-  create_post_from_amount(const create_post_from_amount&) = delete;
-  ~create_post_from_amount() noexcept { TRACE_DTOR(create_post_from_amount); }
+  post_t& null_post = temps.create_post(null_xact, empty_account);
+  null_post.add_flags(POST_CALCULATED);
+  null_post.amount = 0L;
 
-  void operator()(const amount_t& amount) {
-    if (amount.is_zero())
-      return;
-    post_t& balance_post = temps.create_post(xact, &balance_account);
-    balance_post.amount = -amount;
-    (*handler)(balance_post);
-  }
-};
-} // namespace
+  subtotal_posts::operator()(null_post);
+  report_subtotal(interval);
+}
 
 /*--- Equity conversion ---*/
 
@@ -2163,49 +2081,27 @@ void posts_as_equity::report_subtotal() {
   const bool invert = report.HANDLED(invert);
 
   value_t total = 0L;
+  handle_value_options_t opts;
+  opts.date = finish;
+  opts.act_date_p = false;
+  opts.subtotal_row = true;
   for (values_map::value_type& pair : values) {
     value_t value(pair.second.value.strip_annotations(report.what_to_keep()));
     if (unround)
       value.in_place_unround();
     if (invert)
       value.in_place_negate();
+    opts.force_virtual = pair.second.is_virtual;
+    opts.force_must_balance = pair.second.must_balance;
+    auto emit = [&](const amount_t& amt) {
+      if (!amt.is_zero())
+        handle_value(amt, pair.second.account, &xact, temps, handler, opts);
+    };
     if (!value.is_zero()) {
-      if (value.is_balance()) {
-        value.as_balance_lval().map_sorted_amounts([&](const amount_t& amt) {
-          if (!amt.is_zero())
-            handle_value(/* value=              */ amt,
-                         /* account=            */ pair.second.account,
-                         /* xact=               */ &xact,
-                         /* temps=              */ temps,
-                         /* handler=            */ handler,
-                         /* date=               */ finish,
-                         /* act_date_p=         */ false,
-                         /* total=              */ value_t(),
-                         /* direct_amount=      */ false,
-                         /* mark_visited=       */ false,
-                         /* bidir_link=         */ true,
-                         /* source_post=        */ nullptr,
-                         /* force_virtual=      */ pair.second.is_virtual,
-                         /* force_must_balance= */ pair.second.must_balance,
-                         /* subtotal_row=       */ true);
-        });
-      } else {
-        handle_value(/* value=              */ value.to_amount(),
-                     /* account=            */ pair.second.account,
-                     /* xact=               */ &xact,
-                     /* temps=              */ temps,
-                     /* handler=            */ handler,
-                     /* date=               */ finish,
-                     /* act_date_p=         */ false,
-                     /* total=              */ value_t(),
-                     /* direct_amount=      */ false,
-                     /* mark_visited=       */ false,
-                     /* bidir_link=         */ true,
-                     /* source_post=        */ nullptr,
-                     /* force_virtual=      */ pair.second.is_virtual,
-                     /* force_must_balance= */ pair.second.must_balance,
-                     /* subtotal_row=       */ true);
-      }
+      if (value.is_balance())
+        value.as_balance_lval().map_sorted_amounts(emit);
+      else
+        emit(value.to_amount());
     }
 
     if (!pair.second.is_virtual || pair.second.must_balance)
@@ -2218,11 +2114,17 @@ void posts_as_equity::report_subtotal() {
   // all the other postings generated.  But it does make the full
   // balancing amount clearer to the user.
   if (!total.is_zero()) {
-    create_post_from_amount post_creator(handler, xact, *balance_account, temps);
+    auto balance = [&](const amount_t& amount) {
+      if (amount.is_zero())
+        return;
+      post_t& balance_post = temps.create_post(xact, balance_account);
+      balance_post.amount = -amount;
+      (*handler)(balance_post);
+    };
     if (total.is_balance())
-      total.as_balance_lval().map_sorted_amounts(post_creator);
+      total.as_balance_lval().map_sorted_amounts(balance);
     else
-      post_creator(total.to_amount());
+      balance(total.to_amount());
   }
 }
 
