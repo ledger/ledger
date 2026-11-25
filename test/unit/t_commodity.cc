@@ -1074,7 +1074,7 @@ BOOST_AUTO_TEST_CASE(testKeepDetailsWithAnnotatedCommodity)
 
 BOOST_AUTO_TEST_CASE(testCompareByCommdityBasicOrder)
 {
-  // Cover commodity.cc lines 355-377: compare_by_commodity basic ordering
+  // Cover commodity.cc: compare_by_commodity basic ordering
   amount_t a1("$100.00");
   amount_t a2("100.00 EUR");
 
@@ -1090,7 +1090,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommdityBasicOrder)
 
 BOOST_AUTO_TEST_CASE(testCompareByCommdityAnnotationOrder)
 {
-  // Cover commodity.cc lines 369-377: one annotated, one not
+  // Cover commodity.cc: one annotated, one not
   amount_t base("100 AAPL");
   annotation_t ann(amount_t("$150.00"));
   amount_t annotated(base, ann);
@@ -1104,7 +1104,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommdityAnnotationOrder)
 
 BOOST_AUTO_TEST_CASE(testCompareByCommdityPriceOrder)
 {
-  // Cover commodity.cc lines 383-421: both annotated with prices
+  // Cover commodity.cc: both annotated with prices
   amount_t base1("100 AAPL");
   amount_t base2("100 AAPL");
   annotation_t ann1(amount_t("$100.00"));
@@ -1119,7 +1119,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommdityPriceOrder)
 
 BOOST_AUTO_TEST_CASE(testCompareByCommdityNoPrice)
 {
-  // Cover commodity.cc lines 383-390: one has price, other doesn't
+  // Cover commodity.cc: one has price, other doesn't
   amount_t base1("100 AAPL");
   amount_t base2("100 AAPL");
   annotation_t ann1(amount_t("$100.00"));
@@ -1135,7 +1135,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommdityNoPrice)
 
 BOOST_AUTO_TEST_CASE(testCompareByCommdityDateOrder)
 {
-  // Cover commodity.cc lines 424-446: date comparison
+  // Cover commodity.cc: date comparison
   amount_t base1("100 AAPL");
   amount_t base2("100 AAPL");
   annotation_t ann1(std::nullopt, parse_date("2024/01/15"));
@@ -1150,7 +1150,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommdityDateOrder)
 
 BOOST_AUTO_TEST_CASE(testCompareByCommdityNoDate)
 {
-  // Cover commodity.cc lines 424-431: one has date, other doesn't
+  // Cover commodity.cc: one has date, other doesn't
   amount_t base1("100 AAPL");
   amount_t base2("100 AAPL");
   annotation_t ann1(std::nullopt, std::nullopt, string("lot1")); // no date, has tag
@@ -1165,7 +1165,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommdityNoDate)
 
 BOOST_AUTO_TEST_CASE(testCompareByCommdityTagOrder)
 {
-  // Cover commodity.cc lines 448-463: tag comparison
+  // Cover commodity.cc: tag comparison
   amount_t base1("100 AAPL");
   amount_t base2("100 AAPL");
   annotation_t ann1(std::nullopt, std::nullopt, string("alpha"));
@@ -1180,7 +1180,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommdityTagOrder)
 
 BOOST_AUTO_TEST_CASE(testCompareByCommdityNoTag)
 {
-  // Cover commodity.cc lines 448-455: one has tag, other doesn't
+  // Cover commodity.cc: one has tag, other doesn't
   amount_t base1("100 AAPL");
   amount_t base2("100 AAPL");
   annotation_t ann1(std::nullopt); // no tag
@@ -1196,7 +1196,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommdityNoTag)
 
 BOOST_AUTO_TEST_CASE(testCompareByCommditySemanticFlags)
 {
-  // Cover commodity.cc lines 479-493: semantic flag comparison
+  // Cover commodity.cc: semantic flag comparison
   amount_t base1("100 AAPL");
   amount_t base2("100 AAPL");
   annotation_t ann1(amount_t("$100.00"));
@@ -1212,7 +1212,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommditySemanticFlags)
 
 BOOST_AUTO_TEST_CASE(testCompareByCommdityDifferentPriceCommodities)
 {
-  // Cover commodity.cc lines 396-412: different commodity prices
+  // Cover commodity.cc: different commodity prices
   amount_t base1("100 AAPL");
   amount_t base2("100 AAPL");
   annotation_t ann1(amount_t("$100.00"));
@@ -1229,7 +1229,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommdityDifferentPriceCommodities)
 
 BOOST_AUTO_TEST_CASE(testPutCommodity)
 {
-  // Cover commodity.cc lines 496-512: put_commodity XML output
+  // Cover commodity.cc: put_commodity XML output
   amount_t x1("$100.00");
   commodity_t& dollar(x1.commodity());
 
@@ -1261,7 +1261,7 @@ BOOST_AUTO_TEST_CASE(testPutCommodity)
 
 BOOST_AUTO_TEST_CASE(testParseSymbolFromCharPtr)
 {
-  // Cover commodity.cc lines 305-322: parse_symbol(char*&, string&)
+  // Cover commodity.cc: parse_symbol(char*&, string&)
   {
     char buf[] = "\"My Fund\" rest";
     char* p = buf;
@@ -1367,7 +1367,7 @@ BOOST_AUTO_TEST_CASE(testParseSymbolFromCharPtr)
 
 BOOST_AUTO_TEST_CASE(testCommodityPrintDigitQuotedSymbol)
 {
-  // Cover commodity.cc lines 328-331: print with elide_quotes for digit-only symbol
+  // Cover commodity.cc: print with elide_quotes for digit-only symbol
   // A quoted commodity that is all digits should keep quotes when elide_quotes=true
   amount_t x1("10 \"1234\"");
   commodity_t& comm(x1.commodity());
@@ -1382,7 +1382,7 @@ BOOST_AUTO_TEST_CASE(testCommodityPrintDigitQuotedSymbol)
 
 BOOST_AUTO_TEST_CASE(testCommodityBackslashInSymbol)
 {
-  // Cover commodity.cc lines 284-288: backslash in symbol
+  // Cover commodity.cc: backslash in symbol
   {
     std::istringstream in("A\\BC ");
     string sym;
@@ -1398,7 +1398,7 @@ BOOST_AUTO_TEST_CASE(testCommodityBackslashInSymbol)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for commodity.cc lines 338-349: compare_by_commodity with prices
+// Coverage for commodity.cc: compare_by_commodity with prices
 // that have different commodities
 // -----------------------------------------------------------------------
 
@@ -1428,7 +1428,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommdityValueExpr)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for commodity.cc lines 466-476: compare_by_commodity
+// Coverage for commodity.cc: compare_by_commodity
 // when one has value_expr and the other doesn't
 // -----------------------------------------------------------------------
 
@@ -1456,7 +1456,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommdityOneValueExpr)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for commodity.cc lines 486-493: compare_by_commodity
+// Coverage for commodity.cc: compare_by_commodity
 // semantic flags comparison
 // -----------------------------------------------------------------------
 
@@ -1487,7 +1487,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommditySemanticFlagsDiff)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for commodity.cc lines 324-334: print with elide_quotes
+// Coverage for commodity.cc: print with elide_quotes
 // and COMMODITY_STYLE_SEPARATED
 // -----------------------------------------------------------------------
 
@@ -1506,7 +1506,7 @@ BOOST_AUTO_TEST_CASE(testCommodityPrintElideNonDigit)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for commodity.cc lines 503-505: put_commodity
+// Coverage for commodity.cc: put_commodity
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPutCommodityWithAnnotation)
@@ -1527,7 +1527,7 @@ BOOST_AUTO_TEST_CASE(testPutCommodityWithAnnotation)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for commodity.cc lines 408-409: compare_by_commodity with
+// Coverage for commodity.cc: compare_by_commodity with
 // annotated dates in different order
 // -----------------------------------------------------------------------
 
@@ -1555,7 +1555,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommdityDateReverse)
 }
 
 // -----------------------------------------------------------------------
-// Coverage for commodity.cc lines 449-455: compare_by_commodity with
+// Coverage for commodity.cc: compare_by_commodity with
 // tags
 // -----------------------------------------------------------------------
 
@@ -1587,7 +1587,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommdityTagValues)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: commodity_t::operator bool (line 207-209)
+// commodity_t::operator bool
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCommodityBoolOperatorW7)
@@ -1602,7 +1602,7 @@ BOOST_AUTO_TEST_CASE(testCommodityBoolOperatorW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: commodity_t::symbol_needs_quotes (line 260-266)
+// commodity_t::symbol_needs_quotes
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testSymbolNeedsQuotesW7)
@@ -1618,7 +1618,7 @@ BOOST_AUTO_TEST_CASE(testSymbolNeedsQuotesW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: commodity_t::parse_symbol with quoted symbol (lines 273-279)
+// commodity_t::parse_symbol with quoted symbol
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testParseSymbolQuotedW7)
@@ -1631,7 +1631,7 @@ BOOST_AUTO_TEST_CASE(testParseSymbolQuotedW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: commodity_t::parse_symbol with backslash (lines 284-288)
+// commodity_t::parse_symbol with backslash
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testParseSymbolBackslashW7)
@@ -1644,7 +1644,7 @@ BOOST_AUTO_TEST_CASE(testParseSymbolBackslashW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: commodity_t::parse_symbol from char* (lines 305-322)
+// commodity_t::parse_symbol from char*
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testParseSymbolCharPtrW7)
@@ -1665,7 +1665,7 @@ BOOST_AUTO_TEST_CASE(testParseSymbolCharPtrW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: commodity_t::valid() (lines 336-353)
+// commodity_t::valid()
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCommodityValidW7)
@@ -1678,7 +1678,7 @@ BOOST_AUTO_TEST_CASE(testCommodityValidW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: commodity_t::print with elide_quotes (lines 324-334)
+// commodity_t::print with elide_quotes
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCommodityPrintW7)
@@ -1696,7 +1696,7 @@ BOOST_AUTO_TEST_CASE(testCommodityPrintW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: compare_by_commodity with value_expr (lines 463-477)
+// compare_by_commodity with value_expr
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCompareByCommdityValueExprW7)
@@ -1739,8 +1739,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommdityValueExprW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: compare_by_commodity with no annotation vs annotation
-// (lines 369-378)
+// compare_by_commodity with no annotation vs annotation
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCompareByCommNoAnnotVsAnnotW7)
@@ -1768,7 +1767,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommNoAnnotVsAnnotW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: compare_by_commodity same-commodity no annotation (lines 375-377)
+// compare_by_commodity same-commodity no annotation
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCompareByCommSameNoAnnotW7)
@@ -1780,7 +1779,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommSameNoAnnotW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: compare_by_commodity with date annotations (lines 424-446)
+// compare_by_commodity with date annotations
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCompareByCommDatesW7)
@@ -1810,7 +1809,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommDatesW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: compare_by_commodity with no-date vs date (lines 424-431)
+// compare_by_commodity with no-date vs date
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCompareByCommNoDateVsDateW7)
@@ -1843,7 +1842,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommNoDateVsDateW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: compare_by_commodity no-value-expr vs value-expr (lines 465-471)
+// compare_by_commodity no-value-expr vs value-expr
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCompareByCommNoExprVsExprW7)
@@ -1876,7 +1875,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommNoExprVsExprW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: compare_by_commodity no-tag vs tag (lines 448-455)
+// compare_by_commodity no-tag vs tag
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCompareByCommNoTagVsTagW7)
@@ -1909,7 +1908,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommNoTagVsTagW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: compare_by_commodity semantic flags (lines 480-489)
+// compare_by_commodity semantic flags
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCompareByCommSemanticFlagsW7)
@@ -1939,7 +1938,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommSemanticFlagsW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: put_commodity (lines 496-512)
+// put_commodity
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPutCommodityW7)
@@ -1956,7 +1955,7 @@ BOOST_AUTO_TEST_CASE(testPutCommodityW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W7: compare_by_commodity different price commodities (lines 396-412)
+// compare_by_commodity different price commodities
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCompareByCommDiffPriceCommsW7)
@@ -1985,7 +1984,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommDiffPriceCommsW7)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: commodity.cc lines 50-51: add_flags(COMMODITY_PRIMARY)
+// commodity.cc: add_flags(COMMODITY_PRIMARY)
 // on self (non-reflexive path)
 // -----------------------------------------------------------------------
 
@@ -2001,13 +2000,13 @@ BOOST_AUTO_TEST_CASE(testAddPriceNonReflexiveW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: commodity.cc line 78: find_price_from_expr (through
+// commodity.cc: find_price_from_expr (through
 // value_expr)
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFindPriceW8)
 {
-  // Line 78: find_price exercises the memoized price map path
+  // find_price exercises the memoized price map path
   amount_t x1("100 XYZW8");
   commodity_t& xyz(x1.commodity());
 
@@ -2028,7 +2027,7 @@ BOOST_AUTO_TEST_CASE(testFindPriceW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: commodity.cc lines 88-91: symbol_t comparison (operator<)
+// commodity_t::operator== on the commodities of two amounts
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testSymbolComparisonW8)
@@ -2045,7 +2044,7 @@ BOOST_AUTO_TEST_CASE(testSymbolComparisonW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: commodity.cc line 121: find_price returns none for
+// commodity.cc: find_price returns none for
 // same commodity (this == target)
 // -----------------------------------------------------------------------
 
@@ -2063,13 +2062,13 @@ BOOST_AUTO_TEST_CASE(testFindPriceSameCommodityW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: commodity.cc lines 177-178, 183, 192: parse_symbol
+// commodity.cc: parse_symbol
 // edge cases
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testParseSymbolEdgeCasesW8)
 {
-  // Line 177-178: parse_symbol from istream
+  // parse_symbol from istream
   {
     string sym;
     std::istringstream in("\"Quoted Symbol\"");
@@ -2095,7 +2094,7 @@ BOOST_AUTO_TEST_CASE(testParseSymbolEdgeCasesW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: commodity.cc lines 321, 338-339, 343-344, 348-349:
+// commodity.cc:
 // print and valid()
 // -----------------------------------------------------------------------
 
@@ -2111,18 +2110,18 @@ BOOST_AUTO_TEST_CASE(testCommodityPrintAndValidW8)
     BOOST_CHECK_EQUAL(out.str(), "\"123\"");
   }
 
-  // Test valid() (lines 336-349)
+  // Test valid()
   BOOST_CHECK(comm.valid());
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: commodity.cc lines 408-409, 463: compare_by_commodity
+// commodity.cc: compare_by_commodity
 // with value_expr
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testCompareByCommValueExprW8)
 {
-  // Lines 463-493: compare by commodity with tags that differ
+  // compare by commodity with tags that differ
   commodity_t* base = commodity_pool_t::current_pool->find_or_create("TAGCW8");
   BOOST_CHECK(base != nullptr);
 
@@ -2149,13 +2148,13 @@ BOOST_AUTO_TEST_CASE(testCompareByCommValueExprW8)
 }
 
 // -----------------------------------------------------------------------
-// Coverage W8: commodity.cc lines 492-493, 503, 505: put_commodity with
+// commodity.cc: put_commodity with
 // flags
 // -----------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPutCommodityW8)
 {
-  // Lines 496-512: put_commodity fills flags string
+  // put_commodity fills flags string
   amount_t x1("$1,234.56");
   property_tree::ptree pt;
   put_commodity(pt, x1.commodity(), false);

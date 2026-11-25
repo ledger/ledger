@@ -603,12 +603,12 @@ BOOST_AUTO_TEST_CASE(testSortThenFilterThenCollect)
 
 //////////////////////////////////////////////////////////////////////
 //
-// post_splitter tests (covers filters.h lines 294-298)
+// post_splitter tests (covers filters.h)
 //
 
 BOOST_AUTO_TEST_CASE(testPostSplitterClear)
 {
-  // Cover post_splitter::clear() (filters.h lines 294-298)
+  // Cover post_splitter::clear() (filters.h)
   // We can't easily construct a full post_splitter without the report
   // chain, but we can test clear() on a simpler handler chain that
   // exercises the virtual clear method through the base class.
@@ -627,12 +627,12 @@ BOOST_AUTO_TEST_CASE(testPostSplitterClear)
 
 //////////////////////////////////////////////////////////////////////
 //
-// truncate_xacts clear() tests (covers filters.h lines 392-399)
+// truncate_xacts clear() tests (covers filters.h)
 //
 
 BOOST_AUTO_TEST_CASE(testTruncateXactsClear)
 {
-  // Cover truncate_xacts::clear() (filters.h lines 392-399)
+  // Cover truncate_xacts::clear() (filters.h)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   truncate_xacts truncator(collector, /*head_count=*/1, /*tail_count=*/0);
 
@@ -652,12 +652,12 @@ BOOST_AUTO_TEST_CASE(testTruncateXactsClear)
 
 //////////////////////////////////////////////////////////////////////
 //
-// sort_xacts_by_post_amount tests (covers filters.h lines 470-475)
+// sort_xacts_by_post_amount tests (covers filters.h)
 //
 
 BOOST_AUTO_TEST_CASE(testSortXactsByPostAmountClear)
 {
-  // Cover sort_xacts_by_post_amount::clear() (filters.h lines 470-475)
+  // Cover sort_xacts_by_post_amount::clear() (filters.h)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   sort_xacts sorter(collector, expr_t("amount"), report);
 
@@ -681,12 +681,12 @@ BOOST_AUTO_TEST_CASE(testSortXactsByPostAmountClear)
 
 //////////////////////////////////////////////////////////////////////
 //
-// filter_posts clear() tests (covers filters.h lines 499-502)
+// filter_posts clear() tests (covers filters.h)
 //
 
 BOOST_AUTO_TEST_CASE(testFilterPostsClear)
 {
-  // Cover filter_posts::clear() (filters.h lines 499-502)
+  // Cover filter_posts::clear() (filters.h)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   predicate_t pred("1", keep_details_t());
   filter_posts filter(collector, pred, report);
@@ -709,12 +709,12 @@ BOOST_AUTO_TEST_CASE(testFilterPostsClear)
 
 //////////////////////////////////////////////////////////////////////
 //
-// anonymize_posts clear() tests (covers filters.h lines 535-541)
+// anonymize_posts clear() tests (covers filters.h)
 //
 
 BOOST_AUTO_TEST_CASE(testAnonymizePostsClear)
 {
-  // Cover anonymize_posts::clear() (filters.h lines 535-541)
+  // Cover anonymize_posts::clear() (filters.h)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   anonymize_posts anonymizer(collector, report.temp_accounts());
 
@@ -743,12 +743,12 @@ BOOST_AUTO_TEST_CASE(testAnonymizePostsClear)
 
 //////////////////////////////////////////////////////////////////////
 //
-// calc_posts tests (covers filters.cc lines 279-298)
+// calc_posts tests (covers filters.cc)
 //
 
 BOOST_AUTO_TEST_CASE(testCalcPostsRunningTotal)
 {
-  // Cover calc_posts operator() (filters.cc lines 279-298)
+  // Cover calc_posts operator() (filters.cc)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   expr_t amount_expr("amount");
   calc_posts calc(collector, amount_expr, /*calc_running_total=*/true);
@@ -779,7 +779,7 @@ BOOST_AUTO_TEST_CASE(testCalcPostsRunningTotal)
 
 BOOST_AUTO_TEST_CASE(testRelatedPosts)
 {
-  // Cover related_posts (filters.h line 642-660)
+  // Cover related_posts (filters.h)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   related_posts related(collector, /*also_matching=*/false);
 
@@ -820,12 +820,12 @@ BOOST_AUTO_TEST_CASE(testRelatedPostsAlsoMatching)
 
 //////////////////////////////////////////////////////////////////////
 //
-// subtotal_posts / collapse_posts tests (covers filters.h lines 623-639)
+// subtotal_posts / collapse_posts tests (covers filters.h)
 //
 
 BOOST_AUTO_TEST_CASE(testSubtotalPostsClear)
 {
-  // Cover subtotal_posts::clear() (filters.h lines 623-639)
+  // Cover subtotal_posts::clear() (filters.h)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   expr_t amount_expr("amount");
   collapse_posts collapser(collector, report, amount_expr,
@@ -845,12 +845,12 @@ BOOST_AUTO_TEST_CASE(testSubtotalPostsClear)
 
 //////////////////////////////////////////////////////////////////////
 //
-// interval_posts tests (covers filters.h line 881)
+// interval_posts tests (covers filters.h)
 //
 
 BOOST_AUTO_TEST_CASE(testIntervalPostsWithDuration)
 {
-  // Cover interval_posts::operator() with duration (filter line 881)
+  // Cover interval_posts::operator() with duration (filters.cc)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   date_interval_t interval("monthly from 2024/01/01");
 
@@ -879,12 +879,12 @@ BOOST_AUTO_TEST_CASE(testIntervalPostsWithDuration)
 
 //////////////////////////////////////////////////////////////////////
 //
-// by_payee_posts tests (covers filters.h lines 957-962)
+// by_payee_posts tests (covers filters.h)
 //
 
 BOOST_AUTO_TEST_CASE(testByPayeePostsClear)
 {
-  // Cover by_payee_posts::clear() (filters.h lines 957-962)
+  // Cover by_payee_posts::clear() (filters.h)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   expr_t amount_expr("amount");
   by_payee_posts byp(collector, amount_expr);
@@ -902,12 +902,12 @@ BOOST_AUTO_TEST_CASE(testByPayeePostsClear)
 
 //////////////////////////////////////////////////////////////////////
 //
-// transfer_details tests (covers filters.h lines 989-994)
+// transfer_details tests (covers filters.h)
 //
 
 BOOST_AUTO_TEST_CASE(testTransferDetailsClear)
 {
-  // Cover transfer_details::clear() (filters.h lines 989-994)
+  // Cover transfer_details::clear() (filters.h)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   expr_t expr("'Transferred'");
   transfer_details td(collector, transfer_details::SET_PAYEE, expr,
@@ -929,12 +929,12 @@ BOOST_AUTO_TEST_CASE(testTransferDetailsClear)
 
 //////////////////////////////////////////////////////////////////////
 //
-// day_of_week_posts tests (covers filters.h lines 1014-1019)
+// day_of_week_posts tests (covers filters.h)
 //
 
 BOOST_AUTO_TEST_CASE(testDayOfWeekPostsClear)
 {
-  // Cover day_of_week_posts::clear() (filters.h lines 1014-1019)
+  // Cover day_of_week_posts::clear() (filters.h)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   expr_t amount_expr("amount");
   day_of_week_posts dowp(collector, amount_expr);
@@ -953,12 +953,12 @@ BOOST_AUTO_TEST_CASE(testDayOfWeekPostsClear)
 
 //////////////////////////////////////////////////////////////////////
 //
-// generate_posts tests (covers filters.h lines 1046-1051)
+// generate_posts tests (covers filters.h)
 //
 
 BOOST_AUTO_TEST_CASE(testGeneratePostsClear)
 {
-  // Cover generate_posts::clear() (filters.h lines 1046-1051)
+  // Cover generate_posts::clear() (filters.h)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   budget_posts bp(collector, date_t(2025, 1, 1));
 
@@ -977,12 +977,12 @@ BOOST_AUTO_TEST_CASE(testGeneratePostsClear)
 
 //////////////////////////////////////////////////////////////////////
 //
-// forecast_posts tests (covers filters.h lines 1095-1098)
+// forecast_posts tests (covers filters.h)
 //
 
 BOOST_AUTO_TEST_CASE(testForecastPostsClear)
 {
-  // Cover forecast_posts::clear() (filters.h lines 1095-1098)
+  // Cover forecast_posts::clear() (filters.h)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   predicate_t pred("1", keep_details_t());
   forecast_posts fp(collector, pred, report, 5);
@@ -1005,12 +1005,12 @@ struct clear_recording_account_handler : public item_handler<account_t> {
 
 //////////////////////////////////////////////////////////////////////
 //
-// pass_down_accounts tests (covers filters.h lines 1154-1159)
+// pass_down_accounts tests (covers filters.h)
 //
 
 BOOST_AUTO_TEST_CASE(testPassDownAccountsClear)
 {
-  // Cover pass_down_accounts::clear() (filters.h lines 1154-1159)
+  // Cover pass_down_accounts::clear() (filters.h)
   // We need to construct and clear a pass_down_accounts with a predicate
 
   // Create some accounts with xdata
@@ -1034,12 +1034,12 @@ BOOST_AUTO_TEST_CASE(testPassDownAccountsClear)
 
 //////////////////////////////////////////////////////////////////////
 //
-// posts_as_equity tests (covers filters.h lines 931-935)
+// posts_as_equity tests (covers filters.h)
 //
 
 BOOST_AUTO_TEST_CASE(testPostsAsEquityClear)
 {
-  // Cover posts_as_equity::clear() (filters.h lines 931-935)
+  // Cover posts_as_equity::clear() (filters.h)
   std::shared_ptr<collect_posts> collector(new collect_posts);
   expr_t amount_expr("amount");
   posts_as_equity pae(collector, report, amount_expr, false);
@@ -1059,7 +1059,7 @@ BOOST_AUTO_TEST_CASE(testPostsAsEquityClear)
 
 //////////////////////////////////////////////////////////////////////
 //
-// Coverage W7: anonymize_posts (lines 266-274)
+// anonymize_posts
 //
 
 BOOST_AUTO_TEST_CASE(testAnonymizePostsW7)
@@ -1082,7 +1082,7 @@ BOOST_AUTO_TEST_CASE(testAnonymizePostsW7)
 
 //////////////////////////////////////////////////////////////////////
 //
-// Coverage W7: calc_posts with calc_running_total (lines 279-318)
+// calc_posts with calc_running_total
 //
 
 BOOST_AUTO_TEST_CASE(testCalcPostsRunningTotalW7)
@@ -1108,7 +1108,7 @@ BOOST_AUTO_TEST_CASE(testCalcPostsRunningTotalW7)
 
 //////////////////////////////////////////////////////////////////////
 //
-// Coverage W7: collapse_posts (lines 397-425)
+// collapse_posts
 //
 
 BOOST_AUTO_TEST_CASE(testCollapsePostsW7)
@@ -1134,7 +1134,7 @@ BOOST_AUTO_TEST_CASE(testCollapsePostsW7)
 
 //////////////////////////////////////////////////////////////////////
 //
-// Coverage W7: display_filter_posts (lines 217-218)
+// display_filter_posts
 //
 
 BOOST_AUTO_TEST_CASE(testDisplayFilterPostsW7)
@@ -1159,7 +1159,7 @@ BOOST_AUTO_TEST_CASE(testDisplayFilterPostsW7)
 
 //////////////////////////////////////////////////////////////////////
 //
-// Coverage W7: interval_posts (lines 1014-1032)
+// interval_posts
 //
 
 BOOST_AUTO_TEST_CASE(testIntervalPostsW7)
@@ -1188,7 +1188,7 @@ BOOST_AUTO_TEST_CASE(testIntervalPostsW7)
 
 //////////////////////////////////////////////////////////////////////
 //
-// Coverage W7: sort_posts (lines 1108-1120)
+// sort_posts
 //
 
 BOOST_AUTO_TEST_CASE(testSortPostsW7)
@@ -1213,7 +1213,7 @@ BOOST_AUTO_TEST_CASE(testSortPostsW7)
 
 //////////////////////////////////////////////////////////////////////
 //
-// Coverage W7: truncate_xacts (line 1193)
+// truncate_xacts
 //
 
 BOOST_AUTO_TEST_CASE(testTruncateXactsW7)
@@ -1241,7 +1241,7 @@ BOOST_AUTO_TEST_CASE(testTruncateXactsW7)
 
 //////////////////////////////////////////////////////////////////////
 //
-// Coverage W7: related_posts (line 1232)
+// related_posts
 //
 
 BOOST_AUTO_TEST_CASE(testRelatedPostsW7)
@@ -1263,7 +1263,7 @@ BOOST_AUTO_TEST_CASE(testRelatedPostsW7)
 
 //////////////////////////////////////////////////////////////////////
 //
-// Coverage W7: day_of_week_posts (line 1306-1308)
+// day_of_week_posts
 //
 
 BOOST_AUTO_TEST_CASE(testDayOfWeekPostsW7)
@@ -1286,7 +1286,7 @@ BOOST_AUTO_TEST_CASE(testDayOfWeekPostsW7)
 
 //////////////////////////////////////////////////////////////////////
 //
-// Coverage W7: subtotal_posts (line 1383)
+// subtotal_posts
 //
 
 BOOST_AUTO_TEST_CASE(testSubtotalPostsW7)
@@ -1312,7 +1312,7 @@ BOOST_AUTO_TEST_CASE(testSubtotalPostsW7)
 
 //////////////////////////////////////////////////////////////////////
 //
-// Coverage W7: generate_posts (line 1436)
+// generate_posts
 //
 
 BOOST_AUTO_TEST_CASE(testBudgetPostsClearW7)
@@ -1333,7 +1333,7 @@ BOOST_AUTO_TEST_CASE(testBudgetPostsClearW7)
 
 //////////////////////////////////////////////////////////////////////
 //
-// Coverage W7: inject_posts (line 1484-1485)
+// inject_posts
 //
 
 BOOST_AUTO_TEST_CASE(testInjectPostsClearW7)
@@ -1353,7 +1353,7 @@ BOOST_AUTO_TEST_CASE(testInjectPostsClearW7)
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: anonymize_posts render_commodity with annotation (lines 265-268)
+// anonymize_posts render_commodity with annotation
 //
 
 BOOST_AUTO_TEST_CASE(testAnonymizePostsAnnotatedW8)
@@ -1377,12 +1377,12 @@ BOOST_AUTO_TEST_CASE(testAnonymizePostsAnnotatedW8)
 
   BOOST_CHECK(!collector->posts.empty());
   // The anonymized post should have its annotation price also rendered
-  // This covers lines 217, 265-269
+  // This covers the annotation path of anonymize_posts::render_commodity
 }
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: anonymize_posts with cost (line 271-272)
+// anonymize_posts with cost
 //
 
 BOOST_AUTO_TEST_CASE(testAnonymizePostsWithCostW8)
@@ -1407,7 +1407,7 @@ BOOST_AUTO_TEST_CASE(testAnonymizePostsWithCostW8)
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: anonymize_posts with assigned_amount (line 273-274)
+// anonymize_posts with assigned_amount
 //
 
 BOOST_AUTO_TEST_CASE(testAnonymizePostsWithAssignedW8)
@@ -1432,7 +1432,7 @@ BOOST_AUTO_TEST_CASE(testAnonymizePostsWithAssignedW8)
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: subtotal_posts virtual/non-virtual mix (issue #2051)
+// subtotal_posts virtual/non-virtual mix (issue #2051)
 //
 
 BOOST_AUTO_TEST_CASE(testSubtotalPostsVirtualMixW8)
@@ -1465,7 +1465,7 @@ BOOST_AUTO_TEST_CASE(testSubtotalPostsVirtualMixW8)
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: interval_posts without duration (lines 1013-1015)
+// interval_posts without duration
 //
 
 BOOST_AUTO_TEST_CASE(testIntervalPostsNoDurationW8)
@@ -1475,7 +1475,7 @@ BOOST_AUTO_TEST_CASE(testIntervalPostsNoDurationW8)
 
   // Create interval with just a start date, no duration.
   // This exercises the non-duration path in interval_posts::operator()
-  // (lines 1013-1015) and flush (lines 1019-1021).
+  // and flush.
   date_interval_t interval("from 2024/01/01");
   interval_posts ival(collector, amount_expr, interval);
 
@@ -1500,7 +1500,7 @@ BOOST_AUTO_TEST_CASE(testIntervalPostsNoDurationW8)
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: interval_posts flush without duration (lines 1019-1021)
+// interval_posts flush without duration
 //
 
 BOOST_AUTO_TEST_CASE(testIntervalPostsFlushNoDurationW8)
@@ -1519,7 +1519,7 @@ BOOST_AUTO_TEST_CASE(testIntervalPostsFlushNoDurationW8)
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: day_of_week_posts flush (line 1246-1255)
+// day_of_week_posts flush
 //
 
 BOOST_AUTO_TEST_CASE(testDayOfWeekPostsW8)
@@ -1543,7 +1543,7 @@ BOOST_AUTO_TEST_CASE(testDayOfWeekPostsW8)
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: generate_posts::add_period_xacts (line 1257-1265)
+// generate_posts::add_period_xacts
 //
 
 BOOST_AUTO_TEST_CASE(testGeneratePostsAddPeriodXactsW8)
@@ -1570,7 +1570,7 @@ BOOST_AUTO_TEST_CASE(testGeneratePostsAddPeriodXactsW8)
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: transfer_details SET_PAYEE (line 1237-1238)
+// transfer_details SET_PAYEE
 //
 
 BOOST_AUTO_TEST_CASE(testTransferDetailsSetPayeeW8)
@@ -1594,7 +1594,7 @@ BOOST_AUTO_TEST_CASE(testTransferDetailsSetPayeeW8)
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: transfer_details SET_DATE (line 1212-1213)
+// transfer_details SET_DATE
 //
 
 BOOST_AUTO_TEST_CASE(testTransferDetailsSetDateW8)
@@ -1618,7 +1618,7 @@ BOOST_AUTO_TEST_CASE(testTransferDetailsSetDateW8)
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: collapse_posts report_subtotal (line 397+)
+// collapse_posts report_subtotal
 //
 
 BOOST_AUTO_TEST_CASE(testCollapsePostsSubtotalW8)
@@ -1646,7 +1646,7 @@ BOOST_AUTO_TEST_CASE(testCollapsePostsSubtotalW8)
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: posts_as_equity report_subtotal (line 1116-1173)
+// posts_as_equity report_subtotal
 //
 
 BOOST_AUTO_TEST_CASE(testPostsAsEquityW8)
@@ -1670,7 +1670,7 @@ BOOST_AUTO_TEST_CASE(testPostsAsEquityW8)
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: by_payee_posts (line 1184-1198)
+// by_payee_posts
 //
 
 BOOST_AUTO_TEST_CASE(testByPayeePostsW8)
@@ -1699,7 +1699,7 @@ BOOST_AUTO_TEST_CASE(testByPayeePostsW8)
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: zero amount in the balancing-post lambda in
+// zero amount in the balancing-post lambda in
 // posts_as_equity::report_subtotal
 //
 

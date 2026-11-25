@@ -568,7 +568,7 @@ BOOST_AUTO_TEST_CASE(testFinalizeBalancedMustBalanceVirtual)
 
 BOOST_AUTO_TEST_CASE(testJournalAddRemoveAccount)
 {
-  // Cover journal.cc lines 104-110: add_account, remove_account
+  // Cover journal.cc: add_account, remove_account
   account_t* acct = new account_t(root, "TestAccount");
   journal.add_account(acct);
 
@@ -587,7 +587,7 @@ BOOST_AUTO_TEST_CASE(testJournalAddRemoveAccount)
 
 BOOST_AUTO_TEST_CASE(testJournalFindAccountRe)
 {
-  // Cover journal.cc lines 116-118: find_account_re
+  // Cover journal.cc: find_account_re
   (void)journal.find_account("Expenses:Food");
   (void)journal.find_account("Expenses:Rent");
   (void)journal.find_account("Assets:Bank");
@@ -598,7 +598,7 @@ BOOST_AUTO_TEST_CASE(testJournalFindAccountRe)
 
 BOOST_AUTO_TEST_CASE(testJournalRemoveXact)
 {
-  // Cover journal.cc lines 423-438: remove_xact
+  // Cover journal.cc: remove_xact
   // Need balanced transaction for add_xact to accept it
   xact_t* x1 = new xact_t;
   x1->_date = parse_date("2024/01/01");
@@ -627,7 +627,7 @@ BOOST_AUTO_TEST_CASE(testJournalRemoveXact)
 
 BOOST_AUTO_TEST_CASE(testJournalHasXdata)
 {
-  // Cover journal.cc lines 480-497: has_xdata, clear_xdata
+  // Cover journal.cc: has_xdata, clear_xdata
   // Create a fresh journal for this test to ensure clean state
   journal_t j;
   account_t* r = j.master;
@@ -654,7 +654,7 @@ BOOST_AUTO_TEST_CASE(testJournalHasXdata)
 
 BOOST_AUTO_TEST_CASE(testJournalValid)
 {
-  // Cover journal.cc lines 515-524: valid()
+  // Cover journal.cc: valid()
   BOOST_CHECK(journal.valid());
 
   // Add a valid transaction
@@ -676,7 +676,7 @@ BOOST_AUTO_TEST_CASE(testJournalValid)
 
 BOOST_AUTO_TEST_CASE(testSessionFnMinMax)
 {
-  // Cover session.cc lines 258-259, 261-262: fn_min, fn_max
+  // Cover session.cc: fn_min, fn_max
   session_t session;
   scope_t* old_scope = scope_t::default_scope;
   scope_t::default_scope = &session;
@@ -724,7 +724,7 @@ BOOST_AUTO_TEST_CASE(testSessionFnInt)
 
 BOOST_AUTO_TEST_CASE(testSessionReadJournalFromString)
 {
-  // Cover session.cc lines 216-235: read_journal_from_string
+  // Cover session.cc: read_journal_from_string
   session_t session;
   scope_t* old_scope = scope_t::default_scope;
   scope_t::default_scope = &session;
@@ -742,7 +742,7 @@ BOOST_AUTO_TEST_CASE(testSessionReadJournalFromString)
 
 BOOST_AUTO_TEST_CASE(testSessionCloseJournalFiles)
 {
-  // Cover session.cc lines 237-243: close_journal_files
+  // Cover session.cc: close_journal_files
   session_t session;
   scope_t* old_scope = scope_t::default_scope;
   scope_t::default_scope = &session;
@@ -763,7 +763,7 @@ BOOST_AUTO_TEST_CASE(testSessionCloseJournalFiles)
 
 BOOST_AUTO_TEST_CASE(testSessionGetJournal)
 {
-  // Cover session.cc lines 245-247: get_journal
+  // Cover session.cc: get_journal
   session_t session;
   scope_t* old_scope = scope_t::default_scope;
   scope_t::default_scope = &session;
@@ -781,7 +781,7 @@ BOOST_AUTO_TEST_CASE(testSessionGetJournal)
 
 BOOST_AUTO_TEST_CASE(testDraftDumpSimple)
 {
-  // Cover draft.cc lines 47-83: xact_template_t::dump via public dump()
+  // Cover draft.cc: xact_template_t::dump via public dump()
   value_t args;
   args.push_back(string_value("Grocery"));
   args.push_back(string_value("$50.00"));
@@ -795,7 +795,7 @@ BOOST_AUTO_TEST_CASE(testDraftDumpSimple)
 
 BOOST_AUTO_TEST_CASE(testDraftDumpWithCode)
 {
-  // Cover draft.cc lines 53-54: dump with code
+  // Cover draft.cc: dump with code
   value_t args;
   args.push_back(string_value("Grocery"));
   args.push_back(string_value("code"));
@@ -809,7 +809,7 @@ BOOST_AUTO_TEST_CASE(testDraftDumpWithCode)
 
 BOOST_AUTO_TEST_CASE(testDraftDumpWithNote)
 {
-  // Cover draft.cc line 56: dump with note
+  // Cover draft.cc: dump with note
   value_t args;
   args.push_back(string_value("Grocery"));
   args.push_back(string_value("note"));
@@ -823,7 +823,7 @@ BOOST_AUTO_TEST_CASE(testDraftDumpWithNote)
 
 BOOST_AUTO_TEST_CASE(testDraftDumpWithPosts)
 {
-  // Cover draft.cc lines 63-83: dump with posts
+  // Cover draft.cc: dump with posts
   value_t args;
   args.push_back(string_value("Grocery"));
   args.push_back(string_value("to"));
@@ -843,7 +843,7 @@ BOOST_AUTO_TEST_CASE(testDraftDumpWithPosts)
 
 BOOST_AUTO_TEST_CASE(testDraftParseArgsOn)
 {
-  // Cover draft.cc lines 131-135: "on" keyword
+  // Cover draft.cc: "on" keyword
   value_t args;
   args.push_back(string_value("Grocery"));
   args.push_back(string_value("on"));
@@ -857,7 +857,7 @@ BOOST_AUTO_TEST_CASE(testDraftParseArgsOn)
 
 BOOST_AUTO_TEST_CASE(testDraftParseArgsAt)
 {
-  // Cover draft.cc lines 118-121: "at" keyword
+  // Cover draft.cc: "at" keyword
   value_t args;
   args.push_back(string_value("2024/01/15"));
   args.push_back(string_value("at"));
@@ -871,7 +871,7 @@ BOOST_AUTO_TEST_CASE(testDraftParseArgsAt)
 
 BOOST_AUTO_TEST_CASE(testDraftParseArgsRest)
 {
-  // Cover draft.cc line 144-145: "rest" keyword (ignored)
+  // Cover draft.cc: "rest" keyword (ignored)
   value_t args;
   args.push_back(string_value("Grocery"));
   args.push_back(string_value("$50.00"));
@@ -885,19 +885,19 @@ BOOST_AUTO_TEST_CASE(testDraftParseArgsRest)
 
 BOOST_AUTO_TEST_CASE(testDraftInsertNoTemplate)
 {
-  // Cover draft.cc line 213-214: insert with no template (empty args)
+  // Cover draft.cc: insert with no template (empty args)
   value_t empty_args;
   draft_t draft(empty_args);
   BOOST_CHECK(draft.insert(journal) == nullptr);
 }
 
 // ---------------------------------------------------------------------------
-// 9. Xact Lookup Functions - cover xact.cc lines 608-662
+// 9. Xact Lookup Functions - cover xact.cc
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testXactLookupCode)
 {
-  // Cover xact.cc get_code (lines 592-597) and lookup (lines 633-662)
+  // Cover xact.cc get_code and lookup
   xact_t xact;
   xact.add_flags(ITEM_TEMP);
   xact._date = parse_date("2024/01/01");
@@ -910,7 +910,7 @@ BOOST_AUTO_TEST_CASE(testXactLookupCode)
 
 BOOST_AUTO_TEST_CASE(testXactLookupPayee)
 {
-  // Cover xact.cc get_payee (lines 599-601) and lookup 'p'/'payee'
+  // Cover xact.cc get_payee and lookup 'p'/'payee'
   xact_t xact;
   xact.add_flags(ITEM_TEMP);
   xact._date = parse_date("2024/01/01");
@@ -925,7 +925,7 @@ BOOST_AUTO_TEST_CASE(testXactLookupPayee)
 
 BOOST_AUTO_TEST_CASE(testXactLookupMagnitude)
 {
-  // Cover xact.cc get_magnitude (lines 588-590)
+  // Cover xact.cc get_magnitude
   xact_t xact;
   xact.add_flags(ITEM_TEMP);
   xact._date = parse_date("2024/01/01");
@@ -952,7 +952,7 @@ BOOST_AUTO_TEST_CASE(testXactLookupAnyAll)
 
 BOOST_AUTO_TEST_CASE(testXactLookupNonFunction)
 {
-  // Cover xact.cc lookup non-FUNCTION kind (line 634-635)
+  // Cover xact.cc lookup non-FUNCTION kind
   xact_t xact;
   xact.add_flags(ITEM_TEMP);
   xact._date = parse_date("2024/01/01");
@@ -963,12 +963,12 @@ BOOST_AUTO_TEST_CASE(testXactLookupNonFunction)
 }
 
 // ---------------------------------------------------------------------------
-// 10. Xact Hash - cover xact.cc lines 691-729
+// 10. Xact Hash - cover xact.cc
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testXactHash)
 {
-  // Cover xact.cc hash() (lines 691-729)
+  // Cover xact.cc hash()
   xact_t xact;
   xact.add_flags(ITEM_TEMP);
   xact._date = parse_date("2024/06/01");
@@ -997,7 +997,7 @@ BOOST_AUTO_TEST_CASE(testXactHash)
 
 BOOST_AUTO_TEST_CASE(testXactHashNoCode)
 {
-  // Cover xact.cc hash() without code (line 699-700)
+  // Cover xact.cc hash() without code
   xact_t xact;
   xact.add_flags(ITEM_TEMP);
   xact._date = parse_date("2024/06/01");
@@ -1015,7 +1015,7 @@ BOOST_AUTO_TEST_CASE(testXactHashNoCode)
 
 BOOST_AUTO_TEST_CASE(testXactHashWithCost)
 {
-  // Cover xact.cc hash() with cost (line 711-712)
+  // Cover xact.cc hash() with cost
   xact_t xact;
   xact.add_flags(ITEM_TEMP);
   xact._date = parse_date("2024/06/01");
@@ -1064,7 +1064,7 @@ BOOST_AUTO_TEST_CASE(testSha512KnownAnswers)
 
 BOOST_AUTO_TEST_CASE(testPostHasTagInheritance)
 {
-  // Cover post.cc has_tag with inherit (lines 43-48, 51-57)
+  // Cover post.cc has_tag with inherit
   xact_t xact;
   xact.add_flags(ITEM_TEMP);
   xact._date = parse_date("2024/01/01");
@@ -1087,7 +1087,7 @@ BOOST_AUTO_TEST_CASE(testPostHasTagInheritance)
 
 BOOST_AUTO_TEST_CASE(testPostGetTagInheritance)
 {
-  // Cover post.cc get_tag with inherit (lines 60-74)
+  // Cover post.cc get_tag with inherit
   xact_t xact;
   xact.add_flags(ITEM_TEMP);
   xact._date = parse_date("2024/01/01");
@@ -1114,7 +1114,7 @@ BOOST_AUTO_TEST_CASE(testPostGetTagInheritance)
 
 BOOST_AUTO_TEST_CASE(testPostValid)
 {
-  // Cover post.cc valid() (lines 569-602)
+  // Cover post.cc valid()
   xact_t xact;
   xact.add_flags(ITEM_TEMP);
   xact._date = parse_date("2024/01/01");
@@ -1134,7 +1134,7 @@ BOOST_AUTO_TEST_CASE(testPostValid)
 
 BOOST_AUTO_TEST_CASE(testPostXactId)
 {
-  // Cover post.cc xact_id() (lines 547-556)
+  // Cover post.cc xact_id()
   xact_t xact;
   xact.add_flags(ITEM_TEMP);
   xact._date = parse_date("2024/01/01");
@@ -1157,7 +1157,7 @@ BOOST_AUTO_TEST_CASE(testPostXactId)
 
 BOOST_AUTO_TEST_CASE(testPostAccountId)
 {
-  // Cover post.cc account_id() (lines 558-566)
+  // Cover post.cc account_id()
   xact_t xact;
   xact.add_flags(ITEM_TEMP);
   xact._date = parse_date("2024/01/01");
@@ -1176,7 +1176,7 @@ BOOST_AUTO_TEST_CASE(testPostAccountId)
 
 BOOST_AUTO_TEST_CASE(testPostAddToValue)
 {
-  // Cover post.cc add_to_value() (lines 605-639)
+  // Cover post.cc add_to_value()
   xact_t xact;
   xact.add_flags(ITEM_TEMP);
   xact._date = parse_date("2024/01/01");
@@ -1201,12 +1201,12 @@ BOOST_AUTO_TEST_CASE(testPostAddToValue)
 }
 
 // ---------------------------------------------------------------------------
-// 12. Finalize with Two Commodities - cover xact.cc lines 220-275
+// 12. Finalize with Two Commodities - cover xact.cc
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFinalizeTwoCommoditiesAutoPrice)
 {
-  // Cover xact.cc lines 220-275: auto-cost inference with two commodities
+  // Cover xact.cc: auto-cost inference with two commodities
   xact_t xact;
   xact._date = parse_date("2024/01/01");
   xact.payee = "Currency Exchange";
@@ -1224,12 +1224,12 @@ BOOST_AUTO_TEST_CASE(testFinalizeTwoCommoditiesAutoPrice)
 }
 
 // ---------------------------------------------------------------------------
-// 13. Virtual Null Post Balancing - cover xact.cc lines 454-467
+// 13. Virtual Null Post Balancing - cover xact.cc
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFinalizeVirtualNullPostBalance)
 {
-  // Cover xact.cc lines 454-467: balanced-virtual null post
+  // Cover xact.cc: balanced-virtual null post
   xact_t xact;
   xact._date = parse_date("2024/01/01");
   xact.payee = "Virtual Null";
@@ -1257,7 +1257,7 @@ BOOST_AUTO_TEST_CASE(testFinalizeVirtualNullPostBalance)
 }
 
 // ---------------------------------------------------------------------------
-// Wave 4: post_t::has_tag with inheritance = false paths (post.cc lines 48, 57)
+// post_t::has_tag with inheritance = false paths (post.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPostHasTagNoInherit)
@@ -1285,7 +1285,7 @@ BOOST_AUTO_TEST_CASE(testPostHasTagNoInherit)
 }
 
 // ---------------------------------------------------------------------------
-// Wave 4: post_t::get_tag with inheritance = false paths (post.cc lines 71, 74)
+// post_t::get_tag with inheritance = false paths (post.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPostGetTagNoInherit)
@@ -1318,7 +1318,7 @@ BOOST_AUTO_TEST_CASE(testPostGetTagNoInherit)
 }
 
 // ---------------------------------------------------------------------------
-// Wave 4: post_t::primary_date with xdata (post.cc line 97)
+// post_t::primary_date with xdata (post.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPostPrimaryDateWithXdata)
@@ -1343,7 +1343,7 @@ BOOST_AUTO_TEST_CASE(testPostPrimaryDateWithXdata)
 }
 
 // ---------------------------------------------------------------------------
-// Wave 4: post_t::valid edge cases (post.cc lines 570-600)
+// post_t::valid edge cases (post.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPostValidNoXact)
@@ -1389,7 +1389,7 @@ BOOST_AUTO_TEST_CASE(testPostValidNoAccount)
 }
 
 // ---------------------------------------------------------------------------
-// Wave 4: xact_t::verify with same-commodity cost (xact.cc line 560)
+// xact_t::verify with same-commodity cost (xact.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testXactVerifySameCommodityCostThrows)
@@ -1416,7 +1416,7 @@ BOOST_AUTO_TEST_CASE(testXactVerifySameCommodityCostThrows)
 }
 
 // ---------------------------------------------------------------------------
-// Wave 4: xact_t::valid with bad post (xact.cc lines 670-673)
+// xact_t::valid with bad post (xact.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testXactValidBadPost)
@@ -1438,7 +1438,7 @@ BOOST_AUTO_TEST_CASE(testXactValidBadPost)
 }
 
 // ---------------------------------------------------------------------------
-// Wave 4: post_t payee_from_tag and payee (post.cc lines 115-130)
+// post_t payee_from_tag and payee (post.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPostPayeeFromTag)
@@ -1463,7 +1463,7 @@ BOOST_AUTO_TEST_CASE(testPostPayeeFromTag)
 }
 
 // ---------------------------------------------------------------------------
-// Wave 4: post_t value_date (post.cc lines 77-81)
+// post_t value_date (post.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPostValueDate)
@@ -1488,7 +1488,7 @@ BOOST_AUTO_TEST_CASE(testPostValueDate)
 }
 
 // ---------------------------------------------------------------------------
-// Wave 4: post_t::valid with cost (post.cc lines 591-600)
+// post_t::valid with cost (post.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPostValidWithCost)
@@ -1512,11 +1512,11 @@ BOOST_AUTO_TEST_CASE(testPostValidWithCost)
 }
 
 // ---------------------------------------------------------------------------
-// Wave 7: Additional coverage tests
+// Additional coverage tests
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
-// W7-1: xact.cc lines 235-236: saw_cost = true when post already has cost
+// xact.cc: saw_cost = true when post already has cost
 // This is the path where a cost is set (non-COST_CALCULATED) and finalize
 // detects it and skips auto-pricing.
 // ---------------------------------------------------------------------------
@@ -1544,7 +1544,7 @@ BOOST_AUTO_TEST_CASE(testFinalizeSawCostSkipsAutoPrice_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-2: xact.cc lines 296-298: Fixated price with NOT_PER_UNIT
+// xact.cc: Fixated price with NOT_PER_UNIT
 // and negative amount triggers cost negation
 // ---------------------------------------------------------------------------
 
@@ -1574,7 +1574,7 @@ BOOST_AUTO_TEST_CASE(testFinalizeFixatedPriceNotPerUnitNeg_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-3: xact.cc lines 446-449: null_post with balance.is_long()
+// xact.cc: null_post with balance.is_long()
 // When all posts have amounts of 0 in a non-commodity way, the balance
 // ends up as a long value.
 // ---------------------------------------------------------------------------
@@ -1597,7 +1597,7 @@ BOOST_AUTO_TEST_CASE(testFinalizeNullPostBalanceError_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-4: xact.cc lines 464-467: virtual_null_post with balance.is_long()
+// xact.cc: virtual_null_post with balance.is_long()
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFinalizeVirtualNullPostLong_W7)
@@ -1631,7 +1631,7 @@ BOOST_AUTO_TEST_CASE(testFinalizeVirtualNullPostLong_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-5: xact.cc line 523: some_null after finalize throws
+// xact.cc: some_null after finalize throws
 // If posts remain with null amounts after balancing, this throws.
 // This happens when a transaction has null-amount posts that can't be inferred.
 // ---------------------------------------------------------------------------
@@ -1656,7 +1656,7 @@ BOOST_AUTO_TEST_CASE(testFinalizeSomeNullThrows_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-6: xact.cc lines 564-569: verify balance failure
+// xact.cc: verify balance failure
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testVerifyUnbalanced_W7)
@@ -1680,7 +1680,7 @@ BOOST_AUTO_TEST_CASE(testVerifyUnbalanced_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-7: xact.cc line 735: post_pred VALUE case
+// xact.cc: post_pred VALUE case
 // The post_pred function checks VALUE op kind and returns to_boolean().
 // This is used by auto_xact_t::extend_xact when the predicate is simple.
 // ---------------------------------------------------------------------------
@@ -1710,7 +1710,7 @@ BOOST_AUTO_TEST_CASE(testAutoXactSimplePredicate_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-8: xact.cc lines 944-946: auto_xact cost from annotation
+// xact.cc: auto_xact cost from annotation
 // When auto-xact generates a post from a posting with cost and the
 // amount has a price annotation, derive cost from annotation.
 // ---------------------------------------------------------------------------
@@ -1739,7 +1739,7 @@ BOOST_AUTO_TEST_CASE(testAutoXactCostFromAnnotation_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-9: xact.cc lines 1024, 1029: put_xact with ITEM_GENERATED and aux_date
+// xact.cc: put_xact with ITEM_GENERATED and aux_date
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPutXactGenerated_W7)
@@ -1771,7 +1771,7 @@ BOOST_AUTO_TEST_CASE(testPutXactGenerated_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-10: put_xact with cleared/pending state
+// put_xact with cleared/pending state
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPutXactStates_W7)
@@ -1810,7 +1810,7 @@ BOOST_AUTO_TEST_CASE(testPutXactStates_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-11: post.cc line 196: get_amount when amount is null returns 0L
+// post.cc: get_amount when amount is null returns 0L
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPostGetAmountNull_W7)
@@ -1832,7 +1832,7 @@ BOOST_AUTO_TEST_CASE(testPostGetAmountNull_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-12: post.cc lines 211-212, 220: get_commodity, get_commodity_is_primary
+// post.cc: get_commodity, get_commodity_is_primary
 // with POST_EXT_COMPOUND
 // ---------------------------------------------------------------------------
 
@@ -1863,7 +1863,7 @@ BOOST_AUTO_TEST_CASE(testPostCommodityCompound_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-13: post.cc lines 235, 242: get_cost, get_price with null amount
+// post.cc: get_cost, get_price with null amount
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPostCostPriceNull_W7)
@@ -1888,7 +1888,7 @@ BOOST_AUTO_TEST_CASE(testPostCostPriceNull_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-14: post.cc lines 253, 262: get_total, get_count
+// post.cc: get_total, get_count
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPostTotalCount_W7)
@@ -1902,11 +1902,11 @@ BOOST_AUTO_TEST_CASE(testPostTotalCount_W7)
   post->add_flags(ITEM_TEMP);
   xact.add_post(post);
 
-  // get_total with null amount returns 0L (line 253)
+  // get_total with null amount returns 0L
   auto op_total = post->lookup(symbol_t::FUNCTION, "total");
   BOOST_CHECK(op_total != nullptr);
 
-  // get_count without xdata returns 1L (line 262)
+  // get_count without xdata returns 1L
   auto op_count = post->lookup(symbol_t::FUNCTION, "count");
   BOOST_CHECK(op_count != nullptr);
 
@@ -1914,7 +1914,7 @@ BOOST_AUTO_TEST_CASE(testPostTotalCount_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-15: post.cc lines 519, 524, 529: N, O, R shortcut lookups
+// post.cc: N, O, R shortcut lookups
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPostShortcutLookups_W7)
@@ -1928,15 +1928,15 @@ BOOST_AUTO_TEST_CASE(testPostShortcutLookups_W7)
   post->add_flags(ITEM_TEMP);
   xact.add_post(post);
 
-  // N = count (line 519)
+  // N = count
   auto op_N = post->lookup(symbol_t::FUNCTION, "N");
   BOOST_CHECK(op_N != nullptr);
 
-  // O = total (line 524)
+  // O = total
   auto op_O = post->lookup(symbol_t::FUNCTION, "O");
   BOOST_CHECK(op_O != nullptr);
 
-  // R = real (line 529)
+  // R = real
   auto op_R = post->lookup(symbol_t::FUNCTION, "R");
   BOOST_CHECK(op_R != nullptr);
 
@@ -1944,7 +1944,7 @@ BOOST_AUTO_TEST_CASE(testPostShortcutLookups_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-16: post.cc line 539, 542: resolve_expr paths
+// post.cc: resolve_expr paths
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPostResolveExprLong_W7)
@@ -1958,7 +1958,7 @@ BOOST_AUTO_TEST_CASE(testPostResolveExprLong_W7)
   post->add_flags(ITEM_TEMP);
   xact.add_post(post);
 
-  // resolve_expr with result that is_long (line 538-539)
+  // resolve_expr with result that is_long
   expr_t expr_long("2 + 3");
   amount_t result = post->resolve_expr(*scope_t::default_scope, expr_long);
   BOOST_CHECK_EQUAL(result, amount_t(5L));
@@ -1967,7 +1967,7 @@ BOOST_AUTO_TEST_CASE(testPostResolveExprLong_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-17: post.cc line 401: post lookup non-FUNCTION kind
+// post.cc: post lookup non-FUNCTION kind
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPostLookupNonFunction_W7)
@@ -1981,7 +1981,7 @@ BOOST_AUTO_TEST_CASE(testPostLookupNonFunction_W7)
   post->add_flags(ITEM_TEMP);
   xact.add_post(post);
 
-  // Non-FUNCTION kind falls through to item_t::lookup (line 401)
+  // Non-FUNCTION kind falls through to item_t::lookup
   auto op = post->lookup(symbol_t::OPTION, "test");
   BOOST_CHECK(op == nullptr);
 
@@ -1989,7 +1989,7 @@ BOOST_AUTO_TEST_CASE(testPostLookupNonFunction_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-18: post.cc lines 363, 383: fn_any, fn_all with no xact
+// post.cc: fn_any, fn_all with no xact
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPostFnAnyAllNoXact_W7)
@@ -2006,7 +2006,7 @@ BOOST_AUTO_TEST_CASE(testPostFnAnyAllNoXact_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-19: item.cc lines 49-53: item_t copy constructor
+// item.cc: item_t copy constructor
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testItemCopy_W7)
@@ -2028,7 +2028,7 @@ BOOST_AUTO_TEST_CASE(testItemCopy_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-20: item.cc line 66: has_tag with value_mask
+// item.cc: has_tag with value_mask
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testItemHasTagValueMask_W7)
@@ -2048,7 +2048,7 @@ BOOST_AUTO_TEST_CASE(testItemHasTagValueMask_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-21: item.cc line 107: has_date
+// item_t::has_date (item.h)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testItemHasDate_W7)
@@ -2062,7 +2062,7 @@ BOOST_AUTO_TEST_CASE(testItemHasDate_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-22: item.cc lines 306, 313, 320: pathname, filebase, filepath when !pos
+// item.cc: pathname, filebase, filepath when !pos
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testItemPathnameLookupNoPos_W7)
@@ -2084,7 +2084,7 @@ BOOST_AUTO_TEST_CASE(testItemPathnameLookupNoPos_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-23: item.cc lines 344, 350-351: id and addr
+// item.cc: id and addr
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testItemIdAndAddr_W7)
@@ -2108,7 +2108,7 @@ BOOST_AUTO_TEST_CASE(testItemIdAndAddr_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-24: item.cc line 392: get_comment
+// item.cc: get_comment
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testItemGetComment_W7)
@@ -2128,7 +2128,7 @@ BOOST_AUTO_TEST_CASE(testItemGetComment_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-25: item.cc lines 439, 465, 488, etc: various lookup paths
+// item.cc, etc: various lookup paths
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testItemLookupPaths_W7)
@@ -2138,61 +2138,61 @@ BOOST_AUTO_TEST_CASE(testItemLookupPaths_W7)
   xact._date = parse_date("2024/01/01");
   xact.payee = "Test";
 
-  // has_meta (line 464)
+  // has_meta
   auto op_hm = xact.lookup(symbol_t::FUNCTION, "has_meta");
   BOOST_CHECK(op_hm != nullptr);
 
-  // meta (line 476)
+  // meta
   auto op_meta = xact.lookup(symbol_t::FUNCTION, "meta");
   BOOST_CHECK(op_meta != nullptr);
 
-  // pending (line 485-486)
+  // pending
   auto op_pend = xact.lookup(symbol_t::FUNCTION, "pending");
   BOOST_CHECK(op_pend != nullptr);
 
-  // parent (line 487-488)
+  // parent
   auto op_parent = xact.lookup(symbol_t::FUNCTION, "parent");
   BOOST_CHECK(op_parent != nullptr);
 
-  // primary_date (line 489-490)
+  // primary_date
   auto op_pd = xact.lookup(symbol_t::FUNCTION, "primary_date");
   BOOST_CHECK(op_pd != nullptr);
 
-  // seq (line 497)
+  // seq
   auto op_seq = xact.lookup(symbol_t::FUNCTION, "seq");
   BOOST_CHECK(op_seq != nullptr);
 
-  // status / state (line 494)
+  // status / state
   auto op_status = xact.lookup(symbol_t::FUNCTION, "status");
   BOOST_CHECK(op_status != nullptr);
 
-  // tag (line 501-502)
+  // tag
   auto op_tag = xact.lookup(symbol_t::FUNCTION, "tag");
   BOOST_CHECK(op_tag != nullptr);
 
-  // uuid (line 508-509)
+  // uuid
   auto op_uuid = xact.lookup(symbol_t::FUNCTION, "uuid");
   BOOST_CHECK(op_uuid != nullptr);
 
-  // value_date (line 513-514)
+  // value_date
   auto op_vd = xact.lookup(symbol_t::FUNCTION, "value_date");
   BOOST_CHECK(op_vd != nullptr);
 
-  // L (line 518-519)
+  // L
   auto op_L = xact.lookup(symbol_t::FUNCTION, "L");
   BOOST_CHECK(op_L != nullptr);
 
-  // X (line 522-524)
+  // X
   auto op_X = xact.lookup(symbol_t::FUNCTION, "X");
   BOOST_CHECK(op_X != nullptr);
 
-  // Y (line 527-529)
+  // Y
   auto op_Y = xact.lookup(symbol_t::FUNCTION, "Y");
   BOOST_CHECK(op_Y != nullptr);
 }
 
 // ---------------------------------------------------------------------------
-// W7-26: item.cc lines 536-539, 542-543: item_t::valid edge cases
+// item.cc: item_t::valid edge cases
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testItemValid_W7)
@@ -2213,7 +2213,7 @@ BOOST_AUTO_TEST_CASE(testItemValid_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-27: post.cc lines 702-740: put_post with various states and fields
+// post.cc: put_post with various states and fields
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPutPostStates_W7)
@@ -2315,7 +2315,7 @@ BOOST_AUTO_TEST_CASE(testPutPostStates_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-28: put_post with assigned_amount
+// put_post with assigned_amount
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPutPostAssignedAmount_W7)
@@ -2362,7 +2362,7 @@ BOOST_AUTO_TEST_CASE(testPutPostAssignedAmount_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-29: post.cc line 727: put_post with compound value
+// post.cc: put_post with compound value
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPutPostCompoundValue_W7)
@@ -2390,7 +2390,7 @@ BOOST_AUTO_TEST_CASE(testPutPostCompoundValue_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-30: post.cc with payee_from_tag in put_post (lines 702, 705)
+// post.cc with payee_from_tag in put_post
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPutPostPayeeFromTag_W7)
@@ -2416,7 +2416,7 @@ BOOST_AUTO_TEST_CASE(testPutPostPayeeFromTag_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-31: xact.cc lines 313, 315: fixated price recompute skips virtual posts
+// xact.cc: fixated price recompute skips virtual posts
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testFinalizeFixatedRecomputeSkipsVirtual_W7)
@@ -2460,7 +2460,7 @@ BOOST_AUTO_TEST_CASE(testFinalizeFixatedRecomputeSkipsVirtual_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-32: period_xact_t description
+// period_xact_t description
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testPeriodXactDescription_W7)
@@ -2479,7 +2479,7 @@ BOOST_AUTO_TEST_CASE(testPeriodXactDescription_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-33: auto_xact_t description
+// auto_xact_t description
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testAutoXactDescription_W7)
@@ -2503,7 +2503,7 @@ BOOST_AUTO_TEST_CASE(testAutoXactDescription_W7)
 }
 
 // ---------------------------------------------------------------------------
-// W7-34: Draft insert with year_directive_year (draft.cc lines 266-269, 293)
+// Draft insert with year_directive_year (draft.cc)
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(testDraftInsertWithSession_W7)
