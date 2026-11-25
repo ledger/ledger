@@ -1,0 +1,141 @@
+; Under --group-by-cumulative one chain is flushed once per group, and the
+; xml handler writes one document per flush.  Each document must list the
+; transactions, postings and accounts plain --group-by lists for its group.
+; The later documents listed every earlier group's transactions again: the
+; handler kept the transactions it had written, and, as the postings keep
+; their xdata between cumulative groups, a transaction shared with an
+; earlier group also listed the postings that group had visited.  The sed
+; script keeps one line per document, account, transaction and posting.
+
+2012/01/15 Electric Company
+    Expenses:Utilities          $50.00
+    Assets:Checking
+
+2012/02/15 Electric Company
+    Expenses:Utilities          $55.00
+    Assets:Checking
+
+2012/02/20 Grocer
+    Expenses:Food               $20.00
+    Expenses:Utilities           $5.00
+    Assets:Checking
+
+test xml --group-by account | sed -n -E 's/^<ledger .*/document/p; s/^ *<fullname>(.+)<\/fullname>/account \1/p; s/^ *<payee>(.*)<\/payee>/xact \1/p; /<account ref=/{n;s/^ *<name>(.*)<\/name>/  posting \1/p;}'
+document
+account Assets
+account Assets:Checking
+xact Electric Company
+  posting Assets:Checking
+xact Electric Company
+  posting Assets:Checking
+xact Grocer
+  posting Assets:Checking
+document
+account Expenses
+account Expenses:Food
+xact Grocer
+  posting Expenses:Food
+document
+account Expenses
+account Expenses:Utilities
+xact Electric Company
+  posting Expenses:Utilities
+xact Electric Company
+  posting Expenses:Utilities
+xact Grocer
+  posting Expenses:Utilities
+end test
+
+test xml --group-by account --group-by-cumulative | sed -n -E 's/^<ledger .*/document/p; s/^ *<fullname>(.+)<\/fullname>/account \1/p; s/^ *<payee>(.*)<\/payee>/xact \1/p; /<account ref=/{n;s/^ *<name>(.*)<\/name>/  posting \1/p;}'
+document
+account Assets
+account Assets:Checking
+xact Electric Company
+  posting Assets:Checking
+xact Electric Company
+  posting Assets:Checking
+xact Grocer
+  posting Assets:Checking
+document
+account Expenses
+account Expenses:Food
+xact Grocer
+  posting Expenses:Food
+document
+account Expenses
+account Expenses:Utilities
+xact Electric Company
+  posting Expenses:Utilities
+xact Electric Company
+  posting Expenses:Utilities
+xact Grocer
+  posting Expenses:Utilities
+end test
+
+test xml --group-by account -r | sed -n -E 's/^<ledger .*/document/p; s/^ *<fullname>(.+)<\/fullname>/account \1/p; s/^ *<payee>(.*)<\/payee>/xact \1/p; /<account ref=/{n;s/^ *<name>(.*)<\/name>/  posting \1/p;}'
+document
+account Expenses
+account Expenses:Food
+account Expenses:Utilities
+xact Electric Company
+  posting Expenses:Utilities
+xact Electric Company
+  posting Expenses:Utilities
+xact Grocer
+  posting Expenses:Food
+  posting Expenses:Utilities
+document
+account Assets
+account Assets:Checking
+account Expenses
+account Expenses:Utilities
+xact Grocer
+  posting Expenses:Utilities
+  posting Assets:Checking
+document
+account Assets
+account Assets:Checking
+account Expenses
+account Expenses:Food
+xact Electric Company
+  posting Assets:Checking
+xact Electric Company
+  posting Assets:Checking
+xact Grocer
+  posting Expenses:Food
+  posting Assets:Checking
+end test
+
+test xml --group-by account --group-by-cumulative -r | sed -n -E 's/^<ledger .*/document/p; s/^ *<fullname>(.+)<\/fullname>/account \1/p; s/^ *<payee>(.*)<\/payee>/xact \1/p; /<account ref=/{n;s/^ *<name>(.*)<\/name>/  posting \1/p;}'
+document
+account Expenses
+account Expenses:Food
+account Expenses:Utilities
+xact Electric Company
+  posting Expenses:Utilities
+xact Electric Company
+  posting Expenses:Utilities
+xact Grocer
+  posting Expenses:Food
+  posting Expenses:Utilities
+document
+account Assets
+account Assets:Checking
+account Expenses
+account Expenses:Utilities
+xact Grocer
+  posting Expenses:Utilities
+  posting Assets:Checking
+document
+account Assets
+account Assets:Checking
+account Expenses
+account Expenses:Food
+xact Electric Company
+  posting Assets:Checking
+xact Electric Company
+  posting Assets:Checking
+xact Grocer
+  posting Expenses:Food
+  posting Assets:Checking
+end test

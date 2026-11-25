@@ -5,9 +5,11 @@
 ; instead of valuing each posting at its cost.  Valuing the subtotals on
 ; their own dates would count the $1,000.00 gain realized by the sale a
 ; second time, as an unrealized gain.  The journal is that of 1821_2.test.
-; The --by-payee report prints nothing, as bal --by-payee does on this
-; journal; a baseline built from its subtotals printed "$-1,000.00
-; Equity:Unrealized Gains".
+; The --by-payee report prints what the -M and --dow reports print; a
+; baseline built from its subtotals printed "$-1,000.00 Equity:Unrealized
+; Gains".  (It used to print nothing, as bal --by-payee did on every
+; journal: by_payee_posts freed its subtotal postings as it flushed them,
+; before the balance report read the accounts they had been added to.)
 ;
 ; Under --dc, which does not group postings, each column is revalued
 ; against its own cost.  The 50 AAPL bought, in the debit column, and the
@@ -41,6 +43,10 @@ test bal -V --unrealized --dow
 end test
 
 test bal -V --unrealized --by-payee
+           $1,000.00  Assets:Broker
+          $-1,000.00  Income:Capital Gains
+--------------------
+                   0
 end test
 
 test bal -V --unrealized --dc

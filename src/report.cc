@@ -633,62 +633,41 @@ void report_t::parse_query_args(const value_t& args, const string& whence) {
 
 /*--- Report Drivers ---*/
 
-namespace {
-/// @brief Functor run by post_splitter after each --group-by group: clears the
-/// journal's extended data so that the next group starts fresh.  Under
-/// --group-by-cumulative the postings' extended data stays, because calc_posts
-/// carries the running total from the previous group's last posting, but the
-/// accounts' is still cleared, since their display flags decide whether a row
-/// prints as virtual.
-struct posts_flusher {
-  post_handler_ptr handler;
-  report_t& report;
-
-  posts_flusher(post_handler_ptr _handler, report_t& _report)
-      : handler(std::move(_handler)), report(_report) {
-    TRACE_CTOR(posts_flusher, "post_handler_ptr, report_t&");
-  }
-  ~posts_flusher() noexcept { TRACE_DTOR(posts_flusher); }
-
-  void operator()(const value_t&) {
-    if (report.HANDLED(group_by_cumulative))
-      report.session.journal->master->clear_xdata();
-    else
-      report.session.journal->clear_xdata();
-  }
-};
-} // namespace
-
-void report_t::posts_report(post_handler_ptr handler) {
-  handler = chain_post_handlers(handler, *this);
+post_handler_ptr report_t::walk_posts(post_handler_ptr chain,
+                                      const function<void(const value_t&)>& postflush,
+                                      const function<void(const value_t&)>& preflush) {
   if (HANDLED(group_by_)) {
-    unique_ptr<post_splitter> splitter(new post_splitter(handler, *this, HANDLER(group_by_).expr));
-    splitter->set_postflush_func(posts_flusher(handler, *this));
-    handler = post_handler_ptr(splitter.release());
+    auto splitter = std::make_shared<post_splitter>(chain, *this, HANDLER(group_by_).expr);
+    if (preflush)
+      splitter->set_preflush_func(preflush);
+    // Runs before the splitter clears the group's chain, so an accounts
+    // flusher still sees the group's temporary postings (#3207).
+    splitter->set_postflush_func([this, postflush](const value_t& group) {
+      if (postflush)
+        postflush(group);
+      // Between cumulative groups calc_posts carries the running total
+      // from the postings' xdata, so only the accounts' is cleared, and
+      // only when no postflush reads their carried totals (see report.h).
+      if (!HANDLED(group_by_cumulative))
+        session.journal->clear_xdata();
+      else if (!postflush)
+        session.journal->master->clear_xdata();
+    });
+    chain = std::move(splitter);
   }
-  handler = chain_pre_post_handlers(handler, *this);
+  chain = chain_pre_post_handlers(chain, *this);
 
   journal_posts_iterator walker(*session.journal.get());
-  pass_down_posts<journal_posts_iterator>(handler, walker); // NOLINT(bugprone-unused-raii)
+  pass_down_posts<journal_posts_iterator>(chain, walker); // NOLINT(bugprone-unused-raii)
 
+  if (!HANDLED(group_by_) && postflush)
+    postflush(value_t());
   session.journal->clear_xdata();
+  return chain;
 }
 
-void report_t::posts_report(post_handler_ptr handler, post_handler_ptr& saved_chain) {
-  handler = chain_post_handlers(handler, *this);
-  if (HANDLED(group_by_)) {
-    unique_ptr<post_splitter> splitter(new post_splitter(handler, *this, HANDLER(group_by_).expr));
-    splitter->set_postflush_func(posts_flusher(handler, *this));
-    handler = post_handler_ptr(splitter.release());
-  }
-  handler = chain_pre_post_handlers(handler, *this);
-
-  saved_chain = handler; // Keep chain alive to preserve temporary posts/accounts
-
-  journal_posts_iterator walker(*session.journal.get());
-  pass_down_posts<journal_posts_iterator>(handler, walker); // NOLINT(bugprone-unused-raii)
-
-  session.journal->clear_xdata();
+void report_t::posts_report(post_handler_ptr handler) {
+  walk_posts(chain_post_handlers(std::move(handler), *this));
 }
 
 void report_t::posts_report_quick(post_handler_ptr handler) {
@@ -698,17 +677,7 @@ void report_t::posts_report_quick(post_handler_ptr handler) {
                                      display_predicate, only_predicate);
   handler = chain_transfer_handlers(handler, *this);
 
-  if (HANDLED(group_by_)) {
-    unique_ptr<post_splitter> splitter(new post_splitter(handler, *this, HANDLER(group_by_).expr));
-    splitter->set_postflush_func(posts_flusher(handler, *this));
-    handler = post_handler_ptr(splitter.release());
-  }
-  handler = chain_pre_post_handlers(handler, *this);
-
-  journal_posts_iterator walker(*session.journal.get());
-  pass_down_posts<journal_posts_iterator>(handler, walker); // NOLINT(bugprone-unused-raii)
-
-  session.journal->clear_xdata();
+  walk_posts(std::move(handler));
 }
 
 void report_t::generate_report(post_handler_ptr handler) {
@@ -793,10 +762,9 @@ struct accounts_flusher {
       }
     }
 
+    // The next cumulative group adds to these totals; walk_posts clears xdata otherwise.
     if (report.HANDLED(group_by_cumulative))
       report.session.journal->master->clear_display_state();
-    else
-      report.session.journal->clear_xdata();
   }
 };
 } // namespace
@@ -817,26 +785,11 @@ void report_t::accounts_report(
     HANDLER(total_).expr.set_base_expr(
         "is_account & parent & has_children_to_display ? amount : total");
 
-  post_handler_ptr chain = chain_post_handlers(post_handler_ptr(new ignore_posts), *this,
-                                               /* for_accounts_report= */ true);
-  if (HANDLED(group_by_)) {
-    unique_ptr<post_splitter> splitter(new post_splitter(chain, *this, HANDLER(group_by_).expr));
-
-    splitter->set_preflush_func(accounts_title_printer(handler, *this));
-    splitter->set_postflush_func(accounts_flusher(handler, *this));
-
-    chain = post_handler_ptr(splitter.release());
-  }
-  chain = chain_pre_post_handlers(chain, *this);
-
-  // The lifetime of the chain object controls the lifetime of all temporary
-  // objects created within it during the call to pass_down_posts, which will
-  // be needed later by the pass_down_accounts.
-  journal_posts_iterator walker(*session.journal.get());
-  pass_down_posts<journal_posts_iterator>(chain, walker); // NOLINT(bugprone-unused-raii)
-
-  if (!HANDLED(group_by_))
-    accounts_flusher(handler, *this)(value_t());
+  // walk_posts keeps the chain, and with it every temporary posting the
+  // walk created, alive through the flush that walks the account tree.
+  walk_posts(chain_post_handlers(post_handler_ptr(new ignore_posts), *this,
+                                 /* for_accounts_report= */ true),
+             accounts_flusher(handler, *this), accounts_title_printer(handler, *this));
 }
 
 namespace {

@@ -1,0 +1,222 @@
+; Under --group-by-cumulative the postings keep their xdata between groups,
+; and with -r a later group is handed again a posting an earlier group
+; related.  Each group must list the rows plain --group-by lists for it,
+; with the running total (reg) or the account totals (bal) carried over.
+; The later groups lost their rows: related_posts kept its received and
+; handled marks, and the register its displayed mark, so they skipped
+; every posting an earlier group had related.  Once such a posting is
+; handed on again, nothing it holds from the earlier visit may count:
+;
+; - the Expenses:Food group starts with the Grocer's Expenses:Utilities
+;   posting, which the Assets:Checking group ended with, so calc_posts
+;   must continue from that posting's carried totals before it resets
+;   them for this visit (else a bogus <Adjustment> row and a lost total),
+;   and the register must print it as the first row of its group, with
+;   its date and payee;
+; - -V, -X and --lots (no prices here, so they change nothing) cache the
+;   display total on the posting, which must not be read on a later visit;
+; - -S keeps sort keys on the posting, and a second set appended to the
+;   first made the sort fail an assertion;
+; - payee_changed is a mark of one display: false on the first row of a
+;   transaction, and after a posting of the same payee;
+; - the account totals count a posting once (its considered mark), so bal
+;   added nothing for the Grocer's Expenses:Utilities posting in the
+;   Expenses:Food group and printed a total of $105.00 there; a group's
+;   account totals count each of its own postings, as its running total
+;   does, so bal equals bal -M and the carried reg total, $110.00;
+; - -M marks each posting it subtotals compound, with its bare amount, and
+;   with `cleared`, whose amount is a pair, the later group added that bare
+;   amount to a pair ("Cannot add sequences of different lengths").
+
+2012/01/15 Electric Company
+    Expenses:Utilities          $50.00
+    Assets:Checking
+
+2012/02/15 Electric Company
+    Expenses:Utilities          $55.00
+    Assets:Checking
+
+2012/02/20 Grocer
+    Expenses:Food               $20.00
+    Expenses:Utilities           $5.00  ; Payee: Electric Company
+    Assets:Checking
+
+test reg --group-by account -r
+Assets:Checking
+12-Jan-15 Electric Company      Expenses:Utilities           $50.00       $50.00
+12-Feb-15 Electric Company      Expenses:Utilities           $55.00      $105.00
+12-Feb-20 Grocer                Expenses:Food                $20.00      $125.00
+          Electric Company      Expenses:Utilities            $5.00      $130.00
+
+Expenses:Food
+12-Feb-20 Electric Company      Expenses:Utilities            $5.00        $5.00
+          Grocer                Assets:Checking             $-25.00      $-20.00
+
+Expenses:Utilities
+12-Jan-15 Electric Company      Assets:Checking             $-50.00      $-50.00
+12-Feb-15 Electric Company      Assets:Checking             $-55.00     $-105.00
+12-Feb-20 Grocer                Expenses:Food                $20.00      $-85.00
+                                Assets:Checking             $-25.00     $-110.00
+end test
+
+test reg --group-by account --group-by-cumulative -r
+Assets:Checking
+12-Jan-15 Electric Company      Expenses:Utilities           $50.00       $50.00
+12-Feb-15 Electric Company      Expenses:Utilities           $55.00      $105.00
+12-Feb-20 Grocer                Expenses:Food                $20.00      $125.00
+          Electric Company      Expenses:Utilities            $5.00      $130.00
+
+Expenses:Food
+12-Feb-20 Electric Company      Expenses:Utilities            $5.00      $135.00
+          Grocer                Assets:Checking             $-25.00      $110.00
+
+Expenses:Utilities
+12-Jan-15 Electric Company      Assets:Checking             $-50.00       $60.00
+12-Feb-15 Electric Company      Assets:Checking             $-55.00        $5.00
+12-Feb-20 Grocer                Expenses:Food                $20.00       $25.00
+                                Assets:Checking             $-25.00            0
+end test
+
+test reg --group-by account --group-by-cumulative -r -V
+Assets:Checking
+12-Jan-15 Electric Company      Expenses:Utilities           $50.00       $50.00
+12-Feb-15 Electric Company      Expenses:Utilities           $55.00      $105.00
+12-Feb-20 Grocer                Expenses:Food                $20.00      $125.00
+          Electric Company      Expenses:Utilities            $5.00      $130.00
+
+Expenses:Food
+12-Feb-20 Electric Company      Expenses:Utilities            $5.00      $135.00
+          Grocer                Assets:Checking             $-25.00      $110.00
+
+Expenses:Utilities
+12-Jan-15 Electric Company      Assets:Checking             $-50.00       $60.00
+12-Feb-15 Electric Company      Assets:Checking             $-55.00        $5.00
+12-Feb-20 Grocer                Expenses:Food                $20.00       $25.00
+                                Assets:Checking             $-25.00            0
+end test
+
+test reg --group-by account --group-by-cumulative -r -X $
+Assets:Checking
+12-Jan-15 Electric Company      Expenses:Utilities           $50.00       $50.00
+12-Feb-15 Electric Company      Expenses:Utilities           $55.00      $105.00
+12-Feb-20 Grocer                Expenses:Food                $20.00      $125.00
+          Electric Company      Expenses:Utilities            $5.00      $130.00
+
+Expenses:Food
+12-Feb-20 Electric Company      Expenses:Utilities            $5.00      $135.00
+          Grocer                Assets:Checking             $-25.00      $110.00
+
+Expenses:Utilities
+12-Jan-15 Electric Company      Assets:Checking             $-50.00       $60.00
+12-Feb-15 Electric Company      Assets:Checking             $-55.00        $5.00
+12-Feb-20 Grocer                Expenses:Food                $20.00       $25.00
+                                Assets:Checking             $-25.00            0
+end test
+
+test reg --group-by account --group-by-cumulative -r --lots
+Assets:Checking
+12-Jan-15 Electric Company      Expenses:Utilities           $50.00       $50.00
+12-Feb-15 Electric Company      Expenses:Utilities           $55.00      $105.00
+12-Feb-20 Grocer                Expenses:Food                $20.00      $125.00
+          Electric Company      Expenses:Utilities            $5.00      $130.00
+
+Expenses:Food
+12-Feb-20 Electric Company      Expenses:Utilities            $5.00      $135.00
+          Grocer                Assets:Checking             $-25.00      $110.00
+
+Expenses:Utilities
+12-Jan-15 Electric Company      Assets:Checking             $-50.00       $60.00
+12-Feb-15 Electric Company      Assets:Checking             $-55.00        $5.00
+12-Feb-20 Grocer                Expenses:Food                $20.00       $25.00
+                                Assets:Checking             $-25.00            0
+end test
+
+test reg --group-by account --group-by-cumulative -r -S payee
+Assets:Checking
+12-Jan-15 Electric Company      Expenses:Utilities           $50.00       $50.00
+12-Feb-15 Electric Company      Expenses:Utilities           $55.00      $105.00
+12-Feb-20 Electric Company      Expenses:Utilities            $5.00      $110.00
+          Grocer                Expenses:Food                $20.00      $130.00
+
+Expenses:Food
+12-Feb-20 Electric Company      Expenses:Utilities            $5.00      $135.00
+          Grocer                Assets:Checking             $-25.00      $110.00
+
+Expenses:Utilities
+12-Jan-15 Electric Company      Assets:Checking             $-50.00       $60.00
+12-Feb-15 Electric Company      Assets:Checking             $-55.00        $5.00
+12-Feb-20 Grocer                Expenses:Food                $20.00       $25.00
+                                Assets:Checking             $-25.00            0
+end test
+
+test reg --group-by account --group-by-cumulative -r --format '%(account) %(payee) changed=%(payee_changed)\n'
+Assets:Checking
+Expenses:Utilities Electric Company changed=false
+Expenses:Utilities Electric Company changed=false
+Expenses:Food Grocer changed=false
+Expenses:Utilities Electric Company changed=true
+
+Expenses:Food
+Expenses:Utilities Electric Company changed=false
+Assets:Checking Grocer changed=true
+
+Expenses:Utilities
+Assets:Checking Electric Company changed=false
+Assets:Checking Electric Company changed=false
+Expenses:Food Grocer changed=false
+Assets:Checking Grocer changed=false
+end test
+
+test bal --group-by account --group-by-cumulative -r
+Assets:Checking
+             $130.00  Expenses
+              $20.00    Food
+             $110.00    Utilities
+--------------------
+             $130.00
+
+Expenses:Food
+             $-25.00  Assets
+             $-25.00    Checking
+             $135.00  Expenses
+              $20.00    Food
+             $115.00    Utilities
+--------------------
+             $110.00
+
+Expenses:Utilities
+            $-155.00  Assets
+            $-155.00    Checking
+             $155.00  Expenses
+              $40.00    Food
+             $115.00    Utilities
+--------------------
+                   0
+end test
+
+test cleared --group-by account --group-by-cumulative -r -M
+Assets:Checking
+         $130.00                   0                 Expenses
+          $20.00                   0                   Food
+         $110.00                   0                   Utilities
+----------------  ------------------    ---------
+         $130.00                   0             
+
+Expenses:Food
+         $-25.00                   0                 Assets
+         $-25.00                   0                   Checking
+         $135.00                   0                 Expenses
+          $20.00                   0                   Food
+         $115.00                   0                   Utilities
+----------------  ------------------    ---------
+         $110.00                   0             
+
+Expenses:Utilities
+        $-155.00                   0                 Assets
+        $-155.00                   0                   Checking
+         $155.00                   0                 Expenses
+          $40.00                   0                   Food
+         $115.00                   0                   Utilities
+----------------  ------------------    ---------
+               0                   0             
+end test

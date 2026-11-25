@@ -1,0 +1,80 @@
+; Journal.query() under --group-by-cumulative returns each group's own
+; postings, as `reg --group-by-cumulative` reports them: with -r the
+; Expenses:Utilities group holds the Grocer's Expenses:Food and
+; Assets:Checking postings, as without --group-by-cumulative, -V (no
+; prices here) changes none of them, and -S sorts each group's postings
+; afresh.  -P results hold the payee subtotals, which used to be freed
+; while the result (and, under --group-by-cumulative, the next group)
+; still pointed at them.
+
+2012/01/15 Electric Company
+    Expenses:Utilities          $50.00
+    Assets:Checking
+
+2012/02/03 Grocer
+    Expenses:Food               $20.00
+    Expenses:Utilities           $5.00
+    Assets:Checking
+
+2012/02/15 Electric Company
+    Expenses:Utilities          $55.00
+    Assets:Checking
+
+2012/02/20 Electric Company
+    Expenses:Utilities          10 EUR
+    Assets:Checking
+
+test python test/regress/py-query-group-by-cumulative.py
+--group-by account -r Expenses: 7 posts, 7 amounts
+  2012-02-03 Grocer Expenses:Utilities $5.00
+  2012-02-03 Grocer Assets:Checking $-25.00
+  2012-01-15 Electric Company Assets:Checking $-50.00
+  2012-02-03 Grocer Expenses:Food $20.00
+  2012-02-03 Grocer Assets:Checking $-25.00
+  2012-02-15 Electric Company Assets:Checking $-55.00
+  2012-02-20 Electric Company Assets:Checking -10 EUR
+--group-by account --group-by-cumulative -r Expenses: 7 posts, 7 amounts
+  2012-02-03 Grocer Expenses:Utilities $5.00
+  2012-02-03 Grocer Assets:Checking $-25.00
+  2012-01-15 Electric Company Assets:Checking $-50.00
+  2012-02-03 Grocer Expenses:Food $20.00
+  2012-02-03 Grocer Assets:Checking $-25.00
+  2012-02-15 Electric Company Assets:Checking $-55.00
+  2012-02-20 Electric Company Assets:Checking -10 EUR
+--group-by account --group-by-cumulative -r -V Expenses: 7 posts, 7 amounts
+  2012-02-03 Grocer Expenses:Utilities $5.00
+  2012-02-03 Grocer Assets:Checking $-25.00
+  2012-01-15 Electric Company Assets:Checking $-50.00
+  2012-02-03 Grocer Expenses:Food $20.00
+  2012-02-03 Grocer Assets:Checking $-25.00
+  2012-02-15 Electric Company Assets:Checking $-55.00
+  2012-02-20 Electric Company Assets:Checking -10 EUR
+--group-by account --group-by-cumulative -r -S payee: 12 posts, 12 amounts
+  2012-01-15 Electric Company Expenses:Utilities $50.00
+  2012-02-15 Electric Company Expenses:Utilities $55.00
+  2012-02-20 Electric Company Expenses:Utilities 10 EUR
+  2012-02-03 Grocer Expenses:Food $20.00
+  2012-02-03 Grocer Expenses:Utilities $5.00
+  2012-02-03 Grocer Expenses:Utilities $5.00
+  2012-02-03 Grocer Assets:Checking $-25.00
+  2012-01-15 Electric Company Assets:Checking $-50.00
+  2012-02-15 Electric Company Assets:Checking $-55.00
+  2012-02-20 Electric Company Assets:Checking -10 EUR
+  2012-02-03 Grocer Expenses:Food $20.00
+  2012-02-03 Grocer Assets:Checking $-25.00
+-P Expenses: 3 posts, 3 amounts
+  2012-01-15 Electric Company Expenses:Utilities $105.00 + 10 EUR
+  2012-02-03 Grocer Expenses:Food $20.00
+  2012-02-03 Grocer Expenses:Utilities $5.00
+--group-by payee --group-by-cumulative -P Expenses: 3 posts, 3 amounts
+  2012-01-15 Electric Company Expenses:Utilities $105.00 + 10 EUR
+  2012-02-03 Grocer Expenses:Food $20.00
+  2012-02-03 Grocer Expenses:Utilities $5.00
+Expenses: 5 posts, 5 amounts
+  2012-01-15 Electric Company Expenses:Utilities $50.00
+  2012-02-03 Grocer Expenses:Food $20.00
+  2012-02-03 Grocer Expenses:Utilities $5.00
+  2012-02-15 Electric Company Expenses:Utilities $55.00
+  2012-02-20 Electric Company Expenses:Utilities 10 EUR
+held: 3 posts: Electric Company Expenses:Utilities $105.00 + 10 EUR, Grocer Expenses:Food $20.00, Grocer Expenses:Utilities $5.00
+end test

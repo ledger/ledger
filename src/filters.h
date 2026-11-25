@@ -994,6 +994,21 @@ protected:
   temporaries_t temps;                 ///< Temporary storage for synthetic xacts/posts.
   std::deque<post_t*> component_posts; ///< Original postings contributing to this subtotal.
 
+  /// A component posting's compound value as it was before operator()
+  /// replaced it by the posting's amount.
+  struct saved_compound_t {
+    post_t* post;
+    bool compound;
+    value_t value;
+  };
+  std::deque<saved_compound_t> saved_compounds; ///< One per component posting.
+
+  /// @brief Forget the component postings once their subtotal is reported,
+  /// giving each back the compound value it came with, so a later stream
+  /// (the next group under --group-by-cumulative) that is handed one of
+  /// them again evaluates it as this one did.
+  void forget_component_posts();
+
 public:
   subtotal_posts(post_handler_ptr handler, expr_t& _amount_expr)
       : item_handler<post_t>(std::move(handler)), amount_expr(_amount_expr) {
@@ -1026,6 +1041,7 @@ public:
     values.clear();
     temps.clear();
     component_posts.clear();
+    saved_compounds.clear();
 
     item_handler<post_t>::clear();
   }
@@ -1054,7 +1070,7 @@ class interval_posts : public subtotal_posts {
       begin_of_report_;            ///< Report begin date (-b) for anchoring empty leading periods.
   optional<date_t> end_of_report_; ///< Report end date (-e) for generating empty trailing periods.
 
-  std::deque<post_t*> all_posts; ///< All postings seen, sorted by date in flush().
+  std::deque<post_t*> all_posts; ///< Postings since the last flush(), sorted in flush().
 
   interval_posts();
 
@@ -1154,7 +1170,10 @@ class by_payee_posts : public item_handler<post_t> {
   using payee_subtotals_map = std::map<string, std::shared_ptr<subtotal_posts>>;
 
   expr_t& amount_expr;                 ///< Amount expression shared with sub-totals.
-  payee_subtotals_map payee_subtotals; ///< Per-payee subtotal_posts instances.
+  payee_subtotals_map payee_subtotals; ///< Per-payee subtotal_posts since the last flush().
+  /// Subtotals already flushed.  They own the postings they reported, which
+  /// the handlers downstream may still point at until clear().
+  std::vector<std::shared_ptr<subtotal_posts>> reported_subtotals;
 
   by_payee_posts();
 
@@ -1171,6 +1190,7 @@ public:
   void clear() override {
     amount_expr.mark_uncompiled();
     payee_subtotals.clear();
+    reported_subtotals.clear();
 
     item_handler<post_t>::clear();
   }

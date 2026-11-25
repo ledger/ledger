@@ -113,18 +113,47 @@ public:
   }
 };
 
-/// Wraps a report_t and a collect_posts filter to hold query results.
-/// Owns the full filter chain (handler_chain) so that any synthetic posts
-/// created by interval or period filters remain valid while Python iterates.
+/// A collect_posts that also records each posting's display amount: the
+/// report's --display-amount expression, which carries -X/-V exchange and
+/// other display transforms (#2158).  It is evaluated as the posting
+/// arrives, while the chain's xdata for it is intact; an error raises, as
+/// it does in every other report.
+class collect_display_posts : public collect_posts {
+  report_t& report;
+
+public:
+  std::vector<value_t> display_amounts; ///< Display amount of each entry of posts.
+
+  explicit collect_display_posts(report_t& _report) : report(_report) {
+    TRACE_CTOR(collect_display_posts, "report_t&");
+  }
+  ~collect_display_posts() override { TRACE_DTOR(collect_display_posts); }
+
+  void operator()(post_t& post) override {
+    bind_scope_t bound_scope(report, post);
+    display_amounts.push_back(report.HANDLER(display_amount_).expr.calc(bound_scope));
+    collect_posts::operator()(post);
+  }
+
+  void clear() override {
+    display_amounts.clear();
+    collect_posts::clear();
+  }
+};
+
+/// Wraps a report_t and a collect_display_posts filter to hold query
+/// results: the collected postings and their display amounts.  Owns the
+/// full filter chain (handler_chain) so that any synthetic posts created by
+/// interval or period filters remain valid while Python iterates.
 struct collector_wrapper {
   boost::shared_ptr<journal_t> journal_sp;
   report_t report;
   post_handler_ptr handler_chain; // Keeps the filter chain alive (owns synthetic temp posts)
-  post_handler_ptr posts_collector;
-  std::vector<value_t> display_amounts; ///< Report-converted amount for each collected posting.
+  std::shared_ptr<collect_display_posts> posts_collector;
 
   collector_wrapper(boost::shared_ptr<journal_t> _journal_sp, report_t& base)
-      : journal_sp(std::move(_journal_sp)), report(base), posts_collector(new collect_posts) {
+      : journal_sp(std::move(_journal_sp)), report(base),
+        posts_collector(std::make_shared<collect_display_posts>(report)) {
     TRACE_CTOR(collector_wrapper, "boost::shared_ptr<journal_t>, report_t&");
   }
   ~collector_wrapper() {
@@ -132,41 +161,11 @@ struct collector_wrapper {
     journal_sp->clear_xdata();
   }
 
-  std::size_t length() const {
-    return dynamic_cast<collect_posts*>(posts_collector.get())->length();
-  }
+  std::size_t length() const { return posts_collector->length(); }
 
-  std::vector<post_t*>::iterator begin() {
-    return dynamic_cast<collect_posts*>(posts_collector.get())->begin();
-  }
-  std::vector<post_t*>::iterator end() {
-    return dynamic_cast<collect_posts*>(posts_collector.get())->end();
-  }
-
-  void capture_display_amounts();
+  std::vector<post_t*>::iterator begin() { return posts_collector->begin(); }
+  std::vector<post_t*>::iterator end() { return posts_collector->end(); }
 };
-
-// Evaluate the report's display_amount_ expression for each collected
-// posting while xdata is still intact.  This captures any commodity
-// exchange (-X), market valuation (-V), or other display transformations
-// so that Python callers can access the report-converted amounts rather
-// than just the raw journal amounts (issue #2158).  The loop moved here
-// unchanged from py_query, so that a grouped query can capture each
-// group's amounts while that group's xdata is intact; it starts at the
-// first posting not yet captured.
-void collector_wrapper::capture_display_amounts() {
-  expr_t& display_amount_expr(report.HANDLER(display_amount_).expr);
-  collect_posts* collector = dynamic_cast<collect_posts*>(posts_collector.get());
-  for (std::size_t i = display_amounts.size(); i < collector->posts.size(); ++i) {
-    post_t* post = collector->posts[i];
-    bind_scope_t bound_scope(report, *post);
-    try {
-      display_amounts.push_back(display_amount_expr.calc(bound_scope));
-    } catch (...) {
-      display_amounts.push_back(value_t(post->amount));
-    }
-  }
-}
 
 /// Runs a Ledger query string against the journal, building the full
 /// report filter chain and collecting matching posts into a
@@ -198,44 +197,16 @@ shared_ptr<collector_wrapper> py_query(boost::shared_ptr<journal_t> journal_sp,
       args.push_back(string_value(arg));
     coll->report.parse_query_args(args, "@Journal.query");
 
-    // Build the full filter chain and store it in handler_chain.
-    // This is essential: filters like interval_posts create synthetic posts
-    // stored in their temporaries_t. By keeping handler_chain alive in
-    // collector_wrapper, we ensure those synthetic posts remain valid while
-    // Python iterates the collected results.  Under --group-by it keeps
-    // every group's chain alive (see group_chains).
-    if (!coll->report.HANDLED(group_by_)) {
-      coll->handler_chain = chain_post_handlers(coll->posts_collector, coll->report);
-    } else {
-      collector_wrapper* c = coll.get();
-      unique_ptr<post_splitter> splitter(
-          new post_splitter(std::make_shared<group_chains>(
-                                [c] { return chain_post_handlers(c->posts_collector, c->report); }),
-                            coll->report, coll->report.HANDLER(group_by_).expr));
-      // Capture the group's display amounts before its xdata is cleared.
-      // Under --group-by-cumulative the one chain's calc_posts carries its
-      // running total from the previous group's last posting, so only the
-      // accounts' xdata is cleared; their flags decide whether a row
-      // prints as virtual, and they must not carry over.
-      splitter->set_postflush_func([c](const value_t&) {
-        c->capture_display_amounts();
-        if (c->report.HANDLED(group_by_cumulative))
-          c->journal_sp->master->clear_xdata();
-        else
-          c->journal_sp->clear_xdata();
-      });
-      coll->handler_chain = post_handler_ptr(splitter.release());
-    }
-
-    coll->handler_chain = chain_pre_post_handlers(coll->handler_chain, coll->report);
-
-    journal_posts_iterator walker(*coll->report.session.journal.get());
-    pass_down_posts<journal_posts_iterator>(coll->handler_chain, walker);
-
-    // Capture display amounts while xdata is intact (see capture_display_amounts).
-    coll->capture_display_amounts();
-
-    coll->report.session.journal->clear_xdata();
+    // handler_chain keeps every filter alive, and with them every
+    // synthetic posting (interval_posts, changed_value_posts, ...) the
+    // collector points at, while Python iterates.  group_chains gives
+    // each --group-by group a chain of its own and keeps the finished
+    // ones; without --group-by it holds the one chain.  walk_posts
+    // clears the journal's xdata between groups (unless cumulative) and
+    // when the walk ends.
+    collector_wrapper* c = coll.get();
+    coll->handler_chain = coll->report.walk_posts(std::make_shared<group_chains>(
+        [c] { return chain_post_handlers(c->posts_collector, c->report); }));
   } catch (...) {
     coll->report.session.journal = save_journal;
     throw;
@@ -246,14 +217,14 @@ shared_ptr<collector_wrapper> py_query(boost::shared_ptr<journal_t> journal_sp,
 }
 
 post_t* posts_getitem(collector_wrapper& collector, long i) {
-  std::vector<post_t*>& posts =
-      dynamic_cast<collect_posts*>(collector.posts_collector.get())->posts;
+  std::vector<post_t*>& posts = collector.posts_collector->posts;
   return posts[python::py_sequence_index(i, posts.size())];
 }
 
 /// Convert the display_amounts vector to a Python list of Value objects.
 boost::python::object py_collector_display_amounts(collector_wrapper& coll) {
-  return python::to_py_list(coll.display_amounts.begin(), coll.display_amounts.end(),
+  return python::to_py_list(coll.posts_collector->display_amounts.begin(),
+                            coll.posts_collector->display_amounts.end(),
                             [](const value_t& v) -> const value_t& { return v; });
 }
 

@@ -593,6 +593,13 @@ void print_xacts::flush() {
   }
 
   out.flush();
+
+  // Every queued transaction is printed.  Under --group-by-cumulative the
+  // splitter flushes this handler again for the next group without a
+  // clear(), so start that group with nothing queued, or it would print
+  // this group's transactions a second time.
+  xacts.clear();
+  xacts_present.clear();
 }
 
 void print_xacts::operator()(post_t& post) {

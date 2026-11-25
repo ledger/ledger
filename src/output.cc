@@ -201,6 +201,14 @@ format_posts::format_posts(report_t& _report, const string& format,
 
 void format_posts::flush() {
   report.output_stream.flush();
+
+  // The stream is printed.  Under --group-by-cumulative the splitter
+  // flushes this handler again for the next group without a clear(), so
+  // that group starts as a new stream, as after clear(): its first
+  // posting prints a first line, with no separator before it, even when
+  // it belongs to the transaction this stream ended with.
+  last_xact = nullptr;
+  last_post = nullptr;
 }
 
 void format_posts::operator()(post_t& post) {
@@ -212,6 +220,11 @@ void format_posts::operator()(post_t& post) {
     // Bind the current posting into the scope so that format expressions
     // like %(account), %(amount), etc. resolve against this posting.
     bind_scope_t bound_scope(report, post);
+
+    // The payee-changed mark describes this display of the posting, so it
+    // starts unset: under --group-by-cumulative -r a later group can show
+    // a posting an earlier group showed, after another posting or first.
+    post.xdata().drop_flags(POST_EXT_PAYEE_CHANGED);
 
     // Print a group title if one was set by an upstream grouping filter.
     if (!report_title.empty()) {

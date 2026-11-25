@@ -266,8 +266,6 @@ public:
   /// @brief Run a posting-based report (register, csv, print, etc.).
   /// Assembles the filter chain, iterates all journal postings, and flushes.
   void posts_report(post_handler_ptr handler);
-  /// @brief Overload that preserves the handler chain in @a saved_chain for later use.
-  void posts_report(post_handler_ptr handler, post_handler_ptr& saved_chain);
   /// @brief Run a posting report for the listing commands (accounts, payees,
   /// tags, commodities, stats).  Applies the pre-post chain (--limit,
   /// budget/forecast, pivot), the name-changing stage (chain_transfer_handlers:
@@ -277,6 +275,24 @@ public:
   /// a --display or --only predicate that reads `total` (or the --total
   /// expression) sees each posting's own amount, not a running total.
   void posts_report_quick(post_handler_ptr handler);
+  /// @brief Walk every journal posting through the pre-post chain into
+  /// @a chain, the post stage the caller built, and flush it.  Under
+  /// --group-by a post_splitter between the two flushes @a chain once per
+  /// group, calling @a preflush before each group (when empty, the
+  /// splitter prints the group title) and @a postflush after it, then
+  /// clearing the journal's xdata unless --group-by-cumulative carries
+  /// totals into the next group; otherwise @a postflush runs once after
+  /// the walk.  Between cumulative groups the postings' xdata stays, since
+  /// calc_posts carries the running total from it, and the accounts' is
+  /// cleared, since their flags decide how a row's virtual status prints;
+  /// a @a postflush that reads the accounts' carried totals (an accounts
+  /// report) resets their display state itself instead, so this clear is
+  /// left to it.  The journal's xdata is always clear on return.
+  /// @return The assembled chain.  It owns every synthetic posting the
+  ///         walk created, so a caller that reads them later holds it.
+  post_handler_ptr walk_posts(post_handler_ptr chain,
+                              const function<void(const value_t&)>& postflush = {},
+                              const function<void(const value_t&)>& preflush = {});
   /// @brief Run a report using randomly generated postings (for testing).
   void generate_report(post_handler_ptr handler);
   /// @brief Run a report over a single transaction's postings (for xact/draft commands).

@@ -85,8 +85,8 @@ protected:
   using xacts_present_map = std::map<xact_t*, bool>;
 
   report_t& report;                ///< The report context providing options and output stream.
-  xacts_present_map xacts_present; ///< Tracks which transactions have already been queued.
-  xacts_list xacts;                ///< Ordered list of unique transactions to print.
+  xacts_present_map xacts_present; ///< Transactions queued since the last flush().
+  xacts_list xacts;                ///< Unique transactions queued since the last flush().
   bool print_raw;   ///< If true, output original source text instead of reconstructing.
   bool first_title; ///< Tracks whether a title separator is needed.
 
@@ -105,7 +105,8 @@ public:
   /// @brief Print a blank line between report groups.
   void title(const string&) override;
 
-  /// @brief Render all collected transactions and flush the output stream.
+  /// @brief Render all collected transactions, flush the output stream and
+  /// forget them, so a later flush prints only transactions queued after it.
   void flush() override;
 
   /// @brief Collect the transaction that owns this posting (deduplicated).

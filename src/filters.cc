@@ -73,7 +73,14 @@ void post_splitter::print_title(const value_t& val) {
  * invoked (typically to print a title), then all postings in the group are
  * forwarded through the post_chain, which is flushed and optionally cleared
  * (unless --group-by-cumulative is active, which preserves running totals
- * across groups).
+ * across groups).  In that mode the chain is flushed once per group without
+ * a clear(), so each filter's flush() must leave the filter ready for another
+ * stream, holding no posting it has already reported and no count of the
+ * transactions it has seen; running totals and temporaries are what carries
+ * over.  The postings keep their xdata too, and with --related a later group
+ * can be handed a posting an earlier group reported: a stage that marks a
+ * posting once per stream drops the mark when the stream ends or sets it
+ * afresh on every visit, as calc_posts does a posting's value.
  *
  * The postflush callback runs before post_chain->clear() so that an
  * accounts-report flusher can walk the account tree while any temporary
@@ -134,6 +141,14 @@ void post_splitter::operator()(post_t& post) {
  * the selection (e.g., head_count=-2 skips the first 2 transactions).
  */
 void truncate_xacts::flush() {
+  // A flush ends the stream being truncated.  The next one (the next
+  // group under --group-by-cumulative, which no clear() precedes)
+  // counts its transactions from zero.  operator() sets `completed`
+  // again right after its early flush.
+  completed = false;
+  xacts_seen = 0;
+  last_xact = nullptr;
+
   if (!posts.size())
     return;
 
@@ -494,6 +509,28 @@ void calc_posts::operator()(post_t& post) {
     xdata.count = 1;
   }
 
+  // The stripped display total this visit continues from, read before this
+  // posting's own is reset below: under --group-by-cumulative -r the posting
+  // can be last_post itself (see the next comment).
+  value_t carried_display_total;
+  const bool carry_display_total = maintain_stripped_total && calc_running_total && last_post &&
+                                   last_post->xdata().has_flags(POST_EXT_DISPLAY_TOTAL_CACHED);
+  if (carry_display_total)
+    carried_display_total = last_post->xdata().display_total;
+
+  // The value, and the stripped display total cached from it (here, or by
+  // display_filter_posts when no stripped total is kept here: -V, -X,
+  // --lots), are this visit's.  Under --group-by-cumulative, which keeps
+  // the postings' xdata between groups, --related can hand on to a later
+  // group a posting an earlier group already reported; what it holds from
+  // that visit is not a part of this one.  Nor is the mark of its account
+  // totals having counted it: this visit is one of the later group's own
+  // postings, so the group's account totals count it again, as its
+  // running total does.
+  xdata.visited_value = value_t();
+  xdata.display_total = value_t();
+  xdata.drop_flags(POST_EXT_DISPLAY_TOTAL_CACHED | POST_EXT_CONSIDERED);
+
   post.add_to_value(xdata.visited_value, amount_expr);
   xdata.add_flags(POST_EXT_VISITED);
 
@@ -515,8 +552,8 @@ void calc_posts::operator()(post_t& post) {
     // previous stripped total.  This relies on strip_annotations
     // being distributive over balance addition.
     if (maintain_stripped_total) {
-      if (last_post && last_post->xdata().has_flags(POST_EXT_DISPLAY_TOTAL_CACHED))
-        xdata.display_total = last_post->xdata().display_total;
+      if (carry_display_total)
+        xdata.display_total = std::move(carried_display_total);
 
       value_t stripped_value = xdata.visited_value.strip_annotations(what_to_keep);
       add_or_set_value(xdata.display_total, stripped_value);
@@ -853,6 +890,24 @@ void related_posts::flush() {
   }
 
   item_handler<post_t>::flush();
+
+  // The stream is reported.  The next one (the next group under
+  // --group-by-cumulative, which no clear() precedes and which keeps the
+  // postings' xdata) relates its own postings afresh and may hand on a
+  // sibling this one already handed on.  Forget this stream's postings,
+  // and drop the marks that hold only for one stream from them and their
+  // siblings: received and handled here, displayed by the report at the
+  // end of the chain, and sort_posts' cached sort keys, to which the next
+  // sort would otherwise append a second set.
+  for (post_t* post : posts)
+    for (post_t* r_post : post->xact->posts)
+      if (r_post->has_xdata()) {
+        post_t::xdata_t& xdata(r_post->xdata());
+        xdata.drop_flags(POST_EXT_RECEIVED | POST_EXT_HANDLED | POST_EXT_DISPLAYED |
+                         POST_EXT_SORT_CALC);
+        xdata.sort_values.clear();
+      }
+  posts.clear();
 }
 
 /*--- Display filtering and rounding ---*/
@@ -1758,6 +1813,26 @@ void changed_value_posts::operator()(post_t& post) {
 /*--- Subtotaling ---*/
 
 /**
+ * operator() marks each component posting compound, with its amount as the
+ * value.  That mark is of this subtotal only: under --group-by-cumulative,
+ * which keeps the postings' xdata between groups, --related can hand one of
+ * them on to a later group, whose amount expression would otherwise read the
+ * stale amount instead of evaluating the posting (with `cleared`, a bare
+ * amount added to a sequence).  Restored in reverse, so a posting handed in
+ * twice gets back what it came with the first time.
+ */
+void subtotal_posts::forget_component_posts() {
+  for (auto i = saved_compounds.rbegin(); i != saved_compounds.rend(); ++i) {
+    post_t::xdata_t& xdata(i->post->xdata());
+    xdata.compound_value = i->value;
+    if (!i->compound)
+      xdata.drop_flags(POST_EXT_COMPOUND);
+  }
+  saved_compounds.clear();
+  component_posts.clear();
+}
+
+/**
  * Emit a synthetic transaction containing one posting per accumulated
  * account/commodity pair.
  *
@@ -1788,7 +1863,7 @@ void subtotal_posts::report_subtotal(const char* spec_fmt,
         range_finish = value_date;
     }
   }
-  component_posts.clear();
+  forget_component_posts();
 
   std::ostringstream out_date;
   if (!payee) {
@@ -1846,8 +1921,10 @@ void subtotal_posts::operator()(post_t& post) {
   value_t amount;
   post.add_to_value(amount, amount_expr);
 
-  post.xdata().compound_value = value_t(post.amount);
-  post.xdata().add_flags(POST_EXT_COMPOUND);
+  post_t::xdata_t& xdata(post.xdata());
+  saved_compounds.push_back({&post, xdata.has_flags(POST_EXT_COMPOUND), xdata.compound_value});
+  xdata.compound_value = value_t(post.amount);
+  xdata.add_flags(POST_EXT_COMPOUND);
 
   // Use a composite key to distinguish virtual from non-virtual postings to
   // the same account.  A sentinel suffix '\x01' is appended for virtual
@@ -2029,6 +2106,14 @@ void interval_posts::flush() {
 
   // Tell our parent class to flush
   subtotal_posts::flush();
+
+  // Everything seen so far is reported.  Under --group-by-cumulative
+  // the splitter flushes this filter again for the next group without
+  // a clear(), so start that group from the original period with no
+  // postings, as clear() would, but keep temps: the postings reported
+  // above must outlive the report.
+  all_posts.clear();
+  interval = start_interval;
 }
 
 namespace {
@@ -2074,7 +2159,7 @@ void posts_as_equity::report_subtotal() {
     if (!is_valid(finish) || date > finish)
       finish = date;
   }
-  component_posts.clear();
+  forget_component_posts();
 
   xact_t& xact = temps.create_xact();
   xact.payee = _("Opening Balances");
@@ -2155,6 +2240,13 @@ void by_payee_posts::flush() {
 
   item_handler<post_t>::flush();
 
+  // The next stream (the next group under --group-by-cumulative, which no
+  // clear() precedes) starts with no payees.  The flushed subtotals stay
+  // alive until clear(): they own the postings just reported, which the
+  // handlers downstream (calc_posts' last posting, an accounts report's
+  // account totals, a Journal.query result) still point at.
+  for (payee_subtotals_map::value_type& pair : payee_subtotals)
+    reported_subtotals.push_back(std::move(pair.second));
   payee_subtotals.clear();
 }
 
