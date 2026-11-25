@@ -53,8 +53,7 @@ class report_t;
  *
  * Participates in the normal post filter chain, so `--begin`, `--end`,
  * `-p`, `--limit`, and other query filters apply to the reported
- * statistics.  An earlier free-function implementation walked the entire
- * journal unconditionally, ignoring all such filters (issue #742).
+ * statistics.
  */
 class report_statistics : public item_handler<post_t> {
 protected:
