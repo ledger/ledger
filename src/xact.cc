@@ -942,11 +942,10 @@ bool xact_base_t::finalize() {
               // currency, even when the gain/loss is zero (i.e. both
               // commodities have the same base-currency value).  The
               // base-currency cost is `to_cost + gain_loss`, which equals
-              // `from_cost`.  Skipping this assignment in the zero-gain case
-              // left the cost denominated in the secondary commodity, so
-              // `--basis` reported the lot in that commodity rather than the
-              // base currency -- or produced no output at all when the two
-              // sides cancelled (#3227).
+              // `from_cost`.  A zero-gain swap needs it too: otherwise the
+              // cost stays in the secondary commodity, and --basis reports
+              // the lot in that commodity, or nothing when the two sides
+              // cancel (#3227).
               *post->cost = to_cost + gain_loss;
 
               DEBUG("xact.finalize",
@@ -955,19 +954,14 @@ bool xact_base_t::finalize() {
           }
         } else if (post->has_flags(POST_COST_CALCULATED) && !post->has_flags(POST_COST_VIRTUAL) &&
                    !post->amount.annotation().has_flags(ANNOTATION_PRICE_FIXATED)) {
-          // Issue #3232: the posting acquires a commodity with a lot price
-          // whose commodity (e.g. C) differs from the cost commodity (e.g.
-          // B), and the cost was *inferred* from balancing the transaction's
-          // legs (POST_COST_CALCULATED) rather than written explicitly.
-          // exchange() above recorded the implied amount-to-cost rate
-          // (A -> B), but the declared lot price (A -> C) was never entered
-          // into the price history.  As a result a report repricing into C
-          // (`--exchange C`) could not chain B -> A -> C and silently fell
-          // back to mixed-commodity output.  Record the lot price so the
-          // valuation graph can traverse it, the same way an "@" cost would
-          // have.  This is restricted to inferred costs so that a lot's cost
-          // basis is never re-published as a spurious market price when the
-          // lot is later sold (an explicit "@" disposal).
+          // The posting acquires a commodity A with a lot price in C while
+          // its cost, inferred by balancing the legs (POST_COST_CALCULATED),
+          // is in B.  exchange() above recorded only the A -> B rate, so
+          // record the declared lot price A -> C as well, as an "@" cost
+          // would, letting `--exchange C` chain B -> A -> C (#3232).  Only
+          // inferred costs do this, so that a lot's basis is never
+          // re-published as a market price when the lot is later sold at
+          // an explicit "@" price.
           commodity_pool_t::current_pool->exchange(
               post->amount.commodity(), *post->amount.annotation().price,
               datetime_t(post->date(), time_duration(0, 0, 0, 0)));

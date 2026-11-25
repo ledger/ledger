@@ -1,0 +1,37 @@
+; Finalize's Phase 3 prices a conversion between two lots of one
+; commodity with a cost in that same commodity: it balances the
+; transaction but is not a basis.  When the lot prices are in different
+; commodities, Phase 6 cannot restate that cost in a common currency,
+; so --basis must read the lot's annotation price (EUR700), not the
+; balancing conversion (10 AAPL {$70}).  When both lot prices share a
+; currency, Phase 6 restates the cost in it (EUR-700 / EUR700).
+
+2024/01/15 * Buy stock
+    Assets:Brokerage       10 AAPL {$70.00}
+    Assets:Checking              $-700.00
+
+2024/06/01 * Re-denominate lot
+    Assets:Brokerage      -10 AAPL {$70.00}
+    Assets:Brokerage       20 AAPL {35.00 EUR}
+
+2024/07/01 * Two-for-one split
+    Assets:Brokerage      -20 AAPL {35.00 EUR}
+    Assets:Brokerage       40 AAPL {17.50 EUR}
+
+test reg --basis --columns=80 Brokerage
+24-Jan-15 Buy stock             Assets:Brokerage            $700.00      $700.00
+24-Jun-01 Re-denominate lot     Assets:Brokerage           $-700.00            0
+                                Assets:Brokerage             EUR700       EUR700
+24-Jul-01 Two-for-one split     Assets:Brokerage            EUR-700            0
+                                Assets:Brokerage             EUR700       EUR700
+end test
+
+test bal --basis --columns=80
+            $-700.00
+              EUR700  Assets
+              EUR700    Brokerage
+            $-700.00    Checking
+--------------------
+            $-700.00
+              EUR700
+end test

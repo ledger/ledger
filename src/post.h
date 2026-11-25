@@ -89,8 +89,9 @@ class account_t;
  * Ledger infers it from the other postings to balance the transaction.
  * The cost fields track currency conversions and lot prices:
  *   - cost: the total cost in the target commodity (e.g., $150 for 10 AAPL)
- *   - given_cost: the cost as originally written by the user, before
- *     per-unit conversion
+ *   - given_cost: the total cost as written (an @ price is multiplied
+ *     out by the amount), kept when finalize() later rewrites cost; a
+ *     sale that finalize() splits across lots gives each part its share
  *   - given_lot_total: the {{total}} lot price as written; the lot's
  *     annotation, shared by every posting of the lot, keeps only the
  *     per-unit price.  A posting that takes another posting's amount
@@ -111,7 +112,7 @@ public:
   0x0040 ///< Amount was computed (e.g., inferred null amount to balance the transaction).
 #define POST_COST_CALCULATED 0x0080 ///< Cost was computed rather than explicitly given by the user.
 #define POST_COST_IN_FULL                                                                          \
-  0x0100 ///< Cost was given as total cost (@@); stored internally as per-unit.
+  0x0100 ///< Cost was written as a total (@@); cost holds a total either way.
 #define POST_COST_FIXATED                                                                          \
   0x0200 ///< Cost is fixated with = indicator ({=...}), locking the lot price.
 #define POST_COST_VIRTUAL                                                                          \
@@ -123,8 +124,6 @@ public:
 #define POST_AMOUNT_USER_ANNOTATED                                                                 \
   0x4000 ///< Amount has user-supplied lot annotations (price, date, or tag).
 #define POST_AMOUNT_USER_DATE 0x8000 ///< Amount has a user-supplied lot date annotation.
-  // Note: FIFO/LIFO auto-matching is indicated by the presence of an
-  // annotation without POST_AMOUNT_USER_ANNOTATED
 
   xact_t* xact;       ///< Parent transaction; only set for posts of regular xacts.
   account_t* account; ///< Target account this posting debits or credits.
@@ -133,7 +132,7 @@ public:
   optional<expr_t> amount_expr; ///< Expression that computed the amount, if any.
   std::optional<amount_t>
       cost; ///< Total cost in the cost commodity (e.g., $1500 for 10 AAPL @ $150).
-  std::optional<amount_t> given_cost; ///< Cost as originally written, before per-unit conversion.
+  std::optional<amount_t> given_cost; ///< Total cost as written; a lot-split part holds its share.
   std::optional<amount_t> given_lot_total; ///< A {{total}} lot price as written, before
                                            ///< amount_t::parse divided it into the lot's
                                            ///< per-unit price.
@@ -203,8 +202,9 @@ public:
    * @brief The date to use for valuation purposes.
    *
    * Returns the xdata override if set, otherwise falls back to date().
-   * This allows the reporting pipeline to assign a custom valuation date
-   * (e.g., for --now or --value-date) separate from the posting's actual date.
+   * Reporting filters set the override (e.g. handle_value for subtotal
+   * and interval rows, changed_value_posts for revaluations) to value a
+   * synthetic or revalued posting as of a date other than its own.
    */
   virtual date_t value_date() const;
 

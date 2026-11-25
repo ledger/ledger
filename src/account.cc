@@ -601,7 +601,7 @@ value_t get_display_parent_account(account_t& account) {
   // An ancestor is "elided" when it has exactly 1 child to display AND
   // does not itself have ACCOUNT_EXT_TO_DISPLAY set.
   // If all ancestors are elided (e.g., account is at display depth 0),
-  // falls back to the direct structural parent to preserve existing behavior.
+  // returns the direct structural parent.
   for (account_t* acct = account.parent; acct && acct->parent; acct = acct->parent) {
     if (is_display_branch(*acct))
       return scope_value(acct);

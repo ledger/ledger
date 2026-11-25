@@ -79,8 +79,8 @@ class parse_context_t;
 struct position_t {
   /// Filesystem path of the journal file.  Held by shared_ptr so that all
   /// items parsed from the same file share a single allocation rather than
-  /// each carrying its own copy (issue: ~3 M redundant path copies for a
-  /// 1 M-xact journal).  Always non-null; defaults to empty_pathname_ptr().
+  /// each carrying its own copy.  Always non-null; defaults to
+  /// empty_pathname_ptr().
   std::shared_ptr<const path> pathname;
   /// Stream offsets are kept as std::streamoff rather than
   /// std::istream::pos_type: a pos_type carries a conversion state
@@ -193,9 +193,8 @@ public:
    * directly.  Does not copy the parent pointer (which is set
    * separately by the owning transaction).
    */
-  /// Backwards-compatible aliases.  metadata storage and types now live on
-  /// metadata_t; keeping these names available avoids touching every call
-  /// site that references `item_t::string_map` (Python bindings, etc.).
+  /// metadata_t's map types, still named through item_t at call sites
+  /// such as `item_t::string_map`.
   using string_map = metadata_t::string_map;
   using tag_data_t = metadata_t::tag_data_t;
 

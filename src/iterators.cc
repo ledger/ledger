@@ -116,12 +116,10 @@ struct create_price_xact {
 
   std::map<string, xact_t*> xacts_by_commodity; ///< One xact per commodity symbol.
 
-  // Per xact, an index of already-inserted (date, amount) pairs, used to
-  // deduplicate in O(log) instead of a linear scan of xact->posts.  A single
-  // xact for a popular price commodity (e.g. the reporting currency) can
-  // accumulate every parsed price, so the prior O(N) scan made the overall
-  // synthesis O(N^2) -- with the inner `date.date()` ptime->date conversion
-  // dominating cost.
+  // Per xact, an index of already-inserted (date, amount) pairs, so that
+  // deduplication is a lookup rather than a scan of xact->posts: one xact
+  // for a popular price commodity (e.g. the reporting currency) can
+  // accumulate every parsed price.
   std::map<string, std::map<date_t, std::vector<amount_t>>> seen_by_commodity;
 
   create_price_xact(journal_t& _journal, account_t* _account, temporaries_t& _temps,

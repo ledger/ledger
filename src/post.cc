@@ -116,8 +116,9 @@ std::optional<value_t> post_t::get_tag(const mask_t& tag_mask,
 //   primary_date(): xdata override -> posting _date -> xact date -> CURRENT_DATE
 //   aux_date():  posting aux_date -> xact aux_date
 //
-// The xdata date override lets the reporting pipeline assign custom dates
-// (e.g., for --now or period-based reporting) without modifying the journal.
+// Reporting filters (e.g. handle_value, changed_value_posts in
+// filters.cc) set the xdata date overrides to date synthetic or
+// revalued postings without modifying the journal.
 // The --aux-date flag toggles use_aux_date, making auxiliary dates primary.
 
 /**
@@ -188,7 +189,9 @@ optional<date_t> post_t::aux_date() const {
 
 /*--- Payee Resolution ---*/
 // The payee for a posting is resolved through a three-level cascade:
-//   1. Explicit _payee set via set_payee() (used by automated transactions)
+//   1. Explicit _payee, set by the parser from the posting's Payee: tag
+//      (its own or inherited from the transaction) after payee aliases
+//      are applied (journal_t::validate_payee)
 //   2. A "Payee:" metadata tag on the posting or inherited from the transaction
 //   3. The parent transaction's payee field
 //
@@ -403,10 +406,12 @@ value_t get_has_cost(post_t& post) {
  */
 value_t get_cost(post_t& post) {
   if (post.cost) {
-    // When cost was auto-calculated between lots of the same base
-    // commodity (e.g., stock splits where Phase 3 computes a lot-to-lot
-    // "exchange rate"), prefer the annotation-derived cost which
-    // represents the true basis in the cost commodity.
+    // finalize()'s Phase 3 prices a conversion between two lots of one
+    // commodity (`same_base` in xact.cc) with a cost in that same
+    // commodity, e.g. 10 AAPL {$70} for 20 AAPL {35 EUR}.  That cost
+    // balances the transaction but is not a basis.  Phase 6 restates it
+    // in the lots' price currency when both lot prices share one
+    // (#3227); when they do not, the annotation price is the basis (#630).
     if (post.has_flags(POST_COST_CALCULATED) && post.amount.has_annotation() &&
         post.amount.annotation().price &&
         post.cost->commodity().referent() == post.amount.commodity().referent())
@@ -439,10 +444,10 @@ value_t get_cost(post_t& post) {
  * When the annotation price was itself computed from the @ cost
  * (ANNOTATION_PRICE_CALCULATED), there is no separate transaction
  * price to distinguish -- annotation and cost agree -- and we fall
- * back to `post.cost` (this preserves #3009's handling for @@ costs).
+ * back to `post.cost`, which is how an @@ cost on such an amount is priced (#3009).
  *
- * With no cost at all, returns the lot-basis total from the annotation,
- * matching the previous behavior for amounts like "10 AAPL {$5}".
+ * With no cost at all, returns the lot-basis total from the annotation
+ * ($50 for "10 AAPL {$5}").
  */
 value_t get_price(post_t& post) {
   if (post.amount.is_null())
@@ -711,7 +716,7 @@ value_t fn_post_all(call_scope_t& args) {
   for (post_t* p : post.xact->posts) {
     bind_scope_t bound_scope(args, *p);
     if (p == &post && args.has(1) && !args.get<bool>(1)) {
-      // If the user specifies any(EXPR, false), and the context is a
+      // If the user specifies all(EXPR, false), and the context is a
       // posting, then that posting isn't considered by the test.
       ; // skip it
     } else if (!expr->calc(bound_scope, args.locus, args.depth).to_boolean()) {

@@ -78,9 +78,8 @@ std::optional<std::pair<std::size_t, std::size_t>> item_t::note_date_span(const 
   // where a trailing bracketed date has always moved the item -- as in
   // `; Returned clothes [2026/01/01]` (#3252).
   //
-  // Before #1644 and #1968 a colon *anywhere* in the comment disabled the
-  // directive, which broke the documented `; [=date] :tag:` forms; only the
-  // text preceding the bracket is consulted now.
+  // Only the text preceding the bracket is consulted, so the documented
+  // `; [=date] :tag:` forms keep their dates (#1644, #1968).
   const char* b = std::strchr(d, '[');
   if (!b || !(std::isdigit(static_cast<unsigned char>(*(b + 1))) || *(b + 1) == '=') ||
       std::memchr(d, ':', static_cast<std::size_t>(b - d)))

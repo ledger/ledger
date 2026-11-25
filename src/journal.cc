@@ -236,12 +236,11 @@ account_t* journal_t::register_account(string_view name, post_t* post, account_t
  * (#836).  An already_seen set tracks which names have been expanded
  * to detect and prevent infinite alias loops.
  *
- * To avoid the duplication bug reported in #3132 -- where
- * "alias Dining=Expenses:Dining" would cause a user-written
- * "Expenses:Dining:Coffee" to become
- * "Expenses:Expenses:Dining:Coffee" -- a component is skipped when
- * the portion of the name up to and including that component already
- * equals the alias target on a colon-aligned boundary.
+ * A component is skipped when the portion of the name up to and
+ * including it already equals the alias target on a colon-aligned
+ * boundary, so under "alias Dining=Expenses:Dining" the name
+ * "Expenses:Dining:Coffee" stays as written rather than becoming
+ * "Expenses:Expenses:Dining:Coffee" (#3132).
  *
  * @return The resolved account, or nullptr if no alias matched.
  */
@@ -285,10 +284,9 @@ account_t* journal_t::expand_aliases(string name) {
             j != account_aliases.end() && already_seen.count(component) == 0) {
           // Skip the expansion when the name already contains the
           // alias target as a colon-aligned prefix ending at this
-          // component.  This prevents #3132's duplication:
-          // "Expenses:Dining:Coffee" must not be rewritten using
-          // "alias Dining=Expenses:Dining" just because its middle
-          // component matches.
+          // component.  Under "alias Dining=Expenses:Dining",
+          // "Expenses:Dining:Coffee" must not be rewritten just because
+          // its middle component matches (#3132).
           const string& target = (*j).second->fullname();
           bool already_there = false;
           if (component_end >= target.size()) {
@@ -315,9 +313,7 @@ account_t* journal_t::expand_aliases(string name) {
           }
         }
 
-        // Only walk past the first component when recursive alias
-        // expansion is enabled; otherwise stop here to preserve the
-        // pre-#836 default behavior.
+        // Components past the first are expanded only under --recursive-aliases (#836).
         if (!recursive_aliases || colon == string::npos)
           break;
         pos = colon + 1;
@@ -652,7 +648,8 @@ void journal_t::extend_xact(xact_base_t* xact) {
       auto_xact->extend_xact(*xact, current_context);
   // Dispatch account-scoped check directives via the per-account index.
   // Snapshot posts after posting-generating auto_xacts have run so that
-  // generated postings are checked too (matching prior #1680 behavior).
+  // generated postings are checked too, as they are for the assertion-only
+  // auto_xacts above (#1680).
   if (!account_check_xacts.empty()) {
     posts_list initial_posts(xact->posts.begin(), xact->posts.end());
     for (post_t* post : initial_posts) {
