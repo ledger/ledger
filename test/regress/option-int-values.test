@@ -56,12 +56,12 @@ test reg --depth +1
 end test
 
 test reg -M --depth +1
-24-Jan-01 - 24-Jan-31  Expenses                       $10.25       $10.25
-                       Assets                        $-10.25            0
-24-Feb-01 - 24-Feb-29  Expenses                       $20.00       $20.00
-                       Assets                        $-20.00            0
-24-Mar-01 - 24-Mar-31  Expenses                       $30.00       $30.00
-                       Assets                        $-30.00            0
+24-Jan-01 - 24-Jan-31  Assets                        $-10.25      $-10.25
+                       Expenses                       $10.25            0
+24-Feb-01 - 24-Feb-29  Assets                        $-20.00      $-20.00
+                       Expenses                       $20.00            0
+24-Mar-01 - 24-Mar-31  Assets                        $-30.00      $-30.00
+                       Expenses                       $30.00            0
 end test
 
 test reg --meta Category --meta-width 5 --head 1

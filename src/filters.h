@@ -660,7 +660,9 @@ public:
  */
 class collapse_posts : public item_handler<post_t> {
 
-  using totals_map = std::map<account_t*, value_t>;
+  /// Per-account totals in the order each account's first posting arrives,
+  /// so the collapsed rows follow the transaction, not pointer order.
+  using totals_map = std::vector<std::pair<account_t*, value_t>>;
 
   expr_t& amount_expr;                ///< Amount expression for evaluating each posting's value.
   predicate_t display_predicate;      ///< Display predicate from --display.

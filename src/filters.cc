@@ -737,21 +737,27 @@ void collapse_posts::report_subtotal() {
       // When using --depth with --effective, group posts by both the
       // depth-truncated account and effective date, so that postings with
       // different effective dates are not incorrectly collapsed together.
-      typedef std::pair<date_t, account_t*> date_acct_key;
-      typedef std::map<date_acct_key, value_t> grouped_totals_map;
-      grouped_totals_map grouped;
+      // Rows go out by date, and within a date in the order each account's
+      // first posting arrives.
+      std::vector<std::pair<std::pair<date_t, account_t*>, value_t>> grouped;
 
       for (post_t* post : component_posts) {
         account_t* acct = post->account;
         while (acct->depth > collapse_depth && acct->parent)
           acct = acct->parent;
 
-        date_t d = post->date();
-        date_acct_key key(d, acct);
-        post->add_to_value(grouped[key], &amount_expr);
+        std::pair<date_t, account_t*> key(post->date(), acct);
+        auto i = std::find_if(grouped.begin(), grouped.end(),
+                              [&](const auto& entry) { return entry.first == key; });
+        if (i == grouped.end())
+          i = grouped.emplace(grouped.end(), key, value_t());
+        post->add_to_value(i->second, &amount_expr);
       }
+      std::stable_sort(grouped.begin(), grouped.end(), [](const auto& a, const auto& b) {
+        return a.first.first < b.first.first;
+      });
 
-      for (const grouped_totals_map::value_type& entry : grouped) {
+      for (const auto& entry : grouped) {
         date_t d = entry.first.first;
         account_t* acct = entry.first.second;
 
@@ -809,13 +815,15 @@ void collapse_posts::report_subtotal() {
 /// Find the totals bucket for an account, walking up to collapse_depth.
 value_t& collapse_posts::find_totals(account_t* account) {
   if (collapse_depth == 0)
-    return totals[global_totals_account];
+    account = global_totals_account;
+  else
+    while (account->depth > collapse_depth)
+      account = account->parent;
 
-  if (account->depth <= collapse_depth)
-    return totals[account];
-
-  // else recurse
-  return find_totals(account->parent);
+  for (totals_map::value_type& pat : totals)
+    if (pat.first == account)
+      return pat.second;
+  return totals.emplace_back(account, value_t()).second;
 }
 
 /**
