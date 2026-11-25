@@ -462,7 +462,7 @@ commodity_t& annotated_commodity_t::strip_annotations(const keep_details_t& what
                       keep_tag ? details.tag : std::nullopt);
     // A fixated price is part of a lot's identity (the pool keys on it), so
     // it has to be in the details the pool is asked for; the *_CALCULATED
-    // flags are not, and are merged below as before.
+    // flags are not, and are merged below.
     if (keep_price)
       kept.add_flags(details.flags() & ANNOTATION_PRICE_FIXATED);
 

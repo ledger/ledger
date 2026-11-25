@@ -59,9 +59,9 @@
  *   Used as a first-class flags value (e.g., as a function parameter).
  *
  * - **delegates_flags<T>**: A non-owning reference to another object's
- *   `supports_flags` member.  This is used when one object (e.g., a
- *   report filter) needs to manipulate flags owned by a different object
- *   (e.g., the report itself).
+ *   `supports_flags` member, to which every flag operation is forwarded.
+ *   commodity_t uses it so that a commodity and its annotated variants
+ *   share the flags of their one commodity_t::base_t.
  */
 #pragma once
 
@@ -75,8 +75,9 @@ namespace ledger::flags {
  *            a wider unsigned type when T is a scoped enum).
  *
  * Classes that need boolean flag bits inherit from this template to get
- * a uniform API.  For example, `post_t` inherits `supports_flags<uint8_t>`
- * and defines flag constants like `POST_VIRTUAL`, `POST_CALCULATED`, etc.
+ * a uniform API.  For example, `item_t` (and so `post_t` and `xact_t`)
+ * inherits `supports_flags<uint_least16_t>`, and post.h defines flag
+ * constants like `POST_VIRTUAL`, `POST_CALCULATED`, etc.
  */
 template <typename T = boost::uint_least8_t, typename U = T>
 class supports_flags {
@@ -170,14 +171,14 @@ public:
 /**
  * @brief Non-owning reference to another object's flags.
  *
- * When one object needs to manipulate flags owned by a different object
- * (for example, a filter modifying flags on the report that owns it),
- * it holds a `delegates_flags` that references the owner's
- * `supports_flags` member.  All flag operations are forwarded to the
- * referenced object.
+ * Holds a reference to a `supports_flags` object owned elsewhere and
+ * forwards every flag operation to it.  Its one C++ user is commodity_t,
+ * which binds it to its shared commodity_t::base_t, so that a commodity
+ * and its annotated variants read and change one set of flags (Python
+ * also exports the 16-bit instantiation as DelegatesFlags16).
  *
- * This class is noncopyable because copying a reference proxy would be
- * confusing -- move or re-bind explicitly instead.
+ * The reference is bound once, at construction, and cannot be re-bound;
+ * the class is noncopyable so that no second proxy aliases the flags.
  */
 template <typename T = boost::uint_least8_t>
 class delegates_flags : public boost::noncopyable {

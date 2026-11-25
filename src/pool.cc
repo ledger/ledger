@@ -416,18 +416,17 @@ annotated_commodity_t* commodity_pool_t::create(commodity_t& comm, const annotat
  * annotation changes every holder of the lot, which is what a `value`
  * expression applying to a lot asks for (see extend_post()).  The pool's
  * index follows: the lot gains an entry under its new annotation and keeps
- * its old one as an alias, so that a lookup by either annotation finds it
- * (while annotations were edited behind the index, only the old key did).
+ * its old one as an alias, so that a lookup by either annotation finds it.
  *
  * When another lot already carries @p details -- a posting may spell out
  * the very expression an account's `value` gives its lot -- the holders of
  * neither lot can be re-pointed, so the two lots come to carry equal
- * annotations, as they did before the index was kept consistent, and both
- * join duplicate_lots, the class a balance keeps as one component
- * (balance_t::component_key).  An entry that is only the alias of a lot
- * whose annotation has since changed again passes to this lot, which does
- * carry the annotation; a lot whose annotation changes once more leaves
- * its class (the components balances already key under it stay there).
+ * annotations, and both join duplicate_lots, the class a balance keeps as
+ * one component (balance_t::component_key).  An entry that is only the
+ * alias of a lot whose annotation has since changed again passes to this
+ * lot, which does carry the annotation; a lot whose annotation changes
+ * once more leaves its class (the components balances already key under
+ * it stay there).
  */
 void commodity_pool_t::reannotate(annotated_commodity_t& comm, const annotation_t& details) {
   DEBUG("pool.commodities", "commodity_pool_t::reannotate " << "symbol " << comm.base_symbol()
@@ -712,9 +711,8 @@ commodity_pool_t::parse_price_directive(char* line, bool do_not_add_price, bool 
     commodity_t::parse_symbol(symbol_and_price, symbol);
   } else {
     // Without a date, the symbol is still read by parse_symbol, which
-    // removes its quotes; this line used to be split at its first space,
-    // so `P "Fund A" 3.00 USD` priced a commodity named `"Fund` (issue
-    // #3321).  As before, a lone word is not a price line at all.
+    // removes its quotes, so `P "Fund A" 3.00 USD` prices `Fund A`.  A
+    // line holding only a symbol is not a price line.
     commodity_t::parse_symbol(symbol_and_price, symbol);
     if (!*symbol_and_price)
       return std::nullopt;

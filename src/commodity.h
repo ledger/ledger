@@ -120,8 +120,8 @@ protected:
 #define COMMODITY_STYLE_THOUSANDS 0x008     ///< Insert grouping separators (e.g., "1,000").
 #define COMMODITY_NOMARKET 0x010            ///< Exclude from market-price valuations (-V/-X).
 #define COMMODITY_BUILTIN 0x020             ///< Internally created (e.g., the null commodity).
-#define COMMODITY_WALKED 0x040              ///< Traversal flag for graph algorithms.
-#define COMMODITY_KNOWN 0x080               ///< Explicitly declared via a commodity directive.
+#define COMMODITY_WALKED 0x040              ///< Unused; kept as a Python constant.
+#define COMMODITY_KNOWN 0x080               ///< Set by D, N, P; by `commodity` only when strict.
 #define COMMODITY_PRIMARY 0x100             ///< This commodity has appeared as a price target.
 #define COMMODITY_SAW_ANNOTATED 0x200       ///< An annotated variant has been created.
 #define COMMODITY_STYLE_TIME_COLON 0x1000   ///< Use colon notation for time amounts.
@@ -252,8 +252,9 @@ public:
    *
    * Performs a memoized price lookup through the commodity price history
    * graph.  If no target commodity is specified, the pool's default
-   * commodity is used.  Results are cached in base->price_map; when the
-   * cache exceeds max_price_map_size, the oldest half is evicted.
+   * commodity is used.  Results are cached in base->price_map; when it
+   * holds more than max_price_map_size entries, the half with the smallest
+   * keys (the earliest moments) is erased.
    *
    * If the commodity has a value_expr, that expression is evaluated
    * instead of consulting the price graph.

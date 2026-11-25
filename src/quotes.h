@@ -50,10 +50,11 @@ std::optional<price_point_t> commodity_quote_from_script(commodity_t& commodity,
  * @brief Fetch price quotes for multiple commodities in a single script
  *        invocation.
  *
- * Invokes the getquote script with --batch, passing all commodity symbols
- * on the command line grouped by their exchange commodity.  The script is
- * expected to output one price directive per line ("P DATE SYMBOL AMOUNT")
- * for each commodity it was able to price.
+ * Invokes the getquote script as `getquote --batch EXCHANGE SYMBOL...`,
+ * where EXCHANGE is the exchange commodity's symbol, or an empty argument
+ * when there is none.  For each commodity it was able to price, the script
+ * prints one line "DATE SYMBOL AMOUNT" (a P directive without the leading
+ * P), which parse_price_directive() reads.
  *
  * If the command fails (non-zero exit) or produces no output, an empty
  * vector is returned so the caller can fall back to per-commodity fetching.

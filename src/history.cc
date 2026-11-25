@@ -453,11 +453,11 @@ void commodity_history_impl_t::map_prices(const function<void(datetime_t, const 
 
     const price_map_t& prices(get(ratiomap, edge_desc));
 
-    // The prices wanted form the [oldest, moment] range of the date-ordered
-    // map; walking the whole history made every revaluation cost as much
-    // as the edge has price points.  The upper bound is tested on each key
-    // rather than taken from upper_bound(moment), so the range stays
-    // well-formed even if a caller ever passed oldest > moment.
+    // Only the [oldest, moment] range of the date-ordered map is walked, so
+    // a revaluation costs the points in that range, not every point on the
+    // edge.  The upper bound is tested on each key rather than taken from
+    // upper_bound(moment), so the range stays well-formed even if a caller
+    // passes oldest > moment.
     for (auto it = oldest.is_not_a_date_time() ? prices.begin() : prices.lower_bound(oldest);
          it != prices.end() && it->first <= moment; ++it) {
       const datetime_t& when(it->first);

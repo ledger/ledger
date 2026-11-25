@@ -378,7 +378,7 @@ void stream_out_mpq(std::ostream& out, mpq_t quant, amount_t::precision_t precis
   // Under time-colon notation the fraction becomes the next smaller time
   // unit (0.50h -> 0:30h, meaning 30 min), rounded half up and padded with
   // zeros to the width of the fraction.  This is done in GMP: --unround can
-  // show dozens of digits, which used to overflow a machine word.  The
+  // show dozens of digits, more than a machine word holds.  The
   // scratch integers of format_mpq_exact() are free again by now.  A
   // fraction that rounds to 60 carries into the integer digits, which must
   // happen before they are counted for digit grouping.

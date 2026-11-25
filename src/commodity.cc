@@ -40,8 +40,9 @@
  *
  * This file contains the core logic for managing commodities at runtime:
  * recording and removing prices in the commodity_history graph, performing
- * memoized price lookups (with LRU-style cache eviction), downloading
- * updated quotes when --download is active, and parsing commodity symbols
+ * memoized price lookups (the memo drops its earliest-moment entries when
+ * it grows too large), downloading updated quotes when --download is
+ * active, and parsing commodity symbols
  * from both stream and C-string input.  It also implements the multi-level
  * compare_by_commodity ordering used for deterministic balance display.
  */
@@ -84,7 +85,7 @@ void commodity_t::add_price(const datetime_t& date, const amount_t& price, const
 
   pool().commodity_price_history.add_price(referent(), date, price);
 
-  base->price_map.clear(); // a price was added, invalid the map
+  base->price_map.clear(); // a price was added; invalidate the memo map
 }
 
 /**
@@ -98,7 +99,7 @@ void commodity_t::remove_price(const datetime_t& date, commodity_t& commodity) {
 
   DEBUG("history.find", "Removing price: " << symbol() << " on " << date);
 
-  base->price_map.clear(); // a price was added, invalid the map
+  base->price_map.clear(); // a price was removed; invalidate the memo map
 }
 
 void commodity_t::map_prices(const function<void(datetime_t, const amount_t&)>& fn,
@@ -158,8 +159,9 @@ std::optional<price_point_t> commodity_t::find_price_from_expr(expr_t& expr,
  *   2. Check the memoization cache for an identical (moment, oldest, target) key.
  *   3. If the commodity has a value_expr, evaluate it instead of the graph.
  *   4. Otherwise, query the commodity_history graph for the best price.
- *   5. Store the result in the cache; if the cache exceeds max_price_map_size,
- *      evict the oldest half of the entries.
+ *   5. Store the result in the cache; first, if the cache holds more than
+ *      max_price_map_size entries, erase the max_price_map_size / 2 entries
+ *      with the smallest keys (the earliest moments).
  *
  * Returns nullopt when no conversion path exists or the commodity is being
  * looked up in terms of itself.

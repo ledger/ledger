@@ -269,8 +269,8 @@ inline void justify(std::ostream& out, const std::string& str, int width, bool r
   }
 
   // The first space is inserted on its own so that a width the caller set
-  // on the stream applies to it, as it did when the spaces were written one
-  // by one (value_t::print relies on this when right-justifying).
+  // on the stream applies to it (value_t::print relies on this when
+  // right-justifying).
   int spacing = width - int(display_width(str));
   if (spacing > 0) {
     out << ' ';
