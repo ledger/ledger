@@ -1,0 +1,42 @@
+; Control characters occupy no columns when Ledger measures text.
+;
+; mk_wcwidth() gives C0 and C1 control characters and DEL a width of -1;
+; unistring::width() counts them as zero columns instead of adding -1
+; into a std::size_t.  The first payee is "Pay", U+0081 (a C1 control)
+; and "ee": five columns.  The first account is "Assets:X", two SOH
+; (0x01) bytes and "Y": nine columns, which a 12-column field pads with
+; three spaces and an 8-column field abbreviates by one column.  The
+; second account is four SOH bytes and "X:A": three columns; summing -1
+; per SOH wrapped its width around below zero, and reg aborted while
+; abbreviating it.  These characters are invisible in most editors.
+;
+; The C1 control is U+0081 and not NEL (U+0085), FS, GS or RS: Python's
+; str.splitlines() ends a line at those, and the semantic harnesses
+; (test/semantic/check_all.py, footing.py) read this journal with it.
+
+2024/01/01 Payee
+    Assets:XY    10 EUR
+    Equity
+
+2024/01/02 Opening
+    X:A    10 EUR
+    Equity
+
+test reg --format '[%-12(account)]\n' Assets
+[Assets:XY   ]
+end test
+
+test reg --format '|%-8(payee)|\n' Assets
+|Payee   |
+end test
+
+test reg --account-width 8 Assets
+24-Jan-01 Payee                 Asset:XY       10 EUR       10 EUR
+end test
+
+test reg
+24-Jan-01 Payee                 Assets:XY                    10 EUR       10 EUR
+                                Equity                      -10 EUR            0
+24-Jan-02 Opening               X:A                          10 EUR       10 EUR
+                                Equity                      -10 EUR            0
+end test
