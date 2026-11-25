@@ -1,0 +1,14 @@
+test python test/regress/python-manual-examples.py doc/ledger3.texi test/input/sample.dat
+example 1: 17 lines
+example 2: 4 lines
+example 3: 2 lines
+example 4: 3 lines
+example 5: 17 lines
+example 6: 4 lines
+example 7: python directive compiles
+example 8: 2 lines
+end test
+
+test python test/regress/python-manual-examples.py test/regress/python-manual-examples.texi test/input/sample.dat
+example 1: 2 lines
+end test

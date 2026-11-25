@@ -1,0 +1,17 @@
+@c Fixture for python-manual-examples_py.test: a shell transcript
+@c (a line beginning "$ ") is skipped and not numbered, and every
+@c other untagged example is run as Python.
+
+@node Extending with Python, Ledger for Developers, Format Strings, Top
+
+@smallexample
+$ ledger python -- -c 'print("skipped")'
+skipped
+@end smallexample
+
+@smallexample
+print("one")
+print("@{two@}")
+@end smallexample
+
+@node Ledger for Developers, Major Changes from version 2.6, Extending with Python, Top

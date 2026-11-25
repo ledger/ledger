@@ -2690,6 +2690,29 @@ $ ledger -f rewrite.dat reg
                                 Liabilities:Visa            $-10.00            0
 @end smallexample
 
+A query matches the names the journal wrote, not the rewritten ones,
+so @samp{Shopping} below still selects the posting that the report
+shows under @samp{Expenses:Online}; and the @option{--payee-rewrite}
+rule given on the command line wins over the journal's
+@code{payee-rewrite} directive, which matches the same payee:
+
+@smallexample @c input:DD8CF31
+payee-rewrite ^AMZN  Amazon
+account-rewrite ^Expenses:Shop  Expenses:Online
+
+2024/03/02 amzn digital
+    Expenses:Shopping:Books      $10.00
+    Liabilities:Visa
+@end smallexample
+
+@smallexample @c command:DD8CF31
+$ ledger --payee-rewrite 'digital=Kindle Store' reg Shopping
+@end smallexample
+
+@smallexample @c output:DD8CF31
+24-Mar-02 Kindle Store          Expenses:Online              $10.00       $10.00
+@end smallexample
+
 @item assert
 @findex assert
 @cindex assertions
@@ -4536,6 +4559,74 @@ indicate what is being desired.
 In most cases, it is simplest to either use explicit amounts in your
 valuation expressions, or just pass the arguments down to @samp{market}
 after modifying them to suit your needs.
+
+A valuation that a posting does not write in doubled parentheses
+itself, but that Ledger finds for it elsewhere, is given to the
+posting's lot when the amount has a lot annotation (a price, a date or
+a note).  Ledger takes the first of these that is given: a
+@samp{Value:} tag, the @code{value} of the posting's account,
+@option{--account-value-expr}, the @code{value} of its commodity,
+@option{--commodity-value-expr}, and the journal's top-level
+@code{value} directive or @option{--value-expr}.  The valuation then
+belongs to the lot and not to the posting: every amount of that lot,
+in any account and wherever it appears in the journal, is valued with
+it.  A lot that thereby gets
+the same annotation as a lot written with that valuation in doubled
+parentheses is the same lot, so balances, balance assertions and
+sales treat the two as one.  An amount without a lot annotation is
+instead annotated with the valuation alone.
+
+Here only @samp{Assets:Broker} gives a valuation, yet the plainly
+written lot that @samp{Assets:Retirement} bought the day before, and
+the lot @samp{Assets:Savings} writes with the valuation spelled out,
+are one lot:
+
+@smallexample @c input:BCF4DF0
+account Assets:Broker
+    value $7
+
+2020/01/01 Buy
+    Assets:Retirement    10 AAPL @{$5@} [2020/01/01]
+    Assets:Cash         $-50
+
+2020/01/02 Buy
+    Assets:Broker        10 AAPL @{$5@} [2020/01/01]
+    Assets:Cash         $-50
+
+2020/01/03 Buy
+    Assets:Savings       10 AAPL @{$5@} [2020/01/01] (($7))
+    Assets:Cash         $-50
+@end smallexample
+
+@smallexample @c command:BCF4DF0
+$ ledger bal --lots
+@end smallexample
+
+@smallexample @c output:BCF4DF0
+                             $-150
+30 AAPL @{$5@} [2020/01/01] ((@{$7@}))  Assets
+10 AAPL @{$5@} [2020/01/01] ((@{$7@}))    Broker
+               $-150    Cash
+10 AAPL @{$5@} [2020/01/01] ((@{$7@}))    Retirement
+10 AAPL @{$5@} [2020/01/01] ((@{$7@}))    Savings
+--------------------
+                             $-150
+30 AAPL @{$5@} [2020/01/01] ((@{$7@}))
+@end smallexample
+
+@smallexample @c command:120F3B4,with_input:BCF4DF0
+$ ledger bal -V
+@end smallexample
+
+@smallexample @c output:120F3B4
+                 $60  Assets
+                 $70    Broker
+               $-150    Cash
+                 $70    Retirement
+                 $70    Savings
+--------------------
+                 $60
+@end smallexample
 
 @node Automated Transactions,  , Lot value expressions, Transactions
 @section Automated Transactions
@@ -6797,15 +6888,52 @@ Posts this month
 @subsection @command{select}
 @findex select
 
-@command{select query}
-The Command @command{select query} allows generation of SQL-like queries, e.g.,
+The @command{select} command reports postings with an SQL-like query
+written after the command name:
 
-List all postings matching the query.
-This command allows to generate SQL-like queries, e.g.:
-
-@smallexample
-ledger select date,amount from posts where account=~/Income/
+@smallexample @c command:BD98897
+$ ledger -f sample.dat select date,amount from posts where account=~/Income/
 @end smallexample
+
+@smallexample @c output:BD98897
+04-May-14     -500.00€
+04-May-14     $-500.00
+04-May-14   $-1,000.00
+@end smallexample
+
+The query is made of these clauses (a keyword may be written in any
+case), beginning with the column list:
+
+@table @code
+@item @var{EXPR}, @dots{}
+The columns to print, each a value expression.  The @code{date},
+@code{payee}, @code{account}, @code{amount} and @code{total} columns
+are sized as in the @command{register} report.
+
+@item from @var{SOURCE}
+What to report: @code{posts} or @code{postings} (the default),
+@code{xacts}, @code{txns} or @code{transactions} (printed as the
+@command{print} command prints them), @code{accounts}, or
+@code{commodities}.
+
+@item where @var{EXPR}
+Report only the postings for which the value expression is true, as
+@option{--limit} does.
+
+@item display @var{EXPR}
+Show only the postings for which the value expression is true, as
+@option{--display} does.
+
+@item collect @var{EXPR}
+Use the value expression as each posting's amount, as
+@option{--amount} does.
+
+@item group by @var{EXPR}
+Report the postings in groups, as @option{--group-by} does.
+
+@item style @var{NAME}
+Accepted and ignored.
+@end table
 
 @node Command-Line Syntax, Budgeting and Forecasting, Reporting Commands, Top
 @chapter Command-Line Syntax
@@ -7505,7 +7633,8 @@ Format Codes}).
 Automatically match unannotated commodity sales against existing lot
 holdings using the specified @var{POLICY}.  Valid values are
 @samp{fifo} (match against the oldest lot first) and @samp{lifo}
-(match against the newest lot first).  When a sale spans multiple
+(match against the newest lot first); @samp{none}, the default, turns
+matching off.  When a sale spans multiple
 lots, the posting is automatically split.  If the posting also
 specifies a sale price using @samp{@@}, gain or loss is computed
 based on the matched lot's cost basis.  @xref{Automatic Lot
@@ -8277,6 +8406,39 @@ accented letters to their base letters in both the pattern and the
 text, so that @samp{cafe} matches @samp{Café}.  Only letters of the
 Latin-1 Supplement and Latin Extended-A blocks are folded, and
 @code{include} file globs are never folded.
+
+Folding applies wherever Ledger matches a regular expression against
+text: query terms, such as @samp{@@cafe} below, @code{=~} in value
+expressions, the @code{alias} patterns of a @code{payee} directive,
+and the patterns of @code{account-rewrite} and @code{payee-rewrite}.
+Each accented letter is read as one plain letter, so @samp{ß} reads
+as @samp{s} and @samp{Œ} as @samp{O}; letters outside the two blocks
+are compared as written.
+
+@smallexample @c input:5272EAD
+2024/01/05 Café Ñandú
+    Expenses:Coffee             $4.50
+    Assets:Cash
+
+2024/01/06 Cafeteria
+    Expenses:Food               $9.00
+    Assets:Cash
+
+2024/01/07 Bakery
+    Expenses:Food               $3.00
+    Assets:Cash
+@end smallexample
+
+@smallexample @c command:5272EAD
+$ ledger --ignore-diacritics reg @@cafe
+@end smallexample
+
+@smallexample @c output:5272EAD
+24-Jan-05 Café Ñandú            Expenses:Coffee               $4.50        $4.50
+                                Assets:Cash                  $-4.50            0
+24-Jan-06 Cafeteria             Expenses:Food                 $9.00        $9.00
+                                Assets:Cash                  $-9.00            0
+@end smallexample
 
 @item --immediate
 Evaluate calculations immediately rather than lazily.
@@ -10390,9 +10552,74 @@ scope it equals the running posting index, and in account scope it
 sums the postings of an account and all its subaccounts.
 
 @item subcount
+@itemx is_index
 In account scope, the number of postings affecting the account
 itself without considering subaccounts (the same value @code{n}
-returns in account scope).
+returns in account scope).  @code{is_index} is an older name for
+@code{subcount}.
+
+@item capital_gain
+For a posting that sells from a lot, that is, a negative amount with
+a lot price such as @samp{-10 AAPL @{$150.00@} @@ $250.00}, the gain
+the sale realizes: the lot's cost less the amount's market value on
+the posting's @code{value_date}, positive for a gain.  Zero for every
+other posting, and when no market price is known.
+
+@smallexample @c input:F82A918
+2024/01/01 Buy
+    Assets:Broker    10 AAPL @@ $150.00
+    Assets:Cash
+
+2024/06/01 Sell
+    Assets:Broker    -10 AAPL @{$150.00@} @@ $250.00
+    Assets:Cash      $2500.00
+    Income:Gains
+@end smallexample
+
+@smallexample @c command:F82A918
+$ ledger reg Broker --format '%(payee)  %(capital_gain)\n'
+@end smallexample
+
+@smallexample @c output:F82A918
+Buy  0
+Sell  $1000.00
+@end smallexample
+
+@item payee_changed
+True, in the @command{register} report, for a posting printed on a
+continuation line (the same transaction and date as the posting above
+it) whose payee differs from that posting's, as a @samp{Payee:} tag on
+a posting can make it.  The default register format prints the payee
+on such a line instead of leaving the column blank.  False otherwise.
+
+@item display_parent
+In account scope, the nearest ancestor that the balance report shows
+on a line of its own.  That is the account's @code{parent}, unless the
+report folds the parent into the line of its only displayed child (as
+@samp{Food:Lunch} below), in which case it is the nearest ancestor
+that is not folded.  When every ancestor is folded, as @samp{Assets}
+is into a top-level line @samp{Assets:Cash}, it is the parent all the
+same, so @option{--percent} shows that line as 100%.
+@option{--percent} divides each account's total
+by its @code{display_parent}'s, so @samp{Food:Lunch} is 25% of
+@samp{Expenses} rather than 100% of @samp{Food}:
+
+@smallexample @c input:1CECEE7
+2024/01/01 Lunch and a book
+    Expenses:Food:Lunch    $10.00
+    Expenses:Books         $30.00
+    Assets:Cash
+@end smallexample
+
+@smallexample @c command:1CECEE7
+$ ledger bal --percent Expenses
+@end smallexample
+
+@smallexample @c output:1CECEE7
+             100.00%  Expenses
+              75.00%    Books
+              25.00%    Food:Lunch
+@end smallexample
 
 @item code
 The transaction code, the text inside parentheses between the date
@@ -12655,12 +12882,21 @@ Python can be used to extend your Ledger experience.  But first,
 a word must be said about Ledger's data model, so that other things
 make sense later.
 
+The examples in this chapter are Python 3 and begin with @code{import
+ledger}.  When Ledger is built with Python support, the @code{ledger}
+module is available in two ways: built into the @command{python}
+command (@pxref{Running Python scripts}), which needs nothing
+installed, and as an extension module that @samp{make install} puts in
+Python's site-packages directory, which any Python 3 interpreter can
+import.
+
 @menu
 * Basic data traversal::
 * Raw versus Cooked::
 * Queries::
 * Embedded Python::
 * Amounts::
+* Running Python scripts::
 @end menu
 
 @node Basic data traversal, Raw versus Cooked, Extending with Python, Extending with Python
@@ -12675,6 +12911,9 @@ To make a Session useful, you must read a Journal into it, using the
 function `@code{read_journal}`.  This reads Ledger data from the given
 file, populates a Journal object within the current Session, and
 returns a reference to that Journal object.
+@code{read_journal_from_string} does the same with journal text held
+in a Python string.  Either call replaces the Journal the Session held
+before.
 
 Within the Journal live all the Transactions, Postings, and other
 objects related to your data.  There are also AutomatedTransactions
@@ -12687,18 +12926,33 @@ import ledger
 
 for xact in ledger.read_journal("sample.dat").xacts:
     for post in xact.posts:
-        print "Transferring %s to/from %s" % (post.amount, post.account)
+        print("Transferring %s to/from %s" % (post.amount, post.account))
+@end smallexample
+
+To find accounts by name, call @code{find_accounts_re} with a regular
+expression, on a Journal or on an Account.  It returns a list of every
+account at or below that point whose full name matches, parents before
+children and siblings in name order; as in a query, the match is
+case-insensitive.
+
+@smallexample
+import ledger
+
+journal = ledger.read_journal("sample.dat")
+for account in journal.find_accounts_re("^Expenses:"):
+    print(account.fullname())
 @end smallexample
 
 @node Raw versus Cooked, Queries, Basic data traversal, Extending with Python
 @section Raw versus Cooked
 
 Ledger data exists in one of two forms: raw and cooked.  Raw objects are
-what you get from a traversal like the above, and represent exactly what
-was seen in the data file.  Consider this journal:
+what you get from a traversal like the above: the transactions as the
+journal file wrote them, once Ledger has read them in.  Consider this
+journal:
 
 @smallexample @c input:validate
-= true
+= /Food/
     (Assets:Cash)    $100
 
 2012-03-01 KFC
@@ -12726,13 +12980,45 @@ While the @emph{cooked} form is:
 So the easy way to think about raw vs. cooked is that raw is the
 unprocessed data, and cooked has had all considerations applied.
 
-When you traverse a Journal by iterating over its transactions, you are
-generally looking at raw data.  In order to look at cooked data, you
-must generate a report of some kind by querying the journal:
+Reading a journal already applies some of those considerations to its
+transactions: an elided amount is filled in (@samp{$-100} above), and
+an automated transaction adds its postings to every transaction it
+matches.  @code{Transaction.posts} therefore yields all three postings
+of the transaction above, @samp{(Assets:Cash)} included, while
+@code{Transaction.raw_posts} yields only the two the journal wrote,
+leaving out every posting Ledger generated: those an automated
+transaction adds, and the extra postings an elided amount is split
+into when it balances more than one commodity.  A
+Posting's @code{is_virtual} property is true when its account is
+written in parentheses or brackets, as @samp{(Assets:Cash)} is.
 
 @smallexample
-for post in ledger.read_journal("sample.dat").query("food"):
-    print "Transferring %s to/from %s" % (post.amount, post.account)
+import ledger
+
+journal = ledger.read_journal_from_string("""
+= /Food/
+    (Assets:Cash)    $100
+
+2012-03-01 KFC
+    Expenses:Food    $100
+    Assets:Credit
+""")
+for xact in journal.xacts:
+    print(len(list(xact.posts)), len(list(xact.raw_posts)))
+    for post in xact.posts:
+        if post.is_virtual:
+            print("virtual: %s %s" % (post.amount, post.account))
+@end smallexample
+
+The rest of the cooking happens when a report runs, and to look at
+those results you must generate a report of some kind by querying the
+journal:
+
+@smallexample
+import ledger
+
+for post in ledger.read_journal("sample.dat").query("expenses"):
+    print("Transferring %s to/from %s" % (post.amount, post.account))
 @end smallexample
 
 The reason why queries iterate over postings instead of transactions is
@@ -12741,12 +13027,14 @@ apply to.  You can always get at a matching posting's transaction by
 looking at its @code{xact} member:
 
 @smallexample
+import ledger
+
 last_xact = None
 for post in ledger.read_journal("sample.dat").query(""):
     if post.xact != last_xact:
         for post in post.xact.posts:
-            print "Transferring %s to/from %s" % (post.amount,
-            post.account)
+            print("Transferring %s to/from %s" % (post.amount,
+                                                  post.account))
         last_xact = post.xact
 @end smallexample
 
@@ -12765,6 +13053,20 @@ Since a query ``cooks'' the journal it applies to, only one query may be
 active for that journal at a given time.  Once the query object is gone
 (after the for loop), then the data reverts back to its raw state.
 
+A posting's @code{amount} is always the amount the journal gave it.  The
+amount the report would display, after options such as
+@option{--market (-V)} or @option{--exchange (-X)} have converted it, is
+in the query result's @code{display_amounts} list, one Value per
+posting, in the order the query returns the postings:
+
+@smallexample
+import ledger
+
+result = ledger.read_journal("sample.dat").query("-X $ assets")
+for post, shown in zip(result, result.display_amounts):
+    print("%s shown as %s" % (post.amount, shown))
+@end smallexample
+
 @node Embedded Python, Amounts, Queries, Extending with Python
 @section Embedded Python
 
@@ -12774,7 +13076,7 @@ You can embed Python into your data files using the 'python' directive:
 python
     import os
     def check_path(path_value):
-        print "%s => %s" % (str(path_value), os.path.isfile(str(path_value)))
+        print("%s => %s" % (str(path_value), os.path.isfile(str(path_value))))
         return os.path.isfile(str(path_value))
 
 tag PATH
@@ -12789,7 +13091,7 @@ tag PATH
 Any Python functions you define this way become immediately available as
 valexpr functions.
 
-@node Amounts,  , Embedded Python, Extending with Python
+@node Amounts, Running Python scripts, Embedded Python, Extending with Python
 @section Amounts
 
 When numbers come from Ledger, like post.amount, the type of the value
@@ -12799,11 +13101,34 @@ commodity.  If you need to create sums of multiple commodities, use
 a Balance.  For example:
 
 @smallexample
-total = Balance()
+import ledger
+
+total = ledger.Balance()
 for post in ledger.read_journal("sample.dat").query(""):
     total += post.amount
-print total
+print(total)
 @end smallexample
+
+@node Running Python scripts,  , Amounts, Extending with Python
+@section Running Python scripts
+@findex python
+
+The @command{python} command runs Python with the @code{ledger} module
+built in, so a script needs no installed module:
+
+@table @code
+@item ledger python
+Start an interactive Python interpreter.
+
+@item ledger python @var{FILE} [@var{ARG}@dots{}]
+Run the script @var{FILE}.  @code{sys.argv} holds @var{FILE} followed
+by the @var{ARG}s.
+
+@item ledger python -- -c @var{CODE}
+Run the Python statements @var{CODE}, as @samp{python3 -c} does.  The
+@samp{--} is needed because Ledger would otherwise read @samp{-c} as
+its own @option{--current} option.
+@end table
 
 @node Ledger for Developers, Major Changes from version 2.6, Extending with Python, Top
 @chapter Ledger for Developers
