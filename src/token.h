@@ -71,8 +71,10 @@ namespace ledger {
  * token_t is a mutable, non-copyable struct reused by the parser as a
  * one-token lookahead buffer.  Each call to next() reads characters from
  * the input stream and populates @c kind, @c symbol, @c value, and
- * @c length.  The parser can push the token back (via rewind()) to let
- * the next precedence level re-examine it.
+ * @c length.  A precedence level that reads a token belonging to its
+ * caller hands it back with parser_t::push_token(), which only sets
+ * parser_t::use_lookahead so the next parser_t::next_token() returns this
+ * same token without reading the stream.
  *
  * Design note: a single token object is reused rather than allocated per
  * token because expression parsing is a hot path during report generation.
@@ -208,11 +210,14 @@ struct expr_t::token_t : public noncopyable {
   void next(std::istream& in, const parse_flags_t& flags);
 
   /**
-   * @brief Push this token back into the stream by seeking backwards.
+   * @brief Seek the stream back over this token's text.
    *
-   * Moves the stream position back by @c length characters so the token
-   * can be re-read.  Used by the parser when a precedence level decides
-   * the token belongs to the caller.
+   * Moves the stream position back by @c length characters.  Called only
+   * by parser_t::parse(), once the expression is complete, to return an
+   * unused lookahead token to the stream, so a caller that parses a prefix
+   * of a longer stream (PARSE_PARTIAL, PARSE_SINGLE) reads on from just
+   * after the expression.  Pushback between precedence levels never seeks;
+   * it is parser_t::push_token().
    *
    * @param in  The input stream to rewind.
    */

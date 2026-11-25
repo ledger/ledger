@@ -41,19 +41,30 @@
  * @ingroup expr
  *
  * The expression engine evaluates identifiers like `amount`, `total`,
- * `account`, and `payee` by looking them up through a chain of scope
- * objects.  Each scope in the chain represents a different level of the
- * ledger data model:
+ * `account`, and `payee` by calling scope_t::lookup().  A report evaluates
+ * an expression for one journal item at a time, through a bind_scope_t
+ * that joins the report to that item:
  *
  * @verbatim
- *   post_t  -->  xact_t  -->  item_t  -->  session_t  -->  global_scope_t
- *   (posting)   (transaction) (common)     (journal/options) (built-in functions)
+ *   bind_scope_t(report_t, post_t | xact_t | account_t)
+ *     1. the item:  post_t::lookup or xact_t::lookup, each falling through
+ *                   to item_t::lookup (a C++ base-class call, not a chain
+ *                   link), or account_t::lookup
+ *     2. report_t::lookup: session_t::lookup first (session options and
+ *                   functions, then symbols `define`d in the session), then
+ *                   report names
  * @endverbatim
  *
- * When the expression engine encounters an IDENT node (e.g., `amount`),
- * it calls scope_t::lookup() on the innermost scope.  If that scope does
- * not recognize the name, it delegates to its parent via child_scope_t,
- * walking up the chain until the symbol is found or the chain is exhausted.
+ * global_scope_t is not on that chain.  Command and option dispatch
+ * (global_scope_t::execute_command) uses bind_scope_t(global_scope_t,
+ * report_t), which tries report_t and then the global options and
+ * precommands.
+ *
+ * Only child_scope_t subclasses delegate to a parent.  item_t (the base
+ * class of post_t and xact_t), account_t, report_t and global_scope_t
+ * derive scope_t directly, and session_t derives symbol_scope_t with no
+ * parent; each returns nullptr for a name it does not know, and the
+ * bind_scope_t then asks its parent.
  *
  * This design allows each data-model type (post_t, xact_t, account_t) to
  * expose its own fields as expression variables without the expression
@@ -233,9 +244,9 @@ public:
  * implements the chain-of-responsibility pattern: if a lookup is not
  * handled by a derived class, it automatically propagates to the parent.
  *
- * Most data-model types (post_t, xact_t, account_t) inherit from
- * child_scope_t (via item_t) and override lookup() to provide their
- * own fields while delegating unknown names to the parent.
+ * The data-model types (item_t with its subclasses post_t and xact_t, and
+ * account_t) are not child scopes: they derive scope_t directly and are
+ * joined to a parent by a bind_scope_t.
  */
 class child_scope_t : public noncopyable, public scope_t {
 public:
@@ -415,8 +426,13 @@ inline T& find_scope(scope_t& scope) {
  * local table is checked first; if the symbol is not found, the lookup
  * delegates to the parent via child_scope_t.
  *
- * This scope type is used by session_t and report_t to store option
- * handlers, commands, and user-defined functions.
+ * session_t derives from it to hold the symbols `define`d in a session
+ * (report_t::define forwards there); its options and built-in functions are
+ * answered by session_t::lookup itself, ahead of the symbol table.
+ * Short-lived instances hold lambda parameters
+ * (op_t::compile, call_lambda), SCOPE-block locals (op_t::compile),
+ * expr_t's accumulator variables, and a script's file-local symbols
+ * (script_command).  report_t derives scope_t, not symbol_scope_t.
  */
 class symbol_scope_t : public child_scope_t {
   using symbol_map = std::map<symbol_t, expr_t::ptr_op_t>;

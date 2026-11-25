@@ -89,13 +89,13 @@ public:
   using ptr_op_t = expr_t::ptr_op_t;
 
 private:
-  mutable int refc; ///< Intrusive reference count for boost::intrusive_ptr (every lot valued
-                    ///< by one `value` expression shares its op_t, so a short overflowed).
+  mutable int refc; ///< Intrusive reference count for boost::intrusive_ptr; an int because
+                    ///< every lot valued by one `value` expression shares this op_t.
   ptr_op_t left_;   ///< Left child (operand) or compiled definition for IDENT nodes.
 
   /// Polymorphic payload -- the active alternative depends on @c kind:
   ///  - monostate: no payload yet (terminal nodes only; operators hold a ptr_op_t)
-  ///  - ptr_op_t:  right child for binary operators, or resolved def for IDENT
+  ///  - ptr_op_t:  right child for binary operators (an IDENT keeps its resolved def in left_)
   ///  - value_t:   literal constant for VALUE nodes
   ///  - string:    identifier name for IDENT nodes
   ///  - func_t:    native C++ callable for FUNCTION terminals
@@ -278,7 +278,7 @@ public:
 
   /// @brief Access the ptr_op_t stored in the data variant (the right child).
   ptr_op_t& as_op_lval() {
-    assert(kind > TERMINALS || is_ident());
+    assert(kind > TERMINALS);
     return std::get<ptr_op_t>(data);
   }
   const ptr_op_t& as_op() const { return const_cast<op_t*>(this)->as_op_lval(); }
@@ -324,9 +324,12 @@ private:
   friend void intrusive_ptr_add_ref(const op_t* op);
   friend void intrusive_ptr_release(const op_t* op);
 
-  /// @brief Create a shallow copy of this node, optionally overriding children.
+  /// @brief Create a new node of the same kind with exactly the given children.
   /// Terminal payloads (VALUE, IDENT, FUNCTION, SCOPE) are copied by value.
-  /// If @p _left or @p _right are null, the originals are preserved.
+  /// The new node's children are @p _left and @p _right; a null argument
+  /// leaves that child empty (this node's children are never carried over).
+  /// compile() relies on this: copy() with no arguments drops an IDENT's
+  /// resolved definition from left_.
   ptr_op_t copy(const ptr_op_t& _left = nullptr, const ptr_op_t& _right = nullptr) const {
     ptr_op_t node(new_node(kind, _left, _right));
     if (kind < TERMINALS)

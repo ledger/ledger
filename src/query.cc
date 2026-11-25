@@ -51,28 +51,31 @@
  *    note), while the `expr` keyword passes raw expressions through.
  *
  * 3. **Section splitting** (parse_query_expr): After the main predicate,
- *    keywords like `show`, `only`, `bold`, and `for`/`since`/`until`
- *    start new sections, each producing a separate predicate stored in
- *    the query_map.
+ *    `show`, `only` and `bold` each start a section whose terms become a
+ *    separate predicate string, and `for`/`since`/`until` start a period
+ *    whose words are joined into one string; all are stored in query_map.
  *
  * ## EBNF Grammar
  *
  * The query sub-language parsed by the recursive-descent parser below:
  *
  * @verbatim
- *   query       = or_expr { section or_expr } ;
- *   section     = "show" | "only" | "bold" | "for" | "since" | "until" ;
+ *   query       = [ terms ] { section } ;
+ *   terms       = or_expr { or_expr } ;           (* adjacent or_exprs are implicitly ORed *)
+ *   section     = ( "show" | "only" | "bold" ) [ terms ]
+ *               | ( "for" | "since" | "until" ) { WORD }
+ *               ;                                 (* WORDs up to the next unquoted section
+ *                                                    keyword form one period string *)
  *
  *   or_expr     = and_expr { ( "or" | "|" ) and_expr } ;
- *   and_expr    = unary_expr { ( "and" | "&" ) unary_expr }
- *               | unary_expr unary_expr           (* implicit AND between adjacent terms *)
- *               ;
+ *   and_expr    = unary_expr { ( "and" | "&" ) unary_expr } ;
  *   unary_expr  = ( "not" | "!" ) term
  *               | term
  *               ;
  *
  *   term        = field_prefix term                (* changes matching context *)
- *               | "(" query ")"
+ *               | "(" [ terms ] ")"                (* no sections inside parentheses; *)
+ *                                                  (* an empty group ends the terms *)
  *               | TERM                             (* atom: pattern, comparison, or metadata *)
  *               ;
  *   field_prefix = "payee" | "desc" | "@"          (* sets context to payee *)
@@ -98,7 +101,9 @@
  *   (*     text → parsed as a raw value expression                       *)
  * @endverbatim
  *
- * Operator precedence (lowest to highest): `or`, `and`/implicit, `not`, atoms.
+ * Operator precedence (lowest to highest): implicit OR of adjacent terms,
+ * `or`, `and`, `not`, atoms.  So `a and b c` is `(a & b) | c`, at the top
+ * level, inside a show/only/bold section, and inside parentheses alike.
  */
 
 #include <system.hh>
@@ -156,9 +161,15 @@ static bool ends_with_comparison(const string& ident) {
 /// @param tok_context  Determines which characters act as boundaries.
 ///                     In TOK_EXPR context, `(`, `&`, `|`, etc. are NOT
 ///                     boundaries (they're part of the expression).
-/// @param consume_next When true (set by `\\` escape), the next operator
-///                     character is consumed into the identifier instead
-///                     of acting as a boundary.
+/// @param consume_next When true, every operator character for the rest of
+///                     this identifier is consumed into it instead of
+///                     ending it.  The caller sets it after a `\` escape,
+///                     and the scan sets it itself on reaching a `)` that
+///                     closes a `(` already in the identifier (only in
+///                     TOK_EXPR context, as in `expr foo(x)`, since
+///                     elsewhere `(` ends the identifier).  A `)` that
+///                     closes nothing ends the identifier.  The flag is
+///                     never cleared.
 string query_t::lexer_t::scan_identifier(token_t::kind_t tok_context, bool consume_next) {
   string ident;
   bool hit_boundary = false;
@@ -293,8 +304,7 @@ query_t::lexer_t::next_token(query_t::lexer_t::token_t::kind_t tok_context) {
   }
 
   // Main scanning loop: each iteration processes one character or advances
-  // to the next argument.  Whitespace is consumed by looping back to the
-  // top, replacing the former `goto resume`.
+  // to the next argument; whitespace is skipped by looping back to the top.
   while (true) {
     // Advance to the next argument string if the current one is exhausted.
     if (arg_i == arg_end) {
@@ -366,9 +376,7 @@ query_t::lexer_t::next_token(query_t::lexer_t::token_t::kind_t tok_context) {
         return token_t(token_t::TOK_NOTE);
       }
       ++arg_i;
-      // Peek for a second '=' to produce the TOK_EQEQ token, so `==` is a
-      // single atomic token instead of two TOK_EQs requiring look-ahead hacks
-      // at the parser level.
+      // A second '=' makes the single TOK_EQEQ token (`==`).
       if (arg_i != arg_end && *arg_i == '=') {
         ++arg_i;
         return token_t(token_t::TOK_EQEQ);
@@ -779,13 +787,12 @@ expr_t::ptr_op_t query_t::parser_t::parse_or_chain(lexer_t::token_t::kind_t tok_
 /**
  * Parse a complete query expression, handling section keywords.
  *
- * The top-level grammar is:
- *   query := or_expr* ['show' or_expr*] ['only' or_expr*]
- *            ['bold' or_expr*] ['for'|'since'|'until' date_terms...]
+ * Grammar: `query` and `terms` in the EBNF at the top of this file.
  *
- * Multiple consecutive or_expr results at the top level are implicitly
- * OR-ed together (bare terms like `food groceries` mean
- * `account =~ /food/ | account =~ /groceries/`).
+ * Consecutive or_expr results are implicitly OR-ed together, at the top
+ * level, inside a show/only/bold section, and inside parentheses (the
+ * subexpression case), so bare terms like `food groceries` mean
+ * `account =~ /food/ | account =~ /groceries/`.
  *
  * When not parsing a subexpression, section keywords split the query
  * into separate predicates stored in query_map.
