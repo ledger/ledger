@@ -703,23 +703,6 @@ void report_t::xact_report(post_handler_ptr handler, xact_t& xact) {
 }
 
 namespace {
-/// @brief Pre-flush functor for grouped account reports: prints group titles.
-struct accounts_title_printer {
-  acct_handler_ptr handler;
-  report_t& report;
-
-  accounts_title_printer(acct_handler_ptr _handler, report_t& _report)
-      : handler(std::move(_handler)), report(_report) {}
-
-  void operator()(const value_t& val) {
-    if (!report.HANDLED(no_titles)) {
-      std::ostringstream buf;
-      val.print(buf);
-      handler->title(buf.str());
-    }
-  }
-};
-
 /// @brief Post-flush functor for account reports: walks the account tree and passes
 /// accounts to the handler, applying display predicates and sort expressions.
 struct accounts_flusher {
@@ -736,33 +719,22 @@ struct accounts_flusher {
     report.HANDLER(display_total_).expr.mark_uncompiled();
     report.HANDLER(revalued_total_).expr.mark_uncompiled();
 
+    optional<predicate_t> pred;
     if (report.HANDLED(display_)) {
       DEBUG("report.predicate", "Display predicate = " << report.HANDLER(display_).str());
-      if (!report.HANDLED(sort_)) {
-        basic_accounts_iterator iter(*report.session.journal->master);
-        pass_down_accounts<basic_accounts_iterator>(
-            handler, iter, predicate_t(report.HANDLER(display_).str(), report.what_to_keep()),
-            report);
-      } else {
-        expr_t sort_expr(report.HANDLER(sort_).str());
-        sort_expr.set_context(&report);
-        sorted_accounts_iterator iter(*report.session.journal->master, sort_expr, report,
-                                      report.HANDLED(flat));
-        pass_down_accounts<sorted_accounts_iterator>(
-            handler, iter, predicate_t(report.HANDLER(display_).str(), report.what_to_keep()),
-            report);
-      }
+      pred = predicate_t(report.HANDLER(display_).str(), report.what_to_keep());
+    }
+
+    // pass_down_accounts reads the context only when a predicate is set.
+    if (!report.HANDLED(sort_)) {
+      basic_accounts_iterator iter(*report.session.journal->master);
+      pass_down_accounts<basic_accounts_iterator>(handler, iter, pred, report);
     } else {
-      if (!report.HANDLED(sort_)) {
-        basic_accounts_iterator iter(*report.session.journal->master);
-        pass_down_accounts<basic_accounts_iterator>(handler, iter);
-      } else {
-        expr_t sort_expr(report.HANDLER(sort_).str());
-        sort_expr.set_context(&report);
-        sorted_accounts_iterator iter(*report.session.journal->master, sort_expr, report,
-                                      report.HANDLED(flat));
-        pass_down_accounts<sorted_accounts_iterator>(handler, iter);
-      }
+      expr_t sort_expr(report.HANDLER(sort_).str());
+      sort_expr.set_context(&report);
+      sorted_accounts_iterator iter(*report.session.journal->master, sort_expr, report,
+                                    report.HANDLED(flat));
+      pass_down_accounts<sorted_accounts_iterator>(handler, iter, pred, report);
     }
 
     // The next cumulative group adds to these totals; walk_posts clears xdata otherwise.
@@ -792,7 +764,13 @@ void report_t::accounts_report(
   // walk created, alive through the flush that walks the account tree.
   walk_posts(chain_post_handlers(post_handler_ptr(new ignore_posts), *this,
                                  /* for_accounts_report= */ true),
-             accounts_flusher(handler, *this), accounts_title_printer(handler, *this));
+             accounts_flusher(handler, *this), [handler, this](const value_t& val) {
+               if (!HANDLED(no_titles)) {
+                 std::ostringstream buf;
+                 val.print(buf);
+                 handler->title(buf.str());
+               }
+             });
 }
 
 namespace {

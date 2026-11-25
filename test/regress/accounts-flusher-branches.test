@@ -1,0 +1,72 @@
+; An account report walks the account tree once per --group-by group, with
+; or without a --display predicate and with or without a --sort order.
+; These blocks pin all four combinations through the group-by path.  Each
+; sorted block sorts by -amount, an order that differs from the unsorted
+; walk in every group, so dropping the sort fails it.
+
+2024/01/05 Payee A
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/20 Payee B
+    Expenses:Rent    $5.00
+    Expenses:Food    $1.00
+    Assets:Cash
+
+2024/02/03 Payee C
+    Expenses:Food    $2.00
+    Assets:Cash
+
+test bal --group-by payee --display 'account =~ /Food|Rent/' -S -amount --flat --no-total
+Payee A
+              $10.00  Expenses:Food
+
+Payee B
+               $5.00  Expenses:Rent
+               $1.00  Expenses:Food
+
+Payee C
+               $2.00  Expenses:Food
+end test
+
+test bal --group-by payee --display 'account =~ /Food|Rent/' --flat --no-total
+Payee A
+              $10.00  Expenses:Food
+
+Payee B
+               $1.00  Expenses:Food
+               $5.00  Expenses:Rent
+
+Payee C
+               $2.00  Expenses:Food
+end test
+
+test bal --group-by payee -S -amount --flat --no-total
+Payee A
+              $10.00  Expenses:Food
+             $-10.00  Assets:Cash
+
+Payee B
+               $5.00  Expenses:Rent
+               $1.00  Expenses:Food
+              $-6.00  Assets:Cash
+
+Payee C
+               $2.00  Expenses:Food
+              $-2.00  Assets:Cash
+end test
+
+test bal --group-by payee --flat --no-total
+Payee A
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+
+Payee B
+              $-6.00  Assets:Cash
+               $1.00  Expenses:Food
+               $5.00  Expenses:Rent
+
+Payee C
+              $-2.00  Assets:Cash
+               $2.00  Expenses:Food
+end test

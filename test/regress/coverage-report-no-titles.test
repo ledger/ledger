@@ -1,4 +1,4 @@
-; Test --no-titles with --group-by (exercises report.cc accounts_title_printer no_titles path)
+; Test --no-titles with --group-by (exercises the no_titles path of accounts_report's group-title printer)
 
 2024/01/15 * Grocery Store
     Expenses:Food              $50.00
