@@ -1041,8 +1041,10 @@ void amount_t::in_place_round() {
  *
  * Unlike in_place_round() which only affects display, this function
  * actually rounds the underlying rational to the commodity's decimal
- * precision when the stored precision exceeds it.  Used to produce
- * amounts that match what the user would see on a bank statement.
+ * precision (half away from zero) when that precision is nonzero and
+ * the stored precision exceeds it.  It backs the roundto_commodity()
+ * value expression, which --round applies to each posting so that a sum
+ * matches a statement whose lines were each rounded to the cent.
  */
 void amount_t::in_place_round_to_commodity_precision() {
   if (!quantity)
@@ -1058,12 +1060,15 @@ void amount_t::in_place_round_to_commodity_precision() {
       return;
     }
     // A cleared keep_precision flag is a post-condition that we rounded to
-    // a meaningful commodity precision (the #1765 invariant: rounded(x)
-    // must not drift if the commodity widens later).  When comm_prec == 0
-    // there is no such precision to round to, so clearing the flag is
-    // unearned -- it would erase the value's actual fractional content,
-    // making a --basis cost like 20 ETH * `@ $5.025` = $100.500 render
-    // as $100.  Preserve the flag in that case (#3187).
+    // a meaningful commodity precision (the #1765 invariant: a rounded
+    // value must not drift if the commodity widens later).  When the
+    // commodity's precision is 0 (as for a $ seen only inside `@` price
+    // annotations) nothing was rounded, so clearing the flag is unearned:
+    // it would hide the value's fractional content, and --round --basis
+    // would show a cost of 20 * `@ $5.025` = $100.500 as $101.  Preserve
+    // the flag in that case (#3187).  This tests the stored precision
+    // alone.  The display-only rounded() behind --basis has a guard of its
+    // own in report_t::fn_rounded; the two sit on different paths.
     if (comm_prec == 0 && keep_precision() && quantity->prec > 0)
       return;
   }

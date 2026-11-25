@@ -1,0 +1,46 @@
+; roundto_commodity() -- the function behind --round -- physically rounds
+; the stored value to its commodity's precision (half away from zero), so
+; unrounded() cannot bring the dropped digits back.  rounded() only clears
+; keep_precision: unrounded(rounded(x)) shows every digit again (#3220).
+; This covers amount_t::in_place_round_to_commodity_precision and its
+; value_t AMOUNT, BALANCE and SEQUENCE dispatch.
+;
+; CHF appears only inside a price annotation, so the journal gives it no
+; precision.  The cost 20 * 5.025 CHF = 100.500 CHF keeps its precision,
+; so roundto_commodity() has no precision to round to and must leave the
+; fraction alone rather than print it as CHF100 or CHF101 (#3187).  The
+; last two blocks reach that guard through roundto_commodity(cost) and
+; through --round over --basis.
+
+2024/01/01 Setup
+    Expenses:Food    $10.00
+    Expenses:Food    10.00 EUR
+    Assets:Cash
+
+2024/01/02 Buy
+    Assets:Crypto    20 ETH @ 5.025 CHF
+    Assets:Cash
+
+test reg Food --format '%(unrounded(roundto_commodity(amount * 0.1255)))|%(unrounded(roundto_commodity(-amount * 0.1255)))|%(unrounded(rounded(amount * 0.1255)))\n'
+$1.26|$-1.26|$1.255
+1.26 EUR|-1.26 EUR|1.255 EUR
+end test
+
+test bal Food --balance-format '%(unrounded(roundto_commodity(total * 0.1255)))\n---\n'
+$1.26
+1.26 EUR
+---
+end test
+
+test reg Food --format '%(unrounded(roundto_commodity(to_sequence(amount * 0.1255))))\n'
+($1.26)
+(1.26 EUR)
+end test
+
+test reg Crypto --format '%(roundto_commodity(cost))\n'
+CHF100.5
+end test
+
+test reg Crypto --round -B
+24-Jan-02 Buy                   Assets:Crypto              CHF100.5     CHF100.5
+end test

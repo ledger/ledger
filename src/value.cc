@@ -1699,25 +1699,32 @@ void value_t::in_place_cast(type_t cast_type) {
 // ----------------------------------------------------------------------
 // Section 6: Unary operations (negate, not, abs, rounding family)
 //
-// These operations transform a single value in place.  They share a
-// common structure: a switch over the value's type delegates to the
-// corresponding operation on amount_t or balance_t, while INTEGER is
-// handled directly and SEQUENCE applies the operation element-wise.
+// These operations transform a single value in place.  Each dispatches on
+// the value's type to the corresponding amount_t or balance_t operation;
+// negate, not and abs keep their own switches, while the rounding family
+// shares one, round_numeric(), which leaves INTEGER alone and applies the
+// operation element-wise to a SEQUENCE.
 //
 // The rounding family deserves special attention because it determines
 // how amounts appear in reports:
-//   - in_place_round()       -- round to the commodity's internal precision
-//   - in_place_roundto(n)    -- round to exactly n decimal places
-//   - in_place_truncate()    -- truncate (round toward zero)
-//   - in_place_floor()       -- round toward negative infinity
-//   - in_place_ceiling()     -- round toward positive infinity
-//   - in_place_display_round() -- round to the commodity's display precision
-//   - in_place_round_to_commodity_precision() -- round to commodity precision
-//   - in_place_unround()     -- restore full internal precision
+//   - in_place_round()       -- clear keep_precision so the value displays
+//                               at its commodity's precision; the stored
+//                               value is unchanged (#3220)
+//   - in_place_roundto(n)    -- physically round to n decimal places,
+//                               half away from zero
+//   - in_place_truncate()    -- physically truncate toward zero at the
+//                               display precision
+//   - in_place_floor()       -- round toward negative infinity to an integer
+//   - in_place_ceiling()     -- round toward positive infinity to an integer
+//   - in_place_display_round() -- physically round to the display precision
+//   - in_place_round_to_commodity_precision() -- physically round the stored
+//                               value to the commodity's precision (--round)
+//   - in_place_unround()     -- set keep_precision so every stored digit
+//                               displays
 //
-// These correspond to the expression functions round(), roundto(),
-// truncate(), floor(), ceiling(), and unround() available in format
-// strings and value expressions.
+// These back the expression functions round()/rounded(), roundto(),
+// truncate()/truncated(), floor(), ceiling(), roundto_commodity() and
+// unround()/unrounded().
 // ----------------------------------------------------------------------
 
 /// @brief Negate this value in place (unary minus).
@@ -2171,12 +2178,13 @@ value_t value_t::abs() const {
   return NULL_VALUE;
 }
 
-/// @brief Round to the commodity's internal precision.
+/// @brief Display-only rounding: clear keep_precision so the value prints
+/// at its commodity's precision.
 ///
-/// For AMOUNT, this rounds to the number of decimal places defined by the
-/// commodity (e.g., 2 for USD).  For BALANCE, each component amount is
-/// rounded independently.  INTEGER values are already integral and need
-/// no rounding.  For SEQUENCE, rounding is applied element-wise.
+/// For AMOUNT this delegates to amount_t::in_place_round(), which leaves
+/// the stored rational unchanged (#3220), so round(x) still compares equal
+/// to x.  For BALANCE each component is handled independently.  INTEGER
+/// needs nothing.  For SEQUENCE the operation is applied element-wise.
 void value_t::in_place_round() {
   if (!round_numeric(*this, [](auto& x) { x.in_place_round(); })) {
     add_error_context(_f("While rounding %1%:") % *this);
@@ -2191,7 +2199,9 @@ void value_t::in_place_roundto(int places) {
   round_numeric(*this, [places](auto& x) { x.in_place_roundto(places); });
 }
 
-/// @brief Truncate toward zero (remove fractional part without rounding).
+/// @brief Truncate toward zero at the display precision
+/// (amount_t::display_precision()); a value with keep_precision set keeps
+/// all of its digits.
 void value_t::in_place_truncate() {
   if (!round_numeric(*this, [](auto& x) { x.in_place_truncate(); })) {
     add_error_context(_f("While truncating %1%:") % *this);
@@ -2212,11 +2222,14 @@ void value_t::in_place_display_round() {
   }
 }
 
-/// @brief Round to the precision defined by the commodity's usage history.
+/// @brief Physically round the stored value to the commodity's precision.
 ///
-/// This differs from in_place_round() in that it uses the precision
-/// observed from actual transactions involving the commodity, rather than
-/// a fixed internal precision.
+/// Unlike in_place_round(), which only changes how a value displays, this
+/// rounds the stored rational (half away from zero), so later sums and
+/// precision widening see the rounded figure.  It backs roundto_commodity(),
+/// which --round applies to each posting (report_t::fn_roundto_commodity).
+/// A commodity whose precision is 0 is the exception (#3187), documented
+/// at amount_t::in_place_round_to_commodity_precision().
 void value_t::in_place_round_to_commodity_precision() {
   if (!round_numeric(*this, [](auto& x) { x.in_place_round_to_commodity_precision(); })) {
     add_error_context(_f("While rounding %1% to commodity precision:") % *this);

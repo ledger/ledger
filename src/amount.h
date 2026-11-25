@@ -384,14 +384,18 @@ public:
   }
   void in_place_round();
 
-  /** Like rounded(), but also physically truncates the stored value to the
-      commodity's display precision using round-half-away-from-zero.  Unlike
-      rounded(), which only clears the keep_precision flag (leaving the full-
-      precision mpq intact), this method modifies the mpq value so that later
-      precision widening of the commodity cannot reveal sub-display-precision
-      residuals.  Intended for use in report expressions such as
-      rounded(cost) (the --basis amount expression) where a stable, rounded
-      stored value is required. */
+  /** Like rounded(), but also physically rounds the stored value to the
+      commodity's precision, half away from zero, when that precision is
+      nonzero and the amount carries more digits than it.  rounded() only
+      clears the keep_precision flag and leaves the full-precision mpq
+      intact.  This method changes the mpq, so a later widening of the
+      commodity's precision cannot reveal sub-precision residuals (#1765).
+      When the commodity's precision is 0 no digit is rounded away, and an
+      amount with keep_precision set that has fractional digits is returned
+      unchanged, flag included (#3187).  Unlike display_rounded(), it rounds
+      to a nonzero commodity precision even when keep_precision is set.  Its
+      caller is the roundto_commodity() value expression
+      (report_t::fn_roundto_commodity), which backs --round. */
   [[nodiscard]] amount_t rounded_to_commodity_precision() const {
     amount_t temp(*this);
     temp.in_place_round_to_commodity_precision();
@@ -424,9 +428,13 @@ public:
   }
   void in_place_truncate();
 
-  /** Yields an amount rounded to the commodity's display precision using
-      round-half-away-from-zero.  Suitable for computing display adjustment
-      postings where the result must match the displayed value. */
+  /** Yields an amount rounded to its display_precision(), half away from
+      zero; in_place_display_round() does the same in place.  An amount
+      with keep_precision set displays all of its digits, so this does not
+      round it below its own precision; to round to the commodity's
+      precision regardless, use rounded_to_commodity_precision().  Used for
+      display_filter_posts' rounding adjustment postings, where the result
+      must match the displayed value. */
   [[nodiscard]] amount_t display_rounded() const {
     amount_t temp(*this);
     temp.in_place_display_round();
@@ -434,8 +442,8 @@ public:
   }
   void in_place_display_round() { in_place_roundto(display_precision()); }
 
-  /** Yields an amount which has lost all of its extra precision, beyond what
-      the display precision of the commodity would have printed. */
+  /** Yields this amount rounded toward negative infinity to an integer,
+      whatever the commodity's precision: $1.57 becomes $1.00, $-1.57 $-2.00. */
   [[nodiscard]] amount_t floored() const {
     amount_t temp(*this);
     temp.in_place_floor();
@@ -443,8 +451,8 @@ public:
   }
   void in_place_floor();
 
-  /** Yields an amount which has lost all of its extra precision, beyond what
-      the display precision of the commodity would have printed. */
+  /** Yields this amount rounded toward positive infinity to an integer,
+      whatever the commodity's precision: $1.57 becomes $2.00, $-1.57 $-1.00. */
   [[nodiscard]] amount_t ceilinged() const {
     amount_t temp(*this);
     temp.in_place_ceiling();
