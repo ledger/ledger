@@ -197,9 +197,11 @@ components with their standard-library equivalents.
   without a commodity (150) rather than in the lot's own (`C$150.00`), as
   `--basis`, `--price` and the `cost` and `price` value expressions report it
 
-- Implement automatic FIFO/LIFO commodity lot matching (issue #164): selling a
-  commodity without an explicit `{cost}` annotation can now pair the sale with
-  open lots automatically and compute gain/loss from the matched basis
+- Implement automatic FIFO/LIFO commodity lot matching (issue #164): with
+  `--lot-matching fifo` or `--lot-matching lifo`, selling a commodity without
+  an explicit `{cost}` annotation pairs the sale with open lots and computes
+  gain/loss from the matched basis.  Without `--lot-matching` (the default,
+  `none`) such a sale is not matched, as before
 
 - Add `--lots-fifo` and `--lots-lifo` options (which imply `--lot-prices` and
   `--lot-dates`) to display lots in chronological order
@@ -274,9 +276,9 @@ components with their standard-library equivalents.
   crash-when-empty-commodity in `getquote` (#1869)
 
 - Add `--decimal-places` to limit display precision (#797), accept an optional
-  precision argument in `round()` (#628), and add a `--round` option that
-  rounds each posting before aggregation (#781) plus a `--round` option that
-  complements `--unround`
+  precision argument in `round()` (#628), and add `--round`, the counterpart
+  of `--unround`, which rounds each posting to its commodity's precision
+  before aggregation (#781)
 
 - Allow parenthesized expression prices in `P` directives (#1101), emit
   pricedb entries in both directions (#779), filter built-in commodities from
@@ -494,9 +496,9 @@ components with their standard-library equivalents.
   (#742) and use an inclusive day count for single-day journals (#740);
   exclude future-dated postings from recency statistics (#741); fix bad
   pricedb info under `--anon` (#756); fix `--anon` balance accumulation
-  (#617); add `--csv-separator` for `convert`; add `--no-group-by` to cancel
-  `--group-by`; fix the misaligned separator dashes in the `cleared` report
-  (#729) and the bold formatting for uncleared posts under `--payee` (#865)
+  (#617); add `--no-group-by` to cancel `--group-by`; fix the misaligned
+  separator dashes in the `cleared` report (#729) and the bold formatting for
+  uncleared posts under `--payee` (#865)
 
 - Add the `--append-format` option (#1740); add `--ignore-diacritics` for
   accent-insensitive search; add `--pivot-only` to replace the account name
@@ -517,9 +519,6 @@ components with their standard-library equivalents.
   was last restarted, instead of only the final running stretch
 
 ### Filtering, Queries, and Aggregation
-
-- Rewrite the query parser as a documented recursive-descent parser with a
-  published EBNF grammar in the header
 
 - Show declared-but-unused accounts with `--empty` (#1204) and in the
   `accounts` listing, filtered by the account terms of the query/`--limit`
@@ -581,8 +580,7 @@ components with their standard-library equivalents.
 
 - Add `%m-%d` as a built-in short date format (#566); accept relative date
   expressions (`yesterday`, `tomorrow`, `tday`, `yday`, `tmrw`, plus the full
-  period grammar via `on <expr>`) in the `xact` command (#647); recognize
-  `aux`/`aux_date`/`auxdate` aliases for the CSV posted column
+  period grammar via `on <expr>`) in the `xact` command (#647)
 
 - Accept duration units (`s`, `m`, `h`, `d`, `w`) in `--price-exp` /
   `--leeway` / `-Z` (#607); document that `--price-exp` is in hours by default
@@ -597,8 +595,7 @@ components with their standard-library equivalents.
   with `xact`; fix the `--current` option being overridden by `--end`; pin
   evaluation dates in time-sensitive tests for reproducibility
 
-- Fix `-V -M` revaluations in periods without transactions (#2131); fix
-  `--monthly` prices to show the last price per period (#583); restore the
+- Fix `--monthly` prices to show the last price per period (#583); restore the
   `year_directive_year` when ending an `apply year` directive (#2413); year
   directive no longer leaks into `xact`/`entry` commands (#707); fix the year
   directive interaction with price history (#1748); restore year/epoch state
@@ -615,13 +612,6 @@ components with their standard-library equivalents.
   on current-period dates (closes #591, #1044, #1113, #1141, #1148, #1155,
   #1161, #1576, #1605, plus crash #2043)
 
-- Add `payee-rewrite` and `account-rewrite` directives (with matching
-  `--payee-rewrite` and `--account-rewrite` CLI flags) that, at report time,
-  replace the whole payee or account name of postings whose payee or account
-  matches the rule's regex, without modifying the journal
-
-- Add directives to enable and disable automatic transactions
-
 - Allow `$name` in automated-transaction account names in addition to
   `$account`; honor effective dates in automated transactions; fix payee-based
   `Unknown` account resolution; fix date comparison operators in
@@ -634,10 +624,9 @@ components with their standard-library equivalents.
   monthly budget periods with a `from` clause; honor start dates for weekly
   periodic transactions
 
-- Apply payee UUID mappings during CSV import; balance timeclock transactions
-  against the bucket account; pre-register built-in metadata tags so
-  `--strict` no longer warns about them; suppress the spurious `--strict`
-  warning for `$account` in automated transactions (#545)
+- Pre-register built-in metadata tags so `--strict` no longer warns about
+  them; suppress the spurious `--strict` warning for `$account` in automated
+  transactions (#545)
 
 - Apply automated transactions, their `check`/`assert` expressions and
   `account` check directives to transactions added after parsing -- the
@@ -657,7 +646,8 @@ components with their standard-library equivalents.
 
 ### Timelog and Time-based Reporting
 
-- Add `--time-round` to round timelog durations to the nearest unit (#1608)
+- Add `--time-round` to round timelog durations up to the next multiple of N
+  minutes (#1608)
 
 - Fix the `datetime` field to include the time portion for timelog postings
   (#2264); fix payee sub-directive application to timelog entries (#1211); fix
@@ -684,9 +674,9 @@ components with their standard-library equivalents.
 
 - Fix Python bindings for virtual posting flag detection (#2169) by binding to
   the correct `supports_flags<uint_least16_t>` instantiation; fix Python
-  `TypeError` when accessing `boost::optional` fields like `note`; use checked
-  utfcpp functions for Python string conversion; restore terminal settings
-  after `ledger python` exits (#774)
+  `TypeError` when accessing optional fields like `note`; use checked utfcpp
+  functions for Python string conversion; restore terminal settings after
+  `ledger python` exits (#774)
 
 - Make `Commodity.flags` and the `AccountXData` flag methods work (both raised
   `ArgumentError`): every class's flag methods are now bound through the flags
@@ -718,8 +708,10 @@ components with their standard-library equivalents.
 
 ### New Commands and Directives
 
-- Add `payee-rewrite` and `account-rewrite` directives, which replace
-  matching payee and account names at report time
+- Add `payee-rewrite` and `account-rewrite` directives (with matching
+  `--payee-rewrite` and `--account-rewrite` CLI flags) that, at report time,
+  replace the whole payee or account name of postings whose payee or account
+  matches the rule's regex, without modifying the journal
 
 - Add directives to enable and disable automatic transactions
 
@@ -746,7 +738,12 @@ components with their standard-library equivalents.
   `check` and `assert` lines beneath it applied to the misnamed account.  A
   `;` after a single space is still part of the name, as it is in a posting
 
-- Return regex capture-group text from the `=~` operator (extending #664)
+- Add the `==~` operator for regex capture-group extraction (#664): without
+  capture groups it yields the entire match as a string; with capture groups
+  it yields a sequence whose first element is the entire match followed by
+  every captured group (so a pattern with *N* groups yields a sequence of
+  length *N* + 1); on no match it yields `false`.  The `=~` operator still
+  yields a boolean
 
 - Treat every character of an `include` file name other than `*`, `?` and a
   `[...]` set literally, including `$`, `^`, a character escaped with a
@@ -762,8 +759,8 @@ components with their standard-library equivalents.
   a full language reference and runnable doctests (#804); document
   `display_amount`, `display_total`, and `value_date`; expand the value
   expression reference with previously-undocumented keywords; document the
-  expression engine, time, and query layer (Session 3); document the core data
-  model, journal model, and build infrastructure; document the filter pipeline
+  expression engine, time, and query layer; document the core data model,
+  journal model, and build infrastructure; document the filter pipeline
 
 - Add real-world examples for tax year grouping with `--pivot`, recording
   stock dividends, sales-tax automated transactions, and tag-filtering in the
@@ -812,15 +809,17 @@ components with their standard-library equivalents.
 
 ### Testing and Coverage
 
-- Add 419 new regression tests, raising source-code coverage to 89.6%, and
-  lift the CI coverage gate to 90% (#2832, #2728); add regression tests for
-  153 previously-uncovered open issues (#3011)
+- Add 419 new regression tests (#2832, #2728) and regression tests for 153
+  previously-uncovered open issues (#3011); measure CI coverage with LLVM
+  source-based instrumentation over the `ledger` executable, libledger and
+  the C++ unit-test binaries while the whole test suite runs, and fail the
+  build below 91% of lines or 88% of functions (#2836)
 
 - Add a libFuzzer harness for the journal parser, run nightly in CI; add an
   ASan/UBSan sanitizer build to the CI matrix; add Clang-based performance
-  regression checks; add gcov/lcov code coverage reporting; free disk space
-  and shrink coverage profraw footprint to keep the coverage job within runner
-  limits
+  regression checks; add a `coverage` build target with gcov (`USE_GCOV`) or
+  LLVM (`USE_LLVM_COV`) instrumentation; free disk space and shrink coverage
+  profraw footprint to keep the coverage job within runner limits
 
 - Add a snapshot behavioral testing tool; harden the Python test harness for
   Python 3 correctness; remove the 4096-byte line length limit in the parser
@@ -832,7 +831,7 @@ components with their standard-library equivalents.
   `textual_internal.h`
 
 - Rewrite the query parser as a documented recursive-descent parser with
-  structured control flow
+  structured control flow and a published EBNF grammar in its header
 
 - Apply `clang-format` to the entire C++ codebase; enforce formatting in CI
   (#2499); reformat several header files for readability
@@ -874,22 +873,11 @@ components with their standard-library equivalents.
 
 - Add commodity swaps feature over a base commodity
 
-- Add `==~` operator for regex capture group extraction (issue #664).
-  Without capture groups the operator yields the entire match as a
-  string; with capture groups it yields a sequence whose first element
-  is the entire match followed by every captured group (so a pattern
-  with *N* groups yields a sequence of length *N* + 1).  Returns
-  `false` on non-match.
-
 - Add --align-intervals option for reporting
 
 - Add --lisp-date-format option for lisp output (bug #1206)
 
 - Add yday shortcut for "yesterday"
-
-- Allow nested `account` sub-directives inside an `account` block so a
-  parent account can declare its children without repeating the full
-  colon-separated path (issue #877)
 
 ### File Handling
 
