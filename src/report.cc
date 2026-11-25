@@ -523,10 +523,13 @@ void report_t::normalize_period() {
   if (!HANDLED(end_) && end)
     HANDLER(limit_).on(string("?normalize"), "date<[" + to_iso_extended_string(*end) + "]");
 
+  // Assigned on every run: a report copied by push_report()/push_command()
+  // keeps the value, and the copy's own --sort-all or --sort-xacts must
+  // still win when its options are normalized.
+  sort_within_periods =
+      interval.duration.has_value() && !HANDLED(sort_all_) && !HANDLED(sort_xacts_);
   if (!interval.duration)
     HANDLER(period_).off();
-  else if (!HANDLED(sort_all_))
-    HANDLER(sort_xacts_).on("?normalize");
 }
 
 /*--- Query Argument Parsing ---*/

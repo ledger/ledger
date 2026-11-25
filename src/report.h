@@ -188,6 +188,9 @@ public:
   optional<datetime_t>
       gain_from; ///< Reference date for --gain-since (compute gain from this date's market value)
   uint_least8_t budget_flags; ///< Bitmask of BUDGET_* flags controlling budget report behavior
+  /// Recomputed by normalize_period(): -S sorts the postings within each
+  /// period, not the whole report.
+  bool sort_within_periods = false;
   /// Set by normalize_options: the command displays rounded running totals
   /// (balance/register text output), so display_filter_posts may emit
   /// <Adjustment> rows.

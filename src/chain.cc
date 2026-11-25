@@ -425,36 +425,20 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
   /*--- Sorting, collapsing, and aggregation ---*/
 
   if (!for_accounts_report) {
-    // sort_posts will sort all the posts it sees, based on the `sort_order'
-    // value expression.  sort_xacts sorts posts within each transaction.
+    // sort_xacts sorts the postings within each transaction by --sort-xacts;
+    // sort_posts, upstream of it, sorts all postings by --sort.  A period
+    // report sorts by --sort only within each period, which interval_posts
+    // emits as one transaction (report_t::normalize_period).
+    if (report.HANDLED(sort_xacts_))
+      handler =
+          std::make_shared<sort_xacts>(handler, expr_t(report.HANDLER(sort_xacts_).str()), report);
     if (report.HANDLED(sort_)) {
-      bool xacts_only = false;
-
-      if (report.HANDLED(sort_xacts_)) {
-        // sort_xacts_ may have its own expression (from --sort-xacts), or
-        // it may have been activated without a value (from period sorting
-        // via normalize_period).  Check value directly since str() throws
-        // on empty values.
-        const string& sort_xacts_value = report.HANDLER(sort_xacts_).value;
-        if (sort_xacts_value.empty()) {
-          // Activated from period sorting: use sort_'s expression for
-          // within-transaction sorting only, no global sort.
-          handler =
-              std::make_shared<sort_xacts>(handler, expr_t(report.HANDLER(sort_).str()), report);
-          xacts_only = true;
-        } else {
-          // --sort-xacts given explicitly with its own expression: apply
-          // within-transaction sort first, then global sort (from --sort).
-          handler = std::make_shared<sort_xacts>(handler, expr_t(sort_xacts_value), report);
-        }
-      }
-
-      if (!xacts_only)
-        handler = std::make_shared<sort_posts>(handler, report.HANDLER(sort_).str(), report);
-    } else if (report.HANDLED(sort_xacts_)) {
-      const string& sort_xacts_value = report.HANDLER(sort_xacts_).value;
-      if (!sort_xacts_value.empty())
-        handler = std::make_shared<sort_xacts>(handler, expr_t(sort_xacts_value), report);
+      if (report.sort_within_periods)
+        handler =
+            std::make_shared<sort_xacts>(handler, expr_t(report.HANDLER(sort_).str()), report);
+      else
+        handler =
+            std::make_shared<sort_posts>(handler, expr_t(report.HANDLER(sort_).str()), report);
     }
 
     // collapse_posts causes xacts with multiple posts to appear as xacts

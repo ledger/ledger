@@ -1,0 +1,5 @@
+push for monthly
+reg --sort-all amount
+reg -S amount
+pop
+reg -S amount

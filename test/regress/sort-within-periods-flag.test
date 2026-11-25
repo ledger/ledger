@@ -1,0 +1,86 @@
+; A period report sorts the postings inside each period by --sort instead
+; of sorting the whole report.  normalize_period used to record that by
+; turning the user option --sort-xacts on with an empty value, so
+; --options listed a --sort-xacts the user never gave, and chain.cc had to
+; decode an empty option value.  The report now carries its own flag,
+; which every normalize_period run recomputes: the last block pushes a
+; period report (the copy keeps the flag) and then asks for --sort-all,
+; which must still sort the whole report.
+
+2024/01/05 Payee A
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/20 Payee B
+    Expenses:Rent    $5.00
+    Expenses:Food    $1.00
+    Assets:Cash
+
+2024/02/03 Payee C
+    Expenses:Food    $2.00
+    Assets:Cash
+
+test reg --monthly --options --columns 80
+===============================================================================
+[Global scope options]
+             --args-only                                             --args-only
+
+[Session scope options]
+                  --file = $FILE-f
+
+[Report scope options]
+               --columns = 80                                        --columns
+               --monthly                                             --monthly
+                   --now = 2030/06/15                                --now=2030/06/15
+                --period = monthly                                   --monthly
+===============================================================================
+24-Jan-01 - 24-Jan-31  Assets:Cash                   $-16.00      $-16.00
+                       Expenses:Food                  $11.00       $-5.00
+                       Expenses:Rent                   $5.00            0
+24-Feb-01 - 24-Feb-29  Assets:Cash                    $-2.00       $-2.00
+                       Expenses:Food                   $2.00            0
+end test
+
+test reg --monthly -S amount
+24-Jan-01 - 24-Jan-31  Assets:Cash                   $-16.00      $-16.00
+                       Expenses:Rent                   $5.00      $-11.00
+                       Expenses:Food                  $11.00            0
+24-Feb-01 - 24-Feb-29  Assets:Cash                    $-2.00       $-2.00
+                       Expenses:Food                   $2.00            0
+end test
+
+test reg --monthly -S amount --sort-xacts account
+24-Jan-01 - 24-Jan-31  Assets:Cash                   $-16.00      $-16.00
+24-Feb-01 - 24-Feb-29  Assets:Cash                    $-2.00      $-18.00
+                       Expenses:Food                   $2.00      $-16.00
+24-Jan-01 - 24-Jan-31  Expenses:Rent                   $5.00      $-11.00
+                       Expenses:Food                  $11.00            0
+end test
+
+test reg --monthly --sort-all amount
+24-Jan-01 - 24-Jan-31  Assets:Cash                   $-16.00      $-16.00
+24-Feb-01 - 24-Feb-29  Assets:Cash                    $-2.00      $-18.00
+                       Expenses:Food                   $2.00      $-16.00
+24-Jan-01 - 24-Jan-31  Expenses:Rent                   $5.00      $-11.00
+                       Expenses:Food                  $11.00            0
+end test
+
+test --script test/regress/sort-within-periods-flag.dat
+24-Jan-01 - 24-Jan-31  Assets:Cash                   $-16.00      $-16.00
+24-Feb-01 - 24-Feb-29  Assets:Cash                    $-2.00      $-18.00
+                       Expenses:Food                   $2.00      $-16.00
+24-Jan-01 - 24-Jan-31  Expenses:Rent                   $5.00      $-11.00
+                       Expenses:Food                  $11.00            0
+24-Jan-01 - 24-Jan-31  Assets:Cash                   $-16.00      $-16.00
+                       Expenses:Rent                   $5.00      $-11.00
+                       Expenses:Food                  $11.00            0
+24-Feb-01 - 24-Feb-29  Assets:Cash                    $-2.00       $-2.00
+                       Expenses:Food                   $2.00            0
+24-Jan-05 Payee A               Assets:Cash                 $-10.00      $-10.00
+24-Jan-20 Payee B               Assets:Cash                  $-6.00      $-16.00
+24-Feb-03 Payee C               Assets:Cash                  $-2.00      $-18.00
+24-Jan-20 Payee B               Expenses:Food                 $1.00      $-17.00
+24-Feb-03 Payee C               Expenses:Food                 $2.00      $-15.00
+24-Jan-20 Payee B               Expenses:Rent                 $5.00      $-10.00
+24-Jan-05 Payee A               Expenses:Food                $10.00            0
+end test
