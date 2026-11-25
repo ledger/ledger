@@ -4487,30 +4487,28 @@ transaction.
 @node Amount multipliers, Accessing the matching posting's amount, Automated Transactions, Automated Transactions
 @subsection Amount multipliers
 
-As a special case, if an automated transaction's posting's amount
-(phew) has no commodity, it is taken as a multiplier upon the matching
-posting's cost.  For example:
+An amount without a commodity in an automated transaction is a multiplier
+of the matched posting's amount.  For example, the following rule records
+half of each food expense in the virtual account @code{Shared}:
 
-@smallexample @c input:validate
-= expr true
-    Foo                           50.00
-    Bar                          -50.00
+@smallexample @c input:4FB62E3
+= Expenses:Food
+    (Shared)                      0.5
 
-2012-03-10 KFC
-    Expenses:Food                $20.00
+2024-01-01 Dinner abroad
+    Expenses:Food                 200 JPY @@@@ 22 GBP
     Assets:Cash
 @end smallexample
 
-Then the latter transaction turns into this during parsing:
+The expense is 200 JPY with a total cost of 22 GBP.  The multiplier
+applies to the 200 JPY, so the shared portion is 100 JPY:
 
-@smallexample @c input:validate
-2012-03-10 KFC
-    Expenses:Food                $20.00
-    Foo                        $1000.00
-    Bar                       $-1000.00
-    Assets:Cash                 $-20.00
-    Foo                        $1000.00
-    Bar                       $-1000.00
+@smallexample @c command:4FB62E3
+$ ledger -f inline.dat balance Shared
+@end smallexample
+
+@smallexample @c output:4FB62E3
+             100 JPY  Shared
 @end smallexample
 
 @node Accessing the matching posting's amount, Using current account balances, Amount multipliers, Automated Transactions
