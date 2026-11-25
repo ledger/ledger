@@ -57,6 +57,12 @@ test or an option. The tool never removes files from its output directory,
 which is why steps 2 and 4 start from an empty one: a file left by an earlier
 run would show up as an `Only in` line too.
 
+A performance change must leave every report byte-identical on large
+journals too, which the full matrix is too slow for. Check it with
+`--only-bench` instead, following "Checking that output is unchanged" in
+[`tools/bench/README.md`](../tools/bench/README.md), which also says how to
+generate the journals and measure the change.
+
 ### Expected Non-Determinism
 
 Some output is inherently non-deterministic and will always differ between
