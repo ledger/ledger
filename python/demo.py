@@ -67,15 +67,12 @@ assert not 'CAD' in comms
 # The above mentioned commodity display attributes can be set using commodity
 # display flags.  This is not something you will usually be doing, however, as
 # these flags can be inferred correctly from a large enough set of sample
-# amounts, such as those found in your data file.  If you live in Europe and
-# want all amounts to default to the European-style, set the static variable
-# `european_by_default'.
+# amounts, such as those found in your data file.  To have every amount parsed
+# and printed European-style, run Ledger with --decimal-comma.
 
 eur.add_flags(ledger.COMMODITY_STYLE_DECIMAL_COMMA)
 assert eur.has_flags(ledger.COMMODITY_STYLE_DECIMAL_COMMA)
 assert not eur.has_flags(ledger.COMMODITY_STYLE_THOUSANDS)
-
-comms.european_by_default = True
 
 # There are a few built-in commodities: null, %, h, m and s.  Normally you
 # don't need to worry about them, but they'll show up if you examine all the
@@ -261,37 +258,46 @@ assertEqual(ledger.Amount('14016,8 €'), amt2.price()) # european amount!
 # former case an exception in raised, but in the latter the Value simply
 # promotes itself to a Balance object to make the addition valid.
 #
-# Values are not used by any of Ledger's data objects (Journal, Transaction,
-# Posting or Account), but they are used extensively by value expressions.
+# Values appear wherever Ledger computes: tag values, report totals and the
+# display amounts of a journal query.  Value expressions use them throughout.
 
 val = ledger.Value('$100.00')
 
 assert val.is_amount()
 assertEqual('$', val.to_amount().commodity.symbol)
 
-# JOURNALS
+###############################################################################
+#
+# JOURNALS, ACCOUNTS, TRANSACTIONS & POSTINGS
+#
+# A Journal holds the transactions read from your data.  Each Transaction has
+# a payee and a list of Postings; each Posting names an Account and carries
+# an Amount.  `read_journal_from_string' parses journal text directly.
 
-#journal.find_account('')
-#journal.find_or_create_account('')
+journal = ledger.read_journal_from_string("""
+2026/01/05 Grocer
+    Expenses:Food    $12.50
+    Assets:Cash
 
-# ACCOUNTS
+2026/01/09 Landlord
+    Expenses:Rent    $800.00
+    Assets:Cash
+""")
 
-#account.name
-#account.fullname()
-#account.amount
-#account.total
+assertEqual(2, len(journal))
+assertEqual(['Grocer', 'Landlord'], [xact.payee for xact in journal])
 
-# TRANSACTIONS
-
-#txn.payee
-
-# POSTINGS
-
-#post.account
+food = journal.find_account('Expenses:Food')
+assertEqual('Expenses:Food', food.fullname())
 
 # REPORTING
+#
+# `query' runs the same filter chain as the register report, taking the same
+# arguments you would give on the command line.
 
-#journal.collect('-M food')
-#journal.collect_accounts('^assets ^liab ^equity')
+posts = journal.query('food')
+assertEqual(['Grocer'], [post.xact.payee for post in posts])
+assertEqual(['Expenses:Food'], [post.account.fullname() for post in posts])
+assertEqual(['$12.50'], [str(post.amount) for post in posts])
 
 print('Demo completed successfully.')

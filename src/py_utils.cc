@@ -37,9 +37,7 @@
  * Registers bidirectional converters for bool and string (handling UTF-8/
  * UTF-16/UTF-32 transparently), and exposes the flags support classes
  * (SupportFlags8, SupportFlags16, DelegatesFlags16) used by many Ledger
- * types for bitfield state management.  These converters and flag bindings
- * are foundational -- they must be registered before any other binding that
- * passes booleans or strings across the C++/Python boundary.
+ * types for bitfield state management.
  */
 
 #include <system.hh>

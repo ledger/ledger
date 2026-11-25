@@ -38,8 +38,7 @@
  * @brief  All system headers needed by Ledger.
  *
  * These are collected here so that a pre-compiled header can be made.
- * None of these header files (with the exception of acconf.h, when
- * configure is re-run) are expected to change.
+ * None of these header files are expected to change.
  */
 #pragma once
 

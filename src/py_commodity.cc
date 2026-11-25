@@ -91,11 +91,16 @@ commodity_t* py_find_2(commodity_pool_t& pool, const string& symbol, const annot
 
 // Exchange one commodity for another, while recording the factored price.
 
-// Mark the price commodity's precision tentative
-// (COMMODITY_PRECISION_FROM_PRICE), as parse_price_directive does, so
-// journal amounts may still set it.  Unlike a P directive this applies
-// whatever the precision: the Amount literal passed in has already taught
-// it (issue #1019).
+// Mark the price commodity's precision tentative (COMMODITY_PRECISION_FROM_PRICE),
+// as parse_price_directive does, so journal amounts may still set it.  Unlike a P
+// directive this applies whatever the precision: the Amount literal passed in has
+// already taught it (issue #1019).  The next amount parsed in this commodity with
+// nonzero precision then sets its display precision outright (amount_t::parse),
+// narrowing it as readily as widening: after Amount('EUR 10.00'), an exchange()
+// priced in EUR and Amount('EUR 3.5'), the first amount prints as "EUR 10.0".
+// Every Amount literal teaches its commodity a precision, but only exchange()
+// marks it tentative; a literal never passed to exchange() keeps a precision
+// that narrower journal amounts cannot lower.
 static void mark_price_commodity_precision(const amount_t& per_unit_cost) {
   if (per_unit_cost.has_commodity()) {
     commodity_t& price_commodity = per_unit_cost.commodity();
