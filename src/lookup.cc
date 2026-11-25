@@ -192,14 +192,11 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
             last_match_pos = pos;
           }
 
-          // If it occurs in the same general sequence as the source identifier,
-          // it's worth 5 points, plus an extra point if it's within the next 3
-          // characters, and an extra point if it's preceded by a non-alphabetic
-          // character.
-          //
-          // If the letter occurs at all in the target identifier, it's worth 1
-          // point, plus an extra point if it's within 3 characters, and an
-          // extra point if it's preceded by a non-alphabetic character.
+          // Otherwise the letter is worth 5 points if it occurs in the payee
+          // at or after the position it has in the identifier, or 1 point if
+          // it occurs before it.  An in-order match (one lying past the
+          // previous match) that lies at most 2 positions past the letter's
+          // position in the identifier earns 1 more point.
 
           else {
             bool in_order_match = (last_match_pos != unistring::npos && pos > last_match_pos);

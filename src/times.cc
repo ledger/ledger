@@ -287,8 +287,11 @@ void normalize_date_input(const char* date_str, char (&buf)[128], bool to_slashe
  * This is the workhorse behind parse_date_mask().  It:
  *   1. Parses buf via the given io object.
  *   2. Round-trip validates: formats the parsed date back to a string
- *      and verifies it matches buf (catching invalid dates like
- *      "02/30").
+ *      and verifies it matches buf, ignoring the case of letters, which
+ *      rejects any text that strptime left unconsumed (e.g.
+ *      "2024/01/05x").  strptime itself rejects out-of-range fields
+ *      such as month 13, and io.parse()'s gregorian::date_from_tm
+ *      rejects impossible days such as "02/30".
  *   3. Reports the format's traits; the parse itself has already chosen
  *      the year of a yearless format (see temporal_io_t<date_t>::parse).
  *
@@ -308,10 +311,12 @@ date_t parse_date_mask_routine(const char* date_str, const char* buf, date_io_t&
     DEBUG("times.parse", "Parsed result is:    " << when);
     DEBUG("times.parse", "Formatted result is: " << io.format(when));
 
-    // Round-trip validation: format the parsed date back and compare
-    // character by character to catch invalid dates that strptime
-    // silently accepted (e.g. month 13, day 32).  Leading zeros in
-    // the formatted output are skipped during comparison.
+    // Round-trip validation: format the parsed date back and compare it
+    // with buf character by character, ignoring the case of letters, so
+    // that text strptime left unconsumed (the "x" of "2024/01/05x") is
+    // rejected.  strptime has already range-checked each field, and
+    // date_from_tm has rejected impossible days such as Feb 30.  A
+    // leading zero in the formatted output that buf omits is skipped.
     string when_str = io.format(when); // NOLINT(bugprone-unused-local-non-trivial-variable)
 
     const char* p = when_str.c_str();

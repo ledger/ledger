@@ -152,7 +152,7 @@ static char* _strptime(const char* s, const char* format, struct tm* tm) {
         return NULL;
       break;
 
-    // seconds [0, 60]. 60 is for leap year.
+    // seconds [0, 60]. 60 is for a leap second.
     case 'S':
       s = _parse_num(s, 0, 60, &tm->tm_sec);
       if (s == NULL)

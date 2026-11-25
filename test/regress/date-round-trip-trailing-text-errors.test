@@ -1,0 +1,35 @@
+; parse_date_mask_routine formats each parsed date back and compares it
+; with the input.  That round trip is what rejects text strptime leaves
+; unconsumed after a complete date; out-of-range months and days are
+; rejected by strptime itself, and impossible days such as Feb 30 by
+; Boost.Date (see cov-times-invalid-date.test).  These blocks pin the
+; trailing text the round trip rejects; date-round-trip-trailing-text.test
+; pins the dates it accepts.
+
+2024/01/05 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test eval [2024/01/05x] --now 2030/06/15 -> 1
+__ERROR__
+While parsing value expression:
+  [2024/01/05x]
+
+Error: Invalid date: 2024/01/05x
+end test
+
+test eval [01/05x] --now 2030/06/15 -> 1
+__ERROR__
+While parsing value expression:
+  [01/05x]
+
+Error: Invalid date: 01/05x
+end test
+
+test eval [2024-01-05x] --input-date-format '%Y-%m-%d' --now 2030/06/15 -> 1
+__ERROR__
+While parsing value expression:
+  [2024-01-05x]
+
+Error: Invalid date: 2024-01-05x
+end test

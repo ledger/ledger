@@ -53,8 +53,9 @@
  *   both the pattern and the text are normalized to ASCII equivalents
  *   before matching, so "cafe" matches "caf\xc3\xa9".
  * - Glob-to-regex conversion via `assign_glob()` for `!include` file
- *   patterns, which match exactly: case-sensitively, since filesystems
- *   are, and without diacritics folding.
+ *   patterns, which match exactly on every platform: case-sensitively
+ *   and without diacritics folding, so `include FOO.dat` never picks up
+ *   `foo.dat` even where the filesystem ignores case (issue #1660).
  * - Unicode-aware when built with `HAVE_BOOST_REGEX_UNICODE` (ICU).
  */
 #pragma once
@@ -89,8 +90,9 @@ extern bool ignore_diacritics;
  *
  * Patterns are always compiled with `perl | icase` flags for user-facing
  * queries.  The `assign_glob()` method compiles shell-style glob patterns
- * (used by `!include`) with case-sensitive matching instead, since file
- * paths are case-sensitive on most platforms.
+ * (used by `!include`) with exact, case-sensitive matching instead, on
+ * every platform, so that an include never picks a differently-cased file
+ * on a case-insensitive filesystem (issue #1660).
  *
  * When `ignore_diacritics` is true, both the pattern and match text are
  * folded to their ASCII base equivalents via `fold_diacritics()` before

@@ -138,8 +138,8 @@ mask_t& mask_t::operator=(string_view pat) {
 /// Every other character matches only itself, including one escaped
 /// with a backslash and a `[` that no `]` closes, so regex
 /// metacharacters among them are escaped.  Unlike operator=, the
-/// resulting regex is case-sensitive because globs are used for
-/// file path matching where case matters.
+/// resulting regex is case-sensitive on every platform, so that an
+/// include never picks up a differently-cased file (issue #1660).
 mask_t& mask_t::assign_glob(string_view pat) {
   // A literal `]` needs no escape outside a set, and leaving it bare
   // keeps a `]` that closes `[[:digit:]]` working.
@@ -183,12 +183,13 @@ mask_t& mask_t::assign_glob(string_view pat) {
     }
   }
   re_pat += "\\z";
-  // Filename glob matching must be case-sensitive so that !include respects
-  // filesystem case-sensitivity (issue #1660).  Unlike operator= which uses
-  // icase for account/payee query matching, globs are used exclusively for
-  // file name matching where case matters.  For the same reason a glob is
-  // never folded by --ignore-diacritics: café.dat and cafe.dat are
-  // different files.
+  // Filename glob matching is case-sensitive on every platform, so that
+  // `include FOO.dat` never picks up foo.dat, even on a case-insensitive
+  // filesystem such as default macOS APFS (issue #1660).  Unlike
+  // operator=, which uses icase for account/payee query matching, a glob
+  // names files and must match them exactly.  For the same reason a glob
+  // is never folded by --ignore-diacritics: café.dat and cafe.dat are
+  // different names.
 #if HAVE_BOOST_REGEX_UNICODE
   expr = boost::make_u32regex(re_pat.c_str(), boost::regex::perl);
 #else

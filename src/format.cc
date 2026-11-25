@@ -630,7 +630,7 @@ string format_t::truncate(const unistring& ustr, const std::size_t width,
       // passes until the overflow is gone, or we cannot reduce any
       // further.  The calculation to find the amount to remove is:
       //
-      //   overflow * (((len(segment) + counter) * iteration) /
+      //   overflow * (((len(segment) + 3 * counter) * iteration) /
       //               (len(string) - len(last_segment) - counter))
       //
       // Where:
@@ -649,9 +649,9 @@ string format_t::truncate(const unistring& ustr, const std::size_t width,
       //
       // Therefore, the amount to be removed from Assets is calculated as:
       //
-      //   9 * (((6 + 3) * 1) / (29 - 8 - 3)) = ceil(4.5) = 5
+      //   9 * (((6 + 3 * 3) * 1) / (29 - 8 - 3)) = ceil(7.5) = 8
       //
-      // However, since removing 5 chars would make the length of the
+      // However, since removing 8 chars would make the length of the
       // segment shorter than the default minimum of 2, we can only
       // remove 4 chars from Assets to reduce the overflow.  And on it
       // goes.
@@ -688,8 +688,8 @@ string format_t::truncate(const unistring& ustr, const std::size_t width,
             // undefined, so cap the weight at the overflow first.
             adjust = weight < double(overflow) ? std::size_t(weight) : overflow;
           }
-          DEBUG("format.abbrev", "Weight calc: (" << overflow << " * (((" << *i << " + " << counter
-                                                  << ") * " << iteration << ") / ("
+          DEBUG("format.abbrev", "Weight calc: (" << overflow << " * (((" << *i << " + 3 * "
+                                                  << counter << ") * " << iteration << ") / ("
                                                   << len_minus_last << " - " << counter << ")))");
           DEBUG("format.abbrev", "The weighted part is " << adjust << " chars");
           std::size_t slack = *i - std::min(*i, account_abbrev_length);

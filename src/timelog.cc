@@ -45,7 +45,9 @@ void create_timelog_xact(const time_xact_t& in_event, const time_xact_t& out_eve
                          parse_context_t& context) {
   unique_ptr<xact_t> curr(new xact_t);
   curr->_date = in_event.checkin.date();
-  curr->code = out_event.desc; // if it wasn't used above
+  // The check-out description becomes the code, unless
+  // clock_out_from_timelog already made it the payee and cleared it.
+  curr->code = out_event.desc;
   curr->payee = in_event.desc;
   curr->pos = in_event.position;
 

@@ -52,8 +52,10 @@
  * rewards:
  *   - Exact matches (score 100, terminates search)
  *   - In-sequence character runs (10 points, with chain bonuses)
- *   - In-order but non-adjacent matches (5 points)
- *   - Proximity bonuses for nearby matches
+ *   - Other matches (5 points when the letter occurs in the payee at or
+ *     after the position it has in the identifier, 1 point before it)
+ *   - A proximity point for an in-order match at most 2 positions past
+ *     the letter's position in the identifier
  *   - Position decay so that early characters weigh more heavily
  *     (useful for credit card payees that share trailing location info)
  *
