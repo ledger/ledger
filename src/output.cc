@@ -61,6 +61,70 @@
 namespace ledger {
 
 namespace {
+/// @brief Parse @p format into up to three sub-formats split on "%/":
+///          first %/ second %/ third
+///
+/// The next_lines and between formats can use %$N to back-reference
+/// expression fields from the first_line_format.  Both later sub-formats
+/// therefore take @p first as their template.  When @p format contains no
+/// "%/", only @p first is parsed and @p second and @p third stay unset.
+///
+/// @return true if @p format contained a "%/".
+bool split_format(const string& format, format_t& first, format_t& second, format_t& third) {
+  const char* f = format.c_str();
+
+  const char* p = std::strstr(f, "%/");
+  if (!p) {
+    first.parse_format(format);
+    return false;
+  }
+
+  first.parse_format(string(f, static_cast<std::string::size_type>(p - f)));
+  const char* n = p + 2;
+  // NOLINTBEGIN(bugprone-branch-clone)
+  if (const char* pp = std::strstr(n, "%/")) {
+    second.parse_format(string(n, static_cast<std::string::size_type>(pp - n)), &first);
+    third.parse_format(string(pp + 2), &first);
+  } else {
+    second.parse_format(string(n), &first);
+  }
+  // NOLINTEND(bugprone-branch-clone)
+  return true;
+}
+
+/// @brief Print the pending --group-by title, if any, through
+///        --group-title-format.
+///
+/// An upstream grouping filter sets @p title before each group.  Every
+/// title but the first is preceded by a blank line; @p first_title tracks
+/// that, and @p title is cleared once printed so it prints only once.
+void write_group_title(std::ostream& out, report_t& report, string& title, bool& first_title,
+                       scope_t& scope) {
+  if (title.empty())
+    return;
+
+  if (first_title)
+    first_title = false;
+  else
+    out << '\n';
+
+  value_scope_t val_scope(scope, string_value(title));
+  format_t group_title_format(report.HANDLER(group_title_format_).str());
+
+  out << group_title_format(val_scope);
+
+  title = "";
+}
+
+/// @brief Write the --prepend-format column, right-aligned in @p width
+///        characters (--prepend-width), when a prepend format is set.
+void write_prepend(std::ostream& out, format_t& prepend_format, std::size_t width, scope_t& scope) {
+  if (prepend_format) {
+    out.width(static_cast<std::streamsize>(width));
+    out << prepend_format(scope);
+  }
+}
+
 /// @brief Emit @p formatted to @p out, splicing @p append_format in just
 ///        before the final newline (if any).
 ///
@@ -69,22 +133,22 @@ namespace {
 /// end of the *same* line -- not on a subsequent line.  This helper
 /// therefore strips a single trailing `\n`, writes the append expansion,
 /// then restores the newline.  If @p formatted has no trailing newline the
-/// append output is simply concatenated.  A null @p append_format_ptr (or
+/// append output is simply concatenated.  An unset @p append_format (or
 /// an empty @p formatted) reverts to a plain write.
-inline void write_with_append(std::ostream& out, const string& formatted,
-                              format_t* append_format_ptr, scope_t& scope) {
-  if (!append_format_ptr || !*append_format_ptr || formatted.empty()) {
+inline void write_with_append(std::ostream& out, const string& formatted, format_t& append_format,
+                              scope_t& scope) {
+  if (!append_format || formatted.empty()) {
     out << formatted;
     return;
   }
 
   if (formatted.back() == '\n') {
     out.write(formatted.data(), static_cast<std::streamsize>(formatted.size() - 1));
-    out << (*append_format_ptr)(scope);
+    out << append_format(scope);
     out << '\n';
   } else {
     out << formatted;
-    out << (*append_format_ptr)(scope);
+    out << append_format(scope);
   }
 }
 
@@ -165,30 +229,11 @@ format_posts::format_posts(report_t& _report, const string& format,
                            const optional<string>& _append_format)
     : report(_report), prepend_width(_prepend_width), last_xact(nullptr), last_post(nullptr),
       first_report_title(true), next_lines_use_first(false) {
-  // Split the format string on "%/" into up to three sub-formats:
-  //   first_line_format %/ next_lines_format %/ between_format
-  // The next_lines and between formats can use %$N to back-reference
-  // expression fields from the first_line_format.
-  const char* f = format.c_str();
-
-  if (const char* p = std::strstr(f, "%/")) {
-    first_line_format.parse_format(string(f, static_cast<std::string::size_type>(p - f)));
-    const char* n = p + 2;
-    // NOLINTBEGIN(bugprone-branch-clone)
-    if (const char* pp = std::strstr(n, "%/")) {
-      next_lines_format.parse_format(string(n, static_cast<std::string::size_type>(pp - n)),
-                                     &first_line_format);
-      between_format.parse_format(string(pp + 2), &first_line_format);
-    } else {
-      next_lines_format.parse_format(string(n), &first_line_format);
-    }
-    // NOLINTEND(bugprone-branch-clone)
-  } else {
-    // Parse once: every posting shares first_line_format's expressions,
-    // so an accumulator (O_DEFINE) keeps one state across postings.
-    first_line_format.parse_format(format);
-    next_lines_use_first = true;
-  }
+  // Without a "%/", parse once: every posting shares first_line_format's
+  // expressions, so an accumulator (O_DEFINE) keeps one state across
+  // postings.
+  next_lines_use_first =
+      !split_format(format, first_line_format, next_lines_format, between_format);
 
   if (_prepend_format)
     prepend_format.parse_format(*_prepend_format);
@@ -227,24 +272,8 @@ void format_posts::operator()(post_t& post) {
     post.xdata().drop_flags(POST_EXT_PAYEE_CHANGED);
 
     // Print a group title if one was set by an upstream grouping filter.
-    if (!report_title.empty()) {
-      if (first_report_title)
-        first_report_title = false;
-      else
-        out << '\n';
-
-      value_scope_t val_scope(bound_scope, string_value(report_title));
-      format_t group_title_format(report.HANDLER(group_title_format_).str());
-
-      out << group_title_format(val_scope);
-
-      report_title = "";
-    }
-
-    if (prepend_format) {
-      out.width(static_cast<std::streamsize>(prepend_width));
-      out << prepend_format(bound_scope);
-    }
+    write_group_title(out, report, report_title, first_report_title, bound_scope);
+    write_prepend(out, prepend_format, prepend_width, bound_scope);
 
     // Select which sub-format to use:
     //   - New transaction: print between_format (separator), then first_line_format
@@ -256,16 +285,16 @@ void format_posts::operator()(post_t& post) {
         bind_scope_t xact_scope(report, *last_xact);
         out << between_format(xact_scope);
       }
-      write_with_append(out, first_line_format(bound_scope), &append_format, bound_scope);
+      write_with_append(out, first_line_format(bound_scope), append_format, bound_scope);
       last_xact = post.xact;
     } else if (last_post && last_post->date() != post.date()) {
-      write_with_append(out, first_line_format(bound_scope), &append_format, bound_scope);
+      write_with_append(out, first_line_format(bound_scope), append_format, bound_scope);
     } else {
       if (last_post && last_post->payee() != post.payee())
         post.xdata().add_flags(POST_EXT_PAYEE_CHANGED);
       write_with_append(out,
                         (next_lines_use_first ? first_line_format : next_lines_format)(bound_scope),
-                        &append_format, bound_scope);
+                        append_format, bound_scope);
     }
     // NOLINTEND(bugprone-branch-clone)
 
@@ -280,24 +309,8 @@ format_accounts::format_accounts(report_t& _report, const string& format,
                                  const optional<string>& _prepend_format,
                                  std::size_t _prepend_width, const optional<string>& _append_format)
     : report(_report), prepend_width(_prepend_width), disp_pred(), first_report_title(true) {
-  const char* f = format.c_str();
-
-  if (const char* p = std::strstr(f, "%/")) {
-    account_line_format.parse_format(string(f, static_cast<std::string::size_type>(p - f)));
-    const char* n = p + 2;
-    // NOLINTBEGIN(bugprone-branch-clone)
-    if (const char* pp = std::strstr(n, "%/")) {
-      total_line_format.parse_format(string(n, static_cast<std::string::size_type>(pp - n)),
-                                     &account_line_format);
-      separator_format.parse_format(string(pp + 2), &account_line_format);
-    } else {
-      total_line_format.parse_format(n, &account_line_format);
-    }
-    // NOLINTEND(bugprone-branch-clone)
-  } else {
-    account_line_format.parse_format(format);
+  if (!split_format(format, account_line_format, total_line_format, separator_format))
     total_line_format.parse_format(format, &account_line_format);
-  }
 
   if (_prepend_format)
     prepend_format.parse_format(*_prepend_format);
@@ -321,26 +334,10 @@ std::size_t format_accounts::post_account(account_t& account, const bool flat) {
 
     bind_scope_t bound_scope(report, account);
 
-    if (!report_title.empty()) {
-      if (first_report_title)
-        first_report_title = false;
-      else
-        out << '\n';
+    write_group_title(out, report, report_title, first_report_title, bound_scope);
+    write_prepend(out, prepend_format, prepend_width, bound_scope);
 
-      value_scope_t val_scope(bound_scope, string_value(report_title));
-      format_t group_title_format(report.HANDLER(group_title_format_).str());
-
-      out << group_title_format(val_scope);
-
-      report_title = "";
-    }
-
-    if (prepend_format) {
-      out.width(static_cast<std::streamsize>(prepend_width));
-      out << prepend_format(bound_scope);
-    }
-
-    write_with_append(out, account_line_format(bound_scope), &append_format, bound_scope);
+    write_with_append(out, account_line_format(bound_scope), append_format, bound_scope);
 
     return 1;
   }
@@ -446,13 +443,9 @@ void format_accounts::flush() {
     bind_scope_t bound_scope(report, *report.session.journal->master);
     out << separator_format(bound_scope);
 
-    if (prepend_format) {
-      static_cast<std::ostream&>(report.output_stream)
-          .width(static_cast<std::streamsize>(prepend_width));
-      static_cast<std::ostream&>(report.output_stream) << prepend_format(bound_scope);
-    }
+    write_prepend(out, prepend_format, prepend_width, bound_scope);
 
-    write_with_append(out, total_line_format(bound_scope), &append_format, bound_scope);
+    write_with_append(out, total_line_format(bound_scope), append_format, bound_scope);
   }
 
   out.flush();
