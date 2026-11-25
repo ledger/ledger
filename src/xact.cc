@@ -154,6 +154,17 @@ value_t xact_base_t::magnitude() const {
 /*----------------------------------------------------------------------*/
 
 namespace {
+/// The cost implied by @p amt's lot price: the per-unit price times the
+/// amount, in the price's commodity, unrounded.  A `{{total}}` lot price is
+/// stored per unit as well (amount_t::parse divides it by the quantity), so
+/// ANNOTATION_PRICE_NOT_PER_UNIT only steers printing and needs no case here.
+amount_t cost_from_lot_annotation(const amount_t& amt) {
+  amount_t cost(*amt.annotation().price);
+  cost.in_place_unround();
+  cost.multiply(amt, true);
+  return cost;
+}
+
 /// Helper: detect account names ending with digits, `)`, `}`, or `]`,
 /// which often indicate typos or auto-complete artifacts.  Used to
 /// produce a more helpful error message when two null-amount postings
@@ -824,17 +835,7 @@ bool xact_base_t::finalize() {
       if (!post->cost && !post->amount.is_null() && balances_in_group(post, group.is_virtual) &&
           post->amount.has_annotation() && post->amount.annotation().price &&
           post->amount.annotation().has_flags(ANNOTATION_PRICE_FIXATED)) {
-        const annotation_t& ann(post->amount.annotation());
-        post->cost = *ann.price;
-        post->cost->in_place_unround();
-        if (ann.has_flags(ANNOTATION_PRICE_NOT_PER_UNIT)) {
-          if (post->amount.sign() < 0)
-            post->cost->in_place_negate();
-        } else {
-          commodity_t& cost_commodity(post->cost->commodity());
-          *post->cost *= post->amount;
-          post->cost->set_commodity(cost_commodity);
-        }
+        post->cost = cost_from_lot_annotation(post->amount);
         post->add_flags(POST_COST_CALCULATED);
         post->add_flags(POST_COST_FIXATED);
         recompute = true;
@@ -1586,23 +1587,8 @@ void auto_xact_t::extend_xact(xact_base_t& xact, const parse_context_t* context)
             }
           }
 
-          if (check_exprs) {
-            for (expr_t::check_expr_pair& pair : *check_exprs) {
-              if (pair.second == expr_t::EXPR_GENERAL) {
-                pair.first.calc(bound_scope);
-              } else if (!pair.first.calc(bound_scope).to_boolean()) {
-                if (pair.second == expr_t::EXPR_ASSERTION)
-                  throw_(parse_error, _f("Transaction assertion failed: %1%") % pair.first);
-                else
-                  warning_func(check_location(&xact, context) +
-                               (_f("Transaction check failed: %1%") % pair.first).str() +
-                               (pos ? "\n  " + (_f("(check expression at \"%1%\", line %2%)") %
-                                                pos->pathname->string() % pos->beg_line)
-                                                   .str()
-                                    : ""));
-              }
-            }
-          }
+          if (check_exprs)
+            run_check_exprs(bound_scope, &xact, context);
         }
       } // use_aux_date restored here by guard destructor
 
@@ -1613,14 +1599,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact, const parse_context_t* context)
             if (!post->amount_expr)
               throw_(amount_error, _("Automated transaction's posting has no amount"));
 
-            value_t result(post->amount_expr->calc(bound_scope));
-            if (result.is_long()) {
-              post_amount = result.to_amount();
-            } else {
-              if (!result.is_amount())
-                throw_(amount_error, _("Amount expressions must result in a simple amount"));
-              post_amount = result.as_amount();
-            }
+            post_amount = initial_post->resolve_expr(*scope_t::default_scope, *post->amount_expr);
           } else {
             post_amount = post->amount;
           }
@@ -1690,16 +1669,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact, const parse_context_t* context)
             // When the auto-generated amount has a price annotation (e.g., copied
             // from a posting with cost like "100 kWh @@ 72€"), derive the cost
             // from the annotation so verify() can check the balance correctly.
-            new_post->cost = *amt.annotation().price;
-            new_post->cost->in_place_unround();
-            if (amt.annotation().has_flags(ANNOTATION_PRICE_NOT_PER_UNIT)) {
-              if (amt.sign() < 0)
-                new_post->cost->in_place_negate();
-            } else {
-              commodity_t& cost_commodity(new_post->cost->commodity());
-              *new_post->cost *= amt;
-              new_post->cost->set_commodity(cost_commodity);
-            }
+            new_post->cost = cost_from_lot_annotation(amt);
             new_post->add_flags(POST_COST_CALCULATED);
           }
 
@@ -1770,8 +1740,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact, const parse_context_t* context)
  * verified via index lookup that the posting belongs to the scoped
  * account, so predicate evaluation is unnecessary.  Because account
  * directives cannot carry template postings or deferred notes, only
- * check expressions need to run; the logic mirrors the check_exprs
- * branch of the main extend_xact() loop.
+ * check expressions need to run; both paths share run_check_exprs().
  */
 void auto_xact_t::apply_checks_to_post(post_t& initial_post, const parse_context_t* context) {
   if (!enabled || !check_exprs)
@@ -1786,26 +1755,38 @@ void auto_xact_t::apply_checks_to_post(post_t& initial_post, const parse_context
     // (fixes #2945).
     scoped_assign<bool> aux_date_guard(item_t::use_aux_date, false);
 
-    for (expr_t::check_expr_pair& pair : *check_exprs) {
-      if (pair.second == expr_t::EXPR_GENERAL) {
-        pair.first.calc(bound_scope);
-      } else if (!pair.first.calc(bound_scope).to_boolean()) {
-        if (pair.second == expr_t::EXPR_ASSERTION)
-          throw_(parse_error, _f("Transaction assertion failed: %1%") % pair.first);
-        else
-          warning_func(check_location(initial_post.xact, context) +
-                       (_f("Transaction check failed: %1%") % pair.first).str() +
-                       (pos ? "\n  " + (_f("(check expression at \"%1%\", line %2%)") %
-                                        pos->pathname->string() % pos->beg_line)
-                                           .str()
-                            : ""));
-      }
-    }
+    run_check_exprs(bound_scope, initial_post.xact, context);
   } catch (const std::exception&) {
     add_error_context(item_context(*this, _("While applying automated transaction")));
     if (initial_post.xact)
       add_error_context(item_context(*initial_post.xact, _("While extending transaction")));
     throw;
+  }
+}
+
+/**
+ * @brief Evaluate check_exprs in @p bound_scope for extend_xact() and
+ *        apply_checks_to_post() (see the declaration in xact.h).
+ *
+ * A failed `check` warns at @p xact_for_location's position (or the parse
+ * context's), followed by the check expression's own position.
+ */
+void auto_xact_t::run_check_exprs(bind_scope_t& bound_scope, const xact_base_t* xact_for_location,
+                                  const parse_context_t* context) {
+  for (expr_t::check_expr_pair& pair : *check_exprs) {
+    if (pair.second == expr_t::EXPR_GENERAL) {
+      pair.first.calc(bound_scope);
+    } else if (!pair.first.calc(bound_scope).to_boolean()) {
+      if (pair.second == expr_t::EXPR_ASSERTION)
+        throw_(parse_error, _f("Transaction assertion failed: %1%") % pair.first);
+      else
+        warning_func(check_location(xact_for_location, context) +
+                     (_f("Transaction check failed: %1%") % pair.first).str() +
+                     (pos ? "\n  " + (_f("(check expression at \"%1%\", line %2%)") %
+                                      pos->pathname->string() % pos->beg_line)
+                                         .str()
+                          : ""));
+    }
   }
 }
 

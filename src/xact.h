@@ -382,14 +382,23 @@ public:
    * Fast path used by journal_t::extend_xact() for account-scoped check
    * directives that are indexed by account.  The caller looks the
    * posting's account up in journal_t::account_check_xacts, so no
-   * predicate is evaluated.  No template postings are generated and deferred
-   * notes are not applied (account directives cannot carry those).
+   * predicate is evaluated.  It runs the same run_check_exprs() as
+   * extend_xact(); no template postings are generated and deferred notes
+   * are not applied (account directives cannot carry those).
    *
    * @p context is the active parse context, or null outside a parse (the
    * xact command, Python's Journal.add_xact); a failed check then warns
    * without a location (see check_location()).
    */
   void apply_checks_to_post(post_t& initial_post, const parse_context_t* context);
+
+private:
+  /// Evaluate check_exprs in @p bound_scope: an `expr` runs for effect, a
+  /// false `assert` throws parse_error and a false `check` warns at
+  /// check_location(@p xact_for_location, @p context).  The caller holds
+  /// item_t::use_aux_date false (#2945).
+  void run_check_exprs(bind_scope_t& bound_scope, const xact_base_t* xact_for_location,
+                       const parse_context_t* context);
 };
 
 /**
