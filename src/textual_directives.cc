@@ -179,10 +179,13 @@ void instance_t::price_conversion_directive(char* line) {
     // commodity history graph, so that -X (--exchange) can use
     // C-directive rates.  Only journal-level C directives get this
     // treatment; built-in unit conversions (e.g. hours/minutes) do not.
+    // The graph holds no price of a commodity in itself, a conversion
+    // that parse_conversion() rejects below as a cycle.
     amount_t larger, smaller;
     (void)larger.parse(line + 1, PARSE_NO_REDUCE);
     (void)smaller.parse(p, PARSE_NO_REDUCE);
-    if (larger.commodity() && smaller.commodity()) {
+    if (larger.commodity() && smaller.commodity() &&
+        larger.commodity().referent() != smaller.commodity().referent()) {
       amount_t per_unit_price(smaller);
       per_unit_price /= larger.number();
       larger.commodity().add_price(datetime_t(date_t(1970, 1, 1)), per_unit_price, true);

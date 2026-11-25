@@ -1,0 +1,26 @@
+; Regression test for issue #3261: a C directive that equated a commodity
+; with the null commodity merged the two, and reports showed the commodity's
+; amounts without its symbol or number format, whichever side the bare
+; number was written on.  The null commodity is not a unit, so a conversion
+; must name a commodity on each side; anything else is rejected in place.
+
+C 1 "" = 1 $
+C 1 $ = 1 ""
+C 1,00 PLN = 1,00
+C 1 "" = 1 ""
+
+2021-01-01 Test
+    A               $10
+    B
+
+test bal -> 4
+__ERROR__
+While parsing file "$FILE", line 7:
+Error: Commodity conversion requires a commodity on each side
+While parsing file "$FILE", line 8:
+Error: Commodity conversion requires a commodity on each side
+While parsing file "$FILE", line 9:
+Error: Commodity conversion requires a commodity on each side
+While parsing file "$FILE", line 10:
+Error: Commodity conversion requires a commodity on each side
+end test

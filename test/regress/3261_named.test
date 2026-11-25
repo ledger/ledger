@@ -1,0 +1,25 @@
+; Regression test for issue #3261: between two named commodities, a one
+; to one C directive reports amounts of a unit or more in the commodity
+; written on its left, which the directive's order decides and the
+; postings' order does not.  A side without a commodity is rejected
+; instead (see 3261.test).
+
+C 1 EUR = 1 USD
+C 1 CHF = 1 GBP
+
+2021-01-01 Euros against dollars
+    A               10 EUR
+    B              -10 USD
+
+2021-01-01 Pounds against francs
+    C               10 GBP
+    D              -10 CHF
+
+test bal
+              10 EUR  A
+             -10 EUR  B
+              10 CHF  C
+             -10 CHF  D
+--------------------
+                   0
+end test
