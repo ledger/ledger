@@ -23,13 +23,20 @@ class CheckCompletion (CheckOptions):
           return {option.lstrip('-').rstrip('=') for option in match.group(1).split()}
     return set()
 
+  # The options src/pyinterp.h declares (--import) exist only in a Python
+  # build, but the completion list offers them in every build.
+  def find_python_options(self):
+    regex = re.compile(r'OPTION_?\(\s*python_interpreter_t\s*,\s*(\w+?)_?\s*[,)]')
+    with open(join(self.source, 'src', 'pyinterp.h')) as f:
+      return {match.group(1).replace('_', '-') for match in regex.finditer(f.read())}
+
   # CheckOptions.main also checks the fn_ functions of src/report.h, which a
   # completion list does not offer, so this main compares options only.
   def main(self):
     listed = self.find_options(self.source_file)
     options = self.ledger_options()
     self.missing_options = options - listed
-    self.unknown_options = listed - options - self.find_alternates()
+    self.unknown_options = listed - options - self.find_alternates() - self.find_python_options()
     if self.missing_options:
       print("Missing %s option entries for:%s%s\n" % (self.source_type, self.sep, self.sep.join(sorted(self.missing_options))))
     if self.unknown_options:
