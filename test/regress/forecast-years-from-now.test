@@ -1,0 +1,45 @@
+; --forecast-years bounds forecast generation relative to the current date
+; (--now), not to the last real posting: with --now 2012-01-01 and one
+; year, the 2012-12-01 occurrence is the last, although a real posting on
+; 2012-06-15 lies later than --now.  Moving --now moves the bound.
+
+~ Monthly
+    Expenses:Rent       500.00 GBP
+    Assets
+
+2012-06-15 Landlord
+    Expenses:Rent       500.00 GBP
+    Assets
+
+test --now 2012-01-01 --forecast-years 1 --forecast "T<200000.00 GBP" reg :rent
+12-Jun-15 Landlord              Expenses:Rent            500.00 GBP   500.00 GBP
+12-Jan-01 Forecast transaction  Expenses:Rent            500.00 GBP  1000.00 GBP
+12-Feb-01 Forecast transaction  Expenses:Rent            500.00 GBP  1500.00 GBP
+12-Mar-01 Forecast transaction  Expenses:Rent            500.00 GBP  2000.00 GBP
+12-Apr-01 Forecast transaction  Expenses:Rent            500.00 GBP  2500.00 GBP
+12-May-01 Forecast transaction  Expenses:Rent            500.00 GBP  3000.00 GBP
+12-Jun-01 Forecast transaction  Expenses:Rent            500.00 GBP  3500.00 GBP
+12-Jul-01 Forecast transaction  Expenses:Rent            500.00 GBP  4000.00 GBP
+12-Aug-01 Forecast transaction  Expenses:Rent            500.00 GBP  4500.00 GBP
+12-Sep-01 Forecast transaction  Expenses:Rent            500.00 GBP  5000.00 GBP
+12-Oct-01 Forecast transaction  Expenses:Rent            500.00 GBP  5500.00 GBP
+12-Nov-01 Forecast transaction  Expenses:Rent            500.00 GBP  6000.00 GBP
+12-Dec-01 Forecast transaction  Expenses:Rent            500.00 GBP  6500.00 GBP
+end test
+
+test --now 2012-03-01 --forecast-years 1 --forecast "T<200000.00 GBP" reg :rent
+12-Jun-15 Landlord              Expenses:Rent            500.00 GBP   500.00 GBP
+12-Mar-01 Forecast transaction  Expenses:Rent            500.00 GBP  1000.00 GBP
+12-Apr-01 Forecast transaction  Expenses:Rent            500.00 GBP  1500.00 GBP
+12-May-01 Forecast transaction  Expenses:Rent            500.00 GBP  2000.00 GBP
+12-Jun-01 Forecast transaction  Expenses:Rent            500.00 GBP  2500.00 GBP
+12-Jul-01 Forecast transaction  Expenses:Rent            500.00 GBP  3000.00 GBP
+12-Aug-01 Forecast transaction  Expenses:Rent            500.00 GBP  3500.00 GBP
+12-Sep-01 Forecast transaction  Expenses:Rent            500.00 GBP  4000.00 GBP
+12-Oct-01 Forecast transaction  Expenses:Rent            500.00 GBP  4500.00 GBP
+12-Nov-01 Forecast transaction  Expenses:Rent            500.00 GBP  5000.00 GBP
+12-Dec-01 Forecast transaction  Expenses:Rent            500.00 GBP  5500.00 GBP
+13-Jan-01 Forecast transaction  Expenses:Rent            500.00 GBP  6000.00 GBP
+13-Feb-01 Forecast transaction  Expenses:Rent            500.00 GBP  6500.00 GBP
+13-Mar-01 Forecast transaction  Expenses:Rent            500.00 GBP  7000.00 GBP
+end test

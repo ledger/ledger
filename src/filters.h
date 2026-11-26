@@ -573,12 +573,17 @@ public:
 };
 
 /**
- * @brief Replaces all identifying information with anonymized data.
+ * @brief Replaces payees, account names and commodities with anonymized data.
  *
- * Used by --anon for creating sanitized bug reports.  Payees, account names,
- * and commodity symbols are replaced with deterministic hashes or sequential
- * labels.  Amounts are preserved but their commodities are relabeled (A, B,
- * C, ...).  Notes, tags, and transaction codes are stripped.
+ * Used by --anon for creating sanitized bug reports.  Payees and account
+ * names become 8-digit SHA1 hashes salted with rnd_gen (an mt19937 seeded
+ * from std::time()) and pointer addresses, so they differ from run to run.
+ * Within one run an account keeps one hash (acct_hashes), while a payee is
+ * hashed afresh for every transaction.  Commodities are relabeled with
+ * sequential letters (A, B, C, ...); amounts are preserved.  The
+ * transaction code, the transaction and posting notes and a lot
+ * annotation's tag are removed.  Metadata tags (key: value and :tag:) are
+ * copied through and remain readable by tag() and has_tag().
  */
 class anonymize_posts : public item_handler<post_t> {
   using commodity_index_map = std::map<commodity_t*, std::size_t>;
@@ -1298,8 +1303,8 @@ public:
 /**
  * @brief Accumulates postings by day of week (0=Sunday through 6=Saturday).
  *
- * Used by --dow.  On flush(), subtotals each day's postings separately using
- * the "%As" format (abbreviated day name as the payee).
+ * Used by --dow.  On flush(), subtotals each day's postings separately,
+ * with the full day name pluralized as the payee ("Mondays"; format "%As").
  */
 class day_of_week_posts : public subtotal_posts {
   posts_list days_of_the_week[7]; ///< Postings bucketed by day of week (0=Sun, 6=Sat).
@@ -1406,13 +1411,14 @@ public:
  *
  * Used by --forecast-while.  Periodic transactions are projected forward in
  * time, generating synthetic postings.  Generation stops for each periodic
- * posting when it either fails the continuation predicate or exceeds the
- * forecast_years limit (default 5 years beyond the last valid posting).
+ * posting when it either fails the continuation predicate or would start
+ * more than 365 * forecast_years days after the current date (CURRENT_DATE,
+ * i.e. --now); forecast_years comes from --forecast-years, default 5.
  */
 class forecast_posts : public generate_posts {
   predicate_t pred; ///< Continuation predicate; generation stops when this returns false.
   scope_t& context; ///< Scope for evaluating the predicate.
-  const std::size_t forecast_years; ///< Maximum years to project beyond the last valid posting.
+  const std::size_t forecast_years; ///< Years past CURRENT_DATE to generate (--forecast-years).
 
 public:
   forecast_posts(post_handler_ptr handler, const predicate_t& predicate, scope_t& _context,
@@ -1438,8 +1444,9 @@ public:
  * Used by --inject.  The tag_list string (comma-separated) specifies which
  * tags to look for.  For each tag found on a posting or its transaction,
  * a synthetic posting is created with the tag's value as the amount, posted
- * to the account path derived from the tag name.  Each transaction is only
- * injected once per tag.
+ * to the account path derived from the tag name.  A tag on a posting injects
+ * once for every posting that carries it; a posting without the tag falls
+ * back to its transaction's tag, which injects once per transaction.
  */
 class inject_posts : public item_handler<post_t> {
   using tag_injected_set = std::set<xact_t*>;

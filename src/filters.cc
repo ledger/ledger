@@ -355,9 +355,11 @@ void anonymize_posts::render_commodity(amount_t& amt) {
  * symbols with hashed/sequential substitutes.
  *
  * A new temporary transaction is created for each distinct xact, with the
- * payee replaced by a SHA1 hash.  Account names at each level are similarly
- * hashed.  Amounts retain their numeric value but receive relabeled
- * commodities.  Notes, codes, and tags are stripped entirely.
+ * payee replaced by a SHA1 hash salted afresh for that xact.  Each account
+ * level is hashed once per run and reused through acct_hashes.  Amounts
+ * retain their numeric value but receive relabeled commodities.  The code,
+ * the notes and a lot annotation's tag are cleared; the metadata tags that
+ * copy_xact() and copy_post() carry over are kept.
  */
 void anonymize_posts::operator()(post_t& post) {
   bool copy_xact_details = false;
@@ -2220,8 +2222,8 @@ void filter_posts::operator()(post_t& post) {
 /*--- Day-of-week subtotaling ---*/
 
 /**
- * Subtotal each day's accumulated postings and emit them with the
- * abbreviated day name as the payee (format "%As").
+ * Subtotal each day's accumulated postings and emit them with the full day
+ * name pluralized as the payee ("Mondays"; format "%As").
  */
 void day_of_week_posts::flush() {
   for (int i = 0; i < 7; i++) {
@@ -2469,7 +2471,7 @@ void forecast_posts::add_post(const date_interval_t& period, post_t& post) {
  * chain.cc provides additional filtering at the output level.
  *
  * A periodic posting is removed from consideration when:
- * - Its start date exceeds forecast_years beyond the last generated date, or
+ * - Its start date is more than 365 * forecast_years days after CURRENT_DATE, or
  * - Its group's last matching posting fails the continuation predicate, or
  * - Its interval has no more occurrences.
  */
@@ -2478,7 +2480,8 @@ void forecast_posts::flush() {
 
   // If there are period transactions to apply in a continuing series until
   // the forecast condition is met, generate those transactions now.  Note
-  // that no matter what, we abandon forecasting beyond the next 5 years.
+  // that no matter what, we abandon forecasting more than forecast_years
+  // (--forecast-years, default 5) years after the current date.
   //
   // It works like this:
   //
@@ -2523,7 +2526,7 @@ void forecast_posts::flush() {
         same_date.push_back(i);
     }
 
-    // Check the 5-year safety limit.  Only applies when the earliest
+    // Check the forecast_years safety limit.  Only applies when the earliest
     // date is beyond last (CURRENT_DATE); when including the current
     // period, start may precede CURRENT_DATE, which is not a concern.
     if (earliest_date > last && static_cast<std::size_t>((earliest_date - last).days()) >
