@@ -52,10 +52,12 @@
  *   profiling parsing, report generation, and other phases
  * - **Signal handling** for graceful interruption via Ctrl-C
  * - **String utilities** for whitespace manipulation and argument splitting
- * - **SHA-1 hashing** used to generate stable identifiers for transactions
+ * - **SHA-1 hashing** for `--anon` and for convert's duplicate detection
+ *   (transaction `--hashes` use SHA-512; see sha512.cc)
  *
- * Nearly every source file in Ledger includes this header (typically via
- * `system.hh`), making it the shared vocabulary for the entire codebase.
+ * Nearly every source file in Ledger includes this header (through other
+ * Ledger headers; utils.h itself includes ledger.hh, which includes
+ * system.hh), making it the shared vocabulary for the entire codebase.
  */
 #pragma once
 
@@ -110,8 +112,9 @@ inline const std::shared_ptr<const path>& empty_pathname_ptr() {
  * `abort()`.  This allows the test harness and interactive sessions to
  * report assertion failures as catchable exceptions with file/line context.
  *
- * Compile with `NO_ASSERTS=1` to elide all assertion checks for release
- * builds (the expression is still evaluated for side effects).
+ * Configure with `-DDISABLE_ASSERTS=ON` (which sets `NO_ASSERTS` in the
+ * generated ledger.hh) to elide all assertion checks; the expression is
+ * still evaluated for its side effects.
  */
 /*@{*/
 
@@ -148,12 +151,14 @@ void debug_assert(const string& reason, const string& func, const string& file, 
  *
  * 2. **Object lifetime tracing** (`TRACE_CTOR`/`TRACE_DTOR`).  When enabled,
  *    every constructor/destructor call is recorded so that at shutdown the
- *    system can report leaked objects and their allocation sites.  This is
+ *    system can report leaked objects by address, class and size.  This is
  *    Ledger's own lightweight leak detector, independent of tools like
  *    AddressSanitizer.
  *
- * Enable with `--verify` at runtime.  Compile with `VERIFY_ON=0` to remove
- * all verification overhead from release builds.
+ * Verification is compiled in only for Debug builds (`VERIFY_ON` follows
+ * `DEBUG_MODE` in the generated ledger.hh, set by
+ * `-DCMAKE_BUILD_TYPE=Debug`).  There, `--verify` (or `--verify-memory`)
+ * enables it at runtime; in every other build both options do nothing.
  */
 /*@{*/
 
@@ -215,12 +220,10 @@ void report_memory(std::ostream& out, bool report_all = false);
 /*@}*/
 
 /**
- * @name String wrapper
+ * @name String helpers
  *
- * This string type is a wrapper around std::string that allows us to trace
- * constructor and destructor calls.  It also makes ledger's use of strings a
- * unique type, that the Boost.Python code can use as the basis for
- * transparent Unicode conversions.
+ * Small helpers over `ledger::string`, which is a plain alias for
+ * `std::string` (see the type aliases above).
  */
 /*@{*/
 
@@ -390,7 +393,8 @@ inline bool category_matches(const char* cat) {
  * @name Cumulative timers
  *
  * Timers measure cumulative wall-clock time spent in named regions of code.
- * They appear in log output as, for example, `[INFO] Parsing journal: (42ms)`.
+ * They appear in log output as, for example, `[INFO]  Read journal file (42ms)`;
+ * a description ending in `:` is printed without the parentheses.
  *
  * - `start_timer` / `stop_timer` accumulate elapsed time across multiple
  *   start/stop pairs (useful for functions called repeatedly).
@@ -679,7 +683,8 @@ inline int read_into(std::istream& in, string& out, Keep keep, std::size_t* cons
 }
 
 /// Convert a SHA-1 digest to a hexadecimal string.
-/// @param message_digest  The raw SHA-1 digest (array of unsigned ints).
+/// @param message_digest  The raw SHA-1 digest (an array whose element type
+///                        varies across Boost versions).
 /// @param len             Number of hex characters to produce (default: full digest).
 inline string digest_to_hex(const boost::uuids::detail::sha1::digest_type& message_digest,
                             size_t len = sizeof(boost::uuids::detail::sha1::digest_type) * 2) {
@@ -700,8 +705,8 @@ inline string digest_to_hex(const boost::uuids::detail::sha1::digest_type& messa
 }
 
 /// Compute the SHA-1 hash of @p str and return it as a hex string.
-/// Used to generate stable identifiers for automated transactions
-/// and other content-addressed data.
+/// Used to anonymize payees and accounts (`--anon`) and to key CSV lines
+/// for duplicate detection in `convert`.
 /// @param len  Number of hex characters to return (default: full 40-char hash).
 inline string sha1sum(const string& str,
                       size_t len = sizeof(boost::uuids::detail::sha1::digest_type) * 2) {
