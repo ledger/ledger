@@ -37,9 +37,8 @@
  * @ingroup report
  *
  * This file produces output that Emacs's ledger-mode can read directly
- * as Lisp data.  The format is a nested alist where each transaction is
- * a list whose car is the transaction header and whose cdr contains the
- * posting entries.
+ * as Lisp data: a list of transactions, each a list of FILE LINE DATE
+ * CODE PAYEE followed by one list per posting.
  *
  * Date formatting supports three modes controlled by --lisp-date-format:
  *   - "epoch" / "seconds" -- Unix epoch seconds as an integer

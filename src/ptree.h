@@ -84,7 +84,7 @@ protected:
   using commodities_pair = std::pair<string, commodity_t*>;
 
   commodities_map commodities;        ///< Commodities seen since the last flush()
-  std::set<xact_t*> transactions_set; ///< Set for O(1) duplicate detection
+  std::set<xact_t*> transactions_set; ///< Transactions already queued, for de-duplication
   std::deque<xact_t*> transactions;   ///< Transactions since the last flush(), in encounter order
 
 public:

@@ -45,21 +45,22 @@
  * output is a nested list structure that Emacs can `read` directly into
  * Lisp objects for programmatic access to transaction and posting data.
  *
- * The output structure is:
+ * The output is a list with one flat list per transaction: five header
+ * elements followed directly by one list per posting.
  * @code
- * ((<xact-1-header>
- *   (<posting-1-line> <posting-2-line> ...))
- *  (<xact-2-header>
- *   (<posting-1-line> ...)))
+ * ((FILE LINE DATE CODE PAYEE
+ *   (POST-1)
+ *   (POST-2) ...)
+ *  (FILE LINE DATE CODE PAYEE
+ *   (POST-1) ...))
  * @endcode
  *
- * Each transaction header includes the source file path, line number,
- * date (as an Emacs time value or custom format), code, and payee.
- * Each posting includes the line number, account name, amount, clearing
- * state, and optional cost and note.
+ * FILE and LINE are the transaction's source path and line number, DATE
+ * an Emacs time value or a --lisp-date-format value, CODE and PAYEE
+ * strings or nil.  Each posting list holds the line number, account name,
+ * amount, clearing state, and optional cost and note.
  *
- * This mode is activated by the `--pager=emacs` or related Emacs
- * integration options in ledger-mode.
+ * Selected by the `emacs` command (alias `lisp`), which ledger-mode runs.
  */
 #pragma once
 

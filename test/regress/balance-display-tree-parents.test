@@ -1,0 +1,67 @@
+; format_accounts::mark_accounts: in tree mode a parent with two or more
+; displayed children, or one displayed child plus journal postings of its
+; own, is shown even though it fails --display; a parent with one displayed
+; child and no journal postings of its own folds into that child's line.  --flat shows
+; only the accounts that pass --display.  Under --empty a declared but
+; unused account is shown only when it passes --limit.
+
+account Liabilities:Card
+account Assets
+
+2024/01/01 Opening
+    Assets:Cash  $100
+    Assets:Stock  $50
+    Assets:Bank:Checking  $30
+    Expenses  $5
+    Expenses:Food  $7
+    Equity:Opening
+
+test bal --display 'account =~ /Cash|Stock|Checking|Food/'
+                $180  Assets
+                 $30    Bank:Checking
+                $100    Cash
+                 $50    Stock
+                 $12  Expenses
+                  $7    Food
+--------------------
+                   0
+end test
+
+test bal --display 'account =~ /Cash|Stock|Checking|Food/' --flat
+                 $30  Assets:Bank:Checking
+                $100  Assets:Cash
+                 $50  Assets:Stock
+                  $7  Expenses:Food
+--------------------
+                   0
+end test
+
+test bal --empty Assets
+                $180  Assets
+                 $30    Bank:Checking
+                $100    Cash
+                 $50    Stock
+--------------------
+                $180
+end test
+
+test bal --flat --empty Assets
+                   0  Assets
+                 $30  Assets:Bank:Checking
+                $100  Assets:Cash
+                 $50  Assets:Stock
+--------------------
+                $180
+end test
+
+test bal --flat Assets
+                 $30  Assets:Bank:Checking
+                $100  Assets:Cash
+                 $50  Assets:Stock
+--------------------
+                $180
+end test
+
+test bal --empty Liabilities
+                   0  Liabilities:Card
+end test

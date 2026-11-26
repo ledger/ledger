@@ -98,7 +98,7 @@ string csv_reader::read_field(std::istream& in) {
         field += x;
     }
   } else {
-    // Unquoted field: read until comma or end of line
+    // Unquoted field: read until the separator or end of line
     while (in.good() && !in.eof()) {
       in.get(c);
       if (in.good()) {

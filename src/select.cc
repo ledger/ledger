@@ -205,8 +205,9 @@ value_t select_command(call_scope_t& args) {
       }
 
       // Distribute any remaining terminal width to payee/account columns.
-      // In interval mode, the payee width is fixed at date_width + 2, so
-      // grow only the account column (#3216).
+      // In interval mode the payee column holds the period range, so it keeps
+      // its width (date_width + 3 unless --payee-width is given) and only the
+      // account column grows (#3216).
       const bool grow_payee = saw_payee && !report.HANDLED(period_);
       while ((saw_account || grow_payee) && cols_needed < cols) {
         if (saw_account && cols_needed < cols) {

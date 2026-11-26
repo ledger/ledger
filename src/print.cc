@@ -177,8 +177,9 @@ bool post_has_simple_amount(const post_t& post) {
   if (post.amount.is_null())
     return false;
 
-  // Is the amount a complex expression.  If so, the first 'if' should
-  // have triggered.
+  // Was the amount written as an expression?  Such a posting does not carry
+  // POST_CALCULATED, so test amount_expr itself: print shows the expression
+  // as written and must then keep the other posting's amount explicit.
   if (post.amount_expr)
     return false;
 

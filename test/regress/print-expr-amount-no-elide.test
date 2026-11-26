@@ -1,0 +1,30 @@
+; A posting whose amount is written as an expression carries amount_expr
+; but not POST_CALCULATED.  print must then keep the other posting's
+; amount explicit (post_has_simple_amount returns false), whereas a plain
+; two-posting transaction in one commodity has its second amount elided.
+
+2024/01/01 Grocer
+    Expenses:Food    ($10 * 2)
+    Assets:Cash    $-20
+
+2024/01/02 Grocer
+    Expenses:Food    $20
+    Assets:Cash    $-20
+
+2024/01/03 Grocer
+    Expenses:Food    $20
+    Assets:Cash    ($-10 * 2)
+
+test print
+2024/01/01 Grocer
+    Expenses:Food                          ($10 * 2)
+    Assets:Cash                                 $-20
+
+2024/01/02 Grocer
+    Expenses:Food                                $20
+    Assets:Cash
+
+2024/01/03 Grocer
+    Expenses:Food                                $20
+    Assets:Cash                           ($-10 * 2)
+end test

@@ -64,8 +64,7 @@
  *     payees
  *   - Rich metadata tagging (import date and original CSV line)
  *
- * @see textual.cc  The main journal parser that delegates to csv_reader
- *                  for `.csv` file includes.
+ * @see convert.cc  convert_command(), the only user of csv_reader.
  * @see xact_t     The transaction type produced by read_xact().
  */
 #pragma once
@@ -118,7 +117,7 @@ class csv_reader {
     FIELD_CODE,     ///< Transaction code (check number, reference)
     FIELD_PAYEE,    ///< Payee/description/title
     FIELD_CREDIT,   ///< Credit amount (positive inflow) or combined amount
-    FIELD_DEBIT,    ///< Debit amount (negated to represent outflow)
+    FIELD_DEBIT,    ///< Debit amount (a positive value is negated to an outflow)
     FIELD_COST,     ///< Cost basis for the posting
     FIELD_TOTAL,    ///< Running total (used for balance assertions)
     FIELD_NOTE,     ///< Transaction note

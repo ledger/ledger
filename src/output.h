@@ -166,14 +166,22 @@ public:
   /**
    * @brief Recursively mark which accounts should be displayed.
    *
-   * Walks the account hierarchy depth-first.  An account is marked for
-   * display if it (or its children) have been visited, it passes the
-   * display predicate, and it has a non-trivial display total.  The
-   * --flat flag changes the visibility logic so that intermediate
-   * parent accounts are not shown.  With --empty, an account declared by
-   * an `account` directive is shown even when no posting in the report
-   * reaches it, unless the account terms of the --limit predicate (those
-   * testing its name or depth) rule it out; terms about postings never do.
+   * Walks the account hierarchy depth-first, children before parents.  An
+   * account is considered only when it or a descendant was visited (received
+   * a reported posting) or admitted (under --empty, declared by an `account`
+   * directive and not ruled out by the account terms of --limit, those
+   * testing its name or depth; terms about postings never do).
+   *
+   * In tree mode a parent with two or more displayed children, or one
+   * displayed child plus journal postings of its own, is always shown,
+   * whatever --display and its total say, so the tree keeps its shape.  A
+   * parent with exactly one displayed child and no journal postings of its
+   * own is not shown; the child's line carries the joined name (`Bank:Checking`).
+   * Every other account is shown when it passes --display and its display
+   * total is non-zero (any total under --empty).  With --flat a parent is
+   * never shown for its children's sake: it is considered only when it
+   * was visited itself, was admitted itself, or none of its visited
+   * descendants is shown.
    *
    * When a --collapse-if predicate is active and matches an account, that
    * account becomes a collapse point: its descendants are not marked for
