@@ -28,9 +28,8 @@ jobs:
     # makes a cold run slow.  No store-size cap is set on purpose:
     # `nix build .` roots only the ledger output, whose closure does
     # not contain the oracle, the Mathlib tree or the Lean toolchain
-    # (they are check-time inputs), so a pre-save garbage collection
-    # deletes exactly those paths first -- the previous 8G cap did so
-    # on every run and saved a 160 MB cache that could never help.
+    # (they are check-time inputs), so the pre-save garbage collection
+    # a cap triggers would delete exactly those paths first.
     # flake.lock pins the semantics revision, so the key follows every
     # Lean upgrade, and `deps` is content-addressed, so a cache restored
     # by prefix stays valid until that pin moves.  Only pushes to main

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-# This script confirms both that the register report "adds up", and that its
-# final balance is the same as what the balance report shows.
+# Round-trip check: for each seed N in [beg_range, end_range), the balance of
+# the journal `ledger --seed=N generate` writes must equal the balance of its
+# `print`ed form.
 
 import argparse
 import pathlib

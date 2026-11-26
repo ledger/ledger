@@ -211,10 +211,9 @@ jobs:
         # image with either ~145 GB or ~72 GB of root disk depending on
         # availability, so we clean aggressively here to leave headroom on
         # the smaller variant.  Remove preinstalled toolchains that this job
-        # does not need; only target known-unrelated stacks (do not touch
-        # /usr/local/share/boost or /usr/local/share/cmake — apt-installed
-        # Boost works alongside them but hostedtoolcache provides Python
-        # we install via apt instead).
+        # does not need.  Boost and CMake under /usr/local/share are left in
+        # place; hostedtoolcache is removed because this job installs
+        # Python from apt (`acprep dependencies --python`).
         run: |
           df -h /
           sudo rm -rf /usr/local/lib/android

@@ -46,7 +46,7 @@ def get_compiler_implicit_flags(compiler: str) -> list[tuple[str, str]]:
 
     # The -v output contains a line with the cc1 invocation that lists all
     # flags, including the implicit ones the wrapper adds.  Extract the line
-    # that starts with a path and contains "-cc1".
+    # that contains " -cc1 ".
     cc1_line = ''
     for line in output.splitlines():
         if ' -cc1 ' in line:

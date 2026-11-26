@@ -593,13 +593,15 @@ endif()
 
 if(CPPCHECK)
   # --project feeds the compile_commands.json so cppcheck sees real include
-  # paths and defines; --suppress suppresses noise from system/Boost headers
+  # paths and defines; --suppress drops findings inside the generated
+  # precompiled header (system.hh in the build tree), which is Boost and
+  # standard-library includes rather than Ledger code.
   list(APPEND _lint_commands
     COMMAND ${CPPCHECK}
       --enable=all
       --inconclusive
       "--project=${CMAKE_BINARY_DIR}/compile_commands.json"
-      "--suppress=*:${CMAKE_SOURCE_DIR}/src/system.hh")
+      "--suppress=*:${PROJECT_BINARY_DIR}/system.hh")
 endif()
 
 if(NOT _lint_commands)

@@ -674,6 +674,10 @@ class PrepareBuild(CommandLineApp):
         if self.options.python_version:
             self.configure_args.append('-DPYTHON_REQUIRED_VERSION=' + self.options.python_version)
 
+        # Name the macOS SDK explicitly: CMake 4 no longer picks a default
+        # CMAKE_OSX_SYSROOT, and non-Apple compilers (e.g. Homebrew LLVM) need
+        # one.  CMakeLists.txt clears it again when the compiler comes from Nix,
+        # whose clang wrapper supplies its own SDK.
         if system == 'Darwin':
             import subprocess
             try:
