@@ -35,12 +35,12 @@
  *
  * @ingroup expr
  *
- * @brief Implementation of the Pratt expression parser.
+ * @brief Implementation of the recursive-descent expression parser.
  *
- * This file implements the recursive-descent, operator-precedence-climbing
- * parser declared in parser.h.  Each `parse_*` function handles one
- * precedence level of Ledger's expression grammar and delegates to the
- * next-tighter level for its operands.
+ * This file implements the recursive-descent parser declared in
+ * parser.h.  Each `parse_*` function handles one precedence level of
+ * Ledger's expression grammar; its operands are parsed at tighter levels,
+ * except inside parentheses, which restart at parse_value_expr.
  *
  * The general pattern for binary operator levels is:
  *   1. Call the next-higher-precedence function to get the left operand.

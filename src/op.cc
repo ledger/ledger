@@ -737,9 +737,9 @@ value_t expr_t::op_t::calc_seq(scope_t& scope, ptr_op_t* locus, const int depth)
   // An O_SEQ is very similar to an O_CONS except that only the last
   // result value in the series is kept.  O_CONS builds up a list.
   //
-  // Another feature of O_SEQ is that it pushes a new symbol scope onto
-  // the stack.  We evaluate the left side here to catch any
-  // side-effects, such as definitions in the case of 'x = 1; x'.
+  // Every statement is evaluated in the caller's scope; no new symbol
+  // scope is pushed.  Definitions made by earlier statements, as in
+  // 'x = 1; x', are therefore visible to later ones.
   value_t result = left()->calc(scope, locus, depth + 1);
   for_each_in_chain(right(), O_SEQ,
                     [&](const ptr_op_t& stmt) { result = stmt->calc(scope, locus, depth + 1); });

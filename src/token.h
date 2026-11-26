@@ -55,7 +55,7 @@
  * and identifiers through arithmetic, comparison, and logical operators,
  * to control-flow keywords (`if`/`else`) and the ternary `?`/`:` pair.
  *
- * @see parser_t   The Pratt parser that consumes these tokens.
+ * @see parser_t   The recursive-descent parser that consumes these tokens.
  * @see op_t       The AST node type the parser builds from tokens.
  * @see expr_t     The user-facing expression wrapper.
  */
