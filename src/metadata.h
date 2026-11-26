@@ -149,9 +149,12 @@ public:
    * This is the tokenizer of parse_metadata_tags(); it sets and
    * evaluates nothing.  Recognizes:
    *   - `:tag1:tag2:tag3:` -- colon-delimited bare tags.
-   *   - `Key: value`       -- the first whitespace-delimited token ending
-   *                           in `:` names a key whose value is the rest of
-   *                           the line as a string.
+   *   - `Key: value`       -- if the comment's first whitespace-delimited
+   *                           token of two or more characters ends in `:`,
+   *                           it names a key whose value is the rest of the
+   *                           line as a string.  A later token never names
+   *                           a key, and a leading `:tag:` token takes the
+   *                           first position.
    *   - `Key:: expr`       -- like `Key:` but the value is an expression,
    *                           which parse_metadata_tags() evaluates.
    *

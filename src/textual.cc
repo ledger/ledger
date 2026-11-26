@@ -72,10 +72,13 @@ void instance_t::parse() {
   bool error_flag = false;
   xact_t* previous_xact = nullptr;
 
-  // Read lines until EOF or the '^' sentinel (used by the test harness).
-  // Each iteration dispatches one top-level line.  Errors are caught,
-  // reported, and counted rather than aborting the entire parse, so that
-  // all errors in a file can be shown at once.
+  // Read lines until EOF or a line that begins with '^'.  The '^' line
+  // ends this file only (an included file returns to its includer); it is
+  // an undocumented maintainer aid for bisecting a journal to find where
+  // it stops balancing.  The in.good() test after peek() is what stops the
+  // loop at end of input.  Each iteration dispatches one top-level line.
+  // Errors are caught, reported, and counted rather than aborting the
+  // entire parse, so that all errors in a file can be shown at once.
   while (!in.eof() && in.peek() != '^' && in.good()) {
     try {
       if (xact_t* xact = read_next_directive(error_flag, previous_xact)) {

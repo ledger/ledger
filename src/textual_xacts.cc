@@ -46,7 +46,8 @@
  *   - parse_xact()  -- Parses a complete transaction (date line + postings)
  *   - parse_post()  -- Parses a single posting line (account, amount, cost,
  *                      balance assertion/assignment, and note)
- *   - parse_posts() -- Reads all indented posting lines following a header
+ *   - parse_posts() -- Reads the posting lines of a periodic (`~`)
+ *                      transaction; `;` note lines are skipped
  *
  * The posting parser is the most complex part of the Ledger grammar.  A
  * posting line packs a surprising amount of information:

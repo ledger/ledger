@@ -96,11 +96,15 @@ using fixed_rate_t = std::pair<commodity_t*, amount_t>;
  *   - string               -- `apply tag` (tags added to every item)
  *   - fixed_rate_t         -- `apply fixed` / `apply rate` (price override)
  *
- * The label field records the directive keyword (e.g. "account", "tag") so
- * that `end apply <keyword>` can verify it matches the most recent entry.
+ * The label field records the canonical apply keyword: "account", "tag",
+ * "year" or "fixed" (`apply rate` records "fixed" too).  end_apply_directive()
+ * checks `end apply <keyword>`, and the older `end <keyword>`, against the
+ * most recent entry's label, reading `rate` as `fixed`, so either spelling
+ * closes either block.  A bare `end` or `end apply` closes the most recent
+ * entry unchecked.
  */
 struct application_t {
-  string label; ///< The apply keyword ("account", "tag", "year", "fixed")
+  string label; ///< Canonical apply keyword; `apply rate` records "fixed"
   std::variant<optional<datetime_t>, account_t*, string, fixed_rate_t>
       value;                          ///< Type-specific payload
   optional<int> saved_year_directive; ///< Year directive value saved before `apply year` changed it
@@ -397,7 +401,12 @@ public:
                      bool defer_expr = false);
 
   /**
-   * @brief Read and parse all indented posting lines following a transaction header.
+   * @brief Read the posting lines of a periodic (`~`) transaction.
+   *
+   * Reads indented lines until a blank or unindented one.  `;` note and
+   * metadata lines are skipped, not attached to the transaction or its
+   * postings.  Regular and automated transactions read their own posting
+   * lines (parse_xact(), automated_xact_directive()).
    * @return true if at least one posting was added.
    */
   bool parse_posts(account_t* account, xact_base_t& xact, const bool defer_expr = false);

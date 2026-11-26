@@ -1,0 +1,13 @@
+; A line that begins with '^' ends the file that contains it: an
+; undocumented maintainer aid for bisecting a journal.  In an included
+; file it ends only that file, and parsing resumes in the including file
+; after the include line; an included file whose first line is '^'
+; contributes nothing.  A '^' that does not begin a line is ordinary
+; text.  The journal lives in .dat files so the semantic bisimulation,
+; whose oracle has no '^' sentinel, does not replay it.
+
+test -f $sourcepath/test/regress/caret-ends-file.dat reg --format '%(payee) [%(tag("Memo"))]\n' Food
+Main first []
+Included before caret []
+Main after include [a^b]
+end test
