@@ -30,6 +30,20 @@ COLORED = ('             \033[38;5;196m$-25.00\033[0m'
            '  \033[38;2;95;135;255mAssets:Checking\033[0m\n'
            '              $25.00  \033[38;2;95;135;255mExpenses:Food\033[0m\n')
 
+# A journal that defines a value, so that a case can tell whether it was read,
+# and one whose two transactions do not balance (two parse errors).
+MARKED = ('define journal_marker=7\n'
+          '2024/01/01 Test payee\n'
+          '    Expenses:Food    $25.00\n'
+          '    Assets:Checking\n')
+UNBALANCED = ('2024/01/01 X\n'
+              '    A  $1\n'
+              '    B  $2\n'
+              '\n'
+              '2024/01/02 Y\n'
+              '    A  $1\n'
+              '    B  $2\n')
+
 # Each case: (description, environment, init files {name: text}, arguments,
 # expected stdout, expected exit status).  In every string $DIR is the case's
 # own scratch directory (which holds its init files) and $JOURNAL the journal.
@@ -72,6 +86,33 @@ CASES = [
     ('An account check in the init file is rejected', {},
      {'ledgerrc': 'account Assets:Checking\n    check amount < 1000\n'},
      ['--init-file', '$DIR/ledgerrc', '-f', '$JOURNAL', 'bal'], '', 1),
+    # In batch mode execute_command reads the journal only for a regular
+    # command.  A precommand (eval) runs after the init file has been read
+    # and without the journal; a precommand that needs the journal (source)
+    # reads it itself, and journal parse errors (error_count) set the exit
+    # status.  (Under --script and at the REPL main() reads the journal
+    # before the first command; these five rows are all batch runs.)
+    ('eval sees definitions from the init file', {},
+     {'ledgerrc': 'define init_marker=42\n', 'journal.dat': MARKED},
+     ['--init-file', '$DIR/ledgerrc', '-f', '$DIR/journal.dat', 'eval', 'init_marker'],
+     '42\n', 0),
+    ('eval runs without the journal being read', {},
+     {'ledgerrc': 'define init_marker=42\n', 'journal.dat': MARKED},
+     ['--init-file', '$DIR/ledgerrc', '-f', '$DIR/journal.dat', 'eval', 'journal_marker'],
+     '', 1),
+    ('eval ignores parse errors in an unread journal', {},
+     {'ledgerrc': 'define init_marker=42\n', 'unbalanced.dat': UNBALANCED},
+     ['--init-file', '$DIR/ledgerrc', '-f', '$DIR/unbalanced.dat', 'eval', 'init_marker'],
+     '42\n', 0),
+    ('source reads the journal itself; the exit status counts its errors', {},
+     {'ledgerrc': 'define init_marker=42\n', 'unbalanced.dat': UNBALANCED},
+     ['--init-file', '$DIR/ledgerrc', '-f', '$DIR/unbalanced.dat', 'source'],
+     '', 2),
+    ('A regular command reads the journal data files', {},
+     {'ledgerrc': 'define init_marker=42\n', 'journal.dat': MARKED},
+     ['--init-file', '$DIR/ledgerrc', '-f', '$DIR/journal.dat', 'bal',
+      '--format', '%(journal_marker)\n', '--no-total', '--flat'],
+     '7\n7\n', 0),
 ]
 # Every documented way of naming an init file on the command line reads it,
 # and a missing one is an error.

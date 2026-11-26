@@ -716,10 +716,8 @@ value_t xact_command(call_scope_t& args) {
     scoped_assign<optional<int>> suspension(year_directive_year, optional<int>());
     draft_t draft(args.value());
 
-    // Once insert() succeeds the generated transaction lives in the journal,
-    // which owns it (and destroys it in ~journal_t); deleting it here as well
-    // freed it out from under the journal, crashing later commands in the
-    // REPL and the --verify teardown (issue #3244).
+    // Once insert() succeeds the generated transaction is owned by the
+    // journal (destroyed in ~journal_t); do not delete it here.
     new_xact = draft.insert(*report.session.journal.get());
   }
 

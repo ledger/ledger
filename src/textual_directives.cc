@@ -52,8 +52,10 @@
  *   Push/pop entries on the apply stack to affect all subsequent items.
  *
  *   **Legacy single-character directives** -- `A`, `C`, `D`, `N`, `P`, `Y`
- *   Inherited from the original Ledger format; each has a word-based
- *   equivalent in the general_directive() dispatch table.
+ *   Inherited from the original Ledger format and dispatched by
+ *   read_next_directive().  A and Y also have keyword forms (`bucket`,
+ *   `year`); D and N overlap the `commodity` sub-directives `default` and
+ *   `nomarket`; C and P exist only in single-character form.
  *
  *   **File directives** -- `include`, `comment`/`test`, `--option`
  *   Control which files are parsed and how options are set.
@@ -379,9 +381,11 @@ void split_glob_path(const path& filename, path& base, std::vector<path>& compon
  * component, not just the filename -- wildcards in parent directory
  * components are expanded as well, so a single directive can match
  * files across multiple directory levels.  Paths are resolved relative
- * to the directory of the current file.  Recursive includes are
- * detected and skipped; a hard depth limit of 100 prevents runaway
- * include chains.
+ * to the directory of the current file.  A match that is the including
+ * file itself is skipped, so a glob such as `include 1662*` does not
+ * re-read its own file; a literal self-include therefore finds no file
+ * and is reported as not found.  Longer include cycles are stopped by
+ * the hard depth limit of 100.
  *
  * For each matched file, a new instance_t is created and parsed.  The
  * parent file's year/epoch state is saved and restored after the
@@ -990,10 +994,9 @@ string quote_bare_symbol(const string& format, const string& symbol) {
 } // namespace
 
 void instance_t::commodity_format_directive(commodity_t& comm, string format) {
-  // jww (2012-02-27): A format specified this way should turn off
-  // observational formatting.  The format declares the style
-  // (PARSE_DECLARES_STYLE), so a decimal comma that only its digits
-  // suggest is no conflict with an earlier decimal period.
+  // The format declares the style (PARSE_DECLARES_STYLE), so a decimal
+  // comma that only its digits suggest is no conflict with an earlier
+  // decimal period.
   strip_commodity_comment(format);
   trim(format);
   amount_t amt;

@@ -238,10 +238,15 @@ void global_scope_t::execute_command(strings_list args, bool at_repl) {
   strings_list::iterator arg = args.begin();
   const string verb = *arg++; // NOLINT(bugprone-unused-local-non-trivial-variable)
 
-  // Phase 2: Look for a precommand first, which is defined as any defined
-  // function whose name starts with "ledger_precmd_".  The difference
-  // between a precommand and a regular command is that precommands ignore
-  // the journal data file completely, nor is the user's init file read.
+  // Phase 2: Look for a precommand first: any symbol the bound global and
+  // report scopes define under symbol_t::PRECOMMAND (look_for_precommand).
+  // In batch mode execute_command reads the journal data files in Phase 3,
+  // which a precommand skips, so it runs without them (at the REPL and
+  // under --script main() has already read them); a precommand that needs
+  // the journal in batch mode (source) reads it itself.  The environment
+  // and the user's init file were already processed by the global_scope_t
+  // constructor (unless --args-only was given), so they apply to
+  // precommands too.
   //
   // Here are some examples of pre-commands:
   //
@@ -435,7 +440,7 @@ expr_t::ptr_op_t global_scope_t::lookup(const symbol_t::kind_t kind, const strin
   }
 
   // If you're wondering how symbols from report() will be found, it's
-  // because of the bind_scope_t object in execute_command() below.
+  // because of the bind_scope_t object in execute_command().
   return nullptr;
 }
 

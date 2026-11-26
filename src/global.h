@@ -172,8 +172,12 @@ public:
    * @brief Wrapper around execute_command that handles report stack
    *        management and exception reporting.
    *
-   * @return \c true if a command was actually executed; otherwise, it probably
-   *         just resulted in setting some options.
+   * @return 0 if the command completed (also when, with @p at_repl, the line
+   *         only set options), or 1 if it threw a std::exception, which has
+   *         already been reported through report_error().  An error_count
+   *         (journal parse errors, --version) is not a std::exception and
+   *         propagates to main().  main() uses the result as the exit status
+   *         in batch and --script mode and ignores it at the REPL.
    */
   int execute_command_wrapper(strings_list args, bool at_repl);
 
@@ -264,7 +268,7 @@ See LICENSE file included with the distribution for details and disclaimer.");
   OPTION(global_scope_t, verify_memory); ///< Enable memory allocation tracing
 
   OPTION_(
-      global_scope_t, version, DO() { // -v
+      global_scope_t, version, DO() {
         parent->show_version_info(std::cout);
         throw error_count(0, ""); // exit immediately
       });
