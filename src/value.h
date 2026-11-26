@@ -62,7 +62,7 @@
  * follows a hierarchy from least to most general:
  *
  *   VOID < BOOLEAN < DATETIME < DATE < INTEGER < AMOUNT < BALANCE
- *        < STRING < MASK < SEQUENCE < SCOPE < ANY
+ *        < COMMODITY < STRING < MASK < SEQUENCE < SCOPE < ANY
  *
  * Storage is reference-counted with copy-on-write semantics, so
  * passing value_t by value through the filter pipeline is cheap:
@@ -91,7 +91,7 @@ class scope_t;
  *
  * The following type is a polymorphous value type used solely for
  * performance reasons.  The alternative is to compute value
- * expressions (valexpr.cc) in terms of the largest data type,
+ * expressions (expr.cc, op.cc) in terms of the largest data type,
  * balance_t. This was found to be prohibitively expensive, especially
  * when large logic chains were involved, since many temporary
  * allocations would occur for every operator.  With value_t, and the
@@ -422,11 +422,6 @@ public:
 
   /**
    * Binary arithmetic operators.
-   *
-   * add(amount_t, optional<amount_t>) allows for the possibility of
-   * adding both an amount and its cost in a single operation.
-   * Otherwise, there is no way to separately represent the "cost"
-   * part of an amount addition statement.
    */
   value_t& operator+=(const value_t& val);
   value_t& operator-=(const value_t& val);
@@ -594,24 +589,27 @@ public:
    * is_date()
    * is_amount()
    * is_balance()
+   * is_commodity()
    * is_string()
    * is_mask()
    * is_sequence()
+   * is_scope()
    * is_any()
    *
    * There are corresponding as_*() methods that represent a value as a
    * reference to its underlying type.  For example, as_long() returns a
    * reference to a "const long".
    *
-   * There are also as_*_lval() methods, which represent the underlying data
-   * as a reference to a non-const type.  The difference here is that an
-   * _lval() call causes the underlying data to be fully copied before the
-   * resulting reference is returned.
+   * Every type except VOID, COMMODITY and SCOPE also has an as_*_lval()
+   * method, which returns a reference to a non-const type.  Before
+   * returning, an _lval() call gives this value a private copy of its
+   * storage if that storage is shared with another value_t (copy-on-write,
+   * see _dup()), so writing through the reference never changes another
+   * value.
    *
    * Lastly, there are corresponding set_*(data) methods for directly
    * assigning data of a particular type, rather than using the regular
-   * assignment operator (whose implementation simply calls the various set_
-   * methods).
+   * assignment operator.
    */
   bool is_boolean() const { return is_type(BOOLEAN); }
   bool& as_boolean_lval() {
@@ -783,10 +781,13 @@ public:
   }
 
   /**
-   * Dealing with any type at all is bit involved because we actually
-   * deal with typed object.  For example, if you call as_any it returns
-   * a std::any object, but if you use as_any<type_t>, then it returns
-   * a type_t by value.
+   * Dealing with any type at all is a bit involved because we actually
+   * deal with typed objects.  as_any() returns a reference to the
+   * std::any object itself.  as_any<T>() returns a const T& to the T
+   * it contains (std::any_cast<const T&>) and never copies it.
+   * as_any_lval<T>() returns a T&; like every _lval call, it first
+   * un-shares shared storage (see _dup()).  Either reference is valid
+   * only while this value's storage is.
    */
   bool is_any() const { return is_type(ANY); }
   template <typename T>

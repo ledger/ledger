@@ -49,7 +49,7 @@
  * hierarchy, from least to most general, is:
  *
  *   VOID < BOOLEAN < DATETIME < DATE < INTEGER < AMOUNT < BALANCE
- *        < STRING < MASK < SEQUENCE < SCOPE < ANY
+ *        < COMMODITY < STRING < MASK < SEQUENCE < SCOPE < ANY
  *
  * For example, INTEGER + INTEGER stays INTEGER, but INTEGER + AMOUNT
  * (with a commodity) promotes to BALANCE so the commodity is not lost.
