@@ -541,9 +541,10 @@ bool is_equivalent_posting(post_t* left, post_t* right) {
  *   3. Validate all metadata on the transaction.
  *   4. Extend each posting and validate its metadata.
  *   5. UUID deduplication: if a transaction with the same UUID already
- *      exists, verify that the postings are equivalent (same accounts
- *      and amounts).  If they match, apply any deferred posts and
- *      silently discard the duplicate.  If they differ, throw an error.
+ *      exists, first apply any postings the earlier copy deferred, then
+ *      verify that the postings are equivalent (same accounts and
+ *      amounts).  If they match, silently discard the duplicate; if they
+ *      differ, throw an error.
  *
  * @return true if the transaction was added, false if rejected.
  */

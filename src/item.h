@@ -149,8 +149,8 @@ public:
 #define ITEM_NOTE_ON_NEXT_LINE                                                                     \
   0x04 ///< Parser saw the note/comment on the line following the item, not on the same line.
 #define ITEM_INFERRED                                                                              \
-  0x08 ///< Item was inferred by the bucketing/balancing logic (e.g., a null-amount posting filled
-       ///< in by finalize).
+  0x08 ///< Posting added against journal_t::bucket to balance a single-posting transaction or
+       ///< a timelog entry.  Set only there; nothing reads it.
 
   /** @brief Clearing state for a journal item.
    *

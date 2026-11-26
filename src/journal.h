@@ -109,11 +109,13 @@ using tag_check_exprs_map = std::multimap<string, expr_t::check_expr_pair>;
 class journal_t : public noncopyable {
 public:
   /**
-   * @brief Metadata about a source file that was parsed into this journal.
+   * @brief Provenance of a source file that read() parsed into this journal.
    *
-   * Tracks the file path and its modification time so that Ledger can
-   * detect changes for incremental re-reads.  When input comes from a
-   * stream (stdin), from_stream is true and filename is empty.
+   * read() appends one entry for each file or stream that yielded at least
+   * one transaction, stat'ing a file once to record its modification time.
+   * Nothing in C++ reads these entries; Python sees them as Journal.sources.
+   * When input comes from a stream (stdin), from_stream is true and
+   * filename is empty.
    */
   struct fileinfo_t {
     optional<path> filename; ///< Filesystem path, or none if read from a stream.
@@ -136,8 +138,12 @@ public:
     ~fileinfo_t() noexcept { TRACE_DTOR(journal_t::fileinfo_t); }
   };
 
-  account_t* master;          ///< Invisible root of the account tree (depth 0, empty name).
-  account_t* bucket;          ///< Default account for postings with inferred (null) amounts.
+  account_t* master; ///< Invisible root of the account tree (depth 0, empty name).
+  /// Account that balances a transaction with a single posting, and every
+  /// timelog entry.  Set by the `bucket` (or `A`) directive, by `default`
+  /// under an `account` directive, or from Python (Journal.bucket).  Null
+  /// when nothing sets it.
+  account_t* bucket;
   xacts_list xacts;           ///< All regular (dated) transactions, in parse order.
   auto_xacts_list auto_xacts; ///< Automated transactions (= expr) that extend matching xacts.
   /// Owns the auto_xacts made by `account <name>` / `check|assert <expr>`
@@ -150,9 +156,16 @@ public:
   std::set<string>
       known_payees; ///< Payees declared with `payee` directive (for --strict validation).
   std::set<string> known_tags; ///< Tags declared with `tag` directive (for --strict validation).
-  bool was_loaded;             ///< True after at least one successful read().
-  bool check_payees;        ///< True if payee validation is enabled (payee directives were seen).
-  bool day_break;           ///< True if day-break transactions should be inserted between days.
+  /// Never set to true: initialize() clears it and nothing assigns it, so
+  /// Python's Journal.was_loaded is always False.
+  bool was_loaded;
+  /// Set only by --check-payees; a `payee` directive does not set it.
+  /// Payees are checked only while it is set and checking_style is
+  /// CHECK_WARNING or CHECK_ERROR (--strict or --pedantic).
+  bool check_payees;
+  /// Set by --day-break: the timelog parser splits a clock-in/clock-out
+  /// session that crosses midnight into one transaction per day.
+  bool day_break;
   int time_round;           ///< Round timelog durations up to this many seconds (0 = no rounding).
   bool recursive_aliases;   ///< If true, alias expansion repeats until no more aliases match.
   bool no_aliases;          ///< If true, all alias expansion is suppressed.
@@ -178,13 +191,17 @@ public:
   /**
    * @brief Controls how strictly unknown accounts/payees/commodities are handled.
    *
-   * - CHECK_PERMISSIVE: accept everything (default before any `account`/`payee` directives).
-   * - CHECK_NORMAL: the default after initialization.
+   * - CHECK_PERMISSIVE: set by --permissive and by the xact command's draft.
+   *   No account, payee or tag checks; balance assertions are skipped, and a
+   *   balance assignment that conflicts with the other postings is
+   *   rebalanced instead of failing.  Commodity checks follow
+   *   commodity_checking_style.
+   * - CHECK_NORMAL: the default; no account, payee or tag checks.
    * - CHECK_WARNING: warn on unknown entities (--strict).
    * - CHECK_ERROR: error on unknown entities (--pedantic).
    */
   enum checking_style_t : uint8_t {
-    CHECK_PERMISSIVE, ///< Accept all accounts/payees/commodities without checking.
+    CHECK_PERMISSIVE, ///< --permissive: no account/payee/tag checks; assertions skipped.
     CHECK_NORMAL,     ///< Normal mode (default).
     CHECK_WARNING,    ///< Warn on unknown entities (--strict).
     CHECK_ERROR       ///< Error on unknown entities (--pedantic).
@@ -247,10 +264,11 @@ public:
   /**
    * @brief Expand account aliases, returning the resolved account or nullptr.
    *
-   * Checks the account_aliases map for a full-name match first, then
-   * tries matching just the first colon-separated segment.  When
-   * recursive_aliases is true, expansion repeats until no more aliases
-   * match.  An already_seen set prevents infinite loops.  Returns nullptr,
+   * Checks the account_aliases map for a full-name match first, then for
+   * a match on the first colon-separated segment, or with
+   * --recursive-aliases on any segment (the first match wins).  With
+   * recursive_aliases, expansion repeats until no more aliases match.
+   * An already_seen set prevents infinite loops.  Returns nullptr,
    * before copying the name for cycle detection, when has_aliases() is
    * false.
    */
@@ -262,7 +280,7 @@ public:
    * This is the main entry point for registering an account name seen
    * during parsing.  Steps: (1) expand aliases, (2) find/create the
    * account in the tree, (3) map "Unknown" accounts to payee-based
-   * targets, (4) check against known_accounts for --strict/--pedantic.
+   * targets, (4) check the ACCOUNT_KNOWN flag for --strict/--pedantic.
    * Template variables ($var, %(expr)) are accepted in the postings of
    * automated and periodic transactions (@p template_post), which resolve
    * them when applied; any other posting's account is checked whatever its
@@ -283,14 +301,20 @@ public:
    */
   account_t* account_for_payee(const string& payee) const;
 
-  /** @brief Register a payee name as known (for --strict validation). */
+  /**
+   * @brief Record a payee declared by a `payee` directive in known_payees.
+   *
+   * Records it only while should_check_payees() holds (--check-payees
+   * with --strict or --pedantic).
+   */
   string register_payee(const string& name);
 
   /**
    * @brief Translate a payee name through alias mappings and validate it.
    *
    * Applies payee_alias_mappings, then checks the result against
-   * known_payees when --strict or --pedantic is active.
+   * known_payees when --check-payees is set and --strict or --pedantic
+   * is active (should_check_payees()).
    */
   string validate_payee(const string& name_or_alias);
 
@@ -315,8 +339,9 @@ public:
    *
    * Steps: (1) finalize (balance check), (2) extend with auto_xacts,
    * (3) validate metadata, (4) extend each posting, (5) UUID dedup --
-   * if the same UUID was seen before, verify postings are equivalent,
-   * apply deferred posts, then reject the duplicate.
+   * if the same UUID was seen before, apply the postings the earlier
+   * copy deferred, then verify the postings are equivalent (throwing if
+   * not) and reject the duplicate.
    *
    * @return true if the transaction was added, false if rejected (bad balance or duplicate UUID).
    */
