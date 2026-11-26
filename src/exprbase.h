@@ -39,8 +39,9 @@
  *
  * @ingroup expr
  *
- * @brief CRTP base template providing the common expression protocol
- *        (parse, compile, calc, print, dump) for all Ledger expression types.
+ * @brief Abstract base template, parameterized on the result type, that
+ *        provides the common expression protocol (parse, compile, calc,
+ *        print, dump) for Ledger's expression types.
  *
  * Ledger uses several domain-specific expression languages, all sharing the
  * same lifecycle: parse a text string, compile against a scope, and evaluate
@@ -51,14 +52,16 @@
  * The template is parameterized on @c ResultType -- the value produced by
  * evaluation:
  *
- * | Typename    | Description                | ResultType      | Derives     |
- * |-------------|----------------------------|-----------------|-------------|
- * | expr_t      | Value expressions          | value_t         |             |
- * | predicate_t | Special form of expr_t     | bool            | expr_t      |
- * | query_t     | Report queries             | bool            | predicate_t |
- * | period_t    | Time periods and durations | date_interval_t |             |
- * | draft_t     | Partially filled xacts     | xact_t *        |             |
- * | format_t    | Format strings             | string          |             |
+ * | Typename      | Description                    | ResultType | Derives |
+ * |---------------|--------------------------------|------------|---------|
+ * | expr_t        | Value expressions              | value_t    |         |
+ * | merged_expr_t | Composed report option exprs   | value_t    | expr_t  |
+ * | predicate_t   | expr_t tested as a boolean     | value_t    | expr_t  |
+ * | draft_t       | Partially filled xacts         | value_t    |         |
+ * | format_t      | Format strings                 | string     |         |
+ *
+ * query_t (query.h) is not an expression type: it parses report query
+ * arguments into the expr_t that a predicate_t evaluates.
  *
  * Key design decisions:
  *  - **Lazy compilation**: calc() automatically compiles on first use if
@@ -154,7 +157,8 @@ class scope_t;
 class call_scope_t;
 
 /**
- * @brief CRTP base template for all Ledger expression types.
+ * @brief Abstract base template for Ledger's expression types, dispatching
+ *        through virtual functions and parameterized on the result type.
  *
  * Provides the common lifecycle methods: parse (text to internal
  * representation), compile (resolve symbols), and calc (evaluate to produce

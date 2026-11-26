@@ -91,7 +91,7 @@ class symbol_scope_t; // forward declaration for expr_t::accumulator_scope_
  * the bare identifier `amount`.
  *
  * @see op_t          The AST node that this class wraps.
- * @see expr_base_t   CRTP base providing the compile/calc/print protocol.
+ * @see expr_base_t   Abstract base providing the compile/calc/print protocol.
  * @see merged_expr_t Derived class for composable multi-flag expressions.
  */
 class expr_t : public expr_base_t<value_t> {
@@ -175,10 +175,13 @@ public:
   void dump(std::ostream& out) const override;
 
 protected:
-  // Persistent local scope for O_DEFINE variables (accumulator patterns like
-  // biggest=max(amount,biggest)).  Keeps variable state isolated from the
-  // report/session scope chain, preventing cross-posting pollution.
-  // Subclasses (e.g. merged_expr_t) may also use this directly.
+  // Persistent per-expression scope for self-referential O_DEFINE
+  // (accumulator) values, like biggest=max(amount,biggest); compile()
+  // folds other definitions away.  real_calc() evaluates through a
+  // lexical_scope_t over it, so the value carries over from one posting to
+  // the next inside this expression instead of landing in the
+  // report/session scope.  merged_expr_t's compile() and real_calc() wrap
+  // their scopes with it the same way.
   std::unique_ptr<symbol_scope_t> accumulator_scope_;
 
   // Evaluation core shared by expr_t::real_calc and merged_expr_t::real_calc:
@@ -228,8 +231,9 @@ value_t expr_value(expr_t::ptr_op_t op);
  *   - append() adds a piece at the end: --amount, --total,
  *     --display-account, --display-amount, --display-total and the
  *     options that route through them, such as -V/--market and
- *     -A/--average.  A piece that is a bare identifier instead replaces
- *     the base and clears the pieces (check_for_single_identifier).
+ *     -A/--average.  A piece that is an alphanumeric word (no '_')
+ *     instead replaces the base and clears the pieces
+ *     (check_for_single_identifier).
  *
  * With no pieces, compile() parses base_expr alone.  For `-V -A`, it
  * assembles display_total_ (shown wrapped; it is one line) as:
@@ -262,8 +266,10 @@ public:
 
   void set_base_expr(const string& expr) { base_expr = expr; }
 
-  /// @brief If @p expr is a bare identifier (no operators), adopt it as
-  /// the new base_expr and clear all merged pieces.  Returns true if so.
+  /// @brief If @p expr is an alphanumeric word, adopt it as the new
+  /// base_expr and clear all merged pieces.  Returns true if so.  A name
+  /// containing '_' (amount_expr, display_amount) usually names another
+  /// report expression, and adopting it could recurse, so it is appended.
   bool check_for_single_identifier(const string& expr);
 
   /// @brief Add a transformation to the end of the merge chain.

@@ -1,0 +1,39 @@
+; merged_expr_t::check_for_single_identifier: a name containing '_'
+; (amount_expr, total_expr, display_amount, ...) usually names another
+; report expression, so --amount/--total append it as one more step
+; instead of adopting it as the base expression.
+
+2024/01/01 Bookstore
+    Expenses:Books    $20.00
+    Assets:Cash
+
+2024/01/02 Grocer
+    Expenses:Food     $5.00
+    Assets:Cash
+
+; 'amount_expr' is appended, so the doubling piece survives.  Adopted as
+; the base, it would drop the doubling piece.
+test reg --amount 'amount * 2' --amount amount_expr
+24-Jan-01 Bookstore             Expenses:Books               $40.00       $40.00
+                                Assets:Cash                 $-40.00            0
+24-Jan-02 Grocer                Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+; Alone, 'amount_expr' composes amount_expr=(amount);amount_expr=(amount_expr).
+; Adopted as the base, amount_expr would name itself and recurse.
+test reg --amount amount_expr
+24-Jan-01 Bookstore             Expenses:Books               $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+24-Jan-02 Grocer                Expenses:Food                 $5.00        $5.00
+                                Assets:Cash                  $-5.00            0
+end test
+
+; The same rule holds for --total: 'total_expr' is appended, so the
+; doubled running total survives.
+test reg --total 'total * 2' --total total_expr
+24-Jan-01 Bookstore             Expenses:Books               $20.00       $40.00
+                                Assets:Cash                 $-20.00            0
+24-Jan-02 Grocer                Expenses:Food                 $5.00       $10.00
+                                Assets:Cash                  $-5.00            0
+end test
