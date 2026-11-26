@@ -1,0 +1,28 @@
+; --empty with --end emits the empty periods after the last posting, but
+; --average suppresses them (whether or not --empty was given explicitly),
+; because zero-amount trailing periods would dilute the running average.
+
+2024/01/10 Groceries
+    Expenses:Food                $30
+    Assets:Cash
+
+2024/02/10 Groceries
+    Expenses:Food                $60
+    Assets:Cash
+
+test reg Expenses -M -E -e 2024/05/01
+24-Jan-01 - 24-Jan-31  Expenses:Food                     $30          $30
+24-Feb-01 - 24-Feb-29  Expenses:Food                     $60          $90
+24-Mar-01 - 24-Mar-31  <None>                              0          $90
+24-Apr-01 - 24-Apr-30  <None>                              0          $90
+end test
+
+test reg Expenses -M -E -A -e 2024/05/01
+24-Jan-01 - 24-Jan-31  Expenses:Food                     $30          $30
+24-Feb-01 - 24-Feb-29  Expenses:Food                     $60          $45
+end test
+
+test reg Expenses -M -A -e 2024/05/01
+24-Jan-01 - 24-Jan-31  Expenses:Food                     $30          $30
+24-Feb-01 - 24-Feb-29  Expenses:Food                     $60          $45
+end test

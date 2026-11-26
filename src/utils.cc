@@ -284,7 +284,7 @@ void stream_commified_number(std::ostream& out, std::size_t num) {
 
   buf << num;
 
-  string number(buf.str()); // NOLINT(bugprone-unused-local-non-trivial-variable)
+  string number(buf.str());
 
   int integer_digits = 0;
   // Count the number of integer digits

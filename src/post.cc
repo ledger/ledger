@@ -218,7 +218,7 @@ string post_t::payee() const {
   if (_payee)
     return *_payee;
 
-  string post_payee = payee_from_tag(); // NOLINT(bugprone-unused-local-non-trivial-variable)
+  string post_payee = payee_from_tag();
 
   return post_payee != "" ? post_payee : xact ? xact->payee : "";
 }

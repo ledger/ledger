@@ -1025,7 +1025,8 @@ public:
         if (optional<datetime_t> end_dt = try_parse_datetime(str)) {
           OTHER(limit_).on(whence, "datetime<to_datetime(\"" +
                                        format_datetime(*end_dt, FMT_WRITTEN) + "\")");
-          // The instant itself is excluded, so value prices one second earlier.
+          // The instant itself is excluded, so value prices one second earlier
+          // (a --now given after --end sets terminus again).
           parent->terminus = *end_dt - seconds(1);
           parent->report_end = end_dt->date();
           return;
@@ -1043,8 +1044,9 @@ public:
           // use prices from the (exclusive) end date itself.  This makes
           // "--end X" equivalent to "--now X-1" for market-value purposes, so
           // that commodities are valued as of the last included day rather than
-          // the first excluded day.  (--now still overrides this when the user
-          // needs to pin the valuation date explicitly.)
+          // the first excluded day.  --end and --now each set terminus as they
+          // are parsed, so the one given last wins: give --now after --end to
+          // pin the valuation date explicitly.
           parent->terminus = datetime_t(*end - gregorian::days(1));
         } else {
           throw_(std::invalid_argument, _f("Could not determine end of period '%1%'") % str);

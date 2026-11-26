@@ -367,8 +367,8 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
     // (--forecast), and the --amount and --display-amount expressions,
     // which calc_posts and display_filter_posts evaluate for every posting.
     // Such an expression may reach the total under any of its names or
-    // through a function of its own, so its presence alone decides.  A
-    // false positive merely restores the old behaviour.  Sorting and
+    // through a function of its own, so its presence alone decides; a
+    // false positive only costs the time of the total.  Sorting and
     // grouping run upstream of calc_posts and never see a running total.
     bool totals_requested = output_wants_total || report.HANDLED(average) ||
                             report.HANDLED(deviation) || report.HANDLED(percent) ||
@@ -471,8 +471,10 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
     // When -e is specified and the period string has no explicit range end,
     // pass the report end date to interval_posts so that flush() can generate
     // empty trailing periods up to that date when --empty is active.  Skip
-    // this when --average (-A) is the sole reason --empty is active, because
-    // trailing zero-amount periods would incorrectly dilute the running average.
+    // this whenever --average (-A) is set, because trailing zero-amount
+    // periods would dilute the running average.  The average handler turns
+    // --empty on itself (OPTION_(report_t, average, ...) in report.h), so
+    // this test cannot tell an explicit --empty from that one.
     optional<date_t> end_of_report;
     if (report.HANDLED(end_) && !interval.end() && report.HANDLED(empty) &&
         !report.HANDLED(average)) {

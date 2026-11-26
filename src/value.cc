@@ -1659,7 +1659,7 @@ void value_t::in_place_cast(type_t cast_type) {
     case MASK: {
       // Make a copy since set_mask calls set_type which may reallocate storage,
       // invalidating the reference returned by as_string()
-      string str = as_string(); // NOLINT(bugprone-unused-local-non-trivial-variable)
+      string str = as_string();
       set_mask(str);
       return;
     }

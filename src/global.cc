@@ -236,7 +236,7 @@ void global_scope_t::execute_command(strings_list args, bool at_repl) {
   }
 
   strings_list::iterator arg = args.begin();
-  const string verb = *arg++; // NOLINT(bugprone-unused-local-non-trivial-variable)
+  const string verb = *arg++;
 
   // Phase 2: Look for a precommand first: any symbol the bound global and
   // report scopes define under symbol_t::PRECOMMAND (look_for_precommand).

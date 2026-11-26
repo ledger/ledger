@@ -359,7 +359,7 @@ public:
   void on(const optional<string>& whence, const string& str) {
     validate_argument(str);
 
-    string before = value; // NOLINT(bugprone-unused-local-non-trivial-variable)
+    string before = value;
 
     handler_thunk(whence, str);
 

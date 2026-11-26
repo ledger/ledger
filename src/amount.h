@@ -760,7 +760,7 @@ public:
                            std::optional<amount_t>* given_lot_total = nullptr);
   [[nodiscard]] bool parse(const string& str, const parse_flags_t& flags = PARSE_DEFAULT,
                            std::optional<amount_t>* given_lot_total = nullptr) {
-    std::istringstream stream(str); // NOLINT(bugprone-unused-local-non-trivial-variable)
+    std::istringstream stream(str);
     bool result = parse(stream, flags, given_lot_total);
     return result;
   }

@@ -235,7 +235,7 @@ strings_list split_arguments(const char* line);
 
 /// Return a lower-cased copy of @p str (using Boost's locale-aware to_lower).
 inline string lowered(const string& str) {
-  string tmp(str); // NOLINT(bugprone-unused-local-non-trivial-variable)
+  string tmp(str);
   to_lower(tmp);
   return tmp;
 }

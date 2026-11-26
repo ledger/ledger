@@ -1355,7 +1355,7 @@ string xact_t::hash(const string& nonce, hash_type_t hash_type) const {
   }
 
   unsigned char data[64];
-  string repr_str(repr.str()); // NOLINT(bugprone-unused-local-non-trivial-variable)
+  string repr_str(repr.str());
 
   sha512(repr_str.data(), repr_str.size(), data);
 

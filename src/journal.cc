@@ -568,7 +568,7 @@ bool journal_t::add_xact(xact_t* xact) {
   // will have been performed by extend_xact, so asserts can still be
   // applied to it.
   if (std::optional<value_t> ref = xact->get_tag(_("UUID"))) {
-    std::string uuid = ref->to_string(); // NOLINT(bugprone-unused-local-non-trivial-variable)
+    std::string uuid = ref->to_string();
     auto [iter, inserted] = checksum_map.insert(checksum_map_t::value_type(uuid, xact));
     if (!inserted) {
       // This UUID has been seen before; apply any postings which the

@@ -1,0 +1,29 @@
+; --now and --end both set the valuation terminus when they are parsed, so
+; whichever is given last decides the date that -V values at.
+
+P 2024/01/01 X $1
+P 2024/06/01 X $2
+P 2024/12/01 X $3
+
+2024/01/01 Buy
+    Assets                  10 X
+    Equity
+
+; --end given last: values as of the day before --end (2024/06/30).
+test bal Assets -V --now 2024/12/15 --end 2024/07/01
+                 $20  Assets
+end test
+
+; --now given last: values as of --now.
+test bal Assets -V --end 2024/07/01 --now 2024/12/15
+                 $30  Assets
+end test
+
+; A datetime --end values one second before the instant (2024/05/31 23:59:59).
+test bal Assets -V --now 2024/12/15 --end 2024/06/01@00:00:00
+                 $10  Assets
+end test
+
+test bal Assets -V --end 2024/06/01@00:00:00 --now 2024/12/15
+                 $30  Assets
+end test

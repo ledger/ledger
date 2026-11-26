@@ -109,7 +109,7 @@ string fold_diacritics(string_view text) {
   if (!changed)
     return string(text);
 
-  string result; // NOLINT(bugprone-unused-local-non-trivial-variable)
+  string result;
   utf8::unchecked::utf32to8(utf32chars.begin(), utf32chars.end(), std::back_inserter(result));
   return result;
 }

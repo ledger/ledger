@@ -171,20 +171,8 @@ void truncate_xacts::flush() {
       i++;
     }
 
-    bool print = false;
-    if (head_count) {
-      if (head_count > 0 && i < head_count)
-        print = true; // NOLINT(bugprone-branch-clone)
-      else if (head_count < 0 && i >= -head_count)
-        print = true;
-    }
-
-    if (!print && tail_count) {
-      if (tail_count > 0 && l - i <= tail_count)
-        print = true; // NOLINT(bugprone-branch-clone)
-      else if (tail_count < 0 && l - i > -tail_count)
-        print = true;
-    }
+    bool print = (head_count > 0 && i < head_count) || (head_count < 0 && i >= -head_count) ||
+                 (tail_count > 0 && l - i <= tail_count) || (tail_count < 0 && l - i > -tail_count);
 
     if (print)
       item_handler<post_t>::operator()(*post);
@@ -614,7 +602,7 @@ void handle_value(const value_t& value, account_t* account, xact_t* xact, tempor
   // If the caller explicitly specifies that this posting is virtual (e.g.,
   // when subtotal_posts accumulates virtual and non-virtual postings for the
   // same account as separate entries), use that flag directly.  Otherwise,
-  // infer virtual status from account xdata flags as before.
+  // infer virtual status from account xdata flags.
   if (opts.force_virtual) {
     post.add_flags(POST_VIRTUAL);
     if (opts.force_must_balance)
@@ -753,9 +741,8 @@ void collapse_posts::report_subtotal() {
           i = grouped.emplace(grouped.end(), key, value_t());
         post->add_to_value(i->second, &amount_expr);
       }
-      std::stable_sort(grouped.begin(), grouped.end(), [](const auto& a, const auto& b) {
-        return a.first.first < b.first.first;
-      });
+      std::stable_sort(grouped.begin(), grouped.end(),
+                       [](const auto& a, const auto& b) { return a.first.first < b.first.first; });
 
       for (const auto& entry : grouped) {
         date_t d = entry.first.first;
@@ -915,7 +902,7 @@ display_filter_posts::display_filter_posts(post_handler_ptr handler, report_t& _
  * Compares the new display total (after this posting) with the previous one.
  * If they differ due to display rounding, emits a synthetic <Adjustment>
  * posting to compensate.  Returns true if the posting should be displayed
- * (non-zero display amount or --empty), false otherwise.
+ * (a <Revalued> posting, a non-zero display amount, or --empty), false otherwise.
  *
  * The new display total is the stripped running total calc_posts cached for
  * the posting; when calc_posts kept none (non-default total expressions,
@@ -942,9 +929,7 @@ bool display_filter_posts::output_rounding(post_t& post) {
   // Allow the posting to be displayed if:
   //  1. Its display_amount would display as non-zero, or
   //  2. The --empty option was specified, or
-  //  3. a) The account of the posting is <Revalued>, and
-  //     b) the revalued option is specified, and
-  //     c) the --no-rounding option is not specified.
+  //  3. Its account is <Revalued> (the account changed_value_posts posts to).
 
   if (post.account == revalued_account) {
     if (show_rounding)
@@ -1362,7 +1347,7 @@ void changed_value_posts::output_revaluation(post_t& post, const date_t& date) {
  * A balance report does, unless it uses historical prices, or its total has
  * several columns, such as the market value and cost pairs of --gain or the
  * totals of cleared and budget reports, which leave no basis to compare.
- * Those are revalued by output_revaluation() alone, as they were before.
+ * Those are revalued by output_revaluation() alone.
  */
 bool changed_value_posts::books_from_basis() const {
   // Under -V or -X with --unrealized, a balance report whose running total
@@ -1970,8 +1955,8 @@ void interval_posts::flush() {
     // Determine the beginning interval.  When --empty is active and a report
     // begin date was supplied that precedes the first posting, start from that
     // date so that empty leading periods are counted (important for --average,
-    // which uses the period count as its denominator).  Otherwise fall back to
-    // the earliest posting date as before.
+    // which uses the period count as its denominator).  Otherwise start from
+    // the earliest posting date.
     date_t anchor;
     if (generate_empty_posts && begin_of_report_ && !all_posts.empty() &&
         *begin_of_report_ < all_posts.front()->date())
@@ -2497,8 +2482,8 @@ void forecast_posts::flush() {
   //
   // It works like this:
   //
-  // Earlier, in forecast_posts::add_period_xacts, we cut up all the periodic
-  // transactions into their components postings, so that we have N "periodic
+  // Earlier, in generate_posts::add_period_xacts, we cut up all the periodic
+  // transactions into their component postings, so that we have N "periodic
   // postings".  For example, if the user had this:
   //
   // ~ daily
@@ -2510,9 +2495,9 @@ void forecast_posts::flush() {
   //
   // We now have 4 periodic postings in `pending_posts'.
   //
-  // Each periodic postings gets its own copy of its parent transaction's
-  // period, which is modified as we go.  This is found in the second member
-  // of the pending_posts_list for each posting.
+  // Each periodic posting gets its own copy of its parent transaction's
+  // period, which is modified as we go.  This is found in the first member
+  // of the posting's pending_posts_list entry.
   //
   // The algorithm below works by iterating through the N periodic postings
   // over and over, until each of them meets the termination criteria for the

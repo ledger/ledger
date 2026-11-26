@@ -89,7 +89,7 @@ expr_t::ptr_op_t expr_t::parser_t::parse_value_term(std::istream& in,
     break;
 
   case token_t::IDENT: {
-    string ident = tok.value.as_string(); // NOLINT(bugprone-unused-local-non-trivial-variable)
+    string ident = tok.value.as_string();
 
     node = new op_t(op_t::IDENT);
     node->set_ident(ident);

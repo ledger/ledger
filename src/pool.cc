@@ -696,7 +696,7 @@ commodity_pool_t::parse_price_directive(char* line, bool do_not_add_price, bool 
     char* time_field_ptr = next_element(date_field_ptr);
     if (!time_field_ptr)
       return std::nullopt;
-    string date_field = date_field_ptr; // NOLINT(bugprone-unused-local-non-trivial-variable)
+    string date_field = date_field_ptr;
 
     if (std::isdigit(static_cast<unsigned char>(time_field_ptr[0]))) {
       symbol_and_price = next_element(time_field_ptr);

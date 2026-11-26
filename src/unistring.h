@@ -129,7 +129,7 @@ public:
   /// @param len    Number of codepoints to extract (0 = to end).
   std::string extract(const std::string::size_type begin = 0,
                       const std::string::size_type len = 0) const {
-    std::string utf8result; // NOLINT(bugprone-unused-local-non-trivial-variable)
+    std::string utf8result;
     std::string::size_type this_len = length();
 
     assert(begin <= this_len);

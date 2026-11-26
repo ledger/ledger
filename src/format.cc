@@ -151,7 +151,7 @@ struct format_mapping_t {
  * @return             The parsed and ready-to-compile expression.
  */
 expr_t parse_single_expression(const char*& p) {
-  string temp(p); // NOLINT(bugprone-unused-local-non-trivial-variable)
+  string temp(p);
   ptristream str(const_cast<char*&>(p));
   expr_t expr;
   expr.parse(str, PARSE_SINGLE, temp);
@@ -597,7 +597,7 @@ string format_t::truncate(const unistring& ustr, const std::size_t width,
       // First, chop up the Unicode string into individual segments.
       std::list<string> parts;
       string::size_type beg = 0;
-      string strcopy(ustr.extract()); // NOLINT(bugprone-unused-local-non-trivial-variable)
+      string strcopy(ustr.extract());
       for (string::size_type pos = strcopy.find(':'); pos != string::npos;
            beg = pos + 1, pos = strcopy.find(':', beg))
         parts.push_back(string(strcopy, beg, pos - beg));

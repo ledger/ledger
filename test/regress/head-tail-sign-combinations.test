@@ -1,0 +1,49 @@
+; truncate_xacts keeps a transaction when either --head or --tail selects
+; it.  A positive count keeps that many from its end; a negative count
+; skips that many and keeps the rest.
+
+2024/01/01 A
+    Assets                         1
+    Equity
+
+2024/01/02 B
+    Assets                         2
+    Equity
+
+2024/01/03 C
+    Assets                         3
+    Equity
+
+2024/01/04 D
+    Assets                         4
+    Equity
+
+2024/01/05 E
+    Assets                         5
+    Equity
+
+test reg Assets --head 2 --tail 1
+24-Jan-01 A                     Assets                            1            1
+24-Jan-02 B                     Assets                            2            3
+24-Jan-05 E                     Assets                            5           15
+end test
+
+test reg Assets --head -3 --tail 1
+24-Jan-04 D                     Assets                            4           10
+24-Jan-05 E                     Assets                            5           15
+end test
+
+test reg Assets --head 1 --tail -3
+24-Jan-01 A                     Assets                            1            1
+24-Jan-02 B                     Assets                            2            3
+end test
+
+test reg Assets --head -2 --tail -4
+24-Jan-01 A                     Assets                            1            1
+24-Jan-03 C                     Assets                            3            6
+24-Jan-04 D                     Assets                            4           10
+24-Jan-05 E                     Assets                            5           15
+end test
+
+test reg Assets --head 0 --tail 0
+end test

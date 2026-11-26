@@ -575,9 +575,8 @@ expr_t::ptr_op_t wrap_negations(const expr_t::ptr_op_t& op) {
 /// O_NOT(O_EQ) and is rewritten wherever it sits, as it already is when
 /// it is the root.  The walk stops at every other node (a function call
 /// such as any(...), a comparison, a match), so a negation inside a
-/// call's argument keeps its meaning.  A root `not` produces the same
-/// predicate as before (!any(...)), and a root without any `not`
-/// produces the same any(root) as before.
+/// call's argument keeps its meaning.  A root `not` yields !any(...),
+/// and a root without any `not` yields any(root).
 expr_t::ptr_op_t wrap_xact_predicate(const expr_t::ptr_op_t& op) {
   expr_t::ptr_op_t wrapped = wrap_negations(op);
   return wrapped->kind == expr_t::op_t::O_NOT ? wrapped : make_any_call(wrapped);
@@ -1053,6 +1052,7 @@ value_t report_t::fn_get_at(call_scope_t& args) {
   }
 
   value_t::sequence_t& seq(args[0].as_sequence_lval());
+  // An index past the end also yields void, for the same reason (#697).
   if (index >= seq.size())
     return value_t();
 
@@ -1127,6 +1127,7 @@ value_t report_t::fn_quantity(call_scope_t& args) {
     const balance_t& bal(val.as_balance());
     if (bal.single_amount())
       return bal.amounts.begin()->second.number();
+    // A balance of several commodities has no single quantity; yield 0.
     return 0L;
   }
   return val.to_amount().number();
@@ -1199,7 +1200,7 @@ value_t report_t::fn_quoted(call_scope_t& args) {
   std::ostringstream out;
 
   out << '"';
-  string arg(args.get<string>(0)); // NOLINT(bugprone-unused-local-non-trivial-variable)
+  string arg(args.get<string>(0));
   for (const char ch : arg) {
     if (ch == '"')
       out << "\\\"";
@@ -1215,7 +1216,7 @@ value_t report_t::fn_quoted_rfc(call_scope_t& args) {
   std::ostringstream out;
 
   out << '"';
-  string arg(args.get<string>(0)); // NOLINT(bugprone-unused-local-non-trivial-variable)
+  string arg(args.get<string>(0));
   for (const char ch : arg) {
     if (ch == '"')
       out << '"' << '"';
@@ -1230,7 +1231,7 @@ value_t report_t::fn_quoted_rfc(call_scope_t& args) {
 value_t report_t::fn_join(call_scope_t& args) {
   std::ostringstream out;
 
-  string arg(args.get<string>(0)); // NOLINT(bugprone-unused-local-non-trivial-variable)
+  string arg(args.get<string>(0));
   for (const char ch : arg) {
     if (ch != '\n')
       out << ch;
@@ -2042,20 +2043,19 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
     // reporter parses query arguments and calls the report method.
 
 #define POSTS_REPORTER(formatter)                                                                  \
-  WRAP_FUNCTOR(reporter<>(post_handler_ptr(formatter), *this,                                      \
-                          string("#") + p)) ///< Posting report with custom formatter
+  WRAP_FUNCTOR(reporter<>(post_handler_ptr(formatter), *this, string("#") + p))
 
     // Can't use WRAP_FUNCTOR here because the template arguments
     // confuse the parser
 #define POSTS_REPORTER_(method, formatter)                                                         \
   expr_t::op_t::wrap_functor(reporter<post_t, post_handler_ptr, method>(                           \
-      post_handler_ptr(formatter), *this, string("#") + p)) ///< Posting report with custom method
+      post_handler_ptr(formatter), *this, string("#") + p))
 
 #define FORMATTED_POSTS_REPORTER(format)                                                           \
   POSTS_REPORTER(new format_posts(                                                                 \
       *this, report_format(HANDLER(format)), maybe_format(HANDLER(prepend_format_)),               \
       HANDLED(prepend_width_) ? static_cast<std::size_t>(HANDLER(prepend_width_).as_int()) : 0,    \
-      maybe_format(HANDLER(append_format_)))) ///< Posting report using a named format option
+      maybe_format(HANDLER(append_format_))))
 
 #define FORMATTED_COMMODITIES_REPORTER(format)                                                     \
   POSTS_REPORTER_(                                                                                 \
@@ -2064,24 +2064,22 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
           *this, report_format(HANDLER(format)), maybe_format(HANDLER(prepend_format_)),           \
           HANDLED(prepend_width_) ? static_cast<std::size_t>(HANDLER(prepend_width_).as_int())     \
                                   : 0,                                                             \
-          maybe_format(HANDLER(append_format_)))) ///< Commodity report using a named \
-                                                  ///< format option
+          maybe_format(HANDLER(append_format_))))
 
 #define ACCOUNTS_REPORTER(formatter)                                                               \
   expr_t::op_t::wrap_functor(reporter<account_t, acct_handler_ptr, &report_t::accounts_report>(    \
-      acct_handler_ptr(formatter), *this,                                                          \
-      string("#") + p)) ///< Account report with custom formatter
+      acct_handler_ptr(formatter), *this, string("#") + p))
 
 #define FORMATTED_ACCOUNTS_REPORTER(format)                                                        \
   ACCOUNTS_REPORTER(new format_accounts(                                                           \
       *this, report_format(HANDLER(format)), maybe_format(HANDLER(prepend_format_)),               \
       HANDLED(prepend_width_) ? static_cast<std::size_t>(HANDLER(prepend_width_).as_int()) : 0,    \
-      maybe_format(HANDLER(append_format_)))) ///< Account report using a named format option
+      maybe_format(HANDLER(append_format_))))
 
   case symbol_t::COMMAND:
     // Command dispatch: maps user-facing command names (balance, register, print, etc.)
     // to reporter<> functors that bind a formatter to the appropriate report driver.
-    switch (*p) { // NOLINT(bugprone-branch-clone,bugprone-switch-missing-default-case)
+    switch (*p) { // NOLINT(bugprone-branch-clone)
     case 'a':
       if (is_eq(p, "accounts")) {
         return POSTS_REPORTER_(&report_t::posts_report_quick, new report_accounts(*this));

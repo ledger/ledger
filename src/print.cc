@@ -385,7 +385,7 @@ void print_xact(const print_layout_t& layout, std::ostream& out, xact_t& xact) {
 
   buf << xact.payee;
 
-  string leader = buf.str(); // NOLINT(bugprone-unused-local-non-trivial-variable)
+  string leader = buf.str();
   out << leader;
 
   const std::size_t columns = layout.columns;

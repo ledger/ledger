@@ -317,7 +317,7 @@ date_t parse_date_mask_routine(const char* date_str, const char* buf, date_io_t&
     // rejected.  strptime has already range-checked each field, and
     // date_from_tm has rejected impossible days such as Feb 30.  A
     // leading zero in the formatted output that buf omits is skipped.
-    string when_str = io.format(when); // NOLINT(bugprone-unused-local-non-trivial-variable)
+    string when_str = io.format(when);
 
     const char* p = when_str.c_str();
     const char* q = buf;
@@ -2142,7 +2142,7 @@ date_parser_t::lexer_t::token_t date_parser_t::lexer_t::next_token() {
     for (i = begin; i != end && !std::isspace(static_cast<unsigned char>(*i)); i++) {}
     assert(i != begin);
 
-    string possible_date(begin, i); // NOLINT(bugprone-unused-local-non-trivial-variable)
+    string possible_date(begin, i);
 
     try {
       date_traits_t traits;
@@ -2261,7 +2261,7 @@ void date_parser_t::lexer_t::token_t::unexpected() {
     kind = UNKNOWN;
     throw_(date_error, _("Unexpected end of expression"));
   default: {
-    string desc = to_string(); // NOLINT(bugprone-unused-local-non-trivial-variable)
+    string desc = to_string();
     kind = UNKNOWN;
     throw_(date_error, _f("Unexpected date period token '%1%'") % desc);
   }

@@ -60,7 +60,7 @@ thread_local std::ostringstream _ctxt_buffer;
 thread_local std::ostringstream _desc_buffer;
 
 string error_context() {
-  string context = _ctxt_buffer.str(); // NOLINT(bugprone-unused-local-non-trivial-variable)
+  string context = _ctxt_buffer.str();
   discard_error_context();
   return context;
 }

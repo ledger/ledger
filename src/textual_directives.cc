@@ -91,7 +91,7 @@ using detail::instance_t;
 time_xact_t instance_t::parse_clock_event(char* line, bool capitalized) {
   if (std::strlen(line) < 21)
     throw_(parse_error, _("Clock-in/out directive is too short"));
-  string datetime(line, 2, 19); // NOLINT(bugprone-unused-local-non-trivial-variable)
+  string datetime(line, 2, 19);
 
   // line[21] ends the time: either the NUL of a bare "o DATE TIME" line or the
   // separator before the account.  Never read past the NUL: the bytes beyond it
@@ -186,7 +186,7 @@ void instance_t::price_xact_directive(char* line) {
 
 void instance_t::nomarket_directive(char* line) {
   char* p = skip_ws(line + 1);
-  string symbol; // NOLINT(bugprone-unused-local-non-trivial-variable)
+  string symbol;
   commodity_t::parse_symbol(p, symbol);
 
   commodity_t* commodity = commodity_pool_t::current_pool->find_or_create(symbol);
@@ -906,7 +906,7 @@ void strip_commodity_comment(string& arg) {
 
 void instance_t::commodity_directive(char* line) {
   char* p = skip_ws(line);
-  string symbol; // NOLINT(bugprone-unused-local-non-trivial-variable)
+  string symbol;
   commodity_t::parse_symbol(p, symbol);
 
   commodity_t* commodity = commodity_pool_t::current_pool->find_or_create(symbol);
@@ -1078,7 +1078,7 @@ void instance_t::value_directive(char* line) {
 void instance_t::comment_directive(char* line) {
   while (in.good() && !in.eof()) {
     if (read_line(line) > 0) {
-      std::string buf(line); // NOLINT(bugprone-unused-local-non-trivial-variable)
+      std::string buf(line);
       if (starts_with(buf, "end comment") || starts_with(buf, "end test"))
         break;
     }
@@ -1196,7 +1196,7 @@ const word_directive_t word_directives[] = {
  *         legacy single-character directives.
  */
 bool instance_t::general_directive(char* line) {
-  std::string buf(line); // NOLINT(bugprone-unused-local-non-trivial-variable)
+  std::string buf(line);
 
   char* p = &buf[0];
   char* arg = next_element(&buf[0]);

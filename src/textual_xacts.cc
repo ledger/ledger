@@ -478,7 +478,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
   post->pos->beg_line = context.linenum;
   post->pos->sequence = context.sequence++;
 
-  std::string buf(line); // NOLINT(bugprone-unused-local-non-trivial-variable)
+  std::string buf(line);
   std::streamsize beg = 0;
 
   try {
