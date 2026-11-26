@@ -69,7 +69,7 @@
  *
  * Collectively, these types power the `--begin`, `--end`, `--period`,
  * `--daily`, `--weekly`, `--monthly`, `--quarterly`, and `--yearly`
- * command-line options, as well as the `period` and `since`/`until`
+ * command-line options, as well as the `for` and `since`/`until`
  * clauses in query expressions.
  */
 #pragma once
@@ -460,10 +460,13 @@ struct date_duration_t {
  *   - `in 2024`      -> year only
  *   - `in jan`       -> month only (year inferred)
  *   - `2024/03/15`   -> year + month + day
- *   - `monday`       -> weekday only
+ *   - `monday`       -> weekday only (the latest Monday up to today)
  *
  * The begin() method fills in missing components with defaults (year =
- * current year, month = January, day = 1) to produce a concrete date.
+ * the current year or, when a month is given, the year of that month's
+ * most recent occurrence on or before today, month = January, day = 1)
+ * to produce a concrete date; a weekday alone names its most recent
+ * occurrence instead.
  * The end() method returns one unit past the specified granularity,
  * making the specifier a half-open range: a year specifier spans the
  * whole year, a month specifier spans that month, etc.
@@ -518,10 +521,12 @@ public:
   date_specifier_t& operator=(const date_specifier_t&) = default;
   ~date_specifier_t() noexcept { TRACE_DTOR(date_specifier_t); }
 
-  /// @brief Return the earliest date matching this specifier.
+  /// @brief Return the first date of the range this specifier names.
   /// Missing month and day default to January and 1.  A missing year, when
   /// a month is given, is that of the most recent occurrence on or before
-  /// CURRENT_DATE(); otherwise the current year.
+  /// CURRENT_DATE(); otherwise the current year.  A weekday alone gives the
+  /// most recent such weekday on or before today; a weekday with a year or
+  /// month is not consulted.
   date_t begin() const;
 
   /// @brief Return one unit past the specifier's granularity.
@@ -846,7 +851,7 @@ void times_shutdown();
 
 /// @brief Tokenize a period expression string and dump each token with its
 /// type to the stream.  Used for debugging period expression parsing
-/// (invoked by the `period` command with `--debug`).
+/// (the `period` command prints it before the parsed interval).
 void show_period_tokens(std::ostream& out, const string& arg);
 
 /// @brief Stream insertion operator for date_duration_t.

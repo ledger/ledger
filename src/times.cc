@@ -562,9 +562,9 @@ date_t nearest_occurrence(date_t::month_type month, date_t::day_type day, const 
 } // namespace
 
 /**
- * @brief Resolve a possibly-partial specifier to its earliest concrete date.
+ * @brief Resolve a possibly-partial specifier to the first date of its range.
  *
- * Fills in missing components with the earliest valid value:
+ * Fills in missing components with defaults:
  *   - year: when absent and a month is given, the year of the most recent
  *     occurrence on or before CURRENT_DATE() (which honours --now); when
  *     month is absent too, the current year
