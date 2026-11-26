@@ -468,8 +468,9 @@ void stream_out_mpq(std::ostream& out, mpq_t quant, amount_t::precision_t precis
 /**
  * @brief Initialize the GMP/MPFR temporary variables and commodity pool.
  *
- * Must be called once at program startup before any amount_t objects
- * are created.  Sets up the reusable GMP/MPFR temporaries and creates
+ * Must be called before any amount_t objects are created; does nothing
+ * if already initialized.  set_session_context() calls it each time a
+ * session becomes current.  Sets up the reusable GMP/MPFR temporaries and creates
  * the global commodity pool with built-in commodities ("s" for seconds,
  * "%" for percentiles).
  */
@@ -484,8 +485,8 @@ void amount_t::initialize() {
 
     commodity_pool_t::current_pool.reset(new commodity_pool_t);
 
-    // Add time commodity conversions, so that timelogs may be parsed
-    // in terms of seconds, but reported as minutes or hours.
+    // The seconds commodity, in which timelogs are parsed;
+    // set_session_context() adds the minute and hour conversions to it.
     if (commodity_t* commodity = commodity_pool_t::current_pool->create("s"))
       commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
     else
@@ -506,8 +507,9 @@ void amount_t::initialize() {
 /**
  * @brief Release all GMP/MPFR temporaries and destroy the commodity pool.
  *
- * Called once at program exit.  After this call, no amount_t operations
- * are valid.
+ * Does nothing if not initialized.  After this call, no amount_t
+ * operations are valid until initialize() runs again.
+ * set_session_context(nullptr) calls it.
  */
 void amount_t::shutdown() {
   if (is_initialized) {

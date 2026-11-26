@@ -122,11 +122,17 @@ class amount_t
                         ordered_field_operators<amount_t, unsigned long,
                                                 ordered_field_operators<amount_t, long>>>> {
 public:
-  /** Ready the amount subsystem for use.
-      @note Normally called by session_t::initialize(). */
+  /** Ready the amount subsystem for use: the GMP/MPFR temporaries and a
+      fresh commodity pool.  Does nothing if already initialized.
+      @note Called by set_session_context() each time a session becomes
+      current; the C++ unit-test fixtures call it directly, and Python
+      scripts through Amount.initialize(). */
   static void initialize();
-  /** Shutdown the amount subsystem and free all resources.
-      @note Normally called by session_t::shutdown(). */
+  /** Shutdown the amount subsystem and free all resources, including the
+      commodity pool.  Does nothing if not initialized.
+      @note Called by set_session_context(nullptr); the C++ unit-test
+      fixtures call it directly, and Python scripts through
+      Amount.shutdown(). */
   static void shutdown();
 
   static bool is_initialized;
@@ -356,7 +362,7 @@ public:
 
   /** Returns the absolute value of an amount.  Equivalent to:
       @code
-      (x < * 0) ? - x : x
+      (x < 0) ? -x : x
       @endcode
   */
   [[nodiscard]] amount_t abs() const {
@@ -516,8 +522,8 @@ public:
       zero depending on whether the amount is negative, zero, or
       greater than zero.  Note that this function tests the actual
       value of the amount -- using its internal precision -- and not
-      the display value.  To test its display value, use:
-      `round().sign()'.
+      the display value.  To test the display value, use is_zero() or
+      is_nonzero().
 
       is_nonzero(), or operator bool, returns true if an amount's
       display value is not zero.
@@ -557,33 +563,29 @@ public:
 
   /** Conversion methods.  An amount may be converted to the same types
       it can be constructed from -- with the exception of unsigned
-      long.  Implicit conversions are not allowed in C++ (though they
-      are in Python), rather the following conversion methods must be
-      called explicitly:
+      long.  Of these, only the conversion to string is implicit
+      (operator string(), which is to_string()); operator bool is the
+      truth test above.  The others are explicit calls:
 
-      to_double([bool]) returns an amount as a double.  If the optional
-      boolean argument is true (the default), an exception is thrown if
-      the conversion would lose information.
+      to_double() returns the amount as a double, rounded to nearest.
 
-      to_long([bool]) returns an amount as a long integer.  If the
-      optional boolean argument is true (the default), an exception is
-      thrown if the conversion would lose information.
+      to_long() returns the amount as a long integer, rounded to
+      nearest (ties to even).  Both throw amount_error only for an
+      uninitialized amount, never for lost precision.
 
-      fits_in_long() returns true if to_long() would not lose
-      precision.
+      fits_in_long() returns true if the amount, rounded to nearest,
+      lies within the range of a long.
 
-      to_string() returns an amount's "display value" as a string --
-      after rounding the value according to the commodity's default
-      precision.  It is equivalent to: `round().to_fullstring()'.
+      to_string() returns what print() writes: the amount with its
+      commodity, at its display precision.
 
-      to_fullstring() returns an amount's "internal value" as a string,
-      without any rounding.
+      to_fullstring() prints unrounded(): the amount with its
+      commodity, at the precision it carries internally.
 
-      quantity_string() returns an amount's "display value", but
-      without any commodity.  Note that this is different from
-      `number().to_string()', because in that case the commodity has
-      been stripped and the full, internal precision of the amount
-      would be displayed.
+      quantity_string() is number().to_string(): the number without
+      its commodity, at the precision it carries internally with
+      trailing zeros dropped, since a stripped amount has no commodity
+      display precision to round to.
   */
   [[nodiscard]] double to_double() const;
   [[nodiscard]] long to_long() const;
@@ -664,20 +666,27 @@ public:
       price it was purchased for, when it was acquired, or an arbitrary note,
       identifying perhaps the lot number of an item.
 
-      annotate_commodity(amount_t price, [datetime_t date, string tag])
-      sets the annotations for the current amount's commodity.  Only
-      the price argument is required, although it can be passed as
-      `none' if no price is desired.
+      annotate(details) gives the amount its commodity annotated with
+      details, replacing any annotation the commodity had.  It does
+      nothing to an amount without a commodity.
 
-      commodity_annotated() returns true if an amount's commodity has
-      any annotation details associated with it.
+      has_annotation() returns true if an amount's commodity is
+      annotated.
 
-      annotation_details() returns all of the details of an annotated
-      commodity's annotations.  The structure returns will evaluate as
-      boolean false if there are no details.
+      annotation() returns the details of an annotated commodity's
+      annotation, and throws amount_error if the commodity is not
+      annotated.
 
-      strip_annotations() returns an amount whose commodity's annotations have
-      been stripped.
+      strip_annotations(what_to_keep) returns the amount with only the
+      lot details that what_to_keep (a keep_details_t) keeps:
+      keep_price, keep_date and keep_tag retain the price, date
+      and tag, and only_actuals also drops any of them that Ledger
+      computed rather than read from the journal.  Stripping lets lots
+      that differ only in a dropped detail share a commodity: with the
+      price dropped, 10 AAPL {$20} becomes 10 AAPL, which operator+=
+      adds to another 10 AAPL; with the price kept the commodities
+      differ, operator+= throws amount_error, and a balance_t must hold
+      the sum.
   */
   void annotate(const annotation_t& details);
   bool has_annotation() const;
@@ -685,21 +694,6 @@ public:
   annotation_t& annotation();
   const annotation_t& annotation() const { return const_cast<amount_t&>(*this).annotation(); }
 
-  /** If the lot price is considered whenever working with commoditized
-      values.
-
-      Let's say a user adds two values of the following form:
-      @code
-      10 AAPL + 10 AAPL {$20}
-      @endcode
-
-      This expression adds ten shares of Apple stock with another ten
-      shares that were purchased for \c $20 a share.  If \c keep_price
-      is false, the result of this expression is an amount equal to
-      <tt>20 AAPL</tt>.  If \c keep_price is \c true the expression
-      yields an exception for adding amounts with different commodities.
-      In that case, a \link balance_t \endlink object must be used to
-      store the combined sum. */
   amount_t strip_annotations(const keep_details_t& what_to_keep) const;
 
   /*@}*/
@@ -746,8 +740,6 @@ public:
 
       parse(string, flags_t) parses an amount from the given string.
 
-      parse(string, flags_t) also parses an amount from a string.
-
       A `{{total}}` lot price is divided into the lot's per-unit price,
       which may be rounded, and that lot is shared by every amount of
       it, however each one wrote its price.  When @p given_lot_total is
@@ -773,18 +765,27 @@ public:
    */
   /*@{*/
 
-  /** An amount may be output to a stream using the `print' method.  There is
-      also a global operator<< defined which simply calls print for an amount
-      on the given stream.  There is one form of the print method, which takes
-      one required argument and two arguments with default values:
+  /** An amount may be output to a stream using the `print' method.  The
+      global operator<< prints it the same way (as to_fullstring() when
+      stream_fullstrings is set).
 
-      print(ostream, bool omit_commodity = false, bool full_precision = false)
-      prints an amounts to the given output stream, using its commodity's
-      default display characteristics.  If `omit_commodity' is true, the
-      commodity will not be displayed, only the amount (although the
-      commodity's display precision is still used).  If `full_precision' is
-      true, the full internal precision of the amount is displayed, regardless
-      of its commodity's display precision.
+      print(ostream, flags) prints the amount with its commodity's display
+      characteristics (symbol placement, separators, display precision),
+      followed by its annotations.  A width set on the stream applies to
+      the whole rendered amount; print_unpadded() writes the same text
+      without regard to the stream's width.  flags is a bitmask of the
+      AMOUNT_PRINT_* values below; print() itself reads two of them:
+
+      AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS omits annotations that Ledger
+      computed (flagged *_CALCULATED) rather than read from the journal.
+
+      AMOUNT_PRINT_ELIDE_COMMODITY_QUOTES prints a quoted commodity symbol
+      that is separated from the number and not all digits without its
+      quotes.
+
+      AMOUNT_PRINT_RIGHT_JUSTIFY and AMOUNT_PRINT_COLORIZE are read by
+      value_t::print() and balance_t::print(), which justify the amount
+      in its column and color it when negative.
   */
 #define AMOUNT_PRINT_NO_FLAGS 0x00
 #define AMOUNT_PRINT_RIGHT_JUSTIFY 0x01

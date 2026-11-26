@@ -2851,4 +2851,35 @@ BOOST_AUTO_TEST_CASE(testIsZeroNegativeBeyondPrecision)
   BOOST_CHECK((-tiny).is_zero());
 }
 
+BOOST_AUTO_TEST_CASE(testConversionDocClaims)
+{
+  // to_long() rounds to nearest, ties to even (MPFR GMP_RNDN), and never
+  // throws for lost precision.
+  BOOST_CHECK_EQUAL(2L, amount_t("2.5").to_long());
+  BOOST_CHECK_EQUAL(4L, amount_t("3.5").to_long());
+  BOOST_CHECK_EQUAL(-3L, amount_t("-2.6").to_long());
+  BOOST_CHECK_EQUAL(2.5, amount_t("2.5").to_double());
+
+  // fits_in_long() tests range, not exactness.
+  BOOST_CHECK(amount_t("2.5").fits_in_long());
+
+  // to_string() rounds to the commodity's display precision ($ is 2 in
+  // this fixture); quantity_string() is number().to_string(), which no
+  // longer has the commodity's precision to round to.
+  amount_t x("$10.00");
+  x *= amount_t("0.3333");
+  BOOST_CHECK_EQUAL(string("$3.33"), x.to_string());
+  BOOST_CHECK_EQUAL(string("3.333"), x.quantity_string());
+  BOOST_CHECK_EQUAL(x.number().to_string(), x.quantity_string());
+
+  // An amount below the display precision: is_zero() tests the display
+  // value, while rounded() leaves the value intact, so rounded().sign()
+  // still reports it as positive.
+  amount_t tiny("$0.01");
+  tiny /= amount_t("1000");
+  BOOST_CHECK(tiny.is_zero());
+  BOOST_CHECK_EQUAL(1, tiny.sign());
+  BOOST_CHECK_EQUAL(1, tiny.rounded().sign());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
