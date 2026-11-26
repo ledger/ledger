@@ -1,0 +1,25 @@
+; The D directive names the default commodity.  It is the default
+; target of -V, but it does not give its style to amounts written
+; without a commodity: those keep the null commodity's style.  The
+; later EUR price in CHF makes -V pick D's commodity over the most
+; recent price, so the second block fails if D stops being the target.
+D $1,000.00
+
+P 2024/01/01 EUR $2.00
+P 2024/01/05 EUR 1.5 CHF
+
+2024/01/02 Bare
+    A                1234.5
+    B
+
+2024/01/03 Euros
+    C               10 EUR
+    D
+
+test reg A
+24-Jan-02 Bare                  A                            1234.5       1234.5
+end test
+
+test bal -V C --now 2024/02/01
+              $20.00  C
+end test

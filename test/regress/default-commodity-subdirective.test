@@ -1,0 +1,24 @@
+; `commodity X` with a `default` sub-directive sets the same default
+; commodity as the D directive: it is the -V target (over the later
+; CHF price), and `xact` gives it to an amount written without one
+; when no earlier transaction supplies a commodity.
+commodity $
+    format $1,000.00
+    default
+
+P 2024/01/01 EUR $2.00
+P 2024/01/05 EUR 1.5 CHF
+
+2024/01/03 Euros
+    C               10 EUR
+    D
+
+test bal -V C --now 2024/02/01
+              $20.00  C
+end test
+
+test xact --now 2024/02/01 2024/02/01 Shop Food 5 Cash
+2024/02/01 Shop
+    Food                                       $5.00
+    Cash
+end test

@@ -467,6 +467,47 @@ BOOST_AUTO_TEST_CASE(testCommodityComparisons)
   BOOST_CHECK(x6.valid());
 }
 
+BOOST_AUTO_TEST_CASE(testMixedCommodityArithmetic)
+{
+  // compare(), operator+= and operator-= throw only when both amounts carry
+  // a commodity and the two differ; a plain amount mixes with any commodity.
+  BOOST_CHECK_NO_THROW(amount_t("$1.57").compare(amount_t("1")));
+  BOOST_CHECK(amount_t("$1.57").compare(amount_t("1")) > 0);
+  BOOST_CHECK(amount_t("1").compare(amount_t("$1.57")) < 0);
+  BOOST_CHECK_THROW(amount_t("$1.57").compare(amount_t("DM 1")), amount_error);
+
+  amount_t x1("$1.57");
+  BOOST_CHECK_NO_THROW(x1 += amount_t("1"));
+  BOOST_CHECK_EQUAL(amount_t("$2.57"), x1);
+
+  amount_t x2("$1.57");
+  BOOST_CHECK_NO_THROW(x2 -= amount_t("1"));
+  BOOST_CHECK_EQUAL(amount_t("$0.57"), x2);
+
+  // The left operand keeps its commodity, or its lack of one.
+  amount_t x3("1");
+  x3 += amount_t("$1.57");
+  BOOST_CHECK(!x3.has_commodity());
+  BOOST_CHECK_EQUAL(internalAmount("2.57"), x3);
+
+  // The precision becomes the larger of the two only when both amounts
+  // carry a commodity or neither does.
+  amount_t x4("$1.57");
+  x4 += amount_t("0.001");
+  BOOST_CHECK_EQUAL(amount_t::precision_t(2), x4.precision());
+  BOOST_CHECK_EQUAL(internalAmount("$1.571"), x4);
+
+  amount_t x5("1.5");
+  x5 += amount_t("0.001");
+  BOOST_CHECK_EQUAL(amount_t::precision_t(3), x5.precision());
+
+  BOOST_CHECK(x1.valid());
+  BOOST_CHECK(x2.valid());
+  BOOST_CHECK(x3.valid());
+  BOOST_CHECK(x4.valid());
+  BOOST_CHECK(x5.valid());
+}
+
 BOOST_AUTO_TEST_CASE(testIntegerAddition)
 {
   amount_t x0;

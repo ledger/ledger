@@ -237,8 +237,10 @@ std::optional<price_point_t>
 commodity_t::check_for_updated_price(const std::optional<price_point_t>& point,
                                      const datetime_t& moment, const commodity_t* in_terms_of) {
   if (pool().get_quotes && !has_flags(COMMODITY_NOMARKET)) {
-    // If we have already successfully downloaded a quote for this commodity
-    // during this session and within the leeway period, don't download again.
+    // If a download for this commodity was already attempted during this
+    // session and within the leeway period, don't try again (see
+    // quoted_recently()).  A failed attempt sets last_quote too (below),
+    // so a failing getquote script is not rerun for every posting.
     // This prevents duplicate downloads when the same commodity appears in
     // multiple postings (issue #996): find_price() called with a historical
     // moment (midnight) cannot see a price downloaded with a later time

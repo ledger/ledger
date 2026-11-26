@@ -287,8 +287,16 @@ public:
                                                        const datetime_t& moment,
                                                        const commodity_t* in_terms_of);
 
-  /** Whether --download fetched a quote for this commodity (or its
-      referent) less than quote_leeway seconds ago (#996, #1602). */
+  /**
+   * @brief Whether a --download attempt for this commodity (or its
+   * referent) was made less than quote_leeway seconds ago.
+   *
+   * check_for_updated_price() sets last_quote after every attempt,
+   * successful or not, so this throttles repeated downloads of the same
+   * commodity (issue #996) and also retries of a failing getquote
+   * script, which therefore runs at most once per leeway period
+   * (issue #1602).
+   */
   bool quoted_recently() const;
 
   commodity_t& nail_down(const expr_t& expr);

@@ -659,9 +659,10 @@ amount_t& amount_t::operator=(const amount_t& amt) {
  * @brief Three-way comparison of two amounts.
  *
  * Returns a negative value if *this < @a amt, zero if equal, and a
- * positive value if *this > @a amt.  Both amounts must be initialized
- * and share the same commodity (or both be uncommoditized); otherwise
- * an exception is thrown.
+ * positive value if *this > @a amt.  Both amounts must be initialized.
+ * An exception is thrown only when both amounts carry a commodity and
+ * the two differ; an uncommoditized amount compares with any commodity
+ * by quantity alone.
  *
  * The comparison is performed on the exact GMP rationals, so no
  * precision is lost regardless of display formatting.
@@ -759,9 +760,12 @@ amount_t& amount_t::add_or_subtract(const amount_t& amt, bool subtract) {
 /**
  * @brief Add another amount to this one in place.
  *
- * Both amounts must be initialized and share the same commodity.
- * The result's precision is the maximum of the two operands'
- * precisions, so that no decimal information is lost in the sum.
+ * Both amounts must be initialized.  An exception is thrown only when
+ * both carry a commodity and the two differ; an uncommoditized amount
+ * adds to any commodity, and the result keeps this amount's commodity
+ * (or lack of one).  When both amounts carry a commodity, or neither
+ * does, the result's precision is the larger of the two; otherwise it
+ * keeps this amount's precision.
  *
  * Triggers copy-on-write via _dup() before mutating the GMP value.
  */
@@ -866,7 +870,7 @@ amount_t& amount_t::operator/=(const amount_t& amt) {
   _dup();
 
   // Increase the value's precision, to capture fractional parts after
-  // the divide.  Round up in the last position.
+  // the divide.  mpq_div is exact; only the recorded precision changes.
 
   mpq_div(MP(quantity), MP(quantity), MP(amt.quantity));
   quantity->prec = static_cast<precision_t>(quantity->prec + amt.quantity->prec + extend_by_digits);
@@ -1348,6 +1352,13 @@ std::optional<amount_t> amount_t::value(const datetime_t& moment,
       // Also handles the case where the target commodity is reachable via
       // the larger() chain directly (e.g. -X h forces seconds to hours,
       // even when the result is a fraction like 0.50h for 1800s).
+      //
+      // This walk is value()'s only route to a built-in unit conversion
+      // (set_session_context's parse_conversion calls for s/m/h): those
+      // add no edge to commodity_price_history.  A journal C directive
+      // also records a 1970 price edge (price_conversion_directive), so
+      // find_price() above may already have reached its larger unit.
+      // The depth guard stops a cyclic larger() chain.
       if (!point && commodity().larger()) {
         amount_t scaled(*this);
         int depth = 0;
@@ -1631,8 +1642,13 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags,
                      std::optional<amount_t>* given_lot_total) {
   // The possible syntax for an amount is:
   //
-  //   [-]NUM[ ]SYM [@ AMOUNT]
-  //   SYM[ ][-]NUM [@ AMOUNT]
+  //   [-]NUM[ ]SYM [ANNOTATIONS]
+  //   SYM[ ][-]NUM [ANNOTATIONS]
+  //
+  // ANNOTATIONS are the lot details read by annotation_t::parse:
+  // {PRICE}, {=PRICE}, {{TOTAL}} or {{=TOTAL}}, [DATE], (TAG) and
+  // ((EXPR)).  An @ or @@ cost is not part of an amount; the textual
+  // reader parses it.
 
   string symbol;
   string quant;

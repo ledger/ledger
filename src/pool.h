@@ -194,9 +194,12 @@ public:
   /// expressions read amounts in it as fractions (op.cc).
   commodity_t* percent_commodity = nullptr;
 
-  /// The commodity implied by the `D` directive.  When set, amounts
-  /// without an explicit commodity are displayed using this commodity's
-  /// formatting (decimal places, thousands separator, etc.).
+  /// The commodity named by the `D` directive (or by `commodity X` with a
+  /// `default` sub-directive).  It is the default target of find_price()
+  /// for -V, and the commodity that CSV import and the `xact` command give
+  /// to amounts written without one; Python exposes it read/write.  It
+  /// does not style bare amounts on display: after a bare `D 1.000,00`
+  /// that style comes from null_commodity via PARSE_APPLY_STYLE_TO_BARE.
   commodity_t* default_commodity;
 
   bool keep_base;          ///< When true (--base), display amounts in their base commodity.
