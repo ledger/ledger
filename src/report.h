@@ -48,8 +48,11 @@
  * entry points that drive the four report modes: posting iteration, account
  * summation, commodity listing, and journal output.
  *
- * Every command invocation creates a fresh report_t (owned by the global
- * session_t) so that option state is not carried across interactive commands.
+ * report_t objects live on global_scope_t's report stack; the session_t owns
+ * the journal.  A command line runs on the one report created at startup, and
+ * each REPL or --script command runs on a copy of the current report that is
+ * discarded when the command ends, so the options a command sets do not carry
+ * over to the next (the push command saves a copy for later commands).
  * The option handlers declared here frequently cross-reference each other
  * using the OTHER() macro -- for example, --basis activates --revalued and
  * sets the amount expression to "rounded(cost)".  This cascading design means
@@ -76,50 +79,6 @@ namespace ledger {
 
 class session_t;
 class xact_t;
-
-// These are the elements of any report:
-//
-// 1. Formatting string used for outputting the underlying ReportedType.
-//
-// 2. Handler object for the ReportedType.  This is constructed using #1, or
-//    else #1 is ignored completely.  This handler object is also constructed
-//    with the output stream that will be used during formatting.
-//
-// --- The details of #1 and #2 together represent the ItemHandler.
-//
-// 3. Mode of the report.  Currently there are four modes:
-//
-//    a. Posting or commodity iteration.  In this mode, all the journal's
-//       xacts, the postings of a specific xact, or all the journal's
-//       commodities are walked.  In the first two cases, it's the underlying
-//       postings which are passed to #2; in the second case, each
-//       commodity is passed to #2.
-//
-//    b. Account iteration.  This employs step 'a', but add a prologue and
-//       epilogue to it.  In the prologue it "sums" all account totals and
-//       subtotals; in the epilogue it calls yet another handler whose job is
-//       reporting (the handler used in 'a' is only for calculation).
-//
-//       There is one variation on 'b' in which a "totals" line is also
-//       displayed.
-//
-//    c. Write journal.  In this mode, a single function is called that output
-//       the journal object as a textual file.  #2 is used to print out each
-//       posting in the journal.
-//
-//    d. Dump binary file.  This is just like 'c', except that it dumps out a
-//       binary file and #2 is completely ignored.
-//
-// 4. For 'a' and 'b' in #3, there is a different iteration function called,
-//    depending on whether we're iterating:
-//
-//    a. The postings of an xact: walk_postings.
-//    b. The xacts of a journal: walk_xacts.
-//    c. The commodities of a journal: walk_commodities.
-//
-// 5. Finally, for the 'a' and 'b' reporting modes, there is a variant which
-//    says that the formatter should be "flushed" after the entities are
-//    iterated.  This does not happen for the commodities iteration, however.
 
 /**
  * @brief Puts ledger::epoch back, when it goes out of scope, to the value it
@@ -159,9 +118,13 @@ public:
  * - **Symbol lookup** -- lookup() resolves FUNCTION, OPTION, COMMAND, and
  *   PRECOMMAND symbols, delegating to session_t for global symbols.
  *
- * A new report_t is created for each command invocation so that option state
- * is isolated.  The session_t (which owns the journal) persists across
- * commands in interactive mode.
+ * Each REPL or --script command runs on a copy of the current report (see
+ * global_scope_t::push_report), so its option settings end with the command,
+ * while the session_t, which owns the journal, persists across commands.
+ * Options that set process globals (--start-of-week, --period-shift,
+ * --ignore-diacritics, --truncate) are re-derived from the current report by
+ * apply_option_globals(), which runs when a REPL or --script command's report
+ * is pushed and again in normalize_options().
  *
  * @see option_t for the option template machinery.
  * @see chain.h for the post_handler filter chain assembly.
@@ -382,7 +345,7 @@ public:
   value_t fn_floor(call_scope_t& scope);     ///< Floor: round toward negative infinity
   value_t fn_ceiling(call_scope_t& scope);   ///< Ceiling: round toward positive infinity
   value_t fn_clear_commodity(call_scope_t& scope); ///< Remove commodity from an amount
-  value_t fn_round(call_scope_t& scope);           ///< Round to nearest integer
+  value_t fn_round(call_scope_t& scope);           ///< Round to display precision (or N places)
   value_t fn_roundto(call_scope_t& scope);         ///< Round to N decimal places: roundto(val, N)
   value_t fn_abs(call_scope_t& scope);             ///< Absolute value
 
@@ -402,7 +365,7 @@ public:
   value_t fn_format_date(call_scope_t& scope); ///< Format a date: format_date(d [, fmt])
   value_t
   fn_format_datetime(call_scope_t& scope);   ///< Format a datetime: format_datetime(dt [, fmt])
-  value_t fn_ansify_if(call_scope_t& scope); ///< Wrap text in ANSI color codes if condition is met
+  value_t fn_ansify_if(call_scope_t& scope); ///< Wrap in a color's escape; null/boolean: unchanged
   value_t fn_percent(call_scope_t& scope);   ///< Compute percentage: percent(part, whole)
 
   // Commodity and lot inspection
@@ -1244,10 +1207,7 @@ public:
             payee_rewrite_mapping_t(mask_t(str.substr(0, eq)), str.substr(eq + 1)));
       });
 
-  OPTION_(
-      report_t, pending, DO() { // -C
-        OTHER(limit_).on(whence, "pending");
-      });
+  OPTION_(report_t, pending, DO() { OTHER(limit_).on(whence, "pending"); });
 
   OPTION_(
       report_t, percent, DO() { // -%
