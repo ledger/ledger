@@ -1440,4 +1440,41 @@ BOOST_AUTO_TEST_CASE(testMoveTransfersComponents)
   BOOST_CHECK_EQUAL(source, amount_t("$4.00"));
 }
 
+BOOST_AUTO_TEST_CASE(testDocumentedCommodityAmountAndSortOrder)
+{
+  // commodity_amount() with no commodity returns the sole component left
+  // after stripping annotations, and throws amount_error when several
+  // commodities remain.
+  balance_t lots;
+  lots += amount_t("10 AAPL {$5} [2024/02/01]");
+  lots += amount_t("5 AAPL {$6} [2024/01/01]");
+  auto whole = lots.commodity_amount();
+  BOOST_REQUIRE(whole);
+  BOOST_CHECK_EQUAL(*whole, amount_t("15 AAPL"));
+
+  balance_t mixed(lots);
+  mixed += amount_t("$1.00");
+  BOOST_CHECK_THROW((void)mixed.commodity_amount(), amount_error);
+
+  // sort_order is a display preference.  Copies, negated(), assignment
+  // from an amount, abs() and strip_annotations() keep it, number()
+  // starts at by_commodity, operator+= keeps the left operand's, and
+  // operator== ignores it.
+  balance_t fifo(fifo_lot_prices(lots));
+  BOOST_CHECK(fifo.sort_order == balance_t::lot_sort_order::fifo);
+  BOOST_CHECK(balance_t(fifo).sort_order == balance_t::lot_sort_order::fifo);
+  BOOST_CHECK(fifo.negated().sort_order == balance_t::lot_sort_order::fifo);
+  BOOST_CHECK(fifo.abs().sort_order == balance_t::lot_sort_order::fifo);
+  BOOST_CHECK(fifo.strip_annotations(keep_details_t()).sort_order ==
+              balance_t::lot_sort_order::fifo);
+  BOOST_CHECK(fifo.number().sort_order == balance_t::lot_sort_order::by_commodity);
+  balance_t assigned(fifo);
+  assigned = amount_t("1 AAPL");
+  BOOST_CHECK(assigned.sort_order == balance_t::lot_sort_order::fifo);
+  balance_t sum(lots);
+  sum += fifo;
+  BOOST_CHECK(sum.sort_order == balance_t::lot_sort_order::by_commodity);
+  BOOST_CHECK(fifo == lots);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

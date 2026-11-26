@@ -1213,9 +1213,9 @@ bool value_t::is_equal_to(const value_t& val) const {
 namespace {
 /// For comparing a balance with @p val: the first component in display
 /// order whose commodity is not the amount's, or null when every component
-/// is in it.  A plain number compares with any amount, as it always has,
-/// and a component that netted to zero in another commodity is left out
-/// of the comparison, so neither counts as another commodity.
+/// is in it.  A plain number compares with any amount, and a component that
+/// netted to zero in another commodity is left out of the comparison, so
+/// neither counts as another commodity.
 const amount_t* foreign_component(const balance_t& bal, const value_t& val) {
   if (!val.is_amount() || !val.as_amount().has_commodity())
     return nullptr;
@@ -1332,7 +1332,7 @@ bool value_ordered(const value_t& left, const value_t& right, int sign) {
       // decides, in any order, except a component that netted to zero in
       // another commodity, which is no holding in the amount's and is left
       // out.  A balance of nothing else compares as zero; an empty one
-      // compares false, as it always has.
+      // compares false.
       const balance_t& bal(left.as_balance());
       if (const amount_t* foreign = foreign_component(bal, right))
         throw_(amount_error,

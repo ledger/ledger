@@ -43,12 +43,12 @@
  * may hold a mix of dollars, euros, shares of stock, and so on; balance_t
  * is the container that aggregates them.
  *
- * Internally the amounts are stored in an unordered map keyed by commodity
- * pointer.  Arithmetic operators delegate to the per-commodity amount_t
- * operations, so all precision and rounding rules of amount_t are
- * preserved.  Multiplication and division are intentionally restricted:
- * you can scale every component by a plain number, but multiplying two
- * multi-commodity balances is undefined.
+ * Internally the amounts are stored in a persistent (immer) hash map keyed
+ * by commodity pointer.  Arithmetic operators delegate to the per-commodity
+ * amount_t operations, so all precision and rounding rules of amount_t are
+ * preserved.  Multiplication and division take a plain number, which
+ * scales every component, or an amount in the commodity of a balance's
+ * single component; see operator*=() for the other cases.
  *
  * balance_t sits between amount_t (single commodity) and value_t (the
  * polymorphic variant that also carries strings, dates, and sequences).
@@ -116,8 +116,8 @@ balance_t& balance_t::operator+=(const balance_t& bal) {
 /// holds exactly one commodity_t per distinct symbol and per distinct
 /// (symbol, annotation) pair (commodity_pool_t::annotated_commodities), so
 /// two amounts of the same lot -- say @c AAPL {$120} [2024/01/02] -- share
-/// a pointer, and a hash lookup replaces the former linear scan by name
-/// (which made balances holding K lots cost O(K) per addition).  Lots the
+/// a pointer, and a hash lookup finds the component, so an addition costs
+/// O(log K) rather than a scan of every lot.  Lots the
 /// pool has had to give equal annotations are the exception, handled by
 /// component_key(); a lot whose annotation the Python bindings edit in
 /// place stays a component of its own.  Amounts that are precisely zero
@@ -315,10 +315,10 @@ namespace {
 ///
 /// value() and strip_annotations() may map several components onto one
 /// commodity (lots stripped to their base, or valued in one currency);
-/// balance_t::merge() makes the result of such a collapse independent of
-/// the order the components are visited in (a cost kept at full precision
-/// and a lot of the same commodity in a register's --gain total used to
-/// print with either one's precision from one run to the next), and
+/// balance_t::merge() makes the result of such a collapse, precision
+/// included, independent of the order the components are visited in (a
+/// cost kept at full precision and a lot of the same commodity in a
+/// register's --gain total print at full precision on every run), and
 /// balance_t::visit_components() makes the error of a failed valuation
 /// name the same component on every run.
 template <typename Fn>
@@ -375,7 +375,7 @@ optional<balance_t> balance_t::value(const datetime_t& moment,
 /// equal annotations (commodity_pool_t::duplicate_lots): then the member of
 /// that class this balance already holds, else the lot that carried the
 /// annotation first, so that the class is one component, found by
-/// annotation equality as every lot used to be.  The lookup costs one hash
+/// annotation equality.  The lookup costs one hash
 /// probe for any other lot, and one per member of the class for these.
 commodity_t* balance_t::component_key(const commodity_t& comm) const {
   commodity_t* key = const_cast<commodity_t*>(&comm);
@@ -476,7 +476,7 @@ optional<amount_t> balance_t::commodity_amount(const commodity_t* commodity) con
 balance_t balance_t::strip_annotations(const keep_details_t& what_to_keep) const {
   // Fast path: if no amounts have annotations that need stripping,
   // return *this directly to avoid the expensive GMP arithmetic of
-  // rebuilding the balance via operator+=.
+  // rebuilding the balance via merge().
   for (const amounts_map::value_type& pair : amounts) {
     if (!what_to_keep.keep_all(pair.second.commodity())) {
       // At least one amount needs stripping; fall through to rebuild.
@@ -551,11 +551,11 @@ bool sorts_before(const amount_t* left, const amount_t* right, balance_t::lot_so
 ///   is what users see with a plain @c ledger @c bal.
 ///
 /// - @c fifo: lots of the same commodity are ordered oldest-first by
-///   their annotation date.  Used by @c --lot-dates @c --lots to show
-///   positions in acquisition order.
+///   their annotation date.  Set by @c --lots-fifo (the @c fifo_lots()
+///   function) to show positions in acquisition order.
 ///
-/// - @c lifo: lots ordered newest-first.  Used for last-in-first-out
-///   cost-basis reporting.
+/// - @c lifo: lots ordered newest-first.  Set by @c --lots-lifo (the
+///   @c lifo_lots() function).
 ///
 /// Within each mode, unannotated amounts sort before annotated ones,
 /// and a secondary sort by commodity_t::compare_by_commodity provides
@@ -657,9 +657,12 @@ struct print_amount_from_balance {
 /// line; @p latter_width controls subsequent lines, which is useful when
 /// the balance appears in a right-aligned column of a register report.
 ///
-/// If any commodity's rendered form is wider than the requested column,
-/// the column is widened uniformly to fit the widest amount so that all
-/// lines of the balance remain right-aligned with each other (issue #1795).
+/// When @p flags holds both AMOUNT_PRINT_RIGHT_JUSTIFY and
+/// AMOUNT_PRINT_FIT_TO_WIDEST (set by justify()'s sixth argument, which
+/// the balance report's format passes) and @p first_width is positive,
+/// a commodity whose rendered form is wider than the column widens it
+/// uniformly, so that all lines of the balance remain right-aligned with
+/// each other (issue #1795).
 ///
 /// If the balance is empty or all amounts are zero, a single "0" is
 /// printed, justified to @p first_width.
@@ -667,7 +670,7 @@ struct print_amount_from_balance {
 /// @param out           The output stream.
 /// @param first_width   Column width for the first commodity line.
 /// @param latter_width  Column width for subsequent lines (defaults to
-///                      first_width if set to 1).
+///                      first_width if negative).
 /// @param flags         Formatting flags (right-justify, colorize, etc.).
 /// @param negative_color  The ANSI escape sequence with which
 ///                      AMOUNT_PRINT_COLORIZE renders negative amounts;
@@ -721,13 +724,12 @@ void balance_t::print(std::ostream& out, const int first_width, const int latter
 /*  Serialization                                                       */
 /*----------------------------------------------------------------------*/
 
-/// @brief Serialize a balance into a Boost property tree for XML/JSON output.
+/// @brief Serialize a balance into a Boost property tree for the xml report.
 ///
-/// Each component amount is added as a child "amount" node, enabling
-/// structured output via @c ledger @c xml or @c ledger @c json.  Amounts
-/// are emitted in the same order balance_t::print() uses (see
-/// sorted_amounts()), so the output does not depend on the hash order of
-/// the component map.
+/// Each component amount is added as a child "amount" node of the
+/// structured output of @c ledger @c xml.  Amounts are emitted in the same
+/// order balance_t::print() uses (see sorted_amounts()), so the output does
+/// not depend on the hash order of the component map.
 ///
 /// @param st   The property tree node to populate.
 /// @param bal  The balance to serialize.
@@ -763,8 +765,7 @@ void put_balance(property_tree::ptree& st, const balance_t& bal) {
 /// @return A new balance with at most one entry per base commodity, annotated
 ///         with the weighted average price and the earliest acquisition date.
 balance_t average_lot_prices(const balance_t& bal) {
-  // First, we split the balance into multiple balances by underlying
-  // commodity.
+  // Group the lots by commodity symbol (the symbol without its annotation).
   struct group_t {
     amount_t quantity;
     annotation_t ann;
@@ -798,7 +799,7 @@ balance_t average_lot_prices(const balance_t& bal) {
       // Units without a price dilute the average; a fixated average would
       // value them at nothing.  (A component that netted to zero is no
       // holding: it still counts for the date, the precision and the price's
-      // commodity, as it always has, but not against the fixation.)
+      // commodity, but not against the fixation.)
       group.all_fixated = false;
     }
 
@@ -850,8 +851,8 @@ balance_t average_lot_prices(const balance_t& bal) {
 /// @brief Return a copy of the balance with FIFO (first-in, first-out) lot ordering.
 ///
 /// Sets the sort_order to @c fifo so that sorted_amounts() will arrange
-/// lots from earliest to latest acquisition date.  Used by the
-/// @c --lot-dates display option to show the oldest positions first.
+/// lots from earliest to latest acquisition date.  Used by @c --lots-fifo
+/// (the @c fifo_lots() function) to show the oldest positions first.
 ///
 /// @param bal  The input balance.
 /// @return A copy with lot_sort_order::fifo.
@@ -864,7 +865,8 @@ balance_t fifo_lot_prices(const balance_t& bal) {
 /// @brief Return a copy of the balance with LIFO (last-in, first-out) lot ordering.
 ///
 /// Sets the sort_order to @c lifo so that sorted_amounts() will arrange
-/// lots from latest to earliest acquisition date.
+/// lots from latest to earliest acquisition date.  Used by @c --lots-lifo
+/// (the @c lifo_lots() function) to show the newest positions first.
 ///
 /// @param bal  The input balance.
 /// @return A copy with lot_sort_order::lifo.
