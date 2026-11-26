@@ -41,6 +41,10 @@ else
 fi
 export UBSAN_OPTIONS="print_stacktrace=1:halt_on_error=0:suppressions=${PROJECT_ROOT}/ubsan-suppressions.txt"
 
+# AddressSanitizer frames are several times larger than normal ones; give
+# MAX_EXPR_DEPTH's 1024 nested calls room, as the CI sanitizer job does.
+ulimit -s 65536 2>/dev/null || ulimit -s "$(ulimit -H -s)"
+
 ctest --output-on-failure
 
 echo ""

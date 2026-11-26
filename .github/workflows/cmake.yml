@@ -73,7 +73,15 @@ jobs:
         run: npm install -g lefthook
 
       - name: Build and test
-        run: lefthook run cmake-build-and-test
+        # AddressSanitizer frames are several times larger than normal ones,
+        # so the 1024 nested calls MAX_EXPR_DEPTH allows (e.g. runaway lambda
+        # recursion in lambda-recursion-depth.test) need more than the
+        # default 8 MB stack before the depth limit can stop them.
+        run: |
+          if [[ "${{ matrix.config.cmake_args }}" == *USE_SANITIZERS* ]]; then
+            ulimit -s 65536
+          fi
+          lefthook run cmake-build-and-test
         env:
           cmakeFlags: "-DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ${{matrix.config.cmake_args}} -DPython_FIND_VERSION_MAJOR=${{matrix.config.PY_MAJOR}}"
           ASAN_OPTIONS: ${{ contains(matrix.config.cmake_args, 'USE_SANITIZERS') && 'detect_leaks=1:halt_on_error=0:log_path=/tmp/asan_log' || '' }}
