@@ -67,8 +67,7 @@ namespace ledger {
  * down in reverse order.
  *
  * This function exists because several subsystems use file-scope static
- * variables.  Switching the "current session" re-points those globals so
- * that a different session's data is in scope.
+ * variables, which every session in the process shares.
  */
 void set_session_context(session_t* session) {
   if (session) {

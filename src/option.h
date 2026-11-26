@@ -112,8 +112,8 @@
  * | Macro | Expansion | Purpose |
  * |-------|-----------|---------|
  * | `DO()` | `void handler_thunk(whence) override` | Override for boolean (no-arg) options |
- * | `DO_(var)` | `void handler_thunk(whence, var) override` | Override for options taking an
- * argument |
+ * | `DO_()` | `void handler_thunk(whence, str) override` | Override for options taking an
+ * argument, which the body reads as `str` |
  *
  * @subsection opt_convenience Convenience Declaration Macros
  *
@@ -124,7 +124,7 @@
  * | `OPTION(type, name)` | `OPTION(report_t, color);` | Simple option, no custom handler logic |
  * | `OPTION_(type, name, body)` | `OPTION_(report_t, actual, DO() { ... });` | Option with custom
  * DO()/DO_() handler | | `OPTION_CTOR(type, name, body)` | `OPTION_CTOR(report_t, amount_,
- * DECL1(...) { } DO_(...) { ... });` | Fully custom body with extra members, custom CTOR, and
+ * DECL1(...) { } DO_() { ... });` | Fully custom body with extra members, custom CTOR, and
  * handler |
  * | `OPTION_INT(type, name)` / `OPTION_INT_(type, name, body)` | `OPTION_INT(report_t, head_);` |
  * Integer option: argument validated when set, read with as_int() |
@@ -180,7 +180,7 @@
  * @code
  *   // In report_t's member declarations:
  *   OPTION_(report_t, my_filter_,
- *     DO_(str) {
+ *     DO_() {
  *       // Custom handler: also activate --limit with a predicate
  *       OTHER(limit_).on(whence, string("account=~/") + str + "/");
  *     });
@@ -341,7 +341,7 @@ public:
   /// @brief Activate a boolean (no-argument) option.
   /// Calls handler_thunk(whence) for subclass-specific side effects, then marks
   /// the option as handled and records the source.
-  /// @param whence  Describes who set this option (e.g., "--actual", "$LEDGER_ACTUAL").
+  /// @param whence  Describes who set this option (e.g., "--actual", "$actual").
   void on(const char* whence) { on(string(whence)); }
   void on(const optional<string>& whence) {
     handler_thunk(whence);
@@ -539,7 +539,7 @@ inline bool is_eq(const char* p, const char* n) {
   parent->HANDLER(name)
 
 /// @brief Look up and invoke a named option in the given scope.
-/// @param whence  Source description for provenance tracking (e.g., "--limit", "$LEDGER_LIMIT").
+/// @param whence  Source description for provenance tracking (e.g., "--limit", "$limit").
 /// @param name    Option name (hyphens, no leading dashes) to look up.
 /// @param scope   The scope to search for the option handler.
 /// @param arg     The option's argument value, or nullptr for boolean flags.

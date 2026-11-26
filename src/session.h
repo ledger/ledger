@@ -73,8 +73,8 @@ namespace ledger {
 class xact_t;
 
 /**
- * @brief Holds all state for a single "open document" -- the journal,
- *        commodity pool, and session-level options.
+ * @brief Holds all state for a single "open document" -- the journal and
+ *        session-level options.
  *
  * session_t extends symbol_scope_t, which means it can define named
  * symbols (functions and options) that are visible to value expressions
@@ -315,12 +315,13 @@ public:
 };
 
 /**
- * Set the current session context, transferring all static globals to point
- * at the data structures related to this session.  Although Ledger itself is
- * not thread-safe, by locking, switching session context, then unlocking
- * after an operation is done, multiple threads can sequentially make use of
- * the library.  Thus, a session_t maintains all of the information relating
- * to a single usage of the Ledger library.
+ * Initialize (non-null @p session) or shut down (null) the process-global
+ * time, amount and value subsystems.  Initializing also registers the m/h
+ * time conversions; amount_t::initialize() creates the one process-wide
+ * commodity pool unless it is already initialized, so a fresh pool appears
+ * only after a null call has shut the old one down.  The argument is only
+ * tested for null: every session in a process shares these globals, and
+ * Ledger cannot switch between live sessions.
  */
 void set_session_context(session_t* session);
 

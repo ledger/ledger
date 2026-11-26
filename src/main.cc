@@ -89,15 +89,9 @@ int main(int argc, char* argv[], char* envp[]) {
 
   /*--- Phase 1: Early initialization ---*/
 
-  // The very first thing we do is handle some very special command-line
-  // options, since they affect how the environment is setup:
-  //
-  //   --verify            ; turns on memory tracing
-  //   --verbose           ; turns on logging
-  //   --debug CATEGORY    ; turns on debug logging
-  //   --trace LEVEL       ; turns on trace logging
-  //   --memory            ; turns on memory usage tracing
-  //   --init-file         ; directs ledger to use a different init file
+  // The very first thing we do is handle the options that affect how the
+  // environment is set up.  handle_debug_options() (global.cc) pre-scans
+  // argv for them before the session exists; its doc lists them.
   handle_debug_options(argc, argv);
 #if VERIFY_ON
   IF_VERIFY() initialize_memory_tracing();
@@ -119,7 +113,7 @@ int main(int argc, char* argv[], char* envp[]) {
 
   try {
     // Create the session object, which maintains nearly all state relating to
-    // this invocation of Ledger; and register all known journal parsers.
+    // this invocation of Ledger.
     global_scope = new global_scope_t(envp);
     global_scope->session().set_flush_on_next_data_file(true);
 
@@ -215,8 +209,11 @@ int main(int argc, char* argv[], char* envp[]) {
     else
       std::cerr << "Exception during initialization: " << err.what() << '\n';
   } catch (const error_count& errors) {
-    // Used for a "quick" exit, and is used only if help text (such as
-    // --help or --version) was displayed
+    // error_count is not a std::exception, so it bypasses the handler in
+    // execute_command_wrapper and lands here.  --version throws it with a
+    // count of 0 to exit at once; journal_t::read_textual throws it when a
+    // file had parse errors, so the exit status is the number of errors
+    // (the OS keeps only its low 8 bits: 256 errors exit 0).
     status = boost::numeric_cast<int>(errors.count);
   }
 
@@ -240,8 +237,8 @@ int main(int argc, char* argv[], char* envp[]) {
     INFO("Ledger ended"); // let global_scope leak!
   }
 
-  // Return the final status to the operating system, either 1 for error or 0
-  // for a successful completion.
+  // Return the final status to the operating system: 0 on success, 1 after
+  // an error, or the number of parse errors (see the error_count catch).
   return status;
 }
 
