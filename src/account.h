@@ -240,11 +240,14 @@ public:
   void add_post(post_t* post);
 
   /**
-   * @brief Queue a posting to be applied when its UUID-matched transaction arrives.
+   * @brief Park a `<Account>` posting until its transaction's UUID recurs.
    *
-   * Used by automated transactions that reference a specific UUID.  The
-   * posting is held in deferred_posts until apply_deferred_posts() or
-   * UUID deduplication in add_xact() resolves it.
+   * Called by xact_base_t::finalize() for postings to `<Account>`
+   * (POST_DEFERRED) with a non-null amount, keyed by their transaction's
+   * id().  The posting is held in deferred_posts until
+   * journal_t::add_xact() sees a later transaction with the same UUID
+   * that posts to this account, or until apply_deferred_posts() runs at
+   * the end of the parse.
    */
   void add_deferred_post(const string& uuid, post_t* post);
 

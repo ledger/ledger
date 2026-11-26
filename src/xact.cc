@@ -729,12 +729,14 @@ bool xact_base_t::finalize() {
 
       DEBUG("xact.finalize", "there were no costs, and a valid top_post");
 
-      // The primary commodity, x, is top_post's when that is one of the two
-      // components, and otherwise the component that entered the balance
-      // first (first_component), which is what the former unordered map's
-      // two-entry order amounted to.  The persistent map's order is a hash
-      // order, and the direction of the inferred price must not depend on
-      // it.
+      // x, the component that is priced, is top_post's when that is one of
+      // the two components, otherwise the component that entered the
+      // balance first (first_component), and otherwise the first in
+      // sorted_amounts() order.  Below, when neither amount is zero, an x
+      // whose commodity is COMMODITY_PRIMARY is swapped with a y whose
+      // commodity is not, so the cost is stated in the primary commodity.
+      // The balance map's own order is a hash order, so the price's
+      // direction never depends on it.
       balance_t::amounts_array sorted;
       bal.sorted_amounts(sorted);
       assert(sorted.size() == 2);
@@ -1051,9 +1053,10 @@ bool xact_base_t::finalize() {
     // assigned posting so the group balances.  This lets users
     // write `Account = $target` and have --permissive accept the
     // transaction even when the assigned amount conflicts with the
-    // other postings.  Balance assignments that DO balance (issue
-    // #2944) never reach this point because Phase 7 already cleared
-    // the balance.
+    // other postings.  A balance assignment that balances never gets
+    // here, because group_balances() has already accepted its group:
+    // either the group's postings sum to zero, or the group had a null
+    // posting and Phase 7 balanced it and cleared the balance (#2944).
     if (journal && journal->checking_style == journal_t::CHECK_PERMISSIVE) {
       for (post_t* post : posts) {
         if (post->has_flags(POST_CALCULATED) && post->assigned_amount &&
@@ -1081,8 +1084,13 @@ bool xact_base_t::finalize() {
 
   // Phase 9: Register postings with their accounts.
   // Each posting is added to its account's post list so that account
-  // balances are maintained incrementally.  Deferred postings (for
-  // future-dated entries) are handled separately.
+  // balances are maintained incrementally.  A posting to <Account>
+  // (POST_DEFERRED) with a non-null amount is instead parked with
+  // add_deferred_post() under this transaction's id().  When a later
+  // transaction with the same UUID arrives, journal_t::add_xact() applies
+  // the postings parked on the accounts that transaction posts to;
+  // apply_deferred_posts() applies whatever is still parked at the end of
+  // the parse.
 
   if (dynamic_cast<xact_t*>(this)) {
     bool all_null = true;
@@ -1315,12 +1323,14 @@ void put_hash_field(std::ostream& out, const optional<T>& field) {
 } // namespace
 
 /**
- * @brief Compute a SHA-512 hash of this transaction for deduplication.
+ * @brief Compute this transaction's link in the --hashes chain.
  *
- * Builds a canonical string representation from the nonce, dates, code,
- * payee, and all postings (sorted alphabetically for determinism), then
- * hashes it with SHA-512.  The result can be stored as a UUID tag to
- * detect duplicate imports.
+ * Builds a canonical string from the nonce, dates, code, payee, and all
+ * postings (sorted for determinism), then hashes it with SHA-512.  The
+ * parser (textual_xacts.cc) passes the previous transaction's Hash tag as
+ * the nonce and checks the result against this transaction's Hash tag, or
+ * stores it there when the tag is absent, so each Hash is chained to the
+ * one before it.  UUID deduplication does not use this hash.
  */
 string xact_t::hash(const string& nonce, hash_type_t hash_type) const {
   std::ostringstream repr;

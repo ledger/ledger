@@ -234,15 +234,16 @@ public:
   bool valid() const override;
 
   /**
-   * @brief Compute a cryptographic hash of this transaction.
+   * @brief Compute this transaction's link in the --hashes chain.
    *
-   * Produces a SHA-512 hash of the transaction's date, auxiliary date,
-   * code, payee, and all postings (sorted for determinism).  The nonce
-   * parameter can salt the hash for different purposes.
+   * Hashes the transaction's dates, code, payee, and all postings (sorted
+   * for determinism), prefixed by the nonce.  The parser passes the
+   * previous transaction's Hash tag as the nonce, and stores the result
+   * in, or checks it against, this transaction's Hash tag.
    *
-   * @param nonce      Salt value prepended to the hash input.
-   * @param hash_type  HASH_SHA512 for full 64-byte hash, or
-   *                   HASH_SHA512_HALF for the first 32 bytes.
+   * @param nonce      The previous transaction's Hash tag, or "" if none.
+   * @param hash_type  HASH_SHA512 for the full 64-byte hash, or
+   *                   HASH_SHA512_Half for the first 32 bytes.
    */
   string hash(const string& nonce, hash_type_t hash_type) const;
 };

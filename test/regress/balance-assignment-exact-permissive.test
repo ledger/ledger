@@ -1,0 +1,37 @@
+; A balance assignment whose computed amount already balances its
+; group, with no null-amount posting, is accepted with and without
+; --permissive, and --permissive does not adjust it.  The second
+; transaction does this among real postings, the third among balanced
+; virtual postings.
+
+2018/08/01 * First
+    Assets:Foo             $12.34
+    Equity
+
+2018/12/31 * Exact
+    Assets:Foo           = $20.00
+    Equity                $-7.66
+
+2021/02/14 Virtual
+    [Liabilities:Visa]    $-20
+    [Assets:Checking]     =$20
+
+test bal --permissive
+              $40.00  Assets
+              $20.00    Checking
+              $20.00    Foo
+             $-20.00  Equity
+             $-20.00  Liabilities:Visa
+--------------------
+                   0
+end test
+
+test bal
+              $40.00  Assets
+              $20.00    Checking
+              $20.00    Foo
+             $-20.00  Equity
+             $-20.00  Liabilities:Visa
+--------------------
+                   0
+end test
