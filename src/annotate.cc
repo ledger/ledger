@@ -421,9 +421,9 @@ std::optional<price_point_t> annotated_commodity_t::find_price(const commodity_t
 /**
  * @brief Selectively remove annotation fields based on a keep_details_t filter.
  *
- * This is the mechanism behind `--basis` (which strips all annotations,
- * showing amounts in their base commodity) and the `--lots` family of
- * options (which selectively preserve lot prices, dates, or tags).
+ * This implements the default stripping of lot details for display, and
+ * the --lots, --lots-actual, --lot-prices, --lot-dates and --lot-notes
+ * options (report_t::what_to_keep()) that keep some of them.
  *
  * For each annotation field, retention requires both:
  *   - The corresponding keep_* flag is true in @p what_to_keep.

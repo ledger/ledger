@@ -82,7 +82,7 @@ struct annotation_t : public flags::supports_flags<>, public equality_comparable
   0x01 ///< Price was computed from a cost expression, not user-supplied.
 #define ANNOTATION_PRICE_FIXATED 0x02 ///< Price is fixated ({=...}), not a market price.
 #define ANNOTATION_PRICE_NOT_PER_UNIT                                                              \
-  0x04 ///< Price was given as total cost (@@), stored per-unit internally.
+  0x04 ///< Price was written as a total lot price ({{...}}), stored per unit.
 #define ANNOTATION_DATE_CALCULATED                                                                 \
   0x08 ///< Date was derived from the transaction date, not explicit.
 #define ANNOTATION_TAG_CALCULATED 0x10 ///< Tag was computed, not user-supplied.
@@ -253,7 +253,11 @@ inline std::ostream& operator<<(std::ostream& out, const annotation_t& details) 
  *
  * Annotated commodities are deduplicated: two amounts with the same base
  * symbol and identical annotations point to the same annotated_commodity_t
- * instance in the pool's annotated_commodities map.
+ * instance in the pool's annotated_commodities map, except the lots that
+ * reannotate() left carrying one annotation (commodity_pool_t::duplicate_lots)
+ * and a lot whose annotation the Python bindings edit in place.  Conversely,
+ * find_or_create() may return an existing lot for an annotation that only
+ * nearly matches (find_annotation_fuzzy()).  See pool.h.
  */
 class annotated_commodity_t
     : public commodity_t,
