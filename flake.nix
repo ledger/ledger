@@ -13,7 +13,7 @@
     # revision so that `nix flake update` never moves the oracle; to
     # move it, change the revision here and run `nix flake lock`.
     ledger-semantics.url =
-      "github:ledger/ledger-semantics/368d027";
+      "github:ledger/ledger-semantics/111ab8d";
     # flake-compat for the non-flake entry points default.nix and
     # shell.nix, which read its revision and hash from flake.lock.
     # The flake's own outputs do not use it.
